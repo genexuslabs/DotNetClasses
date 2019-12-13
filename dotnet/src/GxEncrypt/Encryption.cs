@@ -218,7 +218,7 @@ namespace GeneXus.Encryption
 		{
 			if (serverKey == null)
 			{
-				serverKey = GetFromKeyFile(0);  // Primera linea
+				serverKey = GetFromKeyFile(0);  // First linea
 				if (serverKey == null || serverKey.Length == 0)
 				{
 					serverKey = GetKeyFromAssembly(0);
@@ -234,7 +234,7 @@ namespace GeneXus.Encryption
 		{
 			if (siteKey == null)
 			{
-				siteKey = GetFromKeyFile(1);    // Segunda linea
+				siteKey = GetFromKeyFile(1);    // Second line
 				if (siteKey == null || siteKey.Length == 0)
 				{
 					siteKey = GetKeyFromAssembly(1);
@@ -296,12 +296,10 @@ namespace GeneXus.Encryption
 						methodInfo.Invoke(instance, parameters);
 						key = (string)parameters[1];
 					}
-					//GXLogging.Debug(log, "Successfully loaded KeyResolver");
 				}
 			}
 			catch (Exception)
 			{
-				//GXLogging.Error( log, "Error Loading KeyResolver.dll", ex);
 				return null;
 			}
 
@@ -497,7 +495,6 @@ namespace GeneXus.Encryption
 				return encrypted;
 			}
 			catch (Exception) {
-				//GXLogging.Error(log, "EncryptRijndael Error", ex);
 			}
 			finally
 			{

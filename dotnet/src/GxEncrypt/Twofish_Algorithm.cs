@@ -396,11 +396,11 @@ Console.WriteLine();
       for (i = q = 0; i < subkeyCnt/2; i++, q += SK_STEP) {
          A = F32( k64Cnt, q        , k32e ); // A uses even key entities
          B = F32( k64Cnt, q+SK_BUMP, k32o ); // B uses odd  key entities
-         B = B << 8 | ror(B, 32, 24); // B >>> 24; //@gusbro -> see
+         B = B << 8 | ror(B, 32, 24); // B >>> 24; 
          A += B;
          subKeys[2*i    ] = A;               // combine with a PHT
          A += B;
-         subKeys[2*i + 1] = (uint)(A << (byte)SK_ROTL | ror(A, 32, (byte)(32-SK_ROTL))); //A >>> (32-SK_ROTL); //@gusbro -> see
+         subKeys[2*i + 1] = (uint)(A << (byte)SK_ROTL | ror(A, 32, (byte)(32-SK_ROTL))); //A >>> (32-SK_ROTL); 
       }
       //
       // fully expand the table for speed
