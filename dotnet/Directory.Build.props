@@ -1,0 +1,17 @@
+﻿<Project>
+  <PropertyGroup>
+	<AssemblyVersion>11.0.0.0</AssemblyVersion>
+	<InformationalVersion>16.0.8.Hash</InformationalVersion>
+	<FileVersion>16.0.8</FileVersion>
+	<AssemblyCompany>GeneXus</AssemblyCompany>
+	<AssemblyCulture></AssemblyCulture>
+	<AssemblyProduct>GeneXus</AssemblyProduct>
+	<AssemblyTrademark></AssemblyTrademark>
+  	<SignAssembly>true</SignAssembly>
+	<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Genexus.snk</AssemblyOriginatorKeyFile>
+</PropertyGroup>
+  
+  <Target Name="MyMessage" BeforeTargets="Build">
+	<Message Text="AssemblyInfo.Props FileVersion: $(FileVersion)" Importance="high"></Message>
+  </Target>
+</Project>

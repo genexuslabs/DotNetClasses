@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>GeneXus.Encryption</RootNamespace>
+    <AssemblyName>GxEncrypt</AssemblyName>
+	<WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  
+ </Project>
