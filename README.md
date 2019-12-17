@@ -17,9 +17,9 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 # Instructions
 
 ## How to build all projects?
-- ```dotnet build StandardClasses.sln```
+- ```dotnet build DotNetStandardClasses.sln```
 or
-- ```msbuild /t:restore;build StandardClasses.sln```
+- ```msbuild /t:restore;build DotNetStandardClasses.sln```
 
 ## How to build a specific project?
 - ```dotnet build project.csproj```
