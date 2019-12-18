@@ -1,17 +1,26 @@
-﻿<Project>
-  <PropertyGroup>
-	<AssemblyVersion>11.0.0.0</AssemblyVersion>
-	<InformationalVersion>16.0.8.Hash</InformationalVersion>
-	<FileVersion>16.0.8</FileVersion>
-	<AssemblyCompany>GeneXus</AssemblyCompany>
-	<AssemblyCulture></AssemblyCulture>
-	<AssemblyProduct>GeneXus</AssemblyProduct>
-	<AssemblyTrademark></AssemblyTrademark>
-  	<SignAssembly>true</SignAssembly>
-	<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Genexus.snk</AssemblyOriginatorKeyFile>
-</PropertyGroup>
-  
-  <Target Name="MyMessage" BeforeTargets="Build">
-	<Message Text="AssemblyInfo.Props FileVersion: $(FileVersion)" Importance="high"></Message>
-  </Target>
+<Project>
+	<PropertyGroup>
+		<AssemblyVersion>11.0.0.0</AssemblyVersion>
+		<InformationalVersion>16.0.8.Hash</InformationalVersion>
+		<FileVersion>16.0.8</FileVersion>
+		<AssemblyCompany>GeneXus</AssemblyCompany>
+		<AssemblyCulture></AssemblyCulture>
+		<AssemblyProduct>GeneXus</AssemblyProduct>
+		<AssemblyTrademark></AssemblyTrademark>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningLevel>4</WarningLevel>
+		<RunCodeAnalysis>false</RunCodeAnalysis>
+		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
 </Project>
