@@ -1,14 +1,14 @@
 <Project>
 	<PropertyGroup>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
-		<InformationalVersion>16.0.8.Hash</InformationalVersion>
-		<FileVersion>16.0.8</FileVersion>
+		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).Hash</InformationalVersion>
+		<FileVersion>1.0.0.0</FileVersion>
 		<AssemblyCompany>GeneXus</AssemblyCompany>
 		<AssemblyCulture></AssemblyCulture>
 		<AssemblyProduct>GeneXus</AssemblyProduct>
 		<AssemblyTrademark></AssemblyTrademark>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningLevel>4</WarningLevel>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
@@ -19,7 +19,7 @@
 		<SignAssembly>true</SignAssembly>
 	</PropertyGroup>
 
-		<ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
