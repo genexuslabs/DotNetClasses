@@ -1,0 +1,33 @@
+name: Build & Publish .Net Classes
+author: jechague
+
+on: 
+  push:
+    branches:
+      - master
+      - beta
+
+jobs:
+  build:
+
+    runs-on: [self-hosted, windows]
+
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v1
+      // setup nuget if neccesary
+    - name: Setup NuGet Repo
+      run: nuget sources Add -Name "Nexus" -Source "" -UserName genexusbot -Password ${{ secrets.NEXUS_TOKEN }}
+    - name: Restore
+      run: dotnet restore DotNetStandardClasses.sln
+    - name: Build
+      run: msbuild DotNetStandardClasses.sln /p:Configuration=Release
+    - name: Prepare Nuspec
+      run: |
+        $FILENAME = "GXOData.Client.nuspec"
+        (gc $FILENAME) -replace '#GIT_BRANCH#', $Env:GITHUB_REF | Out-File -encoding ASCII $FILENAME
+        (gc $FILENAME) -replace '#GIT_SHA#', $Env:GITHUB_SHA | Out-File -encoding ASCII $FILENAME
+    - name: Package
+      run: nuget pack GXOData.Client.nuspec -OutputDirectory build/packages/ -OutputFileNamesWithoutVersion
+    - name: Publish
+      run: nuget push build\packages\GXOData.Client.nupkg -Source "GPR"
