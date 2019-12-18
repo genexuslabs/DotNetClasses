@@ -7,7 +7,6 @@
 		<AssemblyCulture></AssemblyCulture>
 		<AssemblyProduct>GeneXus</AssemblyProduct>
 		<AssemblyTrademark></AssemblyTrademark>
-		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -15,8 +14,12 @@
 		<RunCodeAnalysis>false</RunCodeAnalysis>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
 	</PropertyGroup>
+	
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
+		<SignAssembly>true</SignAssembly>
+	</PropertyGroup>
 
-	<ItemGroup>
+		<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
