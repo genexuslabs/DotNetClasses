@@ -1,7 +1,7 @@
 <Project>
 	<PropertyGroup>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
-		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).Hash</InformationalVersion>
+		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(HashCommit)</InformationalVersion>
 		<FileVersion>1.0.0.0</FileVersion>
 		<AssemblyCompany>GeneXus</AssemblyCompany>
 		<AssemblyCulture></AssemblyCulture>
