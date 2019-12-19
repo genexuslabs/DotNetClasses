@@ -15,8 +15,7 @@
 		<WarningLevel>4</WarningLevel>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
-	
-</PropertyGroup>
+	</PropertyGroup>
 
 	<PropertyGroup Condition="!$(GITHUB_REF.EndsWith('master'))">
 		<MajorFileVersion>$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
