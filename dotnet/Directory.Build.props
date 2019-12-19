@@ -32,4 +32,7 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<Target Name="GetFileVersion">
+		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
+	</Target>
 </Project>
