@@ -1,10 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>GeneXus.Encryption</RootNamespace>
     <AssemblyName>GxEncrypt</AssemblyName>
 	<WarningLevel>4</WarningLevel>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<RepositoryType>git</RepositoryType>
+	<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
+	<FileVersion>16.0.8</FileVersion>
   </PropertyGroup>
 
   
