@@ -2,8 +2,6 @@
 	<PropertyGroup>
 		<TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
 		<RootNamespace>GeneXus.Encryption</RootNamespace>
-		<AssemblyName>GxEncrypt</AssemblyName>
-		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
+		<AssemblyName>GxEncrypt</AssemblyName>		
 	</PropertyGroup>
 </Project>
