@@ -37,4 +37,8 @@
 	<Target Name="GetFileVersion">
 		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
 	</Target>
+
+	<Target Name="IsMaster">
+		<Message Importance="high" Text="IsMaster: True" Condition="$(GITHUB_REF.EndsWith('master'))"></Message>
+	</Target>
 </Project>

@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v1
-      
+
     - name: Clean previous build #Because self-hosted runners are not cleaned automatically
       run: |
         Get-ChildItem .\dotnet\src\*\bin -Recurse |
@@ -38,7 +38,12 @@ jobs:
         # Get the FileVersion from the Build.props file
         $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersion
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
-        $NuGetPackageVersion = $Matches[0] + "." + $CommitNumber
+        $GetFileVersionOutput = $Matches[0]
+
+        $IsMaster = dotnet msbuild dotnet/Directory.Build.props /t:IsMaster
+        $VersionTag = if ($IsMaster -match "(?<=IsMaster:)(.*)") {"rc"} else {"beta"}
+
+        $NuGetPackageVersion = $GetFileVersionOutput + "." + $CommitNumber + "-" + $VersionTag
 
         dotnet pack dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
