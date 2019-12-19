@@ -3,7 +3,7 @@
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
 		<MinorFileVersion>4</MinorFileVersion>
-		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0.0</FileVersion>
+		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0</FileVersion>
 		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
 		<AssemblyCompany>GeneXus</AssemblyCompany>
 		<AssemblyCulture></AssemblyCulture>
