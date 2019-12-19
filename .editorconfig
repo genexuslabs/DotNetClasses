@@ -1,0 +1,12 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = tab
+
+[*.cs]
+tab_width = 4
+trim_trailing_whitespace = true
+csharp_new_line_before_open_brace = all
+csharp_preserve_single_line_statements = true
+dotnet_sort_system_directives_first = true 

@@ -1,17 +1,38 @@
-﻿<Project>
-  <PropertyGroup>
-	<AssemblyVersion>11.0.0.0</AssemblyVersion>
-	<InformationalVersion>16.0.8.Hash</InformationalVersion>
-	<FileVersion>16.0.8</FileVersion>
-	<AssemblyCompany>GeneXus</AssemblyCompany>
-	<AssemblyCulture></AssemblyCulture>
-	<AssemblyProduct>GeneXus</AssemblyProduct>
-	<AssemblyTrademark></AssemblyTrademark>
-  	<SignAssembly>true</SignAssembly>
-	<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Genexus.snk</AssemblyOriginatorKeyFile>
-</PropertyGroup>
-  
-  <Target Name="MyMessage" BeforeTargets="Build">
-	<Message Text="AssemblyInfo.Props FileVersion: $(FileVersion)" Importance="high"></Message>
-  </Target>
+<Project>
+	<PropertyGroup>
+		<AssemblyVersion>11.0.0.0</AssemblyVersion>
+		<MajorFileVersion>1</MajorFileVersion>
+		<MinorFileVersion>4</MinorFileVersion>
+		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0.0</FileVersion>
+		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
+		<AssemblyCompany>GeneXus</AssemblyCompany>
+		<AssemblyCulture></AssemblyCulture>
+		<AssemblyProduct>GeneXus</AssemblyProduct>
+		<AssemblyTrademark></AssemblyTrademark>
+		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningLevel>4</WarningLevel>
+		<RunCodeAnalysis>false</RunCodeAnalysis>
+		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="!$(GITHUB_REF.EndsWith('master'))">
+		<MajorFileVersion>$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
+		<SignAssembly>true</SignAssembly>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<Target Name="GetFileVersion">
+		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
+	</Target>
 </Project>
