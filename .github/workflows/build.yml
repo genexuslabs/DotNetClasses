@@ -1,0 +1,50 @@
+name: Build & Publish .Net Classes
+on: 
+  push:
+    branches:
+      - 'master'
+      - 'beta'
+
+jobs:
+  build:
+    env:
+      Configuration: Release
+      NuGetRepository: http://nexus.genexus.com/repository/nuget-prereleases/
+    
+    runs-on: [self-hosted, windows]
+
+    steps:
+    - name: Clean previous build #Because self-hosted runners are not cleaned automatically
+      run: |
+        Get-ChildItem .\dotnet\src\*\bin -Recurse |
+          ForEach-Object {
+           rm -Recurse $_.FullName
+          }
+        Get-ChildItem .\dotnet\src\*\obj -Recurse |
+          ForEach-Object {
+           rm -Recurse $_.FullName
+          }
+
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Build Solution
+      run: dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration
+
+    - name: Package
+      run: |
+        $CommitNumber = git rev-list --no-merges --count HEAD
+        
+        # Get the FileVersion from the Build.props file
+        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersion
+        "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
+        $NuGetPackageVersion = $Matches[0] + "." + $CommitNumber
+
+      run: dotnet pack dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
+
+    - name: Publish packages
+      run: |      
+        Get-ChildItem .\dotnet\*.nupkg -Recurse |
+          ForEach-Object {
+            dotnet nuget push $_.FullName --source $Env:NuGetRepository
+          }
