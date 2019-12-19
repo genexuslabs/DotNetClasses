@@ -1,8 +1,10 @@
 <Project>
 	<PropertyGroup>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
-		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(HashCommit)</InformationalVersion>
-		<FileVersion>1.0.0.0</FileVersion>
+		<MajorFileVersion>1</MajorFileVersion>
+		<MinorFileVersion>4</MinorFileVersion>
+		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0.0</FileVersion>
+		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
 		<AssemblyCompany>GeneXus</AssemblyCompany>
 		<AssemblyCulture></AssemblyCulture>
 		<AssemblyProduct>GeneXus</AssemblyProduct>
@@ -13,8 +15,13 @@
 		<WarningLevel>4</WarningLevel>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
-	</PropertyGroup>
 	
+</PropertyGroup>
+
+	<PropertyGroup Condition="!$(GITHUB_REF.EndsWith('master'))">
+		<MajorFileVersion>$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
+	</PropertyGroup>
+
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
 		<SignAssembly>true</SignAssembly>
 	</PropertyGroup>
