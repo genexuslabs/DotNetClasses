@@ -40,7 +40,7 @@ jobs:
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
         $NuGetPackageVersion = $Matches[0] + "." + $CommitNumber
 
-      run: dotnet pack dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
+        dotnet pack dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
     - name: Publish packages
       run: |      
