@@ -17,6 +17,7 @@
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
+		<NoWarn>NU5105</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="!$(GITHUB_REF.EndsWith('master'))">

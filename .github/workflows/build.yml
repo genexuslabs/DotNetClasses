@@ -41,9 +41,9 @@ jobs:
         $GetFileVersionOutput = $Matches[0]
 
         $IsMaster = dotnet msbuild dotnet/Directory.Build.props /t:IsMaster
-        $VersionTag = if ($IsMaster -match "(?<=IsMaster:)(.*)") {"rc"} else {"beta"}
+        $VersionTag = if ($IsMaster -match "(?<=IsMaster:)(.*)") {"stable"} else {"trunk"}
 
-        $NuGetPackageVersion = $GetFileVersionOutput + "." + $CommitNumber + "-" + $VersionTag
+        $NuGetPackageVersion = $GetFileVersionOutput + "-" + $VersionTag + "." + $CommitNumber
 
         dotnet pack dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
