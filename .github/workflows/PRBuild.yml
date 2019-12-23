@@ -1,0 +1,32 @@
+name: Test Build .Net Classes PR
+
+on: 
+  push:
+    branches-ignore:
+      - 'master'
+      - 'beta'
+
+jobs:
+  build:
+    env:
+      Configuration: Release
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Build Solution
+      run: dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration
+
+    - name: Package
+      run: |
+        $CommitNumber = git rev-list --no-merges --count HEAD
+
+        # Get the FileVersion from the Build.props file
+        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersion
+        "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
+        $NuGetPackageVersion = $Matches[0] + "-" + $CommitNumber 
+
+        dotnet pack dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:Version=$NuGetPackageVersion

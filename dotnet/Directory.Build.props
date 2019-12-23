@@ -4,7 +4,7 @@
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
 		<MinorFileVersion>4</MinorFileVersion>
-		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0.0</FileVersion>
+		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0</FileVersion>
 		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
 		<AssemblyCompany>GeneXus</AssemblyCompany>
 		<AssemblyCulture></AssemblyCulture>
@@ -19,6 +19,9 @@
 		<RunCodeAnalysis>false</RunCodeAnalysis>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
+		<NoWarn>NU5105</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="!$(GITHUB_REF.EndsWith('master'))">
 		<MajorFileVersion>$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
@@ -37,5 +40,8 @@
 
 	<Target Name="GetFileVersion">
 		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
+	</Target>
+	<Target Name="IsMaster">
+		<Message Importance="high" Text="IsMaster: True" Condition="$(GITHUB_REF.EndsWith('master'))"></Message>
 	</Target>
 </Project>
