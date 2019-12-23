@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GxClasses.Win</RootNamespace>
+		<AssemblyName>GxClasses.Win</AssemblyName>
+		<NoWarn>CA1501</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="log4net" Version="2.0.8"/>
+		<Reference Include="System.Windows.Forms" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+	</ItemGroup>
+
+</Project>

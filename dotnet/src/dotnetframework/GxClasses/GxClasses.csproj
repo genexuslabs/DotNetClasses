@@ -1,0 +1,84 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GxClasses</RootNamespace>
+		<NoWarn>618;1607;1698</NoWarn>
+		<AssemblyName>GxClasses</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="jose-jwt-signed" Version="2.3.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+		<PackageReference Include="Nustache" Version="1.16.0.10" />
+		<PackageReference Include="SecurityCodeScan" PrivateAssets="all" Version="3.3.0" />
+		<PackageReference Include="log4net" Version="2.0.8" />
+		<Reference Include="Microsoft.HostIntegration.MsDb2Client">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\..\libs\dotnetframework\Microsoft.HostIntegration.MsDb2Client.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Security">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\..\libs\dotnetframework\Mono.Security.dll</HintPath>
+		</Reference>
+		<Reference Include="Npgsql">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\..\libs\dotnetframework\Npgsql.dll</HintPath>
+		</Reference>
+		<Reference Include="Jayrock-JSON">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\..\libs\dotnetframework\Jayrock-JSON.dll</HintPath>
+		</Reference>
+		<Reference Include="MySQLDriverCS">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\..\libs\dotnetframework\MySQLDriverCS.dll</HintPath>
+		</Reference>
+		<Reference Include="TZ4Net">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\..\libs\dotnetframework\TZ4Net.dll</HintPath>
+		</Reference>
+
+		<Reference Include="System.configuration" />
+		<Reference Include="System.Configuration.Install" />
+		<Reference Include="System.Data.OracleClient">
+			<Name>System.Data.OracleClient</Name>
+		</Reference>
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.102" />
+		<PackageReference Include="System.Data.SQLite.EF6" Version="1.0.102" />
+		<Reference Include="System.DirectoryServices">
+			<Name>System.DirectoryServices</Name>
+		</Reference>
+		<Reference Include="System.Drawing" />
+		<Reference Include="System.Management">
+			<Name>System.Management</Name>
+		</Reference>
+		<Reference Include="System.Messaging">
+			<Name>System.Messaging</Name>
+		</Reference>
+		<Reference Include="System.Net.Http" />
+		<Reference Include="System.Runtime.Serialization">
+			<RequiredTargetFramework>3.0</RequiredTargetFramework>
+		</Reference>
+		<Reference Include="System.Security" />
+		<Reference Include="System.ServiceModel">
+			<RequiredTargetFramework>3.0</RequiredTargetFramework>
+		</Reference>
+		<Reference Include="System.ServiceModel.Web">
+			<RequiredTargetFramework>3.5</RequiredTargetFramework>
+		</Reference>
+		<Reference Include="System.Web">
+			<Name>System.Web</Name>
+		</Reference>
+		<Reference Include="System.Web.Extensions" />
+		<Reference Include="System.Web.Services">
+			<Name>System.Web.Services</Name>
+		</Reference>
+		<Reference Include="System.Xml">
+			<Name>System.XML</Name>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\dotnet\GxEncrypt\GxEncrypt.csproj" />
+	</ItemGroup>
+
+</Project>

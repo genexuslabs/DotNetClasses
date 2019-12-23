@@ -1,5 +1,6 @@
 <Project>
 	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
 		<MinorFileVersion>4</MinorFileVersion>
@@ -9,14 +10,16 @@
 		<AssemblyCulture></AssemblyCulture>
 		<AssemblyProduct>GeneXus</AssemblyProduct>
 		<AssemblyTrademark></AssemblyTrademark>
+		<AssemblyCopyright>Copyright © 1988-2019 GeneXus. All Rights Reserved</AssemblyCopyright>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<SignAssembly>true</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningLevel>4</WarningLevel>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	</PropertyGroup>
-
 	<PropertyGroup Condition="!$(GITHUB_REF.EndsWith('master'))">
 		<MajorFileVersion>$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
 	</PropertyGroup>

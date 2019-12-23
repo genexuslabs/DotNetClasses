@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$(TargetFramework)</TargetFramework>
+  </PropertyGroup>
+   
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;NETCORE;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Trial|AnyCPU'">
+    <DefineConstants>TRACE;NETCORE;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETCORE;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Trial|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETCORE;</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXGeolocation.cs" Link="Domain\GXGeolocation.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttp.cs" Link="Middleware\GXHttp.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttpServices.cs" Link="Middleware\GXHttpServices.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXRuntime.cs" Link="Domain\GXRuntime.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\View\GXGridStateHandler.cs" Link="View\GXGridStateHandler.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\View\GXWebControls.cs" Link="View\GXWebControls.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Model\GXWebProcedure.cs" Link="Model\GXWebProcedure.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\ThemeHelper.cs" Link="Helpers\ThemeHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Notifications\GXWebNotification.cs" Link="Notifications\GXWebNotification.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Notifications\GXWebProgressIndicator.cs" Link="Notifications\GXWebProgressIndicator.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Notifications\GXWebProgressIndicatorInfo.cs" Link="Notifications\GXWebProgressIndicatorInfo.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Notifications\WebSocket\GXWebSocketFactory.cs" Link="Notifications\WebSocket\GXWebSocketFactory.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Notifications\WebSocket\IGXWebSocketAsync.cs" Link="Notifications\WebSocket\IGXWebSocketAsync.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Domain\" />
+		<Folder Include="Helpers\" />
+		<Folder Include="Model\" />
+		<Folder Include="Notifications\WebSocket\" />
+		<Folder Include="View\UserControls\" />
+	</ItemGroup>
+  <ItemGroup>
+	<Reference Include="Jayrock-JSON">
+		<SpecificVersion>False</SpecificVersion>
+		<HintPath>..\..\..\libs\dotnetcore\Jayrock.dll</HintPath>
+	</Reference>  
+  </ItemGroup>	
+  
+</Project>

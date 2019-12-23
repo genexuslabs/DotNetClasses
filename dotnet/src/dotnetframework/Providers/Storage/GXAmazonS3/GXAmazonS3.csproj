@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GXAmazonS3</RootNamespace>
+		<AssemblyName>GXAmazonS3</AssemblyName>
+	</PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Core" Version="3.1.4.3" />
+    <PackageReference Include="AWSSDK.S3" Version="3.1.4.0" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
+    <ProjectReference Include="..\..\..\GxEncrypt\GxEncrypt.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+</Project>
