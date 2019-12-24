@@ -1,6 +1,5 @@
 <Project>
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
 		<MinorFileVersion>4</MinorFileVersion>
@@ -21,22 +20,14 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
-		<NoWarn>NU5105</NoWarn>
+		<NoWarn>NU5105;CS0618</NoWarn>
 	</PropertyGroup>
+
+	
 	<PropertyGroup Condition="!$(GITHUB_REF.EndsWith('master'))">
 		<MajorFileVersion>$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
-		<SignAssembly>true</SignAssembly>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
 
 	<Target Name="GetFileVersion">
 		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
