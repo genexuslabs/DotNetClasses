@@ -14,27 +14,27 @@
 		<PackageReference Include="log4net" Version="2.0.8" />
 		<Reference Include="Microsoft.HostIntegration.MsDb2Client">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\..\libs\dotnetframework\Microsoft.HostIntegration.MsDb2Client.dll</HintPath>
+			<HintPath>..\libs\Microsoft.HostIntegration.MsDb2Client.dll</HintPath>
 		</Reference>
 		<Reference Include="Mono.Security">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\..\libs\dotnetframework\Mono.Security.dll</HintPath>
+			<HintPath>..\libs\Mono.Security.dll</HintPath>
 		</Reference>
 		<Reference Include="Npgsql">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\..\libs\dotnetframework\Npgsql.dll</HintPath>
+			<HintPath>..\libs\Npgsql.dll</HintPath>
 		</Reference>
 		<Reference Include="Jayrock-JSON">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\..\libs\dotnetframework\Jayrock-JSON.dll</HintPath>
+			<HintPath>..\libs\Jayrock-JSON.dll</HintPath>
 		</Reference>
 		<Reference Include="MySQLDriverCS">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\..\libs\dotnetframework\MySQLDriverCS.dll</HintPath>
+			<HintPath>..\libs\MySQLDriverCS.dll</HintPath>
 		</Reference>
 		<Reference Include="TZ4Net">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\..\libs\dotnetframework\TZ4Net.dll</HintPath>
+			<HintPath>..\libs\TZ4Net.dll</HintPath>
 		</Reference>
 
 		<Reference Include="System.configuration" />

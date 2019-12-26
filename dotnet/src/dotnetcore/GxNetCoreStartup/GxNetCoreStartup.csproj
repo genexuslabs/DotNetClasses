@@ -7,7 +7,7 @@
   	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
 	  <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-	  <PackageReference Include="jose-jwt" Version="2.5.0"  PrivateAssets="All" />
+	  <PackageReference Include="jose-jwt" Version="2.5.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj">

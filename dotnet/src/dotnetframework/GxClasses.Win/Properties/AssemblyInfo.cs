@@ -6,7 +6,6 @@ using System.Security;
 
 [assembly: AssemblyTitle("GxClasses.Win")]
 [assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
 [assembly: AllowPartiallyTrustedCallers] 
 
 [assembly: NeutralResourcesLanguageAttribute("en")]

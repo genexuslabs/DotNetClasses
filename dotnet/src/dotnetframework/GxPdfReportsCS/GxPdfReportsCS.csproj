@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GxPdfReportsCS</RootNamespace>
+		<AssemblyName>GxPdfReportsCS</AssemblyName>
+		<RunCodeAnalysis>false</RunCodeAnalysis>
+	</PropertyGroup>
+
+
+	<ItemGroup>
+		<PackageReference Include="iTextSharp" Version="5.5.13" />
+		<PackageReference Include="log4net" Version="2.0.8" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+</Project>

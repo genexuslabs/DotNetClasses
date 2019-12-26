@@ -6,11 +6,9 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
-	</ItemGroup>
-	<ItemGroup>
 		<Reference Include="Jayrock-JSON">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\..\libs\dotnetframework\Jayrock-JSON.dll</HintPath>
+			<HintPath>..\libs\Jayrock-JSON.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 </Project>

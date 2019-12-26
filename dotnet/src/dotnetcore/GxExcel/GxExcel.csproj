@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GxExcel\GxExcelConstant.cs" Link="GxExcelConstant.cs" />
+    <Compile Include="..\..\dotnetframework\GxExcel\GxExcelEPPlus.cs" Link="GxExcelEPPlus.cs" />
+    <Compile Include="..\..\dotnetframework\GxExcel\GXExcelHelper.cs" Link="GXExcelHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxExcel\GxExcelI.cs" Link="GxExcelI.cs" />
+    <Compile Include="..\..\dotnetframework\GxExcel\GxExcelLite.cs" Link="GxExcelLite.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EPPlus" Version="4.5.3.2" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+</Project>

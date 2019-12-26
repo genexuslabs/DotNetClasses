@@ -1,0 +1,29 @@
+﻿// This file is used by Code Analysis to maintain SuppressMessage
+// attributes that are applied to this project.
+// Project-level suppressions either have no target or are given
+// a specific target and scoped to a namespace, type, member, etc.
+
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.checkExcelDocument~System.Boolean")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.cleanup")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.get_Cells(System.Int32,System.Int32)~GeneXus.Office.IExcelCells")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.get_Cells(System.Int32,System.Int32)~GeneXus.Office.IExcelCells")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.get_Cells(System.Int32,System.Int32,System.Int32,System.Int32)~GeneXus.Office.IExcelCells")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.get_Cells(System.Int32,System.Int32,System.Int32,System.Int32)~GeneXus.Office.IExcelCells")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.getDefaultPath~System.String")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.getDefaultUseAutomation~System.Int16")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.getMacroReturnValue~System.Object")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.setDefaultPath(System.String)")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelDocumentI.setDefaultUseAutomation(System.Int16)")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelGXEPPlus.ExcelCells.fitColumnWidth")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelGXEPPlus.ExcelCells.getExcelCell(System.Int32,System.Int32,System.Int32,System.Int32)~OfficeOpenXml.ExcelRange")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelGXEPPlus.ExcelCells.setColor(System.Int64)")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelGXEPPlus.ExcelDocument.selectFirstSheet")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelLite.ExcelDocument.loadAssembly(System.String)~System.Reflection.Assembly")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.ExcelLite.ExcelDocument.selectSheet(System.String)")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.IExcelDocument.cleanup")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.IExcelDocument.get_Cells(System.Int32,System.Int32,System.Int32,System.Int32)~GeneXus.Office.IExcelCells")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.IExcelDocument.get_Cells(System.Int32,System.Int32,System.Int32,System.Int32)~GeneXus.Office.IExcelCells")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.IGxError.setErrCod(System.Int16)")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Office.IGxError.setErrDes(System.String)")]
+
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1044:Properties should not be write only", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Office.ExcelGXEPPlus.ExcelCells.AutoFit")]

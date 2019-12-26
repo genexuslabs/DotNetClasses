@@ -5,7 +5,6 @@ using System.Security;
 
 [assembly: AssemblyTitle("GxMaps")]
 [assembly: AssemblyDescription("Genexus Map Library")]
-[assembly: AssemblyConfiguration("")]
 
 [assembly: ComVisible(false)]
 

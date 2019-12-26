@@ -5,7 +5,6 @@ using System.Security;
 
 [assembly: AssemblyTitle("GxSearch")]
 [assembly: AssemblyDescription("GxSearch")]
-[assembly: AssemblyConfiguration("")]
 [assembly: AllowPartiallyTrustedCallers]
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 

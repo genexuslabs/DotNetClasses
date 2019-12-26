@@ -1,19 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;NETCORE;NETCOREAPP;NETCOREAPP2_1;DEBUG</DefineConstants>
     <NoWarn>1701;1702;NU1701</NoWarn>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;NETCORE;NETCOREAPP;NETCOREAPP2_1;RELEASE;</DefineConstants>
-    <NoWarn>1701;1702;NU1701</NoWarn>
-    <Optimize>true</Optimize>
-  </PropertyGroup>
+    <DefineConstants>NETCORE</DefineConstants>
+   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxMaps\MapFunctions.cs" Link="MapFunctions.cs" />
@@ -21,12 +11,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
-  </ItemGroup>
-  <ItemGroup>
 	<Reference Include="Jayrock-JSON">
 		<SpecificVersion>False</SpecificVersion>
-		<HintPath>..\..\..\libs\dotnetcore\Jayrock.dll</HintPath>
-	</Reference>  
-  </ItemGroup>	
+		<HintPath>..\libs\Jayrock.dll</HintPath>
+	</Reference>
+  </ItemGroup>
 
 </Project>

@@ -5,11 +5,11 @@
 		<MinorFileVersion>4</MinorFileVersion>
 		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0</FileVersion>
 		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
-		<AssemblyCompany>GeneXus</AssemblyCompany>
+		<Company>GeneXus</Company>
 		<AssemblyCulture></AssemblyCulture>
-		<AssemblyProduct>GeneXus</AssemblyProduct>
+		<Product>GeneXus</Product>
 		<AssemblyTrademark></AssemblyTrademark>
-		<AssemblyCopyright>Copyright © 1988-2019 GeneXus. All Rights Reserved</AssemblyCopyright>
+		<Copyright>Copyright © 1988-2019 GeneXus. All Rights Reserved</Copyright>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<SignAssembly>true</SignAssembly>
@@ -17,7 +17,7 @@
 		<WarningLevel>4</WarningLevel>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
 		<NoWarn>NU5105;CS0618</NoWarn>
