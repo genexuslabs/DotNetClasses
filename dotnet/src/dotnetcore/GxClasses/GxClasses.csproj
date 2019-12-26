@@ -148,7 +148,7 @@
 	  <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" /> 
   </ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\dotnet\GxEncrypt\GxEncrypt.csproj" />
+		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
 	</ItemGroup>
   
   <ItemGroup>

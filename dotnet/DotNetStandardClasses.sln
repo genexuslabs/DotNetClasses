@@ -5,11 +5,7 @@ VisualStudioVersion = 16.0.29509.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnetframework", "dotnetframework", "{F900A4AD-7249-41B4-B918-CB9E8C73747C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnet", "dotnet", "{29845262-B289-4365-8156-CB983EADAD8E}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnetcore", "dotnetcore", "{2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxEncrypt", "src\dotnet\GxEncrypt\GxEncrypt.csproj", "{2019168A-4A6A-499A-B121-2AEC269B900B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxClasses.Web", "src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj", "{FEE50B4B-AFC3-4BDA-95FB-8C56FB58AB7E}"
 EndProject
@@ -43,16 +39,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxPdfReportsCS", "src\dotne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxPdfReportsCS", "src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj", "{651C8B51-B5D5-48DC-9B61-19883254D2F2}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxEncrypt", "src\dotnetcommon\GxEncrypt\GxEncrypt.csproj", "{FDD63DB8-FAEB-4808-8B7D-B2D9E4617E5C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnetcommon", "dotnetcommon", "{F1E13DF4-9F50-41A2-9DC3-04B673B21032}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2019168A-4A6A-499A-B121-2AEC269B900B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2019168A-4A6A-499A-B121-2AEC269B900B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2019168A-4A6A-499A-B121-2AEC269B900B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2019168A-4A6A-499A-B121-2AEC269B900B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FEE50B4B-AFC3-4BDA-95FB-8C56FB58AB7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FEE50B4B-AFC3-4BDA-95FB-8C56FB58AB7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FEE50B4B-AFC3-4BDA-95FB-8C56FB58AB7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -117,12 +113,15 @@ Global
 		{651C8B51-B5D5-48DC-9B61-19883254D2F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{651C8B51-B5D5-48DC-9B61-19883254D2F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{651C8B51-B5D5-48DC-9B61-19883254D2F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDD63DB8-FAEB-4808-8B7D-B2D9E4617E5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDD63DB8-FAEB-4808-8B7D-B2D9E4617E5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDD63DB8-FAEB-4808-8B7D-B2D9E4617E5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDD63DB8-FAEB-4808-8B7D-B2D9E4617E5C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{2019168A-4A6A-499A-B121-2AEC269B900B} = {29845262-B289-4365-8156-CB983EADAD8E}
 		{FEE50B4B-AFC3-4BDA-95FB-8C56FB58AB7E} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 		{E4D122AB-D362-4AEC-9E2B-22B520016B49} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 		{D6FCDD89-C5DB-48F1-A752-A12D0F1B9397} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
@@ -139,6 +138,7 @@ Global
 		{89FD9EC5-E490-4BB9-9A7F-C4BE87E62381} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 		{A92C9C85-407B-4A89-A861-8CAEC695723E} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
 		{651C8B51-B5D5-48DC-9B61-19883254D2F2} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
+		{FDD63DB8-FAEB-4808-8B7D-B2D9E4617E5C} = {F1E13DF4-9F50-41A2-9DC3-04B673B21032}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}

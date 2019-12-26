@@ -80,7 +80,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\dotnet\GxEncrypt\GxEncrypt.csproj" />
+		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
 	</ItemGroup>
 
 </Project>
