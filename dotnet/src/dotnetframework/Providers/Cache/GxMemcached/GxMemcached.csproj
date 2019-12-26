@@ -3,6 +3,8 @@
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GxMemcached</RootNamespace>
 		<AssemblyName>GxMemcached</AssemblyName>
+		<PackageTags>Memcached Cache</PackageTags>
+		<PackageId>GeneXus.Memcached</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>

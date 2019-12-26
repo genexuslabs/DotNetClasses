@@ -2,10 +2,10 @@
 
   <PropertyGroup>
 	<TargetFramework>netcoreapp3.1</TargetFramework>
-	<ApplicationIcon />
 	<OutputType>Library</OutputType>
-	<StartupObject />    
     <DefineConstants>NETCORE</DefineConstants>
+	<PackageTags>Data Access</PackageTags>
+	<PackageId>GeneXus.Classes.Core</PackageId>
   </PropertyGroup>
 
 
