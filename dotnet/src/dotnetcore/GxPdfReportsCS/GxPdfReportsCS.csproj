@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <NoWarn>1701;1702;NU1701</NoWarn>
+	<PackageTags>Itext PDF Report</PackageTags>
+	<PackageId>GeneXus.PdfReportsCS.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

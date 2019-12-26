@@ -3,6 +3,8 @@
 		<TargetFramework>net46</TargetFramework>
 		<AssemblyName>GxExcelI</AssemblyName>
 		<RootNamespace>GxExcelI</RootNamespace>
+		<PackageTags>Excel</PackageTags>
+		<PackageId>GeneXus.Excel</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -4,6 +4,8 @@
 		<RootNamespace>GxClasses</RootNamespace>
 		<NoWarn>618;1607;1698</NoWarn>
 		<AssemblyName>GxClasses</AssemblyName>
+		<PackageTags>Data Access</PackageTags>
+		<PackageId>GeneXus.Classes</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

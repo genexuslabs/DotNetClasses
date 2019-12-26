@@ -3,6 +3,7 @@
 		<TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
 		<RootNamespace>GeneXus.Encryption</RootNamespace>
 		<AssemblyName>GxEncrypt</AssemblyName>
+		<PackageTags>Encrypt64 Decrypt64</PackageTags>
 		<PackageId>GeneXus.Encrypt</PackageId>
 	</PropertyGroup>
 </Project>

@@ -12,6 +12,7 @@
 		<Copyright>Copyright © 1988-2019 GeneXus. All Rights Reserved</Copyright>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<Authors>GeneXus</Authors>
 		<SignAssembly>true</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningLevel>4</WarningLevel>

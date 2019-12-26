@@ -3,6 +3,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <NoWarn>1701;1702;NU1701</NoWarn>
     <DefineConstants>NETCORE</DefineConstants>
+	<PackageTags>Maps</PackageTags>
+	<PackageId>GeneXus.Maps.Core</PackageId>
    </PropertyGroup>
 
   <ItemGroup>

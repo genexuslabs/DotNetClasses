@@ -4,6 +4,8 @@
 		<RootNamespace>GeneXus</RootNamespace>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyName>GXWebSocket</AssemblyName>
+		<PackageTags>WebSockets</PackageTags>
+		<PackageId>GeneXus.WebSockets</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

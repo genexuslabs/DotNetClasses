@@ -3,6 +3,8 @@
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GxMaps</RootNamespace>
 		<AssemblyName>GxMaps</AssemblyName>
+		<PackageTags>Maps</PackageTags>
+		<PackageId>GeneXus.Maps</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />

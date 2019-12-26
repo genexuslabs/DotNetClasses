@@ -3,6 +3,8 @@
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GeneXus.Search</RootNamespace>
 		<AssemblyName>GxSearch</AssemblyName>
+		<PackageTags>Lucene Search</PackageTags>
+		<PackageId>GeneXus.Search</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

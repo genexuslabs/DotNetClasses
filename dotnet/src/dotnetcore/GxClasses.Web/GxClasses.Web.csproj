@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
 	<DefineConstants>NETCORE;</DefineConstants>
+	<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
+	<PackageId>GeneXus.Classes.Web.Core</PackageId>
   </PropertyGroup>
    
   <ItemGroup>

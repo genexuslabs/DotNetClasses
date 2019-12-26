@@ -2,13 +2,9 @@
     <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
 	<NoWarn>1701;1702;NU1701;NU1603;CS0618</NoWarn>
-  </PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;NETCORE</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
+	<PackageTags>Lucene Search</PackageTags>
+	<PackageId>GeneXus.Search.Core</PackageId>
+    <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
