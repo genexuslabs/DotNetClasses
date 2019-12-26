@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+	<NoWarn>1701;1702;NU1701</NoWarn>
+	<DefineConstants>NETCORE</DefineConstants>
+	<PackageTags>SMTP Exchange POP3</PackageTags>
+	<PackageId>GeneXus.Mail.Core</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="OpenPop\**" />
+    <EmbeddedResource Remove="OpenPop\**" />
+    <None Remove="OpenPop\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GxMail\AsyncRunner.cs" Link="AsyncRunner.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Base64Decoder.cs" Link="Base64Decoder.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\DummyDecoder.cs" Link="DummyDecoder.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\DummyStream.cs" Link="DummyStream.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Exchange\CertificateCallback.cs" Link="Exchange\CertificateCallback.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Exchange\ExchangeSession.cs" Link="Exchange\ExchangeSession.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Exchange\Service.cs" Link="Exchange\Service.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Exchange\TraceListener.cs" Link="Exchange\TraceListener.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Exchange\UserData.cs" Link="Exchange\UserData.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXInternetConstants.cs" Link="GXInternetConstants.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXMailException.cs" Link="GXMailException.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXMailMessage.cs" Link="GXMailMessage.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXMailRecipient.cs" Link="GXMailRecipient.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXMailRecipientCollection.cs" Link="GXMailRecipientCollection.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXMailServiceSession.cs" Link="GXMailServiceSession.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXMailSession.cs" Link="GXMailSession.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXPOP3Session.cs" Link="GXPOP3Session.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXSMTPSession.cs" Link="GXSMTPSession.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\IMailService.cs" Link="IMailService.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\InvalidAttachmentException.cs" Link="InvalidAttachmentException.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\InvalidMessageException.cs" Link="InvalidMessageException.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\IPOP3Session.cs" Link="IPOP3Session.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\ISMTPSession.cs" Link="ISMTPSession.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\JapaneseMimeDecoder.cs" Link="JapaneseMimeDecoder.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\MailConstants.cs" Link="MailConstants.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\MailMessage.cs" Link="MailMessage.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\MailProperties.cs" Link="MailProperties.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\MailReader.cs" Link="MailReader.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Mentalis\CouldNotSaveAttachmentException.cs" Link="Mentails\CouldNotSaveAttachmentException.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Mentalis\RFC822EndReader.cs" Link="Mentails\RFC822EndReader.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Mentalis\RFC822Reader.cs" Link="Mentails\RFC822Reader.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\Mentalis\TimeoutExceededException.cs" Link="Mentails\TimeoutExceededException.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\MimeDecoder.cs" Link="MimeDecoder.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\MimeEncoder.cs" Link="MimeEncoder.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\POP3Session.cs" Link="POP3Session.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\POP3SessionOpenPop.cs" Link="POP3SessionOpenPop.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\QuotedPrintableDecoder.cs" Link="QuotedPrintableDecoder.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\SMTPMailClient.cs" Link="SMTPMailClient.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\SMTPSession.cs" Link="SMTPSession.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\SMTP\SmtpHelper.cs" Link="SMTP\SmtpHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Exchange\" />
+    <Folder Include="Mentails\" />
+    <Folder Include="SMTP\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Exchange.WebServices" Version="2.2.0" />
+    <PackageReference Include="OpenPop" Version="2.0.6.2" />
+	<PackageReference Include="Org.Mentalis.Security" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+</Project>

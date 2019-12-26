@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GxMaps</RootNamespace>
+		<AssemblyName>GxMaps</AssemblyName>
+		<PackageTags>Maps</PackageTags>
+		<PackageId>GeneXus.Maps</PackageId>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+		<Reference Include="Jayrock-JSON">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\Jayrock-JSON.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+</Project>

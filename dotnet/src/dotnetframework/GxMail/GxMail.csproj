@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<AssemblyName>GxMail</AssemblyName>
+		<RootNamespace>GeneXus.Mail</RootNamespace>
+		<PackageTags>SMTP Exchange POP3</PackageTags>
+		<PackageId>GeneXus.Mail</PackageId>
+		
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="Org.Mentalis.Security" Version="1.0.0" />
+		<PackageReference Include="StrongNamer" Version="0.2.5" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="Interop.MAPI">
+			<Name>Interop.MAPI</Name>
+			<HintPath>..\libs\Interop.MAPI.dll</HintPath>
+		</Reference>
+		<Reference Include="Interop.Microsoft.Office.Core">
+			<Name>Interop.Microsoft.Office.Core</Name>
+			<HintPath>..\libs\Interop.Microsoft.Office.Core.dll</HintPath>
+		</Reference>
+		<Reference Include="Interop.Outlook">
+			<Name>Interop.Outlook</Name>
+			<HintPath>..\libs\Interop.Outlook.dll</HintPath>
+		</Reference>
+		<Reference Include="Microsoft.Exchange.WebServices">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\Microsoft.Exchange.WebServices.dll</HintPath>
+		</Reference>
+
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+
+	</ItemGroup>
+</Project>

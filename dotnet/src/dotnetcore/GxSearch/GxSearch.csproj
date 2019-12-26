@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+	<NoWarn>1701;1702;NU1701;NU1603;CS0618</NoWarn>
+	<PackageTags>Lucene Search</PackageTags>
+	<PackageId>GeneXus.Search.Core</PackageId>
+    <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GxSearch\DocumentHandler.cs" Link="DocumentHandler.cs" />
+    <Compile Include="..\..\dotnetframework\GxSearch\IndexAction.cs" Link="IndexAction.cs" />
+    <Compile Include="..\..\dotnetframework\GxSearch\Indexer.cs" Link="Indexer.cs" />
+    <Compile Include="..\..\dotnetframework\GxSearch\IndexRecord.cs" Link="IndexRecord.cs" />
+    <Compile Include="..\..\dotnetframework\GxSearch\Searcher.cs" Link="Searcher.cs" />
+    <Compile Include="..\..\dotnetframework\GxSearch\SearchException.cs" Link="SearchException.cs" />
+    <Compile Include="..\..\dotnetframework\GxSearch\SearchResultCollection.cs" Link="SearchResultCollection.cs" />
+    <Compile Include="..\..\dotnetframework\GxSearch\Settings.cs" Link="Settings.cs" />
+    <Compile Include="..\..\dotnetframework\GxSearch\SpellChecker.cs" Link="SpellChecker.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="iTextSharp" Version="5.5.13" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Lucene.Net" Version="3.0.3" />
+    <PackageReference Include="Lucene.Net.Contrib" Version="3.0.3" />
+    <PackageReference Include="TidyManaged" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+	<Reference Include="Jayrock-JSON">
+		<SpecificVersion>False</SpecificVersion>
+		<HintPath>..\libs\Jayrock.dll</HintPath>
+	</Reference>  
+  </ItemGroup>
+
+
+</Project>

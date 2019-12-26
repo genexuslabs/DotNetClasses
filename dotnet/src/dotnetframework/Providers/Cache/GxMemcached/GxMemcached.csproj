@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GxMemcached</RootNamespace>
+		<AssemblyName>GxMemcached</AssemblyName>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
+		<ProjectReference Include="..\BeITMemcached\BeITMemcached.csproj"/>
+	</ItemGroup>
+</Project>

@@ -1,0 +1,160 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+	<TargetFramework>netcoreapp3.1</TargetFramework>
+	<ApplicationIcon />
+	<OutputType>Library</OutputType>
+	<StartupObject />    
+    <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
+
+
+   <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GxClasses.Win\Process\CommandLine.cs" Link="Helpers\Process\CommandLine.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataOracle.cs" Link="Data\GXDataOracle.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Dialog\IProcess.cs" Link="Helpers\Process\IProcess.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Attributes\GXApi.cs" Link="Attributes\GXApi.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ConfigurationManager.cs" Link="Configuration\ConfigurationManager.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Constants.cs" Link="Helpers\Cryptography\Constants.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Encryption\EncryptionProvider.cs" Link="Helpers\Cryptography\Encryption\EncryptionProvider.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Exception\CryptographyException.cs" Link="Helpers\Cryptography\CryptographyException.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXAsymmetricEncryption.cs" Link="Helpers\Cryptography\GXAsymmetricEncryption.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXCertificate.cs" Link="Helpers\Cryptography\GXCertificate.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXHashing.cs" Link="Helpers\Cryptography\GXHashing.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXSigning.cs" Link="Helpers\GXSigning.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXSymmetricEncryption.cs" Link="Helpers\Cryptography\GXSymmetricEncryption.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Hashing\HashAlgorithmProvider.cs" Link="Helpers\Cryptography\Hashing\HashAlgorithmProvider.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Hashing\HashedKeyAlgorithmProvider.cs" Link="Helpers\Cryptography\Hashing\HashedKeyAlgorithmProvider.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Signing\Standards\IPkcsSign.cs" Link="Helpers\Cryptography\Signing\Standards\IPkcsSign.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Signing\Standards\PKCS1Signature.cs" Link="Helpers\Cryptography\Signing\Standards\PKCS1Signature.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Signing\Standards\PKCS7Signature.cs" Link="Helpers\Cryptography\Signing\Standards\PKCS7Signature.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataMemory.cs" Link="Data\GXDataMemory.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataMysql.cs" Link="Data\GXDataMysql.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataPostgreSQL.cs" Link="Data\GXDataPostgreSQL.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataSqlite.cs" Link="Data\GXDataSqlite.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Diagnostics\Log.cs" Link="Diagnostics\Log.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Diagnostics\GXDebugManager.cs" Link="Diagnostics\GXDebugManager.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxMessages.cs" Link="Domain\GxMessages.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxMessaging.cs" Link="Domain\GxMessaging.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXTypeConstants.cs" Link="Domain\GXTypeConstants.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXUri.cs" Link="Domain\GXUri.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXUserInfo.cs" Link="Domain\GXUserInfo.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXWindow.cs" Link="Domain\GXWindow.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\Structs.cs" Link="Domain\Structs.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\AssemblyHelper.cs" Link="Helpers\AssemblyHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\ExpressionEvaluator.cs" Link="Domain\ExpressionEvaluator.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Core\GXApplication.cs" Link="Core\GXApplication.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\Encryption.cs" Link="Helpers\Encryption.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXFileWatcher.cs" Link="Helpers\GXFileWatcher.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\Caching\GxCache.cs" Link="Services\Caching\GxCache.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxCollections.cs" Link="Domain\GxCollections.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Core\gxconfig.cs" Link="Core\GxConfig.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataADO.cs" Link="Data\GXDataADO.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataCommon.cs" Link="Data\GXDataCommon.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataNTier.cs" Link="Data\GXDataNTier.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataNTierADO.cs" Link="Data\GXDataNTierADO.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXFileIO.cs" Link="Domain\GXFileIO.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxFtp.cs" Link="Domain\GxFtp.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxGenericCollections.cs" Link="Domain\GxGenericCollections.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxHttpClient.cs" Link="Domain\GxHttpClient.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Core\Web\GxHttpServer.cs" Link="Core\Web\GxHttpServer.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxLocations.cs" Link="Domain\GxLocations.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXLogging.cs" Link="Helpers\GXLogging.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXMetadata.cs" Link="Helpers\GXMetadata.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Printer\GxPrinter.cs" Link="Printer\GxPrinter.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Model\gxproc.cs" Link="Model\gxproc.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Reorg\GXReorg.cs" Link="Reorg\GXReorg.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXRes.cs" Link="Helpers\GXRes.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\GxRestWrapper.cs" Link="Services\CoreWebAPI\Controller\GxRestWrapper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\JsonConverter.cs" Link="Services\CoreWebAPI\Helpers\JsonConverter.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\ReflectionHelper.cs" Link="Services\CoreWebAPI\Helpers\ReflectionHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\Search\GXSearch.cs" Link="Services\Search\GXSearch.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Security\GxSecurityProvider.cs" Link="Security\GxSecurityProvider.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\Storage\GXServices.cs" Link="Services\Storage\GXServices.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxSession.cs" Link="Domain\GxSession.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Model\GXSilentTrn.cs" Link="Model\GXSilentTrn.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\Caching\GxSmartCacheProvider.cs" Link="Services\Caching\GxSmartCacheProvider.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Core\GXUtils.cs" Link="Core\GXUtils.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Core\GXUtilsCommon.cs" Link="Core\GXUtilsCommon.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXUtilsGeospatial.cs" Link="Helpers\GXUtilsGeospatial.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\CssHelper.cs" Link="Helpers\CssHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXNavigationHelper.cs" Link="Helpers\GXNavigationHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXRestUtils.cs" Link="Helpers\GXRestUtils.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\HttpHelper.cs" Link="Helpers\HttpHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\JSONHelper.cs" Link="Helpers\JSONHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\XMLHelper.cs" Link="Helpers\XMLHelper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Core\Web\HttpAjaxContext.cs" Link="Core\Web\HttpAjaxContext.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Mime\MediaTypesNames.cs" Link="Domain\MediaTypesNames.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\SD\SDApis.cs" Link="Domain\SD\SDApis.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Security\WebSecurity.cs" Link="Security\WebSecurity.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Storage\StorageFactory.cs" Link="Storage\StorageFactory.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\UserControls\IUserControlFactory.cs" Link="UserControls\IUserControlFactory.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlFactory.cs" Link="UserControls\UserControlFactory.cs" />
+    <Compile Include="..\..\dotnetframework\TZ4Net\Converters\BigEndianBitConverter.cs" Link="Timezone\Converters\BigEndianBitConverter.cs" />
+    <Compile Include="..\..\dotnetframework\TZ4Net\Converters\EndianBinaryReader.cs" Link="Timezone\Converters\EndianBinaryReader.cs" />
+    <Compile Include="..\..\dotnetframework\TZ4Net\Converters\EndianBitConverter.cs" Link="Timezone\Converters\EndianBitConverter.cs" />
+    <Compile Include="..\..\dotnetframework\TZ4Net\Converters\Endianness.cs" Link="Timezone\Converters\Endianness.cs" />
+    <Compile Include="..\..\dotnetframework\TZ4Net\Converters\LittleEndianBitConverter.cs" Link="Timezone\Converters\LittleEndianBitConverter.cs" />
+    <Compile Include="..\..\dotnetframework\TZ4Net\OlsonTimeZone.cs" Link="Timezone\OlsonTimeZone.cs" />
+    <Compile Include="..\..\dotnetframework\TZ4Net\ZoneInfo.cs" Link="Timezone\ZoneInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Core\Web\" />
+    <Folder Include="Diagnostics\" />
+    <Folder Include="Helpers\Cryptography\Hashing\" />
+    <Folder Include="Domain\SD\" />
+    <Folder Include="Attributes\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="Helpers\Cryptography\Encryption\" />
+    <Folder Include="Helpers\Cryptography\Signing\Standards\" />
+    <Folder Include="Helpers\Process\" />
+    <Folder Include="Services\CoreWebAPI\Helpers\" />
+    <Folder Include="Timezone\Converters\" />
+    <Folder Include="UserControls\" />
+    <Folder Include="Printer\" />
+    <Folder Include="Storage\" />
+    <Folder Include="Reorg\" />
+    <Folder Include="Services\Caching\" />
+    <Folder Include="Services\Search\" />
+    <Folder Include="Services\Storage\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\dotnetframework\TZ4Net\cldrinfo.resources" Link="Timezone\cldrinfo.resources">
+		<LogicalName>GxClasses.cldrinfo.resources</LogicalName>
+	</EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\dotnetframework\TZ4Net\zoneinfo.resources" Link="Timezone\zoneinfo.resources">
+		<LogicalName>GxClasses.zoneinfo.resources</LogicalName>
+	</EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" />
+    <PackageReference Include="jose-jwt" Version="2.5.0" PrivateAssets="All" />
+    <PackageReference Include="log4net" Version="2.0.8">
+	  </PackageReference>
+	  <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" PrivateAssets="All" />
+	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
+	  <PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
+	  <PackageReference Include="MySql.Data" Version="6.10.6" PrivateAssets="All">
+	  </PackageReference>
+	  <PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All">  
+	  </PackageReference>
+	  <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" /> 
+  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+	</ItemGroup>
+  
+  <ItemGroup>
+	<Reference Include="Jayrock-JSON">
+		<SpecificVersion>False</SpecificVersion>
+		<HintPath>..\libs\Jayrock.dll</HintPath>
+	</Reference>  
+  </ItemGroup>	
+</Project>

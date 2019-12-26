@@ -5,40 +5,34 @@
 		<MinorFileVersion>4</MinorFileVersion>
 		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0</FileVersion>
 		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
-		<AssemblyCompany>GeneXus</AssemblyCompany>
+		<Company>GeneXus</Company>
 		<AssemblyCulture></AssemblyCulture>
-		<AssemblyProduct>GeneXus</AssemblyProduct>
+		<Product>GeneXus</Product>
 		<AssemblyTrademark></AssemblyTrademark>
+		<Copyright>Copyright © 1988-2019 GeneXus. All Rights Reserved</Copyright>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<Authors>GeneXus</Authors>
+		<SignAssembly>true</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningLevel>4</WarningLevel>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
-		<NoWarn>NU5105</NoWarn>
+		<NoWarn>NU5105;CS0618</NoWarn>
 	</PropertyGroup>
 
+	
 	<PropertyGroup Condition="!$(GITHUB_REF.EndsWith('master'))">
 		<MajorFileVersion>$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
-		<SignAssembly>true</SignAssembly>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
 
 	<Target Name="GetFileVersion">
 		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
 	</Target>
-
 	<Target Name="IsMaster">
 		<Message Importance="high" Text="IsMaster: True" Condition="$(GITHUB_REF.EndsWith('master'))"></Message>
 	</Target>
