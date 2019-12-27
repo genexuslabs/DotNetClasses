@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GxMemcached</RootNamespace>
@@ -7,7 +7,12 @@
 		<PackageId>GeneXus.Memcached</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
-		<ProjectReference Include="..\BeITMemcached\BeITMemcached.csproj"/>
+		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="BeITMemcached">
+		  <HintPath>..\..\..\libs\BeITMemcached.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
 </Project>

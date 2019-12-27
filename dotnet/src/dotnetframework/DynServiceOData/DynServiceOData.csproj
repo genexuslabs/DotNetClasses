@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>DynServiceOData</RootNamespace>
+		<AssemblyName>GeneXus.Data.DynService.OData</AssemblyName>
+		<SignAssembly>false</SignAssembly>
+		<NoWarn>CA1812</NoWarn>
+		<PackageTags>DynService OData</PackageTags>
+		<PackageId>GeneXus.DynService.OData</PackageId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AWSSDK.Core" Version="3.1.4.3" />
+		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.1.1.5" />
+		<PackageReference Include="GXOdata.Client" Version="5.2.*" />
+		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="Microsoft.Bcl" Version="1.1.10" />
+		<PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
+		<PackageReference Include="Microsoft.Bcl.Build" Version="1.0.21" />
+		<PackageReference Include="Microsoft.Data.Edm" Version="5.8.3" />
+		<PackageReference Include="Microsoft.Data.OData" Version="5.8.3" />
+		<PackageReference Include="Microsoft.Data.Services" Version="5.8.3" />
+		<PackageReference Include="Microsoft.Data.Services.Client" Version="5.8.3" />
+		<PackageReference Include="Microsoft.Net.Http" Version="2.2.29" />
+		<PackageReference Include="Microsoft.OData.Core" Version="7.4.4" />
+		<PackageReference Include="Microsoft.OData.Edm" Version="7.4.4" />
+		<PackageReference Include="Microsoft.Spatial" Version="7.4.4" />
+		<PackageReference Include="System.Net.Http" Version="4.0.0" />
+		<PackageReference Include="System.Spatial" Version="5.8.3" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="Microsoft.CSharp" />
+		<ProjectReference Include="..\DynService.Core\DynService.Core.csproj" />
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="app.config" />
+	</ItemGroup>
+</Project>

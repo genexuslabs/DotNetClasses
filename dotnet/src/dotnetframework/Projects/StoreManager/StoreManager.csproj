@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GeneXus.SD.Store</RootNamespace>
+		<AssemblyName>GeneXus.SD.Store.StoreManager</AssemblyName>
+		<SignAssembly>true</SignAssembly>
+		<DefineConstants>TRACE;DEBUG;PACKAGE_INDEPENDENT_VERSION;PACKAGE_INDEPENDENT_FILEVERSION;PACKAGE_COPYRIGHT_START_YEAR</DefineConstants>
+		<PackageTags>StoreManager</PackageTags>
+		<PackageId>GeneXus.StoreManager</PackageId>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Google.Apis" Version="1.42.0" />
+		<PackageReference Include="Google.Apis.AndroidPublisher.v3" Version="1.42.0.1766"/>
+		<PackageReference Include="Google.Apis.Auth" Version="1.42.0" />
+		<PackageReference Include="Google.Apis.Core" Version="1.42.0" />
+		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+		<PackageReference Include="Zlib.Portable.Signed" Version="1.11.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj"/>
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="Jayrock-JSON">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\libs\Jayrock-JSON.dll</HintPath>
+		</Reference>
+
+	</ItemGroup>
+</Project>

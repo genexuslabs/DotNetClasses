@@ -1,8 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GXOpenStack</RootNamespace>
 		<AssemblyName>GXOpenStack</AssemblyName>
+		<PackageTags>OpenStack</PackageTags>
+		<PackageId>GeneXus.OpenStack</PackageId>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Flurl.Http.Signed" Version="0.7.0" />
@@ -29,7 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
-    <ProjectReference Include="..\..\..\GxEncrypt\GxEncrypt.csproj"/>
+    <ProjectReference Include="..\..\..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

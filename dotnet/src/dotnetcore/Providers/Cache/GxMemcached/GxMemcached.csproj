@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+		<PackageTags>Memcached</PackageTags>
+		<PackageId>GeneXus.Memcached.Core</PackageId>
+	</PropertyGroup>
+  <PropertyGroup>
+  	<AppDesignerFolder>Properties</AppDesignerFolder>
+  	<SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\..\dotnetframework\Providers\Cache\GxMemcached\GxMemcached.cs" Link="GxMemcached.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BeITMemcached">
+      <HintPath>..\..\..\libs\BeITMemcached.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

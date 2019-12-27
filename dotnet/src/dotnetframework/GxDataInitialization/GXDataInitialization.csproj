@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<SignAssembly>false</SignAssembly>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GXDataInitialization</RootNamespace>
+		<AssemblyName>GXDataInitialization</AssemblyName>
+		<PackageTags>DataInitialization</PackageTags>
+		<PackageId>GeneXus.DataInitialization</PackageId>
+	</PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="log4net">
+      <Version>2.0.8</Version>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<PackageTags>Redis</PackageTags>
+		<PackageId>GeneXus.Redis.Core</PackageId>
+	</PropertyGroup>
+  <PropertyGroup>
+	<AppDesignerFolder>Properties</AppDesignerFolder>
+	<SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DelaySign>false</DelaySign>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\..\dotnetframework\Providers\Cache\GxRedis\GxRedis.cs" Link="GxRedis.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="ServiceStack.Redis" Version="5.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+</Project>

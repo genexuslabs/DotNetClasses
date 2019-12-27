@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
+		<AssemblyName>GeneXus.Data.DynService.Core</AssemblyName>
+		<NoWarn>CA1812</NoWarn>
+		<PackageTags>Dynservice</PackageTags>
+		<PackageId>GeneXus.DynService.Core</PackageId>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+</Project>
