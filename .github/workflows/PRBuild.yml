@@ -17,6 +17,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
 
+    - name: Setup Nuget.exe
+      uses: warrenbuckley/Setup-Nuget@v1
+
+    - name: Setup GitHub NuGet Registry (GPR)
+      run: nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
+
     - name: Build Solution
       run: dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration
 
