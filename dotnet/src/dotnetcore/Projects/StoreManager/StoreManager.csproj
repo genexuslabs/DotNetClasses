@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>GeneXus.SD.Store.StoreManager</AssemblyName>
+    <RootNamespace>GeneXus.SD.Store</RootNamespace>
+		<PackageTags>StoreManager</PackageTags>
+		<PackageId>GeneXus.StoreManager.Core</PackageId>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Constants.cs" Link="Store\Constants.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Model\PurchaseResult.cs" Link="Store\Model\PurchaseResult.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Model\PurchasesInformation.cs" Link="Store\Model\PurchasesInformation.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Model\StoreException.cs" Link="Store\Model\StoreException.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Model\StorePurchase.cs" Link="Store\Model\StorePurchase.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Platforms\AppleStoreStoreManager.cs" Link="Store\Platforms\AppleStoreStoreManager.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Platforms\GooglePlayStoreManager.cs" Link="Store\Platforms\GooglePlayStoreManager.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Platforms\IStoreManager.cs" Link="Store\Platforms\IStoreManager.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\StoreManager.cs" Link="Store\StoreManager.cs" />
+    <Compile Include="..\..\..\dotnetframework\Projects\StoreManager\Store\Util.cs" Link="Store\Util.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Store\Model\" />
+    <Folder Include="Store\Platforms\" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Google.Apis" Version="1.42.0" />
+    <PackageReference Include="Google.Apis.AndroidPublisher.v3">
+      <Version>1.42.0.1766</Version>
+    </PackageReference>
+    <PackageReference Include="Google.Apis.Auth" Version="1.42.0" />
+    <PackageReference Include="Google.Apis.Core" Version="1.42.0" />    
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="Jayrock">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\..\libs\Jayrock.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+</Project>

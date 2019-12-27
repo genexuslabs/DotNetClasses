@@ -3,6 +3,8 @@
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GeneXus.Storage.GXAzureStorage</RootNamespace>
 		<AssemblyName>GXAzureStorage</AssemblyName>
+		<PackageTags>Azure</PackageTags>
+		<PackageId>GeneXus.Azure</PackageId>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="1.0.0" />
@@ -29,6 +31,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
-    <ProjectReference Include="..\..\..\GxEncrypt\GxEncrypt.csproj"/>
+    <ProjectReference Include="..\..\..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj"/>
   </ItemGroup>
 </Project>

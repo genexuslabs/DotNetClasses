@@ -1,0 +1,54 @@
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="CopyFiles;UploadChainCode;" ToolsVersion="4.0">
+  <Import Project="$(GX_PROGRAM_DIR)\MSBuild.Community.Tasks.Targets"/>
+  <Import Project="$(GX_PROGRAM_DIR)\Genexus.WebUtils.Tasks.Targets"/>
+  <ItemGroup>
+        <MySourceFiles Include="$(GX_TARGET_PATH)\web\chaincode\$(GX_OBJECT_NAME).package.json"/>
+  </ItemGroup>
+  <ItemGroup>  
+        <ZipFiles Include="$(GX_TARGET_PATH)\web\chaincode\temp\$(GX_OBJECT_NAME).js"/>
+        <ZipFiles Include="$(GX_TARGET_PATH)\web\chaincode\temp\gxnodest.js"/>
+        <ZipFiles Include="$(GX_TARGET_PATH)\web\chaincode\temp\package.json"/>
+  </ItemGroup>
+  <ItemGroup>  
+        <Properties Include="uuid"/>
+        <Properties Include="language"/>    
+  </ItemGroup>
+
+  <ItemGroup>  
+        <Values Include="$(GX_OBJECT_NAME)"/>
+        <Values Include="javascript"/>    
+  </ItemGroup>
+
+  <Target Name="CopyFiles">  
+
+	<Message Text="GX_OBJECT_NAME:$(GX_OBJECT_NAME)" Importance="high"/>
+
+    <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="$(GX_TARGET_PATH)\web\chaincode\temp\package.json" SkipUnchangedFiles="true"/>  
+    <Copy SourceFiles="$(GX_TARGET_PATH)\web\chaincode\$(GX_OBJECT_NAME).js" DestinationFiles="$(GX_TARGET_PATH)\web\chaincode\temp\$(GX_OBJECT_NAME).js" SkipUnchangedFiles="true"/>  
+    <Copy SourceFiles="$(GX_TARGET_PATH)\web\gxnodest.js.node" DestinationFiles="$(GX_TARGET_PATH)\web\chaincode\temp\gxnodest.js" SkipUnchangedFiles="true"/>  
+    <Zip Files="@(ZipFiles)" WorkingDirectory="$(GX_TARGET_PATH)\web\chaincode\temp" ZipFileName="$(GX_TARGET_PATH)\web\chaincode\$(GX_OBJECT_NAME).zip"/>
+  </Target>
+<!-- 
+  <Target Name="DeleteMetadata"> 
+      <Delete Files="$(GX_TARGET_PATH)\web\chaincode\$(GX_OBJECT_NAME).metadata " /> 
+  </Target>
+-->
+  <Target Name="UploadChainCode">  
+	<HttpWebRequest Url="https://melisandre.ddns.net/api/upload"
+		UserName= "gxuser"
+		UserPassword= "domingo.menchaca.4096.fuxia"
+		ContentType = "multipart/form-data"
+		Method="POST"	
+		Accept = "*/*"
+		RequestBody = ""	
+		RequestFile="$(GX_TARGET_PATH)\web\chaincode\$(GX_OBJECT_NAME).zip" 
+		RequestFileName="cc_name"
+		FormPropertyNames="@(Properties)"
+		FormPropertyValues="@(Values)"
+		SearchInResponse="path">
+               <Output TaskParameter="FoundInResponse" ItemName="Path"/>  
+		</HttpWebRequest>		
+	 <Message Text="Uploaded chaincode files for [ $(GX_OBJECT_NAME) ]"/>
+  </Target>
+</Project>

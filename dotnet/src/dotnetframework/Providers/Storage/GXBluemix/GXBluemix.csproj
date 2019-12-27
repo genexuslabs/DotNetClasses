@@ -3,8 +3,10 @@
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GXBluemix</RootNamespace>
 		<AssemblyName>GXBluemix</AssemblyName>
-		<NoWarn>CA1501</NoWarn>
-  </PropertyGroup>
+		<NoWarn>CA1501;CA1812</NoWarn>
+		<PackageTags>Bluemix</PackageTags>
+		<PackageId>GeneXus.Bluemix</PackageId>
+	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Flurl.Http.Signed" Version="0.7.0" />
     <PackageReference Include="Flurl.Signed" Version="1.0.10" />
@@ -18,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
-    <ProjectReference Include="..\..\..\GxEncrypt\GxEncrypt.csproj"/>
+    <ProjectReference Include="..\..\..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

@@ -3,6 +3,8 @@
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GXGoogleCloud</RootNamespace>
 		<AssemblyName>GXGoogleCloud</AssemblyName>
+		<PackageTags>Google Cloud</PackageTags>
+		<PackageId>GeneXus.Google.Cloud</PackageId>
 	</PropertyGroup>
 	
   <ItemGroup>
@@ -35,6 +37,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
-    <ProjectReference Include="..\..\..\GxEncrypt\GxEncrypt.csproj"/>
+    <ProjectReference Include="..\..\..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj"/>
   </ItemGroup>
 </Project>

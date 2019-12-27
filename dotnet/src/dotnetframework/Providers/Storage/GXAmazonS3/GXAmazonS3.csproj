@@ -3,6 +3,8 @@
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GXAmazonS3</RootNamespace>
 		<AssemblyName>GXAmazonS3</AssemblyName>
+		<PackageTags>Amazon</PackageTags>
+		<PackageId>GeneXus.Amazon</PackageId>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.Core" Version="3.1.4.3" />
@@ -10,8 +12,8 @@
     <PackageReference Include="log4net" Version="2.0.8" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
-    <ProjectReference Include="..\..\..\GxEncrypt\GxEncrypt.csproj"/>
+    <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

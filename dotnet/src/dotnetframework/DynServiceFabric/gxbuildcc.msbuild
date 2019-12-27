@@ -1,0 +1,18 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="deploy;" ToolsVersion="4.0">
+
+<Target Name="listing">
+    <ItemGroup>
+      <PackageFiles Include="$(GX_TARGET_PATH)\web\chaincode\*.js;" />
+      <PackageFiles Remove="%(PackageFiles.Identity)" Condition="!Exists('@(PackageFiles->'$(GX_TARGET_PATH)\web\chaincode\%(Filename).metadata')')" />
+    </ItemGroup>
+    <Message Text="Building %(PackageFiles.Filename)"/>    
+</Target>   
+
+<Target  Name="deploy"  DependsOnTargets="listing">
+    <ItemGroup>
+      <ProjectFiles Include="gxuploadcc.msbuild" />      
+    </ItemGroup>
+   <MSBuild Projects="@(ProjectFiles)" Condition="'@(PackageFiles)' != ''" Properties="GX_PROGRAM_DIR=$(GX_PROGRAM_DIR);GX_TARGET_PATH=$(GX_TARGET_PATH);GX_OBJECT_NAME=%(PackageFiles.Filename)"/>
+</Target>
+
+</Project>
