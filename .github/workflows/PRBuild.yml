@@ -21,7 +21,9 @@ jobs:
       uses: warrenbuckley/Setup-Nuget@v1
 
     - name: Setup GitHub NuGet Registry (GPR)
-      run: nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
+      run: | 
+        nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
+        nuget sources Add -Name Nuget-org -Source "https://api.nuget.org/v3/index.json"
 
     - name: Build Solution
       run: dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration
