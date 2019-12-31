@@ -203,7 +203,7 @@ namespace GeneXus.Http
 
 	}
 
-	internal class GXReorServices : GXHttpHandler
+	public class GXReorServices : GXHttpHandler
 	{
 		static readonly ILog log = LogManager.GetLogger(typeof(GXReorServices));
 		static Assembly _reorAssembly;
@@ -300,7 +300,7 @@ namespace GeneXus.Http
 			}
 		}
 	}
-
+	
 	class HttpResponseWriter : TextWriter
 	{
 		private HttpResponse response;
