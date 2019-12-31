@@ -145,17 +145,25 @@ namespace GeneXus.Data.NTier.ADO
             {
                 string fileName = GXDbFile.GetFileNameFromUri(gxdbFileUri);
                 if (!String.IsNullOrEmpty(fileName))
-                {
-                    string filePath = Path.Combine(_gxDbCommand.Conn.MultimediaPath, fileName);
-                    if (File.Exists(filePath))
-                    {
-                        return filePath;
-                    }
-                    else
-                    {
-                        return getBLOBFile(id, FileUtil.GetFileType(gxdbFileUri), FileUtil.GetFileName(gxdbFileUri), filePath, false);
-                    }
-                }
+				{
+					string filePath = Path.Combine(_gxDbCommand.Conn.MultimediaPath, fileName);
+					try
+					{
+						GxFile file = new GxFile(string.Empty, filePath, GxFileType.PublicAttribute);
+						if (file.Exists())
+						{
+							return filePath;
+						}
+						else
+						{
+							return getBLOBFile(id, FileUtil.GetFileType(gxdbFileUri), FileUtil.GetFileName(gxdbFileUri), filePath, false);
+						}
+					}
+					catch (ArgumentException)
+					{
+						return "";
+					}
+				}
             }
 
             return "";
