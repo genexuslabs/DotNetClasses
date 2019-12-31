@@ -1,7 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
+    <PackageTags>DataInitialization</PackageTags>
+    <PackageId>GeneXus.DataInitialization.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
