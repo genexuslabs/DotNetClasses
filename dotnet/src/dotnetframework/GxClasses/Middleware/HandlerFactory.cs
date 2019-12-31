@@ -29,6 +29,10 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				return new GeneXus.Http.GXResourceProvider();
 			}
+			else if (cname0 == "gxreor")
+			{
+				return new GeneXus.Http.GXReorServices();
+			}
 			else if (cname0 == "gxobject")
 			{
 				return new GeneXus.Http.GXObjectUploadServices();
