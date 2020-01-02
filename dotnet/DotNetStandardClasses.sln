@@ -95,6 +95,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StoreManager", "src\dotnetc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StoreManager", "src\dotnetframework\Projects\StoreManager\StoreManager.csproj", "{E2547AA5-1ECD-45EF-975F-0E467CA23201}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Artech.Genexus.SDAPI", "src\dotnetframework\SDNetAPI\Artech.Genexus.SDAPI.csproj", "{E4817807-6B3E-4A78-A2B4-DBFBD02AA86B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Artech.Genexus.SDAPI", "src\dotnetcore\Artech.Genexus.SDAPI\Artech.Genexus.SDAPI.csproj", "{DF892C9E-A6A4-48D4-ABC6-2F98C3400F8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -249,6 +253,14 @@ Global
 		{E2547AA5-1ECD-45EF-975F-0E467CA23201}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2547AA5-1ECD-45EF-975F-0E467CA23201}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E2547AA5-1ECD-45EF-975F-0E467CA23201}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4817807-6B3E-4A78-A2B4-DBFBD02AA86B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4817807-6B3E-4A78-A2B4-DBFBD02AA86B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4817807-6B3E-4A78-A2B4-DBFBD02AA86B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4817807-6B3E-4A78-A2B4-DBFBD02AA86B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF892C9E-A6A4-48D4-ABC6-2F98C3400F8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF892C9E-A6A4-48D4-ABC6-2F98C3400F8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF892C9E-A6A4-48D4-ABC6-2F98C3400F8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF892C9E-A6A4-48D4-ABC6-2F98C3400F8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -297,6 +309,8 @@ Global
 		{A1D414C9-6716-4964-8880-5C43C362EA8B} = {3C0E779F-1949-40AC-AE18-5D59101B24CB}
 		{E37C85AB-21A2-4F5A-BE34-61EA273C2D5F} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 		{E2547AA5-1ECD-45EF-975F-0E467CA23201} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
+		{E4817807-6B3E-4A78-A2B4-DBFBD02AA86B} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
+		{DF892C9E-A6A4-48D4-ABC6-2F98C3400F8C} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
