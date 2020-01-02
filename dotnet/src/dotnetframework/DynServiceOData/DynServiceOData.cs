@@ -638,11 +638,11 @@ namespace GeneXus.Data.NTier
 			foreach (string key in record.Keys.ToArray())
 			{
 				string[] allKeys = RecordKeys(record, key).ToArray();
-				if (allSelectedKeys.Intersect(allKeys).Any())
+				if (!allSelectedKeys.Intersect(allKeys).Any())
 					record.Remove(key);
 				else if (allSelectedKeys.Contains(key))
 				{ // If a field that is collection is selected but the entity is empty, the record is skipped
-					if (record[key] is IEnumerable<object> entityList && entityList.Any())
+					if (record[key] is IEnumerable<object> entityList && !entityList.Any())
 						return null;
 				}
 			}
