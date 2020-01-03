@@ -418,13 +418,13 @@ namespace GeneXus.Configuration
 #if NETCORE
 		public static IConfigurationRoot ConfigRoot{ get; set; }
 #else
-		const string DeprecatedGxClassesFullName = "GxClasses, Version=11.0.0.0, Culture=neutral, PublicKeyToken=6f5bf81c27b6b8aa";
-		const string DeprecatedGxClassesFileName = "GxClasses_16.0.7.dll";
+		const string PreviousGxClassesFullName = "GxClasses, Version=11.0.0.0, Culture=neutral, PublicKeyToken=6f5bf81c27b6b8aa";
+		const string PreviousGxClassesFileName = "GxClasses_16.0.7.dll";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
-			if (args.Name.StartsWith(DeprecatedGxClassesFullName))
+			if (args.Name.StartsWith(PreviousGxClassesFullName))
 			{
-				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), DeprecatedGxClassesFileName);
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), PreviousGxClassesFileName);
 				if (File.Exists(fileName))
 				{
 					Assembly assembly = Assembly.LoadFrom(fileName);
