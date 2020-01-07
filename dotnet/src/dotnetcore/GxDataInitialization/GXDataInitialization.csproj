@@ -22,5 +22,8 @@
 		  <PrivateAssets>all</PrivateAssets>
 	  </ProjectReference>
   </ItemGroup>
+	<Target Name="PostBuild" AfterTargets="Build">
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
+	</Target>
 
 </Project>

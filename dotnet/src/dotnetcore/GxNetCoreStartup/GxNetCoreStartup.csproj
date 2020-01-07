@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackageTags>GxNetCoreStartup</PackageTags>
@@ -16,6 +16,9 @@
     </ProjectReference>
     <ProjectReference Include="..\GxClasses\GxClasses.csproj">
     </ProjectReference>
-  </ItemGroup>  
+  </ItemGroup>
 
+	<Target Name="PostBuild" AfterTargets="Build">
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
+	</Target>
 </Project>
