@@ -1011,10 +1011,14 @@ namespace GeneXus.Utils
 	}
 	public class GxStorageProvider
 	{
-		ExternalProvider provider;
+		protected ExternalProvider provider;
 		public GxStorageProvider()
 		{
 			provider = ServiceFactory.GetExternalProvider();
+		}
+		public GxStorageProvider(GxStorageProvider other)
+		{
+			provider = other.provider;
 		}
 		void ValidProvider()
 		{
@@ -1177,7 +1181,7 @@ namespace GeneXus.Utils
 
 		}
 
-        private void StorageMessages(Exception ex, GXBaseCollection<SdtMessages_Message> messages)
+        protected void StorageMessages(Exception ex, GXBaseCollection<SdtMessages_Message> messages)
         {
             if (messages != null && ex != null)
             {
