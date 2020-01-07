@@ -127,7 +127,7 @@ namespace GeneXus.Application
 					parmType = parmType.GetElementType();
 					outputParametersIndex.Add(idx);
 				}
-				if (parameters!=null && parameters.TryGetValue(gxParameterName.ToLower(), out value))
+				if (parameters!=null && parameters.TryGetValue(gxParameterName, out value))
 				{
 					var convertedValue = ConvertStringToNewType(value, parmType);
 					parametersForInvocation[idx] = convertedValue;
