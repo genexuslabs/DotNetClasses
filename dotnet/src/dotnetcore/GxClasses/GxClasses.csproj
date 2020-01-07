@@ -15,6 +15,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Dialog\IProcess.cs" Link="Helpers\Process\IProcess.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Attributes\GXApi.cs" Link="Attributes\GXApi.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ConfigurationManager.cs" Link="Configuration\ConfigurationManager.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ExternalStorage.cs" Link="Configuration\ExternalStorage.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Constants.cs" Link="Helpers\Cryptography\Constants.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Encryption\EncryptionProvider.cs" Link="Helpers\Cryptography\Encryption\EncryptionProvider.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Exception\CryptographyException.cs" Link="Helpers\Cryptography\CryptographyException.cs" />
