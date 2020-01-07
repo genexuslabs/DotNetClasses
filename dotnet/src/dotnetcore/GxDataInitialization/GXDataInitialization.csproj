@@ -26,4 +26,10 @@
 		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
 	</Target>
 
+   <ItemGroup>
+		<Content Include="$(ProjectName).deps.json">
+			<Pack>true</Pack>
+			<PackagePath>\content\</PackagePath>
+		</Content>
+	</ItemGroup>
 </Project>
