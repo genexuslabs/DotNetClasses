@@ -1,13 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
     <PackageTags>DataInitialization</PackageTags>
     <PackageId>GeneXus.DataInitialization.Core</PackageId>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="GXDataInitialization.deps.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
