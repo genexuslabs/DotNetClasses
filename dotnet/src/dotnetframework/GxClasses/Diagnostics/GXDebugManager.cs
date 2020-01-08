@@ -224,16 +224,7 @@ namespace GeneXus.Diagnostics
 		internal void OnExit(GXDebugInfo dbgInfo)
 		{
 			PushSystem((int)GXDebugMsgCode.EXIT);
-			lock (saveLock)
-			{
-				if (ToSave != null)
-				{
-					Save(ToSave);
-					ToSave = null;
-				}
-				Save(Current, dbgIndex, false);
-				dbgIndex = 0;
-			}
+			Save();
 		}
 
 		internal void OnCleanup(GXDebugInfo dbgInfo)
@@ -243,7 +234,26 @@ namespace GeneXus.Diagnostics
 			{
 				if (dbgInfo.Parent != null)
 					parentTable[dbgInfo.context.ClientID] = dbgInfo.Parent;
-				else parentTable.TryRemove(dbgInfo.context.ClientID, out GXDebugInfo oldParent);
+				else
+				{
+					parentTable.TryRemove(dbgInfo.context.ClientID, out GXDebugInfo oldParent);
+					if(!GxContext.Current.IsStandalone)
+						Save();
+				}
+			}
+		}
+
+		private void Save()
+		{
+			lock (saveLock)
+			{
+				if (ToSave != null)
+				{
+					Save(ToSave);
+					ToSave = null;
+				}
+				Save(Current, dbgIndex, false);
+				dbgIndex = 0;
 			}
 		}
 
@@ -268,8 +278,9 @@ namespace GeneXus.Diagnostics
 				int idx = 0;
 				try
 				{
+					string FQFileName = Path.IsPathRooted(FileName) ? FileName : Path.Combine(GxContext.Current.GetPhysicalPath(), FileName);
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					using (GXDebugStream stream = new GXDebugStream(FileName, FileMode.Append))
+					using (GXDebugStream stream = new GXDebugStream(FQFileName, FileMode.Append))
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 					{
 						stream.WriteHeader(SessionGuid, (short)(GXDEBUG_VERSION << 4 | GENERATOR_ID.ToByte()), saveCount);
