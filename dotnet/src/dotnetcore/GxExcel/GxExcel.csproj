@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <DefineConstants>NETCORE</DefineConstants>
-	<PackageTags>EPPlus Lite</PackageTags>
-	<PackageId>GeneXus.Excel.Core</PackageId>
+    <AssemblyName>GxExcelI</AssemblyName>
+    <PackageTags>EPPlus Lite</PackageTags>
+    <PackageId>GeneXus.Excel.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
