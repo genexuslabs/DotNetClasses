@@ -1,23 +1,21 @@
-using GeneXus.Services;
-using log4net;
 using System;
 using System.Collections.Generic;
-using Google.Apis.Services;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Storage.v1.Data;
-using Google.Apis.Storage.v1;
 using System.IO;
-using Google;
-using System.Web;
-using GeneXus.Configuration;
-using GeneXus.Utils;
-using GeneXus.Encryption;
-using Google.Cloud.Storage.V1;
 using System.Net.Http;
+using System.Web;
+using GeneXus.Encryption;
+using GeneXus.Services;
+using GeneXus.Utils;
+using Google;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Services;
+using Google.Apis.Storage.v1;
+using Google.Apis.Storage.v1.Data;
+using Google.Cloud.Storage.V1;
 
 namespace GeneXus.Storage.GXGoogleCloud
 {
-    public class ExternalProviderGoogle : ExternalProvider
+	public class ExternalProviderGoogle : ExternalProvider
     {
         const int BUCKET_EXISTS = 409;
         const int OBJECT_NOT_FOUND = 404;
