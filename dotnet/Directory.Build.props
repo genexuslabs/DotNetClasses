@@ -11,10 +11,10 @@
 		<Product>GeneXus</Product>
 		<AssemblyTrademark></AssemblyTrademark>
 		<Copyright>Copyright © 1988-2019 GeneXus. All Rights Reserved</Copyright>
-		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile Condition="'$(ARTECH_SNK_FILE)'!=''">$(ARTECH_SNK_FILE)</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>GeneXus</Authors>
-		<SignAssembly>true</SignAssembly>
+		<SignAssembly Condition="'$(AssemblyOriginatorKeyFile)'!=''">true</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningLevel>4</WarningLevel>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
