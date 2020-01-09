@@ -3,9 +3,13 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <NoWarn>1701;1702;NU1701</NoWarn>
     <DefineConstants>NETCORE</DefineConstants>
-	<PackageTags>Maps</PackageTags>
-	<PackageId>GeneXus.Maps.Core</PackageId>
    </PropertyGroup>
+  <Target Name="SetPackageId" BeforeTargets="Pack">
+    <PropertyGroup>
+		<PackageTags>Maps</PackageTags>
+		<PackageId>GeneXus.Maps.Core</PackageId>
+	</PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxMaps\MapFunctions.cs" Link="MapFunctions.cs" />

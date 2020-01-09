@@ -1,9 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <PackageTags>GxNetCoreStartup</PackageTags>
-    <PackageId>GeneXus.NetCoreStartup</PackageId>
   </PropertyGroup>
+  <Target Name="SetPackageId" BeforeTargets="Pack">
+    <PropertyGroup>
+		<PackageTags>GxNetCoreStartup</PackageTags>
+		<PackageId>GeneXus.NetCoreStartup</PackageId>
+	</PropertyGroup>
+  </Target>
 
   <ItemGroup>
   	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
