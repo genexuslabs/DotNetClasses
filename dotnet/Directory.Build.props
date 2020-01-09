@@ -10,7 +10,8 @@
 		<AssemblyCulture></AssemblyCulture>
 		<Product>GeneXus</Product>
 		<AssemblyTrademark></AssemblyTrademark>
-		<Copyright>Copyright © 1988-2019 GeneXus. All Rights Reserved</Copyright>
+		<CopyrightYear>$([System.DateTime]::UtcNow.ToString("yyyy"))</CopyrightYear>
+		<Copyright>Copyright © 1988-$(CopyrightYear) GeneXus. All Rights Reserved</Copyright>
 		<AssemblyOriginatorKeyFile Condition="'$(ARTECH_SNK_FILE)'!=''">$(ARTECH_SNK_FILE)</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>GeneXus</Authors>
