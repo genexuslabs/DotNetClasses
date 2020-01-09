@@ -2,9 +2,13 @@
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<DefineConstants>NETCORE;</DefineConstants>
-		<PackageId>GeneXus.SDAPI.Core</PackageId>
 		<DefineConstants>NETCOREAPP1_1</DefineConstants>
 	</PropertyGroup>
+  <Target Name="SetPackageId" BeforeTargets="Pack">
+    <PropertyGroup>
+		<PackageId>GeneXus.SDAPI.Core</PackageId>
+	</PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <Compile Remove="Platforms\**" />

@@ -3,9 +3,13 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
 	<NoWarn>1701;1702;NU1701</NoWarn>
 	<DefineConstants>NETCORE</DefineConstants>
-	<PackageTags>SMTP Exchange POP3</PackageTags>
-	<PackageId>GeneXus.Mail.Core</PackageId>
   </PropertyGroup>
+  <Target Name="SetPackageId" BeforeTargets="Pack">
+    <PropertyGroup>
+		<PackageTags>SMTP Exchange POP3</PackageTags>
+		<PackageId>GeneXus.Mail.Core</PackageId>
+	</PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <Compile Remove="OpenPop\**" />

@@ -2,10 +2,14 @@
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<NoWarn>1701;1702;NU1701;NU1603;CS0618</NoWarn>
-		<PackageTags>Lucene Search</PackageTags>
-		<PackageId>GeneXus.Search.Core</PackageId>
 		<DefineConstants>NETCORE</DefineConstants>
 	</PropertyGroup>
+  <Target Name="SetPackageId" BeforeTargets="Pack">
+    <PropertyGroup>
+		<PackageTags>Lucene Search</PackageTags>
+		<PackageId>GeneXus.Search.Core</PackageId>
+	</PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxSearch\DocumentHandler.cs" Link="DocumentHandler.cs" />
