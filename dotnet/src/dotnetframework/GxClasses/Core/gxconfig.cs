@@ -24,8 +24,6 @@ namespace GeneXus.Configuration
 	using System.Reflection;
 	using System.Runtime.Serialization.Json;
 	using System.Collections.Generic;
-
-	[SecuritySafeCritical]
 	public class Config
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Configuration.Config));
@@ -417,22 +415,6 @@ namespace GeneXus.Configuration
 		}
 #if NETCORE
 		public static IConfigurationRoot ConfigRoot{ get; set; }
-#else
-		const string DeprecatedGxClassesFullName = "GxClasses, Version=11.0.0.0, Culture=neutral, PublicKeyToken=6f5bf81c27b6b8aa";
-		const string DeprecatedGxClassesFileName = "GxClasses_16.0.7.dll";
-		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-		{
-			if (args.Name.StartsWith(DeprecatedGxClassesFullName))
-			{
-				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), DeprecatedGxClassesFileName);
-				if (File.Exists(fileName))
-				{
-					Assembly assembly = Assembly.LoadFrom(fileName);
-					return assembly;
-				}
-			}
-			return null;
-		}
 #endif
 		static NameValueCollection config
 		{
@@ -440,9 +422,6 @@ namespace GeneXus.Configuration
 			{
 				if (!configLoaded || _config == null)
 				{
-#if !NETCORE
-					AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-#endif
 					string logConfigSource;
 					configLoaded = true;
 					if (configFileName != null)
