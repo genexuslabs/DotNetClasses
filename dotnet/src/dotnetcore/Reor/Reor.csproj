@@ -2,10 +2,14 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
-    <PackageTags>Reorg</PackageTags>
-    <PackageId>GeneXus.Reorganization.Core</PackageId>
     <DefineConstants>NETCORE</DefineConstants>
   </PropertyGroup>
+ <Target Name="SetPackageId" BeforeTargets="Pack">
+    <PropertyGroup>
+    <PackageTags>Reorg</PackageTags>
+    <PackageId>GeneXus.Reorganization.Core</PackageId>
+	</PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\Reor\frmReorg.cs" Link="frmReorg.cs" />
