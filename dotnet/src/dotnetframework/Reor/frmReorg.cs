@@ -40,13 +40,14 @@ namespace GeneXus.Forms
 				GeneXus.Configuration.Config.ConfigFileName = configFilePath;
 			}
 #else
+			string parentConfigFile = Path.Combine("..", CLIENT_EXE_CONFIG);
 			if (File.Exists(CLIENT_EXE_CONFIG))
 			{
 				GeneXus.Configuration.Config.ConfigFileName = CLIENT_EXE_CONFIG;
 			}
-			else if (File.Exists("../" + CLIENT_EXE_CONFIG))
+			else if (File.Exists(parentConfigFile))
 			{
-				GeneXus.Configuration.Config.ConfigFileName = "../"+ CLIENT_EXE_CONFIG;
+				GeneXus.Configuration.Config.ConfigFileName = parentConfigFile;
 			}else
 			{
 				string configPath = Path.Combine(GxContext.StaticPhysicalPath(), CLIENT_EXE_CONFIG);
