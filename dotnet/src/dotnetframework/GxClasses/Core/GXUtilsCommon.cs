@@ -2617,27 +2617,23 @@ namespace GeneXus.Utils
 		public string Time()
 		{
 			return DateTime.Now.ToString(TimeFormatFromSize(8, -1, ":"), cultureInfo);
-		}
+        }
 
-		static public DateTime AddMth(DateTime dt, int cantMonths)
-		{
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && cantMonths < 0)
-				return nullDate;
-			return dt.AddMonths(cantMonths);
-		}
-		static public DateTime AddYr(DateTime dt, int cantYears)
-		{
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && cantYears < 0)
-				return nullDate;
-			return dt.AddYears(cantYears);
-		}
-		static public DateTime DateEndOfMonth(DateTime dt)
-		{
-			int lastDay = DateTime.DaysInMonth(dt.Year, dt.Month);
+        static public DateTime AddMth(DateTime dt, int cantMonths)
+        {
+            if (dt == nullDate)
+                return nullDate;
+            return dt.AddMonths(cantMonths);
+        }
+        static public DateTime AddYr(DateTime dt, int cantYears)
+        {
+            if (dt == nullDate)
+                return nullDate;
+            return dt.AddYears(cantYears);
+        }
+        static public DateTime DateEndOfMonth(DateTime dt)
+        {
+            int lastDay = DateTime.DaysInMonth(dt.Year, dt.Month);
 			return new DateTime(dt.Year, dt.Month, lastDay, 0, 0, 0);
 		}
 		static public DateTime EndOfMonth(DateTime dt)
@@ -2680,41 +2676,35 @@ namespace GeneXus.Utils
 		{
 			return Convert.ToInt64(dtMinu.Subtract(dtSust).TotalSeconds);
 		}
-		static public int DDiff(DateTime dtMinu, DateTime dtSust)
-		{
-			return Convert.ToInt32((dtMinu - dtSust).TotalDays);
-		}
-		static public DateTime TAdd(DateTime dt, int seconds)
-		{
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && seconds < 0)
-				return nullDate;
-			return dt.AddSeconds(seconds);
-		}
-		static public DateTime TAddMs(DateTime dt, double seconds)
-		{
+        static public int DDiff(DateTime dtMinu, DateTime dtSust)
+        {
+            return Convert.ToInt32((dtMinu - dtSust).TotalDays);
+        }
+        static public DateTime TAdd(DateTime dt, int seconds)
+        {
+            if (dt == nullDate)
+                return nullDate;            
+            return dt.AddSeconds(seconds);
+        }
+        static public DateTime TAddMs(DateTime dt, double seconds)
+        {
 
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && seconds < 0)
-				return nullDate;
-			if (seconds % 1 == 0)
-				return dt.AddSeconds((int)seconds);
-			else
-				return dt.AddMilliseconds(seconds * 1000);
-		}
-		static public DateTime DAdd(DateTime dt, int days)
-		{
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && days < 0)
-				return nullDate;
-			return dt.AddDays(days);
-		}
-		public DateTime CToT(string strDate, int picFmt, int ampmFmt)
-		{
-			if (isNullDateTime(strDate, picFmt, ampmFmt))
+            if (dt == nullDate)
+                return nullDate;
+            if (seconds % 1 == 0)
+                return dt.AddSeconds((int)seconds);
+            else
+                return dt.AddMilliseconds(seconds * 1000);
+        }
+        static public DateTime DAdd(DateTime dt, int days)
+        {
+            if (dt == nullDate)
+                return nullDate;
+            return dt.AddDays(days);
+        }
+        public DateTime CToT(string strDate, int picFmt, int ampmFmt)
+        {
+            if (isNullDateTime(strDate, picFmt, ampmFmt))
 				return nullDate;
 			else
 				return ParseExactDateTime(strDate, picFmt);

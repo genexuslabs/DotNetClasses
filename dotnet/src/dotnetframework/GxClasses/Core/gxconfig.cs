@@ -24,7 +24,6 @@ namespace GeneXus.Configuration
 	using System.Reflection;
 	using System.Runtime.Serialization.Json;
 	using System.Collections.Generic;
-
 	public class Config
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Configuration.Config));

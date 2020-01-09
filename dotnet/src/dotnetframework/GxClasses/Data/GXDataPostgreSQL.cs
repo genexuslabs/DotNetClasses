@@ -332,8 +332,13 @@ namespace GeneXus.Data
 				status = 105;
 				return true;
 			}
-			if (dbmsErrorCode == 5632 && emsg.IndexOf("42p06") >= 0) //42p06: the scheme already exists
+#if NETCORE
+			if (dbmsErrorCode == 16389 && emsg.IndexOf("42p06") >= 0) //42p06: ya existe el esquema
 				return true;
+#else
+			if (dbmsErrorCode == 5632 && emsg.IndexOf("42p06") >= 0) //42p06: ya existe el esquema
+				return true;
+#endif
 
 			switch ((int)dbmsErrorCode)
 			{
