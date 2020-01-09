@@ -2,9 +2,13 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
-    <PackageTags>DataInitialization</PackageTags>
-    <PackageId>GeneXus.DataInitialization.Core</PackageId>
   </PropertyGroup>
+  <Target Name="SetPackageId" BeforeTargets="Pack">
+    <PropertyGroup>
+		<PackageTags>DataInitialization</PackageTags>
+		<PackageId>GeneXus.DataInitialization.Core</PackageId>
+	</PropertyGroup>
+  </Target>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
   </ItemGroup>
