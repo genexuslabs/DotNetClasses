@@ -1,13 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-  </PropertyGroup>
-  <Target Name="SetPackageId" BeforeTargets="Pack">
-    <PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<PackageTags>GxNetCoreStartup</PackageTags>
 		<PackageId>GeneXus.NetCoreStartup</PackageId>
+		<GxGenerateDepsFile>true</GxGenerateDepsFile>
 	</PropertyGroup>
-  </Target>
 
   <ItemGroup>
   	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
@@ -22,7 +19,4 @@
     </ProjectReference>
   </ItemGroup>
 
-	<Target Name="PostBuild" AfterTargets="Build">
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
-	</Target>
 </Project>
