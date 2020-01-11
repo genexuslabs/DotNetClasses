@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<PackageTags>GxNetCoreStartup</PackageTags>
@@ -18,5 +18,10 @@
     <ProjectReference Include="..\GxClasses\GxClasses.csproj">
     </ProjectReference>
   </ItemGroup>
-
+	<ItemGroup>
+		<Reference Include="Jayrock-JSON">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\Jayrock.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 </Project>
