@@ -1,4 +1,5 @@
 using GeneXus.Application;
+using GeneXus.Configuration;
 using GeneXus.XML;
 using System;
 using System.Collections.Concurrent;
@@ -141,7 +142,11 @@ namespace GeneXus.Utils
 		}
 		internal static string Serialize(string rootName, string sNameSpace, XmlAttributeOverrides ovAttrs, bool includeHeader, IGxXMLSerializable instance)
 		{
-
+			bool indentElements = false;
+			if (Config.GetValueOf("XmlSerializationIndent", out string xmlIndent ))
+			{
+				indentElements = xmlIndent.Trim().ToLower() == "true";
+			}
 			XmlSerializer xmls = GetSerializer(instance.GetType(), ovAttrs, rootName, sNameSpace);
 			string s;
 			using (MemoryStream stream = new MemoryStream())
@@ -149,7 +154,7 @@ namespace GeneXus.Utils
 				XmlWriter xmlw = XmlWriter.Create(stream, new System.Xml.XmlWriterSettings()
 				{
 					OmitXmlDeclaration = !includeHeader,
-					Indent = true,
+					Indent = indentElements,
 					IndentChars = "\t",
 					Encoding = Encoding.UTF8
 				});
