@@ -142,7 +142,7 @@ namespace GeneXus.Utils
 		}
 		internal static string Serialize(string rootName, string sNameSpace, XmlAttributeOverrides ovAttrs, bool includeHeader, IGxXMLSerializable instance)
 		{
-			bool indentElements = false;
+			bool indentElements = true;
 			if (Config.GetValueOf("XmlSerializationIndent", out string xmlIndent ))
 			{
 				indentElements = xmlIndent.Trim().ToLower() == "true";
