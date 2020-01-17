@@ -9,30 +9,34 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 
 ## Modules
 
-| Name  | Description
-|---|---
-| GxEncrypt | Classes common to .NET and .NET Core related to encryption based on Twofish algorithm 
-| DynService | Provide classes that support DynamoDB and OData access
-| GxClasses.Win | Provide classes to support windows operative system interaction such has MessageBox and Shell function
-| GxClasses | Core classes related to data access, presentation views and data types used by generated code
-| GxExcel | Provide classes that support Excel data type
-| GxMail | Provide classes that support Mail data type
-| GxMaps | Provide classes that support Map data type
-| GxPdfReportsCS | Provides classes related to PDF manipulation
-| GxSearch | Provides classes related to full text search
-| GxWebSocket | Provides classes related to notifications
-| SDNetAPI | Provides classes related to push notifications
-| GxMemcached | Provides support for manipulation of the distributed memory object cached system Memcached
-| GxRedis | Provides support for manipulation of the distributed memory object cached system Redis
-| GXAmazonS3 | Provides classes related to Amazon Simple Storage Service 
-| GXAzureStorage | Provides classes related to Azure Store service 
-| GXBluemix | Provides classes related to Bluemix platform
-| GXGoogleCloud | Provides classes related to Google Cloud Platform 
-| GXOpenStack | Provides classes related to Open Stack Platform
-| Reor | Executable utility to execute reorganization
-| GxSetFrm | Executable utility to handle GXPRN.INI (reports configuration file)
-| GxConfig | Executable utility to update web.config
-| GxDataInitialization | Executable utility to support dynamic transactions initialization at impact process
+| Name  | Description | .NET Package Name | .NET Core Package Name
+|---|---|---|---
+| GxEncrypt | Classes common to .NET and .NET Core related to encryption based on Twofish algorithm | GeneXus.Encrypt | GeneXus.Encrypt
+| DynService.Core | Provide data types to support DynamoDB, OData and Fabric | GeneXus.DynService.Core | N/A
+| DynService.DynamoDB | Provide classes that support Amazon DynamoDB | GeneXus.DynService.DynamoDB | N/A
+| DynService.Fabric | Provide classes that support Hyperledger Fabric storage | GeneXus.DynService.Fabric | N/A
+| DynServiceOData | Provide classes that support Microsoft OData protocol | GeneXus.DynService.OData | N/A
+| GxClasses.Win | Provide classes to support windows operative system interaction such has MessageBox and Shell function | GeneXus.Classes.Win | N/A
+| GxClasses | Core classes related to data access, presentation views and data types used by generated code | GeneXus.Classes | GeneXus.Classes.Core
+| GxExcel | Provide classes that support Excel data type | GeneXus.Excel | GeneXus.Excel.Core
+| GxMail | Provide classes that support Mail data type | GeneXus.Mail | GeneXus.Mail.Core
+| GxMaps | Provide classes that support Map data type | GeneXus.Maps | GeneXus.Maps.Core
+| GxPdfReportsCS | Provides classes related to PDF manipulation | GeneXus.PdfReportsCS | GeneXus.PdfReportsCS.Core
+| GxSearch | Provides classes related to full text search | GeneXus.Search | GeneXus.Search.Core
+| GxWebSocket | Provides classes related to notifications | GeneXus.WebSockets | GeneXus.WebSockets.Core
+| StoreManager | Provides classes related to push notifications | GeneXus.StoreManager | GeneXus.StoreManager.Core
+| Artech.Genexus.SDAPI | Provides classes related to smart devices push notifications | GeneXus.SDAPI | GeneXus.SDAPI.Core
+| GxMemcached | Provides support for manipulation of the distributed memory object cached system Memcached | GeneXus.Memcached | GeneXus.Memcached.Core
+| GxRedis | Provides support for manipulation of the distributed memory object cached system Redis | GeneXus.Redis | GeneXus.Redis.Core
+| GXAmazonS3 | Provides classes related to Amazon Simple Storage Service | GeneXus.AmazonS3 | GeneXus.AmazonS3.Core
+| GXAzureStorage | Provides classes related to Azure Store service | GeneXus.Azure | N/A
+| GXBluemix | Provides classes related to Bluemix platform | GeneXus.Bluemix | N/A
+| GXGoogleCloud | Provides classes related to Google Cloud Platform | GeneXus.Google.Cloud | N/A
+| GXOpenStack | Provides classes related to Open Stack Platform | GeneXus.OpenStack | N/A
+| Reor | Executable utility to execute reorganization | GeneXus.Reorganization | GeneXus.Reorganization.Core
+| GxSetFrm | Executable utility to handle GXPRN.INI (reports configuration file) | GeneXus.SetFrm | GeneXus.SetFrm
+| GxConfig | Executable utility to update web.config | GeneXus.Config | N/A
+| GxDataInitialization | Executable utility to support dynamic transactions initialization at impact process | GeneXus.DataInitialization | GeneXus.DataInitialization.Core
 
 This repository contains projects for .NET and .NET CORE. It uses the following directory structure:
 
@@ -53,25 +57,20 @@ This repository contains projects for .NET and .NET CORE. It uses the following 
 # How to build
 
 ## Requirements
-- msbuild >= 15 or Visual Stuio 2019 or dotnet SDK >= 3.1 
-- .Net framework 4.6 
+- Visual Studio 2019 >= 16.3
+- dotnet SDK >= 3.1 
+- .Net framework >= 4.6 
 
 # Instructions
 
 ## How to build all projects?
 - ```dotnet build DotNetStandardClasses.sln```
-or
-- ```msbuild /t:restore;build DotNetStandardClasses.sln```
 
 ## How to build a specific project?
 - ```dotnet build project.csproj```
-or
-- ```msbuild /t:restore;build project.csproj```
 
 ## How to copy assemblies to build directory?
 - ```dotnet msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
-or
-- ```msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
 
 It copies the .NET assemblies to the folder build/*gxnet/bin* and .NET CORE assemblies to build/*gxnetcore/bin*
 
