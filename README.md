@@ -84,7 +84,7 @@ It copies the .NET assemblies to the folder build/*gxnet/bin* and .NET CORE asse
 
 ## Advanced information
 
-### Replacing standard clases mechanism 
+### Replacing standard classes mechanism 
 
 To replace the assemblies distributed in GeneXus by the ones built in this repository follow this steps:
 
