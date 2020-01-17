@@ -15,4 +15,9 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnetcore/bin" Condition="'$(TargetFramework)'=='netcoreapp3.1'"/>
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnet/bin" Condition="'$(TargetFramework)'!='netcoreapp3.1'"/>
+	</Target>
+
 </Project>
