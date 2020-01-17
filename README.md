@@ -39,8 +39,9 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 | GxDataInitialization | Executable utility to support dynamic transactions initialization at impact process | GeneXus.DataInitialization(\*)
 
 
-(\*) For .NET Core add suffix .Core to Package Id.
-(\*\*) Package not available for .NET CORE.
+(\*) For .NET Core add suffix .Core to Package Id
+
+(\*\*) Package not available for .NET CORE
 
 
 This repository contains projects for .NET and .NET CORE. It uses the following directory structure:
