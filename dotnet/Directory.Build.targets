@@ -53,6 +53,11 @@
        OutputFilename="$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Web\.Core"
        ReplacementText="GxClasses.Web" />
-	</Target>
+  </Target>
+  
+  <Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnetcore/bin" Condition="'$(TargetFramework)'=='netcoreapp3.1'"/>
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnet/bin" Condition="'$(TargetFramework)'!='netcoreapp3.1'"/>
+  </Target>
 
 </Project>
