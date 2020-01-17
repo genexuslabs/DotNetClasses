@@ -1,4 +1,4 @@
-name: Build & Publish .Net Classes
+name: Build & Publish
 on: 
   push:
     branches:
