@@ -1,13 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-	</PropertyGroup>
-  <Target Name="SetPackageId" BeforeTargets="Pack">
-    <PropertyGroup>
-		<PackageTags>Memcached</PackageTags>
-		<PackageId>GeneXus.Memcached.Core</PackageId>
-	</PropertyGroup>
-  </Target>
+	<PackageTags>Memcached</PackageTags>
+	<PackageId>GeneXus.Memcached.Core</PackageId>
+</PropertyGroup>
   <PropertyGroup>
   	<AppDesignerFolder>Properties</AppDesignerFolder>
   	<SignAssembly>false</SignAssembly>
