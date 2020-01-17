@@ -3,13 +3,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <DefineConstants>NETCORE</DefineConstants>
     <AssemblyName>GxExcelI</AssemblyName>
+	<PackageTags>EPPlus Lite</PackageTags>
+	<PackageId>GeneXus.Excel.Core</PackageId>
   </PropertyGroup>
-  <Target Name="SetPackageId" BeforeTargets="Pack">
-    <PropertyGroup>
-		<PackageTags>EPPlus Lite</PackageTags>
-		<PackageId>GeneXus.Excel.Core</PackageId>
-	</PropertyGroup>
-  </Target>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxExcel\GxExcelConstant.cs" Link="GxExcelConstant.cs" />

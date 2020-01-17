@@ -4,13 +4,9 @@
 	<TargetFramework>netcoreapp3.1</TargetFramework>
 	<OutputType>Library</OutputType>
     <DefineConstants>NETCORE</DefineConstants>
-  </PropertyGroup>
-  <Target Name="SetPackageId" BeforeTargets="Pack">
-    <PropertyGroup>
-			<PackageTags>Data Access</PackageTags>
-			<PackageId>GeneXus.Classes.Core</PackageId>
+	<PackageTags>Data Access</PackageTags>
+	<PackageId>GeneXus.Classes.Core</PackageId>
 	</PropertyGroup>
-  </Target>
 
 
    <ItemGroup>

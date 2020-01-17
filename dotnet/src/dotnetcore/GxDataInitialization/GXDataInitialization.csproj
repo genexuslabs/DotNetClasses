@@ -1,14 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-  <Target Name="SetPackageId" BeforeTargets="Pack">
-    <PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<OutputType>Exe</OutputType>
 		<PackageTags>DataInitialization</PackageTags>
 		<PackageId>GeneXus.DataInitialization.Core</PackageId>
+		<GxGenerateDepsFile>true</GxGenerateDepsFile>
 	</PropertyGroup>
-  </Target>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
   </ItemGroup>
@@ -26,9 +23,6 @@
         <PrivateAssets>all</PrivateAssets>
     </ProjectReference>
   </ItemGroup>
-	<Target Name="PostBuild" AfterTargets="Build">
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
-	</Target>
 
    <ItemGroup>
 		<Content Include="$(ProjectName).deps.json">
