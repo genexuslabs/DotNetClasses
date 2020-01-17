@@ -41,11 +41,11 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 
 (\*) For .NET Core add suffix .Core to Package Id
 
-(\*\*) Package not available for .NET CORE
+(\*\*) Package not available for .NET Core
 
 ## Repository Layout
 
-This repository contains projects for .NET and .NET CORE. It is organized as follows:
+This repository contains projects for .NET and .NET Core. It is organized as follows:
 
 ```
 .
@@ -56,7 +56,7 @@ This repository contains projects for .NET and .NET CORE. It is organized as fol
         ├── dotnetcommon/ (Shared projects that build for both TargetFrameworks: dotnet and dotnetcore)
         ├── dotnetcore/ (.NET Core projects, many of them share sources with dotnetframework projects)
         └── dotnetframework/ (.NET projects)
-    ├── Directory.Build.props (default common configuration for all the projects, imported early in the import order)
+    ├── Directory.Build.props (default configuration for projects, imported early in the import order)
     ├── Directory.Build.targets (configuration for particular projects, imported late in the build order)
     ├── DotNetStandardClasses.sln (solution to build all the projects)
     └── StandardClasses.ruleset (Code analysis rulesets)
