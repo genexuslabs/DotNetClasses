@@ -86,12 +86,12 @@ It copies the .NET assemblies to the folder build/*gxnet/bin* and .NET CORE asse
 
 ### Replacing standard classes mechanism 
 
-To replace the assemblies distributed in GeneXus by the ones built in this repository follow this steps:
+To replace the assemblies distributed in GeneXus by the new ones follow this steps:
 
 * Set Environment variable ARTECH_SNK_FILE with the full path of your .snk file (see [Directory.Build](dotnet/Directory.Build.props)). Its required to set a strong name for the assemblies.
 * Build solution and execute CopyAssemblies 
 * Copy the new assemblies to your web\bin directory
-* Rebuild your application with the new assembiles
+* Rebuild your application with the new assemblies
 
 
 ## License
