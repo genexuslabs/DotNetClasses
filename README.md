@@ -54,7 +54,7 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 ├── dotnet/ 
     ├── src/
         ├── dotnetcommon/ (Shared projects that build for both TargetFrameworks: dotnet and dotnetcore)
-        ├── dotnetcore/ (.NET Core projects, many of them share sources with dotnetframework projects)
+        ├── dotnetcore/ (.NET Core projects, several of these projects link sources from dotnetframework)
         └── dotnetframework/ (.NET projects)
     ├── Directory.Build.props (default configuration for projects, imported early in the import order)
     ├── Directory.Build.targets (configuration for particular projects, imported late in the build order)
