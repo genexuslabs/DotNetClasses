@@ -107,11 +107,12 @@ namespace GeneXus.HttpHandlerFactory
 		private static string ObjectUrl(string requestPath, string basePath) 
 		{
 			var lastSegment = requestPath;
-			if (!string.IsNullOrEmpty(basePath) && lastSegment.StartsWith(basePath))
+			if (!string.IsNullOrEmpty(basePath) && lastSegment.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
 			{
 				lastSegment = lastSegment.Remove(0, basePath.Length);
 			}
 			lastSegment = lastSegment.TrimStart('/');
+			GXLogging.Debug(log, "ObjectUrl:", lastSegment);
 			if (_aspxRewrite.ContainsKey(lastSegment))
 			{
 				return _aspxRewrite[lastSegment];
@@ -120,7 +121,9 @@ namespace GeneXus.HttpHandlerFactory
 		}
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
 		{
-			IHttpHandler handlerToReturn=null;
+			GXLogging.Debug(log, "GetHandler url:", url);
+
+			IHttpHandler handlerToReturn =null;
 
 			var idx = url.LastIndexOf('.');
 			string cname0;
