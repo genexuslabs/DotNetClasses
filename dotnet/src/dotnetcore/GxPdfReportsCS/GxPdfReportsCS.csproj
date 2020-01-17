@@ -2,13 +2,9 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <NoWarn>1701;1702;NU1701</NoWarn>
-  </PropertyGroup>
-  <Target Name="SetPackageId" BeforeTargets="Pack">
-    <PropertyGroup>
-		<PackageTags>Itext PDF Report</PackageTags>
-		<PackageId>GeneXus.PdfReportsCS.Core</PackageId>
+  	<PackageTags>Itext PDF Report</PackageTags>
+	<PackageId>GeneXus.PdfReportsCS.Core</PackageId>
 	</PropertyGroup>
-  </Target>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxPdfReportsCS\PdfReportInterface.cs" Link="PdfReportInterface.cs" />

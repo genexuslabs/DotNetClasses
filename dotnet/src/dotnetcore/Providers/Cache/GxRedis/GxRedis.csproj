@@ -1,13 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
-	</PropertyGroup>
-  <Target Name="SetPackageId" BeforeTargets="Pack">
-    <PropertyGroup>
 		<PackageTags>Redis</PackageTags>
 		<PackageId>GeneXus.Redis.Core</PackageId>
 	</PropertyGroup>
-  </Target>
   <PropertyGroup>
 	<AppDesignerFolder>Properties</AppDesignerFolder>
 	<SignAssembly>false</SignAssembly>
