@@ -1,7 +1,7 @@
 # GeneXus Standard Classes for .NET and .NET Core
 GeneXus Standard Classes for .NET and .NET Core generators.
 
-### Build status
+## Build status
 | Branch | Status
 |---|---
 |master|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=master)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Amaster)
@@ -43,10 +43,12 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 
 (\*\*) Package not available for .NET CORE
 
+## Repository Layout
 
-This repository contains projects for .NET and .NET CORE. It uses the following directory structure:
+This repository contains projects for .NET and .NET CORE. It is organized as follows:
 
 ```
+.
 ├── .editorconfig (configuration for visual studio)
 ├── README.md (this file)
 ├── dotnet/ 
