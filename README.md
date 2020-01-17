@@ -82,6 +82,18 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 
 It copies the .NET assemblies to the folder build/*gxnet/bin* and .NET CORE assemblies to build/*gxnetcore/bin*
 
+## Advanced information
+
+### Replacing standard clases mechanism 
+
+To replace the assemblies distributed in GeneXus by the ones built in this repository follow this steps:
+
+* Set Environment variable ARTECH_SNK_FILE with the full path of your .snk file (see [Directory.Build](dotnet/Directory.Build.props)). Its required to set a strong name for the assemblies.
+* Build solution and execute CopyAssemblies 
+* Copy the new assemblies to your web\bin directory
+* Rebuild your application with the new assembiles
+
+
 ## License
 
     Licensed under the Apache License, Version 2.0 (the "License");
