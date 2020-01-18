@@ -80,13 +80,13 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 ## How to copy assemblies to build directory?
 - ```dotnet msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
 
-It copies the .NET assemblies to the folder build/*gxnet/bin* and .NET Core assemblies to build/*gxnetcore/bin*
+It copies the .NET assemblies to the folder build/**gxnet/bin** and .NET Core assemblies to build/**gxnetcore/bin**
 
 ## Advanced information
 
 ### Replacing standard classes mechanism 
 
-To replace the assemblies distributed in GeneXus by the new ones follow this steps:
+To replace the assemblies distributed in GeneXus by the new ones follow these steps:
 
 * Set AssemblyOriginatorKeyFile property in [Directory.Build](dotnet/Directory.Build.props) with the full path of your .snk file. Its required to set a strong name for the assemblies.
 * Build solution and execute CopyAssemblies 
