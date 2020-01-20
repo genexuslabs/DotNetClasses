@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Diagnostics;
 using System.Security;
 using System.Linq;
+using GeneXus.Encryption;
+using GeneXus.Configuration;
 
 namespace GeneXus.Utils
 {
@@ -27,6 +29,8 @@ namespace GeneXus.Utils
 		private StringBuilder _sbControlSocketLog;
 		private int _status;
 		private string _statusDescription;
+		private string _defaultUser;
+		private string _defaultPassword;
 
 		public FtpService()
 		{
@@ -51,6 +55,36 @@ namespace GeneXus.Utils
 				_Proxy = value;
 			}
 		}
+		string DefaultUser
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_defaultUser))
+				{
+					string cfgBuf;
+					if (Config.GetValueOf("FTP_DEFAULT_USER", out cfgBuf))
+					{
+						CryptoImpl.Decrypt(ref _defaultUser, cfgBuf);
+					}
+				}
+				return _defaultUser;
+			}
+		}
+		string DefaultPassword
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_defaultPassword))
+				{
+					string cfgBuf;
+					if (Config.GetValueOf("FTP_DEFAULT_PASSWORD", out cfgBuf))
+					{
+						CryptoImpl.Decrypt(ref _defaultPassword, cfgBuf);
+					}
+				}
+				return _defaultPassword;
+			}
+		}
 
 		public void Connect(string sUrl, string user, string pass)
 		{
@@ -70,9 +104,9 @@ namespace GeneXus.Utils
 			_bPassiveMode = false;
 
 			if (user.Trim().Length == 0)
-				user = "anonymous";
+				user = DefaultUser;
 			if (pass.Trim().Length == 0)
-				pass = "User@";
+				pass = DefaultPassword;
 
 			if(_Proxy != null) 
 			{
@@ -89,12 +123,12 @@ namespace GeneXus.Utils
 						user = cred.UserName;
 						pass = cred.Password;
 
-						if(String.IsNullOrEmpty(user))
-							user = "anonymous";
-    					
-						if(String.IsNullOrEmpty(pass))
-							pass = "User@";
-					} 
+						if (String.IsNullOrEmpty(user))
+							user = DefaultUser;
+
+						if (String.IsNullOrEmpty(pass))
+							pass = DefaultPassword;
+					}
 					else
 						
 					user = user + "@" + _RequestUri.Host.ToString();
