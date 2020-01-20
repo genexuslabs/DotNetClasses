@@ -1839,11 +1839,12 @@ namespace GeneXus.Utils
 					}
 					elements.ToArray();
 				}
-				catch (Exception)
+				catch (Exception ex)
 				{
 					// Invalid xml: it sends it as text
-					string validXml = "<content><![CDATA[" + s + "]]></content>";
-					System.Xml.XmlDocument xmlDoc = new System.Xml.XmlDocument();
+					string validXml = "<content><![CDATA[" + ex.Message + "]]></content>";
+					GXLogging.Warn(log, "InvalidXML content " + s, ex);
+					XmlDocument xmlDoc = new XmlDocument();
 					xmlDoc.InnerXml = validXml;
 					foreach (XmlNode node in xmlDoc.ChildNodes)
 					{
