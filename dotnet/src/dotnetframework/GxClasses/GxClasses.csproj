@@ -81,6 +81,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+		<ProjectReference Include="..\GxXsl\GxXsl.csproj" />
 	</ItemGroup>
 
 </Project>

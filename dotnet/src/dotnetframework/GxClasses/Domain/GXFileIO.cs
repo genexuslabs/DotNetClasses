@@ -1084,33 +1084,16 @@ public class GxFile
     public string XsltApply(string xslFileName)
     {
 #if !NETCORE
-
-        string s;
         XmlReaderSettings readerSettings = new XmlReaderSettings();
         readerSettings.CheckCharacters = false;
         try
         {
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-            using (StreamReader streamReader = new StreamReader(_file.FullName))
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-            {
-                using (XmlReader xmlReader = XmlReader.Create(streamReader, readerSettings))
-                {
-                    using (StringWriter textWriter = new StringWriter())
-                    {
-                        var transform = new XslCompiledTransform();
-                        transform.Load(FileUtil.NormalizeSource(xslFileName, _baseDirectory), new XsltSettings(true, true), new XmlUrlResolver());
-                        transform.Transform(xmlReader, new XsltArgumentList(), textWriter);
-                        s = textWriter.ToString();
-                    }
-                }
-            }
-            return s;
+            return Xslt.Apply(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
         catch (Exception ex) //ArgumentException invalid characters in xml, XslLoadException An item of type 'Attribute' cannot be constructed within a node of type 'Root'.
         {
             GXLogging.Warn(log, "XsltApply Error", ex);
-            return XsltApplyOld(xslFileName);
+            return Xslt.ApplyOld(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
 #else
 		return string.Empty;
