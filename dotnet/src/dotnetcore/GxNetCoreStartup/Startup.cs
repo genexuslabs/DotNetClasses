@@ -399,16 +399,16 @@ namespace GeneXus.Application
 					GxRestWrapper controller = null;
 					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name)) != null);
 
-					if (servicesMap.ContainsKey(actualPath) && (servicesMap[actualPath].TryGetValue(controllerInfo.Name.ToLower(), out String value)))
-					{
-						controller.ServiceMethod = value;
-					}
-					else
-					{
-						controller.ServiceMethod = null;
-					}
 					if (controller != null)
 					{
+						if (servicesMap.ContainsKey(actualPath) && (servicesMap[actualPath].TryGetValue(controllerInfo.Name.ToLower(), out String value)))
+						{
+							controller.ServiceMethod = value;
+						}
+						else
+						{
+							controller.ServiceMethod = null;
+						}
 						if (HttpMethods.IsGet(context.Request.Method))
 						{
 							return controller.Get(controllerInfo.Parameters);
