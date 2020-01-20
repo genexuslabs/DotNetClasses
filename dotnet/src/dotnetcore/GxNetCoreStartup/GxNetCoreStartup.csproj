@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <PackageTags>GxNetCoreStartup</PackageTags>
-    <PackageId>GeneXus.NetCoreStartup</PackageId>
-  </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<PackageTags>GxNetCoreStartup</PackageTags>
+		<PackageId>GeneXus.NetCoreStartup</PackageId>
+		<GxGenerateDepsFile>true</GxGenerateDepsFile>
+	</PropertyGroup>
 
   <ItemGroup>
   	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
@@ -17,8 +18,10 @@
     <ProjectReference Include="..\GxClasses\GxClasses.csproj">
     </ProjectReference>
   </ItemGroup>
-
-	<Target Name="PostBuild" AfterTargets="Build">
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
-	</Target>
+	<ItemGroup>
+		<Reference Include="Jayrock-JSON">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\Jayrock.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 </Project>

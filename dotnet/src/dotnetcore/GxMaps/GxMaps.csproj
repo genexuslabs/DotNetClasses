@@ -5,7 +5,7 @@
     <DefineConstants>NETCORE</DefineConstants>
 	<PackageTags>Maps</PackageTags>
 	<PackageId>GeneXus.Maps.Core</PackageId>
-   </PropertyGroup>
+</PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxMaps\MapFunctions.cs" Link="MapFunctions.cs" />

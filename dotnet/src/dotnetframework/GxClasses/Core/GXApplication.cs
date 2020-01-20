@@ -3721,18 +3721,21 @@ namespace GeneXus.Application
 		}
 		public void EndMessage()
 		{
-			// End message
-			xmlWriter.Close();
-			string sRet = sWriter.ToString();
-			sWriter.Close();
+			if (xmlWriter != null && sWriter != null)
+			{
+				// End message
+				xmlWriter.Close();
+				string sRet = sWriter.ToString();
+				sWriter.Close();
 
-			// Output
-			if (sRet != null)
-				xml.Append(sRet);
+				// Output
+				if (sRet != null)
+					xml.Append(sRet);
 
-			// Reset
-			xmlWriter = null;
-			sWriter = null;
+				// Reset
+				xmlWriter = null;
+				sWriter = null;
+			}
 		}
 		public override string ToString()
 		{

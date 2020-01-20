@@ -6,7 +6,7 @@
     <DefineConstants>NETCORE</DefineConstants>
 	<PackageTags>Data Access</PackageTags>
 	<PackageId>GeneXus.Classes.Core</PackageId>
-  </PropertyGroup>
+	</PropertyGroup>
 
 
    <ItemGroup>

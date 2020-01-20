@@ -2,8 +2,8 @@
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<DefineConstants>NETCORE;</DefineConstants>
-		<PackageId>GeneXus.SDAPI.Core</PackageId>
 		<DefineConstants>NETCOREAPP1_1</DefineConstants>
+		<PackageId>GeneXus.SDAPI.Core</PackageId>
 	</PropertyGroup>
 
   <ItemGroup>

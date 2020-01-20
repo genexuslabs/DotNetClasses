@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <PackageTags>Reorg</PackageTags>
+    <PackageId>GeneXus.Reorganization.Core</PackageId>
+    <DefineConstants>NETCORE</DefineConstants>
+    <GxGenerateDepsFile>true</GxGenerateDepsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\Reor\frmReorg.cs" Link="frmReorg.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
+	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj">
+        <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
+  
+   <ItemGroup>
+		<Content Include="$(ProjectName).deps.json">
+			<Pack>true</Pack>
+			<PackagePath>\content\</PackagePath>
+		</Content>
+	</ItemGroup>
+</Project>
