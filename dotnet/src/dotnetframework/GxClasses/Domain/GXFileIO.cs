@@ -1088,12 +1088,12 @@ public class GxFile
         readerSettings.CheckCharacters = false;
         try
         {
-            return Xslt.Apply(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
+            return GxXsltImpl.Apply(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
         catch (Exception ex) //ArgumentException invalid characters in xml, XslLoadException An item of type 'Attribute' cannot be constructed within a node of type 'Root'.
         {
             GXLogging.Warn(log, "XsltApply Error", ex);
-            return Xslt.ApplyOld(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
+            return GxXsltImpl.ApplyOld(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
 #else
 		return string.Empty;

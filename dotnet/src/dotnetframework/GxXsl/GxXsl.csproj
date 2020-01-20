@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<AssemblyName>GxXsl</AssemblyName>
 		<RootNamespace>GxXsl</RootNamespace>
-		<PackageTags>Excel</PackageTags>
+		<PackageTags>XML xsl apply</PackageTags>
 		<PackageId>GeneXus.Xsl</PackageId>
 	</PropertyGroup>
 
