@@ -3477,7 +3477,12 @@ namespace GeneXus.Application
 			if (ret != null)
 				return ret;
 			else
-				return id;
+			{
+				if (Guid.TryParse(id, out Guid sanitizedGuid))
+					return sanitizedGuid.ToString();
+				else
+					return Guid.Empty.ToString();
+			}
 		}
 
 		public string GetImageSrcSet(string baseImage)
@@ -3551,9 +3556,7 @@ namespace GeneXus.Application
 			string tmpFileName = "";
 			Guid tmpGuid = Guid.NewGuid();
 			if (tmpGuid == Guid.Empty)
-#pragma warning disable SCS0005 // Weak random generator
-				tmpFileName = new Random(DateTime.Now.Millisecond).Next(9999).ToString();
-#pragma warning restore SCS0005 // Weak random generator
+				tmpFileName = Math.Truncate(NumberUtil.Random() * 9999).ToString();
 			else
 				tmpFileName = tmpGuid.ToString();
 			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
@@ -3575,9 +3578,7 @@ namespace GeneXus.Application
 			string tmpFileName = "";
 			Guid tmpGuid = Guid.NewGuid();
 			if (tmpGuid == Guid.Empty)
-#pragma warning disable SCS0005 // Weak random generator
-				tmpFileName = new Random(DateTime.Now.Millisecond).Next(9999).ToString();
-#pragma warning restore SCS0005 // Weak random generator
+				tmpFileName = Math.Truncate(NumberUtil.Random() * 9999).ToString();
 			else
 				tmpFileName = tmpGuid.ToString();
 			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);

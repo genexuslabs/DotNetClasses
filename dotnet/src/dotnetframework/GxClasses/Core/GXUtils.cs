@@ -313,9 +313,7 @@ namespace GeneXus.Utils
 			fileName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
 			try
 			{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-				_fsr = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+				_fsr = new FileStream(Path.GetFullPath(fileName), FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024);
 			}
 			catch (FileNotFoundException fe)
 			{
