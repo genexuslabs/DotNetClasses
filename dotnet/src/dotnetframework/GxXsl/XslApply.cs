@@ -7,23 +7,24 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.XPath;
 using System.Xml.Xsl;
-
-public class Xslt
+public class GxXsltImpl
 {
-
-    public static string ApplyOld(string xslFileName, string fileFullName)
+	public static string ApplyToString(string xml, string xslFileName)
+	{
+		XslTransform xsltE = new XslTransform();
+		StringReader srXml = new StringReader(xml);
+		XPathDocument xpdXml = new XPathDocument(srXml);
+		XPathDocument xpdXslt = new XPathDocument(xslFileName);
+		xsltE.Load(xpdXslt, null, System.Reflection.Assembly.GetCallingAssembly().Evidence);
+		StringWriter result = new StringWriter();
+		xsltE.Transform(xpdXml, null, result, null);
+		return result.ToString();
+	}
+	public static string ApplyOld(string xslFileName, string fileFullName)
     {
         XslTransform xsltE = new XslTransform();
-#pragma warning disable CA5372 // Use XmlReader For XPathDocument
-#pragma warning disable CA3075 // Insecure DTD processing in XML
 		XPathDocument xpdXml = new XPathDocument(fileFullName);
-#pragma warning restore CA3075 // Insecure DTD processing in XML
-#pragma warning restore CA5372 // Use XmlReader For XPathDocument
-#pragma warning disable CA3075 // Insecure DTD processing in XML
-#pragma warning disable CA5372 // Use XmlReader For XPathDocument
 		XPathDocument xpdXslt = new XPathDocument(xslFileName);
-#pragma warning restore CA5372 // Use XmlReader For XPathDocument
-#pragma warning restore CA3075 // Insecure DTD processing in XML
         xsltE.Load(xpdXslt, new XmlUrlResolver(), System.Reflection.Assembly.GetCallingAssembly().Evidence);
         StringWriter result = new StringWriter();
         xsltE.Transform(xpdXml, null, result, null);
@@ -42,9 +43,7 @@ public class Xslt
                 using (StringWriter textWriter = new StringWriter())
                 {
                     var transform = new XslCompiledTransform();
-#pragma warning disable CA3076 // Insecure XSLT script processing.
                     transform.Load(xslFileName, new XsltSettings(true, true), new XmlUrlResolver());
-#pragma warning restore CA3076 // Insecure XSLT script processing.
                     transform.Transform(xmlReader, new XsltArgumentList(), textWriter);
                     s = textWriter.ToString();
                 }
