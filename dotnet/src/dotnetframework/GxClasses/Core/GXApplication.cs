@@ -3553,12 +3553,7 @@ namespace GeneXus.Application
 		}
 		public string FileFromBase64(string b64)
 		{
-			string tmpFileName = "";
-			Guid tmpGuid = Guid.NewGuid();
-			if (tmpGuid == Guid.Empty)
-				tmpFileName = Math.Truncate(NumberUtil.Random() * 9999).ToString();
-			else
-				tmpFileName = tmpGuid.ToString();
+			string tmpFileName = Guid.NewGuid().ToString();
 			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromBase64(b64);
@@ -3575,12 +3570,7 @@ namespace GeneXus.Application
 		}
 		public string FileFromByteArray(byte[] bArray)
 		{
-			string tmpFileName = "";
-			Guid tmpGuid = Guid.NewGuid();
-			if (tmpGuid == Guid.Empty)
-				tmpFileName = Math.Truncate(NumberUtil.Random() * 9999).ToString();
-			else
-				tmpFileName = tmpGuid.ToString();
+			string tmpFileName = Guid.NewGuid().ToString();
 			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromByteArray(bArray);
