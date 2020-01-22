@@ -15,10 +15,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Dialog\IProcess.cs" Link="Helpers\Process\IProcess.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Attributes\GXApi.cs" Link="Attributes\GXApi.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ConfigurationManager.cs" Link="Configuration\ConfigurationManager.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ExternalStorage.cs" Link="Configuration\ExternalStorage.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Constants.cs" Link="Helpers\Cryptography\Constants.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Encryption\EncryptionProvider.cs" Link="Helpers\Cryptography\Encryption\EncryptionProvider.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\Exception\CryptographyException.cs" Link="Helpers\Cryptography\CryptographyException.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXAsymmetricEncryption.cs" Link="Helpers\Cryptography\GXAsymmetricEncryption.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXCertificate.cs" Link="Helpers\Cryptography\GXCertificate.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXHashing.cs" Link="Helpers\Cryptography\GXHashing.cs" />
@@ -87,6 +83,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Core\Web\HttpAjaxContext.cs" Link="Core\Web\HttpAjaxContext.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Mime\MediaTypesNames.cs" Link="Domain\MediaTypesNames.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\SD\SDApis.cs" Link="Domain\SD\SDApis.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Security\WebSecurity.cs" Link="Security\WebSecurity.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Storage\StorageFactory.cs" Link="Storage\StorageFactory.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\UserControls\IUserControlFactory.cs" Link="UserControls\IUserControlFactory.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlFactory.cs" Link="UserControls\UserControlFactory.cs" />
@@ -148,6 +145,8 @@
 	  <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" /> 
   </ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
+		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
 	</ItemGroup>
   

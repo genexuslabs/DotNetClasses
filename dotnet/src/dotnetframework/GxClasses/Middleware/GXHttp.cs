@@ -1359,7 +1359,7 @@ namespace GeneXus.Http
 
 		protected string GetEncryptedHash(string value, string key)
 		{
-			return Encrypt64(GXUtil.GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SECURITY_HASH_ALGORITHM), key);
+			return Encrypt64(GXUtil.GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
 		}
 
 		protected String Encrypt64(String value, String key)
