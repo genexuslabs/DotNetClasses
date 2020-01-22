@@ -86,7 +86,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Core\Web\HttpAjaxContext.cs" Link="Core\Web\HttpAjaxContext.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Mime\MediaTypesNames.cs" Link="Domain\MediaTypesNames.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\SD\SDApis.cs" Link="Domain\SD\SDApis.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Security\WebSecurity.cs" Link="Security\WebSecurity.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Storage\StorageFactory.cs" Link="Storage\StorageFactory.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\UserControls\IUserControlFactory.cs" Link="UserControls\IUserControlFactory.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlFactory.cs" Link="UserControls\UserControlFactory.cs" />
