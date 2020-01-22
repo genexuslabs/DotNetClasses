@@ -107,6 +107,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{FE3D0F5E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxXsl", "src\dotnetframework\GxXsl\GxXsl.csproj", "{CEE05123-1973-4F54-BC44-AFFB4373936A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptographyCommon", "src\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj", "{6E82437D-8CF2-4206-B4A8-7691B431A45A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptography", "src\dotnetcommon\GxCryptography\GxCryptography.csproj", "{721C71DA-0E1C-49C1-88AE-17A97AA255D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -281,6 +285,14 @@ Global
 		{CEE05123-1973-4F54-BC44-AFFB4373936A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEE05123-1973-4F54-BC44-AFFB4373936A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CEE05123-1973-4F54-BC44-AFFB4373936A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E82437D-8CF2-4206-B4A8-7691B431A45A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E82437D-8CF2-4206-B4A8-7691B431A45A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E82437D-8CF2-4206-B4A8-7691B431A45A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E82437D-8CF2-4206-B4A8-7691B431A45A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{721C71DA-0E1C-49C1-88AE-17A97AA255D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{721C71DA-0E1C-49C1-88AE-17A97AA255D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{721C71DA-0E1C-49C1-88AE-17A97AA255D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{721C71DA-0E1C-49C1-88AE-17A97AA255D3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -335,6 +347,8 @@ Global
 		{7A775A8B-646D-4FE6-8952-9F9C8B38B924} = {914600BD-A02B-414E-AC84-50E60AA64222}
 		{FE3D0F5E-DEFF-4D37-89EB-FD992ABAEE30} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 		{CEE05123-1973-4F54-BC44-AFFB4373936A} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
+		{6E82437D-8CF2-4206-B4A8-7691B431A45A} = {F1E13DF4-9F50-41A2-9DC3-04B673B21032}
+		{721C71DA-0E1C-49C1-88AE-17A97AA255D3} = {F1E13DF4-9F50-41A2-9DC3-04B673B21032}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}

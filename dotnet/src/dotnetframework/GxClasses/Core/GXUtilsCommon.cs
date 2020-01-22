@@ -4902,12 +4902,12 @@ namespace GeneXus.Utils
 #endif
 		public static string GetEncryptedHash(string value, string key)
 		{
-			return Crypto.Encrypt64(GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SECURITY_HASH_ALGORITHM), key);
+			return Crypto.Encrypt64(GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
 		}
 
 		public static bool CheckEncryptedHash(string value, string hash, string key)
 		{
-			return GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SECURITY_HASH_ALGORITHM) == Crypto.Decrypt64(hash, key);
+			return GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm) == Crypto.Decrypt64(hash, key);
 		}
 
 		[Obsolete("GetMD5Hash is deprecated for security reasons, please use GetHash instead.", false)]
@@ -4918,7 +4918,7 @@ namespace GeneXus.Utils
 
 		public static string GetHash(string s)
 		{
-			return GetHash(s, Constants.DEFAULT_HASH_ALGORITHM);
+			return GetHash(s, Constants.DefaultHashAlgorithm);
 		}
 
 		public static string GetHash(string s, string hashAlgorithm)
