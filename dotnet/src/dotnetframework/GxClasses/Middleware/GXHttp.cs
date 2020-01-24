@@ -1692,6 +1692,7 @@ namespace GeneXus.Http
 		{
 			string key = context.httpAjaxContext.GetAjaxEncryptionKey();
 			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_ENCRYPTION_KEY, key);
+			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_ENCRYPTION_IV, CryptoImpl.GX_AJAX_PRIVATE_IV);
 			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_SECURITY_TOKEN, CryptoImpl.EncryptRijndael(key, CryptoImpl.GX_AJAX_PRIVATE_KEY));
 		}
 
