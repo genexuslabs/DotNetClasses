@@ -419,10 +419,11 @@ namespace GeneXus.Encryption
 			}
 			return buffer.ToString();
 		}
-		public static string DecryptRijndael(string encrypted, string key, out bool candecrypt)
+		public static string DecryptRijndael(string ivEncrypted, string key, out bool candecrypt)
 		{
 			AesCryptoServiceProvider aes = null;
 			candecrypt = false;
+			string encrypted = ivEncrypted.Length >= GX_AJAX_PRIVATE_IV.Length ? ivEncrypted.Substring(GX_AJAX_PRIVATE_IV.Length) : ivEncrypted;
 			try
 			{
 				int discarded = 0;
