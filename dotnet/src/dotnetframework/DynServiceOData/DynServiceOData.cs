@@ -210,7 +210,10 @@ namespace GeneXus.Data.NTier
 				RecordAlreadyExistsServiceCodes = RecordAlreadyExistsServiceCodes ?? new HashSet<string>(Enumerable.Repeat("-2035", 1));
 
 				clientSettings.PayloadFormat = ODataPayloadFormat.Json; 
-				isSAP = true; SAPProtocolVersionUpdated = false;
+				isSAPBO = true; SAPProtocolVersionUpdated = false;
+				clientSettings.Properties = clientSettings.Properties ?? new Dictionary<string, object>();
+				clientSettings.Properties[ODataClientSettings.ExtraProperties.STRINGIZE_DATETIME_VALUES] = true;
+
 				using (WebClient login = new WebClient())
 				{
 					string sloginInfo = string.Format("{{\"UserName\":\"{0}\",\"Password\":\"{1}\",\"CompanyDB\":\"{2}\"}}", user, password, sapLoginBO);
@@ -279,7 +282,7 @@ namespace GeneXus.Data.NTier
 
 		public override void Open()
 		{
-			client = new GXODataClient(clientSettings);
+			client = new GXODataClient(new GXODataClientSettings(clientSettings, !isSAPBO));
 			base.Open();
 		}
 
@@ -288,7 +291,7 @@ namespace GeneXus.Data.NTier
 			return new ODataDataReader(this, client, cursorDef, parms, behavior);
 		}
 
-		private bool isSAP = false, SAPProtocolVersionUpdated = false;
+		private bool isSAPBO = false, SAPProtocolVersionUpdated = false;
 		public override int ExecuteNonQuery(ServiceCursorDef cursorDef, IDataParameterCollection parms, CommandBehavior behavior)
 		{
 			int rows = 1;
@@ -299,7 +302,7 @@ namespace GeneXus.Data.NTier
 				Task task = null;
 				ConfiguredTaskAwaitable.ConfiguredTaskAwaiter taskAwaiter;
 
-				if (isSAP && !SAPProtocolVersionUpdated)
+				if (isSAPBO && !SAPProtocolVersionUpdated)
 				{
 					
 					ISession session = client.Session;
@@ -684,7 +687,9 @@ namespace GeneXus.Data.NTier
 							{
 								IDictionary<string, object> oneRecord = new Dictionary<string, object>(subRecord);
 								foreach (string skey in record.Keys)
-									oneRecord.Add(skey, record[skey]);
+									if(!oneRecord.ContainsKey(skey))
+										oneRecord.Add(skey, record[skey]);
+									else Debug.Assert(oneRecord[skey] == null || record[skey] == null || oneRecord[skey].Equals(record[skey]), $"key already in dictionary: { skey } - value: { oneRecord[skey] } - ignoring: { record[skey] }");
 								foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
 									yield return r;
 							}
@@ -964,6 +969,8 @@ namespace GeneXus.Data.NTier
 			object obj = selectList[i].GetValue(NewServiceContext(), currentEntry);
 			if (obj is DateTime dt)
 				return dt;
+			else if(obj is DateTimeOffset dto)
+				return dto.UtcDateTime;
 			else if(obj is TimeOfDay timeOfDay)
 				return new DateTime(timeOfDay.Ticks);
 			else throw new NotImplementedException();
@@ -1040,12 +1047,13 @@ namespace GeneXus.Data.NTier
 				string geoStr = WellKnownTextSqlFormatter.Create().Write(geoValue);
 				geoStr = geoStr.Substring(geoStr.IndexOf(';') + 1);
 				return geoStr;
-			}
-			if (value is DateTimeOffset)
-				return ((DateTimeOffset)value).UtcDateTime;
-			else if (value is TimeSpan)
-				return DateTime.MinValue.Add(((TimeSpan)value));
-			return selectList[i].GetValue(NewServiceContext(), currentEntry);
+			}else if (value is DateTimeOffset dto)
+				return dto.UtcDateTime;
+			else if (value is TimeOfDay timeOfDay)
+				return new DateTime(timeOfDay.Ticks);
+			else if (value is TimeSpan ts)
+				return DateTime.MinValue.Add(ts);
+			return value;
 		}
 
 		public int GetValues(object[] values)
@@ -1604,14 +1612,27 @@ namespace GeneXus.Data.NTier
 		}
 	}
 
+	public class GXODataClientSettings
+	{
+		internal GXODataClientSettings(ODataClientSettings settings, bool isSapB1)
+		{
+			this.settings = settings;
+			this.allowSelectOnExpand = isSapB1;
+		}
+		internal ODataClientSettings settings { get; set; }
+		internal bool allowSelectOnExpand { get; set; }
+	}
+
 	public class GXODataClient
 	{
 		static IDictionary<string, IDictionary<string, IDictionary<string, string>>> entityMappers = new Dictionary<string, IDictionary<string, IDictionary<string, string>>>();
 		static IDictionary<string, IDictionary<string, string>> rootMappers = new Dictionary<string, IDictionary<string, string>>();
 		ODataClientSettings settings;
-		public GXODataClient(ODataClientSettings settings)
+		GXODataClientSettings gxSettings;
+		public GXODataClient(GXODataClientSettings gxSettings)
 		{
-			this.settings = settings;
+			this.gxSettings = gxSettings;
+			settings = gxSettings.settings;
 			Client = new ODataClient(settings);
 			InitializeEntityMapper();
 		}
@@ -1795,29 +1816,46 @@ namespace GeneXus.Data.NTier
 
 		public GXODataClient Select(params ODataExpression[] columns)
 		{
-			return Apply(BoundClient.Select(ApplyMappings(columns, 1)));
+			string[] select = ApplySelectMappings(columns, 1);
+			if (select.Length != columns.Length && !gxSettings.allowSelectOnExpand)
+			{
+				string[] entititesToFullySelect =
+							columns
+								.Select(reference => reference.Reference.Split(separator))
+								.Where(sReferences => sReferences.Length != 1)
+								.Select(sReferences => $"{ this.Entity(BaseEntity, sReferences.FirstOrDefault()) }~{ String.Join("/", sReferences.Skip(1).ToArray()) }")
+								.ToArray();
+
+				return Apply(BoundClient.Select(select).Select(entititesToFullySelect));
+			}else return Apply(BoundClient.Select(select));
 		}
 
 		public GXODataClient Select(Object[] columns)
 		{
-			return Apply(BoundClient.Select(ApplyMappings(columns.OfType<ODataExpression>().ToArray(), 1)));
+			return Select(columns.OfType<ODataExpression>().ToArray());
 		}
 
 		public GXODataClient Expand(params ODataExpression[] associations)
 		{
-			return Apply(BoundClient.ExpandMap(ApplyMappings(associations)));
+			return Apply(BoundClient.ExpandMap(ApplyEntityMappings(associations)));
 		}
 
 		private static char[] separator = new char[] { '/' };
 		private static string strSeparator = "/";
-		private string[] ApplyMappings(ODataExpression[] references, int minus)
+		private string[] ApplySelectMappings(ODataExpression[] references, int minus)
 		{
-			return references.Select(reference => ApplyMapping(BaseEntity, reference.Reference.Split(separator), minus)).ToArray();
+			return references
+					.Select(reference => reference.Reference.Split(separator))
+					.Where(sReferences => gxSettings.allowSelectOnExpand || sReferences.Length == minus)
+					.Select(sReferences => ApplyMapping(BaseEntity, sReferences, minus))
+					.ToArray();
 		}
 
-		private KeyValuePair<string, string>[] ApplyMappings(ODataExpression[] references)
+		private KeyValuePair<string, string>[] ApplyEntityMappings(ODataExpression[] references)
 		{
-			return references.Select(reference => new KeyValuePair<string, string>(reference.Reference, ApplyMapping(BaseEntity, reference.Reference.Split(separator), 0))).ToArray();
+			return references
+					.Select(reference => new KeyValuePair<string, string>(reference.Reference, ApplyMapping(BaseEntity, reference.Reference.Split(separator), 0)))
+					.ToArray();
 		}
 
 		private string ApplyMapping(string Entity, string[] references, int minus)
