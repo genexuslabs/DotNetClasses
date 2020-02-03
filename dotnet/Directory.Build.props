@@ -1,5 +1,6 @@
 <Project>
 	<PropertyGroup>
+		<ARTECH_SNK_FILE>e:\develop\TrunkNew\CommonInfo\Security\Keys\Artech.snk</ARTECH_SNK_FILE>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
 		<MajorFileVersion Condition="$(GITHUB_REF.EndsWith('beta'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
