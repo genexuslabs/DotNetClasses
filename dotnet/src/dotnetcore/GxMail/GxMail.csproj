@@ -5,7 +5,7 @@
 	<DefineConstants>NETCORE</DefineConstants>
 	<PackageTags>SMTP Exchange POP3</PackageTags>
 	<PackageId>GeneXus.Mail.Core</PackageId>
-  </PropertyGroup>
+	</PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="OpenPop\**" />

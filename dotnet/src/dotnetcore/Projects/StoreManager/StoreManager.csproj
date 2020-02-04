@@ -4,8 +4,8 @@
 		<TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>GeneXus.SD.Store.StoreManager</AssemblyName>
     <RootNamespace>GeneXus.SD.Store</RootNamespace>
-		<PackageTags>StoreManager</PackageTags>
-		<PackageId>GeneXus.StoreManager.Core</PackageId>
+	<PackageTags>StoreManager</PackageTags>
+	<PackageId>GeneXus.StoreManager.Core</PackageId>
 	</PropertyGroup>
 
   <ItemGroup>
