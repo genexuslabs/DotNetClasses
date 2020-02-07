@@ -31,7 +31,7 @@ namespace GeneXus.Encryption
 		const char NULL_CHARACTER = (char)0;
 
 		private static int CHECKSUM_LENGTH = 6;
-		private static string GX_ENCRYPT_KEYVALUE { get { throw new FileNotFoundException("KeyResolver.dll was not found. It holds encryption key", "KeyResolver.dll"); } }
+		private static string GX_ENCRYPT_KEYVALUE { get { throw new FileNotFoundException("Encryption keys file not found", "application.key or KeyResolver.dll"); } }
 
 		private static ConcurrentDictionary<string, object> convertedKeys = new ConcurrentDictionary<string, object>();
 
@@ -115,27 +115,23 @@ namespace GeneXus.Encryption
 		{
 			string chkSum, tmpBuf, decBuf;
 			bool ok = false;
-			try
-			{
-				if (string.IsNullOrEmpty(key))
-					key = GetServerKey();
-				if (inverseKey)
-					key = key.Substring(16) + key.Substring(0, 16);
+			
+			if (string.IsNullOrEmpty(key))
+				key = GetServerKey();
+			if (inverseKey)
+				key = key.Substring(16) + key.Substring(0, 16);
 
-				tmpBuf = Decrypt64(cfgBuf, key);
-				if (tmpBuf.Length < 6)
-					return ok;
-				chkSum = tmpBuf.Substring(tmpBuf.Length - 6, 6);
-				decBuf = tmpBuf.Substring(0, tmpBuf.Length - 6);
-				if (chkSum == CheckSum(decBuf, 6))
-				{
-					ret = decBuf;
-					ok = true;
-				}
-			}
-			catch (Exception)
+			tmpBuf = Decrypt64(cfgBuf, key);
+			if (tmpBuf.Length < 6)
+				return ok;
+			chkSum = tmpBuf.Substring(tmpBuf.Length - 6, 6);
+			decBuf = tmpBuf.Substring(0, tmpBuf.Length - 6);
+			if (chkSum == CheckSum(decBuf, 6))
 			{
+				ret = decBuf;
+				ok = true;
 			}
+		
 			return ok;
 		}
 
