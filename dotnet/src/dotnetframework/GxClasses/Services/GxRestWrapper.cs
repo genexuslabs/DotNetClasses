@@ -148,7 +148,7 @@ namespace GeneXus.Application
 					{
 						foreach (string name in jobj.Names)
 						{
-							bodyParameters.Add(name, jobj[name]);
+							bodyParameters.Add(name.ToLower(), jobj[name]);
 						}
 					}
 				}
