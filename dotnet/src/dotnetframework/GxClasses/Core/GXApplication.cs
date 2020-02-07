@@ -3212,13 +3212,16 @@ namespace GeneXus.Application
 		{
 			if (this._session == null)
 			{
-				if (this._isSumbited || this.HttpContext == null)
+				if (IsStandalone)
 					this._session = new GxSession();
 				else
 					this._session = new GxWebSession(this);
 			}
 			return this._session;
 		}
+
+		internal bool IsStandalone => this._session is GxSession || this._isSumbited || this.HttpContext == null;
+
 		internal void SetSession(IGxSession value)
 		{
 			if (value != null)
@@ -3721,18 +3724,21 @@ namespace GeneXus.Application
 		}
 		public void EndMessage()
 		{
-			// End message
-			xmlWriter.Close();
-			string sRet = sWriter.ToString();
-			sWriter.Close();
+			if (xmlWriter != null && sWriter != null)
+			{
+				// End message
+				xmlWriter.Close();
+				string sRet = sWriter.ToString();
+				sWriter.Close();
 
-			// Output
-			if (sRet != null)
-				xml.Append(sRet);
+				// Output
+				if (sRet != null)
+					xml.Append(sRet);
 
-			// Reset
-			xmlWriter = null;
-			sWriter = null;
+				// Reset
+				xmlWriter = null;
+				sWriter = null;
+			}
 		}
 		public override string ToString()
 		{

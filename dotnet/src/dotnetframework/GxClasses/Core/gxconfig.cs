@@ -415,13 +415,32 @@ namespace GeneXus.Configuration
 		}
 #if NETCORE
 		public static IConfigurationRoot ConfigRoot{ get; set; }
+		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
+		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
+		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+		{
+			if (args.Name.StartsWith(ConfigurationManagerBak))
+			{
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), ConfigurationManagerFileName);
+				if (File.Exists(fileName))
+				{
+					Assembly assembly = Assembly.LoadFrom(fileName);
+					return assembly;
+				}
+			}
+			return null;
+		}
 #endif
+
 		static NameValueCollection config
 		{
 			get
 			{
 				if (!configLoaded || _config == null)
 				{
+#if NETCORE
+					AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+#endif
 					string logConfigSource;
 					configLoaded = true;
 					if (configFileName != null)
