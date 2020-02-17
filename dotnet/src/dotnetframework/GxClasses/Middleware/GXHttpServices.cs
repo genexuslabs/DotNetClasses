@@ -663,12 +663,12 @@ namespace GeneXus.Http
 					if (result != null)
 					{
 						string messagePermission = result.Description;
+						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, result.Code, messagePermission);
 						if (GXUtil.ContainsNoAsciiCharacter(messagePermission))
 						{
 							messagePermission = string.Format("{0}{1}", GxRestPrefix.ENCODED_PREFIX, Uri.EscapeDataString(messagePermission));
 						}
 						localHttpContext.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), result.Code, messagePermission));
-						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, result.Code, messagePermission);
 					}
 				}
 				else
