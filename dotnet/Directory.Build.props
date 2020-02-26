@@ -4,7 +4,10 @@
 		<MajorFileVersion>1</MajorFileVersion>
 		<MajorFileVersion Condition="$(GITHUB_REF.EndsWith('beta'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
 		<MinorFileVersion>4</MinorFileVersion>
-		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0</FileVersion>
+		<RevisionFileVersion Condition="'$(CommitNumber)'!=''">$(CommitNumber)</RevisionFileVersion>
+		<RevisionFileVersion Condition="'$(CommitNumber)'==''">0</RevisionFileVersion>
+		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).0</FileVersionWithoutRevision>
+		<FileVersion>$(FileVersionWithoutRevision).$(RevisionFileVersion)</FileVersion>
 		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
 		<Company>GeneXus</Company>
 		<AssemblyCulture></AssemblyCulture>
@@ -26,8 +29,8 @@
 		<NoWarn>NU5105;CS0618</NoWarn>
 	</PropertyGroup>
 
-	<Target Name="GetFileVersion">
-		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
+	<Target Name="GetFileVersionForPackage">
+		<Message Importance="high" Text="FileVersion:$(FileVersionWithoutRevision)"></Message>
 	</Target>
 	<Target Name="IsMaster">
 		<Message Importance="high" Text="IsMaster: True" Condition="$(GITHUB_REF.EndsWith('master'))"></Message>
