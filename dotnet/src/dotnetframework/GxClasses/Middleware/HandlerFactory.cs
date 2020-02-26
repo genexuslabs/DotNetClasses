@@ -68,6 +68,11 @@ namespace GeneXus.HttpHandlerFactory
 				if (GXAPIModule.servicesMap.ContainsKey(actualPath) &&
 					 (GXAPIModule.servicesMap[actualPath].TryGetValue(objectName, out String value)))
 				{
+					if ( GXAPIModule.servicesVerbs.ContainsKey(actualPath) && GXAPIModule.servicesVerbs[actualPath].TryGetValue(objectName, out String httpVerb) )
+					{
+						if (httpVerb !=null && !(requestType.Equals(httpVerb)))
+							   return null;
+					}
 					var handler = ClassLoader.FindInstance(objClass, nspace, objClass, null, null);
 					var gxContext = new GxContext();
 					GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value);					
