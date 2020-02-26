@@ -1,13 +1,9 @@
 using System;
-using GeneXus;
-using log4net;
 
 namespace GxClasses.Helpers
 {
 	internal class EnvVarReader
 	{
-		private static readonly ILog log = LogManager.GetLogger(typeof(EnvVarReader));
-
 		private const string ENVVAR_PREFIX = "GX_";
 		public static bool GetEnvironmentValue(string name, out string value)
 		{
