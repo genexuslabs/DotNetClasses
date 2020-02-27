@@ -14,7 +14,6 @@ namespace GeneXus.Application
 	using System.Web.Configuration;
 #endif
 	using System.Xml;
-	using System.Collections.Concurrent;
 
 	public class GXFileWatcher : IDisposable
 	{
@@ -25,7 +24,7 @@ namespace GeneXus.Application
 		private static bool DISABLED;
 		long TIMEOUT_TICKS;
 		List<GxFile> tmpFiles;
-		ConcurrentDictionary<string,List<GxFile>> webappTmpFiles;
+		Dictionary<string,List<GxFile>> webappTmpFiles;
 #if !NETCORE
 		Thread t;
 #endif
@@ -46,7 +45,7 @@ namespace GeneXus.Application
 		}
 		private GXFileWatcher()
 		{
-			webappTmpFiles = new ConcurrentDictionary<string, List<GxFile>>();
+			webappTmpFiles = new Dictionary<string, List<GxFile>>();
 			string fwTimeout = string.Empty;
 			long result = 0;
 			string delete;
@@ -240,7 +239,7 @@ namespace GeneXus.Application
 				{
 					foreach (string sessionId in toRemove)
 					{
-						webappTmpFiles.TryRemove(sessionId, out _);
+						webappTmpFiles.Remove(sessionId);
 					}
 				}
 				catch (Exception ex2)
