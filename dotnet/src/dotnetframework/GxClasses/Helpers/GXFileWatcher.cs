@@ -24,7 +24,7 @@ namespace GeneXus.Application
 		private static bool DISABLED;
 		long TIMEOUT_TICKS;
 		List<GxFile> tmpFiles;
-		Hashtable webappTmpFiles;
+		Dictionary<string,List<GxFile>> webappTmpFiles;
 #if !NETCORE
 		Thread t;
 #endif
@@ -45,7 +45,7 @@ namespace GeneXus.Application
 		}
 		private GXFileWatcher()
 		{
-			webappTmpFiles = new Hashtable();
+			webappTmpFiles = new Dictionary<string, List<GxFile>>();
 			string fwTimeout = string.Empty;
 			long result = 0;
 			string delete;
@@ -141,7 +141,7 @@ namespace GeneXus.Application
 						List<GxFile> sessionTmpFiles;
 						lock (m_SyncRoot)
 						{
-							if (webappTmpFiles.Contains(sessionId))
+							if (webappTmpFiles.ContainsKey(sessionId))
 								sessionTmpFiles = (List<GxFile>)webappTmpFiles[sessionId];
 							else
 								sessionTmpFiles = new List<GxFile>();
@@ -193,6 +193,7 @@ namespace GeneXus.Application
 		}
 		private void DeleteWebAppTemporaryFiles(bool disposing)
 		{
+			
 			if (webappTmpFiles != null && webappTmpFiles.Count > 0)
 			{
 				long now = DateTime.Now.Ticks;
@@ -201,21 +202,23 @@ namespace GeneXus.Application
 				{
 					foreach (string sessionId in webappTmpFiles.Keys)
 					{
-						List<string> files = (List<string>)webappTmpFiles[sessionId];
+						List<GxFile> files = new List<GxFile>();
+						webappTmpFiles.TryGetValue(sessionId, out files); 
 						if (files != null && files.Count > 0)
 						{
-							if (disposing || ExpiredFile(files[files.Count - 1], now))
+							var lastFileName = files[files.Count - 1].GetURI();
+							if (disposing || ExpiredFile(lastFileName, now))
 							{
 								try
 								{
 									lock (m_SyncRoot)
 									{
-										foreach (string f in files)
+										foreach (GxFile f in files)
 										{
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-											File.Delete(f);
+											f.Delete();
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-											GXLogging.Debug(log, "File.Delete ", f);
+											GXLogging.Debug(log, "File.Delete ", f.GetURI());
 										}
 									}
 								}
@@ -235,7 +238,9 @@ namespace GeneXus.Application
 				try
 				{
 					foreach (string sessionId in toRemove)
+					{
 						webappTmpFiles.Remove(sessionId);
+					}
 				}
 				catch (Exception ex2)
 				{
