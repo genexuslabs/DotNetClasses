@@ -310,7 +310,11 @@ public class GxFileInfo : IGxFileInfo
     {
         filename = FileUtil.NormalizeSource(filename, _baseDirectory);
 
-        return new GxFileInfo(_file.CopyTo(filename, overwrite));
+		FileInfo targetFile = new FileInfo(filename);
+		if (!targetFile.Directory.Exists)
+			targetFile.Directory.Create();
+
+		return new GxFileInfo(_file.CopyTo(filename, overwrite));
     }
 
     public FileStream Create()
