@@ -818,7 +818,7 @@ namespace GeneXus.Utils
 			resetError();
 			try
 			{
-				Regex r = new Regex(rex, RegexOptions.ExplicitCapture | RegexOptions.Multiline);
+				Regex r = new Regex(rex, RegexOptions.Multiline);
 				return r.Match(normalizeText(txt)).Success;
 			}
 			catch (Exception e)
