@@ -424,7 +424,7 @@ namespace GeneXus.Utils
 			if (funcName.ToUpper().Equals("rnd".ToUpper()))
 			{
 				// random function
-				result=(decimal)ThreadSafeRandom.NextDouble();
+				result = (decimal)NumberUtil.Random();
 			}
 			else		
 				// single variable function

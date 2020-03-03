@@ -31,11 +31,15 @@ namespace GeneXus.Storage.GXAzureStorage
         }
 
         public AzureStorageExternalProvider()
-        {			
-            GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE))
+		{	
+        }
 
+        public AzureStorageExternalProvider(GXService providerService)
+        {			
             Account = CryptoImpl.Decrypt(providerService.Properties.Get(ACCOUNT_NAME));
             Key = CryptoImpl.Decrypt(providerService.Properties.Get(ACCESS_KEY));
+
             string publicContainer = CryptoImpl.Decrypt(providerService.Properties.Get(PUBLIC_CONTAINER));
             string privateContainer = CryptoImpl.Decrypt(providerService.Properties.Get(PRIVATE_CONTAINER));
 

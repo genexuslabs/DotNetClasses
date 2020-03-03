@@ -313,9 +313,7 @@ namespace GeneXus.Utils
 			fileName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
 			try
 			{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-				_fsr = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+				_fsr = new FileStream(Path.GetFullPath(fileName), FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024);
 			}
 			catch (FileNotFoundException fe)
 			{
@@ -1011,10 +1009,14 @@ namespace GeneXus.Utils
 	}
 	public class GxStorageProvider
 	{
-		ExternalProvider provider;
+		protected ExternalProvider provider;
 		public GxStorageProvider()
 		{
 			provider = ServiceFactory.GetExternalProvider();
+		}
+		public GxStorageProvider(GxStorageProvider other)
+		{
+			provider = other.provider;
 		}
 		void ValidProvider()
 		{
@@ -1177,7 +1179,7 @@ namespace GeneXus.Utils
 
 		}
 
-        private void StorageMessages(Exception ex, GXBaseCollection<SdtMessages_Message> messages)
+        protected void StorageMessages(Exception ex, GXBaseCollection<SdtMessages_Message> messages)
         {
             if (messages != null && ex != null)
             {
