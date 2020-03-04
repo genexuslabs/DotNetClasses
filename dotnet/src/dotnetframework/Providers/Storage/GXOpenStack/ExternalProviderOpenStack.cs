@@ -24,8 +24,12 @@ namespace GeneXus.Storage.GXOpenStack
 		private static string storageUrl;
 
 		public ExternalProviderOpenStack()
+			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE))
 		{
-			GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+		}
+
+		public ExternalProviderOpenStack(GXService providerService)
+		{
 			var identityEndpoint = new Uri(providerService.Properties.Get("SERVER_URL"));
 			var identity = new CloudIdentityWithProject
 			{
