@@ -350,9 +350,11 @@ namespace GeneXus.Utils
 			}
 			set
 			{
-				base.Clear();
-				foreach (T item in value)
-					this.Add(item);
+				if (this != value) { 
+					base.Clear();
+					foreach (T item in value)
+						this.Add(item);
+				}
 			}
 		}
 		public virtual void Sort(string order)
