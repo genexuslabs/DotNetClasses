@@ -82,6 +82,7 @@ namespace GeneXus.Data.NTier
 			string SAP = null, SAPcsrfToken = null;
 			string metadataLocation = $"{ Application.GxContext.StaticPhysicalPath() }METADATA{ Path.DirectorySeparatorChar }SERVICES{ Path.DirectorySeparatorChar }";
 			bool hasUserMetadataLocation = false;
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12; // Framework 4.5.x does not have TLS 1.2 enabled by default
 			if (builder.TryGetValue("User Id", out object userId) && builder.TryGetValue("Password", out object pass))
 			{
 				user = userId.ToString();
@@ -1457,7 +1458,12 @@ namespace GeneXus.Data.NTier
 
 			public virtual object GetValue(IOServiceContext context, IDictionary<string, object> currentEntry)
 			{
-				return currentEntry[context.Entity(entity) as string] is IDictionary<string, object> currentEntryExt ? map.GetValue(context, currentEntryExt) : null;
+				object currentEntryObj = currentEntry[context.Entity(entity) as string];
+				if (currentEntryObj is IDictionary<string, object> currentEntryExt)
+					return map.GetValue(context, currentEntryExt);
+				else if (currentEntryObj is IEnumerable<IDictionary<string, object>> currentEntryCol && currentEntryCol.Any())
+					return map.GetValue(context, currentEntryCol.First()); // If the server returned a collection for this entity, return data from the first item (SapB1)
+				else return null;
 			}
 
 			public virtual void SetValue(IDictionary<string, object> currentEntry, object value)
