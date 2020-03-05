@@ -3644,6 +3644,18 @@ namespace GeneXus.Utils
 			StackFrame sf = st.GetFrame(0);
 			GXLogging.Debug(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
 		}
+		public static void WriteLogError(string message)
+		{
+			StackTrace st = new StackTrace(new StackFrame(1, true));
+			StackFrame sf = st.GetFrame(0);
+			GXLogging.Error(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
+		}
+		public static void WriteLogInfo(string message)
+		{
+			StackTrace st = new StackTrace(new StackFrame(1, true));
+			StackFrame sf = st.GetFrame(0);
+			GXLogging.Info(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
+		}
 		public static void WriteTLog(string message)
 		{
 			StackTrace st = new StackTrace(new StackFrame(1, true));
