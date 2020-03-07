@@ -63,11 +63,12 @@ namespace GeneXus.Http.WebSocket
 		public SendResponseType Send(string connectionGUID, string message)
 		{
 			var Sockets = WebSocketConnectionManager.GetSocketsById(connectionGUID);
-			foreach (var socket in Sockets)
-			{
-				if (socket.State == WebSocketState.Open)
-					SendMessage(socket, message);
-			}
+			if (Sockets != null)
+				foreach (var socket in Sockets)
+				{
+					if (socket.State == WebSocketState.Open)
+						SendMessage(socket, message);
+				}
 			return SendResponseType.OK;
 		}
 		public override void OnOpen(string connectionGUID, System.Net.WebSockets.WebSocket socket)

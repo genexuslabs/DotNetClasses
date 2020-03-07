@@ -24,7 +24,7 @@ namespace GeneXus.Cryptography
 		public GXIncrementalHash()
 		{
 			isDirty = true;
-			_algorithm = Constants.DEFAULT_HASH_ALGORITHM;
+			_algorithm = Constants.DefaultHashAlgorithm;
 			Initialize();
 		}
 
@@ -170,7 +170,7 @@ namespace GeneXus.Cryptography
 		public GXHashing()
 		{
 			isDirty = true;
-			_algorithm = Constants.DEFAULT_HASH_ALGORITHM;
+			_algorithm = Constants.DefaultHashAlgorithm;
 			Initialize();
 		}
 

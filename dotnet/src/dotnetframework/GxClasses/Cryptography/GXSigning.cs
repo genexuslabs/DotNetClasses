@@ -27,9 +27,9 @@ namespace GeneXus.Cryptography
         {
             isDirty = true;
             _validateCertificates = true;
-            _standard = Constants.DEFAULT_SIGN_FORMAT;
-            _signAlgorithm = Constants.DEFAULT_SIGN_ALGORITHM;
-            _hashAlgorithm = Constants.DEFAULT_HASH_ALGORITHM;
+            _standard = Constants.DefaultSignFormat;
+            _signAlgorithm = Constants.DefaultSignAlgorithm;
+            _hashAlgorithm = Constants.DefaultHashAlgorithm;
         }
 
         public string Sign(string text, bool detached)
