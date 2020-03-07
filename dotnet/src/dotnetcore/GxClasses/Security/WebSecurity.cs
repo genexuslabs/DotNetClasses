@@ -19,8 +19,7 @@ namespace GeneXus.Web.Security
 	public static class WebSecurityHelper
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(GeneXus.Web.Security.WebSecurityHelper));
-		const int SecretKeyMinimumLength = 16;
-
+    		const int SecretKeyMinimumLength = 16;
         public static string StripInvalidChars(string input)
         {
 			if (string.IsNullOrEmpty(input))
@@ -43,7 +42,6 @@ namespace GeneXus.Web.Security
 				return StringUtil.PadL(secretKey, SecretKeyMinimumLength, '0');
 			else
 				return secretKey;
-
         }
 
         public static bool Verify(string pgmName, string issuer, string value, string jwtToken, IGxContext context)
