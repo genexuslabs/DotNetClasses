@@ -3212,13 +3212,16 @@ namespace GeneXus.Application
 		{
 			if (this._session == null)
 			{
-				if (this._isSumbited || this.HttpContext == null)
+				if (IsStandalone)
 					this._session = new GxSession();
 				else
 					this._session = new GxWebSession(this);
 			}
 			return this._session;
 		}
+
+		internal bool IsStandalone => this._session is GxSession || this._isSumbited || this.HttpContext == null;
+
 		internal void SetSession(IGxSession value)
 		{
 			if (value != null)
@@ -3474,7 +3477,12 @@ namespace GeneXus.Application
 			if (ret != null)
 				return ret;
 			else
-				return id;
+			{
+				if (Guid.TryParse(id, out Guid sanitizedGuid))
+					return sanitizedGuid.ToString();
+				else
+					return Guid.Empty.ToString();
+			}
 		}
 		public string GetImageSrcSet(string baseImage)
 		{

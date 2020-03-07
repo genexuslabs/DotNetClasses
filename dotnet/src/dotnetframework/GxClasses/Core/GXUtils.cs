@@ -816,7 +816,7 @@ namespace GeneXus.Utils
 			resetError();
 			try
 			{
-				Regex r = new Regex(rex, RegexOptions.ExplicitCapture | RegexOptions.Multiline);
+				Regex r = new Regex(rex, RegexOptions.Multiline);
 				return r.Match(normalizeText(txt)).Success;
 			}
 			catch (Exception e)
@@ -1009,10 +1009,14 @@ namespace GeneXus.Utils
 	}
 	public class GxStorageProvider
 	{
-		ExternalProvider provider;
+		protected ExternalProvider provider;
 		public GxStorageProvider()
 		{
 			provider = ServiceFactory.GetExternalProvider();
+		}
+		public GxStorageProvider(GxStorageProvider other)
+		{
+			provider = other.provider;
 		}
 		void ValidProvider()
 		{
@@ -1175,7 +1179,7 @@ namespace GeneXus.Utils
 
 		}
 
-        private void StorageMessages(Exception ex, GXBaseCollection<SdtMessages_Message> messages)
+        protected void StorageMessages(Exception ex, GXBaseCollection<SdtMessages_Message> messages)
         {
             if (messages != null && ex != null)
             {
