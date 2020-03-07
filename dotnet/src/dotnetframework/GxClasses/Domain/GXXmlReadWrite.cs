@@ -2645,15 +2645,7 @@ namespace GeneXus.XML
 	{
 		public static string Apply( string xml, string xslFileName)
 		{
-			XslTransform xsltE = new XslTransform();
-
-			StringReader srXml = new StringReader( xml);
-			XPathDocument xpdXml = new XPathDocument( srXml);
-			XPathDocument xpdXslt = new XPathDocument( xslFileName);
-			xsltE.Load( xpdXslt, null, System.Reflection.Assembly.GetCallingAssembly().Evidence );
-			StringWriter result = new StringWriter();
-			xsltE.Transform( xpdXml, null, result, null);
-			return result.ToString();
+			return GxXsltImpl.ApplyToString(xml, xslFileName);
 		}
 	}
 }

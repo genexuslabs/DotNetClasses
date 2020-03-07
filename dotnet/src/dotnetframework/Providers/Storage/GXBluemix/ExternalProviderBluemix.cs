@@ -50,8 +50,12 @@ namespace GeneXus.Storage.GXBluemix
 		string PrivateTempKeyUrl { get; set; }
 
 		public ExternalProviderBluemix()
+			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE))
 		{
-			GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+		}
+
+		public ExternalProviderBluemix(GXService providerService)
+		{
 			var identityEndpoint = new Uri(providerService.Properties.Get(SERVER_URL));
 			CloudIdentityWithProject identity = new CloudIdentityWithProject
 			{

@@ -15,10 +15,13 @@ namespace GeneXus.Http.HttpModules
 		String name;
 		String implementation;
 		String methodName;
+		String verb;
 
 		public string Name { get => name; set => name = value; }
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
+		public string Verb { get => verb; set => verb = value; }
+
 
 	}
 
@@ -44,6 +47,8 @@ namespace GeneXus.Http.HttpModules
 		public static Dictionary<String, String> servicesBase;
 		public static Dictionary<String, String> servicesClass;
 		public static Dictionary<String, Dictionary<String, String>> servicesMap;
+		public static Dictionary<String, Dictionary<String, String>> servicesVerbs;
+
 		const string REST_BASE_URL = "rest/";
 		private static bool moduleStarted;
 
@@ -98,6 +103,7 @@ namespace GeneXus.Http.HttpModules
 				servicesPathUrl = new List<String>();
 				servicesBase = new Dictionary<string, string>();				
 				servicesMap = new Dictionary<String, Dictionary<string, string>>();
+				servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
 				servicesClass = new Dictionary<String, String>();
 
 				String[] grpFiles = Directory.GetFiles(webPath, "*.grp.json");
@@ -126,12 +132,15 @@ namespace GeneXus.Http.HttpModules
 								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
 								{
 									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+									servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), sm.Verb);
 								}
 							}
 							else
 							{
 								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
+								servicesVerbs.Add(mapPathLower, new Dictionary<string, string>());
 								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+								servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), sm.Verb);
 							}
 						}
 					}

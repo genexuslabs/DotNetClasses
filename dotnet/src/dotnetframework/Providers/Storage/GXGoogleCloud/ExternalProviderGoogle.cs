@@ -37,9 +37,12 @@ namespace GeneXus.Storage.GXGoogleCloud
         }
 
         public ExternalProviderGoogle()
+			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE))
         {
-            GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+        }
 
+        public ExternalProviderGoogle(GXService providerService)
+        {
             GoogleCredential credentials;
             using (Stream stream = KeyStream(CryptoImpl.Decrypt(providerService.Properties.Get(KEY))))
             {

@@ -19,7 +19,7 @@ namespace GeneXus.Web.Security
 	public static class WebSecurityHelper
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(GeneXus.Web.Security.WebSecurityHelper));
-
+    		const int SecretKeyMinimumLength = 16;
         public static string StripInvalidChars(string input)
         {
 			if (string.IsNullOrEmpty(input))
@@ -37,7 +37,11 @@ namespace GeneXus.Web.Security
         {
 			string hashSalt = string.Empty;
 			Config.GetValueOf("VER_STAMP", out hashSalt); //Some random SALT that is different in every GX App installation. Better if changes over time
-			return GXUtil.GetEncryptionKey(context, string.Empty) + hashSalt;
+			string secretKey = GXUtil.GetEncryptionKey(context, string.Empty) + hashSalt;
+			if (secretKey.Length < SecretKeyMinimumLength)
+				return StringUtil.PadL(secretKey, SecretKeyMinimumLength, '0');
+			else
+				return secretKey;
         }
 
         public static bool Verify(string pgmName, string issuer, string value, string jwtToken, IGxContext context)

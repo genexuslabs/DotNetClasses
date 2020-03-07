@@ -120,7 +120,7 @@ namespace GeneXus.Application
 			{
 				object value;
 				
-				var gxParameterName = methodParameter.Name.Substring(methodParameter.Name.IndexOf('_') + 1);
+				var gxParameterName = methodParameter.Name.Substring(methodParameter.Name.IndexOf('_') + 1).ToLower();
 				Type parmType = methodParameter.ParameterType;
 				if (IsByRefParameter(methodParameter))
 				{
