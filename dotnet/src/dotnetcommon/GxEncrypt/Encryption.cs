@@ -24,8 +24,10 @@ namespace GeneXus.Encryption
 		private static RandomNumberGenerator rng;
 
 		public static string AJAX_ENCRYPTION_KEY = "GX_AJAX_KEY";
+		public static string AJAX_ENCRYPTION_IV = "GX_AJAX_IV";
 		public static string AJAX_SECURITY_TOKEN = "AJAX_SECURITY_TOKEN";
 		public static string GX_AJAX_PRIVATE_KEY = "E7C360308E854317711A3D9983B98975";
+		public static string GX_AJAX_PRIVATE_IV = "C01D04B1610243D2A2AF23E7952E8B18";
 		const char NULL_CHARACTER = (char)0;
 
 		private static int CHECKSUM_LENGTH = 6;
@@ -417,13 +419,11 @@ namespace GeneXus.Encryption
 			}
 			return buffer.ToString();
 		}
-		public static string DecryptRijndael(string encrypted, string key, out bool candecrypt)
+		public static string DecryptRijndael(string ivEncrypted, string key, out bool candecrypt)
 		{
-			MemoryStream memoryStream = null;
-			CryptoStream cryptoStream = null;
 			AesCryptoServiceProvider aes = null;
-			string decrypted = null;
 			candecrypt = false;
+			string encrypted = ivEncrypted.Length >= GX_AJAX_PRIVATE_IV.Length ? ivEncrypted.Substring(GX_AJAX_PRIVATE_IV.Length) : ivEncrypted;
 			try
 			{
 				int discarded = 0;
@@ -431,20 +431,21 @@ namespace GeneXus.Encryption
 				if (encryptedBytes.Length > 0)
 				{
 					byte[] keyBytes = HexEncoding.GetBytes(key, out discarded);
-					aes = new AesCryptoServiceProvider();
-#pragma warning disable SCS0012 // ECB mode is weak
-					aes.Mode = CipherMode.ECB;
-#pragma warning restore SCS0012 // ECB mode is weak
+					byte[] ivBytes = HexEncoding.GetBytes(GX_AJAX_PRIVATE_IV, out discarded);
+					aes = new AesCryptoServiceProvider(); //CBC Mode
+					aes.IV = ivBytes;
 					aes.Key = keyBytes;
 					aes.Padding = PaddingMode.Zeros;
+					MemoryStream memoryStream;
 					using (memoryStream = new MemoryStream(encryptedBytes))
 					{
+						CryptoStream cryptoStream;
 						using (cryptoStream = new CryptoStream(memoryStream, aes.CreateDecryptor(), CryptoStreamMode.Write))
 						{
 							cryptoStream.Write(encryptedBytes, 0, encryptedBytes.Length);
 						}
 					}
-					decrypted = System.Text.Encoding.ASCII.GetString(memoryStream.ToArray());
+					string decrypted = Encoding.ASCII.GetString(memoryStream.ToArray());
 					int zeroIdx = decrypted.IndexOf(NULL_CHARACTER);
 					if (zeroIdx != -1)
 					{
@@ -463,8 +464,6 @@ namespace GeneXus.Encryption
 		}
 		public static string EncryptRijndael(string decrypted, string key)
 		{
-			MemoryStream memoryStream = null;
-			CryptoStream cryptoStream = null;
 			AesCryptoServiceProvider aes = null;
 			string encrypted = null;
 			try
@@ -472,14 +471,15 @@ namespace GeneXus.Encryption
 				int discarded = 0;
 				byte[] decryptedBytes = Encoding.ASCII.GetBytes(decrypted);
 				byte[] keyBytes = HexEncoding.GetBytes(key, out discarded);
-				aes = new AesCryptoServiceProvider();
-#pragma warning disable SCS0012 // ECB mode is weak
-				aes.Mode = CipherMode.ECB;
-#pragma warning restore SCS0012 // ECB mode is weak
+				byte[] ivBytes = HexEncoding.GetBytes(GX_AJAX_PRIVATE_IV, out discarded);
+				aes = new AesCryptoServiceProvider(); //CBC Mode
+				aes.IV = ivBytes;
 				aes.Key = keyBytes;
 				aes.Padding = PaddingMode.Zeros;
+				MemoryStream memoryStream;
 				using (memoryStream = new MemoryStream())
 				{
+					CryptoStream cryptoStream;
 					using (cryptoStream = new CryptoStream(memoryStream, aes.CreateEncryptor(), CryptoStreamMode.Write))
 					{
 						cryptoStream.Write(decryptedBytes, 0, decryptedBytes.Length);

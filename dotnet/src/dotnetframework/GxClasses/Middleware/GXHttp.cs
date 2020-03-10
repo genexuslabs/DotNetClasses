@@ -295,16 +295,16 @@ namespace GeneXus.Http
 			JArray events;
 			GXHttpHandler targetObj;
 			string[] eventHandlers;
-			bool[] eventUseInternalParms;
-			string cmpContext = string.Empty;
-			int grid;
-			string row, pRow = string.Empty;
-			JArray inParmsMetadata;
-			private HashSet<string> inParmsMetadataHash;
-			bool anyError;
+            bool[] eventUseInternalParms;
+            string cmpContext = string.Empty;
+            int grid;
+            string row;
+            JArray inParmsMetadata;
+            private HashSet<string> inParmsMetadataHash;
+            bool anyError;
 
-			private void ParseInputJSonMessage(JObject objMessage, GXHttpHandler targetObj)
-			{
+            private void ParseInputJSonMessage(JObject objMessage, GXHttpHandler targetObj)
+            {
 				inParmsValues = (JArray)objMessage["parms"];
 				inHashValues = (JArray)objMessage["hsh"];
 				if (inHashValues == null)
@@ -342,17 +342,15 @@ namespace GeneXus.Http
 				if (objMessage.Contains("grids"))
 					ParseGridsDataParms((JObject)objMessage["grids"]);
 				if (objMessage.Contains("grid"))
-					grid = (int)objMessage["grid"];
-				else
-					grid = 0;
-				if (objMessage.Contains("row"))
-					row = (string)objMessage["row"];
-				else
-					row = string.Empty;
-				if (objMessage.Contains("pRow"))
-					pRow = (string)objMessage["pRow"];
-				if (objMessage.Contains("gxstate"))
-				{
+                    grid = (int)objMessage["grid"];
+                else
+                    grid = 0;
+                if (objMessage.Contains("row"))
+                    row = (string)objMessage["row"];
+                else
+                    row = "";
+                if (objMessage.Contains("gxstate"))
+                {
                     ParseGXStateParms((JObject)objMessage["gxstate"]);
                 }
                 if (objMessage.Contains("fullPost"))
@@ -812,7 +810,7 @@ namespace GeneXus.Http
 
 					if (grid != 0 && !String.IsNullOrEmpty(row))
 					{
-						SetFieldValue("sGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", row + pRow);
+						SetFieldValue("sGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", row);
 						SetFieldValue("nGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", int.Parse(row));
 					}
 					SetFieldValue("wbLoad", true);
@@ -1694,6 +1692,7 @@ namespace GeneXus.Http
 		{
 			string key = context.httpAjaxContext.GetAjaxEncryptionKey();
 			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_ENCRYPTION_KEY, key);
+			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_ENCRYPTION_IV, CryptoImpl.GX_AJAX_PRIVATE_IV);
 			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_SECURITY_TOKEN, CryptoImpl.EncryptRijndael(key, CryptoImpl.GX_AJAX_PRIVATE_KEY));
 		}
 
