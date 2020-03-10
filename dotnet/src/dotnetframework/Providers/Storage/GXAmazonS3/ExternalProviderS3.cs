@@ -37,10 +37,14 @@ namespace GeneXus.Storage.GXAmazonS3
 		public string GetBaseURL() {
 			return StorageUri + Folder + StorageUtils.DELIMITER;
 		}
-        public ExternalProviderS3()
-        {
-            GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+        
+		public ExternalProviderS3()
+			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE))
+		{
+		}
 
+        public ExternalProviderS3(GXService providerService)
+        {
             string keyId = CryptoImpl.Decrypt(providerService.Properties.Get(ACCESS_KEY_ID));
             string keySecret = CryptoImpl.Decrypt(providerService.Properties.Get(SECRET_ACCESS_KEY));
 			AWSCredentials credentials = null;

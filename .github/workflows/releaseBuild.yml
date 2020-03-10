@@ -19,14 +19,17 @@ jobs:
     - name: Build Solution
       run: dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration
 
-    - name: Package
+    - name: Build and Pack
       run: |
+        $CommitNumber = git rev-list --no-merges --count HEAD
+
+        dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
         # Get the FileVersion from the Build.props file
-        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersion
+        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$CommitNumber
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
         $NuGetPackageVersion = $Matches[0]
 
-        dotnet pack dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
+        dotnet pack dotnet\DotNetStandardClasses.sln --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
     - name: Publish packages
       run: |

@@ -1,15 +1,14 @@
 using GeneXus.Application;
 using GeneXus.Configuration;
-using GeneXus.Encryption;
 using GeneXus.Utils;
-using Jose;
 using log4net;
+using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security;
+using System.Security.Claims;
 using System.Text;
 using static GeneXus.Web.Security.SecureTokenHelper;
 
@@ -19,6 +18,7 @@ namespace GeneXus.Web.Security
 	public static class WebSecurityHelper
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(GeneXus.Web.Security.WebSecurityHelper));
+		const int SecretKeyMinimumLength = 16;
 
         public static string StripInvalidChars(string input)
         {
@@ -37,7 +37,12 @@ namespace GeneXus.Web.Security
         {
 			string hashSalt = string.Empty;
 			Config.GetValueOf("VER_STAMP", out hashSalt); //Some random SALT that is different in every GX App installation. Better if changes over time
-			return GXUtil.GetEncryptionKey(context, string.Empty) + hashSalt;
+			string secretKey = GXUtil.GetEncryptionKey(context, string.Empty) + hashSalt;
+			if (secretKey.Length < SecretKeyMinimumLength)
+				return StringUtil.PadL(secretKey, SecretKeyMinimumLength, '0');
+			else
+				return secretKey;
+
         }
 
         public static bool Verify(string pgmName, string issuer, string value, string jwtToken, IGxContext context)
@@ -112,38 +117,54 @@ namespace GeneXus.Web.Security
             SignEncrypt,           
             None 
         }
-
 		internal static WebSecureToken getWebSecureToken(string signedToken, string secretKey)
 		{
 			byte[] bSecretKey = Encoding.ASCII.GetBytes(secretKey);
 			if (string.IsNullOrEmpty(signedToken))
 				return null;
-			string payload = Jose.JWT.Decode(signedToken, bSecretKey);
-			WebSecureToken Token = new WebSecureToken();
-			Token.FromJSonString(payload);
-			return Token;
+
+			var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey);
+			var handler = new JwtSecurityTokenHandler();
+			var validationParameters = new TokenValidationParameters
+			{
+				ClockSkew = TimeSpan.FromMinutes(1),
+				ValidateAudience = false,
+				ValidateIssuer = false,
+				IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
+			};
+			SecurityToken securityToken;
+			WebSecureToken outToken = new WebSecureToken();
+			var claims = handler.ValidateToken(signedToken, validationParameters, out securityToken);
+			outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+
+			return outToken;
 		}
-		public static string Sign(SecureToken token, SecurityMode mode, string secretKey)
+        public static string Sign(WebSecureToken token, SecurityMode mode, string secretKey)
         {
 			byte[] bSecretKey = Encoding.ASCII.GetBytes(secretKey);
-			string payload = token.ToJSonString();
 			string encoded = string.Empty;
-            switch (mode)
-            {
-                case SecurityMode.Sign:
-                    encoded = JWT.Encode(payload, bSecretKey, JwsAlgorithm.HS256);
-                    break;
-                case SecurityMode.SignEncrypt:
-                    encoded = JWT.Encode(payload, bSecretKey, JweAlgorithm.PBES2_HS256_A128KW, JweEncryption.A128CBC_HS256);
-                    break;
-                case SecurityMode.None:
-                    encoded = JWT.Encode(payload, null, JwsAlgorithm.none);
-                    break;
-            }
+			switch (mode)
+			{
+				case SecurityMode.Sign:
+					var tokenHandler = new JwtSecurityTokenHandler();
+
+					var jwtoken = tokenHandler.CreateJwtSecurityToken(issuer: token.Issuer, audience: null, 
+                           subject: new ClaimsIdentity(new[] {
+							new Claim(WebSecureToken.GXISSUER, token.Issuer),
+							new Claim(WebSecureToken.GXPROGRAM, token.ProgramName),
+							new Claim(WebSecureToken.GXVALUE, token.Value),
+							new Claim(WebSecureToken.GXEXPIRATION, token.Expiration.Subtract(new DateTime(1970, 1, 1)).TotalSeconds.ToString())
+							}),
+						notBefore: DateTime.UtcNow,
+						expires: token.Expiration,
+						signingCredentials: new SigningCredentials(new SymmetricSecurityKey(bSecretKey), SecurityAlgorithms.HmacSha256));
+
+					return tokenHandler.WriteToken(jwtoken);
+			}
             return encoded;
 		}
 
-		internal static bool Verify(string jwtToken, SecureToken outToken, string secretKey)
+		internal static bool Verify(string jwtToken, WebSecureToken outToken, string secretKey)
 		{
 			bool ok = false;
 			byte[] bSecretKey = Encoding.ASCII.GetBytes(secretKey);
@@ -151,16 +172,23 @@ namespace GeneXus.Web.Security
 			{				
 				try
 				{
-					string payload = Jose.JWT.Decode(jwtToken, bSecretKey);
-                    ok = outToken.FromJSonString(payload);
-                }
-                catch (EncryptionException e)
-                {
-                    GXLogging.Error(_log, string.Format("Web Token Encryption Exception for Token '{0}'", jwtToken), e);
-                }
-                catch (IntegrityException e)
-                {
-                    GXLogging.Error(_log, string.Format("Web Token Integrity Exception for Token '{0}'", jwtToken), e);
+                    var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey);
+                    var handler = new JwtSecurityTokenHandler();
+                    var validationParameters = new TokenValidationParameters
+                    {
+                        ClockSkew = TimeSpan.FromMinutes(1),
+                        ValidateAudience = false,
+                        ValidateIssuer = false,
+						IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
+					};
+                    SecurityToken securityToken;
+
+                    var claims = handler.ValidateToken(jwtToken, validationParameters, out securityToken);
+                    outToken.Expiration = new DateTime(1970, 1, 1).AddSeconds(Double.Parse(claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXEXPIRATION).Value));
+                    outToken.ProgramName = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXPROGRAM).Value;
+                    outToken.Issuer = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXISSUER).Value;
+                    outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+                    ok = true;
                 }
                 catch (Exception e)
 				{
@@ -197,16 +225,21 @@ namespace GeneXus.Web.Security
     [DataContract]
     public class WebSecureToken: SecureToken
     {
-        [DataMember(Name = "gx-issuer", IsRequired = true, EmitDefaultValue = false)]
+        internal const string GXISSUER = "gx-issuer";
+        internal const string GXPROGRAM = "gx-pgm";
+        internal const string GXVALUE = "gx-val";
+        internal const string GXEXPIRATION = "gx-exp";
+
+        [DataMember(Name = GXISSUER, IsRequired = true, EmitDefaultValue = false)]
         public string Issuer { get; set; }
 
-		[DataMember(Name = "gx-pgm", IsRequired = true, EmitDefaultValue = false)]
+		[DataMember(Name = GXPROGRAM, IsRequired = true, EmitDefaultValue = false)]
         public string ProgramName { get; set; }
 
-        [DataMember(Name = "gx-val", EmitDefaultValue = false)]
+        [DataMember(Name = GXVALUE, EmitDefaultValue = false)]
         public string Value { get; set; }
 
-        [DataMember(Name = "gx-exp", EmitDefaultValue = false)]
+        [DataMember(Name = GXEXPIRATION, EmitDefaultValue = false)]
         public DateTime Expiration { get; set; }
 
         public WebSecureToken()

@@ -3,16 +3,61 @@
 	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<SignAssembly>false</SignAssembly>
-		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>   
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
 		<WarningsNotAsErrors>CS8032;$(WarningsNotAsErrors)</WarningsNotAsErrors>
 		<IsPackable>true</IsPackable>
 	</PropertyGroup>
-	
+
 	<ItemGroup Condition="'$(TargetFramework)'!='netcoreapp3.1'">
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+
+	<UsingTask
+    TaskName="ReplaceFileText"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<InputFilename ParameterType="System.String" Required="true" />
+			<OutputFilename ParameterType="System.String" Required="true" />
+			<MatchExpression ParameterType="System.String" Required="true" />
+			<ReplacementText ParameterType="System.String" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System"/>
+			<Using Namespace="System.IO"/>
+			<Using Namespace="System.Text.RegularExpressions" />
+			<Code Type="Fragment" Language="cs">
+				<![CDATA[  
+          File.WriteAllText(
+            OutputFilename,
+            Regex.Replace(File.ReadAllText(InputFilename), MatchExpression, ReplacementText)
+            );
+        ]]>
+			</Code>
+		</Task>
+	</UsingTask>
+
+
+	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true'">
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
+		<ReplaceFileText
+       InputFilename="$(ProjectName).deps.json"
+       OutputFilename="$(ProjectName).deps.json"
+       MatchExpression="GeneXus\.Classes\.Core"
+       ReplacementText="GxClasses" />
+		<ReplaceFileText
+       InputFilename="$(ProjectName).deps.json"
+       OutputFilename="$(ProjectName).deps.json"
+       MatchExpression="GeneXus\.Classes\.Web\.Core"
+       ReplacementText="GxClasses.Web" />
+	</Target>
+
+	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnetcore/bin" Condition="'$(TargetFramework)'=='netcoreapp3.1'"/>
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnet/bin" Condition="'$(TargetFramework)'!='netcoreapp3.1'"/>
+	</Target>
 
 </Project>

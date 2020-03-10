@@ -348,19 +348,21 @@ namespace GeneXus.Http
 				string theme = this.GetNextPar();
 				this.context.setAjaxCallMode();
 				this.context.SetDefaultTheme(theme);
-				string imagePath = this.context.GetImagePath(imageGUID, kbId, theme);
-				if (!string.IsNullOrEmpty(imagePath))
+				if (Guid.TryParse(imageGUID, out Guid sanitizedGuid))
 				{
-					this.context.HttpContext.Response.Clear();
-					this.context.HttpContext.Response.ContentType = MediaTypesNames.TextPlain;
+					string imagePath = this.context.GetImagePath(sanitizedGuid.ToString(), kbId, theme);
+					if (!string.IsNullOrEmpty(imagePath))
+					{
+						this.context.HttpContext.Response.Clear();
+						this.context.HttpContext.Response.ContentType = MediaTypesNames.TextPlain;
 #if NETCORE
-					this.context.HttpContext.Response.Write(imagePath);
+						this.context.HttpContext.Response.Write(imagePath);
 #else
-					this.context.HttpContext.Response.Output.WriteLine(imagePath);
-					
-					this.context.HttpContext.Response.End();
+						this.context.HttpContext.Response.Output.WriteLine(imagePath);
+						this.context.HttpContext.Response.End();
 #endif
-					return;
+						return;
+					}
 				}
 			}
 			this.SendResponseStatus(404, "Resource not found");
@@ -661,12 +663,12 @@ namespace GeneXus.Http
 					if (result != null)
 					{
 						string messagePermission = result.Description;
+						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, result.Code, messagePermission);
 						if (GXUtil.ContainsNoAsciiCharacter(messagePermission))
 						{
 							messagePermission = string.Format("{0}{1}", GxRestPrefix.ENCODED_PREFIX, Uri.EscapeDataString(messagePermission));
 						}
 						localHttpContext.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), result.Code, messagePermission));
-						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, result.Code, messagePermission);
 					}
 				}
 				else
