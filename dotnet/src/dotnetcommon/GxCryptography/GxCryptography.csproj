@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
+		<RootNamespace>GxCryptography</RootNamespace>
+		<NoWarn>618;1607;1698</NoWarn>
+		<AssemblyName>GxCryptography</AssemblyName>
+		<PackageTags>Data Access</PackageTags>
+		<PackageId>GeneXus.Cryptography</PackageId>
+	</PropertyGroup>
+
+  <ItemGroup>
+
+    <ProjectReference Include="..\GxCryptographyCommon\GxCryptographyCommon.csproj">
+
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

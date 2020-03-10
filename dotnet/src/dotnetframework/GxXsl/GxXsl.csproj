@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<AssemblyName>GxXsl</AssemblyName>
+		<RootNamespace>GxXsl</RootNamespace>
+		<PackageTags>XML xsl apply</PackageTags>
+		<PackageId>GeneXus.Xsl</PackageId>
+	</PropertyGroup>
+
+</Project>
