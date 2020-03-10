@@ -149,7 +149,7 @@ namespace GX
 #endif
 			public static List<string> GetAddress(String location)
         {
-            String urlString = MAPS_URI + "geocode/json?latlng=" + location + "&sensor=false";
+			String urlString = MAPS_URI + "geocode/json?latlng=" + GXUtil.UrlEncode(location) + "&sensor=false";
 			String ApiKey = "";
 			if (Config.GetValueOf("GoogleApiKey", out ApiKey))
 			{
