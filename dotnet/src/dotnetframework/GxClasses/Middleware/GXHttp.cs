@@ -487,6 +487,19 @@ namespace GeneXus.Http
 				return propertyInfo;
 			}
 
+			private void SetNullableScalarOrCollectionValue(JObject parm, object value, JArray columnValues)
+			{
+				string nullableAttribute = parm.Contains("nullAv") ? (string)parm["nullAv"] : null;
+				if (nullableAttribute != null && string.IsNullOrEmpty(value.ToString()))
+				{
+					SetScalarOrCollectionValue(nullableAttribute, true, null);
+				}
+				else
+				{
+					SetScalarOrCollectionValue((string)parm["av"], value, columnValues);
+				}
+			}
+
 			private void SetScalarOrCollectionValue(string fieldName, object value, JArray values)
 			{
 				FieldInfo fieldInfo = getfieldInfo(targetObj, fieldName);
@@ -787,7 +800,7 @@ namespace GeneXus.Http
 									}
 									if (value != null)
 									{
-										SetScalarOrCollectionValue((string)parm["av"], value, columnValues);
+										SetNullableScalarOrCollectionValue(parm, value, columnValues);
 									}
 								}
 							}
