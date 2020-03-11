@@ -3477,12 +3477,7 @@ namespace GeneXus.Application
 			if (ret != null)
 				return ret;
 			else
-			{
-				if (Guid.TryParse(id, out Guid sanitizedGuid))
-					return sanitizedGuid.ToString();
-				else
-					return Guid.Empty.ToString();
-			}
+				return id;
 		}
 		public string GetImageSrcSet(string baseImage)
 		{
