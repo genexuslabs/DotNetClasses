@@ -588,7 +588,7 @@ namespace GeneXus.Utils
 		{
             if (IsGeoNull(s))
             {
-                geoText = EMPTY_GEOGRAPHY;
+				geoText = EMPTY_GEOMETRY ;
             }
             else
             {
