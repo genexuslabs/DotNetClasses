@@ -263,6 +263,9 @@ namespace com.genexus.reports
 				}
 
 				loadProps();
+#if NETCORE
+				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
 			}
 			catch (Exception ex)
 			{
