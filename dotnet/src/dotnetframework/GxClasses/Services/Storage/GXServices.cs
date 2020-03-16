@@ -17,6 +17,7 @@ namespace GeneXus.Services
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.GXServices));
 		public static string STORAGE_SERVICE = "Storage";
+		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
 		private static string[] SERVICES_FILE = new string[] { "CloudServices.dev.config", "CloudServices.config" };
@@ -173,33 +174,49 @@ namespace GeneXus.Services
 			return GXServices.Instance;
 		}
 
+		public static ExternalProvider GetExternalProviderAPI()
+		{
+			externalProvider = GetExternalProviderImpl(GXServices.STORAGE_APISERVICE);
+			if (externalProvider == null)
+			{
+				externalProvider = GetExternalProvider();
+			}
+			return externalProvider;
+		}
+
 		public static ExternalProvider GetExternalProvider()
 		{
 			if (externalProvider == null)
 			{
-				GXService providerService = GetGXServices().Get(GXServices.STORAGE_SERVICE);
-				if (providerService != null)
-				{
-					try
-					{
-						string typeFullName = providerService.ClassName;
-						GXLogging.Debug(log, "Loading storage provider:", typeFullName);
-#if !NETCORE
-						Type type = Type.GetType(typeFullName, true, true);
-#else
-						Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
-#endif
-
-						externalProvider = (ExternalProvider)Activator.CreateInstance(type);
-					}
-					catch (Exception e)
-					{
-						GXLogging.Error(log, "Couldn´t connect to external storage provider.", e.Message, e);
-						throw e;
-					}
-				}
+				externalProvider = GetExternalProviderImpl(GXServices.STORAGE_SERVICE);
 			}
 			return externalProvider;
+		}
+
+		public static ExternalProvider GetExternalProviderImpl(string service)
+		{
+			ExternalProvider externalProviderImpl = null;
+			GXService providerService = GetGXServices().Get(service);
+			if (providerService != null)
+			{
+				try
+				{
+					string typeFullName = providerService.ClassName;
+					GXLogging.Debug(log, "Loading storage provider:", typeFullName);
+#if !NETCORE
+					Type type = Type.GetType(typeFullName, true, true);
+#else
+					Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
+#endif
+					externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
+				}
+				catch (Exception e)
+				{
+					GXLogging.Error(log, "Couldn´t connect to external storage provider.", e.Message, e);
+					throw e;
+				}
+			}
+			return externalProviderImpl;
 		}
 	}
 
