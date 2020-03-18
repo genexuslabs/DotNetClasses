@@ -6,6 +6,7 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 |---|---
 |master|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=master)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Amaster)
 |beta|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=beta)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Abeta)
+|beta-corona|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=beta-corona)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Abeta-corona)
 
 ## Modules
 

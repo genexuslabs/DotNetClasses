@@ -2,8 +2,7 @@ name: Build
 on: 
   push:
     branches:
-      - 'master'
-      - 'beta'
+	  - 'beta-corona'
 
 jobs:
   build:
@@ -39,8 +38,7 @@ jobs:
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
         $GetFileVersionOutput = $Matches[0]
 
-        $IsMaster = dotnet msbuild dotnet/Directory.Build.props /t:IsMaster
-        $VersionTag = if ($IsMaster -match "(?<=IsMaster:)(.*)") {"stable"} else {"trunk"}
+        $VersionTag = "corona"
 
         $NuGetPackageVersion = $GetFileVersionOutput + "-" + $VersionTag + "." + $CommitNumber
 
