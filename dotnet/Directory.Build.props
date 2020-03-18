@@ -1,7 +1,7 @@
 <Project>
 	<PropertyGroup>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
-		<MajorFileVersion>$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
+		<MajorFileVersion>101</MajorFileVersion>
 		<MinorFileVersion>5</MinorFileVersion>
 		<RevisionFileVersion Condition="'$(CommitNumber)'!=''">$(CommitNumber)</RevisionFileVersion>
 		<RevisionFileVersion Condition="'$(CommitNumber)'==''">0</RevisionFileVersion>
