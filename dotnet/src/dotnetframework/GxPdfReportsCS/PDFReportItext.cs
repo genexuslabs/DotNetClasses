@@ -392,8 +392,6 @@ namespace com.genexus.reports
 			{
 				GXLogging.Debug(log,"GxDrawRect error", de);
 			}
-			document.AddAuthor(Const.AUTHOR);
-			document.AddCreator(Const.CREATOR);
 			document.Open();
 		}
 
@@ -2538,10 +2536,7 @@ namespace com.genexus.reports
 		public static String MS_FONT_LOCATION = "Fonts Location (MS)"; 
 		public static String SUN_FONT_LOCATION = "Fonts Location (Sun)"; 
 		public static String FONT_SUBSTITUTES_SECTION = "Fonts Substitutions"; 
-		public static String FONT_METRICS_SECTION = "Font Metrics"; 
-
-		public static String CREATOR = "GeneXus PDF Report Generator";
-		public static String AUTHOR = "GeneXus";
+		public static String FONT_METRICS_SECTION = "Font Metrics";
     
 		public static String DEBUG_SECTION = "Debug";
 		public static String DRAW_IMAGE = "DrawImage"; 
