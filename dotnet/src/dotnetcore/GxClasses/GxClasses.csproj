@@ -43,6 +43,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\ExpressionEvaluator.cs" Link="Domain\ExpressionEvaluator.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Core\GXApplication.cs" Link="Core\GXApplication.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\Encryption.cs" Link="Helpers\Encryption.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\EnvVarReader.cs" Link="Helpers\EnvVarReader.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXFileWatcher.cs" Link="Helpers\GXFileWatcher.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Caching\GxCache.cs" Link="Services\Caching\GxCache.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxCollections.cs" Link="Domain\GxCollections.cs" />
