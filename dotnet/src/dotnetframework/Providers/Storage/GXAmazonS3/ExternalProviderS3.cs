@@ -145,7 +145,13 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private bool DoesS3BucketExist()
 		{
-			return Client.DoesS3BucketExistAsync(Bucket).GetAwaiter().GetResult();
+#if NETCORE
+			Task<bool> t = Client.DoesS3BucketExistAsync(Bucket);
+			t.Wait();
+			return t.Result;
+#else
+			return Client.DoesS3BucketExist(Bucket);
+#endif
 		}
 
 		void WriteResponseStreamToFile(GetObjectResponse response, string filePath)
