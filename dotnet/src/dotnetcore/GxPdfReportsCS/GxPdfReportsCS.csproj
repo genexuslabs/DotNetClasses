@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <NoWarn>1701;1702;NU1701</NoWarn>
+	<DefineConstants>NETCORE</DefineConstants>
   	<PackageTags>Itext PDF Report</PackageTags>
 	<PackageId>GeneXus.PdfReportsCS.Core</PackageId>
 	</PropertyGroup>
@@ -16,6 +17,7 @@
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.6.0" />
     <PackageReference Include="System.Drawing.Common" Version="4.6.0" />
+	<PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
