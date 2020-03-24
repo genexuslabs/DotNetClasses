@@ -8,6 +8,7 @@ using log4net;
 using ServiceStack.Caching;
 using ServiceStack.Redis;
 using GeneXus.Services;
+using ServiceStack.Text;
 
 namespace GeneXus.Cache
 {
@@ -42,7 +43,8 @@ namespace GeneXus.Cache
 			}
             else
                 _cache = new RedisClient("localhost", REDIS_DEFAULT_PORT);
-        }
+			JsConfig.DateHandler = DateHandler.ISO8601;
+		}
 
         public void Clear(string cacheid, string key)
         {
