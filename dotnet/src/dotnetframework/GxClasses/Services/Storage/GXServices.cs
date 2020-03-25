@@ -7,9 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-#if NETCORE
 using GxClasses.Helpers;
-#endif
+
 using System.Reflection.Emit;
 
 namespace GeneXus.Services
@@ -110,8 +109,7 @@ namespace GeneXus.Services
 				reader.Read();
 			}
 
-			GXProperties properties = ProcessProperties(reader);
-
+			GXProperties properties = ProcessProperties(type, name, reader);
 
 			GXService service = new GXService();
 			service.Name = name;
@@ -126,7 +124,7 @@ namespace GeneXus.Services
 
 		}
 
-		private GXProperties ProcessProperties(GXXMLReader reader)
+		private GXProperties ProcessProperties(string serviceType, string serviceName, GXXMLReader reader)
 		{
 			GXProperties properties = new GXProperties();
 			reader.Read();
@@ -136,6 +134,10 @@ namespace GeneXus.Services
 				string name = reader.Value;
 				reader.ReadType(1, "Value");
 				string value = reader.Value;
+
+				if (EnvVarReader.GetEnvironmentValue(serviceType, serviceName, name, out string envVarValue))
+					value = envVarValue;
+
 				properties.Add(name, value);
 				reader.Read();
 				reader.Read();
