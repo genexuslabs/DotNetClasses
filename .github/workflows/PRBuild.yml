@@ -17,6 +17,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
 
+    - name: Setup dotnet 3.1.101
+      uses: ./
+      with:
+        dotnet-version: 3.1.101
+
     - name: Setup Nuget.exe
       uses: warrenbuckley/Setup-Nuget@v1
 
