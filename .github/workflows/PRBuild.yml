@@ -32,6 +32,6 @@ jobs:
         # Get the FileVersion from the Build.props file
         $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$CommitNumber
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
-        $NuGetPackageVersion = $Matches[0] + "-" + $CommitNumber 
+        $NuGetPackageVersion = $Matches[0] + "-alpha" + $CommitNumber 
 
         dotnet pack dotnet\DotNetStandardClasses.sln --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
