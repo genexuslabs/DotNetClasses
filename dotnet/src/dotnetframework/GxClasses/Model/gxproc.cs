@@ -16,11 +16,9 @@ namespace GeneXus.Procedure
 	using System.Collections.Generic;
 	using GeneXus.XML;
 	using GeneXus.Metadata;
-
-	public abstract class GXProcedure
+	public abstract class GXProcedure: GXBaseObject
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Procedure.GXProcedure));
-		protected IGxContext _Context;					
 		protected bool _isMain;
 		public abstract void initialize();
 		public abstract void cleanup();
@@ -135,12 +133,6 @@ namespace GeneXus.Procedure
             }
             return sRet;
         }
-
-        public IGxContext context
-		{
-			set	{ _Context = value;	}
-			get	{ return _Context;	}
-		}
 		public msglist GX_msglist 
 		{
 			get	{ return context.GX_msglist ; }
@@ -332,7 +324,7 @@ namespace GeneXus.Procedure
 		{
 			currentNamespacePrefixes.SetPrefixes(new Dictionary<string, string>(pfxs));
 		}
-		public void CallWebObject(string url)
+		public override void CallWebObject(string url)
 		{
 			context.wjLoc = url;
 		}
