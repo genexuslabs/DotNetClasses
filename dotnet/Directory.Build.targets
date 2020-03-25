@@ -4,7 +4,7 @@
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<SignAssembly>false</SignAssembly>
 		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-		<WarningsNotAsErrors>CS8032;CS1609;$(WarningsNotAsErrors)</WarningsNotAsErrors>
+		<WarningsNotAsErrors>CS8032;CS1609;CS1069;$(WarningsNotAsErrors)</WarningsNotAsErrors>
 		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
