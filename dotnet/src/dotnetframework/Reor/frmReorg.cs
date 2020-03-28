@@ -54,8 +54,8 @@ namespace GeneXus.Forms
 				if (File.Exists(configPath))
 					GeneXus.Configuration.Config.ConfigFileName = configPath;
 			}
-#endif
 			bool nogui = false;
+#endif
 			bool notexecute = false;
 			foreach (string sw in args)
 			{
@@ -66,8 +66,10 @@ namespace GeneXus.Forms
 					GeneXus.Configuration.Config.ConfigFileName = configFile;
 					REORG_FILE_3 = Path.Combine(Path.GetDirectoryName(configFile) , REORGPGM_GEN);
 				}
+#if !NETCORE
 				else if (sw.ToLower().Trim() == "-nogui")
 					nogui = true;
+#endif
 				else if (sw.ToLower().Trim() == "-force")
 					force = true;
 				else if (sw.ToLower().Trim() == "-recordcount")
@@ -91,9 +93,9 @@ namespace GeneXus.Forms
 				{
 					GxContext.isReorganization = true;
 					gxReorganization = GetReorgProgram();
+#if !NETCORE
 					if (nogui)
 					{
-#if !NETCORE
 						try
 						{
 							Console.OutputEncoding = Encoding.Default;
@@ -144,8 +146,8 @@ namespace GeneXus.Forms
 							SetStatus(GXResourceManager.GetMessage("GXM_ids_noneeded"));
 							errorCode = 0;
 						}
-					}
 #if !NETCORE
+					}
 					else
 					{
 						FreeConsole();
@@ -399,12 +401,12 @@ namespace GeneXus.Forms
 			base.Dispose(disposing);
 		}
 
-#region Windows Form Designer generated code
-		
+		#region Windows Form Designer generated code
+
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ReorgStartup));
+			var assembly = Assembly.GetEntryAssembly();
 			this.Message = new System.Windows.Forms.ColumnHeader();
 			this.output = new System.Windows.Forms.ListView();
 			this.Status = new System.Windows.Forms.ColumnHeader();
@@ -438,8 +440,8 @@ namespace GeneXus.Forms
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.output.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this.output.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.Message,
-            this.Status});
+			this.Message,
+			this.Status});
 			this.output.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
 			this.output.LabelWrap = false;
 			this.output.Location = new System.Drawing.Point(8, 64);
@@ -500,8 +502,12 @@ namespace GeneXus.Forms
 			this.lblStatus.Click += new System.EventHandler(this.lblStatus_Click);
 			// 
 			// imgReorg
-			// 
-			this.imgReorg.Image = ((System.Drawing.Image)(resources.GetObject("imgReorg.Image")));
+			//
+
+			using (var resourceStream = assembly.GetManifestResourceStream("Reor.Resources.imgReorg.Image.png"))
+			{
+				this.imgReorg.Image = Image.FromStream(resourceStream);
+			}
 			this.imgReorg.Location = new System.Drawing.Point(24, 16);
 			this.imgReorg.Name = "imgReorg";
 			this.imgReorg.Size = new System.Drawing.Size(16, 16);
@@ -511,7 +517,10 @@ namespace GeneXus.Forms
 			// 
 			// imgEqual
 			// 
-			this.imgEqual.Image = ((System.Drawing.Image)(resources.GetObject("imgEqual.Image")));
+			using (var resourceStream = assembly.GetManifestResourceStream("Reor.Resources.imgEqual.Image.png"))
+			{
+				this.imgEqual.Image = Image.FromStream(resourceStream);
+			}
 			this.imgEqual.Location = new System.Drawing.Point(32, 16);
 			this.imgEqual.Name = "imgEqual";
 			this.imgEqual.Size = new System.Drawing.Size(16, 24);
@@ -521,7 +530,10 @@ namespace GeneXus.Forms
 			// 
 			// imgOk
 			// 
-			this.imgOk.Image = ((System.Drawing.Image)(resources.GetObject("imgOk.Image")));
+			using (var resourceStream = assembly.GetManifestResourceStream("Reor.Resources.imgOk.Image.png"))
+			{
+				this.imgOk.Image = Image.FromStream(resourceStream);
+			}
 			this.imgOk.Location = new System.Drawing.Point(32, 16);
 			this.imgOk.Name = "imgOk";
 			this.imgOk.Size = new System.Drawing.Size(16, 16);
@@ -531,7 +543,10 @@ namespace GeneXus.Forms
 			// 
 			// imgCancel
 			// 
-			this.imgCancel.Image = ((System.Drawing.Image)(resources.GetObject("imgCancel.Image")));
+			using (var resourceStream = assembly.GetManifestResourceStream("Reor.Resources.imgCancel.Image.png"))
+			{
+				this.imgCancel.Image = Image.FromStream(resourceStream);
+			}
 			this.imgCancel.Location = new System.Drawing.Point(32, 16);
 			this.imgCancel.Name = "imgCancel";
 			this.imgCancel.Size = new System.Drawing.Size(16, 16);
@@ -563,7 +578,6 @@ namespace GeneXus.Forms
 			this.Controls.Add(this.groupBox2);
 			this.Controls.Add(this.output);
 			this.Controls.Add(this.groupBox1);
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "FrmReorg";
