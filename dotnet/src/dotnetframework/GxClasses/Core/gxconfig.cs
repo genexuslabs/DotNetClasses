@@ -24,6 +24,8 @@ namespace GeneXus.Configuration
 	using System.Reflection;
 	using System.Runtime.Serialization.Json;
 	using System.Collections.Generic;
+	using GxClasses.Helpers;
+
 	public class Config
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Configuration.Config));
@@ -57,19 +59,20 @@ namespace GeneXus.Configuration
 			set { configFileName = value; configLoaded = false; connectionProperties.Clear(); }
 		}
 
-		public static void ParseArgs(ref string [] args)
+		public static void ParseArgs(ref string[] args)
 		{
-			for(int i = 0; i < args.Length; i++)
+			for (int i = 0; i < args.Length; i++)
 			{
 				string arg = args[i];
 				if (arg.StartsWith("\\config:"))
 				{
 					ConfigFileName = arg.Substring(8);
 					RemoveArg(ref args, ref i);
-				}else if(arg.StartsWith("/gxperf:"))
+				}
+				else if (arg.StartsWith("/gxperf:"))
 				{
 					Diagnostics.GXDebugManager.Config(arg.Substring(8));
-					RemoveArg(ref args, ref i);					
+					RemoveArg(ref args, ref i);
 				}
 
 			}
@@ -78,7 +81,7 @@ namespace GeneXus.Configuration
 		private static void RemoveArg(ref string[] args, ref int i)
 		{
 			string[] nArgs = new string[args.Length - 1];
-			if(i != 0)
+			if (i != 0)
 				Array.Copy(args, 0, nArgs, 0, i);
 			Array.Copy(args, i + 1, nArgs, i, nArgs.Length - i);
 			args = nArgs;
@@ -138,9 +141,6 @@ namespace GeneXus.Configuration
 			try
 			{
 				sId = GetMappedProperty(sId);
-				if (GetEnvironmentValue(sId, out sString))
-					return true;
-
 				sString = config.Get(sId);
 				if (String.IsNullOrEmpty(sString))
 					return false;
@@ -151,30 +151,12 @@ namespace GeneXus.Configuration
 				sString = string.Empty;
 				return false;
 			}
-		}		
+		}
 
 		public static bool GetValueOf(string sId)
 		{
 			string sString;
 			return GetValueOf(sId, out sString);
-		}
-
-		private const string ENVVAR_PREFIX = "GX_";
-		static bool GetEnvironmentValue(string name, out string value)
-		{
-			try
-			{
-				value = Environment.GetEnvironmentVariable($"{ENVVAR_PREFIX}{name}");
-				if (!string.IsNullOrEmpty(value))
-					return true;
-
-				return false;
-			}
-			catch
-			{
-				value = string.Empty;
-				return false;
-			}
 		}
 
 		static string GetMappedProperty(string original)
@@ -267,7 +249,7 @@ namespace GeneXus.Configuration
 					{
 						ret = cfgBuf;
 					}
-					if (!string.IsNullOrEmpty(ret)) 
+					if (!string.IsNullOrEmpty(ret))
 						connectionProperties[key] = ret;
 				}
 			}
@@ -414,7 +396,7 @@ namespace GeneXus.Configuration
 			}
 		}
 #if NETCORE
-		public static IConfigurationRoot ConfigRoot{ get; set; }
+		public static IConfigurationRoot ConfigRoot { get; set; }
 		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
@@ -451,6 +433,13 @@ namespace GeneXus.Configuration
 							logConfig(logConfigSource);
 						else
 							logConfig(configFileName);
+
+						foreach (string key in _config.Keys)
+						{
+							if (EnvVarReader.GetEnvironmentValue(key, out string envVarValue))
+								_config[key] = envVarValue;
+						}
+
 						return _config;
 					}
 #if !NETCORE
@@ -460,6 +449,11 @@ namespace GeneXus.Configuration
 						logConfig(null);
 						if (log.IsDebugEnabled) loadedConfigFile = GxContext.StaticPhysicalPath() + "web.config";
 						_config = ConfigurationSettings.AppSettings;
+						foreach (string key in _config.Keys)
+						{
+							if (EnvVarReader.GetEnvironmentValue(key, out string envVarValue))
+								_config[key] = envVarValue;
+						}
 						languages = null;
 						return _config;
 					}
@@ -508,9 +502,7 @@ namespace GeneXus.Configuration
 					}
 					var logConfigFile = "log.config";
 					if (File.Exists(logConfigFile))
-
 						logConfig(logConfigFile);
-
 #endif
 				}
 				return _config;
@@ -520,18 +512,24 @@ namespace GeneXus.Configuration
 #if NETCORE
 		static NameValueCollection loadConfigJson(string appSettings)
 		{
-			if (ConfigRoot == null) {
-					var builder = new ConfigurationBuilder()
-						.SetBasePath(FileUtil.GetBasePath())
-						.AddJsonFile(appSettings, optional: false, reloadOnChange: true)
-						
-						.AddEnvironmentVariables();
-					ConfigRoot = builder.Build();
+			if (ConfigRoot == null)
+			{
+				var builder = new ConfigurationBuilder()
+					.SetBasePath(FileUtil.GetBasePath())
+					.AddJsonFile(appSettings, optional: false, reloadOnChange: true)
+
+					.AddEnvironmentVariables();
+				ConfigRoot = builder.Build();
 			}
 			languages = new Hashtable(StringComparer.OrdinalIgnoreCase);
 			NameValueCollection cfg = new NameValueCollection(StringComparer.Ordinal); //Case sensitive
-			foreach (var c in ConfigRoot.GetSection("appSettings").GetChildren()) {
-				cfg.Add(c.Key, c.Value);
+			foreach (var c in ConfigRoot.GetSection("appSettings").GetChildren())
+			{
+				string key = c.Key;
+				string value = c.Value;
+				if (EnvVarReader.GetEnvironmentValue(key, out string envVarValue))
+					value = envVarValue;
+				cfg.Add(key, value);
 			}
 
 			foreach (var c in ConfigRoot.GetSection("languages").GetChildren())
@@ -611,10 +609,19 @@ namespace GeneXus.Configuration
 									cfg.Add(rdr["key"], rdr["value"]);
 						}
 						else if (rdr.Name.Equals("appSettings"))
+						{
 							while (rdr.Read() && rdr.IsStartElement())
-								cfg.Add(rdr["key"], rdr["value"]);
+							{
+								string key = rdr["key"];
+								string value = rdr["value"];
+								if (EnvVarReader.GetEnvironmentValue(key, out string envVarValue))
+									value = envVarValue;
+
+								cfg.Add(key, value);
+							}
+						}
 						else if (rdr.Name.Equals("log4net") && rdr.IsStartElement())
-								logConfigSource = rdr["configSource"];
+							logConfigSource = rdr["configSource"];
 						else if (rdr.Name.Equals("languages"))
 							while (rdr.Read() && rdr.IsStartElement())
 							{
