@@ -187,10 +187,23 @@ namespace GeneXus.Utils
 	public class GxSerializationErrorManager
 	{
 		List<string> errors = new List<string>();
+		int errorCount = 0;
+		int maxError = 10;
 
+		public GxSerializationErrorManager()
+		{
+			if (Config.GetValueOf("XmlSerialization-MaxErrorReporting", out string sMaxErr))
+			{
+				Int32.TryParse(sMaxErr, out this.maxError);
+			}
+		}
 		public void unknownNode(object sender, XmlNodeEventArgs e)
 		{
-			this.Add( string.Format("Unexpected node found: {0} (name: {1}, namespace: {2}", e.Name, e.LocalName, e.NamespaceURI));
+			if (this.errorCount <= this.maxError)
+			{
+				this.errorCount++;
+				this.Add(string.Format("Unexpected node found ({0}): {1} (name: {2}, namespace: {3}", this.errorCount, e.Name, e.LocalName, e.NamespaceURI));
+			}
 		}
 		public void Add( string s)
 		{
