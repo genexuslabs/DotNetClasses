@@ -18,6 +18,8 @@ using System.Data.Common;
 using System.Linq.Expressions;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Net.Http;
+using GeneXus.Http;
 
 namespace GeneXus.Data.NTier
 {
@@ -214,51 +216,15 @@ namespace GeneXus.Data.NTier
 				isSAPBO = true; SAPProtocolVersionUpdated = false;
 				clientSettings.Properties = clientSettings.Properties ?? new Dictionary<string, object>();
 				clientSettings.Properties[ODataClientSettings.ExtraProperties.STRINGIZE_DATETIME_VALUES] = true;
-
-				using (WebClient login = new WebClient())
-				{
-					string sloginInfo = string.Format("{{\"UserName\":\"{0}\",\"Password\":\"{1}\",\"CompanyDB\":\"{2}\"}}", user, password, sapLoginBO);
-
-					login.Credentials = new NetworkCredential(user, password);
-					string loginBase = serviceUri.TrimEnd(new char[] { '/' });
-					string loginUrl = string.Format("{0}/Login", loginBase);
-					Uri loginUri = new Uri(loginUrl);
-					bool originalExpect100Continue = ServicePointManager.Expect100Continue;
-					ServicePointManager.Expect100Continue = false;
-					try
-					{
-						string loginResponse = login.UploadString(loginUri, sloginInfo);
-						string cookie = login.ResponseHeaders.Get("Set-Cookie");
-						if (!string.IsNullOrEmpty(cookie))
-						{
-							int cookieStart = cookie.IndexOf("B1SESSION=");
-							if (cookieStart >= 0)
-							{
-								int cookieEnd = cookie.IndexOf(';', cookieStart);
-
-								b1SessionId = cookie.Substring(cookieStart + 10, cookieEnd - cookieStart - 10);
-							}
-						}
-					}
-					finally
-					{
-						ServicePointManager.Expect100Continue = originalExpect100Continue;
-					}
-				}
 			}
-			if (b1SessionId != null)
-			{ // SAP B1 can obtain session Id via the property SapLoginBO = Name of the CompanyDB (which makes the Login request) or directly indicating the B1Session
-				clientSettings.OnApplyClientHandler += handler =>
-				{
-					handler.CookieContainer.Add(new Cookie("B1SESSION", b1SessionId, "/", new Uri(serviceUri).Host));
-				};
-			}
+			if (sapLoginBO != null || b1SessionId != null)
+				SapB1LoginHandler.InitializeHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId);
+
 			clientSettings.OnTrace = OnTrace;
 			if (user != null && password != null &&
 				builder.TryGetValue("force_auth", out object forceAuth) && forceAuth.ToString().Equals("y", StringComparison.InvariantCultureIgnoreCase))
-			{ // Case in which the service goes with Basic authentication but is not sending the Challenge when giving the response 401.Unauthorized
-			// If the property force_auth = is set and the authorization header is sent in advance
-			  // Si se pone la property force_auth=y se manda el header de autorización de antemano
+			{   // When the service uses with Basic authentication but is not sending the Challenge after giving the response 401.Unauthorized
+				// if the property force_auth = is set then the authorization header is sent in advance
 				clientSettings.BeforeRequest += request =>
 				{
 					request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{ user }:{ password }")));
@@ -274,6 +240,111 @@ namespace GeneXus.Data.NTier
 					clientSettings.MetadataDocument = File.ReadAllText(metadataFile);
 			}
 			m_ODataConnectionString = serviceUri;
+		}
+
+		class SapB1LoginHandler
+		{
+			private string user, password;
+			private string sloginInfo;
+			private Uri loginUri;
+			private DateTime expiryDT;
+			private const string SESSION_INFO_ID = "B1SESSION";
+			private const string SESSION_INFO_EXPIRY = "B1SESSION_EXPIRY";
+			private IGxSession gxSession;
+
+			private SapB1LoginHandler(ODataClientSettings clientSettings, string serviceUri, string sapLoginBO, string user, string password, string b1SessionId)
+			{
+				this.user = user;
+				this.password = password;
+				expiryDT = b1SessionId != null ? DateTime.MaxValue : DateTime.MinValue;
+
+				sloginInfo = string.Format("{{\"UserName\":\"{0}\",\"Password\":\"{1}\",\"CompanyDB\":\"{2}\"}}", user, password, sapLoginBO);
+				string loginBase = serviceUri.TrimEnd(new char[] { '/' });
+				string loginUrl = string.Format("{0}/Login", loginBase);
+				loginUri = new Uri(loginUrl);
+
+				gxSession = Application.GxContext.Current.GetSession();
+				object sessionExpiry = gxSession.GetObject(SESSION_INFO_EXPIRY);
+				if(sessionExpiry != null && sessionExpiry is DateTime &&
+					gxSession.Get(SESSION_INFO_ID) != null)
+				{
+					expiryDT = (DateTime)sessionExpiry;
+					b1SessionId = gxSession.Get(SESSION_INFO_ID);
+					b1Cookie = new Cookie("B1SESSION", b1SessionId, "/", loginUri.Host);
+					b1Cookie.Expires = expiryDT;
+				}
+
+				clientSettings.BeforeRequest += LoginHandler;
+				clientSettings.OnApplyClientHandler += ClientHandler;
+			}
+
+			private CookieContainer CurrentCookieContainer = null;
+			private Cookie b1Cookie = null;
+			private void ClientHandler(HttpClientHandler handler)
+			{
+				CurrentCookieContainer = handler.CookieContainer;
+				if(b1Cookie != null)
+					CurrentCookieContainer.Add(b1Cookie);
+			}
+
+			private void LoginHandler(System.Net.Http.HttpRequestMessage request)
+			{
+				if (DateTime.Now >= expiryDT)
+				{
+					using (WebClient login = new WebClient())
+					{
+						login.Credentials = new NetworkCredential(user, password);
+						bool originalExpect100Continue = ServicePointManager.Expect100Continue;
+						ServicePointManager.Expect100Continue = false;
+						try
+						{
+							string loginResponse = login.UploadString(loginUri, sloginInfo);
+							string cookie = login.ResponseHeaders.Get("Set-Cookie");
+							string b1SessionId;
+							if (!string.IsNullOrEmpty(cookie))
+							{
+								int cookieStart = cookie.IndexOf("B1SESSION=");
+								if (cookieStart >= 0)
+								{
+									int cookieEnd = cookie.IndexOf(';', cookieStart);
+									b1SessionId = cookie.Substring(cookieStart + 10, cookieEnd - cookieStart - 10);
+									int span = 6;
+									int index = loginResponse.IndexOf("SessionTimeout");
+									if(index > 0)
+									{
+										loginResponse = loginResponse.Substring(index);
+										index = loginResponse.IndexOf(':');
+										if(index > 0)
+										{
+											loginResponse = loginResponse.Substring(index + 1).Trim();
+											for (index = 0; index < loginResponse.Length && Char.IsDigit(loginResponse[index]); index++) { }
+											span = int.Parse(loginResponse.Substring(0, index));
+										}
+									}
+									GxService.log_msg($"Acquired B1Session. Expires in { span } minutes.");
+									expiryDT = DateTime.Now.AddMinutes(span-1);
+
+									gxSession.Set(SESSION_INFO_ID, b1SessionId);
+									gxSession.SetObject(SESSION_INFO_EXPIRY, expiryDT);
+									b1Cookie = new Cookie("B1SESSION", b1SessionId, "/", loginUri.Host);
+									b1Cookie.Expires = expiryDT;
+									if (CurrentCookieContainer != null)
+										CurrentCookieContainer.Add(b1Cookie);
+								}
+							}
+						}
+						finally
+						{
+							ServicePointManager.Expect100Continue = originalExpect100Continue;
+						}
+					}
+				}
+			}
+
+			internal static void InitializeHandler(ODataClientSettings clientSettings, string serviceUri, string sapLoginBO, string user, string password, string b1SessionId)
+			{
+				SapB1LoginHandler sapLoginHandler = new SapB1LoginHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId);
+			}
 		}
 
 		private void OnTrace(string msg, object[] args)
