@@ -199,7 +199,7 @@ namespace GeneXus.Utils
 		}
 		public void unknownNode(object sender, XmlNodeEventArgs e)
 		{
-			if (this.errorCount <= this.maxError)
+			if (this.errorCount < this.maxError)
 			{
 				this.errorCount++;
 				this.Add(string.Format("Unexpected node found ({0}): {1} (name: {2}, namespace: {3}", this.errorCount, e.Name, e.LocalName, e.NamespaceURI));
