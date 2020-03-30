@@ -525,7 +525,7 @@ namespace GeneXus.Utils
 						g.InnerValue.ToString().Equals(EMPTY_LINE) ||
 						g.InnerValue.ToString().Equals(EMPTY_POLY) ||
 						g.InnerValue.ToString().Equals(EMPTY_GEOGRAPHY) ||
-						g.InnerValue.Equals(new Geospatial(EMPTY_GEOMETRY))
+						g.InnerValue.ToString().Equals(EMPTY_GEOMETRY)
                     );
         }
 
@@ -588,7 +588,7 @@ namespace GeneXus.Utils
 		{
             if (IsGeoNull(s))
             {
-                geoText = EMPTY_GEOGRAPHY;
+				geoText = EMPTY_GEOMETRY ;
             }
             else
             {
@@ -616,7 +616,7 @@ namespace GeneXus.Utils
 			}
 			catch (ArgumentException ex)
 			{
-                if (ex.ToString().Contains("24144")) // makevalid didn´t work
+                if (ex.ToString().Contains("24144")) // makevalid didnÂ´t work
                 {
                     _innerValue = null;
                 }
