@@ -233,6 +233,7 @@ namespace GeneXus.Utils
 			while (oReader.LocalName == itemName && currError > 0)
 			{
 				T currObject = new T();
+				currObject.context = this.context;
 				string xml = GxUserType.UpdateNodeDefaultNamespace(oReader.ReadRawXML(), null, false, this.GetPrefixesInContext());
 				currObject.FromXml(xml, itemName, oReader.NamespaceURI);
 				Add(currObject);

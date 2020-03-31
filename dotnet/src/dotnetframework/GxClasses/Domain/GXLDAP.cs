@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Specialized;
 using System.DirectoryServices;
 using System.Text;
 using log4net;
