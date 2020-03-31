@@ -275,8 +275,9 @@ namespace GeneXus.Data.NTier
 
 		public virtual object GetValue(IOServiceContext context, IDictionary<string, object> currentEntry)
 		{
-			Debug.Assert(currentEntry.ContainsKey(name), string.Format("Field not found: {0}", name));
-			return currentEntry[name];
+			if (currentEntry.ContainsKey(name))
+				return currentEntry[name];
+			else return null;
 		}
 
 		public virtual void SetValue(IDictionary<string, object> currentEntry, object value)

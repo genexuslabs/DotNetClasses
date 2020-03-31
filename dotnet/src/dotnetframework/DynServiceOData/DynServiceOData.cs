@@ -1529,12 +1529,16 @@ namespace GeneXus.Data.NTier
 
 			public virtual object GetValue(IOServiceContext context, IDictionary<string, object> currentEntry)
 			{
-				object currentEntryObj = currentEntry[context.Entity(entity) as string];
-				if (currentEntryObj is IDictionary<string, object> currentEntryExt)
-					return map.GetValue(context, currentEntryExt);
-				else if (currentEntryObj is IEnumerable<IDictionary<string, object>> currentEntryCol && currentEntryCol.Any())
-					return map.GetValue(context, currentEntryCol.First()); // If the server returned a collection for this entity, return data from the first item (SapB1)
-				else return null;
+				string key = context.Entity(entity) as string;
+				if (currentEntry.ContainsKey(key))
+				{
+					object currentEntryObj = currentEntry[key];
+					if (currentEntryObj is IDictionary<string, object> currentEntryExt)
+						return map.GetValue(context, currentEntryExt);
+					else if (currentEntryObj is IEnumerable<IDictionary<string, object>> currentEntryCol && currentEntryCol.Any())
+						return map.GetValue(context, currentEntryCol.First()); // If the server returned a collection for this entity, return data from the first item (SapB1)
+				}
+				return null;
 			}
 
 			public virtual void SetValue(IDictionary<string, object> currentEntry, object value)
