@@ -37,6 +37,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataSqlite.cs" Link="Data\GXDataSqlite.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Diagnostics\Log.cs" Link="Diagnostics\Log.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Diagnostics\GXDebugManager.cs" Link="Diagnostics\GXDebugManager.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXLDAP.cs" Link="Domain\GXLDAP.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxMessages.cs" Link="Domain\GxMessages.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxMessaging.cs" Link="Domain\GxMessaging.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXTypeConstants.cs" Link="Domain\GXTypeConstants.cs" />
@@ -151,6 +152,7 @@
 	  </PackageReference>
 	  <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" />
 	  <PackageReference Include="Sandwych.GeographicLib" Version="1.49.3"  PrivateAssets="All" /> 
+	  <PackageReference Include="System.DirectoryServices" Version="4.7.0"  PrivateAssets="All" />
   </ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />

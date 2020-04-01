@@ -181,13 +181,16 @@ namespace GeneXus.Web.Security
                         ValidateIssuer = false,
 						IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
 					};
-                    SecurityToken securityToken;
+					//Avoid handler.ValidateToken which does not work in medium trust environment
+					JwtSecurityToken jwtSecurityToken = (JwtSecurityToken)handler.GetType().InvokeMember("ValidateSignature",
+						System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.InvokeMethod, null, handler,
+						new object[] { jwtToken, validationParameters });
+					Validators.ValidateIssuerSecurityKey(jwtSecurityToken.SigningKey, jwtSecurityToken, validationParameters);
 
-                    var claims = handler.ValidateToken(jwtToken, validationParameters, out securityToken);
-                    outToken.Expiration = new DateTime(1970, 1, 1).AddSeconds(Double.Parse(claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXEXPIRATION).Value));
-                    outToken.ProgramName = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXPROGRAM).Value;
-                    outToken.Issuer = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXISSUER).Value;
-                    outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+					outToken.Expiration = new DateTime(1970, 1, 1).AddSeconds(Double.Parse(jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXEXPIRATION).Value));
+					outToken.ProgramName = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXPROGRAM).Value;
+					outToken.Issuer = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXISSUER).Value;
+					outToken.Value = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
                     ok = true;
                 }
                 catch (Exception e)

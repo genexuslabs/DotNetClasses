@@ -4196,7 +4196,12 @@ namespace GeneXus.Data
 		public virtual DateTime GetDateTime(int i)
 		{
 			if (computeSizeInBytes) readBytes += 8;
-			return (DateTime)block.Item(pos,i);
+			var value = block.Item(pos,i);
+
+			if (value is DateTime)
+				return (DateTime)value;
+			else
+				return Convert.ToDateTime(value);
 		}
 		public virtual decimal GetDecimal(int i	)
 		{
