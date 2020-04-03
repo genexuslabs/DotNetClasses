@@ -189,7 +189,15 @@ namespace GeneXus.Utils
 			{
 				return throwException(EXPRESSION_ERROR, "The expression '" + expression + "' has unbalanced parenthesis");
 			}
-			Tokenizer tokenizer = new Tokenizer(getTokenizerExpression(expression), "'!+-/*><=" + GE + LE + AND + OR + NE, true);
+			String delim = "'!+-/*><=" + GE + LE + AND + OR + NE;
+			bool useParentheses = false;
+			if (expression.Contains("" + AND) || expression.Contains("" + OR))
+			{
+				delim = "" + AND + OR;
+				useParentheses = true;
+			}
+			Tokenizer tokenizer = new Tokenizer(getTokenizerExpression(expression), delim, true, useParentheses);
+
 			return evaluate(expression, tokenizer);
 		}
 		
@@ -644,6 +652,10 @@ namespace GeneXus.Utils
 				token += tokenizer.NextToken();
 			}
 			while (!matchParentesis(token) || (String.IsNullOrEmpty(token.Trim()) && tokenizer.HasMoreTokens()));
+			if (tokenizer.useParentheses() && !token.StartsWith("("))
+			{
+				return "(" + token.Trim() + ")";
+			}
 			return token.Trim();
 		}
 		
@@ -683,7 +695,9 @@ namespace GeneXus.Utils
 		private char[] chars;
 			
 		//The tokenizer uses the default delimiter set: the space character, the tab character, the newline character, and the carriage-return character and the form-feed character
-		private string delimiters = " \t\n\r\f";		
+		private string delimiters = " \t\n\r\f";
+
+		private bool parentheses;
 
 		/// <summary>
 		/// Initializes a new class instance with a specified string to process
@@ -715,7 +729,12 @@ namespace GeneXus.Utils
 		public Tokenizer(String source, String delimiters, bool includeDelims):this(source,delimiters)
 		{
 			this.includeDelims = includeDelims;
-		}	
+		}
+
+		public Tokenizer(String str, String delim, bool returnDelims, bool useParentheses) : this(str, delim, returnDelims)
+		{
+			this.parentheses = useParentheses;
+		}
 
 		/// <summary>
 		/// Returns the next token from the token list
@@ -803,6 +822,11 @@ namespace GeneXus.Utils
 		{
 			string dummyToken;
 			return Peek(out dummyToken);
+		}
+
+		public bool useParentheses()
+		{
+			return parentheses;
 		}
 	}
 
