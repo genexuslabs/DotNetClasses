@@ -95,7 +95,7 @@ namespace GeneXus.Storage.GXAmazonS3
         {
 			metadata.Add("Table", tableName);
 			metadata.Add("Field", fieldName);
-			metadata.Add("KeyValue", EncodeNonAsciiCharacters(key));
+			metadata.Add("KeyValue", StorageUtils.EncodeNonAsciiCharacters(key));
         }
 
         private void CreateFolder(string folder, string table = null, string field = null)
@@ -323,33 +323,6 @@ namespace GeneXus.Storage.GXAmazonS3
             PutObjectResponse result = PutObject(objectRequest);			
 			return Get(fileName, destFileType);
         }
-		string EncodeNonAsciiCharacters(string value)
-		{
-			StringBuilder sb = new StringBuilder();
-			foreach (char c in value)
-			{
-				if (c > 127)
-				{
-					// This character is too big for ASCII
-					string encodedValue = "\\u" + ((int)c).ToString("x4");
-					sb.Append(encodedValue);
-				}
-				else
-				{
-					sb.Append(c);
-				}
-			}
-			return sb.ToString();
-		}
-		string DecodeEncodedNonAsciiCharacters(string value)
-		{
-			return Regex.Replace(
-				value,
-				@"\\u(?<Value>[a-zA-Z0-9]{4})",
-				m => {
-					return ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString();
-				});
-		}
         public string Copy(string url, string newName, string tableName, string fieldName, GxFileType destFileType)
 		{
             url = StorageUtils.DecodeUrl(url);
