@@ -5283,7 +5283,7 @@ namespace GeneXus.Utils
 				return directoryName + DELIMITER;
 			return directoryName;
 		}
-		public string EncodeNonAsciiCharacters(string value)
+		public static string EncodeNonAsciiCharacters(string value)
 		{
 			StringBuilder sb = new StringBuilder();
 			foreach (char c in value)
