@@ -1642,7 +1642,10 @@ namespace GeneXus.Utils
 							{
 								currJsonProp.FromJSONObject(formattableObj);
 							}
-
+							else if (objProperty.PropertyType == typeof(string) && !(currObj is String))
+							{
+								objProperty.SetValue(this, currObj.ToString(), null);
+							}
 							else
 							{
 								objProperty.SetValue(this, currObj, null);
