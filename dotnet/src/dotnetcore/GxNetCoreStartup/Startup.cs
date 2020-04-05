@@ -446,6 +446,7 @@ namespace GeneXus.Application
 		{
 
 			GxContext gxContext = new GxContext();
+			gxContext.HttpContext = context;
 			DataStoreUtil.LoadDataStores(gxContext);
 			context.NewSessionCheck();
 			string nspace;
