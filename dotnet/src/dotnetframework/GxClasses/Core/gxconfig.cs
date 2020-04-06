@@ -664,7 +664,7 @@ namespace GeneXus.Configuration
 		static string remoteLocation;
 		static int remote = -1;
 		static int storageTimezone = -1;
-		private static int exposeMetadata;
+		private static int exposeMetadata = -1;
 
 		public static string RemoteLocation
 		{
