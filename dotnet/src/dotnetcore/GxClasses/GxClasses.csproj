@@ -140,6 +140,7 @@
 	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 	  <PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
+	  <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 	  <PackageReference Include="MySql.Data" Version="6.10.6" PrivateAssets="All">
 	  </PackageReference>
 	  <PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All">  
