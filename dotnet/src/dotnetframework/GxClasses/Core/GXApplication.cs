@@ -176,6 +176,7 @@ namespace GeneXus.Application
 		string GetReferer();
 		int GetBrowserType();
 		bool IsLocalStorageSupported();
+		bool ExposeMetadata();
 		string GetBrowserVersion();
 		short GetHttpSecure();
 		string GetCookie(string name);
@@ -1755,7 +1756,10 @@ namespace GeneXus.Application
 			}
 			return false;
 		}
-
+		public bool ExposeMetadata()
+		{
+			return Preferences.ExposeMetadata;
+		}
 		public bool IsLocalStorageSupported()
 		{
 			bool supported = String.IsNullOrEmpty(this.GetCookie("GXLocalStorageSupport"));
