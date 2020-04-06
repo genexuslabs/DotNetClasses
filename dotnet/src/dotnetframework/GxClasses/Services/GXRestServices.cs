@@ -441,7 +441,7 @@ namespace GeneXus.Utils
 							}
 							else
 							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, GXHttpHandler.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description));
+								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description));
 								SetStatusCode(HttpStatusCode.Unauthorized);
 							}
 							return false;

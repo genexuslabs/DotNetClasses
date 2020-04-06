@@ -209,3 +209,5 @@
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Services.ExternalProvider")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1715:Identifiers should have correct prefix", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Http.WebSocket.WebSocketEventHandler`2")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1715:Identifiers should have correct prefix", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Services.ExternalProvider")]
+
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Application.GXBaseObject.GetCallTargetFromUrl(System.String)~System.String")]
