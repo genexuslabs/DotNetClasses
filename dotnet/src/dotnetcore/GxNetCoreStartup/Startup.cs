@@ -250,6 +250,9 @@ namespace GeneXus.Application
 			provider.Mappings[".otf"] = "font/opentype";
 			provider.Mappings[".pdf"] = "application/pdf";
 			provider.Mappings[".log"] = "text/plain";
+			provider.Mappings[".usdz"] = "model/vnd.pixar.usd";
+			provider.Mappings[".sfb"] = "model/sfb";
+			provider.Mappings[".gltf"] = "model/gltf+json";
 
 			app.UseResponseCompression();
 			app.UseCookiePolicy();
@@ -443,6 +446,7 @@ namespace GeneXus.Application
 		{
 
 			GxContext gxContext = new GxContext();
+			gxContext.HttpContext = context;
 			DataStoreUtil.LoadDataStores(gxContext);
 			context.NewSessionCheck();
 			string nspace;

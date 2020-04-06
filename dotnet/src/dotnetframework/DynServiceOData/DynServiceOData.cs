@@ -18,6 +18,8 @@ using System.Data.Common;
 using System.Linq.Expressions;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Net.Http;
+using GeneXus.Http;
 
 namespace GeneXus.Data.NTier
 {
@@ -82,6 +84,7 @@ namespace GeneXus.Data.NTier
 			string SAP = null, SAPcsrfToken = null;
 			string metadataLocation = $"{ Application.GxContext.StaticPhysicalPath() }METADATA{ Path.DirectorySeparatorChar }SERVICES{ Path.DirectorySeparatorChar }";
 			bool hasUserMetadataLocation = false;
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12; // Framework 4.5.x does not have TLS 1.2 enabled by default
 			if (builder.TryGetValue("User Id", out object userId) && builder.TryGetValue("Password", out object pass))
 			{
 				user = userId.ToString();
@@ -210,51 +213,18 @@ namespace GeneXus.Data.NTier
 				RecordAlreadyExistsServiceCodes = RecordAlreadyExistsServiceCodes ?? new HashSet<string>(Enumerable.Repeat("-2035", 1));
 
 				clientSettings.PayloadFormat = ODataPayloadFormat.Json; 
-				isSAP = true; SAPProtocolVersionUpdated = false;
-				using (WebClient login = new WebClient())
-				{
-					string sloginInfo = string.Format("{{\"UserName\":\"{0}\",\"Password\":\"{1}\",\"CompanyDB\":\"{2}\"}}", user, password, sapLoginBO);
-
-					login.Credentials = new NetworkCredential(user, password);
-					string loginBase = serviceUri.TrimEnd(new char[] { '/' });
-					string loginUrl = string.Format("{0}/Login", loginBase);
-					Uri loginUri = new Uri(loginUrl);
-					bool originalExpect100Continue = ServicePointManager.Expect100Continue;
-					ServicePointManager.Expect100Continue = false;
-					try
-					{
-						string loginResponse = login.UploadString(loginUri, sloginInfo);
-						string cookie = login.ResponseHeaders.Get("Set-Cookie");
-						if (!string.IsNullOrEmpty(cookie))
-						{
-							int cookieStart = cookie.IndexOf("B1SESSION=");
-							if (cookieStart >= 0)
-							{
-								int cookieEnd = cookie.IndexOf(';', cookieStart);
-
-								b1SessionId = cookie.Substring(cookieStart + 10, cookieEnd - cookieStart - 10);
-							}
-						}
-					}
-					finally
-					{
-						ServicePointManager.Expect100Continue = originalExpect100Continue;
-					}
-				}
+				isSAPBO = true; SAPProtocolVersionUpdated = false;
+				clientSettings.Properties = clientSettings.Properties ?? new Dictionary<string, object>();
+				clientSettings.Properties[ODataClientSettings.ExtraProperties.STRINGIZE_DATETIME_VALUES] = true;
 			}
-			if (b1SessionId != null)
-			{ // SAP B1 can obtain session Id via the property SapLoginBO = Name of the CompanyDB (which makes the Login request) or directly indicating the B1Session
-				clientSettings.OnApplyClientHandler += handler =>
-				{
-					handler.CookieContainer.Add(new Cookie("B1SESSION", b1SessionId, "/", new Uri(serviceUri).Host));
-				};
-			}
+			if (sapLoginBO != null || b1SessionId != null)
+				SapB1LoginHandler.InitializeHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId);
+
 			clientSettings.OnTrace = OnTrace;
 			if (user != null && password != null &&
 				builder.TryGetValue("force_auth", out object forceAuth) && forceAuth.ToString().Equals("y", StringComparison.InvariantCultureIgnoreCase))
-			{ // Case in which the service goes with Basic authentication but is not sending the Challenge when giving the response 401.Unauthorized
-			// If the property force_auth = is set and the authorization header is sent in advance
-			  // Si se pone la property force_auth=y se manda el header de autorización de antemano
+			{   // When the service uses with Basic authentication but is not sending the Challenge after giving the response 401.Unauthorized
+				// if the property force_auth = is set then the authorization header is sent in advance
 				clientSettings.BeforeRequest += request =>
 				{
 					request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{ user }:{ password }")));
@@ -272,6 +242,111 @@ namespace GeneXus.Data.NTier
 			m_ODataConnectionString = serviceUri;
 		}
 
+		class SapB1LoginHandler
+		{
+			private string user, password;
+			private string sloginInfo;
+			private Uri loginUri;
+			private DateTime expiryDT;
+			private const string SESSION_INFO_ID = "B1SESSION";
+			private const string SESSION_INFO_EXPIRY = "B1SESSION_EXPIRY";
+			private IGxSession gxSession;
+
+			private SapB1LoginHandler(ODataClientSettings clientSettings, string serviceUri, string sapLoginBO, string user, string password, string b1SessionId)
+			{
+				this.user = user;
+				this.password = password;
+				expiryDT = b1SessionId != null ? DateTime.MaxValue : DateTime.MinValue;
+
+				sloginInfo = string.Format("{{\"UserName\":\"{0}\",\"Password\":\"{1}\",\"CompanyDB\":\"{2}\"}}", user, password, sapLoginBO);
+				string loginBase = serviceUri.TrimEnd(new char[] { '/' });
+				string loginUrl = string.Format("{0}/Login", loginBase);
+				loginUri = new Uri(loginUrl);
+
+				gxSession = Application.GxContext.Current.GetSession();
+				object sessionExpiry = gxSession.GetObject(SESSION_INFO_EXPIRY);
+				if(sessionExpiry != null && sessionExpiry is DateTime &&
+					gxSession.Get(SESSION_INFO_ID) != null)
+				{
+					expiryDT = (DateTime)sessionExpiry;
+					b1SessionId = gxSession.Get(SESSION_INFO_ID);
+					b1Cookie = new Cookie("B1SESSION", b1SessionId, "/", loginUri.Host);
+					b1Cookie.Expires = expiryDT;
+				}
+
+				clientSettings.BeforeRequest += LoginHandler;
+				clientSettings.OnApplyClientHandler += ClientHandler;
+			}
+
+			private CookieContainer CurrentCookieContainer = null;
+			private Cookie b1Cookie = null;
+			private void ClientHandler(HttpClientHandler handler)
+			{
+				CurrentCookieContainer = handler.CookieContainer;
+				if(b1Cookie != null)
+					CurrentCookieContainer.Add(b1Cookie);
+			}
+
+			private void LoginHandler(System.Net.Http.HttpRequestMessage request)
+			{
+				if (DateTime.Now >= expiryDT)
+				{
+					using (WebClient login = new WebClient())
+					{
+						login.Credentials = new NetworkCredential(user, password);
+						bool originalExpect100Continue = ServicePointManager.Expect100Continue;
+						ServicePointManager.Expect100Continue = false;
+						try
+						{
+							string loginResponse = login.UploadString(loginUri, sloginInfo);
+							string cookie = login.ResponseHeaders.Get("Set-Cookie");
+							string b1SessionId;
+							if (!string.IsNullOrEmpty(cookie))
+							{
+								int cookieStart = cookie.IndexOf("B1SESSION=");
+								if (cookieStart >= 0)
+								{
+									int cookieEnd = cookie.IndexOf(';', cookieStart);
+									b1SessionId = cookie.Substring(cookieStart + 10, cookieEnd - cookieStart - 10);
+									int span = 6;
+									int index = loginResponse.IndexOf("SessionTimeout");
+									if(index > 0)
+									{
+										loginResponse = loginResponse.Substring(index);
+										index = loginResponse.IndexOf(':');
+										if(index > 0)
+										{
+											loginResponse = loginResponse.Substring(index + 1).Trim();
+											for (index = 0; index < loginResponse.Length && Char.IsDigit(loginResponse[index]); index++) { }
+											span = int.Parse(loginResponse.Substring(0, index));
+										}
+									}
+									GxService.log_msg($"Acquired B1Session. Expires in { span } minutes.");
+									expiryDT = DateTime.Now.AddMinutes(span-1);
+
+									gxSession.Set(SESSION_INFO_ID, b1SessionId);
+									gxSession.SetObject(SESSION_INFO_EXPIRY, expiryDT);
+									b1Cookie = new Cookie("B1SESSION", b1SessionId, "/", loginUri.Host);
+									b1Cookie.Expires = expiryDT;
+									if (CurrentCookieContainer != null)
+										CurrentCookieContainer.Add(b1Cookie);
+								}
+							}
+						}
+						finally
+						{
+							ServicePointManager.Expect100Continue = originalExpect100Continue;
+						}
+					}
+				}
+			}
+
+			internal static void InitializeHandler(ODataClientSettings clientSettings, string serviceUri, string sapLoginBO, string user, string password, string b1SessionId)
+			{
+				SapB1LoginHandler sapLoginHandler = new SapB1LoginHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId);
+			}
+		}
+
 		private void OnTrace(string msg, object[] args)
 		{
 			GxService.log_msg(String.Format(msg, args));
@@ -279,7 +354,7 @@ namespace GeneXus.Data.NTier
 
 		public override void Open()
 		{
-			client = new GXODataClient(clientSettings);
+			client = new GXODataClient(new GXODataClientSettings(clientSettings, !isSAPBO));
 			base.Open();
 		}
 
@@ -288,7 +363,7 @@ namespace GeneXus.Data.NTier
 			return new ODataDataReader(this, client, cursorDef, parms, behavior);
 		}
 
-		private bool isSAP = false, SAPProtocolVersionUpdated = false;
+		private bool isSAPBO = false, SAPProtocolVersionUpdated = false;
 		public override int ExecuteNonQuery(ServiceCursorDef cursorDef, IDataParameterCollection parms, CommandBehavior behavior)
 		{
 			int rows = 1;
@@ -299,7 +374,7 @@ namespace GeneXus.Data.NTier
 				Task task = null;
 				ConfiguredTaskAwaitable.ConfiguredTaskAwaiter taskAwaiter;
 
-				if (isSAP && !SAPProtocolVersionUpdated)
+				if (isSAPBO && !SAPProtocolVersionUpdated)
 				{
 					
 					ISession session = client.Session;
@@ -684,7 +759,9 @@ namespace GeneXus.Data.NTier
 							{
 								IDictionary<string, object> oneRecord = new Dictionary<string, object>(subRecord);
 								foreach (string skey in record.Keys)
-									oneRecord.Add(skey, record[skey]);
+									if(!oneRecord.ContainsKey(skey))
+										oneRecord.Add(skey, record[skey]);
+									else Debug.Assert(oneRecord[skey] == null || record[skey] == null || oneRecord[skey].Equals(record[skey]), $"key already in dictionary: { skey } - value: { oneRecord[skey] } - ignoring: { record[skey] }");
 								foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
 									yield return r;
 							}
@@ -964,6 +1041,8 @@ namespace GeneXus.Data.NTier
 			object obj = selectList[i].GetValue(NewServiceContext(), currentEntry);
 			if (obj is DateTime dt)
 				return dt;
+			else if(obj is DateTimeOffset dto)
+				return dto.UtcDateTime;
 			else if(obj is TimeOfDay timeOfDay)
 				return new DateTime(timeOfDay.Ticks);
 			else throw new NotImplementedException();
@@ -1040,12 +1119,13 @@ namespace GeneXus.Data.NTier
 				string geoStr = WellKnownTextSqlFormatter.Create().Write(geoValue);
 				geoStr = geoStr.Substring(geoStr.IndexOf(';') + 1);
 				return geoStr;
-			}
-			if (value is DateTimeOffset)
-				return ((DateTimeOffset)value).UtcDateTime;
-			else if (value is TimeSpan)
-				return DateTime.MinValue.Add(((TimeSpan)value));
-			return selectList[i].GetValue(NewServiceContext(), currentEntry);
+			}else if (value is DateTimeOffset dto)
+				return dto.UtcDateTime;
+			else if (value is TimeOfDay timeOfDay)
+				return new DateTime(timeOfDay.Ticks);
+			else if (value is TimeSpan ts)
+				return DateTime.MinValue.Add(ts);
+			return value;
 		}
 
 		public int GetValues(object[] values)
@@ -1449,7 +1529,16 @@ namespace GeneXus.Data.NTier
 
 			public virtual object GetValue(IOServiceContext context, IDictionary<string, object> currentEntry)
 			{
-				return currentEntry[context.Entity(entity) as string] is IDictionary<string, object> currentEntryExt ? map.GetValue(context, currentEntryExt) : null;
+				string key = context.Entity(entity) as string;
+				if (currentEntry.ContainsKey(key))
+				{
+					object currentEntryObj = currentEntry[key];
+					if (currentEntryObj is IDictionary<string, object> currentEntryExt)
+						return map.GetValue(context, currentEntryExt);
+					else if (currentEntryObj is IEnumerable<IDictionary<string, object>> currentEntryCol && currentEntryCol.Any())
+						return map.GetValue(context, currentEntryCol.First()); // If the server returned a collection for this entity, return data from the first item (SapB1)
+				}
+				return null;
 			}
 
 			public virtual void SetValue(IDictionary<string, object> currentEntry, object value)
@@ -1604,14 +1693,27 @@ namespace GeneXus.Data.NTier
 		}
 	}
 
+	public class GXODataClientSettings
+	{
+		internal GXODataClientSettings(ODataClientSettings settings, bool isSapB1)
+		{
+			this.settings = settings;
+			this.allowSelectOnExpand = isSapB1;
+		}
+		internal ODataClientSettings settings { get; set; }
+		internal bool allowSelectOnExpand { get; set; }
+	}
+
 	public class GXODataClient
 	{
 		static IDictionary<string, IDictionary<string, IDictionary<string, string>>> entityMappers = new Dictionary<string, IDictionary<string, IDictionary<string, string>>>();
 		static IDictionary<string, IDictionary<string, string>> rootMappers = new Dictionary<string, IDictionary<string, string>>();
 		ODataClientSettings settings;
-		public GXODataClient(ODataClientSettings settings)
+		GXODataClientSettings gxSettings;
+		public GXODataClient(GXODataClientSettings gxSettings)
 		{
-			this.settings = settings;
+			this.gxSettings = gxSettings;
+			settings = gxSettings.settings;
 			Client = new ODataClient(settings);
 			InitializeEntityMapper();
 		}
@@ -1795,29 +1897,46 @@ namespace GeneXus.Data.NTier
 
 		public GXODataClient Select(params ODataExpression[] columns)
 		{
-			return Apply(BoundClient.Select(ApplyMappings(columns, 1)));
+			string[] select = ApplySelectMappings(columns, 1);
+			if (select.Length != columns.Length && !gxSettings.allowSelectOnExpand)
+			{
+				string[] entititesToFullySelect =
+							columns
+								.Select(reference => reference.Reference.Split(separator))
+								.Where(sReferences => sReferences.Length != 1)
+								.Select(sReferences => $"{ this.Entity(BaseEntity, sReferences.FirstOrDefault()) }~{ String.Join("/", sReferences.Skip(1).ToArray()) }")
+								.ToArray();
+
+				return Apply(BoundClient.Select(select).Select(entititesToFullySelect));
+			}else return Apply(BoundClient.Select(select));
 		}
 
 		public GXODataClient Select(Object[] columns)
 		{
-			return Apply(BoundClient.Select(ApplyMappings(columns.OfType<ODataExpression>().ToArray(), 1)));
+			return Select(columns.OfType<ODataExpression>().ToArray());
 		}
 
 		public GXODataClient Expand(params ODataExpression[] associations)
 		{
-			return Apply(BoundClient.ExpandMap(ApplyMappings(associations)));
+			return Apply(BoundClient.ExpandMap(ApplyEntityMappings(associations)));
 		}
 
 		private static char[] separator = new char[] { '/' };
 		private static string strSeparator = "/";
-		private string[] ApplyMappings(ODataExpression[] references, int minus)
+		private string[] ApplySelectMappings(ODataExpression[] references, int minus)
 		{
-			return references.Select(reference => ApplyMapping(BaseEntity, reference.Reference.Split(separator), minus)).ToArray();
+			return references
+					.Select(reference => reference.Reference.Split(separator))
+					.Where(sReferences => gxSettings.allowSelectOnExpand || sReferences.Length == minus)
+					.Select(sReferences => ApplyMapping(BaseEntity, sReferences, minus))
+					.ToArray();
 		}
 
-		private KeyValuePair<string, string>[] ApplyMappings(ODataExpression[] references)
+		private KeyValuePair<string, string>[] ApplyEntityMappings(ODataExpression[] references)
 		{
-			return references.Select(reference => new KeyValuePair<string, string>(reference.Reference, ApplyMapping(BaseEntity, reference.Reference.Split(separator), 0))).ToArray();
+			return references
+					.Select(reference => new KeyValuePair<string, string>(reference.Reference, ApplyMapping(BaseEntity, reference.Reference.Split(separator), 0)))
+					.ToArray();
 		}
 
 		private string ApplyMapping(string Entity, string[] references, int minus)
