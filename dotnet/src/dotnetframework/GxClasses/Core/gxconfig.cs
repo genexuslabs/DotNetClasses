@@ -664,6 +664,7 @@ namespace GeneXus.Configuration
 		static string remoteLocation;
 		static int remote = -1;
 		static int storageTimezone = -1;
+		private static int exposeMetadata;
 
 		public static string RemoteLocation
 		{
@@ -772,6 +773,28 @@ namespace GeneXus.Configuration
 					}
 				}
 				else return (blankEmptyDates == 1);
+			}
+
+		}
+		public static bool ExposeMetadata
+		{
+			get
+			{
+				if (exposeMetadata == -1)
+				{
+					string val;
+					if (Config.GetValueOf("EXPOSE_METADATA", out val) && val == "1")
+					{
+						exposeMetadata = 1;
+						return true;
+					}
+					else
+					{
+						exposeMetadata = 0;
+						return false;
+					}
+				}
+				else return (exposeMetadata == 1);
 			}
 
 		}
