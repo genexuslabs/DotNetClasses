@@ -5,10 +5,12 @@ using Amazon.S3.Model;
 using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -93,7 +95,7 @@ namespace GeneXus.Storage.GXAmazonS3
         {
 			metadata.Add("Table", tableName);
 			metadata.Add("Field", fieldName);
-			metadata.Add("KeyValue", key);
+			metadata.Add("KeyValue", StorageUtils.EncodeNonAsciiCharacters(key));
         }
 
         private void CreateFolder(string folder, string table = null, string field = null)
@@ -321,7 +323,6 @@ namespace GeneXus.Storage.GXAmazonS3
             PutObjectResponse result = PutObject(objectRequest);			
 			return Get(fileName, destFileType);
         }
-
         public string Copy(string url, string newName, string tableName, string fieldName, GxFileType destFileType)
 		{
             url = StorageUtils.DecodeUrl(url);
