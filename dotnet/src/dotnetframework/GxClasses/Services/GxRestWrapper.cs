@@ -359,15 +359,19 @@ namespace GeneXus.Application
 		protected bool ProcessHeaders(string queryId)
 		{
 			var headers = GetHeaders();
-			String language = null, etag = null;
+			String language = null, theme=null, etag = null;
 			if (headers != null)
 			{
 				language = headers["GeneXus-Language"];
+				theme = headers["GeneXus-Theme"];
 				etag = headers["If-Modified-Since"];
 			}
 
 			if (!string.IsNullOrEmpty(language))
 				_gxContext.SetLanguage(language);
+
+			if (!string.IsNullOrEmpty(theme))
+				_gxContext.SetTheme(theme);
 
 			DateTime dt = HTMLDateToDatetime(etag);
 			DateTime newDt;

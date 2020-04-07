@@ -513,16 +513,20 @@ namespace GeneXus.Utils
         {
             
 			NameValueCollection headers = GetHeaders();
-			String language=null, etag=null;
+			String language=null, theme=null, etag=null;
 			if (headers != null)
 			{
 				language = headers["GeneXus-Language"];
+				theme = headers["GeneXus-Theme"];
 				if (!IsPost())
 					etag = headers["If-Modified-Since"];
 			}
             
 			if (!string.IsNullOrEmpty(language))
                 context.SetLanguage(language);
+
+			if (!string.IsNullOrEmpty(theme))
+				context.SetTheme(theme);
 
             DateTime dt = HTMLDateToDatetime(etag);
             DateTime newDt;
