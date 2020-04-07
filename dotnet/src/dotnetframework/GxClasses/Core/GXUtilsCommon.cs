@@ -4721,7 +4721,7 @@ namespace GeneXus.Utils
 					{
 						if (GXProcessHelper.ProcessFactory != null)
 						{
-							GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
+							exitCode = GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
 							return true;
 						}
 						else
