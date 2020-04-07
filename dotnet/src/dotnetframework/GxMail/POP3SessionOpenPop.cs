@@ -135,17 +135,13 @@ namespace GeneXus.Mail
 						}
 						catch (ArgumentException ae)
 						{
-#if DEBUG
-							if (log.IsErrorEnabled) log.Error("Receive message error " + ae.Message + " subject:" + m.Headers.Subject, ae);
-#endif
+							GXLogging.Error(log, "Receive message error " + ae.Message + " subject:" + m.Headers.Subject, ae);
 							PropertyInfo subjectProp = m.Headers.GetType().GetProperty("Subject");
 							string subject = m.Headers.Subject;
 							if (HasCROrLF(subject))
 							{
 								subjectProp.SetValue(m.Headers, subject.Replace('\r', ' ').Replace('\n', ' '));
-#if DEBUG
-								if (log.IsWarnEnabled) log.Warn("Replaced CR and LF in subject " + m.Headers.Subject);
-#endif
+								GXLogging.Warn(log, "Replaced CR and LF in subject " + m.Headers.Subject);
 							}
 							msg = m.ToMailMessage();
 						}
