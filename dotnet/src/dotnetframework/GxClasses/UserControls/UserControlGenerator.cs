@@ -31,7 +31,8 @@ namespace GeneXus.UserControls
 		{
 			if (!File.Exists(GetTemplateAction(m_Type)))
 				return String.Empty;
-			
+			Encoders.HtmlEncode = (input) => input;  
+
 			if (GetTemplateDateTime() > LastRenderTime || m_Template == null)
 			{
 				m_Template = new Template();
