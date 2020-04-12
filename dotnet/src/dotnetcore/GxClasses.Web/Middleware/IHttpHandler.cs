@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 
 namespace GeneXus.Utils
 {
@@ -6,5 +6,7 @@ namespace GeneXus.Utils
 	{
 		void ProcessRequest(HttpContext context);
 		void sendAdditionalHeaders();
+		HtmlTextWriter ControlOutputWriter { get; set; }
+
 	}
 }
