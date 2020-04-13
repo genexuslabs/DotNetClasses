@@ -1,6 +1,9 @@
 # ChangePublicKeyToken Tool
 
-This is a tool which modifies assemblies replacing references for one with different strong name (in particular different public key token).
+This is a tool which modifies assemblies replacing references.
+If an assembly A changes its strong name key, this tool allows to update all the assemblies 
+in INTPUT_DIRECTORY that reference A. The tool replaces each reference to [A with the old
+strong name key] with a reference to [A with the new strong name key].
 
 
 ## Usage
@@ -8,8 +11,9 @@ This is a tool which modifies assemblies replacing references for one with diffe
 ```
 ChangePublicKeyToken [-a <INPUT_ASSEMBLY>] [-d <INPUT_DIRECTORY>]
 
-Given an assembly INPUT_ASSEMBLY with a public key token B, it searches for all the assemblies in a directory INPUT_DIRECTORY that reference INPUT_ASSEMBLY with
-public key token Z (different from P) and replaces the public key token of the reference by P:
+Given an assembly INPUT_ASSEMBLY with a public key B, it searches for all the assemblies 
+in INPUT_DIRECTORY that reference INPUT_ASSEMBLY with public key Z (different from P)
+and replaces the public key of the reference by P.
 
 Example:
 
