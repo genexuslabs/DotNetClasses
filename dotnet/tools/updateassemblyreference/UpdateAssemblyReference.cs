@@ -65,7 +65,7 @@ namespace ChangePublicKeyToken
 		public string NewAssemblyName { get; set; }
 		public string TargetAssemblyName { get; set; }
 		public string TargetDirectory { get; set; }
-		public byte[] NewPublicKeyToken { get; set; }
+		byte[] NewPublicKeyToken { get; set; }
 		public bool Verbose { get; set; }
 
 		public void PatchAssemblies()
