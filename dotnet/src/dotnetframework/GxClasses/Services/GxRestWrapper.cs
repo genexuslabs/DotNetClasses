@@ -53,10 +53,7 @@ namespace GeneXus.Application
 			AddHeader("Content-type", "application/json; charset=utf-8"); //MediaTypesNames.ApplicationJson);
 			RunAsMain = true;
 		}
-		protected virtual GXBaseObject Worker
-		{
-			get { return _procWorker; }
-		}
+		
 		public virtual void Cleanup()
 		{
 			if (RunAsMain)
@@ -263,7 +260,7 @@ namespace GeneXus.Application
 		}
 		public bool IsAuthenticated()
 		{
-			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
+			return IsAuthenticated(_procWorker.IntegratedSecurityLevel2, _procWorker.IntegratedSecurityEnabled2, _procWorker.ExecutePermissionPrefix2);
 		}
 		private bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{

@@ -23,7 +23,7 @@ namespace GeneXus.Application
 		{
 			_worker = sdt;
 		}
-		protected override GXBaseObject Worker => _worker.trn as GXBaseObject;
+
 		public override Task Post()
 		{
 			try
