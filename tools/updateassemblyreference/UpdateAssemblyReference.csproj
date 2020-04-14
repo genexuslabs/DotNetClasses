@@ -4,6 +4,9 @@
 		<RootNamespace>UpdateAssemblyReference</RootNamespace>
 		<AssemblyName>UpdateAssemblyReference</AssemblyName>
 	<PackageId>GeneXus.ChangePublicKeyToken</PackageId>
+	<ApplicationIcon />
+	<OutputType>Exe</OutputType>
+	<StartupObject />
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser">
