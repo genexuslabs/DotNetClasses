@@ -11,26 +11,26 @@ namespace ChangePublicKeyToken
 {
 	public class Options
 	{
-		[Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
+		[Option('v', "verbose", Default =true, Required = false, HelpText = "Set output to verbose messages.")]
 		public bool Verbose { get; set; }
 		[Option('a', "assembly", Required = true, HelpText = "The name of the assembly that changed its strong name.")]
 		public string Assembly { get; set; }
 
-		[Option('d', "targetDirectory", Required = true, HelpText = "Specify the directory to search for assemblies that reference the assembly which changed its strong name. These assemblies will be modified to link the new assembly strong name.")]
-		public string Directory { get; set; }
+		[Option('d', "directory", Required = true, HelpText = "Specify a directory to search for assemblies that reference the assembly which changed its strong name. These assemblies will be modified to link the new assembly strong name.")]
+		public string TargetDirectory { get; set; }
 
 		[Usage()]
 		public static IEnumerable<Example> Examples
 		{
 			get
 			{
-				return new List<Example>() {new Example("Given an assembly A with a public key token B, it searches for all the assemblies in a directory that reference A with public key token Z (different from P) and replaces the public key token of the reference by P", UnParserSettings.WithGroupSwitchesOnly(), new Options { Assembly = @"C:\DotNetClasses\GxClasses.dll", Directory=@"C:\Model\KB\Web\bin"})};
+				return new List<Example>() {new Example("Given an assembly A with a public key token B, it searches for all the assemblies in a directory that reference A with public key token Z (different from P) and replaces the public key token of the reference by P", UnParserSettings.WithGroupSwitchesOnly(), new Options { Assembly = @"C:\DotNetClasses\GxClasses.dll", TargetDirectory=@"C:\Model\KB\Web\bin"})};
 			}
 		}
 		
 	}
 
-	public class ChangePublicKeyToken
+	public class UpdateAssemblyReference
 	{
 		static void Main(string[] args)
 		{
@@ -47,26 +47,30 @@ namespace ChangePublicKeyToken
 		static void RunOptions(Options opts)
 		{
 			
-			MetadataHandler handler = new MetadataHandler(opts.Assembly, opts.Directory);
+			MetadataHandler handler = new MetadataHandler(opts);
 			handler.PatchAssemblies();
 		}
 	}
 	public class MetadataHandler {
-		public MetadataHandler(string assemblyPath, string targetDirectory)
+		public MetadataHandler(Options opts)
 		{
-			using (AssemblyDefinition a = AssemblyDefinition.ReadAssembly(assemblyPath))
+			using (AssemblyDefinition a = AssemblyDefinition.ReadAssembly(opts.Assembly))
 			{
 				NewPublicKeyToken = a.Name.PublicKeyToken;
-				TargetAssemblyName = a.Name.Name;
+				NewAssemblyName = a.Name.Name;
 			}
-			TargetDirectory = targetDirectory;
+			TargetDirectory = opts.TargetDirectory;
+			Verbose = opts.Verbose;
 		}
+		public string NewAssemblyName { get; set; }
 		public string TargetAssemblyName { get; set; }
 		public string TargetDirectory { get; set; }
 		public byte[] NewPublicKeyToken { get; set; }
+		public bool Verbose { get; set; }
 
 		public void PatchAssemblies()
 		{
+			var files = Directory.EnumerateFiles(TargetDirectory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".dll") || s.EndsWith(".exe"));
 			var resolver = new DefaultAssemblyResolver();
 			resolver.AddSearchDirectory(TargetDirectory);
 			Dictionary<string, string> notPatched = new Dictionary<string, string>();
@@ -75,27 +79,29 @@ namespace ChangePublicKeyToken
 				AssemblyResolver = resolver,
 				ReadWrite = true,
 			};
-			var files = Directory.EnumerateFiles(TargetDirectory, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".dll") || s.EndsWith(".exe"));
 			foreach (string assembly in files)
 			{
 				try
 				{
 					using (AssemblyDefinition targetAssembly = AssemblyDefinition.ReadAssembly(assembly, parameters))
 					{
-						if (targetAssembly.Name.Name != TargetAssemblyName)
+						if (targetAssembly.Name.Name != NewAssemblyName)
 						{
 							var assemblyReferences = targetAssembly.MainModule.AssemblyReferences;
-							var targetAssemblyReference = assemblyReferences.SingleOrDefault(a => StructuralComparisons.StructuralEqualityComparer.Equals(a.Name, TargetAssemblyName) &&
+							var targetAssemblyReference = assemblyReferences.SingleOrDefault(a => StructuralComparisons.StructuralEqualityComparer.Equals(a.Name, NewAssemblyName) &&
 									!StructuralComparisons.StructuralEqualityComparer.Equals(a.PublicKeyToken, NewPublicKeyToken));
 
 							if (targetAssemblyReference != null)
 							{
-								Console.WriteLine($"Modifying {targetAssembly.MainModule.Name}: replacing reference to ");
-								Console.WriteLine($"\t{targetAssemblyReference.FullName} by ");
+								if (Verbose)
+								{
+									Console.WriteLine($"Modifying {targetAssembly.MainModule.Name}: replacing reference to ");
+									Console.WriteLine($"\t{targetAssemblyReference.FullName} by ");
+								}
 								assemblyReferences.Remove(targetAssemblyReference);
 								targetAssemblyReference.PublicKeyToken = NewPublicKeyToken;
 								assemblyReferences.Insert(0, targetAssemblyReference);
-								Console.WriteLine($"\t{targetAssemblyReference.FullName}");
+								if (Verbose) Console.WriteLine($"\t{targetAssemblyReference.FullName}");
 								targetAssembly.Write();
 							}
 						}
@@ -105,7 +111,7 @@ namespace ChangePublicKeyToken
 					notPatched.Add(assembly, ex.Message);
 				}
 			}
-			if (notPatched.Count > 0)
+			if (Verbose && notPatched.Count > 0)
 			{
 				Console.WriteLine($"Could not process the following assemblies:");
 				foreach (string key in notPatched.Keys) {

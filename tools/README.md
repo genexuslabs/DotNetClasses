@@ -1,4 +1,4 @@
-# ChangePublicKeyToken Tool
+# UpdateAssemblyReference Tool
 
 This is a tool which modifies assemblies replacing references.
 If an assembly A changes its strong name key, this tool allows to update all the assemblies 
@@ -9,7 +9,7 @@ strong name key] with a reference to [A with the new strong name key].
 ## Usage
 
 ```
-ChangePublicKeyToken [-a <INPUT_ASSEMBLY>] [-d <INPUT_DIRECTORY>]
+UpdateAssemblyReference [-a <INPUT_ASSEMBLY>] [-d <INPUT_DIRECTORY>]
 
 Given an assembly INPUT_ASSEMBLY with a public key B, it searches for all the assemblies 
 in INPUT_DIRECTORY that reference INPUT_ASSEMBLY with public key Z (different from P)
@@ -17,21 +17,18 @@ and replaces the public key of the reference by P.
 
 Example:
 
-ChangePublicKeyToken -a C:\DotNetClasses\GxClasses.dll -d C:\Model\KB\Web\bin
-  
+  UpdateAssemblyReference --assembly C:\DotNetClasses\GxClasses.dll --directory C:\Model\KB\Web\bin
 
-  -v, --verbose            Set output to verbose messages.
+  -v, --verbose      (Default: true) Set output to verbose messages.
 
-  -a, --assembly           Required. The name of the assembly that changed its strong name.
+  -a, --assembly     Required. The name of the assembly that changed its strong name.
 
-  -d, --targetDirectory    Required. Specify the directory to search for assemblies that reference the assembly which
-                           changed its strong name. These assemblies will be modified to link the new assembly strong
-                           name.
+  -d, --directory    Required. Specify a directory to search for assemblies that reference the assembly which changed
+                     its strong name. These assemblies will be modified to link the new assembly strong name.
 
-  --help                   Display this help screen.
+  --help             Display this help screen.
 
-  --version                Display version information.
- 
+  --version          Display version information.
 ```
 
 ## License

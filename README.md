@@ -86,12 +86,20 @@ It copies the .NET assemblies to the folder build/**gxnet/bin** and .NET Core as
 
 ### Replacing standard classes mechanism 
 
-To replace the assemblies distributed in GeneXus by the new ones follow these steps:
+How to compile an assembly and replace it in a GeneXus generated application. 
 
-* Set AssemblyOriginatorKeyFile property in [Directory.Build](dotnet/Directory.Build.props) with the full path of your .snk file. Its required to set a strong name for the assemblies.
-* Build solution and execute CopyAssemblies 
-* Copy the new assemblies to your web\bin directory
-* Rebuild your application with the new assemblies
+Suppose you fix an issue in GxClasses project. In order to get that fix in your generated application follow these steps:
+
+1. Set AssemblyOriginatorKeyFile property in [Directory.Build.props](dotnet/Directory.Build.props) with the full path of your .snk file. It is required to set a strong name for the assembly.
+	- A new .snk file can be created with the command [sn.exe](https://docs.microsoft.com/en-us/dotnet/framework/tools/sn-exe-strong-name-tool) -k keyPair.snk  
+2. Build solution and copy DotNetClasses\dotnet\src\dotnetframework\GxClasses\bin\Release\net46\GxClasses.dll to your <KB>\CSharpModel\web\bin directory
+3. Patch all the <KB>\CSharpModel\web\bin assemblies to reference the new GxClasses.dll. To do this run [UpdateAssemblyReference tool](tools) with the following parameters
+	```UpdateAssemblyReference.exe -assembly <KB>\CSharpModel\web\bin\GxClasses.dll -d <KB>\CSharpModel\web\bin```
+4. Since GxClasses references other assemblies, it is needed to keep that references unchanged. So this command will patch the new GxClasses.dll to reference the original ones:
+	```UpdateAssemblyReference.exe -a <KB>\CSharpModel\web\bin\GxCryptography.dll -d <KB>\CSharpModel\web\bin```
+	```UpdateAssemblyReference.exe -a <KB>\CSharpModel\web\bin\GxCryptographyCommon.dll -d <KB>\CSharpModel\web\bin```
+	```UpdateAssemblyReference.exe -a <KB>\CSharpModel\web\bin\GxEncrypt.dll -d <KB>\CSharpModel\web\bin```
+5. Execute the web application.
 
 
 ## License
