@@ -12,6 +12,7 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 | Name  | Description | Package Id
 |---|---|---
 | GxEncrypt | Classes common to .NET and .NET Core related to encryption based on Twofish algorithm | GeneXus.Encrypt
+| GxEncryptCMD | Command line tool that allows encryption and decryption of data. [Help](https://wiki.genexus.com/commwiki/servlet/wiki?45615) | GeneXus.EncryptCMD
 | DynService.Core | Provide data types to support DynamoDB, OData and Fabric | GeneXus.DynService.Core(\*\*) 
 | DynService.DynamoDB | Provide classes that support Amazon DynamoDB | GeneXus.DynService.DynamoDB(\*\*) 
 | DynService.Fabric | Provide classes that support Hyperledger Fabric storage | GeneXus.DynService.Fabric(\*\*) 
@@ -67,7 +68,7 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 ## Requirements
 - Visual Studio 2019 >= 16.3
 - dotnet SDK >= 3.1 
-- .Net framework >= 4.6 
+- .NET Framework >= 4.6 
 
 # Instructions
 
