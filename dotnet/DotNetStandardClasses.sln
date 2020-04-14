@@ -111,7 +111,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptographyCommon", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptography", "src\dotnetcommon\GxCryptography\GxCryptography.csproj", "{721C71DA-0E1C-49C1-88AE-17A97AA255D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXAzureStorageNETCore", "src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj", "{BF72FAF5-3A7C-41B6-A27F-9BE049290356}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXAzureStorageNETCore", "src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj", "{BF72FAF5-3A7C-41B6-A27F-9BE049290356}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxEncryptCMD", "src\dotnetframework\GxEncryptCMD\GxEncryptCMD.csproj", "{6E37F161-45C7-4B32-9122-4EE48D870C92}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -299,6 +301,10 @@ Global
 		{BF72FAF5-3A7C-41B6-A27F-9BE049290356}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF72FAF5-3A7C-41B6-A27F-9BE049290356}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF72FAF5-3A7C-41B6-A27F-9BE049290356}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E37F161-45C7-4B32-9122-4EE48D870C92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E37F161-45C7-4B32-9122-4EE48D870C92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E37F161-45C7-4B32-9122-4EE48D870C92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E37F161-45C7-4B32-9122-4EE48D870C92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -356,6 +362,7 @@ Global
 		{6E82437D-8CF2-4206-B4A8-7691B431A45A} = {F1E13DF4-9F50-41A2-9DC3-04B673B21032}
 		{721C71DA-0E1C-49C1-88AE-17A97AA255D3} = {F1E13DF4-9F50-41A2-9DC3-04B673B21032}
 		{BF72FAF5-3A7C-41B6-A27F-9BE049290356} = {3C0E779F-1949-40AC-AE18-5D59101B24CB}
+		{6E37F161-45C7-4B32-9122-4EE48D870C92} = {914600BD-A02B-414E-AC84-50E60AA64222}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
