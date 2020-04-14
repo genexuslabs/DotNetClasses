@@ -3477,7 +3477,10 @@ namespace GeneXus.Application
 			if (ret != null)
 				return ret;
 			else
+			{
+				GXLogging.Debug(log, "Image not found at Images.txt. Image id:",  () => KBId + id + " language:" + lang + " theme:" + theme);
 				return id;
+			}
 		}
 		public string GetImageSrcSet(string baseImage)
 		{
