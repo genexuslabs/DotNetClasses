@@ -1,10 +1,11 @@
-name: Test Build .Net Classes PR
+name: PR_Build
 
 on: 
   push:
     branches-ignore:
       - 'master'
       - 'beta'
+      - 'release-*'
 
 jobs:
   build:
