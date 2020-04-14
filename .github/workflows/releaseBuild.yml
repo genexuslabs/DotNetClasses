@@ -1,39 +1,50 @@
-name: Publish release version of .Net Classes
+name: Release
 
 on: 
-  release:
-    types: [published]
+  push:
+    branches:
+      - 'release-*'
 
 jobs:
   build:
     env:
       Configuration: Release
-      NuGetRepository: http://nexus.genexus.com/repository/nuget-prereleases/
+      NuGetRepository: http://nexus.genexus.com/repository/nuget-hosted/
 
-    runs-on: windows-latest
+     runs-on: [self-hosted, windows]
 
     steps:
     - name: Checkout
       uses: actions/checkout@v1
 
-    - name: Build Solution
-      run: dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration
-
+    - name: Clean previous build #Because self-hosted runners are not cleaned automatically
+      run: |
+        Get-ChildItem .\dotnet\src\*\bin -Recurse -ErrorAction SilentlyContinue |
+          ForEach-Object {
+           rm -Recurse $_.FullName
+          }
+        Get-ChildItem .\dotnet\src\*\obj -Recurse -ErrorAction SilentlyContinue |
+          ForEach-Object {
+           rm -Recurse $_.FullName
+          }
+     
     - name: Build and Pack
       run: |
-        $CommitNumber = git rev-list --no-merges --count HEAD
-
         dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
+        
         # Get the FileVersion from the Build.props file
         $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$CommitNumber
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
-        $NuGetPackageVersion = $Matches[0]
+        $GetFileVersionOutput = $Matches[0]
+
+        $NuGetPackageVersion = $GetFileVersionOutput
 
         dotnet pack dotnet\DotNetStandardClasses.sln --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
     - name: Publish packages
-      run: |
+      run: |      
         Get-ChildItem .\dotnet\*.nupkg -Recurse |
           ForEach-Object {
-            dotnet nuget push $_.FullName --source $Env:NuGetRepository -UserName $Env:GITHUB_ACTOR -Password ${{ secrets.GITHUB_TOKEN }
+            dotnet nuget push $_.FullName --source $Env:NuGetRepository
+            dotnet nuget push $_.FullName --source GPR
           }
