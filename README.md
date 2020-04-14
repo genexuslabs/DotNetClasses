@@ -12,6 +12,7 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 | Name  | Description | Package Id
 |---|---|---
 | GxEncrypt | Classes common to .NET and .NET Core related to encryption based on Twofish algorithm | GeneXus.Encrypt
+| GxEncryptCMD | Command line tool that allows encryption and decryption of data. [Help](https://wiki.genexus.com/commwiki/servlet/wiki?45615) | GeneXus.EncryptCMD
 | GxCryptography | Provide classes that support CryptoAsymmetricEncrypt and GXSymmetricEncryption data type | GeneXus.Cryptography
 | GxCryptographyCommon | Contants and Exceptions classes common to GxCryptography and GxClasses | GeneXus.Cryptography.Common
 | DynService.Core | Provide data types to support DynamoDB, OData and Fabric | GeneXus.DynService.Core(\*\*) 

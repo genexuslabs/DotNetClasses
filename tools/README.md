@@ -31,21 +31,6 @@ Example:
   --version          Display version information.
 ```
 
-# GxEncryptCMD
-GxEncryptCMD is a command line tool that allows you to encrypt and decrypt strings uing the same algorithms GeneXus uses.
-
-## Usage
-```
-Usage: GxEncryptCMD /e|/d [/k:key] input
-
-/e : Encrypt the input
-/d : Decrypt the input
-/k : Use this key for encryption/decryption
-input : Text to encrypt/decrypt
-```
-
-For more info: [GxEncryptCMD](https://wiki.genexus.com/commwiki/servlet/wiki?45615)
-
 ### License
 
     Licensed under the Apache License, Version 2.0 (the "License");
