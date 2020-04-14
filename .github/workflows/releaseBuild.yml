@@ -11,7 +11,7 @@ jobs:
       Configuration: Release
       NuGetRepository: http://nexus.genexus.com/repository/nuget-hosted/
 
-     runs-on: [self-hosted, windows]
+    runs-on: [self-hosted, windows]
 
     steps:
     - name: Checkout
