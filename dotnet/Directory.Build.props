@@ -3,7 +3,7 @@
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
 		<MajorFileVersion Condition="$(GITHUB_REF.EndsWith('beta'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
-		<MinorFileVersion>5</MinorFileVersion>
+		<MinorFileVersion>6</MinorFileVersion>
 		<RevisionFileVersion Condition="'$(CommitNumber)'!=''">$(CommitNumber)</RevisionFileVersion>
 		<RevisionFileVersion Condition="'$(CommitNumber)'==''">0</RevisionFileVersion>
 		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).0</FileVersionWithoutRevision>
