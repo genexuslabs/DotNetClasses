@@ -6,7 +6,7 @@
 		<MinorFileVersion>5</MinorFileVersion>
 		<RevisionFileVersion Condition="'$(CommitNumber)'!=''">$(CommitNumber)</RevisionFileVersion>
 		<RevisionFileVersion Condition="'$(CommitNumber)'==''">0</RevisionFileVersion>
-		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).2</FileVersionWithoutRevision>
+		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).3</FileVersionWithoutRevision>
 		<FileVersion>$(FileVersionWithoutRevision).$(RevisionFileVersion)</FileVersion>
 		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
 		<Company>GeneXus</Company>
