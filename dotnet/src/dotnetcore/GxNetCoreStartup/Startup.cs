@@ -112,8 +112,6 @@ namespace GeneXus.Application
 		static string ContentRootPath;
 		static char[] urlSeparator = {'/','\\'};
 		const char QUESTIONMARK = '?';
-		const string UrlTemplateController = "controller";
-		const string UrlTemplateParms = "parms";
 		const string UrlTemplateControllerWithParms = "controllerWithParms";
 		const string RESOURCES_FOLDER = "Resources";
 		const string TRACE_FOLDER = "logs";
@@ -250,6 +248,9 @@ namespace GeneXus.Application
 			provider.Mappings[".otf"] = "font/opentype";
 			provider.Mappings[".pdf"] = "application/pdf";
 			provider.Mappings[".log"] = "text/plain";
+			provider.Mappings[".usdz"] = "model/vnd.pixar.usd";
+			provider.Mappings[".sfb"] = "model/sfb";
+			provider.Mappings[".gltf"] = "model/gltf+json";
 
 			app.UseResponseCompression();
 			app.UseCookiePolicy();
@@ -348,19 +349,19 @@ namespace GeneXus.Application
 		static public List<ControllerInfo> GetRouteController(string path)
 		{
 			List<ControllerInfo> result = new List<ControllerInfo>();
-			string controller = path;
 			string parms = string.Empty;
 			GXLogging.Debug(log, "GetRouteController path:", path);
 			try {
 				if (!string.IsNullOrEmpty(path))
 				{
 					int questionMarkIdx = path.IndexOf(QUESTIONMARK);
+					string controller;
 					if (questionMarkIdx >= 0)
 					{
 						// rest/module1/module2/service?paramaters
 						controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
-						if (path.Length> questionMarkIdx + 1)
-							parms = path.Substring(questionMarkIdx+1);
+						if (path.Length > questionMarkIdx + 1)
+							parms = path.Substring(questionMarkIdx + 1);
 
 						result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
 					}
@@ -372,10 +373,10 @@ namespace GeneXus.Application
 
 						// rest/module1/module2/service/paramaters
 						int idx = path.LastIndexOfAny(urlSeparator);
-						if (idx > 0 && idx < path.Length-1)
+						if (idx > 0 && idx < path.Length - 1)
 						{
 							controller = path.Substring(0, idx);
-							parms = path.Substring(idx+1);
+							parms = path.Substring(idx + 1);
 							result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
 						}
 					}
@@ -442,7 +443,10 @@ namespace GeneXus.Application
 		private GxRestWrapper GetController(HttpContext context, string controller)
 		{
 
-			GxContext gxContext = new GxContext();
+			GxContext gxContext = new GxContext
+			{
+				HttpContext = context
+			};
 			DataStoreUtil.LoadDataStores(gxContext);
 			context.NewSessionCheck();
 			string nspace;

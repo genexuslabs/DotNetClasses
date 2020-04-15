@@ -23,11 +23,15 @@ namespace GeneXus.Application
 		{
 			_worker = sdt;
 		}
-
+		protected override GXBaseObject Worker => _worker.trn as GXBaseObject;
 		public override Task Post()
 		{
 			try
 			{
+				if (!IsAuthenticated())
+				{
+					return null;
+				}
 				bool gxcheck = IsRestParameter(CHECK_PARAMETER);
 				bool gxinsertorupdate = IsRestParameter(INSERT_OR_UPDATE_PARAMETER);
 
@@ -90,6 +94,10 @@ namespace GeneXus.Application
 		{
 			try
 			{
+				if (!IsAuthenticated())
+				{
+					return null;
+				}
 				string[] key = SplitParameters(parameters);
 				if (key!=null)
 				{
@@ -129,6 +137,10 @@ namespace GeneXus.Application
 		{
 			try
 			{
+				if (!IsAuthenticated())
+				{
+					return null;
+				}
 				string[] key = SplitParameters(parameters);
 				if (key != null)
 				{ 
@@ -163,6 +175,10 @@ namespace GeneXus.Application
 		{
 			try
 			{
+				if (!IsAuthenticated())
+				{
+					return null;
+				}
 				string[] key = SplitParameters(parameters);
 				if (key != null)
 				{

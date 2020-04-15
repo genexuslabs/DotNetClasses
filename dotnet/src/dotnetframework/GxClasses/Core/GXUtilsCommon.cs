@@ -4721,7 +4721,7 @@ namespace GeneXus.Utils
 					{
 						if (GXProcessHelper.ProcessFactory != null)
 						{
-							GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
+							exitCode = GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
 							return true;
 						}
 						else
@@ -5282,6 +5282,24 @@ namespace GeneXus.Utils
 			if (!directoryName.EndsWith(DELIMITER))
 				return directoryName + DELIMITER;
 			return directoryName;
+		}
+		public static string EncodeNonAsciiCharacters(string value)
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach (char c in value)
+			{
+				if (c > 127)
+				{
+					// This character is too big for ASCII
+					string encodedValue = "\\u" + ((int)c).ToString("x4");
+					sb.Append(encodedValue);
+				}
+				else
+				{
+					sb.Append(c);
+				}
+			}
+			return sb.ToString();
 		}
 	}
 

@@ -10,6 +10,7 @@
 		<PackageId>GeneXus.Reorganization</PackageId>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
+	  
 
 	<ItemGroup>
    	 <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
@@ -17,20 +18,16 @@
 			<Name>System.Windows.Forms</Name>
 		</Reference>
 	</ItemGroup>
-
 	<ItemGroup>
-	  <Compile Update="Properties\Resources.Designer.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>Resources.resx</DependentUpon>
-	  </Compile>
+	  <Content Remove="Resources\imgCancel.Image.png" />
+	  <Content Remove="Resources\imgOk.Image.png" />
+	  <Content Remove="Resources\imgEqual.Image.png" />
+	  <Content Remove="Resources\imgReorg.Image.png" />
 	</ItemGroup>
-
 	<ItemGroup>
-	  <EmbeddedResource Update="Properties\Resources.resx">
-	    <Generator>ResXFileCodeGenerator</Generator>
-	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-	  </EmbeddedResource>
+		<EmbeddedResource  Include="Resources\imgCancel.Image.png" />
+		<EmbeddedResource  Include="Resources\imgOk.Image.png" />
+		<EmbeddedResource  Include="Resources\imgEqual.Image.png" />
+		<EmbeddedResource  Include="Resources\imgReorg.Image.png" />
 	</ItemGroup>
-	
 </Project>

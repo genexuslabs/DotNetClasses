@@ -1829,6 +1829,7 @@ namespace GeneXus.Data
 					}
 					catch (Exception ex)
 					{
+#if !NETCORE
 						FileNotFoundException fex = ex as FileNotFoundException;
 						FileLoadException flex = ex as FileLoadException;
 						if (flex !=null || fex != null)
@@ -1844,6 +1845,10 @@ namespace GeneXus.Data
 						{
 							throw ex;
 						}
+#else
+						throw ex;
+#endif
+
 					}
 				}
 			}
@@ -1938,15 +1943,22 @@ namespace GeneXus.Data
 
 		}
 
-        public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+#if !NETCORE
+		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
         {
-            // Latitude and Longitude are inverted in the 'Point' Constructor
+
             return geo.InnerValue;
         }
-
-        public override IGeographicNative Dbms2NetGeo(IGxDbCommand cmd, IDataRecord DR, int i)
+#else
+		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
         {
-            return new Geospatial(DR.GetValue(i));            
+            return geo.ToStringSQL("GEOMETRYCOLLECTION EMPTY");
+        }
+#endif
+
+		public override IGeographicNative Dbms2NetGeo(IGxDbCommand cmd, IDataRecord DR, int i)
+        {
+            return new Geospatial(DR.GetValue(i));
         }
 
 		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)
@@ -4184,7 +4196,12 @@ namespace GeneXus.Data
 		public virtual DateTime GetDateTime(int i)
 		{
 			if (computeSizeInBytes) readBytes += 8;
-			return (DateTime)block.Item(pos,i);
+			var value = block.Item(pos,i);
+
+			if (value is DateTime)
+				return (DateTime)value;
+			else
+				return Convert.ToDateTime(value);
 		}
 		public virtual decimal GetDecimal(int i	)
 		{

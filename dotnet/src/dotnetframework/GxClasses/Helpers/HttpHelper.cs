@@ -87,7 +87,7 @@ namespace GeneXus.Http
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
 						break;
 					default:
-						wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, GXHttpHandler.OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], statusCode, string.Empty));
+						wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], statusCode, string.Empty));
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Unauthorized;
 						break;
 				}
