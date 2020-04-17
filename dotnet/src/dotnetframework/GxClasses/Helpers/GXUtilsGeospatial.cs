@@ -697,8 +697,8 @@ namespace GeneXus.Utils
 
         public String ToStringESQL()
         {
-            String wktText =  this.ToStringSQL(EMPTY_GEOGRAPHY);
-            if (!wktText.Equals(EMPTY_GEOGRAPHY)) {
+            String wktText =  this.ToStringSQL(EMPTY_GEOMETRY);
+            if (!wktText.Equals(EMPTY_GEOMETRY)) {
                 wktText = "SRID=" + this.Srid.ToString() + ";" + wktText;
             }
             return wktText;
