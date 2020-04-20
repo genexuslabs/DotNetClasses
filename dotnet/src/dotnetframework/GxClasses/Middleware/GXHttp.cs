@@ -981,6 +981,9 @@ namespace GeneXus.Http
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
 		protected virtual string IntegratedSecurityPermissionName { get { return ""; } }
+		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
+		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
+		public string IntegratedSecurityPermissionName2 { get { return IntegratedSecurityPermissionName; } }
 #endif
 		private bool disconnectUserAtCleanup;
 		private bool validEncryptedParm;
@@ -1863,13 +1866,6 @@ namespace GeneXus.Http
 		{
 			return ValidGAMSession(true);
 		}
-		internal static String OatuhUnauthorizedHeader(string realm, string errCode, string errDescription)
-		{
-			if (string.IsNullOrEmpty(errDescription))
-				return String.Format("OAuth realm=\"{0}\"", realm);
-			else
-				return string.Format("OAuth realm=\"{0}\",error_code=\"{1}\",error_description=\"{2}\"", realm, errCode, errDescription);
-		}
 
 		private bool ValidWebSession()
 		{
@@ -1906,9 +1902,9 @@ namespace GeneXus.Http
 				if (!isOK)
 				{
 #if NETCORE
-					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]=OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
+					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]= HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
 #else
-					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
+					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
 #endif
 					this.SendResponseStatus(401, "Unauthorized");
 				}
@@ -1929,9 +1925,9 @@ namespace GeneXus.Http
 				if (!isOK)
 				{
 #if NETCORE
-					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]=OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
+					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]= HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
 #else
-					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
+					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
 #endif
 					this.SendResponseStatus(401, "Unauthorized");
 				}

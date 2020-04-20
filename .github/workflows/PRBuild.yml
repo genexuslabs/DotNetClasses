@@ -1,10 +1,11 @@
-name: Test Build .Net Classes PR
+name: PR_Build
 
 on: 
   push:
     branches-ignore:
       - 'master'
       - 'beta'
+      - 'release-*'
 
 jobs:
   build:
@@ -16,11 +17,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v1
-
-    - name: Set DotNet version
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '3.1.101'
 
     - name: Setup Nuget.exe
       uses: warrenbuckley/Setup-Nuget@v1

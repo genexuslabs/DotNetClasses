@@ -18,7 +18,7 @@ using GeneXus.Metadata;
 using GeneXus.Configuration;
 using System.Web;
 using System.Collections.Specialized;
-
+using GeneXus.Security;
 
 namespace GeneXus.Application
 
@@ -53,7 +53,10 @@ namespace GeneXus.Application
 			AddHeader("Content-type", "application/json; charset=utf-8"); //MediaTypesNames.ApplicationJson);
 			RunAsMain = true;
 		}
-		
+		protected virtual GXBaseObject Worker
+		{
+			get { return _procWorker; }
+		}
 		public virtual void Cleanup()
 		{
 			if (RunAsMain)
@@ -63,6 +66,10 @@ namespace GeneXus.Application
 		{
 			try
 			{
+				if (!IsAuthenticated())
+				{
+					return null;
+				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
@@ -95,6 +102,10 @@ namespace GeneXus.Application
 		{
 			try
 			{
+				if (!IsAuthenticated())
+				{
+					return null;
+				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
@@ -217,6 +228,98 @@ namespace GeneXus.Application
 		{
 			return HttpHelper.SetResponseStatusAndJsonErrorAsync(_httpContext, code, message);
 		}
+		public bool IsAuthenticated(string synchronizer)
+		{
+			GXLogging.Debug(log, "IsMainAuthenticated synchronizer:" + synchronizer);
+			bool validSynchronizer = false;
+			try
+			{
+				if (!string.IsNullOrEmpty(synchronizer))
+				{
+					string nspace;
+					if (!Config.GetValueOf("AppMainNamespace", out nspace))
+						nspace = "GeneXus.Programs";
+					String assemblyName = synchronizer.ToLower();
+					String restServiceName = nspace + "." + assemblyName + "_services";
+					GXProcedure synchronizerService = (GXProcedure)ClassLoader.GetInstance(assemblyName, restServiceName, null);
+					if (synchronizerService != null && synchronizerService.IsSynchronizer2)
+					{
+						validSynchronizer = true;
+						return IsAuthenticated(synchronizerService.IntegratedSecurityLevel2, synchronizerService.IntegratedSecurityEnabled2, synchronizerService.ExecutePermissionPrefix2);
+					}
+				}
+				return false;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "IsMainAuthenticated error ");
+				return false;
+			}
+			finally
+			{
+				if (!validSynchronizer)
+					SetError("0", "Invalid Synchronizer " + synchronizer);
+			}
+		}
+		public bool IsAuthenticated()
+		{
+			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
+		}
+		private bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
+		{
+			if (!objIntegratedSecurityEnabled)
+			{
+				return true;
+			}
+			else
+			{
+				String token = GetHeader("Authorization");
+				if (token == null)
+				{
+					SetError("0", "This service needs an Authorization Header");
+					return false;
+				}
+				else
+				{
+
+					token = token.Replace("OAuth ", "");
+					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
+					{
+						bool isOK;
+						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(_gxContext, token, out isOK);
+						if (!isOK)
+						{
+							SetError(result.Code, result.Description);
+							return false;
+						}
+					}
+					else if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
+					{
+						bool sessionOk, permissionOk;
+						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(_gxContext, token, objPermissionPrefix, out sessionOk, out permissionOk);
+						if (permissionOk)
+						{
+							return true;
+						}
+						else
+						{
+							SetError(result.Code, result.Description);
+							if (sessionOk)
+							{
+								SetStatusCode(HttpStatusCode.Forbidden);
+							}
+							else
+							{
+								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(_gxContext.GetServerName(), result.Code, result.Description));
+								SetStatusCode(HttpStatusCode.Unauthorized);
+							}
+							return false;
+						}
+					}
+				}
+				return true;
+			}
+		}
 		protected void SetStatusCode(HttpStatusCode code)
 		{
 			if (_httpContext != null)
@@ -244,6 +347,10 @@ namespace GeneXus.Application
 		}
 
 #endif
+		string GetHeader(string header)
+		{
+			return GetHeaders()[header];
+		}
 		void AddHeader(string header, string value)
 		{
 			if (_httpContext != null)
@@ -255,15 +362,19 @@ namespace GeneXus.Application
 		protected bool ProcessHeaders(string queryId)
 		{
 			var headers = GetHeaders();
-			String language = null, etag = null;
+			String language = null, theme=null, etag = null;
 			if (headers != null)
 			{
 				language = headers["GeneXus-Language"];
+				theme = headers["GeneXus-Theme"];
 				etag = headers["If-Modified-Since"];
 			}
 
 			if (!string.IsNullOrEmpty(language))
 				_gxContext.SetLanguage(language);
+
+			if (!string.IsNullOrEmpty(theme))
+				_gxContext.SetTheme(theme);
 
 			DateTime dt = HTMLDateToDatetime(etag);
 			DateTime newDt;
