@@ -289,6 +289,7 @@ namespace GeneXus.Data.NTier
 
 			private void LoginHandler(System.Net.Http.HttpRequestMessage request)
 			{
+				request.Headers.ExpectContinue = false;
 				if (DateTime.Now >= expiryDT)
 				{
 					using (WebClient login = new WebClient())
@@ -1695,10 +1696,10 @@ namespace GeneXus.Data.NTier
 
 	public class GXODataClientSettings
 	{
-		internal GXODataClientSettings(ODataClientSettings settings, bool isSapB1)
+		internal GXODataClientSettings(ODataClientSettings settings, bool allowSelectOnExpand)
 		{
 			this.settings = settings;
-			this.allowSelectOnExpand = isSapB1;
+			this.allowSelectOnExpand = allowSelectOnExpand;
 		}
 		internal ODataClientSettings settings { get; set; }
 		internal bool allowSelectOnExpand { get; set; }
