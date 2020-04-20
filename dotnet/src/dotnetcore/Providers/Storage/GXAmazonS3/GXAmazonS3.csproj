@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.3.110.33" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.109.4" />
   </ItemGroup>
 
   <ItemGroup>
