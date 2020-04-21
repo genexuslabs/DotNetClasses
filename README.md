@@ -100,6 +100,7 @@ Suppose you do a fix in GxClasses project. In order to get that fix in your gene
 	```UpdateAssemblyReference.exe -assembly <KB>\CSharpModel\web\bin\GxClasses.dll -d <KB>\CSharpModel\web\bin```
 	- To get UpdateAssemblyReference.exe build [UpdateAssemblyReference.sln](dotnet/tools/updateassemblyreference/UpdateAssemblyReference.sln)
 4. Since GxClasses references other assemblies, it is needed to keep that references unchanged. So this command will patch the new GxClasses.dll to reference the original ones:
+
 	```UpdateAssemblyReference.exe -a <KB>\CSharpModel\web\bin\GxCryptography.dll -d <KB>\CSharpModel\web\bin```
 	```UpdateAssemblyReference.exe -a <KB>\CSharpModel\web\bin\GxCryptographyCommon.dll -d <KB>\CSharpModel\web\bin```
 	```UpdateAssemblyReference.exe -a <KB>\CSharpModel\web\bin\GxEncrypt.dll -d <KB>\CSharpModel\web\bin```
