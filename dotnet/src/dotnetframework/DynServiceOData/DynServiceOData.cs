@@ -20,6 +20,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Net.Http;
 using GeneXus.Http;
+using System.Collections.Concurrent;
 
 namespace GeneXus.Data.NTier
 {
@@ -84,6 +85,7 @@ namespace GeneXus.Data.NTier
 			string SAP = null, SAPcsrfToken = null;
 			string metadataLocation = $"{ Application.GxContext.StaticPhysicalPath() }METADATA{ Path.DirectorySeparatorChar }SERVICES{ Path.DirectorySeparatorChar }";
 			bool hasUserMetadataLocation = false;
+			bool? poolConnections = null;
 			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12; // Framework 4.5.x does not have TLS 1.2 enabled by default
 			if (builder.TryGetValue("User Id", out object userId) && builder.TryGetValue("Password", out object pass))
 			{
@@ -193,6 +195,10 @@ namespace GeneXus.Data.NTier
 			{
 				RecordAlreadyExistsServiceCodes = RecordAlreadyExistsServiceCodes ?? new HashSet<string>(alreadyExistsServiceCodes.ToString().Split(new char[] { ',' }));
 			}
+			if (builder.TryGetValue("Pooling", out object poolingValue))
+			{
+				poolConnections = poolingValue.ToString().Trim().Equals("True", StringComparison.InvariantCultureIgnoreCase);
+			}
 
 			if (SAP != null)
 			{
@@ -218,7 +224,16 @@ namespace GeneXus.Data.NTier
 				clientSettings.Properties[ODataClientSettings.ExtraProperties.STRINGIZE_DATETIME_VALUES] = true;
 			}
 			if (sapLoginBO != null || b1SessionId != null)
+			{
 				SapB1LoginHandler.InitializeHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId);
+				poolConnections = poolConnections ?? true;
+			}
+
+			if(poolConnections == true)
+			{
+				string poolKey = Utils.GXUtil.GetHash($"{serviceUri}/{user}:{password}");
+				clientSettings.OnCreateMessageHandler = () => PoolableOnCreateMessageHandler(poolKey);
+			}
 
 			clientSettings.OnTrace = OnTrace;
 			if (user != null && password != null &&
@@ -240,6 +255,24 @@ namespace GeneXus.Data.NTier
 					clientSettings.MetadataDocument = File.ReadAllText(metadataFile);
 			}
 			m_ODataConnectionString = serviceUri;
+		}
+
+		private static ConcurrentDictionary<string, HttpClientHandler> PoolableConnections;
+		private HttpMessageHandler PoolableOnCreateMessageHandler(string poolKey)
+		{
+			PoolableConnections = PoolableConnections ?? new ConcurrentDictionary<string, HttpClientHandler>();
+			HttpClientHandler clientHandler = PoolableConnections.GetOrAdd(poolKey, (str) =>
+			{
+				HttpClientHandler newHandler = new HttpClientHandler();
+				if (clientSettings.Credentials != null)
+				{
+					newHandler.Credentials = clientSettings.Credentials;
+					newHandler.PreAuthenticate = true;
+					clientSettings.OnApplyClientHandler?.Invoke(newHandler);
+				}
+				return newHandler;
+			});
+			return clientHandler;
 		}
 
 		class SapB1LoginHandler
