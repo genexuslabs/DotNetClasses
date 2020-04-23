@@ -10,11 +10,11 @@ namespace GxEncryptCMD
 	{
 		enum Action
 		{
-			Encript,
+			Encrypt,
 			Decrypt
 		}
 
-		const string ENCRIPT = "/e";
+		const string ENCRYPT = "/e";
 		const string DECRYPT = "/d";
 		const string KEY = "/k:";
 		const string REVERSE = "/r";
@@ -27,17 +27,17 @@ namespace GxEncryptCMD
 
 				CheckParams(args);
 
-				Action action = Action.Encript;
+				Action action = Action.Encrypt;
 				string key = string.Empty;
 				string entry = string.Empty;
 				bool reverse = false;
 				foreach (string a in args)
 				{
-					if (a == ENCRIPT)
-						action = Action.Encript;
+					if (a == ENCRYPT)
+						action = Action.Encrypt;
 					else if (a == DECRYPT)
 						action = Action.Decrypt;
-					else if (a.Contains(KEY))
+					else if (a.StartsWith(KEY))
 						key = a.Substring(KEY.Length);
 					else if (a == REVERSE)
 						reverse = true;
@@ -49,7 +49,7 @@ namespace GxEncryptCMD
 				string result = "";
 				switch (action)
 				{
-					case Action.Encript:
+					case Action.Encrypt:
 						result = useKey ? CryptoImpl.Encrypt(entry, key, reverse) : CryptoImpl.Encrypt(entry, reverse);
 						break;
 					case Action.Decrypt:
@@ -70,11 +70,12 @@ namespace GxEncryptCMD
 
 		static void Usage()
 		{
-			Console.WriteLine($"Usage: GxEncryptCMD /e|/d [/k:key] input");
+			Console.WriteLine($"Usage: GxEncryptCMD /e|/d [/r] [/k:key] input");
 			Console.WriteLine("");
 			Console.WriteLine("/e		: Encrypt the input");
 			Console.WriteLine("/d		: Decrypt the input");
 			Console.WriteLine("/k		: Use this key for encryption/decryption");
+			Console.WriteLine("/r		: Reverse the key (used for Java passwords)");
 			Console.WriteLine("input		: Text to encrypt/decrypt");
 
 		}
@@ -83,9 +84,9 @@ namespace GxEncryptCMD
 		{
 			if (args.Length == 0)
 				throw new Exception("No arguments received");
-			if (args.Contains(ENCRIPT) && args.Contains(DECRYPT))
+			if (args.Contains(ENCRYPT) && args.Contains(DECRYPT))
 				throw new Exception("Action must be either Encrypt or Decrypt, never both");
-			if (!args.Contains(ENCRIPT) && !args.Contains(DECRYPT))
+			if (!args.Contains(ENCRYPT) && !args.Contains(DECRYPT))
 				throw new Exception("Action must be either Encrypt or Decrypt, never both");
 		}
 
