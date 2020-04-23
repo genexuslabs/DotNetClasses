@@ -270,6 +270,7 @@ namespace GeneXus.Data.NTier
 					newHandler.PreAuthenticate = true;
 					clientSettings.OnApplyClientHandler?.Invoke(newHandler);
 				}
+				GxService.log_msg($"Adding pooled connection { newHandler.GetHashCode() }.");
 				return newHandler;
 			});
 			return clientHandler;
