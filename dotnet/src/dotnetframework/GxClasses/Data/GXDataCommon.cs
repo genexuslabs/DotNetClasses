@@ -824,6 +824,7 @@ namespace GeneXus.Data
 		}
 		protected static byte[] GetBinary(string fileNameParm, bool dbBlob)
 		{			
+			Uri uri, fileUri;
 			string fileName = fileNameParm;
 			bool inLocalStorage = dbBlob || GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null;
 			bool validFileName = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(fileName.Trim()) && String.Compare(fileName, "about:blank", false) != 0;
@@ -834,7 +835,8 @@ namespace GeneXus.Data
                 if (GxRestUtil.IsUpload(fileName))
                     fileName = GxRestUtil.UploadPath(fileName);
 
-				Uri uri;
+				if (Uri.TryCreate(fileName, UriKind.Relative, out fileUri) && !fileUri.IsAbsoluteUri)
+					fileName = PathUtil.RelativePath(fileName); 
 								
 				bool ok = Uri.TryCreate(PathUtil.GetBaseUri(), fileName, out uri);
 				if (ok && uri != null)
