@@ -150,7 +150,7 @@ namespace GeneXus.Http
                 {
                     string CookieHeaders = httpContext.Request.Headers["Cookie"];
 
-                    if ((null != CookieHeaders) && (CookieHeaders.IndexOf("ASP.NET_SessionId") >= 0))
+                    if ((null != CookieHeaders) && ((CookieHeaders.IndexOf("ASP.NET_SessionId") >= 0)|| CookieHeaders.IndexOf(".AspNetCore.Session") >= 0))
                     {
                         // IsNewSession is true, but session cookie exists,
                         // so, ASP.NET session is expired
