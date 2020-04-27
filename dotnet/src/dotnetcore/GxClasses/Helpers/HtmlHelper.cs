@@ -19,7 +19,9 @@ namespace GeneXus.Utils
 		}
 		public void Flush()
 		{
-			_context.Response.WriteAsync(_stream.ToString());
+			//Response.WriteAsync makes ResponseCompressor throws exception for big stream, use Response.Body.Write instead
+			_context.Response.Body.Write(Encoding.UTF8.GetBytes(_stream.ToString()));
+			_context.Response.Body.FlushAsync();
 		}
 	}
 

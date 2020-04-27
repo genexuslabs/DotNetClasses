@@ -18,7 +18,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
@@ -206,13 +205,14 @@ namespace GeneXus.Application
 				options.Cookie.HttpOnly = true;
 			});
 
-			services.Configure<GzipCompressionProviderOptions>(options => 
-			options.Level = System.IO.Compression.CompressionLevel.Fastest);
+
 			services.AddDirectoryBrowser();
-			services.AddResponseCompression(options =>
+			if (GXUtil.CompressResponse())
 			{
-				options.MimeTypes = new[]
+				services.AddResponseCompression(options =>
 				{
+					options.MimeTypes = new[]
+					{
 							// Default
 							"text/plain",
 							"text/css",
@@ -225,8 +225,10 @@ namespace GeneXus.Application
 							// Custom
 							"application/json",
 							"application/pdf"
-						};
-			});
+							};
+					options.EnableForHttps = true;
+				});
+			}
 			services.AddMvc();
 		}
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -251,8 +253,10 @@ namespace GeneXus.Application
 			provider.Mappings[".usdz"] = "model/vnd.pixar.usd";
 			provider.Mappings[".sfb"] = "model/sfb";
 			provider.Mappings[".gltf"] = "model/gltf+json";
-
-			app.UseResponseCompression();
+			if (GXUtil.CompressResponse())
+			{
+				app.UseResponseCompression();
+			}
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();

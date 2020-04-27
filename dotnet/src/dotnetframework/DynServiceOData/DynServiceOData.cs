@@ -20,6 +20,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Net.Http;
 using GeneXus.Http;
+using System.Collections.Concurrent;
 
 namespace GeneXus.Data.NTier
 {
@@ -84,6 +85,7 @@ namespace GeneXus.Data.NTier
 			string SAP = null, SAPcsrfToken = null;
 			string metadataLocation = $"{ Application.GxContext.StaticPhysicalPath() }METADATA{ Path.DirectorySeparatorChar }SERVICES{ Path.DirectorySeparatorChar }";
 			bool hasUserMetadataLocation = false;
+			bool? poolConnections = null;
 			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12; // Framework 4.5.x does not have TLS 1.2 enabled by default
 			if (builder.TryGetValue("User Id", out object userId) && builder.TryGetValue("Password", out object pass))
 			{
@@ -177,7 +179,7 @@ namespace GeneXus.Data.NTier
 												X509Chain chain,
 												SslPolicyErrors sslPolicyErrors)
 						{
-							return true; 
+							return true;
 						};
 				}
 			}
@@ -192,6 +194,10 @@ namespace GeneXus.Data.NTier
 			if (builder.TryGetValue("RecordAlreadyExistsServiceCodes", out object alreadyExistsServiceCodes))
 			{
 				RecordAlreadyExistsServiceCodes = RecordAlreadyExistsServiceCodes ?? new HashSet<string>(alreadyExistsServiceCodes.ToString().Split(new char[] { ',' }));
+			}
+			if (builder.TryGetValue("Pooling", out object poolingValue))
+			{
+				poolConnections = poolingValue.ToString().Trim().Equals("True", StringComparison.InvariantCultureIgnoreCase);
 			}
 
 			if (SAP != null)
@@ -209,16 +215,25 @@ namespace GeneXus.Data.NTier
 
 			if (sapLoginBO != null)
 			{
-				RecordNotFoundServiceCodes = RecordNotFoundServiceCodes ?? new HashSet<string>(Enumerable.Repeat("-2028",1));
+				RecordNotFoundServiceCodes = RecordNotFoundServiceCodes ?? new HashSet<string>(Enumerable.Repeat("-2028", 1));
 				RecordAlreadyExistsServiceCodes = RecordAlreadyExistsServiceCodes ?? new HashSet<string>(Enumerable.Repeat("-2035", 1));
 
-				clientSettings.PayloadFormat = ODataPayloadFormat.Json; 
+				clientSettings.PayloadFormat = ODataPayloadFormat.Json;
 				isSAPBO = true; SAPProtocolVersionUpdated = false;
 				clientSettings.Properties = clientSettings.Properties ?? new Dictionary<string, object>();
 				clientSettings.Properties[ODataClientSettings.ExtraProperties.STRINGIZE_DATETIME_VALUES] = true;
 			}
 			if (sapLoginBO != null || b1SessionId != null)
+			{
 				SapB1LoginHandler.InitializeHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId);
+				poolConnections = poolConnections ?? true;
+			}
+
+			if(poolConnections == true)
+			{
+				string poolKey = Utils.GXUtil.GetHash($"{serviceUri}/{user}:{password}");
+				clientSettings.OnCreateMessageHandler = () => PoolableOnCreateMessageHandler(poolKey);
+			}
 
 			clientSettings.OnTrace = OnTrace;
 			if (user != null && password != null &&
@@ -240,6 +255,29 @@ namespace GeneXus.Data.NTier
 					clientSettings.MetadataDocument = File.ReadAllText(metadataFile);
 			}
 			m_ODataConnectionString = serviceUri;
+		}
+
+		private static ConcurrentDictionary<string, HttpClientHandler> PoolableConnections;
+		private HttpMessageHandler PoolableOnCreateMessageHandler(string poolKey)
+		{
+			PoolableConnections = PoolableConnections ?? new ConcurrentDictionary<string, HttpClientHandler>();
+			if (PoolableConnections.TryGetValue(poolKey, out HttpClientHandler clientHandler))
+			{
+				GxService.log_msg($"Reusing pooled connection { clientHandler.GetHashCode() }.");
+				return clientHandler;
+			}
+			else return PoolableConnections.GetOrAdd(poolKey, (str) =>
+				{
+					HttpClientHandler newHandler = new HttpClientHandler();
+					if (clientSettings.Credentials != null)
+					{
+						newHandler.Credentials = clientSettings.Credentials;
+						newHandler.PreAuthenticate = true;
+						clientSettings.OnApplyClientHandler?.Invoke(newHandler);
+					}
+					GxService.log_msg($"Adding pooled connection { newHandler.GetHashCode() }.");
+					return newHandler;
+				});
 		}
 
 		class SapB1LoginHandler
@@ -265,7 +303,7 @@ namespace GeneXus.Data.NTier
 
 				gxSession = Application.GxContext.Current.GetSession();
 				object sessionExpiry = gxSession.GetObject(SESSION_INFO_EXPIRY);
-				if(sessionExpiry != null && sessionExpiry is DateTime &&
+				if (sessionExpiry != null && sessionExpiry is DateTime &&
 					gxSession.Get(SESSION_INFO_ID) != null)
 				{
 					expiryDT = (DateTime)sessionExpiry;
@@ -283,12 +321,13 @@ namespace GeneXus.Data.NTier
 			private void ClientHandler(HttpClientHandler handler)
 			{
 				CurrentCookieContainer = handler.CookieContainer;
-				if(b1Cookie != null)
+				if (b1Cookie != null)
 					CurrentCookieContainer.Add(b1Cookie);
 			}
 
 			private void LoginHandler(System.Net.Http.HttpRequestMessage request)
 			{
+				request.Headers.ExpectContinue = false;
 				if (DateTime.Now >= expiryDT)
 				{
 					using (WebClient login = new WebClient())
@@ -310,11 +349,11 @@ namespace GeneXus.Data.NTier
 									b1SessionId = cookie.Substring(cookieStart + 10, cookieEnd - cookieStart - 10);
 									int span = 6;
 									int index = loginResponse.IndexOf("SessionTimeout");
-									if(index > 0)
+									if (index > 0)
 									{
 										loginResponse = loginResponse.Substring(index);
 										index = loginResponse.IndexOf(':');
-										if(index > 0)
+										if (index > 0)
 										{
 											loginResponse = loginResponse.Substring(index + 1).Trim();
 											for (index = 0; index < loginResponse.Length && Char.IsDigit(loginResponse[index]); index++) { }
@@ -322,7 +361,7 @@ namespace GeneXus.Data.NTier
 										}
 									}
 									GxService.log_msg($"Acquired B1Session. Expires in { span } minutes.");
-									expiryDT = DateTime.Now.AddMinutes(span-1);
+									expiryDT = DateTime.Now.AddMinutes(span - 1);
 
 									gxSession.Set(SESSION_INFO_ID, b1SessionId);
 									gxSession.SetObject(SESSION_INFO_EXPIRY, expiryDT);
@@ -376,7 +415,7 @@ namespace GeneXus.Data.NTier
 
 				if (isSAPBO && !SAPProtocolVersionUpdated)
 				{
-					
+
 					ISession session = client.Session;
 					try
 					{
@@ -487,9 +526,9 @@ namespace GeneXus.Data.NTier
 					throw GetRecordNotFoundException(baseE);
 				else throw GetAggregateException(e);
 			}
-			catch(ServiceException e)
+			catch (ServiceException e)
 			{
-				throw new AggregateException(e.Message, e); 
+				throw new AggregateException(e.Message, e);
 			}
 		}
 
@@ -509,7 +548,7 @@ namespace GeneXus.Data.NTier
 			{
 				IDictionary<string, object> linkDict = linkQuery.setEntity(parms);
 				// It can be link or unlink
-				if(linkDict.Values.Any(value => !IsNullOrEmpty(value)))
+				if (linkDict.Values.Any(value => !IsNullOrEmpty(value)))
 					taskAwaiter = Task.Run(() => (task = linkQuery.queryWithCont(client, parms, updTask).LinkEntryAsync(ODataDynamic.ExpressionFromReference(linkQuery.entity), linkDict))).ConfigureAwait(false).GetAwaiter();
 				else
 					taskAwaiter = Task.Run(() => (task = linkQuery.queryWithCont(client, parms, updTask).UnlinkEntryAsync(ODataDynamic.ExpressionFromReference(linkQuery.entity)))).ConfigureAwait(false).GetAwaiter();
@@ -759,7 +798,7 @@ namespace GeneXus.Data.NTier
 							{
 								IDictionary<string, object> oneRecord = new Dictionary<string, object>(subRecord);
 								foreach (string skey in record.Keys)
-									if(!oneRecord.ContainsKey(skey))
+									if (!oneRecord.ContainsKey(skey))
 										oneRecord.Add(skey, record[skey]);
 									else Debug.Assert(oneRecord[skey] == null || record[skey] == null || oneRecord[skey].Equals(record[skey]), $"key already in dictionary: { skey } - value: { oneRecord[skey] } - ignoring: { record[skey] }");
 								foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
@@ -847,7 +886,7 @@ namespace GeneXus.Data.NTier
 
 		private IDictionary<string, object> FlattenRecord(IDictionary<string, object> record)
 		{
-			
+
 			while (record.Any(item => item.Value is IDictionary<string, object> && NeedFlattenRecord(item.Key)))
 			{
 				string entityKey = record.Keys.First(key => record[key] is IDictionary<string, object> && NeedFlattenRecord(key));
@@ -861,7 +900,7 @@ namespace GeneXus.Data.NTier
 					}
 					catch (ArgumentException)
 					{
-						
+
 					}
 				}
 			}
@@ -969,7 +1008,7 @@ namespace GeneXus.Data.NTier
 		{
 			get
 			{
-				return -1; 
+				return -1;
 			}
 		}
 
@@ -1041,9 +1080,9 @@ namespace GeneXus.Data.NTier
 			object obj = selectList[i].GetValue(NewServiceContext(), currentEntry);
 			if (obj is DateTime dt)
 				return dt;
-			else if(obj is DateTimeOffset dto)
+			else if (obj is DateTimeOffset dto)
 				return dto.UtcDateTime;
-			else if(obj is TimeOfDay timeOfDay)
+			else if (obj is TimeOfDay timeOfDay)
 				return new DateTime(timeOfDay.Ticks);
 			else throw new NotImplementedException();
 		}
@@ -1376,7 +1415,7 @@ namespace GeneXus.Data.NTier
 				object baseEntityObj = currentEntity[baseEntity];
 				if (baseEntityObj is IList<object>)
 				{
-					
+
 					IList<object> baseEntityList = baseEntityObj as IList<object>;
 					if (baseEntityList.Any(entity => IsSameEntity(entity, setEntity, false)))
 						throw new ServiceException(ServiceError.RecordAlreadyExists);
@@ -1695,10 +1734,10 @@ namespace GeneXus.Data.NTier
 
 	public class GXODataClientSettings
 	{
-		internal GXODataClientSettings(ODataClientSettings settings, bool isSapB1)
+		internal GXODataClientSettings(ODataClientSettings settings, bool allowSelectOnExpand)
 		{
 			this.settings = settings;
-			this.allowSelectOnExpand = isSapB1;
+			this.allowSelectOnExpand = allowSelectOnExpand;
 		}
 		internal ODataClientSettings settings { get; set; }
 		internal bool allowSelectOnExpand { get; set; }
@@ -1801,14 +1840,14 @@ namespace GeneXus.Data.NTier
 				Microsoft.OData.Edm.IEdmEntityType navPropType = navProp.ToEntityType();
 				if (!currentMapper.ContainsKey(navPropName))
 				{
-					currentMapper.Add(navPropName, navPropName);  
+					currentMapper.Add(navPropName, navPropName);
 					if (entitySetTypesMap.ContainsKey(navPropType))
-					{ 
+					{
 						foreach (string entitySetName in entitySetTypesMap[navPropType].Where(name => !currentMapper.ContainsKey(name)))
 							currentMapper.Add(entitySetName, navPropName);
 					}
 					else
-					{ 
+					{
 						if (!currentMapper.ContainsKey(navPropType.Name))
 							currentMapper.Add(navPropType.Name, navPropName);
 					}
@@ -1831,14 +1870,14 @@ namespace GeneXus.Data.NTier
 				Microsoft.Data.Edm.IEdmEntityType navPropType = navProp.ToEntityType();
 				if (!currentMapper.ContainsKey(navPropName))
 				{
-					currentMapper.Add(navPropName, navPropName);  
+					currentMapper.Add(navPropName, navPropName);
 					if (entitySetTypesMap.ContainsKey(navPropType))
-					{ 
+					{
 						foreach (string entitySetName in entitySetTypesMap[navPropType].Where(name => !currentMapper.ContainsKey(name)))
 							currentMapper.Add(entitySetName, navPropName);
 					}
 					else
-					{ 
+					{
 						if (!currentMapper.ContainsKey(navPropType.Name))
 							currentMapper.Add(navPropType.Name, navPropName);
 					}
@@ -2048,7 +2087,7 @@ namespace GeneXus.Data.NTier
 		}
 		public GXODataClient Set(IDictionary<string, object> value)
 		{
-			return Apply(BoundClient.Set(value)); 
+			return Apply(BoundClient.Set(value));
 		}
 
 		public GXODataClient Key(ODataEntry entryKey)

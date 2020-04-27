@@ -282,7 +282,7 @@ namespace GeneXus.Mail.Exchange
                         }
                     }
                 }
-                if (FetchMessage(msg, MailHeaders))
+                if (FetchMessage(msg, MailHeaders) && msg.InternetMessageHeaders!=null)
                 {
                     foreach (var msgHeader in msg.InternetMessageHeaders)
                     {

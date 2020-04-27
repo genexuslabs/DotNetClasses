@@ -112,6 +112,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptography", "src\dotnetcommon\GxCryptography\GxCryptography.csproj", "{721C71DA-0E1C-49C1-88AE-17A97AA255D3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GxEncryptCMD", "src\dotnetframework\GxEncryptCMD\GxEncryptCMD.csproj", "{E2CC404A-3AE4-4CE9-84DC-0EA6078F69E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXAzureStorageNETCore", "src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj", "{BF72FAF5-3A7C-41B6-A27F-9BE049290356}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -299,6 +300,10 @@ Global
 		{E2CC404A-3AE4-4CE9-84DC-0EA6078F69E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2CC404A-3AE4-4CE9-84DC-0EA6078F69E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E2CC404A-3AE4-4CE9-84DC-0EA6078F69E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF72FAF5-3A7C-41B6-A27F-9BE049290356}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF72FAF5-3A7C-41B6-A27F-9BE049290356}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF72FAF5-3A7C-41B6-A27F-9BE049290356}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF72FAF5-3A7C-41B6-A27F-9BE049290356}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -356,6 +361,7 @@ Global
 		{6E82437D-8CF2-4206-B4A8-7691B431A45A} = {F1E13DF4-9F50-41A2-9DC3-04B673B21032}
 		{721C71DA-0E1C-49C1-88AE-17A97AA255D3} = {F1E13DF4-9F50-41A2-9DC3-04B673B21032}
 		{E2CC404A-3AE4-4CE9-84DC-0EA6078F69E3} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
+		{BF72FAF5-3A7C-41B6-A27F-9BE049290356} = {3C0E779F-1949-40AC-AE18-5D59101B24CB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
