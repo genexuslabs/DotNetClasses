@@ -13,7 +13,7 @@
 		<PackageReference Include="GXOdata.Client" Version="5.2.3.2" />
 		<PackageReference Include="log4net" Version="2.0.8" />
 		<PackageReference Include="Microsoft.Data.Edm" Version="5.8.3" />
-		<PackageReference Include="Microsoft.Data.OData" Version="5.8.3" />
+		<PackageReference Include="Microsoft.Data.OData" Version="5.8.4" />
 		<PackageReference Include="Microsoft.Data.Services" Version="5.8.3" />
 		<PackageReference Include="Microsoft.Data.Services.Client" Version="5.8.3" />
 		<PackageReference Include="Microsoft.Net.Http" Version="2.2.29" />
