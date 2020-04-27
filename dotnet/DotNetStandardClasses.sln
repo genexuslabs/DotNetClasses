@@ -111,9 +111,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptographyCommon", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptography", "src\dotnetcommon\GxCryptography\GxCryptography.csproj", "{721C71DA-0E1C-49C1-88AE-17A97AA255D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GxEncryptCMD", "src\dotnetframework\GxEncryptCMD\GxEncryptCMD.csproj", "{E2CC404A-3AE4-4CE9-84DC-0EA6078F69E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxEncryptCMD", "src\dotnetframework\GxEncryptCMD\GxEncryptCMD.csproj", "{E2CC404A-3AE4-4CE9-84DC-0EA6078F69E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXAzureStorageNETCore", "src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj", "{BF72FAF5-3A7C-41B6-A27F-9BE049290356}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXAzureStorageNETCore", "src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj", "{BF72FAF5-3A7C-41B6-A27F-9BE049290356}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
