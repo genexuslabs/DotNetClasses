@@ -1837,6 +1837,8 @@ namespace GeneXus.Http
 					context.CloseConnections();
 				}
 				catch { }
+				Exception exceptionToHandle = e.InnerException ?? e;
+				handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
 				throw new Exception("GXApplication exception", e);
 			}
 		}
@@ -2572,6 +2574,11 @@ namespace GeneXus.Http
 		public void PrepareForReuse()
 		{
 			((GxContext)this.context).ClearJavascriptSources();
+		}
+
+		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack)
+		{
+
 		}
 
 		private Diagnostics.GXDebugInfo dbgInfo;
