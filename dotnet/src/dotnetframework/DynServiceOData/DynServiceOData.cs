@@ -929,7 +929,10 @@ namespace GeneXus.Data.NTier
 					}
 					catch (WebRequestException e)
 					{
-						throw conn.GetWebRequestException(e);
+						Exception toThrow = conn.GetWebRequestException(e);
+						if (behavior == CommandBehavior.SingleRow && IsRecordNotFoundException(toThrow))
+							return false;
+						else throw toThrow;
 					}
 					if (data == null)
 					{
@@ -969,6 +972,8 @@ namespace GeneXus.Data.NTier
 			}
 			return false;
 		}
+
+		private bool IsRecordNotFoundException(Exception e) => (e as AggregateException)?.Message == ServiceError.RecordNotFound;
 
 		public object this[string name]
 		{
