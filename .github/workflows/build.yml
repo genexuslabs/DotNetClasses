@@ -56,7 +56,7 @@ jobs:
 
     - name: Dispatch build result
       run: |
-        $token = ${{ secrets.GITHUB_PAT }}
+        $token = ${{ secrets.PAT }}
         $uri = "${{ secrets.DISPATCH_URL }}"
         $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "", $token)))
                   
