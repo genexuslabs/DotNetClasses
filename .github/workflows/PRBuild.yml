@@ -13,8 +13,8 @@ jobs:
       Configuration: Release
       NuGetRepository: http://nexus.genexus.com/repository/nuget-prereleases/
     
-      runs-on: windows-latest
-
+    runs-on: windows-latest
+   
     steps:
     - name: Checkout
       uses: actions/checkout@v1
