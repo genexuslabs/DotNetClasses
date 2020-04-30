@@ -56,7 +56,7 @@ jobs:
 
     - name: Dispatch build result
       run: |
-        $token = ${{ secrets.PAT }}
+        $token = "${{ secrets.PAT }}"
         $uri = "${{ secrets.DISPATCH_URL }}"
         $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "", $token)))
                   
@@ -65,14 +65,14 @@ jobs:
         $headers.Add("Content-Type", "application/json")
 
         if ($Env:GITHUB_REF -match "[^\/]+$") {
-            $branch = matches[0]
+            $branch = $Matches[0]
 
             $body = "{
                 `"event_type`": `"component-deployed`",
                 `"client_payload`": {
-                    `"component_name`": `"dotNet`"
+                    `"component`": `"dotNet`",
                     `"git_branch`": `"$branch`",
-                    `"new_version`": `"$NuGetPackageVersion`", 
+                    `"new_version`": `"$Env:NuGetPackageVersion`"
                 }
             }"
 
