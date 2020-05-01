@@ -76,6 +76,7 @@ jobs:
                 }
             }"
 
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
             $response = Invoke-RestMethod -Uri $uri -Headers $headers -Body $body -Method POST
             $response | ConvertTo-Json
         } else {
