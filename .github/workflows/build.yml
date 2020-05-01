@@ -43,6 +43,7 @@ jobs:
         $VersionTag = if ($IsMaster -match "(?<=IsMaster:)(.*)") {"stable"} else {"trunk"}
         $Timestamp = (Get-Date).ToString("yyyyMMddHHmmss")
         $NuGetPackageVersion = $GetFileVersionOutput + "-" + $VersionTag + "." + $Timestamp
+        echo "::set-env name=NuGetPackageVersion::$NuGetPackageVersion"
 
         dotnet pack dotnet\DotNetStandardClasses.sln --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
@@ -51,4 +52,32 @@ jobs:
         Get-ChildItem .\dotnet\*.nupkg -Recurse |
           ForEach-Object {
             dotnet nuget push $_.FullName --source $Env:NuGetRepository
-          }
+        }
+
+    - name: Dispatch build result
+      run: |
+        $token = "${{ secrets.PAT }}"
+        $uri = "${{ secrets.DISPATCH_URL }}"
+        $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "", $token)))
+                  
+        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+        $headers.Add("Authorization", ("Basic {0}" -f $base64AuthInfo))
+        $headers.Add("Content-Type", "application/json")
+
+        if ($Env:GITHUB_REF -match "[^\/]+$") {
+            $branch = $Matches[0]
+
+            $body = "{
+                `"event_type`": `"component-deployed`",
+                `"client_payload`": {
+                    `"component`": `"dotNet`",
+                    `"git_branch`": `"$branch`",
+                    `"new_version`": `"$Env:NuGetPackageVersion`"
+                }
+            }"
+
+            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Body $body -Method POST
+            $response | ConvertTo-Json
+        } else {
+            Write-Error "Unable to get branch information for dispatch"
+        }
