@@ -95,8 +95,12 @@ namespace GX
 		{
 			get
 			{
-				if (GxContext.Current.HttpContext != null)
-					return GxContext.Current.HttpContext.Request.Headers["PlatformName"];
+				if (GxContext.Current.HttpContext != null) {
+					string platformName = GxContext.Current.HttpContext.Request.Headers["PlatformName"];
+					if (string.IsNullOrEmpty(platformName))
+						platformName = GxContext.Current.HttpContext.Request.Headers["DevicePlatform"];
+					return platformName;
+				}
 				else
 					return string.Empty;
 			}
