@@ -62,7 +62,7 @@ namespace GeneXus.Http
 	public class HttpAjaxContext : IHttpAjaxContext
 	{
         private IGxContext _context;
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.ExpressionEvaluator));
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(HttpAjaxContext));
 		private Stack cmpContents = new Stack();
 		private GXAjaxCommandCollection commands = new GXAjaxCommandCollection();
 		private JArray _AttValues = new JArray();
@@ -598,7 +598,7 @@ namespace GeneXus.Http
 					if (!string.IsNullOrEmpty(clientKey))
 					{
 						bool correctKey = false;
-						clientKey = CryptoImpl.DecryptRijndael(clientKey, CryptoImpl.GX_AJAX_PRIVATE_KEY, out correctKey);
+						clientKey = CryptoImpl.DecryptRijndael(CryptoImpl.GX_AJAX_PRIVATE_IV + clientKey, CryptoImpl.GX_AJAX_PRIVATE_KEY, out correctKey);
 						if (correctKey)
 						{
 							context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY, clientKey);

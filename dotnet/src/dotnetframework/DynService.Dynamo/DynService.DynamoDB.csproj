@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
@@ -8,10 +8,10 @@
 		<PackageId>GeneXus.DynService.DynamoDB</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.1.4" />
+		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.9" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\DynService.Core\DynService.Core.csproj"/>
-		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+		<ProjectReference Include="..\DynService.Core\DynService.Core.csproj" />
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 </Project>

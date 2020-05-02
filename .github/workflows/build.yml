@@ -19,14 +19,14 @@ jobs:
 
     - name: Clean previous build #Because self-hosted runners are not cleaned automatically
       run: |
-        Get-ChildItem .\dotnet\src\*\bin -Recurse |
+        Get-ChildItem .\dotnet\src\*\bin -Recurse -ErrorAction SilentlyContinue |
           ForEach-Object {
            rm -Recurse $_.FullName
-          }
-        Get-ChildItem .\dotnet\src\*\obj -Recurse |
+        }
+        Get-ChildItem .\dotnet\src\*\obj -Recurse -ErrorAction SilentlyContinue |
           ForEach-Object {
            rm -Recurse $_.FullName
-          }
+        }
 
     - name: Build and Pack
       run: |
@@ -41,8 +41,8 @@ jobs:
 
         $IsMaster = dotnet msbuild dotnet/Directory.Build.props /t:IsMaster
         $VersionTag = if ($IsMaster -match "(?<=IsMaster:)(.*)") {"stable"} else {"trunk"}
-
-        $NuGetPackageVersion = $GetFileVersionOutput + "-" + $VersionTag + "." + $CommitNumber
+        $Timestamp = (Get-Date).ToString("yyyyMMddHHmmss")
+        $NuGetPackageVersion = $GetFileVersionOutput + "-" + $VersionTag + "." + $Timestamp
 
         dotnet pack dotnet\DotNetStandardClasses.sln --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
