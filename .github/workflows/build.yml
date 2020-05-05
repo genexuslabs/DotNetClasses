@@ -67,10 +67,12 @@ jobs:
         if ($Env:GITHUB_REF -match "[^\/]+$") {
             $branch = $Matches[0]
 
+            $repositoryName = (split-path -leaf "$Env:GITHUB_REPOSITORY").Split(":")[0]
+
             $body = "{
                 `"event_type`": `"component-deployed`",
                 `"client_payload`": {
-                    `"component`": `"dotNet`",
+                    `"component`": `"$repositoryName`",
                     `"git_branch`": `"$branch`",
                     `"new_version`": `"$Env:NuGetPackageVersion`"
                 }
