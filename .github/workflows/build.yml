@@ -58,29 +58,39 @@ jobs:
       run: |
         $token = "${{ secrets.PAT }}"
         $uri = "${{ secrets.DISPATCH_URL }}"
-        $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "", $token)))
-                  
-        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-        $headers.Add("Authorization", ("Basic {0}" -f $base64AuthInfo))
-        $headers.Add("Content-Type", "application/json")
+        
+        if ($token -ne $null -and $uri -ne $null) {
+          $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "", $token)))
 
-        if ($Env:GITHUB_REF -match "[^\/]+$") {
-            $branch = $Matches[0]
+          $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+          $headers.Add("Authorization", ("Basic {0}" -f $base64AuthInfo))
+          $headers.Add("Content-Type", "application/json")
 
-            $repositoryName = (split-path -leaf "$Env:GITHUB_REPOSITORY").Split(":")[0]
+          if ($Env:GITHUB_REF -match "[^\/]+$") {
+              $branch = $Matches[0]
 
-            $body = "{
-                `"event_type`": `"component-deployed`",
-                `"client_payload`": {
-                    `"component`": `"$repositoryName`",
-                    `"git_branch`": `"$branch`",
-                    `"new_version`": `"$Env:NuGetPackageVersion`"
-                }
-            }"
+              $repositoryName = (split-path -leaf "$Env:GITHUB_REPOSITORY").Split(":")[0]
 
-            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
-            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Body $body -Method POST
-            $response | ConvertTo-Json
+              $body = "{
+                  `"event_type`": `"component-deployed`",
+                  `"client_payload`": {
+                      `"component`": `"$repositoryName`",
+                      `"git_branch`": `"$branch`",
+                      `"new_version`": `"$Env:NuGetPackageVersion`"
+                  }
+              }"
+
+              [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
+              $response = Invoke-RestMethod -Uri $uri -Headers $headers -Body $body -Method POST
+              $response | ConvertTo-Json
+          } else {
+              Write-Error "Unable to get branch information for dispatch"
+          }
         } else {
-            Write-Error "Unable to get branch information for dispatch"
+          $repositoryOwner = "${{ github.repository_owner }}"
+          if ($repositoryOwner -match "genexuslabs") {
+            Write-Error "Unable to dispatch build result"
+          } else {
+            Write-Warning "Skipping dispatching build result"
+          }
         }
