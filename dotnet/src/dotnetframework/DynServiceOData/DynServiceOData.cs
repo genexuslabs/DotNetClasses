@@ -376,7 +376,9 @@ namespace GeneXus.Data.NTier
 				bool expiredCookie = b1Cookie != null && DateTime.Now >= b1Cookie.Expires;
 				if(toRemoveCookie)
 				{
-					CurrentCookieContainer.GetCookies(serviceUri)[SESSION_COOKIE_NAME].Expired = true;
+					Cookie cookie = CurrentCookieContainer.GetCookies(serviceUri)[SESSION_COOKIE_NAME];
+					if(cookie != null)
+						cookie.Expired = true;
 					toRemoveCookie = false;
 				}
 				if (expiredCookie || CurrentCookieContainer.GetCookies(serviceUri)[SESSION_COOKIE_NAME] == null)
