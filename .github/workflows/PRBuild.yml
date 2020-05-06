@@ -1,10 +1,9 @@
 name: PR-Build
 
 on: 
-  push:
-    branches-ignore:
+  pull_request:
+    branches: 
       - 'master'
-      - 'beta'
       - 'release-*'
 
 jobs:
