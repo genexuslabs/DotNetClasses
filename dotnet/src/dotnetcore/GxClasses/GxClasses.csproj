@@ -46,6 +46,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\EnvVarReader.cs" Link="Helpers\EnvVarReader.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXFileWatcher.cs" Link="Helpers\GXFileWatcher.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\GXBaseObject.cs" Link="Model\GXBaseObject.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Security\WebSecurity.cs" Link="Security\WebSecurity.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Caching\GxCache.cs" Link="Services\Caching\GxCache.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxCollections.cs" Link="Domain\GxCollections.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Core\gxconfig.cs" Link="Core\GxConfig.cs" />
@@ -129,23 +130,25 @@
 		<LogicalName>GxClasses.zoneinfo.resources</LogicalName>
 	</EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-  <PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" PrivateAssets="All"/>
-  <PackageReference Include="jose-jwt" Version="2.5.0" PrivateAssets="All" />
-  <PackageReference Include="log4net" Version="2.0.8" />
-	<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" PrivateAssets="All" />
-	<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
-	<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
-	<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
-	<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" PrivateAssets="All"/>
-	<PackageReference Include="MySql.Data" Version="6.10.6" PrivateAssets="All"/>
-	<PackageReference Include="NetTopologySuite" Version="2.0.0"  PrivateAssets="All" />
-	<PackageReference Include="NetTopologySuite.Core" Version="1.15.3"  PrivateAssets="All" />
-	<PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All"/>  
-	<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" />
-	<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3"  PrivateAssets="All" /> 
-	<PackageReference Include="System.DirectoryServices" Version="4.7.0"  PrivateAssets="All" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" PrivateAssets="All" />
+		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" PrivateAssets="All" />
+		<PackageReference Include="MySql.Data" Version="6.10.6" PrivateAssets="All" />
+		<PackageReference Include="NetTopologySuite" Version="2.0.0" PrivateAssets="All" />
+		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" PrivateAssets="All" />
+		<PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" />
+		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" PrivateAssets="All" />
+		<PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.0" PrivateAssets="All" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" PrivateAssets="All" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />

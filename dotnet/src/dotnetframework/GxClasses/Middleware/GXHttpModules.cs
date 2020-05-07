@@ -122,9 +122,9 @@ namespace GeneXus.Http.HttpModules
 						}
 						String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
 						String mapPathLower = mapPath.ToLower();
-						servicesPathUrl.Add(mapPath);
-						servicesBase.Add(mapPath, m.Name.ToLower());
-						servicesClass.Add(mapPath, m.Name.ToLower() + "_services");
+						servicesPathUrl.Add(mapPathLower);
+						servicesBase.Add(mapPathLower, m.Name.ToLower());
+						servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
 						foreach (SingleMap sm in m.Mappings)
 						{
 							if (servicesMap.ContainsKey(mapPathLower))
@@ -132,7 +132,7 @@ namespace GeneXus.Http.HttpModules
 								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
 								{
 									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-									servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), sm.Verb);
+									servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), (sm.Verb!=null)?sm.Verb:"GET");
 								}
 							}
 							else
@@ -140,7 +140,7 @@ namespace GeneXus.Http.HttpModules
 								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
 								servicesVerbs.Add(mapPathLower, new Dictionary<string, string>());
 								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-								servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), sm.Verb);
+								servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), (sm.Verb != null) ? sm.Verb : "GET");
 							}
 						}
 					}
