@@ -7,10 +7,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Data.NTier;
+using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Metadata;
 using GeneXus.Procedure;
+using GeneXus.Services;
 using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore;
@@ -200,6 +202,12 @@ namespace GeneXus.Application
 			services.AddDistributedMemoryCache();
 			AppSettings settings = new AppSettings();
 			Config.ConfigRoot.GetSection("AppSettings").Bind(settings);
+
+			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
+
+			if (sessionService != null)
+				ConfigureSessionService(services, sessionService);
+
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(settings.SessionTimeout==0 ? DEFAULT_SESSION_TIMEOUT_MINUTES : settings.SessionTimeout); 
@@ -231,6 +239,17 @@ namespace GeneXus.Application
 				});
 			}
 			services.AddMvc();
+		}
+
+		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
+		{
+			if (sessionService is RedisSession)
+			{
+				services.AddDistributedRedisCache(options =>
+				{
+					options.Configuration = sessionService.ConnectionString;
+				});
+			}
 		}
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
