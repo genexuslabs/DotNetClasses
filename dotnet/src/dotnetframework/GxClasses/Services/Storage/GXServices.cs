@@ -196,24 +196,27 @@ namespace GeneXus.Services
 		public static ExternalProvider GetExternalProviderImpl(string service)
 		{
 			ExternalProvider externalProviderImpl = null;
-			GXService providerService = GetGXServices().Get(service);
-			if (providerService != null)
+			if (GetGXServices() != null)
 			{
-				try
+				GXService providerService = GetGXServices().Get(service);
+				if (providerService != null)
 				{
-					string typeFullName = providerService.ClassName;
-					GXLogging.Debug(log, "Loading storage provider:", typeFullName);
+					try
+					{
+						string typeFullName = providerService.ClassName;
+						GXLogging.Debug(log, "Loading storage provider:", typeFullName);
 #if !NETCORE
-					Type type = Type.GetType(typeFullName, true, true);
+						Type type = Type.GetType(typeFullName, true, true);
 #else
-					Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
+						Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
 #endif
-					externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
-				}
-				catch (Exception e)
-				{
-					GXLogging.Error(log, "Couldn´t connect to external storage provider.", e.Message, e);
-					throw e;
+						externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
+					}
+					catch (Exception e)
+					{
+						GXLogging.Error(log, "Couldn´t connect to external storage provider.", e.Message, e);
+						throw e;
+					}
 				}
 			}
 			return externalProviderImpl;
