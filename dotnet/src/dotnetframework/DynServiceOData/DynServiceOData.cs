@@ -86,6 +86,7 @@ namespace GeneXus.Data.NTier
 			string metadataLocation = $"{ Application.GxContext.StaticPhysicalPath() }METADATA{ Path.DirectorySeparatorChar }SERVICES{ Path.DirectorySeparatorChar }";
 			bool hasUserMetadataLocation = false;
 			bool? poolConnections = null;
+			bool sapB1ByToken = false;
 			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12; // Framework 4.5.x does not have TLS 1.2 enabled by default
 			if (builder.TryGetValue("User Id", out object userId) && builder.TryGetValue("Password", out object pass))
 			{
@@ -157,13 +158,18 @@ namespace GeneXus.Data.NTier
 					}
 				};
 			}
-			if (builder.TryGetValue("SapLogin", out object saplogin) && user != null && password != null)
+			if (builder.TryGetValue("SapLogin", out object saplogin))
 			{
+				user = user ?? string.Empty;
+				password = password ?? string.Empty;
 				sapLoginBO = saplogin.ToString();
+				object b1value;
+				if (builder.TryGetValue("B1SESSION", out b1value))
+					b1SessionId = b1value.ToString();
 			}
-			if (builder.TryGetValue("B1SESSION", out object b1value) && user != null && password != null)
+			if (builder.TryGetValue("SapLoginMethod", out object sapLoginMethod))
 			{
-				b1SessionId = b1value.ToString();
+				sapB1ByToken = sapLoginMethod.ToString().Trim().Equals("token", StringComparison.InvariantCultureIgnoreCase);
 			}
 			if (builder.TryGetValue("MetadataLocation", out object metadatavalue))
 			{
@@ -213,7 +219,7 @@ namespace GeneXus.Data.NTier
 				};
 			}
 
-			if (sapLoginBO != null)
+			if (sapLoginBO != null || sapB1ByToken)
 			{
 				RecordNotFoundServiceCodes = RecordNotFoundServiceCodes ?? new HashSet<string>(Enumerable.Repeat("-2028", 1));
 				RecordAlreadyExistsServiceCodes = RecordAlreadyExistsServiceCodes ?? new HashSet<string>(Enumerable.Repeat("-2035", 1));
@@ -223,9 +229,9 @@ namespace GeneXus.Data.NTier
 				clientSettings.Properties = clientSettings.Properties ?? new Dictionary<string, object>();
 				clientSettings.Properties[ODataClientSettings.ExtraProperties.STRINGIZE_DATETIME_VALUES] = true;
 			}
-			if (sapLoginBO != null || b1SessionId != null)
+			if (sapLoginBO != null || b1SessionId != null || sapB1ByToken)
 			{
-				SapB1LoginHandler.InitializeHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId);
+				SapB1LoginHandler.InitializeHandler(clientSettings, serviceUri, sapLoginBO, user, password, sapB1ByToken ? null : b1SessionId, sapB1ByToken);
 				poolConnections = poolConnections ?? true;
 			}
 
@@ -264,9 +270,8 @@ namespace GeneXus.Data.NTier
 			if (PoolableConnections.TryGetValue(poolKey, out HttpClientHandler clientHandler))
 			{
 				GxService.log_msg($"Reusing pooled connection { clientHandler.GetHashCode() }.");
-				return clientHandler;
 			}
-			else return PoolableConnections.GetOrAdd(poolKey, (str) =>
+			else clientHandler = PoolableConnections.GetOrAdd(poolKey, (str) =>
 				{
 					HttpClientHandler newHandler = new HttpClientHandler();
 					if (clientSettings.Credentials != null)
@@ -278,42 +283,89 @@ namespace GeneXus.Data.NTier
 					GxService.log_msg($"Adding pooled connection { newHandler.GetHashCode() }.");
 					return newHandler;
 				});
+			clientSettings.OnApplyClientHandler?.Invoke(clientHandler);
+			return clientHandler;
 		}
 
 		class SapB1LoginHandler
 		{
 			private string user, password;
 			private string sloginInfo;
-			private Uri loginUri;
+			private Uri loginUri, serviceUri;
 			private DateTime expiryDT;
 			private const string SESSION_INFO_ID = "B1SESSION";
+			private const string SESSION_COOKIE_NAME = "B1SESSION";
 			private const string SESSION_INFO_EXPIRY = "B1SESSION_EXPIRY";
+			private const string SESSION_EXPIRY_NEVER = "NEVER";
 			private IGxSession gxSession;
 
-			private SapB1LoginHandler(ODataClientSettings clientSettings, string serviceUri, string sapLoginBO, string user, string password, string b1SessionId)
+			private bool sapB1ByToken, sapB1ByTokenReacquire = false, toRemoveCookie = false;
+
+			private SapB1LoginHandler(ODataClientSettings clientSettings, string serviceUri, string sapLoginBO, string user, string password, string b1SessionId, bool sapB1ByToken)
 			{
 				this.user = user;
 				this.password = password;
+				this.sapB1ByToken = sapB1ByToken;
 				expiryDT = b1SessionId != null ? DateTime.MaxValue : DateTime.MinValue;
 
 				sloginInfo = string.Format("{{\"UserName\":\"{0}\",\"Password\":\"{1}\",\"CompanyDB\":\"{2}\"}}", user, password, sapLoginBO);
 				string loginBase = serviceUri.TrimEnd(new char[] { '/' });
 				string loginUrl = string.Format("{0}/Login", loginBase);
 				loginUri = new Uri(loginUrl);
+				this.serviceUri = new Uri(serviceUri);
 
 				gxSession = Application.GxContext.Current.GetSession();
-				object sessionExpiry = gxSession.GetObject(SESSION_INFO_EXPIRY);
-				if (sessionExpiry != null && sessionExpiry is DateTime &&
-					gxSession.Get(SESSION_INFO_ID) != null)
+				if(b1SessionId != null)
 				{
-					expiryDT = (DateTime)sessionExpiry;
-					b1SessionId = gxSession.Get(SESSION_INFO_ID);
-					b1Cookie = new Cookie("B1SESSION", b1SessionId, "/", loginUri.Host);
+					b1Cookie = new Cookie(SESSION_COOKIE_NAME, b1SessionId, "/", loginUri.Host);
 					b1Cookie.Expires = expiryDT;
 				}
+				else GetStoredSession();
 
 				clientSettings.BeforeRequest += LoginHandler;
 				clientSettings.OnApplyClientHandler += ClientHandler;
+			}
+
+			private bool GetStoredSession()
+			{
+				sapB1ByTokenReacquire = toRemoveCookie = false;
+				object sessionExpiry = gxSession.GetObject(SESSION_INFO_EXPIRY);
+				if (gxSession.Get(SESSION_INFO_ID) != null)
+				{
+					if (sessionExpiry is DateTime)
+						expiryDT = (DateTime)sessionExpiry;
+					else
+					{
+						string sessionExpiryStr = sessionExpiry as string;
+						if (sessionExpiry != null || sapB1ByToken)
+						{
+							if (sessionExpiryStr?.Equals(SESSION_EXPIRY_NEVER) == true)
+								expiryDT = DateTime.MaxValue;
+							else if (sessionExpiryStr != null && DateTime.TryParse(sessionExpiryStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeLocal, out expiryDT))
+							{
+								gxSession.SetObject(SESSION_INFO_EXPIRY, expiryDT);
+							}
+							else
+							{
+								expiryDT = DateTime.MaxValue;
+								sapB1ByTokenReacquire = sapB1ByToken;
+							}
+						}
+					}
+					
+					if (expiryDT >= DateTime.Now)
+					{
+						string b1SessionId = gxSession.Get(SESSION_INFO_ID);
+						if (!string.IsNullOrEmpty(b1SessionId))
+						{
+							b1Cookie = new Cookie(SESSION_COOKIE_NAME, b1SessionId, "/", loginUri.Host);
+							b1Cookie.Expires = expiryDT;
+							return true;
+						}
+					}
+				}
+				toRemoveCookie = sapB1ByToken;
+				return false;
 			}
 
 			private CookieContainer CurrentCookieContainer = null;
@@ -321,68 +373,96 @@ namespace GeneXus.Data.NTier
 			private void ClientHandler(HttpClientHandler handler)
 			{
 				CurrentCookieContainer = handler.CookieContainer;
-				if (b1Cookie != null)
-					CurrentCookieContainer.Add(b1Cookie);
+				bool expiredCookie = b1Cookie != null && DateTime.Now >= b1Cookie.Expires;
+				if(toRemoveCookie)
+				{
+					Cookie cookie = CurrentCookieContainer.GetCookies(serviceUri)[SESSION_COOKIE_NAME];
+					if(cookie != null)
+						cookie.Expired = true;
+					toRemoveCookie = false;
+				}
+				if (expiredCookie || CurrentCookieContainer.GetCookies(serviceUri)[SESSION_COOKIE_NAME] == null)
+				{					
+					if ((!expiredCookie && b1Cookie != null) || GetStoredSession())
+						AddCookieToContainer();
+				}
 			}
 
 			private void LoginHandler(System.Net.Http.HttpRequestMessage request)
 			{
 				request.Headers.ExpectContinue = false;
-				if (DateTime.Now >= expiryDT)
+				if (DateTime.Now >= expiryDT || sapB1ByTokenReacquire)
 				{
-					using (WebClient login = new WebClient())
+					if (sapB1ByToken)
 					{
-						login.Credentials = new NetworkCredential(user, password);
-						bool originalExpect100Continue = ServicePointManager.Expect100Continue;
-						ServicePointManager.Expect100Continue = false;
-						try
+						if (GetStoredSession())
+							AddCookieToContainer();
+					}
+					else
+					{
+						using (WebClient login = new WebClient())
 						{
-							string loginResponse = login.UploadString(loginUri, sloginInfo);
-							string cookie = login.ResponseHeaders.Get("Set-Cookie");
-							string b1SessionId;
-							if (!string.IsNullOrEmpty(cookie))
+							login.Credentials = new NetworkCredential(user, password);
+							bool originalExpect100Continue = ServicePointManager.Expect100Continue;
+							ServicePointManager.Expect100Continue = false;
+							try
 							{
-								int cookieStart = cookie.IndexOf("B1SESSION=");
-								if (cookieStart >= 0)
+								string loginResponse = login.UploadString(loginUri, sloginInfo);
+								string cookie = login.ResponseHeaders.Get("Set-Cookie");
+								string b1SessionId;
+								if (!string.IsNullOrEmpty(cookie))
 								{
-									int cookieEnd = cookie.IndexOf(';', cookieStart);
-									b1SessionId = cookie.Substring(cookieStart + 10, cookieEnd - cookieStart - 10);
-									int span = 6;
-									int index = loginResponse.IndexOf("SessionTimeout");
-									if (index > 0)
+									int cookieStart = cookie.IndexOf("B1SESSION=");
+									if (cookieStart >= 0)
 									{
-										loginResponse = loginResponse.Substring(index);
-										index = loginResponse.IndexOf(':');
+										int cookieEnd = cookie.IndexOf(';', cookieStart);
+										b1SessionId = cookie.Substring(cookieStart + 10, cookieEnd - cookieStart - 10);
+										int span = 6;
+										int index = loginResponse.IndexOf("SessionTimeout");
 										if (index > 0)
 										{
-											loginResponse = loginResponse.Substring(index + 1).Trim();
-											for (index = 0; index < loginResponse.Length && Char.IsDigit(loginResponse[index]); index++) { }
-											span = int.Parse(loginResponse.Substring(0, index));
+											loginResponse = loginResponse.Substring(index);
+											index = loginResponse.IndexOf(':');
+											if (index > 0)
+											{
+												loginResponse = loginResponse.Substring(index + 1).Trim();
+												for (index = 0; index < loginResponse.Length && Char.IsDigit(loginResponse[index]); index++) { }
+												span = int.Parse(loginResponse.Substring(0, index));
+											}
 										}
-									}
-									GxService.log_msg($"Acquired B1Session. Expires in { span } minutes.");
-									expiryDT = DateTime.Now.AddMinutes(span - 1);
+										GxService.log_msg($"Acquired B1Session. Expires in { span } minutes.");
+										expiryDT = DateTime.Now.AddMinutes(span - 1);
 
-									gxSession.Set(SESSION_INFO_ID, b1SessionId);
-									gxSession.SetObject(SESSION_INFO_EXPIRY, expiryDT);
-									b1Cookie = new Cookie("B1SESSION", b1SessionId, "/", loginUri.Host);
-									b1Cookie.Expires = expiryDT;
-									if (CurrentCookieContainer != null)
-										CurrentCookieContainer.Add(b1Cookie);
+										gxSession.Set(SESSION_INFO_ID, b1SessionId);
+										gxSession.SetObject(SESSION_INFO_EXPIRY, expiryDT);
+										b1Cookie = new Cookie("B1SESSION", b1SessionId, "/", loginUri.Host);
+										b1Cookie.Expires = expiryDT;
+										AddCookieToContainer();
+									}
 								}
 							}
-						}
-						finally
-						{
-							ServicePointManager.Expect100Continue = originalExpect100Continue;
+							finally
+							{
+								ServicePointManager.Expect100Continue = originalExpect100Continue;
+							}
 						}
 					}
 				}
 			}
 
-			internal static void InitializeHandler(ODataClientSettings clientSettings, string serviceUri, string sapLoginBO, string user, string password, string b1SessionId)
+			private void AddCookieToContainer()
 			{
-				SapB1LoginHandler sapLoginHandler = new SapB1LoginHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId);
+				if (CurrentCookieContainer != null)
+				{
+					CurrentCookieContainer.Add(b1Cookie);
+					string expiryMsg = expiryDT != DateTime.MaxValue ? $" Expires in { Convert.ToInt32(expiryDT.Subtract(DateTime.Now).TotalMinutes) } minutes." : string.Empty;
+					GxService.log_msg($"Acquired B1Session.{ expiryMsg }");
+				}
+			}
+
+			internal static void InitializeHandler(ODataClientSettings clientSettings, string serviceUri, string sapLoginBO, string user, string password, string b1SessionId, bool sapB1ByToken)
+			{
+				SapB1LoginHandler sapLoginHandler = new SapB1LoginHandler(clientSettings, serviceUri, sapLoginBO, user, password, b1SessionId, sapB1ByToken);
 			}
 		}
 
@@ -929,7 +1009,10 @@ namespace GeneXus.Data.NTier
 					}
 					catch (WebRequestException e)
 					{
-						throw conn.GetWebRequestException(e);
+						Exception toThrow = conn.GetWebRequestException(e);
+						if (behavior == CommandBehavior.SingleRow && IsRecordNotFoundException(toThrow))
+							return false;
+						else throw toThrow;
 					}
 					if (data == null)
 					{
@@ -969,6 +1052,8 @@ namespace GeneXus.Data.NTier
 			}
 			return false;
 		}
+
+		private bool IsRecordNotFoundException(Exception e) => (e as AggregateException)?.Message == ServiceError.RecordNotFound;
 
 		public object this[string name]
 		{
