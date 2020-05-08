@@ -8,7 +8,6 @@
 	<PackageId>GeneXus.Classes.Core</PackageId>
 	</PropertyGroup>
 
-
    <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxClasses.Win\Process\CommandLine.cs" Link="Helpers\Process\CommandLine.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataOracle.cs" Link="Data\GXDataOracle.cs" />
@@ -131,7 +130,6 @@
 		<LogicalName>GxClasses.zoneinfo.resources</LogicalName>
 	</EmbeddedResource>
   </ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" PrivateAssets="All" />
 		<PackageReference Include="log4net" Version="2.0.8" />
@@ -150,6 +148,7 @@
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.0" PrivateAssets="All" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" PrivateAssets="All" />
 	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />
