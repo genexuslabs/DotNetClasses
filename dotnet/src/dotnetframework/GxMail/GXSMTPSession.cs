@@ -15,6 +15,7 @@ namespace GeneXus.Mail
         private string attachDir;
         private short authentication;
         private short secure;
+		private string authenticationMethod;
 
         private string host;
         private string userName;
@@ -90,7 +91,19 @@ namespace GeneXus.Mail
             }
         }
 
-        public short Secure
+		public string AuthenticationMethod
+		{
+			get
+			{
+				return authenticationMethod;
+			}
+			set
+			{
+				authenticationMethod = value;
+			}
+		}
+
+		public short Secure
         {
             get
             {
