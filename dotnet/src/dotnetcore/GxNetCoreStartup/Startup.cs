@@ -243,11 +243,20 @@ namespace GeneXus.Application
 
 		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
 		{
-			if (sessionService is RedisSession)
+			if (sessionService is GxRedisSession)
 			{
 				services.AddDistributedRedisCache(options =>
 				{
 					options.Configuration = sessionService.ConnectionString;
+				});
+			}
+			else if (sessionService is GxDatabaseSession)
+			{
+				services.AddDistributedSqlServerCache(options =>
+				{
+					options.ConnectionString = sessionService.ConnectionString;
+					options.SchemaName = sessionService.Schema;
+					options.TableName = sessionService.TableName;
 				});
 			}
 		}

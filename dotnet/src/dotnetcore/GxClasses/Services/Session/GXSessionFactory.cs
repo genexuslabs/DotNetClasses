@@ -9,22 +9,33 @@ namespace GeneXus.Services
 	public class GXSessionServiceFactory
 	{
 		static string REDIS = "REDIS";
-		static string ADDRESS = "SESSION_PROVIDER_ADDRESS";
-		static string PASSWORD = "SESSION_PROVIDER_PASSWORD";
+		static string DATABASE = "DATABASE";
+		static string SESSION_ADDRESS = "SESSION_PROVIDER_ADDRESS";
+		static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
+		static string SESSION_SCHEMA = "SESSION_PROVIDER_SCHEMA";
+		static string SESSION_TABLE_NAME = "SESSION_PROVIDER_TABLE_NAME";
 		public static ISessionService GetProvider()
 		{
 			var instance = GXServices.Instance.Get(GXServices.SESSION_SERVICE);
-			if (instance != null && instance.Name.Equals(REDIS, StringComparison.OrdinalIgnoreCase))
+			if (instance != null)
 			{
-				return new RedisSession(instance.Properties.Get(ADDRESS), CryptoImpl.Decrypt(instance.Properties.Get(PASSWORD)));
+				if (instance.Name.Equals(REDIS, StringComparison.OrdinalIgnoreCase))
+				{
+					return new GxRedisSession(instance.Properties.Get(SESSION_ADDRESS), CryptoImpl.Decrypt(instance.Properties.Get(SESSION_PASSWORD)));
+				}
+				else if (instance.Name.Equals(DATABASE, StringComparison.OrdinalIgnoreCase))
+				{
+					return new GxDatabaseSession(instance.Properties.Get(SESSION_ADDRESS), CryptoImpl.Decrypt(instance.Properties.Get(SESSION_PASSWORD))
+						,instance.Properties.Get(SESSION_SCHEMA), instance.Properties.Get(SESSION_TABLE_NAME));
+				}
 			}
 			return null;
 				
 		}
 	}
-	public class RedisSession : ISessionService
+	public class GxRedisSession : ISessionService
 	{
-		public RedisSession(string host, string password)
+		public GxRedisSession(string host, string password)
 		{
 			ConnectionString = $"{host}";
 			if (!string.IsNullOrEmpty(password))
@@ -33,9 +44,35 @@ namespace GeneXus.Services
 			}
 		}
 		public string ConnectionString { get; }
+
+		public string Schema => throw new NotImplementedException();
+
+		public string TableName => throw new NotImplementedException();
 	}
+	public class GxDatabaseSession : ISessionService
+	{
+		public GxDatabaseSession(string host, string password, string schema, string tableName)
+		{
+			ConnectionString = $"{host}";
+			if (!string.IsNullOrEmpty(password))
+			{
+				ConnectionString += $";password={password}";
+			}
+			Schema = schema;
+			TableName = tableName;
+		}
+		public string ConnectionString { get; }
+
+		public string Schema { get; }
+
+		public string TableName { get; }
+	}
+
 	public interface ISessionService
 	{
 		string ConnectionString { get; }
+		string Schema { get; }
+		string TableName { get; }
+
 	}
 }
