@@ -16,7 +16,7 @@ namespace GeneXus.Services
 		static string SESSION_TABLE_NAME = "SESSION_PROVIDER_TABLE_NAME";
 		public static ISessionService GetProvider()
 		{
-			var instance = GXServices.Instance.Get(GXServices.SESSION_SERVICE);
+			var instance = GXServices.Instance?.Get(GXServices.SESSION_SERVICE);
 			if (instance != null)
 			{
 				if (instance.Name.Equals(REDIS, StringComparison.OrdinalIgnoreCase))
