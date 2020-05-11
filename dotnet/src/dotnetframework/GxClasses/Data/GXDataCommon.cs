@@ -836,7 +836,7 @@ namespace GeneXus.Data
                     fileName = GxRestUtil.UploadPath(fileName);
 
 				if (Uri.TryCreate(fileName, UriKind.Relative, out fileUri) && !fileUri.IsAbsoluteUri)
-					fileName = PathUtil.RelativePath(fileName); 
+					fileName = PathUtil.RelativePath(fileName).TrimStart('/', '\\'); 
 								
 				bool ok = Uri.TryCreate(PathUtil.GetBaseUri(), fileName, out uri);
 				if (ok && uri != null)
