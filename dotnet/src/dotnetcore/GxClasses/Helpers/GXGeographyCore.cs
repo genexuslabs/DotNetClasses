@@ -574,7 +574,7 @@ namespace GeneXus.Utils
 										wktBuffer += sep + "" + JSONPointToWKT(jp);
 										sep = ",";
 									}
-									wktBuffer += sep + firstPoint;
+									//wktBuffer += sep + firstPoint;
 									wktBuffer += ")";
 									sep1 = ",";
 								}
