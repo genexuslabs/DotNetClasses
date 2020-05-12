@@ -212,6 +212,7 @@ namespace GeneXus.Application
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(settings.SessionTimeout==0 ? DEFAULT_SESSION_TIMEOUT_MINUTES : settings.SessionTimeout); 
 				options.Cookie.HttpOnly = true;
+				options.Cookie.IsEssential = true;
 			});
 
 
