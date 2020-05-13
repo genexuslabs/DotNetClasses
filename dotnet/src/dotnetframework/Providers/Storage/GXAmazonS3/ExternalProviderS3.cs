@@ -16,7 +16,7 @@ namespace GeneXus.Storage.GXAmazonS3
 {
 	public class ExternalProviderS3 : ExternalProvider
 	{
-		const int PRIVATE_URL_MINUTES_EXPIRATION = 86400; // 24 hours
+		const int PRIVATE_URL_MINUTES_EXPIRATION = 24 * 60; // 24 hours
 		const string ACCESS_KEY_ID = "STORAGE_PROVIDER_ACCESSKEYID";
 		const string SECRET_ACCESS_KEY = "STORAGE_PROVIDER_SECRETACCESSKEY";
 		const string REGION = "STORAGE_PROVIDER_REGION";
