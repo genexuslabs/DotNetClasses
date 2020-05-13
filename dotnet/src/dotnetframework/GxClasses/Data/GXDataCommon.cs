@@ -139,7 +139,8 @@ namespace GeneXus.Data
 		void Close();
 		void Disconnect();
 		DateTime DateTime { get;}
-        string Version { get;}
+		DateTime DateTimeMs { get; }
+		string Version { get;}
 		bool BeforeConnect();
 		bool AfterConnect();
     }

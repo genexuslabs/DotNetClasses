@@ -147,6 +147,7 @@ namespace GeneXus.Application
 		string GetSoapErrMsg();
 		bool isRemoteGXDB();
 		DateTime ServerNow(string dataSource);
+		DateTime ServerNowMs(string dataSource);
 		string ServerVersion(string dataSource);
 		string DataBaseName(string dataSource);
 		void SetProperty(string key, string value);
@@ -1340,6 +1341,11 @@ namespace GeneXus.Application
 		{
 			IGxDataStore dstore = GetDataStore(dataSource);
 			return (dstore.DateTime);
+		}
+		public DateTime ServerNowMs(string dataSource)
+		{
+			IGxDataStore dstore = GetDataStore(dataSource);
+			return (dstore.DateTimeMs);
 		}
 		public string ServerVersion(string dataSource)
 		{

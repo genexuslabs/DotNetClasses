@@ -2797,6 +2797,12 @@ namespace GeneXus.Utils
 #if !NETCORE
 		[Obsolete("ServerNow with string dataSource is deprecated, use ServerNow(IGxContext context, Data.NTier.IDataStoreProvider dataStore) instead", false)]
 #endif
+		static public DateTime ServerNowMS(IGxContext context, string dataSource)
+		{
+			if (Preferences.useTimezoneFix())
+				return ConvertDateTime(context.ServerNowMs(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone());
+			return context.ServerNowMs(dataSource);
+		}
 		static public DateTime ServerNow(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())

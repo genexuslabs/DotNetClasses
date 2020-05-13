@@ -1083,28 +1083,44 @@ namespace GeneXus.Data.ADO
 		{
 			get{ return connectionCache.CountPreparedCommand();}
 		}
+
+		public DateTime ServerDateTimeMs
+		{
+			get
+			{
+				return ServerDateTimeEx(true);
+			}
+		}
+
 		public DateTime ServerDateTime
 		{
 			get
 			{
-				string stmt = m_dataRecord.GetServerDateTimeStmt(this);
-				if (string.IsNullOrEmpty(stmt))
-					return DateTime.Now; 
-				else
+				return ServerDateTimeEx(false);
+			}
+		}
+		public DateTime ServerDateTimeEx(bool hasMiliseconds)
+		{		
+			string stmt = m_dataRecord.GetServerDateTimeStmt(this);
+			if (string.IsNullOrEmpty(stmt))
+			{
+				return DateTime.Now;
+			}
+			else
+			{
+				GxCommand cmd = new GxCommand(m_dataRecord, stmt, dataStore, 0, false, true, null);
+				cmd.ErrorMask = GxErrorMask.GX_NOMASK | GxErrorMask.GX_MASKLOOPLOCK;
+				IDataReader reader;
+				cmd.FetchData(out reader);
+				DateTime d = DateTimeUtil.NullDate();
+				if (reader != null)
 				{
-					GxCommand cmd = new GxCommand(m_dataRecord, stmt, dataStore, 0, false, true, null);
-					cmd.ErrorMask = GxErrorMask.GX_NOMASK | GxErrorMask.GX_MASKLOOPLOCK;
-					IDataReader reader;
-					cmd.FetchData(out reader);
-                    DateTime d = DateTimeUtil.NullDate();
-                    if (reader != null)
-                    {
-                        d = reader.GetDateTime(0);
-                        d = DateTimeUtil.ResetMilliseconds(d);
-                        reader.Close();
-                    }
-                    return d;
+					d = reader.GetDateTime(0);
+					if (!hasMiliseconds)
+						d = DateTimeUtil.ResetMilliseconds(d);
+					reader.Close();
 				}
+				return d;
 			}
 		}
         public string ServerVersion
@@ -2796,7 +2812,14 @@ namespace GeneXus.Data.ADO
 				return connection.ServerDateTime;
 			}
 		}
-        public string Version
+		public DateTime DateTimeMs
+		{
+			get
+			{
+				return connection.ServerDateTimeMs;
+			}
+		}
+		public string Version
         {
             get
             {
