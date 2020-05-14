@@ -17,6 +17,7 @@ using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +28,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace GeneXus.Application
 {
@@ -118,7 +120,7 @@ namespace GeneXus.Application
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
 		const string REST_BASE_URL = "rest/";
-		const string SERVICES_SUFFIX = "_services";
+		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 
 		public List<String> servicesPathUrl = new List<String>();
 		public List<String> servicesBase = new List<String>();
@@ -246,10 +248,12 @@ namespace GeneXus.Application
 		{
 			if (sessionService is GxRedisSession)
 			{
-				services.AddDistributedRedisCache(options =>
+				services.AddStackExchangeRedisCache(options =>
 				{
 					options.Configuration = sessionService.ConnectionString;
+					options.InstanceName = sessionService.InstanceName;
 				});
+				services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
 			}
 			else if (sessionService is GxDatabaseSession)
 			{
