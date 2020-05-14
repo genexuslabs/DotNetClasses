@@ -121,6 +121,7 @@ namespace GeneXus.Application
 		const string TRACE_PATTERN = "trace.axd";
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
+		const string SERVICES_SUFFIX = "_services";
 
 		public List<String> servicesPathUrl = new List<String>();
 		public List<String> servicesBase = new List<String>();
