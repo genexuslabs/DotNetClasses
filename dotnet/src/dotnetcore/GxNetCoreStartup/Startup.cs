@@ -116,7 +116,6 @@ namespace GeneXus.Application
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
 		const string REST_BASE_URL = "rest/";
-		const string SERVICES_SUFFIX = "_services";
 
 		public List<String> servicesPathUrl = new List<String>();
 		public List<String> servicesBase = new List<String>();
@@ -475,10 +474,6 @@ namespace GeneXus.Application
 					var controllerClassName = controllerAssemblyQualifiedName.First();
 					if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
 						controllerClassName = controllerClassName.Substring(nspace.Length+1);
-					if (controllerClassName.EndsWith(SERVICES_SUFFIX))
-					{
-						controllerClassName = controllerClassName.Remove(controllerClassName.Length-SERVICES_SUFFIX.Length);
-					}
 					var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 					GXProcedure proc = controllerInstance as GXProcedure;
 					if (proc != null)
