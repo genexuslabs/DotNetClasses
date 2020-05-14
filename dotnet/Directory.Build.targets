@@ -42,17 +42,17 @@
 
 
 	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true'">
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
 		<ReplaceFileText
-       InputFilename="$(ProjectName).deps.json"
-       OutputFilename="$(ProjectName).deps.json"
+       InputFilename="$(OutDir)$(ProjectName).deps.json"
+       OutputFilename="$(OutDir)$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Core"
        ReplacementText="GxClasses" />
 		<ReplaceFileText
-       InputFilename="$(ProjectName).deps.json"
-       OutputFilename="$(ProjectName).deps.json"
+       InputFilename="$(OutDir)$(ProjectName).deps.json"
+       OutputFilename="$(OutDir)$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Web\.Core"
        ReplacementText="GxClasses.Web" />
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
 	</Target>
 
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">
