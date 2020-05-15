@@ -37,21 +37,29 @@ namespace GeneXus.Application
 		const string DEFAULT_PORT = "80";
 		public static void Main(string[] args)
 		{
-
-			string port = DEFAULT_PORT;
-			if (args.Length > 2)
+			try
 			{
-				Startup.VirtualPath = args[0];
-				Startup.LocalPath = args[1];
-				port = args[2];
+				string port = DEFAULT_PORT;
+				if (args.Length > 2)
+				{
+					Startup.VirtualPath = args[0];
+					Startup.LocalPath = args[1];
+					port = args[2];
+				}
+				if (port == DEFAULT_PORT)
+				{
+					BuildWebHost(null).Run();
+				}
+				else
+				{
+					BuildWebHostPort(null, port).Run();
+				}
 			}
-			if (port == DEFAULT_PORT)
+			catch (Exception e)
 			{
-				BuildWebHost(null).Run();
-			}
-			else
-			{
-				BuildWebHostPort(null, port).Run();
+				Console.Error.WriteLine("ERROR:");
+				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
+				Console.Read();
 			}
 		}
 		public static IWebHost BuildWebHost(string[] args) =>
