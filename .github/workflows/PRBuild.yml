@@ -25,7 +25,7 @@ jobs:
       run: nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
 
 
-    - name: Build and Pack
+    - name: Build, Test and Pack
       run: |
         $CommitNumber = git rev-list --no-merges --count HEAD
 
