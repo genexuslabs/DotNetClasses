@@ -30,6 +30,7 @@ jobs:
 
         dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
         
+        dotnet test test\UnitTest
         # Get the FileVersion from the Build.props file
         $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$CommitNumber
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
