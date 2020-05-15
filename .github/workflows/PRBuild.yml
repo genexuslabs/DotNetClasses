@@ -28,7 +28,7 @@ jobs:
       run: |
         $CommitNumber = git rev-list --no-merges --count HEAD
 
-        dotnet restore dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
+        dotnet restore dotnet\DotNetStandardClasses.sln
         echo "::set-env name=CommitNumber::$CommitNumber"
     - name: Build
       run: |
