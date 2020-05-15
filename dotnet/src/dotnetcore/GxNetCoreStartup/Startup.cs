@@ -502,18 +502,28 @@ namespace GeneXus.Application
 			{
 				if (File.Exists(Path.Combine(ContentRootPath, controller + "_bc.svc")))
 				{
-					var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
+					var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace, GxSilentTrnSdt.GxSdtNameToCsharpName(controller), new Object[] { gxContext }, Assembly.GetEntryAssembly()) as GxSilentTrnSdt;
+					if (sdtInstance != null)
+						return new GXBCRestService(sdtInstance, context, gxContext);
+				}
+				else
+				{
+					string svcFile = Path.Combine(ContentRootPath, $"{controller.ToLower()}.svc");
+					if (File.Exists(svcFile))
+					{
+						var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
 						   .Skip(1)
 						   .TakeWhile(c => c != '"')
 						   .ToArray()).Trim().Split(',');
-					var controllerAssemblyName = controllerAssemblyQualifiedName.Last();
-					var controllerClassName = controllerAssemblyQualifiedName.First();
-					if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
-						controllerClassName = controllerClassName.Substring(nspace.Length+1);
-					var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-					GXProcedure proc = controllerInstance as GXProcedure;
-					if (proc != null)
-						return new GxRestWrapper(proc, context, gxContext);
+						var controllerAssemblyName = controllerAssemblyQualifiedName.Last();
+						var controllerClassName = controllerAssemblyQualifiedName.First();
+						if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
+							controllerClassName = controllerClassName.Substring(nspace.Length + 1);
+						var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+						GXProcedure proc = controllerInstance as GXProcedure;
+						if (proc != null)
+							return new GxRestWrapper(proc, context, gxContext);
+					}
 				}
 			}
 			return null;
