@@ -435,13 +435,13 @@ namespace GeneXus.Utils
 							{
 								wktBuffer += sep1 + "(";
 								sep = "";
-								String firstPoint = JSONPointToWKT(jl.GetArray(0)) ;
-                                foreach (JArray jp in jl)
-                                {                                  
-                                    wktBuffer += sep + " " + JSONPointToWKT(jp) ;
-                                    sep = ",";
-                                }
-								wktBuffer += sep + firstPoint;
+								String firstPoint = JSONPointToWKT(jl.GetArray(0));								
+								foreach (JArray jp in jl)
+								{
+									String jpS = JSONPointToWKT(jp);
+									wktBuffer += sep + " " + jpS;
+									sep = ",";
+								}
 								wktBuffer += ")";
                                 sep1 = ",";
 
@@ -491,11 +491,11 @@ namespace GeneXus.Utils
                                     sep = "";
 									String firstPoint = JSONPointToWKT(jl.GetArray(0));
 									foreach (JArray jp in jl)
-                                    {
-                                        wktBuffer += sep + "" + JSONPointToWKT(jp);
-                                        sep = ",";
-                                    }
-									wktBuffer += sep + firstPoint;
+									{
+										wktBuffer += sep + "" + JSONPointToWKT(jp);
+										sep = ",";
+									}
+									//wktBuffer += sep + firstPoint;
 									wktBuffer += ")";
                                     sep1 = ",";
                                 }
@@ -697,8 +697,8 @@ namespace GeneXus.Utils
 
         public String ToStringESQL()
         {
-            String wktText =  this.ToStringSQL(EMPTY_GEOGRAPHY);
-            if (!wktText.Equals(EMPTY_GEOGRAPHY)) {
+            String wktText =  this.ToStringSQL(EMPTY_GEOMETRY);
+            if (!wktText.Equals(EMPTY_GEOMETRY)) {
                 wktText = "SRID=" + this.Srid.ToString() + ";" + wktText;
             }
             return wktText;
