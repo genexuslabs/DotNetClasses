@@ -477,7 +477,9 @@ namespace GeneXus.Application
 			}
 			catch (Exception ex)
 			{
-				return Task.FromException(ex);
+				GXLogging.Error(log, "ProcessRestRequest", ex);
+				GxRestWrapper.SetError(context, Convert.ToInt32(HttpStatusCode.InternalServerError).ToString(), ex.Message);
+				return Task.CompletedTask;
 			}
 		}
 		private GxRestWrapper GetController(HttpContext context, string controller, string methodName)
