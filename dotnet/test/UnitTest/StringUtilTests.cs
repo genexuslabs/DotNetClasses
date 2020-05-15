@@ -66,9 +66,11 @@ namespace UnitTesting
 		public void TestLike()
 		{
 			string str1 = "hello";
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
 			Assert.IsTrue(StringUtil.Like(str1, StringUtil.PadR("he", str1.Length, "%")));
 			Assert.IsFalse(StringUtil.Like(str1, StringUtil.PadR("el", str1.Length, "%")));
 			Assert.IsTrue(StringUtil.Like(str1, StringUtil.PadR("_el", str1.Length, "%")));
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 		}
 	}
 }
