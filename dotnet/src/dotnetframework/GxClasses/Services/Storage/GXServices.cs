@@ -19,6 +19,7 @@ namespace GeneXus.Services
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
+		public static string SESSION_SERVICE = "Session";
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
 		private static string[] SERVICES_FILE = new string[] { "CloudServices.dev.config", "CloudServices.config" };
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]

@@ -3509,6 +3509,39 @@ namespace GeneXus.Utils
 				return StringUtil.ReplaceLast(blobPath, fileName, Uri.EscapeUriString(fileName));
 			}
 		}
+		public static bool AbsoluteUri(string fileName, out Uri result)
+		{
+			result = null;
+			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			{
+				return true;
+			}
+			else
+			{
+				Uri relative;
+				if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
+				{
+					if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
+					{
+						int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
+						if (idx >= 0)
+						{
+							fileName = fileName.Substring(idx);
+							Uri localRelative;
+							if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
+								relative = localRelative;
+						}
+					}
+
+					if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
+					{
+						return true;
+					}
+				}
+				return false; ;
+			}
+
+		}
 
 		public static string RelativePath(string blobPath)
 		{
