@@ -97,7 +97,9 @@ namespace GeneXus.Programs{
 
 		#region Declaration
 
+#pragma warning disable CA1051 // Do not declare visible instance fields
 		protected String gxTv_SdtItem_Name;
+#pragma warning restore CA1051 // Do not declare visible instance fields
 
 
 

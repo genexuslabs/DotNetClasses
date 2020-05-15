@@ -25,16 +25,28 @@ jobs:
       run: nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
 
 
-    - name: Build, Test and Pack
+    - name: Restore packages
       run: |
         $CommitNumber = git rev-list --no-merges --count HEAD
 
-        dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
-        
-        dotnet test test\UnitTest
-        # Get the FileVersion from the Build.props file
-        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$CommitNumber
-        "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
-        $NuGetPackageVersion = $Matches[0] + "-alpha" + $CommitNumber 
+        dotnet restore dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
+        echo "::set-env name=CommitNumber::$CommitNumber"
+    - name: Build
+      run: |
 
-        dotnet pack dotnet\DotNetStandardClasses.sln --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
+        dotnet build dotnet\DotNetStandardClasses.sln --no-restore --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
+        
+    - name: Test
+      run: |
+
+        dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
+
+    - name: Pack
+      run: |
+
+        # Get the FileVersion from the Build.props file
+        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$Env:CommitNumber
+        "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
+        $NuGetPackageVersion = $Matches[0] + "-alpha" + $Env:CommitNumber
+
+        dotnet pack dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion                

@@ -1,0 +1,9 @@
+<Project>
+	<PropertyGroup>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningLevel>4</WarningLevel>
+		<IsPackable>false</IsPackable>
+		<VSTestResultsDirectory>$(OutputPath)</VSTestResultsDirectory>
+		<VSTestLogger>trx</VSTestLogger>
+	</PropertyGroup>
+</Project>
