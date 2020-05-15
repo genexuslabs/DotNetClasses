@@ -7,14 +7,17 @@ using System.Reflection;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Data.NTier;
+using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Metadata;
 using GeneXus.Procedure;
+using GeneXus.Services;
 using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +28,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace GeneXus.Application
 {
@@ -116,6 +120,7 @@ namespace GeneXus.Application
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
 		const string REST_BASE_URL = "rest/";
+		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 
 		public List<String> servicesPathUrl = new List<String>();
 		public List<String> servicesBase = new List<String>();
@@ -199,10 +204,17 @@ namespace GeneXus.Application
 			services.AddDistributedMemoryCache();
 			AppSettings settings = new AppSettings();
 			Config.ConfigRoot.GetSection("AppSettings").Bind(settings);
+
+			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
+
+			if (sessionService != null)
+				ConfigureSessionService(services, sessionService);
+
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(settings.SessionTimeout==0 ? DEFAULT_SESSION_TIMEOUT_MINUTES : settings.SessionTimeout); 
 				options.Cookie.HttpOnly = true;
+				options.Cookie.IsEssential = true;
 			});
 
 
@@ -230,6 +242,28 @@ namespace GeneXus.Application
 				});
 			}
 			services.AddMvc();
+		}
+
+		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
+		{
+			if (sessionService is GxRedisSession)
+			{
+				services.AddStackExchangeRedisCache(options =>
+				{
+					options.Configuration = sessionService.ConnectionString;
+					options.InstanceName = sessionService.InstanceName;
+				});
+				services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
+			}
+			else if (sessionService is GxDatabaseSession)
+			{
+				services.AddDistributedSqlServerCache(options =>
+				{
+					options.ConnectionString = sessionService.ConnectionString;
+					options.SchemaName = sessionService.Schema;
+					options.TableName = sessionService.TableName;
+				});
+			}
 		}
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
