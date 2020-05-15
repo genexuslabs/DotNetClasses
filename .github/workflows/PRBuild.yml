@@ -27,14 +27,14 @@ jobs:
 
     - name: Restore packages
       run: |
-        $CommitNumber = git rev-list --no-merges --count HEAD
 
         dotnet restore dotnet\DotNetStandardClasses.sln
-        echo "::set-env name=CommitNumber::$CommitNumber"
     - name: Build
       run: |
+        $CommitNumber = git rev-list --no-merges --count HEAD
 
-        dotnet build dotnet\DotNetStandardClasses.sln --no-restore --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
+        dotnet build dotnet\DotNetStandardClasses.sln --no-restore --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
+        echo "::set-env name=CommitNumber::$CommitNumber"
         
     - name: Test
       run: |
@@ -49,4 +49,4 @@ jobs:
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
         $NuGetPackageVersion = $Matches[0] + "-alpha" + $Env:CommitNumber
 
-        dotnet pack dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion                
+        dotnet pack dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
