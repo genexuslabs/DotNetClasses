@@ -2,6 +2,7 @@ using Xunit;
 using GeneXus.Application;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace xUnitTesting
 {
@@ -84,7 +85,9 @@ namespace xUnitTesting
 
 		private List<ControllerInfo> RouteController(string path)
 		{
-			return Startup.GetRouteController(path);
+			Dictionary<String, String> servicesPathUrl = new Dictionary<String, String>();
+			Dictionary<String, Dictionary<String, String>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
+			return Startup.GetRouteController(servicesPathUrl,servicesMap, "",path);
 		}
 	}
 }
