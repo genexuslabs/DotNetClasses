@@ -1,1 +1,1 @@
-<b> {{Mensaje}} </b>{{#Items}} - {{gxTpr_Name}}{{Name}} - {{/Items}} prueba
+<b> {{Message}} </b>{{#Items}} - {{gxTpr_Name}}{{Name}} - {{/Items}} prueba
