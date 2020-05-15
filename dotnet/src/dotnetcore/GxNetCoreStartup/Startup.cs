@@ -511,11 +511,15 @@ namespace GeneXus.Application
 					string svcFile = Path.Combine(ContentRootPath, $"{controller.ToLower()}.svc");
 					if (File.Exists(svcFile))
 					{
-						controller = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != ',')
-							   .Skip(1)
-							   .TakeWhile(c => c != '"')
-							   .ToArray()).Trim();
-						var controllerInstance = ClassLoader.FindInstance(controller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+						var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
+						   .Skip(1)
+						   .TakeWhile(c => c != '"')
+						   .ToArray()).Trim().Split(',');
+						var controllerAssemblyName = controllerAssemblyQualifiedName.Last();
+						var controllerClassName = controllerAssemblyQualifiedName.First();
+						if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
+							controllerClassName = controllerClassName.Substring(nspace.Length + 1);
+						var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 						GXProcedure proc = controllerInstance as GXProcedure;
 						if (proc != null)
 							return new GxRestWrapper(proc, context, gxContext);
