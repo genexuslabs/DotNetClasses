@@ -25,8 +25,8 @@ using System.Web;
 using GeneXus.Data;
 using GeneXus.Encryption;
 
-#if !NETCORE
 using System.DirectoryServices;
+#if !NETCORE
 using TZ4Net;
 #endif
 using GeneXus.Cryptography;
@@ -4349,8 +4349,6 @@ namespace GeneXus.Utils
 				return string.Empty;
 		}
 
-#if !NETCORE
-
 		public static GxStringCollection DefaultWebUser(IGxContext cntxt)
 		{
 			if (Environment.OSVersion.Version.Major >= 6)
@@ -4369,9 +4367,13 @@ namespace GeneXus.Utils
 		const string APPPOOL_IDENTITY_TYPE_NETWORKSERVICE = "2";//The application pool runs as NetworkService.
 		const string APPPOOL_IDENTITY_TYPE_SPECIFICUSER = "3";//The application pool runs as a specified user account.
 		const string APPPOOL_IDENTITY_TYPE_APPPOOL = "4";//The application pool runs as a Application Pool identity.
+#if NETCORE
+		const string IDENTITY_NETCORE_APPPOOL = @"IIS AppPool\NetCore";
+#else
 		const string IDENTITY_INTEGRATED_APPPOOL_FW40 = @"IIS APPPOOL\ASP.NET v4.0";
 		const string IDENTITY_INTEGRATED_APPPOOL_FW35 = @"IIS AppPool\DefaultAppPool";
 		const string IDENTITY_CLASSIC_APPPOOL = @"IIS AppPool\Classic .NET AppPool";
+#endif
 		const string IDENTITY_NETWORK_SERVICE = @"NT AUTHORITY\NETWORK SERVICE";
 		const string IDENTITY_LOCAL_SERVICE = @"NT AUTHORITY\LOCAL SERVICE";
 
@@ -4388,9 +4390,13 @@ namespace GeneXus.Utils
 					switch (AppPoolIdentityType)
 					{
 						case APPPOOL_IDENTITY_TYPE_APPPOOL:
+#if NETCORE
+							usernames.Add(IDENTITY_NETCORE_APPPOOL);
+#else
 							usernames.Add(IDENTITY_CLASSIC_APPPOOL);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
+#endif
 							break;
 						case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
 						case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
@@ -4413,9 +4419,13 @@ namespace GeneXus.Utils
 
 			if (usernames.Count == 0)
 			{
+#if NETCORE
+				usernames.Add(IDENTITY_NETCORE_APPPOOL);
+#else
 				usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 				usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
 				usernames.Add(IDENTITY_CLASSIC_APPPOOL);
+#endif
 				usernames.Add(IDENTITY_NETWORK_SERVICE);
 				usernames.Add(IDENTITY_LOCAL_SERVICE);
 			}
@@ -4424,12 +4434,16 @@ namespace GeneXus.Utils
 
 		private static DirectoryEntry GetAppPoolEntry()
 		{
+#if NETCORE
+			DirectoryEntry Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/NetCore");
+#else
 			DirectoryEntry Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/ASP.NET v4.0");
 			if (Entry == null)
 				Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/DefaultAppPool");
+#endif
 			return Entry;
 		}
-#endif
+
 #if NETCORE
         private static string WrkSt(IGxContext gxContext, object httpContext)
 
