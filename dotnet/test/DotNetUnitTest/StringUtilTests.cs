@@ -1,14 +1,13 @@
 using System;
 using System.Diagnostics;
 using GeneXus.Utils;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace UnitTesting
 {
-	[TestClass]
 	public class StringUtilTests
 	{
-		[TestMethod]
+		[Fact]
 		public void TestNToCPerformance()
 		{
 			StringUtil.CachePictures = false;
@@ -31,45 +30,45 @@ namespace UnitTesting
 			w2.Stop();
 			long elapsed2 = w2.ElapsedMilliseconds;
 
-			Assert.IsTrue(elapsed2 < elapsed);
+			Assert.True(elapsed2 < elapsed);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TestTrunc()
 		{
 			decimal d = NumberUtil.Trunc((decimal)-7561.23, 1);
-			Assert.IsTrue(d == (decimal) -7561.2);
+			Assert.True(d == (decimal) -7561.2);
 
 			double doub = NumberUtil.Trunc(-7561.23, 1);
-			Assert.IsTrue(doub == -7561.2);
+			Assert.True(doub == -7561.2);
 
 			doub = NumberUtil.Trunc(1.5, 0);
-			Assert.IsTrue(doub == 1);
+			Assert.True(doub == 1);
 
 			doub = NumberUtil.Trunc(1.4, 0);
-			Assert.IsTrue(doub == 1);
+			Assert.True(doub == 1);
 
 			doub = NumberUtil.Trunc(1.25, 1);
-			Assert.IsTrue(doub == 1.2);
+			Assert.True(doub == 1.2);
 
 			doub = NumberUtil.Trunc(1.24, 1);
-			Assert.IsTrue(doub == 1.2);
+			Assert.True(doub == 1.2);
 
 			doub = NumberUtil.Trunc(1.24, 2);
-			Assert.IsTrue(doub == 1.24);
+			Assert.True(doub == 1.24);
 
 			doub = NumberUtil.Trunc(1.24, 3);
-			Assert.IsTrue(doub == 1.24);
+			Assert.True(doub == 1.24);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TestLike()
 		{
 			string str1 = "hello";
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
-			Assert.IsTrue(StringUtil.Like(str1, StringUtil.PadR("he", str1.Length, "%")));
-			Assert.IsFalse(StringUtil.Like(str1, StringUtil.PadR("el", str1.Length, "%")));
-			Assert.IsTrue(StringUtil.Like(str1, StringUtil.PadR("_el", str1.Length, "%")));
+			Assert.True(StringUtil.Like(str1, StringUtil.PadR("he", str1.Length, "%")));
+			Assert.False(StringUtil.Like(str1, StringUtil.PadR("el", str1.Length, "%")));
+			Assert.True(StringUtil.Like(str1, StringUtil.PadR("_el", str1.Length, "%")));
 #pragma warning restore CA1303 // Do not pass literals as localized parameters
 		}
 	}
