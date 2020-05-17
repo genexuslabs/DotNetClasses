@@ -19,6 +19,7 @@
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.0" PrivateAssets="All" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" PrivateAssets="All" />
+		<PackageReference Include="Stubble.Core" Version="1.8.4" PrivateAssets="All" />
 	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj">
