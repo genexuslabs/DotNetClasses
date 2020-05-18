@@ -2617,23 +2617,19 @@ namespace GeneXus.Utils
 		public string Time()
 		{
 			return DateTime.Now.ToString(TimeFormatFromSize(8, -1, ":"), cultureInfo);
-		}
+        }
 
-		static public DateTime AddMth(DateTime dt, int cantMonths)
-		{
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && cantMonths < 0)
-				return nullDate;
-			return dt.AddMonths(cantMonths);
-		}
-		static public DateTime AddYr(DateTime dt, int cantYears)
-		{
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && cantYears < 0)
-				return nullDate;
-			return dt.AddYears(cantYears);
+        static public DateTime AddMth(DateTime dt, int cantMonths)
+        {
+            if (dt == nullDate)
+                return nullDate;
+            return dt.AddMonths(cantMonths);
+        }
+        static public DateTime AddYr(DateTime dt, int cantYears)
+        {
+            if (dt == nullDate)
+                return nullDate;
+            return dt.AddYears(cantYears);
         }
         static public DateTime DateEndOfMonth(DateTime dt)
         {
@@ -2682,36 +2678,30 @@ namespace GeneXus.Utils
 		}
         static public int DDiff(DateTime dtMinu, DateTime dtSust)
         {
-			return Convert.ToInt32((dtMinu - dtSust).TotalDays);
-		}
-		static public DateTime TAdd(DateTime dt, int seconds)
-		{
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && seconds < 0)
-				return nullDate;
-			return dt.AddSeconds(seconds);
-		}
-		static public DateTime TAddMs(DateTime dt, double seconds)
-		{
+            return Convert.ToInt32((dtMinu - dtSust).TotalDays);
+        }
+        static public DateTime TAdd(DateTime dt, int seconds)
+        {
+            if (dt == nullDate)
+                return nullDate;            
+            return dt.AddSeconds(seconds);
+        }
+        static public DateTime TAddMs(DateTime dt, double seconds)
+        {
 
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && seconds < 0)
-				return nullDate;
-			if (seconds % 1 == 0)
-				return dt.AddSeconds((int)seconds);
-			else
-				return dt.AddMilliseconds(seconds * 1000);
-		}
-		static public DateTime DAdd(DateTime dt, int days)
-		{
-			if (dt == null)
-				return nullDate;
-			if (dt == nullDate && days < 0)
-				return nullDate;
-			return dt.AddDays(days);
-		}
+            if (dt == nullDate)
+                return nullDate;
+            if (seconds % 1 == 0)
+                return dt.AddSeconds((int)seconds);
+            else
+                return dt.AddMilliseconds(seconds * 1000);
+        }
+        static public DateTime DAdd(DateTime dt, int days)
+        {
+            if (dt == nullDate)
+                return nullDate;
+            return dt.AddDays(days);
+        }
         public DateTime CToT(string strDate, int picFmt, int ampmFmt)
         {
             if (isNullDateTime(strDate, picFmt, ampmFmt))
@@ -3519,6 +3509,39 @@ namespace GeneXus.Utils
 				return StringUtil.ReplaceLast(blobPath, fileName, Uri.EscapeUriString(fileName));
 			}
 		}
+		public static bool AbsoluteUri(string fileName, out Uri result)
+		{
+			result = null;
+			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			{
+				return true;
+			}
+			else
+			{
+				Uri relative;
+				if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
+				{
+					if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
+					{
+						int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
+						if (idx >= 0)
+						{
+							fileName = fileName.Substring(idx);
+							Uri localRelative;
+							if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
+								relative = localRelative;
+						}
+					}
+
+					if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
+					{
+						return true;
+					}
+				}
+				return false; ;
+			}
+
+		}
 
 		public static string RelativePath(string blobPath)
 		{
@@ -3643,6 +3666,18 @@ namespace GeneXus.Utils
 			StackTrace st = new StackTrace(new StackFrame(1, true));
 			StackFrame sf = st.GetFrame(0);
 			GXLogging.Debug(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
+		}
+		public static void WriteLogError(string message)
+		{
+			StackTrace st = new StackTrace(new StackFrame(1, true));
+			StackFrame sf = st.GetFrame(0);
+			GXLogging.Error(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
+		}
+		public static void WriteLogInfo(string message)
+		{
+			StackTrace st = new StackTrace(new StackFrame(1, true));
+			StackFrame sf = st.GetFrame(0);
+			GXLogging.Info(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
 		}
 		public static void WriteTLog(string message)
 		{
@@ -4719,7 +4754,7 @@ namespace GeneXus.Utils
 					{
 						if (GXProcessHelper.ProcessFactory != null)
 						{
-							GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
+							exitCode = GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
 							return true;
 						}
 						else
@@ -5280,6 +5315,24 @@ namespace GeneXus.Utils
 			if (!directoryName.EndsWith(DELIMITER))
 				return directoryName + DELIMITER;
 			return directoryName;
+		}
+		public static string EncodeNonAsciiCharacters(string value)
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach (char c in value)
+			{
+				if (c > 127)
+				{
+					// This character is too big for ASCII
+					string encodedValue = "\\u" + ((int)c).ToString("x4");
+					sb.Append(encodedValue);
+				}
+				else
+				{
+					sb.Append(c);
+				}
+			}
+			return sb.ToString();
 		}
 	}
 

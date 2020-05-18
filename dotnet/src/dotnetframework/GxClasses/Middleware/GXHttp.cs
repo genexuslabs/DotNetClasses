@@ -295,16 +295,16 @@ namespace GeneXus.Http
 			JArray events;
 			GXHttpHandler targetObj;
 			string[] eventHandlers;
-			bool[] eventUseInternalParms;
-			string cmpContext = string.Empty;
-			int grid;
-			string row, pRow = string.Empty;
-			JArray inParmsMetadata;
-			private HashSet<string> inParmsMetadataHash;
-			bool anyError;
+            bool[] eventUseInternalParms;
+            string cmpContext = string.Empty;
+            int grid;
+            string row;
+            JArray inParmsMetadata;
+            private HashSet<string> inParmsMetadataHash;
+            bool anyError;
 
-			private void ParseInputJSonMessage(JObject objMessage, GXHttpHandler targetObj)
-			{
+            private void ParseInputJSonMessage(JObject objMessage, GXHttpHandler targetObj)
+            {
 				inParmsValues = (JArray)objMessage["parms"];
 				inHashValues = (JArray)objMessage["hsh"];
 				if (inHashValues == null)
@@ -342,17 +342,15 @@ namespace GeneXus.Http
 				if (objMessage.Contains("grids"))
 					ParseGridsDataParms((JObject)objMessage["grids"]);
 				if (objMessage.Contains("grid"))
-					grid = (int)objMessage["grid"];
-				else
-					grid = 0;
-				if (objMessage.Contains("row"))
-					row = (string)objMessage["row"];
-				else
-					row = string.Empty;
-				if (objMessage.Contains("pRow"))
-					pRow = (string)objMessage["pRow"];
-				if (objMessage.Contains("gxstate"))
-				{
+                    grid = (int)objMessage["grid"];
+                else
+                    grid = 0;
+                if (objMessage.Contains("row"))
+                    row = (string)objMessage["row"];
+                else
+                    row = "";
+                if (objMessage.Contains("gxstate"))
+                {
                     ParseGXStateParms((JObject)objMessage["gxstate"]);
                 }
                 if (objMessage.Contains("fullPost"))
@@ -487,6 +485,19 @@ namespace GeneXus.Http
 					}
 				}
 				return propertyInfo;
+			}
+
+			private void SetNullableScalarOrCollectionValue(JObject parm, object value, JArray columnValues)
+			{
+				string nullableAttribute = parm.Contains("nullAv") ? (string)parm["nullAv"] : null;
+				if (nullableAttribute != null && string.IsNullOrEmpty(value.ToString()))
+				{
+					SetScalarOrCollectionValue(nullableAttribute, true, null);
+				}
+				else
+				{
+					SetScalarOrCollectionValue((string)parm["av"], value, columnValues);
+				}
 			}
 
 			private void SetScalarOrCollectionValue(string fieldName, object value, JArray values)
@@ -789,7 +800,7 @@ namespace GeneXus.Http
 									}
 									if (value != null)
 									{
-										SetScalarOrCollectionValue((string)parm["av"], value, columnValues);
+										SetNullableScalarOrCollectionValue(parm, value, columnValues);
 									}
 								}
 							}
@@ -812,7 +823,7 @@ namespace GeneXus.Http
 
 					if (grid != 0 && !String.IsNullOrEmpty(row))
 					{
-						SetFieldValue("sGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", row + pRow);
+						SetFieldValue("sGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", row);
 						SetFieldValue("nGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", int.Parse(row));
 					}
 					SetFieldValue("wbLoad", true);
@@ -970,6 +981,9 @@ namespace GeneXus.Http
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
 		protected virtual string IntegratedSecurityPermissionName { get { return ""; } }
+		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
+		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
+		public string IntegratedSecurityPermissionName2 { get { return IntegratedSecurityPermissionName; } }
 #endif
 		private bool disconnectUserAtCleanup;
 		private bool validEncryptedParm;
@@ -1694,6 +1708,7 @@ namespace GeneXus.Http
 		{
 			string key = context.httpAjaxContext.GetAjaxEncryptionKey();
 			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_ENCRYPTION_KEY, key);
+			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_ENCRYPTION_IV, CryptoImpl.GX_AJAX_PRIVATE_IV);
 			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_SECURITY_TOKEN, CryptoImpl.EncryptRijndael(key, CryptoImpl.GX_AJAX_PRIVATE_KEY));
 		}
 
@@ -1853,13 +1868,6 @@ namespace GeneXus.Http
 		{
 			return ValidGAMSession(true);
 		}
-		internal static String OatuhUnauthorizedHeader(string realm, string errCode, string errDescription)
-		{
-			if (string.IsNullOrEmpty(errDescription))
-				return String.Format("OAuth realm=\"{0}\"", realm);
-			else
-				return string.Format("OAuth realm=\"{0}\",error_code=\"{1}\",error_description=\"{2}\"", realm, errCode, errDescription);
-		}
 
 		private bool ValidWebSession()
 		{
@@ -1896,9 +1904,9 @@ namespace GeneXus.Http
 				if (!isOK)
 				{
 #if NETCORE
-					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]=OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
+					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]= HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
 #else
-					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
+					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
 #endif
 					this.SendResponseStatus(401, "Unauthorized");
 				}
@@ -1919,9 +1927,9 @@ namespace GeneXus.Http
 				if (!isOK)
 				{
 #if NETCORE
-					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]=OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
+					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]= HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
 #else
-					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
+					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
 #endif
 					this.SendResponseStatus(401, "Unauthorized");
 				}

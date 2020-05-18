@@ -824,6 +824,7 @@ namespace GeneXus.Data
 		}
 		protected static byte[] GetBinary(string fileNameParm, bool dbBlob)
 		{			
+			Uri uri;
 			string fileName = fileNameParm;
 			bool inLocalStorage = dbBlob || GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null;
 			bool validFileName = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(fileName.Trim()) && String.Compare(fileName, "about:blank", false) != 0;
@@ -834,9 +835,7 @@ namespace GeneXus.Data
                 if (GxRestUtil.IsUpload(fileName))
                     fileName = GxRestUtil.UploadPath(fileName);
 
-				Uri uri;
-								
-				bool ok = Uri.TryCreate(PathUtil.GetBaseUri(), fileName, out uri);
+				bool ok = PathUtil.AbsoluteUri(fileName, out uri);
 				if (ok && uri != null)
 				{					
 					switch (uri.Scheme)
@@ -1829,6 +1828,7 @@ namespace GeneXus.Data
 					}
 					catch (Exception ex)
 					{
+#if !NETCORE
 						FileNotFoundException fex = ex as FileNotFoundException;
 						FileLoadException flex = ex as FileLoadException;
 						if (flex !=null || fex != null)
@@ -1844,6 +1844,10 @@ namespace GeneXus.Data
 						{
 							throw ex;
 						}
+#else
+						throw ex;
+#endif
+
 					}
 				}
 			}
@@ -1938,15 +1942,22 @@ namespace GeneXus.Data
 
 		}
 
-        public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+#if !NETCORE
+		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
         {
-            // Latitude and Longitude are inverted in the 'Point' Constructor
+
             return geo.InnerValue;
         }
-
-        public override IGeographicNative Dbms2NetGeo(IGxDbCommand cmd, IDataRecord DR, int i)
+#else
+		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
         {
-            return new Geospatial(DR.GetValue(i));            
+            return geo.ToStringSQL("GEOMETRYCOLLECTION EMPTY");
+        }
+#endif
+
+		public override IGeographicNative Dbms2NetGeo(IGxDbCommand cmd, IDataRecord DR, int i)
+        {
+            return new Geospatial(DR.GetValue(i));
         }
 
 		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)
@@ -4184,7 +4195,12 @@ namespace GeneXus.Data
 		public virtual DateTime GetDateTime(int i)
 		{
 			if (computeSizeInBytes) readBytes += 8;
-			return (DateTime)block.Item(pos,i);
+			var value = block.Item(pos,i);
+
+			if (value is DateTime)
+				return (DateTime)value;
+			else
+				return Convert.ToDateTime(value);
 		}
 		public virtual decimal GetDecimal(int i	)
 		{

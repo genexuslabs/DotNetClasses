@@ -435,13 +435,13 @@ namespace GeneXus.Utils
 							{
 								wktBuffer += sep1 + "(";
 								sep = "";
-								String firstPoint = JSONPointToWKT(jl.GetArray(0)) ;
-                                foreach (JArray jp in jl)
-                                {                                  
-                                    wktBuffer += sep + " " + JSONPointToWKT(jp) ;
-                                    sep = ",";
-                                }
-								wktBuffer += sep + firstPoint;
+								String firstPoint = JSONPointToWKT(jl.GetArray(0));								
+								foreach (JArray jp in jl)
+								{
+									String jpS = JSONPointToWKT(jp);
+									wktBuffer += sep + " " + jpS;
+									sep = ",";
+								}
 								wktBuffer += ")";
                                 sep1 = ",";
 
@@ -491,11 +491,11 @@ namespace GeneXus.Utils
                                     sep = "";
 									String firstPoint = JSONPointToWKT(jl.GetArray(0));
 									foreach (JArray jp in jl)
-                                    {
-                                        wktBuffer += sep + "" + JSONPointToWKT(jp);
-                                        sep = ",";
-                                    }
-									wktBuffer += sep + firstPoint;
+									{
+										wktBuffer += sep + "" + JSONPointToWKT(jp);
+										sep = ",";
+									}
+									//wktBuffer += sep + firstPoint;
 									wktBuffer += ")";
                                     sep1 = ",";
                                 }
@@ -525,7 +525,7 @@ namespace GeneXus.Utils
 						g.InnerValue.ToString().Equals(EMPTY_LINE) ||
 						g.InnerValue.ToString().Equals(EMPTY_POLY) ||
 						g.InnerValue.ToString().Equals(EMPTY_GEOGRAPHY) ||
-						g.InnerValue.Equals(new Geospatial(EMPTY_GEOMETRY))
+						g.InnerValue.ToString().Equals(EMPTY_GEOMETRY)
                     );
         }
 
@@ -588,7 +588,7 @@ namespace GeneXus.Utils
 		{
             if (IsGeoNull(s))
             {
-                geoText = EMPTY_GEOGRAPHY;
+				geoText = EMPTY_GEOMETRY ;
             }
             else
             {
@@ -616,7 +616,7 @@ namespace GeneXus.Utils
 			}
 			catch (ArgumentException ex)
 			{
-                if (ex.ToString().Contains("24144")) // makevalid didn´t work
+                if (ex.ToString().Contains("24144")) // makevalid didnÂ´t work
                 {
                     _innerValue = null;
                 }
@@ -697,8 +697,8 @@ namespace GeneXus.Utils
 
         public String ToStringESQL()
         {
-            String wktText =  this.ToStringSQL(EMPTY_GEOGRAPHY);
-            if (!wktText.Equals(EMPTY_GEOGRAPHY)) {
+            String wktText =  this.ToStringSQL(EMPTY_GEOMETRY);
+            if (!wktText.Equals(EMPTY_GEOMETRY)) {
                 wktText = "SRID=" + this.Srid.ToString() + ";" + wktText;
             }
             return wktText;

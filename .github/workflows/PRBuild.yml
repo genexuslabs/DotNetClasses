@@ -1,18 +1,20 @@
-name: Test Build .Net Classes PR
+name: PR-Build
 
 on: 
   push:
     branches-ignore:
       - 'master'
       - 'beta'
+      - 'release-*'
 
 jobs:
   build:
     env:
       Configuration: Release
-
+      NuGetRepository: http://nexus.genexus.com/repository/nuget-prereleases/
+    
     runs-on: windows-latest
-
+   
     steps:
     - name: Checkout
       uses: actions/checkout@v1
@@ -23,15 +25,34 @@ jobs:
     - name: Setup GitHub NuGet Registry (GPR)
       run: nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
 
+    - name: Restore packages
+      run: |
 
-    - name: Build and Pack
+        dotnet restore dotnet\DotNetStandardClasses.sln
+    - name: Build
       run: |
         $CommitNumber = git rev-list --no-merges --count HEAD
 
-        dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
-        # Get the FileVersion from the Build.props file
-        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$CommitNumber
-        "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
-        $NuGetPackageVersion = $Matches[0] + "-" + $CommitNumber 
+        dotnet build dotnet\DotNetStandardClasses.sln --no-restore --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
+        echo "::set-env name=CommitNumber::$CommitNumber"
+        
+    - name: Test
+      run: |
 
-        dotnet pack dotnet\DotNetStandardClasses.sln --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
+        dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
+
+    - name: Pack
+      run: |
+
+        # Get the FileVersion from the Build.props file
+        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$Env:CommitNumber
+        "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
+        $GetFileVersionOutput = $Matches[0]
+
+        $IsMaster = dotnet msbuild dotnet/Directory.Build.props /t:IsMaster
+        $VersionTag = if ($IsMaster -match "(?<=IsMaster:)(.*)") {"stable"} else {"trunk"}
+
+        $Timestamp = (Get-Date).ToString("yyyyMMddHHmmss")
+        $NuGetPackageVersion = $GetFileVersionOutput + "-" + $VersionTag + "." + $Timestamp
+
+        dotnet pack dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion

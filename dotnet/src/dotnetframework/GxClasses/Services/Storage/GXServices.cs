@@ -7,9 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-#if NETCORE
 using GxClasses.Helpers;
-#endif
+
 using System.Reflection.Emit;
 
 namespace GeneXus.Services
@@ -20,6 +19,7 @@ namespace GeneXus.Services
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
+		public static string SESSION_SERVICE = "Session";
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
 		private static string[] SERVICES_FILE = new string[] { "CloudServices.dev.config", "CloudServices.config" };
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
@@ -110,8 +110,7 @@ namespace GeneXus.Services
 				reader.Read();
 			}
 
-			GXProperties properties = ProcessProperties(reader);
-
+			GXProperties properties = ProcessProperties(type, name, reader);
 
 			GXService service = new GXService();
 			service.Name = name;
@@ -126,7 +125,7 @@ namespace GeneXus.Services
 
 		}
 
-		private GXProperties ProcessProperties(GXXMLReader reader)
+		private GXProperties ProcessProperties(string serviceType, string serviceName, GXXMLReader reader)
 		{
 			GXProperties properties = new GXProperties();
 			reader.Read();
@@ -136,6 +135,10 @@ namespace GeneXus.Services
 				string name = reader.Value;
 				reader.ReadType(1, "Value");
 				string value = reader.Value;
+
+				if (EnvVarReader.GetEnvironmentValue(serviceType, serviceName, name, out string envVarValue))
+					value = envVarValue;
+
 				properties.Add(name, value);
 				reader.Read();
 				reader.Read();
@@ -194,24 +197,27 @@ namespace GeneXus.Services
 		public static ExternalProvider GetExternalProviderImpl(string service)
 		{
 			ExternalProvider externalProviderImpl = null;
-			GXService providerService = GetGXServices().Get(service);
-			if (providerService != null)
+			if (GetGXServices() != null)
 			{
-				try
+				GXService providerService = GetGXServices().Get(service);
+				if (providerService != null)
 				{
-					string typeFullName = providerService.ClassName;
-					GXLogging.Debug(log, "Loading storage provider:", typeFullName);
+					try
+					{
+						string typeFullName = providerService.ClassName;
+						GXLogging.Debug(log, "Loading storage provider:", typeFullName);
 #if !NETCORE
-					Type type = Type.GetType(typeFullName, true, true);
+						Type type = Type.GetType(typeFullName, true, true);
 #else
-					Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
+						Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
 #endif
-					externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
-				}
-				catch (Exception e)
-				{
-					GXLogging.Error(log, "Couldn´t connect to external storage provider.", e.Message, e);
-					throw e;
+						externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
+					}
+					catch (Exception e)
+					{
+						GXLogging.Error(log, "Couldn´t connect to external storage provider.", e.Message, e);
+						throw e;
+					}
 				}
 			}
 			return externalProviderImpl;

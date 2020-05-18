@@ -176,6 +176,7 @@ namespace GeneXus.Application
 		string GetReferer();
 		int GetBrowserType();
 		bool IsLocalStorageSupported();
+		bool ExposeMetadata();
 		string GetBrowserVersion();
 		short GetHttpSecure();
 		string GetCookie(string name);
@@ -1755,7 +1756,10 @@ namespace GeneXus.Application
 			}
 			return false;
 		}
-
+		public bool ExposeMetadata()
+		{
+			return Preferences.ExposeMetadata;
+		}
 		public bool IsLocalStorageSupported()
 		{
 			bool supported = String.IsNullOrEmpty(this.GetCookie("GXLocalStorageSupport"));
@@ -3478,13 +3482,10 @@ namespace GeneXus.Application
 				return ret;
 			else
 			{
-				if (Guid.TryParse(id, out Guid sanitizedGuid))
-					return sanitizedGuid.ToString();
-				else
-					return Guid.Empty.ToString();
+				GXLogging.Debug(log, "Image not found at Images.txt. Image id:",  () => KBId + id + " language:" + lang + " theme:" + theme);
+				return id;
 			}
 		}
-
 		public string GetImageSrcSet(string baseImage)
 		{
 			if (!String.IsNullOrEmpty(baseImage))
@@ -3553,12 +3554,7 @@ namespace GeneXus.Application
 		}
 		public string FileFromBase64(string b64)
 		{
-			Guid tmpGuid = Guid.NewGuid();
-			string tmpFileName;
-			if (tmpGuid == Guid.Empty)//Guid.NewGuid is not guaranteed to not equal Guid.Empty
-				tmpFileName = Math.Truncate(NumberUtil.Random() * 9999).ToString();
-			else
-				tmpFileName = tmpGuid.ToString();
+			string tmpFileName = Guid.NewGuid().ToString();
 			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromBase64(b64);
@@ -3575,12 +3571,7 @@ namespace GeneXus.Application
 		}
 		public string FileFromByteArray(byte[] bArray)
 		{
-			Guid tmpGuid = Guid.NewGuid();
-			string tmpFileName;
-			if (tmpGuid == Guid.Empty) //Guid.NewGuid is not guaranteed to not equal Guid.Empty
-				tmpFileName = Math.Truncate(NumberUtil.Random() * 9999).ToString();
-			else
-				tmpFileName = tmpGuid.ToString();
+			string tmpFileName = Guid.NewGuid().ToString();
 			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromByteArray(bArray);
