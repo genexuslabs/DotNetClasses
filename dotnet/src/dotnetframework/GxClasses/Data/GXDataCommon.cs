@@ -176,7 +176,8 @@ namespace GeneXus.Data
 		string Port { get ; set ;}
         string CurrentSchema { get; set; }
 		DateTime ServerDateTime {get;}
-        string ServerVersion { get;}
+		DateTime ServerDateTimeMs { get; }
+		string ServerVersion { get;}
 		short ErrCode {get ;}
 		string ErrDescription { get ;}
 		short FullConnect();
@@ -416,6 +417,8 @@ namespace GeneXus.Data
 		}
 
 		public abstract string GetServerDateTimeStmt(IGxConnection connection);
+		public abstract string GetServerDateTimeStmtMs(IGxConnection connection);
+
 
 		public abstract string GetServerUserIdStmt();
 
@@ -1668,6 +1671,10 @@ namespace GeneXus.Data
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT GETDATE()";
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
 		}
 		public override string GetServerUserIdStmt()
 		{

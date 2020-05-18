@@ -267,6 +267,10 @@ namespace GeneXus.Data
 		{
 			return "SELECT NOW()";
 		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return "SELECT NOW(3)";
+		}
 		public override string GetServerUserIdStmt()
 		{
 			return "SELECT USER()";

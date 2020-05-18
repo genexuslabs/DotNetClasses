@@ -1147,6 +1147,10 @@ namespace GeneXus.Data
 			}
 			parameter.Value = binary;
 		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return "SELECT SYSDATE(3) FROM DUAL";
+		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT SYSDATE FROM DUAL";

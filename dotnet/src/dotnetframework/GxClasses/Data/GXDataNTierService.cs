@@ -261,8 +261,11 @@ namespace GeneXus.Data.NTier
 		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
+			throw new NotImplementedException();			
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
 			throw new NotImplementedException();
-			
 		}
 		public override string GetServerVersionStmt()
 		{
