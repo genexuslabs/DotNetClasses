@@ -24,7 +24,6 @@ namespace GeneXus.UserControls
 #endif
 		public UserControlGenerator(string ucType)
 		{
-			System.Diagnostics.Debugger.Launch();
 			m_Type = ucType;
 		}
 		private DateTime LastRenderTime { get; set; } = DateTime.MinValue;
