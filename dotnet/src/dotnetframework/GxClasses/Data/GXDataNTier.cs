@@ -298,6 +298,7 @@ namespace GeneXus.Data.NTier
 					}
 					catch (Exception ex)
 					{
+						GXLogging.Error(log, "Execute error", ex);
 						_ds.CloseConnections();
 						throw ex;
 					}
