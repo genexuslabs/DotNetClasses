@@ -263,6 +263,10 @@ namespace GeneXus.Data
 		{
 			return "SELECT CURRENT YEAR TO SECOND FROM informix.SYSTABLES WHERE tabname = 'systables'";
 		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return "SELECT CURRENT YEAR TO FRACTION(3) FROM informix.SYSTABLES WHERE tabname = 'systables'";
+		}
 		public override string GetServerVersionStmt()
 		{
 			throw new GxNotImplementedException();
