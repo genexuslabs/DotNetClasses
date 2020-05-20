@@ -50,13 +50,17 @@ namespace GeneXus.Application
 				((IGxJSONAble)TObject).FromJSONObject((IJsonFormattable)value);
 				return TObject;
 			}
+			else if (newType == typeof( GeneXus.Utils.Geospatial))
+			{
+				return new GeneXus.Utils.Geospatial(value);
+			}
 			else if (typeof(IConvertible).IsAssignableFrom(newType))
 			{
 				return Convert.ChangeType(value, newType);
 			}
 			else
 			{
-				
+
 				return value;
 			}
 		}
