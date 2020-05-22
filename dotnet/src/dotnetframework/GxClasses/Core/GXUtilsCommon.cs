@@ -2785,7 +2785,14 @@ namespace GeneXus.Utils
 				if (oldSeparator != "/") cultureInfo.DateTimeFormat.DateSeparator = oldSeparator;
 			}
 		}
-
+		static public DateTime ServerNowMs(IGxContext context, IDataStoreProvider dataStore)
+		{
+			if (dataStore == null)
+				return ServerNowMs(context, new DataStoreHelperBase().getDataStoreName());
+			if (Preferences.useTimezoneFix())
+				return ResetMicroseconds(ConvertDateTime(dataStore.serverNowMs(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+			return ResetMicroseconds(dataStore.serverNowMs());
+		}
 		static public DateTime ServerNow(IGxContext context, IDataStoreProvider dataStore)
 		{
 			if (dataStore == null)
@@ -2797,6 +2804,12 @@ namespace GeneXus.Utils
 #if !NETCORE
 		[Obsolete("ServerNow with string dataSource is deprecated, use ServerNow(IGxContext context, Data.NTier.IDataStoreProvider dataStore) instead", false)]
 #endif
+		static public DateTime ServerNowMs(IGxContext context, string dataSource)
+		{
+			if (Preferences.useTimezoneFix())
+				return ResetMicroseconds( ConvertDateTime(context.ServerNowMs(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+			return ResetMicroseconds(context.ServerNowMs(dataSource));
+		}
 		static public DateTime ServerNow(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
@@ -3508,6 +3521,39 @@ namespace GeneXus.Utils
 				blobPath = RelativePath(blobPath);
 				return StringUtil.ReplaceLast(blobPath, fileName, Uri.EscapeUriString(fileName));
 			}
+		}
+		public static bool AbsoluteUri(string fileName, out Uri result)
+		{
+			result = null;
+			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			{
+				return true;
+			}
+			else
+			{
+				Uri relative;
+				if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
+				{
+					if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
+					{
+						int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
+						if (idx >= 0)
+						{
+							fileName = fileName.Substring(idx);
+							Uri localRelative;
+							if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
+								relative = localRelative;
+						}
+					}
+
+					if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
+					{
+						return true;
+					}
+				}
+				return false; ;
+			}
+
 		}
 
 		public static string RelativePath(string blobPath)

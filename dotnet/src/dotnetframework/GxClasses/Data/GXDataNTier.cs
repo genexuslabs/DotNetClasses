@@ -34,7 +34,8 @@ namespace GeneXus.Data.NTier
         void setDynamicOrder(int cursor, String[] parameters);
         int recordCount(int cursor);
         DateTime serverNow();
-        string userId();
+		DateTime serverNowMs();
+		string userId();
     }
 
 	public interface IRemoteDataStoreProvider
@@ -297,6 +298,7 @@ namespace GeneXus.Data.NTier
 					}
 					catch (Exception ex)
 					{
+						GXLogging.Error(log, "Execute error", ex);
 						_ds.CloseConnections();
 						throw ex;
 					}
@@ -540,13 +542,31 @@ namespace GeneXus.Data.NTier
                 }
             }
         }
-        public DateTime serverNow()
+
+		public DateTime serverNowMs()
+		{
+			return serverNowIn(true);
+		}
+
+		public DateTime serverNow()
+		{
+			return serverNowIn(false);
+		}
+		public DateTime serverNowIn(bool hasMilliseconds )
         {
-            string stmt = ((GxDataRecord)_ds.Db).GetServerDateTimeStmt(_ds.Connection);
+			string stmt = "";
+			if (hasMilliseconds)
+				stmt = ((GxDataRecord)_ds.Db).GetServerDateTimeStmtMs(_ds.Connection); 
+			else
+				stmt = ((GxDataRecord)_ds.Db).GetServerDateTimeStmt(_ds.Connection);
+
             if (string.IsNullOrEmpty(stmt))
             {
-                return DateTime.Now; 
-            }
+				if (hasMilliseconds)
+					return DateTimeUtil.ResetMicroseconds(DateTime.Now);
+				else
+					return DateTimeUtil.ResetMilliseconds(DateTime.Now);
+			}
             else
             {
                 GxCommand cmd = new GxCommand(_ds.Db, stmt, _ds, 0, false, true, _errorHandler);
@@ -557,7 +577,10 @@ namespace GeneXus.Data.NTier
                 if (reader != null)
                 {
                     d = reader.GetDateTime(0);
-                    d = DateTimeUtil.ResetMilliseconds(d);
+					if (hasMilliseconds)
+						d = DateTimeUtil.ResetMicroseconds(d);
+					else
+					    d = DateTimeUtil.ResetMilliseconds(d);
                     reader.Close();
                 }
                 return d;

@@ -28,14 +28,27 @@ jobs:
            rm -Recurse $_.FullName
         }
 
-    - name: Build and Pack
+    - name: Restore packages
+      run: |
+
+        dotnet restore dotnet\DotNetStandardClasses.sln
+    - name: Build
       run: |
         $CommitNumber = git rev-list --no-merges --count HEAD
 
-        dotnet build dotnet\DotNetStandardClasses.sln --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
+        dotnet build dotnet\DotNetStandardClasses.sln --no-restore --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
+        echo "::set-env name=CommitNumber::$CommitNumber"
         
+    - name: Test
+      run: |
+
+        dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
+
+    - name: Pack
+      run: |
+
         # Get the FileVersion from the Build.props file
-        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$CommitNumber
+        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:CommitNumber=$Env:CommitNumber
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
         $GetFileVersionOutput = $Matches[0]
 
@@ -45,7 +58,7 @@ jobs:
         $NuGetPackageVersion = $GetFileVersionOutput + "-" + $VersionTag + "." + $Timestamp
         echo "::set-env name=NuGetPackageVersion::$NuGetPackageVersion"
 
-        dotnet pack dotnet\DotNetStandardClasses.sln --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
+        dotnet pack dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
     - name: Publish packages
       run: |      

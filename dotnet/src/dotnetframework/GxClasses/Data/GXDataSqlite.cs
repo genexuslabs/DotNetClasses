@@ -87,6 +87,11 @@ namespace GeneXus.Data
 			idatareader = new GxDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
 			return idatareader;
 		}
+
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
+		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT date('now')";

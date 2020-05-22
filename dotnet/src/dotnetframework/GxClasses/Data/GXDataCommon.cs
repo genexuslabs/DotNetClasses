@@ -139,7 +139,8 @@ namespace GeneXus.Data
 		void Close();
 		void Disconnect();
 		DateTime DateTime { get;}
-        string Version { get;}
+		DateTime DateTimeMs { get; }
+		string Version { get;}
 		bool BeforeConnect();
 		bool AfterConnect();
     }
@@ -175,7 +176,8 @@ namespace GeneXus.Data
 		string Port { get ; set ;}
         string CurrentSchema { get; set; }
 		DateTime ServerDateTime {get;}
-        string ServerVersion { get;}
+		DateTime ServerDateTimeMs { get; }
+		string ServerVersion { get;}
 		short ErrCode {get ;}
 		string ErrDescription { get ;}
 		short FullConnect();
@@ -415,6 +417,8 @@ namespace GeneXus.Data
 		}
 
 		public abstract string GetServerDateTimeStmt(IGxConnection connection);
+		public abstract string GetServerDateTimeStmtMs(IGxConnection connection);
+
 
 		public abstract string GetServerUserIdStmt();
 
@@ -824,6 +828,7 @@ namespace GeneXus.Data
 		}
 		protected static byte[] GetBinary(string fileNameParm, bool dbBlob)
 		{			
+			Uri uri;
 			string fileName = fileNameParm;
 			bool inLocalStorage = dbBlob || GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null;
 			bool validFileName = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(fileName.Trim()) && String.Compare(fileName, "about:blank", false) != 0;
@@ -834,9 +839,7 @@ namespace GeneXus.Data
                 if (GxRestUtil.IsUpload(fileName))
                     fileName = GxRestUtil.UploadPath(fileName);
 
-				Uri uri;
-								
-				bool ok = Uri.TryCreate(PathUtil.GetBaseUri(), fileName, out uri);
+				bool ok = PathUtil.AbsoluteUri(fileName, out uri);
 				if (ok && uri != null)
 				{					
 					switch (uri.Scheme)
@@ -1667,6 +1670,10 @@ namespace GeneXus.Data
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT GETDATE()";
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
 		}
 		public override string GetServerUserIdStmt()
 		{
