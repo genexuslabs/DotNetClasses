@@ -470,6 +470,9 @@ namespace GeneXus.Data
 	sealed internal class MySqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.MySqlConnectionWrapper));
+#if NETCORE
+		private IDbCommand sqlMode = new MySQLCommand("SET @@session.sql_mode = PAD_CHAR_TO_FULL_LENGTH");
+#endif
 		public MySqlConnectionWrapper() : base(new MySQLConnection())
 		{ }
 
@@ -491,6 +494,11 @@ namespace GeneXus.Data
 				{
 					m_transaction = null;
 				}
+#if NETCORE
+				sqlMode.Transaction = m_transaction;
+				sqlMode.Connection = InternalConnection;
+				sqlMode.ExecuteNonQuery();
+#endif
 			}
 			catch (Exception e)
 			{
@@ -563,6 +571,8 @@ namespace GeneXus.Data
 			MySQLCommand cmd = (MySQLCommand)dr.GetCommand(con, stmt, parameters);
 #if !NETCORE
             cmd.UsePreparedStatement = preparedStmts;
+#else
+			cmd.Prepare();
 #endif
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
