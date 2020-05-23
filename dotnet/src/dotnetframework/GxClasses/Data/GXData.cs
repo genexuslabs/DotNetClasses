@@ -288,7 +288,11 @@ namespace GeneXus.Data
         {
             return "SELECT CURRENT_TIMESTAMP FROM DUMMY";
         }
-        public override string GetServerVersionStmt()
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
+		}
+		public override string GetServerVersionStmt()
         {
             throw new GxNotImplementedException();
         }
@@ -542,6 +546,10 @@ namespace GeneXus.Data
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT CURRENT TIMESTAMP FROM SYSIBM.SYSTABLES WHERE NAME = 'SYSTABLES' AND CREATOR = 'SYSIBM'";
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
 		}
 		public override string GetServerVersionStmt()
 		{
@@ -803,6 +811,10 @@ namespace GeneXus.Data
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT CURRENT_TIMESTAMP FROM SYSIBM.SYSDUMMY1";
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
 		}
 		public override string GetServerUserIdStmt()
 		{
@@ -1259,6 +1271,11 @@ namespace GeneXus.Data
 			GXLogging.Debug(log, "SetParameter BLOB, binary.length:" + binary != null ? binary.Length.ToString() : "null");
 			parameter.Value = binary;
 		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
+		}
+
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			string namingConvention = GetParameterValue(connection.Data, "Naming");
@@ -1557,6 +1574,10 @@ namespace GeneXus.Data
 			throw new GxNotImplementedException();
 		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
+		{
+			throw new GxNotImplementedException();
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
 		{
 			throw new GxNotImplementedException();
 		}

@@ -252,6 +252,11 @@ namespace GeneXus.Data
 				return base.Net2DbmsDateTime(parm, dt);
 			}
 		}
+
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
+		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			if (string.IsNullOrEmpty(connection.DSVersion)) //>= 8.1
