@@ -406,8 +406,16 @@ namespace GeneXus.Configuration
 				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), ConfigurationManagerFileName);
 				if (File.Exists(fileName))
 				{
-					Assembly assembly = Assembly.LoadFrom(fileName);
-					return assembly;
+					return Assembly.LoadFrom(fileName);
+				}
+			}
+			else {
+				AssemblyName assName = new AssemblyName(args.Name);
+				bool strongNamedAssembly = assName.GetPublicKeyToken().Length > 0;
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{assName.Name}.dll");
+				if (!strongNamedAssembly && File.Exists(fileName))
+				{
+					return Assembly.LoadFrom(fileName);
 				}
 			}
 			return null;
