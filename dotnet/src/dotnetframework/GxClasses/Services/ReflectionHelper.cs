@@ -42,7 +42,7 @@ namespace GeneXus.Application
 			return false;
 		}
 
-		private static object ConvertSingleItem(object value, Type newType)
+		private static object ConvertSingleJsonItem(object value, Type newType)
 		{
 			if (typeof(IGxJSONAble).IsAssignableFrom(newType))
 			{
@@ -50,13 +50,20 @@ namespace GeneXus.Application
 				((IGxJSONAble)TObject).FromJSONObject((IJsonFormattable)value);
 				return TObject;
 			}
+			else if (newType == typeof(DateTime))
+			{
+				return DateTimeUtil.CToT2(value as string);
+			}
+			else if (newType == typeof(Geospatial))
+			{
+				return new Geospatial(value);
+			}
 			else if (typeof(IConvertible).IsAssignableFrom(newType))
 			{
 				return Convert.ChangeType(value, newType);
 			}
 			else
 			{
-				
 				return value;
 			}
 		}
@@ -72,12 +79,12 @@ namespace GeneXus.Application
 				var elements = new ArrayList();
 				foreach (var element in value.ToString().Split(','))
 				{
-					var convertedSingleItem = ConvertSingleItem(element, singleItemType);
+					var convertedSingleItem = ConvertSingleJsonItem(element, singleItemType);
 					elements.Add(convertedSingleItem);
 				}
 				return elements.ToArray(singleItemType);
 			}
-			return ConvertSingleItem(value, newType);
+			return ConvertSingleJsonItem(value, newType);
 		}
 
 		private static object ConvertStringToNewType(object value, Type newType)
