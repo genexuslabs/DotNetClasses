@@ -13,7 +13,7 @@ namespace GeneXus.Application
 {
 	public class ReflectionHelper
     {
-		const char ISO_8601_TIME_SEPARATOR= 'T';
+		const string ISO_8601_TIME_SEPARATOR= "T";
 		public static void CallBCMethod(object instance, String methodName, IList<string> inParametersValues)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
