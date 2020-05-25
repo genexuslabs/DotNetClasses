@@ -719,6 +719,7 @@ namespace GeneXus.Data
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Long");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Varchar2");
 				case GXType.DateTime: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Date");
+				case GXType.DateTime2: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "TimeStamp");
 				default: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, type.ToString());
 			}
 		}
@@ -1149,7 +1150,7 @@ namespace GeneXus.Data
 		}
 		public override string GetServerDateTimeStmtMs(IGxConnection connection)
 		{
-			return "SELECT SYSDATE(3) FROM DUAL";
+			return "SELECT SYSTIMESTAMP FROM DUAL";
 		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
