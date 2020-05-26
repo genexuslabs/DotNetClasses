@@ -206,8 +206,8 @@ namespace GeneXus.Data
                 case DbType.Int64:
                     return MySQLDbType.Int64;
                 case DbType.Single:
-                    return MySQLDbType.Float;
-                case DbType.Time:
+                    return MySQLDbType.Double;
+				case DbType.Time:
                     return MySQLDbType.Time;
                 default:
                     return MySQLDbType.Int16;
@@ -449,6 +449,20 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
+#if NETCORE
+		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
+		{
+			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
+				return string.Empty;
+			else
+			{
+				string value = DR.GetString(i);
+				if (value != null && value.Length < size)
+					value = value.PadRight(size);
+				return value;
+			}
+		}
+#endif
 		public override void SetParameter(IDbDataParameter parameter, object value)
 		{
 			if (value is Guid)
@@ -563,6 +577,8 @@ namespace GeneXus.Data
 			MySQLCommand cmd = (MySQLCommand)dr.GetCommand(con, stmt, parameters);
 #if !NETCORE
             cmd.UsePreparedStatement = preparedStmts;
+#else
+			cmd.Prepare();
 #endif
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
@@ -630,6 +646,7 @@ namespace GeneXus.Data
 			return res;
 
 		}
+		
 
 	}
 
