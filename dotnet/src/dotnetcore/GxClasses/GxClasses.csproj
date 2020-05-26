@@ -89,6 +89,8 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Storage\StorageFactory.cs" Link="Storage\StorageFactory.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\UserControls\IUserControlFactory.cs" Link="UserControls\IUserControlFactory.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlFactory.cs" Link="UserControls\UserControlFactory.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlFactoryImpl.cs" Link="UserControls\UserControlFactoryImpl.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlGenerator.cs" Link="UserControls\UserControlGenerator.cs" />
     <Compile Include="..\..\dotnetframework\TZ4Net\Converters\BigEndianBitConverter.cs" Link="Timezone\Converters\BigEndianBitConverter.cs" />
     <Compile Include="..\..\dotnetframework\TZ4Net\Converters\EndianBinaryReader.cs" Link="Timezone\Converters\EndianBinaryReader.cs" />
     <Compile Include="..\..\dotnetframework\TZ4Net\Converters\EndianBitConverter.cs" Link="Timezone\Converters\EndianBitConverter.cs" />
@@ -144,6 +146,7 @@
 		<PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" />
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" PrivateAssets="All" />
+		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.0" PrivateAssets="All" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" PrivateAssets="All" />
