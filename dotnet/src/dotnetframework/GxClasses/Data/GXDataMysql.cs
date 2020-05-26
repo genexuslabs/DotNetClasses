@@ -207,7 +207,7 @@ namespace GeneXus.Data
                     return MySQLDbType.Int64;
                 case DbType.Single:
                     return MySQLDbType.Double;
-                case DbType.Time:
+				case DbType.Time:
                     return MySQLDbType.Time;
                 default:
                     return MySQLDbType.Int16;
@@ -449,6 +449,20 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
+#if NETCORE
+		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
+		{
+			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
+				return string.Empty;
+			else
+			{
+				string value = DR.GetString(i);
+				if (value != null && value.Length < size)
+					value = value.PadRight(size);
+				return value;
+			}
+		}
+#endif
 		public override void SetParameter(IDbDataParameter parameter, object value)
 		{
 			if (value is Guid)
@@ -470,9 +484,6 @@ namespace GeneXus.Data
 	sealed internal class MySqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.MySqlConnectionWrapper));
-#if NETCORE
-		private IDbCommand sqlMode = new MySQLCommand("SET @@session.sql_mode = PAD_CHAR_TO_FULL_LENGTH");
-#endif
 		public MySqlConnectionWrapper() : base(new MySQLConnection())
 		{ }
 
@@ -494,11 +505,6 @@ namespace GeneXus.Data
 				{
 					m_transaction = null;
 				}
-#if NETCORE
-				sqlMode.Transaction = m_transaction;
-				sqlMode.Connection = InternalConnection;
-				sqlMode.ExecuteNonQuery();
-#endif
 			}
 			catch (Exception e)
 			{
@@ -640,6 +646,7 @@ namespace GeneXus.Data
 			return res;
 
 		}
+		
 
 	}
 
