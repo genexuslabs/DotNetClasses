@@ -206,7 +206,7 @@ namespace GeneXus.Data
                 case DbType.Int64:
                     return MySQLDbType.Int64;
                 case DbType.Single:
-                    return MySQLDbType.Float;
+                    return MySQLDbType.Double;
                 case DbType.Time:
                     return MySQLDbType.Time;
                 default:
