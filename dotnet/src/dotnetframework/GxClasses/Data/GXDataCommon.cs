@@ -38,7 +38,8 @@ namespace GeneXus.Data
         long GetLong(IGxDbCommand cmd, IDataRecord DR, int i);
         double GetDouble(IGxDbCommand cmd, IDataRecord DR, int i);
         string GetString(IGxDbCommand cmd, IDataRecord DR, int i);
-        string GetBinary(IGxDbCommand cmd, IDataRecord DR, int i);
+		string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size);
+		string GetBinary(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDateTimeMs(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDateTime(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDate(IGxDbCommand cmd, IDataRecord DR, int i);
@@ -1084,6 +1085,11 @@ namespace GeneXus.Data
 		public virtual string ConcatOp(int pos)
 		{
 			return ConcatOpValues[pos];
+		}
+
+		public virtual string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
+		{
+			return GetString(cmd, DR, i);
 		}
 	}
 
