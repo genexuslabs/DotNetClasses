@@ -4,21 +4,21 @@ using GeneXus.UserControls;
 using GeneXus.UserControls.Implementation;
 using GeneXus.Utils;
 using GeneXus.WebControls;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+#if !NETCORE
+using System.Web.UI;
+#endif
+using Xunit;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Web.UI;
 
 namespace UnitTesting
 {
-	[TestClass]
 	public class UserControlRender
 	{
-		[TestMethod]
-		public void TestGenerateSimpleUC()
+		[Fact]
+		public void GenerateSimpleUC()
 		{
-
 			GXUserControl ucMycontrol1 = new GXUserControl();
 
 			UserControlFactoryImpl factory = new UserControlFactoryImpl();
@@ -26,7 +26,7 @@ namespace UnitTesting
 
 			string GetTemplateFile(string type)
 			{
-				return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "TestModule.MyControl.view");
+				return "TestModule.MyControl.view";
 			}
 			var context = new GxContext();
 
@@ -54,7 +54,7 @@ namespace UnitTesting
 			ucMycontrol1.SetProperty("Message", HELLO);
 			ucMycontrol1.Render(context, "testmodule.mycontrol", "internalName", "MYCONTROL1Container");
 
-			Assert.IsTrue(sb.ToString().Contains(ONE) && sb.ToString().Contains(TWO) && sb.ToString().Contains(HELLO));
+			Assert.True(sb.ToString().Contains(ONE) && sb.ToString().Contains(TWO) && sb.ToString().Contains(HELLO));
 		}
 
 	}
