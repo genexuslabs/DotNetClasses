@@ -703,7 +703,7 @@ namespace GeneXus.Utils
 			}
 			else if (prop is DateTime)
 			{
-				jarray.Add(DateTimeUtil.TToC2((DateTime)prop));
+				jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
 			}
 			else
 			{

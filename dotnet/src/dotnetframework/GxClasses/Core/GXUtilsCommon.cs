@@ -2549,21 +2549,29 @@ namespace GeneXus.Utils
 		}
 		public static string TToC2(DateTime dt)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss");
+			return TToC2(dt, true);
+		}
+		public static string TToC2(DateTime dt, bool toUTC)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss", toUTC);
 		}
 
 		public static string TToC3(DateTime dt)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff");
+			return TToC3(dt, true);
+		}
+		public static string TToC3(DateTime dt, bool toUTC)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff", toUTC);
 		}
 
-		public static string TToCRest(DateTime dt, String nullString, String formatStr)
+		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
 		{
 			if (dt == nullDate)
 				return FormatEmptyDate(nullString);
 			else
 			{
-				DateTime ret = Preferences.useTimezoneFix() ? (GxContext.IsRestService ? toUniversalTime(dt) : dt) : dt;
+				DateTime ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt) : dt) : dt;
 				return ret.ToString(formatStr, CultureInfo.InvariantCulture);
 			}
 		}
