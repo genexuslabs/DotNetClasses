@@ -2065,7 +2065,7 @@ namespace GeneXus.Application
 				if (PathUtil.IsAbsoluteUrl(StaticContentBase))
 					return StaticContentBase + fout;
 				else
-					return GetContextPath() + StaticContentBase + fout;
+					return GetScriptPath() + StaticContentBase + fout;
 			}
 			else
 				return file;
