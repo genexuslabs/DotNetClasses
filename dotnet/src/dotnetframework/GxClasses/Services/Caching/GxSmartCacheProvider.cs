@@ -141,12 +141,14 @@ namespace GeneXus.Data
         {
             string basePath = Path.Combine(GxContext.StaticPhysicalPath(), "Metadata\\TableAccess");
 			queryTables = new ConcurrentDictionary<string, List<string>>();
-			foreach (string file in Directory.GetFiles(basePath, "*.xml"))
+			if (Directory.Exists(basePath))
 			{
-				string objname = Path.GetFileNameWithoutExtension(file);
-				List<string> lst = new List<string>();
-				lst.Add(FORCED_INVALIDATE); 
-				bool readingTables = false;
+				foreach (string file in Directory.GetFiles(basePath, "*.xml"))
+				{
+					string objname = Path.GetFileNameWithoutExtension(file);
+					List<string> lst = new List<string>();
+					lst.Add(FORCED_INVALIDATE);
+					bool readingTables = false;
                 using (XmlTextReader tr = new XmlTextReader(Path.Combine(basePath, file)))
                 {
                     while (tr.Read())
@@ -161,15 +163,16 @@ namespace GeneXus.Data
                             readingTables = false;
 							queryTables[NormalizeKey(objname)] = lst;
                             continue;
-                        }
-                        if (tr.HasAttributes)
-                        {
-                            string nme = tr.GetAttribute("name");
-                            if (tr.Name == "Table" && readingTables && nme != null && !lst.Contains(nme))
-                                lst.Add(NormalizeKey(nme));
-                        }
-                    }
-                }
+							}
+							if (tr.HasAttributes)
+							{
+								string nme = tr.GetAttribute("name");
+								if (tr.Name == "Table" && readingTables && nme != null && !lst.Contains(nme))
+									lst.Add(NormalizeKey(nme));
+							}
+						}
+					}
+				}
 			}
         }
 
