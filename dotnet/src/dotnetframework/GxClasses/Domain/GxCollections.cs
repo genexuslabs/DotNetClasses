@@ -1151,7 +1151,7 @@ namespace GeneXus.Utils
 			GxSilentTrnSdt sdt = (GxSilentTrnSdt)Activator.CreateInstance(sdtType);
 			GxStringCollection stateAttrs = sdt.StateAttributes();
 			attrisToIgnore.Add(sdtType, stateAttrs);
-#if !NETCORE
+
 			IEnumerable<PropertyInfo> levels = sdtType.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(x => x.PropertyType.IsGenericType && typeof(IGXBCCollection).IsAssignableFrom(x.PropertyType));
 			foreach (PropertyInfo level in levels)
 			{
@@ -1160,7 +1160,6 @@ namespace GeneXus.Utils
 				foreach (var key in levelAttrisToIgnore.Keys)
 					attrisToIgnore[key] = levelAttrisToIgnore[key];
 			}
-#endif
 			return attrisToIgnore;
 		}
 
