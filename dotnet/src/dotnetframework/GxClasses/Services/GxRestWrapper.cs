@@ -226,7 +226,11 @@ namespace GeneXus.Application
 		}
 		public Task SetError(string code, string message)
 		{
-			return HttpHelper.SetResponseStatusAndJsonErrorAsync(_httpContext, code, message);
+			return SetError(_httpContext, code, message);
+		}
+		public static Task SetError(HttpContext context, string code, string message)
+		{
+			return HttpHelper.SetResponseStatusAndJsonErrorAsync(context, code, message);
 		}
 		public bool IsAuthenticated(string synchronizer)
 		{
