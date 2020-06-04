@@ -406,8 +406,16 @@ namespace GeneXus.Configuration
 				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), ConfigurationManagerFileName);
 				if (File.Exists(fileName))
 				{
-					Assembly assembly = Assembly.LoadFrom(fileName);
-					return assembly;
+					return Assembly.LoadFrom(fileName);
+				}
+			}
+			else {
+				AssemblyName assName = new AssemblyName(args.Name);
+				bool strongNamedAssembly = assName.GetPublicKeyToken().Length > 0;
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{assName.Name}.dll");
+				if (!strongNamedAssembly && File.Exists(fileName))
+				{
+					return Assembly.LoadFrom(fileName);
 				}
 			}
 			return null;
@@ -664,6 +672,7 @@ namespace GeneXus.Configuration
 		static string remoteLocation;
 		static int remote = -1;
 		static int storageTimezone = -1;
+		private static int exposeMetadata = -1;
 
 		public static string RemoteLocation
 		{
@@ -772,6 +781,28 @@ namespace GeneXus.Configuration
 					}
 				}
 				else return (blankEmptyDates == 1);
+			}
+
+		}
+		public static bool ExposeMetadata
+		{
+			get
+			{
+				if (exposeMetadata == -1)
+				{
+					string val;
+					if (Config.GetValueOf("EXPOSE_METADATA", out val) && val == "1")
+					{
+						exposeMetadata = 1;
+						return true;
+					}
+					else
+					{
+						exposeMetadata = 0;
+						return false;
+					}
+				}
+				else return (exposeMetadata == 1);
 			}
 
 		}

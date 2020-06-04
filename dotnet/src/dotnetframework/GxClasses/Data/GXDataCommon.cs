@@ -38,7 +38,8 @@ namespace GeneXus.Data
         long GetLong(IGxDbCommand cmd, IDataRecord DR, int i);
         double GetDouble(IGxDbCommand cmd, IDataRecord DR, int i);
         string GetString(IGxDbCommand cmd, IDataRecord DR, int i);
-        string GetBinary(IGxDbCommand cmd, IDataRecord DR, int i);
+		string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size);
+		string GetBinary(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDateTimeMs(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDateTime(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDate(IGxDbCommand cmd, IDataRecord DR, int i);
@@ -139,7 +140,8 @@ namespace GeneXus.Data
 		void Close();
 		void Disconnect();
 		DateTime DateTime { get;}
-        string Version { get;}
+		DateTime DateTimeMs { get; }
+		string Version { get;}
 		bool BeforeConnect();
 		bool AfterConnect();
     }
@@ -175,7 +177,8 @@ namespace GeneXus.Data
 		string Port { get ; set ;}
         string CurrentSchema { get; set; }
 		DateTime ServerDateTime {get;}
-        string ServerVersion { get;}
+		DateTime ServerDateTimeMs { get; }
+		string ServerVersion { get;}
 		short ErrCode {get ;}
 		string ErrDescription { get ;}
 		short FullConnect();
@@ -415,6 +418,8 @@ namespace GeneXus.Data
 		}
 
 		public abstract string GetServerDateTimeStmt(IGxConnection connection);
+		public abstract string GetServerDateTimeStmtMs(IGxConnection connection);
+
 
 		public abstract string GetServerUserIdStmt();
 
@@ -824,6 +829,7 @@ namespace GeneXus.Data
 		}
 		protected static byte[] GetBinary(string fileNameParm, bool dbBlob)
 		{			
+			Uri uri;
 			string fileName = fileNameParm;
 			bool inLocalStorage = dbBlob || GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null;
 			bool validFileName = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(fileName.Trim()) && String.Compare(fileName, "about:blank", false) != 0;
@@ -834,9 +840,7 @@ namespace GeneXus.Data
                 if (GxRestUtil.IsUpload(fileName))
                     fileName = GxRestUtil.UploadPath(fileName);
 
-				Uri uri;
-								
-				bool ok = Uri.TryCreate(PathUtil.GetBaseUri(), fileName, out uri);
+				bool ok = PathUtil.AbsoluteUri(fileName, out uri);
 				if (ok && uri != null)
 				{					
 					switch (uri.Scheme)
@@ -1081,6 +1085,11 @@ namespace GeneXus.Data
 		public virtual string ConcatOp(int pos)
 		{
 			return ConcatOpValues[pos];
+		}
+
+		public virtual string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
+		{
+			return GetString(cmd, DR, i);
 		}
 	}
 
@@ -1668,6 +1677,10 @@ namespace GeneXus.Data
 		{
 			return "SELECT GETDATE()";
 		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
+		}
 		public override string GetServerUserIdStmt()
 		{
 			return "SELECT SUSER_SNAME()";
@@ -1829,6 +1842,7 @@ namespace GeneXus.Data
 					}
 					catch (Exception ex)
 					{
+#if !NETCORE
 						FileNotFoundException fex = ex as FileNotFoundException;
 						FileLoadException flex = ex as FileLoadException;
 						if (flex !=null || fex != null)
@@ -1844,6 +1858,10 @@ namespace GeneXus.Data
 						{
 							throw ex;
 						}
+#else
+						throw ex;
+#endif
+
 					}
 				}
 			}
@@ -1938,15 +1956,22 @@ namespace GeneXus.Data
 
 		}
 
-        public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+#if !NETCORE
+		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
         {
-            // Latitude and Longitude are inverted in the 'Point' Constructor
+
             return geo.InnerValue;
         }
-
-        public override IGeographicNative Dbms2NetGeo(IGxDbCommand cmd, IDataRecord DR, int i)
+#else
+		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
         {
-            return new Geospatial(DR.GetValue(i));            
+            return geo.ToStringSQL("GEOMETRYCOLLECTION EMPTY");
+        }
+#endif
+
+		public override IGeographicNative Dbms2NetGeo(IGxDbCommand cmd, IDataRecord DR, int i)
+        {
+            return new Geospatial(DR.GetValue(i));
         }
 
 		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)

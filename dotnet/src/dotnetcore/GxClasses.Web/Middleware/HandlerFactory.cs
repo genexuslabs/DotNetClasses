@@ -74,12 +74,15 @@ namespace GeneXus.HttpHandlerFactory
 
 		public async Task Invoke(HttpContext context)
 		{
+			IHttpHandler handler=null;
+			var url = string.Empty;
 			try
 			{
+				//context.Request.EnableBuffering(); does not work in 3.1
 				context.NewSessionCheck();
-				var url = context.Request.Path.Value;
+				url = context.Request.Path.Value;
 
-				IHttpHandler handler = GetHandler(context, context.Request.Method, ObjectUrl(context.Request.Path.Value, _basePath), string.Empty);
+				handler = GetHandler(context, context.Request.Method, ObjectUrl(context.Request.Path.Value, _basePath), string.Empty);
 				context.Response.OnStarting(() =>
 				{
 					if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(".aspx") && string.IsNullOrEmpty(context.Response.ContentType))
@@ -96,7 +99,12 @@ namespace GeneXus.HttpHandlerFactory
 			}
 			catch (Exception ex)
 			{
+				GXLogging.Error(log, $"Handler Factory failed creating {url}", ex);
 				await Task.FromException(ex);
+			}
+			finally
+			{
+				handler?.ControlOutputWriter?.Flush();
 			}
 		}
 		public static bool IsAspxHandler(string path, string basePath)

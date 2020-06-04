@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
 	<TargetFramework>netcoreapp3.1</TargetFramework>
@@ -7,7 +7,6 @@
 	<PackageTags>Data Access</PackageTags>
 	<PackageId>GeneXus.Classes.Core</PackageId>
 	</PropertyGroup>
-
 
    <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxClasses.Win\Process\CommandLine.cs" Link="Helpers\Process\CommandLine.cs" />
@@ -47,6 +46,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\EnvVarReader.cs" Link="Helpers\EnvVarReader.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXFileWatcher.cs" Link="Helpers\GXFileWatcher.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\GXBaseObject.cs" Link="Model\GXBaseObject.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Security\WebSecurity.cs" Link="Security\WebSecurity.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Caching\GxCache.cs" Link="Services\Caching\GxCache.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxCollections.cs" Link="Domain\GxCollections.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Core\gxconfig.cs" Link="Core\GxConfig.cs" />
@@ -77,7 +77,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Caching\GxSmartCacheProvider.cs" Link="Services\Caching\GxSmartCacheProvider.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Core\GXUtils.cs" Link="Core\GXUtils.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Core\GXUtilsCommon.cs" Link="Core\GXUtilsCommon.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXUtilsGeospatial.cs" Link="Helpers\GXUtilsGeospatial.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\CssHelper.cs" Link="Helpers\CssHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXNavigationHelper.cs" Link="Helpers\GXNavigationHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXRestUtils.cs" Link="Helpers\GXRestUtils.cs" />
@@ -90,6 +89,8 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Storage\StorageFactory.cs" Link="Storage\StorageFactory.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\UserControls\IUserControlFactory.cs" Link="UserControls\IUserControlFactory.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlFactory.cs" Link="UserControls\UserControlFactory.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlFactoryImpl.cs" Link="UserControls\UserControlFactoryImpl.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\UserControls\UserControlGenerator.cs" Link="UserControls\UserControlGenerator.cs" />
     <Compile Include="..\..\dotnetframework\TZ4Net\Converters\BigEndianBitConverter.cs" Link="Timezone\Converters\BigEndianBitConverter.cs" />
     <Compile Include="..\..\dotnetframework\TZ4Net\Converters\EndianBinaryReader.cs" Link="Timezone\Converters\EndianBinaryReader.cs" />
     <Compile Include="..\..\dotnetframework\TZ4Net\Converters\EndianBitConverter.cs" Link="Timezone\Converters\EndianBitConverter.cs" />
@@ -131,24 +132,26 @@
 		<LogicalName>GxClasses.zoneinfo.resources</LogicalName>
 	</EmbeddedResource>
   </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" PrivateAssets="All" />
+		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" PrivateAssets="All" />
+		<PackageReference Include="MySql.Data" Version="8.0.20" PrivateAssets="All" />
+		<PackageReference Include="NetTopologySuite" Version="2.0.0" PrivateAssets="All" />
+		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" PrivateAssets="All" />
+		<PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" />
+		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" PrivateAssets="All" />
+		<PackageReference Include="Stubble.Core" Version="1.8.4" />
+		<PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.0" PrivateAssets="All" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" PrivateAssets="All" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" />
-    <PackageReference Include="jose-jwt" Version="2.5.0" PrivateAssets="All" />
-    <PackageReference Include="log4net" Version="2.0.8">
-	  </PackageReference>
-	  <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" PrivateAssets="All" />
-	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
-	  <PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
-	  <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
-	  <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-	  <PackageReference Include="MySql.Data" Version="6.10.6" PrivateAssets="All">
-	  </PackageReference>
-	  <PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All">  
-	  </PackageReference>
-	  <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" />
-	  <PackageReference Include="System.DirectoryServices" Version="4.7.0"  PrivateAssets="All" />
-  </ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />

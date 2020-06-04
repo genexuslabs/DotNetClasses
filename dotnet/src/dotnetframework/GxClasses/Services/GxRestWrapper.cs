@@ -53,7 +53,10 @@ namespace GeneXus.Application
 			AddHeader("Content-type", "application/json; charset=utf-8"); //MediaTypesNames.ApplicationJson);
 			RunAsMain = true;
 		}
-		
+		protected virtual GXBaseObject Worker
+		{
+			get { return _procWorker; }
+		}
 		public virtual void Cleanup()
 		{
 			if (RunAsMain)
@@ -223,7 +226,11 @@ namespace GeneXus.Application
 		}
 		public Task SetError(string code, string message)
 		{
-			return HttpHelper.SetResponseStatusAndJsonErrorAsync(_httpContext, code, message);
+			return SetError(_httpContext, code, message);
+		}
+		public static Task SetError(HttpContext context, string code, string message)
+		{
+			return HttpHelper.SetResponseStatusAndJsonErrorAsync(context, code, message);
 		}
 		public bool IsAuthenticated(string synchronizer)
 		{
@@ -260,7 +267,7 @@ namespace GeneXus.Application
 		}
 		public bool IsAuthenticated()
 		{
-			return IsAuthenticated(_procWorker.IntegratedSecurityLevel2, _procWorker.IntegratedSecurityEnabled2, _procWorker.ExecutePermissionPrefix2);
+			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
 		}
 		private bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{
@@ -359,15 +366,19 @@ namespace GeneXus.Application
 		protected bool ProcessHeaders(string queryId)
 		{
 			var headers = GetHeaders();
-			String language = null, etag = null;
+			String language = null, theme=null, etag = null;
 			if (headers != null)
 			{
 				language = headers["GeneXus-Language"];
+				theme = headers["GeneXus-Theme"];
 				etag = headers["If-Modified-Since"];
 			}
 
 			if (!string.IsNullOrEmpty(language))
 				_gxContext.SetLanguage(language);
+
+			if (!string.IsNullOrEmpty(theme))
+				_gxContext.SetTheme(theme);
 
 			DateTime dt = HTMLDateToDatetime(etag);
 			DateTime newDt;

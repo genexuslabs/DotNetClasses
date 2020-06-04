@@ -25,8 +25,8 @@ using System.Web;
 using GeneXus.Data;
 using GeneXus.Encryption;
 
-#if !NETCORE
 using System.DirectoryServices;
+#if !NETCORE
 using TZ4Net;
 #endif
 using GeneXus.Cryptography;
@@ -2549,21 +2549,29 @@ namespace GeneXus.Utils
 		}
 		public static string TToC2(DateTime dt)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss");
+			return TToC2(dt, true);
+		}
+		public static string TToC2(DateTime dt, bool toUTC)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss", toUTC);
 		}
 
 		public static string TToC3(DateTime dt)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff");
+			return TToC3(dt, true);
+		}
+		public static string TToC3(DateTime dt, bool toUTC)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff", toUTC);
 		}
 
-		public static string TToCRest(DateTime dt, String nullString, String formatStr)
+		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
 		{
 			if (dt == nullDate)
 				return FormatEmptyDate(nullString);
 			else
 			{
-				DateTime ret = Preferences.useTimezoneFix() ? (GxContext.IsRestService ? toUniversalTime(dt) : dt) : dt;
+				DateTime ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt) : dt) : dt;
 				return ret.ToString(formatStr, CultureInfo.InvariantCulture);
 			}
 		}
@@ -2785,7 +2793,14 @@ namespace GeneXus.Utils
 				if (oldSeparator != "/") cultureInfo.DateTimeFormat.DateSeparator = oldSeparator;
 			}
 		}
-
+		static public DateTime ServerNowMs(IGxContext context, IDataStoreProvider dataStore)
+		{
+			if (dataStore == null)
+				return ServerNowMs(context, new DataStoreHelperBase().getDataStoreName());
+			if (Preferences.useTimezoneFix())
+				return ResetMicroseconds(ConvertDateTime(dataStore.serverNowMs(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+			return ResetMicroseconds(dataStore.serverNowMs());
+		}
 		static public DateTime ServerNow(IGxContext context, IDataStoreProvider dataStore)
 		{
 			if (dataStore == null)
@@ -2797,6 +2812,12 @@ namespace GeneXus.Utils
 #if !NETCORE
 		[Obsolete("ServerNow with string dataSource is deprecated, use ServerNow(IGxContext context, Data.NTier.IDataStoreProvider dataStore) instead", false)]
 #endif
+		static public DateTime ServerNowMs(IGxContext context, string dataSource)
+		{
+			if (Preferences.useTimezoneFix())
+				return ResetMicroseconds( ConvertDateTime(context.ServerNowMs(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+			return ResetMicroseconds(context.ServerNowMs(dataSource));
+		}
 		static public DateTime ServerNow(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
@@ -3508,6 +3529,39 @@ namespace GeneXus.Utils
 				blobPath = RelativePath(blobPath);
 				return StringUtil.ReplaceLast(blobPath, fileName, Uri.EscapeUriString(fileName));
 			}
+		}
+		public static bool AbsoluteUri(string fileName, out Uri result)
+		{
+			result = null;
+			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			{
+				return true;
+			}
+			else
+			{
+				Uri relative;
+				if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
+				{
+					if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
+					{
+						int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
+						if (idx >= 0)
+						{
+							fileName = fileName.Substring(idx);
+							Uri localRelative;
+							if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
+								relative = localRelative;
+						}
+					}
+
+					if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
+					{
+						return true;
+					}
+				}
+				return false; ;
+			}
+
 		}
 
 		public static string RelativePath(string blobPath)
@@ -4316,8 +4370,6 @@ namespace GeneXus.Utils
 				return string.Empty;
 		}
 
-#if !NETCORE
-
 		public static GxStringCollection DefaultWebUser(IGxContext cntxt)
 		{
 			if (Environment.OSVersion.Version.Major >= 6)
@@ -4336,9 +4388,13 @@ namespace GeneXus.Utils
 		const string APPPOOL_IDENTITY_TYPE_NETWORKSERVICE = "2";//The application pool runs as NetworkService.
 		const string APPPOOL_IDENTITY_TYPE_SPECIFICUSER = "3";//The application pool runs as a specified user account.
 		const string APPPOOL_IDENTITY_TYPE_APPPOOL = "4";//The application pool runs as a Application Pool identity.
+#if NETCORE
+		const string IDENTITY_NETCORE_APPPOOL = @"IIS AppPool\NetCore";
+#else
 		const string IDENTITY_INTEGRATED_APPPOOL_FW40 = @"IIS APPPOOL\ASP.NET v4.0";
 		const string IDENTITY_INTEGRATED_APPPOOL_FW35 = @"IIS AppPool\DefaultAppPool";
 		const string IDENTITY_CLASSIC_APPPOOL = @"IIS AppPool\Classic .NET AppPool";
+#endif
 		const string IDENTITY_NETWORK_SERVICE = @"NT AUTHORITY\NETWORK SERVICE";
 		const string IDENTITY_LOCAL_SERVICE = @"NT AUTHORITY\LOCAL SERVICE";
 
@@ -4355,9 +4411,13 @@ namespace GeneXus.Utils
 					switch (AppPoolIdentityType)
 					{
 						case APPPOOL_IDENTITY_TYPE_APPPOOL:
+#if NETCORE
+							usernames.Add(IDENTITY_NETCORE_APPPOOL);
+#else
 							usernames.Add(IDENTITY_CLASSIC_APPPOOL);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
+#endif
 							break;
 						case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
 						case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
@@ -4380,9 +4440,13 @@ namespace GeneXus.Utils
 
 			if (usernames.Count == 0)
 			{
+#if NETCORE
+				usernames.Add(IDENTITY_NETCORE_APPPOOL);
+#else
 				usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 				usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
 				usernames.Add(IDENTITY_CLASSIC_APPPOOL);
+#endif
 				usernames.Add(IDENTITY_NETWORK_SERVICE);
 				usernames.Add(IDENTITY_LOCAL_SERVICE);
 			}
@@ -4391,12 +4455,16 @@ namespace GeneXus.Utils
 
 		private static DirectoryEntry GetAppPoolEntry()
 		{
+#if NETCORE
+			DirectoryEntry Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/NetCore");
+#else
 			DirectoryEntry Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/ASP.NET v4.0");
 			if (Entry == null)
 				Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/DefaultAppPool");
+#endif
 			return Entry;
 		}
-#endif
+
 #if NETCORE
         private static string WrkSt(IGxContext gxContext, object httpContext)
 
@@ -4721,7 +4789,7 @@ namespace GeneXus.Utils
 					{
 						if (GXProcessHelper.ProcessFactory != null)
 						{
-							GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
+							exitCode = GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
 							return true;
 						}
 						else

@@ -147,6 +147,7 @@ namespace GeneXus.Application
 		string GetSoapErrMsg();
 		bool isRemoteGXDB();
 		DateTime ServerNow(string dataSource);
+		DateTime ServerNowMs(string dataSource);
 		string ServerVersion(string dataSource);
 		string DataBaseName(string dataSource);
 		void SetProperty(string key, string value);
@@ -176,6 +177,7 @@ namespace GeneXus.Application
 		string GetReferer();
 		int GetBrowserType();
 		bool IsLocalStorageSupported();
+		bool ExposeMetadata();
 		string GetBrowserVersion();
 		short GetHttpSecure();
 		string GetCookie(string name);
@@ -1340,6 +1342,11 @@ namespace GeneXus.Application
 			IGxDataStore dstore = GetDataStore(dataSource);
 			return (dstore.DateTime);
 		}
+		public DateTime ServerNowMs(string dataSource)
+		{
+			IGxDataStore dstore = GetDataStore(dataSource);
+			return (dstore.DateTimeMs);
+		}
 		public string ServerVersion(string dataSource)
 		{
 			IGxDataStore dstore = GetDataStore(dataSource);
@@ -1755,7 +1762,10 @@ namespace GeneXus.Application
 			}
 			return false;
 		}
-
+		public bool ExposeMetadata()
+		{
+			return Preferences.ExposeMetadata;
+		}
 		public bool IsLocalStorageSupported()
 		{
 			bool supported = String.IsNullOrEmpty(this.GetCookie("GXLocalStorageSupport"));
@@ -2055,7 +2065,7 @@ namespace GeneXus.Application
 				if (PathUtil.IsAbsoluteUrl(StaticContentBase))
 					return StaticContentBase + fout;
 				else
-					return GetContextPath() + StaticContentBase + fout;
+					return GetScriptPath() + StaticContentBase + fout;
 			}
 			else
 				return file;
@@ -3477,7 +3487,10 @@ namespace GeneXus.Application
 			if (ret != null)
 				return ret;
 			else
+			{
+				GXLogging.Debug(log, "Image not found at Images.txt. Image id:",  () => KBId + id + " language:" + lang + " theme:" + theme);
 				return id;
+			}
 		}
 		public string GetImageSrcSet(string baseImage)
 		{
