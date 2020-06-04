@@ -422,6 +422,7 @@ namespace GeneXus.Data
 		}
 
 		static DateTime MYSQL_NULL_DATE = new DateTime(1000, 1, 1);
+#if !NETCORE
 		public override Guid GetGuid(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
 			
@@ -435,6 +436,7 @@ namespace GeneXus.Data
 				return Guid.Empty;
 			}
 		}
+#endif
 		public override IGeographicNative GetGeospatial(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
 			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
