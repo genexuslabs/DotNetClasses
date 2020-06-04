@@ -97,7 +97,11 @@ namespace GeneXus.Data
 		}
         private void ParseMySqlException(Exception ex)
         {
-            MySqlException mysqlEx = (MySqlException)ex;
+			MySqlException mysqlEx = (MySqlException)ex;
+			if (mysqlEx.Number == 0 && ex.InnerException != null && ex.InnerException is MySqlException)
+			{
+				mysqlEx = ex.InnerException as MySqlException;
+			}
             m_sErrorInfo = mysqlEx.Message;
             m_sDBMSErrorInfo = mysqlEx.Message;
             m_iErrorCode = (int)mysqlEx.Number;
