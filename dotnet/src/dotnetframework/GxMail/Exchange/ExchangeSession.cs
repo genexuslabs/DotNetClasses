@@ -198,7 +198,6 @@ namespace GeneXus.Mail.Exchange
                 try
                 {
                     email.SendAndSaveCopy(WellKnownFolderName.SentItems);
-					FetchEntireMessage(email, gxmessage);
 				}
                 catch (Exception e)
                 {

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using System;
+using System.IO;
 using System.Text;
 
 namespace GeneXus.Utils
@@ -11,6 +12,11 @@ namespace GeneXus.Utils
 		public HtmlTextWriter(HttpContext context) {
 			_context = context;
 		}
+		public HtmlTextWriter(StringWriter writer)
+		{
+			_stream = writer.GetStringBuilder();
+		}
+
 		public void WriteLine(string s) {
 			Write(s + Environment.NewLine);
 		}
