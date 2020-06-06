@@ -4,13 +4,13 @@ using log4net;
 using System;
 using System.Text;
 using System.Data;
+using System.Data.Common;
 #if NETCORE
 using Microsoft.Data.SqlClient;
 using SQLiteParameter = Microsoft.Data.Sqlite.SqliteParameter;
 using SQLiteCommand = Microsoft.Data.Sqlite.SqliteCommand;
 using SQLiteConnection = Microsoft.Data.Sqlite.SqliteConnection;
 #else
-using System.Data.Common;
 using System.Data.SQLite;
 using System.Data.SqlClient;
 #endif
@@ -61,7 +61,13 @@ namespace GeneXus.Data
 		{
 			return new SQLiteDataAdapter();
 		}
+#else
+		public override DbDataAdapter CreateDataAdapeter()
+		{
+			throw new NotImplementedException();
+		}
 #endif
+
 		internal override object CloneParameter(IDbDataParameter p)
 		{
 			return ((ICloneable)p).Clone();
@@ -323,6 +329,11 @@ namespace GeneXus.Data
 		public override DbDataAdapter CreateDataAdapter()
 		{
 			return new SQLiteDataAdapter();
+		}
+#else
+		public override DbDataAdapter CreateDataAdapter()
+		{
+			throw new NotImplementedException();
 		}
 #endif
 

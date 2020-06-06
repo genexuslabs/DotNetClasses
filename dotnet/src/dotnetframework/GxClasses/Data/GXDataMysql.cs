@@ -8,6 +8,7 @@ using MySQLParameter = MySql.Data.MySqlClient.MySqlParameter;
 using MySQLConnection = MySql.Data.MySqlClient.MySqlConnection;
 using MySQLException = MySql.Data.MySqlClient.MySqlException;
 using MySQLDbType = MySql.Data.MySqlClient.MySqlDbType;
+using MySQLDataAdapter = MySql.Data.MySqlClient.MySqlDataAdapter;
 using System.IO;
 using GxClasses.Helpers;
 using System.Reflection;
@@ -214,12 +215,11 @@ namespace GeneXus.Data
 
             }
         }
-#else
-        public override DbDataAdapter CreateDataAdapeter()
+#endif
+		public override DbDataAdapter CreateDataAdapeter()
 		{
 			return new MySQLDataAdapter();
 		}
-#endif
         public override IDataReader GetDataReader(
 			IGxConnectionManager connManager,
 			IGxConnection con,
@@ -535,12 +535,10 @@ namespace GeneXus.Data
 
 			return sc.CreateCommand();
 		}
-#if !NETCORE
 		public override DbDataAdapter CreateDataAdapter()
 		{
 			throw new GxNotImplementedException();
 		}
-#endif
 		public override short SetSavePoint(IDbTransaction transaction, string savepointName)
 		{
 			
