@@ -8,6 +8,7 @@ using MySQLParameter = MySql.Data.MySqlClient.MySqlParameter;
 using MySQLConnection = MySql.Data.MySqlClient.MySqlConnection;
 using MySQLException = MySql.Data.MySqlClient.MySqlException;
 using MySQLDbType = MySql.Data.MySqlClient.MySqlDbType;
+using MySQLDataAdapter = MySql.Data.MySqlClient.MySqlDataAdapter;
 using System.IO;
 using GxClasses.Helpers;
 using System.Reflection;
@@ -206,20 +207,19 @@ namespace GeneXus.Data
                 case DbType.Int64:
                     return MySQLDbType.Int64;
                 case DbType.Single:
-                    return MySQLDbType.Float;
-                case DbType.Time:
+                    return MySQLDbType.Decimal;
+				case DbType.Time:
                     return MySQLDbType.Time;
                 default:
                     return MySQLDbType.Int16;
 
             }
         }
-#else
-        public override DbDataAdapter CreateDataAdapeter()
+#endif
+		public override DbDataAdapter CreateDataAdapeter()
 		{
 			return new MySQLDataAdapter();
 		}
-#endif
         public override IDataReader GetDataReader(
 			IGxConnectionManager connManager,
 			IGxConnection con,
@@ -422,6 +422,7 @@ namespace GeneXus.Data
 		}
 
 		static DateTime MYSQL_NULL_DATE = new DateTime(1000, 1, 1);
+#if !NETCORE
 		public override Guid GetGuid(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
 			
@@ -435,6 +436,7 @@ namespace GeneXus.Data
 				return Guid.Empty;
 			}
 		}
+#endif
 		public override IGeographicNative GetGeospatial(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
 			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
@@ -449,6 +451,20 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
+#if NETCORE
+		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
+		{
+			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
+				return string.Empty;
+			else
+			{
+				string value = DR.GetString(i);
+				if (value != null && value.Length < size)
+					value = value.PadRight(size);
+				return value;
+			}
+		}
+#endif
 		public override void SetParameter(IDbDataParameter parameter, object value)
 		{
 			if (value is Guid)
@@ -519,12 +535,10 @@ namespace GeneXus.Data
 
 			return sc.CreateCommand();
 		}
-#if !NETCORE
 		public override DbDataAdapter CreateDataAdapter()
 		{
 			throw new GxNotImplementedException();
 		}
-#endif
 		public override short SetSavePoint(IDbTransaction transaction, string savepointName)
 		{
 			
@@ -563,6 +577,8 @@ namespace GeneXus.Data
 			MySQLCommand cmd = (MySQLCommand)dr.GetCommand(con, stmt, parameters);
 #if !NETCORE
             cmd.UsePreparedStatement = preparedStmts;
+#else
+			cmd.Prepare();
 #endif
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
@@ -630,6 +646,7 @@ namespace GeneXus.Data
 			return res;
 
 		}
+		
 
 	}
 

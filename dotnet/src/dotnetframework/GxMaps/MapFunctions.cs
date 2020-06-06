@@ -113,7 +113,7 @@ namespace GeneXus.MapServices
 		{
 			AddObjectProperty("Location", Location, false);
 			AddObjectProperty("Description", Description, false);
-			String STime = GeneXus.Utils.DateTimeUtil.TToC2(Time);
+			String STime = GeneXus.Utils.DateTimeUtil.TToC2(Time, false);
 			AddObjectProperty("Time", STime, false);
 			AddObjectProperty("Precision", Precision, false);
 			AddObjectProperty("Heading", Heading, false);

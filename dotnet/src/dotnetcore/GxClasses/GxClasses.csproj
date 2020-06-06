@@ -140,7 +140,7 @@
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" PrivateAssets="All" />
-		<PackageReference Include="MySql.Data" Version="6.10.6" PrivateAssets="All" />
+		<PackageReference Include="MySql.Data" Version="8.0.20" PrivateAssets="All" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" PrivateAssets="All" />
 		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" PrivateAssets="All" />
 		<PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All" />

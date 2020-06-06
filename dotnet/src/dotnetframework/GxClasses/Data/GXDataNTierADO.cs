@@ -263,7 +263,7 @@ namespace GeneXus.Data.NTier.ADO
 		}
         public string getString(int id, int size)
         {
-            String value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1);
+            String value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1, size);
 			GXLogging.Trace(log, "getString - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}

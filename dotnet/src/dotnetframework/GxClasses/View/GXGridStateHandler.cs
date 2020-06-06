@@ -62,6 +62,17 @@ namespace GeneXus.WebControls
 				state.CurrentPage = value;
 			}
 		}
+		public short OrderedBy
+		{
+			get
+			{
+				return state.OrderedBy;
+			}
+			set
+			{
+				state.OrderedBy = value;
+			}
+		}
 		public GxUserType State {
 			get {
 				if (dirty || exposedSdtGridState==null)
