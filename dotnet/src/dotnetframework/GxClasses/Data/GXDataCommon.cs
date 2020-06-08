@@ -11,7 +11,6 @@ using GeneXus.Configuration;
 using GeneXus.Utils;
 #if !NETCORE
 using ConnectionBuilder;
-using System.Data.Common;
 using System.Data.SqlClient;
 #else
 using Microsoft.Data.SqlClient;
@@ -25,6 +24,7 @@ using System.Net;
 using GeneXus.Http;
 using System.Globalization;
 using GeneXus.Metadata;
+using System.Data.Common;
 
 namespace GeneXus.Data
 {
@@ -662,7 +662,7 @@ namespace GeneXus.Data
 			return parameter;
 			
 		}
-#if !NETCORE
+
         public abstract DbDataAdapter CreateDataAdapeter();
 		public virtual bool SupportUpdateBatchSize
 		{
@@ -710,25 +710,7 @@ namespace GeneXus.Data
         {
             return da.Adapter.Update(da.DataTable);
         }
-#else
-        public virtual DbDataAdapterElem GetDataAdapter(IGxConnection con, string stmt, int batchSize, string stmtId)
-        {
-            return null;
-        }
-        public virtual DbDataAdapterElem GetDataAdapter(IGxConnection con, string stmt, GxParameterCollection parameters)
-        {
-            return null;
-        }
-        protected virtual DbDataAdapterElem GetCachedDataAdapter(IGxConnection con, string stmt)
-        {
-            return null;
-        }
-        public virtual int BatchUpdate(DbDataAdapterElem da)
-        {
-            return 0;
-        }
 
-#endif
 		public virtual bool IsBlobType(IDbDataParameter idbparameter)
 		{
 			return idbparameter.DbType == DbType.Binary;
@@ -1075,12 +1057,6 @@ namespace GeneXus.Data
 		public virtual void SetCursorDef(CursorDef cursorDef)
 		{
 		}
-#if NETCORE
-		public void SetAdapterInsertCommand(DbDataAdapterElem da, IGxConnection con, string stmt, GxParameterCollection parameters)
-		{
-			throw new NotImplementedException();
-		}
-#endif
 		private static readonly string[] ConcatOpValues = new string[] { "CONCAT(", ", ", ")" };
 		public virtual string ConcatOp(int pos)
 		{
@@ -1095,8 +1071,6 @@ namespace GeneXus.Data
 
 	public class DbDataAdapterElem
     {
-#if !NETCORE
-
         public DbDataAdapterElem(DbDataAdapter adapter, DataTable table, int updateBatchSize)
         {
             Adapter = adapter;
@@ -1119,9 +1093,6 @@ namespace GeneXus.Data
         public DbDataAdapter Adapter;
         public DataTable DataTable;
 		public int UpdateBatchSize;
-#else
-        public void Clear() { }
-#endif
     }
 	public class SqlUtil
 	{
@@ -1598,25 +1569,7 @@ namespace GeneXus.Data
 		}
 		internal override object CloneParameter(IDbDataParameter p)
 		{
-#if NETCORE
-			SqlParameter p1 = p as SqlParameter;
-			SqlParameter pcopy = new SqlParameter()
-			{
-				DbType = p1.DbType,
-				Direction = p1.Direction,
-				IsNullable = p1.IsNullable,
-				ParameterName = p1.ParameterName,
-				Precision = p1.Precision,
-				Scale = p1.Scale,
-				Size = p1.Size,
-				SqlDbType = p1.SqlDbType,
-				SqlValue = p1.SqlValue,
-				Value = p1.Value
-			};
-			return pcopy;
-#else
 			return ((ICloneable)p).Clone();
-#endif
 		}
 		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
@@ -1630,12 +1583,10 @@ namespace GeneXus.Data
 				return base.GetCachedCommand(con, stmt);
 			}
 		}
-#if !NETCORE
 		public override DbDataAdapter CreateDataAdapeter()
         {
             return new SqlDataAdapter();
         }
-#endif
         public override bool MultiThreadSafe
 		{
 			get
@@ -2529,7 +2480,6 @@ namespace GeneXus.Data
 			preparedStmtCache[stmt]=s;
 
 		}
-#if !NETCORE
         public void AddDataAdapter(string stmt, DbDataAdapterElem adapter)
         {
 			if (!dataAdapterCache.ContainsKey(stmt))
@@ -2538,7 +2488,6 @@ namespace GeneXus.Data
 				dataAdapterCacheQueue.Add(adapter);
 			}
         }
-#endif
 
 		public void AddPreparedCommand(string  stmt, IDbCommand cmd)
 		{
@@ -4003,12 +3952,10 @@ namespace GeneXus.Data
 				throw new InvalidOperationException("InvalidConnType00" + InternalConnection.GetType().FullName);
 			return sc.CreateCommand();
 		}
-#if !NETCORE
 		public override DbDataAdapter CreateDataAdapter()
 		{
 			return new SqlDataAdapter();
 		}
-#endif
 		public override bool IsSQLServer7()
 		{
 
@@ -4156,9 +4103,7 @@ namespace GeneXus.Data
 		}
 
 		abstract public IDbCommand CreateCommand();
-#if !NETCORE
 		abstract public DbDataAdapter CreateDataAdapter();
-#endif
 		public virtual bool IsSQLServer7()
 		{
 			return false;

@@ -336,7 +336,6 @@ namespace GeneXus.Data
 		{
 			return (IDbDataParameter)ClassLoader.CreateInstance(OdpAssembly, "Oracle.DataAccess.Client.OracleParameter");
 		}
-#if !NETCORE
 		public override int BatchUpdate(DbDataAdapterElem da)
 		{
 			DataRowCollection rows = da.DataTable.Rows;
@@ -392,7 +391,6 @@ namespace GeneXus.Data
 			Type odpAdapter = OdpAssembly.GetType("Oracle.DataAccess.Client.OracleDataAdapter");
 			return (DbDataAdapter)Activator.CreateInstance(odpAdapter);
 		}
-#endif
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(OdpAssembly, "Oracle.DataAccess.Client.OracleParameter");
@@ -642,7 +640,6 @@ namespace GeneXus.Data
 		{
 			return (IDbDataParameter)ClassLoader.CreateInstance(OdpAssembly, "Oracle.ManagedDataAccess.Client.OracleParameter");
 		}
-#if !NETCORE
 		public override int BatchUpdate(DbDataAdapterElem da)
 		{
 			DataRowCollection rows = da.DataTable.Rows;
@@ -698,7 +695,6 @@ namespace GeneXus.Data
 			Type odpAdapter = OdpAssembly.GetType("Oracle.ManagedDataAccess.Client.OracleDataAdapter");
 			return (DbDataAdapter)Activator.CreateInstance(odpAdapter);
 		}
-#endif
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(OdpAssembly, "Oracle.ManagedDataAccess.Client.OracleParameter");
@@ -719,6 +715,7 @@ namespace GeneXus.Data
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Long");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Varchar2");
 				case GXType.DateTime: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Date");
+				case GXType.DateTime2: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "TimeStamp");
 				default: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, type.ToString());
 			}
 		}
@@ -985,6 +982,10 @@ namespace GeneXus.Data
 		{
 			return null;
 		}
+		public override DbDataAdapter CreateDataAdapeter()
+		{
+			throw new NotImplementedException();
+		}
 #endif
 		public override IDataReader GetDataReader(
 			IGxConnectionManager connManager,
@@ -1149,7 +1150,7 @@ namespace GeneXus.Data
 		}
 		public override string GetServerDateTimeStmtMs(IGxConnection connection)
 		{
-			return "SELECT SYSDATE(3) FROM DUAL";
+			return "SELECT SYSTIMESTAMP FROM DUAL";
 		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
@@ -1557,12 +1558,10 @@ namespace GeneXus.Data
 			ClassLoader.SetPropValue(cmd, "BindByName", true);
 			return cmd;
 		}
-#if !NETCORE
 		public override DbDataAdapter CreateDataAdapter()
 		{
 			return (DbDataAdapter)ClassLoader.CreateInstance(GxODPOracle.OdpAssembly, "Oracle.DataAccess.Client.OracleDataAdapter");
 		}
-#endif
 		public override short SetSavePoint(IDbTransaction transaction, string savepointName)
 		{
 			ClassLoader.Invoke(transaction, "Save", new object[] { savepointName });
@@ -1653,12 +1652,10 @@ namespace GeneXus.Data
 			ClassLoader.SetPropValue(cmd, "BindByName", true);
 			return cmd;
 		}
-#if !NETCORE
 		public override DbDataAdapter CreateDataAdapter()
 		{
 			return (DbDataAdapter)ClassLoader.CreateInstance(GxODPManagedOracle.OdpAssembly, "Oracle.ManagedDataAccess.Client.OracleDataAdapter");
 		}
-#endif
 		public override short SetSavePoint(IDbTransaction transaction, string savepointName)
 		{
 			ClassLoader.Invoke(transaction, "Save", new object[] { savepointName });

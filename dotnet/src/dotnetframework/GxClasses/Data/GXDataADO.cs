@@ -546,7 +546,6 @@ namespace GeneXus.Data.ADO
 
 		public void BeforeCommit()
 		{
-#if !NETCORE
 			ICollection adapters = ConnectionCache.GetDataAdapters();
 			foreach (DbDataAdapterElem elem in adapters)
 			{
@@ -557,12 +556,10 @@ namespace GeneXus.Data.ADO
 				}
 				elem.DataTable.Rows.Clear();
 			}
-#endif
 		}
 
 		public void BeforeRollback()
 		{
-#if !NETCORE
 			ICollection adapters = ConnectionCache.GetDataAdapters();
 			foreach (DbDataAdapterElem elem in adapters)
 			{
@@ -571,7 +568,6 @@ namespace GeneXus.Data.ADO
 					elem.DataTable.Rows.Clear();
 				}
 			}
-#endif
 		}
 
         public IDbTransaction commitTransaction()
@@ -1596,7 +1592,6 @@ namespace GeneXus.Data.ADO
 
 		public string ExecuteDataSet()
 		{
-#if !NETCORE
 			bool retry = true;
 			int retryCount=0;
 			while (retry)
@@ -1636,7 +1631,6 @@ namespace GeneXus.Data.ADO
 					}
 				}
 			}
-#endif
 			return "";
 		}
 
@@ -1776,21 +1770,24 @@ namespace GeneXus.Data.ADO
 				return parms; 
 		}
 #endif
-        public int ExecuteBatchQuery()
+		public int ExecuteBatchQuery()
         {
-#if !NETCORE
             try
             {
                 int res = 0;
                 if (da != null)
                 {
-                    GXLogging.Debug(log, "Start GxCommand.ExecuteBatchQuery: Parameters ", DatatableParameters);
-                    con = GxConnectionManager.Instance.SetAvailable(handle, dataRecord.DataSource, false);
+#if !NETCORE
+					GXLogging.Debug(log, "Start GxCommand.ExecuteBatchQuery: Parameters ", DatatableParameters);
+#endif
+					con = GxConnectionManager.Instance.SetAvailable(handle, dataRecord.DataSource, false);
                     con.CurrentStmt = stmt;
                     con.MonitorEnter();
 					con.InternalConnection.SetSavePoint(Transaction, stmtId);
 					dataRecord.SetAdapterInsertCommand(da, con, stmt, parameters);
-                    da.Adapter.ContinueUpdateOnError = false;
+#if !NETCORE
+					da.Adapter.ContinueUpdateOnError = false;
+#endif
                     res = dataRecord.BatchUpdate(da);
 
 					con.InternalConnection.ReleaseSavePoint(Transaction, stmtId);
@@ -1821,10 +1818,6 @@ namespace GeneXus.Data.ADO
                     errorRecordIndex = -1;
                 }
             }
-#else
-            errorRecords = new List<object>();
-            return 0;
-#endif
         }
 
         public int ReadNextErrorRecord()
@@ -1977,18 +1970,14 @@ namespace GeneXus.Data.ADO
 		}
         public void OnCommitEvent(object instance, string method)
         {
-#if !NETCORE
             if (da != null)
             {
                 da.OnCommitEventInstance = instance;
                 da.OnCommitEventMethod = method;
             }
-#endif
         }
         public void AddRecord(Object[] execParms)
         {
-#if !NETCORE
-
             if (da != null)
             {
 				int parameterCount = parameters.Count;
@@ -2012,7 +2001,6 @@ namespace GeneXus.Data.ADO
                 da.BlockValues.Add(parms);
                 da.DataTable.Rows.Add(parms);
             }
-#endif
         }
 
 		private string OriginalCmd = null;
@@ -2263,25 +2251,17 @@ namespace GeneXus.Data.ADO
 		{
             get
             {
-#if !NETCORE
                 if (da != null) return da.UpdateBatchSize;
                 else return 0;
-#else
-                return 0;
-#endif
             }
 		}
         public int RecordCount
         {
             get
             {
-#if !NETCORE
                 if (da != null && da.DataTable.Rows != null)
                     return da.DataTable.Rows.Count;
                 else return 0;
-#else
-                return 0;
-#endif
             }
         }
         public int BlockSize

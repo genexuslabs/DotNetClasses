@@ -135,12 +135,10 @@ namespace GeneXus.Data
 			parm.ParameterName = name;
 			return parm;
 		}
-#if !NETCORE
         public override DbDataAdapter CreateDataAdapeter()
 		{
 			return new NpgsqlDataAdapter();
 		}
-#endif
 #if NETCORE
 		public override bool MultiThreadSafe
 		{
@@ -418,12 +416,10 @@ namespace GeneXus.Data
 				throw new DataException(ex.Message, ex);
 			}
 		}
-#if !NETCORE
         public override DbDataAdapter CreateDataAdapter()
 		{
 			throw new GxNotImplementedException();
 		}
-#endif
 		override public IDbCommand CreateCommand()
 		{
 			NpgsqlConnection sc = InternalConnection as NpgsqlConnection;

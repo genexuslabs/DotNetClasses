@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using log4net;
 using GeneXus;
 using Microsoft.Extensions.DependencyModel.Resolution;
+using System.Collections.Concurrent;
 
 namespace GxClasses.Helpers
 {
@@ -99,7 +100,7 @@ namespace GxClasses.Helpers
 	}
 	public class AssemblyLoader : AssemblyLoadContext
 	{
-		static Dictionary<string, Assembly> loadedAssemblies = new Dictionary<string, Assembly>(); 
+		static ConcurrentDictionary<string, Assembly> loadedAssemblies = new ConcurrentDictionary<string, Assembly>(); 
 		private string folderPath;
 
 		public AssemblyLoader(string folderPath)

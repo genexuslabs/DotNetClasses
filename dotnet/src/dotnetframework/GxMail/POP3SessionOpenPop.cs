@@ -9,6 +9,7 @@ using System.Net.Mail;
 using System.IO;
 using GeneXus.Utils;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace GeneXus.Mail
 {
@@ -90,7 +91,16 @@ namespace GeneXus.Mail
             return uIds[lastReadMessage + 1];
         }
 
-        public void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage)
+		internal static bool HasCROrLF(string data)
+		{
+			for (int index = 0; index < data.Length; ++index)
+			{
+				if (data[index] == '\r' || data[index] == '\n')
+					return true;
+			}
+			return false;
+		}
+		public void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage)
         {
             if (client == null)
             {
@@ -103,57 +113,78 @@ namespace GeneXus.Mail
                 LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages);
                 return;
             }
+			try {
+				if (count > lastReadMessage)
+				{
+					Message m = null;
+					try
+					{
+						m = client.GetMessage(++lastReadMessage);
+					}
+					catch (Exception e)
+					{
+						LogError("Receive message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e);
+					}
 
-            if (count > lastReadMessage)
-            {
-                Message m = null;
-                try
-                {
-                    m = client.GetMessage(++lastReadMessage);
-                }
-                catch (Exception e)
-                {
-                    LogError("Receive message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e);
-                }
-
-                if (m != null)
-                {					
-                    using (MailMessage msg = m.ToMailMessage())
-                    {
-                        gxmessage.From = new GXMailRecipient(msg.From.DisplayName, msg.From.Address);
-                        SetRecipient(gxmessage.To, msg.To);
-                        SetRecipient(gxmessage.CC, msg.CC);
-                        gxmessage.Subject = msg.Subject;
-                        if (msg.IsBodyHtml)
-                        {
-                            gxmessage.HTMLText = msg.Body;
-							MessagePart plainText = m.FindFirstPlainTextVersion();
-							if (plainText != null)
-							{
-								gxmessage.Text += plainText.GetBodyAsText();
-							}
-                        }
-                        else
-                        {
-                            gxmessage.Text = msg.Body;
-                        }
-                        if (msg.ReplyToList != null && msg.ReplyToList.Count>0)
-                        {
-                            SetRecipient(gxmessage.ReplyTo, msg.ReplyToList);
-                        }
-
-						gxmessage.DateSent = m.Headers.DateSent;
-						if (gxmessage.DateSent.Kind == DateTimeKind.Utc && GeneXus.Application.GxContext.Current != null)
+					if (m != null)
+					{
+						MailMessage msg;
+						try
 						{
-							gxmessage.DateSent = DateTimeUtil.FromTimeZone(m.Headers.DateSent, "Etc/UTC", GeneXus.Application.GxContext.Current);
+							msg = m.ToMailMessage();
 						}
-                        gxmessage.DateReceived = GeneXus.Mail.Internals.Pop3.MailMessage.GetMessageDate(m.Headers.Date);
-                        AddHeader(gxmessage, "DispositionNotificationTo", m.Headers.DispositionNotificationTo.ToString());       
-                        ProcessMailAttachments(gxmessage, m.FindAllAttachments());                       
-                    }
-                }
-            }
-        }
+						catch (ArgumentException ae)
+						{
+							GXLogging.Error(log, "Receive message error " + ae.Message + " subject:" + m.Headers.Subject, ae);
+							PropertyInfo subjectProp = m.Headers.GetType().GetProperty("Subject");
+							string subject = m.Headers.Subject;
+							if (HasCROrLF(subject))
+							{
+								subjectProp.SetValue(m.Headers, subject.Replace('\r', ' ').Replace('\n', ' '));
+								GXLogging.Warn(log, "Replaced CR and LF in subject " + m.Headers.Subject);
+							}
+							msg = m.ToMailMessage();
+						}
+						using (msg)
+						{
+							gxmessage.From = new GXMailRecipient(msg.From.DisplayName, msg.From.Address);
+							SetRecipient(gxmessage.To, msg.To);
+							SetRecipient(gxmessage.CC, msg.CC);
+							gxmessage.Subject = msg.Subject;
+							if (msg.IsBodyHtml)
+							{
+								gxmessage.HTMLText = msg.Body;
+								MessagePart plainText = m.FindFirstPlainTextVersion();
+								if (plainText != null)
+								{
+									gxmessage.Text += plainText.GetBodyAsText();
+								}
+							}
+							else
+							{
+								gxmessage.Text = msg.Body;
+							}
+							if (msg.ReplyToList != null && msg.ReplyToList.Count > 0)
+							{
+								SetRecipient(gxmessage.ReplyTo, msg.ReplyToList);
+							}
+
+							gxmessage.DateSent = m.Headers.DateSent;
+							if (gxmessage.DateSent.Kind == DateTimeKind.Utc && GeneXus.Application.GxContext.Current != null)
+							{
+								gxmessage.DateSent = DateTimeUtil.FromTimeZone(m.Headers.DateSent, "Etc/UTC", GeneXus.Application.GxContext.Current);
+							}
+							gxmessage.DateReceived = GeneXus.Mail.Internals.Pop3.MailMessage.GetMessageDate(m.Headers.Date);
+							AddHeader(gxmessage, "DispositionNotificationTo", m.Headers.DispositionNotificationTo.ToString());
+							ProcessMailAttachments(gxmessage, m.FindAllAttachments());
+						}
+					}
+				}
+            }catch(Exception e)
+			{
+				LogError("Receive message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e);
+			}
+		}
 
         private void ProcessMailAttachments(GXMailMessage gxmessage, List<MessagePart> attachs)
         {
