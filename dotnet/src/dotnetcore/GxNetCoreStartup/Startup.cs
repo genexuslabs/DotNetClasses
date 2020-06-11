@@ -510,8 +510,8 @@ namespace GeneXus.Application
 			if (controller.Contains("\\"))
 			{
 				tmpController = controller.Substring(controller.LastIndexOf("\\") + 1);
-				addNspace = (controller.Contains("\\")) ? controller.Substring(0, controller.LastIndexOf("\\")).Replace("\\", ".") ;
-				asssemblycontroller = (controller.Contains("\\")) ? addNspace + "." + tmpController ;
+				addNspace =  controller.Substring(0, controller.LastIndexOf("\\")).Replace("\\", ".") ;
+				asssemblycontroller = addNspace + "." + tmpController ;
 				nspace += "." + addNspace;
 			}
 			if (File.Exists(Path.Combine(ContentRootPath, $"{asssemblycontroller.ToLower()}.grp.json")))
