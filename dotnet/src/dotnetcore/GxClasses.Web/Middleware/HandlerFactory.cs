@@ -60,6 +60,7 @@ namespace GeneXus.HttpHandlerFactory
 												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20"},
 												{"oauth/gam/v2.0/RequestTokenAndUserinfo","aGAMSSORestRequestTokenAndUserInfo_v20"}};
 		private const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
+		private const string GXFLOW_NSPACE = "GXflow.Programs";
 		private static List<string> GxNamespaces;
 		public HandlerFactory(RequestDelegate next, IOptions<AppSettings> appSettings)
 		{
@@ -153,12 +154,15 @@ namespace GeneXus.HttpHandlerFactory
                 cname = cname.Substring(0, cname.Length - 3);
                 assemblyName = cname;
             }
-
 			string mainNamespace = null;
 			string className;
 			if (cname.StartsWith("agxpl_", StringComparison.OrdinalIgnoreCase) || cname.Equals("gxqueryviewerforsd", StringComparison.OrdinalIgnoreCase))
 			{
 				className = $"{QUERYVIEWER_NAMESPACE}.{cname}";
+			}
+			else if (Preferences.GxpmEnabled && (cname.StartsWith("awf", StringComparison.OrdinalIgnoreCase) || cname.StartsWith("wf", StringComparison.OrdinalIgnoreCase) || cname.StartsWith("apwf", StringComparison.OrdinalIgnoreCase)))
+			{
+				className = $"{GXFLOW_NSPACE}.{cname}";
 			}
 			else
 			{
