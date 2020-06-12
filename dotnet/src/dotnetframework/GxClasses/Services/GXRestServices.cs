@@ -231,20 +231,7 @@ namespace GeneXus.Utils
         //Convert GxUnknownObjectCollection of Object[] to GxUnknownObjectCollection of GxSimpleCollections
         public GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
         {
-            GxUnknownObjectCollection result = new GxUnknownObjectCollection();
-            if (tableHashList != null && tableHashList.Count > 0)
-            {
-                foreach (object[] list in tableHashList)
-                {
-                    GxStringCollection tableHash = new GxStringCollection();
-                    foreach (string data in list)
-                    {
-                        tableHash.Add(data);
-                    }
-                    result.Add(tableHash);
-                }
-            }
-            return result;
+			return GxRestUtil.TableHashList(tableHashList);
         }
 
 		public string EmptyParm(string parmValue)
