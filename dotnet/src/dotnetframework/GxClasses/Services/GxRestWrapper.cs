@@ -23,6 +23,15 @@ using GeneXus.Security;
 namespace GeneXus.Application
 
 {
+	internal static class Synchronizer
+	{
+		internal const string SYNC_METHOD_ALL = "gxAllSync";
+		internal const string SYNC_METHOD_CHECK = "gxCheckSync";
+		internal const string SYNC_METHOD_CONFIRM = "gxconfirmsync";
+		internal const string SYNC_INPUT_PARAMETER = "hashList";
+		internal const string SYNC_EVENT_PARAMETER = "event";
+
+	}
 #if NETCORE
 	public class GxRestWrapper
 #else
@@ -73,12 +82,21 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
+				bool wrapped = true;
+				String innerMethod = EXECUTE_METHOD;
+
 #if NETCORE
 				var bodyParameters = ReadRequestParameters(_httpContext.Request.Body);
 #else
 				var bodyParameters = ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
-				String innerMethod = EXECUTE_METHOD;
+				if (_procWorker.IsSynchronizer2)
+				{
+					innerMethod = SynchronizerMethod();
+					PreProcessSynchronizerParameteres(bodyParameters);
+					wrapped = false;
+				}
+				
 				if (!String.IsNullOrEmpty(this.ServiceMethod))
 				{
 					innerMethod = this.ServiceMethod;
@@ -86,7 +104,7 @@ namespace GeneXus.Application
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, true);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -97,6 +115,43 @@ namespace GeneXus.Application
 				Cleanup();
 
 			}
+		}
+		private void PreProcessSynchronizerParameteres(Dictionary<string, object> bodyParameters)
+		{
+			GxUnknownObjectCollection hashList;
+			if (bodyParameters.ContainsKey(Synchronizer.SYNC_INPUT_PARAMETER))
+				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[Synchronizer.SYNC_INPUT_PARAMETER], typeof(GxUnknownObjectCollection));
+			else
+				hashList = new GxUnknownObjectCollection();
+			bodyParameters[Synchronizer.SYNC_INPUT_PARAMETER] = GxRestUtil.TableHashList(hashList);
+		}
+		private string SynchronizerMethod()
+		{
+			string method = string.Empty;
+			var queryParameters = ReadQueryParameters();
+			string gxevent = string.Empty;
+			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
+				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
+
+			if (string.IsNullOrEmpty(gxevent))
+			{
+				method = Synchronizer.SYNC_METHOD_ALL;
+			}
+			else
+			{
+				if (gxevent.Equals(Synchronizer.SYNC_METHOD_CHECK, StringComparison.OrdinalIgnoreCase))
+				{
+					method = Synchronizer.SYNC_METHOD_CHECK;
+				}
+				else
+				{
+					if (gxevent.Equals(Synchronizer.SYNC_METHOD_CONFIRM, StringComparison.OrdinalIgnoreCase))
+					{
+						method = Synchronizer.SYNC_METHOD_CONFIRM;
+					}
+				}
+			}
+			return method;
 		}
 		public virtual Task Get(object key)
 		{
