@@ -69,7 +69,17 @@ namespace GeneXus.HttpHandlerFactory
 						if (httpVerb !=null && !(requestType.Equals(httpVerb)))
 							   return null;
 					}
-					var handler = ClassLoader.FindInstance(objClass, nspace, objClass, null, null);
+					String tmpController = objClass;
+					String addNspace = "";
+					String asssemblycontroller =  tmpController;
+					if (objClass.Contains("\\"))
+					{
+						tmpController = objClass.Substring(objClass.LastIndexOf("\\") + 1);
+						addNspace =  objClass.Substring(0, objClass.LastIndexOf("\\")).Replace("\\", ".") ;
+						asssemblycontroller = addNspace + "." + tmpController ;
+						nspace += "." + addNspace;
+					}					
+					var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, null, null);
 					var gxContext = new GxContext();
 					GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value);					
 					return restWrapper ;
