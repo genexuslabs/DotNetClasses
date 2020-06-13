@@ -1,13 +1,12 @@
-using GeneXus.Configuration;
-using GeneXus.Metadata;
-using GeneXus.Utils;
-using Jayrock.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using GeneXus.Utils;
+using Jayrock.Json;
+using Type = System.Type;
 
 namespace GeneXus.Application
 {
@@ -45,7 +44,11 @@ namespace GeneXus.Application
 
 		private static object ConvertSingleJsonItem(object value, Type newType)
 		{
-			if (typeof(IGxJSONAble).IsAssignableFrom(newType))
+			if (value!= null && value.GetType() == newType)
+			{
+				return value;
+			}
+			else if (typeof(IGxJSONAble).IsAssignableFrom(newType))
 			{
 				var TObject = Activator.CreateInstance(newType);
 				((IGxJSONAble)TObject).FromJSONObject((IJsonFormattable)value);

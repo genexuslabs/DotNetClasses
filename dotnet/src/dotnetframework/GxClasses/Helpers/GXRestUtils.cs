@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace GeneXus.Utils
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses")]
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses")]
 
 	public class GxRestPrefix
 	{
@@ -40,24 +36,7 @@ namespace GeneXus.Utils
 			else
 				return string.Empty;
 		}
-		internal static GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
-		{
-			GxUnknownObjectCollection result = new GxUnknownObjectCollection();
-			if (tableHashList != null && tableHashList.Count > 0)
-			{
-				foreach (object[] list in tableHashList)
-				{
-					GxStringCollection tableHash = new GxStringCollection();
-					foreach (string data in list)
-					{
-						tableHash.Add(data);
-					}
-					result.Add(tableHash);
-				}
-			}
-			return result;
-		}
-
+		
 	}
 
 }
