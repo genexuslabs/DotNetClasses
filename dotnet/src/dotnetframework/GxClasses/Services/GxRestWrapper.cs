@@ -19,6 +19,7 @@ using GeneXus.Configuration;
 using System.Web;
 using System.Collections.Specialized;
 using GeneXus.Security;
+using Jayrock.Json;
 
 namespace GeneXus.Application
 
@@ -28,9 +29,8 @@ namespace GeneXus.Application
 		internal const string SYNC_METHOD_ALL = "gxAllSync";
 		internal const string SYNC_METHOD_CHECK = "gxCheckSync";
 		internal const string SYNC_METHOD_CONFIRM = "gxconfirmsync";
-		internal const string SYNC_INPUT_PARAMETER = "hashList";
 		internal const string SYNC_EVENT_PARAMETER = "event";
-
+		internal const string SYNC_INPUT_PARAMETER = "gxtablehashlist";
 	}
 #if NETCORE
 	public class GxRestWrapper
@@ -119,12 +119,30 @@ namespace GeneXus.Application
 		private void PreProcessSynchronizerParameteres(Dictionary<string, object> bodyParameters)
 		{
 			GxUnknownObjectCollection hashList;
-			if (bodyParameters.ContainsKey(Synchronizer.SYNC_INPUT_PARAMETER))
-				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[Synchronizer.SYNC_INPUT_PARAMETER], typeof(GxUnknownObjectCollection));
+			if (bodyParameters.ContainsKey(string.Empty))
+				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[string.Empty], typeof(GxUnknownObjectCollection));
 			else
 				hashList = new GxUnknownObjectCollection();
-			bodyParameters[Synchronizer.SYNC_INPUT_PARAMETER] = GxRestUtil.TableHashList(hashList);
+			bodyParameters[Synchronizer.SYNC_INPUT_PARAMETER] = TableHashList(hashList);
 		}
+		internal GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
+		{
+			GxUnknownObjectCollection result = new GxUnknownObjectCollection();
+			if (tableHashList != null && tableHashList.Count > 0)
+			{
+				foreach (JArray list in tableHashList)
+				{
+					GxStringCollection tableHash = new GxStringCollection();
+					foreach (string data in list)
+					{
+						tableHash.Add(data);
+					}
+					result.Add(tableHash);
+				}
+			}
+			return result;
+		}
+
 		private string SynchronizerMethod()
 		{
 			string method = string.Empty;
@@ -210,12 +228,17 @@ namespace GeneXus.Application
 					Jayrock.Json.JsonTextReader reader = new Jayrock.Json.JsonTextReader(streamReader);
 					var data = reader.DeserializeNext();
 					Jayrock.Json.JObject jobj = data as Jayrock.Json.JObject;
+					Jayrock.Json.JArray jArray = data as Jayrock.Json.JArray;
 					if (jobj != null)
 					{
 						foreach (string name in jobj.Names)
 						{
 							bodyParameters.Add(name.ToLower(), jobj[name]);
 						}
+					}
+					else if(jArray != null)
+					{
+						bodyParameters.Add(string.Empty,jArray);
 					}
 				}
 			}
