@@ -30,7 +30,7 @@ namespace GeneXus.Application
 		internal const string SYNC_METHOD_CHECK = "gxCheckSync";
 		internal const string SYNC_METHOD_CONFIRM = "gxconfirmsync";
 		internal const string SYNC_EVENT_PARAMETER = "event";
-		internal const string SYNC_INPUT_PARAMETER = "gxtablehashlist";
+		
 	}
 #if NETCORE
 	public class GxRestWrapper
@@ -93,7 +93,7 @@ namespace GeneXus.Application
 				if (_procWorker.IsSynchronizer2)
 				{
 					innerMethod = SynchronizerMethod();
-					PreProcessSynchronizerParameteres(bodyParameters);
+					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
 					wrapped = false;
 				}
 				
@@ -116,14 +116,15 @@ namespace GeneXus.Application
 
 			}
 		}
-		private void PreProcessSynchronizerParameteres(Dictionary<string, object> bodyParameters)
+		private void PreProcessSynchronizerParameteres(GXProcedure instance, string method, Dictionary<string, object> bodyParameters)
 		{
+			var gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
 			GxUnknownObjectCollection hashList;
 			if (bodyParameters.ContainsKey(string.Empty))
 				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[string.Empty], typeof(GxUnknownObjectCollection));
 			else
 				hashList = new GxUnknownObjectCollection();
-			bodyParameters[Synchronizer.SYNC_INPUT_PARAMETER] = TableHashList(hashList);
+			bodyParameters[gxParameterName] = TableHashList(hashList);
 		}
 		internal GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
 		{
