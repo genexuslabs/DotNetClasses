@@ -672,6 +672,7 @@ namespace GeneXus.Configuration
 		static string remoteLocation;
 		static int remote = -1;
 		static int storageTimezone = -1;
+		static int gxpmEnabled = -1;
 		private static int exposeMetadata = -1;
 
 		public static string RemoteLocation
@@ -697,6 +698,21 @@ namespace GeneXus.Configuration
 				return (docTypeDTD == 1);
 			}
 		}
+		public static bool GxpmEnabled
+		{
+			get
+			{
+				string value;
+				if (gxpmEnabled == -1)
+				{
+					if (Config.GetValueOf("GX_FLOW_ENABLED", out value) && value == "1")
+						gxpmEnabled = 1;
+					else
+						gxpmEnabled = 0;
+				}
+				return (gxpmEnabled == 1);
+			}
+		}
 		public static bool MustSetupDB()
 		{
 			if (setupDB == -1)
@@ -715,7 +731,7 @@ namespace GeneXus.Configuration
 			}
 			else return (setupDB == 1);
 		}
-
+		
 		public static HTMLDocType DocType
 		{
 			get

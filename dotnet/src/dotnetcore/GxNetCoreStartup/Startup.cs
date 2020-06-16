@@ -501,9 +501,23 @@ namespace GeneXus.Application
 			context.NewSessionCheck();
 			string nspace;
 			Config.GetValueOf("AppMainNamespace", out nspace);
-			if (File.Exists(Path.Combine(ContentRootPath, $"{controller.ToLower()}.grp.json")))
+
+			String tmpController = controller;
+			String addNspace =  "";
+			String asssemblycontroller = tmpController;
+
+
+			if (controller.Contains("\\"))
 			{
-				var controllerInstance = ClassLoader.FindInstance(controller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+				tmpController = controller.Substring(controller.LastIndexOf("\\") + 1);
+				addNspace =  controller.Substring(0, controller.LastIndexOf("\\")).Replace("\\", ".") ;
+				asssemblycontroller = addNspace + "." + tmpController ;
+				nspace += "." + addNspace;
+			}
+			if (File.Exists(Path.Combine(ContentRootPath, $"{asssemblycontroller.ToLower()}.grp.json")))
+			{
+				controller = tmpController;
+				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 				GXProcedure proc = controllerInstance as GXProcedure;
 				if (proc != null)
 					return new GxRestWrapper(proc, context, gxContext, methodName);
