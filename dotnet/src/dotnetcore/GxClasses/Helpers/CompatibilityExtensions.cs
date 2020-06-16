@@ -117,7 +117,11 @@ namespace GxClasses.Helpers
 		protected override Assembly Load(AssemblyName assemblyName)
 		{
 			Assembly ass;
-			loadedAssemblies.TryGetValue(assemblyName.Name, out ass);
+
+			//Assemblies with a different case of the Name are considered the same assembly.
+			string assemblyLowerName = assemblyName.Name.ToLower();
+
+			loadedAssemblies.TryGetValue(assemblyLowerName, out ass);
 			if (ass != null)
 				return ass;
 
@@ -128,7 +132,7 @@ namespace GxClasses.Helpers
 				if (res.Count > 0)
 				{
 					ass = Assembly.Load(new AssemblyName(res.First().Name));
-					loadedAssemblies[assemblyName.Name] = ass;
+					loadedAssemblies[assemblyLowerName] = ass;
 					return ass;
 				}
 				else
@@ -137,7 +141,7 @@ namespace GxClasses.Helpers
 					if (runtimeLibs.Count > 0)
 					{
 						ass = Assembly.Load(new AssemblyName(runtimeLibs.First().Name));
-						loadedAssemblies[assemblyName.Name] = ass;
+						loadedAssemblies[assemblyLowerName] = ass;
 						return ass;
 					}
 					else
@@ -146,7 +150,7 @@ namespace GxClasses.Helpers
 						if (foundDlls.Any())
 						{
 							ass = LoadFromAssemblyPath(foundDlls[0]);
-							loadedAssemblies[assemblyName.Name] = ass;
+							loadedAssemblies[assemblyLowerName] = ass;
 							return ass;
 						}
 
@@ -162,7 +166,7 @@ namespace GxClasses.Helpers
 					ass = Default.LoadFromAssemblyPath(assemblyPath);
 					if (ass != null)
 					{
-						loadedAssemblies[assemblyName.Name] = ass;
+						loadedAssemblies[assemblyLowerName] = ass;
 						return ass;
 					}
 				}
