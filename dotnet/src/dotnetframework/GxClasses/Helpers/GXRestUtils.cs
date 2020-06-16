@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace GeneXus.Utils
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses")]
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses")]
 
 	public class GxRestPrefix
 	{
@@ -40,6 +36,7 @@ namespace GeneXus.Utils
 			else
 				return string.Empty;
 		}
+		
 	}
 
 }

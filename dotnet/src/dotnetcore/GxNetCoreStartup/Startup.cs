@@ -543,6 +543,8 @@ namespace GeneXus.Application
 						var controllerClassName = controllerAssemblyQualifiedName.First();
 						if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
 							controllerClassName = controllerClassName.Substring(nspace.Length + 1);
+						else
+							nspace=String.Empty;
 						var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 						GXProcedure proc = controllerInstance as GXProcedure;
 						if (proc != null)

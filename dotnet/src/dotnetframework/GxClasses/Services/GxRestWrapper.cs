@@ -19,10 +19,19 @@ using GeneXus.Configuration;
 using System.Web;
 using System.Collections.Specialized;
 using GeneXus.Security;
+using Jayrock.Json;
 
 namespace GeneXus.Application
 
 {
+	internal static class Synchronizer
+	{
+		internal const string SYNC_METHOD_ALL = "gxAllSync";
+		internal const string SYNC_METHOD_CHECK = "gxCheckSync";
+		internal const string SYNC_METHOD_CONFIRM = "gxconfirmsync";
+		internal const string SYNC_EVENT_PARAMETER = "event";
+		
+	}
 #if NETCORE
 	public class GxRestWrapper
 #else
@@ -73,12 +82,21 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
+				bool wrapped = true;
+				String innerMethod = EXECUTE_METHOD;
+
 #if NETCORE
 				var bodyParameters = ReadRequestParameters(_httpContext.Request.Body);
 #else
 				var bodyParameters = ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
-				String innerMethod = EXECUTE_METHOD;
+				if (_procWorker.IsSynchronizer2)
+				{
+					innerMethod = SynchronizerMethod();
+					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
+					wrapped = false;
+				}
+				
 				if (!String.IsNullOrEmpty(this.ServiceMethod))
 				{
 					innerMethod = this.ServiceMethod;
@@ -86,7 +104,7 @@ namespace GeneXus.Application
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, true);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -97,6 +115,62 @@ namespace GeneXus.Application
 				Cleanup();
 
 			}
+		}
+		private void PreProcessSynchronizerParameteres(GXProcedure instance, string method, Dictionary<string, object> bodyParameters)
+		{
+			var gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
+			GxUnknownObjectCollection hashList;
+			if (bodyParameters.ContainsKey(string.Empty))
+				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[string.Empty], typeof(GxUnknownObjectCollection));
+			else
+				hashList = new GxUnknownObjectCollection();
+			bodyParameters[gxParameterName] = TableHashList(hashList);
+		}
+		internal GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
+		{
+			GxUnknownObjectCollection result = new GxUnknownObjectCollection();
+			if (tableHashList != null && tableHashList.Count > 0)
+			{
+				foreach (JArray list in tableHashList)
+				{
+					GxStringCollection tableHash = new GxStringCollection();
+					foreach (string data in list)
+					{
+						tableHash.Add(data);
+					}
+					result.Add(tableHash);
+				}
+			}
+			return result;
+		}
+
+		private string SynchronizerMethod()
+		{
+			string method = string.Empty;
+			var queryParameters = ReadQueryParameters();
+			string gxevent = string.Empty;
+			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
+				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
+
+			if (string.IsNullOrEmpty(gxevent))
+			{
+				method = Synchronizer.SYNC_METHOD_ALL;
+			}
+			else
+			{
+				if (gxevent.Equals(Synchronizer.SYNC_METHOD_CHECK, StringComparison.OrdinalIgnoreCase))
+				{
+					method = Synchronizer.SYNC_METHOD_CHECK;
+				}
+				else
+				{
+					if (gxevent.Equals(Synchronizer.SYNC_METHOD_CONFIRM, StringComparison.OrdinalIgnoreCase))
+					{
+						method = Synchronizer.SYNC_METHOD_CONFIRM;
+					}
+				}
+			}
+			return method;
 		}
 		public virtual Task Get(object key)
 		{
@@ -155,12 +229,17 @@ namespace GeneXus.Application
 					Jayrock.Json.JsonTextReader reader = new Jayrock.Json.JsonTextReader(streamReader);
 					var data = reader.DeserializeNext();
 					Jayrock.Json.JObject jobj = data as Jayrock.Json.JObject;
+					Jayrock.Json.JArray jArray = data as Jayrock.Json.JArray;
 					if (jobj != null)
 					{
 						foreach (string name in jobj.Names)
 						{
 							bodyParameters.Add(name.ToLower(), jobj[name]);
 						}
+					}
+					else if(jArray != null)
+					{
+						bodyParameters.Add(string.Empty,jArray);
 					}
 				}
 			}
