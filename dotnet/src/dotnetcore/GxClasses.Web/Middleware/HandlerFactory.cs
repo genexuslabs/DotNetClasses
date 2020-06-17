@@ -43,22 +43,22 @@ namespace GeneXus.HttpHandlerFactory
 												{"gx_valid_service",typeof(GXValidService)},
 												{"gxmulticall",typeof(GXMultiCall)}};
 		static Dictionary<string, string> _aspxRewrite = new Dictionary<string, string>(){
-												{"oauth/access_token","gxoauthaccesstoken"},
-												{"oauth/logout","gxoauthlogout"},
-												{"oauth/userinfo","gxoauthuserinfo"},
-												{"oauth/gam/signin","agamextauthinput"},
-												{"oauth/gam/callback","agamextauthinput"},
-												{"oauth/gam/access_token","agamoauth20getaccesstoken"},
-												{"oauth/gam/userinfo","agamoauth20getuserinfo"},
-												{"oauth/gam/signout","agamextauthinput"},
+												{"oauth/access_token","gxoauthaccesstoken.aspx"},
+												{"oauth/logout","gxoauthlogout.aspx"},
+												{"oauth/userinfo","gxoauthuserinfo.aspx"},
+												{"oauth/gam/signin","agamextauthinput.aspx"},
+												{"oauth/gam/callback","agamextauthinput.aspx"},
+												{"oauth/gam/access_token","agamoauth20getaccesstoken.aspx"},
+												{"oauth/gam/userinfo","agamoauth20getuserinfo.aspx"},
+												{"oauth/gam/signout","agamextauthinput.aspx"},
 												{"saml/gam/signin","Saml2/SignIn"},
-												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws"},
+												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws.aspx"},
 												{"saml/gam/signout","Saml2/Logout"},
-												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken"},
-												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken"},
-												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20"},
-												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20"},
-												{"oauth/gam/v2.0/RequestTokenAndUserinfo","aGAMSSORestRequestTokenAndUserInfo_v20"}};
+												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken.aspx"},
+												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
+												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
+												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
+												{"oauth/gam/v2.0/RequestTokenAndUserinfo","aGAMSSORestRequestTokenAndUserInfo_v20.aspx"}};
 		private const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
 		private const string GXFLOW_NSPACE = "GXflow.Programs";
 		private static List<string> GxNamespaces;
