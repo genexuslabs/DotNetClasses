@@ -17,6 +17,15 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
 
+    - name: Checkout action - dispatch-build-result
+      uses: actions/checkout@v2
+      if: github.repository_owner == 'GeneXusLabs'
+      with:
+          repository: genexuslabs/generate-package-version
+          ref: releases/v1
+          token: ${{ secrets.PAT }}
+          path: .github/actions/generate-package-version
+
     - name: Clean previous build #Because self-hosted runners are not cleaned automatically
       run: |
         Get-ChildItem .\dotnet\src\*\bin -Recurse -ErrorAction SilentlyContinue |
@@ -68,42 +77,8 @@ jobs:
         }
 
     - name: Dispatch build result
-      run: |
-        $token = "${{ secrets.PAT }}"
-        $uri = "${{ secrets.DISPATCH_URL }}"
-        
-        if ($token -ne $null -and $uri -ne $null) {
-          $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f "", $token)))
-
-          $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-          $headers.Add("Authorization", ("Basic {0}" -f $base64AuthInfo))
-          $headers.Add("Content-Type", "application/json")
-
-          if ($Env:GITHUB_REF -match "[^\/]+$") {
-              $branch = $Matches[0]
-
-              $repositoryName = (split-path -leaf "$Env:GITHUB_REPOSITORY").Split(":")[0]
-
-              $body = "{
-                  `"event_type`": `"component-deployed`",
-                  `"client_payload`": {
-                      `"component`": `"$repositoryName`",
-                      `"git_branch`": `"$branch`",
-                      `"new_version`": `"$Env:NuGetPackageVersion`"
-                  }
-              }"
-
-              [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
-              $response = Invoke-RestMethod -Uri $uri -Headers $headers -Body $body -Method POST
-              $response | ConvertTo-Json
-          } else {
-              Write-Error "Unable to get branch information for dispatch"
-          }
-        } else {
-          $repositoryOwner = "${{ github.repository_owner }}"
-          if ($repositoryOwner -match "genexuslabs") {
-            Write-Error "Unable to dispatch build result"
-          } else {
-            Write-Warning "Skipping dispatching build result"
-          }
-        }
+      uses: ./.github/actions/dispatch-build-result
+      if: github.repository_owner == 'GeneXusLabs'
+      with:
+        new-version: ${{ env.NuGetPackageVersion }}
+        token: ${{ secrets.PAT }}
