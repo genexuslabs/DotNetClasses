@@ -3,6 +3,7 @@
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>DotNetUnitTest</RootNamespace>
 		<AssemblyName>DotNetUnitTest</AssemblyName>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="client.exe.config" />
