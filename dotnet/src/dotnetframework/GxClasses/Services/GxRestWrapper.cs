@@ -30,7 +30,8 @@ namespace GeneXus.Application
 		internal const string SYNC_METHOD_CHECK = "gxCheckSync";
 		internal const string SYNC_METHOD_CONFIRM = "gxconfirmsync";
 		internal const string SYNC_EVENT_PARAMETER = "event";
-		
+		internal const string CORE_OFFLINE_EVENT_REPLICATOR = "GeneXus.Core.genexus.sd.synchronization.offlineeventreplicator";
+		internal const string SYNCHRONIZER_INFO = "gxTpr_Synchronizer";
 	}
 #if NETCORE
 	public class GxRestWrapper
@@ -75,21 +76,26 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				String innerMethod = EXECUTE_METHOD;
+				bool wrapped = true;
+				Dictionary<string, object> bodyParameters = null;
+				if (IsCoreEventReplicator(_procWorker))
 				{
-					return null;
+					bodyParameters = ReadBodyParameters();
+					string synchronizer = PreProcessReplicatorParameteres(_procWorker, innerMethod, bodyParameters);
+					if (!IsAuthenticated(synchronizer))
+						return Task.CompletedTask;
+				}
+				else if (!IsAuthenticated())
+				{
+					return Task.CompletedTask;
 				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				bool wrapped = true;
-				String innerMethod = EXECUTE_METHOD;
+				if (bodyParameters == null)
+					bodyParameters = ReadBodyParameters();
 
-#if NETCORE
-				var bodyParameters = ReadRequestParameters(_httpContext.Request.Body);
-#else
-				var bodyParameters = ReadRequestParameters(_httpContext.Request.GetInputStream());
-#endif
 				if (_procWorker.IsSynchronizer2)
 				{
 					innerMethod = SynchronizerMethod();
@@ -116,6 +122,28 @@ namespace GeneXus.Application
 
 			}
 		}
+		private Dictionary<string, object> ReadBodyParameters()
+		{
+#if NETCORE
+			return ReadRequestParameters(_httpContext.Request.Body);
+#else
+			return ReadRequestParameters(_httpContext.Request.GetInputStream());
+#endif
+		}
+		private string PreProcessReplicatorParameteres(GXProcedure procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
+		{
+			var methodInfo = procWorker.GetType().GetMethod(innerMethod);
+			object[] parametersForInvocation = ReflectionHelper.ProcessParametersForInvoke(methodInfo, bodyParameters);
+			var synchroInfo = parametersForInvocation[1];
+			return synchroInfo.GetType().GetProperty(Synchronizer.SYNCHRONIZER_INFO).GetValue(synchroInfo) as string;
+
+		}
+
+		private bool IsCoreEventReplicator(GXProcedure procWorker)
+		{
+			return procWorker.GetType().FullName == Synchronizer.CORE_OFFLINE_EVENT_REPLICATOR; 
+		}
+
 		private void PreProcessSynchronizerParameteres(GXProcedure instance, string method, Dictionary<string, object> bodyParameters)
 		{
 			var gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
