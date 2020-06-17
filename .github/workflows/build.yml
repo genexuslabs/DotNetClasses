@@ -21,10 +21,10 @@ jobs:
       uses: actions/checkout@v2
       if: github.repository_owner == 'GeneXusLabs'
       with:
-          repository: genexuslabs/generate-package-version
+          repository: genexuslabs/dispatch-build-result
           ref: releases/v1
           token: ${{ secrets.PAT }}
-          path: .github/actions/generate-package-version
+          path: .github/actions/dispatch-build-result
 
     - name: Clean previous build #Because self-hosted runners are not cleaned automatically
       run: |
