@@ -27,6 +27,7 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
 		<NoWarn>NU5105;CS0618</NoWarn>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">
