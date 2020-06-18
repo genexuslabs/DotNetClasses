@@ -23,15 +23,19 @@ namespace GeneXus.Storage.GXAmazonS3
 		const string ENDPOINT = "STORAGE_ENDPOINT";
 		const string BUCKET = "BUCKET_NAME";
 		const string FOLDER = "FOLDER_NAME";
+		const string DEFAULT_REGION = "us-east-1";
+
+		string _storageUri;
 
 		IAmazonS3 Client { get; set; }
 		string Bucket { get; set; }
 		string Folder { get; set; }
 		string Endpoint { get; set; }
+		string Region { get; set; }
 
 		public string StorageUri
 		{
-			get { return $"https://{Bucket}.{Endpoint}/"; }
+			get { return _storageUri; }
 		}
 
 		public string GetBaseURL()
@@ -85,9 +89,23 @@ namespace GeneXus.Storage.GXAmazonS3
 #endif
 			Bucket = CryptoImpl.Decrypt(providerService.Properties.Get(BUCKET));
 			Folder = providerService.Properties.Get(FOLDER);
+			Region = region.SystemName;
 
+			SetURI();
 			CreateBucket();
 			CreateFolder(Folder);
+		}
+
+		private void SetURI()
+		{
+			if (Region == DEFAULT_REGION)
+			{
+				_storageUri = $"https://{Bucket}.{Endpoint}/";
+			}
+			else
+			{
+				_storageUri = $"https://{Bucket}.{Endpoint.Replace("s3.amazonaws.com", String.Format("s3.{0}.amazonaws.com", Region.ToLower()))}/";
+			}
 		}
 
 		private void AddObjectMetadata(MetadataCollection metadata, string tableName, string fieldName, string key)
@@ -325,7 +343,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				AddObjectMetadata(objectRequest.Metadata, tableName, fieldName, resourceKey);
 				PutObjectResponse result = PutObject(objectRequest);
 
-				return "https://" + Bucket + ".s3.amazonaws.com/" + resourceKey;
+				return StorageUri + resourceKey;
 			}
 			catch (Exception ex)
 			{
