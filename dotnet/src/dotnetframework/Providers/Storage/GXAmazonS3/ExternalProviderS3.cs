@@ -27,7 +27,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		const string STORAGE_CUSTOM_ENDPOINT_VALUE = "custom";
 
 		const string DEFAULT_REGION = "us-east-1";
-
+		
 		[Obsolete("Use Property ACCESS_KEY instead", false)]
 		const string ACCESS_KEY_ID_DEPRECATED = "STORAGE_PROVIDER_ACCESSKEYID";
 		[Obsolete("Use Property SECRET_ACCESS_KEY instead", false)]
@@ -57,7 +57,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		public string StorageUri
 		{
 			get {
-				return (ForcePathStyle)? $"{Endpoint}/": $"https://{Bucket}.{Endpoint}/";
+				return _storageUri;
 			}
 		}
 
@@ -133,7 +133,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			if (Region == DEFAULT_REGION)
 			{
-				_storageUri = $"https://{Bucket}.{Endpoint}/";
+				_storageUri = (ForcePathStyle) ? $"{Endpoint}/" : $"https://{Bucket}.{Endpoint}/";
 			}
 			else
 			{
@@ -240,14 +240,18 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		public string Get(string objectName, GxFileType fileType, int urlMinutes = DefaultExpirationMinutes)
 		{
-			bool isPrivate = IsPrivateUpload(fileType);
 			if (Exists(objectName, fileType))
-				if (isPrivate)
-					return GetPreSignedUrl(objectName, urlMinutes);
-				else
-					return StorageUri + StorageUtils.EncodeUrl(objectName);
+			{
+				return GetUrlImpl(objectName, fileType, urlMinutes);
+			}
 			else
 				return string.Empty;
+		}
+
+		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = DefaultExpirationMinutes)
+		{
+			bool isPrivate = IsPrivateUpload(fileType);
+			return (isPrivate)? GetPreSignedUrl(objectName, urlMinutes): StorageUri + StorageUtils.EncodeUrl(objectName);
 		}
 
 		private string GetPreSignedUrl(string objectName, int urlMinutes)
