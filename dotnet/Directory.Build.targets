@@ -5,6 +5,7 @@
 		<SignAssembly>false</SignAssembly>
 		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
 		<WarningsNotAsErrors>CS8032;CS1609;CS1069;$(WarningsNotAsErrors)</WarningsNotAsErrors>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'!='netcoreapp3.1'">
