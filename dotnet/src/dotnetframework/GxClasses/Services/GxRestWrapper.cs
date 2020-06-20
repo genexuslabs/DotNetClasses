@@ -206,7 +206,7 @@ namespace GeneXus.Application
 			{
 				if (!IsAuthenticated())
 				{
-					return null;
+					return Task.CompletedTask; 
 				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
