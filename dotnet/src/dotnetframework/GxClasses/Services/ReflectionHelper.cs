@@ -131,7 +131,7 @@ namespace GeneXus.Application
 				outputParameters.Add(string.Empty, returnParm);
 			return outputParameters;
 		}
-		private static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters)
+		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters)
 		{
 			var methodParameters = methodInfo.GetParameters();
 			object[] parametersForInvocation = new object[methodParameters.Length];

@@ -30,7 +30,7 @@ namespace GeneXus.Application
 			{
 				if (!IsAuthenticated())
 				{
-					return null;
+					return Task.CompletedTask;
 				}
 				bool gxcheck = IsRestParameter(CHECK_PARAMETER);
 				bool gxinsertorupdate = IsRestParameter(INSERT_OR_UPDATE_PARAMETER);
@@ -96,7 +96,7 @@ namespace GeneXus.Application
 			{
 				if (!IsAuthenticated())
 				{
-					return null;
+					return Task.CompletedTask;
 				}
 				string[] key = SplitParameters(parameters);
 				if (key!=null)
@@ -139,7 +139,7 @@ namespace GeneXus.Application
 			{
 				if (!IsAuthenticated())
 				{
-					return null;
+					return Task.CompletedTask;
 				}
 				string[] key = SplitParameters(parameters);
 				if (key != null)
@@ -177,7 +177,7 @@ namespace GeneXus.Application
 			{
 				if (!IsAuthenticated())
 				{
-					return null;
+					return Task.CompletedTask;
 				}
 				string[] key = SplitParameters(parameters);
 				if (key != null)
