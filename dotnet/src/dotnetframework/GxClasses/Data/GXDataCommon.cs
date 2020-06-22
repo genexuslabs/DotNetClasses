@@ -2299,7 +2299,7 @@ namespace GeneXus.Data
 		{
 			throw (new GxNotImplementedException());
 		}
-		public long GetBytes( int i, long fieldOffset, byte[] buffer, int bufferoffset, int length	)
+		public virtual long GetBytes( int i, long fieldOffset, byte[] buffer, int bufferoffset, int length	)
 		{
 			long res = reader.GetBytes(i, fieldOffset, buffer, bufferoffset, length);
 			readBytes += res;

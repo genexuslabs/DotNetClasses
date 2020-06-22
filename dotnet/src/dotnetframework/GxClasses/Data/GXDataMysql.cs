@@ -464,6 +464,7 @@ namespace GeneXus.Data
 				return value;
 			}
 		}
+
 #endif
 		public override void SetParameter(IDbDataParameter parameter, object value)
 		{
@@ -646,8 +647,18 @@ namespace GeneXus.Data
 			return res;
 
 		}
-		
-
+		public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+		{
+			try
+			{
+				long res = reader.GetBytes(i, fieldOffset, buffer, bufferoffset, length);
+				readBytes += res;
+				return res;
+			}catch(IndexOutOfRangeException)
+			{
+				return 0;
+			}
+		}
 	}
 
 	public class GxMySQLCacheDataReader : GxCacheDataReader
