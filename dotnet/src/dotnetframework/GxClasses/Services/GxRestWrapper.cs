@@ -351,7 +351,7 @@ namespace GeneXus.Application
 					if (!Config.GetValueOf("AppMainNamespace", out nspace))
 						nspace = "GeneXus.Programs";
 					String assemblyName = synchronizer.ToLower();
-					String restServiceName = nspace + "." + assemblyName + "_services";
+					String restServiceName = nspace + "." + assemblyName;
 					GXProcedure synchronizerService = (GXProcedure)ClassLoader.GetInstance(assemblyName, restServiceName, null);
 					if (synchronizerService != null && synchronizerService.IsSynchronizer2)
 					{
