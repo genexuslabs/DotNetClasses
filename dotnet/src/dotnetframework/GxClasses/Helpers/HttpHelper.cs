@@ -148,7 +148,7 @@ namespace GeneXus.Http
 		{
 			SetResponseStatus(httpContext, statusCode, statusDescription);
 			httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-			var jsonError = new HttpJsonError() { Code = statusCode, Message = statusDescription };
+			var jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
 #if NETCORE
 			return httpContext.Response.WriteAsync(JSONHelper.Serialize(jsonError));
 #else
