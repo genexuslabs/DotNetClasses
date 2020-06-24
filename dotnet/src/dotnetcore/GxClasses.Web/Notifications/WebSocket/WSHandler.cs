@@ -126,16 +126,16 @@ namespace GeneXus.Http.WebSocket
 					try
 					{
 						obj = (GXProcedure)ClassLoader.FindInstance(Config.CommonAssemblyName, nSpace, handler, null, null);
+						if (obj == null)
+						{
+							LogError($"GXWebSocket - Could not create Procedure Handler Class. Class Type '{nSpace}.{handler}' not found in Class Loader.");
+						}
 					}
 					catch (Exception e)
 					{
 						LogError("GXWebSocket - Failed to intialize Procedure Handler Class: " + handler, e);
 					}
-					if (obj == null)
-					{
-						LogError($"GXWebSocket - Could not create Procedure Handler Class. Class Type '{nSpace}.{handler}' not found in Class Loader.");
-					}
-					else
+					if (obj != null)
 					{
 						ClassLoader.Execute(obj, "execute", parameters);
 						return true;
