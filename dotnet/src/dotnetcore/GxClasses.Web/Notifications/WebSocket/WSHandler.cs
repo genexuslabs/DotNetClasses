@@ -103,7 +103,7 @@ namespace GeneXus.Http.WebSocket
 			GXLogging.Debug(log, msg);
 		}
 
-		private static void LogError(string msg, Exception e)
+		private static void LogError(string msg, Exception e = null)
 		{
 			GXLogging.Error(log, e, msg);
 		}
@@ -113,7 +113,7 @@ namespace GeneXus.Http.WebSocket
 		}
 		private static Dictionary<HandlerType, String> handlerCache = new Dictionary<HandlerType, String>(4);
 
-		private void ExecuteHandler(HandlerType type, Object[] parameters)
+		private bool ExecuteHandler(HandlerType type, Object[] parameters)
 		{
 			String handler = GetHandlerClassName(type);
 			if (!string.IsNullOrWhiteSpace(handler))
@@ -129,16 +129,24 @@ namespace GeneXus.Http.WebSocket
 					}
 					catch (Exception e)
 					{
-						LogError("GXWebSocket - Could not create Procedure Instance: " + handler, e);
-						return;
+						LogError("GXWebSocket - Failed to intialize Procedure Handler Class: " + handler, e);
 					}
-					ClassLoader.Execute(obj, "execute", parameters);
+					if (obj == null)
+					{
+						LogError($"GXWebSocket - Could not create Procedure Handler Class. Class Type '{nSpace}.{handler}' not found in Class Loader.");
+					}
+					else
+					{
+						ClassLoader.Execute(obj, "execute", parameters);
+						return true;
+					}
 				}
 				catch (Exception e)
 				{
-					LogError("GXWebSocket - Handler Found, but failed executing action: " + handler, e);
+					LogError($"GXWebSocket - Procedure Handler Class Found '{handler}', but failed executing action 'execute.", e);
 				}
 			}
+			return false;
 		}
 
 		private String GetHandlerClassName(HandlerType hType)
