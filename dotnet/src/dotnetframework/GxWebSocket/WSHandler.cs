@@ -108,10 +108,7 @@ namespace GeneXus.Http.WebSocket
 			jObj.Put("Message", message);
 			nInfo.FromJSONObject(jObj);
 			ExecuteHandler(HandlerType.ReceivedMessage, new Object[] { key, nInfo });
-			if (OnNewMessage != null)
-			{
-				OnNewMessage(key, message);
-			}
+			OnNewMessage?.Invoke(key, message);
 		}
 
 		public override void OnClose()
@@ -120,10 +117,7 @@ namespace GeneXus.Http.WebSocket
 			string key = GetClientKey(this);
 			LogDebug($"Client websocket disconnected '{key}'");
 			ExecuteHandler(HandlerType.OnClose, new Object[] { key });
-			if (OnSessionClosed != null)
-			{
-				OnSessionClosed(key, string.Empty);
-			}
+			OnSessionClosed?.Invoke(key, string.Empty);
 			base.OnClose();
 		}
 
@@ -131,11 +125,11 @@ namespace GeneXus.Http.WebSocket
 		{
 			base.OnError();
 			string key = GetClientKey(this);
-			ExecuteHandler(HandlerType.OnError, new Object[] { key });
-			if (OnSessionClosed != null)
+			if (!ExecuteHandler(HandlerType.OnError, new Object[] { key }))
 			{
-				OnSessionClosed(key, "WebSocket Error");
+				log.Debug($"An unknown error ocurred on WebSocket client ('{key}')");
 			}
+			OnSessionClosed?.Invoke(key, "WebSocket Error");
 		}
 		public override void OnOpen()
 		{
@@ -143,28 +137,24 @@ namespace GeneXus.Http.WebSocket
 			AddClient(this);
 			string key = GetClientKey(this);
 			ExecuteHandler(HandlerType.OnOpen, new Object[] { key });
-			if (OnSessionConnected != null)
-			{
-				OnSessionConnected(key);
-			}
+			OnSessionConnected?.Invoke(key);
 		}
 		private static void LogDebug(string msg)
 		{
 			GXLogging.Debug(log, msg);
 		}
 
-		private static void LogError(string msg)
+		private static void LogError(string msg, Exception e = null)
 		{
-			GXLogging.Error(log, msg);
+			GXLogging.Error(log, e, msg);
 		}
-
 		public enum HandlerType
 		{
 			ReceivedMessage, OnOpen, OnClose, OnError
 		}
 		private static ConcurrentDictionary<HandlerType, String> handlerCache = new ConcurrentDictionary<HandlerType, String>();
 
-		private void ExecuteHandler(HandlerType type, Object[] parameters)
+		private bool ExecuteHandler(HandlerType type, Object[] parameters)
 		{
 			String handler = GetHandlerClassName(type);
 			if (!string.IsNullOrWhiteSpace(handler))
@@ -178,19 +168,26 @@ namespace GeneXus.Http.WebSocket
 					{
 						obj = (GXProcedure)ClassLoader.FindInstance(Config.CommonAssemblyName, nSpace, handler, null, null);
 					}
-					catch (Exception)
+					catch (Exception e)
 					{
-						LogError("GXWebSocket - Could not create Procedure Instance: " + handler);
-						return;
+						LogError("GXWebSocket - Failed to intialize Procedure Handler Class: " + handler, e);
 					}
-					ClassLoader.Execute(obj, "execute", parameters);
+					if (obj == null)
+					{
+						LogError($"GXWebSocket - Could not create Procedure Handler Class. Class Type '{nSpace}.{handler}' not found in Class Loader.");
+					}
+					else
+					{
+						ClassLoader.Execute(obj, "execute", parameters);
+						return true;
+					}
 				}
 				catch (Exception e)
 				{
-					LogError("GXWebSocket - Handler failed executing action: " + handler);
-					LogError(e.Message);
+					LogError($"GXWebSocket - Procedure Handler Class Found '{handler}', but failed executing action 'execute.", e);
 				}
 			}
+			return false;
 		}
 
 		private String GetHandlerClassName(HandlerType hType)
