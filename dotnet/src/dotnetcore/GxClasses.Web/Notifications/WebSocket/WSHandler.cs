@@ -103,9 +103,9 @@ namespace GeneXus.Http.WebSocket
 			GXLogging.Debug(log, msg);
 		}
 
-		private static void LogError(string msg)
+		private static void LogError(string msg, Exception e)
 		{
-			GXLogging.Error(log, msg);
+			GXLogging.Error(log, e, msg);
 		}
 		public enum HandlerType
 		{
@@ -125,19 +125,18 @@ namespace GeneXus.Http.WebSocket
 					GXProcedure obj = null;
 					try
 					{
-						obj = (GXProcedure)ClassLoader.FindInstance(string.Empty, nSpace, handler, null, null);
+						obj = (GXProcedure)ClassLoader.FindInstance(Config.CommonAssemblyName, nSpace, handler, null, null);
 					}
-					catch (Exception)
+					catch (Exception e)
 					{
-						LogError("GXWebSocket - Could not create Procedure Instance: " + handler);
+						LogError("GXWebSocket - Could not create Procedure Instance: " + handler, e);
 						return;
 					}
 					ClassLoader.Execute(obj, "execute", parameters);
 				}
 				catch (Exception e)
 				{
-					LogError("GXWebSocket - Handler failed executing action: " + handler);
-					LogError(e.Message);
+					LogError("GXWebSocket - Handler Found, but failed executing action: " + handler, e);
 				}
 			}
 		}
