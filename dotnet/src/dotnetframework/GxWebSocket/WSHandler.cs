@@ -176,7 +176,7 @@ namespace GeneXus.Http.WebSocket
 					GXProcedure obj = null;
 					try
 					{
-						obj = (GXProcedure)ClassLoader.FindInstance(string.Empty, nSpace, handler, null, null);
+						obj = (GXProcedure)ClassLoader.FindInstance(Config.CommonAssemblyName, nSpace, handler, null, null);
 					}
 					catch (Exception)
 					{
