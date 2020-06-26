@@ -2168,17 +2168,28 @@ namespace GeneXus.Http
 			_params.Clear();
 			if (value.Length > 0)
 			{
+				bool useOldQueryStringFormat = value.IndexOf('&')<0;
+				string[] elements;
+
 				if (value[0] == '?')
 					value1 = value.Substring(1);
 				else
 					value1 = value;
-				string[] elements = value1.Split(',');
+
+				if (useOldQueryStringFormat)
+					elements = value1.Split(',');
+				else
+					elements = value1.Split('&');
 				for (int i = 0; i < elements.Length; i++)
 				{
 					string parm = elements[i];
 					if (parm.IndexOf("gx-no-cache=") != -1)
 						break;
-					_params.Add(GXUtil.UrlDecode(parm));
+
+					if (useOldQueryStringFormat || parm.IndexOf('=')<0)
+						_params.Add(GXUtil.UrlDecode(parm));
+					else
+						_params.Add(GXUtil.UrlDecode(parm.Split('=')[1]));
 				}
 
 			}
