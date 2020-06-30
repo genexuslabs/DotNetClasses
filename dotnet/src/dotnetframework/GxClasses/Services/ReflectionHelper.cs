@@ -1,13 +1,12 @@
-using GeneXus.Configuration;
-using GeneXus.Metadata;
-using GeneXus.Utils;
-using Jayrock.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using GeneXus.Utils;
+using Jayrock.Json;
+using Type = System.Type;
 
 namespace GeneXus.Application
 {
@@ -24,11 +23,10 @@ namespace GeneXus.Application
 		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
-			List<int> outputParameterIndex;
-			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, out outputParameterIndex);
-			methodInfo.Invoke(instance, parametersForInvocation);
+			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters);
+			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
 
-			return ProcessParametersAfterInvoke(methodInfo, parametersForInvocation);
+			return ProcessParametersAfterInvoke(methodInfo, parametersForInvocation, returnParm);
 		}
 		public static bool MethodHasInputParameters(object instance, String methodName)
 		{
@@ -46,7 +44,11 @@ namespace GeneXus.Application
 
 		private static object ConvertSingleJsonItem(object value, Type newType)
 		{
-			if (typeof(IGxJSONAble).IsAssignableFrom(newType))
+			if (value!= null && value.GetType() == newType)
+			{
+				return value;
+			}
+			else if (typeof(IGxJSONAble).IsAssignableFrom(newType))
 			{
 				var TObject = Activator.CreateInstance(newType);
 				((IGxJSONAble)TObject).FromJSONObject((IJsonFormattable)value);
@@ -97,7 +99,7 @@ namespace GeneXus.Application
 			return ConvertSingleJsonItem(value, newType);
 		}
 
-		private static object ConvertStringToNewType(object value, Type newType)
+		internal static object ConvertStringToNewType(object value, Type newType)
 		{
 			// If it's not a nullable type, just pass through the parameters to Convert.ChangeType
 			if (newType.GetTypeInfo().IsGenericType && newType.GetGenericTypeDefinition() != null && newType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
@@ -111,7 +113,7 @@ namespace GeneXus.Application
 			return ConvertStringToNewNonNullableType(value, newType);
 		}
 
-		private static Dictionary<string, object> ProcessParametersAfterInvoke(MethodInfo methodInfo, object[] parametersForInvocation)
+		private static Dictionary<string, object> ProcessParametersAfterInvoke(MethodInfo methodInfo, object[] parametersForInvocation, object returnParm)
 		{
 			Dictionary<string, object> outputParameters = new Dictionary<string, object>();
 			var methodParameters = methodInfo.GetParameters();
@@ -125,12 +127,13 @@ namespace GeneXus.Application
 				}
 				idx++;
 			}
+			if (returnParm != null)
+				outputParameters.Add(string.Empty, returnParm);
 			return outputParameters;
 		}
-		private static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters, out List<int> outputParametersIndex)
+		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters)
 		{
 			var methodParameters = methodInfo.GetParameters();
-			outputParametersIndex = new List<int>();
 			object[] parametersForInvocation = new object[methodParameters.Length];
 			var idx = 0;
 			foreach (var methodParameter in methodParameters)
@@ -142,7 +145,6 @@ namespace GeneXus.Application
 				if (IsByRefParameter(methodParameter))
 				{
 					parmType = parmType.GetElementType();
-					outputParametersIndex.Add(idx);
 				}
 				if (parameters!=null && parameters.TryGetValue(gxParameterName, out value))
 				{

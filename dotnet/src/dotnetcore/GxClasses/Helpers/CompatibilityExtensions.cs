@@ -114,59 +114,66 @@ namespace GxClasses.Helpers
 			AssemblyName assName = new AssemblyName(assemblyName);
 			return LoadFromAssemblyName(assName).GetType(typeName);
 		}
+		static object syncRoot = new Object();
 		protected override Assembly Load(AssemblyName assemblyName)
 		{
 			Assembly ass;
-			loadedAssemblies.TryGetValue(assemblyName.Name, out ass);
-			if (ass != null)
-				return ass;
 
-			try
+			//Assemblies with a different case of the Name are considered the same assembly.
+			string assemblyLowerName = assemblyName.Name.ToLower();
+			lock (syncRoot)
 			{
-				var deps = DependencyContext.Default;
-				var res = deps.CompileLibraries.Where(d => d.Name.Equals(assemblyName.Name, StringComparison.OrdinalIgnoreCase)).ToList();
-				if (res.Count > 0)
-				{
-					ass = Assembly.Load(new AssemblyName(res.First().Name));
-					loadedAssemblies[assemblyName.Name] = ass;
+				loadedAssemblies.TryGetValue(assemblyLowerName, out ass);
+				if (ass != null)
 					return ass;
-				}
-				else
+
+				try
 				{
-					var runtimeLibs = deps.RuntimeLibraries.Where(d => d.Name.Equals(assemblyName.Name, StringComparison.OrdinalIgnoreCase)).ToList();
-					if (runtimeLibs.Count > 0)
+					var deps = DependencyContext.Default;
+					var res = deps.CompileLibraries.Where(d => d.Name.Equals(assemblyName.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+					if (res.Count > 0)
 					{
-						ass = Assembly.Load(new AssemblyName(runtimeLibs.First().Name));
-						loadedAssemblies[assemblyName.Name] = ass;
+						ass = Assembly.Load(new AssemblyName(res.First().Name));
+						loadedAssemblies[assemblyLowerName] = ass;
 						return ass;
 					}
 					else
 					{
-						var foundDlls = Directory.GetFileSystemEntries(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), assemblyName.Name + ".dll", SearchOption.AllDirectories);
-						if (foundDlls.Any())
+						var runtimeLibs = deps.RuntimeLibraries.Where(d => d.Name.Equals(assemblyName.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+						if (runtimeLibs.Count > 0)
 						{
-							ass = LoadFromAssemblyPath(foundDlls[0]);
-							loadedAssemblies[assemblyName.Name] = ass;
+							ass = Assembly.Load(new AssemblyName(runtimeLibs.First().Name));
+							loadedAssemblies[assemblyLowerName] = ass;
 							return ass;
 						}
+						else
+						{
+							var foundDlls = Directory.GetFileSystemEntries(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), assemblyName.Name + ".dll", SearchOption.AllDirectories);
+							if (foundDlls.Any())
+							{
+								ass = LoadFromAssemblyPath(foundDlls[0]);
+								loadedAssemblies[assemblyLowerName] = ass;
+								return ass;
+							}
 
-						return Assembly.Load(assemblyName);
+							return Assembly.Load(assemblyName);
+						}
 					}
 				}
-			}
-			catch (FileNotFoundException) //>ExecutingAssembly>.deps.json does not exist (p.e. deployed procs command line)
-			{
-				var assemblyPath = Path.Combine(folderPath, assemblyName.Name + ".dll");
-				if (File.Exists(assemblyPath))
+				catch (FileNotFoundException) //>ExecutingAssembly>.deps.json does not exist (p.e. deployed procs command line)
 				{
-					ass = Default.LoadFromAssemblyPath(assemblyPath);
-					if (ass != null)
+					var assemblyPath = Path.Combine(folderPath, assemblyName.Name + ".dll");
+					if (File.Exists(assemblyPath))
 					{
-						loadedAssemblies[assemblyName.Name] = ass;
-						return ass;
+						ass = Default.LoadFromAssemblyPath(assemblyPath);
+						if (ass != null)
+						{
+							loadedAssemblies[assemblyLowerName] = ass;
+							return ass;
+						}
 					}
+					return null;
 				}
-				return null;
 			}
 		}
 	}

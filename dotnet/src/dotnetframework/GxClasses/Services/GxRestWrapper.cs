@@ -19,10 +19,20 @@ using GeneXus.Configuration;
 using System.Web;
 using System.Collections.Specialized;
 using GeneXus.Security;
+using Jayrock.Json;
 
 namespace GeneXus.Application
 
 {
+	internal static class Synchronizer
+	{
+		internal const string SYNC_METHOD_ALL = "gxAllSync";
+		internal const string SYNC_METHOD_CHECK = "gxCheckSync";
+		internal const string SYNC_METHOD_CONFIRM = "gxconfirmsync";
+		internal const string SYNC_EVENT_PARAMETER = "event";
+		internal const string CORE_OFFLINE_EVENT_REPLICATOR = "GeneXus.Core.genexus.sd.synchronization.offlineeventreplicator";
+		internal const string SYNCHRONIZER_INFO = "gxTpr_Synchronizer";
+	}
 #if NETCORE
 	public class GxRestWrapper
 #else
@@ -66,19 +76,33 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				String innerMethod = EXECUTE_METHOD;
+				bool wrapped = true;
+				Dictionary<string, object> bodyParameters = null;
+				if (IsCoreEventReplicator(_procWorker))
 				{
-					return null;
+					bodyParameters = ReadBodyParameters();
+					string synchronizer = PreProcessReplicatorParameteres(_procWorker, innerMethod, bodyParameters);
+					if (!IsAuthenticated(synchronizer))
+						return Task.CompletedTask;
+				}
+				else if (!IsAuthenticated())
+				{
+					return Task.CompletedTask;
 				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-#if NETCORE
-				var bodyParameters = ReadRequestParameters(_httpContext.Request.Body);
-#else
-				var bodyParameters = ReadRequestParameters(_httpContext.Request.GetInputStream());
-#endif
-				String innerMethod = EXECUTE_METHOD;
+				if (bodyParameters == null)
+					bodyParameters = ReadBodyParameters();
+
+				if (_procWorker.IsSynchronizer2)
+				{
+					innerMethod = SynchronizerMethod();
+					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
+					wrapped = false;
+				}
+				
 				if (!String.IsNullOrEmpty(this.ServiceMethod))
 				{
 					innerMethod = this.ServiceMethod;
@@ -86,7 +110,7 @@ namespace GeneXus.Application
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, true);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -98,13 +122,91 @@ namespace GeneXus.Application
 
 			}
 		}
+		private Dictionary<string, object> ReadBodyParameters()
+		{
+#if NETCORE
+			return ReadRequestParameters(_httpContext.Request.Body);
+#else
+			return ReadRequestParameters(_httpContext.Request.GetInputStream());
+#endif
+		}
+		private string PreProcessReplicatorParameteres(GXProcedure procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
+		{
+			var methodInfo = procWorker.GetType().GetMethod(innerMethod);
+			object[] parametersForInvocation = ReflectionHelper.ProcessParametersForInvoke(methodInfo, bodyParameters);
+			var synchroInfo = parametersForInvocation[1];
+			return synchroInfo.GetType().GetProperty(Synchronizer.SYNCHRONIZER_INFO).GetValue(synchroInfo) as string;
+
+		}
+
+		private bool IsCoreEventReplicator(GXProcedure procWorker)
+		{
+			return procWorker.GetType().FullName == Synchronizer.CORE_OFFLINE_EVENT_REPLICATOR; 
+		}
+
+		private void PreProcessSynchronizerParameteres(GXProcedure instance, string method, Dictionary<string, object> bodyParameters)
+		{
+			var gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
+			GxUnknownObjectCollection hashList;
+			if (bodyParameters.ContainsKey(string.Empty))
+				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[string.Empty], typeof(GxUnknownObjectCollection));
+			else
+				hashList = new GxUnknownObjectCollection();
+			bodyParameters[gxParameterName] = TableHashList(hashList);
+		}
+		internal GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
+		{
+			GxUnknownObjectCollection result = new GxUnknownObjectCollection();
+			if (tableHashList != null && tableHashList.Count > 0)
+			{
+				foreach (JArray list in tableHashList)
+				{
+					GxStringCollection tableHash = new GxStringCollection();
+					foreach (string data in list)
+					{
+						tableHash.Add(data);
+					}
+					result.Add(tableHash);
+				}
+			}
+			return result;
+		}
+
+		private string SynchronizerMethod()
+		{
+			string method = string.Empty;
+			var queryParameters = ReadQueryParameters();
+			string gxevent = string.Empty;
+			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
+				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
+
+			if (string.IsNullOrEmpty(gxevent))
+			{
+				method = Synchronizer.SYNC_METHOD_ALL;
+			}
+			else
+			{
+				if (gxevent.Equals(Synchronizer.SYNC_METHOD_CHECK, StringComparison.OrdinalIgnoreCase))
+				{
+					method = Synchronizer.SYNC_METHOD_CHECK;
+				}
+				else
+				{
+					if (gxevent.Equals(Synchronizer.SYNC_METHOD_CONFIRM, StringComparison.OrdinalIgnoreCase))
+					{
+						method = Synchronizer.SYNC_METHOD_CONFIRM;
+					}
+				}
+			}
+			return method;
+		}
 		public virtual Task Get(object key)
 		{
 			try
 			{
 				if (!IsAuthenticated())
 				{
-					return null;
+					return Task.CompletedTask; 
 				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
@@ -155,12 +257,17 @@ namespace GeneXus.Application
 					Jayrock.Json.JsonTextReader reader = new Jayrock.Json.JsonTextReader(streamReader);
 					var data = reader.DeserializeNext();
 					Jayrock.Json.JObject jobj = data as Jayrock.Json.JObject;
+					Jayrock.Json.JArray jArray = data as Jayrock.Json.JArray;
 					if (jobj != null)
 					{
 						foreach (string name in jobj.Names)
 						{
 							bodyParameters.Add(name.ToLower(), jobj[name]);
 						}
+					}
+					else if(jArray != null)
+					{
+						bodyParameters.Add(string.Empty,jArray);
 					}
 				}
 			}
@@ -244,7 +351,7 @@ namespace GeneXus.Application
 					if (!Config.GetValueOf("AppMainNamespace", out nspace))
 						nspace = "GeneXus.Programs";
 					String assemblyName = synchronizer.ToLower();
-					String restServiceName = nspace + "." + assemblyName + "_services";
+					String restServiceName = nspace + "." + assemblyName;
 					GXProcedure synchronizerService = (GXProcedure)ClassLoader.GetInstance(assemblyName, restServiceName, null);
 					if (synchronizerService != null && synchronizerService.IsSynchronizer2)
 					{
