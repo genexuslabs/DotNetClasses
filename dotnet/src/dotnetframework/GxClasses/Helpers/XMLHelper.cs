@@ -23,7 +23,15 @@ namespace GeneXus.Utils
 			else
 				namespacePrefixes[p] = ns;
 		}
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			setNamespaceContext(rdr, false);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
+		{
+			setNamespaceContext(rdr, true);
+		}
+		void setNamespaceContext(GXXMLReader rdr, bool setLocalNamespace)
 		{
 			for (int i = 1; i <= rdr.AttributeCount; i++)
 			{
@@ -32,7 +40,7 @@ namespace GeneXus.Utils
 				{
 					AddNamespacePrefix(attName.Substring(6), rdr.GetAttributeByIndex(i));
 				}
-				else if (attName.ToLower() == "xmlns")
+				else if (attName.ToLower() == "xmlns" && setLocalNamespace)
 				{
 					AddNamespacePrefix("", rdr.GetAttributeByIndex(i));
 				}

@@ -329,6 +329,10 @@ namespace GeneXus.Utils
 		}
 		private XMLPrefixes currentNamespacePrefixes = new XMLPrefixes();
 
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			currentNamespacePrefixes.SetNamedPrefixesFromReader(rdr);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
 		{
 			currentNamespacePrefixes.SetPrefixesFromReader(rdr);
