@@ -123,21 +123,22 @@ namespace GeneXus.Web.Security
 			if (string.IsNullOrEmpty(signedToken))
 				return null;
 
-			var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey);
-			var handler = new JwtSecurityTokenHandler();
-			var validationParameters = new TokenValidationParameters
+			using (var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey))
 			{
-				ClockSkew = TimeSpan.FromMinutes(1),
-				ValidateAudience = false,
-				ValidateIssuer = false,
-				IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
-			};
-			SecurityToken securityToken;
-			WebSecureToken outToken = new WebSecureToken();
-			var claims = handler.ValidateToken(signedToken, validationParameters, out securityToken);
-			outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
-
-			return outToken;
+				var handler = new JwtSecurityTokenHandler();
+				var validationParameters = new TokenValidationParameters
+				{
+					ClockSkew = TimeSpan.FromMinutes(1),
+					ValidateAudience = false,
+					ValidateIssuer = false,
+					IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
+				};
+				SecurityToken securityToken;
+				WebSecureToken outToken = new WebSecureToken();
+				var claims = handler.ValidateToken(signedToken, validationParameters, out securityToken);
+				outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+				return outToken;
+			}
 		}
         public static string Sign(WebSecureToken token, SecurityMode mode, string secretKey)
         {
@@ -172,26 +173,28 @@ namespace GeneXus.Web.Security
 			{				
 				try
 				{
-                    var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey);
-                    var handler = new JwtSecurityTokenHandler();
-                    var validationParameters = new TokenValidationParameters
-                    {
-                        ClockSkew = TimeSpan.FromMinutes(1),
-                        ValidateAudience = false,
-                        ValidateIssuer = false,
-						IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
-					};
-					//Avoid handler.ValidateToken which does not work in medium trust environment
-					JwtSecurityToken jwtSecurityToken = (JwtSecurityToken)handler.GetType().InvokeMember("ValidateSignature",
-						System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.InvokeMethod, null, handler,
-						new object[] { jwtToken, validationParameters });
-					Validators.ValidateIssuerSecurityKey(jwtSecurityToken.SigningKey, jwtSecurityToken, validationParameters);
+					using (var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey))
+					{
+						var handler = new JwtSecurityTokenHandler();
+						var validationParameters = new TokenValidationParameters
+						{
+							ClockSkew = TimeSpan.FromMinutes(1),
+							ValidateAudience = false,
+							ValidateIssuer = false,
+							IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
+						};
+						//Avoid handler.ValidateToken which does not work in medium trust environment
+						JwtSecurityToken jwtSecurityToken = (JwtSecurityToken)handler.GetType().InvokeMember("ValidateSignature",
+							System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.InvokeMethod, null, handler,
+							new object[] { jwtToken, validationParameters });
+						Validators.ValidateIssuerSecurityKey(jwtSecurityToken.SigningKey, jwtSecurityToken, validationParameters);
 
-					outToken.Expiration = new DateTime(1970, 1, 1).AddSeconds(Double.Parse(jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXEXPIRATION).Value));
-					outToken.ProgramName = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXPROGRAM).Value;
-					outToken.Issuer = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXISSUER).Value;
-					outToken.Value = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
-                    ok = true;
+						outToken.Expiration = new DateTime(1970, 1, 1).AddSeconds(Double.Parse(jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXEXPIRATION).Value));
+						outToken.ProgramName = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXPROGRAM).Value;
+						outToken.Issuer = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXISSUER).Value;
+						outToken.Value = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+						ok = true;
+					}
                 }
                 catch (Exception e)
 				{
