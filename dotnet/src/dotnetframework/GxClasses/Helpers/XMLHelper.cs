@@ -100,6 +100,10 @@ namespace GeneXus.Utils
 						throw ex;
 					}
 				}
+				finally
+				{
+					xmls.UnknownNode -= serErr.unknownNode;
+				}
 
 				serializationErrors = serErr.GetErrors();
 				return deserialized;
