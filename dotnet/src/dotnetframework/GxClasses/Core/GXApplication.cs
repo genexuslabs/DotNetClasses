@@ -3097,8 +3097,12 @@ namespace GeneXus.Application
 		public string PathToRelativeUrl(string path, bool relativeToServer)
 		{
 			Uri uri;
+			string scriptPath = GetScriptPath();
 			if (!Uri.TryCreate(path, UriKind.Absolute, out uri) || uri.Scheme != GXUri.UriSchemeFile)
 			{
+				//Relative URL => make sure it honour relativeToServer
+				if (!relativeToServer && path.StartsWith(scriptPath))
+					path = path.Remove(0, scriptPath.Length);
 				return path;
 			}
 			string Resource = path;
@@ -3117,7 +3121,7 @@ namespace GeneXus.Application
 
 			Resource = StringUtil.ReplaceLast(Resource, fileName, Uri.EscapeUriString(fileName));
 			if (relativeToServer)
-				return GetScriptPath() + Resource;
+				return scriptPath + Resource;
 			return Resource;
 		}
 
