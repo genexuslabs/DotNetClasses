@@ -148,8 +148,8 @@
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" PrivateAssets="All" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.7.1" PrivateAssets="All" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.7.1" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" PrivateAssets="All" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" PrivateAssets="All" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
