@@ -4259,8 +4259,10 @@ namespace GeneXus.Data
                 return (((byte)block.Item(pos,i)) == 1);
             else if ((block.Item(pos,i)) is bool)
                 return (bool)block.Item(pos,i);
-            else
-                return (((int)block.Item(pos,i)) == 1);
+			else if ((block.Item(pos, i)) is string && bool.TryParse((string)block.Item(pos, i), out bool result))
+				return result;
+			else
+				return (((int)block.Item(pos,i)) == 1);
 		}
 		public byte GetByte( int i)
 		{
