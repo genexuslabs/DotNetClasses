@@ -670,16 +670,19 @@ namespace GeneXus.Data
 
 		public override string GetString(int i)
 		{
-			if (computeSizeInBytes) readBytes += 10 + (2 * ((string)block.Item(pos, i)).Length);
+			string result;
 
 			if (block.Item(pos, i) is byte[])
 #if NETCORE
-				return System.Text.Encoding.UTF8.GetString((byte[])block.Item(pos, i));
+				result = System.Text.Encoding.UTF8.GetString((byte[])block.Item(pos, i));
 #else
-				return System.Text.Encoding.Default.GetString((byte[])block.Item(pos, i));
+				result = System.Text.Encoding.Default.GetString((byte[])block.Item(pos, i));
 #endif
 			else
-				return (string)block.Item(pos, i);
+				result= (string)block.Item(pos, i);
+
+			if (computeSizeInBytes) readBytes += 10 + (2 * result.Length);
+			return result;
 		}
 		public override DateTime GetDateTime(int i)
 		{
