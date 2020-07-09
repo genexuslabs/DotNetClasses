@@ -1,9 +1,8 @@
-﻿using GeneXus.Cryptography.CryptoException;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using GeneXus.Cryptography.CryptoException;
+using GeneXus.Utils;
 
 namespace GeneXus.Cryptography.Hashing
 {
@@ -13,7 +12,10 @@ namespace GeneXus.Cryptography.Hashing
 
 		public HashedKeyAlgorithmProvider(string algorithm)
 		{
-			_keyedHash = KeyedHashAlgorithm.Create(algorithm);
+			if (GXUtil.IsWindowsPlatform)
+			{
+				_keyedHash = KeyedHashAlgorithm.Create(algorithm);
+			}
 			if (_keyedHash == null)
 			{
 				throw new AlgorithmNotSupportedException();

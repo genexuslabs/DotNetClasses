@@ -571,7 +571,14 @@ namespace GeneXus.Utils
 
 			try
 			{
-				_DataSocket.Connect(serverEndPoint);
+				if (GXUtil.IsWindowsPlatform)
+				{
+					_DataSocket.Connect(serverEndPoint);
+				}
+				else
+				{
+					ProcessProtocolViolationError("OpenPassiveDataConnection not supported in this platform");
+				}
 			} 
 			catch
 			{
@@ -630,7 +637,14 @@ namespace GeneXus.Utils
 
 				try
 				{
-					_ControlSocket.Connect(serverEndPoint);
+					if (GXUtil.IsWindowsPlatform)
+					{
+						_DataSocket.Connect(serverEndPoint);
+					}
+					else
+					{
+						ProcessProtocolViolationError("OpenControlConnection not supported in this platform");
+					}
 				}
 				catch (Exception e)
 				{  

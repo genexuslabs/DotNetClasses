@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Security.Cryptography;
 using GeneXus.Cryptography.CryptoException;
+using GeneXus.Utils;
 
 namespace GeneXus.Cryptography.Hashing
 {
@@ -44,7 +42,10 @@ namespace GeneXus.Cryptography.Hashing
 					_hash = new SHA512CryptoServiceProvider();
 					break;
 				default:
-					_hash = HashAlgorithm.Create(algorithm);
+					if (GXUtil.IsWindowsPlatform)
+					{
+						_hash = HashAlgorithm.Create(algorithm);
+					}
 					break;
 		}
 
