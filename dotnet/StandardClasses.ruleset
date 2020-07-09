@@ -153,4 +153,10 @@
   <Rules AnalyzerId="Microsoft.CodeQuality.CSharp.Analyzers" RuleNamespace="Microsoft.CodeQuality.CSharp.Analyzers">
     <Rule Id="CA1032" Action="None" />
   </Rules>
+  <Rules AnalyzerId="Microsoft.DotNet.Analyzers.Compatibility" RuleNamespace="Microsoft.DotNet.Analyzers.Compatibility">
+    <Rule Id="DE0006" Action="Hidden" />
+    <Rule Id="DE0003" Action="Hidden" />
+    <Rule Id="DE0004" Action="Hidden" />
+    <Rule Id="DE0008" Action="Hidden" />
+  </Rules>
 </RuleSet>

@@ -4197,7 +4197,7 @@ namespace GeneXus.Utils
 			}
 			else
 			{
-				string value, s, s1;
+				string value, s=null, s1;
 				if (Config.GetValueOf("HTTPCONTEXT_USER_AS_USERID", out value) && value.StartsWith("y"))
 				{
 					//Virtual directory mapped to another machine, returns the user for "connect as" of virtual directory
@@ -4208,8 +4208,11 @@ namespace GeneXus.Utils
 					}
 					else
 					{
-						s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-						GXLogging.Debug(log, "HttpContext.Current is null, UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name:", s);
+						if (IsWindowsPlatform)
+						{
+							s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+							GXLogging.Debug(log, "HttpContext.Current is null, UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name:", s);
+						}
 					}
 				}
 				else
@@ -4222,12 +4225,13 @@ namespace GeneXus.Utils
                     }
                     else
                     {
-                        s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+						if (IsWindowsPlatform)
+							s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
                     }
 #else
 					s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-#endif
 					GXLogging.Debug(log, "UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name: ", s);
+#endif
 				}
 
 				if (s == null)
@@ -4261,6 +4265,17 @@ namespace GeneXus.Utils
             return decodedHeader;
         }
 #endif
+		public static bool IsWindowsPlatform
+		{
+			get
+			{
+#if NETCORE
+				return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#else
+				return true;
+#endif
+			}
+		}
 		static public int DbmsVersion(IGxContext context, string dataSource)
 		{
 			string version = context.ServerVersion(dataSource);
