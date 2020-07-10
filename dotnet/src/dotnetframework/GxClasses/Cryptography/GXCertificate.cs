@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using System.Security.Cryptography;
 using log4net;
 using GeneXus.Utils;
 
+
 namespace GeneXus.Cryptography
 {
-    public class GXCertificate
+	public class GXCertificate
     {
         static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -31,13 +29,14 @@ namespace GeneXus.Cryptography
 
         public int Load(string certPath, string password)
         {
-            if (File.Exists(certPath))
+			if (File.Exists(certPath) && GXUtil.IsWindowsPlatform)
             {
                 try
                 {
                     if (!string.IsNullOrEmpty(password))
                     {
-                        _cert = new X509Certificate2(certPath, password, X509KeyStorageFlags.MachineKeySet |
+
+						_cert = new X509Certificate2(certPath, password, X509KeyStorageFlags.MachineKeySet |
                                      X509KeyStorageFlags.PersistKeySet |
                                      X509KeyStorageFlags.Exportable);
                         _password = password;
@@ -67,8 +66,16 @@ namespace GeneXus.Cryptography
         {
             try
             {
-                _cert = new X509Certificate2(Convert.FromBase64String(base64Data));
-                SetError(0);
+				if (GXUtil.IsWindowsPlatform)
+				{
+					_cert = new X509Certificate2(Convert.FromBase64String(base64Data));
+					SetError(0);
+				}
+				else
+				{
+					SetError(1);
+					GXLogging.Error(log, String.Format("FromBase64 not supported in this platform"));
+				}
             }
             catch (FormatException)
             {

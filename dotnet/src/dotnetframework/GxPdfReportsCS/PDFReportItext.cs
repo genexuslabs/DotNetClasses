@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Security;
 using GeneXus;
 using GeneXus.Configuration;
+using GeneXus.Utils;
 
 namespace com.genexus.reports 
 {
@@ -125,7 +126,7 @@ namespace com.genexus.reports
 			catch (IOException) { props = new ParseINI(); }
 			
 			String acrobatLocation = props.getGeneralProperty(Const.ACROBAT_LOCATION); 
-			if (acrobatLocation == null)
+			if (acrobatLocation == null && GXUtil.IsWindowsPlatform)
 			{
 				try
 				{
@@ -360,9 +361,17 @@ namespace com.genexus.reports
 				DEBUG = false;
 			}
 			try {
-				Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, "."),
+				string systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+				if (!string.IsNullOrEmpty(systemFolder))
+				{
+					Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, "."),
 															   Path.Combine(
-															   Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System)).FullName, "fonts")});
+															   Directory.GetParent(systemFolder).FullName, "fonts")});
+				}
+				else
+				{
+					Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, ".")});
+				}
 			}
 			catch (SecurityException ex)
 			{
@@ -963,7 +972,7 @@ namespace com.genexus.reports
 						fontPath = fontDescriptor.getTrueTypeFontLocation(fontName);
 						if (string.IsNullOrEmpty(fontPath))
 						{
-							baseFont = BaseFont.CreateFont("Helvetica", BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+							baseFont = CreateDefaultFont();
 							foundFont = false;
 						}
 						else
@@ -973,8 +982,6 @@ namespace com.genexus.reports
 					}
 					if (foundFont)
 					{
-						GXLogging.Debug(log,"foundFont");
-
 						if (IsEmbeddedFont(fontName))
 						{
 							baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
@@ -1007,13 +1014,17 @@ namespace com.genexus.reports
 			}
 			catch (DocumentException de)
 			{
-				GXLogging.Debug(log,"GxAttris error", de);
+				GXLogging.Debug(log,"GxAttris DocumentException", de);
 				throw de;
 			}
-			catch (IOException ioe)
+			catch (Exception e)
 			{
-				GXLogging.Debug(log,"GxAttris io error", ioe);
+				GXLogging.Debug(log, "GxAttris error", e);
+				baseFont = CreateDefaultFont();
 			}
+		}
+		private BaseFont CreateDefaultFont() {
+			return BaseFont.CreateFont("Helvetica", BaseFont.WINANSI, BaseFont.NOT_EMBEDDED); 
 		}
 		private string GetFontLocation(string fontName)
 		{
@@ -1961,48 +1972,50 @@ namespace com.genexus.reports
 
 		private void loadSubstituteTable()
 		{
-			// Registry substitutes
 			Hashtable tempInverseMappings = new Hashtable();
-			ArrayList table = new ArrayList();
-			String registryEntry = Const.REGISTRY_FONT_SUBSTITUTES_ENTRY;
-			try
-			{ // Win95/98/Me
-				table = nativeCode.getRegistrySubValues(Registry.LocalMachine.Name, Const.REGISTRY_FONT_SUBSTITUTES_ENTRY);
-			}
-			catch(Exception)
+			if (GXUtil.IsWindowsPlatform)
 			{
-				registryEntry = Const.REGISTRY_FONT_SUBSTITUTES_ENTRY_NT;
+				// Registry substitutes
+				ArrayList table = new ArrayList();
+				String registryEntry = Const.REGISTRY_FONT_SUBSTITUTES_ENTRY;
 				try
-				{ // Win NT/2000
-					table = nativeCode.getRegistrySubValues(Registry.LocalMachine.Name, Const.REGISTRY_FONT_SUBSTITUTES_ENTRY_NT);
+				{ // Win95/98/Me
+					table = nativeCode.getRegistrySubValues(Registry.LocalMachine.Name, Const.REGISTRY_FONT_SUBSTITUTES_ENTRY);
 				}
-				catch(Exception){ ; }
-			}
-			for(IEnumerator enu = table.GetEnumerator(); enu.MoveNext();)
-			{
-				String entryName = (String)enu.Current;
-				String fontName = entryName;
-				int index = fontName.IndexOf(',');
-				if(index != -1)
-					fontName = fontName.Substring(0, index);
-				try
+				catch (Exception)
 				{
-					String substitute = nativeCode.getRegistryValue(Registry.LocalMachine.Name, registryEntry, entryName);
-					int index2 = substitute.IndexOf(',');
-					if(index2 != -1)
-						substitute = substitute.Substring(0, index2);
-					fontSubstitutes[fontName]= substitute;
-					ArrayList tempVector = (ArrayList)tempInverseMappings[substitute];
-					if(tempVector == null)
-					{                        
-						tempVector = new ArrayList();
-						tempInverseMappings[substitute]= tempVector;
+					registryEntry = Const.REGISTRY_FONT_SUBSTITUTES_ENTRY_NT;
+					try
+					{ // Win NT/2000
+						table = nativeCode.getRegistrySubValues(Registry.LocalMachine.Name, Const.REGISTRY_FONT_SUBSTITUTES_ENTRY_NT);
 					}
-					tempVector.Add(fontName);                    
+					catch (Exception) {; }
 				}
-				catch(Exception) { ; }
+				for (IEnumerator enu = table.GetEnumerator(); enu.MoveNext();)
+				{
+					String entryName = (String)enu.Current;
+					String fontName = entryName;
+					int index = fontName.IndexOf(',');
+					if (index != -1)
+						fontName = fontName.Substring(0, index);
+					try
+					{
+						String substitute = nativeCode.getRegistryValue(Registry.LocalMachine.Name, registryEntry, entryName);
+						int index2 = substitute.IndexOf(',');
+						if (index2 != -1)
+							substitute = substitute.Substring(0, index2);
+						fontSubstitutes[fontName] = substitute;
+						ArrayList tempVector = (ArrayList)tempInverseMappings[substitute];
+						if (tempVector == null)
+						{
+							tempVector = new ArrayList();
+							tempInverseMappings[substitute] = tempVector;
+						}
+						tempVector.Add(fontName);
+					}
+					catch (Exception) {; }
+				}
 			}
-
 			for(int i = 0; i < Const.FONT_SUBSTITUTES_TTF_TYPE1.Length; i++)
 				fontSubstitutes[Const.FONT_SUBSTITUTES_TTF_TYPE1[i][0]]= Const.FONT_SUBSTITUTES_TTF_TYPE1[i][1];
         
@@ -2652,7 +2665,7 @@ namespace com.genexus.reports
 		public ArrayList getRegistrySubValues(string key, String entry) 
 		{
 			RegistryKey regkey = findRegKey(key + "\\" + entry);
-			if (regkey!=null)
+			if (regkey != null && GXUtil.IsWindowsPlatform)
 			{
 				string[] values = regkey.GetValueNames();
 				return new ArrayList( values);
@@ -2682,7 +2695,7 @@ namespace com.genexus.reports
 				partialPath += "\\"+splitPath[i];
 
 			RegistryKey rKey = findRegKey(partialPath);
-			if ( rKey != null)
+			if ( rKey != null && GXUtil.IsWindowsPlatform)
 			{
 				object oRet = rKey.GetValue(splitPath[pathItems-1]);
 				if (oRet != null)
@@ -2694,7 +2707,7 @@ namespace com.genexus.reports
 		{
 			string[] splitPath = path.Split('\\');
 			int pathItems = splitPath.Length;
-			if (pathItems < 2)
+			if (pathItems < 2 || !GXUtil.IsWindowsPlatform)
 				return null;
 			RegistryKey baseKey;
 			switch(splitPath[0].ToUpper())
@@ -2910,44 +2923,48 @@ namespace com.genexus.reports
 				return fontFileLocation;
 			staticMappingsSearched = true;
 
-			try
+			if (GXUtil.IsWindowsPlatform)
 			{
-				RegistryKey FONTS_ENTRY = isWinNT() ? Registry.LocalMachine.OpenSubKey(REGISTRY_FONTS_ENTRY_NT, false) : Registry.LocalMachine.OpenSubKey(REGISTRY_FONTS_ENTRY, false);
-				String [] fontNames = FONTS_ENTRY.GetValueNames();
-				for(int i = 0; i < fontNames.Length; i++)
+				try
 				{
-					String fontNameMs = fontNames[i];
-					
-					if(fontNameMs.EndsWith(TRUE_TYPE_REGISTRY_SIGNATURE))
-					{ 
-						try
-						{
-							
-							String strippedFontName = fontNameMs.Substring(0, fontNameMs.Length - TRUE_TYPE_REGISTRY_SIGNATURE.Length).Trim();
-							String fontFile = (String)FONTS_ENTRY.GetValue(fontNameMs);
-							fontFileLocation = Utilities.findFileInPath(fontFile);
+					RegistryKey FONTS_ENTRY = isWinNT() ? Registry.LocalMachine.OpenSubKey(REGISTRY_FONTS_ENTRY_NT, false) : Registry.LocalMachine.OpenSubKey(REGISTRY_FONTS_ENTRY, false);
+					String[] fontNames = FONTS_ENTRY.GetValueNames();
+					for (int i = 0; i < fontNames.Length; i++)
+					{
+						String fontNameMs = fontNames[i];
 
-							if (fontFile.ToLower().EndsWith("ttc"))
+						if (fontNameMs.EndsWith(TRUE_TYPE_REGISTRY_SIGNATURE))
+						{
+							try
 							{
-								String [] strippedFontNames = strippedFontName.Split(new char[]{'&'});
-								for(int j=0; j<strippedFontNames.Length; j++)
+
+								String strippedFontName = fontNameMs.Substring(0, fontNameMs.Length - TRUE_TYPE_REGISTRY_SIGNATURE.Length).Trim();
+								String fontFile = (String)FONTS_ENTRY.GetValue(fontNameMs);
+								fontFileLocation = Utilities.findFileInPath(fontFile);
+
+								if (fontFile.ToLower().EndsWith("ttc"))
 								{
-									String strippedFontName1 = strippedFontNames[j].Trim();
-									staticProps.setProperty(Const.MS_FONT_LOCATION, strippedFontName1, fontFileLocation + "," + j);
+									String[] strippedFontNames = strippedFontName.Split(new char[] { '&' });
+									for (int j = 0; j < strippedFontNames.Length; j++)
+									{
+										String strippedFontName1 = strippedFontNames[j].Trim();
+										staticProps.setProperty(Const.MS_FONT_LOCATION, strippedFontName1, fontFileLocation + "," + j);
+									}
+								}
+								else
+								{
+									staticProps.setProperty(Const.MS_FONT_LOCATION, strippedFontName, fontFileLocation);
 								}
 							}
-							else
-							{
-								staticProps.setProperty(Const.MS_FONT_LOCATION, strippedFontName, fontFileLocation);
-							}
+							catch (IOException) {; }
 						}
-						catch(IOException) { ;}
 					}
+					FONTS_ENTRY.Close();
 				}
-				FONTS_ENTRY.Close();
-			}
-			catch(Exception ex) {
-				GXLogging.Warn(log,"getTrueTypeFontLocation error", ex);
+				catch (Exception ex)
+				{
+					GXLogging.Warn(log, "getTrueTypeFontLocation error", ex);
+				}
 			}
 			return staticProps.getProperty(Const.MS_FONT_LOCATION, fontName);
 		}  
