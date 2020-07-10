@@ -372,8 +372,12 @@ namespace GeneXus.Utils
 					object g = new Guid(o.ToString());
 					TObject = (T)g;
 				}
-				else
+				else if (o is IConvertible)
+				{
 					TObject = (T)Convert.ChangeType(o, typeof(T));
+				}
+				else
+					TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
 			}
 			if (idx == 0)
 				Add(TObject);
