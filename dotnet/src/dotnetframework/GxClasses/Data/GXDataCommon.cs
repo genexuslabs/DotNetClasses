@@ -4210,7 +4210,7 @@ namespace GeneXus.Data
 		}
 		public virtual bool IsDBNull(int i)
 		{
-			return block.Item(pos,i) == DBNull.Value;
+			return (block.Item(pos, i) == DBNull.Value) || (block.Item(pos, i) is DBNull);
 		}
 		public char GetChar(int i)
 		{
