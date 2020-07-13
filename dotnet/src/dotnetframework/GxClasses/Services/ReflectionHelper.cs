@@ -20,10 +20,10 @@ namespace GeneXus.Application
 			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, inParametersValues);
 			methodInfo.Invoke(instance, parametersForInvocation);
 		}
-		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters)
+		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context=null)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
-			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters);
+			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, context);
 			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
 
 			return ProcessParametersAfterInvoke(methodInfo, parametersForInvocation, returnParm);
@@ -42,7 +42,7 @@ namespace GeneXus.Application
 			return false;
 		}
 
-		private static object ConvertSingleJsonItem(object value, Type newType)
+		private static object ConvertSingleJsonItem(object value, Type newType, IGxContext context)
 		{
 			if (value!= null && value.GetType() == newType)
 			{
@@ -50,7 +50,15 @@ namespace GeneXus.Application
 			}
 			else if (typeof(IGxJSONAble).IsAssignableFrom(newType))
 			{
-				var TObject = Activator.CreateInstance(newType);
+				object TObject;
+				if (typeof(GxSilentTrnSdt).IsAssignableFrom(newType) && context!=null)
+				{
+					TObject = Activator.CreateInstance(newType, new object[] { context});
+				}
+				else
+				{
+					TObject = Activator.CreateInstance(newType);
+				}
 				((IGxJSONAble)TObject).FromJSONObject((IJsonFormattable)value);
 				return TObject;
 			}
@@ -80,7 +88,7 @@ namespace GeneXus.Application
 			}
 		}
 
-		private static object ConvertStringToNewNonNullableType(object value, Type newType)
+		private static object ConvertStringToNewNonNullableType(object value, Type newType, IGxContext context=null)
 		{
 			
 			if (newType.IsArray)
@@ -91,15 +99,15 @@ namespace GeneXus.Application
 				var elements = new ArrayList();
 				foreach (var element in value.ToString().Split(','))
 				{
-					var convertedSingleItem = ConvertSingleJsonItem(element, singleItemType);
+					var convertedSingleItem = ConvertSingleJsonItem(element, singleItemType, context);
 					elements.Add(convertedSingleItem);
 				}
 				return elements.ToArray(singleItemType);
 			}
-			return ConvertSingleJsonItem(value, newType);
+			return ConvertSingleJsonItem(value, newType, context);
 		}
 
-		internal static object ConvertStringToNewType(object value, Type newType)
+		internal static object ConvertStringToNewType(object value, Type newType, IGxContext context=null)
 		{
 			// If it's not a nullable type, just pass through the parameters to Convert.ChangeType
 			if (newType.GetTypeInfo().IsGenericType && newType.GetGenericTypeDefinition() != null && newType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
@@ -108,9 +116,9 @@ namespace GeneXus.Application
 				{
 					return null;
 				}
-				return ConvertStringToNewNonNullableType(value, new NullableConverter(newType).UnderlyingType);
+				return ConvertStringToNewNonNullableType(value, new NullableConverter(newType).UnderlyingType, context);
 			}
-			return ConvertStringToNewNonNullableType(value, newType);
+			return ConvertStringToNewNonNullableType(value, newType, context);
 		}
 
 		private static Dictionary<string, object> ProcessParametersAfterInvoke(MethodInfo methodInfo, object[] parametersForInvocation, object returnParm)
@@ -131,7 +139,7 @@ namespace GeneXus.Application
 				outputParameters.Add(string.Empty, returnParm);
 			return outputParameters;
 		}
-		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters)
+		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters, IGxContext context=null)
 		{
 			var methodParameters = methodInfo.GetParameters();
 			object[] parametersForInvocation = new object[methodParameters.Length];
@@ -148,7 +156,7 @@ namespace GeneXus.Application
 				}
 				if (parameters!=null && parameters.TryGetValue(gxParameterName, out value))
 				{
-					var convertedValue = ConvertStringToNewType(value, parmType);
+					var convertedValue = ConvertStringToNewType(value, parmType, context);
 					parametersForInvocation[idx] = convertedValue;
 				}
 				else
