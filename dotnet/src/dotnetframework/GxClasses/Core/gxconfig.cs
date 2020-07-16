@@ -493,12 +493,9 @@ namespace GeneXus.Configuration
 					}
 
 #else
-					var log4netConfig = Path.Combine(FileUtil.GetBasePath(), "log4net.xml");
-					if (File.Exists(log4netConfig))
-						logConfig(log4netConfig);
-
 					var appSettings = "appsettings.json";
 					var clientConfig = "client.exe.config";
+					var logConfigFile = GxContext.IsHttpContext ? "log.config":"log.console.config";
 					if (File.Exists(Path.Combine(FileUtil.GetBasePath(), appSettings)))
 					{
 						_config = loadConfigJson(appSettings);
@@ -506,9 +503,7 @@ namespace GeneXus.Configuration
 					else if (File.Exists(clientConfig))
 					{
 						_config = loadConfig(clientConfig);
-						logConfig(clientConfig);
 					}
-					var logConfigFile = "log.config";
 					if (File.Exists(logConfigFile))
 						logConfig(logConfigFile);
 #endif
