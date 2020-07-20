@@ -1233,17 +1233,12 @@ namespace com.genexus.reports
 				Col.SetSimpleColumn(rect);
 				simulationCol.SetSimpleColumn(rect);
 				
-				bool pageHeightExceeded = bottomAux > drawingPageHeight;
-
-				if (pageHeightExceeded)
-					bottomAux -= drawingPageHeight;
-
 				try
 				{
 					List<IElement> objects = HTMLWorker.ParseToList(new StringReader(sTxt), styles);
 					for (int k = 0; k < objects.Count; ++k)
 					{
-						if (pageHeightExceeded)
+						if (PageHeightExceeded(bottomAux, drawingPageHeight))
 						{
 							simulationCol.AddElement((IElement)objects[k]);
 							simulationCol.Go(true);
@@ -1252,9 +1247,7 @@ namespace com.genexus.reports
 							{
 								rect = new Rectangle(leftAux + leftMargin, drawingPageHeight - bottomAux, rightAux + leftMargin, drawingPageHeight - topAux);
 
-								pageHeightExceeded = bottomAux > drawingPageHeight;
-								if (pageHeightExceeded)
-									bottomAux -= drawingPageHeight;
+								bottomAux -= drawingPageHeight;
 
 								GxEndPage();
 								GxStartPage();
@@ -1509,6 +1502,10 @@ namespace com.genexus.reports
 					}
 				}
 			}
+		}
+		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
+		{
+			return bottomAux > drawingPageHeight;
 		}
 
 #pragma warning restore CS0612 // Type or member is obsolete
