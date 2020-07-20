@@ -1220,24 +1220,54 @@ namespace com.genexus.reports
 				bottomAux = (float)convertScale(bottom);
 				topAux = (float)convertScale(top);
 
-				ColumnText Col = new ColumnText(cb);
-				
-				Col.SetSimpleColumn(leftAux + leftMargin,
-				(float)this.pageSize.Top - bottomAux - topMargin - bottomMargin,
-				 rightAux + leftMargin,
-				(float)this.pageSize.Top - topAux - topMargin - bottomMargin);
 
+				ColumnText Col = new ColumnText(cb);
+				ColumnText simulationCol = new ColumnText(null);
+				float drawingPageHeight = (float)this.pageSize.Top - topMargin - bottomMargin;
+
+				Rectangle rect = new Rectangle(leftAux + leftMargin,
+				drawingPageHeight - bottomAux,
+				 rightAux + leftMargin,
+				drawingPageHeight - topAux);
+
+				Col.SetSimpleColumn(rect);
+				simulationCol.SetSimpleColumn(rect);
+				
 				try
 				{
 					List<IElement> objects = HTMLWorker.ParseToList(new StringReader(sTxt), styles);
 					for (int k = 0; k < objects.Count; ++k)
+					{
+						if (PageHeightExceeded(bottomAux, drawingPageHeight))
+						{
+							simulationCol.AddElement((IElement)objects[k]);
+							simulationCol.Go(true);
+
+							if (simulationCol.YLine < bottomMargin)
+							{
+								rect = new Rectangle(leftAux + leftMargin, drawingPageHeight - bottomAux, rightAux + leftMargin, drawingPageHeight - topAux);
+
+								bottomAux -= drawingPageHeight;
+
+								GxEndPage();
+								GxStartPage();
+								simulationCol = new ColumnText(null);
+								simulationCol.SetSimpleColumn(rect);
+								simulationCol.AddElement((IElement)objects[k]);
+
+								Col = new ColumnText(cb);
+								Col.SetSimpleColumn(rect);
+							}
+						}
 						Col.AddElement((IElement)objects[k]);
+						Col.Go();
+					}
 				}
 				catch (Exception ex1)
 				{
 					GXLogging.Debug(log, "Error adding html: ", ex1);
 				}
-				Col.Go();
+				
 			}
 			else if (barcode != null)
 			{
@@ -1473,7 +1503,13 @@ namespace com.genexus.reports
 				}
 			}
 		}
+		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
+		{
+			return bottomAux > drawingPageHeight;
+		}
+
 #pragma warning restore CS0612 // Type or member is obsolete
+
 		ColumnText SimulateDrawColumnText(PdfContentByte cb, Rectangle rect, Paragraph p, float leading, int runDirection, int alignment)
 		{
 			ColumnText Col = new ColumnText(cb);
