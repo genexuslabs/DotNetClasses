@@ -88,7 +88,11 @@ namespace GeneXus.Application
 		}
 		public string formatLink(string jumpURL)
 		{
-			return jumpURL.Trim();
+			return formatLink(jumpURL, Array.Empty<string>(), Array.Empty<string>());
+		}
+		protected string formatLink(string jumpURL, string[] parms, string[] parmsName)
+		{
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName);
 		}
 		public virtual string UrlEncode(string s)
 		{

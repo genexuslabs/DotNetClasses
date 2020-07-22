@@ -26,6 +26,7 @@ namespace GeneXus.Http
 	using Jayrock.Json;
 	using System.Web.SessionState;
 	using Helpers;
+	using System.Collections.Concurrent;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.AspNetCore.Http.Extensions;
@@ -41,7 +42,7 @@ namespace GeneXus.Http
 	using GeneXus.Notifications;
 	using Web.Security;
 #endif
-	
+
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -211,6 +212,8 @@ namespace GeneXus.Http
 		bool _isStatic;
 		string staticContentBase;
 
+		ConcurrentDictionary<string, string> _namedParms = new ConcurrentDictionary<string, string>();
+		bool useOldQueryStringFormat;
 		public List<string> _params = new List<string>();       
 		private string _strParms;
 		int _currParameter;                             
@@ -1236,7 +1239,7 @@ namespace GeneXus.Http
 			set { disconnectUserAtCleanup = value; }
 		}
 #if NETCORE
-				public override IGxContext context
+		public override IGxContext context
 #else
 		public IGxContext context
 #endif
@@ -2166,9 +2169,12 @@ namespace GeneXus.Http
 			string value1;
 			initpars();
 			_params.Clear();
-			if (value.Length > 0)
+			_namedParms.Clear();
+			if (!string.IsNullOrEmpty(value))
 			{
-				bool useOldQueryStringFormat = value.IndexOf('&')<0;
+				GxContext gxContext = context as GxContext;
+				useOldQueryStringFormat =   !(gxContext.RemoveInternalParms(value).Contains("="));
+				
 				string[] elements;
 
 				if (value[0] == '?')
@@ -2186,10 +2192,15 @@ namespace GeneXus.Http
 					if (parm.IndexOf("gx-no-cache=") != -1)
 						break;
 
-					if (useOldQueryStringFormat || parm.IndexOf('=')<0)
+					if (useOldQueryStringFormat)
 						_params.Add(GXUtil.UrlDecode(parm));
 					else
-						_params.Add(GXUtil.UrlDecode(parm.Split('=')[1]));
+					{
+						var parmNameValue = parm.Split('=');
+						string parmValue = GXUtil.UrlDecode(parmNameValue[1]);
+						_params.Add(parmValue);
+						_namedParms[parmNameValue[0]]= parmValue;
+					}
 				}
 
 			}
@@ -2242,6 +2253,15 @@ namespace GeneXus.Http
 				return _params[_currParameter];
 			else
 				return "";
+		}
+		public string GetPar(string parameterName)
+		{
+			if (useOldQueryStringFormat)
+				return GetNextPar();
+			else if (_namedParms.TryGetValue(parameterName, out string value))
+				return value;
+			else
+				return string.Empty;
 		}
 		public void SetQueryString(string value)
 		{
@@ -2349,7 +2369,11 @@ namespace GeneXus.Http
 #if !NETCORE
 		public string formatLink(string jumpURL)
 		{
-			return jumpURL.Trim();
+			return formatLink(jumpURL, Array.Empty<string>(), Array.Empty<string>());
+		}
+		protected string formatLink(string jumpURL, string[] parms, string[] parmsName)
+		{
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName);
 		}
 #endif
 		public void Msg(string s)

@@ -263,7 +263,6 @@ namespace GeneXus.Application
 		IGxSession GetSession();
 		CookieContainer GetCookieContainer(string url);
 		bool WillRedirect();
-
 		GXSOAPContext SoapContext { get; set; }
 	}
 	[Serializable]
@@ -1488,6 +1487,8 @@ namespace GeneXus.Application
 			if (IsGxAjaxRequest() || isAjaxEventMode())
 			{
 				int comIdx = query.IndexOf(",");
+				if (comIdx == -1)
+					comIdx = query.IndexOf("&");
 				if (comIdx != -1)
 					query = query.Substring(comIdx + 1);
 			}
@@ -2362,7 +2363,16 @@ namespace GeneXus.Application
 			}
 			return false;
 		}
+		private string UrlPrefix(string url)
+		{
+			if (!url.Contains("?"))
+				return "?";
+			else if (url.Contains("="))
+				return "&";
+			else
+				return ",";
 
+		}
 		private void Redirect_impl(String url, GXWindow win)
 		{
 			if (!IsGxAjaxRequest() && !isAjaxRequest() && win == null)
@@ -2372,7 +2382,7 @@ namespace GeneXus.Application
 				string popLvlParm = "";
 				if (popupLvl != -1)
 				{
-					popLvlParm = (url.IndexOf('?') != -1) ? "," : "?";
+					popLvlParm = UrlPrefix(url);
 					popLvlParm += GXUtil.UrlEncode("gxPopupLevel=" + popupLvl + ";");
 				}
 
