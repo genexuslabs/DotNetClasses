@@ -698,7 +698,10 @@ public class GxFile
 			{
 				return _file.Separator;
 			}
-            return "\\";
+			else
+			{
+				return Path.DirectorySeparatorChar.ToString();
+			}
         }
     }
     public string Source
