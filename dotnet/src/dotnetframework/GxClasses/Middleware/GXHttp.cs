@@ -1914,29 +1914,6 @@ namespace GeneXus.Http
 					this.SendResponseStatus(401, "Unauthorized");
 				}
 			}
-			if (IntegratedSecurityLevel == GAMSecurityLevel.SecurityObject)
-			{
-				String token = localHttpContext.Request.Headers["Authorization"];
-				if (!string.IsNullOrEmpty(token))
-				{
-					token = token.Replace("OAuth ", "");
-					GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
-				}
-				else
-				{
-					token = string.Empty;
-					GxSecurityProvider.Provider.checksession(context, context.CleanAbsoluteUri, out isOK);
-				}
-				if (!isOK)
-				{
-#if NETCORE
-					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]= HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
-#else
-					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
-#endif
-					this.SendResponseStatus(401, "Unauthorized");
-				}
-			}
 			else if (IntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 			{
 				GxSecurityProvider.Provider.checksession(context, context.CleanAbsoluteUri, out isOK);
@@ -2591,6 +2568,10 @@ namespace GeneXus.Http
 
 		private XMLPrefixes currentNamespacePrefixes = new XMLPrefixes();
 
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			currentNamespacePrefixes.SetNamedPrefixesFromReader(rdr);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
 		{
 			currentNamespacePrefixes.SetPrefixesFromReader(rdr);

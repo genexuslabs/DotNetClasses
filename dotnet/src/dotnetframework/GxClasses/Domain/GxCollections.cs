@@ -372,8 +372,12 @@ namespace GeneXus.Utils
 					object g = new Guid(o.ToString());
 					TObject = (T)g;
 				}
-				else
+				else if (o is IConvertible)
+				{
 					TObject = (T)Convert.ChangeType(o, typeof(T));
+				}
+				else
+					TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
 			}
 			if (idx == 0)
 				Add(TObject);
@@ -570,6 +574,10 @@ namespace GeneXus.Utils
 		}
 		private XMLPrefixes currentNamespacePrefixes = new XMLPrefixes();
 
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			currentNamespacePrefixes.SetNamedPrefixesFromReader(rdr);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
 		{
 			currentNamespacePrefixes.SetPrefixesFromReader(rdr);
@@ -1237,6 +1245,10 @@ namespace GeneXus.Utils
 
 		private XMLPrefixes currentNamespacePrefixes = new XMLPrefixes();
 
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			currentNamespacePrefixes.SetNamedPrefixesFromReader(rdr);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
 		{
 			currentNamespacePrefixes.SetPrefixesFromReader(rdr);
