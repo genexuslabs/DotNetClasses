@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
 	<TargetFramework>netcoreapp3.1</TargetFramework>
@@ -46,6 +46,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\EnvVarReader.cs" Link="Helpers\EnvVarReader.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXFileWatcher.cs" Link="Helpers\GXFileWatcher.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\GXBaseObject.cs" Link="Model\GXBaseObject.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Model\URLRouter.cs" Link="Model\URLRouter.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Security\WebSecurity.cs" Link="Security\WebSecurity.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Caching\GxCache.cs" Link="Services\Caching\GxCache.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxCollections.cs" Link="Domain\GxCollections.cs" />
