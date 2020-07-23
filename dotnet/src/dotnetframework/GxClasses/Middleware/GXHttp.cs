@@ -2143,27 +2143,18 @@ namespace GeneXus.Http
 
 		protected void LoadParameters(string value)
 		{
-			string value1;
 			initpars();
 			_params.Clear();
 			_namedParms.Clear();
+			string parmValue;
 			if (!string.IsNullOrEmpty(value))
 			{
 				GxContext gxContext = context as GxContext;
 				useOldQueryStringFormat =   !(gxContext.RemoveInternalParms(value).Contains("="));
-				
-				string[] elements;
 
-				if (value[0] == '?')
-					value1 = value.Substring(1);
-				else
-					value1 = value;
+				value = value.TrimStart('?');
+				string[] elements = useOldQueryStringFormat ? value.Split(',') : value.Split('&');
 
-				
-				if (useOldQueryStringFormat)
-					elements = value1.Split(',');
-				else
-					elements = value1.Split('&');
 				for (int i = 0; i < elements.Length; i++)
 				{
 					string parm = elements[i];
@@ -2175,9 +2166,16 @@ namespace GeneXus.Http
 					else
 					{
 						var parmNameValue = parm.Split('=');
-						string parmValue = GXUtil.UrlDecode(parmNameValue[1]);
+						if (parmNameValue.Length > 1)
+						{
+							parmValue = GXUtil.UrlDecode(parmNameValue[1]);
+							_namedParms[parmNameValue[0]] = parmValue;
+						}
+						else
+						{
+							parmValue = GXUtil.UrlDecode(parmNameValue[0]);
+						}
 						_params.Add(parmValue);
-						_namedParms[parmNameValue[0]]= parmValue;
 					}
 				}
 
@@ -2187,7 +2185,6 @@ namespace GeneXus.Http
 								&& _params.Count == 0) // If it is a call ajax made through a POST is has 1 parameter (the one used to avoid cache)
 			{
 				TryLoadAjaxCallParms();
-
 			}
 		}
 		protected void TryLoadAjaxCallParms()
