@@ -2161,6 +2161,7 @@ namespace GeneXus.Http
 				else
 					value1 = value;
 
+				
 				if (useOldQueryStringFormat)
 					elements = value1.Split(',');
 				else
@@ -2467,7 +2468,7 @@ namespace GeneXus.Http
 			{
 				parameters = parameters.Substring(completeName.Length);
 			}
-			parms = parameters.Split(',');
+			parms = HttpHelper.GetParameterValues(parameters);
 			for (int i = 0; i < parms.Length; i++)
 				parms[i] = GXUtil.UrlDecode((string)parms[i]);
 

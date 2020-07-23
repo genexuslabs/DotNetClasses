@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Text;
 using System.Web;
+using GeneXus.Http;
 using GeneXus.Utils;
 
 namespace GeneXus.Application
@@ -13,7 +14,7 @@ namespace GeneXus.Application
 		static ConcurrentDictionary<string, string> routerList;
 		const string RESOURCE_NAME = "urlrouter.txt";
 
-		public static string GetURLRoute(string key, string[] parms, string[] parmsName, bool useNamedParameters=true)
+		internal static string GetURLRoute(string key, string[] parms, string[] parmsName, bool useNamedParameters=true)
 		{
 			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/"))
 				return key;
@@ -28,7 +29,7 @@ namespace GeneXus.Application
 			string query = urlQueryString.Length > 1 ? urlQueryString[1] : string.Empty;
 			string path = urlQueryString[0];
 
-			string[] parameterValues= string.IsNullOrEmpty(query) ? parms : GetParameterValues(query);
+			string[] parameterValues= string.IsNullOrEmpty(query) ? parms : HttpHelper.GetParameterValues(query);
 
 			if (routerList.ContainsKey(path))
 				path = string.Format(routerList[path], parameterValues);
@@ -38,28 +39,6 @@ namespace GeneXus.Application
 			else
 				return $"{path}?{query}";
 		}
-
-		static bool NamedParametersQuery(string query)
-		{
-			return query.Contains("=");
-		}
-		private static string[] GetParameterValues(string query)
-		{
-			if (NamedParametersQuery(query))
-			{
-				NameValueCollection names = HttpUtility.ParseQueryString(query);
-				string[] values = new string[names.Count];
-				for (int i = 0; i < names.Count; i++)
-					values[i]=names[i];
-
-				return values;
-			}
-			else
-			{
-				return query.Replace("%2C", ",").Split(',');
-			}
-		}
-
 		private static string ConvertParmsToQueryString(bool useNamedParameters, string[] parms, string[] parmsName, string routerRule)
 		{
 			if (routerRule.Contains("%1") || (parms.Length == 0))
