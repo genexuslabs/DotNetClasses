@@ -1477,6 +1477,11 @@ namespace GeneXus.Application
 		public string RemoveInternalParms(string query)
 		{
 			query = RemoveEventPrefix(query);
+			query = RemoveInternalSuffixes(query);
+			return query;
+		}
+		internal static string RemoveInternalSuffixes(string query)
+		{
 			int idx = query.IndexOf(GXNavigationHelper.POPUP_LEVEL);
 			if (idx == 1)
 				return "";
