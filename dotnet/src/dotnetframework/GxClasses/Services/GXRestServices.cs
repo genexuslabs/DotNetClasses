@@ -208,14 +208,10 @@ namespace GeneXus.Utils
 
         public GxRestService()
         {
-            context = new GxContext();
-            DataStoreUtil.LoadDataStores(context);
-            wcfContext = WebOperationContext.Current;
+			context = GxContext.CreateDefaultInstance();
+			wcfContext = WebOperationContext.Current;
             httpContext = HttpContext.Current;
-            string theme = Preferences.GetDefaultTheme();
-            if (!string.IsNullOrEmpty(theme))
-                context.SetDefaultTheme(theme);
-            if (GXUtil.CompressResponse())
+			if (GXUtil.CompressResponse())
                 GXUtil.SetGZip(httpContext);
         }
         public void Cleanup()
