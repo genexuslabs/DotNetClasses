@@ -416,7 +416,11 @@ namespace GeneXus.Application
 					string controller;
 					if (sMap.ContainsKey(basePath) && apiPaths.ContainsKey(basePath) && (sMap[basePath].TryGetValue(path.ToLower(), out String value)))
 					{
-						sVerb[basePath].TryGetValue(path.ToLower(), out String httpverb);
+						String httpverb = "";
+						if (sVerb.ContainsKey(basePath))
+							sVerb[basePath].TryGetValue(path.ToLower(), out httpverb);
+						else
+							httpverb = "";
 						if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
 								parms = path.Substring(questionMarkIdx + 1);										
 						result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = value , Verb = httpverb});						
