@@ -801,7 +801,7 @@ namespace GeneXus.Http
 											hash_i++;
 										}
 									}
-									if (value != null)
+									if (value != null && value!= JNull.Value)
 									{
 										SetNullableScalarOrCollectionValue(parm, value, columnValues);
 									}
@@ -2149,23 +2149,19 @@ namespace GeneXus.Http
 			string parmValue;
 			if (!string.IsNullOrEmpty(value))
 			{
-				GxContext gxContext = context as GxContext;
-				useOldQueryStringFormat =   !(gxContext.RemoveInternalParms(value).Contains("="));
+				value = GxContext.RemoveInternalSuffixes(value).TrimStart('?');
+				useOldQueryStringFormat =   !value.Contains("=");
 
-				value = value.TrimStart('?');
 				string[] elements = useOldQueryStringFormat ? value.Split(',') : value.Split('&');
 
 				for (int i = 0; i < elements.Length; i++)
 				{
-					string parm = elements[i];
-					if (parm.IndexOf("gx-no-cache=") != -1)
-						break;
 
 					if (useOldQueryStringFormat)
-						_params.Add(GXUtil.UrlDecode(parm));
+						_params.Add(GXUtil.UrlDecode(elements[i]));
 					else
 					{
-						var parmNameValue = parm.Split('=');
+						var parmNameValue = elements[i].Split('=');
 						if (parmNameValue.Length > 1)
 						{
 							parmValue = GXUtil.UrlDecode(parmNameValue[1]);
