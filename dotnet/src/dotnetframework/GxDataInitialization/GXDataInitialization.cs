@@ -30,12 +30,8 @@ namespace GeneXus.Utils
 
 		public GXDataInitialization()
 		{
-			context = new GxContext();
-			DataStoreUtil.LoadDataStores(context);
+			context = GxContext.CreateDefaultInstance();
 			IsMain = true;
-			string theme = Preferences.GetDefaultTheme();
-			if (!string.IsNullOrEmpty(theme))
-				context.SetDefaultTheme(theme);
 		}
 		public static int Main(string [] args)
 		{

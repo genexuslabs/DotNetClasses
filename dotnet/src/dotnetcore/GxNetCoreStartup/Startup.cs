@@ -493,11 +493,7 @@ namespace GeneXus.Application
 		private GxRestWrapper GetController(HttpContext context, string controller, string methodName)
 		{
 
-			GxContext gxContext = new GxContext
-			{
-				HttpContext = context
-			};
-			DataStoreUtil.LoadDataStores(gxContext);
+			GxContext gxContext = GxContext.CreateDefaultInstance();
 			context.NewSessionCheck();
 			string nspace;
 			Config.GetValueOf("AppMainNamespace", out nspace);
