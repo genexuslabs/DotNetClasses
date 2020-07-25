@@ -55,6 +55,7 @@ namespace GeneXus.Http
 		internal const string GX_SPA_MASTERPAGE_HEADER = "X-SPA-MP";
 		internal const string GX_AJAX_MULTIPART_ID = "GXAjaxMultipart";
 		private const string GX_FULL_AJAX_REQUEST_HEADER = "X-FULL-AJAX-REQUEST";
+		private const string GXEVENT_PARM = "gxevent";
 		private static Regex MULTIMEDIA_GXI_GRID_PATTERN = new Regex("(\\w+)(_\\d{4})$", RegexOptions.Compiled);
 		private const int SPA_NOT_SUPPORTED_STATUS_CODE = 530;
 		protected bool FullAjaxMode;
@@ -2235,6 +2236,14 @@ namespace GeneXus.Http
 				return value;
 			else
 				return string.Empty;
+		}
+		public string GetEventPar(string parameterName)
+		{
+			if (useOldQueryStringFormat)
+				return GetNextPar();
+			else if (_namedParms.TryGetValue(GXEVENT_PARM, out string value))
+				return value;
+			else return GetPar(parameterName);
 		}
 		public void SetQueryString(string value)
 		{
