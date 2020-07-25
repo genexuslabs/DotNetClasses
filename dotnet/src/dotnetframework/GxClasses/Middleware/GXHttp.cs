@@ -2235,7 +2235,7 @@ namespace GeneXus.Http
 			else
 				return string.Empty;
 		}
-		public string GetEventPar(string parameterName)
+		public string GetFirstPar(string parameterName)
 		{
 			if (useOldQueryStringFormat)
 				return GetNextPar();
