@@ -2148,34 +2148,36 @@ namespace GeneXus.Http
 			_params.Clear();
 			_namedParms.Clear();
 			string parmValue;
+			
 			if (!string.IsNullOrEmpty(value))
 			{
 				value = GxContext.RemoveInternalSuffixes(value).TrimStart('?');
-				useOldQueryStringFormat =   !value.Contains("=");
-
-				string[] elements = useOldQueryStringFormat ? value.Split(',') : value.Split('&');
-
-				for (int i = 0; i < elements.Length; i++)
+				useOldQueryStringFormat = !value.Contains("=");
+				if (!string.IsNullOrEmpty(value))
 				{
+					string[] elements = useOldQueryStringFormat ? value.Split(',') : value.Split('&');
 
-					if (useOldQueryStringFormat)
-						_params.Add(GXUtil.UrlDecode(elements[i]));
-					else
+					for (int i = 0; i < elements.Length; i++)
 					{
-						var parmNameValue = elements[i].Split('=');
-						if (parmNameValue.Length > 1)
-						{
-							parmValue = GXUtil.UrlDecode(parmNameValue[1]);
-							_namedParms[parmNameValue[0]] = parmValue;
-						}
+
+						if (useOldQueryStringFormat)
+							_params.Add(GXUtil.UrlDecode(elements[i]));
 						else
 						{
-							parmValue = GXUtil.UrlDecode(parmNameValue[0]);
+							var parmNameValue = elements[i].Split('=');
+							if (parmNameValue.Length > 1)
+							{
+								parmValue = GXUtil.UrlDecode(parmNameValue[1]);
+								_namedParms[parmNameValue[0]] = parmValue;
+							}
+							else
+							{
+								parmValue = GXUtil.UrlDecode(parmNameValue[0]);
+							}
+							_params.Add(parmValue);
 						}
-						_params.Add(parmValue);
 					}
 				}
-
 			}
 
 			if (localHttpContext.Request.GetMethod() == "POST"
