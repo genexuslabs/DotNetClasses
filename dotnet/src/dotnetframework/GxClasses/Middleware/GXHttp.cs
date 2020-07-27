@@ -2170,7 +2170,7 @@ namespace GeneXus.Http
 							if (parmNameValue.Length > 1)
 							{
 								parmValue = GXUtil.UrlDecode(parmNameValue[1]);
-								_namedParms[parmNameValue[0]] = parmValue;
+								_namedParms[NormalizeParameterName(parmNameValue[0])] = parmValue;
 							}
 							else
 							{
@@ -2234,7 +2234,7 @@ namespace GeneXus.Http
 		{
 			if (useOldQueryStringFormat)
 				return GetNextPar();
-			else if (_namedParms.TryGetValue(parameterName, out string value))
+			else if (_namedParms.TryGetValue(NormalizeParameterName(parameterName), out string value))
 				return value;
 			else
 				return string.Empty;
@@ -2246,6 +2246,13 @@ namespace GeneXus.Http
 			else if (_namedParms.TryGetValue(GXEVENT_PARM, out string value))
 				return value;
 			else return GetPar(parameterName);
+		}
+		string NormalizeParameterName(string parameterName)
+		{
+			if (!string.IsNullOrEmpty(parameterName))
+				return parameterName.ToLower();
+			else
+				return parameterName;
 		}
 		public void SetQueryString(string value)
 		{
