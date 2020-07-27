@@ -12,7 +12,7 @@ namespace GeneXus.Application
 	{
 
 		static ConcurrentDictionary<string, string> routerList;
-		const string RESOURCE_NAME = "urlrouter.txt";
+		const string RESOURCE_PATTERN = "*.rewrite";
 
 		internal static string GetURLRoute(string key, string[] parms, string[] parmsName, bool useNamedParameters=true)
 		{
@@ -22,12 +22,12 @@ namespace GeneXus.Application
 			if (routerList == null)
 			{
 				routerList = new ConcurrentDictionary<string, string>();
-				Load(Path.Combine(GxContext.StaticPhysicalPath(),RESOURCE_NAME));
+				Load(RESOURCE_PATTERN);
 			}
 
 			string[] urlQueryString = key.Split('?');
 			string query = urlQueryString.Length > 1 ? urlQueryString[1] : string.Empty;
-			string path = urlQueryString[0];
+			string path = urlQueryString[0].ToLower();
 
 			string[] parameterValues= string.IsNullOrEmpty(query) ? parms : HttpHelper.GetParameterValues(query);
 
@@ -62,9 +62,10 @@ namespace GeneXus.Application
 			return queryString.ToString();
 		}
 
-		private static void Load(string resourceName)
+		private static void Load(string resourcePattern)
 		{
-			if (File.Exists(resourceName))
+			string[] files = Directory.GetFiles(GxContext.StaticPhysicalPath(), resourcePattern);
+			foreach (string resourceName in files)
 			{
 				foreach (string line in File.ReadLines(resourceName, Encoding.UTF8))
 				{
@@ -74,7 +75,7 @@ namespace GeneXus.Application
 						string objectName = map[0];
 						string url = map[1];
 						url = url.Replace(@"\=", "=").Replace(@"\\", @"\");
-						routerList[objectName] = url;
+						routerList[objectName.ToLower()] = url;
 					}
 				}
 			}
