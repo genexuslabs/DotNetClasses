@@ -515,6 +515,7 @@ namespace GeneXus.Application
 		{
 
 			GxContext gxContext = GxContext.CreateDefaultInstance();
+			gxContext.HttpContext = context;
 			context.NewSessionCheck();
 			string nspace;
 			Config.GetValueOf("AppMainNamespace", out nspace);
