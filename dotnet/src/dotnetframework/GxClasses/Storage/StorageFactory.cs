@@ -1,4 +1,4 @@
-﻿using GeneXus.Services;
+using GeneXus.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ namespace GeneXus.Storage
 {
 	public class StorageFactory
 	{
-
+		const char QUESTION_MARK = '?';
 		public static ExternalProvider GetExternalProviderFromUrl(string url, out string objectName)
 		{
 			objectName = null;
@@ -17,7 +17,8 @@ namespace GeneXus.Storage
 			{
 				if (provider.GetObjectNameFromURL(url, out objectName))
 				{
-					objectName = objectName.Substring(0, objectName.IndexOf("?"));
+					var questionMarkIndex = objectName.IndexOf(QUESTION_MARK);
+					objectName = questionMarkIndex >= 0 ? objectName.Substring(0, questionMarkIndex): objectName.Substring(0);
 					return provider;
 				}
 			}
