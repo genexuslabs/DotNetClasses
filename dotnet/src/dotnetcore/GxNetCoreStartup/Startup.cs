@@ -130,6 +130,7 @@ namespace GeneXus.Application
 		const string TRACE_PATTERN = "trace.axd";
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
+		const string REWRITE_FILE = "rewrite.config";
 
 		public Dictionary<String,String> servicesPathUrl = new Dictionary<String, String>();
 		public List<String> servicesBase = new List<String>();
@@ -343,9 +344,9 @@ namespace GeneXus.Application
 					});
 				}
 			}
-			string[] rewriteFiles = Directory.GetFiles(LocalPath, "*.rewrite.config");
-			if (rewriteFiles.Length > 0)
-				AddRewrite(app, rewriteFiles);
+			string rewriteFile = Path.Combine(LocalPath, REWRITE_FILE);
+			if (File.Exists(rewriteFile))
+				AddRewrite(app, rewriteFile);
 
 			app.UseStaticFiles(new StaticFileOptions()
 			{
@@ -393,17 +394,13 @@ namespace GeneXus.Application
 			app.UseEnableRequestRewind();
 		}
 
-		private void AddRewrite(IApplicationBuilder app, string[] rewriteFiles)
+		private void AddRewrite(IApplicationBuilder app, string rewriteFile)
 		{
-			RewriteOptions options = new RewriteOptions();
-			foreach (string file in rewriteFiles)
+			using (StreamReader apacheModRewriteStreamReader = File.OpenText(rewriteFile))
 			{
-				using (StreamReader apacheModRewriteStreamReader = File.OpenText(file))
-				{
-					options = options.AddApacheModRewrite(apacheModRewriteStreamReader);
-				}
+				var options = new RewriteOptions().AddApacheModRewrite(apacheModRewriteStreamReader);
+				app.UseRewriter(options);
 			}
-			app.UseRewriter(options);
 		}
 
 		bool IsAspx(HttpContext context, string basePath)
