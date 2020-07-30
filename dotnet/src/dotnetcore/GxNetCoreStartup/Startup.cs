@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
@@ -353,6 +354,9 @@ namespace GeneXus.Application
 					});
 				}
 			}
+			string[] rewriteFiles = Directory.GetFiles(LocalPath, "*.rewrite.config");
+			if (rewriteFiles.Length > 0)
+				AddRewrite(app, rewriteFiles);
 
 			app.UseStaticFiles(new StaticFileOptions()
 			{
@@ -399,6 +403,20 @@ namespace GeneXus.Application
 						});
 			app.UseEnableRequestRewind();
 		}
+
+		private void AddRewrite(IApplicationBuilder app, string[] rewriteFiles)
+		{
+			RewriteOptions options = new RewriteOptions();
+			foreach (string file in rewriteFiles)
+			{
+				using (StreamReader apacheModRewriteStreamReader = File.OpenText(file))
+				{
+					options = options.AddApacheModRewrite(apacheModRewriteStreamReader);
+				}
+			}
+			app.UseRewriter(options);
+		}
+
 		bool IsAspx(HttpContext context, string basePath)
 		{
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
