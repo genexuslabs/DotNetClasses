@@ -670,7 +670,11 @@ namespace GeneXus.Configuration
 		static int gxpmEnabled = -1;
 		static int rewriteEnabled = -1;
 		private static int exposeMetadata = -1;
+#if NETCORE
+		public static string DefaultRewriteFile = "rewrite.config";
+#else
 		public static string DefaultRewriteFile = "ManagedFusion.Rewriter.txt";
+#endif
 
 		public static string RemoteLocation
 		{
@@ -716,7 +720,12 @@ namespace GeneXus.Configuration
 			{
 				if (rewriteEnabled == -1)
 				{
-					string rewriteFile = Path.Combine(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName, DefaultRewriteFile);
+#if NETCORE
+					var basePath = FileUtil.GetBasePath();
+#else
+					var basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+#endif
+					string rewriteFile = Path.Combine(basePath, DefaultRewriteFile);
 					rewriteEnabled = File.Exists(rewriteFile)?1:0;
 				}
 				return (rewriteEnabled == 1);

@@ -346,7 +346,7 @@ namespace GeneXus.Application
 			}
 			string rewriteFile = Path.Combine(LocalPath, REWRITE_FILE);
 			if (File.Exists(rewriteFile))
-				AddRewrite(app, rewriteFile);
+				AddRewrite(app, rewriteFile, baseVirtualPath);
 
 			app.UseStaticFiles(new StaticFileOptions()
 			{
@@ -394,9 +394,12 @@ namespace GeneXus.Application
 			app.UseEnableRequestRewind();
 		}
 
-		private void AddRewrite(IApplicationBuilder app, string rewriteFile)
+		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)
 		{
-			using (StreamReader apacheModRewriteStreamReader = File.OpenText(rewriteFile))
+			string rules = File.ReadAllText(rewriteFile);
+			rules = rules.Replace("{BASEURL}", baseURL);
+			
+			using (var apacheModRewriteStreamReader = new StringReader(rules))
 			{
 				var options = new RewriteOptions().AddApacheModRewrite(apacheModRewriteStreamReader);
 				app.UseRewriter(options);
