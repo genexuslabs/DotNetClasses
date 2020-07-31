@@ -1,8 +1,7 @@
+using System;
 using System.Collections.Concurrent;
-using System.Collections.Specialized;
 using System.IO;
 using System.Text;
-using System.Web;
 using GeneXus.Http;
 using GeneXus.Utils;
 
@@ -13,8 +12,10 @@ namespace GeneXus.Application
 
 		static ConcurrentDictionary<string, string> routerList;
 		const string RESOURCE_PATTERN = "*.rewrite";
+		const string DONT_USE_NAMED_PARAMETERS = "DontUseNamedParameters";
+		const string OFF = "0";
 
-		internal static string GetURLRoute(string key, string[] parms, string[] parmsName, bool useNamedParameters=true)
+		internal static string GetURLRoute(string key, string[] parms, string[] parmsName)
 		{
 			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/"))
 				return key;
@@ -31,18 +32,31 @@ namespace GeneXus.Application
 
 			string[] parameterValues= string.IsNullOrEmpty(query) ? parms : HttpHelper.GetParameterValues(query);
 
-			if (routerList.ContainsKey(path))
-				path = string.Format(routerList[path], parameterValues);
+			string routerKey;
+			if (routerList.TryGetValue(path, out routerKey)){
+				path = string.Format(routerKey, parameterValues);
+			}
 
 			if (string.IsNullOrEmpty(query))
-				return $"{path}{ConvertParmsToQueryString(useNamedParameters, parms, parmsName, path)}";
+			{
+				if (PatternHasParameters(routerKey))
+					return path;
+				else
+					return $"{path}{ConvertParmsToQueryString(parms, parmsName, path)}";
+			}
 			else
 				return $"{path}?{query}";
 		}
-		private static string ConvertParmsToQueryString(bool useNamedParameters, string[] parms, string[] parmsName, string routerRule)
+
+		private static bool PatternHasParameters(string routerKey)
 		{
-			if (routerRule.Contains("%1") || (parms.Length == 0))
+			return !string.IsNullOrEmpty(routerKey) && routerKey.Contains("{0}");
+		}
+		private static string ConvertParmsToQueryString(string[] parms, string[] parmsName, string routerRule)
+		{
+			if (parms.Length == 0)
 				return string.Empty;
+			bool useNamedParameters = (Configuration.Config.GetValueOf(DONT_USE_NAMED_PARAMETERS, OFF) == OFF);
 
 			StringBuilder queryString = new StringBuilder("?");
 			string parameterSeparator = useNamedParameters ? "&" : ",";
