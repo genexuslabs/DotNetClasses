@@ -198,13 +198,11 @@ namespace GeneXus.Http.HttpModules
     }
 	public class GXRewriter : RewriterModule
 	{
-		const string DefaultRewriteFile = "ManagedFusion.Rewriter.txt";
 		public GXRewriter()
 		{
-			string rewriteFile = Path.Combine(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName, DefaultRewriteFile);
-			if (!File.Exists(rewriteFile))
+			if (!Preferences.RewriteEnabled)
 			{
-				File.Create(rewriteFile).Close();
+				File.Create(Path.Combine(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName, Preferences.DefaultRewriteFile)).Close();
 			}
 		}
 	}

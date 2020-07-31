@@ -2074,7 +2074,7 @@ namespace GeneXus.Application
 				return GetContextPath() + fout;
 			}
 
-			if (!String.IsNullOrEmpty(StaticContentBase))
+			if (!String.IsNullOrEmpty(StaticContentBase) || Preferences.RewriteEnabled)
 			{
 				if (PathUtil.IsAbsoluteUrl(StaticContentBase))
 					return StaticContentBase + fout;
