@@ -698,7 +698,10 @@ public class GxFile
 			{
 				return _file.Separator;
 			}
-            return "\\";
+			else
+			{
+				return Path.DirectorySeparatorChar.ToString();
+			}
         }
     }
     public string Source
@@ -1140,7 +1143,7 @@ public class GxFile
         else
         {
             string sFilePath = (_file == null) ? "" : _file.DirectoryName;
-            Rename(sFilePath + "\\" + FileUtil.GetFileName(FileName) + "." + ext);
+            Rename(Path.Combine(sFilePath, FileUtil.GetFileName(FileName) + "." + ext));
         }
     }
     public string GetPath()

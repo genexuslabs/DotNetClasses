@@ -108,7 +108,7 @@ namespace GeneXus.Application
 				{
 					innerMethod = this.ServiceMethod;
 				}
-				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters);
+				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
 				return Serialize(outputParameters, wrapped);
