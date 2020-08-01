@@ -213,7 +213,6 @@ namespace GeneXus.Application
 		}
 		public virtual Task  MethodUrlExecute(object key)
 		{
-			System.Diagnostics.Debugger.Launch();
 			try
 			{
 				if (!IsAuthenticated())
