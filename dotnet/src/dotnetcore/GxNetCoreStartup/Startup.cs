@@ -421,7 +421,7 @@ namespace GeneXus.Application
 		{
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
 		}
-		
+				
 		static public List<ControllerInfo> GetRouteController(Dictionary<String,String> apiPaths, Dictionary<String, Dictionary<String, String>> sMap, Dictionary<String, Dictionary<String, String>> sVerb, string basePath, string path)
 		{
 			List<ControllerInfo> result = new List<ControllerInfo>();
@@ -433,7 +433,7 @@ namespace GeneXus.Application
 					int questionMarkIdx = path.IndexOf(QUESTIONMARK);
 					string controller;
 					if (sMap.ContainsKey(basePath) && apiPaths.ContainsKey(basePath) && (sMap[basePath].TryGetValue(path.ToLower(), out String value)))
-					{
+					{						
 						String httpverb = "";
 						if (sVerb.ContainsKey(basePath))
 							sVerb[basePath].TryGetValue(path.ToLower(), out httpverb);
@@ -485,7 +485,7 @@ namespace GeneXus.Application
 				string actualPath = "";
 				if (path.Contains($"/{REST_BASE_URL}") || serviceInPath(path, out actualPath))
 				{
-					string controllerWihtParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
+					string controllerWihtParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;					
 					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesMap, servicesVerb, actualPath, controllerWihtParms);
 					GxRestWrapper controller = null;
 					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name, c.MethodName)) != null);
@@ -507,6 +507,10 @@ namespace GeneXus.Application
 						else if (HttpMethods.IsPut(context.Request.Method) && (HttpMethods.IsPut(controllerInfo.Verb) || controllerInfo.Verb == null))
 						{
 							return controller.Put(controllerInfo.Parameters);
+						}
+						else if (HttpMethods.IsOptions(context.Request.Method))
+						{
+							context.Response.StatusCode = (int)HttpStatusCode.OK;
 						}
 						else
 						{
