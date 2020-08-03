@@ -82,10 +82,12 @@ namespace GeneXus.Application
 
 	public class SingleMap
 	{
+
 		String verb = "GET";
 		String name = "";
 		String implementation = "";
 		String methodName = "";
+
 
 		public string Name { get => name; set => name = value; } 
 		public string ServiceMethod { get => methodName; set => methodName = value; }
@@ -421,7 +423,6 @@ namespace GeneXus.Application
 		{
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
 		}
-				
 		static public List<ControllerInfo> GetRouteController(Dictionary<String,String> apiPaths, Dictionary<String, Dictionary<String, String>> sMap, Dictionary<String, Dictionary<String, String>> sVerb, string basePath, string path)
 		{
 			List<ControllerInfo> result = new List<ControllerInfo>();
@@ -440,7 +441,7 @@ namespace GeneXus.Application
 						else
 							httpverb = "";
 						if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
-								parms = path.Substring(questionMarkIdx + 1);										
+								parms = path.Substring(questionMarkIdx + 1);
 						result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = value , Verb = httpverb});						
 					}
 					else
@@ -491,7 +492,7 @@ namespace GeneXus.Application
 					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name, c.MethodName)) != null);
 
 					if (controller != null)
-					{
+					{						
 						if (HttpMethods.IsGet(context.Request.Method) && (HttpMethods.IsGet(controllerInfo.Verb) || controllerInfo.Verb == null))
 						{
 							return controller.Get(controllerInfo.Parameters);
@@ -508,6 +509,7 @@ namespace GeneXus.Application
 						{
 							return controller.Put(controllerInfo.Parameters);
 						}
+						
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
 							context.Response.StatusCode = (int)HttpStatusCode.OK;
