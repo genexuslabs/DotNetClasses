@@ -474,6 +474,10 @@ namespace GeneXus.Application
 						{
 							return controller.Put(controllerInfo.Parameters);
 						}
+						else if (HttpMethods.IsOptions(context.Request.Method))
+						{
+							context.Response.StatusCode = (int)HttpStatusCode.OK;
+						}
 					}
 					else
 					{
