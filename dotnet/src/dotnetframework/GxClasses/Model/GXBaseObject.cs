@@ -90,6 +90,10 @@ namespace GeneXus.Application
 		{
 			return formatLink(jumpURL, Array.Empty<object>(), Array.Empty<string>());
 		}
+		protected string formatLink(string jumpURL, string[] parms, string[] parmsName)
+		{
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName);
+		}
 		protected string formatLink(string jumpURL, object[] parms, string[] parmsName)
 		{
 			return URLRouter.GetURLRoute(jumpURL, parms, parmsName);
