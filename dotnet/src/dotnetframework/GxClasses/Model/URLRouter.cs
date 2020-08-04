@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Text;
 using GeneXus.Http;
 using GeneXus.Utils;
@@ -15,8 +16,9 @@ namespace GeneXus.Application
 		const string DONT_USE_NAMED_PARAMETERS = "DontUseNamedParameters";
 		const string OFF = "0";
 
-		internal static string GetURLRoute(string key, string[] parms, string[] parmsName)
+		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName)
 		{
+			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray() ;
 			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/"))
 				return key;
 
@@ -46,6 +48,16 @@ namespace GeneXus.Application
 			}
 			else
 				return $"{path}?{query}";
+		}
+
+		private static string StringizeParm(object objectParm)
+		{
+			if (objectParm == null)
+				return string.Empty;
+			else if (objectParm is string)
+				return objectParm as string;
+			else
+				return objectParm.ToString();
 		}
 
 		private static bool PatternHasParameters(string routerKey)
