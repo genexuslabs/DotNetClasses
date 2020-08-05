@@ -66,7 +66,7 @@ namespace GeneXus.HttpHandlerFactory
 				{
 					if ( GXAPIModule.servicesVerbs.ContainsKey(actualPath) && GXAPIModule.servicesVerbs[actualPath].TryGetValue(objectName, out String httpVerb) )
 					{
-						if (httpVerb !=null && !(requestType.Equals(httpVerb)))
+						if ((httpVerb !=null && !(requestType.Equals(httpVerb))) || requestType.Equals("OPTIONS"))
 							   return null;
 					}
 					String tmpController = objClass;
