@@ -24,7 +24,7 @@ jobs:
       with:
           repository: genexuslabs/dispatch-build-result
           ref: releases/v1
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.SECURE_TOKEN }}
           path: .github/actions/dispatch-build-result
 
     - name: Setup GitHub NuGet Registry (GPR)
@@ -83,4 +83,4 @@ jobs:
       with:
         new-version: ${{ env.NuGetPackageVersion }}
         committer: ${{ github.actor }}
-        token: ${{ secrets.PAT }}
+        token: ${{ secrets.SECURE_TOKEN }}
