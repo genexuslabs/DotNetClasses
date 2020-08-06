@@ -10,7 +10,6 @@ jobs:
   build:
     env:
       Configuration: Release
-      NuGetRepository: http://nexus.genexus.com/repository/nuget-prereleases/
     
     runs-on: windows-latest
    
