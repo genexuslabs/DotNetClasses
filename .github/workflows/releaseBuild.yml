@@ -9,13 +9,14 @@ jobs:
   build:
     env:
       Configuration: Release
-      NuGetRepository: http://nexus.genexus.com/repository/nuget-hosted/
 
     runs-on: [self-hosted, windows]
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Checkout action - dispatch-build-result
       uses: actions/checkout@v2
@@ -23,8 +24,11 @@ jobs:
       with:
           repository: genexuslabs/dispatch-build-result
           ref: releases/v1
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.SECURE_TOKEN }}
           path: .github/actions/dispatch-build-result
+
+    - name: Setup GitHub NuGet Registry (GPR)
+      run: nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
 
     - name: Clean previous build #Because self-hosted runners are not cleaned automatically
       run: |
@@ -38,9 +42,8 @@ jobs:
           }
      
     - name: Restore packages
-      run: |
+      run: dotnet restore dotnet\DotNetStandardClasses.sln
 
-        dotnet restore dotnet\DotNetStandardClasses.sln
     - name: Build
       run: |
         $CommitNumber = git rev-list --no-merges --count HEAD
@@ -49,9 +52,7 @@ jobs:
         echo "::set-env name=CommitNumber::$CommitNumber"
         
     - name: Test
-      run: |
-
-        dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
+      run: dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
 
     - name: Pack
       run: |
@@ -67,6 +68,8 @@ jobs:
         dotnet pack dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
     - name: Publish packages
+      env:
+        NuGetRepository: ${{ secrets.NEXUS_NUGET_RELEASES }}
       run: |      
         Get-ChildItem .\dotnet\*.nupkg -Recurse |
           ForEach-Object {
@@ -80,4 +83,4 @@ jobs:
       with:
         new-version: ${{ env.NuGetPackageVersion }}
         committer: ${{ github.actor }}
-        token: ${{ secrets.PAT }}
+        token: ${{ secrets.SECURE_TOKEN }}
