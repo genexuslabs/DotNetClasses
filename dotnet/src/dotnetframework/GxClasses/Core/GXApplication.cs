@@ -380,7 +380,15 @@ namespace GeneXus.Application
 				return _isWebAppManifestDefined == true;
 			}
 		}
-
+		public static GxContext CreateDefaultInstance()
+		{
+			GxContext context = new GxContext();
+			DataStoreUtil.LoadDataStores(context);
+			string theme = Preferences.GetDefaultTheme();
+			if (!string.IsNullOrEmpty(theme))
+				context.SetDefaultTheme(theme);
+			return context;
+		}
 		public GxContext()
 		{
 			_DataStores = new ArrayList(2);
