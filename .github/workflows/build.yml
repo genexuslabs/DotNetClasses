@@ -9,7 +9,6 @@ jobs:
   build:
     env:
       Configuration: Release
-      NuGetRepository: http://nexus.genexus.com/repository/nuget-prereleases/
     
     runs-on: [self-hosted, windows]
 
@@ -70,6 +69,8 @@ jobs:
         dotnet pack dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:Version=$NuGetPackageVersion
 
     - name: Publish packages
+      env:
+        NuGetRepository: ${{ secrets.NEXUS_NUGET_PRERELEASES }}
       run: |      
         Get-ChildItem .\dotnet\*.nupkg -Recurse | ForEach-Object {
             dotnet nuget push $_.FullName --source $Env:NuGetRepository
