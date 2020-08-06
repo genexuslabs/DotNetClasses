@@ -27,9 +27,6 @@ jobs:
           token: ${{ secrets.SECURE_TOKEN }}
           path: .github/actions/dispatch-build-result
 
-    - name: Setup GitHub NuGet Registry (GPR)
-      run: nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
-
     - name: Clean previous build #Because self-hosted runners are not cleaned automatically
       run: |
         Get-ChildItem .\dotnet\src\*\bin -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
