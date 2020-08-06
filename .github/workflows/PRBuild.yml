@@ -27,9 +27,8 @@ jobs:
       run: nuget sources Add -Name "GPR" -Source "https://nuget.pkg.github.com/genexuslabs/index.json" -UserName %GITHUB_ACTOR% -Password ${{ secrets.GITHUB_TOKEN }} 
 
     - name: Restore packages
-      run: |
+      run: dotnet restore dotnet\DotNetStandardClasses.sln
 
-        dotnet restore dotnet\DotNetStandardClasses.sln
     - name: Build
       run: |
         $CommitNumber = git rev-list --no-merges --count HEAD
@@ -38,9 +37,7 @@ jobs:
         echo "::set-env name=CommitNumber::$CommitNumber"
         
     - name: Test
-      run: |
-
-        dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
+      run: dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
 
     - name: Pack
       run: |

@@ -43,9 +43,8 @@ jobs:
           }
      
     - name: Restore packages
-      run: |
+      run: dotnet restore dotnet\DotNetStandardClasses.sln
 
-        dotnet restore dotnet\DotNetStandardClasses.sln
     - name: Build
       run: |
         $CommitNumber = git rev-list --no-merges --count HEAD
@@ -54,9 +53,7 @@ jobs:
         echo "::set-env name=CommitNumber::$CommitNumber"
         
     - name: Test
-      run: |
-
-        dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
+      run: dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
 
     - name: Pack
       run: |
