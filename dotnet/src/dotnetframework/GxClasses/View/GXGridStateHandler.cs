@@ -110,16 +110,25 @@ namespace GeneXus.WebControls
 	[DataContract]
 	internal class GridState
 	{
+		List<GridState_InputValuesItem> _inputValues;
 		public GridState()
 		{
-			InputValues = new List<GridState_InputValuesItem>();
 		}
 		[DataMember]
 		internal int CurrentPage { get; set; }
 		[DataMember]
 		internal short OrderedBy { get; set; }
 		[DataMember]
-		internal List<GridState_InputValuesItem> InputValues { get; set; }
+		internal List<GridState_InputValuesItem> InputValues {
+			get {
+				if (_inputValues == null)
+					_inputValues = new List<GridState_InputValuesItem>();
+				return _inputValues;
+			}
+			set {
+				_inputValues = value;
+			}
+		}
 	}
 	[DataContract]
 	internal class GridState_InputValuesItem
