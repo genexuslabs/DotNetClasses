@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Text;
+using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.Utils;
 
@@ -16,7 +17,7 @@ namespace GeneXus.Application
 		const string DONT_USE_NAMED_PARAMETERS = "DontUseNamedParameters";
 		const string OFF = "0";
 
-		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName)
+		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName, string scriptPath)
 		{
 			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray() ;
 			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/"))
@@ -38,16 +39,17 @@ namespace GeneXus.Application
 			if (routerList.TryGetValue(path, out routerKey)){
 				path = string.Format(routerKey, parameterValues);
 			}
+			string basePath = Preferences.RewriteEnabled ? scriptPath : string.Empty;
 
 			if (string.IsNullOrEmpty(query))
 			{
 				if (PatternHasParameters(routerKey))
-					return path;
+					return $"{basePath}{path}";
 				else
-					return $"{path}{ConvertParmsToQueryString(parms, parmsName, path)}";
+					return $"{basePath}{path}{ConvertParmsToQueryString(parms, parmsName, path)}";
 			}
 			else
-				return $"{path}?{query}";
+				return $"{basePath}{path}?{query}";
 		}
 
 		private static string StringizeParm(object objectParm)
