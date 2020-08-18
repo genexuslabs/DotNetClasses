@@ -2364,11 +2364,11 @@ namespace GeneXus.Http
 		}
 		protected string formatLink(string jumpURL, string[] parms, string[] parmsName)
 		{
-			return URLRouter.GetURLRoute(jumpURL, parms, parmsName);
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName, context.GetScriptPath());
 		}
 		protected string formatLink(string jumpURL, object[] parms, string[] parmsName)
 		{
-			return URLRouter.GetURLRoute(jumpURL, parms, parmsName);
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName, context.GetScriptPath());
 		}
 #endif
 		public void Msg(string s)
