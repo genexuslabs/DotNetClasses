@@ -70,7 +70,7 @@ namespace GeneXus.Application
 		{
 			if (parms.Length == 0)
 				return string.Empty;
-			bool useNamedParameters = (Configuration.Config.GetValueOf(DONT_USE_NAMED_PARAMETERS, OFF) == OFF);
+			bool useNamedParameters = (Configuration.Config.GetValueOf(DONT_USE_NAMED_PARAMETERS, OFF) == OFF) && (parms.Length == parmsName.Length);
 
 			StringBuilder queryString = new StringBuilder("?");
 			string parameterSeparator = useNamedParameters ? "&" : ",";
@@ -79,7 +79,7 @@ namespace GeneXus.Application
 			{
 				bool lastParameter = (i == parms.Length - 1);
 
-				if (!useNamedParameters || parms.Length != parmsName.Length)
+				if (!useNamedParameters)
 					queryString.Append(parms[i]);
 				else
 					queryString.Append($"{parmsName[i]}={parms[i]}");
