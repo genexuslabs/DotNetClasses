@@ -1384,8 +1384,10 @@ namespace GeneXus.Data.ADO
 
 		public void rollbackSavePoint()
 		{
-			IDbCommand cmd = dataRecord.GetCommand(con, "ROLLBACK TO SAVEPOINT gxupdate", new GxParameterCollection());
-			cmd.ExecuteNonQuery();
+			using (IDbCommand cmd = dataRecord.GetCommand(con, "ROLLBACK TO SAVEPOINT gxupdate", new GxParameterCollection()))
+			{
+				cmd.ExecuteNonQuery();
+			}
 		}
 		public bool DynamicStmt
 		{
@@ -1457,14 +1459,17 @@ namespace GeneXus.Data.ADO
 			try
 			{
 				GXLogging.Debug(log, "Start GxCommand.ExecuteNonQuery: Parameters ", ParametersString);
-				
+
 				con = GxConnectionManager.Instance.SetAvailable(handle, dataRecord.DataSource, false);
-				con.CurrentStmt=stmt;
+				con.CurrentStmt = stmt;
 				con.MonitorEnter();
+				int res;
 				dataRecord.SetCursorDef(CursorDef);
-				IDbCommand cmd =dataRecord.GetCommand(con,stmt,parameters, isCursor, false, false);
-				cmd.CommandType=commandType;
-				int res=cmd.ExecuteNonQuery();
+				using (IDbCommand cmd = dataRecord.GetCommand(con, stmt, parameters, isCursor, false, false))
+				{
+					cmd.CommandType = commandType;
+					res = cmd.ExecuteNonQuery();
+				}
 				con.MonitorExit();
 
 				GXLogging.Debug(log, "Return GxCommand.ExecuteNonQuery");
@@ -1500,17 +1505,20 @@ namespace GeneXus.Data.ADO
 			con.MonitorEnter();
 			try
 			{
-                reader = dataRecord.GetCommand(con, stmt, parameters, isCursor, true, false).ExecuteReader(CommandBehavior.SingleRow);
-                if (reader.Read())
+				using (IDbCommand cmd = dataRecord.GetCommand(con, stmt, parameters, isCursor, true, false))
 				{
-					object[] values = new object[reader.FieldCount];
-					dataRecord.GetValues(reader, ref values);
-					block.Add(values);
-					blockSize = 1;
-				}
-				else
-				{
-					blockSize = 0;
+					reader = cmd.ExecuteReader(CommandBehavior.SingleRow);
+					if (reader.Read())
+					{
+						object[] values = new object[reader.FieldCount];
+						dataRecord.GetValues(reader, ref values);
+						block.Add(values);
+						blockSize = 1;
+					}
+					else
+					{
+						blockSize = 0;
+					}
 				}
 				return new CacheItem(block, false, blockSize, 0);
 			}
@@ -1551,10 +1559,12 @@ namespace GeneXus.Data.ADO
 				con.CurrentStmt=stmt;
 				block=new GxArrayList(1);
 				GXLogging.Debug(log, "ExecRpc, SqlConnection ");
-
-				IDbCommand cmd= dataRecord.GetCommand(con,stmt,parameters, isCursor, false, true);
-				cmd.CommandType=CommandType.StoredProcedure;
-				object[] values = dataRecord.ExecuteStoredProcedure(cmd);
+				object[] values;
+				using (IDbCommand cmd = dataRecord.GetCommand(con, stmt, parameters, isCursor, false, true))
+				{
+					cmd.CommandType = CommandType.StoredProcedure;
+					values = dataRecord.ExecuteStoredProcedure(cmd);
+				}
 
 				if (values!=null)
 				{
