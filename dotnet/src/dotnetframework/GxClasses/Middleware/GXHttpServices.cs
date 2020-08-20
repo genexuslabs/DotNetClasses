@@ -33,7 +33,6 @@ namespace GeneXus.Http
 	using GeneXus.Web.Security;
 	using System.Linq;
 	using GeneXus.Procedure;
-	using System.Security.Policy;
 #else
 	using System.Web.UI;
 	using System.Web.UI.WebControls;
