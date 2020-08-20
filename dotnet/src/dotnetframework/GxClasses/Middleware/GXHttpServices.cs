@@ -405,6 +405,7 @@ namespace GeneXus.Http
 
 						gxFile.Create(hpf.InputStream);
 						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
+
 						string uri = gxFile.GetURI();
 						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);
 
@@ -416,8 +417,7 @@ namespace GeneXus.Http
 							type = context.GetContentType(ext),
 							extension = ext,
 							thumbnailUrl = url,
-                            path = uri
-
+							path = uri
 						});
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
