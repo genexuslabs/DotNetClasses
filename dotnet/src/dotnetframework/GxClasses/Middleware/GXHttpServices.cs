@@ -33,6 +33,7 @@ namespace GeneXus.Http
 	using GeneXus.Web.Security;
 	using System.Linq;
 	using GeneXus.Procedure;
+	using System.Security.Policy;
 #else
 	using System.Web.UI;
 	using System.Web.UI.WebControls;
@@ -404,18 +405,20 @@ namespace GeneXus.Http
 						GxFile gxFile = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
 
 						gxFile.Create(hpf.InputStream);
-
 						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
 
-                        r.Add(new UploadFile()
+						string uri = gxFile.GetURI();
+						string blobPath = uri;
+
+						r.Add(new UploadFile()
 						{
 							name = fileName,
 							size = gxFile.GetLength(),
-							url = gxFile.GetPath(),
+							url = uri,
 							type = context.GetContentType(ext),
 							extension = ext,
-							thumbnailUrl = gxFile.GetPath(),
-                            path = savedFileName
+							thumbnailUrl = uri,
+							path = blobPath
 						});
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
