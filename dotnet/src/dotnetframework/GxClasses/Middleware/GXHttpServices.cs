@@ -405,19 +405,19 @@ namespace GeneXus.Http
 
 						gxFile.Create(hpf.InputStream);
 						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
-
 						string uri = gxFile.GetURI();
-						string blobPath = uri;
+						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);
 
 						r.Add(new UploadFile()
 						{
 							name = fileName,
 							size = gxFile.GetLength(),
-							url = uri,
+							url = url,
 							type = context.GetContentType(ext),
 							extension = ext,
-							thumbnailUrl = uri,
-							path = blobPath
+							thumbnailUrl = url,
+                            path = uri
+
 						});
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
