@@ -333,7 +333,7 @@ namespace GeneXus.Data.NTier
 				if (gxSession.Get(SESSION_INFO_ID) != null)
 				{
 					if (sessionExpiry is DateTime)
-						expiryDT = (DateTime)sessionExpiry;
+						expiryDT = DateTime.SpecifyKind((DateTime)sessionExpiry, DateTimeKind.Local);
 					else
 					{
 						string sessionExpiryStr = sessionExpiry as string;

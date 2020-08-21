@@ -74,7 +74,8 @@ namespace GeneXus.Http.HttpModules
 			if (GXAPIModule.serviceInPath(context.Request.FilePath, actualPath: out actualPath))
 			{
 				IHttpHandler myHandler = new GeneXus.HttpHandlerFactory.HandlerFactory().GetHandler(context, context.Request.RequestType, context.Request.Url.AbsoluteUri, context.Request.FilePath);
-				context.Handler = myHandler;
+				if (myHandler !=null)
+					context.Handler = myHandler;
 			}
 		}
 		

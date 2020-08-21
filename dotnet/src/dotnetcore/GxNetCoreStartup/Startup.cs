@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Data.NTier;
@@ -29,6 +31,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -79,14 +82,16 @@ namespace GeneXus.Application
 
 	public class SingleMap
 	{
-		String name;
-		String implementation;
-		String methodName;
+		String verb = "GET";
+		String name = "";
+		String implementation = "";
+		String methodName = "";
 
-		public string Name { get => name; set => name = value; }
+		public string Name { get => name; set => name = value; } 
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
-	
+		public string Verb { get => verb; set => verb = value; }
+
 	}
 
 	public class MapGroup
@@ -135,6 +140,7 @@ namespace GeneXus.Application
 		public Dictionary<String,String> servicesPathUrl = new Dictionary<String, String>();
 		public List<String> servicesBase = new List<String>();
 		public Dictionary<String, Dictionary<String, String>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
+		public Dictionary<String, Dictionary<String, String>> servicesVerb = new Dictionary<String, Dictionary<string, string>>();
 
 		public Startup(IHostingEnvironment env)
         {
@@ -168,16 +174,21 @@ namespace GeneXus.Application
 					servicesPathUrl.Add(mapPathLower,m.Name.ToLower());
 					foreach (SingleMap sm in m.Mappings)
 					{
+						if (sm.Verb == null)
+							sm.Verb = "GET";
 						if (servicesMap.ContainsKey(mapPathLower))
 						{
 							if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
 							{
 								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+								servicesVerb[mapPathLower].Add(sm.Name.ToLower(), sm.Verb.ToUpper());
 							}
 						}
 						else {
 							servicesMap.Add(mapPathLower, new Dictionary<string, string>());
 							servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+							servicesVerb.Add(mapPathLower, new Dictionary<string, string>());
+							servicesVerb[mapPathLower].Add(sm.Name.ToLower(), sm.Verb.ToUpper());
 						}
 					}
 				}
@@ -411,7 +422,7 @@ namespace GeneXus.Application
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
 		}
 		
-		static public List<ControllerInfo> GetRouteController(Dictionary<String,String> apiPaths, Dictionary<String, Dictionary<String, String>> sMap, string basePath, string path)
+		static public List<ControllerInfo> GetRouteController(Dictionary<String,String> apiPaths, Dictionary<String, Dictionary<String, String>> sMap, Dictionary<String, Dictionary<String, String>> sVerb, string basePath, string path)
 		{
 			List<ControllerInfo> result = new List<ControllerInfo>();
 			string parms = string.Empty;
@@ -422,10 +433,15 @@ namespace GeneXus.Application
 					int questionMarkIdx = path.IndexOf(QUESTIONMARK);
 					string controller;
 					if (sMap.ContainsKey(basePath) && apiPaths.ContainsKey(basePath) && (sMap[basePath].TryGetValue(path.ToLower(), out String value)))
-					{						
+					{
+						String httpverb = "";
+						if (sVerb.ContainsKey(basePath))
+							sVerb[basePath].TryGetValue(path.ToLower(), out httpverb);
+						else
+							httpverb = "";
 						if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
 								parms = path.Substring(questionMarkIdx + 1);										
-						result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = value });						
+						result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = value , Verb = httpverb});						
 					}
 					else
 					{
@@ -470,27 +486,36 @@ namespace GeneXus.Application
 				if (path.Contains($"/{REST_BASE_URL}") || serviceInPath(path, out actualPath))
 				{
 					string controllerWihtParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
-					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesMap, actualPath, controllerWihtParms);
+					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesMap, servicesVerb, actualPath, controllerWihtParms);
 					GxRestWrapper controller = null;
 					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name, c.MethodName)) != null);
 
 					if (controller != null)
 					{
-						if (HttpMethods.IsGet(context.Request.Method))
+						if (HttpMethods.IsGet(context.Request.Method) && (HttpMethods.IsGet(controllerInfo.Verb) || controllerInfo.Verb == null))
 						{
 							return controller.Get(controllerInfo.Parameters);
 						}
-						else if (HttpMethods.IsPost(context.Request.Method))
+						else if (HttpMethods.IsPost(context.Request.Method) && (HttpMethods.IsPost(controllerInfo.Verb) || controllerInfo.Verb == null))
 						{
 							return controller.Post();
 						}
-						else if (HttpMethods.IsDelete(context.Request.Method))
+						else if (HttpMethods.IsDelete(context.Request.Method) && (HttpMethods.IsDelete(controllerInfo.Verb) || controllerInfo.Verb == null))
 						{
 							return controller.Delete(controllerInfo.Parameters);
 						}
-						else if (HttpMethods.IsPut(context.Request.Method))
+						else if (HttpMethods.IsPut(context.Request.Method) && (HttpMethods.IsPut(controllerInfo.Verb) || controllerInfo.Verb == null))
 						{
 							return controller.Put(controllerInfo.Parameters);
+						}						
+						else if (HttpMethods.IsOptions(context.Request.Method))
+						{
+							context.Response.StatusCode = (int)HttpStatusCode.OK;
+						}
+						else
+						{
+							context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+							context.Response.Headers.Clear();
 						}
 					}
 					else
