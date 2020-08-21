@@ -26,6 +26,7 @@ namespace GeneXus.Http
 	using Jayrock.Json;
 	using System.Web.SessionState;
 	using Helpers;
+	using System.Collections.Concurrent;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.AspNetCore.Http.Extensions;
@@ -41,7 +42,7 @@ namespace GeneXus.Http
 	using GeneXus.Notifications;
 	using Web.Security;
 #endif
-	
+
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -54,6 +55,7 @@ namespace GeneXus.Http
 		internal const string GX_SPA_MASTERPAGE_HEADER = "X-SPA-MP";
 		internal const string GX_AJAX_MULTIPART_ID = "GXAjaxMultipart";
 		private const string GX_FULL_AJAX_REQUEST_HEADER = "X-FULL-AJAX-REQUEST";
+		private const string GXEVENT_PARM = "gxevent";
 		private static Regex MULTIMEDIA_GXI_GRID_PATTERN = new Regex("(\\w+)(_\\d{4})$", RegexOptions.Compiled);
 		private const int SPA_NOT_SUPPORTED_STATUS_CODE = 530;
 		protected bool FullAjaxMode;
@@ -211,6 +213,8 @@ namespace GeneXus.Http
 		bool _isStatic;
 		string staticContentBase;
 
+		ConcurrentDictionary<string, string> _namedParms = new ConcurrentDictionary<string, string>();
+		bool useOldQueryStringFormat;
 		public List<string> _params = new List<string>();       
 		private string _strParms;
 		int _currParameter;                             
@@ -798,7 +802,7 @@ namespace GeneXus.Http
 											hash_i++;
 										}
 									}
-									if (value != null)
+									if (value != null && value!= JNull.Value)
 									{
 										SetNullableScalarOrCollectionValue(parm, value, columnValues);
 									}
@@ -1236,7 +1240,7 @@ namespace GeneXus.Http
 			set { disconnectUserAtCleanup = value; }
 		}
 #if NETCORE
-				public override IGxContext context
+		public override IGxContext context
 #else
 		public IGxContext context
 #endif
@@ -2140,31 +2144,46 @@ namespace GeneXus.Http
 
 		protected void LoadParameters(string value)
 		{
-			string value1;
 			initpars();
 			_params.Clear();
-			if (value.Length > 0)
+			_namedParms.Clear();
+			string parmValue;
+			
+			if (!string.IsNullOrEmpty(value))
 			{
-				if (value[0] == '?')
-					value1 = value.Substring(1);
-				else
-					value1 = value;
-				string[] elements = value1.Split(',');
-				for (int i = 0; i < elements.Length; i++)
+				value = GxContext.RemoveInternalSuffixes(value).TrimStart('?');
+				useOldQueryStringFormat = !value.Contains("=");
+				if (!string.IsNullOrEmpty(value))
 				{
-					string parm = elements[i];
-					if (parm.IndexOf("gx-no-cache=") != -1)
-						break;
-					_params.Add(GXUtil.UrlDecode(parm));
-				}
+					string[] elements = useOldQueryStringFormat ? value.Split(',') : value.Split('&');
 
+					for (int i = 0; i < elements.Length; i++)
+					{
+
+						if (useOldQueryStringFormat)
+							_params.Add(GXUtil.UrlDecode(elements[i]));
+						else
+						{
+							var parmNameValue = elements[i].Split('=');
+							if (parmNameValue.Length > 1)
+							{
+								parmValue = GXUtil.UrlDecode(parmNameValue[1]);
+								_namedParms[NormalizeParameterName(parmNameValue[0])] = parmValue;
+							}
+							else
+							{
+								parmValue = GXUtil.UrlDecode(parmNameValue[0]);
+							}
+							_params.Add(parmValue);
+						}
+					}
+				}
 			}
 
 			if (localHttpContext.Request.GetMethod() == "POST"
 								&& _params.Count == 0) // If it is a call ajax made through a POST is has 1 parameter (the one used to avoid cache)
 			{
 				TryLoadAjaxCallParms();
-
 			}
 		}
 		protected void TryLoadAjaxCallParms()
@@ -2208,6 +2227,30 @@ namespace GeneXus.Http
 				return _params[_currParameter];
 			else
 				return "";
+		}
+		public string GetPar(string parameterName)
+		{
+			if (useOldQueryStringFormat)
+				return GetNextPar();
+			else if (_namedParms.TryGetValue(NormalizeParameterName(parameterName), out string value))
+				return value;
+			else
+				return string.Empty;
+		}
+		public string GetFirstPar(string parameterName)
+		{
+			if (useOldQueryStringFormat)
+				return GetNextPar();
+			else if (_namedParms.TryGetValue(GXEVENT_PARM, out string value))
+				return value;
+			else return GetPar(parameterName);
+		}
+		string NormalizeParameterName(string parameterName)
+		{
+			if (!string.IsNullOrEmpty(parameterName))
+				return parameterName.ToLower();
+			else
+				return parameterName;
 		}
 		public void SetQueryString(string value)
 		{
@@ -2315,7 +2358,15 @@ namespace GeneXus.Http
 #if !NETCORE
 		public string formatLink(string jumpURL)
 		{
-			return jumpURL.Trim();
+			return formatLink(jumpURL, Array.Empty<object>(), Array.Empty<string>());
+		}
+		protected string formatLink(string jumpURL, string[] parms, string[] parmsName)
+		{
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName, context.GetScriptPath());
+		}
+		protected string formatLink(string jumpURL, object[] parms, string[] parmsName)
+		{
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName, context.GetScriptPath());
 		}
 #endif
 		public void Msg(string s)
@@ -2430,7 +2481,7 @@ namespace GeneXus.Http
 			{
 				parameters = parameters.Substring(completeName.Length);
 			}
-			parms = parameters.Split(',');
+			parms = HttpHelper.GetParameterValues(parameters);
 			for (int i = 0; i < parms.Length; i++)
 				parms[i] = GXUtil.UrlDecode((string)parms[i]);
 
