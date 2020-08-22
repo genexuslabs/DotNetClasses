@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GeneXus.Configuration;
 using System.Web;
 using System.IO;
 using GeneXus.Utils;
 using GeneXus.Application;
+using ManagedFusion.Rewriter;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -198,4 +197,14 @@ namespace GeneXus.Http.HttpModules
         }
         #endregion
     }
+	public class GXRewriter : RewriterModule
+	{
+		public GXRewriter()
+		{
+			if (!Preferences.RewriteEnabled)
+			{
+				File.Create(Path.Combine(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName, Preferences.DefaultRewriteFile)).Close();
+			}
+		}
+	}
 }

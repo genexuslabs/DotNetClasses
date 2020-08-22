@@ -668,7 +668,13 @@ namespace GeneXus.Configuration
 		static int remote = -1;
 		static int storageTimezone = -1;
 		static int gxpmEnabled = -1;
+		static int rewriteEnabled = -1;
 		private static int exposeMetadata = -1;
+#if NETCORE
+		public static string DefaultRewriteFile = "rewrite.config";
+#else
+		public static string DefaultRewriteFile = "ManagedFusion.Rewriter.txt";
+#endif
 
 		public static string RemoteLocation
 		{
@@ -706,6 +712,23 @@ namespace GeneXus.Configuration
 						gxpmEnabled = 0;
 				}
 				return (gxpmEnabled == 1);
+			}
+		}
+		public static bool RewriteEnabled
+		{
+			get
+			{
+				if (rewriteEnabled == -1)
+				{
+#if NETCORE
+					var basePath = FileUtil.GetBasePath();
+#else
+					var basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+#endif
+					string rewriteFile = Path.Combine(basePath, DefaultRewriteFile);
+					rewriteEnabled = File.Exists(rewriteFile)?1:0;
+				}
+				return (rewriteEnabled == 1);
 			}
 		}
 		public static bool MustSetupDB()
