@@ -432,7 +432,7 @@ namespace GeneXus.Http
                     GxFile file = new GxFile(Preferences.getTMP_MEDIA_PATH(), fileName);
                     file.Create(istream);
 
-					Jayrock.Json.JObject obj = new Jayrock.Json.JObject();
+					JObject obj = new JObject();
 					fileName = file.GetURI();
                   
                     String fileGuid =  Guid.NewGuid().ToString("N");
@@ -518,7 +518,7 @@ namespace GeneXus.Http
 				GxSecurityProvider.Provider.oauthlogout(context);
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 				localHttpContext.Response.StatusCode = 200;
-				localHttpContext.Response.Write(new Jayrock.Json.JObject().ToString());
+				localHttpContext.Response.Write(new JObject().ToString());
 				context.CloseConnections();
 			}
 			catch (Exception e)
@@ -680,7 +680,7 @@ namespace GeneXus.Http
 						else
 							localHttpContext.Response.StatusCode = 200;
 						localHttpContext.Response.AddHeader("location", URL);
-						Jayrock.Json.JObject jObj = new Jayrock.Json.JObject();
+						JObject jObj = new JObject();
 						jObj.Put("Location", URL);
 						localHttpContext.Response.Write(jObj.ToString());
 					}

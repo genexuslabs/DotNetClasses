@@ -5,11 +5,13 @@ using log4net;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Serialization;
 
 namespace GeneXus.Utils
 {
+
 	[Serializable]
 	public class GXBaseCollection<T> : List<T>, IGxXMLSerializable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable where T : GxUserType, IGxXMLSerializable, IGxJSONAble, new()
 	{
@@ -126,6 +128,7 @@ namespace GeneXus.Utils
 		}
 		public virtual void ClearCollection()
 		{
+			_jsonArr.Clear();
 			base.Clear();
 		}
 		public virtual object Clone()
@@ -368,7 +371,7 @@ namespace GeneXus.Utils
 		}
 		public String ToJavascriptSource(bool includeState)
 		{
-			return GetJSONObject(includeState).ToString();
+			return JSONHelper.WriteJSON<dynamic>(GetJSONObject(includeState)); 
 		}
 		public String ToJavascriptSource()
 		{
@@ -376,7 +379,7 @@ namespace GeneXus.Utils
 		}
 		public void ToJSON(bool includeState)
 		{
-			((JArray)jsonArr).Clear();
+			jsonArr.Clear();
 			for (int i = 0; i < this.Count; i++)
 			{
 				AddObjectProperty(this[i], includeState);
@@ -418,7 +421,7 @@ namespace GeneXus.Utils
 			bool result = _jsonArr != null;
 			try
 			{
-				FromJSONObject((JArray)jsonArr);
+				FromJSONObject(jsonArr);
 				return result;
 			}
 			catch (Exception ex)
@@ -483,19 +486,14 @@ namespace GeneXus.Utils
 			return GetJSONObject(true);
 		}
 
-		public virtual void FromJSONObject(IJsonFormattable obj)
+		public virtual void FromJSONObject(dynamic obj)
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
 			for (int i = 0; i < jobj.Length; i++)
 			{
 				T obj1 = (T)Activator.CreateInstance(typeof(T), new object[] { context });
-
-				JArray jobji = jobj[i] as JArray;
-				if (jobji != null)
-					obj1.FromJSONObject(jobji);
-				else
-					obj1.FromJSONObject((JObject)jobj[i]);
+				obj1.FromJSONObject(jobj[i]);
 				Add(obj1);
 			}
 		}
