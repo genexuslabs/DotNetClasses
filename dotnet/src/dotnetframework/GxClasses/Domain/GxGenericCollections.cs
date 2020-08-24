@@ -128,7 +128,8 @@ namespace GeneXus.Utils
 		}
 		public virtual void ClearCollection()
 		{
-			_jsonArr.Clear();
+			if (_jsonArr!=null)
+				_jsonArr.Clear();
 			base.Clear();
 		}
 		public virtual object Clone()
