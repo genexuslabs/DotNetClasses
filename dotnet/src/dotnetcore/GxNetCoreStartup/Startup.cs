@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
@@ -134,6 +135,7 @@ namespace GeneXus.Application
 		const string TRACE_PATTERN = "trace.axd";
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
+		const string REWRITE_FILE = "rewrite.config";
 
 		public Dictionary<String,String> servicesPathUrl = new Dictionary<String, String>();
 		public List<String> servicesBase = new List<String>();
@@ -353,6 +355,9 @@ namespace GeneXus.Application
 					});
 				}
 			}
+			string rewriteFile = Path.Combine(LocalPath, REWRITE_FILE);
+			if (File.Exists(rewriteFile))
+				AddRewrite(app, rewriteFile, baseVirtualPath);
 
 			app.UseStaticFiles(new StaticFileOptions()
 			{
@@ -399,6 +404,19 @@ namespace GeneXus.Application
 						});
 			app.UseEnableRequestRewind();
 		}
+
+		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)
+		{
+			string rules = File.ReadAllText(rewriteFile);
+			rules = rules.Replace("{BASEURL}", baseURL);
+			
+			using (var apacheModRewriteStreamReader = new StringReader(rules))
+			{
+				var options = new RewriteOptions().AddApacheModRewrite(apacheModRewriteStreamReader);
+				app.UseRewriter(options);
+			}
+		}
+
 		bool IsAspx(HttpContext context, string basePath)
 		{
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
