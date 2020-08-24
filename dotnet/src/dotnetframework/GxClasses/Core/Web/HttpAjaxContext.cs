@@ -373,7 +373,8 @@ namespace GeneXus.Http
 			JObject ctrlProps = null;
 			try
 			{
-				if (!obj.Contains(Control))
+				ctrlProps = obj[Control] as JObject;
+				if (ctrlProps == null)
 				{
 					ctrlProps = new JObject();
 					obj.Put(Control, ctrlProps);
