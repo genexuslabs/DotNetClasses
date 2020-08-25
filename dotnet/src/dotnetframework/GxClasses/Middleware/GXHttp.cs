@@ -56,6 +56,7 @@ namespace GeneXus.Http
 		internal const string GX_AJAX_MULTIPART_ID = "GXAjaxMultipart";
 		private const string GX_FULL_AJAX_REQUEST_HEADER = "X-FULL-AJAX-REQUEST";
 		private const string GXEVENT_PARM = "gxevent";
+		private const string URI_SEPARATOR = "/";
 		private static Regex MULTIMEDIA_GXI_GRID_PATTERN = new Regex("(\\w+)(_\\d{4})$", RegexOptions.Compiled);
 		private const int SPA_NOT_SUPPORTED_STATUS_CODE = 530;
 		protected bool FullAjaxMode;
@@ -2396,7 +2397,7 @@ namespace GeneXus.Http
 		}
 		static public GXWebComponent getWebComponent(Object caller, string nameSpace, string name, Object[] ctorParms)
 		{
-			String objName = name.ToLower();
+			String objName = CleanObjectFromUrl(name.ToLower());
 			GXWebComponent objComponent = null;
 
 			if (!isUrlName(objName))    
@@ -2424,7 +2425,7 @@ namespace GeneXus.Http
 				
 				string url = name;
 				Object[] actualParms = null;
-				name = objectFromUrl(url, ctorParms, ref actualParms);
+				name = ObjectSignatureFromUrl(url, ctorParms, ref actualParms);
 
 				if (url.Equals(name))
 					return new GXErrorWebComponent(name);
@@ -2435,15 +2436,25 @@ namespace GeneXus.Http
 			return objComponent;
 		}
 
-		protected static string objectFromUrl(string url, Object[] ctorParms, ref object[] parms)
+		private static string CleanObjectFromUrl(string url)
 		{
+			if (url.StartsWith(URI_SEPARATOR))
+			{
+				int idx = url.LastIndexOf(URI_SEPARATOR);
+				if (idx > 0)
+					return url.Substring(idx + 1);
+			}
+			return url;
+		}
 
-			System.Uri uri = null;
-			string name = "";
-			string parameters = "";
+		protected static string ObjectSignatureFromUrl(string url, Object[] ctorParms, ref object[] parms)
+		{
+			string parameters;
+			string name;
 			try
 			{
-				uri = new System.Uri(url, UriKind.RelativeOrAbsolute);
+				url = CleanObjectFromUrl(url);
+				Uri uri = new System.Uri(url, UriKind.RelativeOrAbsolute);
 				if (!uri.IsAbsoluteUri)
 					uri = new Uri("http://gxhost/" + url);
 				name = uri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
@@ -2455,8 +2466,8 @@ namespace GeneXus.Http
 				  + @"//(?<a0>[^/\?#]*))?(?<p0>[^\?#]*)"
 				  + @"(?<q1>\?(?<q0>[^#]*))?"
 				  + @"(?<f1>#(?<f0>.*))?";
-				System.Text.RegularExpressions.Regex r = new System.Text.RegularExpressions.Regex(regexPattern);
-				System.Text.RegularExpressions.Match m = r.Match(url);
+				Regex r = new Regex(regexPattern);
+				Match m = r.Match(url);
 				name = m.Groups["p0"].Value;
 				parameters = m.Groups["q0"].Value;
 			}
@@ -2658,7 +2669,7 @@ namespace GeneXus.Http
 		public void setparmsfromurl(string url)
 		{
 			Object[] urlParms = null;
-			GXHttpHandler.objectFromUrl(url, new Object[] { context }, ref urlParms);
+			GXHttpHandler.ObjectSignatureFromUrl(url, new Object[] { context }, ref urlParms);
 			if (urlParms != null)
 			{
 				this.setParms(urlParms);
