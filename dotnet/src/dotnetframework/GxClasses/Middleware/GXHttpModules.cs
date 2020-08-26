@@ -6,6 +6,7 @@ using System.IO;
 using GeneXus.Utils;
 using GeneXus.Application;
 using ManagedFusion.Rewriter;
+using System.Web.Hosting;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -197,14 +198,33 @@ namespace GeneXus.Http.HttpModules
         }
         #endregion
     }
-	public class GXRewriter : RewriterModule
+	public class GXRewriter : IHttpModule
 	{
+		RewriterModule rewriter;
+		public void Dispose()
+		{
+			
+		}
 		public GXRewriter()
 		{
-			if (!Preferences.RewriteEnabled)
+			string physicalApplicationPath = null;
+			try
 			{
-				File.Create(Path.Combine(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName, Preferences.DefaultRewriteFile)).Close();
+				physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
 			}
+			finally
+			{
+				if (String.IsNullOrEmpty(physicalApplicationPath))
+					physicalApplicationPath = GxContext.StaticPhysicalPath();
+			}
+		
+			if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
+				rewriter = new RewriterModule();
+		}
+		public void Init(HttpApplication context)
+		{
+			if (rewriter!=null)
+				rewriter.Init(context);
 		}
 	}
 }
