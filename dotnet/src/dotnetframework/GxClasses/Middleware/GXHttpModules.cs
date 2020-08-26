@@ -217,7 +217,7 @@ namespace GeneXus.Http.HttpModules
 				{
 					physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
 				}
-				finally
+			finally
 				{
 					if (String.IsNullOrEmpty(physicalApplicationPath))
 						physicalApplicationPath = GxContext.StaticPhysicalPath();
