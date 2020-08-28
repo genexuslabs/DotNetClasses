@@ -225,7 +225,7 @@ namespace GeneXus.Http.HttpModules
 
 				if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
 				{
-					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid TOO Many Redirects with inverse urles.
+					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid Too Many Redirects with inverse urles.
 					enabled = true;
 				}
 				moduleStarted = true;
