@@ -7,6 +7,7 @@ using GeneXus.Utils;
 using GeneXus.Application;
 using ManagedFusion.Rewriter;
 using System.Web.Hosting;
+using ManagedFusion.Rewriter.Rules;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -200,31 +201,69 @@ namespace GeneXus.Http.HttpModules
     }
 	public class GXRewriter : IHttpModule
 	{
-		RewriterModule rewriter;
+		private static RewriterModule rewriter;
+		private static bool moduleStarted;
+		private static bool enabled;
 		public void Dispose()
 		{
-			
-		}
-		public GXRewriter()
-		{
-			string physicalApplicationPath = null;
-			try
-			{
-				physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
-			}
-			finally
-			{
-				if (String.IsNullOrEmpty(physicalApplicationPath))
-					physicalApplicationPath = GxContext.StaticPhysicalPath();
-			}
-		
-			if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
-				rewriter = new RewriterModule();
+
 		}
 		public void Init(HttpApplication context)
 		{
-			if (rewriter!=null)
+			if (!moduleStarted)
+			{
+				string physicalApplicationPath = null;
+				try
+				{
+					physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
+				}
+				finally
+				{
+					if (String.IsNullOrEmpty(physicalApplicationPath))
+						physicalApplicationPath = GxContext.StaticPhysicalPath();
+				}
+
+				if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
+				{
+					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid TOO Many Redirects with inverse urles.
+					enabled = true;
+				}
+				moduleStarted = true;
+			}
+			if (enabled)
+			{
+				rewriter = new RewriterModule();
 				rewriter.Init(context);
+			}
+		}
+
+	}
+	public class GxInverseRuleAction: DefaultRuleAction
+	{
+		public override void Execute(RuleContext context)
+		{
+			base.Execute(context);
+			context.SubstitutedUrl = AddBase(context.RuleSet.VirtualBase, context.SubstitutedUrl);
+		}
+		public override bool IsMatch(RuleContext context)
+		{
+			return base.IsMatch(context);
+		}
+		private Uri AddBase(string baseFrom, Uri url)
+		{
+			if (!String.IsNullOrEmpty(baseFrom) && baseFrom != "/")
+			{
+				string urlPath = url.GetComponents(UriComponents.PathAndQuery, UriFormat.SafeUnescaped);
+
+				if (!urlPath.StartsWith(baseFrom))
+					urlPath = baseFrom + urlPath;
+
+				while (urlPath.Contains("//"))
+					urlPath = urlPath.Replace("//", "/");
+
+				return new Uri(url, urlPath);
+			}
+			return url;
 		}
 	}
 }
