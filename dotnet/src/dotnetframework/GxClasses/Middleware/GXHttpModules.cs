@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GeneXus.Configuration;
 using System.Web;
 using System.IO;
 using GeneXus.Utils;
 using GeneXus.Application;
+using ManagedFusion.Rewriter;
+using System.Web.Hosting;
+using ManagedFusion.Rewriter.Rules;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -198,4 +199,71 @@ namespace GeneXus.Http.HttpModules
         }
         #endregion
     }
+	public class GXRewriter : IHttpModule
+	{
+		private static RewriterModule rewriter;
+		private static bool moduleStarted;
+		private static bool enabled;
+		public void Dispose()
+		{
+
+		}
+		public void Init(HttpApplication context)
+		{
+			if (!moduleStarted)
+			{
+				string physicalApplicationPath = null;
+				try
+				{
+					physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
+				}
+			finally
+				{
+					if (String.IsNullOrEmpty(physicalApplicationPath))
+						physicalApplicationPath = GxContext.StaticPhysicalPath();
+				}
+
+				if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
+				{
+					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid Too Many Redirects with inverse urles.
+					enabled = true;
+				}
+				moduleStarted = true;
+			}
+			if (enabled)
+			{
+				rewriter = new RewriterModule();
+				rewriter.Init(context);
+			}
+		}
+
+	}
+	public class GxInverseRuleAction: DefaultRuleAction
+	{
+		public override void Execute(RuleContext context)
+		{
+			base.Execute(context);
+			context.SubstitutedUrl = AddBase(context.RuleSet.VirtualBase, context.SubstitutedUrl);
+		}
+		public override bool IsMatch(RuleContext context)
+		{
+			return base.IsMatch(context);
+		}
+		private Uri AddBase(string baseFrom, Uri url)
+		{
+			if (!String.IsNullOrEmpty(baseFrom) && baseFrom != "/")
+			{
+				string urlPath = url.GetComponents(UriComponents.PathAndQuery, UriFormat.SafeUnescaped);
+
+				if (!urlPath.StartsWith(baseFrom))
+					urlPath = baseFrom + urlPath;
+
+				while (urlPath.Contains("//"))
+					urlPath = urlPath.Replace("//", "/");
+
+				return new Uri(url, urlPath);
+			}
+			return url;
+		}
+	}
 }
