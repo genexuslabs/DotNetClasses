@@ -88,7 +88,7 @@ namespace GeneXus.Application
 		String path = "";
 		String implementation = "";
 		String methodName = "";
-
+		
 		public string Name { get => name; set => name = value; }
 		public string Path { get => path; set => path = value; }
 
@@ -164,8 +164,10 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
+			
 			string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
 			foreach (String grp in grpFiles)
+			
 			{				
 				object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
 				MapGroup m = p as MapGroup;
@@ -178,6 +180,7 @@ namespace GeneXus.Application
 					}
 					String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
 					String mapPathLower = mapPath.ToLower();
+					
 					servicesPathUrl.Add(mapPathLower, m.Name.ToLower());
 					foreach (SingleMap sm in m.Mappings)
 					{
@@ -473,6 +476,7 @@ namespace GeneXus.Application
 							}
 						}
 						else
+						
 							return result; // Not found
 
 					}
@@ -519,6 +523,7 @@ namespace GeneXus.Application
 				if (path.Contains($"/{REST_BASE_URL}") || serviceInPath(path, out actualPath))
 				{
 					string controllerWihtParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
+					
 					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesValidPath, servicesMap, servicesMapData, actualPath, context.Request.Method, controllerWihtParms);
 
 					GxRestWrapper controller = null;
@@ -589,7 +594,6 @@ namespace GeneXus.Application
 				asssemblycontroller = addNspace + "." + tmpController ;
 				nspace += "." + addNspace;
 			}
-
 			if (File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
