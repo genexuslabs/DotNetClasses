@@ -164,7 +164,7 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
-			
+
 			string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
 			foreach (String grp in grpFiles)
 			
