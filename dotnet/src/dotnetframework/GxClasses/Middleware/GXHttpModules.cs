@@ -51,6 +51,7 @@ namespace GeneXus.Http.HttpModules
 		public static Dictionary<String, Dictionary<String, String>> servicesVerbs;
 
 		const string REST_BASE_URL = "rest/";
+		const string PRIVATE_DIR = "private";
 		private static bool moduleStarted;
 
 		void IHttpModule.Init(HttpApplication context)
@@ -108,7 +109,7 @@ namespace GeneXus.Http.HttpModules
 				servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
 				servicesClass = new Dictionary<String, String>();
 
-				String[] grpFiles = Directory.GetFiles(webPath, "*.grp.json");
+				String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
 				foreach (String grp in grpFiles)
 				{
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'

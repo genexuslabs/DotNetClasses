@@ -141,7 +141,7 @@ namespace GeneXus.Application
 		public List<String> servicesBase = new List<String>();
 		public Dictionary<String, Dictionary<String, String>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
 		public Dictionary<String, Dictionary<String, String>> servicesVerb = new Dictionary<String, Dictionary<string, string>>();
-
+		const string PRIVATE_DIR = "private";
 		public Startup(IHostingEnvironment env)
         {
 			var builder = new ConfigurationBuilder()
@@ -157,7 +157,7 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
-			string[] grpFiles = Directory.GetFiles(ContentRootPath, "*.grp.json");
+			string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
 			foreach (String grp in grpFiles)
 			{
 				object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
@@ -554,7 +554,7 @@ namespace GeneXus.Application
 				asssemblycontroller = addNspace + "." + tmpController ;
 				nspace += "." + addNspace;
 			}
-			if (File.Exists(Path.Combine(ContentRootPath, $"{asssemblycontroller.ToLower()}.grp.json")))
+			if (File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
 				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
