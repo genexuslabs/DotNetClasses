@@ -112,7 +112,7 @@ namespace GeneXus.Http.HttpModules
 				//servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
 				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
-				
+
 				String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
 				foreach (String grp in grpFiles)
 				{
