@@ -36,20 +36,33 @@ namespace GeneXus.Application
 			string[] parameterValues= string.IsNullOrEmpty(query) ? parms : HttpHelper.GetParameterValues(query);
 
 			string routerKey;
-			if (routerList.TryGetValue(path, out routerKey)){
+			bool rewriteMatch = routerList.TryGetValue(path, out routerKey);
+			if (rewriteMatch)
+			{
 				path = string.Format(routerKey, parameterValues);
 			}
 			string basePath = Preferences.RewriteEnabled ? scriptPath : string.Empty;
+			string result;
 
-			if (string.IsNullOrEmpty(query))
+			if (rewriteMatch)
 			{
 				if (PatternHasParameters(routerKey))
-					return $"{basePath}{path}";
+					result = $"{basePath}{path}";
 				else
-					return $"{basePath}{path}{ConvertParmsToQueryString(parms, parmsName, path)}";
+					result = $"{basePath}{path}{ConvertParmsToQueryString(parms, parmsName, path)}";
+			}
+			else if (parms.Length > 0)
+			{
+				result = $"{basePath}{path}{ConvertParmsToQueryString(parms, parmsName, path)}";
+			}
+			else if (!string.IsNullOrEmpty(query))
+			{
+				result = $"{basePath}{path}?{query}";
 			}
 			else
-				return $"{basePath}{path}?{query}";
+				result = $"{basePath}{path}";
+
+			return result;
 		}
 
 		private static string StringizeParm(object objectParm)

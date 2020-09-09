@@ -6,6 +6,11 @@ using System.IO;
 using GeneXus.Utils;
 using GeneXus.Application;
 using ManagedFusion.Rewriter;
+using System.Web.Hosting;
+using ManagedFusion.Rewriter.Rules;
+using ManagedFusion.Rewriter.Engines;
+using System.Reflection;
+using log4net;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -197,14 +202,85 @@ namespace GeneXus.Http.HttpModules
         }
         #endregion
     }
-	public class GXRewriter : RewriterModule
+	public class GXRewriter : IHttpModule
 	{
-		public GXRewriter()
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXRewriter));
+		private static RewriterModule rewriter;
+		private static bool moduleStarted;
+		private static bool enabled;
+		public void Dispose()
 		{
-			if (!Preferences.RewriteEnabled)
+
+		}
+		public void Init(HttpApplication context)
+		{
+			if (!moduleStarted)
 			{
-				File.Create(Path.Combine(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName, Preferences.DefaultRewriteFile)).Close();
+				string physicalApplicationPath = null;
+				try
+				{
+					physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
+				}
+			finally
+				{
+					if (String.IsNullOrEmpty(physicalApplicationPath))
+						physicalApplicationPath = GxContext.StaticPhysicalPath();
+				}
+
+				if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
+				{
+					ChangeApacheDefaultFileName();
+					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid Too Many Redirects with inverse urles.
+					enabled = true;
+				}
+				moduleStarted = true;
 			}
+			if (enabled)
+			{
+				rewriter = new RewriterModule();
+				rewriter.Init(context);
+			}
+		}
+		private void ChangeApacheDefaultFileName()
+		{
+			try
+			{
+				ApacheEngine engine = (ApacheEngine)typeof(Manager).GetField("_rewriterEngine", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+				typeof(ApacheEngine).GetProperty("FileName", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(engine, Preferences.DefaultRewriteFile);
+				engine.Init();
+			}catch(Exception ex)
+			{
+				GXLogging.Error(log, "Error changing ApacheDefaultFileName", ex);
+			}
+		}
+
+	}
+	public class GxInverseRuleAction: DefaultRuleAction
+	{
+		public override void Execute(RuleContext context)
+		{
+			base.Execute(context);
+			context.SubstitutedUrl = AddBase(context.RuleSet.VirtualBase, context.SubstitutedUrl);
+		}
+		public override bool IsMatch(RuleContext context)
+		{
+			return base.IsMatch(context);
+		}
+		private Uri AddBase(string baseFrom, Uri url)
+		{
+			if (!String.IsNullOrEmpty(baseFrom) && baseFrom != "/")
+			{
+				string urlPath = url.GetComponents(UriComponents.PathAndQuery, UriFormat.SafeUnescaped);
+
+				if (!urlPath.StartsWith(baseFrom))
+					urlPath = baseFrom + urlPath;
+
+				while (urlPath.Contains("//"))
+					urlPath = urlPath.Replace("//", "/");
+
+				return new Uri(url, urlPath);
+			}
+			return url;
 		}
 	}
 }
