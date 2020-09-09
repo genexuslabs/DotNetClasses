@@ -670,11 +670,7 @@ namespace GeneXus.Configuration
 		static int gxpmEnabled = -1;
 		static int rewriteEnabled = -1;
 		private static int exposeMetadata = -1;
-#if NETCORE
 		public static string DefaultRewriteFile = "rewrite.config";
-#else
-		public static string DefaultRewriteFile = "ManagedFusion.Rewriter.txt";
-#endif
 
 		public static string RemoteLocation
 		{
