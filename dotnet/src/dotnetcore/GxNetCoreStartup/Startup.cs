@@ -84,10 +84,12 @@ namespace GeneXus.Application
 	{
 		String verb = "GET";
 		String name = "";
+		String path = "";
 		String implementation = "";
 		String methodName = "";
 
-		public string Name { get => name; set => name = value; } 
+		public string Name { get => name; set => name = value; }
+		public string Path { get => path; set => path = value; }
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
 		public string Verb { get => verb; set => verb = value; }
@@ -137,10 +139,14 @@ namespace GeneXus.Application
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
 
-		public Dictionary<String,String> servicesPathUrl = new Dictionary<String, String>();
-		public List<String> servicesBase = new List<String>();
-		public Dictionary<String, Dictionary<String, String>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
-		public Dictionary<String, Dictionary<String, String>> servicesVerb = new Dictionary<String, Dictionary<string, string>>();
+		public Dictionary<string,string> servicesPathUrl = new Dictionary<string, string>();
+		public List<string> servicesBase = new List<string>();		
+		public Dictionary<String, Dictionary<string, string>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
+		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string,string>, string>>();
+		public Dictionary<string, List<string>> servicesValidPath = new Dictionary<string, List<string>>();
+		
+
+		const string PRIVATE_DIR = "private";
 
 		public Startup(IHostingEnvironment env)
         {
@@ -157,9 +163,9 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
-			string[] grpFiles = Directory.GetFiles(ContentRootPath, "*.grp.json");
+			string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
 			foreach (String grp in grpFiles)
-			{
+			{				
 				object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
 				MapGroup m = p as MapGroup;
 				if (m != null)
@@ -171,28 +177,30 @@ namespace GeneXus.Application
 					}
 					String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
 					String mapPathLower = mapPath.ToLower();
-					servicesPathUrl.Add(mapPathLower,m.Name.ToLower());
+					servicesPathUrl.Add(mapPathLower, m.Name.ToLower());
 					foreach (SingleMap sm in m.Mappings)
 					{
 						if (sm.Verb == null)
 							sm.Verb = "GET";
-						if (servicesMap.ContainsKey(mapPathLower))
-						{
-							if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
-							{
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-								servicesVerb[mapPathLower].Add(sm.Name.ToLower(), sm.Verb.ToUpper());
+						if (String.IsNullOrEmpty(sm.Path))
+							sm.Path = sm.Name;
+						if (servicesMap.ContainsKey(mapPathLower)) {
+							if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower())) {
+								servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
+								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);								
+								servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
 							}
 						}
 						else {
+							servicesValidPath.Add(mapPathLower, new List<string>());
+							servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
 							servicesMap.Add(mapPathLower, new Dictionary<string, string>());
 							servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-							servicesVerb.Add(mapPathLower, new Dictionary<string, string>());
-							servicesVerb[mapPathLower].Add(sm.Name.ToLower(), sm.Verb.ToUpper());
+							servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
+							servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
 						}
 					}
 				}
-
 			}
 		}
 
@@ -422,7 +430,11 @@ namespace GeneXus.Application
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
 		}
 		
-		static public List<ControllerInfo> GetRouteController(Dictionary<String,String> apiPaths, Dictionary<String, Dictionary<String, String>> sMap, Dictionary<String, Dictionary<String, String>> sVerb, string basePath, string path)
+		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
+											Dictionary<string, List<string>> sValid,
+											Dictionary<string, Dictionary<string, string>> sMap,
+											Dictionary<string, Dictionary<Tuple<string, string>, string>> sMapData,									
+											string basePath, string verb, string path)
 		{
 			List<ControllerInfo> result = new List<ControllerInfo>();
 			string parms = string.Empty;
@@ -432,16 +444,35 @@ namespace GeneXus.Application
 				{
 					int questionMarkIdx = path.IndexOf(QUESTIONMARK);
 					string controller;
-					if (sMap.ContainsKey(basePath) && apiPaths.ContainsKey(basePath) && (sMap[basePath].TryGetValue(path.ToLower(), out String value)))
+					if (apiPaths.ContainsKey(basePath)
+						&& sValid.ContainsKey(basePath)
+						&& sMap.ContainsKey(basePath)
+						&& sMapData.ContainsKey(basePath)
+						)
 					{
-						String httpverb = "";
-						if (sVerb.ContainsKey(basePath))
-							sVerb[basePath].TryGetValue(path.ToLower(), out httpverb);
+						if (sValid[basePath].Contains(path.ToLower()))
+						{
+							if (sMapData[basePath].TryGetValue(Tuple.Create(path.ToLower(), verb), out string value))
+							{
+								//string httpverb = "";
+								//if (sVerb.ContainsKey(basePath))
+								//	sVerb[basePath].TryGetValue(path.ToLower(), out httpverb);
+								//else
+								//	httpverb = "";
+								string mth = sMap[basePath][value];
+								if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
+									parms = path.Substring(questionMarkIdx + 1);
+								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = mth, Verb = verb });
+							}
+							else
+							{
+								// Method not allowed
+								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = "", MethodName = "", Verb =""});
+								return result;
+							}
+						}
 						else
-							httpverb = "";
-						if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
-								parms = path.Substring(questionMarkIdx + 1);										
-						result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = value , Verb = httpverb});						
+							return result; // Not found
 					}
 					else
 					{
@@ -486,7 +517,7 @@ namespace GeneXus.Application
 				if (path.Contains($"/{REST_BASE_URL}") || serviceInPath(path, out actualPath))
 				{
 					string controllerWihtParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
-					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesMap, servicesVerb, actualPath, controllerWihtParms);
+					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesValidPath, servicesMap, servicesMapData, actualPath, context.Request.Method, controllerWihtParms);
 					GxRestWrapper controller = null;
 					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name, c.MethodName)) != null);
 
@@ -554,7 +585,7 @@ namespace GeneXus.Application
 				asssemblycontroller = addNspace + "." + tmpController ;
 				nspace += "." + addNspace;
 			}
-			if (File.Exists(Path.Combine(ContentRootPath, $"{asssemblycontroller.ToLower()}.grp.json")))
+			if (File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))			
 			{
 				controller = tmpController;
 				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
