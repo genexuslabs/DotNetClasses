@@ -136,6 +136,7 @@ namespace GeneXus.Http.Client
 			_authCollection = new ArrayList();
 			_authProxyCollection = new ArrayList();
 			_certificateCollection = new X509Certificate2Collection();
+			IncludeCookies = true;
 
 
 			_proxyHost = "";
@@ -252,6 +253,7 @@ namespace GeneXus.Http.Client
 			get { return _proxyHost; }
 			set { _proxyHost = value; }
 		}
+		public bool IncludeCookies { get; set; }
 		public void set_ProxyHost(string host)
 		{
 			_proxyHost = host;
@@ -629,13 +631,12 @@ namespace GeneXus.Http.Client
 			httpC.Timeout = _timeout;
 		}
 #endif
-		HttpWebRequest buildRequest(string method, string name, CookieContainer cookies)
+		HttpWebRequest buildRequest(string method, string requestUrl, CookieContainer cookies)
 		{
-			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1} name:{2}", _url, method, name));
+			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			int BytesRead;
 			Byte[] Buffer = new Byte[1024];
 			
-			string requestUrl = GetRequestURL(name);
 			HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requestUrl);
 
 			if (GXUtil.CompressResponse())
@@ -745,9 +746,9 @@ namespace GeneXus.Http.Client
 			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
 			try
 			{
-				
-				CookieContainer cookies = (_context == null || String.IsNullOrEmpty(_url)) ? new CookieContainer() : _context.GetCookieContainer(_url);
-				req = buildRequest(method, name, cookies);
+				string requestUrl = GetRequestURL(name);
+				CookieContainer cookies = (_context == null || String.IsNullOrEmpty(requestUrl) || !IncludeCookies) ? new CookieContainer() : _context.GetCookieContainer(requestUrl);
+				req = buildRequest(method, requestUrl, cookies);
 
 #if NETCORE
 				resp = req.GetResponse() as HttpWebResponse;
