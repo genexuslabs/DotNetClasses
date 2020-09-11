@@ -670,11 +670,9 @@ namespace GeneXus.Configuration
 		static int gxpmEnabled = -1;
 		static int rewriteEnabled = -1;
 		private static int exposeMetadata = -1;
-#if NETCORE
 		public static string DefaultRewriteFile = "rewrite.config";
-#else
-		public static string DefaultRewriteFile = "ManagedFusion.Rewriter.txt";
-#endif
+		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
+		const string YES = "1";
 
 		public static string RemoteLocation
 		{
@@ -729,6 +727,13 @@ namespace GeneXus.Configuration
 					rewriteEnabled = File.Exists(rewriteFile)?1:0;
 				}
 				return (rewriteEnabled == 1);
+			}
+		}
+		public static bool UseNamedParameters
+		{
+			get
+			{
+				return Config.GetValueOf(USE_NAMED_PARAMETERS, YES) == YES;
 			}
 		}
 		public static bool MustSetupDB()

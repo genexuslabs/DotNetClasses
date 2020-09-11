@@ -8,6 +8,9 @@ using GeneXus.Application;
 using ManagedFusion.Rewriter;
 using System.Web.Hosting;
 using ManagedFusion.Rewriter.Rules;
+using ManagedFusion.Rewriter.Engines;
+using System.Reflection;
+using log4net;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -205,6 +208,7 @@ namespace GeneXus.Http.HttpModules
     }
 	public class GXRewriter : IHttpModule
 	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXRewriter));
 		private static RewriterModule rewriter;
 		private static bool moduleStarted;
 		private static bool enabled;
@@ -229,6 +233,7 @@ namespace GeneXus.Http.HttpModules
 
 				if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
 				{
+					ChangeApacheDefaultFileName();
 					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid Too Many Redirects with inverse urles.
 					enabled = true;
 				}
@@ -238,6 +243,18 @@ namespace GeneXus.Http.HttpModules
 			{
 				rewriter = new RewriterModule();
 				rewriter.Init(context);
+			}
+		}
+		private void ChangeApacheDefaultFileName()
+		{
+			try
+			{
+				ApacheEngine engine = (ApacheEngine)typeof(Manager).GetField("_rewriterEngine", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+				typeof(ApacheEngine).GetProperty("FileName", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(engine, Preferences.DefaultRewriteFile);
+				engine.Init();
+			}catch(Exception ex)
+			{
+				GXLogging.Error(log, "Error changing ApacheDefaultFileName", ex);
 			}
 		}
 
