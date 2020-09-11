@@ -113,7 +113,7 @@ namespace GeneXus.Http.HttpModules
 				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
 
-				if (Directory.Exists(Path.Combine(webPath, PRIVATE_DIR)))
+				if (Directory.Exists(Path.Combine(webPath, PRIVATE_DIR))) 
 				{
 					String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
 					foreach (String grp in grpFiles)
