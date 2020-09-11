@@ -157,42 +157,44 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
-			string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
-			foreach (String grp in grpFiles)
-			{
-				object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
-				MapGroup m = p as MapGroup;
-				if (m != null)
+			if (Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)))
+			{ 
+				string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
+				foreach (String grp in grpFiles)
 				{
-					
-					if (String.IsNullOrEmpty(m.BasePath))
+					object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
+					MapGroup m = p as MapGroup;
+					if (m != null)
 					{
-						m.BasePath = REST_BASE_URL;
-					}
-					String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
-					String mapPathLower = mapPath.ToLower();
-					servicesPathUrl.Add(mapPathLower,m.Name.ToLower());
-					foreach (SingleMap sm in m.Mappings)
-					{
-						if (sm.Verb == null)
-							sm.Verb = "GET";
-						if (servicesMap.ContainsKey(mapPathLower))
+
+						if (String.IsNullOrEmpty(m.BasePath))
 						{
-							if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
-							{
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-								servicesVerb[mapPathLower].Add(sm.Name.ToLower(), sm.Verb.ToUpper());
-							}
+							m.BasePath = REST_BASE_URL;
 						}
-						else {
-							servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-							servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-							servicesVerb.Add(mapPathLower, new Dictionary<string, string>());
-							servicesVerb[mapPathLower].Add(sm.Name.ToLower(), sm.Verb.ToUpper());
+						String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
+						String mapPathLower = mapPath.ToLower();
+						servicesPathUrl.Add(mapPathLower, m.Name.ToLower());
+						foreach (SingleMap sm in m.Mappings)
+						{
+							if (sm.Verb == null)
+								sm.Verb = "GET";
+							if (servicesMap.ContainsKey(mapPathLower))
+							{
+								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+								{
+									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+									servicesVerb[mapPathLower].Add(sm.Name.ToLower(), sm.Verb.ToUpper());
+								}
+							}
+							else {
+								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
+								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+								servicesVerb.Add(mapPathLower, new Dictionary<string, string>());
+								servicesVerb[mapPathLower].Add(sm.Name.ToLower(), sm.Verb.ToUpper());
+							}	
 						}
 					}
 				}
-
 			}
 		}
 
@@ -554,7 +556,8 @@ namespace GeneXus.Application
 				asssemblycontroller = addNspace + "." + tmpController ;
 				nspace += "." + addNspace;
 			}
-			if (File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))
+			if (  Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)) &&
+				 File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
 				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
