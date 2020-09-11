@@ -164,7 +164,8 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
-
+			if (Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)))
+			{ 
 			string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
 			foreach (String grp in grpFiles)
 			
@@ -205,6 +206,7 @@ namespace GeneXus.Application
 						}
 					}
 				}
+			}
 			}
 		}
 
@@ -594,7 +596,8 @@ namespace GeneXus.Application
 				asssemblycontroller = addNspace + "." + tmpController ;
 				nspace += "." + addNspace;
 			}
-			if (File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))
+			if (  Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)) &&
+				 File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
 				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());

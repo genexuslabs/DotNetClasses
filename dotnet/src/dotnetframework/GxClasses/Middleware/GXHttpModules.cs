@@ -113,47 +113,50 @@ namespace GeneXus.Http.HttpModules
 				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
 
-				String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
-				foreach (String grp in grpFiles)
+				if (Directory.Exists(Path.Combine(webPath, PRIVATE_DIR)))
 				{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
-#pragma warning restore SCS0018
-					MapGroup m = p as MapGroup;
-					if (m != null)
+					String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
+					foreach (String grp in grpFiles)
 					{
-						if (String.IsNullOrEmpty(m.BasePath))
+#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+						object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
+#pragma warning restore SCS0018
+						MapGroup m = p as MapGroup;
+						if (m != null)
 						{
-							m.BasePath = REST_BASE_URL;
-						}
-						String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
-						String mapPathLower = mapPath.ToLower();
-						servicesPathUrl.Add(mapPathLower);
-						servicesBase.Add(mapPathLower, m.Name.ToLower());
-						servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
-						foreach (SingleMap sm in m.Mappings)
-						{
-							if (String.IsNullOrEmpty(sm.Verb))
-								sm.Verb = "GET";
-							if (servicesMap.ContainsKey(mapPathLower))
+
+							if (String.IsNullOrEmpty(m.BasePath))
 							{
-								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+								m.BasePath = REST_BASE_URL;
+							}
+							String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
+							String mapPathLower = mapPath.ToLower();
+							servicesPathUrl.Add(mapPathLower);
+							servicesBase.Add(mapPathLower, m.Name.ToLower());
+							servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
+							foreach (SingleMap sm in m.Mappings)
+							{
+								if (String.IsNullOrEmpty(sm.Verb))
+									sm.Verb = "GET";								
+								if (servicesMap.ContainsKey(mapPathLower))
 								{
+									if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+									{
+										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);										
+										servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+									}
+								}
+								else
+								{
+									servicesMap.Add(mapPathLower, new Dictionary<string, string>());
+									servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
 									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
 									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
-									//servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), (sm.Verb!=null)?sm.Verb:"GET");
-								}
-							}
-							else
-							{
-								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-								servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-								servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name);
+								}							
+							
 							}
 						}
 					}
-
 				}
 			}
 		}
