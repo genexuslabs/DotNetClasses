@@ -320,11 +320,11 @@ namespace GeneXus.Metadata
 
 			Type objType = FindType(assmbly, nspace, className, Assembly.GetCallingAssembly());
 #if NETCORE
-			if (objType.FullName.Contains("GXHttpHandler"))
+			if (typeof(IHttpHandler).IsAssignableFrom(objType))
 #else
 			if (objType.IsSubclassOf(typeof(GeneXus.Http.GXHttpHandler)))
 #endif
-				throw new GxClassLoaderException(": (" + assmbly + "). Loading of web object not allowed in WebExecute.");
+			throw new GxClassLoaderException(": (" + assmbly + "). Loading of web object not allowed in WebExecute.");
 			Object o = Activator.CreateInstance(objType, constructorArgs);
 
 			ExecuteVoidRef(o, mthd, args);
