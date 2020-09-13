@@ -2153,7 +2153,7 @@ namespace GeneXus.Http
 			if (!string.IsNullOrEmpty(value))
 			{
 				value = GxContext.RemoveInternalSuffixes(value).TrimStart('?');
-				useOldQueryStringFormat = !value.Contains("=");
+				useOldQueryStringFormat = !(Preferences.UseNamedParameters && value.Contains("="));
 				if (!string.IsNullOrEmpty(value))
 				{
 					string[] elements = useOldQueryStringFormat ? value.Split(',') : value.Split('&');
