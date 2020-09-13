@@ -126,7 +126,6 @@ namespace GeneXus.Http.HttpModules
 						{
 
 							if (String.IsNullOrEmpty(m.BasePath))
-<<<<<<< HEAD
 							{
 								m.BasePath = REST_BASE_URL;
 							}
