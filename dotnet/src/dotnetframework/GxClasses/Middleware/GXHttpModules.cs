@@ -112,12 +112,14 @@ namespace GeneXus.Http.HttpModules
 				//servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
 				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
-				
-				String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
-				foreach (String grp in grpFiles)
+
+				if (Directory.Exists(Path.Combine(webPath, PRIVATE_DIR))) 
 				{
+					String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
+					foreach (String grp in grpFiles)
+					{
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
+						object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
 #pragma warning restore SCS0018
 					MapGroup m = p as MapGroup;
 					if (m != null)
@@ -134,26 +136,26 @@ namespace GeneXus.Http.HttpModules
 						foreach (SingleMap sm in m.Mappings)
 						{
 							if (String.IsNullOrEmpty(sm.Verb))
-								sm.Verb = "GET";
+  								sm.Verb = "GET";
 							if (servicesMap.ContainsKey(mapPathLower))
 							{
-								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
-								{
-									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
-									//servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), (sm.Verb!=null)?sm.Verb:"GET");
-								}
-							}
-							else
-							{
-								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-								servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-								servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name);
-							}
+									if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+									{
+										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+   									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());					
+					  			}
+						  }
+						  else
+						  {
+								  servicesMap.Add(mapPathLower, new Dictionary<string, string>());
+								  servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
+								  servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+								  servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name);
+						  }
+								
+						}						
 						}
 					}
-
 				}
 			}
 		}

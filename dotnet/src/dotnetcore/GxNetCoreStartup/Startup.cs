@@ -122,6 +122,7 @@ namespace GeneXus.Application
 			return app.Map(path, (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>());
 		}
 	}
+  
 	public class Startup
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
@@ -139,20 +140,21 @@ namespace GeneXus.Application
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
 
+
 		public Dictionary<string,string> servicesPathUrl = new Dictionary<string, string>();
 		public List<string> servicesBase = new List<string>();		
 		public Dictionary<String, Dictionary<string, string>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
 		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string,string>, string>>();
 		public Dictionary<string, List<string>> servicesValidPath = new Dictionary<string, List<string>>();
-		
-
+	
 		const string PRIVATE_DIR = "private";
 
+
 		public Startup(IHostingEnvironment env)
-        {
+    {
 			var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+			  	      .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
 			ContentRootPath = env.ContentRootPath;
@@ -163,6 +165,8 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
+	    if (Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR))) 
+			{ 
 			string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
 			foreach (String grp in grpFiles)
 			{				
@@ -202,6 +206,7 @@ namespace GeneXus.Application
 					}
 				}
 			}
+      }
 		}
 
 		Boolean serviceInPath(String path, out String actualPath)
@@ -585,7 +590,9 @@ namespace GeneXus.Application
 				asssemblycontroller = addNspace + "." + tmpController ;
 				nspace += "." + addNspace;
 			}
-			if (File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))			
+
+			if ( Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)) &&
+				 File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
 				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
