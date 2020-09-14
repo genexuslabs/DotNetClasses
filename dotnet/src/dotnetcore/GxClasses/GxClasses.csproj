@@ -102,7 +102,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Core\Web\" />
     <Folder Include="Diagnostics\" />
     <Folder Include="Helpers\Cryptography\Hashing\" />
     <Folder Include="Domain\SD\" />
