@@ -212,6 +212,7 @@ namespace GeneXus.Http.HttpModules
 		private static RewriterModule rewriter;
 		private static bool moduleStarted;
 		private static bool enabled;
+		internal static string physicalApplicationPath;
 		public void Dispose()
 		{
 
@@ -220,7 +221,6 @@ namespace GeneXus.Http.HttpModules
 		{
 			if (!moduleStarted)
 			{
-				string physicalApplicationPath = null;
 				try
 				{
 					physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
@@ -233,7 +233,7 @@ namespace GeneXus.Http.HttpModules
 
 				if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
 				{
-					ChangeApacheDefaultFileName();
+					ChangeApacheDefaultEngine();
 					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid Too Many Redirects with inverse urles.
 					enabled = true;
 				}
@@ -245,19 +245,33 @@ namespace GeneXus.Http.HttpModules
 				rewriter.Init(context);
 			}
 		}
-		private void ChangeApacheDefaultFileName()
+		private void ChangeApacheDefaultEngine()
 		{
 			try
 			{
-				ApacheEngine engine = (ApacheEngine)typeof(Manager).GetField("_rewriterEngine", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-				typeof(ApacheEngine).GetProperty("FileName", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(engine, Preferences.DefaultRewriteFile);
+				GxApacheEngine engine = new GxApacheEngine();
+				typeof(Manager).GetField("_rewriterEngine", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, engine);
 				engine.Init();
 			}catch(Exception ex)
 			{
-				GXLogging.Error(log, "Error changing ApacheDefaultFileName", ex);
+				GXLogging.Error(log, "Error changing ChangeApacheDefaultEngine", ex);
 			}
 		}
 
+	}
+	public class GxApacheEngine : ApacheEngine
+	{
+		public GxApacheEngine() : base()
+		{
+		}
+		public override void Init()
+		{
+			Paths.Clear();
+			DirectoryInfo refreshDir = new DirectoryInfo(GXRewriter.physicalApplicationPath);
+			FileInfo file = new FileInfo(Path.Combine(refreshDir.FullName, Preferences.DefaultRewriteFile));
+			Add(HttpContext.Current.Request.ApplicationPath, file);
+			RefreshRules();
+		}
 	}
 	public class GxInverseRuleAction: DefaultRuleAction
 	{
