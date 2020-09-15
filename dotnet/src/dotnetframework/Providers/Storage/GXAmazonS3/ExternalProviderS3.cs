@@ -112,7 +112,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			metadata.Add("Table", tableName);
 			metadata.Add("Field", fieldName);
-			metadata.Add("KeyValue", key);
+			metadata.Add("KeyValue", StorageUtils.EncodeNonAsciiCharacters(key));
 		}
 
 		private void CreateFolder(string folder, string table = null, string field = null)

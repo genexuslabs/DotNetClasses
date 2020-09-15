@@ -404,18 +404,20 @@ namespace GeneXus.Http
 						GxFile gxFile = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
 
 						gxFile.Create(hpf.InputStream);
-
 						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
 
-                        r.Add(new UploadFile()
+						string uri = gxFile.GetURI();
+						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);
+
+						r.Add(new UploadFile()
 						{
 							name = fileName,
 							size = gxFile.GetLength(),
-							url = gxFile.GetPath(),
+							url = url,
 							type = context.GetContentType(ext),
 							extension = ext,
-							thumbnailUrl = gxFile.GetPath(),
-                            path = savedFileName
+							thumbnailUrl = url,
+							path = uri
 						});
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };

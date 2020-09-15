@@ -493,12 +493,9 @@ namespace GeneXus.Configuration
 					}
 
 #else
-					var log4netConfig = Path.Combine(FileUtil.GetBasePath(), "log4net.xml");
-					if (File.Exists(log4netConfig))
-						logConfig(log4netConfig);
-
 					var appSettings = "appsettings.json";
 					var clientConfig = "client.exe.config";
+					var logConfigFile = GxContext.IsHttpContext ? "log.config":"log.console.config";
 					if (File.Exists(Path.Combine(FileUtil.GetBasePath(), appSettings)))
 					{
 						_config = loadConfigJson(appSettings);
@@ -506,9 +503,7 @@ namespace GeneXus.Configuration
 					else if (File.Exists(clientConfig))
 					{
 						_config = loadConfig(clientConfig);
-						logConfig(clientConfig);
 					}
-					var logConfigFile = "log.config";
 					if (File.Exists(logConfigFile))
 						logConfig(logConfigFile);
 #endif
@@ -673,7 +668,11 @@ namespace GeneXus.Configuration
 		static int remote = -1;
 		static int storageTimezone = -1;
 		static int gxpmEnabled = -1;
+		static int rewriteEnabled = -1;
 		private static int exposeMetadata = -1;
+		public static string DefaultRewriteFile = "rewrite.config";
+		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
+		const string YES = "1";
 
 		public static string RemoteLocation
 		{
@@ -711,6 +710,30 @@ namespace GeneXus.Configuration
 						gxpmEnabled = 0;
 				}
 				return (gxpmEnabled == 1);
+			}
+		}
+		public static bool RewriteEnabled
+		{
+			get
+			{
+				if (rewriteEnabled == -1)
+				{
+#if NETCORE
+					var basePath = FileUtil.GetBasePath();
+#else
+					var basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+#endif
+					string rewriteFile = Path.Combine(basePath, DefaultRewriteFile);
+					rewriteEnabled = File.Exists(rewriteFile)?1:0;
+				}
+				return (rewriteEnabled == 1);
+			}
+		}
+		public static bool UseNamedParameters
+		{
+			get
+			{
+				return Config.GetValueOf(USE_NAMED_PARAMETERS, YES) == YES;
 			}
 		}
 		public static bool MustSetupDB()

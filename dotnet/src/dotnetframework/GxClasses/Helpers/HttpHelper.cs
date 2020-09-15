@@ -300,6 +300,27 @@ namespace GeneXus.Http
 			return binary;
 		}
 #endif
+		static bool NamedParametersQuery(string query)
+		{
+			return Preferences.UseNamedParameters && query.Contains("=");
+		}
+		public static string[] GetParameterValues(string query)
+		{
+			if (NamedParametersQuery(query))
+			{
+				NameValueCollection names = HttpUtility.ParseQueryString(query);
+				string[] values = new string[names.Count];
+				for (int i = 0; i < names.Count; i++)
+					values[i] = names[i];
+
+				return values;
+			}
+			else
+			{
+				return query.Split(',');
+			}
+		}
+
 	}
 #if NETCORE
 	public class HttpCookieCollection : Dictionary<string, HttpCookie>

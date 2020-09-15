@@ -72,7 +72,8 @@ namespace GeneXus.Application
 			if (RunAsMain)
 				_gxContext.CloseConnections();
 		}
-		public virtual Task Post()
+
+		public virtual Task MethodBodyExecute(object key)
 		{
 			try
 			{
@@ -107,7 +108,7 @@ namespace GeneXus.Application
 				{
 					innerMethod = this.ServiceMethod;
 				}
-				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters);
+				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
 				return Serialize(outputParameters, wrapped);
@@ -122,6 +123,12 @@ namespace GeneXus.Application
 
 			}
 		}
+
+		public virtual Task Post()
+		{
+			return MethodBodyExecute(null);
+		}
+
 		private Dictionary<string, object> ReadBodyParameters()
 		{
 #if NETCORE
@@ -202,6 +209,10 @@ namespace GeneXus.Application
 		}
 		public virtual Task Get(object key)
 		{
+			return MethodUrlExecute(key);
+		}
+		public virtual Task  MethodUrlExecute(object key)
+		{
 			try
 			{
 				if (!IsAuthenticated())
@@ -229,7 +240,6 @@ namespace GeneXus.Application
 			finally
 			{
 				Cleanup();
-
 			}
 		}
 		public bool RunAsMain
@@ -241,12 +251,14 @@ namespace GeneXus.Application
 
 		public virtual Task Delete(object key)
 		{
-			return Task.CompletedTask;
-		}
+			return MethodUrlExecute(key);
+		}		
+
 		public virtual Task Put(object key)
 		{
-			return Task.CompletedTask;
+			return MethodBodyExecute(key);
 		}
+		
 		public Dictionary<string, object> ReadRequestParameters(Stream stream)
 		{
 			var bodyParameters = new Dictionary<string, object>();
@@ -272,7 +284,6 @@ namespace GeneXus.Application
 				}
 			}
 			return bodyParameters;
-
 		}
 		protected IDictionary<string, object> ReadQueryParameters()
 		{
@@ -627,5 +638,6 @@ namespace GeneXus.Application
 		public string Name { get; set; }
 		public string Parameters { get; set; }
 		public string MethodName { get; set; }
+		public string Verb { get; set; }
 	}
 }
