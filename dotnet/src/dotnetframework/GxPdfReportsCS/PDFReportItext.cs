@@ -17,14 +17,12 @@ using iTextSharp.text;
 
 using GeneXus.Printer;
 using iTextSharp.text.html.simpleparser;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Security;
 using GeneXus;
-using GeneXus.Configuration;
 using GeneXus.Utils;
 
-namespace com.genexus.reports 
+namespace com.genexus.reports
 {
 
 	internal enum VerticalAlign
