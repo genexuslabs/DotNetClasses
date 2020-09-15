@@ -1694,7 +1694,10 @@ namespace GeneXus.Http
 					SendResponseStatus(HttpStatusCode.Unauthorized);
 					if (context.GetBrowserType() != GxContext.BROWSER_INDEXBOT)
 					{
-						GXLogging.Warn(log, String.Format("Validation security token '{0}' failed for program: {1}", GetObjectAccessWebToken(cmpCtx), cmpCtx + this.GetPgmname().ToUpper()));
+						if (log.IsWarnEnabled)
+						{
+							GXLogging.Warn(log, $"Validation security token '{GetObjectAccessWebToken(cmpCtx)}' failed for program: '{cmpCtx + this.GetPgmname().ToUpper()}'");
+						}
 					}
 					return false;
 				}
@@ -2153,7 +2156,7 @@ namespace GeneXus.Http
 			if (!string.IsNullOrEmpty(value))
 			{
 				value = GxContext.RemoveInternalSuffixes(value).TrimStart('?');
-				useOldQueryStringFormat = !value.Contains("=");
+				useOldQueryStringFormat = !(Preferences.UseNamedParameters && value.Contains("="));
 				if (!string.IsNullOrEmpty(value))
 				{
 					string[] elements = useOldQueryStringFormat ? value.Split(',') : value.Split('&');

@@ -14,8 +14,6 @@ namespace GeneXus.Application
 
 		static ConcurrentDictionary<string, string> routerList;
 		const string RESOURCE_PATTERN = "*.rewrite";
-		const string DONT_USE_NAMED_PARAMETERS = "DontUseNamedParameters";
-		const string OFF = "0";
 
 		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName, string scriptPath)
 		{
@@ -83,7 +81,7 @@ namespace GeneXus.Application
 		{
 			if (parms.Length == 0)
 				return string.Empty;
-			bool useNamedParameters = (Configuration.Config.GetValueOf(DONT_USE_NAMED_PARAMETERS, OFF) == OFF) && (parms.Length == parmsName.Length);
+			bool useNamedParameters = Preferences.UseNamedParameters && (parms.Length == parmsName.Length);
 
 			StringBuilder queryString = new StringBuilder("?");
 			string parameterSeparator = useNamedParameters ? "&" : ",";
