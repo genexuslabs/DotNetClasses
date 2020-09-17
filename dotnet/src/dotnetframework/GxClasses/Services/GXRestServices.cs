@@ -505,11 +505,11 @@ namespace GeneXus.Utils
                 httpContext.Response.AddHeader(header, value);
             }
         }
-        public bool ProcessHeaders(string queryId)
-        {
-            
+		public bool ProcessHeaders(string queryId)
+		{
+
 			NameValueCollection headers = GetHeaders();
-			String language=null, theme=null, etag=null;
+			String language = null, theme = null, etag = null;
 			if (headers != null)
 			{
 				language = headers["GeneXus-Language"];
@@ -517,34 +517,52 @@ namespace GeneXus.Utils
 				if (!IsPost())
 					etag = headers["If-Modified-Since"];
 			}
-            
+
 			if (!string.IsNullOrEmpty(language))
-                context.SetLanguage(language);
+				context.SetLanguage(language);
 
 			if (!string.IsNullOrEmpty(theme))
 				context.SetTheme(theme);
 
-            DateTime dt = HTMLDateToDatetime(etag);
-            DateTime newDt;
-            DataUpdateStatus status;
-            if (etag == null)
-            {
-                status = DataUpdateStatus.Invalid;
-                GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
-            }
-            else 
-            {
-                status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
-            }
-            AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
-            if (status == DataUpdateStatus.UpToDate)
-            {
-                SetStatusCode(HttpStatusCode.NotModified);
-                return false;
-            }
-            return true;
-        }
-        DateTime HTMLDateToDatetime(string s)
+			DateTime dt = HTMLDateToDatetime(etag);
+			DateTime newDt;
+			DataUpdateStatus status;
+			if (etag == null)
+			{
+				status = DataUpdateStatus.Invalid;
+				GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
+			}
+			else
+			{
+				status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
+			}
+			AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
+			AddCacheHeaders();
+
+			if (status == DataUpdateStatus.UpToDate)
+			{
+				SetStatusCode(HttpStatusCode.NotModified);
+				return false;
+			}
+			return true;
+		}
+
+		private void AddCacheHeaders()
+		{
+			// WebPlatform Only
+			if ((int)GX.ClientInformation.DeviceTypeEnum.Web == GX.ClientInformation.DeviceType)
+			{
+				/*
+				* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+				* Specifying no-cache or max-age=0 indicates that 
+				* clients can cache a resource and must revalidate each time before using it. 
+				* This means HTTP request occurs each time, but it can skip downloading HTTP body if the content is valid.
+				*/
+				AddHeader("Cache-Control", "no-cache, max-age=0");
+			}
+		}
+
+		DateTime HTMLDateToDatetime(string s)
         {
             // Date Format: RFC 1123
             DateTime dt;
