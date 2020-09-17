@@ -537,21 +537,32 @@ namespace GeneXus.Utils
 				status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
 			}
 			AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
-			/*
-			* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-			* Specifying no-cache or max-age=0 indicates that 
-			* clients can cache a resource and must revalidate each time before using it. 
-			* This means HTTP request occurs each time, but it can skip downloading HTTP body if the content is valid.
-			*/
-			AddHeader("Cache-Control", "no-cache, max-age=0");
+			AddCacheHeaders();
+
 			if (status == DataUpdateStatus.UpToDate)
 			{
 				SetStatusCode(HttpStatusCode.NotModified);
 				return false;
-			}			
+			}
 			return true;
-        }
-        DateTime HTMLDateToDatetime(string s)
+		}
+
+		private void AddCacheHeaders()
+		{
+			// WebPlatform Only
+			if ((int)GX.ClientInformation.DeviceTypeEnum.Web == GX.ClientInformation.DeviceType)
+			{
+				/*
+				* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+				* Specifying no-cache or max-age=0 indicates that 
+				* clients can cache a resource and must revalidate each time before using it. 
+				* This means HTTP request occurs each time, but it can skip downloading HTTP body if the content is valid.
+				*/
+				AddHeader("Cache-Control", "no-cache, max-age=0");
+			}
+		}
+
+		DateTime HTMLDateToDatetime(string s)
         {
             // Date Format: RFC 1123
             DateTime dt;
