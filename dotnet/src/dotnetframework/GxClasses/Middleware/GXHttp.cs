@@ -61,7 +61,7 @@ namespace GeneXus.Http
 		private const int SPA_NOT_SUPPORTED_STATUS_CODE = 530;
 		protected bool FullAjaxMode;
 		private Exception workerException;
-		private bool firstParAlreadyRead = false;
+		private bool firstParConsumed = false;
 		private StringDictionary customCSSContent = new StringDictionary();
 #if !NETCORE
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
@@ -2246,9 +2246,9 @@ namespace GeneXus.Http
 		{
 			if (useOldQueryStringFormat)
 				return GetNextPar();
-			else if (!firstParAlreadyRead && _namedParms.TryGetValue(GXEVENT_PARM, out string value))
+			else if (!firstParConsumed && _namedParms.TryGetValue(GXEVENT_PARM, out string value))
 			{
-				firstParAlreadyRead = true;
+				firstParConsumed = true;
 				return value;
 			}
 			else return GetPar(parameterName);
