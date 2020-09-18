@@ -208,7 +208,7 @@ namespace GeneXus.Data
 		
 		void SetIsolationLevel( ushort isolationLevel); 
 		bool UncommitedChanges{get;set;}
-        void BeforeCommit();
+        void FlushBatchCursors();
 		void BeforeRollback();
 		
 		string LastObject

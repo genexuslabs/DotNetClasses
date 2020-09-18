@@ -544,7 +544,7 @@ namespace GeneXus.Data.ADO
 			}
 		}
 
-		public void BeforeCommit()
+		public void FlushBatchCursors()
 		{
 			ICollection adapters = ConnectionCache.GetDataAdapters();
 			foreach (DbDataAdapterElem elem in adapters)
@@ -2764,7 +2764,7 @@ namespace GeneXus.Data.ADO
 		}
 		public void Commit()
 		{
-            connection.BeforeCommit();
+            connection.FlushBatchCursors();
 			if (connection.Opened)
 			{
 				connection.commitTransaction();
