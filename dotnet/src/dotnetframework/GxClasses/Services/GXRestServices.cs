@@ -18,7 +18,7 @@ using System.ServiceModel;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel.Channels;
 using System.Runtime.Serialization;
-using Jayrock.Json;
+
 using System.Collections.Specialized;
 using GeneXus.Security;
 using GeneXus.Mime;

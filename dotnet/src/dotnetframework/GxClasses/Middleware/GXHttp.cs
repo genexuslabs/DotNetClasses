@@ -347,7 +347,7 @@ namespace GeneXus.Http
 				if (objMessage.Contains("grids"))
 					ParseGridsDataParms((JObject)objMessage["grids"]);
 				if (objMessage.Contains("grid"))
-                    grid = (int)objMessage["grid"];
+                    grid = Convert.ToInt32(objMessage["grid"]);
                 else
                     grid = 0;
                 if (objMessage.Contains("row"))
@@ -360,7 +360,7 @@ namespace GeneXus.Http
                 }
                 if (objMessage.Contains("fullPost"))
                 {
-					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
+					this.targetObj._Context.httpAjaxContext.ParseGXState((JObject)objMessage["fullPost"]);
 				}
 			}
 			private void ParseGridsDataParms(JObject gxGrids)
@@ -495,7 +495,7 @@ namespace GeneXus.Http
 			private void SetNullableScalarOrCollectionValue(JObject parm, object value, JArray columnValues)
 			{
 				string nullableAttribute = parm.Contains("nullAv") ? (string)parm["nullAv"] : null;
-				if (nullableAttribute != null && string.IsNullOrEmpty(value.ToString()))
+				if (nullableAttribute != null && string.IsNullOrEmpty(JSONHelper.WriteJSON<dynamic>(value)))
 				{
 					SetScalarOrCollectionValue(nullableAttribute, true, null);
 				}
@@ -542,9 +542,9 @@ namespace GeneXus.Http
 				if (fieldInfo != null)
 				{
 
-					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSonString", new Type[] { typeof(string) });
+					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSONObject");
 					if (mth != null)
-						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { values.ToString() });
+						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { values });					
 				}
 			}
 
@@ -586,9 +586,10 @@ namespace GeneXus.Http
 			{
 				if (fieldInfo != null)
 				{
-					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSonString", new Type[] { typeof(string) });
+					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSONObject");
 					if (mth != null)
-						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value.ToString() });
+						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value });
+
 					else
 					{
 						if (fieldInfo.FieldType.IsArray)
@@ -1693,7 +1694,10 @@ namespace GeneXus.Http
 					SendResponseStatus(HttpStatusCode.Unauthorized);
 					if (context.GetBrowserType() != GxContext.BROWSER_INDEXBOT)
 					{
-						GXLogging.Warn(log, String.Format("Validation security token '{0}' failed for program: {1}", GetObjectAccessWebToken(cmpCtx), cmpCtx + this.GetPgmname().ToUpper()));
+						if (log.IsWarnEnabled)
+						{
+							GXLogging.Warn(log, $"Validation security token '{GetObjectAccessWebToken(cmpCtx)}' failed for program: '{cmpCtx + this.GetPgmname().ToUpper()}'");
+						}
 					}
 					return false;
 				}
@@ -1719,20 +1723,19 @@ namespace GeneXus.Http
 
 		public void ajax_req_read_hidden_sdt(String jsonStr, Object SdtObj)
 		{
-			JsonReader reader = new JsonTextReader(new StringReader(jsonStr));
-			IJsonFormattable jsonObj;
+			dynamic jsonObj;
 			try
 			{
 				if (SdtObj != null && !string.IsNullOrEmpty(jsonStr) && !jsonStr.Equals("undefined") && !jsonStr.Equals("null"))
 				{
 					if (jsonStr.StartsWith("["))
-						jsonObj = (JArray)reader.DeserializeNext();
+						jsonObj = JSONHelper.ReadJSON<JArray>(jsonStr);
 					else
-						jsonObj = (JObject)reader.DeserializeNext();
+						jsonObj = JSONHelper.ReadJSON<JObject>(jsonStr);
 					((IGxJSONAble)SdtObj).FromJSONObject(jsonObj);
 				}
 			}
-			catch (Jayrock.Json.ParseException ex)
+			catch (Exception ex)
 			{
 				GXLogging.Warn(log, "Error parsing jsonObj:" + jsonStr + " for type " + SdtObj.GetType().FullName, ex);
 			}
