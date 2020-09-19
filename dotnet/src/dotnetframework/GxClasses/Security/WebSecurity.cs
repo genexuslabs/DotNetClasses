@@ -50,39 +50,41 @@ namespace GeneXus.Web.Security
             WebSecureToken token;
             return WebSecurityHelper.Verify(pgmName, issuer, value, jwtToken, out token, context);
         }
-        public static bool Verify(string pgmName, string issuer, string value, string jwtToken, out WebSecureToken token, IGxContext context)
-        {
-            token = new WebSecureToken();
-            bool ok = SecureTokenHelper.Verify(jwtToken, token, GetSecretKey(context));			
-            bool ret = ok && !string.IsNullOrEmpty(pgmName) && token.ProgramName == pgmName && issuer == token.Issuer &&
-                StripInvalidChars(token.Value) == StripInvalidChars(value) && token.Expiration >= DateTime.Now;
+		public static bool Verify(string pgmName, string issuer, string value, string jwtToken, out WebSecureToken token, IGxContext context)
+		{
+			token = new WebSecureToken();
+			bool jwtVerifyOk = SecureTokenHelper.Verify(jwtToken, token, GetSecretKey(context));
+			bool contentVerifyOk = jwtVerifyOk && !string.IsNullOrEmpty(pgmName) && token.ProgramName == pgmName && issuer == token.Issuer &&
+				StripInvalidChars(token.Value) == StripInvalidChars(value) && token.Expiration >= DateTime.Now;
 
-            if (!ret)
-            {
+			if (!contentVerifyOk && _log.IsErrorEnabled)
+			{
+				StringBuilder errMessage = new StringBuilder("WebSecurity Token Verification error");
+				if (!jwtVerifyOk)
+				{
+					errMessage.Append($" - JWT Signature Verification failed");
+				}
+				if (token.ProgramName != pgmName)
+				{
+					errMessage.Append($" - ProgramName mismatch '{token.ProgramName}' <> '{pgmName}'");
+				}
+				if (StripInvalidChars(token.Value) != StripInvalidChars(value))
+				{
+					errMessage.Append($" - Value mismatch '{StripInvalidChars(token.Value)}' <> '{StripInvalidChars(value)}'");
+				}
+				else if (issuer != token.Issuer)
+				{
+					errMessage.Append($" - Issuer mismatch '{token.Issuer}' <> '{issuer}'");
+				}
 
-                if (!ok)
-                {
-                    GXLogging.Error(_log, "verify: Invalid token");
-                }
-                if (token.ProgramName != pgmName)
-                {
-                    GXLogging.Error(_log, "verify: pgmName mismatch " + "'" + token.ProgramName + "' <> '" + pgmName + "'");
-                }
-                if (issuer != token.Issuer)
-                {
-                    GXLogging.Error(_log, "verify: issuer mismatch " + "'" + token.Issuer + "' <> '" + issuer + "'");
-                }
-                if (StripInvalidChars(token.Value) != StripInvalidChars(value))
-                {
-                    GXLogging.Error(_log, "verify: value mismatch " + "'" + token.Value + "'" + " <> '" + value + "'");
-                }
-                if (token.Expiration < DateTime.Now)
-                {
-                    GXLogging.Error(_log, "verify: token expired ");
-                }
-            }
-            return ret;
-        }
+				if (token.Expiration < DateTime.Now)
+				{
+					errMessage.Append(" - Token expired ");
+				}
+				GXLogging.Error(_log, errMessage.ToString());
+			}
+			return contentVerifyOk;
+		}
 
 		internal static bool VerifySecureSignedSDTToken(string cmpCtx, IGxCollection value, string signedToken, IGxContext context)
 		{
