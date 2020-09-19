@@ -302,7 +302,7 @@ namespace GeneXus.Http
 #endif
 		static bool NamedParametersQuery(string query)
 		{
-			return query.Contains("=");
+			return Preferences.UseNamedParameters && query.Contains("=");
 		}
 		public static string[] GetParameterValues(string query)
 		{
