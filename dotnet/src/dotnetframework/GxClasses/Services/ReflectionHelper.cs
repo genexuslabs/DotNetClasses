@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using GeneXus.Utils;
-using Jayrock.Json;
+
 using Type = System.Type;
 
 namespace GeneXus.Application
@@ -59,7 +59,7 @@ namespace GeneXus.Application
 				{
 					TObject = Activator.CreateInstance(newType);
 				}
-				((IGxJSONAble)TObject).FromJSONObject((IJsonFormattable)value);
+				((IGxJSONAble)TObject).FromJSONObject(value);
 				return TObject;
 			}
 			else if (newType == typeof(DateTime))

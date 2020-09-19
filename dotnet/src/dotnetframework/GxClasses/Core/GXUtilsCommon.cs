@@ -2779,10 +2779,15 @@ namespace GeneXus.Utils
 			string[] fmtVec = DateFormatFromPicture(picFmt);
 			string[] fmts = modifyFormatStrings(fmtVec);
 			string oldSeparator = cultureInfo.DateTimeFormat.DateSeparator;
+
 			try
 			{
+				DateTime dValue;
 				if (oldSeparator != "/") cultureInfo.DateTimeFormat.DateSeparator = "/";
-				return DateTime.ParseExact(strDate.Trim(), fmts, cultureInfo.DateTimeFormat, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault);
+				if (DateTime.TryParseExact(strDate.Trim(), fmts, cultureInfo.DateTimeFormat, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault, out dValue))
+					return dValue;
+				else
+					return nullDate;
 			}
 			catch
 			{
