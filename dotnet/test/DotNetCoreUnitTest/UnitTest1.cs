@@ -87,8 +87,9 @@ namespace xUnitTesting
 		{
 			Dictionary<String, String> servicesPathUrl = new Dictionary<String, String>();
 			Dictionary<String, Dictionary<String, String>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
-		    Dictionary<String, Dictionary<String, String>> servicesVerb = new Dictionary<String, Dictionary<string, string>>();
-			return Startup.GetRouteController(servicesPathUrl,servicesMap, servicesVerb, "",path);
+			Dictionary<string, Dictionary<Tuple<string, string>, string>> servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
+			Dictionary<string, List<string>> sValid = new Dictionary<string, List<string>>();			 
+			return Startup.GetRouteController(servicesPathUrl, sValid, servicesMap, servicesMapData, "", "GET", path);						
 		}
 	}
 }

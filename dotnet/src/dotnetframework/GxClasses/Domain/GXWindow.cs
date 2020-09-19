@@ -95,7 +95,7 @@ namespace GeneXus.Application
 			return GetJSONObject();
 		}
 
-		public void FromJSONObject(IJsonFormattable obj)
+		public void FromJSONObject(dynamic obj)
 		{
 		}
 
