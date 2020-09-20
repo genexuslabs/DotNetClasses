@@ -259,12 +259,7 @@ namespace GeneXus.Application
 		{
 			return MethodBodyExecute(key);
 		}
-
-		public virtual Task Patch(object key)
-		{
-			return MethodBodyExecute(key);
-		}
-
+		
 		public Dictionary<string, object> ReadRequestParameters(Stream stream)
 		{
 			var bodyParameters = new Dictionary<string, object>();
@@ -626,8 +621,6 @@ namespace GeneXus.Application
 					Put(controllerInfo.Parameters);
 				else if (context.Request.HttpMethod == "DELETE")
 					Delete(controllerInfo.Parameters);
-				else if (context.Request.HttpMethod == "PATCH")
-					Patch(controllerInfo.Parameters);
 				else
 				{
 					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
