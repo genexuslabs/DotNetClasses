@@ -139,10 +139,10 @@ namespace GeneXus.Http.HttpModules
   								sm.Verb = "GET";
 							if (servicesMap.ContainsKey(mapPathLower))
 							{
-									if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
-									{
-										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-   									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());					
+								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+								{
+									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+   								    servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());					
 					  			}
 						  }
 						  else

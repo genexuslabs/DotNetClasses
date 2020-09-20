@@ -528,24 +528,48 @@ namespace GeneXus.Application
 
 					if (controller != null)
 					{
-						if (HttpMethods.IsGet(context.Request.Method) && (HttpMethods.IsGet(controllerInfo.Verb) || controllerInfo.Verb == null))
+						if (HttpMethods.IsGet(context.Request.Method) && ( controllerInfo.Verb == null || HttpMethods.IsGet(controllerInfo.Verb)))
 						{
 							return controller.Get(controllerInfo.Parameters);
 						}
-						else if (HttpMethods.IsPost(context.Request.Method) && (HttpMethods.IsPost(controllerInfo.Verb) || controllerInfo.Verb == null))
+						else if (HttpMethods.IsPost(context.Request.Method) && ( controllerInfo.Verb == null || HttpMethods.IsPost(controllerInfo.Verb) ))
 						{
 							return controller.Post();
 						}
-						else if (HttpMethods.IsDelete(context.Request.Method) && (HttpMethods.IsDelete(controllerInfo.Verb) || controllerInfo.Verb == null))
+						else if (HttpMethods.IsDelete(context.Request.Method) && ( controllerInfo.Verb == null || HttpMethods.IsDelete(controllerInfo.Verb)))
 						{
 							return controller.Delete(controllerInfo.Parameters);
 						}
-						else if (HttpMethods.IsPut(context.Request.Method) && (HttpMethods.IsPut(controllerInfo.Verb) || controllerInfo.Verb == null))
+						else if (HttpMethods.IsPut(context.Request.Method) && ( controllerInfo.Verb == null || HttpMethods.IsPut(controllerInfo.Verb) ))
 						{
 							return controller.Put(controllerInfo.Parameters);
-						}						
+						}
+						else if (HttpMethods.IsPatch(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPatch(controllerInfo.Verb)))
+						{
+							return controller.Patch(controllerInfo.Parameters);
+						}
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
+							string mthheaders = "OPTIONS, HEAD";
+							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath))
+							{
+								foreach (Tuple<string, string> t in servicesMapData[actualPath].Keys)
+								{
+									if (t.Item1.Equals(controllerWihtParms.ToLower()))
+									{
+										mthheaders += "," + t.Item2;
+									}
+								}
+							}
+							else
+							{
+								mthheaders += ", GET, POST";
+							}
+							context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { (string)context.Request.Headers["Origin"] });
+							context.Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Origin, X-Requested-With, Content-Type, Accept" });
+							context.Response.Headers.Add("Access-Control-Allow-Methods", new[] { mthheaders });
+							context.Response.Headers.Add("Access-Control-Allow-Credentials", new[] { "true" });
+							context.Response.Headers.Add("Allow", mthheaders);
 							context.Response.StatusCode = (int)HttpStatusCode.OK;
 						}
 						else
