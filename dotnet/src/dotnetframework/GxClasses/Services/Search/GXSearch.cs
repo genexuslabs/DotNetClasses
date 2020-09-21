@@ -141,7 +141,7 @@ namespace GeneXus.Search
 		public SearchResultCollection()
 		{
 		}
-		public override void FromJSONObject(IJsonFormattable obj)
+		public override void FromJSONObject(dynamic obj)
 		{
 		}
 
@@ -216,7 +216,7 @@ namespace GeneXus.Search
 			AddObjectProperty("Score", Score);
 			AddObjectProperty("Timestamp", TimeStamp);
 		}
-		public void FromJSONObject(Jayrock.Json.IJsonFormattable obj)
+		public void FromJSONObject(dynamic obj)
 		{
 		}
 

@@ -8,7 +8,7 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Security;
 using System.Net.Security;
-using Jayrock.Json;
+
 using Artech.Genexus.SDAPI;
 using PushSharp.Common;
 using System.Web;

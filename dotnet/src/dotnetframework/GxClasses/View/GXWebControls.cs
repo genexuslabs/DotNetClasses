@@ -18,6 +18,7 @@ using Jayrock.Json;
 using System.IO;
 using GeneXus.Configuration;
 using GeneXus.Application;
+using log4net;
 
 namespace GeneXus.WebControls
 {
@@ -430,7 +431,7 @@ namespace GeneXus.WebControls
 			return GetJSONObject();
         }
 
-        public void FromJSONObject(IJsonFormattable obj)
+        public void FromJSONObject(dynamic obj)
         {
         }
     }
@@ -646,7 +647,7 @@ namespace GeneXus.WebControls
 			return GetJSONObject();
 		}
 
-        public void FromJSONObject(IJsonFormattable obj)
+        public void FromJSONObject(dynamic obj)
         {
         }
     }
@@ -703,14 +704,15 @@ namespace GeneXus.WebControls
 			return GetJSONObject();
         }
 
-        public void FromJSONObject(IJsonFormattable obj)
+        public void FromJSONObject(dynamic obj)
         {
         }
     }
 
     public abstract class GXWebControl : IGxJSONAble, IGxJSONSerializable
     {
-        bool ForeColorFlag;
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXWebControl));
+		bool ForeColorFlag;
         bool BackColorFlag;
         Color _ForeColor;
         Color _BackColor;
@@ -1168,10 +1170,13 @@ namespace GeneXus.WebControls
             {
                 jsonObj.Put(Desc, Value);
             }
-            catch (JsonException) { }
-        }
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "AddObjectProperty error", ex);
+			}
+		}
 
-        public virtual void FromJSONObject(IJsonFormattable Obj)
+        public virtual void FromJSONObject(dynamic Obj)
         {
 
         }
@@ -1646,7 +1651,7 @@ namespace GeneXus.WebControls
             jsonObj.Put("v", jsonArrValues);
         }
 
-        public override void FromJSONObject(IJsonFormattable Obj)
+        public override void FromJSONObject(dynamic Obj)
         {
             this.removeAllItems();
             JObject jsonObj = (JObject)Obj;

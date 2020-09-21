@@ -1,5 +1,5 @@
 using GeneXus.Utils;
-using Jayrock.Json;
+
 using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;

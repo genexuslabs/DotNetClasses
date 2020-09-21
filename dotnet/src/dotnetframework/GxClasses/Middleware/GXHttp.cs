@@ -61,6 +61,7 @@ namespace GeneXus.Http
 		private const int SPA_NOT_SUPPORTED_STATUS_CODE = 530;
 		protected bool FullAjaxMode;
 		private Exception workerException;
+		private bool firstParConsumed = false;
 		private StringDictionary customCSSContent = new StringDictionary();
 #if !NETCORE
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
@@ -347,7 +348,7 @@ namespace GeneXus.Http
 				if (objMessage.Contains("grids"))
 					ParseGridsDataParms((JObject)objMessage["grids"]);
 				if (objMessage.Contains("grid"))
-                    grid = (int)objMessage["grid"];
+                    grid = Convert.ToInt32(objMessage["grid"]);
                 else
                     grid = 0;
                 if (objMessage.Contains("row"))
@@ -360,7 +361,7 @@ namespace GeneXus.Http
                 }
                 if (objMessage.Contains("fullPost"))
                 {
-					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
+					this.targetObj._Context.httpAjaxContext.ParseGXState((JObject)objMessage["fullPost"]);
 				}
 			}
 			private void ParseGridsDataParms(JObject gxGrids)
@@ -495,7 +496,7 @@ namespace GeneXus.Http
 			private void SetNullableScalarOrCollectionValue(JObject parm, object value, JArray columnValues)
 			{
 				string nullableAttribute = parm.Contains("nullAv") ? (string)parm["nullAv"] : null;
-				if (nullableAttribute != null && string.IsNullOrEmpty(value.ToString()))
+				if (nullableAttribute != null && string.IsNullOrEmpty(JSONHelper.WriteJSON<dynamic>(value)))
 				{
 					SetScalarOrCollectionValue(nullableAttribute, true, null);
 				}
@@ -542,9 +543,9 @@ namespace GeneXus.Http
 				if (fieldInfo != null)
 				{
 
-					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSonString", new Type[] { typeof(string) });
+					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSONObject");
 					if (mth != null)
-						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { values.ToString() });
+						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { values });					
 				}
 			}
 
@@ -586,9 +587,10 @@ namespace GeneXus.Http
 			{
 				if (fieldInfo != null)
 				{
-					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSonString", new Type[] { typeof(string) });
+					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSONObject");
 					if (mth != null)
-						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value.ToString() });
+						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value });
+
 					else
 					{
 						if (fieldInfo.FieldType.IsArray)
@@ -1722,20 +1724,19 @@ namespace GeneXus.Http
 
 		public void ajax_req_read_hidden_sdt(String jsonStr, Object SdtObj)
 		{
-			JsonReader reader = new JsonTextReader(new StringReader(jsonStr));
-			IJsonFormattable jsonObj;
+			dynamic jsonObj;
 			try
 			{
 				if (SdtObj != null && !string.IsNullOrEmpty(jsonStr) && !jsonStr.Equals("undefined") && !jsonStr.Equals("null"))
 				{
 					if (jsonStr.StartsWith("["))
-						jsonObj = (JArray)reader.DeserializeNext();
+						jsonObj = JSONHelper.ReadJSON<JArray>(jsonStr);
 					else
-						jsonObj = (JObject)reader.DeserializeNext();
+						jsonObj = JSONHelper.ReadJSON<JObject>(jsonStr);
 					((IGxJSONAble)SdtObj).FromJSONObject(jsonObj);
 				}
 			}
-			catch (Jayrock.Json.ParseException ex)
+			catch (Exception ex)
 			{
 				GXLogging.Warn(log, "Error parsing jsonObj:" + jsonStr + " for type " + SdtObj.GetType().FullName, ex);
 			}
@@ -2245,8 +2246,11 @@ namespace GeneXus.Http
 		{
 			if (useOldQueryStringFormat)
 				return GetNextPar();
-			else if (_namedParms.TryGetValue(GXEVENT_PARM, out string value))
+			else if (!firstParConsumed && _namedParms.TryGetValue(GXEVENT_PARM, out string value))
+			{
+				firstParConsumed = true;
 				return value;
+			}
 			else return GetPar(parameterName);
 		}
 		string NormalizeParameterName(string parameterName)
