@@ -1,26 +1,19 @@
 
 using System;
-using GeneXus.Utils;
 using GeneXus.Application;
-using System.Runtime.Serialization;
-using System.Collections.Generic;
-using GeneXus.Configuration;
-using GeneXus.Metadata;
+using GeneXus.Core.genexus.common;
 
 namespace GeneXus.WebControls
 {
 	public class GXGridStateHandler
 	{
-		String gridName;
+		string gridName;
 		readonly Action varsFromState;
 		readonly Action varsToState;
 		IGxContext context;
-		GridState state;
-		GxUserType exposedSdtGridState;
+		SdtGridState state;
 		bool dirty;
 		const string GRID_STATE = "GridState";
-		const string SDTGridStateNamespace = "GeneXus.Core.genexus.common";
-		const string SDTGridState = "SdtGridState";
 
 		public GXGridStateHandler(IGxContext context, string gridName, string programName, Action varsFromState, Action varsToState)
 		{
@@ -28,114 +21,83 @@ namespace GeneXus.WebControls
 			this.varsFromState = varsFromState;
 			this.varsToState = varsToState;
 			this.context = context;
-			state = new GridState();
+			state = new SdtGridState(context);
 			dirty = true;
 		}
 		public void SaveGridState()
 		{
-			state = JSONHelper.Deserialize<GridState>(context.GetSession().Get(gridName));
+			state.FromJSonString(context.GetSession().Get(gridName));
 			varsToState();
-			context.GetSession().Set(gridName, JSONHelper.Serialize<GridState>(state));
+			context.GetSession().Set(gridName, state.ToJSonString());
 			dirty = true;
 		}
 		public void LoadGridState()
 		{
 			if (context.GetRequestMethod() == "GET")
 			{
-				state = JSONHelper.Deserialize<GridState>(context.GetSession().Get(gridName));
+				state = new SdtGridState(context);
+				state.FromJSonString(context.GetSession().Get(gridName));
 				varsFromState();
 				dirty = true;
 			}
 		}
 		public string FilterValues(int idx)
 		{
-			return state.InputValues[idx - 1].Value;
+			return state.gxTpr_Inputvalues[idx-1].gxTpr_Value;
 		}
 		public int CurrentPage
 		{
 			get
 			{
-				return state.CurrentPage;
+				return state.gxTpr_Currentpage;
 			}
 			set
 			{
-				state.CurrentPage = value;
+				state.gxTpr_Currentpage = value;
 			}
 		}
 		public short OrderedBy
 		{
 			get
 			{
-				return state.OrderedBy;
+				return state.gxTpr_Orderedby;
 			}
 			set
 			{
-				state.OrderedBy = value;
+				state.gxTpr_Orderedby = value;
 			}
 		}
-		public GxUserType State {
+		public SdtGridState State {
 			get {
-				if (dirty || exposedSdtGridState==null)
+				if (dirty || state==null)
 				{
-					exposedSdtGridState = (GxUserType)ClassLoader.FindInstance(Config.CoreAssemblyName, SDTGridStateNamespace, SDTGridState, new object[] {context }, null);
-					exposedSdtGridState.FromJSonString(context.GetSession().Get(gridName));
+					state = new SdtGridState(context);
+					state.FromJSonString(context.GetSession().Get(gridName));
 					dirty = false;
 				}
-				return exposedSdtGridState;
+				return state;
 			}
 		}
 
-		public void SetState(GxUserType value)
+		public void SetState(SdtGridState value)
 		{
-			exposedSdtGridState = value;
-			String jsonState = exposedSdtGridState.ToJSonString();
-			state = JSONHelper.Deserialize<GridState>(jsonState);
-			context.GetSession().Set(gridName, jsonState);
+			state = value;
+			context.GetSession().Set(gridName, state.ToJSonString());
 		}
 
 		public void ClearFilterValues()
 		{
-			state.InputValues.Clear();
+			state.gxTpr_Inputvalues.Clear();
 		}
 		public void AddFilterValue(string name, string value)
 		{
-			state.InputValues.Add(new GridState_InputValuesItem() { Name = name, Value = value });
+			state.gxTpr_Inputvalues.Add(new SdtGridState_InputValuesItem() { gxTpr_Name = name, gxTpr_Value = value });
 		}
 		public int FilterCount
 		{
-			get { return state.InputValues.Count; }
+			get { return state.gxTpr_Inputvalues.Count; }
 		}
 
 	}
-	[DataContract]
-	internal class GridState
-	{
-		List<GridState_InputValuesItem> _inputValues;
-		public GridState()
-		{
-		}
-		[DataMember]
-		internal int CurrentPage { get; set; }
-		[DataMember]
-		internal short OrderedBy { get; set; }
-		[DataMember]
-		internal List<GridState_InputValuesItem> InputValues {
-			get {
-				if (_inputValues == null)
-					_inputValues = new List<GridState_InputValuesItem>();
-				return _inputValues;
-			}
-			set {
-				_inputValues = value;
-			}
-		}
-	}
-	[DataContract]
-	internal class GridState_InputValuesItem
-	{
-		[DataMember]
-		internal String Name { get; set; }
-		[DataMember]
-		internal String Value { get; set; }
-	}
+
 }
