@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,9 +34,7 @@ namespace Artech.Genexus.SDAPI
             JObject _jsonArr = null;
             if (!string.IsNullOrEmpty(s))
             {
-                StringReader sr = new StringReader(s);
-                JsonTextReader tr = new JsonTextReader(sr);
-                _jsonArr = (JObject)(tr.DeserializeNext());
+				_jsonArr = JSONHelper.ReadJSON<JObject>(s);
             }
             return _jsonArr;
         }
