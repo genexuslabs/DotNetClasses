@@ -128,11 +128,7 @@ namespace GeneXus.Http.Server
 		{
 			if (Response != null)
 			{
-#if NETCORE
-				Response.WriteAsync(s);
-#else
 				Response.Write(s);
-#endif
 			}			
 		}
 
@@ -140,11 +136,7 @@ namespace GeneXus.Http.Server
 		{
 			if (!string.IsNullOrEmpty(fileName))
 			{
-#if NETCORE
-				Response.SendFileAsync(fileName.Trim());
-#else
 				Response.WriteFile(fileName.Trim());
-#endif
 			}
 		}
 		public void AppendHeader( string name, string value)

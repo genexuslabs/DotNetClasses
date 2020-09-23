@@ -149,12 +149,8 @@ namespace GeneXus.Http
 			SetResponseStatus(httpContext, statusCode, statusDescription);
 			httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 			var jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
-#if NETCORE
-			return httpContext.Response.WriteAsync(JSONHelper.Serialize(jsonError));
-#else
 			httpContext.Response.Write(JSONHelper.Serialize(jsonError));
 			return Task.CompletedTask;
-#endif
 		}
 
 		public static String OatuhUnauthorizedHeader(string realm, string errCode, string errDescription)
@@ -448,11 +444,11 @@ namespace GeneXus.Http
 
 		public static void Write(this HttpResponse response, string value)
 		{
-			response.WriteAsync(value);
+			response.WriteAsync(value).Wait();
 		}
 		public static void WriteFile(this HttpResponse response, string fileName)
 		{
-			response.SendFileAsync(fileName);
+			response.SendFileAsync(fileName).Wait();
 		}
 		
 	}
