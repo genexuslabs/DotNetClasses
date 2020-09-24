@@ -747,7 +747,7 @@ namespace GeneXus.Http.Client
 			try
 			{
 				string requestUrl = GetRequestURL(name);
-				CookieContainer cookies = (_context == null || String.IsNullOrEmpty(requestUrl) || !IncludeCookies) ? new CookieContainer() : _context.GetCookieContainer(requestUrl);
+				CookieContainer cookies = (_context == null || String.IsNullOrEmpty(requestUrl)) ? new CookieContainer() : _context.GetCookieContainer(requestUrl, IncludeCookies);
 				req = buildRequest(method, requestUrl, cookies);
 
 #if NETCORE
