@@ -261,7 +261,7 @@ namespace GeneXus.Application
 		String getJSONResponse();
 		LocalUtil localUtil { get; }
 		IGxSession GetSession();
-		CookieContainer GetCookieContainer(string url);
+		CookieContainer GetCookieContainer(string url, bool includeCookies=true);
 		bool WillRedirect();
 		GXSOAPContext SoapContext { get; set; }
 	}
@@ -427,7 +427,7 @@ namespace GeneXus.Application
 			httpContextVars = new GxHttpContextVars();
 		}
 
-		public CookieContainer GetCookieContainer(string url)
+		public CookieContainer GetCookieContainer(string url, bool includeCookies=true)
 		{
 			try
 			{
@@ -440,7 +440,11 @@ namespace GeneXus.Application
 					tempStorage.SetObject(COOKIE_CONTAINER, cookieContainers);
 				}
 				string domain = (new Uri(url)).GetLeftPart(UriPartial.Authority);
-				if (!cookieContainers.TryGetValue(domain, out container))
+				if (cookieContainers.TryGetValue(domain, out container) && includeCookies)
+				{
+					return container;
+				}
+				else
 				{
 					container = new CookieContainer();
 					cookieContainers[domain] = container;
