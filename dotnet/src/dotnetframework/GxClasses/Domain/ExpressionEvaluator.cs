@@ -32,6 +32,7 @@ namespace GeneXus.Utils
 		short EXPRESSION_ERROR = 3;
 		short EVALUATION_ERROR = 4;
 		short EXTERNAL_FUNCTION_ERROR = 5;
+		internal bool iifContext = false;
 		public GXProperties Variables
 		{
 			get { return parms; }
@@ -191,7 +192,7 @@ namespace GeneXus.Utils
 			}
 			String delim = "'!+-/*><=" + GE + LE + AND + OR + NE;
 			bool useParentheses = false;
-			if (expression.Contains("" + AND) || expression.Contains("" + OR))
+			if (iifContext && (expression.Contains("" + AND) || expression.Contains("" + OR)))
 			{
 				delim = "" + AND + OR;
 				useParentheses = true;
@@ -363,7 +364,7 @@ namespace GeneXus.Utils
 			
 			// Finished processing
 			// So check if it is an expression with parentheses, a number, or a function
-			if (token.StartsWith("("))
+			if (token.StartsWith("(") && token.EndsWith(")"))
 			{
 				// Si es una expresion entre parentesis
 				return eval(token.Substring(1, (token.Length - 1) - (1)).Trim());
@@ -554,6 +555,7 @@ namespace GeneXus.Utils
 				{
 					return throwException(EVALUATION_ERROR, "The function " + funcName + " needs 3 arguments");
 				}
+				iifContext = true;
 				bool iif_result = (eval(sarg1) != 0);
 				if (ErrCode != 0)
 					return result;
@@ -561,6 +563,7 @@ namespace GeneXus.Utils
 					result= eval(sarg2);
 				else
 					result= eval(sarg3);
+				iifContext = false;
 			}
 			else
 			{
