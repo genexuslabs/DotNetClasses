@@ -268,7 +268,13 @@ namespace GeneXus.Data
 		{
 			return new GxODPOracleDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
 		}
-
+		public override bool SupportUpdateBatchSize
+		{
+			get
+			{
+				return false;
+			}
+		}
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
 		{
