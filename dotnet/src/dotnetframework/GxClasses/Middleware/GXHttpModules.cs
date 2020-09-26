@@ -20,13 +20,12 @@ namespace GeneXus.Http.HttpModules
 		String implementation;
 		String methodName;
 		String verb;
-
+		String path;
 		public string Name { get => name; set => name = value; }
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
 		public string Verb { get => verb; set => verb = value; }
-
-
+		public string Path { get => path; set => path = value; }
 	}
 
 	public class MapGroup
@@ -51,9 +50,11 @@ namespace GeneXus.Http.HttpModules
 		public static Dictionary<String, String> servicesBase;
 		public static Dictionary<String, String> servicesClass;
 		public static Dictionary<String, Dictionary<String, String>> servicesMap;
-		public static Dictionary<String, Dictionary<String, String>> servicesVerbs;
+		//public static Dictionary<String, Dictionary<String, String>> servicesVerbs;
+		public static Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
 
 		const string REST_BASE_URL = "rest/";
+		const string PRIVATE_DIR = "private";
 		private static bool moduleStarted;
 
 		void IHttpModule.Init(HttpApplication context)
@@ -104,23 +105,25 @@ namespace GeneXus.Http.HttpModules
 		public void ServicesGroupSetting(String webPath)
 		{
 			if (!String.IsNullOrEmpty(webPath) && servicesMap == null)
-			{
+			{				
 				servicesPathUrl = new List<String>();
 				servicesBase = new Dictionary<string, string>();				
 				servicesMap = new Dictionary<String, Dictionary<string, string>>();
-				servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
+				//servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
+				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
 
-				String[] grpFiles = Directory.GetFiles(webPath, "*.grp.json");
-				foreach (String grp in grpFiles)
+				if (Directory.Exists(Path.Combine(webPath, PRIVATE_DIR))) 
 				{
+					String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
+					foreach (String grp in grpFiles)
+					{
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
+						object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
 #pragma warning restore SCS0018
 					MapGroup m = p as MapGroup;
 					if (m != null)
 					{
-
 						if (String.IsNullOrEmpty(m.BasePath))
 						{
 							m.BasePath = REST_BASE_URL;
@@ -132,24 +135,27 @@ namespace GeneXus.Http.HttpModules
 						servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
 						foreach (SingleMap sm in m.Mappings)
 						{
+							if (String.IsNullOrEmpty(sm.Verb))
+  								sm.Verb = "GET";
 							if (servicesMap.ContainsKey(mapPathLower))
 							{
 								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
 								{
 									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-									servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), (sm.Verb!=null)?sm.Verb:"GET");
-								}
-							}
-							else
-							{
-								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-								servicesVerbs.Add(mapPathLower, new Dictionary<string, string>());
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-								servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), (sm.Verb != null) ? sm.Verb : "GET");
-							}
+   								    servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());					
+					  			}
+						  }
+						  else
+						  {
+								  servicesMap.Add(mapPathLower, new Dictionary<string, string>());
+								  servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
+								  servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+								  servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name);
+						  }
+								
+						}						
 						}
 					}
-
 				}
 			}
 		}
@@ -208,6 +214,7 @@ namespace GeneXus.Http.HttpModules
 		private static RewriterModule rewriter;
 		private static bool moduleStarted;
 		private static bool enabled;
+		internal static string physicalApplicationPath;
 		public void Dispose()
 		{
 
@@ -216,7 +223,6 @@ namespace GeneXus.Http.HttpModules
 		{
 			if (!moduleStarted)
 			{
-				string physicalApplicationPath = null;
 				try
 				{
 					physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
@@ -229,7 +235,7 @@ namespace GeneXus.Http.HttpModules
 
 				if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
 				{
-					ChangeApacheDefaultFileName();
+					ChangeApacheDefaultEngine();
 					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid Too Many Redirects with inverse urles.
 					enabled = true;
 				}
@@ -241,19 +247,33 @@ namespace GeneXus.Http.HttpModules
 				rewriter.Init(context);
 			}
 		}
-		private void ChangeApacheDefaultFileName()
+		private void ChangeApacheDefaultEngine()
 		{
 			try
 			{
-				ApacheEngine engine = (ApacheEngine)typeof(Manager).GetField("_rewriterEngine", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-				typeof(ApacheEngine).GetProperty("FileName", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(engine, Preferences.DefaultRewriteFile);
+				GxApacheEngine engine = new GxApacheEngine();
+				typeof(Manager).GetField("_rewriterEngine", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, engine);
 				engine.Init();
 			}catch(Exception ex)
 			{
-				GXLogging.Error(log, "Error changing ApacheDefaultFileName", ex);
+				GXLogging.Error(log, "Error changing ChangeApacheDefaultEngine", ex);
 			}
 		}
 
+	}
+	public class GxApacheEngine : ApacheEngine
+	{
+		public GxApacheEngine() : base()
+		{
+		}
+		public override void Init()
+		{
+			Paths.Clear();
+			DirectoryInfo refreshDir = new DirectoryInfo(GXRewriter.physicalApplicationPath);
+			FileInfo file = new FileInfo(Path.Combine(refreshDir.FullName, Preferences.DefaultRewriteFile));
+			Add(HttpContext.Current.Request.ApplicationPath, file);
+			RefreshRules();
+		}
 	}
 	public class GxInverseRuleAction: DefaultRuleAction
 	{

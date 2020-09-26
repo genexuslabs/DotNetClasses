@@ -12,7 +12,7 @@ namespace GeneXus.Diagnostics
 	
 	public class GXDebugManager
 	{
-		public const short GXDEBUG_VERSION = 1;
+		public const short GXDEBUG_VERSION = 2;
 		internal const GXDebugGenId GENERATOR_ID = GXDebugGenId.CSHARP;
 
 		internal const int PGM_INFO_NO_PARENT = 0;
@@ -45,7 +45,7 @@ namespace GeneXus.Diagnostics
 				return m_Instance;
 			}
 		}
-		private static int BUFFER_INITIAL_SIZE = 16384;
+		private static int BUFFER_INITIAL_SIZE = 16383;
 		private const long TICKS_NOT_SET = long.MaxValue;
 		private const long TICKS_NOT_NEEDED = 0;
 		private static string FileName = $"gxperf.gxd";
@@ -594,15 +594,15 @@ namespace GeneXus.Diagnostics
 		public void WriteVLUInt(int value)
 		{
 			if (value < 0) throw new ArgumentException("Cannot handle negative values");
-			else if (value > 0x3FFFFFFFL)
-				throw new ArgumentException("Cannot handle 31bit values");
+			else if (value > 0x1FFFFFFFL)
+				throw new ArgumentException("Cannot handle > 29bit values");
 			if (value < 0x80)
 				WriteByte((byte)value);
 			else if (value < 0x4000)
-				WriteVLUShort((short)( ((value&0x3F80) << 1) | (value&0x7F) | 0x80));
+				WriteVLUShort((short)(value & 0x3FFF));
 			else
 			{
-				WriteVLUShort((short)(((value & 0x3F80) << 1) | (value & 0x7F) | 0x4080));
+				WriteVLUShort((short)(value & 0x3FFF | 0x4000) );
 				WriteVLUShort((short)(value >> 14));
 			}
 		}
@@ -791,8 +791,8 @@ namespace GeneXus.Diagnostics
 			int value = ReadVLUShort();
 			if (value < 0x80)
 				return value;
-			int intValue = (value & 0x7F) | ((value & 0x7F00) >> 1);
-			if ((value & 0x8000) == 0)
+			int intValue = (value & 0x3FFF);
+			if ((value & 0x4000) == 0)
 				return intValue;
 			else
 				return intValue | (ReadVLUShort() << 14);

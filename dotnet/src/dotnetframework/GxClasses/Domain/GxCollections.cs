@@ -215,7 +215,7 @@ namespace GeneXus.Utils
 				return false;
 			}
 		}
-		public virtual void FromJSONObject(IJsonFormattable obj)
+		public virtual void FromJSONObject(dynamic obj)
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
@@ -358,7 +358,7 @@ namespace GeneXus.Utils
 			{
 
 				TObject = (T)Activator.CreateInstance(typeof(T));
-				((IGxJSONAble)TObject).FromJSONObject((IJsonFormattable)o);
+				((IGxJSONAble)TObject).FromJSONObject(o);
 			}
 			else
 			{
@@ -614,7 +614,7 @@ namespace GeneXus.Utils
 		}
 		public string ToJavascriptSource(bool includeState)
 		{
-			return GetJSONObject(includeState).ToString();
+			return JSONHelper.WriteJSON<dynamic>(GetJSONObject(includeState));
 		}
 		public string ToJavascriptSource()
 		{
@@ -622,7 +622,7 @@ namespace GeneXus.Utils
 		}
 		public void ToJSON(bool includeState)
 		{
-			((JArray)jsonArr).Clear();
+			jsonArr.Clear();
 			for (int i = 0; i < this.Count; i++)
 			{
 				AddObjectProperty(this[i], includeState);
@@ -666,7 +666,7 @@ namespace GeneXus.Utils
 			bool result = _jsonArr != null;
 			try
 			{
-				FromJSONObject((JArray)jsonArr);
+				FromJSONObject(jsonArr);
 				return result;
 			}
 			catch (Exception ex)
@@ -727,7 +727,7 @@ namespace GeneXus.Utils
 		{
 			return GetJSONObject(true);
 		}
-		public virtual void FromJSONObject(IJsonFormattable obj)
+		public virtual void FromJSONObject(dynamic obj)
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
@@ -897,18 +897,14 @@ namespace GeneXus.Utils
 			return false;
 		}
 
-		public override void FromJSONObject(IJsonFormattable obj)
+		public override void FromJSONObject(dynamic obj)
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
 			for (int i = 0; i < jobj.Length; i++)
 			{
 				IGxJSONAble obj1 = (IGxJSONAble)Activator.CreateInstance(_containedObjType, new object[] { context });
-				JArray jobji = jobj[i] as JArray;
-				if (jobji != null)
-					obj1.FromJSONObject(jobji);
-				else
-					obj1.FromJSONObject((JObject)jobj[i]);
+				obj1.FromJSONObject(jobj[i]);
 				Add(obj1);
 			}
 		}
@@ -1178,11 +1174,11 @@ namespace GeneXus.Utils
 		}
 		public string ToJavascriptSource(bool includeState)
 		{
-			return ToJavascriptSource(includeState, true).ToString();
+			return ToJavascriptSource(includeState, true);
 		}
 		public string ToJavascriptSource(bool includeState, bool includeNoInitialized)
 		{
-			return GetJSONObject(includeState, includeNoInitialized).ToString();
+			return JSONHelper.WriteJSON<dynamic>(GetJSONObject(includeState, includeNoInitialized));
 		}
 		public string ToJavascriptSource()
 		{
@@ -1526,13 +1522,14 @@ namespace GeneXus.Utils
 			return v;
 		}
 
-		public void FromJSONObject(IJsonFormattable obj)
+		public void FromJSONObject(dynamic obj)
 		{
 
 			JObject jobj = obj as JObject;
 			if (jobj == null)
 				return;
-			foreach (string name in getFromJSONObjectOrderIterator(jobj.Names))
+			ICollection jsonIterator = getFromJSONObjectOrderIterator(jobj.Names);
+			foreach (string name in jsonIterator)
 			{
 				object currObj = jobj[name];
 				string map = JsonMap(name);
@@ -1540,7 +1537,7 @@ namespace GeneXus.Utils
 
 				if (objProperty != null)
 				{
-					if (currObj != JNull.Value)
+					if (!JSONHelper.IsJsonNull(currObj))
 					{
 						object newValue;
 						if (TryConvertValueToProperty(currObj, objProperty, out newValue))
@@ -1602,7 +1599,6 @@ namespace GeneXus.Utils
 							GxSimpleCollection<object> currSimpleColl;
 							IGxJSONAble currJsonProp;
 							CollectionBase currObjColl = currObj as CollectionBase;
-							IJsonFormattable formattableObj = currObj as IJsonFormattable;
 #if !NETCORE
 							GxObjectCollectionBase currColl;
 							if ((currColl = currProp as GxObjectCollectionBase) != null)
@@ -1611,7 +1607,7 @@ namespace GeneXus.Utils
 								if (currObjColl == null) //arays with 1 item often send the item itself and not the whole array
 								{
 									object collItem = currColl.ContainedType.GetConstructor(new Type[] { typeof(IGxContext) }).Invoke(new object[] { currColl.context });
-									((IGxJSONAble)collItem).FromJSONObject(formattableObj);
+									((IGxJSONAble)collItem).FromJSONObject(currObj);
 									currColl.Add(collItem);
 								}
 								else
@@ -1619,7 +1615,7 @@ namespace GeneXus.Utils
 									foreach (object item in currObjColl)
 									{
 										object collItem = currColl.ContainedType.GetConstructor(new Type[] { typeof(IGxContext) }).Invoke(new object[] { currColl.context });
-										((IGxJSONAble)collItem).FromJSONObject((IJsonFormattable)item);
+										((IGxJSONAble)collItem).FromJSONObject(item);
 										currColl.Add(collItem);
 									}
 								}
@@ -1636,7 +1632,7 @@ namespace GeneXus.Utils
 									foreach (object item in currObjColl)
 									{
 										object bcItem = BCType.GetConstructor(new Type[] { typeof(IGxContext) }).Invoke(new object[] { this.context });
-										((IGxJSONAble)bcItem).FromJSONObject((IJsonFormattable)item);
+										((IGxJSONAble)bcItem).FromJSONObject(item);
 										bcColl.BaseAdd(bcItem); //BaseAdd doesn´t change mode in BCs levels.
 									}
 								}
@@ -1651,7 +1647,7 @@ namespace GeneXus.Utils
 							}
 							else if ((currJsonProp = currProp as IGxJSONAble) != null)
 							{
-								currJsonProp.FromJSONObject(formattableObj);
+								currJsonProp.FromJSONObject(currObj);
 							}
 							else if (objProperty.PropertyType == typeof(string) && !(currObj is String))
 							{
@@ -1902,7 +1898,7 @@ namespace GeneXus.Utils
 		void AddObjectProperty(string name, object prop);
 		Object GetJSONObject();
 		Object GetJSONObject(bool includeState);
-		void FromJSONObject(IJsonFormattable obj);
+		void FromJSONObject(dynamic obj);
 		string ToJavascriptSource();
 	}
 	public interface IGxJSONSerializable
@@ -2190,7 +2186,7 @@ namespace GeneXus.Utils
 				{
 					lock (syncObj)
 					{
-						this.Set(item.Key.ToString(), item.Value.ToString());
+						this.Set(item.Key.ToString(), JSONHelper.WriteJSON<dynamic>(item.Value));
 					}
 				}
 				return true;
@@ -2235,7 +2231,7 @@ namespace GeneXus.Utils
 			return GetJSONObject();
 		}
 
-		public void FromJSONObject(IJsonFormattable obj)
+		public void FromJSONObject(dynamic obj)
 		{
 			this.Clear();
 			JObject jObj = obj as JObject;

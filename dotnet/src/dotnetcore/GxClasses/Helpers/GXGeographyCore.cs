@@ -1,15 +1,12 @@
 using System;
+using System.Collections;
 using System.Globalization;
 using System.Runtime.Serialization;
-using System.Collections;
 using Jayrock.Json;
-using log4net;
-using System.Reflection;
-using GeneXus.Metadata;
-using NetTopologySuite.IO;
-using NetTopologySuite.Geometries;
-using GxClasses.Helpers;
 using GeographicLib;
+using log4net;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.IO;
 
 namespace GeneXus.Utils
 {

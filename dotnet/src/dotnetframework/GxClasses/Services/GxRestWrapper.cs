@@ -19,6 +19,7 @@ using GeneXus.Configuration;
 using System.Web;
 using System.Collections.Specialized;
 using GeneXus.Security;
+using System.Collections;
 using Jayrock.Json;
 
 namespace GeneXus.Application
@@ -258,7 +259,12 @@ namespace GeneXus.Application
 		{
 			return MethodBodyExecute(key);
 		}
-		
+
+		public virtual Task Patch(object key)
+		{
+			return MethodBodyExecute(key);
+		}
+
 		public Dictionary<string, object> ReadRequestParameters(Stream stream)
 		{
 			var bodyParameters = new Dictionary<string, object>();
@@ -266,10 +272,11 @@ namespace GeneXus.Application
 			{
 				if (!streamReader.EndOfStream)
 				{
-					Jayrock.Json.JsonTextReader reader = new Jayrock.Json.JsonTextReader(streamReader);
-					var data = reader.DeserializeNext();
-					Jayrock.Json.JObject jobj = data as Jayrock.Json.JObject;
-					Jayrock.Json.JArray jArray = data as Jayrock.Json.JArray;
+
+					string json = streamReader.ReadToEnd();
+					var data = JSONHelper.ReadJSON<dynamic>(json);
+					JObject jobj = data as JObject;
+					JArray jArray = data as JArray;
 					if (jobj != null)
 					{
 						foreach (string name in jobj.Names)
@@ -619,6 +626,8 @@ namespace GeneXus.Application
 					Put(controllerInfo.Parameters);
 				else if (context.Request.HttpMethod == "DELETE")
 					Delete(controllerInfo.Parameters);
+				else if (context.Request.HttpMethod == "PATCH")
+					Patch(controllerInfo.Parameters);
 				else
 				{
 					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
