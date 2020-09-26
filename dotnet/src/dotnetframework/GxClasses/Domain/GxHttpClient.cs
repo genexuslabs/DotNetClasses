@@ -747,11 +747,14 @@ namespace GeneXus.Http.Client
 			try
 			{
 				string requestUrl = GetRequestURL(name);
-				CookieContainer cookies = (_context == null || String.IsNullOrEmpty(requestUrl)) ? new CookieContainer() : _context.GetCookieContainer(requestUrl, IncludeCookies);
+				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
+				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
 				req = buildRequest(method, requestUrl, cookies);
 
 #if NETCORE
 				resp = req.GetResponse() as HttpWebResponse;
+				if (contextCookies)
+					_context.UpdateSessionCookieContainer();
 #else
 				resp = (HttpWebResponse)req.GetResponse();
 #endif
