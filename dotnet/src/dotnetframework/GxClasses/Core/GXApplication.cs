@@ -264,6 +264,9 @@ namespace GeneXus.Application
 		CookieContainer GetCookieContainer(string url, bool includeCookies=true);
 		bool WillRedirect();
 		GXSOAPContext SoapContext { get; set; }
+#if NETCORE
+		void UpdateSessionCookieContainer();
+#endif
 	}
 	[Serializable]
 	public class GxContext : IGxContext
@@ -426,7 +429,11 @@ namespace GeneXus.Application
 			setContext(this);
 			httpContextVars = new GxHttpContextVars();
 		}
-
+		public void UpdateSessionCookieContainer()
+		{
+			IGxSession tempStorage = GetSession();
+			tempStorage.SetObject(COOKIE_CONTAINER, cookieContainers);
+		}
 		public CookieContainer GetCookieContainer(string url, bool includeCookies=true)
 		{
 			try
