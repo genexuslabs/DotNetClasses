@@ -544,17 +544,17 @@ namespace GeneXus.Data.ADO
 			}
 		}
 
-		public void FlushBatchCursors()
+		public void FlushBatchCursors(GXBaseObject obj)
 		{
 			ICollection adapters = ConnectionCache.GetDataAdapters();
 			foreach (DbDataAdapterElem elem in adapters)
 			{
-				if (elem.DataTable.Rows.Count > 0)
+				if (elem.DataTable.Rows.Count > 0 && (obj==null || elem.OnCommitEventInstance==obj))
 				{
 					elem.OnCommitEventInstance.GetType().GetMethod(elem.OnCommitEventMethod, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(
 						elem.OnCommitEventInstance, null);
+					elem.DataTable.Rows.Clear();
 				}
-				elem.DataTable.Rows.Clear();
 			}
 		}
 
