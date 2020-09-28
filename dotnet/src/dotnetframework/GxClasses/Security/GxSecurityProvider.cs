@@ -64,6 +64,7 @@ namespace GeneXus.Security
 						catch (Exception ex)
 						{
 							GXLogging.Debug(log, "Error loading Security provider " + GAMSecurityProvider, ex);
+							provider = new NoSecurityProvider();
 						}
 					}
 					else
@@ -84,38 +85,38 @@ namespace GeneXus.Security
 	{
 		public GxResult checkaccesstoken(IGxContext context, string token, out bool isOK)
 		{
-			isOK = true;
+			isOK = false;
 			return new GxResult();
 		}
 
 		public GxResult checkaccesstokenprm(IGxContext context, string token, string permissionPrefix, out bool sessionOk, out bool permissionOk)
 		{
-			permissionOk = true;
+			permissionOk = false;
 			sessionOk = true;
 			return new GxResult();
 		}
 
 		public void checksession(IGxContext context, string CleanAbsoluteUri, out bool isOK)
 		{
-			isOK = true;
+			isOK = false;
 		}
 
 		public void checksessionprm(IGxContext context, string pathAndQuery, string permissionPrefix, out bool isOK, out bool isPermissionOK)
 		{
 			isOK = true;
-			isPermissionOK = true;
+			isPermissionOK = false;
 		}
 
 		public GxResult refreshtoken(IGxContext context, string clientId, string clientSecret, string refreshToken, out OutData outData, out bool flag)
 		{
-			flag = true;
+			flag = false;
 			outData = new OutData();
 			return new GxResult();
 		}
 
 		public GxResult logindevice(IGxContext context, string clientId, string clientSecret, out OutData outData, out bool flag)
 		{
-			flag = true;
+			flag = false;
 			outData = new OutData();
 			return new GxResult();
 		}
@@ -123,7 +124,7 @@ namespace GeneXus.Security
 		public GxResult externalauthenticationfromsdusingtoken(IGxContext context, string grantType, string nativeToken, string nativeVerifier, string clientId, string clientSecret, ref string scope, out OutData outData, out bool flag)
 		{
 			scope = string.Empty;
-			flag = true;
+			flag = false;
 			outData = new OutData();
 			return new GxResult();
 		}
@@ -131,14 +132,14 @@ namespace GeneXus.Security
 		public GxResult externalauthenticationfromsdusingtoken(IGxContext context, string grantType, string nativeToken, string nativeVerifier, string clientId, string clientSecret, ref string scope, string additionalParameters, out OutData outData, out bool flag)
 		{
 			scope = string.Empty;
-			flag = true;
+			flag = false;
 			outData = new OutData();
 			return new GxResult();
 		}
 		public GxResult oauthauthentication(IGxContext context, string grantType, string userName, string userPassword, string clientId, string clientSecret, string scope, out OutData outData, out string URL, out bool flag)
 		{
 			URL = string.Empty;
-			flag = true;
+			flag = false;
 			outData = new OutData();
 			return new GxResult();
 		}
@@ -146,7 +147,7 @@ namespace GeneXus.Security
 		public GxResult oauthauthentication(IGxContext context, string grantType, string userName, string userPassword, string clientId, string clientSecret, string scope, string additionalParameters, out OutData outData, out string URL, out bool flag)
 		{
 			URL = string.Empty;
-			flag = true;
+			flag = false;
 			outData = new OutData();
 			return new GxResult();
 		}
@@ -154,7 +155,7 @@ namespace GeneXus.Security
 		public void oauthgetuser(IGxContext context, out string userJson, out bool isOK)
 		{
 			userJson = string.Empty;
-			isOK = true;
+			isOK = false;
 		}
 
 		public void oauthlogout(IGxContext context)
