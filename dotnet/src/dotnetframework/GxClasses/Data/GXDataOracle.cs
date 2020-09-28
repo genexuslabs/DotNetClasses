@@ -345,7 +345,9 @@ namespace GeneXus.Data
 		public override int BatchUpdate(DbDataAdapterElem da)
 		{
 			DataRowCollection rows = da.DataTable.Rows;
-			DbParameterCollection parms = da.Adapter.InsertCommand.Parameters;
+			Type iCommand = OdpAssembly.GetType("Oracle.DataAccess.Client.OracleCommand");
+			IDbCommand insertComand = (IDbCommand)ClassLoader.GetPropValue(da.Adapter, "InsertCommand", iCommand);
+			IDataParameterCollection parms = insertComand.Parameters;
 			int columns = da.DataTable.Columns.Count;
 			object[][] values = new object[columns][];
 			for (int i = 0; i < columns; i++)
@@ -361,16 +363,16 @@ namespace GeneXus.Data
 			}
 			for (int i = 0; i < parms.Count; i++)
 			{
-				parms[i].Value = values[i];
+				ClassLoader.SetPropValue(parms[i], "Value", values[i]);
 			}
-			da.Command = da.Adapter.InsertCommand;
 
-			object ocmd = da.Command;
+			da.Command = insertComand;
+			IDbCommand ocmd = da.Command;
 			int oldArrayBindCount = (int)ClassLoader.GetPropValue(ocmd, "ArrayBindCount");
 			ClassLoader.SetPropValue(ocmd, "ArrayBindCount", da.DataTable.Rows.Count);
 			try
 			{
-				da.Command.ExecuteNonQuery();
+				ocmd.ExecuteNonQuery();
 			}
 			catch (Exception ex)
 			{
@@ -378,7 +380,7 @@ namespace GeneXus.Data
 			}
 			finally
 			{
-				foreach (object p in da.Command.Parameters)
+				foreach (object p in ocmd.Parameters)
 				{
 					ClassLoader.SetPropValue(p, "ArrayBindStatus", null);
 					ClassLoader.SetPropValue(p, "ArrayBindSize", null);
@@ -392,6 +394,14 @@ namespace GeneXus.Data
 			}
 			return 0;
 		}
+		public override void SetAdapterInsertCommand(DbDataAdapterElem da, IGxConnection con, string stmt, GxParameterCollection parameters)
+		{
+			Type iCommand = OdpAssembly.GetType("Oracle.DataAccess.Client.OracleCommand");
+			ClassLoader.SetPropValue(da.Adapter, "InsertCommand", iCommand, GetCommand(con, stmt, parameters));
+			object InsertCommand = ClassLoader.GetPropValue(da.Adapter, "InsertCommand", iCommand);
+			ClassLoader.SetPropValue(InsertCommand, "UpdatedRowSource", UpdateRowSource.None);
+		}
+
 		public override DbDataAdapter CreateDataAdapeter()
 		{
 			Type odpAdapter = OdpAssembly.GetType("Oracle.DataAccess.Client.OracleDataAdapter");
