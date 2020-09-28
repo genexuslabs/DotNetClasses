@@ -82,7 +82,7 @@ namespace GeneXus.Procedure
 		protected void exitApplication()
 		{
 			foreach (IGxDataStore ds in context.DataStores)
-				ds.Connection.FlushBatchCursors();
+				ds.Connection.FlushBatchCursors(this);
 
 			if (IsMain)
 				dbgInfo?.OnExit();
