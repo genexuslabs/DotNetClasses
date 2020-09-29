@@ -1027,7 +1027,7 @@ namespace GeneXus.Data
                 }
                 if (_iAssembly == null)
                 {
-					GXLogging.Debug(log, "Loading Oracle.DataAccess from GAC");
+					GXLogging.Debug(log, "Loading IBM.Data.DB2.iSeries from GAC");
                     _iAssembly = Assembly.LoadWithPartialName("IBM.Data.DB2.iSeries");
 					if (_iAssembly != null) GXLogging.Debug(log, "IBM.Data.DB2.iSeries Loaded from GAC", _iAssembly.FullName);
                 }
