@@ -198,6 +198,11 @@ namespace GeneXus.Data
 				return count;
 			}
 		}
+		public override void DisposeCommand(IDbCommand command)
+		{
+			command.Parameters.Clear();
+			base.DisposeCommand(command);
+		}
 		public override Guid GetGuid(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
 			string guid = base.GetString(cmd, DR, i);
