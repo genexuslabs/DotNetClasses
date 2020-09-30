@@ -45,6 +45,15 @@ namespace GeneXus.WebControls
 		{
 			return state.gxTpr_Inputvalues[idx-1].gxTpr_Value;
 		}
+		public string FilterValues(string filterName)
+		{
+			foreach( var inputvalue in state.gxTpr_Inputvalues)
+			{
+				if (inputvalue.gxTpr_Name.Equals(filterName, StringComparison.OrdinalIgnoreCase))
+					return inputvalue.gxTpr_Value;
+			}
+			return string.Empty;
+		}
 		public int CurrentPage
 		{
 			get
