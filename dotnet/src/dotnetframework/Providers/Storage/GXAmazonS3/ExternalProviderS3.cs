@@ -21,6 +21,8 @@ namespace GeneXus.Storage.GXAmazonS3
 		const string SECRET_ACCESS_KEY = "STORAGE_PROVIDER_SECRETACCESSKEY";
 		const string REGION = "STORAGE_PROVIDER_REGION";
 		const string ENDPOINT = "STORAGE_ENDPOINT";
+		const string STORAGE_CUSTOM_ENDPOINT = "STORAGE_CUSTOM_ENDPOINT";
+		const string STORAGE_CUSTOM_ENDPOINT_VALUE = "custom";
 		const string BUCKET = "BUCKET_NAME";
 		const string FOLDER = "FOLDER_NAME";
 		const string DEFAULT_REGION = "us-east-1";
@@ -33,9 +35,13 @@ namespace GeneXus.Storage.GXAmazonS3
 		string Endpoint { get; set; }
 		string Region { get; set; }
 
+		bool ForcePathStyle = false;
+
 		public string StorageUri
 		{
-			get { return _storageUri; }
+			get {
+				return (ForcePathStyle)? $"{Endpoint}/": _storageUri;
+			}
 		}
 
 		public string GetBaseURL()
@@ -59,14 +65,21 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 
 			var region = Amazon.RegionEndpoint.GetBySystemName(providerService.Properties.Get(REGION));
+
 			Endpoint = providerService.Properties.Get(ENDPOINT);
+			if (Endpoint == STORAGE_CUSTOM_ENDPOINT_VALUE)
+			{
+				Endpoint = providerService.Properties.Get(STORAGE_CUSTOM_ENDPOINT);
+				ForcePathStyle = true;
+			}
 
 			AmazonS3Config config = new AmazonS3Config()
 			{
+				RegionEndpoint = region,
 				ServiceURL = Endpoint,
-				RegionEndpoint = region
+				ForcePathStyle = ForcePathStyle
 			};
-
+						
 #if NETCORE
 			if (credentials != null)
 			{
