@@ -94,37 +94,46 @@ namespace GeneXus.Http
 				wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
 				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 			}
-#else
-			if (httpContext != null)
+			else
 			{
-				switch (statusCode)
+#endif
+				if (httpContext != null)
 				{
-					case "400":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-						break;
-					case "404":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
-						break;
-					case "409":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
-						break;
-					case "103":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-						break;
-					case "500":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-						break;
-					default:
-						httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], statusCode, string.Empty);
-						httpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-						break;
+					switch (statusCode)
+					{
+						case "400":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+							break;
+						case "404":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+							break;
+						case "409":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
+							break;
+						case "103":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+							break;
+						case "500":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+							break;
+						default:
+							httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], statusCode, string.Empty);
+							httpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+							break;
+					}
+#if !NETCORE
+					httpContext.Response.StatusDescription =  statusDescription.Replace(Environment.NewLine, string.Empty);
+					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 				}
-				
-				httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
-				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 			}
+#else
+					httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
+					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
+				}
+
 #endif
 		}
+
 		public static void SetResponseStatusAndJsonError(HttpContext httpContext, string statusCode, string statusDescription)
 		{
 			SetResponseStatus(httpContext, statusCode, statusDescription);
