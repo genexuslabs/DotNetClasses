@@ -2147,7 +2147,10 @@ namespace GeneXus.Application
 			if (cookie != null && cookie.Value != null)
 			{
 #if NETCORE
-				cookieVal = cookie.Value; //Cookie value is already decoded in .netcore
+				if (cookie.Value.Contains('+'))//Cookie value is already decoded
+					cookieVal = cookie.Value; 
+				else 
+					cookieVal = HttpUtility.UrlDecode(cookie.Value); 
 #else
 				cookieVal = HttpUtility.UrlDecode(cookie.Value);
 #endif
