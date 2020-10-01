@@ -45,6 +45,25 @@ namespace GeneXus.WebControls
 		{
 			return state.gxTpr_Inputvalues[idx-1].gxTpr_Value;
 		}
+		public string FilterValues(string filterName)
+		{
+			int idx = ContainsName(filterName);
+			if (idx > 0)
+				return FilterValues(idx);
+			else
+				return string.Empty;
+		}
+		private int ContainsName(string filterName)
+		{
+			int idx = 1;
+			foreach (var inputvalue in state.gxTpr_Inputvalues)
+			{
+				if (inputvalue.gxTpr_Name.Equals(filterName, StringComparison.OrdinalIgnoreCase))
+					return idx;
+				idx++;
+			}
+			return -1;
+		}
 		public int CurrentPage
 		{
 			get
@@ -91,7 +110,11 @@ namespace GeneXus.WebControls
 		}
 		public void AddFilterValue(string name, string value)
 		{
-			state.gxTpr_Inputvalues.Add(new SdtGridState_InputValuesItem() { gxTpr_Name = name, gxTpr_Value = value });
+			int idx = ContainsName(name);
+			if (idx > 0)
+				state.gxTpr_Inputvalues[idx - 1].gxTpr_Value = value;
+			else
+				state.gxTpr_Inputvalues.Add(new SdtGridState_InputValuesItem() { gxTpr_Name = name, gxTpr_Value = value });
 		}
 		public int FilterCount
 		{
