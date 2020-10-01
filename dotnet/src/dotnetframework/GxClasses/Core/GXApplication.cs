@@ -2146,7 +2146,11 @@ namespace GeneXus.Application
 			}
 			if (cookie != null && cookie.Value != null)
 			{
+#if NETCORE
+				cookieVal = cookie.Value; //Cookie value is already decoded in .netcore
+#else
 				cookieVal = HttpUtility.UrlDecode(cookie.Value);
+#endif
 			}
 			return cookieVal;
 		}
@@ -3700,7 +3704,7 @@ namespace GeneXus.Application
 
 		public GXSOAPContext SoapContext { get; set; }
 
-		#endregion
+#endregion
 	}
 	public class GxXmlContext
 	{
