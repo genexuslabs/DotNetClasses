@@ -3,7 +3,7 @@
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Dynservice</PackageTags>
-		<PackageId>GeneXus.DynService.Core</PackageId>
+		<PackageId>GeneXus.DynService.Core.Core</PackageId>
 		<AssemblyName>GeneXus.Data.DynService.Core</AssemblyName>
 	</PropertyGroup>
   <ItemGroup>
