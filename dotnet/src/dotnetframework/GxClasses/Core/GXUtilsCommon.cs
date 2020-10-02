@@ -2553,16 +2553,19 @@ namespace GeneXus.Utils
 		}
 		public static string TToC2(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss", toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, toUTC);
 		}
 
 		public static string TToC3(DateTime dt)
 		{
 			return TToC3(dt, true);
 		}
+		internal const string JsonDateFormatMillis = "yyyy-MM-ddTHH:mm:ss.fff";
+		internal const string JsonDateFormat = "yyyy-MM-ddTHH:mm:ss";
+		
 		public static string TToC3(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff", toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, toUTC);
 		}
 
 		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
