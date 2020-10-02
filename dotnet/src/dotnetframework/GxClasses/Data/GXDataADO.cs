@@ -2678,6 +2678,7 @@ namespace GeneXus.Data.ADO
 					return new GxDb2();
 				case "informix":
 					return new GxInformix(id);
+#endif
 				case "service":
 					{
 						string runtimeProvider;
@@ -2685,7 +2686,6 @@ namespace GeneXus.Data.ADO
 						Config.GetValueOf($"Connection-{id}-DatastoreProviderRuntime", out runtimeProvider);
 						return NTier.GxServiceFactory.Create(id, cfgBuf, runtimeProvider);												
 					}
-#endif
 				default:
 					return null;
 			}
