@@ -555,7 +555,7 @@ namespace GeneXus.Application
 						}
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
-							string mthheaders = "OPTIONS, HEAD";
+							string mthheaders = "OPTIONS,HEAD";
 							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath))
 							{
 								foreach (Tuple<string, string> t in servicesMapData[actualPath].Keys)
