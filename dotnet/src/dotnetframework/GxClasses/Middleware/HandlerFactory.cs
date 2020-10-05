@@ -92,7 +92,7 @@ namespace GeneXus.HttpHandlerFactory
 					if ( requestType.Equals("OPTIONS") && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
 					{
 						// OPTIONS VERB
-						string mthheaders = "OPTIONS, HEAD";
+						string mthheaders = "OPTIONS,HEAD";
 						bool found = false;
 						foreach (Tuple<string, string> t in GXAPIModule.servicesMapData[actualPath].Keys)
 						{
