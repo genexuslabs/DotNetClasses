@@ -2147,7 +2147,7 @@ namespace GeneXus.Application
 			if (cookie != null && cookie.Value != null)
 			{
 #if NETCORE
-				if (cookie.Value.Contains('+'))//Cookie value is already decoded
+				if (name==GxHttpCookie.GX_SESSION_ID && cookie.Value.Contains('+')) //Cookie compatibility with java, cookie value is already decoded
 					cookieVal = cookie.Value; 
 				else 
 					cookieVal = HttpUtility.UrlDecode(cookie.Value); 
