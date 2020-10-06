@@ -22,7 +22,7 @@ namespace GeneXus.Http.Server
 		String _Domain = "";
 		bool _Secure;
 		bool _HttpOnly;
-
+		internal static string GX_SESSION_ID = "GX_SESSION_ID";
 		public GxHttpCookie()
 		{
 			_HttpOnly = HttpOnlyDefault();
