@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,5 +10,7 @@ namespace GeneXus
 		public static string UriSchemeHttps = Uri.UriSchemeHttps;
 		public static string UriSchemeFile = Uri.UriSchemeFile;
 		public static string UriSchemeFtp = Uri.UriSchemeFtp;
+		public static string UriSchemeGxgam = "gxgam";
+		public static string UriSchemeSd = "sd";
 	}
 }
