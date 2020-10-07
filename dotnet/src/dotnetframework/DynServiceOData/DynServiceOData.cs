@@ -606,10 +606,6 @@ namespace GeneXus.Data.NTier
 					throw GetRecordNotFoundException(baseE);
 				else throw GetAggregateException(e);
 			}
-//			catch (ServiceException e)
-//			{
-//				throw new AggregateException(e.Message, e);
-//			}
 		}
 
 		private Task ApplyLinkUpdates(ODataQuery queryObj, IDataParameterCollection parms, Func<GXODataClient, IDataParameterCollection, GXODataClient> action, bool baseUpd)
