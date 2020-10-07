@@ -29,6 +29,9 @@ namespace GeneXus.Data.NTier
 	{
 		public ServiceException(string msg):base(msg)
 		{ }
+
+		public ServiceException(string msg, Exception innerException): base(msg, innerException)
+		{ }
 	}
 
 	public class ServiceCursorDef : CursorDef
