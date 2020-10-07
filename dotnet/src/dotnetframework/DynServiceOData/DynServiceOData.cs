@@ -606,10 +606,10 @@ namespace GeneXus.Data.NTier
 					throw GetRecordNotFoundException(baseE);
 				else throw GetAggregateException(e);
 			}
-			catch (ServiceException e)
-			{
-				throw new AggregateException(e.Message, e);
-			}
+//			catch (ServiceException e)
+//			{
+//				throw new AggregateException(e.Message, e);
+//			}
 		}
 
 		private Task ApplyLinkUpdates(ODataQuery queryObj, IDataParameterCollection parms, Func<GXODataClient, IDataParameterCollection, GXODataClient> action, bool baseUpd)
@@ -650,12 +650,12 @@ namespace GeneXus.Data.NTier
 
 		internal static Exception GetRecordNotFoundException(Exception e)
 		{
-			return new AggregateException(ServiceError.RecordNotFound, e);
+			return new ServiceException(ServiceError.RecordNotFound, e);
 		}
 
 		internal static Exception GetRecordAlreadyExistsException(Exception e)
 		{
-			return new AggregateException(ServiceError.RecordAlreadyExists, e);
+			return new ServiceException(ServiceError.RecordAlreadyExists, e);
 		}
 
 		internal static Exception GetAggregateException(AggregateException e)
@@ -1348,7 +1348,8 @@ namespace GeneXus.Data.NTier
 						value = null;
 						return false;
 					}
-					if (sParm.Value?.GetType().ToString() == "Microsoft.SqlServer.Types.SqlGeography")
+					string parmType = sParm.Value?.GetType().ToString();
+					if (parmType == "Microsoft.SqlServer.Types.SqlGeography" || parmType == "NetTopologySuite.Geometries.Point")
 					{
 						//must use Convertible because the object WellKnownTextSqlFormatter returns does not implement IConvertible and SimpleOData does not take it as "IsAssignableFrom"
 						string geoStr = sParm.Value.ToString();
