@@ -136,7 +136,7 @@
   </ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" PrivateAssets="All" />
-		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="log4net" Version="2.0.11" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
