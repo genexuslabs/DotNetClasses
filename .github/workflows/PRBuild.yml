@@ -33,7 +33,7 @@ jobs:
         $CommitNumber = git rev-list --no-merges --count HEAD
 
         dotnet build dotnet\DotNetStandardClasses.sln --no-restore --configuration $Env:Configuration /p:CommitNumber=$CommitNumber
-		echo "CommitNumber=$CommitNumber" >> $env:GITHUB_ENV
+        echo "CommitNumber=$CommitNumber" >> $env:GITHUB_ENV
         
     - name: Test
       run: dotnet test dotnet\DotNetStandardClasses.sln --no-restore --no-build --configuration $Env:Configuration /p:CommitNumber=$Env:CommitNumber
