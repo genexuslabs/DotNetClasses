@@ -11,7 +11,7 @@
     <Compile Include="..\..\..\dotnetframework\DynServiceOData\DynServiceOData.cs" Link="DynServiceOData.cs" />
   </ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="GXOdata.Client" Version="5.2.3.4" />
+		<PackageReference Include="GXOdata.Client" Version="5.2.3.5-rc1" />
 		<PackageReference Include="log4net" Version="2.0.8" />
 	</ItemGroup>
 	<ItemGroup>
