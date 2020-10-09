@@ -747,6 +747,17 @@ namespace GeneXus.Data.NTier
 			this.behavior = behavior;
 			this.cursorDef = cursorDef;
 			conn.State = ConnectionState.Executing;
+#if NETCORE
+			try
+			{
+				ODataQuery test = (ODataQuery)cursorDef.Query;				
+				Console.WriteLine($"Test Passed!: {test}");
+			}catch(Exception e)
+			{
+				Console.WriteLine("Test Failed: " + cursorDef.Query);
+				Console.WriteLine($"ODataException: \n{e.Message}\n{e.StackTrace}");
+			}
+#endif
 			ODataQuery query = cursorDef.Query as ODataQuery;
 			action = query.query;
 			selectList = query.selectList;
@@ -1408,9 +1419,16 @@ namespace GeneXus.Data.NTier
 			return GetParmUDate(parms, parm);
 		}
 
+
 		public ODataQuery GetQuery(Func<GXODataClient, IDataParameterCollection, GXODataClient> query, IODataMap[] selectList)
 		{
+#if NETCORE
+			ODataQuery oquery = new ODataQuery(query, selectList);
+			Console.WriteLine($"GetQuery: {oquery}");
+			return oquery;
+#else
 			return new ODataQuery(query, selectList);
+#endif
 		}
 
 		public class Query
