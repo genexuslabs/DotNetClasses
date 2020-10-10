@@ -15,6 +15,7 @@ using GeneXus.Data.NTier.ADO;
 using System.Reflection;
 using GeneXus.Metadata;
 using System.Data.Common;
+using GeneXus.Helpers;
 
 namespace GeneXus.Data.NTier
 {
@@ -68,7 +69,7 @@ namespace GeneXus.Data.NTier
 
 		public static GxService Create(string id, string providerId, string serviceClass)		
 		{
-			return (GxService)Activator.CreateInstance(Type.GetType(serviceClass), new object[2] { id, providerId });
+			return (GxService)Activator.CreateInstance(AssemblyHelper.GetRuntimeType(serviceClass), new object[2] { id, providerId });
 		}
 	}
 
@@ -84,7 +85,7 @@ namespace GeneXus.Data.NTier
 
 		public GxService(string id, string providerId, string runtimeClass)
 		{
-			m_ServiceType = Type.GetType(runtimeClass);
+			m_ServiceType = AssemblyHelper.GetRuntimeType(runtimeClass);
 		}
 
 		public GxService(string id, string providerId, Type serviceType)
