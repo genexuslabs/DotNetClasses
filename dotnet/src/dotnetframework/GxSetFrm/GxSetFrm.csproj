@@ -7,9 +7,13 @@
 		<SignAssembly>false</SignAssembly>
 		<PackageTags>SetFrm</PackageTags>
 		<PackageId>GeneXus.SetFrm</PackageId>
+		<ApplicationIcon>..\..\resources\Default_App.ico</ApplicationIcon>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Content Include="..\..\resources\Default_App.ico" Link="Default_App.ico" />
+	</ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 </Project>
