@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<OutputType>WinExe</OutputType>
-		<ApplicationIcon>App.ico</ApplicationIcon>
+		<ApplicationIcon>..\..\resources\Default_App.ico</ApplicationIcon>
 		<RootNamespace>GxConfig</RootNamespace>
 		<AssemblyName>GxConfig</AssemblyName>
 		<IncludeCommonAssembly>false</IncludeCommonAssembly>
@@ -11,9 +11,12 @@
 		<PackageTags>Config</PackageTags>
 		<PackageId>GeneXus.Config</PackageId>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Content Include="..\..\resources\Default_App.ico" Link="Default_App.ico" />
+	</ItemGroup>
 	
   <ItemGroup>
-    <ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj"/>
+    <ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
     <Reference Include="System.Drawing">
       <Name>System.Drawing</Name>
     </Reference>
@@ -23,7 +26,7 @@
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
-    <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
   
   <ItemGroup>

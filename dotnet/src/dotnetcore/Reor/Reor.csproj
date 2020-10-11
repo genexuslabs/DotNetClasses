@@ -6,6 +6,7 @@
     <PackageId>GeneXus.Reorganization.Core</PackageId>
     <DefineConstants>NETCORE</DefineConstants>
     <GxGenerateDepsFile>true</GxGenerateDepsFile>
+    <ApplicationIcon>..\..\resources\Default_App.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\Reor\frmReorg.cs" Link="frmReorg.cs" />
@@ -31,5 +32,6 @@
 			<Pack>true</Pack>
 			<PackagePath>\content\</PackagePath>
 		</Content>
+		<Content Include="..\..\resources\Default_App.ico" Link="Default_App.ico" />
 	</ItemGroup>
 </Project>
