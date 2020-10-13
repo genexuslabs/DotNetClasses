@@ -9,7 +9,6 @@
 		<PackageTags>Reorg</PackageTags>
 		<PackageId>GeneXus.Reorganization</PackageId>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-		<ApplicationIcon>..\..\resources\Default_App.ico</ApplicationIcon>
 	</PropertyGroup>
 	  
 
@@ -24,9 +23,6 @@
 	  <Content Remove="Resources\imgOk.Image.png" />
 	  <Content Remove="Resources\imgEqual.Image.png" />
 	  <Content Remove="Resources\imgReorg.Image.png" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Content Include="..\..\resources\Default_App.ico" Link="Default_App.ico" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\imgCancel.Image.png" />

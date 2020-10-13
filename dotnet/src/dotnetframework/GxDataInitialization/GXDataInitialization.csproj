@@ -7,11 +7,7 @@
 		<AssemblyName>GXDataInitialization</AssemblyName>
 		<PackageTags>DataInitialization</PackageTags>
 		<PackageId>GeneXus.DataInitialization</PackageId>
-		<ApplicationIcon>..\..\resources\Default_App.ico</ApplicationIcon>
 	</PropertyGroup>
-	<ItemGroup>
-	  <Content Include="..\..\resources\Default_App.ico" Link="Default_App.ico" />
-	</ItemGroup>
   <ItemGroup>
     <PackageReference Include="log4net">
       <Version>2.0.8</Version>
