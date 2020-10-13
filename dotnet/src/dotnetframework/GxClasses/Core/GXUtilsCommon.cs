@@ -3514,7 +3514,7 @@ namespace GeneXus.Utils
 		public static bool IsAbsoluteUrl(string url)
 		{
 			Uri result;
-			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp || result.Scheme == GXUri.UriSchemeGxgam || result.Scheme == GXUri.UriSchemeSd);
+			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp);
 		}
 
 		public static Uri GetBaseUri()
