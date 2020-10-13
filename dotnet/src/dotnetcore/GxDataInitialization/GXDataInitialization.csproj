@@ -5,7 +5,6 @@
 		<PackageTags>DataInitialization</PackageTags>
 		<PackageId>GeneXus.DataInitialization.Core</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
-		<ApplicationIcon>..\..\resources\Default_App.ico</ApplicationIcon>
 	</PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
@@ -33,6 +32,5 @@
 			<Pack>true</Pack>
 			<PackagePath>\content\</PackagePath>
 		</Content>
-		<Content Include="..\..\resources\Default_App.ico" Link="Default_App.ico" />
 	</ItemGroup>
 </Project>
