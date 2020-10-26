@@ -26,7 +26,12 @@ jobs:
         -d '{
           "ref":"master",
            "inputs": { 
+              "repository": "${{ github.repository }}",
               "ref": "${{ github.ref }}",
-              "sha": "${{ github.sha }}"
+              "sha": "${{ github.sha }}",
+              "build-file": "dotnet\\DotNetStandardClasses.sln",
+              "package-version": ".\\.github\\generatePackageVersion.ps1",
+              "packages-path": ".\\dotnet\\*.nupkg",
+              "skip-duplicates": "true"
             }
           }'

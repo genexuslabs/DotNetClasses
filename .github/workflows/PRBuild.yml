@@ -9,8 +9,8 @@ on:
 jobs:
   build:
     env:
-      GIT_REF: ${{ github.event.inputs.ref }}
-      GIT_SHA: ${{ github.event.inputs.sha }}
+      GIT_REF: ${{ github.ref }}
+      GIT_SHA: ${{ github.sha }}
       Configuration: Release
       SolutionFile: dotnet\DotNetStandardClasses.sln
     
@@ -38,19 +38,11 @@ jobs:
         echo "COMMIT_NUMBER=$COMMIT_NUMBER" >> $env:GITHUB_ENV
 
     - name: Calculate package version
+      env:
+        PackageVersionString: ./.github/generatePackageVersion.ps1
       run: |
-        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage
-        "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)"
-        $GetFileVersionOutput = $Matches[0]
-
-        $NuGetPackageVersion = $GetFileVersionOutput
-        if ([System.Convert]::ToBoolean($Env:IsPrerelease)) {
-          $IsMaster = $Env:GIT_REF -match 'master$'
-          $VersionTag =  @("trunk", "stable")[$IsMaster]
-          $Timestamp = (Get-Date).ToString("yyyyMMddHHmmss")
-          $NuGetPackageVersion = $NuGetPackageVersion + "-" + $VersionTag + "." + $Timestamp
-        }
-
+        $NuGetPackageVersion = & "$Env:PackageVersionString"
+        
         Write-Output "Packge version to be used: $NuGetPackageVersion"
 
         echo "NuGetPackageVersion=$NuGetPackageVersion" >> $env:GITHUB_ENV
