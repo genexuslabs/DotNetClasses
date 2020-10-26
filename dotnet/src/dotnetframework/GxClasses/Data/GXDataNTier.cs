@@ -157,13 +157,13 @@ namespace GeneXus.Data.NTier
         public virtual void getErrorResults(int cursor, IFieldGetter rslt, Object[] buf)
         { 
         }
-		public StringBuilder AddWhere(StringBuilder currentWhere, string condition)
+		public void AddWhere(StringBuilder currentWhere, string condition)
 		{
 			if (currentWhere.Length > 0)
 				currentWhere.Append(AND);
 			else
 				currentWhere.Append(WHERE);
-			return currentWhere.Append(condition);
+			currentWhere.Append(condition);
 		}
 	}
 
