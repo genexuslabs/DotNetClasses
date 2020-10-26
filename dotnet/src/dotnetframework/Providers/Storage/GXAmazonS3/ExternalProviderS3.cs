@@ -68,7 +68,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			var region = Amazon.RegionEndpoint.GetBySystemName(providerService.Properties.Get(REGION));
 
 			string endPoint = providerService.Properties.Get(ENDPOINT);
-			UseCustomEndpoint = STORAGE_CUSTOM_ENDPOINT_VALUE == endPoint;
+			UseCustomEndpoint = !String.IsNullOrEmpty(endPoint) && endPoint.Equals(STORAGE_CUSTOM_ENDPOINT_VALUE, StringComparison.OrdinalIgnoreCase);
 			if (UseCustomEndpoint)
 			{
 				Endpoint = providerService.Properties.Get(STORAGE_CUSTOM_ENDPOINT);
