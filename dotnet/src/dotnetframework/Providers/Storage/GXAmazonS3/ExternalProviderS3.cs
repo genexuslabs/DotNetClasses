@@ -35,12 +35,13 @@ namespace GeneXus.Storage.GXAmazonS3
 		string Endpoint { get; set; }
 		string Region { get; set; }
 
+		bool UseCustomEndpoint = false;
 		bool ForcePathStyle = false;
 
 		public string StorageUri
 		{
 			get {
-				return (ForcePathStyle)? $"{Endpoint}/": _storageUri;
+				return _storageUri;
 			}
 		}
 
@@ -66,8 +67,9 @@ namespace GeneXus.Storage.GXAmazonS3
 
 			var region = Amazon.RegionEndpoint.GetBySystemName(providerService.Properties.Get(REGION));
 
-			Endpoint = providerService.Properties.Get(ENDPOINT);
-			if (Endpoint == STORAGE_CUSTOM_ENDPOINT_VALUE)
+			string endPoint = providerService.Properties.Get(ENDPOINT);
+			UseCustomEndpoint = STORAGE_CUSTOM_ENDPOINT_VALUE == endPoint;
+			if (UseCustomEndpoint)
 			{
 				Endpoint = providerService.Properties.Get(STORAGE_CUSTOM_ENDPOINT);
 				ForcePathStyle = true;
@@ -111,7 +113,11 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private void SetURI()
 		{
-			if (Region == DEFAULT_REGION)
+			if (UseCustomEndpoint)
+			{
+				_storageUri = $"{Endpoint}/{(ForcePathStyle ? Bucket + "/" : String.Empty)}";
+			}
+			else if (Region == DEFAULT_REGION)
 			{
 				_storageUri = $"https://{Bucket}.{Endpoint}/";
 			}
