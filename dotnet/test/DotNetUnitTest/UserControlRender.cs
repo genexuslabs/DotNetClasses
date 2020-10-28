@@ -57,11 +57,15 @@ namespace UnitTesting
 
 			string output = sb.ToString();
 
-			Assert.Contains(ONE, output, System.StringComparison.InvariantCulture);
-			Assert.Contains(TWO, output, System.StringComparison.InvariantCulture);
-			Assert.Contains(HELLO, output, System.StringComparison.InvariantCulture);
-			Assert.Contains("Boolean:true", output, System.StringComparison.InvariantCulture);
+			AssertContains(ONE, output);
+			AssertContains(TWO, output);
+			AssertContains(HELLO, output);
+			AssertContains("Boolean:true", output);
 		}
 
+		private static void AssertContains(string expectedSubstring, string actualString)
+		{
+			Assert.Contains(expectedSubstring, actualString, System.StringComparison.InvariantCulture);
+		}
 	}
 }
