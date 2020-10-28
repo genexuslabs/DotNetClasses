@@ -2038,12 +2038,12 @@ namespace GeneXus.WebControls
 		public void SetProperty(String propertyName, object propertyValue)
 		{
 			string stringValue = propertyValue?.ToString();
-			if (propertyValue is Boolean)
+			if (propertyValue != null && !String.IsNullOrEmpty(stringValue))
 			{
-				stringValue = stringValue?.ToLower();
+				propertyBag[propertyName] = propertyValue is Boolean
+												? stringValue.ToLower()
+												: propertyValue;
 			}
-			if (!String.IsNullOrEmpty(stringValue))
-				propertyBag[propertyName] = stringValue;
 		}
 		public void SendProperty(IGxContext context, String componentPrefix, bool isMasterPage, String internalName, String propertyName, String propertyValue) 
 		{
