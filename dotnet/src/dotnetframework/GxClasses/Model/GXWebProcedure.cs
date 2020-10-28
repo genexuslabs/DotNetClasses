@@ -6,6 +6,7 @@ namespace GeneXus.Procedure
 	using System.Globalization;
 	using GeneXus.Http;
 	using System.Threading;
+	using GeneXus.Mime;
 
 	public class GXWebProcedure : GXHttpHandler
 	{
@@ -64,7 +65,8 @@ namespace GeneXus.Procedure
 		void setContentType()
 		{
 			if (getOutputType() == GxReportUtils.OUTPUT_PDF) { 
-				context.HttpContext.Response.ContentType = "application/pdf";
+				context.HttpContext.Response.ContentType = MediaTypesNames.ApplicationPdf;
+				context.HttpContext.Response.AddHeader("Content-Disposition", "inline; filename=" + GetType().Name + ".pdf");
 			}
 			else
 				context.HttpContext.Response.ContentType = "text/richtext";
