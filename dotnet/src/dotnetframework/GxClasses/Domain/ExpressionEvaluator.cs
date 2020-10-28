@@ -54,6 +54,8 @@ namespace GeneXus.Utils
 		{
 			try
 			{
+				errCode = 0;
+				errDescription = "";
 				return eval(expr).D;
 			}
 			catch (OverflowException e)
@@ -181,8 +183,6 @@ namespace GeneXus.Utils
 		
 		EvalValue eval(String expression)
 		{
-			errCode = 0;
-			errDescription = "";
 			if (expression.Trim().Length == 0)
 				return throwException(EXPRESSION_ERROR, "Empty expression");
 
