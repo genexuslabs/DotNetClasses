@@ -2037,8 +2037,13 @@ namespace GeneXus.WebControls
 		GxDictionary propertyBag = new GxDictionary();
 		public void SetProperty(String propertyName, object propertyValue)
 		{
-			if (propertyValue != null && !String.IsNullOrEmpty(propertyValue.ToString()))
-				propertyBag[propertyName] = propertyValue;
+			string stringValue = propertyValue?.ToString();
+			if (propertyValue is Boolean)
+			{
+				stringValue = stringValue?.ToLower();
+			}
+			if (!String.IsNullOrEmpty(stringValue))
+				propertyBag[propertyName] = stringValue;
 		}
 		public void SendProperty(IGxContext context, String componentPrefix, bool isMasterPage, String internalName, String propertyName, String propertyValue) 
 		{
