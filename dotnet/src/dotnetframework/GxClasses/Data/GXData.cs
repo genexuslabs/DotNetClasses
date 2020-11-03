@@ -23,6 +23,7 @@ using GeneXus.Metadata;
 using System.Globalization;
 using System.Data.SQLite;
 using Npgsql;
+using System.Security;
 
 namespace GeneXus.Data
 {
@@ -1665,7 +1666,7 @@ namespace GeneXus.Data
 		public GxADODataException(Exception ex)	: base("GeneXus ADO Data Exception", ex)
 		{
 			m_sErrorType = ex.GetType().ToString();
-			if (ex.GetType().ToString()== "System.Data.SqlClient.SqlException")
+			if (m_sErrorType == "System.Data.SqlClient.SqlException")
 			{
 				SqlException sqlEx = (SqlException)ex;
 				m_sErrorInfo = sqlEx.Message;
@@ -1681,56 +1682,60 @@ namespace GeneXus.Data
 					m_iErrorCode = code;
 				}
 			}
-			else if (ex.GetType().ToString()=="System.Data.OracleClient.OracleException")
+			else if (m_sErrorType == "System.Data.OracleClient.OracleException")
 			{
 				MSOracleProvider.OracleException orclEx = (MSOracleProvider.OracleException)ex;
 				m_sErrorInfo = orclEx.Message;
 				m_sDBMSErrorInfo = orclEx.Message;
 				m_iErrorCode = orclEx.Code;
 			}
-			else if (ex.GetType().ToString()=="Oracle.DataAccess.Client.OracleException")
+			else if (m_sErrorType == "Oracle.DataAccess.Client.OracleException")
 			{
 				ParseOracleException(ex);//It prevents the dll from loading in runtime when it is not necessary
 			}
-			else if (ex.GetType().ToString() == "Oracle.ManagedDataAccess.Client.OracleException")
+			else if (m_sErrorType == "Oracle.ManagedDataAccess.Client.OracleException")
 			{
 				ParseOracleManagedException(ex);
 			}
-			else if (ex.GetType().ToString() == "System.Data.SQLite.SQLiteException")
+			else if (m_sErrorType == "System.Data.SQLite.SQLiteException")
 			{
 				ParseSQLiteException(ex);
 			}
-			else if (ex.GetType().ToString() == "IBM.Data.DB2.DB2Exception")
+			else if (m_sErrorType == "IBM.Data.DB2.DB2Exception")
 			{
 				ParseDB2Exception(ex);
 			}
-			else if (ex.GetType().ToString()== "IBM.Data.Informix.IfxException")
+			else if (m_sErrorType == "IBM.Data.Informix.IfxException")
 			{
 				ParseIfxException(ex);
 			}
-			else if (ex.GetType().ToString()== "Npgsql.NpgsqlException")
+			else if (m_sErrorType == "Npgsql.NpgsqlException")
 			{
 				ParsePostgresException(ex);
 			}
-			else if (ex.GetType().ToString().StartsWith("IBM.Data.DB2.iSeries"))
+			else if (m_sErrorType.StartsWith("IBM.Data.DB2.iSeries"))
 				
 			{
 				ParseIDB2Exception(ex);
 			}
-			else if (ex.GetType().ToString().StartsWith("Microsoft.HostIntegration.MsDb2Client.MsDb2Exception"))
+			else if (m_sErrorType.StartsWith("Microsoft.HostIntegration.MsDb2Client.MsDb2Exception"))
 				
 			{
 				ParseIDB2HISException(ex);
 			}
-			else if (ex.GetType().ToString()== "MySQLDriverCS.MySQLException")
+			else if (m_sErrorType == "MySQLDriverCS.MySQLException")
 			{
 				ParseMySqlException(ex);
 			}
-            else if (ex.GetType().ToString() == "Sap.Data.Hana.HanaException")
+			else if (m_sErrorType == "MySqlConnector.MySqlException")
+			{
+				ParseMySqlConnectorException(ex);
+			}
+			else if (m_sErrorType == "Sap.Data.Hana.HanaException")
             {
                 ParseHanaException(ex); 
             }
-			else if (ex.GetType().ToString() ==  "GeneXus.Data.DynService.Fabric.FabricException")
+			else if (m_sErrorType ==  "GeneXus.Data.DynService.Fabric.FabricException")
 			{
 				ParseFabricException(ex); 
 			}
@@ -1845,9 +1850,17 @@ namespace GeneXus.Data
 			m_iErrorCode = (int)mysqlEx.Number;
 			//m_sSqlState = mysqlEx.SqlState;
 		}
-
-
-        private void ParseHanaException(Exception ex)
+		[SecuritySafeCritical]
+		private void ParseMySqlConnectorException(Exception ex)
+		{
+			MySqlConnector.MySqlException mysqlEx = (MySqlConnector.MySqlException)ex;
+			m_sErrorInfo = mysqlEx.Message;
+			m_sDBMSErrorInfo = mysqlEx.Message;
+			m_iErrorCode = (int)mysqlEx.Number;
+			//m_sSqlState = mysqlEx.SqlState;
+		}
+		
+		private void ParseHanaException(Exception ex)
         {
             m_sErrorInfo = (string)ClassLoader.GetPropValue(ex, "Message");
             m_sDBMSErrorInfo = m_sErrorInfo;

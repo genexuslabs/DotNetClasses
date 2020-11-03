@@ -1,5 +1,5 @@
 using GeneXus.Metadata;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Npgsql;
 using System;
 using Microsoft.Data.SqlClient;
@@ -45,7 +45,7 @@ namespace GeneXus.Data
 			{
 				ParseOracleManagedException(ex);
 			}
-			else if (m_sErrorType == "MySql.Data.MySqlClient.MySqlException")
+			else if (m_sErrorType == "MySqlConnector.MySqlException")
             {
                 ParseMySqlException(ex);
             }
