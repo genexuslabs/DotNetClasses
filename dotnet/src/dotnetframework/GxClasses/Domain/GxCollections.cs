@@ -144,6 +144,27 @@ namespace GeneXus.Utils
 					parameters[index] = value;
 			}
 		}
+		public GxParameterCollection Distinct()
+		{
+			if (Count > 1)
+			{
+				HashSet<string> parms = new HashSet<string>();
+				GxParameterCollection uniqueParms = new GxParameterCollection();
+				for (int j = Count - 1; j >= 0; j--)
+				{
+					if (!parms.Contains(this[j].ParameterName))
+					{
+						uniqueParms.Add(this[j]);
+						parms.Add(this[j].ParameterName);
+					}
+				}
+				return uniqueParms;
+			}
+			else
+			{
+				return this;
+			}
+		}
 	}
 
 	public class GxStringCollection : StringCollection, IGxJSONSerializable, IGxJSONAble
