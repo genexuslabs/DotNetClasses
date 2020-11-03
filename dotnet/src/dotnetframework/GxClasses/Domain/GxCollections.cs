@@ -2675,7 +2675,7 @@ namespace GeneXus.Utils
 		string m_value;
 		protected virtual string formatDate(DateTime value, bool useMillis)
 		{
-			return (useMillis) ? value.ToString("yyyy-MM-ddTHH:mm:ss.fff") : value.ToString("yyyy-MM-ddTHH:mm:ss");
+			return (useMillis) ? value.ToString(DateTimeUtil.JsonDateFormatMillis) : value.ToString(DateTimeUtil.JsonDateFormat);
 		}
 
 		public GxDatetimeString(DateTime value)
