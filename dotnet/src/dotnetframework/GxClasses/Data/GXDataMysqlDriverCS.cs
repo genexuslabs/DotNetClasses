@@ -150,7 +150,7 @@ namespace GeneXus.Data
 		}
 		public override IDataReader GetCacheDataReader(CacheItem item, bool computeSize, string keyCache)
 		{
-			return new GxMySQLCacheDataReader(item, computeSize, keyCache);
+			return new GxMySQLDriverCSCacheDataReader(item, computeSize, keyCache);
 		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
@@ -520,5 +520,39 @@ namespace GeneXus.Data
 			}
 		}
 	}
+	public class GxMySQLDriverCSCacheDataReader : GxCacheDataReader
+	{
+
+		public GxMySQLDriverCSCacheDataReader(CacheItem cacheItem, bool computeSize, string keyCache)
+			: base(cacheItem, computeSize, keyCache)
+		{ }
+
+		public override string GetString(int i)
+		{
+			string result;
+
+			if (block.Item(pos, i) is byte[])
+				result = Encoding.Default.GetString((byte[])block.Item(pos, i));
+			else
+				result = (string)block.Item(pos, i);
+
+			if (computeSizeInBytes) readBytes += 10 + (2 * result.Length);
+			return result;
+		}
+		public override DateTime GetDateTime(int i)
+		{
+			if (block.Item(pos, i) is DateTime)
+			{
+				return base.GetDateTime(i);
+			}
+			else
+			{
+				if (computeSizeInBytes) readBytes += 8;
+				return Convert.ToDateTime(block.Item(pos, i), System.Globalization.CultureInfo.InvariantCulture.NumberFormat);
+			}
+		}
+
+	}
+
 
 }
