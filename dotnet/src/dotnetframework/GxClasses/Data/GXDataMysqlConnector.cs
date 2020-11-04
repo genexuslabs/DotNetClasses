@@ -626,7 +626,7 @@ namespace GeneXus.Data
 			string result;
 
 			if (block.Item(pos, i) is byte[])
-				result = Encoding.Default.GetString((byte[])block.Item(pos, i));
+				result = Encoding.UTF8.GetString((byte[])block.Item(pos, i));
 			else
 				result = (string)block.Item(pos, i);
 
