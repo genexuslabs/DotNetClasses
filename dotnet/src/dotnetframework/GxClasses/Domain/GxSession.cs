@@ -28,8 +28,8 @@ namespace GeneXus.Http
         {
             get;
         }
-
-    }
+		void Renew();
+	}
 
     public class GxWebSession : IGxSession
     {
@@ -279,6 +279,11 @@ namespace GeneXus.Http
         public void Clear()
         {
             ClearHash();
-        }        
-    }
+        }
+		public void Renew()
+		{
+			Destroy();
+		}
+
+	}
 }
