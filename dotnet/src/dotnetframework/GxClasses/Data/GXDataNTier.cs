@@ -310,7 +310,10 @@ namespace GeneXus.Data.NTier
 			{
 				oCur.getFieldSetter().RestoreParametersRT();
 			}
-            _dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+			if (oCur.getStatus() != Cursor.EOF)
+			{
+				_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+			}
 
             _dynConstraints = null;
 
@@ -326,7 +329,10 @@ namespace GeneXus.Data.NTier
 		{
 			ICursor oCur = getCursor(cursor);
 			oCur.readNext();
-			_dataStoreHelper.getResults( cursor, oCur.getFieldGetter(), results[cursor]);
+			if (oCur.getStatus() != Cursor.EOF)
+			{
+				_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+			}
 			dataStoreRequestCount++;
 
 		}
