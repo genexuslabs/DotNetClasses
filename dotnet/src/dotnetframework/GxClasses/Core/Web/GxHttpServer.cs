@@ -22,7 +22,7 @@ namespace GeneXus.Http.Server
 		String _Domain = "";
 		bool _Secure;
 		bool _HttpOnly;
-
+		internal static string GX_SESSION_ID = "GX_SESSION_ID";
 		public GxHttpCookie()
 		{
 			_HttpOnly = HttpOnlyDefault();
@@ -128,11 +128,7 @@ namespace GeneXus.Http.Server
 		{
 			if (Response != null)
 			{
-#if NETCORE
-				Response.WriteAsync(s);
-#else
 				Response.Write(s);
-#endif
 			}			
 		}
 
@@ -140,11 +136,7 @@ namespace GeneXus.Http.Server
 		{
 			if (!string.IsNullOrEmpty(fileName))
 			{
-#if NETCORE
-				Response.SendFileAsync(fileName.Trim());
-#else
 				Response.WriteFile(fileName.Trim());
-#endif
 			}
 		}
 		public void AppendHeader( string name, string value)
