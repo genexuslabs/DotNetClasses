@@ -518,7 +518,7 @@ namespace GeneXus.Data
 	[SecuritySafeCritical]
 	public class GxMySQLConnectorDataReader : GxDataReader
 	{
-
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxMySQLConnectorDataReader));
 		public GxMySQLConnectorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt)
 		{
@@ -551,7 +551,16 @@ namespace GeneXus.Data
 		}
 		public override string GetString(int i)
 		{
-			string res = Convert.ToString(reader.GetString(i));
+			string res;
+			try
+			{
+				res = Convert.ToString(reader.GetString(i));
+			}
+			catch (InvalidCastException ex)
+			{
+				GXLogging.Warn(log, "GetString error", ex);
+				res = Convert.ToString(reader.GetValue(i).ToString());
+			}
 			readBytes += 10 + (2 * res.Length);
 			return res;
 
