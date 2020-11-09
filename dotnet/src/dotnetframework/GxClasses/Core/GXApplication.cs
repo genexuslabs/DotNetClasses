@@ -268,7 +268,7 @@ namespace GeneXus.Application
 		void UpdateSessionCookieContainer();
 #endif
 		string GetCacheInvalidationToken();
-		string GetURLBuildNumber(string styleSheet, string urlBuildNumber);
+		string GetURLBuildNumber(string resourcePath, string urlBuildNumber);
 	}
 	[Serializable]
 	public class GxContext : IGxContext
@@ -821,9 +821,9 @@ namespace GeneXus.Application
 			styleSheets.Add(styleSheet);
 		}
 
-		public string GetURLBuildNumber(string styleSheet, string urlBuildNumber)
+		public string GetURLBuildNumber(string resourcePath, string urlBuildNumber)
 		{
-			if (string.IsNullOrEmpty(urlBuildNumber) && !PathUtil.IsAbsoluteUrl(styleSheet))
+			if (string.IsNullOrEmpty(urlBuildNumber) && !PathUtil.IsAbsoluteUrl(resourcePath))
 			{
 				return "?" + GetCacheInvalidationToken();
 			}
