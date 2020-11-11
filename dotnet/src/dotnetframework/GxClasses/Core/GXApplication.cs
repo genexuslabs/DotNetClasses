@@ -823,7 +823,7 @@ namespace GeneXus.Application
 
 		public string GetURLBuildNumber(string resourcePath, string urlBuildNumber)
 		{
-			if (string.IsNullOrEmpty(urlBuildNumber) && !PathUtil.IsAbsoluteUrl(resourcePath))
+			if (string.IsNullOrEmpty(urlBuildNumber) && !PathUtil.IsAbsoluteUrl(resourcePath) && !PathUtil.HasUrlQueryString(resourcePath))
 			{
 				return "?" + GetCacheInvalidationToken();
 			}
