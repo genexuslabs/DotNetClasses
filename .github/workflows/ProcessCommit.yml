@@ -3,9 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'master'
-      - 'beta'
-      - 'release-*'
+      - 'beta-corona'
     paths:
       - 'dotnet/**'
     ignore-paths:
@@ -32,6 +30,7 @@ jobs:
             "build-file": "dotnet\\DotNetStandardClasses.sln",
             "package-version": ".\\.github\\generatePackageVersion.ps1",
             "packages-path": ".\\dotnet\\*.nupkg",
-            "skip-duplicates": "true"
+            "skip-duplicates": "true",
+            "use-prerelease-versioning": "false"
           }
         }'
