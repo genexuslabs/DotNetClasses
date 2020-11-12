@@ -639,7 +639,7 @@ namespace GeneXus.Utils
 				{
 					if (GXUtil.IsWindowsPlatform)
 					{
-						_DataSocket.Connect(serverEndPoint);
+						_ControlSocket.Connect(serverEndPoint);
 					}
 					else
 					{
