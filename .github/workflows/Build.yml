@@ -1,15 +1,9 @@
 name: Build
 
 on: 
-  pull_request:
-    branches:
-      - 'master'
-      - 'release-*'
   push:
     branches: 
-      - 'master'
-      - 'beta'
-      - 'release-*'
+      - 'beta-corona'
 
 jobs:
   build:
@@ -62,4 +56,18 @@ jobs:
       run: dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
 
     - name: Pack
-      run: dotnet pack $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration /p:Version=$Env:NuGetPackageVersion
+      run: |
+        dotnet pack $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration /p:Version=$Env:NuGetPackageVersion
+
+        # Execute validation in case a new project is added to the solution without the corresponding convention.
+        write-host "== Validate PackageId naming ===================="
+        $packagePreffixName = "GeneXus.Corona"
+        Get-ChildItem -Path *.nupkg -Recurse | ForEach-Object {
+          if (!$_.Name.StartsWith($packagePreffixName)) {
+            write-error "'$($_.Name)' must have defined a PackageId starting with '$packagePreffixName'"
+          }
+          else {
+            write-host "'$($_.Name)' successful PackageId!"
+          }
+        }
+        write-host "================================================="

@@ -4,7 +4,7 @@
 		<AssemblyName>GxXsl</AssemblyName>
 		<RootNamespace>GxXsl</RootNamespace>
 		<PackageTags>XML xsl apply</PackageTags>
-		<PackageId>GeneXus.Xsl</PackageId>
+		<PackageId>GeneXus.Corona.Xsl</PackageId>
 	</PropertyGroup>
 
 </Project>

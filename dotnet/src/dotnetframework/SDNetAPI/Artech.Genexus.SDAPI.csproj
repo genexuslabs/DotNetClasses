@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>Artech.Genexus.SDAPI</RootNamespace>
 		<AssemblyName>Artech.Genexus.SDAPI</AssemblyName>
-		<PackageId>GeneXus.SDAPI</PackageId>
+		<PackageId>GeneXus.Corona.SDAPI</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="log4net" Version="2.0.8" />

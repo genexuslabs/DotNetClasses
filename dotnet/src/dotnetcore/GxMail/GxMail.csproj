@@ -4,7 +4,7 @@
 	<NoWarn>1701;1702;NU1701</NoWarn>
 	<DefineConstants>NETCORE</DefineConstants>
 	<PackageTags>SMTP Exchange POP3</PackageTags>
-	<PackageId>GeneXus.Mail.Core</PackageId>
+	<PackageId>GeneXus.Corona.Mail.Core</PackageId>
 	</PropertyGroup>
 
   <ItemGroup>

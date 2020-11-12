@@ -4,7 +4,7 @@
 		<AssemblyName>GxExcelI</AssemblyName>
 		<RootNamespace>GxExcelI</RootNamespace>
 		<PackageTags>Excel</PackageTags>
-		<PackageId>GeneXus.Excel</PackageId>
+		<PackageId>GeneXus.Corona.Excel</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

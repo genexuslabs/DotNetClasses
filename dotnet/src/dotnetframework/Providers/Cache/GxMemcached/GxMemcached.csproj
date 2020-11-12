@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GxMemcached</RootNamespace>
 		<AssemblyName>GxMemcached</AssemblyName>
 		<PackageTags>Memcached Cache</PackageTags>
-		<PackageId>GeneXus.Memcached</PackageId>
+		<PackageId>GeneXus.Corona.Memcached</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />

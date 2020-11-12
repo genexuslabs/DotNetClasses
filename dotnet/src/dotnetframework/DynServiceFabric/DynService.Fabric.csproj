@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GeneXus.Data.DynService.Fabric</RootNamespace>
 		<AssemblyName>GeneXus.Data.DynService.Fabric</AssemblyName>
 		<SignAssembly>false</SignAssembly>
 		<PackageTags>DynService Fabric</PackageTags>
-		<PackageId>GeneXus.DynService.Fabric</PackageId>
+		<PackageId>GeneXus.Corona.DynService.Fabric</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

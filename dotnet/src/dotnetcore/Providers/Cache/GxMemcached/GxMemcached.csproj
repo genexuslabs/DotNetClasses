@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
 	<PackageTags>Memcached</PackageTags>
-	<PackageId>GeneXus.Memcached.Core</PackageId>
+	<PackageId>GeneXus.Corona.Memcached.Core</PackageId>
 </PropertyGroup>
   <PropertyGroup>
   	<AppDesignerFolder>Properties</AppDesignerFolder>

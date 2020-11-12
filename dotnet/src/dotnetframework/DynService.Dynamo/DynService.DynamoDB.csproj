@@ -5,7 +5,7 @@
 		<AssemblyName>GeneXus.Data.DynService.DynamoDB</AssemblyName>
 		<SignAssembly>false</SignAssembly>
 		<PackageTags>DynamoDB</PackageTags>
-		<PackageId>GeneXus.DynService.DynamoDB</PackageId>
+		<PackageId>GeneXus.Corona.DynService.DynamoDB</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.1.4" />

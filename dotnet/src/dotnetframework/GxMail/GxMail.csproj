@@ -4,7 +4,7 @@
 		<AssemblyName>GxMail</AssemblyName>
 		<RootNamespace>GeneXus.Mail</RootNamespace>
 		<PackageTags>SMTP Exchange POP3</PackageTags>
-		<PackageId>GeneXus.Mail</PackageId>
+		<PackageId>GeneXus.Corona.Mail</PackageId>
 		
 	</PropertyGroup>
 

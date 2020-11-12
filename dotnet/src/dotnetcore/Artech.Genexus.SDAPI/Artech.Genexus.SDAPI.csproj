@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<DefineConstants>NETCORE;</DefineConstants>
 		<DefineConstants>NETCOREAPP1_1</DefineConstants>
-		<PackageId>GeneXus.SDAPI.Core</PackageId>
+		<PackageId>GeneXus.Corona.SDAPI.Core</PackageId>
 	</PropertyGroup>
 
   <ItemGroup>

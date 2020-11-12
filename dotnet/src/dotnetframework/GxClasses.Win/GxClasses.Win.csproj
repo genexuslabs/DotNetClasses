@@ -5,7 +5,7 @@
 		<AssemblyName>GxClasses.Win</AssemblyName>
 		<NoWarn>CA1501</NoWarn>
 		<PackageTags>Command line</PackageTags>
-		<PackageId>GeneXus.Classes.Win</PackageId>
+		<PackageId>GeneXus.Corona.Classes.Win</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="log4net" Version="2.0.8"/>

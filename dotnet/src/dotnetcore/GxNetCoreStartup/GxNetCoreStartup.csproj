@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<PackageTags>GxNetCoreStartup</PackageTags>
-		<PackageId>GeneXus.NetCoreStartup</PackageId>
+		<PackageId>GeneXus.Corona.NetCoreStartup</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
 	</PropertyGroup>
 

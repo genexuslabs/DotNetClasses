@@ -4,7 +4,7 @@
 		<RootNamespace>GxMaps</RootNamespace>
 		<AssemblyName>GxMaps</AssemblyName>
 		<PackageTags>Maps</PackageTags>
-		<PackageId>GeneXus.Maps</PackageId>
+		<PackageId>GeneXus.Corona.Maps</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />

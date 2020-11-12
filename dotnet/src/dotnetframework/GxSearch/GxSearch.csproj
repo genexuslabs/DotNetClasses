@@ -4,7 +4,7 @@
 		<RootNamespace>GeneXus.Search</RootNamespace>
 		<AssemblyName>GxSearch</AssemblyName>
 		<PackageTags>Lucene Search</PackageTags>
-		<PackageId>GeneXus.Search</PackageId>
+		<PackageId>GeneXus.Corona.Search</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

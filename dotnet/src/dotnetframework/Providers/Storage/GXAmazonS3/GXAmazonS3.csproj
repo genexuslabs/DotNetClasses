@@ -4,7 +4,7 @@
 		<RootNamespace>GXAmazonS3</RootNamespace>
 		<AssemblyName>GXAmazonS3</AssemblyName>
 		<PackageTags>Amazon</PackageTags>
-		<PackageId>GeneXus.Amazon</PackageId>
+		<PackageId>GeneXus.Corona.Amazon</PackageId>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="3.1.4" />

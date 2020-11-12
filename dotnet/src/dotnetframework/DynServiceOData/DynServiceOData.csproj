@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>DynServiceOData</RootNamespace>
@@ -6,11 +6,11 @@
 		<SignAssembly>false</SignAssembly>
 		<NoWarn>CA1812</NoWarn>
 		<PackageTags>DynService OData</PackageTags>
-		<PackageId>GeneXus.DynService.OData</PackageId>
+		<PackageId>GeneXus.Corona.DynService.OData</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GXOdata.Client" Version="5.2.3.1-*" />
+		<PackageReference Include="GXOdata.Client" Version="5.2.3.2" />
 		<PackageReference Include="log4net" Version="2.0.8" />
 		<PackageReference Include="Microsoft.Data.Edm" Version="5.8.3" />
 		<PackageReference Include="Microsoft.Data.OData" Version="5.8.3" />

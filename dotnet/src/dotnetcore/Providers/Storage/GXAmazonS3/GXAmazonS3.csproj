@@ -5,7 +5,7 @@
 		<AppDesignerFolder>Properties</AppDesignerFolder>
 		<SignAssembly>false</SignAssembly>
 		<PackageTags>Amazon</PackageTags>
-		<PackageId>GeneXus.AmazonS3.Core</PackageId>
+		<PackageId>GeneXus.Corona.AmazonS3.Core</PackageId>
 	</PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\..\..\dotnetframework\Providers\Storage\GXAmazonS3\ExternalProviderS3.cs" Link="ExternalProviderS3.cs" />

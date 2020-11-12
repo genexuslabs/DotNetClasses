@@ -5,7 +5,7 @@
     <AssemblyName>GeneXus.SD.Store.StoreManager</AssemblyName>
     <RootNamespace>GeneXus.SD.Store</RootNamespace>
 	<PackageTags>StoreManager</PackageTags>
-	<PackageId>GeneXus.StoreManager.Core</PackageId>
+	<PackageId>GeneXus.Corona.StoreManager.Core</PackageId>
 	</PropertyGroup>
 
   <ItemGroup>

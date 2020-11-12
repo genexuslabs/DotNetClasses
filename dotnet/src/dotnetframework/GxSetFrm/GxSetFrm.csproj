@@ -6,7 +6,7 @@
 		<AssemblyName>GxSetFrm</AssemblyName>
 		<SignAssembly>false</SignAssembly>
 		<PackageTags>SetFrm</PackageTags>
-		<PackageId>GeneXus.SetFrm</PackageId>
+		<PackageId>GeneXus.Corona.SetFrm</PackageId>
 	</PropertyGroup>
 
   <ItemGroup>

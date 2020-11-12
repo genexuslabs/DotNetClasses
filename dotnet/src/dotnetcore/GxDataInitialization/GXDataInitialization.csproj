@@ -3,7 +3,7 @@
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<OutputType>Exe</OutputType>
 		<PackageTags>DataInitialization</PackageTags>
-		<PackageId>GeneXus.DataInitialization.Core</PackageId>
+		<PackageId>GeneXus.Corona.DataInitialization.Core</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
 	</PropertyGroup>
   <ItemGroup>

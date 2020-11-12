@@ -9,7 +9,7 @@
 		<AllowUnsafeBlocks>false</AllowUnsafeBlocks>
 		<NoWarn>CA1501;CA1824</NoWarn>
 		<PackageTags>Config</PackageTags>
-		<PackageId>GeneXus.Config</PackageId>
+		<PackageId>GeneXus.Corona.Config</PackageId>
 	</PropertyGroup>
 	
   <ItemGroup>

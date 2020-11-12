@@ -4,7 +4,7 @@
     <NoWarn>1701;1702;NU1701</NoWarn>
 	<DefineConstants>NETCORE</DefineConstants>
   	<PackageTags>Itext PDF Report</PackageTags>
-	<PackageId>GeneXus.PdfReportsCS.Core</PackageId>
+	<PackageId>GeneXus.Corona.PdfReportsCS.Core</PackageId>
 	</PropertyGroup>
 
   <ItemGroup>

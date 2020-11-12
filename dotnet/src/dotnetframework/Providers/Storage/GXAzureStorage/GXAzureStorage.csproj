@@ -4,7 +4,7 @@
 		<RootNamespace>GeneXus.Storage.GXAzureStorage</RootNamespace>
 		<AssemblyName>GXAzureStorage</AssemblyName>
 		<PackageTags>Azure</PackageTags>
-		<PackageId>GeneXus.Azure</PackageId>
+		<PackageId>GeneXus.Corona.Azure</PackageId>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />

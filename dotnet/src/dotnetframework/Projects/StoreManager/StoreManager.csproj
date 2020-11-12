@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GeneXus.SD.Store</RootNamespace>
@@ -6,7 +6,7 @@
 		<SignAssembly>true</SignAssembly>
 		<DefineConstants>TRACE;DEBUG;PACKAGE_INDEPENDENT_VERSION;PACKAGE_INDEPENDENT_FILEVERSION;PACKAGE_COPYRIGHT_START_YEAR</DefineConstants>
 		<PackageTags>StoreManager</PackageTags>
-		<PackageId>GeneXus.StoreManager</PackageId>
+		<PackageId>GeneXus.Corona.StoreManager</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Google.Apis" Version="1.42.0" />

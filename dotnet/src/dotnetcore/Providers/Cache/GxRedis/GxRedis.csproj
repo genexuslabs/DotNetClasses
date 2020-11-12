@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<PackageTags>Redis</PackageTags>
-		<PackageId>GeneXus.Redis.Core</PackageId>
+		<PackageId>GeneXus.Corona.Redis.Core</PackageId>
 	</PropertyGroup>
   <PropertyGroup>
 	<AppDesignerFolder>Properties</AppDesignerFolder>

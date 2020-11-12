@@ -6,7 +6,7 @@
 		<RootNamespace>GXDataInitialization</RootNamespace>
 		<AssemblyName>GXDataInitialization</AssemblyName>
 		<PackageTags>DataInitialization</PackageTags>
-		<PackageId>GeneXus.DataInitialization</PackageId>
+		<PackageId>GeneXus.Corona.DataInitialization</PackageId>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="log4net">

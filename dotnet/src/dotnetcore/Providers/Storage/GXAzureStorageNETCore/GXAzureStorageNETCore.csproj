@@ -6,7 +6,7 @@
 	  <AppDesignerFolder>Properties</AppDesignerFolder>
 	  <SignAssembly>false</SignAssembly>
 	  <PackageTags>Azure</PackageTags>
-	  <PackageId>GeneXus.Azure.Core</PackageId>
+	  <PackageId>GeneXus.Corona.Azure.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,7 +5,7 @@
 	<OutputType>Library</OutputType>
     <DefineConstants>NETCORE</DefineConstants>
 	<PackageTags>Data Access</PackageTags>
-	<PackageId>GeneXus.Classes.Core</PackageId>
+	<PackageId>GeneXus.Corona.Classes.Core</PackageId>
 	</PropertyGroup>
 
 

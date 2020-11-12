@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GeneXus</RootNamespace>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyName>GXWebSocket</AssemblyName>
 		<PackageTags>WebSockets</PackageTags>
-		<PackageId>GeneXus.WebSockets</PackageId>
+		<PackageId>GeneXus.Corona.WebSockets</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

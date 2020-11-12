@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <OutputType>Exe</OutputType>
     <PackageTags>Reorg</PackageTags>
-    <PackageId>GeneXus.Reorganization.Core</PackageId>
+    <PackageId>GeneXus.Corona.Reorganization.Core</PackageId>
     <DefineConstants>NETCORE</DefineConstants>
     <GxGenerateDepsFile>true</GxGenerateDepsFile>
   </PropertyGroup>

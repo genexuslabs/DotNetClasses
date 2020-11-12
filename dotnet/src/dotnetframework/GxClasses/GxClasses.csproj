@@ -5,7 +5,7 @@
 		<NoWarn>618;1607;1698</NoWarn>
 		<AssemblyName>GxClasses</AssemblyName>
 		<PackageTags>Data Access</PackageTags>
-		<PackageId>GeneXus.Classes</PackageId>
+		<PackageId>GeneXus.Corona.Classes</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>

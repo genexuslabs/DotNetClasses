@@ -7,7 +7,7 @@
 		<NoWarn>CA1501;CA1824</NoWarn>
 		<OutputType>Exe</OutputType>
 		<PackageTags>Reorg</PackageTags>
-		<PackageId>GeneXus.Reorganization</PackageId>
+		<PackageId>GeneXus.Corona.Reorganization</PackageId>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
 	  
