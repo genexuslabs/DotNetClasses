@@ -16,6 +16,8 @@ namespace GeneXus.Procedure
 	using System.Collections.Generic;
 	using GeneXus.XML;
 	using GeneXus.Metadata;
+	using GeneXus.Data;
+
 	public abstract class GXProcedure: GXBaseObject
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Procedure.GXProcedure));
@@ -79,7 +81,10 @@ namespace GeneXus.Procedure
 		}
 		protected void exitApplication()
 		{
-			if(IsMain)
+			foreach (IGxDataStore ds in context.DataStores)
+				ds.Connection.FlushBatchCursors(this);
+
+			if (IsMain)
 				dbgInfo?.OnExit();
 			if (disconnectUserAtCleanup)
 			{

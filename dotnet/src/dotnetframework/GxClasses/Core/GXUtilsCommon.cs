@@ -2553,16 +2553,19 @@ namespace GeneXus.Utils
 		}
 		public static string TToC2(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss", toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, toUTC);
 		}
 
 		public static string TToC3(DateTime dt)
 		{
 			return TToC3(dt, true);
 		}
+		internal const string JsonDateFormatMillis = "yyyy-MM-ddTHH:mm:ss.fff";
+		internal const string JsonDateFormat = "yyyy-MM-ddTHH:mm:ss";
+		
 		public static string TToC3(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff", toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, toUTC);
 		}
 
 		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
@@ -3320,28 +3323,24 @@ namespace GeneXus.Utils
 		{
 			return Path.Combine(FileUtil.GetStartupDirectory(), AppDomain.CurrentDomain.FriendlyName + ".out");
 		}
+#else
+        private static byte RemoteFileExists(string url)
+        {
+            return (byte)0;
+        }
+        //In command line, return the base directory, web.
+        public static string GetBasePath()
+        {
+            return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+        }
+#endif
 		public static string GetStartupDirectory()
 		{
 			string dir = Assembly.GetCallingAssembly().GetName().CodeBase;
 			Uri uri = new Uri(dir);
 			return Path.GetDirectoryName(uri.LocalPath);
 		}
-#else
-        private static byte RemoteFileExists(string url)
-        {
-            return (byte)0;
-        }
-        public static string GetStartupDirectory()
-        {
-            return AppContext.BaseDirectory;
-        }
 
-        //In command line, return the base directory, web.
-        public static string GetBasePath()
-        {
-            return Directory.GetParent(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName).FullName;
-        }
-#endif
 		public static string UriToPath(string uriString)
 		{
 			try
