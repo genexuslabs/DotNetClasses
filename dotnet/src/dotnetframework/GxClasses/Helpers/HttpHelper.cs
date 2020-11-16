@@ -531,10 +531,8 @@ namespace GeneXus.Http
 
 	public static class HttpRequestExtensions
 	{
-#if NETCORE
 		const int DEFAULT_HTTP_PORT = 80;
 		const int DEFAULT_HTTPS_PORT = 443;
-#endif
 		public static HttpCookieCollection GetCookies(this HttpRequest request)
 		{
 #if NETCORE
@@ -661,18 +659,23 @@ namespace GeneXus.Http
 			return request.Url.Scheme;
 #endif
 		}
-		public static int GetPort(this HttpRequest request)
+		public static int GetPort(this HttpRequest request, bool isSecure)
 		{
 #if NETCORE
 			if (request.Host.Port.HasValue)
 				return request.Host.Port.Value;
-			else if (request.IsHttps)
+			else if (isSecure)
 				return DEFAULT_HTTPS_PORT;
 			else
 				return DEFAULT_HTTP_PORT;
 #else
-			return request.Url.Port;
-
+			if (request.Url.IsDefaultPort)
+				if (isSecure)
+					return DEFAULT_HTTPS_PORT;
+				else
+					return DEFAULT_HTTP_PORT;
+			else 
+				return request.Url.Port;
 #endif
 		}
 		public static string GetHost(this HttpRequest request)

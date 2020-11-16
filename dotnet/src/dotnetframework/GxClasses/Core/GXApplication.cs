@@ -2686,7 +2686,7 @@ namespace GeneXus.Application
 		{
 			return request.Headers != null && (!string.IsNullOrEmpty(request.Headers["Host"]) || !string.IsNullOrEmpty(request.Headers["X-Forwarded-Host"]));
 		}
-		internal static int GetServerPort(HttpRequest request)
+		internal static int GetServerPort(HttpRequest request, bool isSecure)
 		{
 			try
 			{
@@ -2699,7 +2699,7 @@ namespace GeneXus.Application
 						if (idx >= 0)
 							return int.Parse(host.Substring(idx + 1));
 					}
-					return request.GetPort();
+					return request.GetPort(isSecure);
 				}
 				else return 0;
 			}
@@ -2712,7 +2712,7 @@ namespace GeneXus.Application
 		}
 		public virtual int GetServerPort()
 		{
-			return GetServerPort(_HttpContext != null ? _HttpContext.Request : null);
+			return GetServerPort(_HttpContext != null ? _HttpContext.Request : null, GetHttpSecure() == 1);
 		}
 		private bool RequestDefaultPort
 		{
