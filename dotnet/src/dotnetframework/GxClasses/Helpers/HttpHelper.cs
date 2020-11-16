@@ -236,7 +236,7 @@ namespace GeneXus.Http
 		public static string RequestPhysicalApplicationPath(HttpContext context = null)
 		{
 #if NETCORE
-			return Directory.GetParent(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName).FullName;
+			return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #else
 			if (context==null)
 				return HttpContext.Current.Request.PhysicalApplicationPath; 
