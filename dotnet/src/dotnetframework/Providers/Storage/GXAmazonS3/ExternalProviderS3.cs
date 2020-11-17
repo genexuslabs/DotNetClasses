@@ -67,21 +67,24 @@ namespace GeneXus.Storage.GXAmazonS3
 
 			var region = Amazon.RegionEndpoint.GetBySystemName(providerService.Properties.Get(REGION));
 
-			string endPoint = providerService.Properties.Get(ENDPOINT);
-			UseCustomEndpoint = !String.IsNullOrEmpty(endPoint) && endPoint.Equals(STORAGE_CUSTOM_ENDPOINT_VALUE, StringComparison.OrdinalIgnoreCase);
-			if (UseCustomEndpoint)
-			{
-				Endpoint = providerService.Properties.Get(STORAGE_CUSTOM_ENDPOINT);
-				ForcePathStyle = true;
-			}
+			string _endPoint = providerService.Properties.Get(ENDPOINT);
+			UseCustomEndpoint = !String.IsNullOrEmpty(_endPoint) && _endPoint.Equals(STORAGE_CUSTOM_ENDPOINT_VALUE, StringComparison.OrdinalIgnoreCase);
+
+
+			Endpoint = (UseCustomEndpoint)? providerService.Properties.Get(STORAGE_CUSTOM_ENDPOINT): _endPoint;
+			ForcePathStyle = UseCustomEndpoint;
 
 			AmazonS3Config config = new AmazonS3Config()
 			{
 				RegionEndpoint = region,
-				ServiceURL = Endpoint,
 				ForcePathStyle = ForcePathStyle
 			};
-						
+			
+			if (!string.IsNullOrEmpty(Endpoint) && !Endpoint.EndsWith(".amazonaws.com"))
+			{
+				config.ServiceURL = Endpoint;
+			}
+			
 #if NETCORE
 			if (credentials != null)
 			{
