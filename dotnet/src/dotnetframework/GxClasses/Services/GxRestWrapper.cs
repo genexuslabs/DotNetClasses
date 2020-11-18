@@ -4,6 +4,7 @@ using System.Text;
 using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 #endif
 using GeneXus.Utils;
 using System.Net;
@@ -21,6 +22,7 @@ using System.Collections.Specialized;
 using GeneXus.Security;
 using System.Collections;
 using Jayrock.Json;
+
 
 namespace GeneXus.Application
 
@@ -110,6 +112,7 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
 				return Serialize(outputParameters, wrapped);
@@ -128,6 +131,23 @@ namespace GeneXus.Application
 		public virtual Task Post()
 		{
 			return MethodBodyExecute(null);
+		}
+
+		private void setWorkerStatus(GXProcedure _procWorker)
+		{			
+			if (ReflectionHelper.HasMethod(_procWorker, "getrestcode"))
+			{
+
+				Dictionary<string, object> outVal = ReflectionHelper.CallMethod(_procWorker, "getrestcode", new Dictionary<string, object>());
+				this.SetStatusCode((HttpStatusCode)(short)outVal.Values.First<object>());
+			}
+			if (ReflectionHelper.HasMethod(_procWorker, "getrestmsg"))
+			{
+
+				Dictionary<string, object> outVal = ReflectionHelper.CallMethod(_procWorker, "getrestmsg", new Dictionary<string, object>());
+				this.SetStatusMessage(outVal.Values.First<object>().ToString());
+			}
+
 		}
 
 		private Dictionary<string, object> ReadBodyParameters()
@@ -230,6 +250,7 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				var outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
 				return Serialize(outputParameters, false);
@@ -272,21 +293,28 @@ namespace GeneXus.Application
 			{
 				if (!streamReader.EndOfStream)
 				{
-
-					string json = streamReader.ReadToEnd();
-					var data = JSONHelper.ReadJSON<dynamic>(json);
-					JObject jobj = data as JObject;
-					JArray jArray = data as JArray;
-					if (jobj != null)
+					try
 					{
-						foreach (string name in jobj.Names)
+						string json = streamReader.ReadToEnd();
+						var data = JSONHelper.ReadJSON<dynamic>(json);
+						JObject jobj = data as JObject;
+						JArray jArray = data as JArray;
+						if (jobj != null)
 						{
-							bodyParameters.Add(name.ToLower(), jobj[name]);
+							foreach (string name in jobj.Names)
+							{
+								bodyParameters.Add(name.ToLower(), jobj[name]);
+							}
+						}
+						else if (jArray != null)
+						{
+							bodyParameters.Add(string.Empty, jArray);
 						}
 					}
-					else if(jArray != null)
+					catch (Exception ex)
 					{
-						bodyParameters.Add(string.Empty,jArray);
+						GXLogging.Error(log, ex, "Parsing error in Body ");
+
 					}
 				}
 			}
@@ -454,6 +482,18 @@ namespace GeneXus.Application
 			if (_httpContext != null)
 			{
 				_httpContext.Response.StatusCode = (int)code;
+			}
+		}
+		protected void SetStatusMessage(String statusMessage)
+		{
+			if (_httpContext != null)
+			{
+#if !NETCORE
+				_httpContext.Response.StatusDescription = statusMessage;
+#else
+				_httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusMessage.Replace(Environment.NewLine, string.Empty);
+
+#endif
 			}
 		}
 #if NETCORE
