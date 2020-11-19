@@ -20,6 +20,15 @@ namespace GeneXus.Application
 			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, inParametersValues);
 			methodInfo.Invoke(instance, parametersForInvocation);
 		}
+		public static bool HasMethod(object instance, String methodName, IGxContext context = null)
+		{
+			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
+			if (methodInfo != null)
+				return true;
+			else
+				return false;
+		}
+
 		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context=null)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
