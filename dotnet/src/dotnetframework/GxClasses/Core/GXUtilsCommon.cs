@@ -3516,6 +3516,11 @@ namespace GeneXus.Utils
 			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp);
 		}
 
+		public static bool HasUrlQueryString(string url)
+		{
+			return url.Contains("?");
+		}
+
 		public static Uri GetBaseUri()
 		{
 			return new Uri(GxContext.StaticPhysicalPath() + Path.DirectorySeparatorChar.ToString());
