@@ -660,10 +660,10 @@ namespace GeneXus.Data
 	public class GxMySqlMemoryDataReader : GxDataReader
 	{
 		public GxMySqlMemoryDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
-			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt) : base(connManager, dr, connection, parameters,
+			string stmt, ushort fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt) : base(connManager, dr, connection, parameters,
 			stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt)
 		{
-			MemoryDataReader memoryDataReader = new MemoryDataReader(reader);
+			MemoryDataReader memoryDataReader = new MemoryDataReader(reader, con, parameters, stmt, fetchSize, isForFirst, cached, expiration);
 			reader.Dispose();
 			reader = memoryDataReader;
 		}
