@@ -824,6 +824,7 @@ namespace GeneXus.Data.NTier.ADO
             if (_blockSize > 0)
                 _gxDbCommand.FetchSize = Convert.ToUInt16(_blockSize);
             bindParms(_parmBinds);
+			_gxDbCommand.AfterCreateCommand();
             _fldGetter = new GXFatFieldGetter(_gxDbCommand);
             _fldSetter = new GXFatFieldSetter(_gxDbCommand);
             _state = 2;

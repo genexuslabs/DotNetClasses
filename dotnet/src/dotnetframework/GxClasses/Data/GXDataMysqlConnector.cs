@@ -2,57 +2,46 @@ using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Utils;
 using log4net;
-#if NETCORE
-using MySQLCommand = MySql.Data.MySqlClient.MySqlCommand;
-using MySQLParameter = MySql.Data.MySqlClient.MySqlParameter;
-using MySQLConnection = MySql.Data.MySqlClient.MySqlConnection;
-using MySQLException = MySql.Data.MySqlClient.MySqlException;
-using MySQLDbType = MySql.Data.MySqlClient.MySqlDbType;
-using MySQLDataAdapter = MySql.Data.MySqlClient.MySqlDataAdapter;
+using MySQLCommand = MySqlConnector.MySqlCommand;
+using MySQLParameter = MySqlConnector.MySqlParameter;
+using MySQLConnection = MySqlConnector.MySqlConnection;
+using MySQLException = MySqlConnector.MySqlException;
+using MySQLDbType = MySqlConnector.MySqlDbType;
+using MySQLDataAdapter = MySqlConnector.MySqlDataAdapter;
 using System.IO;
 using GxClasses.Helpers;
 using System.Reflection;
-#else
-using MySQLDriverCS;
-#endif
 using System;
 using System.Data;
 using System.Data.Common;
 using System.Text;
+using System.Collections.Generic;
+using System.Security;
 
 namespace GeneXus.Data
 {
-	public class GxMySql : GxDataRecord 
+	
+	public class GxMySqlConnector : GxDataRecord 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxMySql));
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxMySqlConnector));
 		private int MAX_TRIES;
 		private int m_FailedConnections;
-		private bool preparedStmts;
 #if NETCORE
 		static Assembly assembly;
 #endif
-		public GxMySql(string id)
+		public GxMySqlConnector(string id)
 		{
 #if NETCORE
 			if (assembly == null)
 			{
-				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "MySql.Data.dll")))
+				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "MySqlConnector.dll")))
 				{
 					assembly = dynamicContext.Assembly;
 				}
 				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "System.Configuration.ConfigurationManager.dll"))) { }
 			}
-#else
-			if (GxContext.isReorganization && !GXUtil.ExecutingRunX86())
-			{
-				MYSQL_FIELD_FACTORY.GetInstance();//Force libmysql load
-			}
 #endif
 
-	}
-		public GxMySql(string id, bool prepStmt) : this(id)
-		{
-			preparedStmts = prepStmt;
 		}
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
@@ -61,7 +50,7 @@ namespace GeneXus.Data
 				m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
 			m_FailedConnections = 0;
-			return new MySqlConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
+			return new MySqlConnectorConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 		}
 
 		string convertToMySqlCall(string stmt, GxParameterCollection parameters)
@@ -80,37 +69,55 @@ namespace GeneXus.Data
 			}
 			return "CALL " + stmt + "(" + sBld.ToString() + ")";    
 		}
+		[SecuritySafeCritical]
 		public override IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters, bool isCursor, bool forFirst, bool isRpc)
 		{
 			if (isRpc)
-				stmt = convertToMySqlCall(stmt, parameters);    
-			MySQLCommand mysqlcmd = (MySQLCommand)base.GetCommand(con, stmt, parameters);
-
-			if (preparedStmts && isCursor && !isRpc)        
+				stmt = convertToMySqlCall(stmt, parameters);
+			MySQLCommand mysqlcmd = (MySQLCommand)base.GetCommand(con, stmt, parameters.Distinct());
+			if (isCursor && !isRpc)        
 			{
-#if !NETCORE
-				mysqlcmd.UsePreparedStatement = true;
-#endif
 				mysqlcmd.Prepare();
 			}
 			return mysqlcmd;
+		}
+		public override string AfterCreateCommand(string stmt, GxParameterCollection parmBinds)
+		{
+			if (parmBinds == null  || parmBinds.Count==0 || stmt.IndexOf('?') < 0 )
+				return stmt;
+			bool inString = false;
+			int parmIndex = 0;
+			StringBuilder sBld = new StringBuilder();
+			for (int i = 0; i < stmt.Length; i++)
+			{
+				char c = stmt[i];
+				if (c == '`')
+				{
+					inString = !inString;
+					sBld.Append(c);
+				}
+				else if (c == '?' && !inString)
+				{
+					sBld.Append('@');
+					sBld.Append(parmBinds[parmIndex].ParameterName);
+					parmIndex++;
+				}
+				else
+				{
+					sBld.Append(c);
+				}
+			}
+			return sBld.ToString();
 		}
 		protected override string BuildConnectionString(string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra)
 		{
 			StringBuilder connectionString = new StringBuilder();
-#if NETCORE
 
             if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Server"))
 			{
 				connectionString.AppendFormat("Server={0};", datasourceName);
 			}
-#else
-            if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Location"))
-			{
-				connectionString.AppendFormat("Location={0};", datasourceName);
-			}
-#endif
             if (port != null && port.Trim().Length > 0 && !hasKey(extra, "Port"))
 			{
 				connectionString.AppendFormat("Port={0};", port);
@@ -119,23 +126,13 @@ namespace GeneXus.Data
 			{
 				connectionString.AppendFormat(";User ID={0};Password={1}", userId, userPassword);
 			}
-#if NETCORE
             if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Database"))
             {
                 connectionString.AppendFormat(";Database={0}", databaseName);
             }
-#else
-            if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Data Source"))
-			{
-				connectionString.AppendFormat(";Data Source={0}", databaseName);
-			}
-#endif
             if (extra != null)
 			{
 				string res = ParseAdditionalData(extra, "integrated security");
-#if !NETCORE
-                res = ReplaceKeyword(res, "database", "Data Source");
-#endif
                 if (!res.StartsWith(";") && res.Length > 1) connectionString.Append(";");
 				connectionString.Append(res);
 			}
@@ -150,29 +147,27 @@ namespace GeneXus.Data
 		{
 			get
 			{
-				return preparedStmts;
+				return false;
 			}
 		}
 		public override IDbDataParameter CreateParameter()
 		{
 			return new MySQLParameter();
 		}
+		[SecuritySafeCritical]
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			MySQLParameter parm = new MySQLParameter();
 			parm.DbType = (DbType)dbtype;
-#if NETCORE
             parm.MySqlDbType = DbtoMysqlType((DbType)dbtype);
-#endif
-            
             parm.Size = gxlength;
 			parm.Precision = (byte)gxlength;
 			parm.Scale = (byte)gxdec;
 			parm.ParameterName = name;
 			return parm;
 		}
-#if NETCORE
-        public static MySQLDbType DbtoMysqlType(DbType dbtype)
+		[SecuritySafeCritical]
+		public static MySQLDbType DbtoMysqlType(DbType dbtype)
         {
             switch (dbtype)
             {
@@ -215,7 +210,6 @@ namespace GeneXus.Data
 
             }
         }
-#endif
 		public override DbDataAdapter CreateDataAdapeter()
 		{
 			return new MySQLDataAdapter();
@@ -230,29 +224,17 @@ namespace GeneXus.Data
 			bool hasNested,
 			bool dynStmt)
 		{
-
             IDataReader idatareader;
-#if !NETCORE
-            GXLogging.Debug(log, "ExecuteReader: client cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode() + " PreparedStmt " + preparedStmts);
-			if (preparedStmts)
-				idatareader = new GxMySQLCursorDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, hasNested, dynStmt);
-			else
-				idatareader = new GxMySQLDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt, preparedStmts);
-#else
-            if (!hasNested)//Client Cursor
-            {
-                GXLogging.Debug(log, "ExecuteReader: client cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode() + " PreparedStmt " + preparedStmts);
-                if (preparedStmts)
-                    idatareader = new GxMySQLCursorDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, hasNested, dynStmt);
-                else
-                    idatareader = new GxMySQLDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt, preparedStmts);
+			if (!hasNested)//Client Cursor
+			{
+				GXLogging.Debug(log, "ExecuteReader: client cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
+				idatareader = new GxMySQLConnectorDataReader(connManager, this, con, parameters.Distinct(), stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
+			}
+			else //Server Cursor
+			{
+				GXLogging.Debug(log, "ExecuteReader: server cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
+                idatareader = new GxMySqlMemoryDataReader(connManager, this, con, parameters.Distinct(), stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
             }
-            else //Server Cursor
-            {
-                GXLogging.Debug(log, "ExecuteReader: server cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
-                idatareader = new GxMySqlMemoryDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
-            }
-#endif
             return idatareader;
         }
         protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
@@ -422,21 +404,6 @@ namespace GeneXus.Data
 		}
 
 		static DateTime MYSQL_NULL_DATE = new DateTime(1000, 1, 1);
-#if !NETCORE
-		public override Guid GetGuid(IGxDbCommand cmd, IDataRecord DR, int i)
-		{
-			
-			string guid = base.GetString(cmd, DR, i);
-			try
-			{
-				return new Guid(guid);
-			}
-			catch (FormatException)
-			{
-				return Guid.Empty;
-			}
-		}
-#endif
 		public override IGeographicNative GetGeospatial(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
 			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
@@ -451,7 +418,6 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
-#if NETCORE
 		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
 		{
 			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
@@ -465,7 +431,6 @@ namespace GeneXus.Data
 			}
 		}
 
-#endif
 		public override void SetParameter(IDbDataParameter parameter, object value)
 		{
 			if (value is Guid)
@@ -473,28 +438,28 @@ namespace GeneXus.Data
 				parameter.Value = value.ToString();
 				
 			}
-#if NETCORE
 			else if (value is bool && parameter.DbType == DbType.Byte ) {
 				bool boolValue = (bool)value;
 				parameter.Value = boolValue ? (byte)1 : (byte)0;
 			}
-#endif
 			else
 				base.SetParameter(parameter, value);
 		}
 	}
 
-	sealed internal class MySqlConnectionWrapper : GxAbstractConnectionWrapper
+	[SecuritySafeCritical]
+	sealed internal class MySqlConnectorConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.MySqlConnectionWrapper));
-		public MySqlConnectionWrapper() : base(new MySQLConnection())
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.MySqlConnectorConnectionWrapper));
+		[SecuritySafeCritical]
+		public MySqlConnectorConnectionWrapper() : base(new MySQLConnection())
 		{ }
-
-		public MySqlConnectionWrapper(String connectionString, GxConnectionCache connCache, IsolationLevel isolationLevel) : base(new MySQLConnection(connectionString), isolationLevel)
+		[SecuritySafeCritical]
+		public MySqlConnectorConnectionWrapper(String connectionString, GxConnectionCache connCache, IsolationLevel isolationLevel) : base(new MySQLConnection(connectionString), isolationLevel)
 		{
 			m_connectionCache = connCache;
 		}
-
+		[SecuritySafeCritical]
 		override public void Open()
 		{
 			try
@@ -515,7 +480,6 @@ namespace GeneXus.Data
 				throw (new GxADODataException(e));
 			}
 		}
-
 		override public void Close()
 		{
 			try
@@ -530,11 +494,7 @@ namespace GeneXus.Data
 
 		override public IDbCommand CreateCommand()
 		{
-			MySQLConnection sc = InternalConnection as MySQLConnection;
-			if (null == sc)
-				throw new InvalidOperationException("InvalidConnType00" + InternalConnection.GetType().FullName);
-
-			return sc.CreateCommand();
+			return InternalConnection.CreateCommand();
 		}
 		public override DbDataAdapter CreateDataAdapter()
 		{
@@ -555,11 +515,12 @@ namespace GeneXus.Data
 			return 0;
 		}
 	}
-	public class GxMySQLDataReader : GxDataReader
+	[SecuritySafeCritical]
+	public class GxMySQLConnectorDataReader : GxDataReader
 	{
-
-		public GxMySQLDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
-			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt, bool preparedStmts)
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxMySQLConnectorDataReader));
+		public GxMySQLConnectorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
+			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt)
 		{
 			this.parameters = parameters;
 			this.stmt = stmt;
@@ -576,11 +537,7 @@ namespace GeneXus.Data
 			con.CurrentStmt = stmt;
 			con.MonitorEnter();
 			MySQLCommand cmd = (MySQLCommand)dr.GetCommand(con, stmt, parameters);
-#if !NETCORE
-            cmd.UsePreparedStatement = preparedStmts;
-#else
 			cmd.Prepare();
-#endif
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
@@ -594,18 +551,28 @@ namespace GeneXus.Data
 		}
 		public override string GetString(int i)
 		{
-			string res = Convert.ToString(reader.GetString(i));
+			string res;
+			try
+			{
+				res = Convert.ToString(reader.GetString(i));
+			}
+			catch (InvalidCastException ex)
+			{
+				GXLogging.Warn(log, "GetString error", ex);
+				res = Convert.ToString(reader.GetValue(i).ToString());
+			}
 			readBytes += 10 + (2 * res.Length);
 			return res;
 
 		}
 
 	}
-	public class GxMySQLCursorDataReader : GxDataReader
+	[SecuritySafeCritical]
+	public class GxMySQLConnectorCursorDataReader : GxDataReader
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxDataReader));
 
-		public GxMySQLCursorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
+		public GxMySQLConnectorCursorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool hasNested, bool dynStmt)
 		{
 			this.parameters = parameters;
@@ -624,10 +591,6 @@ namespace GeneXus.Data
 			con.MonitorEnter();
 			GXLogging.Debug(log, "Open GxMySQLCursorDataReader handle:'" + handle);
 			MySQLCommand cmd = (MySQLCommand)dr.GetCommand(con, stmt, parameters);
-#if !NETCORE
-			cmd.ServerCursor = hasNested;
-			cmd.FetchSize = (uint)fetchSize;
-#endif
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
@@ -660,7 +623,6 @@ namespace GeneXus.Data
 			}
 		}
 	}
-
 	public class GxMySQLCacheDataReader : GxCacheDataReader
 	{
 
@@ -673,13 +635,9 @@ namespace GeneXus.Data
 			string result;
 
 			if (block.Item(pos, i) is byte[])
-#if NETCORE
-				result = System.Text.Encoding.UTF8.GetString((byte[])block.Item(pos, i));
-#else
-				result = System.Text.Encoding.Default.GetString((byte[])block.Item(pos, i));
-#endif
+				result = Encoding.UTF8.GetString((byte[])block.Item(pos, i));
 			else
-				result= (string)block.Item(pos, i);
+				result = (string)block.Item(pos, i);
 
 			if (computeSizeInBytes) readBytes += 10 + (2 * result.Length);
 			return result;
@@ -698,23 +656,23 @@ namespace GeneXus.Data
 		}
 
 	}
-    public class GxMySqlMemoryDataReader : GxDataReader
-    {
-        public GxMySqlMemoryDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
-            string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt) : base(connManager, dr, connection, parameters,
-            stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt)
-        {
-            MemoryDataReader memoryDataReader = new MemoryDataReader(reader);
-            reader.Dispose();
-            reader = memoryDataReader;
-        }
-        public override string GetString(int i)
-        {
-            string res = Convert.ToString(reader.GetString(i));
-            readBytes += 10 + (2 * res.Length);
-            return res;
 
-        }
-    }
+	public class GxMySqlMemoryDataReader : GxDataReader
+	{
+		public GxMySqlMemoryDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
+			string stmt, ushort fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt) : base(connManager, dr, connection, parameters,
+			stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt)
+		{
+			MemoryDataReader memoryDataReader = new MemoryDataReader(reader, con, parameters, stmt, fetchSize, isForFirst, cached, expiration);
+			reader.Dispose();
+			reader = memoryDataReader;
+		}
+		public override string GetString(int i)
+		{
+			string res = Convert.ToString(reader.GetString(i));
+			readBytes += 10 + (2 * res.Length);
+			return res;
 
+		}
+	}
 }
