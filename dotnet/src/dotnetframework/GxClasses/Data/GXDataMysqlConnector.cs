@@ -279,6 +279,7 @@ namespace GeneXus.Data
 			switch (dbmsErrorCode)
 			{
 				case 2006://MySQL server has gone away
+				case 1042: //SSL Authentication Error
 					if (con != null && m_FailedConnections < MAX_TRIES)//Retry if it is an Open operation.
 					{
 						try
