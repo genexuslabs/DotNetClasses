@@ -137,7 +137,6 @@ namespace GeneXus.Application
 		{			
 			if (ReflectionHelper.HasMethod(_procWorker, "getrestcode"))
 			{
-
 				Dictionary<string, object> outVal = ReflectionHelper.CallMethod(_procWorker, "getrestcode", new Dictionary<string, object>());
 				short statusCode = (short)outVal.Values.First<object>();
 				if (statusCode > 0)
@@ -150,7 +149,6 @@ namespace GeneXus.Application
 				if (!String.IsNullOrEmpty(statusMsg))
 						this.SetStatusMessage(statusMsg);
 			}
-
 		}
 
 		private Dictionary<string, object> ReadBodyParameters()
