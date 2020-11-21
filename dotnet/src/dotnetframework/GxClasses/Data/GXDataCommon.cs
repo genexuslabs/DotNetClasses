@@ -138,6 +138,7 @@ namespace GeneXus.Data
 		void SetAdapterInsertCommand(DbDataAdapterElem da, IGxConnection con, string stmt, GxParameterCollection parameters);
 		void SetCursorDef(CursorDef cursorDef);
 		string ConcatOp(int pos);
+		string AfterCreateCommand(string stmt, GxParameterCollection parmBinds);
 	}
 
 
@@ -1106,6 +1107,11 @@ namespace GeneXus.Data
 		{
 			return GetString(cmd, DR, i);
 		}
+		public virtual string AfterCreateCommand(string stmt, GxParameterCollection parmBinds)
+		{
+			return stmt;
+		}
+
 	}
 
 	public class DbDataAdapterElem

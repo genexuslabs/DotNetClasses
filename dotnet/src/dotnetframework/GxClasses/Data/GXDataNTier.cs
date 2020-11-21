@@ -102,7 +102,7 @@ namespace GeneXus.Data.NTier
         void SetParameter(int id, Utils.IGeographicNative parm);
 		void SetParameter(int id, Utils.IGeographicNative parm, GXType type);
 		void SetParameterObj(int id, object parm);
-		void SetParameter(int id, Guid parm);
+        void SetParameter(int id, Guid parm);
         void SetParameter(int id, bool parm);
         void SetParameter(int id, short parm);
 		void SetParameter( int id, int parm);
@@ -140,6 +140,7 @@ namespace GeneXus.Data.NTier
 	public class DataStoreHelperBase
 	{
 		/*DO NOT ADD INSTANCE VARIABLES IN THIS CLASS, THIS IS REFERENCED BY THE STATIC CURSORDEF ARRAY IN THE XX___DEFAULT, ALL THE VARIABLES HERE LIVE FOREVER*/
+
 		private const string AND = " and ";
 		private const string WHERE = " WHERE ";
 
@@ -434,8 +435,9 @@ namespace GeneXus.Data.NTier
 			{
 				oCur.getFieldSetter().RestoreParametersRT();
 			}
-            _dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
 
+			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+			
             _dynConstraints = null;
 
             if (Preferences.Instrumented)
@@ -450,7 +452,7 @@ namespace GeneXus.Data.NTier
 		{
 			ICursor oCur = getCursor(cursor);
 			oCur.readNext();
-			_dataStoreHelper.getResults( cursor, oCur.getFieldGetter(), results[cursor]);
+			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
 			dataStoreRequestCount++;
 
 		}

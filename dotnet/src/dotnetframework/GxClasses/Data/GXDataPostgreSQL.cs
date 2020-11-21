@@ -481,10 +481,10 @@ namespace GeneXus.Data
 	public class GxPostgresqlMemoryDataReader : GxDataReader
 	{
 		public GxPostgresqlMemoryDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
-			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt) : base(connManager, dr, connection, parameters,
+			string stmt, ushort fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt) : base(connManager, dr, connection, parameters,
 			stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt)
 		{
-			MemoryDataReader memoryDataReader = new MemoryDataReader(reader);
+			MemoryDataReader memoryDataReader = new MemoryDataReader(reader, connection, parameters, stmt, fetchSize, forFirst, cached, expiration);
 			Close();
 			reader = memoryDataReader;
 		}
