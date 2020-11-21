@@ -154,7 +154,7 @@ namespace GeneXus.Data.NTier
 			return parm;
 		}
 
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
 		{
 			return geo.InnerValue;
 		}

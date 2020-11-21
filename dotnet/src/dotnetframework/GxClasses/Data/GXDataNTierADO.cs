@@ -494,9 +494,23 @@ namespace GeneXus.Data.NTier.ADO
         public void SetParameter(int id, IGeographicNative parm)
         {
             
-            _gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsGeo((IDbDataParameter)_gxDbCommand.Parameters[id - 1], parm));
+            _gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsGeo(GXType.Undefined, parm));
         }
-        public void SetParameter(int id, bool parm)
+		public void SetParameter(int id, IGeographicNative parm, GXType type)
+		{
+
+			_gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsGeo(type, parm));
+		}
+		public List<ParDef> ParameterDefinition 
+		{
+				get{ return _gxDbCommand.ParmDefinition; }
+		}
+		public void SetParameterObj(int id, object parm)
+		{
+
+			_gxDbCommand.SetParameter(id - 1, parm);
+		}
+		public void SetParameter(int id, bool parm)
         {
             
             _gxDbCommand.SetParameter(id - 1, parm);
@@ -826,18 +840,36 @@ namespace GeneXus.Data.NTier.ADO
         protected virtual void bindParms(Object[] ptb)
         {
             int pos = 1;
-            if (ptb != null)
-            {
-                _gxDbCommand.ClearParameters();
-                foreach (Object[] p in ptb)
-                {
-					if (p.Length > 4 && p[4].Equals("rt"))
-						continue;
-                    _gxDbCommand.AddParameter((string)p[0], p[1], (int)(p[2]), (int)(p[3]));
-                    pos++;
-                }
-            }
-        }
+			if (ptb != null)
+			{
+				_gxDbCommand.ClearParameters();
+				if (ptb.Length > 0)
+				{
+					//Backward compatibility
+					if (ptb[0] is Object[])
+					{
+						foreach (Object[] p in ptb)
+						{
+							if (p.Length > 4 && p[4].Equals("rt"))
+								continue;
+							_gxDbCommand.AddParameter((string)p[0], p[1], (int)(p[2]), (int)(p[3]));
+							pos++;
+						}
+					}
+					else
+					{
+						foreach (ParDef p in ptb)
+						{
+							if (p.Return)
+								continue;
+							_gxDbCommand.AddParameter(p.Name, p.GxType, p.Size, p.Scale);
+							_gxDbCommand.ParmDefinition.Add(p);
+							pos++;
+						}
+					}
+				}
+			}
+		}
         public virtual void OnCommitEvent(object instance, string method)
         {
             throw (new GxADODataException("OnCommitEvent operation not allowed in this type of cursor. Cursor" + _name));

@@ -160,16 +160,42 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			MySQLParameter parm = new MySQLParameter();
-			parm.DbType = (DbType)dbtype;
+			parm.DbType = GXTypeToDbType(dbtype);
 #if NETCORE
-            parm.MySqlDbType = DbtoMysqlType((DbType)dbtype);
+            parm.MySqlDbType = DbtoMysqlType(GXTypeToDbType(dbtype));
 #endif
-            
-            parm.Size = gxlength;
+
+			parm.Size = gxlength;
 			parm.Precision = (byte)gxlength;
 			parm.Scale = (byte)gxdec;
 			parm.ParameterName = name;
 			return parm;
+		}
+		private DbType GXTypeToDbType(object type)
+		{
+			if (type is DbType)
+				return (DbType)type;
+
+			switch (type)
+			{
+				case GXType.Byte: return DbType.Byte;
+				case GXType.Int16: return DbType.Int16;
+				case GXType.Int32: return DbType.Int32;
+				case GXType.Int64: return DbType.Int64;
+				case GXType.Number: return DbType.Single;
+				case GXType.DateTime: return DbType.DateTime;
+				case GXType.DateTime2: return DbType.DateTime2;
+				case GXType.Date: return DbType.Date;
+				case GXType.Boolean: return DbType.Byte;
+				case GXType.Char: return DbType.String;
+				case GXType.Blob: return DbType.Binary;
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+					return DbType.String;
+				default: return DbType.String;
+			}
 		}
 #if NETCORE
         public static MySQLDbType DbtoMysqlType(DbType dbtype)
@@ -285,9 +311,34 @@ namespace GeneXus.Data
 		{
 			return new Geospatial(DR.GetString(i));
 		}
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
 		{
-			return geo.ToStringSQL();
+			string defaultValue;
+			switch (type)
+			{
+				case GXType.Geopoint:
+					defaultValue = Geospatial.ALT_EMPTY_POINT;
+					break;
+				case GXType.Geography:
+					defaultValue = Geospatial.EMPTY_GEOMETRY;
+					break;
+				case GXType.Geoline:
+					defaultValue = Geospatial.ALT_EMPTY_LINE;
+					break;
+				case GXType.Geopolygon:
+					defaultValue = Geospatial.ALT_EMPTY_POLY;
+					break;
+				case GXType.Undefined:
+					defaultValue = string.Empty;
+					break;
+				default:
+					defaultValue = Geospatial.EMPTY_GEOMETRY;
+					break;
+			}
+			if (!string.IsNullOrEmpty(defaultValue))
+				return geo.ToStringSQL(defaultValue);
+			else
+				return geo.ToStringSQL();
 		}
 
 

@@ -127,14 +127,40 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			NpgsqlParameter parm = new NpgsqlParameter();
-			parm.NpgsqlDbType = (NpgsqlDbType)dbtype;
-			
+			parm.NpgsqlDbType = GXTypeToNpgsqlDbType(dbtype);
 			parm.Size = gxlength;
 			parm.Precision = (byte)gxlength;
 			parm.Scale = (byte)gxdec;
 			parm.ParameterName = name;
 			return parm;
 		}
+		private NpgsqlDbType GXTypeToNpgsqlDbType(object type)
+		{
+			if (type is NpgsqlDbType)
+				return (NpgsqlDbType)type;
+			
+			switch (type)
+			{
+				case GXType.Int16: return NpgsqlDbType.Smallint;
+				case GXType.Int32: return NpgsqlDbType.Integer;
+				case GXType.Int64: return NpgsqlDbType.Real;
+				case GXType.Number: return NpgsqlDbType.Numeric;
+				case GXType.DateTime: return NpgsqlDbType.Timestamp;
+				case GXType.Date: return NpgsqlDbType.Date;
+				case GXType.Boolean: return NpgsqlDbType.Boolean;
+				case GXType.Char: return NpgsqlDbType.Char;
+				case GXType.LongVarChar: return NpgsqlDbType.Text;
+				case GXType.VarChar: return NpgsqlDbType.Varchar;
+				case GXType.Byte: return NpgsqlDbType.Bytea;
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+					return NpgsqlDbType.Text;
+				default: return NpgsqlDbType.Unknown;
+			}
+		}
+
         public override DbDataAdapter CreateDataAdapeter()
 		{
 			return new NpgsqlDataAdapter();
@@ -295,9 +321,13 @@ namespace GeneXus.Data
 		{
 			return new Geospatial(DR.GetString(i));
 		}
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
 		{
-			return geo.ToStringSQL();
+			Geospatial geos = geo as Geospatial;
+			if (geos!=null)
+				return geos.ToStringESQL();
+			else
+				return geo.ToStringSQL();
 		}
 
 		public override bool ProcessError(int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
