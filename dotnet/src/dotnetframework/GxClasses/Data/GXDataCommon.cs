@@ -28,7 +28,47 @@ using System.Data.Common;
 
 namespace GeneXus.Data
 {
-	
+	public enum GXMetaType
+	{
+		LVChar=0,
+		VChar=1,
+		MMedia=2,
+		Blob=3
+
+	}
+	public enum GXType
+	{
+		Number = 0,
+		Int16 = 1,
+		Int32 = 2,
+		Int64 = 3,
+		Date = 4,
+		DateTime = 5,
+		DateTime2 = 17,
+		Byte = 6,
+		NChar = 7,
+		NClob = 8,
+		NVarChar = 9,
+		Char = 10,
+		LongVarChar = 11,
+		Clob = 12,
+		VarChar = 13,
+		Raw = 14,
+		Blob = 15,
+		Undefined = 16,
+		Boolean = 18,
+		Decimal = 19,
+		NText = 20,
+		Text = 21,
+		Image = 22,
+		UniqueIdentifier = 23,
+		Xml = 24,
+		Geography=25,
+		Geopoint=26,
+		Geoline=27,
+		Geopolygon=28
+	}
+
 	public interface IGxDataRecord
     {
         byte GetByte(IGxDbCommand cmd, IDataRecord DR, int i);
@@ -50,8 +90,8 @@ namespace GeneXus.Data
         DateTime Dbms2NetDateTime(DateTime dt, Boolean precision);
         DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i);
         Object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt);
-        Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo);
-        String DbmsTToC(DateTime dt);
+		Object Net2DbmsGeo(GXType type, IGeographicNative parm);
+		String DbmsTToC(DateTime dt);
         void GetValues(IDataReader reader, ref object[] values);
 
         [Obsolete("ProcessError with 6 arguments is deprecated", false)]
@@ -583,7 +623,7 @@ namespace GeneXus.Data
         {
 			throw (new GxNotImplementedException());
         }
-        public virtual Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+        public virtual Object Net2DbmsGeo(GXType type, IGeographicNative geo)
         {
 			throw (new GxNotImplementedException());
         }
@@ -1553,7 +1593,7 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			SqlParameter parm =new SqlParameter();
-			SqlDbType type=(SqlDbType)dbtype;
+			SqlDbType type= GXTypeToSqlDbType(dbtype);
 			parm.SqlDbType=type;
 			parm.IsNullable=true;
 			parm.Size = gxlength;
@@ -1571,6 +1611,48 @@ namespace GeneXus.Data
 #endif
 			parm.ParameterName=name;
 			return parm;
+		}
+		private SqlDbType GXTypeToSqlDbType(object type)
+		{
+			if (type is SqlDbType)
+				return (SqlDbType)type;
+
+			switch (type)
+			{
+#if NETCORE
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+					return SqlDbType.NChar;
+#else
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+					return SqlDbType.Udt;
+#endif
+				case GXType.Int16: return SqlDbType.SmallInt; 
+				case GXType.Int32: return SqlDbType.Int;
+				case GXType.Int64: return SqlDbType.BigInt;
+				case GXType.Number: return SqlDbType.Float;
+				case GXType.Decimal: return SqlDbType.Decimal; 
+				case GXType.DateTime: return SqlDbType.DateTime;
+				case GXType.DateTime2: return SqlDbType.DateTime2;
+				case GXType.NChar: return SqlDbType.NChar;
+				case GXType.NVarChar: return SqlDbType.NVarChar;
+				case GXType.NText: return SqlDbType.NText;
+				case GXType.Char: return SqlDbType.Char;
+				case GXType.VarChar: return SqlDbType.VarChar;
+				case GXType.Text: return SqlDbType.Text;
+				case GXType.Date: return SqlDbType.DateTime;
+				case GXType.Boolean: return SqlDbType.Bit;
+				case GXType.Xml: return SqlDbType.Xml;
+				case GXType.UniqueIdentifier: return SqlDbType.UniqueIdentifier;
+				case GXType.Blob: return SqlDbType.VarBinary;
+				case GXType.Image: return SqlDbType.Image;
+				default: return SqlDbType.Char;
+			}
 		}
 		internal override object CloneParameter(IDbDataParameter p)
 		{
@@ -1913,13 +1995,13 @@ namespace GeneXus.Data
 		}
 
 #if !NETCORE
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
         {
 
             return geo.InnerValue;
         }
 #else
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
         {
             return geo.ToStringSQL("GEOMETRYCOLLECTION EMPTY");
         }

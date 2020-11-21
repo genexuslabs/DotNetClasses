@@ -100,6 +100,8 @@ namespace GeneXus.Data.NTier
 	public interface IFieldSetter
 	{
         void SetParameter(int id, Utils.IGeographicNative parm);
+		void SetParameter(int id, Utils.IGeographicNative parm, GXType type);
+		void SetParameterObj(int id, object parm);
         void SetParameter(int id, Guid parm);
         void SetParameter(int id, bool parm);
         void SetParameter(int id, short parm);
@@ -122,6 +124,7 @@ namespace GeneXus.Data.NTier
 		void SetParameterMultimedia(int id, string parm, string imgParm, string tableName, string fieldName);
 		void SetParameterRT(string name, string value);
 		void RestoreParametersRT();
+		List<ParDef> ParameterDefinition { get; }
 	}
 	public interface IDataStoreHelper
 	{
@@ -144,6 +147,102 @@ namespace GeneXus.Data.NTier
 		public virtual string getDataStoreName()
 		{
 			return "Default";
+		}
+		public void setParameters(int cursor,
+							   IFieldSetter stmt,
+							   Object[] parms)
+		{
+			List<ParDef> parmdefs = stmt.ParameterDefinition;
+			int idx = 0;
+			int idxParmCollection = 1;
+			foreach (ParDef pdef in parmdefs)
+			{
+				if (pdef.InOut)
+				{
+					stmt.RegisterInOutParameter(idxParmCollection, null);
+				}
+				else if (pdef.Out)
+				{
+					stmt.RegisterOutParameter(idxParmCollection, null);
+					continue;
+				}
+
+				if (pdef.Nullable)
+				{
+					bool valueIsNull = (bool)parms[idx];
+					if (valueIsNull)
+					{
+						stmt.setNull(idxParmCollection, DBNull.Value);
+						continue;
+					}
+					idx += 1;
+				}
+				switch (pdef.GxType)
+				{
+					case GXType.Char:
+					case GXType.NChar:
+						stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+						break;
+					case GXType.NVarChar:
+						stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+						break;
+					case GXType.NClob:
+					case GXType.Clob:
+					case GXType.LongVarChar:
+						stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
+						break;
+					case GXType.VarChar:
+						if (pdef.AddAtt && !pdef.Preload)
+						{
+							if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
+								stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idx - 1], pdef.Tbl, pdef.Fld);
+							else
+								stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idx - 1]);
+						}
+						else
+						{
+							stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+						}
+						break;
+					case GXType.Int16:
+						stmt.SetParameter(idxParmCollection, (short)parms[idx]);
+						break;
+					case GXType.Int32:
+						stmt.SetParameter(idxParmCollection, (int)parms[idx]);
+						break;
+					case GXType.Int64:
+						stmt.SetParameter(idxParmCollection, (long)parms[idx]);
+						break;
+					case GXType.DateTime:
+					case GXType.Date:
+						stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx]);
+						break;
+					case GXType.DateTime2:
+						stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx], true);
+						break;
+					case GXType.Decimal:
+					case GXType.Number:
+						stmt.SetParameterObj(idxParmCollection, parms[idx]);
+						break;
+					case GXType.Blob:
+						stmt.SetParameterBlob(idxParmCollection, (string)parms[idx], pdef.InDB);
+						break;
+					case GXType.UniqueIdentifier:
+						stmt.SetParameter(idxParmCollection, (Guid)parms[idx]);
+						break;
+					case GXType.Geography:
+					case GXType.Geopoint:
+					case GXType.Geoline:
+					case GXType.Geopolygon:
+						stmt.SetParameter(idxParmCollection, (Geospatial)parms[idx], pdef.GxType);
+						break;
+					default:
+						stmt.SetParameterObj(idxParmCollection, parms[idx]);
+						break;
+				}
+				idx += 1;
+				idxParmCollection += 1;
+			}
 		}
 		[Obsolete("getDynamicStatement with 2 arguments is deprecated", false)]
         public virtual Object[] getDynamicStatement(int cursor, object[] dynConstraints)
@@ -297,10 +396,25 @@ namespace GeneXus.Data.NTier
 
 						if (parmHasValue != null)
 						{
-							Object[] parmsNew = new Object[parms.Length + parmHasValue.Length];
-							parmHasValue.CopyTo(parmsNew, 0);
-							parms.CopyTo(parmsNew, parmHasValue.Length);
-							_dataStoreHelper.setParameters(cursor, oCur.getFieldSetter(), parmsNew);
+							if (oCur.getFieldSetter().ParameterDefinition.Count == 0) //Backward compatibility
+							{
+								Object[] parmsNew = new Object[parms.Length + parmHasValue.Length];
+								parmHasValue.CopyTo(parmsNew, 0);
+								parms.CopyTo(parmsNew, parmHasValue.Length);
+								_dataStoreHelper.setParameters(cursor, oCur.getFieldSetter(), parmsNew);
+							}
+							else
+							{
+								List<object> parmsNew = new List<object>();
+								for (int i=0; i<parms.Length; i++)
+								{
+									if ((short)parmHasValue[i] == 0)
+									{
+										parmsNew.Add(parms[i]);
+									}
+								}
+								_dataStoreHelper.setParameters(cursor, oCur.getFieldSetter(), parmsNew.ToArray());
+							}
 						}
 						else
 						{
