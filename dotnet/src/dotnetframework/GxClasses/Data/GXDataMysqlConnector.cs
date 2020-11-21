@@ -160,7 +160,7 @@ namespace GeneXus.Data
 			MySQLParameter parm = new MySQLParameter();
 			parm.DbType = GXTypeToDbType(dbtype);
             parm.MySqlDbType = DbtoMysqlType(GXTypeToDbType(dbtype));
-			parm.Size = gxlength;
+            parm.Size = gxlength;
 			parm.Precision = (byte)gxlength;
 			parm.Scale = (byte)gxdec;
 			parm.ParameterName = name;
