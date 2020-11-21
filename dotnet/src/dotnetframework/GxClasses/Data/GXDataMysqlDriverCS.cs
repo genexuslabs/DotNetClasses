@@ -174,11 +174,35 @@ namespace GeneXus.Data
 		{
 			return new Geospatial(DR.GetString(i));
 		}
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
 		{
-			return geo.ToStringSQL();
+			string defaultValue;
+			switch (type)
+			{
+				case GXType.Geopoint:
+					defaultValue = Geospatial.ALT_EMPTY_POINT;
+					break;
+				case GXType.Geography:
+					defaultValue = Geospatial.EMPTY_GEOMETRY;
+					break;
+				case GXType.Geoline:
+					defaultValue = Geospatial.ALT_EMPTY_LINE;
+					break;
+				case GXType.Geopolygon:
+					defaultValue = Geospatial.ALT_EMPTY_POLY;
+					break;
+				case GXType.Undefined:
+					defaultValue = string.Empty;
+					break;
+				default:
+					defaultValue = Geospatial.EMPTY_GEOMETRY;
+					break;
+			}
+			if (!string.IsNullOrEmpty(defaultValue))
+				return geo.ToStringSQL(defaultValue);
+			else
+				return geo.ToStringSQL();
 		}
-
 
 		public override bool ProcessError(int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
 		{
