@@ -575,8 +575,5 @@ namespace GeneXus.Data
 				return Convert.ToDateTime(block.Item(pos, i), System.Globalization.CultureInfo.InvariantCulture.NumberFormat);
 			}
 		}
-
 	}
-
-
 }
