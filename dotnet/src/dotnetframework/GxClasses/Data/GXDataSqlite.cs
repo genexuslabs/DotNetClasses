@@ -58,7 +58,7 @@ namespace GeneXus.Data
 		}
 		private DbType GXTypeToDbType(object type)
 		{
-			if (type is DbType)
+			if (!(type is GXType))
 				return (DbType)type;
 
 			switch (type)

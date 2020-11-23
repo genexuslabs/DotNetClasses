@@ -136,7 +136,7 @@ namespace GeneXus.Data
 		}
 		private NpgsqlDbType GXTypeToNpgsqlDbType(object type)
 		{
-			if (type is NpgsqlDbType)
+			if (!(type is GXType))
 				return (NpgsqlDbType)type;
 			
 			switch (type)
