@@ -1614,7 +1614,7 @@ namespace GeneXus.Data
 		}
 		private SqlDbType GXTypeToSqlDbType(object type)
 		{
-			if (type is SqlDbType)
+			if (!(type is GXType))
 				return (SqlDbType)type;
 
 			switch (type)
