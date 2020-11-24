@@ -160,7 +160,6 @@ namespace GeneXus.Data
 				default: return NpgsqlDbType.Unknown;
 			}
 		}
-
         public override DbDataAdapter CreateDataAdapeter()
 		{
 			return new NpgsqlDataAdapter();
