@@ -137,17 +137,18 @@ namespace GeneXus.Application
 		{			
 			if (ReflectionHelper.HasMethod(_procWorker, "getrestcode"))
 			{
-
 				Dictionary<string, object> outVal = ReflectionHelper.CallMethod(_procWorker, "getrestcode", new Dictionary<string, object>());
-				this.SetStatusCode((HttpStatusCode)(short)outVal.Values.First<object>());
+				short statusCode = (short)outVal.Values.First<object>();
+				if (statusCode > 0)
+					this.SetStatusCode((HttpStatusCode) statusCode);
 			}
 			if (ReflectionHelper.HasMethod(_procWorker, "getrestmsg"))
 			{
-
 				Dictionary<string, object> outVal = ReflectionHelper.CallMethod(_procWorker, "getrestmsg", new Dictionary<string, object>());
-				this.SetStatusMessage(outVal.Values.First<object>().ToString());
+				string statusMsg = outVal.Values.First<object>().ToString();
+				if (!String.IsNullOrEmpty(statusMsg))
+						this.SetStatusMessage(statusMsg);
 			}
-
 		}
 
 		private Dictionary<string, object> ReadBodyParameters()
