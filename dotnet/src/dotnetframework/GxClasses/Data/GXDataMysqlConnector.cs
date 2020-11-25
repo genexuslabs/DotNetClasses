@@ -329,8 +329,9 @@ namespace GeneXus.Data
 			GXLogging.Debug(log, "ProcessError: dbmsErrorCode=" + dbmsErrorCode + ", emsg '" + emsg + "'");
 			switch (dbmsErrorCode)
 			{
+				case 1042: //SSL Authentication Error
 				case 2006://MySQL server has gone away
-					if (con != null && m_FailedConnections < MAX_TRIES)//Retry if it is an Open operation.
+					if ((dbmsErrorCode == 1042 && emsg.Contains("SSL") || dbmsErrorCode==2006) && (con != null && m_FailedConnections < MAX_TRIES))//Retry if it is an Open operation.
 					{
 						try
 						{
