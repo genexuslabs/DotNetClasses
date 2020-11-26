@@ -181,7 +181,8 @@ namespace GeneXus.Data.NTier
 				{
 					case GXType.Char:
 					case GXType.NChar:
-						stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+						//It includes Guid 
+						stmt.SetParameterObj(idxParmCollection, parms[idx]);
 						break;
 					case GXType.NVarChar:
 						stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
