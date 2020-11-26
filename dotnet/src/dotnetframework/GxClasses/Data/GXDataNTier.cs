@@ -213,8 +213,10 @@ namespace GeneXus.Data.NTier
 					case GXType.Int64:
 						stmt.SetParameter(idxParmCollection, (long)parms[idx]);
 						break;
-					case GXType.DateTime:
 					case GXType.Date:
+						stmt.SetParameter(idxParmCollection, (DateTime)parms[idx]);
+						break;
+					case GXType.DateTime:
 						stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx]);
 						break;
 					case GXType.DateTime2:
