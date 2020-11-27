@@ -432,6 +432,7 @@ namespace GeneXus.Data
 				case GXType.Geoline:
 				case GXType.Geopoint:
 				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:
 					return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Char");
 				default: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, type.ToString());
 			}
@@ -737,6 +738,7 @@ namespace GeneXus.Data
 				case GXType.VarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Varchar2");
 				case GXType.DateTime: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Date");
 				case GXType.DateTime2: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "TimeStamp");
+				case GXType.UniqueIdentifier:return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Char");
 				default: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, type.ToString());
 			}
 		}
@@ -986,6 +988,7 @@ namespace GeneXus.Data
 					case GXType.NVarChar: return MSOracleProvider.OracleType.NVarChar;
 					case GXType.Raw: return MSOracleProvider.OracleType.Raw;
 					case GXType.VarChar: return MSOracleProvider.OracleType.VarChar;
+					case GXType.UniqueIdentifier: return MSOracleProvider.OracleType.Char;
 					default: return MSOracleProvider.OracleType.Char;
 				}
 			}

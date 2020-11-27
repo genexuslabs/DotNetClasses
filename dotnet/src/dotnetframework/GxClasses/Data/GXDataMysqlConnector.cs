@@ -182,6 +182,7 @@ namespace GeneXus.Data
 				case GXType.DateTime2: return DbType.DateTime2;
 				case GXType.Date: return DbType.Date;
 				case GXType.Boolean: return DbType.Byte;
+				case GXType.UniqueIdentifier:
 				case GXType.Char: return DbType.String;
 				case GXType.Blob: return DbType.Binary;
 				case GXType.Geography:

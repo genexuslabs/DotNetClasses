@@ -78,6 +78,7 @@ namespace GeneXus.Data
 				case GXType.Geoline:
 				case GXType.Geopoint:
 				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:
 					return DbType.String;
 				default: return DbType.String;
 			}

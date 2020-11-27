@@ -141,6 +141,7 @@ namespace GeneXus.Data
 				case GXType.Geoline:
 				case GXType.Geopoint:
 				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:
 				case GXType.Char: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
 				case GXType.NChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NVarChar");
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
@@ -444,7 +445,8 @@ namespace GeneXus.Data
 				case GXType.Number: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Float");
 				case GXType.DateTime: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Timestamp");
                 case GXType.DateTime2: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Timestamp");
-                case GXType.Char: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Char");
+				case GXType.UniqueIdentifier:
+				case GXType.Char: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Char");
 				case GXType.Date: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Date");
 				case GXType.Clob: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Clob");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "VarChar");
@@ -774,6 +776,7 @@ namespace GeneXus.Data
 				case GXType.Number: return MsDb2Type.Double;
 				case GXType.DateTime: return MsDb2Type.Timestamp;
 				case GXType.Date: return MsDb2Type.Date;
+				case GXType.UniqueIdentifier:
 				case GXType.Char: return MsDb2Type.Char;
 				case GXType.VarChar: return MsDb2Type.VarChar;
 				case GXType.Blob: return MsDb2Type.VarBinary;
@@ -1195,7 +1198,8 @@ namespace GeneXus.Data
 				case GXType.Number: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Double");
 				case GXType.DateTime: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2TimeStamp");
                 case GXType.DateTime2: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2TimeStamp");
-                case GXType.Char: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Char");
+				case GXType.UniqueIdentifier:
+				case GXType.Char: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Char");
 				case GXType.Date: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Date");
 				case GXType.Clob: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "Clob");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2VarChar");
