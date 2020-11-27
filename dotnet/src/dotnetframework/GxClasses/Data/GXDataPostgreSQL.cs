@@ -156,6 +156,7 @@ namespace GeneXus.Data
 				case GXType.Geoline:
 				case GXType.Geopoint:
 				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:
 					return NpgsqlDbType.Text;
 				default: return NpgsqlDbType.Unknown;
 			}
