@@ -145,6 +145,7 @@ namespace GeneXus.Data
 				case GXType.Int32: return NpgsqlDbType.Integer;
 				case GXType.Int64: return NpgsqlDbType.Real;
 				case GXType.Number: return NpgsqlDbType.Numeric;
+				case GXType.DateTime2:
 				case GXType.DateTime: return NpgsqlDbType.Timestamp;
 				case GXType.Date: return NpgsqlDbType.Date;
 				case GXType.Boolean: return NpgsqlDbType.Boolean;
