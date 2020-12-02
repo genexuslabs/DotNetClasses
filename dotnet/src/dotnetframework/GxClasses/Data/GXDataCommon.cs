@@ -66,7 +66,8 @@ namespace GeneXus.Data
 		Geography=25,
 		Geopoint=26,
 		Geoline=27,
-		Geopolygon=28
+		Geopolygon=28,
+		DateAsChar=29
 	}
 
 	public interface IGxDataRecord
