@@ -140,7 +140,7 @@ namespace GeneXus.Data.NTier
 	public class DataStoreHelperBase
 	{
 		/*DO NOT ADD INSTANCE VARIABLES IN THIS CLASS, THIS IS REFERENCED BY THE STATIC CURSORDEF ARRAY IN THE XX___DEFAULT, ALL THE VARIABLES HERE LIVE FOREVER*/
-
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(DataStoreHelperBase));
 		private const string AND = " and ";
 		private const string WHERE = " WHERE ";
 
@@ -157,99 +157,96 @@ namespace GeneXus.Data.NTier
 			int idxParmCollection = 1;
 			foreach (ParDef pdef in parmdefs)
 			{
-				if (pdef.InOut)
+				try
 				{
-					stmt.RegisterInOutParameter(idxParmCollection, null);
-				}
-				else if (pdef.Out)
-				{
-					stmt.RegisterOutParameter(idxParmCollection, null);
-					continue;
-				}
-
-				if (pdef.Nullable)
-				{
-					bool valueIsNull = (bool)parms[idx];
-					if (valueIsNull)
+					if (pdef.InOut)
 					{
-						stmt.setNull(idxParmCollection, DBNull.Value);
+						stmt.RegisterInOutParameter(idxParmCollection, null);
+					}
+					else if (pdef.Out)
+					{
+						stmt.RegisterOutParameter(idxParmCollection, null);
 						continue;
 					}
-					idx += 1;
-				}
-				switch (pdef.GxType)
-				{
-					case GXType.Char:
-					case GXType.NChar:
-						//It includes Guid 
-						stmt.SetParameterObj(idxParmCollection, parms[idx]);
-						break;
-					case GXType.NVarChar:
-						stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
-						break;
-					case GXType.NClob:
-					case GXType.Clob:
-					case GXType.LongVarChar:
-						stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
-						break;
-					case GXType.VarChar:
-						int idxPreviousAtt;
-						if (pdef.Nullable)
-							idxPreviousAtt = idx - 2;
-						else
-							idxPreviousAtt = idx - 1;
-						if (pdef.AddAtt && !pdef.Preload)
+
+					if (pdef.Nullable)
+					{
+						bool valueIsNull = (bool)parms[idx];
+						if (valueIsNull)
 						{
-							if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
-								stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idxPreviousAtt], pdef.Tbl, pdef.Fld);
-							else
-								stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idxPreviousAtt]);
+							stmt.setNull(idxParmCollection, DBNull.Value);
+							continue;
 						}
-						else
-						{
+						idx += 1;
+					}
+					switch (pdef.GxType)
+					{
+						case GXType.Char:
+						case GXType.NChar:
+							//It includes Guid 
+							stmt.SetParameterObj(idxParmCollection, parms[idx]);
+							break;
+						case GXType.NVarChar:
 							stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
-						}
-						break;
-					case GXType.Int16:
-						stmt.SetParameter(idxParmCollection, (short)parms[idx]);
-						break;
-					case GXType.Int32:
-						stmt.SetParameter(idxParmCollection, (int)parms[idx]);
-						break;
-					case GXType.Int64:
-						stmt.SetParameter(idxParmCollection, (long)parms[idx]);
-						break;
-					case GXType.Date:
-						stmt.SetParameter(idxParmCollection, (DateTime)parms[idx]);
-						break;
-					case GXType.DateTime:
-						stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx]);
-						break;
-					case GXType.DateTime2:
-						stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx], true);
-						break;
-					case GXType.Decimal:
-					case GXType.Number:
-						stmt.SetParameterObj(idxParmCollection, parms[idx]);
-						break;
-					case GXType.Blob:
-						stmt.SetParameterBlob(idxParmCollection, (string)parms[idx], pdef.InDB);
-						break;
-					case GXType.UniqueIdentifier:
-						stmt.SetParameter(idxParmCollection, (Guid)parms[idx]);
-						break;
-					case GXType.Geography:
-					case GXType.Geopoint:
-					case GXType.Geoline:
-					case GXType.Geopolygon:
-						stmt.SetParameter(idxParmCollection, (Geospatial)parms[idx], pdef.GxType);
-						break;
-					default:
-						stmt.SetParameterObj(idxParmCollection, parms[idx]);
-						break;
+							break;
+						case GXType.NClob:
+						case GXType.Clob:
+						case GXType.LongVarChar:
+							stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
+							break;
+						case GXType.VarChar:
+							int idxPreviousAtt;
+							if (pdef.Nullable)
+								idxPreviousAtt = idx - 2;
+							else
+								idxPreviousAtt = idx - 1;
+							if (pdef.AddAtt && !pdef.Preload)
+							{
+								if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
+									stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idxPreviousAtt], pdef.Tbl, pdef.Fld);
+								else
+									stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idxPreviousAtt]);
+							}
+							else
+							{
+								stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+							}
+							break;
+						case GXType.Date:
+							stmt.SetParameter(idxParmCollection, (DateTime)parms[idx]);
+							break;
+						case GXType.DateAsChar:
+						case GXType.DateTime:
+							stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx]);
+							break;
+						case GXType.DateTime2:
+							stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx], true);
+							break;
+						case GXType.Blob:
+							stmt.SetParameterBlob(idxParmCollection, (string)parms[idx], pdef.InDB);
+							break;
+						case GXType.UniqueIdentifier:
+							stmt.SetParameter(idxParmCollection, (Guid)parms[idx]);
+							break;
+						case GXType.Geography:
+						case GXType.Geopoint:
+						case GXType.Geoline:
+						case GXType.Geopolygon:
+							stmt.SetParameter(idxParmCollection, (Geospatial)parms[idx], pdef.GxType);
+							break;
+						default:
+							stmt.SetParameterObj(idxParmCollection, parms[idx]);
+							break;
+					}
+					idx += 1;
+					idxParmCollection += 1;
 				}
-				idx += 1;
-				idxParmCollection += 1;
+				catch (InvalidCastException ex)
+				{
+					string msg = this.GetType() + ".setParameters error  parameterName:" + pdef.Name + " parameterType:" + pdef.GxType;
+					GXLogging.Error(log, ex, msg + " value:" + parms[idx]);
+					throw new Exception("Invalid parameter conversion at " + msg, ex);
+				}
 			}
 		}
 		[Obsolete("getDynamicStatement with 2 arguments is deprecated", false)]
