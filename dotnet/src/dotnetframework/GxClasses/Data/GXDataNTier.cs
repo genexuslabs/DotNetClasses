@@ -193,12 +193,17 @@ namespace GeneXus.Data.NTier
 						stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
 						break;
 					case GXType.VarChar:
+						int idxPreviousAtt;
+						if (pdef.Nullable)
+							idxPreviousAtt = idx - 2;
+						else
+							idxPreviousAtt = idx - 1;
 						if (pdef.AddAtt && !pdef.Preload)
 						{
 							if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
-								stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idx - 1], pdef.Tbl, pdef.Fld);
+								stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idxPreviousAtt], pdef.Tbl, pdef.Fld);
 							else
-								stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idx - 1]);
+								stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idxPreviousAtt]);
 						}
 						else
 						{

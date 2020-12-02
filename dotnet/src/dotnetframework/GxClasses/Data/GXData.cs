@@ -774,6 +774,7 @@ namespace GeneXus.Data
 				case GXType.Int32: return MsDb2Type.Int;
 				case GXType.Int64: return MsDb2Type.BigInt;
 				case GXType.Number: return MsDb2Type.Double;
+				case GXType.DateTime2:
 				case GXType.DateTime: return MsDb2Type.Timestamp;
 				case GXType.Date: return MsDb2Type.Date;
 				case GXType.UniqueIdentifier:

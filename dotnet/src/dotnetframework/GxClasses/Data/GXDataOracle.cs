@@ -426,6 +426,7 @@ namespace GeneXus.Data
 				case GXType.NVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "NVarchar2");
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Long");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Varchar2");
+				case GXType.Date:
 				case GXType.DateTime: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Date");
 				case GXType.DateTime2: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "TimeStamp");
 				case GXType.Geography:
@@ -736,6 +737,7 @@ namespace GeneXus.Data
 				case GXType.NVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "NVarchar2");
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Long");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Varchar2");
+				case GXType.Date:
 				case GXType.DateTime: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Date");
 				case GXType.DateTime2: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "TimeStamp");
 				case GXType.UniqueIdentifier:return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Char");
@@ -978,6 +980,7 @@ namespace GeneXus.Data
 					case GXType.Byte: return MSOracleProvider.OracleType.Byte;
 					case GXType.Char: return MSOracleProvider.OracleType.Char;
 					case GXType.Clob: return MSOracleProvider.OracleType.Clob;
+					case GXType.Date:
 					case GXType.DateTime: return MSOracleProvider.OracleType.DateTime;
 					case GXType.Int16: return MSOracleProvider.OracleType.Int16;
 					case GXType.Int32: return MSOracleProvider.OracleType.Int32;
