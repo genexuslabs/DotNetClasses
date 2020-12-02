@@ -2716,13 +2716,11 @@ namespace GeneXus.Application
 		{
 			get
 			{
-#if !NETCORE
                 try
                 {
-                    return _HttpContext.Request.Url.IsDefaultPort;
+                    return _HttpContext.Request.IsDefaultPort();
                 }
                 catch
-#endif
 				{
 					return false;
 				}
