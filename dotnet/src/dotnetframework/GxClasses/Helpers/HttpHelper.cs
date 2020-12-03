@@ -678,6 +678,14 @@ namespace GeneXus.Http
 				return request.Url.Port;
 #endif
 		}
+		public static bool IsDefaultPort(this HttpRequest request)
+		{
+#if NETCORE
+			return !request.Host.Port.HasValue;
+#else
+			return request.Url.IsDefaultPort;
+#endif
+		}
 		public static string GetHost(this HttpRequest request)
 		{
 #if NETCORE
