@@ -1290,6 +1290,7 @@ namespace GeneXus.Data.ADO
 		public GXType GxType { get; set; }
 		public int Size { get; set; }
 		public int Scale { get; set; }
+		public int ImgIdx { get; set; }
 		public bool Nullable { get; set; }
 		public bool Return { get; set; }
 		public bool InDB { get; set; }

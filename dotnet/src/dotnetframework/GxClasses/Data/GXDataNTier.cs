@@ -155,6 +155,7 @@ namespace GeneXus.Data.NTier
 			List<ParDef> parmdefs = stmt.ParameterDefinition;
 			int idx = 0;
 			int idxParmCollection = 1;
+			object[] parmsValues = new object[parmdefs.Count];
 			foreach (ParDef pdef in parmdefs)
 			{
 				bool valueIsNull = false;
@@ -176,11 +177,13 @@ namespace GeneXus.Data.NTier
 						if (valueIsNull)
 						{
 							stmt.setNull(idxParmCollection, DBNull.Value);
+							parmsValues[idxParmCollection - 1] = DBNull.Value;
 						}
 						idx += 1;
 					}
 					if (!valueIsNull)
 					{
+						parmsValues[idxParmCollection - 1] = parms[idx];
 						switch (pdef.GxType)
 						{
 							case GXType.Char:
@@ -197,17 +200,12 @@ namespace GeneXus.Data.NTier
 								stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
 								break;
 							case GXType.VarChar:
-								int idxPreviousAtt;
-								if (pdef.Nullable)
-									idxPreviousAtt = idx - 2;
-								else
-									idxPreviousAtt = idx - 1;
 								if (pdef.AddAtt && !pdef.Preload)
 								{
 									if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
-										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idxPreviousAtt], pdef.Tbl, pdef.Fld);
+										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx], pdef.Tbl, pdef.Fld);
 									else
-										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parms[idxPreviousAtt]);
+										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx]);
 								}
 								else
 								{
