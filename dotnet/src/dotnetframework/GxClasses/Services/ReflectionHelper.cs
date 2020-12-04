@@ -91,6 +91,10 @@ namespace GeneXus.Application
 			{
 				return Convert.ChangeType(value, newType);
 			}
+			else if (newType == typeof(Guid) && Guid.TryParse(value.ToString(), out Guid guidResult))
+			{
+				return guidResult;
+			}
 			else
 			{
 				return value;
