@@ -21,7 +21,16 @@ namespace GeneXus.Application
 		{
 			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray() ;
 			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/") || scheme.IsMatch(key))
-				return key;
+			{
+				if (parms.Length > 0)
+				{
+					return $"{key}{ConvertParmsToQueryString(parms, parmsName)}";
+				}
+				else
+				{
+					return key;
+				}
+			}
 
 			if (routerList == null)
 			{
