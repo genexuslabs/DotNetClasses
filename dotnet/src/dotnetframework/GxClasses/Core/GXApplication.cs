@@ -1398,13 +1398,12 @@ namespace GeneXus.Application
 		}
 		static public string StdClassesVersion()
 		{
-
-			object[] customAtts = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), true);
+			object[] customAtts = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyFileVersionAttribute), true);
 			if (customAtts != null && customAtts.Length > 0)
 			{
-				AssemblyInformationalVersionAttribute verAtt = customAtts[0] as AssemblyInformationalVersionAttribute;
+				AssemblyFileVersionAttribute verAtt = customAtts[0] as AssemblyFileVersionAttribute;
 				if (verAtt != null)
-					return verAtt.InformationalVersion;
+					return verAtt.Version;
 			}
 			return Assembly.GetAssembly(typeof(GxContext)).GetName().Version.ToString();
 		}
