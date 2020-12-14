@@ -2679,7 +2679,7 @@ namespace GeneXus.Data.ADO
 				if (Config.GetValueOf("Connection-" + id + "-PROVIDER", out cfgBuf) && cfgBuf.ToLower() == "mysqlconnector")
 					return new GxMySqlConnector(id);
 				else
-					return new GxMySqlDriverCS(id, prepStmt);
+					return new GxMySql(id, prepStmt);
 #endif
 				case "sqlite":
                     return new GxSqlite();
