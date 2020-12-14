@@ -10,20 +10,20 @@ using System.Text;
 
 namespace GeneXus.Data
 {
-	public class GxMySqlDriverCS : GxDataRecord 
+	public class GxMySql : GxDataRecord 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxMySqlDriverCS));
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxMySql));
 		private int MAX_TRIES;
 		private int m_FailedConnections;
 		private bool preparedStmts;
-		public GxMySqlDriverCS(string id)
+		public GxMySql(string id)
 		{
 			if (GxContext.isReorganization && !GXUtil.ExecutingRunX86())
 			{
 				MYSQL_FIELD_FACTORY.GetInstance();//Force libmysql load
 			}
 	}
-		public GxMySqlDriverCS(string id, bool prepStmt) : this(id)
+		public GxMySql(string id, bool prepStmt) : this(id)
 		{
 			preparedStmts = prepStmt;
 		}
