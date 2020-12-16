@@ -75,7 +75,6 @@ namespace GeneXus.HttpHandlerFactory
 					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out String value))
 					{
 						String tmpController = objClass;
-						String addNspace = "";
 						String asssemblycontroller = tmpController;
 						if (objClass.Contains("\\"))
 						{
