@@ -482,14 +482,6 @@ namespace GeneXus.Http
 				return GAMSecurityLevel.SecurityObject;
 			}
 		}
-
-		protected override string IntegratedSecurityPermissionName
-		{
-			get
-			{
-				return base.IntegratedSecurityPermissionName;
-			}
-		}
 	}
 	public class UploadFilesResult
 	{
@@ -573,14 +565,6 @@ namespace GeneXus.Http
 			get
 			{
 				return GAMSecurityLevel.SecurityObject;
-			}
-		}
-
-		protected override string IntegratedSecurityPermissionName
-		{
-			get
-			{
-				return base.IntegratedSecurityPermissionName;
 			}
 		}
 	}

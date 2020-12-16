@@ -986,10 +986,11 @@ namespace GeneXus.Http
 #if !NETCORE
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
+		[Obsolete("IntegratedSecurityPermissionName is deprecated, it is here for compatibility. Use ExecutePermissionPrefix instead.", false)]
 		protected virtual string IntegratedSecurityPermissionName { get { return ""; } }
+		protected virtual string ExecutePermissionPrefix { get { return ""; } }
 		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
 		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
-		public string IntegratedSecurityPermissionName2 { get { return IntegratedSecurityPermissionName; } }
 #endif
 		private bool disconnectUserAtCleanup;
 		private bool validEncryptedParm;
@@ -1922,7 +1923,7 @@ namespace GeneXus.Http
 			}
 			else if (IntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
 			{
-				isOK = checkAuthorization(IntegratedSecurityPermissionName, context.CleanAbsoluteUri, bRedirectIfNotAuth);
+				isOK = checkAuthorization(ExecutePermissionPrefix, context.CleanAbsoluteUri, bRedirectIfNotAuth);
 			}
 			return isOK;
 		}
