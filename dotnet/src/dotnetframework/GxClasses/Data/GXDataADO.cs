@@ -2565,7 +2565,7 @@ namespace GeneXus.Data.ADO
 
 			connection.BlobPath = Preferences.getBLOB_PATH();
 			string strCache;
-			connection.Cache=(Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive;
+			connection.Cache=((Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive) && ! GxContext.isReorganization;
 			connection.DataStore = this;
 
 			string isolevel;
