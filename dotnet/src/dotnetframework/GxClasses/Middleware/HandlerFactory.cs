@@ -71,17 +71,16 @@ namespace GeneXus.HttpHandlerFactory
 					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out String value))
 					{
 						String tmpController = objClass;
-						String addNspace = "";
 						String asssemblycontroller = tmpController;
 						if (objClass.Contains("\\"))
 						{
 							tmpController = objClass.Substring(objClass.LastIndexOf("\\") + 1);
-							addNspace = objClass.Substring(0, objClass.LastIndexOf("\\")).Replace("\\", ".");
+							String addNspace = objClass.Substring(0, objClass.LastIndexOf("\\")).Replace("\\", ".");
 							asssemblycontroller = addNspace + "." + tmpController;
 							nspace += "." + addNspace;
 						}
 						var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, null, null);
-						var gxContext = new GxContext();
+						var gxContext = GxContext.CreateDefaultInstance();
 						gxContext.HttpContext = context;
 						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value);
 						return restWrapper;
