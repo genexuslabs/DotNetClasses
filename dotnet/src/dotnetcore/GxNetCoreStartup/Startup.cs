@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Data.NTier;
@@ -139,6 +140,8 @@ namespace GeneXus.Application
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
+		const string SDSVC_PREFIX = "sdsvc_";
+		const string SDSVC_METHO_SUFFIX = "DL";
 
 
 		public Dictionary<string,string> servicesPathUrl = new Dictionary<string, string>();
@@ -250,7 +253,7 @@ namespace GeneXus.Application
 
 			if (sessionService != null)
 				ConfigureSessionService(services, sessionService);
-
+			services.AddHttpContextAccessor();
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(settings.SessionTimeout==0 ? DEFAULT_SESSION_TIMEOUT_MINUTES : settings.SessionTimeout); 
@@ -451,6 +454,7 @@ namespace GeneXus.Application
 		{
 			List<ControllerInfo> result = new List<ControllerInfo>();
 			string parms = string.Empty;
+			string method = string.Empty;
 			GXLogging.Debug(log, $"GetRouteController basePath:{basePath} verb:{verb} path:{path}");
 			try {
 				if (!string.IsNullOrEmpty(path))
@@ -491,7 +495,24 @@ namespace GeneXus.Application
 					}
 					else
 					{
-						if (questionMarkIdx >= 0)
+						if (path.StartsWith(SDSVC_PREFIX))
+						{
+							if (questionMarkIdx >= 0)
+							{
+								// rest/module1/module2/sdsvc_service/method?parameters
+								controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
+								if (path.Length > questionMarkIdx + 1)
+									parms = path.Substring(questionMarkIdx + 1);
+							}
+
+							int idx = path.LastIndexOfAny(urlSeparator);
+							if (idx > 0 && idx < path.Length - 1)
+							{
+								controller = path.Substring(0, idx);
+								method = $"{path.Substring(idx + 1)}{SDSVC_METHO_SUFFIX}";
+								result.Add(new ControllerInfo() { Name = controller, Parameters = parms, MethodName = method });
+							}
+						}else if (questionMarkIdx >= 0)
 						{
 							// rest/module1/module2/service?paramaters
 							controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
@@ -610,7 +631,8 @@ namespace GeneXus.Application
 		{
 			GXLogging.Debug(log, $"GetController:{controller} method:{methodName}");
 			GxContext gxContext = GxContext.CreateDefaultInstance();
-			gxContext.HttpContext = context;
+			IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
+			gxContext.HttpContext = new GxHttpContextAccesor(contextAccessor);
 			context.NewSessionCheck();
 			string nspace;
 			Config.GetValueOf("AppMainNamespace", out nspace);
@@ -672,7 +694,7 @@ namespace GeneXus.Application
 						var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 						GXProcedure proc = controllerInstance as GXProcedure;
 						if (proc != null)
-							return new GxRestWrapper(proc, context, gxContext);
+							return new GxRestWrapper(proc, context, gxContext, methodName);
 						else
 							GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{controllerAssemblyName} nspace:{nspace} controller:{controllerClassName}");
 					}

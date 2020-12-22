@@ -39,6 +39,11 @@ namespace GeneXus.Application
 	using GeneXus.Printer;
 	using System.Drawing;
 	using System.Collections.Concurrent;
+#if NETCORE
+	using Microsoft.AspNetCore.Http.Features;
+#endif
+	using System.Threading;
+	using System.Security.Claims;
 
 	public interface IGxContext
 	{
@@ -270,6 +275,39 @@ namespace GeneXus.Application
 		string GetCacheInvalidationToken();
 		string GetURLBuildNumber(string resourcePath, string urlBuildNumber);
 	}
+#if NETCORE
+	public class GxHttpContextAccesor : HttpContext
+	{
+		IHttpContextAccessor ctxAccessor;
+		public GxHttpContextAccesor(IHttpContextAccessor ctxAccessor)
+		{
+			this.ctxAccessor = ctxAccessor;
+		}
+		public override ConnectionInfo Connection => ctxAccessor.HttpContext.Connection;
+
+		public override IFeatureCollection Features => ctxAccessor.HttpContext.Features;
+
+		public override IDictionary<object, object> Items { get => ctxAccessor.HttpContext.Items; set => ctxAccessor.HttpContext.Items=value; }
+
+		public override HttpRequest Request => ctxAccessor.HttpContext.Request;
+
+		public override CancellationToken RequestAborted { get => ctxAccessor.HttpContext.RequestAborted; set => ctxAccessor.HttpContext.RequestAborted=value; }
+		public override IServiceProvider RequestServices { get => ctxAccessor.HttpContext.RequestServices; set => ctxAccessor.HttpContext.RequestServices=value; }
+
+		public override HttpResponse Response => ctxAccessor.HttpContext.Response;
+
+		public override ISession Session { get => ctxAccessor.HttpContext.Session; set => ctxAccessor.HttpContext.Session=value; }
+		public override string TraceIdentifier { get => ctxAccessor.HttpContext.TraceIdentifier; set => ctxAccessor.HttpContext.TraceIdentifier=value; }
+		public override ClaimsPrincipal User { get => ctxAccessor.HttpContext.User; set => ctxAccessor.HttpContext.User=value; }
+
+		public override WebSocketManager WebSockets => ctxAccessor.HttpContext.WebSockets;
+
+		public override void Abort()
+		{
+			ctxAccessor.HttpContext.Abort();
+		}
+	}
+#endif
 	[Serializable]
 	public class GxContext : IGxContext
 	{
