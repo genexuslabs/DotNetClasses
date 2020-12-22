@@ -5,6 +5,8 @@ using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+#else
+using System.Web.SessionState;
 #endif
 using GeneXus.Utils;
 using System.Net;
@@ -39,7 +41,7 @@ namespace GeneXus.Application
 #if NETCORE
 	public class GxRestWrapper
 #else
-	public class GxRestWrapper : IHttpHandler
+	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
