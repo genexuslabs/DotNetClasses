@@ -188,16 +188,24 @@ namespace GeneXus.Data.NTier
 						{
 							case GXType.Char:
 							case GXType.NChar:
-								//It includes Guid 
-								stmt.SetParameterObj(idxParmCollection, parms[idx]);
+								if (pdef.ChkEmpty)
+									stmt.SetParameterChar(idxParmCollection, (string)parms[idx]);
+								else
+									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
 								break;
 							case GXType.NVarChar:
-								stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+								if (pdef.ChkEmpty)
+									stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+								else
+									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
 								break;
 							case GXType.NClob:
 							case GXType.Clob:
 							case GXType.LongVarChar:
-								stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
+								if (pdef.ChkEmpty)
+									stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
+								else
+									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
 								break;
 							case GXType.VarChar:
 								if (pdef.AddAtt && !pdef.Preload)
@@ -209,7 +217,10 @@ namespace GeneXus.Data.NTier
 								}
 								else
 								{
-									stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+									if (pdef.ChkEmpty)
+										stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+									else
+										stmt.SetParameterObj(idxParmCollection, parms[idx]);
 								}
 								break;
 							case GXType.Date:

@@ -1292,6 +1292,7 @@ namespace GeneXus.Data.ADO
 		public int Scale { get; set; }
 		public int ImgIdx { get; set; }
 		public bool Nullable { get; set; }
+		public bool ChkEmpty { get; set; }
 		public bool Return { get; set; }
 		public bool InDB { get; set; }
 		public bool AddAtt { get; set; }
