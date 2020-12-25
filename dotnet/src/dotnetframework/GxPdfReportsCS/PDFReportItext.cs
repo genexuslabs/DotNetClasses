@@ -1220,6 +1220,7 @@ namespace com.genexus.reports
 
 
 				ColumnText Col = new ColumnText(cb);
+				Col.Alignment = ColumnAlignment(alignment);
 				ColumnText simulationCol = new ColumnText(null);
 				float drawingPageHeight = (float)this.pageSize.Top - topMargin - bottomMargin;
 
@@ -1254,10 +1255,16 @@ namespace com.genexus.reports
 								simulationCol.AddElement((IElement)objects[k]);
 
 								Col = new ColumnText(cb);
+								Col.Alignment = ColumnAlignment(alignment);
 								Col.SetSimpleColumn(rect);
 							}
 						}
-						Col.AddElement((IElement)objects[k]);
+
+						Paragraph p = objects[k] as Paragraph;
+						if (p != null)
+							p.Alignment = ColumnAlignment(alignment);
+
+						Col.AddElement(objects[k]);
 						Col.Go();
 					}
 				}
@@ -1540,10 +1547,7 @@ namespace com.genexus.reports
 			ColumnText Col = new ColumnText(cb);
 			Col.RunDirection = runDirection;
 
-			if (alignment == Element.ALIGN_JUSTIFIED)
-				Col.Alignment = justifiedType;
-			else
-				Col.Alignment = alignment;
+			Col.Alignment = ColumnAlignment(alignment);
 
 			if (linesCount <= 1)
 				Col.SetLeading(0, 1);
@@ -1552,6 +1556,13 @@ namespace com.genexus.reports
 			Col.SetSimpleColumn(rect);
 			Col.AddText(p);
 			Col.Go();
+		}
+		private int ColumnAlignment(int alignment)
+		{
+			if (alignment == Element.ALIGN_JUSTIFIED)
+				return justifiedType;
+			else
+				return alignment;
 		}
 		public void GxClearAttris()
 		{
