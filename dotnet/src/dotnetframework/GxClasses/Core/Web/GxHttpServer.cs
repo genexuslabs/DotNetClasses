@@ -64,6 +64,8 @@ namespace GeneXus.Http.Server
 			get { return _ExpirationDate; }
 		}
 
+		public string SameSite { get; set; }
+
 		public String Domain
 		{
 			set { _Domain = value; }
