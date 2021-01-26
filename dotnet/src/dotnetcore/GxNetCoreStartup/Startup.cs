@@ -244,11 +244,18 @@ namespace GeneXus.Application
 			if (sessionService != null)
 				ConfigureSessionService(services, sessionService);
 
+			string sameSite;
+			SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(settings.SessionTimeout==0 ? DEFAULT_SESSION_TIMEOUT_MINUTES : settings.SessionTimeout); 
 				options.Cookie.HttpOnly = true;
 				options.Cookie.IsEssential = true;
+
+				if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+				{
+					options.Cookie.SameSite = sameSiteMode;
+				}
 			});
 
 
