@@ -3765,7 +3765,7 @@ namespace GeneXus.Application
 					if (string.IsNullOrEmpty(_clientId))
 					{
 						_clientId = Guid.NewGuid().ToString();
-						this.SetCookie(CLIENT_ID_HEADER, _clientId, string.Empty, DateTime.MaxValue, string.Empty, 0);
+						this.SetCookie(CLIENT_ID_HEADER, _clientId, string.Empty, DateTime.MaxValue, string.Empty, GetHttpSecure());
 					}
 				}
 				return _clientId;
