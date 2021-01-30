@@ -188,10 +188,31 @@ namespace GeneXus.Data.NTier
 						{
 							case GXType.Char:
 							case GXType.NChar:
-								if (pdef.ChkEmpty)
-									stmt.SetParameterChar(idxParmCollection, (string)parms[idx]);
+							case GXType.VarChar:
+								if (pdef.AddAtt && !pdef.Preload)
+								{
+									if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
+										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx], pdef.Tbl, pdef.Fld);
+									else
+										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx]);
+								}
 								else
-									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+								{
+									if (pdef.GxType == GXType.VarChar)
+									{
+										if (pdef.ChkEmpty)
+											stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+										else
+											stmt.SetParameterObj(idxParmCollection, parms[idx]); 
+									}
+									else
+									{
+										if (pdef.ChkEmpty)
+											stmt.SetParameterChar(idxParmCollection, (string)parms[idx]);
+										else
+											stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+									}
+								}
 								break;
 							case GXType.NVarChar:
 								if (pdef.ChkEmpty)
@@ -206,22 +227,6 @@ namespace GeneXus.Data.NTier
 									stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
 								else
 									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
-								break;
-							case GXType.VarChar:
-								if (pdef.AddAtt && !pdef.Preload)
-								{
-									if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
-										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx], pdef.Tbl, pdef.Fld);
-									else
-										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx]);
-								}
-								else
-								{
-									if (pdef.ChkEmpty)
-										stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
-									else
-										stmt.SetParameterObj(idxParmCollection, parms[idx]);
-								}
 								break;
 							case GXType.Date:
 								stmt.SetParameter(idxParmCollection, (DateTime)parms[idx]);
