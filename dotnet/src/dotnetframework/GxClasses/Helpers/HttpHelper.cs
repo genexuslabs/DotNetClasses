@@ -227,7 +227,7 @@ namespace GeneXus.Http
 #else
 					filePath = file.Create(pf.InputStream);
 #endif
-					GXFileWatcher.Instance.AddTemporaryFile(file);
+					GXFileWatcher.Instance.AddTemporaryFile(file, httpContext);
 					return true;
 				}
 			}
