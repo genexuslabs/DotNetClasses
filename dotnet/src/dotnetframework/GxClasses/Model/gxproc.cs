@@ -22,6 +22,7 @@ namespace GeneXus.Procedure
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Procedure.GXProcedure));
 		protected bool _isMain;
+		protected bool _isApi;
 		public abstract void initialize();
 		public abstract void cleanup();
 
@@ -147,6 +148,11 @@ namespace GeneXus.Procedure
 		{
 			set	{ _isMain = value; }
 			get	{ return _isMain;  }
+		}
+		public bool IsApiObject
+		{
+			set { _isApi = value; }
+			get { return _isApi; }
 		}
 		public void setContextReportHandler()
 		{
