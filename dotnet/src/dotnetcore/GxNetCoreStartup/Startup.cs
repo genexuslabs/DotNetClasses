@@ -626,15 +626,16 @@ namespace GeneXus.Application
 			}
 			else
 			{
-				if (File.Exists(Path.Combine(ContentRootPath, controller + "_bc.svc")))
+				string controllerLower = controller.ToLower();
+				if (File.Exists(Path.Combine(ContentRootPath, controllerLower + "_bc.svc")))
 				{
-					var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace, GxSilentTrnSdt.GxSdtNameToCsharpName(controller), new Object[] { gxContext }, Assembly.GetEntryAssembly()) as GxSilentTrnSdt;
+					var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace, GxSilentTrnSdt.GxSdtNameToCsharpName(controllerLower), new Object[] { gxContext }, Assembly.GetEntryAssembly(), true) as GxSilentTrnSdt;
 					if (sdtInstance != null)
 						return new GXBCRestService(sdtInstance, context, gxContext);
 				}
 				else
 				{
-					string svcFile = Path.Combine(ContentRootPath, $"{controller.ToLower()}.svc");
+					string svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
 					if (File.Exists(svcFile))
 					{
 						var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
