@@ -2634,9 +2634,7 @@ namespace GeneXus.Data.ADO
 		
 		GxDataRecord getDbmsDataRecord(string id, string dbms)
 		{
-#if !NETCORE
 			string cfgBuf;
-#endif
 			switch (dbms)
 			{
                 case "sqlserver":
