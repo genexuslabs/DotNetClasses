@@ -144,6 +144,27 @@ namespace GeneXus.Utils
 					parameters[index] = value;
 			}
 		}
+		public GxParameterCollection Distinct()
+		{
+			if (Count > 1)
+			{
+				HashSet<string> parms = new HashSet<string>();
+				GxParameterCollection uniqueParms = new GxParameterCollection();
+				for (int j = Count - 1; j >= 0; j--)
+				{
+					if (!parms.Contains(this[j].ParameterName))
+					{
+						uniqueParms.Add(this[j]);
+						parms.Add(this[j].ParameterName);
+					}
+				}
+				return uniqueParms;
+			}
+			else
+			{
+				return this;
+			}
+		}
 	}
 
 	public class GxStringCollection : StringCollection, IGxJSONSerializable, IGxJSONAble
@@ -2654,7 +2675,7 @@ namespace GeneXus.Utils
 		string m_value;
 		protected virtual string formatDate(DateTime value, bool useMillis)
 		{
-			return (useMillis) ? value.ToString("yyyy-MM-ddTHH:mm:ss.fff") : value.ToString("yyyy-MM-ddTHH:mm:ss");
+			return (useMillis) ? value.ToString(DateTimeUtil.JsonDateFormatMillis) : value.ToString(DateTimeUtil.JsonDateFormat);
 		}
 
 		public GxDatetimeString(DateTime value)
