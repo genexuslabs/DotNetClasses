@@ -52,10 +52,20 @@ namespace UnitTesting
 			ucMycontrol1.SetProperty("Items", AV6ItemCollection);
 
 			ucMycontrol1.SetProperty("Message", HELLO);
+			ucMycontrol1.SetProperty("Boolean", true);
 			ucMycontrol1.Render(context, "testmodule.mycontrol", "internalName", "MYCONTROL1Container");
 
-			Assert.True(sb.ToString().Contains(ONE) && sb.ToString().Contains(TWO) && sb.ToString().Contains(HELLO));
+			string output = sb.ToString();
+
+			AssertContains(ONE, output);
+			AssertContains(TWO, output);
+			AssertContains(HELLO, output);
+			AssertContains("Boolean:true", output);
 		}
 
+		private static void AssertContains(string expectedSubstring, string actualString)
+		{
+			Assert.Contains(expectedSubstring, actualString, System.StringComparison.InvariantCulture);
+		}
 	}
 }

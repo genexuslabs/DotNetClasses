@@ -9,6 +9,7 @@ using log4net;
 using System.Collections.Generic;
 using GeneXus.Data.ADO;
 using GeneXus.Utils;
+using System.Text;
 
 namespace GeneXus.Data.NTier
 {
@@ -135,7 +136,10 @@ namespace GeneXus.Data.NTier
 
 	public class DataStoreHelperBase
 	{
-        /*DO NOT ADD INSTANCE VARIABLES IN THIS CLASS, THIS IS REFERENCED BY THE STATIC CURSORDEF ARRAY IN THE XX___DEFAULT, ALL THE VARIABLES HERE LIVE FOREVER*/
+		/*DO NOT ADD INSTANCE VARIABLES IN THIS CLASS, THIS IS REFERENCED BY THE STATIC CURSORDEF ARRAY IN THE XX___DEFAULT, ALL THE VARIABLES HERE LIVE FOREVER*/
+
+		private const string AND = " and ";
+		private const string WHERE = " WHERE ";
 
 		public virtual string getDataStoreName()
 		{
@@ -153,7 +157,14 @@ namespace GeneXus.Data.NTier
         public virtual void getErrorResults(int cursor, IFieldGetter rslt, Object[] buf)
         { 
         }
-
+		public void AddWhere(StringBuilder currentWhere, string condition)
+		{
+			if (currentWhere.Length > 0)
+				currentWhere.Append(AND);
+			else
+				currentWhere.Append(WHERE);
+			currentWhere.Append(condition);
+		}
 	}
 
 	public class DataStoreUtil
@@ -310,8 +321,9 @@ namespace GeneXus.Data.NTier
 			{
 				oCur.getFieldSetter().RestoreParametersRT();
 			}
-            _dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
 
+			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+			
             _dynConstraints = null;
 
             if (Preferences.Instrumented)
@@ -326,7 +338,7 @@ namespace GeneXus.Data.NTier
 		{
 			ICursor oCur = getCursor(cursor);
 			oCur.readNext();
-			_dataStoreHelper.getResults( cursor, oCur.getFieldGetter(), results[cursor]);
+			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
 			dataStoreRequestCount++;
 
 		}
