@@ -2234,6 +2234,12 @@ namespace GeneXus.Application
 				Path = cookie.Path,
 				Secure = cookie.Secure
 			};
+			string sameSite;
+			SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
+			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+			{
+				cookieOptions.SameSite = sameSiteMode;
+			}
 			if (!expires.Equals(DateTimeUtil.NullDate()))
 				cookieOptions.Expires = DateTime.SpecifyKind(cookie.Expires, DateTimeKind.Utc);
 
