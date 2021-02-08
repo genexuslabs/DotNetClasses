@@ -207,6 +207,7 @@ namespace GeneXus.Configuration
 			}
 		}
 
+		[SecuritySafeCritical]
 		public static bool LoadConfiguration()
 		{
 			return config != null;
@@ -420,17 +421,32 @@ namespace GeneXus.Configuration
 			}
 			return null;
 		}
-#endif
+#else
+		const string Log4NetShortName = "log4net";
+		static Version Log4NetVersion = new Version(2, 0, 11);
+		[SecurityCritical]
+		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+		{
+			var requestedAssembly = new AssemblyName(args.Name);
+			if (requestedAssembly.Name != Log4NetShortName)
+				return null;
 
+			requestedAssembly.Version = Log4NetVersion;
+
+			AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+
+			return Assembly.Load(requestedAssembly);
+		}
+#endif
+		
 		static NameValueCollection config
 		{
+			[SecuritySafeCritical]
 			get
 			{
 				if (!configLoaded || _config == null)
 				{
-#if NETCORE
 					AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-#endif
 					string logConfigSource;
 					configLoaded = true;
 					if (configFileName != null)
