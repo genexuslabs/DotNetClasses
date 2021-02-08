@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Flurl.Http.Signed" Version="0.7.0" />
     <PackageReference Include="Flurl.Signed" Version="1.0.10" />
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.11" />
     <PackageReference Include="Marvin.JsonPatch.Signed" Version="0.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="openstack.net" Version="1.7.8" />
