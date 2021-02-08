@@ -2553,16 +2553,19 @@ namespace GeneXus.Utils
 		}
 		public static string TToC2(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss", toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, toUTC);
 		}
 
 		public static string TToC3(DateTime dt)
 		{
 			return TToC3(dt, true);
 		}
+		internal const string JsonDateFormatMillis = "yyyy-MM-ddTHH:mm:ss.fff";
+		internal const string JsonDateFormat = "yyyy-MM-ddTHH:mm:ss";
+		
 		public static string TToC3(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff", toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, toUTC);
 		}
 
 		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
@@ -2985,12 +2988,13 @@ namespace GeneXus.Utils
 				StringUtil.PadL(StringUtil.Str(Month(date), 2, 0), 2, '0') +
 				StringUtil.PadL(StringUtil.Str(Day(date), 2, 0), 2, '0'));
 		}
-		public static string getYYYYMMDDHHMMSS_nosep(DateTime date)
+		public static string getYYYYMMDDHHMMSSnosep(DateTime date, bool hasMilliseconds)
 		{
 			string sDate = getYYYYMMDD(date);
 			sDate += StringUtil.PadL(StringUtil.Str(Hour(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Minute(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Second(date), 2, 0), 2, '0');
+			if (hasMilliseconds) sDate += StringUtil.PadL(StringUtil.Str(MilliSecond(date), 3, 0), 3, '0');
 			return (sDate);
 		}
 		private static DateTime ConvertDateTime(DateTime dt, OlsonTimeZone FromTimezone, OlsonTimeZone ToTimezone)
@@ -3067,11 +3071,17 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		public static string FormatDateTimeParmMS(DateTime date)
+		{
+			if (date.Equals(nullDate))
+				return "";
+			return getYYYYMMDDHHMMSSnosep(date, true);
+		}
 		public static string FormatDateTimeParm(DateTime date)
 		{
 			if (date.Equals(nullDate))
 				return "";
-			return getYYYYMMDDHHMMSS_nosep(date);
+			return getYYYYMMDDHHMMSSnosep(date, false);
 		}
 		public static string FormatDateParm(DateTime date)
 		{
@@ -3117,12 +3127,15 @@ namespace GeneXus.Utils
 					return dtValue;
 			}
 
-			return YMDHMSToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
+			int mil = (valueString.Trim().Length >= 17)? (int)NumberUtil.Val(valueString.Substring(14, 3)):0;
+
+			return YMDHMSMToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
 				(int)NumberUtil.Val(valueString.Substring(4, 2)),
 				(int)NumberUtil.Val(valueString.Substring(6, 2)),
 				(int)NumberUtil.Val(valueString.Substring(8, 2)),
 				(int)NumberUtil.Val(valueString.Substring(10, 2)),
-				(int)NumberUtil.Val(valueString.Substring(12, 2)), false);
+				(int)NumberUtil.Val(valueString.Substring(12, 2)), mil, false);
+
 		}
 		public DateTime ParseDateOrDTimeParm(string valueString)
 		{
@@ -3320,28 +3333,24 @@ namespace GeneXus.Utils
 		{
 			return Path.Combine(FileUtil.GetStartupDirectory(), AppDomain.CurrentDomain.FriendlyName + ".out");
 		}
+#else
+        private static byte RemoteFileExists(string url)
+        {
+            return (byte)0;
+        }
+        //In command line, return the base directory, web.
+        public static string GetBasePath()
+        {
+            return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+        }
+#endif
 		public static string GetStartupDirectory()
 		{
 			string dir = Assembly.GetCallingAssembly().GetName().CodeBase;
 			Uri uri = new Uri(dir);
 			return Path.GetDirectoryName(uri.LocalPath);
 		}
-#else
-        private static byte RemoteFileExists(string url)
-        {
-            return (byte)0;
-        }
-        public static string GetStartupDirectory()
-        {
-            return AppContext.BaseDirectory;
-        }
 
-        //In command line, return the base directory, web.
-        public static string GetBasePath()
-        {
-            return Directory.GetParent(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName).FullName;
-        }
-#endif
 		public static string UriToPath(string uriString)
 		{
 			try
@@ -3514,7 +3523,12 @@ namespace GeneXus.Utils
 		public static bool IsAbsoluteUrl(string url)
 		{
 			Uri result;
-			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp || result.Scheme == GXUri.UriSchemeGxgam || result.Scheme == GXUri.UriSchemeSd);
+			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp);
+		}
+
+		public static bool HasUrlQueryString(string url)
+		{
+			return url.Contains("?");
 		}
 
 		public static Uri GetBaseUri()

@@ -214,7 +214,10 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), knownTypes);
+				var settings = new DataContractJsonSerializerSettings() { DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat(DateTimeUtil.JsonDateFormatMillis), KnownTypes = knownTypes };
+				
+				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
+				
 				using (MemoryStream stream = new MemoryStream())
 				{
 					serializer.WriteObject(stream, kbObject);

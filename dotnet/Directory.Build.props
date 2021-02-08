@@ -2,13 +2,14 @@
 	<PropertyGroup>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
-		<MajorFileVersion Condition="$(GITHUB_REF.EndsWith('beta'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
-		<MinorFileVersion>9</MinorFileVersion>
-		<RevisionFileVersion Condition="'$(CommitNumber)'!=''">$(CommitNumber)</RevisionFileVersion>
-		<RevisionFileVersion Condition="'$(CommitNumber)'==''">0</RevisionFileVersion>
-		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).0</FileVersionWithoutRevision>
+		<MajorFileVersion Condition="$(GIT_REF.EndsWith('beta'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
+		<MinorFileVersion>10</MinorFileVersion>
+		<RevisionFileVersion Condition="'$(COMMIT_NUMBER)'!=''">$(COMMIT_NUMBER)</RevisionFileVersion>
+		<RevisionFileVersion Condition="'$(COMMIT_NUMBER)'==''">0</RevisionFileVersion>
+		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).$(RevisionFileVersion)</FileVersionWithoutRevision>
+		<FileVersionWithoutRevision Condition="$(GIT_REF.EndsWith('beta')) Or $(GIT_REF.EndsWith('master'))">$(MajorFileVersion).$(MinorFileVersion).0</FileVersionWithoutRevision>
 		<FileVersion>$(FileVersionWithoutRevision).$(RevisionFileVersion)</FileVersion>
-		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
+		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GIT_SHA)</InformationalVersion>
 		<Company>GeneXus</Company>
 		<AssemblyCulture></AssemblyCulture>
 		<Product>GeneXus</Product>
@@ -26,14 +27,12 @@
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
+		<RepositoryCommit>$(GIT_SHA)</RepositoryCommit>
 		<NoWarn>NU5105;CS0618</NoWarn>
 		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">
 		<Message Importance="high" Text="FileVersion:$(FileVersionWithoutRevision)"></Message>
-	</Target>
-	<Target Name="IsMaster">
-		<Message Importance="high" Text="IsMaster: True" Condition="$(GITHUB_REF.EndsWith('master'))"></Message>
 	</Target>
 </Project>
