@@ -395,12 +395,21 @@ namespace GeneXus.Configuration
 				return new CultureInfo(CultureInfo.CurrentCulture.Name);
 			}
 		}
+		const string Log4NetShortName = "log4net";
+		static Version Log4NetVersion = new Version(2, 0, 11);
+
 #if NETCORE
 		public static IConfigurationRoot ConfigRoot { get; set; }
 		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
+			var requestedAssembly = new AssemblyName(args.Name);
+			if (requestedAssembly.Name == Log4NetShortName){
+				requestedAssembly.Version = Log4NetVersion;
+				return Assembly.Load(requestedAssembly);
+			}
+
 			if (args.Name.StartsWith(ConfigurationManagerBak))
 			{
 				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), ConfigurationManagerFileName);
@@ -421,8 +430,6 @@ namespace GeneXus.Configuration
 			return null;
 		}
 #else
-		const string Log4NetShortName = "log4net";
-		static Version Log4NetVersion = new Version(2, 0, 11);
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
