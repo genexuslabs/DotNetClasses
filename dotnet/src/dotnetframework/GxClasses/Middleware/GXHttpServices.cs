@@ -379,46 +379,53 @@ namespace GeneXus.Http
 			this.context = new GxContext();
 			DataStoreUtil.LoadDataStores(context);
 		}
+		public GXObjectUploadServices(IGxContext ctx)
+		{
+			this.context = ctx;
+		}
 
 		public override void webExecute()
 		{
 			try
 			{
+				string savedFileName, ext, fName;
 				if (context.isMultipartRequest())
 				{
 					localHttpContext.Response.ContentType = MediaTypesNames.TextPlain;
 					var r = new List<UploadFile>();
 					var fileCount = localHttpContext.Request.GetFileCount();
-					for (var i =0; i< fileCount; i++)
+					for (var i = 0; i < fileCount; i++)
 					{
+						string fileGuid = GxUploadHelper.GetUploadFileGuid();
+						string fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
 						var hpf = localHttpContext.Request.GetFile(i);
-						string fileName = string.Empty;
+						fName = string.Empty;
 						string[] files = hpf.FileName.Split(new char[] { '\\' });
 						if (files.Length > 0)
-							fileName = files[files.Length - 1];
+							fName = files[files.Length - 1];
 						else
-							fileName = hpf.FileName;
+							fName = hpf.FileName;
 
-						string ext = FileUtil.GetFileType(fileName);
-						string savedFileName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), FileUtil.GetFileName(fileName), string.IsNullOrEmpty(ext) ? "tmp" : ext);
+						ext = FileUtil.GetFileType(fName);
+						savedFileName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), FileUtil.GetFileName(fName), string.IsNullOrEmpty(ext) ? "tmp" : ext);
 						GxFile gxFile = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
 
 						gxFile.Create(hpf.InputStream);
-						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
 
 						string uri = gxFile.GetURI();
 						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);
 
 						r.Add(new UploadFile()
 						{
-							name = fileName,
+							name = fName,
 							size = gxFile.GetLength(),
 							url = url,
 							type = context.GetContentType(ext),
 							extension = ext,
 							thumbnailUrl = url,
-							path = uri
+							path = fileToken
 						});
+						GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, fName, ext, gxFile, localHttpContext);
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
 					var jsonObj = JSONHelper.Serialize(result);
@@ -427,24 +434,25 @@ namespace GeneXus.Http
 				else
 				{
 					Stream istream = localHttpContext.Request.GetInputStream();
-					String contentType = localHttpContext.Request.ContentType;
-					String ext = context.ExtensionForContentType(contentType);
+					string contentType = localHttpContext.Request.ContentType;
+					ext = context.ExtensionForContentType(contentType);
 
-					string fileName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), "BLOB", string.IsNullOrEmpty(ext) ? "tmp" : ext);
-                    GxFile file = new GxFile(Preferences.getTMP_MEDIA_PATH(), fileName);
-                    file.Create(istream);
+					savedFileName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), "BLOB", string.IsNullOrEmpty(ext) ? "tmp" : ext);
+					GxFile file = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
+					file.Create(istream);
 
 					JObject obj = new JObject();
-					fileName = file.GetURI();
-                  
-                    String fileGuid =  Guid.NewGuid().ToString("N");
-                    String fileToken= GxRestPrefix.UPLOAD_PREFIX + fileGuid;
-                    CacheAPI.FilesCache.Set(fileGuid, fileName, GxRestPrefix.UPLOAD_TIMEOUT);
+					fName = file.GetURI();
+					string fileGuid = GxUploadHelper.GetUploadFileGuid();
+					string fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
+
 					obj.Put("object_id", fileToken);
-					localHttpContext.Response.AddHeader("GeneXus-Object-Id", fileToken);
+					localHttpContext.Response.AddHeader("GeneXus-Object-Id", fileGuid);
 					localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-					localHttpContext.Response.StatusCode = 201;
+					HttpHelper.SetResponseStatus(localHttpContext, ((int)HttpStatusCode.Created).ToString(), string.Empty);
 					localHttpContext.Response.Write(obj.ToString());
+
+					GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, fName, ext, file, localHttpContext);
 				}
 			}
 			catch (Exception e)

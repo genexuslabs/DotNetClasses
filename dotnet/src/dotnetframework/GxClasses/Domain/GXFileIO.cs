@@ -657,6 +657,7 @@ public class GxFile
     int _lastError;
     string _lastErrorDescription;
 	string _source;
+	string _uploadFileId;
     public GxFile()
         : this(GxContext.StaticPhysicalPath())
     {
@@ -678,6 +679,11 @@ public class GxFile
     public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.Public)
       : this(baseDirectory)
     {
+		if (GxUploadHelper.IsUpload(fileName))
+		{
+			_uploadFileId = fileName;
+			fileName = GxUploadHelper.UploadPath(fileName);
+		}
 		fileName = fileName.Trim();
 		if ((GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null) && !Path.IsPathRooted(fileName))
             _file = new GxExternalFileInfo(fileName, ServiceFactory.GetExternalProvider(), fileType);
@@ -727,6 +733,12 @@ public class GxFile
 					}
 					else
 					{
+						if (GxUploadHelper.IsUpload(value))
+						{
+							_uploadFileId = value;
+							value = GxUploadHelper.UploadPath(value);
+						}
+						
 						if (IsAbsoluteUrl(value))
 						{
 							string objName = string.Empty;
@@ -928,7 +940,11 @@ public class GxFile
     {
         _lastError = 0;
         _lastErrorDescription = "";
-        if (!validSource())
+		if (!string.IsNullOrEmpty(_uploadFileId))
+		{
+			return GxUploadHelper.UploadName(_uploadFileId);
+		}
+		if (!validSource())
             return "";
         if (!Exists())
         {
@@ -959,7 +975,11 @@ public class GxFile
 
     public string GetExtension()
     {
-        if (this.HasExtension())
+		if (!string.IsNullOrEmpty(_uploadFileId))
+		{
+			return GxUploadHelper.UploadExtension(_uploadFileId);
+		}
+		else if (this.HasExtension())
             return System.IO.Path.GetExtension(this.GetAbsoluteName()).Replace(".", "");
         else
             return string.Empty;

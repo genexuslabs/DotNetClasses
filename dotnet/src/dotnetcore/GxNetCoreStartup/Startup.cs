@@ -490,6 +490,12 @@ namespace GeneXus.Application
 
 							result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
 						}
+						else if (path.EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase))
+						{
+							controller = path.Substring(0, path.Length - HttpHelper.GXOBJECT.Length);
+							GXLogging.Debug(log, $"Controller found Name:{controller}/{HttpHelper.GXOBJECT}");
+							result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
+						}
 						else
 						{
 							// rest/module1/module2/service

@@ -587,9 +587,9 @@ namespace GeneXus.Application
 			return string.Empty;
 		}
 
-		public static bool GetHttpRequestPostedFile(HttpContext httpContext, string varName, out string filePath)
+		public static bool GetHttpRequestPostedFile(HttpContext httpContext, string varName, out string fileToken)
 		{
-			filePath = null;
+			fileToken = null;
 			if (httpContext != null)
 			{
 				HttpPostedFile pf = httpContext.Request.GetFile(varName);
@@ -602,12 +602,17 @@ namespace GeneXus.Application
 					string ext = fi.Extension;
 					if (ext != null)
 						ext = ext.TrimStart('.');
-					filePath = FileUtil.getTempFileName(tempDir, "BLOB", ext);
+					string filePath = FileUtil.getTempFileName(tempDir, "BLOB", ext);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
 					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
 					filePath = file.Create(pf.InputStream);
-					GXFileWatcher.Instance.AddTemporaryFile(file);
-					return true;
+
+					string fileGuid = GxUploadHelper.GetUploadFileGuid();
+					fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
+
+					GxUploadHelper.CacheUploadFile(fileGuid, filePath, pf.FileName, ext, file, httpContext);
+
+				return true;
 				}
 			}
 			return false;
@@ -2938,9 +2943,9 @@ namespace GeneXus.Application
 															 new string[] {"ram"    , "audio/x-pn-realaudio"},
 															 new string[] {"bmp"    , "image/bmp"},
 															 new string[] {"gif"    , "image/gif"},
+															 new string[] {"jpg"    , "image/jpeg"},
 															 new string[] {"jpeg", "image/jpeg"},
 															 new string[] {"jpe"    , "image/jpeg"},
-															 new string[] {"jpg"    , "image/jpeg"},
 															 new string[] {"jfif", "image/pjpeg"},
 															 new string[] {"tif"    , "image/tiff"},
 															 new string[] {"tiff", "image/tiff"},
