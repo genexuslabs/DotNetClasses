@@ -83,10 +83,10 @@ namespace GeneXus.HttpHandlerFactory
 				context.NewSessionCheck();
 				url = context.Request.Path.Value;
 
-				handler = GetHandler(context, context.Request.Method, ObjectUrl(context.Request.Path.Value, _basePath), string.Empty);
+				handler = GetHandler(context, context.Request.Method, ObjectUrl(url, _basePath), string.Empty);
 				context.Response.OnStarting(() =>
 				{
-					if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(".aspx") && string.IsNullOrEmpty(context.Response.ContentType))
+					if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(HttpHelper.ASPX) && string.IsNullOrEmpty(context.Response.ContentType))
 					{
 						context.Response.ContentType = MediaTypesNames.TextHtml;
 						//If no ContentType is specified, the default is text/HTML.
@@ -111,7 +111,7 @@ namespace GeneXus.HttpHandlerFactory
 		public static bool IsAspxHandler(string path, string basePath)
 		{
 			var name = ObjectUrl(path, basePath);
-			return name.EndsWith(".aspx", StringComparison.OrdinalIgnoreCase) || _aspxObjects.ContainsKey(name);
+			return name.EndsWith(HttpHelper.ASPX, StringComparison.OrdinalIgnoreCase) || _aspxObjects.ContainsKey(name);
 		}
 		private static string ObjectUrl(string requestPath, string basePath) 
 		{
@@ -120,13 +120,22 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				lastSegment = lastSegment.Remove(0, basePath.Length);
 			}
-			lastSegment = lastSegment.TrimStart('/');
+			lastSegment = CleanUploadUrlSuffix(lastSegment.TrimStart('/'));
 			GXLogging.Debug(log, "ObjectUrl:", lastSegment);
 			if (_aspxRewrite.ContainsKey(lastSegment))
 			{
 				return _aspxRewrite[lastSegment];
 			}
 			return lastSegment;
+		}
+		private static string CleanUploadUrlSuffix(string url)
+		{
+			if (url.EndsWith($"{HttpHelper.ASPX}{HttpHelper.GXOBJECT}", StringComparison.OrdinalIgnoreCase))
+			{
+				return url.Substring(0, url.Length - (HttpHelper.GXOBJECT.Length));
+			}
+			else
+				return url;
 		}
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
 		{

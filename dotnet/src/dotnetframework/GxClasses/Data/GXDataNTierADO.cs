@@ -591,10 +591,10 @@ namespace GeneXus.Data.NTier.ADO
 			
 			bool storageServiceEnabled = !string.IsNullOrEmpty(tableName) && !string.IsNullOrEmpty(fieldName) && (GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null);
 
-			if (GxRestUtil.IsUpload(image))
-				image = GxRestUtil.UploadPath(image);
-			if (GxRestUtil.IsUpload(image_gxi))
-				image_gxi = GxRestUtil.UploadPath(image_gxi);
+			if (GxUploadHelper.IsUpload(image))
+				image = GxUploadHelper.UploadPath(image);
+			if (GxUploadHelper.IsUpload(image_gxi))
+				image_gxi = GxUploadHelper.UploadPath(image_gxi);
 
 			if (String.IsNullOrEmpty(image))
 			{

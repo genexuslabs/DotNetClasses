@@ -73,9 +73,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceCommand.cs" Link="Services\ServiceCommand.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceConnection.cs" Link="Services\ServiceConnection.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceTransaction.cs" Link="Services\ServiceTransaction.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Services\GxRestWrapper.cs" Link="Services\CoreWebAPI\Controller\GxRestWrapper.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Services\JsonConverter.cs" Link="Services\CoreWebAPI\Helpers\JsonConverter.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Services\ReflectionHelper.cs" Link="Services\CoreWebAPI\Helpers\ReflectionHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Search\GXSearch.cs" Link="Services\Search\GXSearch.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Security\GxSecurityProvider.cs" Link="Security\GxSecurityProvider.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Storage\GXServices.cs" Link="Services\Storage\GXServices.cs" />
@@ -141,7 +138,6 @@
 	<ItemGroup>
 		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" PrivateAssets="All" />
 		<PackageReference Include="log4net" Version="2.0.11" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">

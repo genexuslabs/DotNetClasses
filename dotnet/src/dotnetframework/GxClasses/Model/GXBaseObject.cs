@@ -20,6 +20,7 @@ namespace GeneXus.Application
 			get { return _Context; }
 			
 		}
+		virtual public bool UploadEnabled() { return false; }
 		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
 		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
 		public bool IsSynchronizer2 { get { return IsSynchronizer; } }

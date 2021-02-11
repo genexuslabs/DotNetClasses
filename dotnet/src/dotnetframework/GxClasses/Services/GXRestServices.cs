@@ -288,6 +288,11 @@ namespace GeneXus.Utils
 				return false;
 			}
 		}
+		public void UploadImpl()
+		{
+			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
+			gxobject.webExecute();
+		}
 		public void ErrorCheck(IGxSilentTrn trn)
 		{
 			if (trn.Errors() == 1)

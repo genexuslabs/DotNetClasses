@@ -1,3 +1,4 @@
+using GeneXus.Http;
 using GeneXus.Utils;
 
 using Microsoft.AspNetCore.Http;
@@ -30,6 +31,12 @@ namespace GeneXus.Application
 			{
 				if (!IsAuthenticated())
 				{
+					return Task.CompletedTask;
+				}
+				if (Worker.UploadEnabled() && GxUploadHelper.IsUploadURL(_httpContext))
+				{
+					GXObjectUploadServices gxobject = new GXObjectUploadServices(_gxContext);
+					gxobject.webExecute();
 					return Task.CompletedTask;
 				}
 				bool gxcheck = IsRestParameter(CHECK_PARAMETER);
