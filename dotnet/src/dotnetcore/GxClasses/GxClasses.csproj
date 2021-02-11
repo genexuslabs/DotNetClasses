@@ -57,6 +57,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataCommon.cs" Link="Data\GXDataCommon.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataNTier.cs" Link="Data\GXDataNTier.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataNTierADO.cs" Link="Data\GXDataNTierADO.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataNTierService.cs" Link="Data\GXDataNTierService.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXFileIO.cs" Link="Domain\GXFileIO.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxFtp.cs" Link="Domain\GxFtp.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxGenericCollections.cs" Link="Domain\GxGenericCollections.cs" />
