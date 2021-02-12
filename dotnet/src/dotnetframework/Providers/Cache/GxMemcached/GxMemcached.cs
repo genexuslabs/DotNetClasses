@@ -140,6 +140,7 @@ namespace GeneXus.Cache
 			ClearKey(Key(cacheid, key));
 		}
 
+		[SecuritySafeCritical]
 		public void ClearKey(string key)
 		{
 			_cache.Delete(key);
@@ -150,7 +151,7 @@ namespace GeneXus.Cache
 			Nullable<long> prefix = new Nullable<long>(KeyPrefix(cacheid).Value + 1);
 			_cache.Set(cacheid, prefix);
 		}
-
+		[SecuritySafeCritical]
 		public void ClearAllCaches()
 		{
 			_cache.FlushAll();
