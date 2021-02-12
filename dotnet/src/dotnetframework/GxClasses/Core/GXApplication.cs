@@ -2015,8 +2015,11 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (FrontEndHttps())
+				if (_HttpContext.Request.GetIsSecureFrontEnd())
+				{
+					GXLogging.Debug(log, "Front-End-Https header activated");
 					return 1;
+				}
 				else
 					return _HttpContext.Request.GetIsSecureConnection();
 			}
@@ -2735,7 +2738,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (FrontEndHttps())
+				if (GetHttpSecure() == 1)
 				{
 					return GXUri.UriSchemeHttps;
 				}
@@ -2743,8 +2746,6 @@ namespace GeneXus.Application
 			}
 			catch
 			{
-				if (GetHttpSecure() == 1)
-					return GXUri.UriSchemeHttps;
 				return GXUri.UriSchemeHttp;
 			}
 		}
