@@ -70,6 +70,9 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Model\gxproc.cs" Link="Model\gxproc.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Reorg\GXReorg.cs" Link="Reorg\GXReorg.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXRes.cs" Link="Helpers\GXRes.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceCommand.cs" Link="Services\ServiceCommand.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceConnection.cs" Link="Services\ServiceConnection.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceTransaction.cs" Link="Services\ServiceTransaction.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Search\GXSearch.cs" Link="Services\Search\GXSearch.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Security\GxSecurityProvider.cs" Link="Security\GxSecurityProvider.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Storage\GXServices.cs" Link="Services\Storage\GXServices.cs" />
