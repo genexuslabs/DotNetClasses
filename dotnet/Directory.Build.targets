@@ -1,5 +1,4 @@
 <Project>
-
 	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<SignAssembly>false</SignAssembly>
