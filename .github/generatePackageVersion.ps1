@@ -3,6 +3,7 @@ $GetFileVersionOutput = dotnet msbuild $PSScriptRoot/../dotnet/Directory.Build.p
 $GetFileVersionOutput = $Matches[0]
 
 $NuGetPackageVersion = $GetFileVersionOutput
+
 if ([System.Convert]::ToBoolean($Env:IsPrerelease)) {
   $IsMaster = $Env:GIT_REF -match 'master$'
   $VersionTag =  @("trunk", "stable")[$IsMaster]
