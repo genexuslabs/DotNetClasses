@@ -41,13 +41,11 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 | GxConfig | Executable utility to update web.config | GeneXus.Config
 | GxDataInitialization | Executable utility to support dynamic transactions initialization at impact process | GeneXus.DataInitialization(\*)
 
-
 (\*) For .NET Core add suffix ".Core" to Package Id
 
 (\*\*) Package not available for .NET Core
 
 ## Repository Layout
-
 This repository contains projects for .NET and .NET Core. It is organized as follows:
 
 ```
@@ -73,6 +71,8 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 - .NET Framework >= 4.6 
 
 # Instructions
+For the following steps must be executed from inside ```dotnet``` directory:
+```c:\DotNetClasses>cd dotnet```
 
 ## How to build all projects?
 - ```dotnet build DotNetStandardClasses.sln```
@@ -87,8 +87,7 @@ It copies the .NET assemblies to the folder build/**gxnet/bin** and .NET Core as
 
 ## Advanced information
 
-### Replacing standard classes mechanism 
-
+### Replacing standard classes mechanism
 How to compile an assembly and replace it in a GeneXus generated application. 
 
 Suppose you do a fix in GxClasses project. In order to get that fix in your generated application follow these steps:
