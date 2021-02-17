@@ -79,8 +79,8 @@ namespace GeneXus.HttpHandlerFactory
 							asssemblycontroller = addNspace + "." + tmpController;
 							nspace += "." + addNspace;
 						}
-						var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, null, null);
 						var gxContext = GxContext.CreateDefaultInstance();
+						var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
 						gxContext.HttpContext = context;
 						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value);
 						return restWrapper;

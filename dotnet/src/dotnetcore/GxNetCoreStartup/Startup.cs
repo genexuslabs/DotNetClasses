@@ -251,7 +251,14 @@ namespace GeneXus.Application
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(settings.SessionTimeout==0 ? DEFAULT_SESSION_TIMEOUT_MINUTES : settings.SessionTimeout); 
 				options.Cookie.HttpOnly = true;
+				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
+				string sameSite;
+				SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
+				if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+				{
+					options.Cookie.SameSite = sameSiteMode;
+				}
 			});
 
 
