@@ -35,7 +35,7 @@ jobs:
 
     - name: Calculate environment variables
       run: |     
-        $IsPrerelease = !($Env:GIT_REF -match 'release-[0-9]?\.[0-9]?$')
+        $IsPrerelease = !($Env:GIT_REF -match 'release-[0-9]+?\.[0-9]+?$')
         echo "IsPrerelease=$IsPrerelease" >> $env:GITHUB_ENV
 
         $COMMIT_NUMBER = @($(git rev-list --count origin/master..), $(git rev-list --count HEAD))[$IsPrerelease]
