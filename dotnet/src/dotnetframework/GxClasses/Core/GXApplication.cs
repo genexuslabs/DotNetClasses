@@ -2015,8 +2015,11 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (FrontEndHttps())
+				if (_HttpContext.Request.GetIsSecureFrontEnd())
+				{
+					GXLogging.Debug(log, "Front-End-Https header activated");
 					return 1;
+				}
 				else
 					return _HttpContext.Request.GetIsSecureConnection();
 			}
@@ -2234,6 +2237,12 @@ namespace GeneXus.Application
 				Path = cookie.Path,
 				Secure = cookie.Secure
 			};
+			string sameSite;
+			SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
+			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+			{
+				cookieOptions.SameSite = sameSiteMode;
+			}
 			if (!expires.Equals(DateTimeUtil.NullDate()))
 				cookieOptions.Expires = DateTime.SpecifyKind(cookie.Expires, DateTimeKind.Utc);
 
@@ -2729,7 +2738,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (FrontEndHttps())
+				if (GetHttpSecure() == 1)
 				{
 					return GXUri.UriSchemeHttps;
 				}
@@ -2737,8 +2746,6 @@ namespace GeneXus.Application
 			}
 			catch
 			{
-				if (GetHttpSecure() == 1)
-					return GXUri.UriSchemeHttps;
 				return GXUri.UriSchemeHttp;
 			}
 		}
@@ -3725,7 +3732,7 @@ namespace GeneXus.Application
 					if (string.IsNullOrEmpty(_clientId))
 					{
 						_clientId = Guid.NewGuid().ToString();
-						this.SetCookie(CLIENT_ID_HEADER, _clientId, string.Empty, DateTime.MaxValue, string.Empty, 0);
+						this.SetCookie(CLIENT_ID_HEADER, _clientId, string.Empty, DateTime.MaxValue, string.Empty, GetHttpSecure());
 					}
 				}
 				return _clientId;

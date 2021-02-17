@@ -642,6 +642,26 @@ namespace GeneXus.Http
 			return request.RawUrl;
 #endif
 		}
+		public static bool GetIsSecureFrontEnd(this HttpRequest request)
+		{
+			if (CheckHeaderValue(request, "Front-End-Https", "on") || CheckHeaderValue(request, "X-Forwarded-Proto", "https"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		private static bool CheckHeaderValue(HttpRequest request, String headerName, String headerValue)
+		{
+			string httpsHeader = request.Headers[headerName];
+			if (!string.IsNullOrEmpty(httpsHeader) && httpsHeader.Equals(headerValue, StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+			return false;
+		}
 
 		public static short GetIsSecureConnection(this HttpRequest request)
 		{
