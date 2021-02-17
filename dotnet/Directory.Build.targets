@@ -42,7 +42,6 @@
 		</Task>
 	</UsingTask>
 
-
 	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true'">
 		<ReplaceFileText
        InputFilename="$(OutDir)$(ProjectName).deps.json"
