@@ -52,7 +52,7 @@
        OutputFilename="$(OutDir)$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Web\.Core"
        ReplacementText="GxClasses.Web" />
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json $(ProjectName).deps.json" />
 	</Target>
 
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">
