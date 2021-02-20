@@ -129,12 +129,12 @@ namespace GeneXus.Data
         private Object GXTypeToHanaType(GXType type)
         {
 
-			switch (type)
-			{
-				case GXType.Int16: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "SmallInt");
-				case GXType.Int32: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Integer");
-				case GXType.Int64: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "BigInt");
-				case GXType.Number: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Decimal");
+            switch (type)
+            {
+                case GXType.Int16: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "SmallInt");
+                case GXType.Int32: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Integer");
+                case GXType.Int64: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "BigInt");
+                case GXType.Number: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Decimal");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
 				case GXType.NVarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NVarChar");
 				case GXType.Geography:
@@ -148,12 +148,12 @@ namespace GeneXus.Data
 				case GXType.Clob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Clob");
 				case GXType.NClob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NClob");
 				case GXType.Blob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Blob");
-				case GXType.DateTime: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "SecondDate");
-				case GXType.DateTime2: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "TimeStamp");
-				case GXType.Date: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Date");
-				case GXType.Byte: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "TinyInt");
-				default: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, type.ToString());
-			}
+                case GXType.DateTime: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "SecondDate");
+                case GXType.DateTime2: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "TimeStamp");
+                case GXType.Date: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Date");
+                case GXType.Byte: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "TinyInt");
+                default: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, type.ToString());
+            }
         }
 
         public override DbDataAdapter CreateDataAdapeter()
@@ -218,42 +218,43 @@ namespace GeneXus.Data
         {
             return geo.ToStringSQL();
         }
+
 		public override void SetParameter(IDbDataParameter parameter, Object value)
-        {            
-            if (IsBlobType(parameter))         
+		{
+			if (value == null || value == DBNull.Value)
+			{
+				parameter.Value = DBNull.Value;
+			}
+			else if (IsBlobType(parameter))
 			{
 				GXLogging.Debug(log, "SetParameter BLOB value:" + value);
 				SetBinary(parameter, GetBinary((string)value, false));
-            }            
-            else if (value == null || value == DBNull.Value)
-            {               
-                parameter.Value = DBNull.Value;                
-            }
-            else if (value is Guid)
-            {
-                parameter.Value = value.ToString();
-            }
-            else if (parameter.DbType == DbType.Decimal)
-            {
-                
-                int size = parameter.Size;
-                byte scale = (byte)ClassLoader.GetPropValue(parameter, "Scale");
-                Decimal intPart = Decimal.Truncate(Convert.ToDecimal(value));
+			}
+			else if (value is Guid)
+			{
+				parameter.Value = value.ToString();
+			}
+			else if (parameter.DbType == DbType.Decimal)
+			{
 
-                if (intPart.ToString().Length <= size)
-                {
-                    parameter.Value = NumberUtil.Trunc((decimal)value, scale);
-                }
-                else
-                {
-                    parameter.Value = 0;
-                }                                    
-            }
-            else
-            {
+				int size = parameter.Size;
+				byte scale = (byte)ClassLoader.GetPropValue(parameter, "Scale");
+				Decimal intPart = Decimal.Truncate(Convert.ToDecimal(value));
+
+				if (intPart.ToString().Length <= size)
+				{
+					parameter.Value = NumberUtil.Trunc((decimal)value, scale);
+				}
+				else
+				{
+					parameter.Value = 0;
+				}
+			}
+			else
+			{
 				parameter.Value = CheckDataLength(value, parameter);
 			}
-        }
+		}
 		protected override void SetBinary(IDbDataParameter parameter, byte[] binary)
 		{
 			GXLogging.Debug(log, "SetParameter BLOB, binary.length:" + binary.Length);
