@@ -277,7 +277,7 @@ namespace GeneXus.Http.Server
 			{
 				if (_httpReq == null)
 					return 0;
-				return (short) GxContext.GetServerPort(_httpReq);
+				return (short) _context.GetServerPort();
 			}
 		}
 		public short Secure

@@ -2354,21 +2354,15 @@ namespace GeneXus.Data.ADO
         {
             if (!dataRecord.AllowsDuplicateParameters)
             {
-                int count = parameters.Count;
-                List<String> parms = new List<String>();
-                GxParameterCollection newParameters = new GxParameterCollection();
-                for (int j = 0; j < count; j++)
-                {
-                    if (!parms.Contains(parameters[j].ParameterName))
-                    {
-                        newParameters.Add(parameters[j]);
-                        parms.Add(parameters[j].ParameterName);
-                    }
-                }
-                parameters = newParameters;
+				parameters = parameters.Distinct();
             }
         }
-    }
+
+		internal void AfterCreateCommand()
+		{
+			stmt = dataRecord.AfterCreateCommand(stmt, parameters);
+		}
+	}
 	
 	public class GxDataStore : IGxDataStore
 	{
@@ -2646,13 +2640,20 @@ namespace GeneXus.Data.ADO
                 case "sqlserver":
                     return new GxSqlServer();
 				case "mysql":
-					bool prepStmt = true;
-					if (Config.GetValueOf("PREPARED_STMT_MYSQL", out cfgBuf))
-					{
-						if (cfgBuf.ToUpper().StartsWith("N"))
-							prepStmt = false;
-					}
+#if NETCORE
+					return new GxMySqlConnector(id);
+#else
+				bool prepStmt = true;
+				if (Config.GetValueOf("PREPARED_STMT_MYSQL", out cfgBuf))
+				{
+					if (cfgBuf.ToUpper().StartsWith("N"))
+						prepStmt = false;
+				}
+				if (Config.GetValueOf("Connection-" + id + "-PROVIDER", out cfgBuf) && cfgBuf.ToLower() == "mysqlconnector")
+					return new GxMySqlConnector(id);
+				else
 					return new GxMySql(id, prepStmt);
+#endif
 				case "sqlite":
                     return new GxSqlite();
                 case "postgresql":
@@ -2678,6 +2679,7 @@ namespace GeneXus.Data.ADO
 					return new GxDb2();
 				case "informix":
 					return new GxInformix(id);
+#endif
 				case "service":
 					{
 						string runtimeProvider;
@@ -2685,7 +2687,6 @@ namespace GeneXus.Data.ADO
 						Config.GetValueOf($"Connection-{id}-DatastoreProviderRuntime", out runtimeProvider);
 						return NTier.GxServiceFactory.Create(id, cfgBuf, runtimeProvider);												
 					}
-#endif
 				default:
 					return null;
 			}
