@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<DefineConstants>NETCORE</DefineConstants>
+		<PackageTags>Dynservice</PackageTags>
+		<PackageId>GeneXus.DynService.Core.Core</PackageId>
+		<AssemblyName>GeneXus.Data.DynService.Core</AssemblyName>
+	</PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\dotnetframework\DynService.Core\DynServiceCommon.cs" Link="DynServiceCommon.cs" />
+  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+</Project>
