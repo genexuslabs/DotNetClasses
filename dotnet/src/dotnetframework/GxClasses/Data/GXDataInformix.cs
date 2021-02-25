@@ -174,6 +174,8 @@ namespace GeneXus.Data
 				case GXType.Int32: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Integer");
 				case GXType.Int64: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Int8");
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Text");
+				case GXType.DateTime2: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "DateTime");
+				case GXType.UniqueIdentifier:return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Char");
 				default: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, type.ToString());
 			}
 		}
