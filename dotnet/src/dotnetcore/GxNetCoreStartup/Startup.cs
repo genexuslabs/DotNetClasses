@@ -168,51 +168,56 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
-	    if (Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR))) 
-			{ 
-			string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
-			foreach (String grp in grpFiles)
-			{				
-				object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
-				MapGroup m = p as MapGroup;
-				if (m != null)
+			if (Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)))
+			{
+				string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
+				foreach (String grp in grpFiles)
 				{
-					
-					if (String.IsNullOrEmpty(m.BasePath))
+					object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
+					MapGroup m = p as MapGroup;
+					if (m != null)
 					{
-						m.BasePath = REST_BASE_URL;
-					}
-					String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
-					String mapPathLower = mapPath.ToLower();
-					servicesPathUrl.Add(mapPathLower, m.Name.ToLower());
-					foreach (SingleMap sm in m.Mappings)
-					{
-						if (sm.Verb == null)
-							sm.Verb = "GET";
-						if (String.IsNullOrEmpty(sm.Path))
-							sm.Path = sm.Name;
-						if (servicesMap.ContainsKey(mapPathLower)) {
-							if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower())) {
+
+						if (String.IsNullOrEmpty(m.BasePath))
+						{
+							m.BasePath = REST_BASE_URL;
+						}
+						String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
+						String mapPathLower = mapPath.ToLower();
+						String mNameLower = m.Name.ToLower();
+						servicesPathUrl.Add(mapPathLower, mNameLower);
+						GXLogging.Debug(log, $"addServicesPathUrl key:{mapPathLower} value:{mNameLower}");
+						foreach (SingleMap sm in m.Mappings)
+						{
+							if (sm.Verb == null)
+								sm.Verb = "GET";
+							if (String.IsNullOrEmpty(sm.Path))
+								sm.Path = sm.Name;
+							if (servicesMap.ContainsKey(mapPathLower))
+							{
+								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+								{
+									servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
+									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+								}
+							}
+							else
+							{
+								servicesValidPath.Add(mapPathLower, new List<string>());
 								servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);								
+								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
+								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+								servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string, string>, string>());
 								servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
 							}
-						}
-						else {
-							servicesValidPath.Add(mapPathLower, new List<string>());
-							servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
-							servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-							servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-							servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
-							servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
 						}
 					}
 				}
 			}
-      }
 		}
 
-		Boolean serviceInPath(String path, out String actualPath)
+		bool ServiceInPath(String path, out String actualPath)
 		{
 			actualPath = "";
 			foreach (String subPath in servicesPathUrl.Keys)
@@ -220,9 +225,11 @@ namespace GeneXus.Application
 				if (path.ToLower().Contains($"/{subPath.ToLower()}"))
 				{
 					actualPath = subPath.ToLower();
+					GXLogging.Debug(log, $"ServiceInPath actualPath:{actualPath}");
 					return true;
 				}
 			}
+			GXLogging.Debug(log, $"ServiceInPath path:{path} not found");
 			return false;
 		}
 
@@ -410,6 +417,7 @@ namespace GeneXus.Application
 			{
 				foreach (String serviceBasePath in servicesBase)
 				{
+					GXLogging.Debug(log, $"MapRoute: {serviceBasePath}{{*{UrlTemplateControllerWithParms}}}");
 					routes.MapRoute($"{serviceBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(ProcessRestRequest));
 				}
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(ProcessRestRequest));
@@ -454,7 +462,7 @@ namespace GeneXus.Application
 			List<ControllerInfo> result = new List<ControllerInfo>();
 			string parms = string.Empty;
 			string method = string.Empty;
-			GXLogging.Debug(log, "GetRouteController path:", path);
+			GXLogging.Debug(log, $"GetRouteController basePath:{basePath} verb:{verb} path:{path}");
 			try {
 				if (!string.IsNullOrEmpty(path))
 				{
@@ -479,11 +487,13 @@ namespace GeneXus.Application
 								if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
 									parms = path.Substring(questionMarkIdx + 1);
 								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = mth, Verb = verb });
+								GXLogging.Debug(log, $"Controller found Name:{apiPaths[basePath]} Parameters:{parms} MethodName:{mth} Verb={verb}");
 							}
 							else
 							{
 								// Method not allowed
-								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = "", MethodName = "", Verb = "" });
+								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = "", MethodName = "", Verb =""});
+								GXLogging.Debug(log, $"Controller found (Method not allowed) Name:{apiPaths[basePath]}");
 								return result;
 							}
 						}
@@ -515,13 +525,14 @@ namespace GeneXus.Application
 							controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
 							if (path.Length > questionMarkIdx + 1)
 								parms = path.Substring(questionMarkIdx + 1);
-
+							GXLogging.Debug(log, $"Controller found (with question mark) Name:{controller} Parameters:{parms}");
 							result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
 						}
 						else
 						{
 							// rest/module1/module2/service
 							controller = path.TrimEnd(urlSeparator);
+							GXLogging.Debug(log, $"Controller found (without parameters) Name:{controller} Parameters:{parms}");
 							result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
 
 							// rest/module1/module2/service/parameters
@@ -530,6 +541,7 @@ namespace GeneXus.Application
 							{
 								controller = path.Substring(0, idx);
 								parms = path.Substring(idx + 1);
+								GXLogging.Debug(log, $"Controller found (without url parameters) Name:{controller} Parameters:{parms}");
 								result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
 							}
 						}
@@ -547,7 +559,7 @@ namespace GeneXus.Application
 			{
 				string path = context.Request.Path.ToString();
 				string actualPath = "";
-				if (path.Contains($"/{REST_BASE_URL}") || serviceInPath(path, out actualPath))
+				if (path.Contains($"/{REST_BASE_URL}") || ServiceInPath(path, out actualPath))
 				{
 					string controllerWihtParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
 					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesValidPath, servicesMap, servicesMapData, actualPath, context.Request.Method, controllerWihtParms);
@@ -608,6 +620,7 @@ namespace GeneXus.Application
 					}
 					else
 					{
+						GXLogging.Error(log, $"ProcessRestRequest controller not found path:{path} controllerWihtParms:{controllerWihtParms}");
 						context.Response.StatusCode = (int)HttpStatusCode.NotFound;
 						context.Response.Headers.Clear();
 					}
@@ -623,7 +636,7 @@ namespace GeneXus.Application
 		}
 		private GxRestWrapper GetController(HttpContext context, string controller, string methodName)
 		{
-
+			GXLogging.Debug(log, $"GetController:{controller} method:{methodName}");
 			GxContext gxContext = GxContext.CreateDefaultInstance();
 			IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
 			gxContext.HttpContext = new GxHttpContextAccesor(contextAccessor);
@@ -644,14 +657,21 @@ namespace GeneXus.Application
 				nspace += "." + addNspace;
 			}
 
-			if ( Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)) &&
-				 File.Exists(Path.Combine(Path.Combine(ContentRootPath, PRIVATE_DIR), $"{asssemblycontroller.ToLower()}.grp.json")))
+			string privateDir = Path.Combine(ContentRootPath, PRIVATE_DIR);
+			bool privateDirExists = Directory.Exists(privateDir);
+
+			GXLogging.Debug(log, $"PrivateDir:{privateDir} asssemblycontroller:{asssemblycontroller}");
+
+			if ( privateDirExists && File.Exists(Path.Combine(privateDir, $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
+				GXLogging.Debug(log, $"FindController:{controller} namespace:{nspace} assembly:{asssemblycontroller}");
 				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 				GXProcedure proc = controllerInstance as GXProcedure;
 				if (proc != null)
 					return new GxRestWrapper(proc, context, gxContext, methodName);
+				else
+					GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{asssemblycontroller} nspace:{nspace} controller:{controller}");
 			}
 			else
 			{
@@ -661,6 +681,8 @@ namespace GeneXus.Application
 					var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace, GxSilentTrnSdt.GxSdtNameToCsharpName(controllerLower), new Object[] { gxContext }, Assembly.GetEntryAssembly(), true) as GxSilentTrnSdt;
 					if (sdtInstance != null)
 						return new GXBCRestService(sdtInstance, context, gxContext);
+					else
+						GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{Config.CommonAssemblyName} nspace:{nspace} controller:{GxSilentTrnSdt.GxSdtNameToCsharpName(controller)}");
 				}
 				else
 				{
@@ -681,9 +703,12 @@ namespace GeneXus.Application
 						GXProcedure proc = controllerInstance as GXProcedure;
 						if (proc != null)
 							return new GxRestWrapper(proc, context, gxContext, methodName);
+						else
+							GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{controllerAssemblyName} nspace:{nspace} controller:{controllerClassName}");
 					}
 				}
 			}
+			GXLogging.Warn(log, $"Controller was not found");
 			return null;
 		}
 	}
