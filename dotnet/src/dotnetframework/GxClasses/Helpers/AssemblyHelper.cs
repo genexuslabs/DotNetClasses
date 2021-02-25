@@ -38,5 +38,11 @@ namespace GeneXus.Helpers
 
 			return default;
 		}
+
+#if !NETCORE
+		public static Type GetRuntimeType(string typeName) => Type.GetType(typeName);
+#else
+		public static Type GetRuntimeType(string typeName) => new GxClasses.Helpers.AssemblyLoader(Utils.FileUtil.GetStartupDirectory()).GetType(typeName);
+#endif
 	}
 }

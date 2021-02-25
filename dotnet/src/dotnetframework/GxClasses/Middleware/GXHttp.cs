@@ -1382,7 +1382,7 @@ namespace GeneXus.Http
 			}
 			catch (InvalidKeyException)
 			{
-				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", 0);
+				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", context.GetHttpSecure());
 				GXLogging.Error(log, "440 Invalid encryption key");
 				SendResponseStatus(440, "Session timeout");
 			}
@@ -1398,7 +1398,7 @@ namespace GeneXus.Http
 			}
 			catch (InvalidKeyException)
 			{
-				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", 0);
+				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", context.GetHttpSecure());
 				GXLogging.Error(log, "440 Invalid encryption key");
 				SendResponseStatus(440, "Session timeout");
 			}

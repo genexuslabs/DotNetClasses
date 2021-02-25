@@ -236,42 +236,42 @@ namespace GeneXus.Data
             return geo.ToStringSQL();
         }
 
-        public override void SetParameter(IDbDataParameter parameter, Object value)
-        {            
-            if (IsBlobType(parameter))         
+		public override void SetParameter(IDbDataParameter parameter, Object value)
+		{
+			if (value == null || value == DBNull.Value)
+			{
+				parameter.Value = DBNull.Value;
+			}
+			else if (IsBlobType(parameter))
 			{
 				GXLogging.Debug(log, "SetParameter BLOB value:" + value);
 				SetBinary(parameter, GetBinary((string)value, false));
-            }            
-            else if (value == null || value == DBNull.Value)
-            {               
-                parameter.Value = DBNull.Value;                
-            }
-            else if (value is Guid)
-            {
-                parameter.Value = value.ToString();
-            }
-            else if (parameter.DbType == DbType.Decimal)
-            {
-                
-                int size = parameter.Size;
-                byte scale = (byte)ClassLoader.GetPropValue(parameter, "Scale");
-                Decimal intPart = Decimal.Truncate(Convert.ToDecimal(value));
+			}
+			else if (value is Guid)
+			{
+				parameter.Value = value.ToString();
+			}
+			else if (parameter.DbType == DbType.Decimal)
+			{
 
-                if (intPart.ToString().Length <= size)
-                {
-                    parameter.Value = NumberUtil.Trunc((decimal)value, scale);
-                }
-                else
-                {
-                    parameter.Value = 0;
-                }                                    
-            }
-            else
-            {
+				int size = parameter.Size;
+				byte scale = (byte)ClassLoader.GetPropValue(parameter, "Scale");
+				Decimal intPart = Decimal.Truncate(Convert.ToDecimal(value));
+
+				if (intPart.ToString().Length <= size)
+				{
+					parameter.Value = NumberUtil.Trunc((decimal)value, scale);
+				}
+				else
+				{
+					parameter.Value = 0;
+				}
+			}
+			else
+			{
 				parameter.Value = CheckDataLength(value, parameter);
 			}
-        }
+		}
 		protected override void SetBinary(IDbDataParameter parameter, byte[] binary)
 		{
 			GXLogging.Debug(log, "SetParameter BLOB, binary.length:" + binary.Length);
