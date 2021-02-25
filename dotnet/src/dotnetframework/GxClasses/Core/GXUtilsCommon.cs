@@ -2988,12 +2988,13 @@ namespace GeneXus.Utils
 				StringUtil.PadL(StringUtil.Str(Month(date), 2, 0), 2, '0') +
 				StringUtil.PadL(StringUtil.Str(Day(date), 2, 0), 2, '0'));
 		}
-		public static string getYYYYMMDDHHMMSS_nosep(DateTime date)
+		public static string getYYYYMMDDHHMMSSnosep(DateTime date, bool hasMilliseconds)
 		{
 			string sDate = getYYYYMMDD(date);
 			sDate += StringUtil.PadL(StringUtil.Str(Hour(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Minute(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Second(date), 2, 0), 2, '0');
+			if (hasMilliseconds) sDate += StringUtil.PadL(StringUtil.Str(MilliSecond(date), 3, 0), 3, '0');
 			return (sDate);
 		}
 		private static DateTime ConvertDateTime(DateTime dt, OlsonTimeZone FromTimezone, OlsonTimeZone ToTimezone)
@@ -3070,11 +3071,17 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		public static string FormatDateTimeParmMS(DateTime date)
+		{
+			if (date.Equals(nullDate))
+				return "";
+			return getYYYYMMDDHHMMSSnosep(date, true);
+		}
 		public static string FormatDateTimeParm(DateTime date)
 		{
 			if (date.Equals(nullDate))
 				return "";
-			return getYYYYMMDDHHMMSS_nosep(date);
+			return getYYYYMMDDHHMMSSnosep(date, false);
 		}
 		public static string FormatDateParm(DateTime date)
 		{
@@ -3120,12 +3127,15 @@ namespace GeneXus.Utils
 					return dtValue;
 			}
 
-			return YMDHMSToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
+			int mil = (valueString.Trim().Length >= 17)? (int)NumberUtil.Val(valueString.Substring(14, 3)):0;
+
+			return YMDHMSMToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
 				(int)NumberUtil.Val(valueString.Substring(4, 2)),
 				(int)NumberUtil.Val(valueString.Substring(6, 2)),
 				(int)NumberUtil.Val(valueString.Substring(8, 2)),
 				(int)NumberUtil.Val(valueString.Substring(10, 2)),
-				(int)NumberUtil.Val(valueString.Substring(12, 2)), false);
+				(int)NumberUtil.Val(valueString.Substring(12, 2)), mil, false);
+
 		}
 		public DateTime ParseDateOrDTimeParm(string valueString)
 		{
@@ -4264,16 +4274,28 @@ namespace GeneXus.Utils
             return decodedHeader;
         }
 #endif
+#if NETCORE
+		static int windowsPlatform = -1;
+#endif
 		public static bool IsWindowsPlatform
 		{
 			get
 			{
 #if NETCORE
-				return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+				if (windowsPlatform == -1)
+					windowsPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 1 : 0;
+
+				return (windowsPlatform == 1);
 #else
 				return true;
 #endif
 			}
+#if NETCORE
+			set
+			{
+				windowsPlatform = value ? 1 : 0;
+			}
+#endif
 		}
 		static public int DbmsVersion(IGxContext context, string dataSource)
 		{
