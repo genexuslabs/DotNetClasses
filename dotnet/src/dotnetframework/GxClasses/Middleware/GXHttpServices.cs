@@ -404,7 +404,7 @@ namespace GeneXus.Http
 						GxFile gxFile = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
 
 						gxFile.Create(hpf.InputStream);
-						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
+						GXFileWatcher.Instance.AddTemporaryFile(gxFile, localHttpContext);
 
 						string uri = gxFile.GetURI();
 						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);
@@ -480,14 +480,6 @@ namespace GeneXus.Http
 			get
 			{
 				return GAMSecurityLevel.SecurityObject;
-			}
-		}
-
-		protected override string IntegratedSecurityPermissionName
-		{
-			get
-			{
-				return base.IntegratedSecurityPermissionName;
 			}
 		}
 	}
@@ -573,14 +565,6 @@ namespace GeneXus.Http
 			get
 			{
 				return GAMSecurityLevel.SecurityObject;
-			}
-		}
-
-		protected override string IntegratedSecurityPermissionName
-		{
-			get
-			{
-				return base.IntegratedSecurityPermissionName;
 			}
 		}
 	}

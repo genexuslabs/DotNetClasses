@@ -11,7 +11,7 @@ using GeneXus.Utils;
 using GeneXus.Encryption;
 using GeneXus.Application;
 using log4net;
-
+using System.Collections.Generic;
 
 namespace GeneXus.Http
 {
@@ -28,13 +28,14 @@ namespace GeneXus.Http
         {
             get;
         }
-
-    }
+		void Renew();
+	}
 
     public class GxWebSession : IGxSession
     {
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GxWebSession));
         private HttpSessionState _httpSession;
+		static string[] _internalKeys = { GxContext.GX_NAV_HELPER, CryptoImpl.AJAX_ENCRYPTION_KEY, GxContext.GXTheme, GxContext.GXLanguage };
 
         public GxWebSession()
         {
@@ -130,17 +131,43 @@ namespace GeneXus.Http
 #endif
             }
         }
-        public void Clear()
+		public void Renew()
+		{
+			if (_httpSession != null)
+			{
+				GXLogging.Debug(log, "Renew sessionId: " + _httpSession.SessionID);
+				var internalValues = BackupInternalKeys();
+				Destroy();
+				RestoreInternalKeys(internalValues);
+			}
+		}
+		private Dictionary<string, object> BackupInternalKeys()
+		{
+			Dictionary<string, object> internalValues = new Dictionary<string, object>();
+			foreach (string key in _internalKeys)
+			{
+				var value = GetObject(key);
+				if (value != null)
+					internalValues[key] = value;
+			}
+			return internalValues;
+		}
+		private void RestoreInternalKeys(Dictionary<string, object> internalValues)
+		{
+			foreach (string key in internalValues.Keys)
+			{
+				SetObject(key, internalValues[key]);
+			}
+		}
+		public void Clear()
         {
             if (_httpSession != null)
             {
 				GXLogging.Debug(log, "Clear sessionId: " + _httpSession.SessionID);
-				object navHelper = _httpSession[GxContext.GX_NAV_HELPER];
-                string ajaxEncriptionKey = _httpSession[CryptoImpl.AJAX_ENCRYPTION_KEY] as string;
+				var internalValues = BackupInternalKeys();
                 _httpSession.Clear();
-                _httpSession[CryptoImpl.AJAX_ENCRYPTION_KEY] = ajaxEncriptionKey;
-                _httpSession[GxContext.GX_NAV_HELPER] = navHelper;
-            }
+				RestoreInternalKeys(internalValues);
+			}
         }
         public static bool IsSessionExpired(HttpContext httpContext)
         {
@@ -252,6 +279,11 @@ namespace GeneXus.Http
         public void Clear()
         {
             ClearHash();
-        }        
-    }
+        }
+		public void Renew()
+		{
+			Destroy();
+		}
+
+	}
 }

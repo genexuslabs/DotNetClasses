@@ -227,7 +227,7 @@ namespace GeneXus.Http
 #else
 					filePath = file.Create(pf.InputStream);
 #endif
-					GXFileWatcher.Instance.AddTemporaryFile(file);
+					GXFileWatcher.Instance.AddTemporaryFile(file, httpContext);
 					return true;
 				}
 			}
@@ -236,7 +236,7 @@ namespace GeneXus.Http
 		public static string RequestPhysicalApplicationPath(HttpContext context = null)
 		{
 #if NETCORE
-			return Directory.GetParent(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName).FullName;
+			return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #else
 			if (context==null)
 				return HttpContext.Current.Request.PhysicalApplicationPath; 
@@ -531,6 +531,8 @@ namespace GeneXus.Http
 
 	public static class HttpRequestExtensions
 	{
+		const int DEFAULT_HTTP_PORT = 80;
+		const int DEFAULT_HTTPS_PORT = 443;
 		public static HttpCookieCollection GetCookies(this HttpRequest request)
 		{
 #if NETCORE
@@ -640,6 +642,26 @@ namespace GeneXus.Http
 			return request.RawUrl;
 #endif
 		}
+		public static bool GetIsSecureFrontEnd(this HttpRequest request)
+		{
+			if (CheckHeaderValue(request, "Front-End-Https", "on") || CheckHeaderValue(request, "X-Forwarded-Proto", "https"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		private static bool CheckHeaderValue(HttpRequest request, String headerName, String headerValue)
+		{
+			string httpsHeader = request.Headers[headerName];
+			if (!string.IsNullOrEmpty(httpsHeader) && httpsHeader.Equals(headerValue, StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+			return false;
+		}
 
 		public static short GetIsSecureConnection(this HttpRequest request)
 		{
@@ -657,16 +679,31 @@ namespace GeneXus.Http
 			return request.Url.Scheme;
 #endif
 		}
-		public static int GetPort(this HttpRequest request)
+		public static int GetPort(this HttpRequest request, bool isSecure)
 		{
 #if NETCORE
 			if (request.Host.Port.HasValue)
 				return request.Host.Port.Value;
+			else if (isSecure)
+				return DEFAULT_HTTPS_PORT;
 			else
-				return 0;
+				return DEFAULT_HTTP_PORT;
 #else
-			return request.Url.Port;
-
+			if (request.Url.IsDefaultPort)
+				if (isSecure)
+					return DEFAULT_HTTPS_PORT;
+				else
+					return DEFAULT_HTTP_PORT;
+			else 
+				return request.Url.Port;
+#endif
+		}
+		public static bool IsDefaultPort(this HttpRequest request)
+		{
+#if NETCORE
+			return !request.Host.Port.HasValue;
+#else
+			return request.Url.IsDefaultPort;
 #endif
 		}
 		public static string GetHost(this HttpRequest request)
