@@ -58,7 +58,7 @@ namespace GeneXus.HttpHandlerFactory
 												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
 												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
 												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
-												{"oauth/gam/v2.0/RequestTokenAndUserinfo","aGAMSSORestRequestTokenAndUserInfo_v20.aspx"}};
+												{"oauth/gam/v2.0/requesttokenanduserinfo","aGAMSSORestRequestTokenAndUserInfo_v20.aspx"}};
 		private const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
 		private const string GXFLOW_NSPACE = "GXflow.Programs";
 		private static List<string> GxNamespaces;
@@ -120,7 +120,7 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				lastSegment = lastSegment.Remove(0, basePath.Length);
 			}
-			lastSegment = CleanUploadUrlSuffix(lastSegment.TrimStart('/'));
+			lastSegment = CleanUploadUrlSuffix(lastSegment.TrimStart('/')).ToLower();
 			GXLogging.Debug(log, "ObjectUrl:", lastSegment);
 			if (_aspxRewrite.ContainsKey(lastSegment))
 			{
