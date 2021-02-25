@@ -51,10 +51,37 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			SQLiteParameter parm = new SQLiteParameter();
-			parm.DbType = (DbType)dbtype;
+			parm.DbType = GXTypeToDbType(dbtype);
 			parm.Size = gxlength;
 			parm.ParameterName = name;
 			return parm;
+		}
+		private DbType GXTypeToDbType(object type)
+		{
+			if (!(type is GXType))
+				return (DbType)type;
+
+			switch (type)
+			{
+				case GXType.Byte: return DbType.Byte;
+				case GXType.Int16: return DbType.Int16;
+				case GXType.Int32: return DbType.Int32;
+				case GXType.Int64: return DbType.Int64;
+				case GXType.Number: return DbType.Single;
+				case GXType.DateTime: return DbType.DateTime;
+				case GXType.DateTime2: return DbType.DateTime2;
+				case GXType.Date: return DbType.Date;
+				case GXType.Boolean: return DbType.Byte;
+				case GXType.Char:return DbType.String;
+				case GXType.Blob: return DbType.Binary;
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:
+					return DbType.String;
+				default: return DbType.String;
+			}
 		}
 #if !NETCORE
 		public override DbDataAdapter CreateDataAdapeter()
