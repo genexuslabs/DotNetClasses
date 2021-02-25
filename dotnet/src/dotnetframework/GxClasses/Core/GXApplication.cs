@@ -314,6 +314,8 @@ namespace GeneXus.Application
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxContext));
 		internal static string GX_SPA_REQUEST_HEADER = "X-SPA-REQUEST";
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
+		internal const string GXLanguage = "GXLanguage";
+		internal const string GXTheme = "GXTheme";
 		[NonSerialized]
 		HttpContext _HttpContext;
 		[NonSerialized]
@@ -3366,7 +3368,7 @@ namespace GeneXus.Application
 		{
 			if (Config.GetLanguageProperty(id, "code") != null)
 			{
-				SetProperty("GXLanguage", id);
+				SetProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
 				_refreshAsGET = true;
 				return 0;
@@ -3380,7 +3382,7 @@ namespace GeneXus.Application
 		{
 			if (Config.GetLanguageProperty(id, "code") != null)
 			{
-				SetContextProperty("GXLanguage", id);
+				SetContextProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
 				_refreshAsGET = true;
 				return 0;
@@ -3392,14 +3394,14 @@ namespace GeneXus.Application
 		}
 		public string GetLanguage()
 		{
-			string prop = GetProperty("GXLanguage");
+			string prop = GetProperty(GXLanguage);
 			if (!String.IsNullOrEmpty(prop))
 				return prop;
 			else if (Config.GetValueOf("LANG_NAME", out prop))
 			{
 				if (HttpContext != null && HttpContext.Session != null)
 				{
-					WriteSessionKey("GXLanguage", prop);
+					WriteSessionKey(GXLanguage, prop);
 				}
 				return prop;
 			}
@@ -3643,7 +3645,7 @@ namespace GeneXus.Application
 
 		public string GetTheme()
 		{
-			Hashtable cThemeMap = ReadSessionKey<Hashtable>("GXTheme");
+			Hashtable cThemeMap = ReadSessionKey<Hashtable>(GXTheme);
 			if (cThemeMap != null && cThemeMap.Contains(_theme))
 				return (string)cThemeMap[_theme];
 			else
@@ -3655,14 +3657,14 @@ namespace GeneXus.Application
 				return 0;
 			else
 			{
-				Hashtable cThemeMap = ReadSessionKey<Hashtable>("GXTheme");
+				Hashtable cThemeMap = ReadSessionKey<Hashtable>(GXTheme);
 				if (cThemeMap == null)
 					cThemeMap = new Hashtable();
 				if (!cThemeMap.Contains(_theme))
 					cThemeMap.Add(_theme, t);
 				else
 					cThemeMap[_theme] = t;
-				return WriteSessionKey("GXTheme", cThemeMap) ? 1 : 0;
+				return WriteSessionKey(GXTheme, cThemeMap) ? 1 : 0;
 			}
 		}
 		public void SetDefaultTheme(string t)
