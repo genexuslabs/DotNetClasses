@@ -4274,16 +4274,28 @@ namespace GeneXus.Utils
             return decodedHeader;
         }
 #endif
+#if NETCORE
+		static int windowsPlatform = -1;
+#endif
 		public static bool IsWindowsPlatform
 		{
 			get
 			{
 #if NETCORE
-				return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+				if (windowsPlatform == -1)
+					windowsPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 1 : 0;
+
+				return (windowsPlatform == 1);
 #else
 				return true;
 #endif
 			}
+#if NETCORE
+			set
+			{
+				windowsPlatform = value ? 1 : 0;
+			}
+#endif
 		}
 		static public int DbmsVersion(IGxContext context, string dataSource)
 		{

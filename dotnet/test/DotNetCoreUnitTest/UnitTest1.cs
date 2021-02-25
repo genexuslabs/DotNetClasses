@@ -3,6 +3,8 @@ using GeneXus.Application;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using GeneXus.Cryptography;
+using GeneXus.Utils;
 
 namespace xUnitTesting
 {
@@ -81,6 +83,23 @@ namespace xUnitTesting
 			Assert.Single(cList);
 			Assert.Equal("aprocrest", cList.First().Name);
 			Assert.Equal("", cList.First().Parameters);
+		}
+
+		[Fact]
+		public void TestGXIncrementalHash()
+		{
+			GXUtil.IsWindowsPlatform = false;
+			GxStringCollection gxsyncheader = new GxStringCollection();
+			gxsyncheader.Add("GXTable");
+			gxsyncheader.Add("TiposDeDatos");
+			GxStringCollection gxsyncline = new GxStringCollection();
+			gxsyncline.Add("A");
+			gxsyncline.Add("B");
+			GXIncrementalHash gxinchash = new GXIncrementalHash("MD5");
+			gxinchash.InitData(gxsyncheader.ToJavascriptSource());
+			gxinchash.AppendData(gxsyncline.ToJavascriptSource());
+			var gxtablecurrenthash = gxinchash.GetHash();
+			Assert.Equal("b97443161c7982869e384d6c068b2f43", gxtablecurrenthash);
 		}
 
 		private List<ControllerInfo> RouteController(string path)

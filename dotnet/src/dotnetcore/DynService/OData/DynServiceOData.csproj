@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<DefineConstants>NETCORE</DefineConstants>
+		<PackageTags>DynService OData</PackageTags>
+		<PackageId>GeneXus.DynService.OData.Core</PackageId>
+		<AssemblyName>GeneXus.Data.DynService.OData</AssemblyName>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\dotnetframework\DynServiceOData\DynServiceOData.cs" Link="DynServiceOData.cs" />
+  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="GXOdata.Client" Version="5.2.3.5" />
+		<PackageReference Include="log4net" Version="2.0.8" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Core\DynService.Core.csproj" />
+		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+</Project>
