@@ -137,7 +137,7 @@ namespace GeneXus.Http
 			{
 				GXLogging.Debug(log, "Renew sessionId: " + _httpSession.SessionID);
 				var internalValues = BackupInternalKeys();
-				Destroy();
+				_httpSession.RemoveAll();
 				RestoreInternalKeys(internalValues);
 			}
 		}
