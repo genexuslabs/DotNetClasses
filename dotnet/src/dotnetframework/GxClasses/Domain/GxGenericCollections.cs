@@ -647,7 +647,6 @@ namespace GeneXus.Utils
 		}
 		private bool IsEqualComparedByKey(T item, params object[] key)
 		{
-#if !NETCORE
 			try
 			{
 				Object[][] itemKey = item.GetBCKey();
@@ -674,9 +673,6 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Error in IsEqualComparedByKey", ex);
 				return false;
 			}
-#else
-			return false;
-#endif
 		}
 	}
 }
