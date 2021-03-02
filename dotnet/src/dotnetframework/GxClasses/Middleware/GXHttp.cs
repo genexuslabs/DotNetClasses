@@ -1989,7 +1989,7 @@ namespace GeneXus.Http
 			return isOK && isPermissionOK;
 		}
 
-		private static string GetGAMLoginWebObject()
+		private string GetGAMLoginWebObject()
 		{
 			string loginObject = string.Empty;
 			if (Config.GetValueOf("IntegratedSecurityLoginWeb", out loginObject))
@@ -1998,9 +1998,10 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-			return loginObject;
+
+			return formatLink(loginObject);
 		}
-		private static string GetGAMNotAuthorizedWebObject()
+		private string GetGAMNotAuthorizedWebObject()
 		{
 			string loginObject = string.Empty;
 			if (Config.GetValueOf("IntegratedSecurityNotAuthorizedWeb", out loginObject))
@@ -2009,7 +2010,8 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-			return loginObject;
+
+			return formatLink(loginObject);
 		}
 
 		protected virtual void sendCacheHeaders()
