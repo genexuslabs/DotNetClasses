@@ -22,7 +22,6 @@ using GeneXus.Utils;
 using GeneXus.Metadata;
 using System.Globalization;
 using System.Data.SQLite;
-using Npgsql;
 using System.Security;
 
 namespace GeneXus.Data
@@ -1812,10 +1811,9 @@ namespace GeneXus.Data
 		}
 		private void ParsePostgresException(Exception ex)
 		{
-			NpgsqlException pEx = (NpgsqlException)ex;
-			m_sErrorInfo = pEx.Message.ToLower();
-			m_sDBMSErrorInfo = pEx.Message;
-			m_sSqlState = pEx.Code;
+			m_sErrorInfo = ex.Message.ToLower();
+			m_sDBMSErrorInfo = ex.Message;
+			m_sSqlState = (String)ClassLoader.GetPropValue(ex, "Code");  
 			PropertyInfo prop = ex.GetType().GetProperty("HResult", BindingFlags.NonPublic | BindingFlags.Instance); 
 			if (prop == null) 
 			{
@@ -1823,7 +1821,7 @@ namespace GeneXus.Data
 			}
 			if (prop == null)
 			{
-				Int32.TryParse(pEx.Code, out m_iErrorCode);
+				Int32.TryParse(m_sSqlState, out m_iErrorCode);
 			}
 			else
 			{
