@@ -447,12 +447,19 @@ namespace GeneXus.Configuration
 		
 		static NameValueCollection config
 		{
-			[SecuritySafeCritical]
+			[SecuritySafeCritical] 
 			get
 			{
 				if (!configLoaded || _config == null)
 				{
-					AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+					try
+					{
+						AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+					}
+					catch (Exception ex)
+					{
+						GXLogging.Info(log, ".NET trust level is lower than full", ex.Message);
+					}
 					string logConfigSource;
 					configLoaded = true;
 					if (configFileName != null)
