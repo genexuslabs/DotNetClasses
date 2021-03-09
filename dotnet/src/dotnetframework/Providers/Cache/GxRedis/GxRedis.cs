@@ -9,22 +9,27 @@ using GeneXus.Services;
 using GeneXus.Utils;
 using log4net;
 using StackExchange.Redis;
+using System.Reflection;
+using System.Security;
 
 namespace GeneXus.Cache
 {
 	public sealed class Redis : ICacheService2
 	{
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Redis));
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Redis));
 		ConnectionMultiplexer _redisConnection;
 		IDatabase _redis;
 		private const int REDIS_DEFAULT_PORT = 6379;
-
+		static Redis()
+		{
+			AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+		}
 		public Redis()
-        {
-            GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
+		{
+			GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
 			string address, password;
-            address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
-            password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
+			address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+			password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
 			ConfigurationOptions options;
 
 
@@ -55,24 +60,24 @@ namespace GeneXus.Cache
 			_redis = _redisConnection.GetDatabase();
 		}
 
-        public void Clear(string cacheid, string key)
-        {
-            ClearKey(Key(cacheid, key));
-        }
+		public void Clear(string cacheid, string key)
+		{
+			ClearKey(Key(cacheid, key));
+		}
 
-        public void ClearKey(string key)
-        {
+		public void ClearKey(string key)
+		{
 			_redis.KeyDelete(key);
-        }
+		}
 
-        public void ClearCache(string cacheid)
-        {
+		public void ClearCache(string cacheid)
+		{
 			Nullable<long> prefix = new Nullable<long>(KeyPrefix(cacheid).Value + 1);
 			_redis.StringSet(cacheid, prefix);
-        }
+		}
 
-        public void ClearAllCaches()
-        {
+		public void ClearAllCaches()
+		{
 			var endpoints = _redisConnection.GetEndPoints(true);
 			foreach (var endpoint in endpoints)
 			{
@@ -81,28 +86,29 @@ namespace GeneXus.Cache
 			}
 		}
 
-        private bool Get<T>(string key, out T value)
-        {
+		private bool Get<T>(string key, out T value)
+		{
 			if (default(T) == null)
-            {
-                value = Deserialize<T>(_redis.StringGet(key));
-                if (value == null) GXLogging.Debug(log, "Get<T>, misses key '" + key + "'");
-                return value != null;
-            }
-            else {
-                if (_redis.KeyExists(key))
-                {
-                    value = Deserialize<T>(_redis.StringGet(key));
-                    return true;
-                }
-                else
-                {
-                    GXLogging.Debug(log, "Get<T>, misses key '" + key + "'");
-                    value = default(T);
-                    return false;
-                }
-            }
-        }
+			{
+				value = Deserialize<T>(_redis.StringGet(key));
+				if (value == null) GXLogging.Debug(log, "Get<T>, misses key '" + key + "'");
+				return value != null;
+			}
+			else
+			{
+				if (_redis.KeyExists(key))
+				{
+					value = Deserialize<T>(_redis.StringGet(key));
+					return true;
+				}
+				else
+				{
+					GXLogging.Debug(log, "Get<T>, misses key '" + key + "'");
+					value = default(T);
+					return false;
+				}
+			}
+		}
 
 		public IDictionary<string, T> GetAll<T>(string cacheid, IEnumerable<string> keys)
 		{
@@ -125,14 +131,14 @@ namespace GeneXus.Cache
 				return null;
 			}
 		}
-		public void SetAll<T>(string cacheid, IEnumerable<string> keys, IEnumerable<T> values, int duration=0)
+		public void SetAll<T>(string cacheid, IEnumerable<string> keys, IEnumerable<T> values, int duration = 0)
 		{
 			if (keys != null && values != null && keys.Count() == values.Count())
 			{
 				var prefixedKeys = Key(cacheid, keys);
 				IEnumerator<T> valuesEnumerator = values.GetEnumerator();
 				KeyValuePair<RedisKey, RedisValue>[] dictionary = new KeyValuePair<RedisKey, RedisValue>[prefixedKeys.Count()];
-				int i = 0;	
+				int i = 0;
 				foreach (string key in prefixedKeys)
 				{
 					if (valuesEnumerator.MoveNext())
@@ -143,39 +149,39 @@ namespace GeneXus.Cache
 		}
 
 		private void Set<T>(string key, T value, int duration)
-        {
-            GXLogging.Debug(log,"Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());
-            if (duration > 0)
+		{
+			GXLogging.Debug(log, "Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());
+			if (duration > 0)
 				_redis.StringSet(key, Serialize(value), TimeSpan.FromMinutes(duration));
-            else
-				_redis. StringSet(key, Serialize(value));
-        }
+			else
+				_redis.StringSet(key, Serialize(value));
+		}
 
-        private void Set<T>(string key, T value)
-        {
-            _redis.StringSet(key, Serialize(value));
-        }
+		private void Set<T>(string key, T value)
+		{
+			_redis.StringSet(key, Serialize(value));
+		}
 
-        public bool Get<T>(string cacheid, string key, out T value)
-        {
-            GXLogging.Debug(log,"Get<T> cacheid:" + cacheid + " key:" + key);
-            return Get<T>(Key(cacheid, key), out value);
-        }
+		public bool Get<T>(string cacheid, string key, out T value)
+		{
+			GXLogging.Debug(log, "Get<T> cacheid:" + cacheid + " key:" + key);
+			return Get<T>(Key(cacheid, key), out value);
+		}
 
-        public void Set<T>(string cacheid, string key, T value)
-        {
-            Set<T>(Key(cacheid, key), value);
-        }
+		public void Set<T>(string cacheid, string key, T value)
+		{
+			Set<T>(Key(cacheid, key), value);
+		}
 
-        public void Set<T>(string cacheid, string key, T value, int durationMinutes)
-        {
-            Set<T>(Key(cacheid, key), value, durationMinutes);
-        }
+		public void Set<T>(string cacheid, string key, T value, int durationMinutes)
+		{
+			Set<T>(Key(cacheid, key), value, durationMinutes);
+		}
 
-        private string Key(string cacheid, string key)
-        {
+		private string Key(string cacheid, string key)
+		{
 			return FormatKey(cacheid, key, KeyPrefix(cacheid));
-        }
+		}
 		private IEnumerable<RedisKey> Key(string cacheid, IEnumerable<string> key)
 		{
 			var prefix = KeyPrefix(cacheid);
@@ -211,10 +217,29 @@ namespace GeneXus.Cache
 				return default(T);
 			}
 			JsonSerializerOptions opts = new JsonSerializerOptions();
-			opts.Converters.Add(new ObjectToInferredTypesConverter ());
+			opts.Converters.Add(new ObjectToInferredTypesConverter());
 			return JsonSerializer.Deserialize<T>(value, opts);
 		}
+		#region Compatibility with GxClasses dependencies through MySQLConnector
+		const string CompilerServicesShortName = "System.Runtime.CompilerServices.Unsafe";
+		static Version CompilerServicesVersion = new Version(4, 0, 4);
 
+		const string MemoryShortName = "System.Memory";
+		static Version MemoryVersion = new Version(4, 0, 1, 0);
+		[SecurityCritical]
+		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+		{
+			var requestedAssembly = new AssemblyName(args.Name);
+			if (requestedAssembly.Name == CompilerServicesShortName)
+				requestedAssembly.Version = CompilerServicesVersion;
+			else if (requestedAssembly.Name == MemoryShortName)
+				requestedAssembly.Version = MemoryVersion;
+			else
+				return null;
+
+			return Assembly.Load(requestedAssembly);
+		}
+		#endregion
 	}
 	public class ObjectToInferredTypesConverter: JsonConverter<object>
 	{
