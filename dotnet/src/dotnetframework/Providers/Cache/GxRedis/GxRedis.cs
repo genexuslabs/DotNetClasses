@@ -1,49 +1,58 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using GeneXus.Configuration;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Runtime.Serialization.Formatters.Binary;
+using GeneXus.Services;
 using GeneXus.Utils;
 using log4net;
-using ServiceStack.Caching;
-using ServiceStack.Redis;
-using GeneXus.Services;
-using ServiceStack.Text;
+using StackExchange.Redis;
 
 namespace GeneXus.Cache
 {
-    public sealed class Redis : ICacheService2
+	public sealed class Redis : ICacheService2
 	{
         private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Redis));
-        RedisClient _cache;
+		ConnectionMultiplexer _redisConnection;
+		IDatabase _redis;
 		private const int REDIS_DEFAULT_PORT = 6379;
 
 		public Redis()
         {
             GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
-            String address, password;
+			string address, password;
             address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
             password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
+			ConfigurationOptions options;
 
-            if (!String.IsNullOrEmpty(address))
-            {
-                if (!String.IsNullOrEmpty(password))
-                {
+
+			if (!string.IsNullOrEmpty(address))
+			{
+				if (!string.IsNullOrEmpty(password))
+				{
 					if (!address.Contains(':'))
 					{
 						address = $"{address}:{REDIS_DEFAULT_PORT}";
 					}
-					address = String.Format("redis://clientid:{0}@{1}", password.Trim(), address.Trim());
-					_cache = new RedisClient(new Uri(address));
+					address = string.Format("{0},password={1}", address.Trim(), password.Trim());
+					options = ConfigurationOptions.Parse(address);
 				}
 				else
 				{
-					_cache = new RedisClient(address);
+					options = ConfigurationOptions.Parse(address);
 				}
 			}
-            else
-                _cache = new RedisClient("localhost", REDIS_DEFAULT_PORT);
-			JsConfig.DateHandler = DateHandler.ISO8601;
+			else
+			{
+				options = ConfigurationOptions.Parse(String.Format("localhost:{0}", REDIS_DEFAULT_PORT));
+			}
+
+			options.AllowAdmin = true;
+			_redisConnection = ConnectionMultiplexer.Connect(options);
+
+			_redis = _redisConnection.GetDatabase();
 		}
 
         public void Clear(string cacheid, string key)
@@ -53,31 +62,37 @@ namespace GeneXus.Cache
 
         public void ClearKey(string key)
         {
-            _cache.Remove(key);
+			_redis.KeyDelete(key);
         }
 
         public void ClearCache(string cacheid)
         {
-            _cache.Increment(cacheid, 1);
+			Nullable<long> prefix = new Nullable<long>(KeyPrefix(cacheid).Value + 1);
+			_redis.StringSet(cacheid, prefix);
         }
 
         public void ClearAllCaches()
         {
-            _cache.FlushAll();
-        }
+			var endpoints = _redisConnection.GetEndPoints(true);
+			foreach (var endpoint in endpoints)
+			{
+				var server = _redisConnection.GetServer(endpoint);
+				server.FlushAllDatabases();
+			}
+		}
 
         private bool Get<T>(string key, out T value)
         {
-            if (default(T) == null)
+			if (default(T) == null)
             {
-                value = _cache.Get<T>(key);
+                value = Deserialize<T>(_redis.StringGet(key));
                 if (value == null) GXLogging.Debug(log, "Get<T>, misses key '" + key + "'");
                 return value != null;
             }
             else {
-                if (_cache.ContainsKey(key))
+                if (_redis.KeyExists(key))
                 {
-                    value = _cache.Get<T>(key);
+                    value = Deserialize<T>(_redis.StringGet(key));
                     return true;
                 }
                 else
@@ -94,27 +109,36 @@ namespace GeneXus.Cache
 			if (keys != null)
 			{
 				var prefixedKeys = Key(cacheid, keys);
-				return _cache.GetAll<T>(prefixedKeys);
+				RedisValue[] values = _redis.StringGet(prefixedKeys.ToArray());
+				IDictionary<string, T> results = new Dictionary<string, T>();
+				int i = 0;
+				foreach (RedisKey key in prefixedKeys)
+				{
+					Get<T>(key, out T result);
+					results.Add(key, Deserialize<T>(values[i]));
+					i++;
+				}
+				return results;
 			}
 			else
 			{
 				return null;
 			}
 		}
-
 		public void SetAll<T>(string cacheid, IEnumerable<string> keys, IEnumerable<T> values, int duration=0)
 		{
-			if (keys != null && values!=null && keys.Count() == values.Count())
+			if (keys != null && values != null && keys.Count() == values.Count())
 			{
 				var prefixedKeys = Key(cacheid, keys);
-				IDictionary<string, T> dictionary = new Dictionary<string, T>();
 				IEnumerator<T> valuesEnumerator = values.GetEnumerator();
+				KeyValuePair<RedisKey, RedisValue>[] dictionary = new KeyValuePair<RedisKey, RedisValue>[prefixedKeys.Count()];
+				int i = 0;	
 				foreach (string key in prefixedKeys)
 				{
 					if (valuesEnumerator.MoveNext())
-						dictionary.Add(key, valuesEnumerator.Current);
+						dictionary[i] = new KeyValuePair<RedisKey, RedisValue>(key, Serialize(valuesEnumerator.Current));
 				}
-				_cache.SetAll<T>(dictionary);
+				_redis.StringSet(dictionary);
 			}
 		}
 
@@ -122,14 +146,14 @@ namespace GeneXus.Cache
         {
             GXLogging.Debug(log,"Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());
             if (duration > 0)
-                _cache.Set<T>(key, value, TimeSpan.FromMinutes(duration));
+				_redis.StringSet(key, Serialize(value), TimeSpan.FromMinutes(duration));
             else
-                _cache.Set<T>(key, value);
+				_redis. StringSet(key, Serialize(value));
         }
 
         private void Set<T>(string key, T value)
         {
-            _cache.Set<T>(key, value);
+            _redis.StringSet(key, Serialize(value));
         }
 
         public bool Get<T>(string cacheid, string key, out T value)
@@ -152,10 +176,10 @@ namespace GeneXus.Cache
         {
 			return FormatKey(cacheid, key, KeyPrefix(cacheid));
         }
-		private IEnumerable<string> Key(string cacheid, IEnumerable<string> key)
+		private IEnumerable<RedisKey> Key(string cacheid, IEnumerable<string> key)
 		{
 			var prefix = KeyPrefix(cacheid);
-			return key.Select(k => FormatKey(cacheid, k, prefix));
+			return key.Select(k => new RedisKey(FormatKey(cacheid, k, prefix)));
 		}
 		private string FormatKey(string cacheid, string key, Nullable<long> prefix)
 		{
@@ -171,6 +195,60 @@ namespace GeneXus.Cache
 			}
 			return prefix;
 		}
+		static string Serialize(object o)
+		{
+			if (o == null)
+			{
+				return null;
+			}
+			return JsonSerializer.Serialize(o);
+		}
 
-    }
+		static T Deserialize<T>(string value)
+		{
+			if (value == null)
+			{
+				return default(T);
+			}
+			JsonSerializerOptions opts = new JsonSerializerOptions();
+			opts.Converters.Add(new ObjectToInferredTypesConverter ());
+			return JsonSerializer.Deserialize<T>(value, opts);
+		}
+
+	}
+	public class ObjectToInferredTypesConverter: JsonConverter<object>
+	{
+		public override bool CanConvert(Type typeToConvert)
+		{
+			return typeof(object) == typeToConvert;
+		}
+		public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			switch (reader.TokenType)
+			{
+				case JsonTokenType.True:
+					return false;
+				case JsonTokenType.False:
+					return false;
+				case JsonTokenType.Number:
+					if (reader.TryGetInt64(out long l))
+						return l;
+					else return reader.GetDouble();
+				case JsonTokenType.String:
+					if (reader.TryGetDateTime(out DateTime datetime))
+						return datetime;
+					else return reader.GetString();
+				default:
+					using (JsonDocument document = JsonDocument.ParseValue(ref reader))
+					{
+						return document.RootElement.Clone().ToString();
+					}
+			}
+		}
+
+		public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+		{
+			throw new NotImplementedException();
+		}
+	}
 }
