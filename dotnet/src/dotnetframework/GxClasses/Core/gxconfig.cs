@@ -431,16 +431,19 @@ namespace GeneXus.Configuration
 			return null;
 		}
 #else
+		const string ThreadingShortName = "System.Threading.Tasks.Extensions";
+		static Version ThreadingVersion = new Version(4, 2, 0, 1);
+
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
 			var requestedAssembly = new AssemblyName(args.Name);
-			if (requestedAssembly.Name != Log4NetShortName)
-				return null;
+			if (requestedAssembly.Name == Log4NetShortName)
+				requestedAssembly.Version = Log4NetVersion;
+			else if (requestedAssembly.Name == ThreadingShortName)
+				requestedAssembly.Version = ThreadingVersion;
+			else return null;
 
-			requestedAssembly.Version = Log4NetVersion;
-
-			AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
 
 			return Assembly.Load(requestedAssembly);
 		}
