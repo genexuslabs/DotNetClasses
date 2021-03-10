@@ -95,8 +95,15 @@ namespace GeneXus.Data
 			if (!string.IsNullOrEmpty(extra))
 			{
 				string res = ParseAdditionalData(extra, "integrated security");
-				if (extra.IndexOf(ConnectionStringEncoding, StringComparison.OrdinalIgnoreCase) != extra.LastIndexOf(ConnectionStringEncoding, StringComparison.OrdinalIgnoreCase))
-					res = RemoveDuplicates(res, ConnectionStringEncoding);
+				if (NpgsqlAssembly.GetName().Version.Major == 1)
+				{
+					if (extra.IndexOf(ConnectionStringEncoding, StringComparison.OrdinalIgnoreCase) != extra.LastIndexOf(ConnectionStringEncoding, StringComparison.OrdinalIgnoreCase))
+						res = RemoveDuplicates(res, ConnectionStringEncoding);
+				}
+				else
+				{
+					res = ParseAdditionalData(res, ConnectionStringEncoding); //remove ConnectionStringEncoding unsupported in npgsql > 1.
+				}
 
 				if (!res.StartsWith(";") && res.Length > 1) connectionString.Append(";");
 				connectionString.Append(res);
