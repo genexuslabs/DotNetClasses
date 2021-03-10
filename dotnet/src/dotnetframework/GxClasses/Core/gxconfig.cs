@@ -430,30 +430,24 @@ namespace GeneXus.Configuration
 			return null;
 		}
 #else
-		const string ThreadingShortName = "System.Threading.Tasks.Extensions";
-		static Version ThreadingVersion = new Version(4, 2, 0, 1);
+		static Dictionary<string, Version> AssemblyRedirect = new Dictionary<string, Version>
+		{
+			{ "System.Threading.Tasks.Extensions", new Version(4, 2, 0, 1) },
+			{ "System.Runtime.CompilerServices.Unsafe", new Version(4, 0, 4, 1) },
+			{ "System.Buffers", new Version(4, 0, 3, 0)},
+			{ "System.Memory",new Version(4, 0, 1, 1) }
+		};
 
-		const string CompilerServicesShortName = "System.Runtime.CompilerServices.Unsafe";
-		static Version CompilerServicesVersion = new Version(4, 0, 4, 1);
-
-		const string BuffersShortName = "System.Buffers";
-		static Version BuffersVersion = new Version(4, 0, 3, 0);
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
 			var requestedAssembly = new AssemblyName(args.Name);
-			if (requestedAssembly.Name == Log4NetShortName)
-				requestedAssembly.Version = Log4NetVersion;
-			else if (requestedAssembly.Name == ThreadingShortName)
-				requestedAssembly.Version = ThreadingVersion;
-			else if (requestedAssembly.Name == CompilerServicesShortName)
-				requestedAssembly.Version = CompilerServicesVersion;
-			else if (requestedAssembly.Name == BuffersShortName)
-				requestedAssembly.Version = BuffersVersion;
+			if (AssemblyRedirect.ContainsKey(requestedAssembly.Name))
+			{
+				requestedAssembly.Version = AssemblyRedirect[requestedAssembly.Name];
+				return Assembly.Load(requestedAssembly);
+			}
 			else return null;
-
-
-			return Assembly.Load(requestedAssembly);
 		}
 #endif
 		
