@@ -433,6 +433,11 @@ namespace GeneXus.Configuration
 		const string ThreadingShortName = "System.Threading.Tasks.Extensions";
 		static Version ThreadingVersion = new Version(4, 2, 0, 1);
 
+		const string CompilerServicesShortName = "System.Runtime.CompilerServices.Unsafe";
+		static Version CompilerServicesVersion = new Version(4, 0, 4, 1);
+
+		const string BuffersShortName = "System.Buffers";
+		static Version BuffersVersion = new Version(4, 0, 3, 0);
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
@@ -441,6 +446,10 @@ namespace GeneXus.Configuration
 				requestedAssembly.Version = Log4NetVersion;
 			else if (requestedAssembly.Name == ThreadingShortName)
 				requestedAssembly.Version = ThreadingVersion;
+			else if (requestedAssembly.Name == CompilerServicesShortName)
+				requestedAssembly.Version = CompilerServicesVersion;
+			else if (requestedAssembly.Name == BuffersShortName)
+				requestedAssembly.Version = BuffersVersion;
 			else return null;
 
 
