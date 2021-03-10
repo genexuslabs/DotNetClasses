@@ -395,11 +395,12 @@ namespace GeneXus.Configuration
 				return new CultureInfo(CultureInfo.CurrentCulture.Name);
 			}
 		}
-		const string Log4NetShortName = "log4net";
-		static Version Log4NetVersion = new Version(2, 0, 11);
 
 #if NETCORE
 		public static IConfigurationRoot ConfigRoot { get; set; }
+		const string Log4NetShortName = "log4net";
+		static Version Log4NetVersion = new Version(2, 0, 11);
+
 		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
@@ -432,6 +433,7 @@ namespace GeneXus.Configuration
 #else
 		static Dictionary<string, Version> AssemblyRedirect = new Dictionary<string, Version>
 		{
+			{"log4net", new Version(2, 0, 11) },
 			{ "System.Threading.Tasks.Extensions", new Version(4, 2, 0, 1) },
 			{ "System.Runtime.CompilerServices.Unsafe", new Version(4, 0, 4, 1) },
 			{ "System.Buffers", new Version(4, 0, 3, 0)},
