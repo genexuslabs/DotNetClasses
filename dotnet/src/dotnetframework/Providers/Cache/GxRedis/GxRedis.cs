@@ -20,10 +20,6 @@ namespace GeneXus.Cache
 		ConnectionMultiplexer _redisConnection;
 		IDatabase _redis;
 		private const int REDIS_DEFAULT_PORT = 6379;
-		static Redis()
-		{
-			AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-		}
 		public Redis()
 		{
 			GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
@@ -220,26 +216,6 @@ namespace GeneXus.Cache
 			opts.Converters.Add(new ObjectToInferredTypesConverter());
 			return JsonSerializer.Deserialize<T>(value, opts);
 		}
-		#region Compatibility with GxClasses dependencies through MySQLConnector
-		const string CompilerServicesShortName = "System.Runtime.CompilerServices.Unsafe";
-		static Version CompilerServicesVersion = new Version(4, 0, 4);
-
-		const string MemoryShortName = "System.Memory";
-		static Version MemoryVersion = new Version(4, 0, 1, 0);
-		[SecurityCritical]
-		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-		{
-			var requestedAssembly = new AssemblyName(args.Name);
-			if (requestedAssembly.Name == CompilerServicesShortName)
-				requestedAssembly.Version = CompilerServicesVersion;
-			else if (requestedAssembly.Name == MemoryShortName)
-				requestedAssembly.Version = MemoryVersion;
-			else
-				return null;
-
-			return Assembly.Load(requestedAssembly);
-		}
-		#endregion
 	}
 	public class ObjectToInferredTypesConverter: JsonConverter<object>
 	{
