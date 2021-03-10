@@ -18,7 +18,8 @@ namespace GeneXus.Cache
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Redis));
 		ConnectionMultiplexer _redisConnection;
-		IDatabase _redis;
+		IDatabase _redisDatabase;
+		ConfigurationOptions _redisConnectionOptions;
 		private const int REDIS_DEFAULT_PORT = 6379;
 		public Redis()
 		{
@@ -26,8 +27,6 @@ namespace GeneXus.Cache
 			string address, password;
 			address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
 			password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
-			ConfigurationOptions options;
-
 
 			if (!string.IsNullOrEmpty(address))
 			{
@@ -38,24 +37,32 @@ namespace GeneXus.Cache
 						address = $"{address}:{REDIS_DEFAULT_PORT}";
 					}
 					address = string.Format("{0},password={1}", address.Trim(), password.Trim());
-					options = ConfigurationOptions.Parse(address);
+					_redisConnectionOptions = ConfigurationOptions.Parse(address);
 				}
 				else
 				{
-					options = ConfigurationOptions.Parse(address);
+					_redisConnectionOptions = ConfigurationOptions.Parse(address);
 				}
 			}
 			else
 			{
-				options = ConfigurationOptions.Parse(String.Format("localhost:{0}", REDIS_DEFAULT_PORT));
+				_redisConnectionOptions = ConfigurationOptions.Parse(String.Format("localhost:{0}", REDIS_DEFAULT_PORT));
 			}
 
-			options.AllowAdmin = true;
-			_redisConnection = ConnectionMultiplexer.Connect(options);
-
-			_redis = _redisConnection.GetDatabase();
+			_redisConnectionOptions.AllowAdmin = true;
 		}
-
+		IDatabase RedisDatabase
+		{
+			get
+			{
+				if (_redisDatabase == null)
+				{
+					_redisConnection = ConnectionMultiplexer.Connect(_redisConnectionOptions);
+					_redisDatabase = _redisConnection.GetDatabase();
+				}
+				return _redisDatabase;
+			}
+		}
 		public void Clear(string cacheid, string key)
 		{
 			ClearKey(Key(cacheid, key));
@@ -63,13 +70,13 @@ namespace GeneXus.Cache
 
 		public void ClearKey(string key)
 		{
-			_redis.KeyDelete(key);
+			RedisDatabase.KeyDelete(key);
 		}
 
 		public void ClearCache(string cacheid)
 		{
 			Nullable<long> prefix = new Nullable<long>(KeyPrefix(cacheid).Value + 1);
-			_redis.StringSet(cacheid, prefix);
+			RedisDatabase.StringSet(cacheid, prefix);
 		}
 
 		public void ClearAllCaches()
@@ -86,15 +93,15 @@ namespace GeneXus.Cache
 		{
 			if (default(T) == null)
 			{
-				value = Deserialize<T>(_redis.StringGet(key));
+				value = Deserialize<T>(RedisDatabase.StringGet(key));
 				if (value == null) GXLogging.Debug(log, "Get<T>, misses key '" + key + "'");
 				return value != null;
 			}
 			else
 			{
-				if (_redis.KeyExists(key))
+				if (RedisDatabase.KeyExists(key))
 				{
-					value = Deserialize<T>(_redis.StringGet(key));
+					value = Deserialize<T>(RedisDatabase.StringGet(key));
 					return true;
 				}
 				else
@@ -111,7 +118,7 @@ namespace GeneXus.Cache
 			if (keys != null)
 			{
 				var prefixedKeys = Key(cacheid, keys);
-				RedisValue[] values = _redis.StringGet(prefixedKeys.ToArray());
+				RedisValue[] values = RedisDatabase.StringGet(prefixedKeys.ToArray());
 				IDictionary<string, T> results = new Dictionary<string, T>();
 				int i = 0;
 				foreach (RedisKey key in prefixedKeys)
@@ -140,7 +147,7 @@ namespace GeneXus.Cache
 					if (valuesEnumerator.MoveNext())
 						dictionary[i] = new KeyValuePair<RedisKey, RedisValue>(key, Serialize(valuesEnumerator.Current));
 				}
-				_redis.StringSet(dictionary);
+				RedisDatabase.StringSet(dictionary);
 			}
 		}
 
@@ -148,14 +155,14 @@ namespace GeneXus.Cache
 		{
 			GXLogging.Debug(log, "Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());
 			if (duration > 0)
-				_redis.StringSet(key, Serialize(value), TimeSpan.FromMinutes(duration));
+				RedisDatabase.StringSet(key, Serialize(value), TimeSpan.FromMinutes(duration));
 			else
-				_redis.StringSet(key, Serialize(value));
+				RedisDatabase.StringSet(key, Serialize(value));
 		}
 
 		private void Set<T>(string key, T value)
 		{
-			_redis.StringSet(key, Serialize(value));
+			RedisDatabase.StringSet(key, Serialize(value));
 		}
 
 		public bool Get<T>(string cacheid, string key, out T value)
