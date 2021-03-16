@@ -1282,9 +1282,34 @@ namespace GeneXus.Data.ADO
 		}
 #endregion
 	}
-
+	public class ParDef
+	{
+		public string Name { get; set; }
+		public string Tbl { get; set; }
+		public string Fld { get; set; }
+		public GXType GxType { get; set; }
+		public int Size { get; set; }
+		public int Scale { get; set; }
+		public int ImgIdx { get; set; }
+		public bool Nullable { get; set; }
+		public bool ChkEmpty { get; set; }
+		public bool Return { get; set; }
+		public bool InDB { get; set; }
+		public bool AddAtt { get; set; }
+		public bool Preload { get; set; }
+		public bool InOut { get; set; }
+		public bool Out { get; set; }
+		public ParDef(string name, GXType type, int size, int scale)
+		{
+			Name = name;
+			GxType = type;
+			Size = size;
+			Scale = scale;
+		}
+	}
 	public class GxCommand: IGxDbCommand
 	{
+		internal List<ParDef> ParmDefinition;
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxCommand));
 		string stmt;
         String stmtId;
@@ -1335,6 +1360,7 @@ namespace GeneXus.Data.ADO
 			timeToLive=GetTimeToLive(ttl);
 			hasNested=hasNestedCursor;
 			_errorHandler = errorHandler;
+			ParmDefinition = new List<ParDef>();
 			try
 			{
 				dataStore = ds;
@@ -2169,6 +2195,8 @@ namespace GeneXus.Data.ADO
         {
             if (parameters.Count>0)
                 parameters.Clear();
+			if (ParmDefinition.Count > 0)
+				ParmDefinition.Clear();
         }
 		public void AddParameter( string name, Object dbtype, int gxlength, int gxdec)
 		{
@@ -2565,7 +2593,7 @@ namespace GeneXus.Data.ADO
 
 			connection.BlobPath = Preferences.getBLOB_PATH();
 			string strCache;
-			connection.Cache=(Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive;
+			connection.Cache=((Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive) && ! GxContext.isReorganization;
 			connection.DataStore = this;
 
 			string isolevel;

@@ -39,6 +39,11 @@ namespace GeneXus.Application
 	using GeneXus.Printer;
 	using System.Drawing;
 	using System.Collections.Concurrent;
+#if NETCORE
+	using Microsoft.AspNetCore.Http.Features;
+#endif
+	using System.Threading;
+	using System.Security.Claims;
 
 	public interface IGxContext
 	{
@@ -270,12 +275,47 @@ namespace GeneXus.Application
 		string GetCacheInvalidationToken();
 		string GetURLBuildNumber(string resourcePath, string urlBuildNumber);
 	}
+#if NETCORE
+	public class GxHttpContextAccesor : HttpContext
+	{
+		IHttpContextAccessor ctxAccessor;
+		public GxHttpContextAccesor(IHttpContextAccessor ctxAccessor)
+		{
+			this.ctxAccessor = ctxAccessor;
+		}
+		public override ConnectionInfo Connection => ctxAccessor.HttpContext.Connection;
+
+		public override IFeatureCollection Features => ctxAccessor.HttpContext.Features;
+
+		public override IDictionary<object, object> Items { get => ctxAccessor.HttpContext.Items; set => ctxAccessor.HttpContext.Items=value; }
+
+		public override HttpRequest Request => ctxAccessor.HttpContext.Request;
+
+		public override CancellationToken RequestAborted { get => ctxAccessor.HttpContext.RequestAborted; set => ctxAccessor.HttpContext.RequestAborted=value; }
+		public override IServiceProvider RequestServices { get => ctxAccessor.HttpContext.RequestServices; set => ctxAccessor.HttpContext.RequestServices=value; }
+
+		public override HttpResponse Response => ctxAccessor.HttpContext.Response;
+
+		public override ISession Session { get => ctxAccessor.HttpContext.Session; set => ctxAccessor.HttpContext.Session=value; }
+		public override string TraceIdentifier { get => ctxAccessor.HttpContext.TraceIdentifier; set => ctxAccessor.HttpContext.TraceIdentifier=value; }
+		public override ClaimsPrincipal User { get => ctxAccessor.HttpContext.User; set => ctxAccessor.HttpContext.User=value; }
+
+		public override WebSocketManager WebSockets => ctxAccessor.HttpContext.WebSockets;
+
+		public override void Abort()
+		{
+			ctxAccessor.HttpContext.Abort();
+		}
+	}
+#endif
 	[Serializable]
 	public class GxContext : IGxContext
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxContext));
 		internal static string GX_SPA_REQUEST_HEADER = "X-SPA-REQUEST";
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
+		internal const string GXLanguage = "GXLanguage";
+		internal const string GXTheme = "GXTheme";
 		[NonSerialized]
 		HttpContext _HttpContext;
 		[NonSerialized]
@@ -606,7 +646,6 @@ namespace GeneXus.Application
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
 					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
 					filePath = file.Create(pf.InputStream);
-
 					string fileGuid = GxUploadHelper.GetUploadFileGuid();
 					fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
 
@@ -2020,8 +2059,11 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (FrontEndHttps())
+				if (_HttpContext.Request.GetIsSecureFrontEnd())
+				{
+					GXLogging.Debug(log, "Front-End-Https header activated");
 					return 1;
+				}
 				else
 					return _HttpContext.Request.GetIsSecureConnection();
 			}
@@ -2239,6 +2281,12 @@ namespace GeneXus.Application
 				Path = cookie.Path,
 				Secure = cookie.Secure
 			};
+			string sameSite;
+			SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
+			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+			{
+				cookieOptions.SameSite = sameSiteMode;
+			}
 			if (!expires.Equals(DateTimeUtil.NullDate()))
 				cookieOptions.Expires = DateTime.SpecifyKind(cookie.Expires, DateTimeKind.Utc);
 
@@ -2734,7 +2782,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (FrontEndHttps())
+				if (GetHttpSecure() == 1)
 				{
 					return GXUri.UriSchemeHttps;
 				}
@@ -2742,8 +2790,6 @@ namespace GeneXus.Application
 			}
 			catch
 			{
-				if (GetHttpSecure() == 1)
-					return GXUri.UriSchemeHttps;
 				return GXUri.UriSchemeHttp;
 			}
 		}
@@ -3326,7 +3372,7 @@ namespace GeneXus.Application
 		{
 			if (Config.GetLanguageProperty(id, "code") != null)
 			{
-				SetProperty("GXLanguage", id);
+				SetProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
 				_refreshAsGET = true;
 				return 0;
@@ -3340,7 +3386,7 @@ namespace GeneXus.Application
 		{
 			if (Config.GetLanguageProperty(id, "code") != null)
 			{
-				SetContextProperty("GXLanguage", id);
+				SetContextProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
 				_refreshAsGET = true;
 				return 0;
@@ -3352,14 +3398,14 @@ namespace GeneXus.Application
 		}
 		public string GetLanguage()
 		{
-			string prop = GetProperty("GXLanguage");
+			string prop = GetProperty(GXLanguage);
 			if (!String.IsNullOrEmpty(prop))
 				return prop;
 			else if (Config.GetValueOf("LANG_NAME", out prop))
 			{
 				if (HttpContext != null && HttpContext.Session != null)
 				{
-					WriteSessionKey("GXLanguage", prop);
+					WriteSessionKey(GXLanguage, prop);
 				}
 				return prop;
 			}
@@ -3603,7 +3649,7 @@ namespace GeneXus.Application
 
 		public string GetTheme()
 		{
-			Hashtable cThemeMap = ReadSessionKey<Hashtable>("GXTheme");
+			Hashtable cThemeMap = ReadSessionKey<Hashtable>(GXTheme);
 			if (cThemeMap != null && cThemeMap.Contains(_theme))
 				return (string)cThemeMap[_theme];
 			else
@@ -3615,14 +3661,14 @@ namespace GeneXus.Application
 				return 0;
 			else
 			{
-				Hashtable cThemeMap = ReadSessionKey<Hashtable>("GXTheme");
+				Hashtable cThemeMap = ReadSessionKey<Hashtable>(GXTheme);
 				if (cThemeMap == null)
 					cThemeMap = new Hashtable();
 				if (!cThemeMap.Contains(_theme))
 					cThemeMap.Add(_theme, t);
 				else
 					cThemeMap[_theme] = t;
-				return WriteSessionKey("GXTheme", cThemeMap) ? 1 : 0;
+				return WriteSessionKey(GXTheme, cThemeMap) ? 1 : 0;
 			}
 		}
 		public void SetDefaultTheme(string t)
@@ -3648,7 +3694,7 @@ namespace GeneXus.Application
 			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromBase64(b64);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")));
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), HttpContext);
 			return filePath;
 		}
 
@@ -3665,7 +3711,7 @@ namespace GeneXus.Application
 			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromByteArray(bArray);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")));
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), HttpContext);
 			return filePath;
 		}
 
@@ -3730,7 +3776,7 @@ namespace GeneXus.Application
 					if (string.IsNullOrEmpty(_clientId))
 					{
 						_clientId = Guid.NewGuid().ToString();
-						this.SetCookie(CLIENT_ID_HEADER, _clientId, string.Empty, DateTime.MaxValue, string.Empty, 0);
+						this.SetCookie(CLIENT_ID_HEADER, _clientId, string.Empty, DateTime.MaxValue, string.Empty, GetHttpSecure());
 					}
 				}
 				return _clientId;

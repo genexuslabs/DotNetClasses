@@ -149,15 +149,15 @@ namespace GeneXus.Utils
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.Geospatial));
 
-		const string EMPTY_GEOMETRY = "GEOMETRYCOLLECTION EMPTY";
+		internal const string EMPTY_GEOMETRY = "GEOMETRYCOLLECTION EMPTY";
 		const string EMPTY_GEOGRAPHY = "GEOGRAPHY EMPTY";
 		const string EMPTY_POINT = "POINT EMPTY";
 		const string EMPTY_LINE = "LINESTRING EMPTY";
 		const string EMPTY_POLY = "POLYGON EMPTY";
 
-		const string ALT_EMPTY_POINT = "POINT(0 0)";
-        const string ALT_EMPTY_LINE = "LINESTRING( 0 0,0 1)";
-        const string ALT_EMPTY_POLY = "POLYGON((0 0, 0 1, 1 0,0 0))";
+		internal const string ALT_EMPTY_POINT = "POINT(0 0)";
+		internal const string ALT_EMPTY_LINE = "LINESTRING( 0 0,0 1)";
+		internal const string ALT_EMPTY_POLY = "POLYGON((0 0, 0 1, 1 0,0 0))";
 
         public enum GeoGraphicTypeValue { Point, MultiPoint, Line, MultiLine, Polygon, MultiPolygon, Other };
 

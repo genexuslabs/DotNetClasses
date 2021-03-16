@@ -230,7 +230,7 @@ namespace GeneXus.Procedure
 			getPrinter().GxSetDocName(fileName);
             getPrinter().GxSetDocFormat(fileExtension);
 			context.PrintReportAtClient(fileName, printerRule);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile(Preferences.getBLOB_PATH(), new GxFileInfo(fileName, Preferences.getBLOB_PATH())));
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile(Preferences.getBLOB_PATH(), new GxFileInfo(fileName, Preferences.getBLOB_PATH())), context.HttpContext);
 		}
 
 		protected bool initPrinter(String outputTo, int gxXPage, int gxYPage, string iniFile, string form, string printer, int mode, int orientation, int pageSize, int pageLength, int pageWidth, int scale, int copies, int defSrc, int quality, int color, int duplex)
