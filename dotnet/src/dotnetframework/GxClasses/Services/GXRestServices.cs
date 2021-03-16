@@ -25,6 +25,7 @@ using GeneXus.Mime;
 using System.Reflection;
 using GeneXus.Metadata;
 using System.Net.Http;
+using System.IO;
 
 namespace GeneXus.Utils
 {
@@ -288,10 +289,16 @@ namespace GeneXus.Utils
 				return false;
 			}
 		}
+		[Obsolete("UploadImpl without arguments is deprecated", false)]
 		public void UploadImpl()
 		{
 			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
 			gxobject.webExecute();
+		}
+		public void UploadImpl(Stream stream)
+		{
+			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
+			gxobject.WcfExecute(stream, WebOperationContext.Current.IncomingRequest.ContentType);
 		}
 		public void ErrorCheck(IGxSilentTrn trn)
 		{
