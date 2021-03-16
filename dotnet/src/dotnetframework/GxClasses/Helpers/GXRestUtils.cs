@@ -32,7 +32,7 @@ namespace GeneXus.Utils
 		internal static void CacheUploadFile(string fileGuid, string savedFileName, string localfileName, string ext, GxFile file, HttpContext localHttpContext)
 		{
 			CacheAPI.FilesCache.Set(fileGuid, JSONHelper.Serialize(new UploadCachedFile() { path = savedFileName, fileExtension = ext, fileName = localfileName }), GxRestPrefix.UPLOAD_TIMEOUT);
-			GXFileWatcher.Instance.AddTemporaryFile(file);
+			GXFileWatcher.Instance.AddTemporaryFile(file, localHttpContext);
 		}
 		internal static string GetUploadFileGuid()
 		{
