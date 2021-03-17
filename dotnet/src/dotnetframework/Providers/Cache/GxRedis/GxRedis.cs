@@ -188,7 +188,7 @@ namespace GeneXus.Cache
 		private IEnumerable<RedisKey> Key(string cacheid, IEnumerable<string> key)
 		{
 			var prefix = KeyPrefix(cacheid);
-			return key.Select(k => new RedisKey(FormatKey(cacheid, k, prefix)));
+			return key.Select(k => new RedisKey().Append(FormatKey(cacheid, k, prefix)));
 		}
 		private string FormatKey(string cacheid, string key, Nullable<long> prefix)
 		{
