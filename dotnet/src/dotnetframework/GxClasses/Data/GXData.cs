@@ -1716,9 +1716,9 @@ namespace GeneXus.Data
 			{
 				ParseIfxException(ex);
 			}
-			else if (m_sErrorType == "Npgsql.NpgsqlException")
+			else if (m_sErrorType == "Npgsql.NpgsqlException" || m_sErrorType == "Npgsql.PostgresException")
 			{
-				ParsePostgresException(ex);
+				ParsePostgresException(ex, m_sErrorType);
 			}
 			else if (m_sErrorType.StartsWith("IBM.Data.DB2.iSeries"))
 				
@@ -1810,27 +1810,38 @@ namespace GeneXus.Data
 				}
 			}
 		}
-		private void ParsePostgresException(Exception ex)
+		private void ParsePostgresException(Exception ex, String errorType)
 		{
-			m_sErrorInfo = ex.Message.ToLower();
-			m_sDBMSErrorInfo = ex.Message;
-			m_sSqlState = (String)ClassLoader.GetPropValue(ex, "Code");  
-			PropertyInfo prop = ex.GetType().GetProperty("HResult", BindingFlags.NonPublic | BindingFlags.Instance); 
-			if (prop == null) 
+			if (errorType == "Npgsql.PostgresException")
 			{
-				prop = ex.GetType().GetProperty("HResult"); 
-			}
-			if (prop == null)
-			{
-				Int32.TryParse(m_sSqlState, out m_iErrorCode);
+				m_sDBMSErrorInfo = ex.Message;
+				m_sSqlState = (String)ClassLoader.GetPropValue(ex, "Code");
+				PropertyInfo prop = ex.GetType().GetProperty("HResult", BindingFlags.NonPublic | BindingFlags.Instance);
+				if (prop == null)
+				{
+					prop = ex.GetType().GetProperty("HResult");
+				}
+				if (prop == null)
+				{
+					Int32.TryParse(m_sSqlState, out m_iErrorCode);
+				}
+				else
+				{
+					byte[] buf = BitConverter.GetBytes((int)prop.GetValue(ex, null));
+					byte[] errCode = new byte[2];
+					Array.Copy(buf, 0, errCode, 0, 2);
+					int code = BitConverter.ToInt16(errCode, 0);
+					m_iErrorCode = code;
+				}
 			}
 			else
 			{
-				byte[] buf = BitConverter.GetBytes((int)prop.GetValue(ex, null));
+				m_sErrorInfo = ex.Message.ToLower();
+				m_sDBMSErrorInfo = ex.Message.ToLower();
+				byte[] buf = BitConverter.GetBytes(ex.HResult);
 				byte[] errCode = new byte[2];
 				Array.Copy(buf, 0, errCode, 0, 2);
-				int code = BitConverter.ToInt16(errCode, 0);
-				m_iErrorCode = code;
+				m_iErrorCode = BitConverter.ToInt16(errCode, 0);
 			}
 		}
 		private void ParseDB2Exception(Exception ex)
