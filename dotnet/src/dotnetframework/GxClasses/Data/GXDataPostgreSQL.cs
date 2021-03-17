@@ -176,7 +176,7 @@ namespace GeneXus.Data
 			{
 				case GXType.Int16: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Smallint");  
 				case GXType.Int32: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Integer");
-				case GXType.Int64: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Real");
+				case GXType.Int64: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Bigint");
 				case GXType.Number: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Numeric");
 				case GXType.DateTime2:
 				case GXType.DateTime: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Timestamp");
