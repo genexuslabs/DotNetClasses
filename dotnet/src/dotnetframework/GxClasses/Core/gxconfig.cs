@@ -445,7 +445,7 @@ namespace GeneXus.Configuration
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
 			var requestedAssembly = new AssemblyName(args.Name);
-			if (AssemblyRedirect.ContainsKey(requestedAssembly.Name))
+			if (AssemblyRedirect.ContainsKey(requestedAssembly.Name) && requestedAssembly.Version != AssemblyRedirect[requestedAssembly.Name])
 			{
 				requestedAssembly.Version = AssemblyRedirect[requestedAssembly.Name];
 				return Assembly.Load(requestedAssembly);
