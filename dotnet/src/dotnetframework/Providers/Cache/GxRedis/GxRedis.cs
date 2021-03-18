@@ -28,27 +28,22 @@ namespace GeneXus.Cache
 			address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
 			password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
 
-			if (!string.IsNullOrEmpty(address))
+			if (string.IsNullOrEmpty(address))
+				address = String.Format("localhost:{0}", REDIS_DEFAULT_PORT);
+
+			if (!string.IsNullOrEmpty(password))
 			{
-				if (!string.IsNullOrEmpty(password))
+				if (!address.Contains(':'))
 				{
-					if (!address.Contains(':'))
-					{
-						address = $"{address}:{REDIS_DEFAULT_PORT}";
-					}
-					address = string.Format("{0},password={1}", address.Trim(), password.Trim());
-					_redisConnectionOptions = ConfigurationOptions.Parse(address);
+					address = $"{address}:{REDIS_DEFAULT_PORT}";
 				}
-				else
-				{
-					_redisConnectionOptions = ConfigurationOptions.Parse(address);
-				}
+				address = string.Format("{0},password={1}", address.Trim(), password.Trim());
+				_redisConnectionOptions = ConfigurationOptions.Parse(address);
 			}
 			else
 			{
-				_redisConnectionOptions = ConfigurationOptions.Parse(String.Format("localhost:{0}", REDIS_DEFAULT_PORT));
+				_redisConnectionOptions = ConfigurationOptions.Parse(address);
 			}
-
 			_redisConnectionOptions.AllowAdmin = true;
 		}
 		IDatabase RedisDatabase
