@@ -2013,8 +2013,10 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-
-			return formatLink(loginObject);
+			if (IsUploadRequest(this.localHttpContext))
+				return formatLink($"{context.GetScriptPath()}{loginObject}");
+			else
+				return formatLink(loginObject);
 		}
 		private string GetGAMNotAuthorizedWebObject()
 		{
@@ -2025,8 +2027,10 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-
-			return formatLink(loginObject);
+			if (IsUploadRequest(this.localHttpContext))
+				return formatLink($"{context.GetScriptPath()}{loginObject}");
+			else
+				return formatLink(loginObject);
 		}
 
 		protected virtual void sendCacheHeaders()
