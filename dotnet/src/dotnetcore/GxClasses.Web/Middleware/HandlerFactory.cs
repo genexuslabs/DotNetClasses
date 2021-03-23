@@ -36,7 +36,6 @@ namespace GeneXus.HttpHandlerFactory
 		private string _basePath;
 		static Dictionary<string, Type> _aspxObjects = new Dictionary<string, Type>(){
 												{"gxresourceprovider",typeof(GXResourceProvider)},
-												{"gxobject",typeof(GXObjectUploadServices)},
 												{"gxoauthlogout",typeof(GXOAuthLogout)},
 												{"gxoauthuserinfo",typeof(GXOAuthUserInfo)},
 												{"gxoauthaccesstoken",typeof(GXOAuthAccessToken)},
