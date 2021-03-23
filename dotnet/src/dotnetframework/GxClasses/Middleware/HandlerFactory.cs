@@ -35,10 +35,6 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				return new GeneXus.Http.GXReorServices();
 			}
-			else if (cname0 == "gxobject")
-			{
-				return new GeneXus.Http.GXObjectUploadServices();
-			}
 			else if (cname0 == "gxoauthlogout")
 			{
 				return new GeneXus.Http.GXOAuthLogout();
