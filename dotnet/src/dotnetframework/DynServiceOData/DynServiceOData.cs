@@ -21,6 +21,8 @@ using System.Text;
 using System.Net.Http;
 using GeneXus.Http;
 using System.Collections.Concurrent;
+using GeneXus.Utils;
+using System.Globalization;
 
 namespace GeneXus.Data.NTier
 {
@@ -329,7 +331,7 @@ namespace GeneXus.Data.NTier
 			private bool GetStoredSession()
 			{
 				sapB1ByTokenReacquire = toRemoveCookie = false;
-				object sessionExpiry = gxSession.GetObject(SESSION_INFO_EXPIRY);
+				object sessionExpiry = new DateTime(Convert.ToInt64(gxSession.Get(SESSION_INFO_EXPIRY)));
 				if (gxSession.Get(SESSION_INFO_ID) != null)
 				{
 					if (sessionExpiry is DateTime)
@@ -341,9 +343,9 @@ namespace GeneXus.Data.NTier
 						{
 							if (sessionExpiryStr?.Equals(SESSION_EXPIRY_NEVER) == true)
 								expiryDT = DateTime.MaxValue;
-							else if (sessionExpiryStr != null && DateTime.TryParse(sessionExpiryStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeLocal, out expiryDT))
+							else if (sessionExpiryStr != null && DateTime.TryParse(sessionExpiryStr, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out expiryDT))
 							{
-								gxSession.SetObject(SESSION_INFO_EXPIRY, expiryDT);
+								gxSession.Set(SESSION_INFO_EXPIRY, expiryDT.Ticks.ToString());
 							}
 							else
 							{
@@ -434,7 +436,7 @@ namespace GeneXus.Data.NTier
 										expiryDT = DateTime.Now.AddMinutes(span - 1);
 
 										gxSession.Set(SESSION_INFO_ID, b1SessionId);
-										gxSession.SetObject(SESSION_INFO_EXPIRY, expiryDT);
+										gxSession.Set(SESSION_INFO_EXPIRY, expiryDT.Ticks.ToString());
 										b1Cookie = new Cookie("B1SESSION", b1SessionId, "/", loginUri.Host);
 										b1Cookie.Expires = expiryDT;
 										AddCookieToContainer();

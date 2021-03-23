@@ -473,10 +473,51 @@ namespace GeneXus.Application
 			setContext(this);
 			httpContextVars = new GxHttpContextVars();
 		}
+#if NETCORE
+		private Dictionary<string, IEnumerable<Cookie>> ToSerializableCookieContainer(Dictionary<string, CookieContainer> cookies)
+		{
+			if (cookies == null)
+				return null;
+			Dictionary<string, IEnumerable<Cookie>> serializableCookies = new Dictionary<string, IEnumerable<Cookie>>();
+			foreach(string key in cookies.Keys)
+			{
+				serializableCookies[key] = cookies[key].GetCookies();
+			}
+			return serializableCookies;
+		}
+		private Dictionary<string, CookieContainer> FromSerializableCookieContainer(Dictionary<string, IEnumerable<Cookie>> cookies)
+		{
+			if (cookies == null)
+				return null;
+			Dictionary<string, CookieContainer> serializableCookies = new Dictionary<string, CookieContainer>();
+			
+			foreach (string key in cookies.Keys)
+			{
+				CookieCollection cookieco = new CookieCollection();
+				IEnumerable<Cookie> cookiesEnum = cookies[key];
+				foreach(Cookie c in cookiesEnum)
+				{
+					cookieco.Add(c);
+				}
+				CookieContainer cc = new CookieContainer();
+				cc.Add(cookieco);
+				serializableCookies[key] = cc;
+			}
+			return serializableCookies;
+		}
+#else
+		private Dictionary<string, CookieContainer> ToSerializableCookieContainer(Dictionary<string, CookieContainer> cookies){
+			return cookies;
+		}
+		private Dictionary<string, CookieContainer> FromSerializableCookieContainer(Dictionary<string, CookieContainer> cookies)
+		{
+			return cookies;
+		}
+#endif
 		public void UpdateSessionCookieContainer()
 		{
 			IGxSession tempStorage = GetSession();
-			tempStorage.SetObject(COOKIE_CONTAINER, cookieContainers);
+			tempStorage.Set(COOKIE_CONTAINER, ToSerializableCookieContainer(cookieContainers));
 		}
 		public CookieContainer GetCookieContainer(string url, bool includeCookies = true)
 		{
@@ -484,11 +525,15 @@ namespace GeneXus.Application
 			{
 				CookieContainer container = null;
 				IGxSession tempStorage = GetSession();
-				cookieContainers = (Dictionary<string, CookieContainer>)tempStorage.GetObject(COOKIE_CONTAINER);
+#if NETCORE
+				cookieContainers = FromSerializableCookieContainer(tempStorage.Get<Dictionary<string, IEnumerable<Cookie>>>(COOKIE_CONTAINER));
+#else
+				cookieContainers =tempStorage.Get<Dictionary<string, CookieContainer>>(COOKIE_CONTAINER);
+#endif
 				if (cookieContainers == null)
 				{
 					cookieContainers = new Dictionary<string, CookieContainer>();
-					tempStorage.SetObject(COOKIE_CONTAINER, cookieContainers);
+					tempStorage.Set(COOKIE_CONTAINER, ToSerializableCookieContainer(cookieContainers));
 				}
 				string domain = (new Uri(url)).GetLeftPart(UriPartial.Authority);
 				if (cookieContainers.TryGetValue(domain, out container) && includeCookies)
