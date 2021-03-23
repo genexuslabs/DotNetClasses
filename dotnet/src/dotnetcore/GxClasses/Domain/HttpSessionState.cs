@@ -1,10 +1,45 @@
-﻿using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Collections.Generic;
+using System.Net;
+using System.Reflection;
 using Microsoft.AspNetCore.Http;
 
 namespace GeneXus.Http
 {
+	internal static class CookieContainerHelper
+	{
+		public static IEnumerable<Cookie> GetCookies(this CookieContainer cookieContainer)
+		{
+			var domainTable = GetFieldValue<dynamic>(cookieContainer, "_domainTable");
+			foreach (var entry in domainTable)
+			{
+				string key = GetPropertyValue<string>(entry, "Key");
+
+				var value = GetPropertyValue<dynamic>(entry, "Value");
+
+				var internalList = GetFieldValue<SortedList<string, CookieCollection>>(value, "_list");
+				foreach (var li in internalList)
+				{
+					foreach (Cookie cookie in li.Value)
+					{
+						yield return cookie;
+					}
+				}
+			}
+		}
+
+		internal static T GetFieldValue<T>(object instance, string fieldName)
+		{
+			BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+			FieldInfo fi = instance.GetType().GetField(fieldName, bindFlags);
+			return (T)fi.GetValue(instance);
+		}
+
+		internal static T GetPropertyValue<T>(object instance, string propertyName)
+		{
+			var pi = instance.GetType().GetProperty(propertyName);
+			return (T)pi.GetValue(instance, null);
+		}
+	}
 	internal class HttpSessionState 
 	{
 		ISession session;
@@ -16,32 +51,15 @@ namespace GeneXus.Http
 
 		public string SessionID { get { return session.Id; } internal set { } }
 		
-		public object this[string name] { get { return ByteArrayToObject(session.Get(name)); } set { session.Set(name, ObjectToByteArray(value)); } }
-
-		private byte[] ObjectToByteArray(Object obj)
-		{
-			if (obj == null)
-				return null;
-
-			BinaryFormatter bf = new BinaryFormatter();
-			MemoryStream ms = new MemoryStream();
-			bf.Serialize(ms, obj);
-
-			return ms.ToArray();
-		}
-
-		// Convert a byte array to an Object
-		private Object ByteArrayToObject(byte[] arrBytes)
-		{
-			if (arrBytes == null)
-				return null;
-			MemoryStream memStream = new MemoryStream();
-			BinaryFormatter binForm = new BinaryFormatter();
-			memStream.Write(arrBytes, 0, arrBytes.Length);
-			memStream.Seek(0, SeekOrigin.Begin);
-			Object obj = (Object)binForm.Deserialize(memStream);
-
-			return obj;
+		public string this[string name] {
+			get
+			{
+				return session.GetString(name);
+			}
+			set
+			{
+				session.SetString(name, value);
+			}
 		}
 		internal void Remove(string key)
 		{
