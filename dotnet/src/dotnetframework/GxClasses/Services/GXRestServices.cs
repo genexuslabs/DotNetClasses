@@ -289,12 +289,6 @@ namespace GeneXus.Utils
 				return false;
 			}
 		}
-		[Obsolete("UploadImpl without arguments is deprecated", false)]
-		public void UploadImpl()
-		{
-			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
-			gxobject.webExecute();
-		}
 		public void UploadImpl(Stream stream)
 		{
 			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
