@@ -48,9 +48,9 @@ namespace GeneXus.Encryption
 				byte[] str = encrypt(Encoding.UTF8.GetBytes(value), ConvertedKey(key));
 				return Convert.ToBase64String(str, 0, str.Length);
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
-				throw new Exception(e.Message);
+				throw new InvalidKeyException();
 			}
 		}
 
@@ -198,9 +198,9 @@ namespace GeneXus.Encryption
 				byte[] str = decrypt(new Base64Decoder(value.ToCharArray()).GetDecoded(), ConvertedKey(key));
 				return Encoding.UTF8.GetString(str, 0, str.Length).TrimEnd(' ');
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
-				throw new Exception(e.Message);
+				throw new InvalidKeyException();
 			}
 		}
 
