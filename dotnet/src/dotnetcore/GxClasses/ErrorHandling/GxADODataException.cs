@@ -1,6 +1,5 @@
 using GeneXus.Metadata;
 using MySqlConnector;
-using Npgsql;
 using System;
 using Microsoft.Data.SqlClient;
 using System.Runtime.Serialization;
@@ -51,7 +50,7 @@ namespace GeneXus.Data
             }
             else if (m_sErrorType == "Npgsql.NpgsqlException" || m_sErrorType == "Npgsql.PostgresException")
             {
-                ParsePostgresException(ex);
+                ParsePostgresException(ex, m_sErrorType);
             }
             else if (ex.GetType() == typeof(GxADODataException))
 			{
@@ -71,25 +70,23 @@ namespace GeneXus.Data
 			m_sDBMSErrorInfo = (String)ClassLoader.GetPropValue(ex, "Message");
 			m_iErrorCode = (int)ClassLoader.GetPropValue(ex, "Number");
 		}
-		private void ParsePostgresException(Exception ex)
-        {
-			PostgresException pEx1 = ex as PostgresException;
-			if (pEx1 != null)
+		private void ParsePostgresException(Exception ex, String errorType)
+		{
+			if (errorType == "Npgsql.PostgresException")
 			{
-				m_sSqlState = pEx1.Code;
-				m_sErrorInfo = pEx1.Message.ToLower();
-				m_sDBMSErrorInfo = pEx1.Message.ToLower();
-				byte[] buf = BitConverter.GetBytes(pEx1.HResult);
+				m_sSqlState = (String)ClassLoader.GetPropValue(ex, "Code");
+				m_sErrorInfo = ex.Message.ToLower();
+				m_sDBMSErrorInfo = ex.Message.ToLower();
+				byte[] buf = BitConverter.GetBytes(ex.HResult);
 				byte[] errCode = new byte[2];
 				Array.Copy(buf, 0, errCode, 0, 2);
 				m_iErrorCode = BitConverter.ToInt16(errCode, 0);
 			}
-			NpgsqlException pEx = ex as NpgsqlException;
-			if (pEx != null)
+			else
 			{
-				m_sErrorInfo = pEx.Message.ToLower();
-				m_sDBMSErrorInfo = pEx.Message.ToLower();
-				byte[] buf = BitConverter.GetBytes(pEx.HResult);
+				m_sErrorInfo = ex.Message.ToLower();
+				m_sDBMSErrorInfo = ex.Message.ToLower();
+				byte[] buf = BitConverter.GetBytes(ex.HResult);
 				byte[] errCode = new byte[2];
 				Array.Copy(buf, 0, errCode, 0, 2);
 				m_iErrorCode = BitConverter.ToInt16(errCode, 0);
