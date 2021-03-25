@@ -404,7 +404,7 @@ namespace GeneXus.Http
 						GxFile gxFile = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
 
 						gxFile.Create(hpf.InputStream);
-						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
+						GXFileWatcher.Instance.AddTemporaryFile(gxFile, localHttpContext);
 
 						string uri = gxFile.GetURI();
 						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);

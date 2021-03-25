@@ -11,6 +11,9 @@ using ManagedFusion.Rewriter.Rules;
 using ManagedFusion.Rewriter.Engines;
 using System.Reflection;
 using log4net;
+using System.Web.SessionState;
+using System.Web.Configuration;
+using System.Security;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -160,7 +163,64 @@ namespace GeneXus.Http.HttpModules
 			}
 		}
 	}
+	public class GXSessionModule : IHttpModule
+	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXSessionModule));
+		HttpApplication App;
+		const string ASPNETSESSION_COOKIE = "ASP.NET_SessionId";
+		string cookieName= ASPNETSESSION_COOKIE;
 
+		public void Init(HttpApplication app)
+		{
+			App = app;
+			try
+			{
+				SessionStateSection sessionStateSection = (SessionStateSection)System.Configuration.ConfigurationManager.GetSection("system.web/sessionState");
+				if (sessionStateSection != null)
+					cookieName = sessionStateSection.CookieName;
+				IHttpModule module = app.Modules["Session"];
+				if (module.GetType() == typeof(SessionStateModule))
+				{
+					SessionStateModule stateModule = (SessionStateModule)module;
+					stateModule.Start += (Session_Start);
+				}
+			}catch(SecurityException ex)
+			{
+				GXLogging.Info(log, ".NET trust level is lower than full", ex.Message);
+				app.EndRequest += Session_Start;
+			}
+		}
+
+		private void Session_Start(object sender, EventArgs e)
+		{
+			if (App.Request.GetIsSecureFrontEnd() || App.Request.GetIsSecureConnection() == 1)
+			{
+				HttpCookie sessionCookie = RetrieveResponseCookie(App.Response, cookieName);
+
+				if (sessionCookie != null && !sessionCookie.Secure)
+				{
+					sessionCookie.Secure = true;
+					App.Response.SetCookie(sessionCookie);
+				}
+			}
+		}
+		private HttpCookie RetrieveResponseCookie(HttpResponse currentResponse, string cookieName)
+		{
+			foreach (string key in App.Response.Cookies.Keys)
+			{
+				if (key.Equals(cookieName, StringComparison.OrdinalIgnoreCase))
+				{
+					return App.Response.Cookies[key];
+				}
+			}
+			return null;
+		}
+
+		public void Dispose()
+		{
+			App = null;
+		}
+	}
 	public class GXStaticCacheModule : IHttpModule
     {
         #region IHttpModule Members

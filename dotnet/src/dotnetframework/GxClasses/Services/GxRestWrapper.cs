@@ -50,6 +50,7 @@ namespace GeneXus.Application
 		private GXProcedure _procWorker;
 		private const string EXECUTE_METHOD = "execute";
 		public String ServiceMethod = "";
+		public bool WrappedParameter = false;
 
 
 		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod) : this(worker, context, gxContext)
@@ -256,7 +257,15 @@ namespace GeneXus.Application
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, false);
+				bool wrapped = false;
+				if (_procWorker.IsApiObject)
+				{
+					if (outputParameters.Count == 1 && outputParameters.First().Value.GetType().GetInterfaces().Contains(typeof(ICollection)))
+					{
+						wrapped = true;
+					}
+				}
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{

@@ -42,12 +42,9 @@ namespace GeneXus.Cryptography.Hashing
 					_hash = new SHA512CryptoServiceProvider();
 					break;
 				default:
-					if (GXUtil.IsWindowsPlatform)
-					{
-						_hash = HashAlgorithm.Create(algorithm);
-					}
+					_hash = HashAlgorithm.Create(algorithm);
 					break;
-		}
+			}
 
 			if (_hash == null)
             {
