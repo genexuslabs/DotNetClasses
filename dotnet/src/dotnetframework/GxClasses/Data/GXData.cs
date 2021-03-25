@@ -1813,6 +1813,7 @@ namespace GeneXus.Data
 		{
 			if (errorType == "Npgsql.PostgresException")
 			{
+				m_sErrorInfo = ex.Message.ToLower();
 				m_sDBMSErrorInfo = ex.Message;
 				m_sSqlState = (String)ClassLoader.GetPropValue(ex, "Code");
 				PropertyInfo prop = ex.GetType().GetProperty("HResult", BindingFlags.NonPublic | BindingFlags.Instance);
