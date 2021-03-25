@@ -245,7 +245,7 @@ namespace GeneXus.Utils
 
 		public string EmptyParm(string parmValue)
 		{
-			if (!string.IsNullOrEmpty(parmValue) && parmValue.Equals("gxempty", StringComparison.OrdinalIgnoreCase))
+			if (string.IsNullOrEmpty(parmValue) || parmValue.Equals("gxempty", StringComparison.OrdinalIgnoreCase))
 				return string.Empty;
 			else
 				return parmValue;

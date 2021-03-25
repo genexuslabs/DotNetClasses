@@ -986,10 +986,11 @@ namespace GeneXus.Http
 #if !NETCORE
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
+		[Obsolete("IntegratedSecurityPermissionName is deprecated, it is here for compatibility. Use ExecutePermissionPrefix instead.", false)]
 		protected virtual string IntegratedSecurityPermissionName { get { return ""; } }
+		protected virtual string ExecutePermissionPrefix { get { return ""; } }
 		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
 		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
-		public string IntegratedSecurityPermissionName2 { get { return IntegratedSecurityPermissionName; } }
 #endif
 		private bool disconnectUserAtCleanup;
 		private bool validEncryptedParm;
@@ -1381,7 +1382,7 @@ namespace GeneXus.Http
 			}
 			catch (InvalidKeyException)
 			{
-				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", 0);
+				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", context.GetHttpSecure());
 				GXLogging.Error(log, "440 Invalid encryption key");
 				SendResponseStatus(440, "Session timeout");
 			}
@@ -1397,7 +1398,7 @@ namespace GeneXus.Http
 			}
 			catch (InvalidKeyException)
 			{
-				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", 0);
+				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", context.GetHttpSecure());
 				GXLogging.Error(log, "440 Invalid encryption key");
 				SendResponseStatus(440, "Session timeout");
 			}
@@ -1922,7 +1923,7 @@ namespace GeneXus.Http
 			}
 			else if (IntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
 			{
-				isOK = checkAuthorization(IntegratedSecurityPermissionName, context.CleanAbsoluteUri, bRedirectIfNotAuth);
+				isOK = checkAuthorization(ExecutePermissionPrefix, context.CleanAbsoluteUri, bRedirectIfNotAuth);
 			}
 			return isOK;
 		}
@@ -1988,7 +1989,7 @@ namespace GeneXus.Http
 			return isOK && isPermissionOK;
 		}
 
-		private static string GetGAMLoginWebObject()
+		private string GetGAMLoginWebObject()
 		{
 			string loginObject = string.Empty;
 			if (Config.GetValueOf("IntegratedSecurityLoginWeb", out loginObject))
@@ -1997,9 +1998,10 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-			return loginObject;
+
+			return formatLink(loginObject);
 		}
-		private static string GetGAMNotAuthorizedWebObject()
+		private string GetGAMNotAuthorizedWebObject()
 		{
 			string loginObject = string.Empty;
 			if (Config.GetValueOf("IntegratedSecurityNotAuthorizedWeb", out loginObject))
@@ -2008,7 +2010,8 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-			return loginObject;
+
+			return formatLink(loginObject);
 		}
 
 		protected virtual void sendCacheHeaders()

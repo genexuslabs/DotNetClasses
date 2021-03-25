@@ -18,7 +18,7 @@
     <Compile Include="..\..\..\..\dotnetframework\Providers\Cache\GxRedis\GxRedis.cs" Link="GxRedis.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.11" />
     <PackageReference Include="ServiceStack.Redis" Version="5.1.0" />
   </ItemGroup>
 

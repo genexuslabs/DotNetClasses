@@ -27,28 +27,6 @@ using System.Security;
 
 namespace GeneXus.Data
 {
-	public enum GXType
-	{
-		Number=0,
-		Int16=1,
-		Int32=2,
-        Int64=3,
-        Date=4,
-		DateTime=5,
-        DateTime2=17,
-		Byte=6,
-		NChar=7,
-		NClob=8,
-		NVarChar=9,
-		Char=10,
-		LongVarChar=11,
-		Clob=12,
-		VarChar=13,
-		Raw=14,
-		Blob=15,
-		Undefined=16,
-		Boolean = 18
-	}
 	public class GxHana : GxDataRecord
     {
 
@@ -151,26 +129,31 @@ namespace GeneXus.Data
         private Object GXTypeToHanaType(GXType type)
         {
 
-            switch (type)
-            {
-                case GXType.Int16: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "SmallInt");
-                case GXType.Int32: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Integer");
-                case GXType.Int64: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "BigInt");
-                case GXType.Number: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Decimal");
-                case GXType.VarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
-                case GXType.NVarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NVarChar");
-                case GXType.Char:  return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
-                case GXType.NChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NVarChar");
-                case GXType.LongVarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
-                case GXType.Clob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Clob");
-                case GXType.NClob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NClob");
-                case GXType.Blob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Blob");
-                case GXType.DateTime: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "SecondDate");
-                case GXType.DateTime2: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "TimeStamp");
-                case GXType.Date: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Date");
-                case GXType.Byte: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "TinyInt");
-                default: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, type.ToString());
-            }
+			switch (type)
+			{
+				case GXType.Int16: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "SmallInt");
+				case GXType.Int32: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Integer");
+				case GXType.Int64: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "BigInt");
+				case GXType.Number: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Decimal");
+				case GXType.VarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
+				case GXType.NVarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NVarChar");
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:
+				case GXType.Char: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
+				case GXType.NChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NVarChar");
+				case GXType.LongVarChar: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "VarChar");
+				case GXType.Clob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Clob");
+				case GXType.NClob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "NClob");
+				case GXType.Blob: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Blob");
+				case GXType.DateTime: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "SecondDate");
+				case GXType.DateTime2: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "TimeStamp");
+				case GXType.Date: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "Date");
+				case GXType.Byte: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, "TinyInt");
+				default: return ClassLoader.GetEnumValue(HanaAssembly, HanaDbTypeEnum, type.ToString());
+			}
         }
 
         public override DbDataAdapter CreateDataAdapeter()
@@ -231,47 +214,46 @@ namespace GeneXus.Data
             return new Geospatial(DR.GetString(i));
         }
 
-        public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+        public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
         {
             return geo.ToStringSQL();
         }
-
-        public override void SetParameter(IDbDataParameter parameter, Object value)
-        {            
-            if (IsBlobType(parameter))         
+		public override void SetParameter(IDbDataParameter parameter, Object value)
+		{
+			if (value == null || value == DBNull.Value)
+			{
+				parameter.Value = DBNull.Value;
+			}
+			else if (IsBlobType(parameter))
 			{
 				GXLogging.Debug(log, "SetParameter BLOB value:" + value);
 				SetBinary(parameter, GetBinary((string)value, false));
-            }            
-            else if (value == null || value == DBNull.Value)
-            {               
-                parameter.Value = DBNull.Value;                
-            }
-            else if (value is Guid)
-            {
-                parameter.Value = value.ToString();
-            }
-            else if (parameter.DbType == DbType.Decimal)
-            {
-                
-                int size = parameter.Size;
-                byte scale = (byte)ClassLoader.GetPropValue(parameter, "Scale");
-                Decimal intPart = Decimal.Truncate(Convert.ToDecimal(value));
+			}
+			else if (value is Guid)
+			{
+				parameter.Value = value.ToString();
+			}
+			else if (parameter.DbType == DbType.Decimal)
+			{
 
-                if (intPart.ToString().Length <= size)
-                {
-                    parameter.Value = NumberUtil.Trunc((decimal)value, scale);
-                }
-                else
-                {
-                    parameter.Value = 0;
-                }                                    
-            }
-            else
-            {
+				int size = parameter.Size;
+				byte scale = (byte)ClassLoader.GetPropValue(parameter, "Scale");
+				Decimal intPart = Decimal.Truncate(Convert.ToDecimal(value));
+
+				if (intPart.ToString().Length <= size)
+				{
+					parameter.Value = NumberUtil.Trunc((decimal)value, scale);
+				}
+				else
+				{
+					parameter.Value = 0;
+				}
+			}
+			else
+			{
 				parameter.Value = CheckDataLength(value, parameter);
 			}
-        }
+		}
 		protected override void SetBinary(IDbDataParameter parameter, byte[] binary)
 		{
 			GXLogging.Debug(log, "SetParameter BLOB, binary.length:" + binary.Length);
@@ -444,7 +426,7 @@ namespace GeneXus.Data
 		public override  IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
             IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(Db2Assembly, "IBM.Data.DB2.DB2Parameter");
-			ClassLoader.SetPropValue(parm, "DB2Type", GXTypeToiDB2DbType((GXType)dbtype));
+			ClassLoader.SetPropValue(parm, "DB2Type", GXTypeToDB2DbType((GXType)dbtype));
 
 			ClassLoader.SetPropValue(parm, "Size", gxlength);//This property is used for binary and strings types
             ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);//This property is used only for decimal and numeric input parameters
@@ -452,7 +434,7 @@ namespace GeneXus.Data
             ClassLoader.SetPropValue(parm, "ParameterName", name);
 			return parm;
 		}
-		private Object GXTypeToiDB2DbType(GXType type)
+		private Object GXTypeToDB2DbType(GXType type)
 		{
 
 			switch (type)
@@ -463,7 +445,8 @@ namespace GeneXus.Data
 				case GXType.Number: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Float");
 				case GXType.DateTime: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Timestamp");
                 case GXType.DateTime2: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Timestamp");
-                case GXType.Char: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Char");
+				case GXType.UniqueIdentifier:
+				case GXType.Char: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Char");
 				case GXType.Date: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Date");
 				case GXType.Clob: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "Clob");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "VarChar");
@@ -772,13 +755,35 @@ namespace GeneXus.Data
 		public override  IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			MsDb2Parameter parm =new MsDb2Parameter();
-			parm.MsDb2Type = (MsDb2Type)dbtype;
+			parm.MsDb2Type = GXTypeToMsDb2Type(dbtype);
 			
 			parm.Size = gxlength;
 			parm.Scale= (byte)gxdec;
 			parm.Precision = (byte)gxlength;
 			parm.ParameterName=name;
 			return parm;
+		}
+		private MsDb2Type GXTypeToMsDb2Type(object type)
+		{
+			if (type is MsDb2Type)
+				return (MsDb2Type)type;
+
+			switch (type)
+			{
+				case GXType.Int16: return MsDb2Type.SmallInt;
+				case GXType.Int32: return MsDb2Type.Int;
+				case GXType.Int64: return MsDb2Type.BigInt;
+				case GXType.Number: return MsDb2Type.Double;
+				case GXType.DateTime2:
+				case GXType.DateTime: return MsDb2Type.Timestamp;
+				case GXType.Date: return MsDb2Type.Date;
+				case GXType.UniqueIdentifier:
+				case GXType.DateAsChar:
+				case GXType.Char: return MsDb2Type.Char;
+				case GXType.VarChar: return MsDb2Type.VarChar;
+				case GXType.Blob: return MsDb2Type.VarBinary;
+				default: return MsDb2Type.Char;
+			}
 		}
         public override DbDataAdapter CreateDataAdapeter()
         {
@@ -1195,7 +1200,9 @@ namespace GeneXus.Data
 				case GXType.Number: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Double");
 				case GXType.DateTime: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2TimeStamp");
                 case GXType.DateTime2: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2TimeStamp");
-                case GXType.Char: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Char");
+				case GXType.UniqueIdentifier:
+				case GXType.DateAsChar:
+				case GXType.Char: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Char");
 				case GXType.Date: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Date");
 				case GXType.Clob: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "Clob");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2VarChar");

@@ -57,6 +57,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataCommon.cs" Link="Data\GXDataCommon.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataNTier.cs" Link="Data\GXDataNTier.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataNTierADO.cs" Link="Data\GXDataNTierADO.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataNTierService.cs" Link="Data\GXDataNTierService.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXFileIO.cs" Link="Domain\GXFileIO.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxFtp.cs" Link="Domain\GxFtp.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxGenericCollections.cs" Link="Domain\GxGenericCollections.cs" />
@@ -69,6 +70,9 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Model\gxproc.cs" Link="Model\gxproc.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Reorg\GXReorg.cs" Link="Reorg\GXReorg.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXRes.cs" Link="Helpers\GXRes.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceCommand.cs" Link="Services\ServiceCommand.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceConnection.cs" Link="Services\ServiceConnection.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceTransaction.cs" Link="Services\ServiceTransaction.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\GxRestWrapper.cs" Link="Services\CoreWebAPI\Controller\GxRestWrapper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\JsonConverter.cs" Link="Services\CoreWebAPI\Helpers\JsonConverter.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ReflectionHelper.cs" Link="Services\CoreWebAPI\Helpers\ReflectionHelper.cs" />
@@ -136,7 +140,7 @@
   </ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" PrivateAssets="All" />
-		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="log4net" Version="2.0.11" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
@@ -146,15 +150,17 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" PrivateAssets="All" />
-		<PackageReference Include="MySqlConnector" Version="1.0.1"  PrivateAssets="All" />
+		<PackageReference Include="MySqlConnector" Version="1.0.1" PrivateAssets="All" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" PrivateAssets="All" />
 		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" PrivateAssets="All" />
+		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" PrivateAssets="All" />
 		<PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" />
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" PrivateAssets="All" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" PrivateAssets="All" />
+		<PackageReference Include="System.Drawing.Common" Version="4.7.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" PrivateAssets="All" />
 	</ItemGroup>
 

@@ -36,6 +36,7 @@ using System.Drawing;
 using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
+using System.Drawing.Drawing2D;
 
 namespace GeneXus.Utils
 {
@@ -2988,12 +2989,13 @@ namespace GeneXus.Utils
 				StringUtil.PadL(StringUtil.Str(Month(date), 2, 0), 2, '0') +
 				StringUtil.PadL(StringUtil.Str(Day(date), 2, 0), 2, '0'));
 		}
-		public static string getYYYYMMDDHHMMSS_nosep(DateTime date)
+		public static string getYYYYMMDDHHMMSSnosep(DateTime date, bool hasMilliseconds)
 		{
 			string sDate = getYYYYMMDD(date);
 			sDate += StringUtil.PadL(StringUtil.Str(Hour(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Minute(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Second(date), 2, 0), 2, '0');
+			if (hasMilliseconds) sDate += StringUtil.PadL(StringUtil.Str(MilliSecond(date), 3, 0), 3, '0');
 			return (sDate);
 		}
 		private static DateTime ConvertDateTime(DateTime dt, OlsonTimeZone FromTimezone, OlsonTimeZone ToTimezone)
@@ -3070,11 +3072,17 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		public static string FormatDateTimeParmMS(DateTime date)
+		{
+			if (date.Equals(nullDate))
+				return "";
+			return getYYYYMMDDHHMMSSnosep(date, true);
+		}
 		public static string FormatDateTimeParm(DateTime date)
 		{
 			if (date.Equals(nullDate))
 				return "";
-			return getYYYYMMDDHHMMSS_nosep(date);
+			return getYYYYMMDDHHMMSSnosep(date, false);
 		}
 		public static string FormatDateParm(DateTime date)
 		{
@@ -3120,12 +3128,15 @@ namespace GeneXus.Utils
 					return dtValue;
 			}
 
-			return YMDHMSToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
+			int mil = (valueString.Trim().Length >= 17)? (int)NumberUtil.Val(valueString.Substring(14, 3)):0;
+
+			return YMDHMSMToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
 				(int)NumberUtil.Val(valueString.Substring(4, 2)),
 				(int)NumberUtil.Val(valueString.Substring(6, 2)),
 				(int)NumberUtil.Val(valueString.Substring(8, 2)),
 				(int)NumberUtil.Val(valueString.Substring(10, 2)),
-				(int)NumberUtil.Val(valueString.Substring(12, 2)), false);
+				(int)NumberUtil.Val(valueString.Substring(12, 2)), mil, false);
+
 		}
 		public DateTime ParseDateOrDTimeParm(string valueString)
 		{
@@ -4264,16 +4275,28 @@ namespace GeneXus.Utils
             return decodedHeader;
         }
 #endif
+#if NETCORE
+		static int windowsPlatform = -1;
+#endif
 		public static bool IsWindowsPlatform
 		{
 			get
 			{
 #if NETCORE
-				return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+				if (windowsPlatform == -1)
+					windowsPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 1 : 0;
+
+				return (windowsPlatform == 1);
 #else
 				return true;
 #endif
 			}
+#if NETCORE
+			set
+			{
+				windowsPlatform = value ? 1 : 0;
+			}
+#endif
 		}
 		static public int DbmsVersion(IGxContext context, string dataSource)
 		{
@@ -5349,6 +5372,214 @@ namespace GeneXus.Utils
 		}
 	}
 
+	public static class GxImageUtil
+	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxImageUtil));
+
+		private static string ImageAbsolutePath(string originalFileLocation)
+		{
+			return ImageFile(originalFileLocation).GetAbsoluteName();
+		}
+		private static GxFile ImageFile(string originalFileLocation)
+		{
+			return new GxFile(GxContext.StaticPhysicalPath(), originalFileLocation);
+		}
+
+		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
+		{
+			try
+			{
+				int newheight = height;
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Image image = Image.FromFile(ImageAbsolutePath(originalFileLocation)))
+				{
+					// Prevent using images internal thumbnail
+					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+
+					if (keepAspectRatio)
+					{
+						double resize = (double)image.Width / (double)width;//get the resize vector
+						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
+					}//return the image resized to the given heigth and width
+					image.GetThumbnailImage(width, newheight, null, IntPtr.Zero).Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Resize {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string Scale(string imageFile, int percent)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				int width, height;
+				using (Image image = Image.FromFile(originalFileLocation))
+				{
+					width = image.Size.Width * percent / 100;
+					height = image.Size.Height * percent / 100;
+				}
+				return Resize(imageFile, width, height, true);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Scale {imageFile} failed", ex);
+				return imageFile;
+			}
+		}
+		public static string Crop(string imageFile, int X, int Y, int Width, int Height)
+		{
+			try
+			{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					string originalFileLocation = ImageAbsolutePath(imageFile);
+					using (Image OriginalImage = Image.FromFile(originalFileLocation))
+					{
+						using (Bitmap bmp = new Bitmap(Width, Height))
+						{
+							bmp.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+							using (Graphics Graphic = Graphics.FromImage(bmp))
+							{
+								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
+								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
+								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
+								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
+								bmp.Save(ms, OriginalImage.RawFormat);
+							}
+						}
+					}
+					using (FileStream file = new FileStream(originalFileLocation, FileMode.Open, FileAccess.Write))
+					{
+						ms.WriteTo(file);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Crop {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string Rotate(string imageFile, int angle)
+		{
+
+			try
+			{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					string originalFileLocation = ImageAbsolutePath(imageFile);
+					using (Image OriginalImage = Image.FromFile(originalFileLocation))
+					{
+						using (Bitmap rotatedImage = new Bitmap(OriginalImage.Width, OriginalImage.Height))
+						{
+							rotatedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+
+							using (Graphics g = Graphics.FromImage(rotatedImage))
+							{
+								g.TranslateTransform(OriginalImage.Width / 2, OriginalImage.Height / 2);
+								g.RotateTransform(angle);
+								g.TranslateTransform(-OriginalImage.Width / 2, -OriginalImage.Height / 2);
+								g.DrawImage(OriginalImage, new Point(0, 0));
+							}
+							rotatedImage.Save(ms, OriginalImage.RawFormat);
+						}
+					}
+					using (FileStream file = new FileStream(originalFileLocation, FileMode.Open, FileAccess.Write))
+					{
+						ms.WriteTo(file);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Rotate {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string FlipHorizontally(string imageFile) {
+
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
+					bmp.Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Flip Horizontally {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string FlipVertically(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+					bmp.Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Flip Vertically {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+
+		public static int GetImageWidth(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					return bmp.Width;
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetImageWidth {imageFile} failed", ex);
+			}
+			return 0;
+		}
+		public static int GetImageHeight(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					return bmp.Height;
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetImageHeight {imageFile} failed", ex);
+			}
+			return 0;
+		}
+		public static long GetFileSize(string imageFile)
+		{
+			try
+			{
+				return ImageFile(imageFile).GetLength();
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetFileSize {imageFile} failed", ex);
+			}
+			return 0;
+		}
+	}
 	public class StorageUtils
 	{
 		public const string DELIMITER = "/";

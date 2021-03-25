@@ -5,6 +5,8 @@ using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+#else
+using System.Web.SessionState;
 #endif
 using GeneXus.Utils;
 using System.Net;
@@ -39,7 +41,7 @@ namespace GeneXus.Application
 #if NETCORE
 	public class GxRestWrapper
 #else
-	public class GxRestWrapper : IHttpHandler
+	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
@@ -48,6 +50,7 @@ namespace GeneXus.Application
 		private GXProcedure _procWorker;
 		private const string EXECUTE_METHOD = "execute";
 		public String ServiceMethod = "";
+		public bool WrappedParameter = false;
 
 
 		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod) : this(worker, context, gxContext)
@@ -254,7 +257,15 @@ namespace GeneXus.Application
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, false);
+				bool wrapped = false;
+				if (_procWorker.IsApiObject)
+				{
+					if (outputParameters.Count == 1 && outputParameters.First().Value.GetType().GetInterfaces().Contains(typeof(ICollection)))
+					{
+						wrapped = true;
+					}
+				}
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{

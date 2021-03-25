@@ -31,7 +31,7 @@ namespace GeneXus.Application
 
 		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context=null)
 		{
-			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
+			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, context);
 			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
 
@@ -91,6 +91,10 @@ namespace GeneXus.Application
 			{
 				return Convert.ChangeType(value, newType);
 			}
+			else if (newType == typeof(Guid) && Guid.TryParse(value.ToString(), out Guid guidResult))
+			{
+				return guidResult;
+			}
 			else
 			{
 				return value;
@@ -137,7 +141,7 @@ namespace GeneXus.Application
 			int idx = 0;
 			foreach (var methodParameter in methodParameters)
 			{
-				var gxParameterName = methodParameter.Name.Substring(methodParameter.Name.IndexOf('_') + 1);
+				var gxParameterName = GxParameterName(methodParameter.Name);
 				if (IsByRefParameter(methodParameter))
 				{
 					outputParameters.Add(gxParameterName, parametersForInvocation[idx]);
@@ -157,7 +161,7 @@ namespace GeneXus.Application
 			{
 				object value;
 				
-				var gxParameterName = methodParameter.Name.Substring(methodParameter.Name.IndexOf('_') + 1).ToLower();
+				var gxParameterName = GxParameterName(methodParameter.Name).ToLower();
 				Type parmType = methodParameter.ParameterType;
 				if (IsByRefParameter(methodParameter))
 				{
@@ -176,6 +180,19 @@ namespace GeneXus.Application
 				idx++;
 			}
 			return parametersForInvocation;
+		}
+		private static Regex attVar = new Regex(@"^AV?\d{1,}", RegexOptions.Compiled);
+		private static string GxParameterName(string methodParameterName)
+		{
+			int idx = methodParameterName.IndexOf('_');
+			if (idx >= 0)
+			{
+				return methodParameterName.Substring(idx + 1);
+			}
+			else
+			{
+				return attVar.Replace(methodParameterName, string.Empty);
+			}
 		}
 
 		private static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IList<string> parametersValues)
