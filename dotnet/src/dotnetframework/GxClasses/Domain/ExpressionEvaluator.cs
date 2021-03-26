@@ -557,13 +557,13 @@ namespace GeneXus.Utils
 				}
 				iifContext = true;
 				bool iif_result = (eval(sarg1) != 0);
+				iifContext = false;
 				if (ErrCode != 0)
 					return result;
 				if (iif_result)
 					result = eval(sarg2);
 				else
 					result = eval(sarg3);
-				iifContext = false;
 			}
 			else
 			{
