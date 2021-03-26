@@ -95,7 +95,9 @@ namespace GeneXus.Mail.Util
 		{
 			try
 			{
+#pragma warning disable SYSLIB0006
 				thread.Abort();
+#pragma warning restore SYSLIB0006
 			}
 			catch {}
 		}

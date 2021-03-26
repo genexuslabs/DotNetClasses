@@ -32,9 +32,6 @@ namespace GeneXus.Utils
 	class NTSGeographyWrapper
 	{
 
-		private const double EARTH_RADIUS = 6371008.8;
-		private const double DEG_TO_RAD = Math.PI / 180;
-
 		internal static object Parse(String geoText)
 		{
 			WKTReader reader = new WKTReader();
@@ -150,27 +147,6 @@ namespace GeneXus.Utils
 			var dt = g.Inverse(LatA, LonA, LatB, LonB);
 			return dt.s12;
 		}
-
-		/*public static double DistanceSLC(double Lat1, double Lon1, double Lat2, double Lon2)
-		{
-			try
-			{
-				double radLat1 = Lat1 * DEG_TO_RAD;
-				double radLat2 = Lat2 * DEG_TO_RAD;
-				double radLon1 = Lon1 * DEG_TO_RAD;
-				double radLon2 = Lon2 * DEG_TO_RAD;
-
-				// central angle, aka arc segment angular distance
-				double centralAngle = Math.Acos(Math.Sin(radLat1) * Math.Sin(radLat2) +
-						Math.Cos(radLat1) * Math.Cos(radLat2) * Math.Cos(radLon2 - radLon1));
-
-				// great-circle (orthodromic) distance on Earth between 2 points
-				return EARTH_RADIUS * centralAngle;
-			}
-			catch {
-					throw;
-				}
-		}*/
 
 		internal static bool STIntersects(object instanceA, object instanceB)
 		{
