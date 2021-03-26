@@ -573,7 +573,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Name of the resource containing the names of databases embedded as assembly resources.
 		/// </summary>
-		private static readonly string resMetaInfoName = "metainfo";
+		private const string resMetaInfoName = "metainfo";
 
 		/// <summary>
 		/// Holds the default zoneinfo directory name. Used when consturctor with no
@@ -1050,7 +1050,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets all zoneinfo directories stored in zoneinfo database.
 		/// </summary>
-		public static string[] AllDirs
+		private static string[] AllDirs
 		{
 			get 
 			{
@@ -1100,7 +1100,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets all zoneinfo names in default zoneinfo directory.
 		/// </summary>
-		public static string[] AllNames
+		internal static string[] AllNames
 		{
 			get 
 			{
@@ -1160,7 +1160,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets the unix times of all transitions for this zoneinfo.
 		/// </summary>
-		public long[] AllTransitionClocks
+		internal long[] AllTransitionClocks
 		{
 			get 
 			{
@@ -1174,7 +1174,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets all transition rules of this zoneinfo.
 		/// </summary>
-		public Rule[] AllRules
+		internal Rule[] AllRules
 		{
 			get 
 			{
@@ -1234,7 +1234,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets the unix times of all leap second corrections for this zoneinfo.
 		/// </summary>
-		public long[] AllLeapSecondCorrectionClocks
+		private long[] AllLeapSecondCorrectionClocks
 		{
 			get 
 			{

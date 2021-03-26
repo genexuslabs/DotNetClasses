@@ -1762,7 +1762,9 @@ namespace GeneXus.Http
 		public virtual bool UseBigStack()
 		{ return false; }
 
-		private const int STACKSIZE = 1024 * 1024 * 2;
+#if !NETCORE
+	private const int STACKSIZE = 1024 * 1024 * 2;
+#endif
 
 		public bool IsMain
 		{

@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-	<DefineConstants>NETCORE;</DefineConstants>
-	<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
-	<PackageId>GeneXus.Classes.Web.Core</PackageId>
-	<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
-	<PackageId>GeneXus.Classes.Web.Core</PackageId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netcoreapp3.1;net5.0</TargetFrameworks>
+		<DefineConstants>NETCORE;</DefineConstants>
+		<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
+		<PackageId>GeneXus.Classes.Web.Core</PackageId>
+		<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
+		<PackageId>GeneXus.Classes.Web.Core</PackageId>
+		<NoWarn>CA1812</NoWarn>
+	</PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXGeolocation.cs" Link="Domain\GXGeolocation.cs" />

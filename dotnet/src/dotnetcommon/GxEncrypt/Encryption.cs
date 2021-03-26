@@ -509,7 +509,7 @@ namespace GeneXus.Encryption
 				if (string.IsNullOrEmpty(s_currentDir))
 				{
 					Assembly ass = Assembly.GetExecutingAssembly();
-					FileInfo file = new FileInfo(new Uri(ass.EscapedCodeBase).LocalPath);
+					FileInfo file = new FileInfo(new Uri(ass.Location).LocalPath);
 
 					s_currentDir = file.Directory.FullName;
 				}

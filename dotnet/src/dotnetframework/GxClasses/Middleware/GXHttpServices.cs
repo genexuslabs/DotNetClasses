@@ -332,12 +332,10 @@ namespace GeneXus.Http
 	internal class GXResourceProvider : GXHttpHandler
 	{
 		internal static string PROVIDER_NAME = "GXResourceProvider.aspx";
-
 		public GXResourceProvider()
 		{
 			this.context = new GxContext();
 		}
-
 		public override void webExecute()
 		{
 			string resourceType = this.GetNextPar();

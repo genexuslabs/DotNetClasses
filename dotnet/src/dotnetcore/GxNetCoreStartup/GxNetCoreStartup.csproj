@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<TargetFrameworks>netcoreapp3.1;net5.0</TargetFrameworks>
 		<PackageTags>GxNetCoreStartup</PackageTags>
 		<PackageId>GeneXus.NetCoreStartup</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
@@ -19,8 +19,8 @@
 		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" PrivateAssets="All"/>
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.0" PrivateAssets="All" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" PrivateAssets="All" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" PrivateAssets="All" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" PrivateAssets="All" />
 	</ItemGroup>
   <ItemGroup>
