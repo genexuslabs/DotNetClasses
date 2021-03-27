@@ -136,6 +136,7 @@ namespace GeneXus.Http.Client
 			_authCollection = new ArrayList();
 			_authProxyCollection = new ArrayList();
 			_certificateCollection = new X509Certificate2Collection();
+			IncludeCookies = true;
 
 
 			_proxyHost = "";
@@ -252,6 +253,7 @@ namespace GeneXus.Http.Client
 			get { return _proxyHost; }
 			set { _proxyHost = value; }
 		}
+		public bool IncludeCookies { get; set; }
 		public void set_ProxyHost(string host)
 		{
 			_proxyHost = host;
@@ -629,13 +631,12 @@ namespace GeneXus.Http.Client
 			httpC.Timeout = _timeout;
 		}
 #endif
-		HttpWebRequest buildRequest(string method, string name, CookieContainer cookies)
+		HttpWebRequest buildRequest(string method, string requestUrl, CookieContainer cookies)
 		{
-			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1} name:{2}", _url, method, name));
+			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			int BytesRead;
 			Byte[] Buffer = new Byte[1024];
 			
-			string requestUrl = GetRequestURL(name);
 			HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requestUrl);
 
 			if (GXUtil.CompressResponse())
@@ -745,12 +746,15 @@ namespace GeneXus.Http.Client
 			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
 			try
 			{
-				
-				CookieContainer cookies = (_context == null || String.IsNullOrEmpty(_url)) ? new CookieContainer() : _context.GetCookieContainer(_url);
-				req = buildRequest(method, name, cookies);
+				string requestUrl = GetRequestURL(name);
+				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
+				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
+				req = buildRequest(method, requestUrl, cookies);
 
 #if NETCORE
-				resp = req.GetResponseAsync().Result as HttpWebResponse;
+				resp = req.GetResponse() as HttpWebResponse;
+				if (contextCookies)
+					_context.UpdateSessionCookieContainer();
 #else
 				resp = (HttpWebResponse)req.GetResponse();
 #endif
@@ -787,36 +791,46 @@ namespace GeneXus.Http.Client
 			_receiveStream = new MemoryStream();
 			using (Stream rStream = resp.GetResponseStream())
 			{
-				Buffer = new Byte[1024];
-				BytesRead = rStream.Read(Buffer, 0, 1024);
-				GXLogging.Debug(log, "BytesRead " + BytesRead);
-				bool encodingFound = false;
-				String charset = resp.ContentType;
-				if (!string.IsNullOrEmpty(charset))
+				try
 				{
-					int idx = charset.IndexOf("charset=");
-					if (idx > 0)
-					{
-						idx += 8;
-						charset = charset.Substring(idx, charset.Length - idx);
-						_encoding = GetEncoding(charset);
-						if (_encoding != null)
-							encodingFound = true;
-					}
-					else
-					{
-						charset = String.Empty;
-					}
-				}
-				while (BytesRead > 0)
-				{
-					if (!encodingFound)
-					{
-						_encoding = DetectEncoding(charset, out encodingFound, Buffer, BytesRead);
-					}
-					_receiveStream.Write(Buffer, 0, BytesRead);
+					Buffer = new Byte[1024];
 					BytesRead = rStream.Read(Buffer, 0, 1024);
 					GXLogging.Debug(log, "BytesRead " + BytesRead);
+					bool encodingFound = false;
+					String charset = resp.ContentType;
+					if (!string.IsNullOrEmpty(charset))
+					{
+						int idx = charset.IndexOf("charset=");
+						if (idx > 0)
+						{
+							idx += 8;
+							charset = charset.Substring(idx, charset.Length - idx);
+							_encoding = GetEncoding(charset);
+							if (_encoding != null)
+								encodingFound = true;
+						}
+						else
+						{
+							charset = String.Empty;
+						}
+					}
+					while (BytesRead > 0)
+					{
+						if (!encodingFound)
+						{
+							_encoding = DetectEncoding(charset, out encodingFound, Buffer, BytesRead);
+						}
+						_receiveStream.Write(Buffer, 0, BytesRead);
+						BytesRead = rStream.Read(Buffer, 0, 1024);
+						GXLogging.Debug(log, "BytesRead " + BytesRead);
+					}
+				}
+				catch (IOException ioEx)
+				{
+					if (_errCode == 1)
+						GXLogging.Warn(log, "Could not read response", ioEx);
+					else
+						throw ioEx;
 				}
 			}
 			_receiveStream.Seek(0, SeekOrigin.Begin);

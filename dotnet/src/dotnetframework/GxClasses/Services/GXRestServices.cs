@@ -18,7 +18,7 @@ using System.ServiceModel;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel.Channels;
 using System.Runtime.Serialization;
-using Jayrock.Json;
+
 using System.Collections.Specialized;
 using GeneXus.Security;
 using GeneXus.Mime;
@@ -208,14 +208,10 @@ namespace GeneXus.Utils
 
         public GxRestService()
         {
-            context = new GxContext();
-            DataStoreUtil.LoadDataStores(context);
-            wcfContext = WebOperationContext.Current;
+			context = GxContext.CreateDefaultInstance();
+			wcfContext = WebOperationContext.Current;
             httpContext = HttpContext.Current;
-            string theme = Preferences.GetDefaultTheme();
-            if (!string.IsNullOrEmpty(theme))
-                context.SetDefaultTheme(theme);
-            if (GXUtil.CompressResponse())
+			if (GXUtil.CompressResponse())
                 GXUtil.SetGZip(httpContext);
         }
         public void Cleanup()
@@ -231,25 +227,25 @@ namespace GeneXus.Utils
         //Convert GxUnknownObjectCollection of Object[] to GxUnknownObjectCollection of GxSimpleCollections
         public GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
         {
-            GxUnknownObjectCollection result = new GxUnknownObjectCollection();
-            if (tableHashList != null && tableHashList.Count > 0)
-            {
-                foreach (object[] list in tableHashList)
-                {
-                    GxStringCollection tableHash = new GxStringCollection();
-                    foreach (string data in list)
-                    {
-                        tableHash.Add(data);
-                    }
-                    result.Add(tableHash);
-                }
-            }
-            return result;
+			GxUnknownObjectCollection result = new GxUnknownObjectCollection();
+			if (tableHashList != null && tableHashList.Count > 0)
+			{
+				foreach (object[] list in tableHashList)
+				{
+					GxStringCollection tableHash = new GxStringCollection();
+					foreach (string data in list)
+					{
+						tableHash.Add(data);
+					}
+					result.Add(tableHash);
+				}
+			}
+			return result;
         }
 
 		public string EmptyParm(string parmValue)
 		{
-			if (!string.IsNullOrEmpty(parmValue) && parmValue.Equals("gxempty", StringComparison.OrdinalIgnoreCase))
+			if (string.IsNullOrEmpty(parmValue) || parmValue.Equals("gxempty", StringComparison.OrdinalIgnoreCase))
 				return string.Empty;
 			else
 				return parmValue;
@@ -441,7 +437,7 @@ namespace GeneXus.Utils
 							}
 							else
 							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, GXHttpHandler.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description));
+								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description));
 								SetStatusCode(HttpStatusCode.Unauthorized);
 							}
 							return false;
@@ -513,16 +509,20 @@ namespace GeneXus.Utils
         {
             
 			NameValueCollection headers = GetHeaders();
-			String language=null, etag=null;
+			String language=null, theme=null, etag=null;
 			if (headers != null)
 			{
 				language = headers["GeneXus-Language"];
+				theme = headers["GeneXus-Theme"];
 				if (!IsPost())
 					etag = headers["If-Modified-Since"];
 			}
             
 			if (!string.IsNullOrEmpty(language))
                 context.SetLanguage(language);
+
+			if (!string.IsNullOrEmpty(theme))
+				context.SetTheme(theme);
 
             DateTime dt = HTMLDateToDatetime(etag);
             DateTime newDt;

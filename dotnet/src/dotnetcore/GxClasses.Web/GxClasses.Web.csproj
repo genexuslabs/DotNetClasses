@@ -4,8 +4,10 @@
 	<DefineConstants>NETCORE;</DefineConstants>
 	<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
 	<PackageId>GeneXus.Classes.Web.Core</PackageId>
+	<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
+	<PackageId>GeneXus.Classes.Web.Core</PackageId>
   </PropertyGroup>
-   
+
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXGeolocation.cs" Link="Domain\GXGeolocation.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttp.cs" Link="Middleware\GXHttp.cs" />
@@ -23,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.11" />
   </ItemGroup>
 
   <ItemGroup>

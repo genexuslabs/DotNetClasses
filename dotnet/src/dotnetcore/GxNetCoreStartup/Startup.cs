@@ -1,24 +1,30 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Data.NTier;
+using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Metadata;
 using GeneXus.Procedure;
+using GeneXus.Services;
 using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
@@ -26,6 +32,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using StackExchange.Redis;
 
 namespace GeneXus.Application
 {
@@ -34,21 +42,29 @@ namespace GeneXus.Application
 		const string DEFAULT_PORT = "80";
 		public static void Main(string[] args)
 		{
-
-			string port = DEFAULT_PORT;
-			if (args.Length > 2)
+			try
 			{
-				Startup.VirtualPath = args[0];
-				Startup.LocalPath = args[1];
-				port = args[2];
+				string port = DEFAULT_PORT;
+				if (args.Length > 2)
+				{
+					Startup.VirtualPath = args[0];
+					Startup.LocalPath = args[1];
+					port = args[2];
+				}
+				if (port == DEFAULT_PORT)
+				{
+					BuildWebHost(null).Run();
+				}
+				else
+				{
+					BuildWebHostPort(null, port).Run();
+				}
 			}
-			if (port == DEFAULT_PORT)
+			catch (Exception e)
 			{
-				BuildWebHost(null).Run();
-			}
-			else
-			{
-				BuildWebHostPort(null, port).Run();
+				Console.Error.WriteLine("ERROR:");
+				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
+				Console.Read();
 			}
 		}
 		public static IWebHost BuildWebHost(string[] args) =>
@@ -67,14 +83,18 @@ namespace GeneXus.Application
 
 	public class SingleMap
 	{
-		String name;
-		String implementation;
-		String methodName;
+		String verb = "GET";
+		String name = "";
+		String path = "";
+		String implementation = "";
+		String methodName = "";
 
 		public string Name { get => name; set => name = value; }
+		public string Path { get => path; set => path = value; }
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
-	
+		public string Verb { get => verb; set => verb = value; }
+
 	}
 
 	public class MapGroup
@@ -103,6 +123,7 @@ namespace GeneXus.Application
 			return app.Map(path, (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>());
 		}
 	}
+  
 	public class Startup
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
@@ -112,23 +133,31 @@ namespace GeneXus.Application
 		static string ContentRootPath;
 		static char[] urlSeparator = {'/','\\'};
 		const char QUESTIONMARK = '?';
-		const string UrlTemplateController = "controller";
-		const string UrlTemplateParms = "parms";
 		const string UrlTemplateControllerWithParms = "controllerWithParms";
 		const string RESOURCES_FOLDER = "Resources";
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
 		const string REST_BASE_URL = "rest/";
+		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
+		const string REWRITE_FILE = "rewrite.config";
+		const string SDSVC_PREFIX = "sdsvc_";
+		const string SDSVC_METHO_SUFFIX = "DL";
 
-		public List<String> servicesPathUrl = new List<String>();
-		public List<String> servicesBase = new List<String>();
-		public Dictionary<String, Dictionary<String, String>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
+
+		public Dictionary<string,string> servicesPathUrl = new Dictionary<string, string>();
+		public List<string> servicesBase = new List<string>();		
+		public Dictionary<String, Dictionary<string, string>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
+		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string,string>, string>>();
+		public Dictionary<string, List<string>> servicesValidPath = new Dictionary<string, List<string>>();
+	
+		const string PRIVATE_DIR = "private";
+
 
 		public Startup(IHostingEnvironment env)
-        {
+    {
 			var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+			  	      .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
 			ContentRootPath = env.ContentRootPath;
@@ -139,51 +168,68 @@ namespace GeneXus.Application
 
 		public void ServicesGroupSetting()
 		{
-			string[] grpFiles = Directory.GetFiles(ContentRootPath, "*.grp.json");
-			foreach (String grp in grpFiles)
+			if (Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)))
 			{
-				object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
-				MapGroup m = p as MapGroup;
-				if (m != null)
+				string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
+				foreach (String grp in grpFiles)
 				{
-					
-					if (String.IsNullOrEmpty(m.BasePath))
+					object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
+					MapGroup m = p as MapGroup;
+					if (m != null)
 					{
-						m.BasePath = REST_BASE_URL;
-					}
-					String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
-					String mapPathLower = mapPath.ToLower();
-					servicesPathUrl.Add(mapPath);
-					foreach (SingleMap sm in m.Mappings)
-					{
-						if (servicesMap.ContainsKey(mapPathLower))
+
+						if (String.IsNullOrEmpty(m.BasePath))
 						{
-							if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
-							{
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-							}
+							m.BasePath = REST_BASE_URL;
 						}
-						else {
-							servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-							servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+						String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
+						String mapPathLower = mapPath.ToLower();
+						String mNameLower = m.Name.ToLower();
+						servicesPathUrl.Add(mapPathLower, mNameLower);
+						GXLogging.Debug(log, $"addServicesPathUrl key:{mapPathLower} value:{mNameLower}");
+						foreach (SingleMap sm in m.Mappings)
+						{
+							if (sm.Verb == null)
+								sm.Verb = "GET";
+							if (String.IsNullOrEmpty(sm.Path))
+								sm.Path = sm.Name;
+							if (servicesMap.ContainsKey(mapPathLower))
+							{
+								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+								{
+									servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
+									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+								}
+							}
+							else
+							{
+								servicesValidPath.Add(mapPathLower, new List<string>());
+								servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
+								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
+								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+								servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string, string>, string>());
+								servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+							}
 						}
 					}
 				}
-
 			}
 		}
 
-		Boolean serviceInPath(String path, out String actualPath)
+		bool ServiceInPath(String path, out String actualPath)
 		{
 			actualPath = "";
-			foreach (String subPath in servicesPathUrl)
+			foreach (String subPath in servicesPathUrl.Keys)
 			{
 				if (path.ToLower().Contains($"/{subPath.ToLower()}"))
 				{
 					actualPath = subPath.ToLower();
+					GXLogging.Debug(log, $"ServiceInPath actualPath:{actualPath}");
 					return true;
 				}
 			}
+			GXLogging.Debug(log, $"ServiceInPath path:{path} not found");
 			return false;
 		}
 
@@ -202,19 +248,34 @@ namespace GeneXus.Application
 			services.AddDistributedMemoryCache();
 			AppSettings settings = new AppSettings();
 			Config.ConfigRoot.GetSection("AppSettings").Bind(settings);
+
+			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
+
+			if (sessionService != null)
+				ConfigureSessionService(services, sessionService);
+			services.AddHttpContextAccessor();
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(settings.SessionTimeout==0 ? DEFAULT_SESSION_TIMEOUT_MINUTES : settings.SessionTimeout); 
 				options.Cookie.HttpOnly = true;
+				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+				options.Cookie.IsEssential = true;
+				string sameSite;
+				SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
+				if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+				{
+					options.Cookie.SameSite = sameSiteMode;
+				}
 			});
 
-			services.Configure<GzipCompressionProviderOptions>(options => 
-			options.Level = System.IO.Compression.CompressionLevel.Fastest);
+
 			services.AddDirectoryBrowser();
-			services.AddResponseCompression(options =>
+			if (GXUtil.CompressResponse())
 			{
-				options.MimeTypes = new[]
+				services.AddResponseCompression(options =>
 				{
+					options.MimeTypes = new[]
+					{
 							// Default
 							"text/plain",
 							"text/css",
@@ -227,9 +288,33 @@ namespace GeneXus.Application
 							// Custom
 							"application/json",
 							"application/pdf"
-						};
-			});
+							};
+					options.EnableForHttps = true;
+				});
+			}
 			services.AddMvc();
+		}
+
+		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
+		{
+			if (sessionService is GxRedisSession)
+			{
+				services.AddStackExchangeRedisCache(options =>
+				{
+					options.Configuration = sessionService.ConnectionString;
+					options.InstanceName = sessionService.InstanceName;
+				});
+				services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
+			}
+			else if (sessionService is GxDatabaseSession)
+			{
+				services.AddDistributedSqlServerCache(options =>
+				{
+					options.ConnectionString = sessionService.ConnectionString;
+					options.SchemaName = sessionService.Schema;
+					options.TableName = sessionService.TableName;
+				});
+			}
 		}
 		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
@@ -250,8 +335,13 @@ namespace GeneXus.Application
 			provider.Mappings[".otf"] = "font/opentype";
 			provider.Mappings[".pdf"] = "application/pdf";
 			provider.Mappings[".log"] = "text/plain";
-
-			app.UseResponseCompression();
+			provider.Mappings[".usdz"] = "model/vnd.pixar.usd";
+			provider.Mappings[".sfb"] = "model/sfb";
+			provider.Mappings[".gltf"] = "model/gltf+json";
+			if (GXUtil.CompressResponse())
+			{
+				app.UseResponseCompression();
+			}
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
@@ -295,6 +385,9 @@ namespace GeneXus.Application
 					});
 				}
 			}
+			string rewriteFile = Path.Combine(LocalPath, REWRITE_FILE);
+			if (File.Exists(rewriteFile))
+				AddRewrite(app, rewriteFile, baseVirtualPath);
 
 			app.UseStaticFiles(new StaticFileOptions()
 			{
@@ -313,7 +406,7 @@ namespace GeneXus.Application
 				ContentTypeProvider = provider
 			});
 			
-			foreach( String p in servicesPathUrl)
+			foreach( String p in servicesPathUrl.Keys)
 			{
 				 servicesBase.Add( string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
 			}
@@ -324,6 +417,7 @@ namespace GeneXus.Application
 			{
 				foreach (String serviceBasePath in servicesBase)
 				{
+					GXLogging.Debug(log, $"MapRoute: {serviceBasePath}{{*{UrlTemplateControllerWithParms}}}");
 					routes.MapRoute($"{serviceBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(ProcessRestRequest));
 				}
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(ProcessRestRequest));
@@ -341,42 +435,115 @@ namespace GeneXus.Application
 						});
 			app.UseEnableRequestRewind();
 		}
+
+		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)
+		{
+			string rules = File.ReadAllText(rewriteFile);
+			rules = rules.Replace("{BASEURL}", baseURL);
+			
+			using (var apacheModRewriteStreamReader = new StringReader(rules))
+			{
+				var options = new RewriteOptions().AddApacheModRewrite(apacheModRewriteStreamReader);
+				app.UseRewriter(options);
+			}
+		}
+
 		bool IsAspx(HttpContext context, string basePath)
 		{
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
 		}
-		static public List<ControllerInfo> GetRouteController(string path)
+		
+		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
+											Dictionary<string, List<string>> sValid,
+											Dictionary<string, Dictionary<string, string>> sMap,
+											Dictionary<string, Dictionary<Tuple<string, string>, string>> sMapData,									
+											string basePath, string verb, string path)
 		{
 			List<ControllerInfo> result = new List<ControllerInfo>();
-			string controller = path;
 			string parms = string.Empty;
-			GXLogging.Debug(log, "GetRouteController path:", path);
+			string method = string.Empty;
+			GXLogging.Debug(log, $"GetRouteController basePath:{basePath} verb:{verb} path:{path}");
 			try {
 				if (!string.IsNullOrEmpty(path))
 				{
 					int questionMarkIdx = path.IndexOf(QUESTIONMARK);
-					if (questionMarkIdx >= 0)
+					string controller;
+					if (apiPaths.ContainsKey(basePath)
+						&& sValid.ContainsKey(basePath)
+						&& sMap.ContainsKey(basePath)
+						&& sMapData.ContainsKey(basePath)
+						)
 					{
-						// rest/module1/module2/service?paramaters
-						controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
-						if (path.Length> questionMarkIdx + 1)
-							parms = path.Substring(questionMarkIdx+1);
-
-						result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
+						if (sValid[basePath].Contains(path.ToLower()))
+						{
+							if (sMapData[basePath].TryGetValue(Tuple.Create(path.ToLower(), verb), out string value))
+							{
+								//string httpverb = "";
+								//if (sVerb.ContainsKey(basePath))
+								//	sVerb[basePath].TryGetValue(path.ToLower(), out httpverb);
+								//else
+								//	httpverb = "";
+								string mth = sMap[basePath][value];
+								if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
+									parms = path.Substring(questionMarkIdx + 1);
+								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = mth, Verb = verb });
+								GXLogging.Debug(log, $"Controller found Name:{apiPaths[basePath]} Parameters:{parms} MethodName:{mth} Verb={verb}");
+							}
+							else
+							{
+								// Method not allowed
+								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = "", MethodName = "", Verb =""});
+								GXLogging.Debug(log, $"Controller found (Method not allowed) Name:{apiPaths[basePath]}");
+								return result;
+							}
+						}
+						else
+							return result; // Not found
 					}
 					else
 					{
-						// rest/module1/module2/service
-						controller = path.TrimEnd(urlSeparator);
-						result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
-
-						// rest/module1/module2/service/paramaters
-						int idx = path.LastIndexOfAny(urlSeparator);
-						if (idx > 0 && idx < path.Length-1)
+						if (path.StartsWith(SDSVC_PREFIX))
 						{
-							controller = path.Substring(0, idx);
-							parms = path.Substring(idx+1);
+							if (questionMarkIdx >= 0)
+							{
+								// rest/module1/module2/sdsvc_service/method?parameters
+								controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
+								if (path.Length > questionMarkIdx + 1)
+									parms = path.Substring(questionMarkIdx + 1);
+							}
+
+							int idx = path.LastIndexOfAny(urlSeparator);
+							if (idx > 0 && idx < path.Length - 1)
+							{
+								controller = path.Substring(0, idx);
+								method = $"{path.Substring(idx + 1)}{SDSVC_METHO_SUFFIX}";
+								result.Add(new ControllerInfo() { Name = controller, Parameters = parms, MethodName = method });
+							}
+						}else if (questionMarkIdx >= 0)
+						{
+							// rest/module1/module2/service?paramaters
+							controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
+							if (path.Length > questionMarkIdx + 1)
+								parms = path.Substring(questionMarkIdx + 1);
+							GXLogging.Debug(log, $"Controller found (with question mark) Name:{controller} Parameters:{parms}");
 							result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
+						}
+						else
+						{
+							// rest/module1/module2/service
+							controller = path.TrimEnd(urlSeparator);
+							GXLogging.Debug(log, $"Controller found (without parameters) Name:{controller} Parameters:{parms}");
+							result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
+
+							// rest/module1/module2/service/parameters
+							int idx = path.LastIndexOfAny(urlSeparator);
+							if (idx > 0 && idx < path.Length - 1)
+							{
+								controller = path.Substring(0, idx);
+								parms = path.Substring(idx + 1);
+								GXLogging.Debug(log, $"Controller found (without url parameters) Name:{controller} Parameters:{parms}");
+								result.Add(new ControllerInfo() { Name = controller, Parameters = parms });
+							}
 						}
 					}
 				}
@@ -392,42 +559,68 @@ namespace GeneXus.Application
 			{
 				string path = context.Request.Path.ToString();
 				string actualPath = "";
-				if (path.Contains($"/{REST_BASE_URL}") || serviceInPath(path, out actualPath))
+				if (path.Contains($"/{REST_BASE_URL}") || ServiceInPath(path, out actualPath))
 				{
 					string controllerWihtParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
-					List<ControllerInfo> controllers = GetRouteController(controllerWihtParms);
+					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesValidPath, servicesMap, servicesMapData, actualPath, context.Request.Method, controllerWihtParms);
 					GxRestWrapper controller = null;
-					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name)) != null);
+					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name, c.MethodName)) != null);
 
-					if (servicesMap.ContainsKey(actualPath) && (servicesMap[actualPath].TryGetValue(controllerInfo.Name.ToLower(), out String value)))
-					{
-						controller.ServiceMethod = value;
-					}
-					else
-					{
-						controller.ServiceMethod = null;
-					}
 					if (controller != null)
 					{
-						if (HttpMethods.IsGet(context.Request.Method))
+						if (HttpMethods.IsGet(context.Request.Method) && ( controllerInfo.Verb == null || HttpMethods.IsGet(controllerInfo.Verb)))
 						{
 							return controller.Get(controllerInfo.Parameters);
 						}
-						else if (HttpMethods.IsPost(context.Request.Method))
+						else if (HttpMethods.IsPost(context.Request.Method) && ( controllerInfo.Verb == null || HttpMethods.IsPost(controllerInfo.Verb) ))
 						{
 							return controller.Post();
 						}
-						else if (HttpMethods.IsDelete(context.Request.Method))
+						else if (HttpMethods.IsDelete(context.Request.Method) && ( controllerInfo.Verb == null || HttpMethods.IsDelete(controllerInfo.Verb)))
 						{
 							return controller.Delete(controllerInfo.Parameters);
 						}
-						else if (HttpMethods.IsPut(context.Request.Method))
+						else if (HttpMethods.IsPut(context.Request.Method) && ( controllerInfo.Verb == null || HttpMethods.IsPut(controllerInfo.Verb) ))
 						{
 							return controller.Put(controllerInfo.Parameters);
+						}
+						else if (HttpMethods.IsPatch(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPatch(controllerInfo.Verb)))
+						{
+							return controller.Patch(controllerInfo.Parameters);
+						}
+						else if (HttpMethods.IsOptions(context.Request.Method))
+						{
+							string mthheaders = "OPTIONS,HEAD";
+							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath))
+							{
+								foreach (Tuple<string, string> t in servicesMapData[actualPath].Keys)
+								{
+									if (t.Item1.Equals(controllerWihtParms.ToLower()))
+									{
+										mthheaders += "," + t.Item2;
+									}
+								}
+							}
+							else
+							{
+								mthheaders += ", GET, POST";
+							}
+							context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { (string)context.Request.Headers["Origin"] });
+							context.Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Origin, X-Requested-With, Content-Type, Accept" });
+							context.Response.Headers.Add("Access-Control-Allow-Methods", new[] { mthheaders });
+							context.Response.Headers.Add("Access-Control-Allow-Credentials", new[] { "true" });
+							context.Response.Headers.Add("Allow", mthheaders);
+							context.Response.StatusCode = (int)HttpStatusCode.OK;
+						}
+						else
+						{
+							context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+							context.Response.Headers.Clear();
 						}
 					}
 					else
 					{
+						GXLogging.Error(log, $"ProcessRestRequest controller not found path:{path} controllerWihtParms:{controllerWihtParms}");
 						context.Response.StatusCode = (int)HttpStatusCode.NotFound;
 						context.Response.Headers.Clear();
 					}
@@ -436,38 +629,86 @@ namespace GeneXus.Application
 			}
 			catch (Exception ex)
 			{
-				return Task.FromException(ex);
+				GXLogging.Error(log, "ProcessRestRequest", ex);
+				GxRestWrapper.SetError(context, Convert.ToInt32(HttpStatusCode.InternalServerError).ToString(), ex.Message);
+				return Task.CompletedTask;
 			}
 		}
-		private GxRestWrapper GetController(HttpContext context, string controller)
+		private GxRestWrapper GetController(HttpContext context, string controller, string methodName)
 		{
-
-			GxContext gxContext = new GxContext();
-			DataStoreUtil.LoadDataStores(gxContext);
+			GXLogging.Debug(log, $"GetController:{controller} method:{methodName}");
+			GxContext gxContext = GxContext.CreateDefaultInstance();
+			IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
+			gxContext.HttpContext = new GxHttpContextAccesor(contextAccessor);
 			context.NewSessionCheck();
 			string nspace;
 			Config.GetValueOf("AppMainNamespace", out nspace);
-			if (File.Exists(Path.Combine(ContentRootPath, controller + "_bc.svc")))
+
+			String tmpController = controller;
+			String addNspace =  "";
+			String asssemblycontroller = tmpController;
+
+
+			if (controller.Contains("\\"))
 			{
-				var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace,  GxSilentTrnSdt.GxSdtNameToCsharpName(controller), new Object[] { gxContext }, Assembly.GetEntryAssembly()) as GxSilentTrnSdt;
-				if (sdtInstance != null)
-					return new GXBCRestService(sdtInstance, context, gxContext);
+				tmpController = controller.Substring(controller.LastIndexOf("\\") + 1);
+				addNspace =  controller.Substring(0, controller.LastIndexOf("\\")).Replace("\\", ".") ;
+				asssemblycontroller = addNspace + "." + tmpController ;
+				nspace += "." + addNspace;
+			}
+
+			string privateDir = Path.Combine(ContentRootPath, PRIVATE_DIR);
+			bool privateDirExists = Directory.Exists(privateDir);
+
+			GXLogging.Debug(log, $"PrivateDir:{privateDir} asssemblycontroller:{asssemblycontroller}");
+
+			if ( privateDirExists && File.Exists(Path.Combine(privateDir, $"{asssemblycontroller.ToLower()}.grp.json")))
+			{
+				controller = tmpController;
+				GXLogging.Debug(log, $"FindController:{controller} namespace:{nspace} assembly:{asssemblycontroller}");
+				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+				GXProcedure proc = controllerInstance as GXProcedure;
+				if (proc != null)
+					return new GxRestWrapper(proc, context, gxContext, methodName);
+				else
+					GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{asssemblycontroller} nspace:{nspace} controller:{controller}");
 			}
 			else
 			{
-				string svcFile = Path.Combine(ContentRootPath, $"{controller.ToLower()}.svc");
-				if (File.Exists(svcFile))
+				string controllerLower = controller.ToLower();
+				if (File.Exists(Path.Combine(ContentRootPath, controllerLower + "_bc.svc")))
 				{
-					controller = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != ',')
+					var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace, GxSilentTrnSdt.GxSdtNameToCsharpName(controllerLower), new Object[] { gxContext }, Assembly.GetEntryAssembly(), true) as GxSilentTrnSdt;
+					if (sdtInstance != null)
+						return new GXBCRestService(sdtInstance, context, gxContext);
+					else
+						GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{Config.CommonAssemblyName} nspace:{nspace} controller:{GxSilentTrnSdt.GxSdtNameToCsharpName(controller)}");
+				}
+				else
+				{
+					string svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
+					if (File.Exists(svcFile))
+					{
+						var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
 						   .Skip(1)
 						   .TakeWhile(c => c != '"')
-						   .ToArray()).Trim();
-					var controllerInstance = ClassLoader.FindInstance(controller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-					GXProcedure proc = controllerInstance as GXProcedure;
-					if (proc != null)
-						return new GxRestWrapper(proc, context, gxContext);
+						   .ToArray()).Trim().Split(',');
+						var controllerAssemblyName = controllerAssemblyQualifiedName.Last();
+						var controllerClassName = controllerAssemblyQualifiedName.First();
+						if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
+							controllerClassName = controllerClassName.Substring(nspace.Length + 1);
+						else
+							nspace=String.Empty;
+						var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+						GXProcedure proc = controllerInstance as GXProcedure;
+						if (proc != null)
+							return new GxRestWrapper(proc, context, gxContext, methodName);
+						else
+							GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{controllerAssemblyName} nspace:{nspace} controller:{controllerClassName}");
+					}
 				}
 			}
+			GXLogging.Warn(log, $"Controller was not found");
 			return null;
 		}
 	}

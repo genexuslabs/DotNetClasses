@@ -87,44 +87,53 @@ namespace GeneXus.Http
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
 						break;
 					default:
-						wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, GXHttpHandler.OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], statusCode, string.Empty));
+						wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], statusCode, string.Empty));
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Unauthorized;
 						break;
 				}
 				wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
 				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 			}
-#else
-			if (httpContext != null)
+			else
 			{
-				switch (statusCode)
+#endif
+				if (httpContext != null)
 				{
-					case "400":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-						break;
-					case "404":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
-						break;
-					case "409":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
-						break;
-					case "103":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-						break;
-					case "500":
-						httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-						break;
-					default:
-						httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], statusCode, string.Empty);
-						httpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-						break;
+					switch (statusCode)
+					{
+						case "400":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+							break;
+						case "404":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+							break;
+						case "409":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
+							break;
+						case "103":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+							break;
+						case "500":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+							break;
+						default:
+							httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], statusCode, string.Empty);
+							httpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+							break;
+					}
+#if !NETCORE
+					httpContext.Response.StatusDescription =  statusDescription.Replace(Environment.NewLine, string.Empty);
+					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 				}
-				
-				httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
-				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 			}
+#else
+					httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
+					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
+				}
+
 #endif
 		}
+
 		public static void SetResponseStatusAndJsonError(HttpContext httpContext, string statusCode, string statusDescription)
 		{
 			SetResponseStatus(httpContext, statusCode, statusDescription);
@@ -148,13 +157,9 @@ namespace GeneXus.Http
 		{
 			SetResponseStatus(httpContext, statusCode, statusDescription);
 			httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-			var jsonError = new HttpJsonError() { Code = statusCode, Message = statusDescription };
-#if NETCORE
-			return httpContext.Response.WriteAsync(JSONHelper.Serialize(jsonError));
-#else
+			var jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
 			httpContext.Response.Write(JSONHelper.Serialize(jsonError));
 			return Task.CompletedTask;
-#endif
 		}
 
 		public static String OatuhUnauthorizedHeader(string realm, string errCode, string errDescription)
@@ -222,7 +227,7 @@ namespace GeneXus.Http
 #else
 					filePath = file.Create(pf.InputStream);
 #endif
-					GXFileWatcher.Instance.AddTemporaryFile(file);
+					GXFileWatcher.Instance.AddTemporaryFile(file, httpContext);
 					return true;
 				}
 			}
@@ -231,7 +236,7 @@ namespace GeneXus.Http
 		public static string RequestPhysicalApplicationPath(HttpContext context = null)
 		{
 #if NETCORE
-			return Directory.GetParent(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName).FullName;
+			return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #else
 			if (context==null)
 				return HttpContext.Current.Request.PhysicalApplicationPath; 
@@ -300,6 +305,27 @@ namespace GeneXus.Http
 			return binary;
 		}
 #endif
+		static bool NamedParametersQuery(string query)
+		{
+			return Preferences.UseNamedParameters && query.Contains("=");
+		}
+		public static string[] GetParameterValues(string query)
+		{
+			if (NamedParametersQuery(query))
+			{
+				NameValueCollection names = HttpUtility.ParseQueryString(query);
+				string[] values = new string[names.Count];
+				for (int i = 0; i < names.Count; i++)
+					values[i] = names[i];
+
+				return values;
+			}
+			else
+			{
+				return query.Split(',');
+			}
+		}
+
 	}
 #if NETCORE
 	public class HttpCookieCollection : Dictionary<string, HttpCookie>
@@ -427,11 +453,11 @@ namespace GeneXus.Http
 
 		public static void Write(this HttpResponse response, string value)
 		{
-			response.WriteAsync(value);
+			response.WriteAsync(value).Wait();
 		}
 		public static void WriteFile(this HttpResponse response, string fileName)
 		{
-			response.SendFileAsync(fileName);
+			response.SendFileAsync(fileName).Wait();
 		}
 		
 	}
@@ -505,6 +531,8 @@ namespace GeneXus.Http
 
 	public static class HttpRequestExtensions
 	{
+		const int DEFAULT_HTTP_PORT = 80;
+		const int DEFAULT_HTTPS_PORT = 443;
 		public static HttpCookieCollection GetCookies(this HttpRequest request)
 		{
 #if NETCORE
@@ -614,6 +642,26 @@ namespace GeneXus.Http
 			return request.RawUrl;
 #endif
 		}
+		public static bool GetIsSecureFrontEnd(this HttpRequest request)
+		{
+			if (CheckHeaderValue(request, "Front-End-Https", "on") || CheckHeaderValue(request, "X-Forwarded-Proto", "https"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		private static bool CheckHeaderValue(HttpRequest request, String headerName, String headerValue)
+		{
+			string httpsHeader = request.Headers[headerName];
+			if (!string.IsNullOrEmpty(httpsHeader) && httpsHeader.Equals(headerValue, StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+			return false;
+		}
 
 		public static short GetIsSecureConnection(this HttpRequest request)
 		{
@@ -631,16 +679,31 @@ namespace GeneXus.Http
 			return request.Url.Scheme;
 #endif
 		}
-		public static int GetPort(this HttpRequest request)
+		public static int GetPort(this HttpRequest request, bool isSecure)
 		{
 #if NETCORE
 			if (request.Host.Port.HasValue)
 				return request.Host.Port.Value;
+			else if (isSecure)
+				return DEFAULT_HTTPS_PORT;
 			else
-				return 0;
+				return DEFAULT_HTTP_PORT;
 #else
-			return request.Url.Port;
-
+			if (request.Url.IsDefaultPort)
+				if (isSecure)
+					return DEFAULT_HTTPS_PORT;
+				else
+					return DEFAULT_HTTP_PORT;
+			else 
+				return request.Url.Port;
+#endif
+		}
+		public static bool IsDefaultPort(this HttpRequest request)
+		{
+#if NETCORE
+			return !request.Host.Port.HasValue;
+#else
+			return request.Url.IsDefaultPort;
 #endif
 		}
 		public static string GetHost(this HttpRequest request)

@@ -1,4 +1,5 @@
 using GeneXus.Application;
+using GeneXus.Configuration;
 using GeneXus.XML;
 using System;
 using System.Collections.Concurrent;
@@ -22,7 +23,15 @@ namespace GeneXus.Utils
 			else
 				namespacePrefixes[p] = ns;
 		}
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			setNamespaceContext(rdr, false);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
+		{
+			setNamespaceContext(rdr, true);
+		}
+		void setNamespaceContext(GXXMLReader rdr, bool setLocalNamespace)
 		{
 			for (int i = 1; i <= rdr.AttributeCount; i++)
 			{
@@ -31,7 +40,7 @@ namespace GeneXus.Utils
 				{
 					AddNamespacePrefix(attName.Substring(6), rdr.GetAttributeByIndex(i));
 				}
-				else if (attName.ToLower() == "xmlns")
+				else if (attName.ToLower() == "xmlns" && setLocalNamespace)
 				{
 					AddNamespacePrefix("", rdr.GetAttributeByIndex(i));
 				}
@@ -91,6 +100,10 @@ namespace GeneXus.Utils
 						throw ex;
 					}
 				}
+				finally
+				{
+					xmls.UnknownNode -= serErr.unknownNode;
+				}
 
 				serializationErrors = serErr.GetErrors();
 				return deserialized;
@@ -141,7 +154,11 @@ namespace GeneXus.Utils
 		}
 		internal static string Serialize(string rootName, string sNameSpace, XmlAttributeOverrides ovAttrs, bool includeHeader, IGxXMLSerializable instance)
 		{
-
+			bool indentElements = true;
+			if (Config.GetValueOf("XmlSerializationIndent", out string xmlIndent ))
+			{
+				indentElements = xmlIndent.Trim().ToLower() == "true";
+			}
 			XmlSerializer xmls = GetSerializer(instance.GetType(), ovAttrs, rootName, sNameSpace);
 			string s;
 			using (MemoryStream stream = new MemoryStream())
@@ -149,7 +166,7 @@ namespace GeneXus.Utils
 				XmlWriter xmlw = XmlWriter.Create(stream, new System.Xml.XmlWriterSettings()
 				{
 					OmitXmlDeclaration = !includeHeader,
-					Indent = true,
+					Indent = indentElements,
 					IndentChars = "\t",
 					Encoding = Encoding.UTF8
 				});
@@ -182,10 +199,23 @@ namespace GeneXus.Utils
 	public class GxSerializationErrorManager
 	{
 		List<string> errors = new List<string>();
+		int errorCount = 0;
+		int maxError = 10;
 
+		public GxSerializationErrorManager()
+		{
+			if (Config.GetValueOf("XmlSerialization-MaxErrorReporting", out string sMaxErr))
+			{
+				Int32.TryParse(sMaxErr, out this.maxError);
+			}
+		}
 		public void unknownNode(object sender, XmlNodeEventArgs e)
 		{
-			this.Add( string.Format("Unexpected node found: {0} (name: {1}, namespace: {2}", e.Name, e.LocalName, e.NamespaceURI));
+			if (this.errorCount < this.maxError)
+			{
+				this.errorCount++;
+				this.Add(string.Format("Unexpected node found ({0}): {1} (name: {2}, namespace: {3}", this.errorCount, e.Name, e.LocalName, e.NamespaceURI));
+			}
 		}
 		public void Add( string s)
 		{

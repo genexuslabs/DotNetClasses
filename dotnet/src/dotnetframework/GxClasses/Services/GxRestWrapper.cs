@@ -4,6 +4,9 @@ using System.Text;
 using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+#else
+using System.Web.SessionState;
 #endif
 using GeneXus.Utils;
 using System.Net;
@@ -18,15 +21,27 @@ using GeneXus.Metadata;
 using GeneXus.Configuration;
 using System.Web;
 using System.Collections.Specialized;
+using GeneXus.Security;
+using System.Collections;
+using Jayrock.Json;
 
 
 namespace GeneXus.Application
 
 {
+	internal static class Synchronizer
+	{
+		internal const string SYNC_METHOD_ALL = "gxAllSync";
+		internal const string SYNC_METHOD_CHECK = "gxCheckSync";
+		internal const string SYNC_METHOD_CONFIRM = "gxconfirmsync";
+		internal const string SYNC_EVENT_PARAMETER = "event";
+		internal const string CORE_OFFLINE_EVENT_REPLICATOR = "GeneXus.Core.genexus.sd.synchronization.offlineeventreplicator";
+		internal const string SYNCHRONIZER_INFO = "gxTpr_Synchronizer";
+	}
 #if NETCORE
 	public class GxRestWrapper
 #else
-	public class GxRestWrapper : IHttpHandler
+	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
@@ -35,6 +50,7 @@ namespace GeneXus.Application
 		private GXProcedure _procWorker;
 		private const string EXECUTE_METHOD = "execute";
 		public String ServiceMethod = "";
+		public bool WrappedParameter = false;
 
 
 		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod) : this(worker, context, gxContext)
@@ -53,33 +69,56 @@ namespace GeneXus.Application
 			AddHeader("Content-type", "application/json; charset=utf-8"); //MediaTypesNames.ApplicationJson);
 			RunAsMain = true;
 		}
-		
+		protected virtual GXBaseObject Worker
+		{
+			get { return _procWorker; }
+		}
 		public virtual void Cleanup()
 		{
 			if (RunAsMain)
 				_gxContext.CloseConnections();
 		}
-		public virtual Task Post()
+
+		public virtual Task MethodBodyExecute(object key)
 		{
 			try
 			{
+				String innerMethod = EXECUTE_METHOD;
+				bool wrapped = true;
+				Dictionary<string, object> bodyParameters = null;
+				if (IsCoreEventReplicator(_procWorker))
+				{
+					bodyParameters = ReadBodyParameters();
+					string synchronizer = PreProcessReplicatorParameteres(_procWorker, innerMethod, bodyParameters);
+					if (!IsAuthenticated(synchronizer))
+						return Task.CompletedTask;
+				}
+				else if (!IsAuthenticated())
+				{
+					return Task.CompletedTask;
+				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-#if NETCORE
-				var bodyParameters = ReadRequestParameters(_httpContext.Request.Body);
-#else
-				var bodyParameters = ReadRequestParameters(_httpContext.Request.GetInputStream());
-#endif
-				String innerMethod = EXECUTE_METHOD;
+				if (bodyParameters == null)
+					bodyParameters = ReadBodyParameters();
+
+				if (_procWorker.IsSynchronizer2)
+				{
+					innerMethod = SynchronizerMethod();
+					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
+					wrapped = false;
+				}
+				
 				if (!String.IsNullOrEmpty(this.ServiceMethod))
 				{
 					innerMethod = this.ServiceMethod;
 				}
-				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters);
+				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, true);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -91,10 +130,120 @@ namespace GeneXus.Application
 
 			}
 		}
+
+		public virtual Task Post()
+		{
+			return MethodBodyExecute(null);
+		}
+
+		private void setWorkerStatus(GXProcedure _procWorker)
+		{			
+			if (ReflectionHelper.HasMethod(_procWorker, "getrestcode"))
+			{
+				Dictionary<string, object> outVal = ReflectionHelper.CallMethod(_procWorker, "getrestcode", new Dictionary<string, object>());
+				short statusCode = (short)outVal.Values.First<object>();
+				if (statusCode > 0)
+					this.SetStatusCode((HttpStatusCode) statusCode);
+			}
+			if (ReflectionHelper.HasMethod(_procWorker, "getrestmsg"))
+			{
+				Dictionary<string, object> outVal = ReflectionHelper.CallMethod(_procWorker, "getrestmsg", new Dictionary<string, object>());
+				string statusMsg = outVal.Values.First<object>().ToString();
+				if (!String.IsNullOrEmpty(statusMsg))
+						this.SetStatusMessage(statusMsg);
+			}
+		}
+
+		private Dictionary<string, object> ReadBodyParameters()
+		{
+#if NETCORE
+			return ReadRequestParameters(_httpContext.Request.Body);
+#else
+			return ReadRequestParameters(_httpContext.Request.GetInputStream());
+#endif
+		}
+		private string PreProcessReplicatorParameteres(GXProcedure procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
+		{
+			var methodInfo = procWorker.GetType().GetMethod(innerMethod);
+			object[] parametersForInvocation = ReflectionHelper.ProcessParametersForInvoke(methodInfo, bodyParameters);
+			var synchroInfo = parametersForInvocation[1];
+			return synchroInfo.GetType().GetProperty(Synchronizer.SYNCHRONIZER_INFO).GetValue(synchroInfo) as string;
+
+		}
+
+		private bool IsCoreEventReplicator(GXProcedure procWorker)
+		{
+			return procWorker.GetType().FullName == Synchronizer.CORE_OFFLINE_EVENT_REPLICATOR; 
+		}
+
+		private void PreProcessSynchronizerParameteres(GXProcedure instance, string method, Dictionary<string, object> bodyParameters)
+		{
+			var gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
+			GxUnknownObjectCollection hashList;
+			if (bodyParameters.ContainsKey(string.Empty))
+				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[string.Empty], typeof(GxUnknownObjectCollection));
+			else
+				hashList = new GxUnknownObjectCollection();
+			bodyParameters[gxParameterName] = TableHashList(hashList);
+		}
+		internal GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
+		{
+			GxUnknownObjectCollection result = new GxUnknownObjectCollection();
+			if (tableHashList != null && tableHashList.Count > 0)
+			{
+				foreach (JArray list in tableHashList)
+				{
+					GxStringCollection tableHash = new GxStringCollection();
+					foreach (string data in list)
+					{
+						tableHash.Add(data);
+					}
+					result.Add(tableHash);
+				}
+			}
+			return result;
+		}
+
+		private string SynchronizerMethod()
+		{
+			string method = string.Empty;
+			var queryParameters = ReadQueryParameters();
+			string gxevent = string.Empty;
+			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
+				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
+
+			if (string.IsNullOrEmpty(gxevent))
+			{
+				method = Synchronizer.SYNC_METHOD_ALL;
+			}
+			else
+			{
+				if (gxevent.Equals(Synchronizer.SYNC_METHOD_CHECK, StringComparison.OrdinalIgnoreCase))
+				{
+					method = Synchronizer.SYNC_METHOD_CHECK;
+				}
+				else
+				{
+					if (gxevent.Equals(Synchronizer.SYNC_METHOD_CONFIRM, StringComparison.OrdinalIgnoreCase))
+					{
+						method = Synchronizer.SYNC_METHOD_CONFIRM;
+					}
+				}
+			}
+			return method;
+		}
 		public virtual Task Get(object key)
+		{
+			return MethodUrlExecute(key);
+		}
+		public virtual Task  MethodUrlExecute(object key)
 		{
 			try
 			{
+				if (!IsAuthenticated())
+				{
+					return Task.CompletedTask; 
+				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
@@ -105,9 +254,18 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				var outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, false);
+				bool wrapped = false;
+				if (_procWorker.IsApiObject)
+				{
+					if (outputParameters.Count == 1 && outputParameters.First().Value.GetType().GetInterfaces().Contains(typeof(ICollection)))
+					{
+						wrapped = true;
+					}
+				}
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -116,7 +274,6 @@ namespace GeneXus.Application
 			finally
 			{
 				Cleanup();
-
 			}
 		}
 		public bool RunAsMain
@@ -128,12 +285,19 @@ namespace GeneXus.Application
 
 		public virtual Task Delete(object key)
 		{
-			return Task.CompletedTask;
-		}
+			return MethodUrlExecute(key);
+		}		
+
 		public virtual Task Put(object key)
 		{
-			return Task.CompletedTask;
+			return MethodBodyExecute(key);
 		}
+
+		public virtual Task Patch(object key)
+		{
+			return MethodBodyExecute(key);
+		}
+
 		public Dictionary<string, object> ReadRequestParameters(Stream stream)
 		{
 			var bodyParameters = new Dictionary<string, object>();
@@ -141,20 +305,32 @@ namespace GeneXus.Application
 			{
 				if (!streamReader.EndOfStream)
 				{
-					Jayrock.Json.JsonTextReader reader = new Jayrock.Json.JsonTextReader(streamReader);
-					var data = reader.DeserializeNext();
-					Jayrock.Json.JObject jobj = data as Jayrock.Json.JObject;
-					if (jobj != null)
+					try
 					{
-						foreach (string name in jobj.Names)
+						string json = streamReader.ReadToEnd();
+						var data = JSONHelper.ReadJSON<dynamic>(json);
+						JObject jobj = data as JObject;
+						JArray jArray = data as JArray;
+						if (jobj != null)
 						{
-							bodyParameters.Add(name, jobj[name]);
+							foreach (string name in jobj.Names)
+							{
+								bodyParameters.Add(name.ToLower(), jobj[name]);
+							}
 						}
+						else if (jArray != null)
+						{
+							bodyParameters.Add(string.Empty, jArray);
+						}
+					}
+					catch (Exception ex)
+					{
+						GXLogging.Error(log, ex, "Parsing error in Body ");
+
 					}
 				}
 			}
 			return bodyParameters;
-
 		}
 		protected IDictionary<string, object> ReadQueryParameters()
 		{
@@ -215,13 +391,121 @@ namespace GeneXus.Application
 		}
 		public Task SetError(string code, string message)
 		{
-			return HttpHelper.SetResponseStatusAndJsonErrorAsync(_httpContext, code, message);
+			return SetError(_httpContext, code, message);
+		}
+		public static Task SetError(HttpContext context, string code, string message)
+		{
+			return HttpHelper.SetResponseStatusAndJsonErrorAsync(context, code, message);
+		}
+		public bool IsAuthenticated(string synchronizer)
+		{
+			GXLogging.Debug(log, "IsMainAuthenticated synchronizer:" + synchronizer);
+			bool validSynchronizer = false;
+			try
+			{
+				if (!string.IsNullOrEmpty(synchronizer))
+				{
+					string nspace;
+					if (!Config.GetValueOf("AppMainNamespace", out nspace))
+						nspace = "GeneXus.Programs";
+					String assemblyName = synchronizer.ToLower();
+					String restServiceName = nspace + "." + assemblyName;
+					GXProcedure synchronizerService = (GXProcedure)ClassLoader.GetInstance(assemblyName, restServiceName, null);
+					if (synchronizerService != null && synchronizerService.IsSynchronizer2)
+					{
+						validSynchronizer = true;
+						return IsAuthenticated(synchronizerService.IntegratedSecurityLevel2, synchronizerService.IntegratedSecurityEnabled2, synchronizerService.ExecutePermissionPrefix2);
+					}
+				}
+				return false;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "IsMainAuthenticated error ");
+				return false;
+			}
+			finally
+			{
+				if (!validSynchronizer)
+					SetError("0", "Invalid Synchronizer " + synchronizer);
+			}
+		}
+		public bool IsAuthenticated()
+		{
+			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
+		}
+		private bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
+		{
+			if (!objIntegratedSecurityEnabled)
+			{
+				return true;
+			}
+			else
+			{
+				String token = GetHeader("Authorization");
+				if (token == null)
+				{
+					SetError("0", "This service needs an Authorization Header");
+					return false;
+				}
+				else
+				{
+
+					token = token.Replace("OAuth ", "");
+					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
+					{
+						bool isOK;
+						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(_gxContext, token, out isOK);
+						if (!isOK)
+						{
+							SetError(result.Code, result.Description);
+							return false;
+						}
+					}
+					else if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
+					{
+						bool sessionOk, permissionOk;
+						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(_gxContext, token, objPermissionPrefix, out sessionOk, out permissionOk);
+						if (permissionOk)
+						{
+							return true;
+						}
+						else
+						{
+							SetError(result.Code, result.Description);
+							if (sessionOk)
+							{
+								SetStatusCode(HttpStatusCode.Forbidden);
+							}
+							else
+							{
+								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(_gxContext.GetServerName(), result.Code, result.Description));
+								SetStatusCode(HttpStatusCode.Unauthorized);
+							}
+							return false;
+						}
+					}
+				}
+				return true;
+			}
 		}
 		protected void SetStatusCode(HttpStatusCode code)
 		{
 			if (_httpContext != null)
 			{
 				_httpContext.Response.StatusCode = (int)code;
+			}
+		}
+		protected void SetStatusMessage(String statusMessage)
+		{
+			if (_httpContext != null)
+			{
+#if !NETCORE
+				_httpContext.Response.StatusDescription = statusMessage;
+#else
+				_httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusMessage.Replace(Environment.NewLine, string.Empty);
+
+#endif
 			}
 		}
 #if NETCORE
@@ -244,6 +528,10 @@ namespace GeneXus.Application
 		}
 
 #endif
+		string GetHeader(string header)
+		{
+			return GetHeaders()[header];
+		}
 		void AddHeader(string header, string value)
 		{
 			if (_httpContext != null)
@@ -255,15 +543,19 @@ namespace GeneXus.Application
 		protected bool ProcessHeaders(string queryId)
 		{
 			var headers = GetHeaders();
-			String language = null, etag = null;
+			String language = null, theme=null, etag = null;
 			if (headers != null)
 			{
 				language = headers["GeneXus-Language"];
+				theme = headers["GeneXus-Theme"];
 				etag = headers["If-Modified-Since"];
 			}
 
 			if (!string.IsNullOrEmpty(language))
 				_gxContext.SetLanguage(language);
+
+			if (!string.IsNullOrEmpty(theme))
+				_gxContext.SetTheme(theme);
 
 			DateTime dt = HTMLDateToDatetime(etag);
 			DateTime newDt;
@@ -386,6 +678,8 @@ namespace GeneXus.Application
 					Put(controllerInfo.Parameters);
 				else if (context.Request.HttpMethod == "DELETE")
 					Delete(controllerInfo.Parameters);
+				else if (context.Request.HttpMethod == "PATCH")
+					Patch(controllerInfo.Parameters);
 				else
 				{
 					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -405,5 +699,6 @@ namespace GeneXus.Application
 		public string Name { get; set; }
 		public string Parameters { get; set; }
 		public string MethodName { get; set; }
+		public string Verb { get; set; }
 	}
 }

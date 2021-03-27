@@ -11,7 +11,6 @@ using GeneXus.Configuration;
 using GeneXus.Utils;
 #if !NETCORE
 using ConnectionBuilder;
-using System.Data.Common;
 using System.Data.SqlClient;
 #else
 using Microsoft.Data.SqlClient;
@@ -25,10 +24,52 @@ using System.Net;
 using GeneXus.Http;
 using System.Globalization;
 using GeneXus.Metadata;
+using System.Data.Common;
 
 namespace GeneXus.Data
 {
-	
+	public enum GXMetaType
+	{
+		LVChar=0,
+		VChar=1,
+		MMedia=2,
+		Blob=3
+
+	}
+	public enum GXType
+	{
+		Number = 0,
+		Int16 = 1,
+		Int32 = 2,
+		Int64 = 3,
+		Date = 4,
+		DateTime = 5,
+		DateTime2 = 17,
+		Byte = 6,
+		NChar = 7,
+		NClob = 8,
+		NVarChar = 9,
+		Char = 10,
+		LongVarChar = 11,
+		Clob = 12,
+		VarChar = 13,
+		Raw = 14,
+		Blob = 15,
+		Undefined = 16,
+		Boolean = 18,
+		Decimal = 19,
+		NText = 20,
+		Text = 21,
+		Image = 22,
+		UniqueIdentifier = 23,
+		Xml = 24,
+		Geography=25,
+		Geopoint=26,
+		Geoline=27,
+		Geopolygon=28,
+		DateAsChar=29
+	}
+
 	public interface IGxDataRecord
     {
         byte GetByte(IGxDbCommand cmd, IDataRecord DR, int i);
@@ -38,7 +79,8 @@ namespace GeneXus.Data
         long GetLong(IGxDbCommand cmd, IDataRecord DR, int i);
         double GetDouble(IGxDbCommand cmd, IDataRecord DR, int i);
         string GetString(IGxDbCommand cmd, IDataRecord DR, int i);
-        string GetBinary(IGxDbCommand cmd, IDataRecord DR, int i);
+		string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size);
+		string GetBinary(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDateTimeMs(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDateTime(IGxDbCommand cmd, IDataRecord DR, int i);
         DateTime GetDate(IGxDbCommand cmd, IDataRecord DR, int i);
@@ -49,8 +91,8 @@ namespace GeneXus.Data
         DateTime Dbms2NetDateTime(DateTime dt, Boolean precision);
         DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i);
         Object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt);
-        Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo);
-        String DbmsTToC(DateTime dt);
+		Object Net2DbmsGeo(GXType type, IGeographicNative parm);
+		String DbmsTToC(DateTime dt);
         void GetValues(IDataReader reader, ref object[] values);
 
         [Obsolete("ProcessError with 6 arguments is deprecated", false)]
@@ -97,7 +139,7 @@ namespace GeneXus.Data
 		void SetAdapterInsertCommand(DbDataAdapterElem da, IGxConnection con, string stmt, GxParameterCollection parameters);
 		void SetCursorDef(CursorDef cursorDef);
 		string ConcatOp(int pos);
-
+		string AfterCreateCommand(string stmt, GxParameterCollection parmBinds);
 	}
 
 
@@ -139,7 +181,8 @@ namespace GeneXus.Data
 		void Close();
 		void Disconnect();
 		DateTime DateTime { get;}
-        string Version { get;}
+		DateTime DateTimeMs { get; }
+		string Version { get;}
 		bool BeforeConnect();
 		bool AfterConnect();
     }
@@ -175,7 +218,8 @@ namespace GeneXus.Data
 		string Port { get ; set ;}
         string CurrentSchema { get; set; }
 		DateTime ServerDateTime {get;}
-        string ServerVersion { get;}
+		DateTime ServerDateTimeMs { get; }
+		string ServerVersion { get;}
 		short ErrCode {get ;}
 		string ErrDescription { get ;}
 		short FullConnect();
@@ -205,7 +249,7 @@ namespace GeneXus.Data
 		
 		void SetIsolationLevel( ushort isolationLevel); 
 		bool UncommitedChanges{get;set;}
-        void BeforeCommit();
+        void FlushBatchCursors(GXBaseObject obj=null);
 		void BeforeRollback();
 		
 		string LastObject
@@ -415,6 +459,8 @@ namespace GeneXus.Data
 		}
 
 		public abstract string GetServerDateTimeStmt(IGxConnection connection);
+		public abstract string GetServerDateTimeStmtMs(IGxConnection connection);
+
 
 		public abstract string GetServerUserIdStmt();
 
@@ -578,7 +624,7 @@ namespace GeneXus.Data
         {
 			throw (new GxNotImplementedException());
         }
-        public virtual Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+        public virtual Object Net2DbmsGeo(GXType type, IGeographicNative geo)
         {
 			throw (new GxNotImplementedException());
         }
@@ -657,7 +703,7 @@ namespace GeneXus.Data
 			return parameter;
 			
 		}
-#if !NETCORE
+
         public abstract DbDataAdapter CreateDataAdapeter();
 		public virtual bool SupportUpdateBatchSize
 		{
@@ -705,25 +751,7 @@ namespace GeneXus.Data
         {
             return da.Adapter.Update(da.DataTable);
         }
-#else
-        public virtual DbDataAdapterElem GetDataAdapter(IGxConnection con, string stmt, int batchSize, string stmtId)
-        {
-            return null;
-        }
-        public virtual DbDataAdapterElem GetDataAdapter(IGxConnection con, string stmt, GxParameterCollection parameters)
-        {
-            return null;
-        }
-        protected virtual DbDataAdapterElem GetCachedDataAdapter(IGxConnection con, string stmt)
-        {
-            return null;
-        }
-        public virtual int BatchUpdate(DbDataAdapterElem da)
-        {
-            return 0;
-        }
 
-#endif
 		public virtual bool IsBlobType(IDbDataParameter idbparameter)
 		{
 			return idbparameter.DbType == DbType.Binary;
@@ -824,6 +852,7 @@ namespace GeneXus.Data
 		}
 		protected static byte[] GetBinary(string fileNameParm, bool dbBlob)
 		{			
+			Uri uri;
 			string fileName = fileNameParm;
 			bool inLocalStorage = dbBlob || GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null;
 			bool validFileName = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(fileName.Trim()) && String.Compare(fileName, "about:blank", false) != 0;
@@ -834,9 +863,7 @@ namespace GeneXus.Data
                 if (GxRestUtil.IsUpload(fileName))
                     fileName = GxRestUtil.UploadPath(fileName);
 
-				Uri uri;
-								
-				bool ok = Uri.TryCreate(PathUtil.GetBaseUri(), fileName, out uri);
+				bool ok = PathUtil.AbsoluteUri(fileName, out uri);
 				if (ok && uri != null)
 				{					
 					switch (uri.Scheme)
@@ -1071,23 +1098,25 @@ namespace GeneXus.Data
 		public virtual void SetCursorDef(CursorDef cursorDef)
 		{
 		}
-#if NETCORE
-		public void SetAdapterInsertCommand(DbDataAdapterElem da, IGxConnection con, string stmt, GxParameterCollection parameters)
-		{
-			throw new NotImplementedException();
-		}
-#endif
 		private static readonly string[] ConcatOpValues = new string[] { "CONCAT(", ", ", ")" };
 		public virtual string ConcatOp(int pos)
 		{
 			return ConcatOpValues[pos];
 		}
+
+		public virtual string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
+		{
+			return GetString(cmd, DR, i);
+		}
+		public virtual string AfterCreateCommand(string stmt, GxParameterCollection parmBinds)
+		{
+			return stmt;
+		}
+
 	}
 
 	public class DbDataAdapterElem
     {
-#if !NETCORE
-
         public DbDataAdapterElem(DbDataAdapter adapter, DataTable table, int updateBatchSize)
         {
             Adapter = adapter;
@@ -1110,9 +1139,6 @@ namespace GeneXus.Data
         public DbDataAdapter Adapter;
         public DataTable DataTable;
 		public int UpdateBatchSize;
-#else
-        public void Clear() { }
-#endif
     }
 	public class SqlUtil
 	{
@@ -1568,7 +1594,7 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			SqlParameter parm =new SqlParameter();
-			SqlDbType type=(SqlDbType)dbtype;
+			SqlDbType type= GXTypeToSqlDbType(dbtype);
 			parm.SqlDbType=type;
 			parm.IsNullable=true;
 			parm.Size = gxlength;
@@ -1587,27 +1613,51 @@ namespace GeneXus.Data
 			parm.ParameterName=name;
 			return parm;
 		}
+		private SqlDbType GXTypeToSqlDbType(object type)
+		{
+			if (!(type is GXType))
+				return (SqlDbType)type;
+
+			switch (type)
+			{
+#if NETCORE
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+					return SqlDbType.NChar;
+#else
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+					return SqlDbType.Udt;
+#endif
+				case GXType.Int16: return SqlDbType.SmallInt; 
+				case GXType.Int32: return SqlDbType.Int;
+				case GXType.Int64: return SqlDbType.BigInt;
+				case GXType.Number: return SqlDbType.Float;
+				case GXType.Decimal: return SqlDbType.Decimal; 
+				case GXType.DateTime: return SqlDbType.DateTime;
+				case GXType.DateTime2: return SqlDbType.DateTime2;
+				case GXType.NChar: return SqlDbType.NChar;
+				case GXType.NVarChar: return SqlDbType.NVarChar;
+				case GXType.NText: return SqlDbType.NText;
+				case GXType.Char: return SqlDbType.Char;
+				case GXType.VarChar: return SqlDbType.VarChar;
+				case GXType.Text: return SqlDbType.Text;
+				case GXType.Date: return SqlDbType.DateTime;
+				case GXType.Boolean: return SqlDbType.Bit;
+				case GXType.Xml: return SqlDbType.Xml;
+				case GXType.UniqueIdentifier: return SqlDbType.UniqueIdentifier;
+				case GXType.Blob: return SqlDbType.VarBinary;
+				case GXType.Image: return SqlDbType.Image;
+				default: return SqlDbType.Char;
+			}
+		}
 		internal override object CloneParameter(IDbDataParameter p)
 		{
-#if NETCORE
-			SqlParameter p1 = p as SqlParameter;
-			SqlParameter pcopy = new SqlParameter()
-			{
-				DbType = p1.DbType,
-				Direction = p1.Direction,
-				IsNullable = p1.IsNullable,
-				ParameterName = p1.ParameterName,
-				Precision = p1.Precision,
-				Scale = p1.Scale,
-				Size = p1.Size,
-				SqlDbType = p1.SqlDbType,
-				SqlValue = p1.SqlValue,
-				Value = p1.Value
-			};
-			return pcopy;
-#else
 			return ((ICloneable)p).Clone();
-#endif
 		}
 		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
@@ -1621,12 +1671,10 @@ namespace GeneXus.Data
 				return base.GetCachedCommand(con, stmt);
 			}
 		}
-#if !NETCORE
 		public override DbDataAdapter CreateDataAdapeter()
         {
             return new SqlDataAdapter();
         }
-#endif
         public override bool MultiThreadSafe
 		{
 			get
@@ -1667,6 +1715,10 @@ namespace GeneXus.Data
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT GETDATE()";
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
 		}
 		public override string GetServerUserIdStmt()
 		{
@@ -1829,6 +1881,7 @@ namespace GeneXus.Data
 					}
 					catch (Exception ex)
 					{
+#if !NETCORE
 						FileNotFoundException fex = ex as FileNotFoundException;
 						FileLoadException flex = ex as FileLoadException;
 						if (flex !=null || fex != null)
@@ -1844,6 +1897,10 @@ namespace GeneXus.Data
 						{
 							throw ex;
 						}
+#else
+						throw ex;
+#endif
+
 					}
 				}
 			}
@@ -1938,15 +1995,22 @@ namespace GeneXus.Data
 
 		}
 
-        public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+#if !NETCORE
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
         {
-            // Latitude and Longitude are inverted in the 'Point' Constructor
+
             return geo.InnerValue;
         }
-
-        public override IGeographicNative Dbms2NetGeo(IGxDbCommand cmd, IDataRecord DR, int i)
+#else
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
         {
-            return new Geospatial(DR.GetValue(i));            
+            return geo.ToStringSQL("GEOMETRYCOLLECTION EMPTY");
+        }
+#endif
+
+		public override IGeographicNative Dbms2NetGeo(IGxDbCommand cmd, IDataRecord DR, int i)
+        {
+            return new Geospatial(DR.GetValue(i));
         }
 
 		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)
@@ -2323,7 +2387,7 @@ namespace GeneXus.Data
 		{
 			throw (new GxNotImplementedException());
 		}
-		public long GetBytes( int i, long fieldOffset, byte[] buffer, int bufferoffset, int length	)
+		public virtual long GetBytes( int i, long fieldOffset, byte[] buffer, int bufferoffset, int length	)
 		{
 			long res = reader.GetBytes(i, fieldOffset, buffer, bufferoffset, length);
 			readBytes += res;
@@ -2504,7 +2568,6 @@ namespace GeneXus.Data
 			preparedStmtCache[stmt]=s;
 
 		}
-#if !NETCORE
         public void AddDataAdapter(string stmt, DbDataAdapterElem adapter)
         {
 			if (!dataAdapterCache.ContainsKey(stmt))
@@ -2513,7 +2576,6 @@ namespace GeneXus.Data
 				dataAdapterCacheQueue.Add(adapter);
 			}
         }
-#endif
 
 		public void AddPreparedCommand(string  stmt, IDbCommand cmd)
 		{
@@ -3978,12 +4040,10 @@ namespace GeneXus.Data
 				throw new InvalidOperationException("InvalidConnType00" + InternalConnection.GetType().FullName);
 			return sc.CreateCommand();
 		}
-#if !NETCORE
 		public override DbDataAdapter CreateDataAdapter()
 		{
 			return new SqlDataAdapter();
 		}
-#endif
 		public override bool IsSQLServer7()
 		{
 
@@ -4131,9 +4191,7 @@ namespace GeneXus.Data
 		}
 
 		abstract public IDbCommand CreateCommand();
-#if !NETCORE
 		abstract public DbDataAdapter CreateDataAdapter();
-#endif
 		public virtual bool IsSQLServer7()
 		{
 			return false;
@@ -4184,7 +4242,12 @@ namespace GeneXus.Data
 		public virtual DateTime GetDateTime(int i)
 		{
 			if (computeSizeInBytes) readBytes += 8;
-			return (DateTime)block.Item(pos,i);
+			var value = block.Item(pos,i);
+
+			if (value is DateTime)
+				return (DateTime)value;
+			else
+				return Convert.ToDateTime(value);
 		}
 		public virtual decimal GetDecimal(int i	)
 		{
@@ -4235,7 +4298,7 @@ namespace GeneXus.Data
 		}
 		public virtual bool IsDBNull(int i)
 		{
-			return block.Item(pos,i) == DBNull.Value;
+			return (block.Item(pos, i) == DBNull.Value) || (block.Item(pos, i) is DBNull);
 		}
 		public char GetChar(int i)
 		{
@@ -4284,8 +4347,10 @@ namespace GeneXus.Data
                 return (((byte)block.Item(pos,i)) == 1);
             else if ((block.Item(pos,i)) is bool)
                 return (bool)block.Item(pos,i);
-            else
-                return (((int)block.Item(pos,i)) == 1);
+			else if ((block.Item(pos, i)) is string && bool.TryParse((string)block.Item(pos, i), out bool result))
+				return result;
+			else
+				return (((int)block.Item(pos,i)) == 1);
 		}
 		public byte GetByte( int i)
 		{

@@ -149,10 +149,15 @@ namespace GeneXus.Utils
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.Geospatial));
 
-		const string EMPTY_GEOGRAPHY = "GEOMETRYCOLLECTION EMPTY";
-        const string EMPTY_POINT = "POINT(0 0)";
-        const string EMPTY_LINE = "LINESTRING( 0 0,0 1)";
-        const string EMPTY_POLY = "POLYGON((0 0, 0 1, 1 0,0 0))";
+		internal const string EMPTY_GEOMETRY = "GEOMETRYCOLLECTION EMPTY";
+		const string EMPTY_GEOGRAPHY = "GEOGRAPHY EMPTY";
+		const string EMPTY_POINT = "POINT EMPTY";
+		const string EMPTY_LINE = "LINESTRING EMPTY";
+		const string EMPTY_POLY = "POLYGON EMPTY";
+
+		internal const string ALT_EMPTY_POINT = "POINT(0 0)";
+		internal const string ALT_EMPTY_LINE = "LINESTRING( 0 0,0 1)";
+		internal const string ALT_EMPTY_POLY = "POLYGON((0 0, 0 1, 1 0,0 0))";
 
         public enum GeoGraphicTypeValue { Point, MultiPoint, Line, MultiLine, Polygon, MultiPolygon, Other };
 
@@ -430,13 +435,13 @@ namespace GeneXus.Utils
 							{
 								wktBuffer += sep1 + "(";
 								sep = "";
-								String firstPoint = JSONPointToWKT(jl.GetArray(0)) ;
-                                foreach (JArray jp in jl)
-                                {                                  
-                                    wktBuffer += sep + " " + JSONPointToWKT(jp) ;
-                                    sep = ",";
-                                }
-								wktBuffer += sep + firstPoint;
+								String firstPoint = JSONPointToWKT(jl.GetArray(0));								
+								foreach (JArray jp in jl)
+								{
+									String jpS = JSONPointToWKT(jp);
+									wktBuffer += sep + " " + jpS;
+									sep = ",";
+								}
 								wktBuffer += ")";
                                 sep1 = ",";
 
@@ -486,11 +491,11 @@ namespace GeneXus.Utils
                                     sep = "";
 									String firstPoint = JSONPointToWKT(jl.GetArray(0));
 									foreach (JArray jp in jl)
-                                    {
-                                        wktBuffer += sep + "" + JSONPointToWKT(jp);
-                                        sep = ",";
-                                    }
-									wktBuffer += sep + firstPoint;
+									{
+										wktBuffer += sep + "" + JSONPointToWKT(jp);
+										sep = ",";
+									}
+									//wktBuffer += sep + firstPoint;
 									wktBuffer += ")";
                                     sep1 = ",";
                                 }
@@ -516,8 +521,11 @@ namespace GeneXus.Utils
         {
 			return  (	g.InnerValue == null ||
                         g.InnerValue == SQLGeographyWrapper.NullSQLGeography ||
+						g.InnerValue.ToString().Equals(EMPTY_POINT) ||
+						g.InnerValue.ToString().Equals(EMPTY_LINE) ||
+						g.InnerValue.ToString().Equals(EMPTY_POLY) ||
 						g.InnerValue.ToString().Equals(EMPTY_GEOGRAPHY) ||
-						g.InnerValue.Equals(new Geospatial("GEOMETRYCOLLECTION EMPTY"))
+						g.InnerValue.ToString().Equals(EMPTY_GEOMETRY)
                     );
         }
 
@@ -564,8 +572,9 @@ namespace GeneXus.Utils
 
         private bool IsGeoNull(String s)
         {
-            if (String.IsNullOrEmpty(s) || s.Equals(EMPTY_GEOGRAPHY) || s.Equals(EMPTY_POINT) ||
-                s.Equals(EMPTY_LINE) || s.Equals(EMPTY_POLY))
+            if (String.IsNullOrEmpty(s) || s.Equals(ALT_EMPTY_POINT) || s.Equals(ALT_EMPTY_LINE)
+				|| s.Equals(ALT_EMPTY_POLY) || s.Equals(EMPTY_GEOMETRY)  || s.Equals(EMPTY_GEOGRAPHY) ||
+				s.Equals(EMPTY_POINT) || s.Equals(EMPTY_LINE) || s.Equals(EMPTY_POLY) )
             {
                 return true;
             }
@@ -579,7 +588,7 @@ namespace GeneXus.Utils
 		{
             if (IsGeoNull(s))
             {
-                geoText = EMPTY_GEOGRAPHY;
+				geoText = EMPTY_GEOMETRY ;
             }
             else
             {
@@ -607,7 +616,7 @@ namespace GeneXus.Utils
 			}
 			catch (ArgumentException ex)
 			{
-                if (ex.ToString().Contains("24144")) // makevalid didn´t work
+                if (ex.ToString().Contains("24144")) // makevalid didnÂ´t work
                 {
                     _innerValue = null;
                 }
@@ -688,8 +697,8 @@ namespace GeneXus.Utils
 
         public String ToStringESQL()
         {
-            String wktText =  this.ToStringSQL(EMPTY_GEOGRAPHY);
-            if (!wktText.Equals(EMPTY_GEOGRAPHY)) {
+            String wktText =  this.ToStringSQL(EMPTY_GEOMETRY);
+            if (!wktText.Equals(EMPTY_GEOMETRY)) {
                 wktText = "SRID=" + this.Srid.ToString() + ";" + wktText;
             }
             return wktText;

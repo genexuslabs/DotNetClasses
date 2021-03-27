@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<RootNamespace>GxClasses</RootNamespace>
@@ -9,22 +9,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="jose-jwt-signed" Version="2.3.0" />
+		<PackageReference Include="ManagedFusion.Rewriter" Version="3.7.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
+		<PackageReference Include="MySqlConnector" Version="1.0.1" />
+		<PackageReference Include="Npgsql" Version="3.2.7" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" />
+		<PackageReference Include="Microsoft.Win32.Registry" Version="4.3.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
 		<PackageReference Include="Nustache" Version="1.16.0.10" />
 		<PackageReference Include="SecurityCodeScan" PrivateAssets="all" Version="3.3.0" />
-		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="log4net" Version="2.0.11" />
 		<Reference Include="Microsoft.HostIntegration.MsDb2Client">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\Microsoft.HostIntegration.MsDb2Client.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Security">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\Mono.Security.dll</HintPath>
-		</Reference>
-		<Reference Include="Npgsql">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\Npgsql.dll</HintPath>
 		</Reference>
 		<Reference Include="Jayrock-JSON">
 			<SpecificVersion>False</SpecificVersion>
@@ -80,7 +77,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
+		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+		<ProjectReference Include="..\GxXsl\GxXsl.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>Artech.Genexus.SDAPI</RootNamespace>
+		<AssemblyName>Artech.Genexus.SDAPI</AssemblyName>
+		<PackageId>GeneXus.SDAPI</PackageId>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="log4net" Version="2.0.11" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="System.ServiceModel.Web">
+			<RequiredTargetFramework>3.5</RequiredTargetFramework>
+		</Reference>
+		<Reference Include="System.Web" />
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+		<Reference Include="Jayrock-JSON">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\Jayrock-JSON.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+</Project>

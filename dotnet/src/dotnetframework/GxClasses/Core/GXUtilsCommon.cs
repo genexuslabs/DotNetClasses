@@ -25,8 +25,8 @@ using System.Web;
 using GeneXus.Data;
 using GeneXus.Encryption;
 
-#if !NETCORE
 using System.DirectoryServices;
+#if !NETCORE
 using TZ4Net;
 #endif
 using GeneXus.Cryptography;
@@ -36,6 +36,7 @@ using System.Drawing;
 using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
+using System.Drawing.Drawing2D;
 
 namespace GeneXus.Utils
 {
@@ -2549,21 +2550,32 @@ namespace GeneXus.Utils
 		}
 		public static string TToC2(DateTime dt)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss");
+			return TToC2(dt, true);
+		}
+		public static string TToC2(DateTime dt, bool toUTC)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, toUTC);
 		}
 
 		public static string TToC3(DateTime dt)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff");
+			return TToC3(dt, true);
+		}
+		internal const string JsonDateFormatMillis = "yyyy-MM-ddTHH:mm:ss.fff";
+		internal const string JsonDateFormat = "yyyy-MM-ddTHH:mm:ss";
+		
+		public static string TToC3(DateTime dt, bool toUTC)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, toUTC);
 		}
 
-		public static string TToCRest(DateTime dt, String nullString, String formatStr)
+		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
 		{
 			if (dt == nullDate)
 				return FormatEmptyDate(nullString);
 			else
 			{
-				DateTime ret = Preferences.useTimezoneFix() ? (GxContext.IsRestService ? toUniversalTime(dt) : dt) : dt;
+				DateTime ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt) : dt) : dt;
 				return ret.ToString(formatStr, CultureInfo.InvariantCulture);
 			}
 		}
@@ -2781,10 +2793,15 @@ namespace GeneXus.Utils
 			string[] fmtVec = DateFormatFromPicture(picFmt);
 			string[] fmts = modifyFormatStrings(fmtVec);
 			string oldSeparator = cultureInfo.DateTimeFormat.DateSeparator;
+
 			try
 			{
+				DateTime dValue;
 				if (oldSeparator != "/") cultureInfo.DateTimeFormat.DateSeparator = "/";
-				return DateTime.ParseExact(strDate.Trim(), fmts, cultureInfo.DateTimeFormat, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault);
+				if (DateTime.TryParseExact(strDate.Trim(), fmts, cultureInfo.DateTimeFormat, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault, out dValue))
+					return dValue;
+				else
+					return nullDate;
 			}
 			catch
 			{
@@ -2795,7 +2812,14 @@ namespace GeneXus.Utils
 				if (oldSeparator != "/") cultureInfo.DateTimeFormat.DateSeparator = oldSeparator;
 			}
 		}
-
+		static public DateTime ServerNowMs(IGxContext context, IDataStoreProvider dataStore)
+		{
+			if (dataStore == null)
+				return ServerNowMs(context, new DataStoreHelperBase().getDataStoreName());
+			if (Preferences.useTimezoneFix())
+				return ResetMicroseconds(ConvertDateTime(dataStore.serverNowMs(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+			return ResetMicroseconds(dataStore.serverNowMs());
+		}
 		static public DateTime ServerNow(IGxContext context, IDataStoreProvider dataStore)
 		{
 			if (dataStore == null)
@@ -2807,6 +2831,12 @@ namespace GeneXus.Utils
 #if !NETCORE
 		[Obsolete("ServerNow with string dataSource is deprecated, use ServerNow(IGxContext context, Data.NTier.IDataStoreProvider dataStore) instead", false)]
 #endif
+		static public DateTime ServerNowMs(IGxContext context, string dataSource)
+		{
+			if (Preferences.useTimezoneFix())
+				return ResetMicroseconds( ConvertDateTime(context.ServerNowMs(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+			return ResetMicroseconds(context.ServerNowMs(dataSource));
+		}
 		static public DateTime ServerNow(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
@@ -2969,12 +2999,13 @@ namespace GeneXus.Utils
 				StringUtil.PadL(StringUtil.Str(Month(date), 2, 0), 2, '0') +
 				StringUtil.PadL(StringUtil.Str(Day(date), 2, 0), 2, '0'));
 		}
-		public static string getYYYYMMDDHHMMSS_nosep(DateTime date)
+		public static string getYYYYMMDDHHMMSSnosep(DateTime date, bool hasMilliseconds)
 		{
 			string sDate = getYYYYMMDD(date);
 			sDate += StringUtil.PadL(StringUtil.Str(Hour(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Minute(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Second(date), 2, 0), 2, '0');
+			if (hasMilliseconds) sDate += StringUtil.PadL(StringUtil.Str(MilliSecond(date), 3, 0), 3, '0');
 			return (sDate);
 		}
 		private static DateTime ConvertDateTime(DateTime dt, OlsonTimeZone FromTimezone, OlsonTimeZone ToTimezone)
@@ -3051,11 +3082,17 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		public static string FormatDateTimeParmMS(DateTime date)
+		{
+			if (date.Equals(nullDate))
+				return "";
+			return getYYYYMMDDHHMMSSnosep(date, true);
+		}
 		public static string FormatDateTimeParm(DateTime date)
 		{
 			if (date.Equals(nullDate))
 				return "";
-			return getYYYYMMDDHHMMSS_nosep(date);
+			return getYYYYMMDDHHMMSSnosep(date, false);
 		}
 		public static string FormatDateParm(DateTime date)
 		{
@@ -3101,12 +3138,15 @@ namespace GeneXus.Utils
 					return dtValue;
 			}
 
-			return YMDHMSToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
+			int mil = (valueString.Trim().Length >= 17)? (int)NumberUtil.Val(valueString.Substring(14, 3)):0;
+
+			return YMDHMSMToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
 				(int)NumberUtil.Val(valueString.Substring(4, 2)),
 				(int)NumberUtil.Val(valueString.Substring(6, 2)),
 				(int)NumberUtil.Val(valueString.Substring(8, 2)),
 				(int)NumberUtil.Val(valueString.Substring(10, 2)),
-				(int)NumberUtil.Val(valueString.Substring(12, 2)), false);
+				(int)NumberUtil.Val(valueString.Substring(12, 2)), mil, false);
+
 		}
 		public DateTime ParseDateOrDTimeParm(string valueString)
 		{
@@ -3304,28 +3344,24 @@ namespace GeneXus.Utils
 		{
 			return Path.Combine(FileUtil.GetStartupDirectory(), AppDomain.CurrentDomain.FriendlyName + ".out");
 		}
+#else
+        private static byte RemoteFileExists(string url)
+        {
+            return (byte)0;
+        }
+        //In command line, return the base directory, web.
+        public static string GetBasePath()
+        {
+            return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+        }
+#endif
 		public static string GetStartupDirectory()
 		{
 			string dir = Assembly.GetCallingAssembly().GetName().CodeBase;
 			Uri uri = new Uri(dir);
 			return Path.GetDirectoryName(uri.LocalPath);
 		}
-#else
-        private static byte RemoteFileExists(string url)
-        {
-            return (byte)0;
-        }
-        public static string GetStartupDirectory()
-        {
-            return AppContext.BaseDirectory;
-        }
 
-        //In command line, return the base directory, web.
-        public static string GetBasePath()
-        {
-            return Directory.GetParent(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName).FullName;
-        }
-#endif
 		public static string UriToPath(string uriString)
 		{
 			try
@@ -3501,6 +3537,11 @@ namespace GeneXus.Utils
 			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp);
 		}
 
+		public static bool HasUrlQueryString(string url)
+		{
+			return url.Contains("?");
+		}
+
 		public static Uri GetBaseUri()
 		{
 			return new Uri(GxContext.StaticPhysicalPath() + Path.DirectorySeparatorChar.ToString());
@@ -3518,6 +3559,39 @@ namespace GeneXus.Utils
 				blobPath = RelativePath(blobPath);
 				return StringUtil.ReplaceLast(blobPath, fileName, Uri.EscapeUriString(fileName));
 			}
+		}
+		public static bool AbsoluteUri(string fileName, out Uri result)
+		{
+			result = null;
+			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			{
+				return true;
+			}
+			else
+			{
+				Uri relative;
+				if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
+				{
+					if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
+					{
+						int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
+						if (idx >= 0)
+						{
+							fileName = fileName.Substring(idx);
+							Uri localRelative;
+							if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
+								relative = localRelative;
+						}
+					}
+
+					if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
+					{
+						return true;
+					}
+				}
+				return false; ;
+			}
+
 		}
 
 		public static string RelativePath(string blobPath)
@@ -3643,6 +3717,18 @@ namespace GeneXus.Utils
 			StackTrace st = new StackTrace(new StackFrame(1, true));
 			StackFrame sf = st.GetFrame(0);
 			GXLogging.Debug(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
+		}
+		public static void WriteLogError(string message)
+		{
+			StackTrace st = new StackTrace(new StackFrame(1, true));
+			StackFrame sf = st.GetFrame(0);
+			GXLogging.Error(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
+		}
+		public static void WriteLogInfo(string message)
+		{
+			StackTrace st = new StackTrace(new StackFrame(1, true));
+			StackFrame sf = st.GetFrame(0);
+			GXLogging.Info(log, String.Format("At file: {0}, line: {1}, {2}", sf.GetFileName(), sf.GetFileLineNumber(), message));
 		}
 		public static void WriteTLog(string message)
 		{
@@ -4131,7 +4217,7 @@ namespace GeneXus.Utils
 			}
 			else
 			{
-				string value, s, s1;
+				string value, s=null, s1;
 				if (Config.GetValueOf("HTTPCONTEXT_USER_AS_USERID", out value) && value.StartsWith("y"))
 				{
 					//Virtual directory mapped to another machine, returns the user for "connect as" of virtual directory
@@ -4142,8 +4228,11 @@ namespace GeneXus.Utils
 					}
 					else
 					{
-						s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-						GXLogging.Debug(log, "HttpContext.Current is null, UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name:", s);
+						if (IsWindowsPlatform)
+						{
+							s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+							GXLogging.Debug(log, "HttpContext.Current is null, UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name:", s);
+						}
 					}
 				}
 				else
@@ -4156,12 +4245,13 @@ namespace GeneXus.Utils
                     }
                     else
                     {
-                        s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+						if (IsWindowsPlatform)
+							s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
                     }
 #else
 					s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-#endif
 					GXLogging.Debug(log, "UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name: ", s);
+#endif
 				}
 
 				if (s == null)
@@ -4195,6 +4285,29 @@ namespace GeneXus.Utils
             return decodedHeader;
         }
 #endif
+#if NETCORE
+		static int windowsPlatform = -1;
+#endif
+		public static bool IsWindowsPlatform
+		{
+			get
+			{
+#if NETCORE
+				if (windowsPlatform == -1)
+					windowsPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 1 : 0;
+
+				return (windowsPlatform == 1);
+#else
+				return true;
+#endif
+			}
+#if NETCORE
+			set
+			{
+				windowsPlatform = value ? 1 : 0;
+			}
+#endif
+		}
 		static public int DbmsVersion(IGxContext context, string dataSource)
 		{
 			string version = context.ServerVersion(dataSource);
@@ -4314,8 +4427,6 @@ namespace GeneXus.Utils
 				return string.Empty;
 		}
 
-#if !NETCORE
-
 		public static GxStringCollection DefaultWebUser(IGxContext cntxt)
 		{
 			if (Environment.OSVersion.Version.Major >= 6)
@@ -4334,9 +4445,13 @@ namespace GeneXus.Utils
 		const string APPPOOL_IDENTITY_TYPE_NETWORKSERVICE = "2";//The application pool runs as NetworkService.
 		const string APPPOOL_IDENTITY_TYPE_SPECIFICUSER = "3";//The application pool runs as a specified user account.
 		const string APPPOOL_IDENTITY_TYPE_APPPOOL = "4";//The application pool runs as a Application Pool identity.
+#if NETCORE
+		const string IDENTITY_NETCORE_APPPOOL = @"IIS AppPool\NetCore";
+#else
 		const string IDENTITY_INTEGRATED_APPPOOL_FW40 = @"IIS APPPOOL\ASP.NET v4.0";
 		const string IDENTITY_INTEGRATED_APPPOOL_FW35 = @"IIS AppPool\DefaultAppPool";
 		const string IDENTITY_CLASSIC_APPPOOL = @"IIS AppPool\Classic .NET AppPool";
+#endif
 		const string IDENTITY_NETWORK_SERVICE = @"NT AUTHORITY\NETWORK SERVICE";
 		const string IDENTITY_LOCAL_SERVICE = @"NT AUTHORITY\LOCAL SERVICE";
 
@@ -4353,9 +4468,13 @@ namespace GeneXus.Utils
 					switch (AppPoolIdentityType)
 					{
 						case APPPOOL_IDENTITY_TYPE_APPPOOL:
+#if NETCORE
+							usernames.Add(IDENTITY_NETCORE_APPPOOL);
+#else
 							usernames.Add(IDENTITY_CLASSIC_APPPOOL);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
+#endif
 							break;
 						case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
 						case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
@@ -4378,9 +4497,13 @@ namespace GeneXus.Utils
 
 			if (usernames.Count == 0)
 			{
+#if NETCORE
+				usernames.Add(IDENTITY_NETCORE_APPPOOL);
+#else
 				usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 				usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
 				usernames.Add(IDENTITY_CLASSIC_APPPOOL);
+#endif
 				usernames.Add(IDENTITY_NETWORK_SERVICE);
 				usernames.Add(IDENTITY_LOCAL_SERVICE);
 			}
@@ -4389,12 +4512,16 @@ namespace GeneXus.Utils
 
 		private static DirectoryEntry GetAppPoolEntry()
 		{
+#if NETCORE
+			DirectoryEntry Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/NetCore");
+#else
 			DirectoryEntry Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/ASP.NET v4.0");
 			if (Entry == null)
 				Entry = new DirectoryEntry("IIS://localhost/W3SVC/AppPools/DefaultAppPool");
+#endif
 			return Entry;
 		}
-#endif
+
 #if NETCORE
         private static string WrkSt(IGxContext gxContext, object httpContext)
 
@@ -4719,7 +4846,7 @@ namespace GeneXus.Utils
 					{
 						if (GXProcessHelper.ProcessFactory != null)
 						{
-							GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
+							exitCode = GXProcessHelper.ProcessFactory.GetProcessHelper().ExecProcess(RunAsX86Path, args, basePath, executable, dataReceived);
 							return true;
 						}
 						else
@@ -4912,12 +5039,12 @@ namespace GeneXus.Utils
 #endif
 		public static string GetEncryptedHash(string value, string key)
 		{
-			return Crypto.Encrypt64(GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SECURITY_HASH_ALGORITHM), key);
+			return Crypto.Encrypt64(GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
 		}
 
 		public static bool CheckEncryptedHash(string value, string hash, string key)
 		{
-			return GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SECURITY_HASH_ALGORITHM) == Crypto.Decrypt64(hash, key);
+			return GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm) == Crypto.Decrypt64(hash, key);
 		}
 
 		[Obsolete("GetMD5Hash is deprecated for security reasons, please use GetHash instead.", false)]
@@ -4928,7 +5055,7 @@ namespace GeneXus.Utils
 
 		public static string GetHash(string s)
 		{
-			return GetHash(s, Constants.DEFAULT_HASH_ALGORITHM);
+			return GetHash(s, Constants.DefaultHashAlgorithm);
 		}
 
 		public static string GetHash(string s, string hashAlgorithm)
@@ -5255,6 +5382,214 @@ namespace GeneXus.Utils
 		}
 	}
 
+	public static class GxImageUtil
+	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxImageUtil));
+
+		private static string ImageAbsolutePath(string originalFileLocation)
+		{
+			return ImageFile(originalFileLocation).GetAbsoluteName();
+		}
+		private static GxFile ImageFile(string originalFileLocation)
+		{
+			return new GxFile(GxContext.StaticPhysicalPath(), originalFileLocation);
+		}
+
+		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
+		{
+			try
+			{
+				int newheight = height;
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Image image = Image.FromFile(ImageAbsolutePath(originalFileLocation)))
+				{
+					// Prevent using images internal thumbnail
+					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+
+					if (keepAspectRatio)
+					{
+						double resize = (double)image.Width / (double)width;//get the resize vector
+						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
+					}//return the image resized to the given heigth and width
+					image.GetThumbnailImage(width, newheight, null, IntPtr.Zero).Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Resize {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string Scale(string imageFile, int percent)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				int width, height;
+				using (Image image = Image.FromFile(originalFileLocation))
+				{
+					width = image.Size.Width * percent / 100;
+					height = image.Size.Height * percent / 100;
+				}
+				return Resize(imageFile, width, height, true);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Scale {imageFile} failed", ex);
+				return imageFile;
+			}
+		}
+		public static string Crop(string imageFile, int X, int Y, int Width, int Height)
+		{
+			try
+			{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					string originalFileLocation = ImageAbsolutePath(imageFile);
+					using (Image OriginalImage = Image.FromFile(originalFileLocation))
+					{
+						using (Bitmap bmp = new Bitmap(Width, Height))
+						{
+							bmp.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+							using (Graphics Graphic = Graphics.FromImage(bmp))
+							{
+								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
+								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
+								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
+								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
+								bmp.Save(ms, OriginalImage.RawFormat);
+							}
+						}
+					}
+					using (FileStream file = new FileStream(originalFileLocation, FileMode.Open, FileAccess.Write))
+					{
+						ms.WriteTo(file);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Crop {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string Rotate(string imageFile, int angle)
+		{
+
+			try
+			{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					string originalFileLocation = ImageAbsolutePath(imageFile);
+					using (Image OriginalImage = Image.FromFile(originalFileLocation))
+					{
+						using (Bitmap rotatedImage = new Bitmap(OriginalImage.Width, OriginalImage.Height))
+						{
+							rotatedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+
+							using (Graphics g = Graphics.FromImage(rotatedImage))
+							{
+								g.TranslateTransform(OriginalImage.Width / 2, OriginalImage.Height / 2);
+								g.RotateTransform(angle);
+								g.TranslateTransform(-OriginalImage.Width / 2, -OriginalImage.Height / 2);
+								g.DrawImage(OriginalImage, new Point(0, 0));
+							}
+							rotatedImage.Save(ms, OriginalImage.RawFormat);
+						}
+					}
+					using (FileStream file = new FileStream(originalFileLocation, FileMode.Open, FileAccess.Write))
+					{
+						ms.WriteTo(file);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Rotate {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string FlipHorizontally(string imageFile) {
+
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
+					bmp.Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Flip Horizontally {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string FlipVertically(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+					bmp.Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Flip Vertically {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+
+		public static int GetImageWidth(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					return bmp.Width;
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetImageWidth {imageFile} failed", ex);
+			}
+			return 0;
+		}
+		public static int GetImageHeight(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					return bmp.Height;
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetImageHeight {imageFile} failed", ex);
+			}
+			return 0;
+		}
+		public static long GetFileSize(string imageFile)
+		{
+			try
+			{
+				return ImageFile(imageFile).GetLength();
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetFileSize {imageFile} failed", ex);
+			}
+			return 0;
+		}
+	}
 	public class StorageUtils
 	{
 		public const string DELIMITER = "/";
@@ -5280,6 +5615,24 @@ namespace GeneXus.Utils
 			if (!directoryName.EndsWith(DELIMITER))
 				return directoryName + DELIMITER;
 			return directoryName;
+		}
+		public static string EncodeNonAsciiCharacters(string value)
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach (char c in value)
+			{
+				if (c > 127)
+				{
+					// This character is too big for ASCII
+					string encodedValue = "\\u" + ((int)c).ToString("x4");
+					sb.Append(encodedValue);
+				}
+				else
+				{
+					sb.Append(c);
+				}
+			}
+			return sb.ToString();
 		}
 	}
 

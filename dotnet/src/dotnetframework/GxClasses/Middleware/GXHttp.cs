@@ -26,6 +26,7 @@ namespace GeneXus.Http
 	using Jayrock.Json;
 	using System.Web.SessionState;
 	using Helpers;
+	using System.Collections.Concurrent;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.AspNetCore.Http.Extensions;
@@ -41,7 +42,7 @@ namespace GeneXus.Http
 	using GeneXus.Notifications;
 	using Web.Security;
 #endif
-	
+
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -54,16 +55,18 @@ namespace GeneXus.Http
 		internal const string GX_SPA_MASTERPAGE_HEADER = "X-SPA-MP";
 		internal const string GX_AJAX_MULTIPART_ID = "GXAjaxMultipart";
 		private const string GX_FULL_AJAX_REQUEST_HEADER = "X-FULL-AJAX-REQUEST";
+		private const string GXEVENT_PARM = "gxevent";
+		private const string URI_SEPARATOR = "/";
 		private static Regex MULTIMEDIA_GXI_GRID_PATTERN = new Regex("(\\w+)(_\\d{4})$", RegexOptions.Compiled);
 		private const int SPA_NOT_SUPPORTED_STATUS_CODE = 530;
 		protected bool FullAjaxMode;
 		private Exception workerException;
+		private bool firstParConsumed = false;
 		private StringDictionary customCSSContent = new StringDictionary();
 #if !NETCORE
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
 		private Dictionary<string, string> callTargetsByObject = new Dictionary<string, string>();
 #endif
-		private static string CACHE_INVALIDATION_TOKEN;
 		public GXHttpHandler()
 		{
 			initpars();
@@ -158,7 +161,7 @@ namespace GeneXus.Http
 					((IGxJSONSerializable)parmObj).FromJSonString(valueS);
 					return parmObj;
 				}
-				
+
 				if (parmtype.Equals(typeof(int)) && value != null)
 				{
 					if (string.Compare(valueS, "true", StringComparison.OrdinalIgnoreCase) == 0)
@@ -207,15 +210,17 @@ namespace GeneXus.Http
 #if !NETCORE
 		protected IGxContext _Context;                  
 #endif
-		bool _isMain;                                   
+		bool _isMain;
 		bool _isStatic;
 		string staticContentBase;
 
-		public List<string> _params = new List<string>();       
+		ConcurrentDictionary<string, string> _namedParms = new ConcurrentDictionary<string, string>();
+		bool useOldQueryStringFormat;
+		public List<string> _params = new List<string>();
 		private string _strParms;
-		int _currParameter;                             
+		int _currParameter;
 #if NETCORE
-				private GXWebRow _currentGridRow;
+		private GXWebRow _currentGridRow;
 #endif
 		private Hashtable EventsMetadata = new Hashtable();
 
@@ -237,7 +242,7 @@ namespace GeneXus.Http
 		private bool IsFullAjaxRequest(HttpContext httpContext)
 		{
 #if NETCORE
-					String contentType = (localHttpContext != null && localHttpContext.Request.ContentType != null) ? localHttpContext.Request.ContentType : string.Empty;
+			String contentType = (localHttpContext != null && localHttpContext.Request.ContentType != null) ? localHttpContext.Request.ContentType : string.Empty;
 #else
 			String contentType = httpContext != null ? httpContext.Request.ContentType : string.Empty;
 #endif
@@ -256,25 +261,25 @@ namespace GeneXus.Http
 		public virtual String AjaxOnSessionTimeout() { return "Ignore"; }
 
 #if NETCORE
-				public void DoAjaxLoad(int SId, GXWebRow row)
-				{
-					JObject JSONRow = new JObject();
-					JSONRow.Put("grid", SId);
-					JSONRow.Put("props", row.parentGrid.GetJSONObject());
-					JSONRow.Put("values", row.parentGrid.GetValues());
-					context.httpAjaxContext.appendLoadData(SId, JSONRow);
-				}
-				public void ajax_sending_grid_row(GXWebRow row)
-				{
-					if (context.isAjaxCallMode())
-					{
-						_currentGridRow = row;
-					}
-					else
-					{
-						_currentGridRow = null;
-					}
-				}
+		public void DoAjaxLoad(int SId, GXWebRow row)
+		{
+			JObject JSONRow = new JObject();
+			JSONRow.Put("grid", SId);
+			JSONRow.Put("props", row.parentGrid.GetJSONObject());
+			JSONRow.Put("values", row.parentGrid.GetValues());
+			context.httpAjaxContext.appendLoadData(SId, JSONRow);
+		}
+		public void ajax_sending_grid_row(GXWebRow row)
+		{
+			if (context.isAjaxCallMode())
+			{
+				_currentGridRow = row;
+			}
+			else
+			{
+				_currentGridRow = null;
+			}
+		}
 #endif
 		public void ajax_rsp_clear()
 		{
@@ -295,16 +300,16 @@ namespace GeneXus.Http
 			JArray events;
 			GXHttpHandler targetObj;
 			string[] eventHandlers;
-            bool[] eventUseInternalParms;
-            string cmpContext = string.Empty;
-            int grid;
-            string row;
-            JArray inParmsMetadata;
-            private HashSet<string> inParmsMetadataHash;
-            bool anyError;
+			bool[] eventUseInternalParms;
+			string cmpContext = string.Empty;
+			int grid;
+			string row;
+			JArray inParmsMetadata;
+			private HashSet<string> inParmsMetadataHash;
+			bool anyError;
 
-            private void ParseInputJSonMessage(JObject objMessage, GXHttpHandler targetObj)
-            {
+			private void ParseInputJSonMessage(JObject objMessage, GXHttpHandler targetObj)
+			{
 				inParmsValues = (JArray)objMessage["parms"];
 				inHashValues = (JArray)objMessage["hsh"];
 				if (inHashValues == null)
@@ -342,20 +347,20 @@ namespace GeneXus.Http
 				if (objMessage.Contains("grids"))
 					ParseGridsDataParms((JObject)objMessage["grids"]);
 				if (objMessage.Contains("grid"))
-                    grid = (int)objMessage["grid"];
-                else
-                    grid = 0;
-                if (objMessage.Contains("row"))
-                    row = (string)objMessage["row"];
-                else
-                    row = "";
-                if (objMessage.Contains("gxstate"))
-                {
-                    ParseGXStateParms((JObject)objMessage["gxstate"]);
-                }
-                if (objMessage.Contains("fullPost"))
-                {
-					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
+					grid = Convert.ToInt32(objMessage["grid"]);
+				else
+					grid = 0;
+				if (objMessage.Contains("row"))
+					row = (string)objMessage["row"];
+				else
+					row = "";
+				if (objMessage.Contains("gxstate"))
+				{
+					ParseGXStateParms((JObject)objMessage["gxstate"]);
+				}
+				if (objMessage.Contains("fullPost"))
+				{
+					this.targetObj._Context.httpAjaxContext.ParseGXState((JObject)objMessage["fullPost"]);
 				}
 			}
 			private void ParseGridsDataParms(JObject gxGrids)
@@ -487,6 +492,19 @@ namespace GeneXus.Http
 				return propertyInfo;
 			}
 
+			private void SetNullableScalarOrCollectionValue(JObject parm, object value, JArray columnValues)
+			{
+				string nullableAttribute = parm.Contains("nullAv") ? (string)parm["nullAv"] : null;
+				if (nullableAttribute != null && string.IsNullOrEmpty(JSONHelper.WriteJSON<dynamic>(value)))
+				{
+					SetScalarOrCollectionValue(nullableAttribute, true, null);
+				}
+				else
+				{
+					SetScalarOrCollectionValue((string)parm["av"], value, columnValues);
+				}
+			}
+
 			private void SetScalarOrCollectionValue(string fieldName, object value, JArray values)
 			{
 				FieldInfo fieldInfo = getfieldInfo(targetObj, fieldName);
@@ -524,9 +542,9 @@ namespace GeneXus.Http
 				if (fieldInfo != null)
 				{
 
-					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSonString", new Type[] { typeof(string) });
+					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSONObject");
 					if (mth != null)
-						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { values.ToString() });
+						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { values });
 				}
 			}
 
@@ -568,9 +586,10 @@ namespace GeneXus.Http
 			{
 				if (fieldInfo != null)
 				{
-					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSonString", new Type[] { typeof(string) });
+					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSONObject");
 					if (mth != null)
-						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value.ToString() });
+						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value });
+
 					else
 					{
 						if (fieldInfo.FieldType.IsArray)
@@ -603,7 +622,7 @@ namespace GeneXus.Http
 						else
 						{
 #if NETCORE
-									IFormatProvider provider = CultureInfo.InvariantCulture;
+							IFormatProvider provider = CultureInfo.InvariantCulture;
 #else
 							IFormatProvider provider = CultureInfo.CreateSpecificCulture("en-US");
 #endif
@@ -699,7 +718,7 @@ namespace GeneXus.Http
 												foreach (object columnVal in columnValues)
 												{
 													string varName = $"{cmpContext}{(string)parm["fld"]}_{rowIdx.ToString(CultureInfo.InvariantCulture).PadLeft(4, '0')}{parentRow}";
-													
+
 													ReadColumnVarValue(columnVal, targetObj, varName);
 													rowIdx++;
 												}
@@ -785,9 +804,9 @@ namespace GeneXus.Http
 											hash_i++;
 										}
 									}
-									if (value != null)
+									if (value != null && value != JNull.Value)
 									{
-										SetScalarOrCollectionValue((string)parm["av"], value, columnValues);
+										SetNullableScalarOrCollectionValue(parm, value, columnValues);
 									}
 								}
 							}
@@ -804,9 +823,9 @@ namespace GeneXus.Http
 							{
 								parm_i++;
 							}
-                        }
+						}
 
-                    }
+					}
 
 					if (grid != 0 && !String.IsNullOrEmpty(row))
 					{
@@ -879,7 +898,7 @@ namespace GeneXus.Http
 						_ = targetObj.GetType().InvokeMember(handler, BindingFlags.Public |
 						BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod,
 						Type.DefaultBinder,
-						targetObj, (eventUseInternalParms[i] ? MethodParms : null));						
+						targetObj, (eventUseInternalParms[i] ? MethodParms : null));
 					}
 				}
 			}
@@ -967,7 +986,11 @@ namespace GeneXus.Http
 #if !NETCORE
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
+		[Obsolete("IntegratedSecurityPermissionName is deprecated, it is here for compatibility. Use ExecutePermissionPrefix instead.", false)]
 		protected virtual string IntegratedSecurityPermissionName { get { return ""; } }
+		protected virtual string ExecutePermissionPrefix { get { return ""; } }
+		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
+		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
 #endif
 		private bool disconnectUserAtCleanup;
 		private bool validEncryptedParm;
@@ -1007,7 +1030,7 @@ namespace GeneXus.Http
 			}
 			else if (newName.Trim().ToLower().StartsWith(oldName.Trim().ToLower() + ".aspx"))
 			{
-				
+
 				return true;
 			}
 			return false;
@@ -1066,8 +1089,10 @@ namespace GeneXus.Http
 
 		public void AddStyleSheetFile(string styleSheet, string urlBuildNumber, bool isDeferred = false)
 		{
+			urlBuildNumber = context.GetURLBuildNumber(styleSheet, urlBuildNumber);
 			AddStyleSheetFile(styleSheet, urlBuildNumber, false, isDeferred);
 		}
+
 		//isGxThemeHidden: true if it is the theme to be sent in GX_THEME, in that case it is not added to the GX_STYLE_FILES list, only in the hidden GX_THEME
 		private void AddStyleSheetFile(string styleSheet, string urlBuildNumber, bool isGxThemeHidden, bool isDeferred = false)
 		{
@@ -1127,13 +1152,13 @@ namespace GeneXus.Http
 			string cssContent = "";
 			Boolean bHasCustomContent = FetchCustomCSS(ref cssContent);
 
-            if (bHasCustomContent && !context.StyleSheetAdded(GetPgmname()))
-            {
+			if (bHasCustomContent && !context.StyleSheetAdded(GetPgmname()))
+			{
 				context.WriteHtmlTextNl("<style id=\"gx-inline-css\">" + cssContent + "</style>");
-                context.AddStyleSheetFile(GetPgmname());
-            }
+				context.AddStyleSheetFile(GetPgmname());
+			}
 
-            string[] referencedFiles = ThemeHelper.GetThemeCssReferencedFiles(Path.GetFileNameWithoutExtension(styleSheet));
+			string[] referencedFiles = ThemeHelper.GetThemeCssReferencedFiles(Path.GetFileNameWithoutExtension(styleSheet));
 			foreach (string file in referencedFiles)
 			{
 				string extension = Path.GetExtension(file);
@@ -1149,19 +1174,7 @@ namespace GeneXus.Http
 
 		public string GetCacheInvalidationToken()
 		{
-			if (String.IsNullOrEmpty(CACHE_INVALIDATION_TOKEN))
-			{
-				string token;
-				if (Config.GetValueOf("CACHE_INVALIDATION_TOKEN", out token))
-				{
-					CACHE_INVALIDATION_TOKEN = token;
-				}
-				else
-				{
-					CACHE_INVALIDATION_TOKEN = Math.Truncate(NumberUtil.Random() * 1000000).ToString();
-				}
-			}
-			return CACHE_INVALIDATION_TOKEN;
+			return context.GetCacheInvalidationToken();
 		}
 
 		public void AddComponentObject(string cmpCtx, string objName, bool justCreated)
@@ -1220,7 +1233,7 @@ namespace GeneXus.Http
 			set { disconnectUserAtCleanup = value; }
 		}
 #if NETCORE
-				public override IGxContext context
+		public override IGxContext context
 #else
 		public IGxContext context
 #endif
@@ -1266,7 +1279,7 @@ namespace GeneXus.Http
 			get
 			{
 				return _Context.OutputWriter;
-				
+
 			}
 			set
 			{
@@ -1320,7 +1333,7 @@ namespace GeneXus.Http
 				}
 				catch (Exception) {; }
 			}
-			
+
 		}
 
 		private bool IsGxAjaxRequest()
@@ -1357,7 +1370,7 @@ namespace GeneXus.Http
 
 		protected string GetEncryptedHash(string value, string key)
 		{
-			return Encrypt64(GXUtil.GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SECURITY_HASH_ALGORITHM), key);
+			return Encrypt64(GXUtil.GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
 		}
 
 		protected String Encrypt64(String value, String key)
@@ -1369,7 +1382,7 @@ namespace GeneXus.Http
 			}
 			catch (InvalidKeyException)
 			{
-				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", 0);
+				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", context.GetHttpSecure());
 				GXLogging.Error(log, "440 Invalid encryption key");
 				SendResponseStatus(440, "Session timeout");
 			}
@@ -1385,7 +1398,7 @@ namespace GeneXus.Http
 			}
 			catch (InvalidKeyException)
 			{
-				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", 0);
+				context.SetCookie("GX_SESSION_ID", "", "", DateTime.MinValue, "", context.GetHttpSecure());
 				GXLogging.Error(log, "440 Invalid encryption key");
 				SendResponseStatus(440, "Session timeout");
 			}
@@ -1672,7 +1685,10 @@ namespace GeneXus.Http
 					SendResponseStatus(HttpStatusCode.Unauthorized);
 					if (context.GetBrowserType() != GxContext.BROWSER_INDEXBOT)
 					{
-						GXLogging.Warn(log, String.Format("Validation security token '{0}' failed for program: {1}", GetObjectAccessWebToken(cmpCtx), cmpCtx + this.GetPgmname().ToUpper()));
+						if (log.IsWarnEnabled)
+						{
+							GXLogging.Warn(log, $"Validation security token '{GetObjectAccessWebToken(cmpCtx)}' failed for program: '{cmpCtx + this.GetPgmname().ToUpper()}'");
+						}
 					}
 					return false;
 				}
@@ -1692,25 +1708,25 @@ namespace GeneXus.Http
 		{
 			string key = context.httpAjaxContext.GetAjaxEncryptionKey();
 			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_ENCRYPTION_KEY, key);
+			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_ENCRYPTION_IV, CryptoImpl.GX_AJAX_PRIVATE_IV);
 			_Context.httpAjaxContext.ajax_rsp_assign_hidden(CryptoImpl.AJAX_SECURITY_TOKEN, CryptoImpl.EncryptRijndael(key, CryptoImpl.GX_AJAX_PRIVATE_KEY));
 		}
 
 		public void ajax_req_read_hidden_sdt(String jsonStr, Object SdtObj)
 		{
-			JsonReader reader = new JsonTextReader(new StringReader(jsonStr));
-			IJsonFormattable jsonObj;
+			dynamic jsonObj;
 			try
 			{
 				if (SdtObj != null && !string.IsNullOrEmpty(jsonStr) && !jsonStr.Equals("undefined") && !jsonStr.Equals("null"))
 				{
 					if (jsonStr.StartsWith("["))
-						jsonObj = (JArray)reader.DeserializeNext();
+						jsonObj = JSONHelper.ReadJSON<JArray>(jsonStr);
 					else
-						jsonObj = (JObject)reader.DeserializeNext();
+						jsonObj = JSONHelper.ReadJSON<JObject>(jsonStr);
 					((IGxJSONAble)SdtObj).FromJSONObject(jsonObj);
 				}
 			}
-			catch (Jayrock.Json.ParseException ex)
+			catch (Exception ex)
 			{
 				GXLogging.Warn(log, "Error parsing jsonObj:" + jsonStr + " for type " + SdtObj.GetType().FullName, ex);
 			}
@@ -1818,6 +1834,8 @@ namespace GeneXus.Http
 					context.CloseConnections();
 				}
 				catch { }
+				Exception exceptionToHandle = e.InnerException ?? e;
+				handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
 				throw new Exception("GXApplication exception", e);
 			}
 		}
@@ -1849,18 +1867,11 @@ namespace GeneXus.Http
 		{
 			return ValidGAMSession(true);
 		}
-		internal static String OatuhUnauthorizedHeader(string realm, string errCode, string errDescription)
-		{
-			if (string.IsNullOrEmpty(errDescription))
-				return String.Format("OAuth realm=\"{0}\"", realm);
-			else
-				return string.Format("OAuth realm=\"{0}\",error_code=\"{1}\",error_description=\"{2}\"", realm, errCode, errDescription);
-		}
 
 		private bool ValidWebSession()
 		{
 #if NETCORE
-            bool isExpired = IsFullAjaxRequest(localHttpContext) && this.AjaxOnSessionTimeout() == "Warn" && GxWebSession.IsSessionExpired(localHttpContext);
+			bool isExpired = IsFullAjaxRequest(localHttpContext) && this.AjaxOnSessionTimeout() == "Warn" && GxWebSession.IsSessionExpired(localHttpContext);
 #else
 			bool isExpired = IsFullAjaxRequest(HttpContext.Current) && this.AjaxOnSessionTimeout() == "Warn" && GxWebSession.IsSessionExpired(localHttpContext);
 #endif
@@ -1892,32 +1903,9 @@ namespace GeneXus.Http
 				if (!isOK)
 				{
 #if NETCORE
-					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]=OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
+					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
 #else
-					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
-#endif
-					this.SendResponseStatus(401, "Unauthorized");
-				}
-			}
-			if (IntegratedSecurityLevel == GAMSecurityLevel.SecurityObject)
-			{
-				String token = localHttpContext.Request.Headers["Authorization"];
-				if (!string.IsNullOrEmpty(token))
-				{
-					token = token.Replace("OAuth ", "");
-					GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
-				}
-				else
-				{
-					token = string.Empty;
-					GxSecurityProvider.Provider.checksession(context, context.CleanAbsoluteUri, out isOK);
-				}
-				if (!isOK)
-				{
-#if NETCORE
-					localHttpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER]=OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty);
-#else
-					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
+					HttpContext.Current.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), string.Empty, string.Empty));
 #endif
 					this.SendResponseStatus(401, "Unauthorized");
 				}
@@ -1935,14 +1923,14 @@ namespace GeneXus.Http
 			}
 			else if (IntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
 			{
-				isOK = checkAuthorization(IntegratedSecurityPermissionName, context.CleanAbsoluteUri, bRedirectIfNotAuth);
+				isOK = checkAuthorization(ExecutePermissionPrefix, context.CleanAbsoluteUri, bRedirectIfNotAuth);
 			}
 			return isOK;
 		}
 
 		public bool IsAuthorized(String permissionPrefix)
 		{
-			
+
 			bool isOK = false;
 			bool isPermissionOK;
 
@@ -2001,7 +1989,7 @@ namespace GeneXus.Http
 			return isOK && isPermissionOK;
 		}
 
-		private static string GetGAMLoginWebObject()
+		private string GetGAMLoginWebObject()
 		{
 			string loginObject = string.Empty;
 			if (Config.GetValueOf("IntegratedSecurityLoginWeb", out loginObject))
@@ -2010,9 +1998,10 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-			return loginObject;
+
+			return formatLink(loginObject);
 		}
-		private static string GetGAMNotAuthorizedWebObject()
+		private string GetGAMNotAuthorizedWebObject()
 		{
 			string loginObject = string.Empty;
 			if (Config.GetValueOf("IntegratedSecurityNotAuthorizedWeb", out loginObject))
@@ -2021,7 +2010,8 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-			return loginObject;
+
+			return formatLink(loginObject);
 		}
 
 		protected virtual void sendCacheHeaders()
@@ -2151,31 +2141,46 @@ namespace GeneXus.Http
 
 		protected void LoadParameters(string value)
 		{
-			string value1;
 			initpars();
 			_params.Clear();
-			if (value.Length > 0)
-			{
-				if (value[0] == '?')
-					value1 = value.Substring(1);
-				else
-					value1 = value;
-				string[] elements = value1.Split(',');
-				for (int i = 0; i < elements.Length; i++)
-				{
-					string parm = elements[i];
-					if (parm.IndexOf("gx-no-cache=") != -1)
-						break;
-					_params.Add(GXUtil.UrlDecode(parm));
-				}
+			_namedParms.Clear();
+			string parmValue;
 
+			if (!string.IsNullOrEmpty(value))
+			{
+				value = GxContext.RemoveInternalSuffixes(value).TrimStart('?');
+				useOldQueryStringFormat = !(Preferences.UseNamedParameters && value.Contains("="));
+				if (!string.IsNullOrEmpty(value))
+				{
+					string[] elements = useOldQueryStringFormat ? value.Split(',') : value.Split('&');
+
+					for (int i = 0; i < elements.Length; i++)
+					{
+
+						if (useOldQueryStringFormat)
+							_params.Add(GXUtil.UrlDecode(elements[i]));
+						else
+						{
+							var parmNameValue = elements[i].Split('=');
+							if (parmNameValue.Length > 1)
+							{
+								parmValue = GXUtil.UrlDecode(parmNameValue[1]);
+								_namedParms[NormalizeParameterName(parmNameValue[0])] = parmValue;
+							}
+							else
+							{
+								parmValue = GXUtil.UrlDecode(parmNameValue[0]);
+							}
+							_params.Add(parmValue);
+						}
+					}
+				}
 			}
 
 			if (localHttpContext.Request.GetMethod() == "POST"
 								&& _params.Count == 0) // If it is a call ajax made through a POST is has 1 parameter (the one used to avoid cache)
 			{
 				TryLoadAjaxCallParms();
-
 			}
 		}
 		protected void TryLoadAjaxCallParms()
@@ -2200,7 +2205,7 @@ namespace GeneXus.Http
 				}
 			}
 		}
-		
+
 		public virtual string getresponse(string sGXDynURL)
 		{
 			return "";
@@ -2219,6 +2224,33 @@ namespace GeneXus.Http
 				return _params[_currParameter];
 			else
 				return "";
+		}
+		public string GetPar(string parameterName)
+		{
+			if (useOldQueryStringFormat)
+				return GetNextPar();
+			else if (_namedParms.TryGetValue(NormalizeParameterName(parameterName), out string value))
+				return value;
+			else
+				return string.Empty;
+		}
+		public string GetFirstPar(string parameterName)
+		{
+			if (useOldQueryStringFormat)
+				return GetNextPar();
+			else if (!firstParConsumed && _namedParms.TryGetValue(GXEVENT_PARM, out string value))
+			{
+				firstParConsumed = true;
+				return value;
+			}
+			else return GetPar(parameterName);
+		}
+		string NormalizeParameterName(string parameterName)
+		{
+			if (!string.IsNullOrEmpty(parameterName))
+				return parameterName.ToLower();
+			else
+				return parameterName;
 		}
 		public void SetQueryString(string value)
 		{
@@ -2321,12 +2353,20 @@ namespace GeneXus.Http
 		}
 		public void flushBuffer()
 		{
-			
+
 		}
 #if !NETCORE
 		public string formatLink(string jumpURL)
 		{
-			return jumpURL.Trim();
+			return formatLink(jumpURL, Array.Empty<object>(), Array.Empty<string>());
+		}
+		protected string formatLink(string jumpURL, string[] parms, string[] parmsName)
+		{
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName, context.GetScriptPath());
+		}
+		protected string formatLink(string jumpURL, object[] parms, string[] parmsName)
+		{
+			return URLRouter.GetURLRoute(jumpURL, parms, parmsName, context.GetScriptPath());
 		}
 #endif
 		public void Msg(string s)
@@ -2354,20 +2394,20 @@ namespace GeneXus.Http
 		}
 		static public GXWebComponent getWebComponent(Object caller, string nameSpace, string name, Object[] ctorParms)
 		{
-			String objName = name.ToLower();
+			String objName = CleanObjectFromUrl(name.ToLower());
 			GXWebComponent objComponent = null;
 
-			if (!isUrlName(objName))    
+			if (!isUrlName(objName))
 			{
 				try
 				{
-					
+
 					objComponent = (GXWebComponent)ClassLoader.GetInstance(objName, nameSpace + "." + objName, ctorParms);
 				}
 				catch { }
 				try
 				{
-					
+
 					if (objComponent == null)
 #if NETCORE
 						objComponent = (GXWebComponent)ClassLoader.CreateInstance(Assembly.GetEntryAssembly(), nameSpace + "." + objName, ctorParms);
@@ -2379,10 +2419,10 @@ namespace GeneXus.Http
 			}
 			if (objComponent == null)
 			{
-				
+
 				string url = name;
 				Object[] actualParms = null;
-				name = objectFromUrl(url, ctorParms, ref actualParms);
+				name = ObjectSignatureFromUrl(url, ctorParms, ref actualParms);
 
 				if (url.Equals(name))
 					return new GXErrorWebComponent(name);
@@ -2393,15 +2433,25 @@ namespace GeneXus.Http
 			return objComponent;
 		}
 
-		protected static string objectFromUrl(string url, Object[] ctorParms, ref object[] parms)
+		private static string CleanObjectFromUrl(string url)
 		{
+			if (url.StartsWith(URI_SEPARATOR))
+			{
+				int idx = url.LastIndexOf(URI_SEPARATOR);
+				if (idx > 0)
+					return url.Substring(idx + 1);
+			}
+			return url;
+		}
 
-			System.Uri uri = null;
-			string name = "";
-			string parameters = "";
+		protected static string ObjectSignatureFromUrl(string url, Object[] ctorParms, ref object[] parms)
+		{
+			string parameters;
+			string name;
 			try
 			{
-				uri = new System.Uri(url, UriKind.RelativeOrAbsolute);
+				url = CleanObjectFromUrl(url);
+				Uri uri = new System.Uri(url, UriKind.RelativeOrAbsolute);
 				if (!uri.IsAbsoluteUri)
 					uri = new Uri("http://gxhost/" + url);
 				name = uri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
@@ -2413,8 +2463,8 @@ namespace GeneXus.Http
 				  + @"//(?<a0>[^/\?#]*))?(?<p0>[^\?#]*)"
 				  + @"(?<q1>\?(?<q0>[^#]*))?"
 				  + @"(?<f1>#(?<f0>.*))?";
-				System.Text.RegularExpressions.Regex r = new System.Text.RegularExpressions.Regex(regexPattern);
-				System.Text.RegularExpressions.Match m = r.Match(url);
+				Regex r = new Regex(regexPattern);
+				Match m = r.Match(url);
 				name = m.Groups["p0"].Value;
 				parameters = m.Groups["q0"].Value;
 			}
@@ -2441,7 +2491,7 @@ namespace GeneXus.Http
 			{
 				parameters = parameters.Substring(completeName.Length);
 			}
-			parms = parameters.Split(',');
+			parms = HttpHelper.GetParameterValues(parameters);
 			for (int i = 0; i < parms.Length; i++)
 				parms[i] = GXUtil.UrlDecode((string)parms[i]);
 
@@ -2544,6 +2594,10 @@ namespace GeneXus.Http
 
 		private XMLPrefixes currentNamespacePrefixes = new XMLPrefixes();
 
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			currentNamespacePrefixes.SetNamedPrefixesFromReader(rdr);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
 		{
 			currentNamespacePrefixes.SetPrefixesFromReader(rdr);
@@ -2560,6 +2614,11 @@ namespace GeneXus.Http
 		public void PrepareForReuse()
 		{
 			((GxContext)this.context).ClearJavascriptSources();
+		}
+
+		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack)
+		{
+
 		}
 
 		private Diagnostics.GXDebugInfo dbgInfo;
@@ -2607,7 +2666,7 @@ namespace GeneXus.Http
 		public void setparmsfromurl(string url)
 		{
 			Object[] urlParms = null;
-			GXHttpHandler.objectFromUrl(url, new Object[] { context }, ref urlParms);
+			GXHttpHandler.ObjectSignatureFromUrl(url, new Object[] { context }, ref urlParms);
 			if (urlParms != null)
 			{
 				this.setParms(urlParms);

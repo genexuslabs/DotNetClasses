@@ -84,10 +84,16 @@ namespace GeneXus.Data
 		}
 		internal static decimal GetIfxDecimal(IDataReader reader, int i)
 		{
-			decimal result;
-			string ifxDecimal = ClassLoader.Invoke(reader, "GetIfxDecimal", new object[] { i }).ToString();
-			Decimal.TryParse(ifxDecimal, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
-			return result;
+			try
+			{
+				decimal result;
+				string ifxDecimal = ClassLoader.Invoke(reader, "GetIfxDecimal", new object[] { i }).ToString();
+				Decimal.TryParse(ifxDecimal, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
+				return result;
+			}catch(Exception)
+			{
+				return Convert.ToInt64(reader.GetValue(i));
+			}
 		}
 		public override IDataReader GetDataReader(IGxConnectionManager connManager, IGxConnection con, GxParameterCollection parameters, string stmt, ushort fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool hasNested, bool dynStmt)
 		{
@@ -168,6 +174,8 @@ namespace GeneXus.Data
 				case GXType.Int32: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Integer");
 				case GXType.Int64: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Int8");
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Text");
+				case GXType.DateTime2: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "DateTime");
+				case GXType.UniqueIdentifier:return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Char");
 				default: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, type.ToString());
 			}
 		}
@@ -262,6 +270,10 @@ namespace GeneXus.Data
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT CURRENT YEAR TO SECOND FROM informix.SYSTABLES WHERE tabname = 'systables'";
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return "SELECT CURRENT YEAR TO FRACTION(3) FROM informix.SYSTABLES WHERE tabname = 'systables'";
 		}
 		public override string GetServerVersionStmt()
 		{

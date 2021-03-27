@@ -1,4 +1,4 @@
-﻿using GeneXus.Application;
+using GeneXus.Application;
 using GeneXus.Utils;
 using Jayrock.Json;
 using System;
@@ -24,9 +24,7 @@ namespace GeneXus.SD.Store
 			JObject _jsonArr = null;
 			if (!string.IsNullOrEmpty(s))
 			{
-				StringReader sr = new StringReader(s);
-				JsonTextReader tr = new JsonTextReader(sr);
-				_jsonArr = (JObject)(tr.DeserializeNext());
+				_jsonArr = JSONHelper.ReadJSON<JObject>(s);
 			}
 			return _jsonArr;
 		}

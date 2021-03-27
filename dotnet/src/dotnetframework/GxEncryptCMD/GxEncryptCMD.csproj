@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net46</TargetFramework>
+		<RootNamespace>GxEncryptCMD</RootNamespace>
+		<OutputType>Exe</OutputType>
+		<AssemblyName>GxEncryptCMD</AssemblyName>
+		<PackageTags>Encrypt64 Decrypt64</PackageTags>
+		<PackageId>GeneXus.EncryptCMD</PackageId>
+	</PropertyGroup>
+
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" ></ProjectReference>
+	</ItemGroup>
+
+</Project>

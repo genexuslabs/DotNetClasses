@@ -149,7 +149,7 @@ namespace GX
 #endif
 			public static List<string> GetAddress(String location)
         {
-            String urlString = MAPS_URI + "geocode/json?latlng=" + location + "&sensor=false";
+			String urlString = MAPS_URI + "geocode/json?latlng=" + GXUtil.UrlEncode(location) + "&sensor=false";
 			String ApiKey = "";
 			if (Config.GetValueOf("GoogleApiKey", out ApiKey))
 			{
@@ -163,9 +163,7 @@ namespace GX
             {
                 if (!string.IsNullOrEmpty(response))
                 {
-                    StringReader sr = new StringReader(response);
-                    JsonTextReader tr = new JsonTextReader(sr);
-                    JObject json = (JObject)(tr.DeserializeNext());
+					JObject json = JSONHelper.ReadJSON<JObject>(response);
                     if (json.Contains("results"))
                     {
                         JArray results = (JArray)json["results"];
@@ -180,7 +178,7 @@ namespace GX
                     }
                 }
             }
-            catch (JsonException ex) 
+            catch (Exception ex) 
             {
                 GXLogging.Error(log, "getAddress error json:" + response, ex);
             }
@@ -217,9 +215,7 @@ namespace GX
             {
                 if (!string.IsNullOrEmpty(response))
                 {
-                    StringReader sr = new StringReader(response);
-                    JsonTextReader tr = new JsonTextReader(sr);
-                    JObject json = (JObject)(tr.DeserializeNext());
+					JObject json = JSONHelper.ReadJSON<JObject>(response);
                     if (json.Contains("results"))
                     {
                         JArray results = (JArray)json["results"];
@@ -243,7 +239,7 @@ namespace GX
                     }
                 }
             }
-            catch (JsonException ex) 
+            catch (Exception ex) 
             {
                 GXLogging.Error(log, "getLocation error json:" + response, ex);
             }

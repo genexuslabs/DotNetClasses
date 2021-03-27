@@ -348,19 +348,21 @@ namespace GeneXus.Http
 				string theme = this.GetNextPar();
 				this.context.setAjaxCallMode();
 				this.context.SetDefaultTheme(theme);
-				string imagePath = this.context.GetImagePath(imageGUID, kbId, theme);
-				if (!string.IsNullOrEmpty(imagePath))
+				if (Guid.TryParse(imageGUID, out Guid sanitizedGuid))
 				{
-					this.context.HttpContext.Response.Clear();
-					this.context.HttpContext.Response.ContentType = MediaTypesNames.TextPlain;
+					string imagePath = this.context.GetImagePath(sanitizedGuid.ToString(), kbId, theme);
+					if (!string.IsNullOrEmpty(imagePath))
+					{
+						this.context.HttpContext.Response.Clear();
+						this.context.HttpContext.Response.ContentType = MediaTypesNames.TextPlain;
 #if NETCORE
-					this.context.HttpContext.Response.Write(imagePath);
+						this.context.HttpContext.Response.Write(imagePath);
 #else
-					this.context.HttpContext.Response.Output.WriteLine(imagePath);
-					
-					this.context.HttpContext.Response.End();
+						this.context.HttpContext.Response.Output.WriteLine(imagePath);
+						this.context.HttpContext.Response.End();
 #endif
-					return;
+						return;
+					}
 				}
 			}
 			this.SendResponseStatus(404, "Resource not found");
@@ -402,18 +404,20 @@ namespace GeneXus.Http
 						GxFile gxFile = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
 
 						gxFile.Create(hpf.InputStream);
+						GXFileWatcher.Instance.AddTemporaryFile(gxFile, localHttpContext);
 
-						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
+						string uri = gxFile.GetURI();
+						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);
 
-                        r.Add(new UploadFile()
+						r.Add(new UploadFile()
 						{
 							name = fileName,
 							size = gxFile.GetLength(),
-							url = gxFile.GetPath(),
+							url = url,
 							type = context.GetContentType(ext),
 							extension = ext,
-							thumbnailUrl = gxFile.GetPath(),
-                            path = savedFileName
+							thumbnailUrl = url,
+							path = uri
 						});
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
@@ -430,7 +434,7 @@ namespace GeneXus.Http
                     GxFile file = new GxFile(Preferences.getTMP_MEDIA_PATH(), fileName);
                     file.Create(istream);
 
-					Jayrock.Json.JObject obj = new Jayrock.Json.JObject();
+					JObject obj = new JObject();
 					fileName = file.GetURI();
                   
                     String fileGuid =  Guid.NewGuid().ToString("N");
@@ -478,14 +482,6 @@ namespace GeneXus.Http
 				return GAMSecurityLevel.SecurityObject;
 			}
 		}
-
-		protected override string IntegratedSecurityPermissionName
-		{
-			get
-			{
-				return base.IntegratedSecurityPermissionName;
-			}
-		}
 	}
 	public class UploadFilesResult
 	{
@@ -516,7 +512,7 @@ namespace GeneXus.Http
 				GxSecurityProvider.Provider.oauthlogout(context);
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 				localHttpContext.Response.StatusCode = 200;
-				localHttpContext.Response.Write(new Jayrock.Json.JObject().ToString());
+				localHttpContext.Response.Write(new JObject().ToString());
 				context.CloseConnections();
 			}
 			catch (Exception e)
@@ -569,14 +565,6 @@ namespace GeneXus.Http
 			get
 			{
 				return GAMSecurityLevel.SecurityObject;
-			}
-		}
-
-		protected override string IntegratedSecurityPermissionName
-		{
-			get
-			{
-				return base.IntegratedSecurityPermissionName;
 			}
 		}
 	}
@@ -661,12 +649,12 @@ namespace GeneXus.Http
 					if (result != null)
 					{
 						string messagePermission = result.Description;
+						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, result.Code, messagePermission);
 						if (GXUtil.ContainsNoAsciiCharacter(messagePermission))
 						{
 							messagePermission = string.Format("{0}{1}", GxRestPrefix.ENCODED_PREFIX, Uri.EscapeDataString(messagePermission));
 						}
-						localHttpContext.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), result.Code, messagePermission));
-						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, result.Code, messagePermission);
+						localHttpContext.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, messagePermission));
 					}
 				}
 				else
@@ -678,7 +666,7 @@ namespace GeneXus.Http
 						else
 							localHttpContext.Response.StatusCode = 200;
 						localHttpContext.Response.AddHeader("location", URL);
-						Jayrock.Json.JObject jObj = new Jayrock.Json.JObject();
+						JObject jObj = new JObject();
 						jObj.Put("Location", URL);
 						localHttpContext.Response.Write(jObj.ToString());
 					}

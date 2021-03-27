@@ -5,11 +5,13 @@ using log4net;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Serialization;
 
 namespace GeneXus.Utils
 {
+
 	[Serializable]
 	public class GXBaseCollection<T> : List<T>, IGxXMLSerializable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable where T : GxUserType, IGxXMLSerializable, IGxJSONAble, new()
 	{
@@ -126,6 +128,8 @@ namespace GeneXus.Utils
 		}
 		public virtual void ClearCollection()
 		{
+			if (_jsonArr!=null)
+				_jsonArr.Clear();
 			base.Clear();
 		}
 		public virtual object Clone()
@@ -233,6 +237,7 @@ namespace GeneXus.Utils
 			while (oReader.LocalName == itemName && currError > 0)
 			{
 				T currObject = new T();
+				currObject.context = this.context;
 				string xml = GxUserType.UpdateNodeDefaultNamespace(oReader.ReadRawXML(), null, false, this.GetPrefixesInContext());
 				currObject.FromXml(xml, itemName, oReader.NamespaceURI);
 				Add(currObject);
@@ -328,6 +333,10 @@ namespace GeneXus.Utils
 		}
 		private XMLPrefixes currentNamespacePrefixes = new XMLPrefixes();
 
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			currentNamespacePrefixes.SetNamedPrefixesFromReader(rdr);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
 		{
 			currentNamespacePrefixes.SetPrefixesFromReader(rdr);
@@ -350,9 +359,11 @@ namespace GeneXus.Utils
 			}
 			set
 			{
-				base.Clear();
-				foreach (T item in value)
-					this.Add(item);
+				if (this != value) { 
+					base.Clear();
+					foreach (T item in value)
+						this.Add(item);
+				}
 			}
 		}
 		public virtual void Sort(string order)
@@ -361,7 +372,7 @@ namespace GeneXus.Utils
 		}
 		public String ToJavascriptSource(bool includeState)
 		{
-			return GetJSONObject(includeState).ToString();
+			return JSONHelper.WriteJSON<dynamic>(GetJSONObject(includeState)); 
 		}
 		public String ToJavascriptSource()
 		{
@@ -369,7 +380,7 @@ namespace GeneXus.Utils
 		}
 		public void ToJSON(bool includeState)
 		{
-			((JArray)jsonArr).Clear();
+			jsonArr.Clear();
 			for (int i = 0; i < this.Count; i++)
 			{
 				AddObjectProperty(this[i], includeState);
@@ -411,7 +422,7 @@ namespace GeneXus.Utils
 			bool result = _jsonArr != null;
 			try
 			{
-				FromJSONObject((JArray)jsonArr);
+				FromJSONObject(jsonArr);
 				return result;
 			}
 			catch (Exception ex)
@@ -459,7 +470,7 @@ namespace GeneXus.Utils
 			}
 			else if (prop is DateTime)
 			{
-				jarray.Add(DateTimeUtil.TToC2((DateTime)prop));
+				jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
 			}
 			else
 			{
@@ -476,19 +487,14 @@ namespace GeneXus.Utils
 			return GetJSONObject(true);
 		}
 
-		public virtual void FromJSONObject(IJsonFormattable obj)
+		public virtual void FromJSONObject(dynamic obj)
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
 			for (int i = 0; i < jobj.Length; i++)
 			{
 				T obj1 = (T)Activator.CreateInstance(typeof(T), new object[] { context });
-
-				JArray jobji = jobj[i] as JArray;
-				if (jobji != null)
-					obj1.FromJSONObject(jobji);
-				else
-					obj1.FromJSONObject((JObject)jobj[i]);
+				obj1.FromJSONObject(jobj[i]);
 				Add(obj1);
 			}
 		}
@@ -641,7 +647,6 @@ namespace GeneXus.Utils
 		}
 		private bool IsEqualComparedByKey(T item, params object[] key)
 		{
-#if !NETCORE
 			try
 			{
 				Object[][] itemKey = item.GetBCKey();
@@ -668,9 +673,6 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Error in IsEqualComparedByKey", ex);
 				return false;
 			}
-#else
-			return false;
-#endif
 		}
 	}
 }

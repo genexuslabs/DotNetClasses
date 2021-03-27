@@ -62,7 +62,7 @@ namespace GeneXus.Http
 	public class HttpAjaxContext : IHttpAjaxContext
 	{
         private IGxContext _context;
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.ExpressionEvaluator));
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(HttpAjaxContext));
 		private Stack cmpContents = new Stack();
 		private GXAjaxCommandCollection commands = new GXAjaxCommandCollection();
 		private JArray _AttValues = new JArray();
@@ -190,11 +190,12 @@ namespace GeneXus.Http
 				{
 					WebComponents.Put(CmpId, "");
 				}
-				catch (JsonException)
+				catch (Exception ex)
 				{
+					GXLogging.Error(log, "ajax_rspStartCmp error", ex);
 				}
 			}
-            context.CmpDrawLvl++;
+			context.CmpDrawLvl++;
             cmpContents.Push(new GXCmpContent(CmpId));
 		}
 
@@ -211,12 +212,13 @@ namespace GeneXus.Http
 						((GXCmpContent)cmpContents.Peek()).Content += cmp.Content;
 				}
 			}
-			catch (JsonException)
+			catch (Exception ex)
 			{
+				GXLogging.Error(log, "ajax_rspEndCmp error", ex);
 			}
 		}
 
-        private JObject GetGxObject(JArray array, String CmpContext, bool IsMasterPage)
+		private JObject GetGxObject(JArray array, String CmpContext, bool IsMasterPage)
         {
             try
             {
@@ -235,10 +237,12 @@ namespace GeneXus.Http
 				array.Add(obj);
                 return obj;
             }
-            catch (JsonException)
-            {
-            }
-            return null;
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "GetGxObject error", ex);
+			}
+
+			return null;
         }        
 
         public void ajax_rsp_assign_attri(String CmpContext, bool IsMasterPage, String AttName, Object AttValue)
@@ -255,8 +259,9 @@ namespace GeneXus.Http
 							obj.Put(AttName, AttValue);
 						}
 					}
-					catch (JsonException)
+					catch (Exception ex)
 					{
+						GXLogging.Error(log, "ajax_rsp_assign_attri error", ex);
 					}
 				}
 			}
@@ -288,8 +293,9 @@ namespace GeneXus.Http
 							}
 						}
 					}
-					catch (JsonException)
+					catch (Exception ex)
 					{
+						GXLogging.Error(log, "ajax_rsp_assign_sdt_attri error", ex);
 					}
 				}
 			}
@@ -326,8 +332,9 @@ namespace GeneXus.Http
 #endif
 					HiddenValues.Put(AttName, AttValue);
 			}
-			catch (JsonException)
+			catch (Exception ex)
 			{
+				GXLogging.Error(log, "ajax_rsp_assign_hidden error", ex);
 			}
 		}
 		public void ajax_rsp_assign_hidden_sdt(String SdtName, Object SdtObj)
@@ -349,8 +356,9 @@ namespace GeneXus.Http
 					}
 				}
 			}
-			catch (JsonException)
+			catch (Exception ex)
 			{
+				GXLogging.Error(log, "ajax_rsp_assign_hidden_sdt error", ex);
 			}
 
 		}
@@ -372,8 +380,9 @@ namespace GeneXus.Http
 					obj.Put(Control, ctrlProps);
 				}
 			}
-			catch (JsonException)
+			catch (Exception ex)
 			{
+				GXLogging.Error(log, "GetControlProps error", ex);
 			}
 			return ctrlProps; 
 		}
@@ -420,8 +429,9 @@ namespace GeneXus.Http
 							ajax_rsp_assign_hidden(Control + "_" + Property.Substring(0, 1) + Property.Substring(1).ToLower(), Value);
 						}
 					}
-					catch (JsonException)
+					catch (Exception ex)
 					{
+						GXLogging.Error(log, "ajax_rsp_assign_prop error", ex);
 					}
 				}
 			}
@@ -443,10 +453,11 @@ namespace GeneXus.Http
             {
                 Grids.Add(((IGxJSONAble)GridObj).GetJSONObject());
             }
-            catch (JsonException)
-            {
-            }
-        }
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "ajax_rsp_assign_grid error", ex);
+			}
+		}
 
 		private bool ShouldLogAjaxControlProperty(string Property)
 		{
@@ -474,9 +485,10 @@ namespace GeneXus.Http
                 obj.Put("reportFile", reportFile);
                 obj.Put("printerRule", printerRule);
             }
-            catch (JsonException)
-            {
-            }
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "PrintReportAtClient error", ex);
+			}
 			commands.AppendCommand(new GXAjaxCommand("print", obj));
 		}
 
@@ -520,10 +532,11 @@ namespace GeneXus.Http
                 jsonCmdWrapper.Put("gxContainer", Container.GetJSONObject());
 
             }
-            catch (JsonException)
-            {
-            }
-            return jsonCmdWrapper.ToString();
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "getJSONContainerResponse error", ex);
+			}
+			return jsonCmdWrapper.ToString();
         }
 
         internal string getJSONResponse(string cmpContext)
@@ -554,10 +567,11 @@ namespace GeneXus.Http
 					jsonCmdWrapper.Put("gxCommands", commands.JSONArray);
 				}
 			}
-			catch (JsonException) 
+			catch (Exception ex)
 			{
+				GXLogging.Error(log, "getJSONResponse error", ex);
 			}
-            return jsonCmdWrapper.ToString();
+			return jsonCmdWrapper.ToString();
 		}
 
 		public static JArray GetParmsJArray(Object[] parms)
@@ -598,7 +612,7 @@ namespace GeneXus.Http
 					if (!string.IsNullOrEmpty(clientKey))
 					{
 						bool correctKey = false;
-						clientKey = CryptoImpl.DecryptRijndael(clientKey, CryptoImpl.GX_AJAX_PRIVATE_KEY, out correctKey);
+						clientKey = CryptoImpl.DecryptRijndael(CryptoImpl.GX_AJAX_PRIVATE_IV + clientKey, CryptoImpl.GX_AJAX_PRIVATE_KEY, out correctKey);
 						if (correctKey)
 						{
 							context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY, clientKey);
@@ -668,12 +682,7 @@ namespace GeneXus.Http
                     {
                         state = Encoding.UTF8.GetString(Convert.FromBase64String(state));
                     }
-                    JsonReader reader = new JsonTextReader(new StringReader(state));
-                    JsonToken token = reader.ReadToken();
-                    if (token == JsonToken.Object)
-                    {
-                        return (JObject)reader.DeserializeNext();
-                    }
+					return JSONHelper.ReadJSON<JObject>(state); 
                 }
             }
             catch (Exception e)
@@ -859,7 +868,7 @@ namespace GeneXus.Http
 			return GetJSONObject();
 		}
 
-		public void FromJSONObject(IJsonFormattable obj)
+		public void FromJSONObject(dynamic obj)
 		{
 			throw new Exception("The method or operation is not implemented.");
 		}

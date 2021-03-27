@@ -310,7 +310,11 @@ public class GxFileInfo : IGxFileInfo
     {
         filename = FileUtil.NormalizeSource(filename, _baseDirectory);
 
-        return new GxFileInfo(_file.CopyTo(filename, overwrite));
+		FileInfo targetFile = new FileInfo(filename);
+		if (!targetFile.Directory.Exists)
+			targetFile.Directory.Create();
+
+		return new GxFileInfo(_file.CopyTo(filename, overwrite));
     }
 
     public FileStream Create()
@@ -694,7 +698,10 @@ public class GxFile
 			{
 				return _file.Separator;
 			}
-            return "\\";
+			else
+			{
+				return Path.DirectorySeparatorChar.ToString();
+			}
         }
     }
     public string Source
@@ -1084,33 +1091,16 @@ public class GxFile
     public string XsltApply(string xslFileName)
     {
 #if !NETCORE
-
-        string s;
         XmlReaderSettings readerSettings = new XmlReaderSettings();
         readerSettings.CheckCharacters = false;
         try
         {
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-            using (StreamReader streamReader = new StreamReader(_file.FullName))
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-            {
-                using (XmlReader xmlReader = XmlReader.Create(streamReader, readerSettings))
-                {
-                    using (StringWriter textWriter = new StringWriter())
-                    {
-                        var transform = new XslCompiledTransform();
-                        transform.Load(FileUtil.NormalizeSource(xslFileName, _baseDirectory), new XsltSettings(true, true), new XmlUrlResolver());
-                        transform.Transform(xmlReader, new XsltArgumentList(), textWriter);
-                        s = textWriter.ToString();
-                    }
-                }
-            }
-            return s;
+            return GxXsltImpl.Apply(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
         catch (Exception ex) //ArgumentException invalid characters in xml, XslLoadException An item of type 'Attribute' cannot be constructed within a node of type 'Root'.
         {
             GXLogging.Warn(log, "XsltApply Error", ex);
-            return XsltApplyOld(xslFileName);
+            return GxXsltImpl.ApplyOld(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
 #else
 		return string.Empty;
@@ -1153,7 +1143,7 @@ public class GxFile
         else
         {
             string sFilePath = (_file == null) ? "" : _file.DirectoryName;
-            Rename(sFilePath + "\\" + FileUtil.GetFileName(FileName) + "." + ext);
+            Rename(Path.Combine(sFilePath, FileUtil.GetFileName(FileName) + "." + ext));
         }
     }
     public string GetPath()

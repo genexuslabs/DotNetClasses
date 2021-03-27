@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-		<PackageTags>Memcached</PackageTags>
-		<PackageId>GeneXus.Memcached.Core</PackageId>
-	</PropertyGroup>
+	<PackageTags>Memcached</PackageTags>
+	<PackageId>GeneXus.Memcached.Core</PackageId>
+</PropertyGroup>
   <PropertyGroup>
   	<AppDesignerFolder>Properties</AppDesignerFolder>
   	<SignAssembly>false</SignAssembly>
@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.11" />
   </ItemGroup>
 
   <ItemGroup>

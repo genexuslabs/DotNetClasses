@@ -43,23 +43,24 @@ namespace GeneXus.HttpHandlerFactory
 												{"gx_valid_service",typeof(GXValidService)},
 												{"gxmulticall",typeof(GXMultiCall)}};
 		static Dictionary<string, string> _aspxRewrite = new Dictionary<string, string>(){
-												{"oauth/access_token","gxoauthaccesstoken"},
-												{"oauth/logout","gxoauthlogout"},
-												{"oauth/userinfo","gxoauthuserinfo"},
-												{"oauth/gam/signin","agamextauthinput"},
-												{"oauth/gam/callback","agamextauthinput"},
-												{"oauth/gam/access_token","agamoauth20getaccesstoken"},
-												{"oauth/gam/userinfo","agamoauth20getuserinfo"},
-												{"oauth/gam/signout","agamextauthinput"},
+												{"oauth/access_token","gxoauthaccesstoken.aspx"},
+												{"oauth/logout","gxoauthlogout.aspx"},
+												{"oauth/userinfo","gxoauthuserinfo.aspx"},
+												{"oauth/gam/signin","agamextauthinput.aspx"},
+												{"oauth/gam/callback","agamextauthinput.aspx"},
+												{"oauth/gam/access_token","agamoauth20getaccesstoken.aspx"},
+												{"oauth/gam/userinfo","agamoauth20getuserinfo.aspx"},
+												{"oauth/gam/signout","agamextauthinput.aspx"},
 												{"saml/gam/signin","Saml2/SignIn"},
-												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws"},
+												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws.aspx"},
 												{"saml/gam/signout","Saml2/Logout"},
-												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken"},
-												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken"},
-												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20"},
-												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20"},
-												{"oauth/gam/v2.0/RequestTokenAndUserinfo","aGAMSSORestRequestTokenAndUserInfo_v20"}};
+												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken.aspx"},
+												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
+												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
+												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
+												{"oauth/gam/v2.0/requesttokenanduserinfo","aGAMSSORestRequestTokenAndUserInfo_v20.aspx"}};
 		private const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
+		private const string GXFLOW_NSPACE = "GXflow.Programs";
 		private static List<string> GxNamespaces;
 		public HandlerFactory(RequestDelegate next, IOptions<AppSettings> appSettings)
 		{
@@ -74,12 +75,15 @@ namespace GeneXus.HttpHandlerFactory
 
 		public async Task Invoke(HttpContext context)
 		{
+			IHttpHandler handler=null;
+			var url = string.Empty;
 			try
 			{
+				//context.Request.EnableBuffering(); does not work in 3.1
 				context.NewSessionCheck();
-				var url = context.Request.Path.Value;
+				url = context.Request.Path.Value;
 
-				IHttpHandler handler = GetHandler(context, context.Request.Method, ObjectUrl(context.Request.Path.Value, _basePath), string.Empty);
+				handler = GetHandler(context, context.Request.Method, ObjectUrl(context.Request.Path.Value, _basePath), string.Empty);
 				context.Response.OnStarting(() =>
 				{
 					if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(".aspx") && string.IsNullOrEmpty(context.Response.ContentType))
@@ -96,7 +100,12 @@ namespace GeneXus.HttpHandlerFactory
 			}
 			catch (Exception ex)
 			{
+				GXLogging.Error(log, $"Handler Factory failed creating {url}", ex);
 				await Task.FromException(ex);
+			}
+			finally
+			{
+				handler?.ControlOutputWriter?.Flush();
 			}
 		}
 		public static bool IsAspxHandler(string path, string basePath)
@@ -107,11 +116,12 @@ namespace GeneXus.HttpHandlerFactory
 		private static string ObjectUrl(string requestPath, string basePath) 
 		{
 			var lastSegment = requestPath;
-			if (!string.IsNullOrEmpty(basePath) && lastSegment.StartsWith(basePath))
+			if (!string.IsNullOrEmpty(basePath) && lastSegment.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
 			{
 				lastSegment = lastSegment.Remove(0, basePath.Length);
 			}
-			lastSegment = lastSegment.TrimStart('/');
+			lastSegment = lastSegment.TrimStart('/').ToLower();
+			GXLogging.Debug(log, "ObjectUrl:", lastSegment);
 			if (_aspxRewrite.ContainsKey(lastSegment))
 			{
 				return _aspxRewrite[lastSegment];
@@ -120,7 +130,9 @@ namespace GeneXus.HttpHandlerFactory
 		}
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
 		{
-			IHttpHandler handlerToReturn=null;
+			GXLogging.Debug(log, "GetHandler url:", url);
+
+			IHttpHandler handlerToReturn =null;
 
 			var idx = url.LastIndexOf('.');
 			string cname0;
@@ -142,12 +154,15 @@ namespace GeneXus.HttpHandlerFactory
                 cname = cname.Substring(0, cname.Length - 3);
                 assemblyName = cname;
             }
-
 			string mainNamespace = null;
 			string className;
 			if (cname.StartsWith("agxpl_", StringComparison.OrdinalIgnoreCase) || cname.Equals("gxqueryviewerforsd", StringComparison.OrdinalIgnoreCase))
 			{
 				className = $"{QUERYVIEWER_NAMESPACE}.{cname}";
+			}
+			else if (Preferences.GxpmEnabled && (cname.StartsWith("awf", StringComparison.OrdinalIgnoreCase) || cname.StartsWith("wf", StringComparison.OrdinalIgnoreCase) || cname.StartsWith("apwf", StringComparison.OrdinalIgnoreCase)))
+			{
+				className = $"{GXFLOW_NSPACE}.{cname}";
 			}
 			else
 			{

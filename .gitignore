@@ -348,3 +348,7 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/dotnet/src/dotnetcore/GxDataInitialization/GXDataInitialization.deps.json
+/dotnet/src/dotnetcore/GxNetCoreStartup/GxNetCoreStartup.deps.json
+/dotnet/src/dotnetcore/Reor/Reor.deps.json
+build

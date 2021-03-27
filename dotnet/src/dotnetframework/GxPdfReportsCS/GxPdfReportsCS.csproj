@@ -10,11 +10,15 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="iTextSharp" Version="5.5.13" />
-		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="log4net" Version="2.0.11" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="itextsharp">
+	    <HintPath>..\libs\itextsharp.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 
 </Project>

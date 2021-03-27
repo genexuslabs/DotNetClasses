@@ -1,12 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Jayrock.Json;
+
 using GeneXus.Utils;
 using System.IO;
 using System.Globalization;
 using GeneXus.Configuration;
 using GX;
+using Jayrock.Json;
 
 namespace GeneXus.MapServices
 {
@@ -113,7 +114,7 @@ namespace GeneXus.MapServices
 		{
 			AddObjectProperty("Location", Location, false);
 			AddObjectProperty("Description", Description, false);
-			String STime = GeneXus.Utils.DateTimeUtil.TToC2(Time);
+			String STime = GeneXus.Utils.DateTimeUtil.TToC2(Time, false);
 			AddObjectProperty("Time", STime, false);
 			AddObjectProperty("Precision", Precision, false);
 			AddObjectProperty("Heading", Heading, false);
@@ -203,11 +204,9 @@ namespace GeneXus.MapServices
 		{
 			Directions directionsCalculated = new Directions();
 			directionsCalculated.Routes = new GxSimpleCollection<Route>();
-			JsonReader reader = new JsonTextReader(new StringReader(response));
-			JsonToken token = reader.ReadToken();
-			if (token == JsonToken.Object)
+			JObject objResponse = JSONHelper.ReadJSON<JObject>(response);
+			if (objResponse != null)
 			{
-				JObject objResponse = (JObject)reader.DeserializeNext();
 				JArray routes = (JArray) objResponse["routes"];
 				foreach (JObject r in routes)
 				{

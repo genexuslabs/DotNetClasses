@@ -544,25 +544,22 @@ namespace GeneXus.Data.ADO
 			}
 		}
 
-		public void BeforeCommit()
+		public void FlushBatchCursors(GXBaseObject obj)
 		{
-#if !NETCORE
 			ICollection adapters = ConnectionCache.GetDataAdapters();
 			foreach (DbDataAdapterElem elem in adapters)
 			{
-				if (elem.DataTable.Rows.Count > 0)
+				if (elem.DataTable.Rows.Count > 0 && (obj==null || elem.OnCommitEventInstance==obj))
 				{
 					elem.OnCommitEventInstance.GetType().GetMethod(elem.OnCommitEventMethod, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(
 						elem.OnCommitEventInstance, null);
+					elem.DataTable.Rows.Clear();
 				}
-				elem.DataTable.Rows.Clear();
 			}
-#endif
 		}
 
 		public void BeforeRollback()
 		{
-#if !NETCORE
 			ICollection adapters = ConnectionCache.GetDataAdapters();
 			foreach (DbDataAdapterElem elem in adapters)
 			{
@@ -571,7 +568,6 @@ namespace GeneXus.Data.ADO
 					elem.DataTable.Rows.Clear();
 				}
 			}
-#endif
 		}
 
         public IDbTransaction commitTransaction()
@@ -1083,28 +1079,44 @@ namespace GeneXus.Data.ADO
 		{
 			get{ return connectionCache.CountPreparedCommand();}
 		}
+
+		public DateTime ServerDateTimeMs
+		{
+			get
+			{
+				return ServerDateTimeEx(true);
+			}
+		}
+
 		public DateTime ServerDateTime
 		{
 			get
 			{
-				string stmt = m_dataRecord.GetServerDateTimeStmt(this);
-				if (string.IsNullOrEmpty(stmt))
-					return DateTime.Now; 
-				else
+				return ServerDateTimeEx(false);
+			}
+		}
+		public DateTime ServerDateTimeEx(bool hasMiliseconds)
+		{		
+			string stmt = m_dataRecord.GetServerDateTimeStmt(this);
+			if (string.IsNullOrEmpty(stmt))
+			{
+				return DateTime.Now;
+			}
+			else
+			{
+				GxCommand cmd = new GxCommand(m_dataRecord, stmt, dataStore, 0, false, true, null);
+				cmd.ErrorMask = GxErrorMask.GX_NOMASK | GxErrorMask.GX_MASKLOOPLOCK;
+				IDataReader reader;
+				cmd.FetchData(out reader);
+				DateTime d = DateTimeUtil.NullDate();
+				if (reader != null)
 				{
-					GxCommand cmd = new GxCommand(m_dataRecord, stmt, dataStore, 0, false, true, null);
-					cmd.ErrorMask = GxErrorMask.GX_NOMASK | GxErrorMask.GX_MASKLOOPLOCK;
-					IDataReader reader;
-					cmd.FetchData(out reader);
-                    DateTime d = DateTimeUtil.NullDate();
-                    if (reader != null)
-                    {
-                        d = reader.GetDateTime(0);
-                        d = DateTimeUtil.ResetMilliseconds(d);
-                        reader.Close();
-                    }
-                    return d;
+					d = reader.GetDateTime(0);
+					if (!hasMiliseconds)
+						d = DateTimeUtil.ResetMilliseconds(d);
+					reader.Close();
 				}
+				return d;
 			}
 		}
         public string ServerVersion
@@ -1270,9 +1282,34 @@ namespace GeneXus.Data.ADO
 		}
 #endregion
 	}
-
+	public class ParDef
+	{
+		public string Name { get; set; }
+		public string Tbl { get; set; }
+		public string Fld { get; set; }
+		public GXType GxType { get; set; }
+		public int Size { get; set; }
+		public int Scale { get; set; }
+		public int ImgIdx { get; set; }
+		public bool Nullable { get; set; }
+		public bool ChkEmpty { get; set; }
+		public bool Return { get; set; }
+		public bool InDB { get; set; }
+		public bool AddAtt { get; set; }
+		public bool Preload { get; set; }
+		public bool InOut { get; set; }
+		public bool Out { get; set; }
+		public ParDef(string name, GXType type, int size, int scale)
+		{
+			Name = name;
+			GxType = type;
+			Size = size;
+			Scale = scale;
+		}
+	}
 	public class GxCommand: IGxDbCommand
 	{
+		internal List<ParDef> ParmDefinition;
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxCommand));
 		string stmt;
         String stmtId;
@@ -1323,6 +1360,7 @@ namespace GeneXus.Data.ADO
 			timeToLive=GetTimeToLive(ttl);
 			hasNested=hasNestedCursor;
 			_errorHandler = errorHandler;
+			ParmDefinition = new List<ParDef>();
 			try
 			{
 				dataStore = ds;
@@ -1580,7 +1618,6 @@ namespace GeneXus.Data.ADO
 
 		public string ExecuteDataSet()
 		{
-#if !NETCORE
 			bool retry = true;
 			int retryCount=0;
 			while (retry)
@@ -1620,7 +1657,6 @@ namespace GeneXus.Data.ADO
 					}
 				}
 			}
-#endif
 			return "";
 		}
 
@@ -1760,21 +1796,24 @@ namespace GeneXus.Data.ADO
 				return parms; 
 		}
 #endif
-        public int ExecuteBatchQuery()
+		public int ExecuteBatchQuery()
         {
-#if !NETCORE
             try
             {
                 int res = 0;
                 if (da != null)
                 {
-                    GXLogging.Debug(log, "Start GxCommand.ExecuteBatchQuery: Parameters ", DatatableParameters);
-                    con = GxConnectionManager.Instance.SetAvailable(handle, dataRecord.DataSource, false);
+#if !NETCORE
+					GXLogging.Debug(log, "Start GxCommand.ExecuteBatchQuery: Parameters ", DatatableParameters);
+#endif
+					con = GxConnectionManager.Instance.SetAvailable(handle, dataRecord.DataSource, false);
                     con.CurrentStmt = stmt;
                     con.MonitorEnter();
 					con.InternalConnection.SetSavePoint(Transaction, stmtId);
 					dataRecord.SetAdapterInsertCommand(da, con, stmt, parameters);
-                    da.Adapter.ContinueUpdateOnError = false;
+#if !NETCORE
+					da.Adapter.ContinueUpdateOnError = false;
+#endif
                     res = dataRecord.BatchUpdate(da);
 
 					con.InternalConnection.ReleaseSavePoint(Transaction, stmtId);
@@ -1805,10 +1844,6 @@ namespace GeneXus.Data.ADO
                     errorRecordIndex = -1;
                 }
             }
-#else
-            errorRecords = new List<object>();
-            return 0;
-#endif
         }
 
         public int ReadNextErrorRecord()
@@ -1961,18 +1996,14 @@ namespace GeneXus.Data.ADO
 		}
         public void OnCommitEvent(object instance, string method)
         {
-#if !NETCORE
             if (da != null)
             {
                 da.OnCommitEventInstance = instance;
                 da.OnCommitEventMethod = method;
             }
-#endif
         }
         public void AddRecord(Object[] execParms)
         {
-#if !NETCORE
-
             if (da != null)
             {
 				int parameterCount = parameters.Count;
@@ -1996,7 +2027,6 @@ namespace GeneXus.Data.ADO
                 da.BlockValues.Add(parms);
                 da.DataTable.Rows.Add(parms);
             }
-#endif
         }
 
 		private string OriginalCmd = null;
@@ -2165,6 +2195,8 @@ namespace GeneXus.Data.ADO
         {
             if (parameters.Count>0)
                 parameters.Clear();
+			if (ParmDefinition.Count > 0)
+				ParmDefinition.Clear();
         }
 		public void AddParameter( string name, Object dbtype, int gxlength, int gxdec)
 		{
@@ -2247,25 +2279,17 @@ namespace GeneXus.Data.ADO
 		{
             get
             {
-#if !NETCORE
                 if (da != null) return da.UpdateBatchSize;
                 else return 0;
-#else
-                return 0;
-#endif
             }
 		}
         public int RecordCount
         {
             get
             {
-#if !NETCORE
                 if (da != null && da.DataTable.Rows != null)
                     return da.DataTable.Rows.Count;
                 else return 0;
-#else
-                return 0;
-#endif
             }
         }
         public int BlockSize
@@ -2358,21 +2382,15 @@ namespace GeneXus.Data.ADO
         {
             if (!dataRecord.AllowsDuplicateParameters)
             {
-                int count = parameters.Count;
-                List<String> parms = new List<String>();
-                GxParameterCollection newParameters = new GxParameterCollection();
-                for (int j = 0; j < count; j++)
-                {
-                    if (!parms.Contains(parameters[j].ParameterName))
-                    {
-                        newParameters.Add(parameters[j]);
-                        parms.Add(parameters[j].ParameterName);
-                    }
-                }
-                parameters = newParameters;
+				parameters = parameters.Distinct();
             }
         }
-    }
+
+		internal void AfterCreateCommand()
+		{
+			stmt = dataRecord.AfterCreateCommand(stmt, parameters);
+		}
+	}
 	
 	public class GxDataStore : IGxDataStore
 	{
@@ -2575,7 +2593,7 @@ namespace GeneXus.Data.ADO
 
 			connection.BlobPath = Preferences.getBLOB_PATH();
 			string strCache;
-			connection.Cache=(Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive;
+			connection.Cache=((Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive) && ! GxContext.isReorganization;
 			connection.DataStore = this;
 
 			string isolevel;
@@ -2650,13 +2668,20 @@ namespace GeneXus.Data.ADO
                 case "sqlserver":
                     return new GxSqlServer();
 				case "mysql":
-					bool prepStmt = true;
-					if (Config.GetValueOf("PREPARED_STMT_MYSQL", out cfgBuf))
-					{
-						if (cfgBuf.ToUpper().StartsWith("N"))
-							prepStmt = false;
-					}
+#if NETCORE
+					return new GxMySqlConnector(id);
+#else
+				bool prepStmt = true;
+				if (Config.GetValueOf("PREPARED_STMT_MYSQL", out cfgBuf))
+				{
+					if (cfgBuf.ToUpper().StartsWith("N"))
+						prepStmt = false;
+				}
+				if (Config.GetValueOf("Connection-" + id + "-PROVIDER", out cfgBuf) && cfgBuf.ToLower() == "mysqlconnector")
+					return new GxMySqlConnector(id);
+				else
 					return new GxMySql(id, prepStmt);
+#endif
 				case "sqlite":
                     return new GxSqlite();
                 case "postgresql":
@@ -2682,6 +2707,7 @@ namespace GeneXus.Data.ADO
 					return new GxDb2();
 				case "informix":
 					return new GxInformix(id);
+#endif
 				case "service":
 					{
 						string runtimeProvider;
@@ -2689,7 +2715,6 @@ namespace GeneXus.Data.ADO
 						Config.GetValueOf($"Connection-{id}-DatastoreProviderRuntime", out runtimeProvider);
 						return NTier.GxServiceFactory.Create(id, cfgBuf, runtimeProvider);												
 					}
-#endif
 				default:
 					return null;
 			}
@@ -2768,7 +2793,7 @@ namespace GeneXus.Data.ADO
 		}
 		public void Commit()
 		{
-            connection.BeforeCommit();
+            connection.FlushBatchCursors();
 			if (connection.Opened)
 			{
 				connection.commitTransaction();
@@ -2796,7 +2821,14 @@ namespace GeneXus.Data.ADO
 				return connection.ServerDateTime;
 			}
 		}
-        public string Version
+		public DateTime DateTimeMs
+		{
+			get
+			{
+				return connection.ServerDateTimeMs;
+			}
+		}
+		public string Version
         {
             get
             {

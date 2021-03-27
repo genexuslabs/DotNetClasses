@@ -127,7 +127,7 @@ namespace GeneXus.Data.NTier.ADO
 					}
 				}
 				if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute));
+                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute), _gxDbCommand.Conn.DataStore.Context.HttpContext);
                 fileName = new FileInfo(fileName).FullName;
             }
             catch (IOException e)
@@ -212,6 +212,13 @@ namespace GeneXus.Data.NTier.ADO
         {
             _gxDbCommand = gxDbCommand;
         }
+		void TraceRow(params string[] list)
+		{
+			if (_gxDbCommand.HasMoreRows)
+			{
+				GXLogging.Trace(log, list);
+			}
+		}
         public IDataReader DataReader
         {
             get { return _DR; }
@@ -220,57 +227,57 @@ namespace GeneXus.Data.NTier.ADO
         public short getShort(int id)
         {
 			short value = _gxDbCommand.Db.GetShort(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getShort - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getShort - index : ", id.ToString(), " value:", value.ToString());
 			return value;
         }
         public int getInt(int id)
         {
             int value = _gxDbCommand.Db.GetInt(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getInt - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getInt - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
 		public bool getBool(int id)
 		{
 			bool value = _gxDbCommand.Db.GetBoolean(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getBool - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getBool - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
         public Guid getGuid(int id)
         {
             Guid value = _gxDbCommand.Db.GetGuid(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getGuid - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getGuid - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
         public long getLong(int id)
         {
             long value = _gxDbCommand.Db.GetLong(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getLong - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getLong - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 
 		}
         public double getDouble(int id)
         {
             double value= _gxDbCommand.Db.GetDouble(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getDouble - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getDouble - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
         public Decimal getDecimal(int id)
         {
             Decimal value= _gxDbCommand.Db.GetDecimal(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getDecimal - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getDecimal - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 
 		}
         public string getString(int id, int size)
         {
-            String value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getString - index : ", id.ToString(), " value:", value.ToString());
+            String value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1, size);
+			TraceRow("getString - index : ", id.ToString(), " value:", (value!=null ? value.ToString(): string.Empty));
 			return value;
 		}
         public DateTime getDateTime(int id)
         {
             DateTime value = _gxDbCommand.Db.GetDateTime(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
         public DateTime getDateTime(int id, Boolean precision)
@@ -282,43 +289,43 @@ namespace GeneXus.Data.NTier.ADO
             else {
                 value = _gxDbCommand.Db.GetDateTime(_gxDbCommand, _DR, id - 1);
             }
-			GXLogging.Trace(log, "getDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
         public DateTime getDate(int id)
         {
             DateTime value = _gxDbCommand.Db.GetDate(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getDate - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getDate - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
         public string getLongVarchar(int id)
         {
             string value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getLongVarchar - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getLongVarchar - index : ", id.ToString(), " value:", (value!=null ? value.ToString(): string.Empty));
 			return value;
 		}
         public DateTime getGXDateTime(int id, Boolean precision)
         {
             DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.ClientTimeZone);
-			GXLogging.Trace(log, "getDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
         public DateTime getGXDateTime(int id)
         {
 			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id,false), _gxDbCommand.Conn.ClientTimeZone);
-			GXLogging.Trace(log, "getGXDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getGXDateTime - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
 		public DateTime getGXDate(int id)
         {
             DateTime value = getDate(id);
-			GXLogging.Trace(log, "getGXDate - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getGXDate - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
         public string getBLOBFile(int id)
         {
             string value= getBLOBFile(id, "tmp", "");
-			GXLogging.Trace(log, "getBLOBFile - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getBLOBFile - index : ", id.ToString(), " value:", (value!=null ? value.ToString() : string.Empty));
 			return value;
 		}
 
@@ -326,7 +333,7 @@ namespace GeneXus.Data.NTier.ADO
         {
             string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.PrivateAttribute);
             String value = getBLOBFile(id, extension, name, fileName, true);
-			GXLogging.Trace(log, "getBLOBFile - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getBLOBFile - index : ", id.ToString(), " value:", (value!=null ? value.ToString() : string.Empty));
 			return value;
 		}
 
@@ -376,10 +383,10 @@ namespace GeneXus.Data.NTier.ADO
 				}
 				streamClosed = true;
 
-                GXLogging.Debug(log, "GetBlobFile fileName:" + fileName + ", retval bytes:" + retval);
+				TraceRow("GetBlobFile fileName:" + fileName + ", retval bytes:" + retval);
 
                 if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(file);
+                    GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context.HttpContext);
 
 				fileName = file.GetURI();
             }
@@ -460,20 +467,20 @@ namespace GeneXus.Data.NTier.ADO
 		public string getVarchar(int id)
         {
             string value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getVarchar - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getVarchar - index : ", id.ToString(), " value:", (value != null ? value.ToString() : string.Empty));
 			return value;
 		}
         public decimal getBigDecimal(int id, int dec)
         {
 			decimal value =_gxDbCommand.Db.GetDecimal(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getBigDecimal - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getBigDecimal - index : ", id.ToString(), " value:", value.ToString());
 			return value;
 		}
 
         public IGeographicNative getGeospatial(int id)
         {
             IGeographicNative value = _gxDbCommand.Db.GetGeospatial(_gxDbCommand, _DR, id - 1);
-			GXLogging.Trace(log, "getGeospatial - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow("getGeospatial - index : ", id.ToString(), " value:", (value != null ? value.ToString() : string.Empty));
 			return value;
 		}
 
@@ -494,9 +501,23 @@ namespace GeneXus.Data.NTier.ADO
         public void SetParameter(int id, IGeographicNative parm)
         {
             
-            _gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsGeo((IDbDataParameter)_gxDbCommand.Parameters[id - 1], parm));
+            _gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsGeo(GXType.Undefined, parm));
         }
-        public void SetParameter(int id, bool parm)
+		public void SetParameter(int id, IGeographicNative parm, GXType type)
+		{
+
+			_gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsGeo(type, parm));
+		}
+		public List<ParDef> ParameterDefinition 
+		{
+				get{ return _gxDbCommand.ParmDefinition; }
+		}
+		public void SetParameterObj(int id, object parm)
+		{
+
+			_gxDbCommand.SetParameter(id - 1, parm);
+		}
+		public void SetParameter(int id, bool parm)
         {
             
             _gxDbCommand.SetParameter(id - 1, parm);
@@ -817,6 +838,7 @@ namespace GeneXus.Data.NTier.ADO
             if (_blockSize > 0)
                 _gxDbCommand.FetchSize = Convert.ToUInt16(_blockSize);
             bindParms(_parmBinds);
+			_gxDbCommand.AfterCreateCommand();
             _fldGetter = new GXFatFieldGetter(_gxDbCommand);
             _fldSetter = new GXFatFieldSetter(_gxDbCommand);
             _state = 2;
@@ -826,18 +848,36 @@ namespace GeneXus.Data.NTier.ADO
         protected virtual void bindParms(Object[] ptb)
         {
             int pos = 1;
-            if (ptb != null)
-            {
-                _gxDbCommand.ClearParameters();
-                foreach (Object[] p in ptb)
-                {
-					if (p.Length > 4 && p[4].Equals("rt"))
-						continue;
-                    _gxDbCommand.AddParameter((string)p[0], p[1], (int)(p[2]), (int)(p[3]));
-                    pos++;
-                }
-            }
-        }
+			if (ptb != null)
+			{
+				_gxDbCommand.ClearParameters();
+				if (ptb.Length > 0)
+				{
+					//Backward compatibility
+					if (ptb[0] is Object[])
+					{
+						foreach (Object[] p in ptb)
+						{
+							if (p.Length > 4 && p[4].Equals("rt"))
+								continue;
+							_gxDbCommand.AddParameter((string)p[0], p[1], (int)(p[2]), (int)(p[3]));
+							pos++;
+						}
+					}
+					else
+					{
+						foreach (ParDef p in ptb)
+						{
+							if (p.Return)
+								continue;
+							_gxDbCommand.AddParameter(p.Name, p.GxType, p.Size, p.Scale);
+							_gxDbCommand.ParmDefinition.Add(p);
+							pos++;
+						}
+					}
+				}
+			}
+		}
         public virtual void OnCommitEvent(object instance, string method)
         {
             throw (new GxADODataException("OnCommitEvent operation not allowed in this type of cursor. Cursor" + _name));
