@@ -2633,7 +2633,7 @@ namespace GeneXus.Utils
 
 		static public DateTime AddMth(DateTime dt, int cantMonths)
 		{
-			if (dt == null)
+			if (dt == DateTime.MinValue)
 				return nullDate;
 			if (dt == nullDate && cantMonths < 0)
 				return nullDate;
@@ -2641,7 +2641,7 @@ namespace GeneXus.Utils
 		}
 		static public DateTime AddYr(DateTime dt, int cantYears)
 		{
-			if (dt == null)
+			if (dt == DateTime.MinValue)
 				return nullDate;
 			if (dt == nullDate && cantYears < 0)
 				return nullDate;
@@ -2698,7 +2698,7 @@ namespace GeneXus.Utils
 		}
 		static public DateTime TAdd(DateTime dt, int seconds)
 		{
-			if (dt == null)
+			if (dt == DateTime.MinValue)
 				return nullDate;
 			if (dt == nullDate && seconds < 0)
 				return nullDate;
@@ -2707,7 +2707,7 @@ namespace GeneXus.Utils
 		static public DateTime TAddMs(DateTime dt, double seconds)
 		{
 
-			if (dt == null)
+			if (dt == DateTime.MinValue)
 				return nullDate;
 			if (dt == nullDate && seconds < 0)
 				return nullDate;
@@ -2718,7 +2718,7 @@ namespace GeneXus.Utils
 		}
 		static public DateTime DAdd(DateTime dt, int days)
 		{
-			if (dt == null)
+			if (dt == DateTime.MinValue)
 				return nullDate;
 			if (dt == nullDate && days < 0)
 				return nullDate;
