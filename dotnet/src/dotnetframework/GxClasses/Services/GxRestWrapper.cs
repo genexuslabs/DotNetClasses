@@ -29,6 +29,7 @@ using Jayrock.Json;
 namespace GeneXus.Application
 
 {
+
 	internal static class Synchronizer
 	{
 		internal const string SYNC_METHOD_ALL = "gxAllSync";
@@ -38,6 +39,15 @@ namespace GeneXus.Application
 		internal const string CORE_OFFLINE_EVENT_REPLICATOR = "GeneXus.Core.genexus.sd.synchronization.offlineeventreplicator";
 		internal const string SYNCHRONIZER_INFO = "gxTpr_Synchronizer";
 	}
+
+	public class OrderedContractResolver : Newtonsoft.Json.Serialization.DefaultContractResolver
+	{
+		protected override System.Collections.Generic.IList<Newtonsoft.Json.Serialization.JsonProperty> CreateProperties(System.Type type, Newtonsoft.Json.MemberSerialization memberSerialization)
+		{
+			return base.CreateProperties(type, memberSerialization).OrderBy(p => p.PropertyName).ToList();
+		}
+	}
+
 #if NETCORE
 	public class GxRestWrapper
 #else
@@ -114,17 +124,22 @@ namespace GeneXus.Application
 					innerMethod = SynchronizerMethod();
 					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
 					wrapped = false;
-				}
-				
+				}				
+
 				if (!String.IsNullOrEmpty(this.ServiceMethod))
 				{
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+				if (_procWorker.IsApiObject)
+				{
+					if (outputParameters.Count == 1)
+						wrapped = false;
+				}
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
-				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, wrapped);
+				RestProcess(outputParameters);
+				return Serialize(outputParameters, wrapped, _procWorker.IsApiObject);
 			}
 			catch (Exception e)
 			{
@@ -135,6 +150,7 @@ namespace GeneXus.Application
 				Cleanup();
 
 			}
+			
 		}
 
 		public virtual Task Post()
@@ -262,7 +278,7 @@ namespace GeneXus.Application
 				var outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
-				MakeRestTypes(outputParameters);
+				RestProcess(outputParameters);			  
 				bool wrapped = false;
 				if (_procWorker.IsApiObject)
 				{
@@ -271,7 +287,7 @@ namespace GeneXus.Application
 						wrapped = true;
 					}
 				}
-				return Serialize(outputParameters, wrapped);
+				return Serialize(outputParameters, wrapped, _procWorker.IsApiObject);
 			}
 			catch (Exception e)
 			{
@@ -601,9 +617,12 @@ namespace GeneXus.Application
 			GXLogging.Error(log, "WebException", ex);
 			return SetError("500", ex.Message);
 		}
-		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
+		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped, bool ordered)
 		{
 			var serializer = new Newtonsoft.Json.JsonSerializer();
+
+			if (ordered)
+				serializer.ContractResolver = new OrderedContractResolver();
 			serializer.Converters.Add(new SDTConverter());
 			TextWriter ms = new StringWriter();
 			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
@@ -643,6 +662,19 @@ namespace GeneXus.Application
 		protected void Deserialize(string value, ref GxSilentTrnSdt sdt)
 		{
 			sdt.FromJSonString(value);
+		}
+
+		private static void RestProcess(Dictionary<string, object> outputParameters)
+		{
+			foreach (var k in outputParameters.Keys.ToList())
+			{
+				GxUserType p = outputParameters[k] as GxUserType;
+				if ((p != null) && !(p.ShouldSerializeSdtJson()))
+				{
+					outputParameters.Remove(k);
+				}
+			}
+			MakeRestTypes(outputParameters);
 		}
 		private static void MakeRestTypes(Dictionary<string, object> parameters)
 		{
