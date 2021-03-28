@@ -42,7 +42,7 @@
 	</UsingTask>
 
 
-	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND '$(IsCrossTargetingBuild)'=='false'">
+	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND '$(TargetFramework)'=='netcoreapp3.1'">
 		<ReplaceFileText
        InputFilename="$(OutDir)$(ProjectName).deps.json"
        OutputFilename="$(OutDir)$(ProjectName).deps.json"
