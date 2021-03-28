@@ -42,23 +42,23 @@
 	</UsingTask>
 
 
-	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND '$(TargetFramework)'=='netcoreapp3.1'">
+	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND '$(IsCrossTargetingBuild)'=='false'">
 		<ReplaceFileText
-       InputFilename="$(OutDir)$(MSBuildProjectName).deps.json"
-       OutputFilename="$(OutDir)$(MSBuildProjectName).deps.json"
+       InputFilename="$(OutDir)$(ProjectName).deps.json"
+       OutputFilename="$(OutDir)$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Core"
        ReplacementText="GxClasses" />
 		<ReplaceFileText
-       InputFilename="$(OutDir)$(MSBuildProjectName).deps.json"
-       OutputFilename="$(OutDir)$(MSBuildProjectName).deps.json"
+       InputFilename="$(OutDir)$(ProjectName).deps.json"
+       OutputFilename="$(OutDir)$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Web\.Core"
        ReplacementText="GxClasses.Web" />
-		<Exec Command="copy $(OutDir)$(MSBuildProjectName).deps.json   $(MSBuildProjectName).deps.json" />
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
 	</Target>
 
-	<Target Name="CopyAssemblies" Condition="'$(MSBuildProjectName)'!=''">
-		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnetcore/bin" Condition="!$(TargetFramework.StartsWith('net4'))"/>
-		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnet/bin" Condition="$(TargetFramework.StartsWith('net4'))"/>
+	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnetcore/bin" Condition="'$(TargetFramework)'=='netcoreapp3.1'"/>
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnet/bin" Condition="'$(TargetFramework)'!='netcoreapp3.1'"/>
 	</Target>
 
 </Project>

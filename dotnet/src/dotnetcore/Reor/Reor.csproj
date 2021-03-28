@@ -27,7 +27,7 @@
   </ItemGroup>
   
    <ItemGroup>
-		<Content Include="$(MSBuildProjectName).deps.json">
+		<Content Include="$(ProjectName).deps.json">
 			<Pack>true</Pack>
 			<PackagePath>\content\</PackagePath>
 		</Content>

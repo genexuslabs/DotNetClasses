@@ -4,6 +4,7 @@
 		<PackageTags>GxNetCoreStartup</PackageTags>
 		<PackageId>GeneXus.NetCoreStartup</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
+		<EnableDefaultContentItems>false</EnableDefaultContentItems>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -34,5 +35,12 @@
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\Jayrock.dll</HintPath>
 		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="$(ProjectName).deps.json">
+			<Pack>true</Pack>
+			<PackagePath>\content\</PackagePath>
+		</Content>
 	</ItemGroup>
 </Project>
