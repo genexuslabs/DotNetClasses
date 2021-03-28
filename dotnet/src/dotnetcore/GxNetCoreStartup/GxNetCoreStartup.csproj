@@ -38,7 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="$(ProjectName).deps.json">
+		<Content Include="$(MSBuildProjectName).deps.json">
 			<Pack>true</Pack>
 			<PackagePath>\content\</PackagePath>
 		</Content>
