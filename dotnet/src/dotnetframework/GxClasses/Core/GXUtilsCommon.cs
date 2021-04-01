@@ -1660,6 +1660,7 @@ namespace GeneXus.Utils
 		}
 		public static bool NotNumeric(string num)
 		{
+			num = num.Trim();
 			foreach (char c in num)
 				if (!Char.IsNumber(c))
 					return true;
