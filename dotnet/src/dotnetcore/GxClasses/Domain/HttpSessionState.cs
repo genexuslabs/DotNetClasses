@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
@@ -7,37 +9,26 @@ namespace GeneXus.Http
 {
 	internal static class CookieContainerHelper
 	{
-		public static IEnumerable<Cookie> GetCookies(this CookieContainer cookieContainer)
+		public static CookieCollection GetCookies(this CookieContainer container)
 		{
-			var domainTable = GetFieldValue<dynamic>(cookieContainer, "_domainTable");
-			foreach (var entry in domainTable)
+			CookieCollection allCookies = new CookieCollection();
+			Hashtable domainTable = (Hashtable)container.GetType()
+				.GetRuntimeFields()
+				.First(x => x.Name == "m_domainTable")
+				.GetValue(container);
+
+			FieldInfo pathListField = null;
+			foreach (object domain in domainTable.Values)
 			{
-				string key = GetPropertyValue<string>(entry, "Key");
+				SortedList pathList = (SortedList)(pathListField ??= domain.GetType()
+					.GetRuntimeFields()
+					.First(x => x.Name == "m_list"))
+					.GetValue(domain);
 
-				var value = GetPropertyValue<dynamic>(entry, "Value");
-
-				var internalList = GetFieldValue<SortedList<string, CookieCollection>>(value, "_list");
-				foreach (var li in internalList)
-				{
-					foreach (Cookie cookie in li.Value)
-					{
-						yield return cookie;
-					}
-				}
+				foreach (CookieCollection cookies in pathList.GetValueList())
+					allCookies.Add(cookies);
 			}
-		}
-
-		internal static T GetFieldValue<T>(object instance, string fieldName)
-		{
-			BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
-			FieldInfo fi = instance.GetType().GetField(fieldName, bindFlags);
-			return (T)fi.GetValue(instance);
-		}
-
-		internal static T GetPropertyValue<T>(object instance, string propertyName)
-		{
-			var pi = instance.GetType().GetProperty(propertyName);
-			return (T)pi.GetValue(instance, null);
+			return allCookies;
 		}
 	}
 	internal class HttpSessionState 
