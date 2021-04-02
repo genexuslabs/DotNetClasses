@@ -681,36 +681,33 @@ namespace GeneXus.Application
 			else
 			{
 				string controllerLower = controller.ToLower();
-				if (File.Exists(Path.Combine(ContentRootPath, controllerLower + "_bc.svc")))
+				string svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
+				if (File.Exists(svcFile))
+				{
+					var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
+					   .Skip(1)
+					   .TakeWhile(c => c != '"')
+					   .ToArray()).Trim().Split(',');
+					var controllerAssemblyName = controllerAssemblyQualifiedName.Last();
+					var controllerClassName = controllerAssemblyQualifiedName.First();
+					if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
+						controllerClassName = controllerClassName.Substring(nspace.Length + 1);
+					else
+						nspace = String.Empty;
+					var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+					GXProcedure proc = controllerInstance as GXProcedure;
+					if (proc != null)
+						return new GxRestWrapper(proc, context, gxContext, methodName);
+					else
+						GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{controllerAssemblyName} nspace:{nspace} controller:{controllerClassName}");
+				}
+				else if (File.Exists(Path.Combine(ContentRootPath, controllerLower + "_bc.svc")))
 				{
 					var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace, GxSilentTrnSdt.GxSdtNameToCsharpName(controllerLower), new Object[] { gxContext }, Assembly.GetEntryAssembly(), true) as GxSilentTrnSdt;
 					if (sdtInstance != null)
 						return new GXBCRestService(sdtInstance, context, gxContext);
 					else
 						GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{Config.CommonAssemblyName} nspace:{nspace} controller:{GxSilentTrnSdt.GxSdtNameToCsharpName(controller)}");
-				}
-				else
-				{
-					string svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
-					if (File.Exists(svcFile))
-					{
-						var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
-						   .Skip(1)
-						   .TakeWhile(c => c != '"')
-						   .ToArray()).Trim().Split(',');
-						var controllerAssemblyName = controllerAssemblyQualifiedName.Last();
-						var controllerClassName = controllerAssemblyQualifiedName.First();
-						if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
-							controllerClassName = controllerClassName.Substring(nspace.Length + 1);
-						else
-							nspace=String.Empty;
-						var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-						GXProcedure proc = controllerInstance as GXProcedure;
-						if (proc != null)
-							return new GxRestWrapper(proc, context, gxContext, methodName);
-						else
-							GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{controllerAssemblyName} nspace:{nspace} controller:{controllerClassName}");
-					}
 				}
 			}
 			GXLogging.Warn(log, $"Controller was not found");
