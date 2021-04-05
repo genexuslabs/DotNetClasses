@@ -2863,6 +2863,10 @@ namespace GeneXus.Application
 		{
 			try
 			{
+#if NETCORE
+				if (_HttpContext.Request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase))
+					return Config.ScriptPath + "/";
+#endif
 				string appPath = _HttpContext.Request.GetApplicationPath();
 				if (appPath.EndsWith("/"))
 					return _HttpContext.Request.GetApplicationPath();

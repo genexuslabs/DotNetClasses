@@ -96,13 +96,7 @@ namespace GeneXus.Application
 				String innerMethod = EXECUTE_METHOD;
 				bool wrapped = true;
 				Dictionary<string, object> bodyParameters = null;
-				if (Worker.UploadEnabled() && GxUploadHelper.IsUploadURL(_httpContext))
-				{
-					GXObjectUploadServices gxobject = new GXObjectUploadServices(_gxContext);
-					gxobject.webExecute();
-					return Task.CompletedTask;
-				}
-				else if (IsCoreEventReplicator(_procWorker))
+				if (IsCoreEventReplicator(_procWorker))
 				{
 					bodyParameters = ReadBodyParameters();
 					string synchronizer = PreProcessReplicatorParameteres(_procWorker, innerMethod, bodyParameters);
@@ -111,6 +105,12 @@ namespace GeneXus.Application
 				}
 				else if (!IsAuthenticated())
 				{
+					return Task.CompletedTask;
+				}
+				if (Worker.UploadEnabled() && GxUploadHelper.IsUploadURL(_httpContext))
+				{
+					GXObjectUploadServices gxobject = new GXObjectUploadServices(_gxContext);
+					gxobject.webExecute();
 					return Task.CompletedTask;
 				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
