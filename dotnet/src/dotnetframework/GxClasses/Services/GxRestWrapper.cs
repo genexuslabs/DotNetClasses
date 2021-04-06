@@ -76,7 +76,6 @@ namespace GeneXus.Application
 		{
 			_httpContext = context;
 			_gxContext = gxContext;
-//			AddHeader("Content-Type", "application/json; charset=utf-8"); //MediaTypesNames.ApplicationJson);
 			if (_httpContext != null)_httpContext.Response.ContentType = "application/json; charset=utf-8";		
 			RunAsMain = true;
 		}
