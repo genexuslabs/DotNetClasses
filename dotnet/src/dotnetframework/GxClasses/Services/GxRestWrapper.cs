@@ -76,7 +76,7 @@ namespace GeneXus.Application
 		{
 			_httpContext = context;
 			_gxContext = gxContext;
-			AddHeader("Content-type", "application/json; charset=utf-8"); //MediaTypesNames.ApplicationJson);
+			if (_httpContext != null)_httpContext.Response.ContentType = "application/json; charset=utf-8";		
 			RunAsMain = true;
 		}
 		protected virtual GXBaseObject Worker
@@ -558,7 +558,7 @@ namespace GeneXus.Application
 		{
 			if (_httpContext != null)
 			{
-				_httpContext.Response.Headers[header] =value;
+				_httpContext.Response.Headers[header] = value;
 			}
 		}
 
@@ -640,7 +640,7 @@ namespace GeneXus.Application
 					serializer.Serialize(writer, parameters);
 				}
 			}
-			_httpContext.Response.Write(ms.ToString()); //Use intermediate StringWriter in order to avoid chunked response
+			_httpContext.Response.Write(ms.ToString()); // Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
 		}
 		protected Task Serialize(object value)
