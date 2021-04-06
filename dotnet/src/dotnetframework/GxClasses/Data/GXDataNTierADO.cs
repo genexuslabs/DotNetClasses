@@ -1121,6 +1121,7 @@ namespace GeneXus.Data.NTier.ADO
                 base.bindParms(newParmBinds.ToArray());
                 GXLogging.Debug(log, "ForEachCursor.preExecute, DynamicStatement: " + _stmt);
                 _gxDbCommand.CommandText = _stmt;
+				_gxDbCommand.AfterCreateCommand();
             }
             _gxDbCommand.DynamicStmt = dynamicStmt;
             _gxDbCommand.CursorDef = _cursorDef;
