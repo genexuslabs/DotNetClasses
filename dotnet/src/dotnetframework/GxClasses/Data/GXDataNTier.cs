@@ -177,13 +177,12 @@ namespace GeneXus.Data.NTier
 						if (valueIsNull)
 						{
 							stmt.setNull(idxParmCollection, DBNull.Value);
-							parmsValues[idxParmCollection - 1] = DBNull.Value;
 						}
 						idx += 1;
 					}
+					parmsValues[idxParmCollection - 1] = parms[idx];
 					if (!valueIsNull)
 					{
-						parmsValues[idxParmCollection - 1] = parms[idx];
 						switch (pdef.GxType)
 						{
 							case GXType.Char:
