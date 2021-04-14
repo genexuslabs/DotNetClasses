@@ -130,11 +130,6 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-				//if (_procWorker.IsApiObject)
-				//{
-				//	if (outputParameters.Count == 1)
-				//		wrapped = false;
-				//}
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
