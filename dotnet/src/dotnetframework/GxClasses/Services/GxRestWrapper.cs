@@ -89,6 +89,11 @@ namespace GeneXus.Application
 				_gxContext.CloseConnections();
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="key"></param>
+		/// <returns></returns>
 		public virtual Task MethodBodyExecute(object key)
 		{
 			try
@@ -125,11 +130,11 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-				if (_procWorker.IsApiObject)
-				{
-					if (outputParameters.Count == 1)
-						wrapped = false;
-				}
+				//if (_procWorker.IsApiObject)
+				//{
+				//	if (outputParameters.Count == 1)
+				//		wrapped = false;
+				//}
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
