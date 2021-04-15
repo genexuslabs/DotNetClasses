@@ -2864,8 +2864,14 @@ namespace GeneXus.Application
 			try
 			{
 #if NETCORE
-				if (_HttpContext.Request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase))
-					return Config.ScriptPath + "/";
+				var request = _HttpContext.Request;
+				if (request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase))
+				{
+					if (request.PathBase != null && request.PathBase.HasValue)
+						return request.PathBase.Value + "/";
+					else
+						return Config.ScriptPath + "/";
+				}
 #endif
 				string appPath = _HttpContext.Request.GetApplicationPath();
 				if (appPath.EndsWith("/"))
