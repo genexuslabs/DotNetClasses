@@ -40,14 +40,7 @@ namespace GeneXus.Application
 		internal const string SYNCHRONIZER_INFO = "gxTpr_Synchronizer";
 	}
 
-	public class OrderedContractResolver : Newtonsoft.Json.Serialization.DefaultContractResolver
-	{
-		protected override System.Collections.Generic.IList<Newtonsoft.Json.Serialization.JsonProperty> CreateProperties(System.Type type, Newtonsoft.Json.MemberSerialization memberSerialization)
-		{
-			return base.CreateProperties(type, memberSerialization).OrderBy(p => p.PropertyName).ToList();
-		}
-	}
-
+	
 #if NETCORE
 	public class GxRestWrapper
 #else
@@ -133,7 +126,7 @@ namespace GeneXus.Application
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
-				return Serialize(outputParameters, wrapped, _procWorker.IsApiObject);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -281,7 +274,7 @@ namespace GeneXus.Application
 						wrapped = true;
 					}
 				}
-				return Serialize(outputParameters, wrapped, _procWorker.IsApiObject);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -611,12 +604,10 @@ namespace GeneXus.Application
 			GXLogging.Error(log, "WebException", ex);
 			return SetError("500", ex.Message);
 		}
-		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped, bool ordered)
+		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
 		{
 			var serializer = new Newtonsoft.Json.JsonSerializer();
 
-			if (ordered)
-				serializer.ContractResolver = new OrderedContractResolver();
 			serializer.Converters.Add(new SDTConverter());
 			TextWriter ms = new StringWriter();
 			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
