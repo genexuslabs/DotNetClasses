@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net46;netcoreapp3.1;net5.0</TargetFrameworks>
+		<TargetFrameworks>net461;netcoreapp3.1;net5.0</TargetFrameworks>
 		<RootNamespace>GxCryptographyCommon</RootNamespace>
 		<NoWarn>618;1607;1698</NoWarn>
 		<AssemblyName>GxCryptographyCommon</AssemblyName>

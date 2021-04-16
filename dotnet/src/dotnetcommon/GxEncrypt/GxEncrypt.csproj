@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net46;netcoreapp3.1;net5.0</TargetFrameworks>
+		<TargetFrameworks>net461;netcoreapp3.1;net5.0</TargetFrameworks>
 		<RootNamespace>GeneXus.Encryption</RootNamespace>
 		<AssemblyName>GxEncrypt</AssemblyName>
 		<PackageTags>Encrypt64 Decrypt64</PackageTags>
