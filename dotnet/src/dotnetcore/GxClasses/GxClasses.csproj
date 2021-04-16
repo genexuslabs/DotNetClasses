@@ -74,9 +74,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceCommand.cs" Link="Services\ServiceCommand.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceConnection.cs" Link="Services\ServiceConnection.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ServiceTransaction.cs" Link="Services\ServiceTransaction.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Services\GxRestWrapper.cs" Link="Services\CoreWebAPI\Controller\GxRestWrapper.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Services\JsonConverter.cs" Link="Services\CoreWebAPI\Helpers\JsonConverter.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Services\ReflectionHelper.cs" Link="Services\CoreWebAPI\Helpers\ReflectionHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Search\GXSearch.cs" Link="Services\Search\GXSearch.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Security\GxSecurityProvider.cs" Link="Security\GxSecurityProvider.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\Storage\GXServices.cs" Link="Services\Storage\GXServices.cs" />

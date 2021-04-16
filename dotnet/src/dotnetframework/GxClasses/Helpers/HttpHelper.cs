@@ -62,6 +62,8 @@ namespace GeneXus.Http
 	public class HttpHelper
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
+		public const string ASPX = ".aspx";
+		public const string GXOBJECT = "/gxobject";
 
 		public static void SetResponseStatus(HttpContext httpContext, string statusCode, string statusDescription)
 		{
@@ -71,6 +73,9 @@ namespace GeneXus.Http
 			{
 				switch (statusCode)
 				{
+					case "201":
+						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Created;
+						break;
 					case "400":
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
 						break;
@@ -91,7 +96,8 @@ namespace GeneXus.Http
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Unauthorized;
 						break;
 				}
-				wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
+				if (!string.IsNullOrEmpty(statusDescription))
+					wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
 				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 			}
 			else
@@ -101,6 +107,9 @@ namespace GeneXus.Http
 				{
 					switch (statusCode)
 					{
+						case "201":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.Created;
+							break;
 						case "400":
 							httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 							break;
@@ -122,12 +131,14 @@ namespace GeneXus.Http
 							break;
 					}
 #if !NETCORE
-					httpContext.Response.StatusDescription =  statusDescription.Replace(Environment.NewLine, string.Empty);
+					if (!string.IsNullOrEmpty(statusDescription))
+						httpContext.Response.StatusDescription =  statusDescription.Replace(Environment.NewLine, string.Empty);
 					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 				}
 			}
 #else
-					httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
+					if (!string.IsNullOrEmpty(statusDescription))
+						httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
 					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
 				}
 
@@ -679,6 +690,15 @@ namespace GeneXus.Http
 			return request.Url.Scheme;
 #endif
 		}
+		public static string[] GetURLSegments(this HttpRequest request)
+		{
+#if NETCORE
+			return new Uri(request.GetRawUrl()).Segments;
+#else
+			return request.Url.Segments;
+#endif
+		}
+
 		public static int GetPort(this HttpRequest request, bool isSecure)
 		{
 #if NETCORE

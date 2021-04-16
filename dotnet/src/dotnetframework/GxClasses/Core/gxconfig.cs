@@ -551,6 +551,7 @@ namespace GeneXus.Configuration
 		}
 
 #if NETCORE
+		public static string ScriptPath { get; set; }
 		static NameValueCollection loadConfigJson(string appSettings)
 		{
 			if (ConfigRoot == null)
