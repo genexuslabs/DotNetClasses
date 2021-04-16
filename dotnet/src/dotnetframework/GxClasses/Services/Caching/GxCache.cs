@@ -528,8 +528,12 @@ namespace GeneXus.Cache
     }
     [Serializable]
     public class CacheItem
-    {
-        public CacheItem(GxArrayList data, bool hasnext, int blockSize, long sizeInBytes)
+	{
+		public CacheItem()
+		{
+		}
+
+		public CacheItem(GxArrayList data, bool hasnext, int blockSize, long sizeInBytes)
         {
             Data = data;
             HasNext = hasnext;
