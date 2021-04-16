@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net461</TargetFramework>
 		<AssemblyName>GxExcelI</AssemblyName>
 		<RootNamespace>GxExcelI</RootNamespace>
 		<PackageTags>Excel</PackageTags>

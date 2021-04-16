@@ -42,7 +42,7 @@
 	</UsingTask>
 
 
-	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND '$(TargetFramework)'=='netcoreapp3.1'">
+	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND ('$(TargetFramework)'=='netcoreapp3.1' OR '$(TargetFramework)'=='net5.0')">
 		<ReplaceFileText
        InputFilename="$(OutDir)$(ProjectName).deps.json"
        OutputFilename="$(OutDir)$(ProjectName).deps.json"
@@ -53,7 +53,7 @@
        OutputFilename="$(OutDir)$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Web\.Core"
        ReplacementText="GxClasses.Web" />
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(TargetFramework)\$(ProjectName).deps.json" />
 	</Target>
 
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">

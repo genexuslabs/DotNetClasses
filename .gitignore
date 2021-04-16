@@ -352,3 +352,9 @@ MigrationBackup/
 /dotnet/src/dotnetcore/GxNetCoreStartup/GxNetCoreStartup.deps.json
 /dotnet/src/dotnetcore/Reor/Reor.deps.json
 build
+/dotnet/src/dotnetcore/GxDataInitialization/net5.0/GXDataInitialization.deps.json
+/dotnet/src/dotnetcore/GxDataInitialization/netcoreapp3.1/GXDataInitialization.deps.json
+/dotnet/src/dotnetcore/GxNetCoreStartup/net5.0/GxNetCoreStartup.deps.json
+/dotnet/src/dotnetcore/GxNetCoreStartup/netcoreapp3.1/GxNetCoreStartup.deps.json
+/dotnet/src/dotnetcore/Reor/net5.0/Reor.deps.json
+/dotnet/src/dotnetcore/Reor/netcoreapp3.1/Reor.deps.json

@@ -28,9 +28,13 @@
   </ItemGroup>
 
    <ItemGroup>
-		<Content Include="$(MSBuildProjectName).deps.json">
+		<Content Include="netcoreapp3.1\$(MSBuildProjectName).deps.json">
 			<Pack>true</Pack>
-			<PackagePath>\content\</PackagePath>
+			<PackagePath>\content\netcoreapp3.1\</PackagePath>
+		</Content>
+		<Content Include="net5.0\$(MSBuildProjectName).deps.json">
+			<Pack>true</Pack>
+			<PackagePath>\content\net5.0\</PackagePath>
 		</Content>
 	</ItemGroup>
 </Project>
