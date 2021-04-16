@@ -112,6 +112,12 @@ namespace GeneXus.Application
 				{
 					return Task.CompletedTask;
 				}
+				if (Worker.UploadEnabled() && GxUploadHelper.IsUploadURL(_httpContext))
+				{
+					GXObjectUploadServices gxobject = new GXObjectUploadServices(_gxContext);
+					gxobject.webExecute();
+					return Task.CompletedTask;
+				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
