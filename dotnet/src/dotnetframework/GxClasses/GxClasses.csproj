@@ -12,6 +12,7 @@
 		<PackageReference Include="ManagedFusion.Rewriter" Version="3.7.0" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
 		<PackageReference Include="MySqlConnector" Version="1.0.1" />
+		<PackageReference Include="Npgsql" Version="3.2.7" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.3.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
@@ -21,14 +22,6 @@
 		<Reference Include="Microsoft.HostIntegration.MsDb2Client">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\Microsoft.HostIntegration.MsDb2Client.dll</HintPath>
-		</Reference>
-		<Reference Include="Mono.Security">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\Mono.Security.dll</HintPath>
-		</Reference>
-		<Reference Include="Npgsql">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\Npgsql.dll</HintPath>
 		</Reference>
 		<Reference Include="Jayrock-JSON">
 			<SpecificVersion>False</SpecificVersion>

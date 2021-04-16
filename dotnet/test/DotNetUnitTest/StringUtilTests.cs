@@ -8,6 +8,23 @@ namespace UnitTesting
 	public class StringUtilTests
 	{
 		[Fact]
+		public void NotNumeric()
+		{
+			String A8T4CtoN = "12345678       ";
+			long A40006GXC7;
+			if (StringUtil.NotNumeric(A8T4CtoN))
+			{
+				A40006GXC7 = 0;
+			}
+			else
+			{
+				A40006GXC7 = (long)(NumberUtil.Val(A8T4CtoN, "."));
+			}
+			Assert.True(A40006GXC7 == 12345678);
+
+		}
+
+		[Fact]
 		public void TestNToCPerformance()
 		{
 			StringUtil.CachePictures = false;

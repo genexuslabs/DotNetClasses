@@ -1063,7 +1063,6 @@ namespace GeneXus.Utils
 		{
 		}
 
-
 		public virtual void SetDirty(string fieldName)
 		{
 			dirties[fieldName.ToLower()] = "true";
@@ -1235,6 +1234,10 @@ namespace GeneXus.Utils
 				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
 				return false;
 			}
+		}
+		public virtual bool ShouldSerializeSdtJson()
+		{
+			return true;
 		}
 
 		public virtual object Clone()

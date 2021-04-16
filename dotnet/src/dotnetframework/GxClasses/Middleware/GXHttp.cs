@@ -1335,8 +1335,7 @@ namespace GeneXus.Http
 			set { staticContentBase = value; }
 
 		}
-
-		protected void exitApplication()
+		protected void ExitApp()
 		{
 			if (disconnectUserAtCleanup)
 			{
@@ -1346,7 +1345,11 @@ namespace GeneXus.Http
 				}
 				catch (Exception) {; }
 			}
+		}
 
+		protected void exitApplication()
+		{
+			ExitApp();
 		}
 
 		private bool IsGxAjaxRequest()
