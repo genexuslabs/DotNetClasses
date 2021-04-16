@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net461</TargetFramework>
 		<RootNamespace>GxRedis</RootNamespace>
 		<AssemblyName>GxRedis</AssemblyName>
 		<SignAssembly>false</SignAssembly>
@@ -9,9 +9,10 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="log4net" Version="2.0.11" />
-		<PackageReference Include="ServiceStack.Redis" Version="5.7.0"/>
+		<PackageReference Include="StackExchange.Redis" Version="2.2.4" />
+		<PackageReference Include="System.Text.Json" Version="5.0.1" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj"/>
+		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 </Project>

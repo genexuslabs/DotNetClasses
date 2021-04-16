@@ -396,11 +396,12 @@ namespace GeneXus.Configuration
 				return new CultureInfo(CultureInfo.CurrentCulture.Name);
 			}
 		}
-		const string Log4NetShortName = "log4net";
-		static Version Log4NetVersion = new Version(2, 0, 11);
 
 #if NETCORE
 		public static IConfigurationRoot ConfigRoot { get; set; }
+		const string Log4NetShortName = "log4net";
+		static Version Log4NetVersion = new Version(2, 0, 11);
+
 		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
@@ -431,18 +432,25 @@ namespace GeneXus.Configuration
 			return null;
 		}
 #else
+		static Dictionary<string, Version> AssemblyRedirect = new Dictionary<string, Version>
+		{
+			{"log4net", new Version(2, 0, 11) },
+			{ "System.Threading.Tasks.Extensions", new Version(4, 2, 0, 1) },
+			{ "System.Runtime.CompilerServices.Unsafe", new Version(4, 0, 4, 1) },
+			{ "System.Buffers", new Version(4, 0, 3, 0)},
+			{ "System.Memory",new Version(4, 0, 1, 1) }
+		};
+
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
 			var requestedAssembly = new AssemblyName(args.Name);
-			if (requestedAssembly.Name != Log4NetShortName)
-				return null;
-
-			requestedAssembly.Version = Log4NetVersion;
-
-			AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
-
-			return Assembly.Load(requestedAssembly);
+			if (AssemblyRedirect.ContainsKey(requestedAssembly.Name) && requestedAssembly.Version != AssemblyRedirect[requestedAssembly.Name])
+			{
+				requestedAssembly.Version = AssemblyRedirect[requestedAssembly.Name];
+				return Assembly.Load(requestedAssembly);
+			}
+			else return null;
 		}
 #endif
 		
@@ -543,6 +551,7 @@ namespace GeneXus.Configuration
 		}
 
 #if NETCORE
+		public static string ScriptPath { get; set; }
 		static NameValueCollection loadConfigJson(string appSettings)
 		{
 			if (ConfigRoot == null)

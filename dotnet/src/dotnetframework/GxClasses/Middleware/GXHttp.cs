@@ -233,10 +233,21 @@ namespace GeneXus.Http
 
 		public void webExecuteEx(HttpContext httpContext)
 		{
-			if (IsFullAjaxRequest(httpContext))
+			if (IsUploadRequest(httpContext))
+				new GXObjectUploadServices(context).webExecute();
+			else  if (IsFullAjaxRequest(httpContext))
 				webAjaxEvent();
 			else
 				webExecute();
+		}
+
+		private bool IsUploadRequest(HttpContext httpContext)
+		{
+			if (UploadEnabled())
+			{
+				return httpContext.Request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase);
+			}
+			return false;
 		}
 
 		private bool IsFullAjaxRequest(HttpContext httpContext)
@@ -259,7 +270,9 @@ namespace GeneXus.Http
 		public virtual void cleanup() { }
 		public virtual bool SupportAjaxEvent() { return false; }
 		public virtual String AjaxOnSessionTimeout() { return "Ignore"; }
-
+#if !NETCORE
+		virtual public bool UploadEnabled() { return false; }
+#endif
 #if NETCORE
 		public void DoAjaxLoad(int SId, GXWebRow row)
 		{
@@ -1322,8 +1335,7 @@ namespace GeneXus.Http
 			set { staticContentBase = value; }
 
 		}
-
-		protected void exitApplication()
+		protected void ExitApp()
 		{
 			if (disconnectUserAtCleanup)
 			{
@@ -1333,7 +1345,11 @@ namespace GeneXus.Http
 				}
 				catch (Exception) {; }
 			}
+		}
 
+		protected void exitApplication()
+		{
+			ExitApp();
 		}
 
 		private bool IsGxAjaxRequest()
@@ -1998,8 +2014,10 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-
-			return formatLink(loginObject);
+			if (IsUploadRequest(this.localHttpContext))
+				return formatLink($"{context.GetScriptPath()}{loginObject}");
+			else
+				return formatLink(loginObject);
 		}
 		private string GetGAMNotAuthorizedWebObject()
 		{
@@ -2010,8 +2028,10 @@ namespace GeneXus.Http
 				if (loginObjParts.Length > 0)
 					loginObject = loginObjParts[0] + ".aspx";
 			}
-
-			return formatLink(loginObject);
+			if (IsUploadRequest(this.localHttpContext))
+				return formatLink($"{context.GetScriptPath()}{loginObject}");
+			else
+				return formatLink(loginObject);
 		}
 
 		protected virtual void sendCacheHeaders()

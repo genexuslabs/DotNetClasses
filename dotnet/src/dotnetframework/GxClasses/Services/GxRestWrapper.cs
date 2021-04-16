@@ -89,6 +89,11 @@ namespace GeneXus.Application
 				_gxContext.CloseConnections();
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="key"></param>
+		/// <returns></returns>
 		public virtual Task MethodBodyExecute(object key)
 		{
 			try
@@ -105,6 +110,12 @@ namespace GeneXus.Application
 				}
 				else if (!IsAuthenticated())
 				{
+					return Task.CompletedTask;
+				}
+				if (Worker.UploadEnabled() && GxUploadHelper.IsUploadURL(_httpContext))
+				{
+					GXObjectUploadServices gxobject = new GXObjectUploadServices(_gxContext);
+					gxobject.webExecute();
 					return Task.CompletedTask;
 				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
@@ -125,6 +136,7 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+
 				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();

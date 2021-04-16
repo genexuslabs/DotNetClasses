@@ -80,10 +80,21 @@ namespace GeneXus.Procedure
 				action(x);
 			};
 		}
+		protected void ExitApp()
+		{
+			exitApplication(BatchCursorHolder());
+		}
 		protected void exitApplication()
 		{
-			foreach (IGxDataStore ds in context.DataStores)
-				ds.Connection.FlushBatchCursors(this);
+			exitApplication(true);
+		}
+		private void exitApplication(bool flushBatchCursor)
+		{
+			if (flushBatchCursor)
+			{
+				foreach (IGxDataStore ds in context.DataStores)
+					ds.Connection.FlushBatchCursors(this);
+			}
 
 			if (IsMain)
 				dbgInfo?.OnExit();
@@ -103,7 +114,7 @@ namespace GeneXus.Procedure
 #endif
 			
 		}
-
+		protected virtual bool BatchCursorHolder() { return false; }
 		protected virtual void printHeaders(){}
 		protected virtual void printFooters(){}
 
