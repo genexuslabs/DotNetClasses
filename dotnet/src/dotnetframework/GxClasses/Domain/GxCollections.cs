@@ -1014,7 +1014,7 @@ namespace GeneXus.Utils
 
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
-
+		
 		static void loadConfigurator()
 		{
 			if (GxUserType.setupChannelObject == null && !GxUserType.setupChannelInitialized)
@@ -1058,7 +1058,8 @@ namespace GeneXus.Utils
 					_jsonObj = new JObject();
 				return _jsonObj;
 			}
-		}
+		}				
+
 		public GxUserType()
 		{
 		}

@@ -499,7 +499,15 @@ namespace GeneXus.Utils
 			return msgs;
 		}
 	}
-	public class GxGenericCollection<T> : List<T> where T : new()
+
+	public interface IGxGenericCollectionWrapped
+	{
+		bool GetIsWrapped();
+		void SetIsWrapped(bool value);
+	}
+
+	public class GxGenericCollection<T> : List<T>, IGxGenericCollectionWrapped
+		where T : new() 
 	{
 		public GxGenericCollection()
 			: base()
@@ -515,11 +523,17 @@ namespace GeneXus.Utils
 				Add((T)x2);
 			}
 		}
+		public GxGenericCollection(IGxCollection x, bool wrapped):this(x)
+		{
+			isWrapped = wrapped;			
+		}
+
 		public void LoadCollection(IGxCollection x)
 		{
 			foreach (IGxGenericCollectionItem x1 in this)
 				x.Add(x1.Sdt);
 		}
+
 		public override string ToString()
 		{
 			string s = "";
@@ -529,11 +543,33 @@ namespace GeneXus.Utils
 			}
 			return s;
 		}
+
+		private bool isWrapped = true;
+
+		public bool GetIsWrapped()
+		{
+			return isWrapped;
+		}
+
+		public void SetIsWrapped(bool value)
+		{
+			isWrapped = value;
+		}
 	}
 	public interface IGxGenericCollectionItem
 	{
 		GxUserType Sdt { get; set; }
 	}
+
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxUnWrappedJson : Attribute
+	{
+		public GxUnWrappedJson()
+		{
+		}
+	}
+
+
 
 	[DataContract]
 	public class GxGenericCollectionItem<T> : IGxGenericCollectionItem where T : GxUserType, new()
@@ -556,6 +592,8 @@ namespace GeneXus.Utils
 		{
 			get { return sdt1.context; }
 		}
+
+		public bool isWrappedInCollection = true;
 		public override string ToString()
 		{
 			string s = "";
@@ -697,7 +735,7 @@ namespace GeneXus.Utils
 	{
 		public SdtMessages_Message()
 		{
-			/* Constructor for serialization */
+			/* Constructor for serialization */		
 		}
 
 		public SdtMessages_Message(IGxContext context)
@@ -799,11 +837,13 @@ namespace GeneXus.Utils
 		public SdtMessages_Message_RESTInterface()
 			: base()
 		{
+			isWrappedInCollection = true;
 		}
 
 		public SdtMessages_Message_RESTInterface(SdtMessages_Message psdt)
 			: base(psdt)
 		{
+			isWrappedInCollection = true;
 		}
 
 		[DataMember(Name = "Id", Order = 0)]
