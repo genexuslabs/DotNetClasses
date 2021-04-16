@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net461</TargetFramework>
 		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
 		<AssemblyName>GeneXus.Data.DynService.Core</AssemblyName>
 		<NoWarn>CA1812</NoWarn>

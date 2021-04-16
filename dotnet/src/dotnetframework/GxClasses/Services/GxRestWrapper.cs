@@ -24,7 +24,7 @@ using System.Collections.Specialized;
 using GeneXus.Security;
 using System.Collections;
 using Jayrock.Json;
-
+using System.Text.Json;
 
 namespace GeneXus.Application
 
@@ -38,14 +38,6 @@ namespace GeneXus.Application
 		internal const string SYNC_EVENT_PARAMETER = "event";
 		internal const string CORE_OFFLINE_EVENT_REPLICATOR = "GeneXus.Core.genexus.sd.synchronization.offlineeventreplicator";
 		internal const string SYNCHRONIZER_INFO = "gxTpr_Synchronizer";
-	}
-
-	public class OrderedContractResolver : Newtonsoft.Json.Serialization.DefaultContractResolver
-	{
-		protected override System.Collections.Generic.IList<Newtonsoft.Json.Serialization.JsonProperty> CreateProperties(System.Type type, Newtonsoft.Json.MemberSerialization memberSerialization)
-		{
-			return base.CreateProperties(type, memberSerialization).OrderBy(p => p.PropertyName).ToList();
-		}
 	}
 
 #if NETCORE
@@ -89,11 +81,6 @@ namespace GeneXus.Application
 				_gxContext.CloseConnections();
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="key"></param>
-		/// <returns></returns>
 		public virtual Task MethodBodyExecute(object key)
 		{
 			try
@@ -624,42 +611,37 @@ namespace GeneXus.Application
 		}
 		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped, bool ordered)
 		{
-			var serializer = new Newtonsoft.Json.JsonSerializer();
+			var jsonOptions = new JsonSerializerOptions();
+			///if (ordered)
+			//	jsonOptions.ContractResolver = new OrderedContractResolver();
 
-			if (ordered)
-				serializer.ContractResolver = new OrderedContractResolver();
-			serializer.Converters.Add(new SDTConverter());
-			TextWriter ms = new StringWriter();
+			jsonOptions.Converters.Add(new SDTConverter());
+
+			string json;
 			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
 			{
 				string key = parameters.First().Key;
-				using (var writer = new Newtonsoft.Json.JsonTextWriter(ms))
-				{
-					serializer.Serialize(writer, parameters[key]);
-				}
+				json = JsonSerializer.Serialize(parameters[key], jsonOptions);
 			}
 			else
 			{
-				using (var writer = new Newtonsoft.Json.JsonTextWriter(ms))
-				{
-					serializer.Serialize(writer, parameters);
-				}
+				json = JsonSerializer.Serialize(parameters, jsonOptions);
 			}
-			_httpContext.Response.Write(ms.ToString()); // Use intermediate StringWriter in order to avoid chunked response
+			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
 		}
 		protected Task Serialize(object value)
 		{
-			var serializer = new Newtonsoft.Json.JsonSerializer();
-			serializer.Converters.Add(new SDTConverter());
+			var jsonOptions = new JsonSerializerOptions();
+			jsonOptions.Converters.Add(new SDTConverter());
 #if NETCORE
 			var responseStream = _httpContext.Response.Body;
 #else
 			var responseStream = _httpContext.Response.OutputStream;
 #endif
-			using (var writer = new Newtonsoft.Json.JsonTextWriter(new StreamWriter(responseStream)))
+			using (var writer = new Utf8JsonWriter(responseStream))
 			{
-				serializer.Serialize(writer, value);
+				JsonSerializer.Serialize(writer, value, jsonOptions);
 			}
 			return Task.CompletedTask;
 		}
