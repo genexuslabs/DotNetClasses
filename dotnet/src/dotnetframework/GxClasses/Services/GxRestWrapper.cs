@@ -269,7 +269,7 @@ namespace GeneXus.Application
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters);			
-				return Serialize(outputParameters, wrapped, _procWorker.IsApiObject);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
