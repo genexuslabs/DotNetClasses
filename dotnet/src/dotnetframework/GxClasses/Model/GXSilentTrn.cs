@@ -547,13 +547,11 @@ namespace GeneXus.Utils
 		{
 			sdt1 = s;
 		}
-		[System.Text.Json.Serialization.JsonIgnore]
 		public GxUserType Sdt
 		{
 			get { return sdt1; }
 			set { sdt1 = (T)value; }
 		}
-		[System.Text.Json.Serialization.JsonIgnore]
 		public IGxContext context
 		{
 			get { return sdt1.context; }

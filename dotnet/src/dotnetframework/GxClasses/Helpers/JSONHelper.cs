@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using Jayrock.Json;
+using System.Runtime.Serialization;
 #if NETCORE
 using System.Linq;
 using System.Buffers.Text;
@@ -214,8 +215,7 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				var settings = new DataContractJsonSerializerSettings() { DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat(DateTimeUtil.JsonDateFormatMillis), KnownTypes = knownTypes };
-				
+				var settings = SerializationSettings(knownTypes);
 				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
 				
 				using (MemoryStream stream = new MemoryStream())
@@ -229,6 +229,44 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Serialize error ", ex);
 			}
 			return null;
+		}
+		internal static string WCFSerialize<T>(T kbObject, Encoding encoding, IEnumerable<Type> knownTypes, bool useSimpleDictionaryFormat) where T : class
+		{
+			try
+			{
+				var settings = WCFSerializationSettings(knownTypes, useSimpleDictionaryFormat);
+				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
+				using (MemoryStream stream = new MemoryStream())
+				{
+					serializer.WriteObject(stream, kbObject);
+					return encoding.GetString(stream.ToArray());
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Serialize error ", ex);
+			}
+			return null;
+		}
+		internal static void WCFSerialize<T>(T kbObject, Encoding encoding, IEnumerable<Type> knownTypes, Stream stream) where T : class
+		{
+			try
+			{
+				var settings = WCFSerializationSettings(knownTypes);
+				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
+				serializer.WriteObject(stream, kbObject);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Serialize error ", ex);
+			}
+		}
+		static DataContractJsonSerializerSettings SerializationSettings(IEnumerable<Type> knownTypes)
+		{
+			return new DataContractJsonSerializerSettings() { DateTimeFormat = new DateTimeFormat(DateTimeUtil.JsonDateFormatMillis), KnownTypes=knownTypes };
+		}
+		static DataContractJsonSerializerSettings WCFSerializationSettings(IEnumerable<Type> knownTypes, bool useSimpleDictionaryFormat=false) {
+			return new DataContractJsonSerializerSettings() { DateTimeFormat = new DateTimeFormat(DateTimeUtil.JsonDateFormatMillis), EmitTypeInformation = EmitTypeInformation.Never, UseSimpleDictionaryFormat= useSimpleDictionaryFormat, KnownTypes=knownTypes };
 		}
 		public static T Deserialize<T>(string kbObject, Encoding encoding, IEnumerable<Type> knownTypes) where T : class, new()
 		{

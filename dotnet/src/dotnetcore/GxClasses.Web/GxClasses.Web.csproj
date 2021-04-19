@@ -15,7 +15,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttpServices.cs" Link="Middleware\GXHttpServices.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXRuntime.cs" Link="Domain\GXRuntime.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\GxRestWrapper.cs" Link="Middleware\GxRestWrapper.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Services\JsonConverter.cs" Link="Helpers\JsonConverter.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ReflectionHelper.cs" Link="Helpers\ReflectionHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\View\GXGridStateHandler.cs" Link="View\GXGridStateHandler.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\View\GXWebControls.cs" Link="View\GXWebControls.cs" />

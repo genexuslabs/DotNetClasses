@@ -24,7 +24,7 @@ using System.Collections.Specialized;
 using GeneXus.Security;
 using System.Collections;
 using Jayrock.Json;
-using System.Text.Json;
+
 
 namespace GeneXus.Application
 
@@ -611,38 +611,36 @@ namespace GeneXus.Application
 		}
 		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped, bool ordered)
 		{
-			var jsonOptions = new JsonSerializerOptions();
-			///if (ordered)
-			//	jsonOptions.ContractResolver = new OrderedContractResolver();
-
-			jsonOptions.Converters.Add(new SDTConverter());
-
 			string json;
+			var knownTypes = new List<Type>();
+			foreach (var k in parameters.Keys)
+			{
+				var val = parameters[k];
+				knownTypes.Add(val.GetType());
+			}
 			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
 			{
 				string key = parameters.First().Key;
-				json = JsonSerializer.Serialize(parameters[key], jsonOptions);
+				json = JSONHelper.Serialize(parameters[key], Encoding.UTF8, knownTypes);
 			}
 			else
 			{
-				json = JsonSerializer.Serialize(parameters, jsonOptions);
+				json = JSONHelper.WCFSerialize(parameters, Encoding.UTF8, knownTypes, true); 
 			}
 			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
 		}
 		protected Task Serialize(object value)
 		{
-			var jsonOptions = new JsonSerializerOptions();
-			jsonOptions.Converters.Add(new SDTConverter());
 #if NETCORE
 			var responseStream = _httpContext.Response.Body;
 #else
 			var responseStream = _httpContext.Response.OutputStream;
 #endif
-			using (var writer = new Utf8JsonWriter(responseStream))
-			{
-				JsonSerializer.Serialize(writer, value, jsonOptions);
-			}
+			var knownTypes = new List<Type>();
+			knownTypes.Add(value.GetType());
+		
+			JSONHelper.WCFSerialize(value, Encoding.UTF8, knownTypes, responseStream);
 			return Task.CompletedTask;
 		}
 
