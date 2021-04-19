@@ -860,8 +860,8 @@ namespace GeneXus.Data
 
 			if (inLocalStorage && validFileName)
             {
-                if (GxRestUtil.IsUpload(fileName))
-                    fileName = GxRestUtil.UploadPath(fileName);
+                if (GxUploadHelper.IsUpload(fileName))
+                    fileName = GxUploadHelper.UploadPath(fileName);
 
 				bool ok = PathUtil.AbsoluteUri(fileName, out uri);
 				if (ok && uri != null)

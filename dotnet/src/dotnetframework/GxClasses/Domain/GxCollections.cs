@@ -1014,7 +1014,7 @@ namespace GeneXus.Utils
 
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
-
+		
 		static void loadConfigurator()
 		{
 			if (GxUserType.setupChannelObject == null && !GxUserType.setupChannelInitialized)
@@ -1058,7 +1058,8 @@ namespace GeneXus.Utils
 					_jsonObj = new JObject();
 				return _jsonObj;
 			}
-		}
+		}				
+
 		public GxUserType()
 		{
 		}
@@ -1585,9 +1586,9 @@ namespace GeneXus.Utils
 										}
 									}
 								}
-								else if (GxRestUtil.IsUpload(uploadPath)) //File upload from SD
+								else if (GxUploadHelper.IsUpload(uploadPath)) //File upload from SD
 								{
-									objProperty.SetValue(this, GxRestUtil.UploadPath(uploadPath), null);
+									objProperty.SetValue(this, GxUploadHelper.UploadPath(uploadPath), null);
 									PropertyInfo info_gxi = this.GetType().GetProperty(objProperty.Name + "_gxi");//gxi reset
 									if (info_gxi != null)
 										info_gxi.SetValue(this, string.Empty, null);

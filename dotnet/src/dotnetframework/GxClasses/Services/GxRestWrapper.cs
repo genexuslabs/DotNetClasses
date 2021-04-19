@@ -104,6 +104,12 @@ namespace GeneXus.Application
 				{
 					return Task.CompletedTask;
 				}
+				if (Worker.UploadEnabled() && GxUploadHelper.IsUploadURL(_httpContext))
+				{
+					GXObjectUploadServices gxobject = new GXObjectUploadServices(_gxContext);
+					gxobject.webExecute();
+					return Task.CompletedTask;
+				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
@@ -122,11 +128,8 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-				//if (_procWorker.IsApiObject)
-				//{
-				//	if (outputParameters.Count == 1)
-				//		wrapped = false;
-				//}
+
+				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
@@ -266,18 +269,12 @@ namespace GeneXus.Application
 				{
 					innerMethod = this.ServiceMethod;
 				}
-				var outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				if (_procWorker.IsApiObject)
-				{
-					if (outputParameters.Count == 1 && outputParameters.First().Value.GetType().GetInterfaces().Contains(typeof(ICollection)))
-					{
-						wrapped = true;
-					}
-				}
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters);			
 				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
@@ -289,6 +286,29 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
+
+		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters)
+		{
+			if (worker.IsApiObject)
+			{
+				if (outputParameters.Count == 1)
+				{
+					Object v = outputParameters.First().Value;
+
+					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
+					{
+
+						wrapped = (v as IGxGenericCollectionWrapped).GetIsWrapped();
+					}
+					else
+					{
+						wrapped = true;
+					}
+				}
+			}
+			return wrapped;
+		}
+
 		public bool RunAsMain
 		{
 			get;set;
@@ -679,9 +699,9 @@ namespace GeneXus.Application
 			{
 				Type itemType = v.GetType().GetGenericArguments()[0];
 				Type restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
-
+				bool isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
 				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
-				return Activator.CreateInstance(genericListItemType, new object[] { v });
+				return Activator.CreateInstance(genericListItemType, new object[] { v , isWrapped });
 			}
 			else if (typeof(GxUserType).IsAssignableFrom(vType)) //SDTType convert to SDTType_RESTInterface
 			{
