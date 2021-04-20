@@ -412,7 +412,7 @@ namespace GeneXus.Utils
 		{
 			get
 			{
-				return this.PointList[0].Longitude;
+				return NTSGeographyWrapper.Long(this._innerValue);
 			}
 		}
 
@@ -420,7 +420,7 @@ namespace GeneXus.Utils
 		{
 			get
 			{
-				return this.PointList[0].Latitude;
+				return NTSGeographyWrapper.Lat(this._innerValue);				
 			}
 		}
 
