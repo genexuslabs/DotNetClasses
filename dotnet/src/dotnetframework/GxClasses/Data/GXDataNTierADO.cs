@@ -631,12 +631,14 @@ namespace GeneXus.Data.NTier.ADO
 							{
 								try
 								{
+#pragma warning disable SYSLIB0014 // WebClient
 									using (var fileStream = new MemoryStream(new WebClient().DownloadData(image_gxi)))
 									{
 										//Cannot pass Http Stream directly, because some Providers (AWS S3) does not support Http Stream.
 										multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.Public);
 										GXLogging.Debug(log, "Upload external file to ExternalProvider:", multimediaUri);
 									}
+#pragma warning disable SYSLIB0014 // WebClient
 								}
 								catch (WebException)
 								{
@@ -692,9 +694,11 @@ namespace GeneXus.Data.NTier.ADO
 							}
 							else
 							{
+#pragma warning disable SYSLIB0014 // WebClient
 								WebClient c = new WebClient();
 								fileStream = new MemoryStream(c.DownloadData(image));
 								//Cannot pass Http Stream directly, because some Providers (AWS S3) does not support Http Stream.
+#pragma warning disable SYSLIB0014 // WebClient
 							}
 							string externalFileName = GXDbFile.GenerateUri(fileName, !GXDbFile.HasToken(fileName), false);
 							multimediaUri = PushToExternalProvider(fileStream, externalFileName, tableName, fieldName);
