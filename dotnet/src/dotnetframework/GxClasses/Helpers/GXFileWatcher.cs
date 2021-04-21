@@ -15,6 +15,7 @@ namespace GeneXus.Application
 #endif
 	using System.Xml;
 	using GeneXus.Http;
+	using System.Collections.Concurrent;
 
 	public class GXFileWatcher : IDisposable
 	{
@@ -24,7 +25,7 @@ namespace GeneXus.Application
 		TimeSpan TIMEOUT;
 		private static bool DISABLED;
 		long TIMEOUT_TICKS;
-		List<GxFile> tmpFiles;
+		ConcurrentDictionary<int, List<GxFile>> tmpFiles;
 		Dictionary<string,List<GxFile>> webappTmpFiles;
 		bool running=false;
 		CancellationTokenSource cts = new CancellationTokenSource();
@@ -124,11 +125,12 @@ namespace GeneXus.Application
 				GXLogging.Error(log, "DeleteFiles error", ex);
 			}
 		}
-		public void AddTemporaryFile(GxFile FileUploaded, HttpContext httpcontext)
+		public void AddTemporaryFile(GxFile FileUploaded, IGxContext gxcontext)
 		{
 			if (!DISABLED)
 			{
 				GXLogging.Debug(log, "AddTemporaryFile ", FileUploaded.Source);
+				HttpContext httpcontext = gxcontext.HttpContext;
 #if !NETCORE
 			if (httpcontext==null)
 				httpcontext =HttpContext.Current;
@@ -176,10 +178,12 @@ namespace GeneXus.Application
 				else
 				{
 					if (tmpFiles == null)
-						tmpFiles = new List<GxFile>();
+						tmpFiles = new ConcurrentDictionary<int, List<GxFile>>();
 					lock (tmpFiles)
 					{
-						tmpFiles.Add(FileUploaded);
+						if (!tmpFiles.ContainsKey(gxcontext.handle))
+							tmpFiles[gxcontext.handle] = new List<GxFile>();
+						tmpFiles[gxcontext.handle].Add(FileUploaded);
 					}
 				}
 			}
@@ -260,20 +264,25 @@ namespace GeneXus.Application
 				}
 			}
 		}
-		public void DeleteTemporaryFiles()
+		public void DeleteTemporaryFiles(int handle)
 		{
+			GXLogging.Debug(log, "DeleteTemporaryFiles handle: " + handle);
 			if (!DISABLED)
 			{
 				if (tmpFiles != null)
 				{
+					
 					lock (tmpFiles)
 					{
-						foreach (GxFile s in tmpFiles)
+						if (tmpFiles.ContainsKey(handle))
 						{
-							s.Delete();
-							GXLogging.Debug(log, "File.Delete ", s.GetAbsoluteName());
+							foreach (GxFile s in tmpFiles[handle])
+							{
+								s.Delete();
+								GXLogging.Debug(log, "File.Delete ", s.GetAbsoluteName());
+							}
+							tmpFiles[handle].Clear();
 						}
-						tmpFiles.Clear();
 					}
 				}
 			}
