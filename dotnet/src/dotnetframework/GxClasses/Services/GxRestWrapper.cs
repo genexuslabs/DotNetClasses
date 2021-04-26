@@ -310,7 +310,7 @@ namespace GeneXus.Application
 					}
 					else
 					{
-						wrapped = true;
+						wrapped = false;
 					}
 				}
 			}
