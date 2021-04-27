@@ -24,8 +24,8 @@ namespace GeneXus.Application
 			{
 				if (parms.Length > 0)
 				{
-					string[] noNameParms = Array.Empty<string>();
-					return $"{key}{ConvertParmsToQueryString(parms, noNameParms)}";
+					string[] noParmsName = Array.Empty<string>();
+					return $"{key}{ConvertParmsToQueryString(parms, noParmsName)}";
 				}
 				else
 				{
