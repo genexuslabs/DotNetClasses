@@ -5,6 +5,7 @@
 		<SignAssembly>false</SignAssembly>
 		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
 		<WarningsNotAsErrors>CS8032;CS1609;CS1069;$(WarningsNotAsErrors)</WarningsNotAsErrors>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(OutputType)' == 'Exe' OR '$(OutputType)' == 'WinExe'">
 		<ApplicationIcon >$(MSBuildThisFileDirectory)\src\resources\Default_App.ico</ApplicationIcon>
