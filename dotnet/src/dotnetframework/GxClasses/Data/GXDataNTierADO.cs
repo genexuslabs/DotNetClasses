@@ -127,7 +127,7 @@ namespace GeneXus.Data.NTier.ADO
 					}
 				}
 				if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute), _gxDbCommand.Conn.DataStore.Context.HttpContext);
+                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute), _gxDbCommand.Conn.DataStore.Context);
                 fileName = new FileInfo(fileName).FullName;
             }
             catch (IOException e)
@@ -386,7 +386,7 @@ namespace GeneXus.Data.NTier.ADO
 				TraceRow("GetBlobFile fileName:" + fileName + ", retval bytes:" + retval);
 
                 if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context.HttpContext);
+                    GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context);
 
 				fileName = file.GetURI();
             }

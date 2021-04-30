@@ -1577,7 +1577,7 @@ namespace GeneXus.Utils
 									MethodInfo setBlob = GetMethodInfo("gxtv_" + GetType().Name + "_" + name + "_setblob");
 									if (setBlob != null)
 									{
-										if (HttpHelper.GetHttpRequestPostedFile(context.HttpContext, sVar, out uploadPath))
+										if (HttpHelper.GetHttpRequestPostedFile(context, sVar, out uploadPath))
 										{
 											string fileName = HttpHelper.GetHttpRequestPostedFileName(this.context.HttpContext, sVar);
 											string fileType = HttpHelper.GetHttpRequestPostedFileType(this.context.HttpContext, sVar);
