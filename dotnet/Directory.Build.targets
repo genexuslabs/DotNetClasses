@@ -5,6 +5,8 @@
 		<SignAssembly>false</SignAssembly>
 		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
 		<WarningsNotAsErrors>CS8032;CS1609;CS1069;$(WarningsNotAsErrors)</WarningsNotAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(OverridePackable)'=='true'">
 		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(OutputType)' == 'Exe' OR '$(OutputType)' == 'WinExe'">
