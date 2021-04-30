@@ -23,5 +23,15 @@
 			<HintPath>..\..\libs\GeneXusServerlessAPI.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+	<ItemGroup>
+		<Content Include="$(OutDir)\bin\function.deps.json">
+			<Pack>true</Pack>
+			<PackagePath>\lib\$(TargetFramework)</PackagePath>
+		</Content>
+		<Content Include="$(OutDir)\bin\extensions.json">
+			<Pack>true</Pack>
+			<PackagePath>\lib\$(TargetFramework)</PackagePath>
+		</Content>
+	</ItemGroup>
 
 </Project>
