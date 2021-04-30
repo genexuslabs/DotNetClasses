@@ -20,9 +20,6 @@ jobs:
       SolutionFile: dotnet\DotNetStandardClasses.sln
     
     runs-on: windows-latest
-    strategy:
-      matrix:
-        dotnet: ['3.1.x', '5.0.x']
 
     steps:
     - name: Checkout
@@ -34,12 +31,9 @@ jobs:
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: '6.0.100-preview.3.21202.5'
-        
-    - name: Install dotnet ${{ matrix.dotnet-version }}
-      uses: actions/setup-dotnet@v1
+    - uses: actions/setup-dotnet@v1
       with:
         source-url: https://nuget.pkg.github.com/genexuslabs/index.json
-        dotnet-version: ${{ matrix.dotnet-version }}
       env:
         NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
