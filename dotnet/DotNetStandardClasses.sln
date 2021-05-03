@@ -129,11 +129,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynServiceOData", "src\dotn
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azurefunctionhandlers", "azurefunctionhandlers", "{BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.QueueHandler", "src\dotnetcore\AzureFunctionHandlers\GeneXus.Deploy.AzureFunctions.QueueHandler\GeneXus.Deploy.AzureFunctions.QueueHandler.csproj", "{5DE61A86-791D-4A14-AF3B-1FA843ACE751}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.QueueHandler", "src\dotnetcore\AzureFunctionHandlers\QueueHandler\GeneXus.Deploy.AzureFunctions.QueueHandler.csproj", "{5DE61A86-791D-4A14-AF3B-1FA843ACE751}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.ServiceBusHandler", "src\dotnetcore\AzureFunctionHandlers\GeneXus.Deploy.AzureFunctions.ServiceBusHandler\GeneXus.Deploy.AzureFunctions.ServiceBusHandler.csproj", "{D4EA9E93-4F7E-45F2-8F1A-6AC8E41F6976}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.ServiceBusHandler", "src\dotnetcore\AzureFunctionHandlers\ServiceBusHandler\GeneXus.Deploy.AzureFunctions.ServiceBusHandler.csproj", "{D4EA9E93-4F7E-45F2-8F1A-6AC8E41F6976}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.TimerHandler", "src\dotnetcore\AzureFunctionHandlers\GeneXus.Deploy.AzureFunctions.TimerHandler\GeneXus.Deploy.AzureFunctions.TimerHandler.csproj", "{01A66394-6949-4DAB-914A-407F14D1204F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.TimerHandler", "src\dotnetcore\AzureFunctionHandlers\TimerHandler\GeneXus.Deploy.AzureFunctions.TimerHandler.csproj", "{01A66394-6949-4DAB-914A-407F14D1204F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
