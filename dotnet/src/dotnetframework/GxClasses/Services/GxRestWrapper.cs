@@ -634,7 +634,7 @@ namespace GeneXus.Application
 			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
 			{
 				string key = parameters.First().Key;
-				json = JSONHelper.Serialize(parameters[key], Encoding.UTF8, knownTypes);
+				json = JSONHelper.WCFSerialize(parameters[key], Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
