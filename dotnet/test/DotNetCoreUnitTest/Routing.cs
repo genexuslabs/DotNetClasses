@@ -8,7 +8,7 @@ using GeneXus.Utils;
 
 namespace xUnitTesting
 {
-    public class UnitTest1
+    public class Routing
     {
         [Fact]
 		public void TestProcRestInModule()
