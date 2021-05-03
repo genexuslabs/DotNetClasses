@@ -176,13 +176,13 @@ namespace GeneXus.Http
 		private void RestoreInternalKeys()
 		{
 			if (InternalKeyNavigationHelper!=null)
-				Set(GxContext.GX_NAV_HELPER, InternalKeyNavigationHelper);
+				Set<GXNavigationHelper>(GxContext.GX_NAV_HELPER, InternalKeyNavigationHelper);
 			if (InternalKeyAjaxEncryptionKey != null)
-				Set(CryptoImpl.AJAX_ENCRYPTION_KEY, InternalKeyAjaxEncryptionKey);
+				Set<string>(CryptoImpl.AJAX_ENCRYPTION_KEY, InternalKeyAjaxEncryptionKey);
 			if (InternalKeyGxLanguage != null)
-				Set(GxContext.GXLanguage, InternalKeyGxLanguage);
+				Set<string>(GxContext.GXLanguage, InternalKeyGxLanguage);
 			if (InternalKeyGxTheme != null)
-				Set(GxContext.GXTheme, InternalKeyGxTheme);
+				Set<Hashtable>(GxContext.GXTheme, InternalKeyGxTheme);
 		}
 		public void Clear()
         {
