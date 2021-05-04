@@ -684,10 +684,19 @@ namespace GeneXus.Application
 		protected static object MakeRestType(object v)
 		{
 			Type vType = v.GetType();
-			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) //Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+			Type itemType;
+			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
 			{
-				Type itemType = v.GetType().GetGenericArguments()[0];
-				Type restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+				Type restItemType=null;
+				itemType = v.GetType().GetGenericArguments()[0];
+				if (typeof(IGXBCCollection).IsAssignableFrom(vType))//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				{
+					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+				}
+				if (restItemType == null)//Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+				{
+					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+				}
 				bool isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
 				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
 				return Activator.CreateInstance(genericListItemType, new object[] { v , isWrapped });
