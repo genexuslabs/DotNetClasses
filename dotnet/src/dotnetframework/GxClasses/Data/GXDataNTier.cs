@@ -168,7 +168,7 @@ namespace GeneXus.Data.NTier
 					else if (pdef.Out)
 					{
 						stmt.RegisterOutParameter(idxParmCollection, null);
-						continue;
+						goto Increment;
 					}
 
 					if (pdef.Nullable)
@@ -254,6 +254,7 @@ namespace GeneXus.Data.NTier
 								break;
 						}
 					}
+				Increment:
 					idx += 1;
 					idxParmCollection += 1;
 				}
