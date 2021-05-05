@@ -537,14 +537,14 @@ namespace GeneXus.Utils
 			{
 				if (length > 0)
 				{
-					if (_lastPos + length > _currentLineR.Length)
+					if (_currentLineR.Length > _lastPos + length)
 					{
-						dlPos = _currentLineR.Length;
+						dlPos = _lastPos + length;
 						retval = GX_ASCDEL_OVERFLOW;
 					}
 					else
 					{
-						dlPos = _lastPos + length;
+						dlPos = _currentLineR.Length;
 					}
 				}
 				else
@@ -605,13 +605,13 @@ namespace GeneXus.Utils
 			{
 				if (length > 0)
 				{
-					if (_lastPos + length > currentLineBytes.Length)
+					if (currentLineBytes.Length > _lastPos + length)
 					{
-						dlPos = currentLineBytes.Length;
+						dlPos = _lastPos + length;
 						retval = GX_ASCDEL_OVERFLOW;
 					}
 					else
-						dlPos = _lastPos + length;
+						dlPos = currentLineBytes.Length;
 				}
 				else
 				{ 
@@ -798,32 +798,39 @@ namespace GeneXus.Utils
 		short substringByte(string sEnc, string s, int len, out string substring)
 		{
 			short retval = GX_ASCDEL_SUCCESS;
-			int len1;
 			if (sEnc.Trim().Length == 0)
 			{
-				len1 = len == 0 ? s.Length : len;
-				if (s.Length <= len1)
+				if (len == 0)
 				{
 					substring = s;
-					if (s.Length <= len)
-						retval = GX_ASCDEL_OVERFLOW;
+				}
+				else if (s.Length <= len)
+				{
+					substring = s;
 				}
 				else
-					substring = s.Substring(0, len1);
+				{
+					retval = GX_ASCDEL_OVERFLOW;
+					substring = s.Substring(0, len);
+				}
 			}
 			else
 			{
 				Encoding enc = GXUtil.GxIanaToNetEncoding(sEnc, false);
 				byte[] b1 = enc.GetBytes(s);
-				len1 = len == 0 ? b1.Length : len;
-				if (b1.Length <= len1)
+				if (len == 0)
 				{
 					substring = s;
-					if (b1.Length < len)
-						retval = GX_ASCDEL_OVERFLOW;
+				}
+				else if (b1.Length <= len)
+				{
+					substring = s;
 				}
 				else
-					substring = enc.GetString(b1, 0, len1);
+				{
+					retval = GX_ASCDEL_OVERFLOW;
+					substring = enc.GetString(b1, 0, len);
+				}
 			}
 			return retval;
 		}
