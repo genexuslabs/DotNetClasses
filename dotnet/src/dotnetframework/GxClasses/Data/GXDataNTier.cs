@@ -418,7 +418,8 @@ namespace GeneXus.Data.NTier
 
 						if (parmHasValue != null)
 						{
-							if (oCur.getFieldSetter().ParameterDefinition.Count == 0) //Backward compatibility
+							List<ParDef> pdefList = oCur.getFieldSetter().ParameterDefinition;
+							if (pdefList.Count == 0) //Backward compatibility
 							{
 								Object[] parmsNew = new Object[parms.Length + parmHasValue.Length];
 								parmHasValue.CopyTo(parmsNew, 0);
@@ -428,12 +429,20 @@ namespace GeneXus.Data.NTier
 							else
 							{
 								List<object> parmsNew = new List<object>();
-								for (int i=0; i<parms.Length; i++)
+								int idx = 0;
+								for (int i=0; i< pdefList.Count; i++)
 								{
+									ParDef pdef = pdefList[i];
 									if ((short)parmHasValue[i] == 0)
 									{
-										parmsNew.Add(parms[i]);
+										if (pdef.Nullable)
+										{
+											parmsNew.Add(parms[idx]);
+											idx += 1;
+										}
+										parmsNew.Add(parms[idx]);
 									}
+									idx += 1;
 								}
 								_dataStoreHelper.setParameters(cursor, oCur.getFieldSetter(), parmsNew.ToArray());
 							}
