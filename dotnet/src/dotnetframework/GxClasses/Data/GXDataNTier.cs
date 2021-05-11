@@ -69,6 +69,7 @@ namespace GeneXus.Data.NTier
         int RecordCount { get;}
         void OnCommitEvent(object instance, string method);
         int readNextErrorRecord();
+		List<ParDef> DynamicParameters { get; }
     }
 	public interface IFieldGetter
 	{
@@ -418,7 +419,7 @@ namespace GeneXus.Data.NTier
 
 						if (parmHasValue != null)
 						{
-							List<ParDef> pdefList = oCur.getFieldSetter().ParameterDefinition;
+							List<ParDef> pdefList = oCur.DynamicParameters;
 							if (pdefList.Count == 0) //Backward compatibility
 							{
 								Object[] parmsNew = new Object[parms.Length + parmHasValue.Length];
