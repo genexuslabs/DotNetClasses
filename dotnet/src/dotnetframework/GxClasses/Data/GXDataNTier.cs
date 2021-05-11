@@ -434,13 +434,16 @@ namespace GeneXus.Data.NTier
 								for (int i=0; i< pdefList.Count; i++)
 								{
 									ParDef pdef = pdefList[i];
-									if ((short)parmHasValue[i] == 0)
+									if (pdef.Nullable)
 									{
-										if (pdef.Nullable)
+										if (parmHasValue[i] == 0)
 										{
 											parmsNew.Add(parms[idx]);
-											idx += 1;
 										}
+										idx += 1;
+									}
+									if (parmHasValue[i] == 0)
+									{
 										parmsNew.Add(parms[idx]);
 									}
 									idx += 1;
