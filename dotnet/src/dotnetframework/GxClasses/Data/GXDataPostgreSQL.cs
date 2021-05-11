@@ -323,38 +323,27 @@ namespace GeneXus.Data
 					while (byteAPosition < byteALength)
 					{
 						byte octalValue;
-						if (BackendData[byteAPosition] == ASCIIByteBackSlash)
-						{
-							if (byteAPosition + 1 == byteALength)
-							{
-								octalValue = ASCIIByteBackSlash;
-								byteAPosition++;
-							}
-							else if (byteAPosition + 3 < byteALength &&
-								BackendData[byteAPosition + 1] >= ASCIIByteb0 && BackendData[byteAPosition + 1] <= ASCIIByteb7 &&
-								BackendData[byteAPosition + 2] >= ASCIIByteb0 && BackendData[byteAPosition + 2] <= ASCIIByteb7 &&
-								BackendData[byteAPosition + 3] >= ASCIIByteb0 && BackendData[byteAPosition + 3] <= ASCIIByteb7)
-							{
-								octalValue = FastConverter.ToByteEscapeFormat(BackendData, byteAPosition + 1);
-								byteAPosition += 4;
-							}
-							else if (BackendData[byteAPosition + 1] == ASCIIByteBackSlash)
-							{
-								octalValue = ASCIIByteBackSlash;
-								byteAPosition += 2;
-							}
-							else
-							{
-								octalValue = ASCIIByteBackSlash;
-								byteAPosition++;
-							}
-						}
-						else
+						byte b = BackendData[byteAPosition];
+						if (b >= 0x20 && b < 0x7F && b != 0x27 && b != 0x5C)
 						{
 							octalValue = BackendData[byteAPosition];
 							byteAPosition++;
+							ms.WriteByte((Byte)octalValue);
 						}
-						ms.WriteByte((Byte)octalValue);
+						else if (BackendData[byteAPosition] == ASCIIByteBackSlash &&
+								byteAPosition + 3 < byteALength &&
+								BackendData[byteAPosition + 1] >= ASCIIByteb0 && BackendData[byteAPosition + 1] <= ASCIIByteb7 &&
+								BackendData[byteAPosition + 2] >= ASCIIByteb0 && BackendData[byteAPosition + 2] <= ASCIIByteb7 &&
+								BackendData[byteAPosition + 3] >= ASCIIByteb0 && BackendData[byteAPosition + 3] <= ASCIIByteb7)
+						{
+							octalValue = FastConverter.ToByteEscapeFormat(BackendData, byteAPosition + 1);
+							byteAPosition += 4;
+							ms.WriteByte((Byte)octalValue);
+						}
+						else
+						{
+							return BackendData;
+						}
 					}
 					return ms.ToArray();
 				}
