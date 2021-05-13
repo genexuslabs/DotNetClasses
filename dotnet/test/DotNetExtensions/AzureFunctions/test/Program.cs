@@ -14,7 +14,7 @@ namespace Extensiones.AzureFunctions
 		[Fact]
 		public void TestAzureFunctionsInterface()
 		{
-			string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "amyprochandler.dll");
+			string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "amyprochandler");
 			Assembly obj = Assembly.LoadFile(path);
 			Type objexec = obj.GetType("GeneXus.Programs.amyprochandler");
 			object objgxproc= Activator.CreateInstance(objexec);
