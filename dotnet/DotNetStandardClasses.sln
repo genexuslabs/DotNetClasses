@@ -135,6 +135,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.TimerHandler", "src\dotnetcore\AzureFunctionHandlers\TimerHandler\GeneXus.Deploy.AzureFunctions.TimerHandler.csproj", "{01A66394-6949-4DAB-914A-407F14D1204F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extensions", "extensions", "{B8478785-AA65-4E08-ADC7-A93C025B6E8C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azurefunctionhandlers", "azurefunctionhandlers", "{9D871E7D-A5A7-4874-8B4C-78C7D6A0191F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "amyprochandler", "test\DotNetExtensions\AzureFunctions\amyprocedurehandler\amyprochandler.csproj", "{1A86A494-72BC-4EE0-B2F0-27032DA4E6CF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureInteropTests", "test\DotNetExtensions\AzureFunctions\test\AzureInteropTests.csproj", "{5DF1C830-D3B1-4DCD-8559-531AD044541E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -353,6 +361,14 @@ Global
 		{01A66394-6949-4DAB-914A-407F14D1204F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{01A66394-6949-4DAB-914A-407F14D1204F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{01A66394-6949-4DAB-914A-407F14D1204F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A86A494-72BC-4EE0-B2F0-27032DA4E6CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A86A494-72BC-4EE0-B2F0-27032DA4E6CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A86A494-72BC-4EE0-B2F0-27032DA4E6CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A86A494-72BC-4EE0-B2F0-27032DA4E6CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DF1C830-D3B1-4DCD-8559-531AD044541E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DF1C830-D3B1-4DCD-8559-531AD044541E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DF1C830-D3B1-4DCD-8559-531AD044541E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DF1C830-D3B1-4DCD-8559-531AD044541E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -420,6 +436,10 @@ Global
 		{5DE61A86-791D-4A14-AF3B-1FA843ACE751} = {BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}
 		{D4EA9E93-4F7E-45F2-8F1A-6AC8E41F6976} = {BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}
 		{01A66394-6949-4DAB-914A-407F14D1204F} = {BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}
+		{B8478785-AA65-4E08-ADC7-A93C025B6E8C} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
+		{9D871E7D-A5A7-4874-8B4C-78C7D6A0191F} = {B8478785-AA65-4E08-ADC7-A93C025B6E8C}
+		{1A86A494-72BC-4EE0-B2F0-27032DA4E6CF} = {9D871E7D-A5A7-4874-8B4C-78C7D6A0191F}
+		{5DF1C830-D3B1-4DCD-8559-531AD044541E} = {9D871E7D-A5A7-4874-8B4C-78C7D6A0191F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
