@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net461</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<AssemblyName>GxMail</AssemblyName>
 		<RootNamespace>GeneXus.Mail</RootNamespace>
 		<PackageTags>SMTP Exchange POP3</PackageTags>
@@ -32,7 +32,7 @@
 			<HintPath>..\libs\Microsoft.Exchange.WebServices.dll</HintPath>
 		</Reference>
 
-		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 
 	</ItemGroup>
 </Project>

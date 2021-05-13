@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net461</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GxPdfReportsCS</RootNamespace>
 		<AssemblyName>GxPdfReportsCS</AssemblyName>
 		<RunCodeAnalysis>false</RunCodeAnalysis>

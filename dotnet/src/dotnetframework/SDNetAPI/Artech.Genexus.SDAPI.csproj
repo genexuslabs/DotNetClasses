@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net461</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>Artech.Genexus.SDAPI</RootNamespace>
 		<AssemblyName>Artech.Genexus.SDAPI</AssemblyName>
 		<PackageId>GeneXus.SDAPI</PackageId>
