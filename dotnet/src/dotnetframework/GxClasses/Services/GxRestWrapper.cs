@@ -128,7 +128,7 @@ namespace GeneXus.Application
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
-				return Serialize(outputParameters, wrapped, _procWorker.IsApiObject);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -270,7 +270,7 @@ namespace GeneXus.Application
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters);			
-				return Serialize(outputParameters, wrapped, _procWorker.IsApiObject);
+				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -623,7 +623,7 @@ namespace GeneXus.Application
 			GXLogging.Error(log, "WebException", ex);
 			return SetError("500", ex.Message);
 		}
-		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped, bool ordered)
+		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
 		{
 			string json;
 			var knownTypes = new List<Type>();

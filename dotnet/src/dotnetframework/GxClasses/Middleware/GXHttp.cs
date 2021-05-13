@@ -2290,7 +2290,7 @@ namespace GeneXus.Http
 			string sValue = null;
 			try
 			{
-				if (GxContext.GetHttpRequestPostedFile(localHttpContext, sVar, out sValue))
+				if (GxContext.GetHttpRequestPostedFile(context, sVar, out sValue))
 					return sValue;
 
 				if (FormVars != null)

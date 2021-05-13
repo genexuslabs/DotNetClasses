@@ -127,7 +127,7 @@ namespace GeneXus.Data.NTier.ADO
 					}
 				}
 				if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute), _gxDbCommand.Conn.DataStore.Context.HttpContext);
+                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute), _gxDbCommand.Conn.DataStore.Context);
                 fileName = new FileInfo(fileName).FullName;
             }
             catch (IOException e)
@@ -386,7 +386,7 @@ namespace GeneXus.Data.NTier.ADO
 				TraceRow("GetBlobFile fileName:" + fileName + ", retval bytes:" + retval);
 
                 if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context.HttpContext);
+                    GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context);
 
 				fileName = file.GetURI();
             }
@@ -882,6 +882,29 @@ namespace GeneXus.Data.NTier.ADO
 				}
 			}
 		}
+		List<ParDef> ICursor.DynamicParameters => _dynamicParameters;
+		List<ParDef> _dynamicParameters = new List<ParDef>();
+		protected virtual void bindDynamicParms(Object[] ptb)
+		{
+			int pos = 1;
+			if (ptb != null)
+			{
+				_dynamicParameters.Clear();
+				if (ptb.Length > 0)
+				{
+					if (ptb[0] is ParDef)
+					{
+						foreach (ParDef p in ptb)
+						{
+							if (p.Return)
+								continue;
+							_dynamicParameters.Add(p);
+							pos++;
+						}
+					}
+				}
+			}
+		}
         public virtual void OnCommitEvent(object instance, string method)
         {
             throw (new GxADODataException("OnCommitEvent operation not allowed in this type of cursor. Cursor" + _name));
@@ -1115,6 +1138,7 @@ namespace GeneXus.Data.NTier.ADO
                     dynStmt = ((DataStoreHelperBase)parent).getDynamicStatement(cursorNum, connectionProvider.getDynConstraints());
                 _stmt = (string)dynStmt[0];
 
+				bindDynamicParms(_parmBinds);
                 List<object> newParmBinds = new List<object>();
                 parmHasValue = (short[])dynStmt[1];
                 for (int i = 0; i < _parmBinds.Length; i++)
