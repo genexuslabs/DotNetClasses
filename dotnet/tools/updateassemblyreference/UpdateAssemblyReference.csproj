@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net461</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>UpdateAssemblyReference</RootNamespace>
 		<AssemblyName>UpdateAssemblyReference</AssemblyName>
 		<PackageId>GeneXus.UpdateAssemblyReference</PackageId>

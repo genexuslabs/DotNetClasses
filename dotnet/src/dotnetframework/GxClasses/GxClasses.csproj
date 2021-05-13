@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net461</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GxClasses</RootNamespace>
 		<NoWarn>618;1607;1698</NoWarn>
 		<AssemblyName>GxClasses</AssemblyName>

@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net461</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GXBluemix</RootNamespace>
 		<AssemblyName>GXBluemix</AssemblyName>
 		<NoWarn>CA1501;CA1812</NoWarn>
