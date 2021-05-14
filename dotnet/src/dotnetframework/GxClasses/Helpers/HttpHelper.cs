@@ -215,9 +215,10 @@ namespace GeneXus.Http
 			return string.Empty;
 		}
 
-		public static bool GetHttpRequestPostedFile(HttpContext httpContext, string varName, out string filePath)
+		public static bool GetHttpRequestPostedFile(IGxContext gxContext, string varName, out string filePath)
 		{
 			filePath = null;
+			var httpContext = gxContext.HttpContext;
 			if (httpContext != null)
 			{
 				var pf = GetFormFile(httpContext, varName);
@@ -238,7 +239,7 @@ namespace GeneXus.Http
 #else
 					filePath = file.Create(pf.InputStream);
 #endif
-					GXFileWatcher.Instance.AddTemporaryFile(file, httpContext);
+					GXFileWatcher.Instance.AddTemporaryFile(file, gxContext);
 					return true;
 				}
 			}

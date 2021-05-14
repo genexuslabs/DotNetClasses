@@ -392,25 +392,32 @@ namespace GeneXus.Utils
 		}
 		public double dfrgnum1(out short err)
 		{
-			err = GX_ASCDEL_SUCCESS;
 			if (_readStatus != FileIOStatus.DataReady)
 			{
 				err = GX_ASCDEL_INVALIDSEQUENCE;
 				GXLogging.Error(log, "Error ADF0004 o ADF0006");
 				return GX_ASCDEL_SUCCESS;
 			}
-			string fld = getNextFld(-1);
-			string outStr = StringUtil.ExtractNumber(fld, CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator);
-			try
+			string fld;
+			err = getNextFld(-1, out fld);
+			if (err == GX_ASCDEL_SUCCESS)
 			{
-				err = GX_ASCDEL_SUCCESS;
-				return Convert.ToDouble(outStr, CultureInfo.InvariantCulture.NumberFormat);
+				string outStr = StringUtil.ExtractNumber(fld, CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator);
+				try
+				{
+					err = GX_ASCDEL_SUCCESS;
+					return Convert.ToDouble(outStr, CultureInfo.InvariantCulture.NumberFormat);
+				}
+				catch (Exception e)
+				{
+					err = GX_ASCDEL_INVALIDFORMAT;
+					GXLogging.Error(log, "Error ADF0008", e);
+					return GX_ASCDEL_SUCCESS;
+				}
 			}
-			catch (Exception e)
+			else
 			{
-				err = GX_ASCDEL_INVALIDFORMAT;
-				GXLogging.Error(log, "Error ADF0008", e);
-				return GX_ASCDEL_SUCCESS;
+				return err;
 			}
 		}
 		public short dfrgtxt(out string s, int length)
@@ -421,29 +428,32 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Error ADF0004 o ADF0006");
 				return GX_ASCDEL_INVALIDSEQUENCE;
 			}
-			string fld = getNextFld(length);
-			fld = stripDelimiters(fld);
-			if (length != 0)
+			string fld;
+			short err = getNextFld(length, out fld);
+			if (err == GX_ASCDEL_SUCCESS)
 			{
-				try
+				fld = stripDelimiters(fld);
+				if (length != 0)
 				{
-					s = substringByte(_encodingR, fld, length);
+					try
+					{
+						err = substringByte(_encodingR, fld, length, out s);
+					}
+					catch
+					{
+						s = fld;
+						return GX_ASCDEL_OVERFLOW;
+					}
 				}
-				catch
-				{
+				else
 					s = fld;
-					return GX_ASCDEL_OVERFLOW;
-				}
 			}
-			else
-				s = fld;
-			return 0;
+			return err;
 		}
 		public short dfrgdate(out DateTime d, string fmt, string sep)
 		{
-			short retval = GX_ASCDEL_SUCCESS;
+			short retval;
 			d = DateTimeUtil.NullDate();
-			string[] values = null;
 			int year = 0; int month = 0; int day = 0;
 			if (_readStatus != FileIOStatus.DataReady)
 			{
@@ -451,71 +461,91 @@ namespace GeneXus.Utils
 				return GX_ASCDEL_INVALIDSEQUENCE;
 			}
 
-			string fld = getNextFld(-1);
+			string fld;
+			retval =  getNextFld(-1, out fld);
 
-			try
+			if (retval == GX_ASCDEL_SUCCESS)
 			{
-				values = fld.Split(sep[0]);
-
-				for (int i = 0; i < 3; i++)
+				try
 				{
-					int value = Convert.ToInt32(values[i]);
-					switch (fmt[i])
+					string[] values = fld.Split(sep[0]);
+
+					for (int i = 0; i < 3; i++)
 					{
-						case 'y':
-							year = value;
-							break;
-						case 'm':
-							month = value;
-							break;
-						case 'd':
-							day = value;
-							break;
-						default:
-							return GX_ASCDEL_BADFMTSTR;
+						int value = Convert.ToInt32(values[i]);
+						switch (fmt[i])
+						{
+							case 'y':
+								year = value;
+								break;
+							case 'm':
+								month = value;
+								break;
+							case 'd':
+								day = value;
+								break;
+							default:
+								return GX_ASCDEL_BADFMTSTR;
+						}
+					}
+
+					if (month == 0 && day == 0 && year == 0)
+					{
+						d = DateTimeUtil.NullDate();
+					}
+					else if (month < 1 || month > 12 || day < 1 || day > 31)
+					{
+						retval = GX_ASCDEL_INVALIDDATE;
+						GXLogging.Error(log, "Error ADF0010");
+					}
+					else
+					{
+						d = new DateTime(year, month, day);
 					}
 				}
-
-				if (month == 0 && day == 0 && year == 0)
+				catch
 				{
-					d = DateTimeUtil.NullDate();
+					retval = GX_ASCDEL_INVALIDFORMAT;
 				}
-				else if (month < 1 || month > 12 || day < 1 || day > 31)
-				{
-					retval = GX_ASCDEL_INVALIDDATE;
-					GXLogging.Error(log, "Error ADF0010");
-				}
-				else
-				{
-					d = new DateTime(year, month, day);
-				}
-			}
-			catch
-			{
-				retval = GX_ASCDEL_INVALIDFORMAT;
 			}
 			return retval;
 		}
-		string getNextFld(int length)
+		short getNextFld(int length, out string field)
 		{
+			short retval = GX_ASCDEL_SUCCESS;
 			int dlPos;
-			if (_encodingR.Trim().Length > 0)       
-				return getNextFldByte(length);
+			if (_encodingR.Trim().Length > 0)
+			{
+				return getNextFldByte(length, out field);
+			}
 
-			if (length == -1 && _fldDelimiterR.Length == 0) 
-				return "";
-			
+			if (length == -1 && _fldDelimiterR.Length == 0)
+			{
+				field = string.Empty;
+				return retval;
+			}
+
 			if (_lastPos >= _currentLineR.Length)
-				return "";
+			{
+				field = string.Empty;
+				return retval;
+			}
 			
 			int oPos = _lastPos;
 			
 			if (_fldDelimiterR.Length == 0) 
 			{
 				if (length > 0)
-				{ 
-					dlPos = Math.Min(_lastPos + length, _currentLineR.Length);
-					
+				{
+					if (_currentLineR.Length > _lastPos + length)
+					{
+						dlPos = _lastPos + length;
+						retval = GX_ASCDEL_OVERFLOW;
+					}
+					else
+					{
+						dlPos = _currentLineR.Length;
+					}
 				}
 				else
 				{ 
@@ -539,28 +569,54 @@ namespace GeneXus.Utils
 				_lastPos = dlPos + _fldDelimiterR.Length;       
 			}
 			if (dlPos < oPos)
-				return "";
-			return _currentLineR.Substring(oPos, dlPos - oPos);
+			{
+				field = string.Empty;
+			}
+			else
+			{
+				field = _currentLineR.Substring(oPos, dlPos - oPos);
+			}
+			return retval;
 		}
-		string getNextFldByte(int length)
+		short getNextFldByte(int length, out string field)
 		{
+			short retval = GX_ASCDEL_SUCCESS;
 			int dlPos;
 			Encoding enc = GXUtil.GxIanaToNetEncoding(_encodingR, false);
 			byte[] currentLineBytes = enc.GetBytes(_currentLineR);
 			byte[] fldDelimiterBytes = enc.GetBytes(_fldDelimiterR);
 			byte[] strDelimiterBytes = enc.GetBytes(_strDelimiterR);
-			
-			if (length == -1 && _fldDelimiterR.Length == 0) 
-				return "";
-			
+
+			if (length == -1 && _fldDelimiterR.Length == 0)
+			{
+				field = string.Empty;
+				return retval;
+			}
+
 			if (_lastPos >= currentLineBytes.Length)
-				return "";
+			{
+				field = string.Empty;
+				return retval;
+			}
 			
 			int oPos = _lastPos;
 			
 			if (_fldDelimiterR.Length == 0) 
 			{
-				dlPos = Math.Min(_lastPos + length, currentLineBytes.Length);
+				if (length > 0)
+				{
+					if (currentLineBytes.Length > _lastPos + length)
+					{
+						dlPos = _lastPos + length;
+						retval = GX_ASCDEL_OVERFLOW;
+					}
+					else
+						dlPos = currentLineBytes.Length;
+				}
+				else
+				{ 
+					dlPos = _currentLineR.Length;
+				}
 				_lastPos = dlPos;       
 			}
 			else
@@ -577,12 +633,21 @@ namespace GeneXus.Utils
 
 				if (dlPos == -1)    
 					dlPos = currentLineBytes.Length;
-				_lastPos = dlPos + fldDelimiterBytes.Length;        
+				_lastPos = dlPos + fldDelimiterBytes.Length;
+
+				if ((dlPos - oPos) > length)
+					retval = GX_ASCDEL_OVERFLOW;
 			}
 
 			if (dlPos < oPos)
-				return "";
-			return enc.GetString(currentLineBytes, oPos, dlPos - oPos);
+			{
+				field = string.Empty;
+			}
+			else
+			{
+				field = enc.GetString(currentLineBytes, oPos, dlPos - oPos);
+			}
+			return retval;
 		}
 
 		private int IndexOfArray(byte[] arr1, byte[] arr2, int pos)
@@ -722,32 +787,52 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Error ADF0004");
 				return GX_ASCDEL_INVALIDSEQUENCE;
 			}
-			appendFld(_strDelimiterW + substringByte(_encodingW, s, len) + _strDelimiterW);
-			return GX_ASCDEL_SUCCESS;
+			string substr;
+			short retval = substringByte(_encodingW, s, len, out substr);
+			if (retval == GX_ASCDEL_SUCCESS)
+			{
+				appendFld(_strDelimiterW + substr + _strDelimiterW);
+			}
+			return retval;
 		}
-		string substringByte(string sEnc, string s, int len)
+		short substringByte(string sEnc, string s, int len, out string substring)
 		{
-			string s1;
-			int len1;
+			short retval = GX_ASCDEL_SUCCESS;
 			if (sEnc.Trim().Length == 0)
 			{
-				len1 = len == 0 ? s.Length : len;
-				if (s.Length <= len1)
-					s1 = s;
+				if (len == 0)
+				{
+					substring = s;
+				}
+				else if (s.Length <= len)
+				{
+					substring = s;
+				}
 				else
-					s1 = s.Substring(0, len1);
+				{
+					retval = GX_ASCDEL_OVERFLOW;
+					substring = s.Substring(0, len);
+				}
 			}
 			else
 			{
 				Encoding enc = GXUtil.GxIanaToNetEncoding(sEnc, false);
 				byte[] b1 = enc.GetBytes(s);
-				len1 = len == 0 ? b1.Length : len;
-				if (b1.Length <= len1)
-					s1 = s;
+				if (len == 0)
+				{
+					substring = s;
+				}
+				else if (b1.Length <= len)
+				{
+					substring = s;
+				}
 				else
-					s1 = enc.GetString(b1, 0, len1);
+				{
+					retval = GX_ASCDEL_OVERFLOW;
+					substring = enc.GetString(b1, 0, len);
+				}
 			}
-			return s1;
+			return retval;
 		}
 
 		public short dfwpdate(DateTime dt, string fmt, string sep)
