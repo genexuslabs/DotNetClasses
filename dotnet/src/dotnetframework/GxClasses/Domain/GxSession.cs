@@ -38,9 +38,12 @@ namespace GeneXus.Http
 		#region InternalKeys
 		GXNavigationHelper InternalKeyNavigationHelper;
 		string InternalKeyAjaxEncryptionKey; 
-		Hashtable InternalKeyGxTheme; 
-		string InternalKeyGxLanguage; 
-		#endregion
+		Hashtable InternalKeyGxTheme;
+		string InternalKeyGxLanguage;
+#if NETCORE
+		string InternalKeyGxNewSession;
+#endif
+#endregion
 		public GxWebSession()
         {
         }
@@ -170,8 +173,11 @@ namespace GeneXus.Http
 		{
 			InternalKeyNavigationHelper = Get<GXNavigationHelper>(GxContext.GX_NAV_HELPER);
 			InternalKeyAjaxEncryptionKey = Get<string>(CryptoImpl.AJAX_ENCRYPTION_KEY);
-			InternalKeyGxLanguage = Get(GxContext.GXLanguage);
+			InternalKeyGxLanguage = Get<string>(GxContext.GXLanguage);
 			InternalKeyGxTheme = Get<Hashtable>(GxContext.GXTheme);
+#if NETCORE
+			InternalKeyGxNewSession = Get<string>(HttpContextExtensions.NEWSESSION);
+#endif
 		}
 		private void RestoreInternalKeys()
 		{
@@ -183,6 +189,10 @@ namespace GeneXus.Http
 				Set<string>(GxContext.GXLanguage, InternalKeyGxLanguage);
 			if (InternalKeyGxTheme != null)
 				Set<Hashtable>(GxContext.GXTheme, InternalKeyGxTheme);
+#if NETCORE
+			if (InternalKeyGxNewSession != null)
+				Set<string>(GxContext.GXTheme, InternalKeyGxNewSession);
+#endif
 		}
 		public void Clear()
         {
