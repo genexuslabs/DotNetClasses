@@ -517,7 +517,7 @@ namespace GeneXus.Http
 	public static class HttpContextExtensions
 	{
 #if NETCORE
-		static string NEWSESSION = "gxnewSession";
+		internal static string NEWSESSION = "gxnewSession";
 		public static void NewSessionCheck(this HttpContext context)
 		{
 			if (string.IsNullOrEmpty(context.Session.GetString(NEWSESSION)))
