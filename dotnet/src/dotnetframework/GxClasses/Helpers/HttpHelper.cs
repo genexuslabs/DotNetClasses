@@ -517,21 +517,25 @@ namespace GeneXus.Http
 	public static class HttpContextExtensions
 	{
 #if NETCORE
-		internal static string NEWSESSION = "gxnewSession";
+		internal static string NEWSESSION = "GXNEWSESSION";
 		public static void NewSessionCheck(this HttpContext context)
 		{
-			if (string.IsNullOrEmpty(context.Session.GetString(NEWSESSION)))
+			GxWebSession websession = new GxWebSession(new HttpSessionState(context.Session));
+			string value = websession.Get<string>(NEWSESSION);
+			if (string.IsNullOrEmpty(value))
 			{
-				context.Session.SetString(NEWSESSION, true.ToString());
+				websession.Set<string>(NEWSESSION, true.ToString());
 			}
 			else
 			{
-				context.Session.SetString(NEWSESSION, false.ToString());
+				websession.Set<string>(NEWSESSION, false.ToString());
 			}
 		}
 		public static bool IsNewSession(this HttpContext context)
 		{
-			return string.IsNullOrEmpty(context.Session.GetString(NEWSESSION)) || context.Session.GetString(NEWSESSION) == true.ToString();
+			GxWebSession websession = new GxWebSession(new HttpSessionState(context.Session));
+			string value=websession.Get<string>(NEWSESSION);
+			return string.IsNullOrEmpty(value) || value == true.ToString();
 		}
 #else
 		public static bool IsNewSession(this HttpContext context)
