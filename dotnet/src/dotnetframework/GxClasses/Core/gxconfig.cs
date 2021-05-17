@@ -524,19 +524,27 @@ namespace GeneXus.Configuration
 					}
 
 #else
+					string[] basePaths = { FileUtil.GetBasePath(), FileUtil.GetStartupDirectory(), Directory.GetCurrentDirectory() };
 					var appSettings = "appsettings.json";
 					var clientConfig = "client.exe.config";
 					var logConfigFile = GxContext.IsHttpContext ? "log.config":"log.console.config";
-					if (File.Exists(Path.Combine(FileUtil.GetBasePath(), appSettings)))
+					foreach (string basePath in basePaths)
 					{
-						_config = loadConfigJson(appSettings);
+						string clientConfigFullName = Path.Combine(basePath, clientConfig);
+						string logConfigFileFullName = Path.Combine(basePath, logConfigFile);
+						if (File.Exists(Path.Combine(basePath, appSettings)))
+						{
+							_config = loadConfigJson(basePath, appSettings);
+						}
+						else if (File.Exists(clientConfigFullName))
+						{
+							_config = loadConfig(clientConfigFullName);
+						}
+						if (File.Exists(logConfigFileFullName))
+							logConfig(logConfigFileFullName);
+						if (_config != null)
+							break;
 					}
-					else if (File.Exists(clientConfig))
-					{
-						_config = loadConfig(clientConfig);
-					}
-					if (File.Exists(logConfigFile))
-						logConfig(logConfigFile);
 #endif
 				}
 				return _config;
@@ -545,12 +553,12 @@ namespace GeneXus.Configuration
 
 #if NETCORE
 		public static string ScriptPath { get; set; }
-		static NameValueCollection loadConfigJson(string appSettings)
+		static NameValueCollection loadConfigJson(string baseDir, string appSettings)
 		{
 			if (ConfigRoot == null)
 			{
 				var builder = new ConfigurationBuilder()
-					.SetBasePath(FileUtil.GetBasePath())
+					.SetBasePath(baseDir)
 					.AddJsonFile(appSettings, optional: false, reloadOnChange: true)
 
 					.AddEnvironmentVariables();
