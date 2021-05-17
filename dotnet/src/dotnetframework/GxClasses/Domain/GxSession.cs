@@ -47,6 +47,10 @@ namespace GeneXus.Http
 		public GxWebSession()
         {
         }
+		internal GxWebSession(HttpSessionState session)
+		{
+			_httpSession = session;
+		}
         public GxWebSession(IGxContext context)
         {
             if (context.HttpContext != null)
@@ -191,7 +195,7 @@ namespace GeneXus.Http
 				Set<Hashtable>(GxContext.GXTheme, InternalKeyGxTheme);
 #if NETCORE
 			if (InternalKeyGxNewSession != null)
-				Set<string>(GxContext.GXTheme, InternalKeyGxNewSession);
+				Set<string>(HttpContextExtensions.NEWSESSION, InternalKeyGxNewSession);
 #endif
 		}
 		public void Clear()
