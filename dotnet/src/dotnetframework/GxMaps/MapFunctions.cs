@@ -1,91 +1,17 @@
 using System;
 using System.Collections;
+using System.Reflection;
+using GeneXus.Application;
+using GX;
 using System.Collections.Generic;
-
 using GeneXus.Utils;
 using System.IO;
 using System.Globalization;
-using GeneXus.Configuration;
-using GX;
-using Jayrock.Json;
 
 namespace GeneXus.MapServices
 {
-	public class Directions : GxUserType
+	public class LocationInfo : GxUserType
 	{
-		public GxSimpleCollection<Route> Routes;
-		public SdtMessages_Message Messages;
-
-		#region Json
-
-		private static Hashtable mapper;
-
-		public override String JsonMap(String value)
-		{
-			if (mapper == null)
-			{
-				mapper = new Hashtable();
-			}
-			return (String)mapper[value]; ;
-		}
-
-		public override void ToJSON()
-		{
-			ToJSON(true);
-			return;
-		}
-
-		public override void ToJSON(bool includeState)
-		{
-			AddObjectProperty("Routes", Routes, false);
-			AddObjectProperty("Messages", Messages, false);
-			return;
-		}
-
-		#endregion
-
-	}
-	public class Route:GxUserType
-	{
-		public String name;
-		public Double distance;
-		public GxSimpleCollection<String> advisoryNotices;
-		public Double expectedTravelTime;
-		public String transportType;
-		public Geospatial geoline;
-
-		#region Json
-		private static Hashtable mapper;
-		public override String JsonMap(String value)
-		{
-			if (mapper == null)
-			{
-				mapper = new Hashtable();
-			}
-			return (String)mapper[value]; ;
-		}
-
-		public override void ToJSON()
-		{
-			ToJSON(true);
-			return;
-		}
-
-		public override void ToJSON(bool includeState)
-		{
-			AddObjectProperty("name", name, false);
-			AddObjectProperty("distance", distance, false);
-			AddObjectProperty("advisoryNotices", advisoryNotices, false);
-			AddObjectProperty("expectedTravelTime", expectedTravelTime, false);
-			AddObjectProperty("transportType", transportType, false);
-			AddObjectProperty("geoline", geoline, false);
-			return;
-		}
-
-		#endregion
-	}
-
-	public class LocationInfo:  GxUserType {
 		public Geospatial Location;
 		public String Description;
 		public DateTime Time;
@@ -93,7 +19,7 @@ namespace GeneXus.MapServices
 		public Double Heading;
 		public Double Speed;
 
-		#region Json
+#region Json
 		private static Hashtable mapper;
 		public override String JsonMap(String value)
 		{
@@ -122,144 +48,71 @@ namespace GeneXus.MapServices
 			return;
 		}
 
-		#endregion
+#endregion
 	}
 
 	public class Maps
     {
-		public static Directions CalculateDirections(Geospatial a, Geospatial b) {
-			return CalculateDirections(a, b, "", false);
+		private const string GENEXUS_CORE_DLL_PATH = @"GeneXus.dll";
+		private const string NAMESPACE = @"GeneXus.Core.genexus.common";
+		private static Assembly assembly;
+
+		private const string DIRECTIONS_PARAMETERS_SDT_CLASS_NAME = @"SdtDirectionsRequestParameters";
+		
+		public static dynamic CalculateDirections(Geospatial a, Geospatial b, string transportType = "", bool requestAlternateRoutes = false)
+		{
+			LoadAssemblyIfNeeded();
+
+			Type classType = assembly.GetType(NAMESPACE + "." + DIRECTIONS_PARAMETERS_SDT_CLASS_NAME, false, ignoreCase: true);
+			if (classType != null && Activator.CreateInstance(classType) is GxUserType parametersSDT)
+			{
+				classType.GetProperty("gxTpr_Sourcelocation").SetValue(parametersSDT, a);
+				classType.GetProperty("gxTpr_Destinationlocation").SetValue(parametersSDT, b);
+				classType.GetProperty("gxTpr_Transporttype").SetValue(parametersSDT, transportType);
+				classType.GetProperty("gxTpr_Requestalternateroutes").SetValue(parametersSDT, requestAlternateRoutes);
+
+				return CalculateDirections(ref parametersSDT);
+			}
+
+			return null;
 		}
 
-		public static Directions CalculateDirections(Geospatial a, Geospatial b, String transportType ,
-									   bool requestAlternateRoutes)
+		private const string DIRECTIONS_SERVICE_INTERNAL_PROCEDURE_CLASS_NAME = @"googlemapsdirectionsserviceinternal";
+
+		public static dynamic CalculateDirections(ref GxUserType directionsParameters)
 		{
-			Directions directionsCalculated = new Directions();
-			String ApiKey = "";
-			if (Config.GetValueOf("GoogleApiKey", out ApiKey))
+			LoadAssemblyIfNeeded();
+
+			Type procedureClassType = assembly.GetType(NAMESPACE + "." + DIRECTIONS_SERVICE_INTERNAL_PROCEDURE_CLASS_NAME, false, true);
+			Type sdtClassType = assembly.GetType(NAMESPACE + "." + DIRECTIONS_PARAMETERS_SDT_CLASS_NAME, false, ignoreCase: true);
+			if (procedureClassType != null && sdtClassType != null)
 			{
-				String queryString = $"json?key={ApiKey}&origin={a.Latitude.ToString(CultureInfo.InvariantCulture)},{a.Longitude.ToString(CultureInfo.InvariantCulture)}&destination={b.Latitude.ToString(CultureInfo.InvariantCulture)},{b.Longitude.ToString(CultureInfo.InvariantCulture)}";
-				String transportMode = TransportMode(transportType);
-				if (!String.IsNullOrEmpty(transportMode))
-				{
-					queryString += $"&mode={transportMode}";
-				}
-				if (requestAlternateRoutes)
-				{
-					queryString += "&alternatives=true";
-				}
-				Http.Client.GxHttpClient http = new Http.Client.GxHttpClient();
-				http.Host = "maps.googleapis.com";
-				http.Secure = 1;
-				http.BaseURL = "maps/api/directions/";
-				http.Execute("GET", queryString);
-				if (http.StatusCode == 200)
-				{
-					String result = http.ToString();
-					directionsCalculated = ParseResponse(result);
-				}
+				MethodBase method = procedureClassType.GetMethod("executeUdp", BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+				object gxProdecure = Activator.CreateInstance(procedureClassType, new object[] { GxContext.Current });
+				return (GxUserType)method.Invoke(gxProdecure, new object[] { directionsParameters });
 			}
-			return directionsCalculated;
+
+			return null;
 		}
 
-		private static String DecodePolyLine(String EncodedPolyLine)
-		{
-
-			int len = EncodedPolyLine.Length;
-
-			System.Collections.ArrayList path = new System.Collections.ArrayList(len / 2);
-			int index = 0;
-			int lat = 0;
-			int lng = 0;
-
-			while (index < len)
+		private static void LoadAssemblyIfNeeded() {
+			if (assembly == null)
 			{
-				int result = 1;
-				int shift = 0;
-				int b;
-				do
-				{
-					b = EncodedPolyLine[index++] - 63 - 1;
-					result += b << shift;
-					shift += 5;
-				} while (b >= 0x1f);
-				lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-
-				result = 1;
-				shift = 0;
-				do
-				{
-					b = EncodedPolyLine[index++] - 63 - 1;
-					result += b << shift;
-					shift += 5;
-				} while (b >= 0x1f);
-				lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-
-				path.Add((lng * 1e-5).ToString(CultureInfo.InvariantCulture) + " " + (lat * 1e-5).ToString(CultureInfo.InvariantCulture));
+				assembly = LoadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), GENEXUS_CORE_DLL_PATH));
+				if (assembly == null)
+					assembly = LoadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", GENEXUS_CORE_DLL_PATH));
 			}
-			return String.Join(",", path.ToArray());
 		}
 
-		static Directions ParseResponse(String response)
+		private static Assembly LoadAssembly(string fileName)
 		{
-			Directions directionsCalculated = new Directions();
-			directionsCalculated.Routes = new GxSimpleCollection<Route>();
-			JObject objResponse = JSONHelper.ReadJSON<JObject>(response);
-			if (objResponse != null)
+			if (File.Exists(fileName))
 			{
-				JArray routes = (JArray) objResponse["routes"];
-				foreach (JObject r in routes)
-				{
-					
-					int routeDistance = 0;
-					int routeDuration = 0;
-					List<string> polyLineData = new List<string>();
-					String travelMode = "";
-					JArray legs = (JArray)(r["legs"]);
-					foreach (JObject l in legs)
-					{
-						routeDistance += (int)((JObject)(l["distance"]))["value"];
-						routeDuration += (int)((JObject)(l["duration"]))["value"];
-						JArray steps = (JArray)l["steps"];
-						foreach (JObject s in steps)
-						{
-							String encodedLine = (String)((JObject)(s["polyline"]))["points"];
-							String decodedLine = DecodePolyLine(encodedLine);
-							if (decodedLine.Length > 0)
-							{
-								polyLineData.Add(decodedLine);
-							}
-							travelMode = (String)s["travel_mode"];
-						}
-					}
-					string lineStringPoints = string.Join(",", polyLineData);
-					Route currentRoute = new Route();
-					currentRoute.name = (String)r["summary"];
-					currentRoute.transportType = travelMode;
-					currentRoute.distance = routeDistance;
-					currentRoute.expectedTravelTime = routeDuration;
-					currentRoute.geoline = new Geospatial("LINESTRING(" + lineStringPoints + ")");
-					directionsCalculated.Routes.Add(currentRoute);
-				}
+				Assembly ass = Assembly.LoadFrom(fileName);
+				return ass;				
 			}
-			return directionsCalculated;
-		}
-
-		private static String TransportMode(String transportType)
-		{
-			switch (transportType)
-			{
-				case "GXM_Driving":
-					return "driving";					
-				case "GXM_Walking":
-					return "walking";
-				case "GXM_Transit":
-					return "transit";
-				case "GXM_Bicycling":
-					return "bicycling";
-				 default:
-					return "";
-			}
+			else
+				return null;
 		}
 
 		public static LocationInfo GetCurrentLocation(int minAccuracy, int timeout, bool includeHAndS, bool ignoreErrors)
