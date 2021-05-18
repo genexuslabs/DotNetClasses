@@ -11,7 +11,7 @@
 	<ItemGroup>
 		<PackageReference Include="log4net" Version="2.0.11" />
 		<PackageReference Include="Microsoft.Net.Http" Version="2.2.29" />
-		<PackageReference Include="System.Net.Http" Version="4.0.0" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Spatial" Version="5.8.3" />
 	</ItemGroup>
 	<ItemGroup>
