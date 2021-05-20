@@ -66,9 +66,10 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 # How to build
 
 ## Requirements
-- Visual Studio 2019 >= 16.3
-- dotnet SDK >= 3.1 
-- .NET Framework >= 4.6 
+- Visual Studio 2019 >= 16.8
+- dotnet SDK 3.1 
+- .NET 6 
+- .NET Framework 4.6.2 DevPack
 
 # Instructions
 For the following steps must be executed from inside ```dotnet``` directory:
@@ -94,7 +95,7 @@ Suppose you do a fix in GxClasses project. In order to get that fix in your gene
 
 1. Set AssemblyOriginatorKeyFile property in [Directory.Build.props](dotnet/Directory.Build.props) with the full path of your .snk file. It is required to set a strong name for the assembly.
 	- A new .snk file can be created with the command [sn.exe](https://docs.microsoft.com/en-us/dotnet/framework/tools/sn-exe-strong-name-tool) -k keyPair.snk  
-2. Build DotNetStandardClasses.sln and copy ```DotNetClasses\dotnet\src\dotnetframework\GxClasses\bin\Release\net46\GxClasses.dll``` to your ```<KB>\CSharpModel\web\bin directory```
+2. Build DotNetStandardClasses.sln and copy ```DotNetClasses\dotnet\src\dotnetframework\GxClasses\bin\Release\net462\GxClasses.dll``` to your ```<KB>\CSharpModel\web\bin directory```
 3. Patch all the ```<KB>\CSharpModel\web\bin``` assemblies to reference the new GxClasses.dll. To do this run [UpdateAssemblyReference tool](dotnet/tools) with the following parameters
 	```UpdateAssemblyReference.exe -assembly <KB>\CSharpModel\web\bin\GxClasses.dll -d <KB>\CSharpModel\web\bin```
 	- To get UpdateAssemblyReference.exe build [UpdateAssemblyReference.sln](dotnet/tools/updateassemblyreference/UpdateAssemblyReference.sln)

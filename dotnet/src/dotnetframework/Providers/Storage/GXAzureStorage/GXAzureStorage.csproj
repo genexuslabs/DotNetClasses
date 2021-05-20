@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GeneXus.Storage.GXAzureStorage</RootNamespace>
 		<AssemblyName>GXAzureStorage</AssemblyName>
 		<PackageTags>Azure</PackageTags>

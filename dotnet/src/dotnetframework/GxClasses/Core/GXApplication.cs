@@ -3270,7 +3270,9 @@ namespace GeneXus.Application
 		public string PathToUrl(string path)
 		{
 			GXLogging.Debug(log, "PathToUrl:", () => GetContextPath() + " relativePath:" + PathToRelativeUrl(path));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			return Uri.EscapeUriString(GetContextPath()) + PathToRelativeUrl(path, false);
+#pragma warning disable SYSLIB0013 // EscapeUriString
 		}
 
 		public string PathToRelativeUrl(string path)
@@ -3303,7 +3305,9 @@ namespace GeneXus.Application
 				Resource = Resource.Substring(Resource.LastIndexOf("/") + 1);
 			}
 
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			Resource = StringUtil.ReplaceLast(Resource, fileName, Uri.EscapeUriString(fileName));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			if (relativeToServer)
 				return scriptPath + Resource;
 			return Resource;
@@ -3821,7 +3825,7 @@ namespace GeneXus.Application
 		{
 			return !String.IsNullOrEmpty(StringUtil.RTrim(wjLoc));
 		}
-		#region IGxContext Members
+#region IGxContext Members
 
 		private const string CLIENT_ID_HEADER = "GX_CLIENT_ID";
 		public string ClientID
@@ -3850,7 +3854,7 @@ namespace GeneXus.Application
 
 		public GXSOAPContext SoapContext { get; set; }
 
-		#endregion
+#endregion
 	}
 	public class GxXmlContext
 	{

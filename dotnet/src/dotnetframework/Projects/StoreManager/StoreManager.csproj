@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GeneXus.SD.Store</RootNamespace>
 		<AssemblyName>GeneXus.SD.Store.StoreManager</AssemblyName>
 		<SignAssembly>true</SignAssembly>
