@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GeneXus.Data.DynService.Fabric</RootNamespace>
@@ -23,11 +23,13 @@
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="app.config" />
-		<None Include="gxuploadcc.msbuild">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Include="gxbuildcc.msbuild">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="gxuploadcc.msbuild">
+			<Pack>true</Pack>
+		</Content>
+		<Content Include="gxbuildcc.msbuild">
+			<Pack>true</Pack>
+		</Content>
 	</ItemGroup>
 </Project>
