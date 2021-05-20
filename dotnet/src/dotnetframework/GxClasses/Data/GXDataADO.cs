@@ -2701,13 +2701,13 @@ namespace GeneXus.Data.ADO
 						return new GxISeriesHIS(id);
 					else
 						return new GxDb2ISeries(id);
-                case "hana":
-                    return new GxHana();
 				case "db2":
 					return new GxDb2();
 				case "informix":
 					return new GxInformix(id);
 #endif
+				case "hana":
+					return new GxHana();
 				case "service":
 					{
 						string runtimeProvider;
