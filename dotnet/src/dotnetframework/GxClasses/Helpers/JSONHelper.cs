@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using Jayrock.Json;
 using System.Runtime.Serialization;
+using GeneXus.Configuration;
 #if NETCORE
 using System.Linq;
 using System.Buffers.Text;
@@ -137,6 +138,7 @@ namespace GeneXus.Utils
 	{
 		
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.JSONHelper));
+		static string WFCDateTimeFormat = Preferences.WFCDateTimeMillis ? DateTimeUtil.JsonDateFormatMillis : DateTimeUtil.JsonDateFormat;
 		public static bool IsJsonNull(object jobject)
 		{
 			return GXJsonSerializer.Instance.IsJsonNull(jobject);
@@ -266,7 +268,7 @@ namespace GeneXus.Utils
 			return new DataContractJsonSerializerSettings() { DateTimeFormat = new DateTimeFormat(DateTimeUtil.JsonDateFormatMillis), KnownTypes=knownTypes };
 		}
 		static DataContractJsonSerializerSettings WCFSerializationSettings(IEnumerable<Type> knownTypes, bool useSimpleDictionaryFormat=false) {
-			return new DataContractJsonSerializerSettings() { DateTimeFormat = new DateTimeFormat(DateTimeUtil.JsonDateFormatMillis), EmitTypeInformation = EmitTypeInformation.Never, UseSimpleDictionaryFormat= useSimpleDictionaryFormat, KnownTypes=knownTypes };
+			return new DataContractJsonSerializerSettings() { DateTimeFormat = new DateTimeFormat(WFCDateTimeFormat), EmitTypeInformation = EmitTypeInformation.Never, UseSimpleDictionaryFormat= useSimpleDictionaryFormat, KnownTypes=knownTypes };
 		}
 		public static T Deserialize<T>(string kbObject, Encoding encoding, IEnumerable<Type> knownTypes) where T : class, new()
 		{
