@@ -71,7 +71,7 @@ namespace GeneXus.MapServices
 				classType.GetProperty("gxTpr_Transporttype").SetValue(parametersSDT, transportType);
 				classType.GetProperty("gxTpr_Requestalternateroutes").SetValue(parametersSDT, requestAlternateRoutes);
 
-				return CalculateDirections(ref parametersSDT);
+				return CalculateDirections(parametersSDT);
 			}
 
 			return null;
