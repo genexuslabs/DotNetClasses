@@ -80,7 +80,7 @@ namespace GeneXus.MapServices
 
 		private const string DIRECTIONS_SERVICE_INTERNAL_PROCEDURE_CLASS_NAME = @"googlemapsdirectionsserviceinternal";
 
-		public static dynamic CalculateDirections(ref GxUserType directionsParameters)
+		public static dynamic CalculateDirections(GxUserType directionsParameters)
 		{
 			LoadAssemblyIfNeeded();
 
