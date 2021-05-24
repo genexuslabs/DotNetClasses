@@ -3697,7 +3697,7 @@ namespace GeneXus.Utils
 			}
 			else
 			{
-				return Path.Combine(FileUtil.GetFileName(fileName));
+				return Path.Combine(basePath, Path.GetFileName(fileName));
 			}
 		}
 	}
