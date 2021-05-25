@@ -28,7 +28,7 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
 		<RepositoryCommit>$(GIT_SHA)</RepositoryCommit>
-		<NoWarn>NU5105;CS0618</NoWarn>
+		<NoWarn>NU5105;CS0618;CS8032</NoWarn>
 		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 

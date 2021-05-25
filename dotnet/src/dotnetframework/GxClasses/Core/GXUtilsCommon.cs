@@ -3548,7 +3548,9 @@ namespace GeneXus.Utils
 			{
 				string fileName = Path.GetFileNameWithoutExtension(blobPath);
 				blobPath = RelativePath(blobPath);
+#pragma warning disable SYSLIB0013 // EscapeUriString
 				return StringUtil.ReplaceLast(blobPath, fileName, Uri.EscapeUriString(fileName));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			}
 		}
 		public static bool AbsoluteUri(string fileName, out Uri result)

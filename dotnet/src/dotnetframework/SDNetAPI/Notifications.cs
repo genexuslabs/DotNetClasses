@@ -19,30 +19,29 @@ namespace Artech.Genexus.SDAPI
 {
     public sealed class Notifications
     {
+#if !NETCOREAPP1_1
         private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Artech.Genexus.SDAPI.Notifications));
 
         private const string IOS_HOST_SANDBOX = "gateway.sandbox.push.apple.com";
         private const string IOS_HOST_PROD = "gateway.push.apple.com";
-
+#endif
 
         public const short IOS     = 0;
         public const short ANDROID = 1;
         public const short BB      = 2;
         public const short WPHONE  = 3;
-
+#if !NETCOREAPP1_1
 		/// <summary>
 		/// / error Codes
 		/// </summary>
 		private const short NO_ERROR = 0;
 		private const short INVALID_DEVICE_TYPE = -1;
 		private const short CUSTOM_ERROR = 3;
-
+#endif
 
 #if !NETCOREAPP1_1
 		private int m_error = 0;
-#endif
 		private string m_customError = string.Empty;
-#if !NETCOREAPP1_1
 		private int SendInternal(string applicationId, short deviceType, string deviceToken, string alertMessage, string action, NotificationParameters props)
         {
             switch (deviceType)
@@ -94,7 +93,7 @@ namespace Artech.Genexus.SDAPI
             return SendInternal(applicationId, deviceType, deviceToken, alertMessage, action, props);
         }
 
-        #region GX Error Handling
+#region GX Error Handling
 
         public int ErrorCode { get { return m_error; } }
 
@@ -131,7 +130,7 @@ namespace Artech.Genexus.SDAPI
             }
         }
 
-        #endregion
+#endregion
 
         private const string PAYLOAD_FORMAT = "{{\"aps\":{{\"alert\":\"{0}\"}},\"m\":\"{1}\",\"a\":\"{2}\",\"t\":\"{3}\",\"p\":{4}}}";
         private const string PAYLOAD_BADGE_FORMAT = "{{\"aps\":{{\"badge\":{0},\"sound\":\"{1}\"}}}}";
@@ -173,7 +172,7 @@ namespace Artech.Genexus.SDAPI
 
 
 		/////////////////// U3 API
-		#region XEV2U3 API
+#region XEV2U3 API
 
 		private string m_appId;
 		private ConfigurationProps m_config = null;
@@ -264,7 +263,7 @@ namespace Artech.Genexus.SDAPI
             SetResult(result);
         }
 
-		#region Events
+#region Events
 
 		private void SubscribeServiceEvents(PushService service)
 		{
@@ -309,7 +308,7 @@ namespace Artech.Genexus.SDAPI
 			SetResult(CUSTOM_ERROR, notification, notificationFailureException);
 		}
 
-		#endregion
+#endregion
 
 		public int OpenSession(string appId)
 		{
@@ -413,7 +412,7 @@ namespace Artech.Genexus.SDAPI
 			Certificates.Instance.MergePropertiesFor(entryPoint, properties);
 		}
 
-		#endregion
+#endregion
 #else
 		public int IOSSetBadge(string applicationId, string deviceToken, int badgeNumber, string sound)
 		{
