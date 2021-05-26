@@ -11,10 +11,16 @@
    <DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
  </PropertyGroup>
  <ItemGroup>
+   <None Remove="FullTextSearch\Ugly.html" />
+ </ItemGroup>
+ <ItemGroup>
    <EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
    </EmbeddedResource>
    <Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
+   <Content Include="FullTextSearch\Ugly.html">
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </Content>
  </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +37,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
   </ItemGroup>
 
   <ItemGroup>
