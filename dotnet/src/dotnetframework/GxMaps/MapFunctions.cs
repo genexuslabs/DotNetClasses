@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using GeneXus.Utils;
 using System.IO;
 using System.Globalization;
+using System.Net.Http;
 
 namespace GeneXus.MapServices
 {
