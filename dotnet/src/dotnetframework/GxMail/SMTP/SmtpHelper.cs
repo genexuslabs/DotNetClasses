@@ -1,4 +1,4 @@
-﻿using GeneXus.Metadata;
+using GeneXus.Metadata;
 using log4net;
 using System;
 using System.Net;
@@ -24,8 +24,8 @@ namespace GeneXus.Mail.Smtp
 		const string SMTP_MAIL_COMMAND_TYPE = "System.Net.Mail.MailCommand";
 		public static bool ValidateConnection(SmtpClient smtp, string senderAddress, bool checkUnicodeSupport=true)
 		{
-			string assFullName = typeof(SmtpClient).Assembly.FullName;
-			Type smtpTransportType = GetType($"{SMTP_TRANSPORT_TYPE}, {assFullName}");
+			Assembly ass = typeof(SmtpClient).Assembly;
+			Type smtpTransportType = ass.GetType(SMTP_TRANSPORT_TYPE);
 			object SmtpTransport = null;
 			try
 			{
@@ -37,7 +37,7 @@ namespace GeneXus.Mail.Smtp
 					var connection = SmtpConnectionField(SmtpTransport);
 					if (checkUnicodeSupport)
 					{
-						Type mailCommandType = GetType($"{SMTP_MAIL_COMMAND_TYPE}, {assFullName}");
+						Type mailCommandType = ass.GetType(SMTP_MAIL_COMMAND_TYPE);
 						Boolean isUnicodeSupported = (Boolean)Execute(typeof(SmtpClient), smtp, "IsUnicodeSupported", null);
 						Execute(mailCommandType, null, "Send", new object[] { connection, Encoding.ASCII.GetBytes("MAIL FROM:"), new MailAddress(senderAddress), isUnicodeSupported });
 					}
@@ -90,11 +90,6 @@ namespace GeneXus.Mail.Smtp
 		{
 			FieldInfo fInfo = instance.GetType().GetField(FieldName, BindingFlags.NonPublic | BindingFlags.Instance);
 			return fInfo.GetValue(instance);
-		}
-
-		private static Type GetType(string type)
-		{
-			return Type.GetType(type);
 		}
 
 		private static object Execute(Type type, object instance, string methodName, object[] parms)

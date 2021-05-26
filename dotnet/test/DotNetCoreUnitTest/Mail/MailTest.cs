@@ -15,7 +15,6 @@ namespace MailNetCore
 				client.EnableSsl = true;
 				client.Host = "smtp.gmail.com";
 				client.UseDefaultCredentials = false;
-				System.Diagnostics.Debugger.Launch();
 				bool result = SmtpHelper.ValidateConnection(client, string.Empty, false);
 				Assert.True(result);
 			}
