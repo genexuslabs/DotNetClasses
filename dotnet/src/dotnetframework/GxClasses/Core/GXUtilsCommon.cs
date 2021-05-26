@@ -3380,7 +3380,7 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					fileName = Path.Combine(baseDir, name + "." + extension);
+					fileName = PathUtil.SafeCombine(baseDir, name + "." + extension);
 				}
 				GxFile file = new GxFile(baseDir, fileName, fileType);
 				while (file.FileInfo.Exist(fileName))
@@ -3396,11 +3396,11 @@ namespace GeneXus.Utils
 			string fileName;
 			try
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			catch (ArgumentException)//Illegal characters in path
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			return fileName;
 		}
@@ -3689,14 +3689,15 @@ namespace GeneXus.Utils
 		internal static string SafeCombine(string basePath, string fileName)
 		{
 			string fullPath = Path.Combine(basePath, fileName);
+			string canonicalBasePath = Path.GetFullPath(basePath);
 			string canonicalPath = Path.GetFullPath(fullPath);
-			if (canonicalPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
+			if (canonicalPath.StartsWith(canonicalBasePath, StringComparison.OrdinalIgnoreCase))
 			{
 				return canonicalPath;
 			}
 			else
 			{
-				return Path.Combine(basePath, Path.GetFileName(fileName));
+				return Path.Combine(canonicalBasePath, Path.GetFileName(fileName));
 			}
 		}
 	}
