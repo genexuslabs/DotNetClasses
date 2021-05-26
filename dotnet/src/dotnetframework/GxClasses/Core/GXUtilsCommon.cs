@@ -3381,7 +3381,7 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					fileName = Path.Combine(baseDir, name + "." + extension);
+					fileName = PathUtil.SafeCombine(baseDir, name + "." + extension);
 				}
 				GxFile file = new GxFile(baseDir, fileName, fileType);
 				while (file.FileInfo.Exist(fileName))
@@ -3397,11 +3397,11 @@ namespace GeneXus.Utils
 			string fileName;
 			try
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			catch (ArgumentException)//Illegal characters in path
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			return fileName;
 		}
