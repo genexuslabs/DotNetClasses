@@ -896,7 +896,8 @@ namespace GeneXus.Data
                     }
                     else
                     {
-                        using (MemoryStream memStream = new MemoryStream())
+#pragma warning disable SYSLIB0011 // BinaryFormatter serialization is obsolete and should not be used
+						using (MemoryStream memStream = new MemoryStream())
                         {
                             BinaryFormatter formatter = new BinaryFormatter();
                             formatter.Serialize(memStream, value);
@@ -905,7 +906,8 @@ namespace GeneXus.Data
 
                             return newValue;
                         }
-                    }
+#pragma warning restore SYSLIB0011 //BinaryFormatter serialization is obsolete and should not be used
+					}
 				}
 			}
 		}

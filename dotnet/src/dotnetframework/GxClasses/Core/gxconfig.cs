@@ -711,7 +711,9 @@ namespace GeneXus.Configuration
 		private static int exposeMetadata = -1;
 		public static string DefaultRewriteFile = "rewrite.config";
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
+		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
 		const string YES = "1";
+		const string NO = "0";
 
 		public static string RemoteLocation
 		{
@@ -773,6 +775,13 @@ namespace GeneXus.Configuration
 			get
 			{
 				return Config.GetValueOf(USE_NAMED_PARAMETERS, YES) == YES;
+			}
+		}
+		public static bool WFCDateTimeMillis
+		{
+			get
+			{
+				return Config.GetValueOf(REST_DATES_WITH_MILLIS, NO) == YES;
 			}
 		}
 		public static bool MustSetupDB()

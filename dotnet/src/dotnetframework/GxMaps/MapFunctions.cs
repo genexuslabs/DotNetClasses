@@ -119,8 +119,17 @@ namespace GeneXus.MapServices
 		{
 			if (Application.GxContext.IsHttpContext)
 			{
-				String ip = Application.GxContext.Current.GetRemoteAddress();
-				string info = new System.Net.WebClient().DownloadString("http://ipinfo.io/" + ip);
+				string ip = Application.GxContext.Current.GetRemoteAddress();
+				using (HttpClient client = new HttpClient())
+				{
+					using (HttpResponseMessage response = client.GetAsync(new Uri("http://ipinfo.io/" + ip)).Result)
+					{
+						using (HttpContent content = response.Content)
+						{
+							string info = content.ReadAsStringAsync().Result;
+						}
+					}
+				}
 				return new LocationInfo { };
 			}
 			return new LocationInfo { };

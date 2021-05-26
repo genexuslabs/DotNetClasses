@@ -10,6 +10,7 @@ using GeneXus.Utils;
 using System.Globalization;
 using GeneXus;
 using GeneXus.Configuration;
+using System.Net.Http;
 
 namespace GX
 {
@@ -115,20 +116,17 @@ namespace GX
 		private static String GetContentFromURL(String urlString)
 		{
 			HttpWebResponse resp = null;
-			String result = null;
+			string result = null;
 
 			try
 			{
-				HttpWebRequest req = (HttpWebRequest)WebRequest.Create(urlString);
-				req.Method = "GET";
-				using (resp = (HttpWebResponse)req.GetResponseAsync().Result)
+				using (HttpClient client = new HttpClient())
 				{
-
-					using (Stream rStream = resp.GetResponseStream())
+					using (HttpResponseMessage response = client.GetAsync(urlString).Result)
 					{
-						using (StreamReader readStream = new StreamReader(rStream, Encoding.UTF8))
+						using (HttpContent content = response.Content)
 						{
-							result = readStream.ReadToEnd();
+							result = content.ReadAsStringAsync().Result;
 						}
 					}
 				}

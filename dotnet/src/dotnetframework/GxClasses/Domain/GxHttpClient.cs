@@ -636,8 +636,9 @@ namespace GeneXus.Http.Client
 			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			int BytesRead;
 			Byte[] Buffer = new Byte[1024];
-			
+#pragma warning disable SYSLIB0014 // WebRequest 
 			HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requestUrl);
+#pragma warning disable SYSLIB0014 // WebRequest 
 
 			if (GXUtil.CompressResponse())
 			{

@@ -575,7 +575,7 @@ namespace GeneXus.Data
 							_odpAssembly = Assembly.LoadWithPartialName("Oracle.ManagedDataAccess");
 						}
 #endif
-						GXLogging.Debug(log, "Oracle.ManagedDataAccess Loaded:" + _odpAssembly.FullName + " location: " + _odpAssembly.Location + " CodeBase:" + _odpAssembly.CodeBase);
+						GXLogging.Debug(log, "Oracle.ManagedDataAccess Loaded:" + _odpAssembly.FullName + " location: " + _odpAssembly.Location);
 					} 
 
 				}
