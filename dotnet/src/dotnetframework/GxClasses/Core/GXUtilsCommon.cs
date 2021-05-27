@@ -3689,17 +3689,7 @@ namespace GeneXus.Utils
 
 		internal static string SafeCombine(string basePath, string fileName)
 		{
-			string fullPath = Path.Combine(basePath, fileName);
-			string canonicalBasePath = Path.GetFullPath(basePath);
-			string canonicalPath = Path.GetFullPath(fullPath);
-			if (canonicalPath.StartsWith(canonicalBasePath, StringComparison.OrdinalIgnoreCase))
-			{
-				return canonicalPath;
-			}
-			else
-			{
-				return Path.Combine(canonicalBasePath, Path.GetFileName(fileName));
-			}
+			return Path.Combine(basePath, Path.GetFileName(fileName));
 		}
 	}
 
