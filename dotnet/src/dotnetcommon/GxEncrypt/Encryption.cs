@@ -509,7 +509,9 @@ namespace GeneXus.Encryption
 				if (string.IsNullOrEmpty(s_currentDir))
 				{
 					Assembly ass = Assembly.GetExecutingAssembly();
+#pragma warning disable SYSLIB0012 // EscapedCodeBase Is obsolete
 					FileInfo file = new FileInfo(new Uri(ass.EscapedCodeBase).LocalPath);
+#pragma warning disable SYSLIB0012 // EscapedCodeBase Is obsolete
 
 					s_currentDir = file.Directory.FullName;
 				}
