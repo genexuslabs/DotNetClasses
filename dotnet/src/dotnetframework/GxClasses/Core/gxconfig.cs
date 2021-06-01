@@ -524,26 +524,35 @@ namespace GeneXus.Configuration
 					}
 
 #else
-					string[] basePaths = { FileUtil.GetBasePath(), FileUtil.GetStartupDirectory(), Directory.GetCurrentDirectory() };
-					var appSettings = "appsettings.json";
-					var clientConfig = "client.exe.config";
-					var logConfigFile = GxContext.IsHttpContext ? "log.config":"log.console.config";
-					foreach (string basePath in basePaths)
+					string basePath = FileUtil.GetBasePath();
+					string currentDir = Directory.GetCurrentDirectory();
+					string startupDir = FileUtil.GetStartupDirectory();
+					string appSettings = "appsettings.json";
+					string clientConfig = "client.exe.config";
+					string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
+
+					if (File.Exists(Path.Combine(basePath, appSettings)))
 					{
-						string clientConfigFullName = Path.Combine(basePath, clientConfig);
-						string logConfigFileFullName = Path.Combine(basePath, logConfigFile);
-						if (File.Exists(Path.Combine(basePath, appSettings)))
-						{
-							_config = loadConfigJson(basePath, appSettings);
-						}
-						else if (File.Exists(clientConfigFullName))
-						{
-							_config = loadConfig(clientConfigFullName);
-						}
-						if (File.Exists(logConfigFileFullName))
-							logConfig(logConfigFileFullName);
-						if (_config != null)
-							break;
+						_config = loadConfigJson(basePath, appSettings);
+						logConfig(Path.Combine(basePath, logConfigFile));
+					}
+					else if (File.Exists(appSettings))
+					{
+						_config = loadConfigJson(currentDir, appSettings);
+						logConfig(logConfigFile);
+					}
+					else if (File.Exists(Path.Combine(startupDir, appSettings)))
+					{
+						_config = loadConfigJson(startupDir, appSettings);
+						logConfig(Path.Combine(startupDir, logConfigFile));
+					}
+					else if (File.Exists(clientConfig))
+					{
+						_config = loadConfig(clientConfig, out logConfigSource);
+						if (!string.IsNullOrEmpty(logConfigSource))
+							logConfig(logConfigSource);
+						else
+							logConfig(logConfigFile);
 					}
 #endif
 				}
@@ -592,9 +601,9 @@ namespace GeneXus.Configuration
 				try
 				{
 #if NETCORE
-					var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-					if (filename != null)
+					if (filename != null && File.Exists(filename))
 					{
+						var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 						XmlConfigurator.ConfigureAndWatch(logRepository, new FileInfo(filename));
 						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", filename);
 					}
