@@ -10,26 +10,47 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace GeneXus.Storage.GXAmazonS3
 {
-	public class ExternalProviderS3 : ExternalProvider
+	public class ExternalProviderS3 : ExternalProviderBase, ExternalProvider
 	{
-		const int PRIVATE_URL_MINUTES_EXPIRATION = 24 * 60; // 24 hours
-		const string ACCESS_KEY_ID = "STORAGE_PROVIDER_ACCESSKEYID";
-		const string SECRET_ACCESS_KEY = "STORAGE_PROVIDER_SECRETACCESSKEY";
-		const string REGION = "STORAGE_PROVIDER_REGION";
-		const string ENDPOINT = "STORAGE_ENDPOINT";
-		const string STORAGE_CUSTOM_ENDPOINT = "STORAGE_CUSTOM_ENDPOINT";
-		const string STORAGE_CUSTOM_ENDPOINT_VALUE = "custom";
+		const string Name = "AWSS3";
+		
+		const string ACCESS_KEY = "ACCESS_KEY";
+		const string SECRET_ACCESS_KEY = "SECRET_KEY";
+		const string STORAGE_CUSTOM_ENDPOINT = "CUSTOM_ENDPOINT";
+		const string STORAGE_ENDPOINT = "ENDPOINT";
 		const string BUCKET = "BUCKET_NAME";
-		const string FOLDER = "FOLDER_NAME";
+		const string REGION = "REGION";
+		const string STORAGE_CUSTOM_ENDPOINT_VALUE = "custom";
+
+		const string DEFAULT_REGION = "us-east-1";
+
+		[Obsolete("Use Property ACCESS_KEY instead", false)]
+		const string ACCESS_KEY_ID_DEPRECATED = "STORAGE_PROVIDER_ACCESSKEYID";
+		[Obsolete("Use Property SECRET_ACCESS_KEY instead", false)]
+		const string SECRET_ACCESS_KEY_DEPRECATED = "STORAGE_PROVIDER_SECRETACCESSKEY";
+		[Obsolete("Use Property REGION instead", false)]
+		const string REGION_DEPRECATED = "STORAGE_PROVIDER_REGION";
+		[Obsolete("Use Property STORAGE_ENDPOINT instead", false)]
+		const string ENDPOINT_DEPRECATED = "STORAGE_ENDPOINT";
+		[Obsolete("Use Property STORAGE_CUSTOM_ENDPOINT instead", false)]
+		const string STORAGE_CUSTOM_ENDPOINT_DEPRECATED = "STORAGE_CUSTOM_ENDPOINT";
+		
+		[Obsolete("Use Property BUCKET instead", false)]
+		const string BUCKET_DEPRECATED = "BUCKET_NAME";
+		[Obsolete("Use Property FOLDER instead", false)]
+		const string FOLDER_DEPRECATED = "FOLDER_NAME";
+		
+		string _storageUri;
 
 		IAmazonS3 Client { get; set; }
 		string Bucket { get; set; }
 		string Folder { get; set; }
 		string Endpoint { get; set; }
+		string Region { get; set; }
 
 		bool ForcePathStyle = false;
 
@@ -52,20 +73,20 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		public ExternalProviderS3(GXService providerService)
 		{
-			string keyId = CryptoImpl.Decrypt(providerService.Properties.Get(ACCESS_KEY_ID));
-			string keySecret = CryptoImpl.Decrypt(providerService.Properties.Get(SECRET_ACCESS_KEY));
+			string keyId = GetEncryptedPropertyValue(ACCESS_KEY, ACCESS_KEY_ID_DEPRECATED);
+			string keySecret = GetEncryptedPropertyValue(SECRET_ACCESS_KEY, SECRET_ACCESS_KEY_DEPRECATED);
 			AWSCredentials credentials = null;
 			if (!string.IsNullOrEmpty(keyId) && !string.IsNullOrEmpty(keySecret))
 			{
 				credentials = new BasicAWSCredentials(keyId, keySecret);
 			}
 
-			var region = Amazon.RegionEndpoint.GetBySystemName(providerService.Properties.Get(REGION));
+			var region = Amazon.RegionEndpoint.GetBySystemName(GetPropertyValue(REGION, REGION_DEPRECATED));
 
-			Endpoint = providerService.Properties.Get(ENDPOINT);
+			Endpoint = GetPropertyValue( STORAGE_ENDPOINT , ENDPOINT_DEPRECATED);
 			if (Endpoint == STORAGE_CUSTOM_ENDPOINT_VALUE)
 			{
-				Endpoint = providerService.Properties.Get(STORAGE_CUSTOM_ENDPOINT);
+				Endpoint = GetPropertyValue(STORAGE_CUSTOM_ENDPOINT, STORAGE_CUSTOM_ENDPOINT_DEPRECATED);
 				ForcePathStyle = true;
 			}
 
@@ -96,11 +117,25 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 
 #endif
-			Bucket = CryptoImpl.Decrypt(providerService.Properties.Get(BUCKET));
-			Folder = providerService.Properties.Get(FOLDER);
+			Bucket = GetEncryptedPropertyValue(BUCKET, BUCKET_DEPRECATED);
+			Folder = GetPropertyValue(FOLDER, FOLDER_DEPRECATED);
+			Region = region.SystemName;
 
+			SetURI();
 			CreateBucket();
 			CreateFolder(Folder);
+		}
+
+		private void SetURI()
+		{
+			if (Region == DEFAULT_REGION)
+			{
+				_storageUri = $"https://{Bucket}.{Endpoint}/";
+			}
+			else
+			{
+				_storageUri = $"https://{Bucket}.{Endpoint.Replace("s3.amazonaws.com", $"s3.{Region.ToLower()}.amazonaws.com")}/";
+			}
 		}
 
 		private void AddObjectMetadata(MetadataCollection metadata, string tableName, string fieldName, string key)
@@ -173,11 +208,11 @@ namespace GeneXus.Storage.GXAmazonS3
 				PutBucketRequest request = new PutBucketRequest
 				{
 					BucketName = Bucket,
-					UseClientRegion = true,
-					// Every bucket is public
-					CannedACL = S3CannedACL.PublicRead
+					UseClientRegion = true
 				};
-
+				if (defaultAcl == GxFileType.Public) {
+					request.CannedACL = S3CannedACL.PublicRead;
+				}
 				PutBucket(request);
 			}
 		}
@@ -200,7 +235,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			return fileType.HasFlag(GxFileType.Private);
 		}
 
-		public string Get(string objectName, GxFileType fileType, int urlMinutes = PRIVATE_URL_MINUTES_EXPIRATION)
+		public string Get(string objectName, GxFileType fileType, int urlMinutes = DefaultExpirationMinutes)
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
 			if (Exists(objectName, fileType))
@@ -247,7 +282,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		//https://github.com/aws/aws-sdk-net/blob/master/sdk/src/Services/S3/Custom/_bcl/IO/S3FileInfo.cs
 		public bool Exists(string objectName, GxFileType fileType)
 		{
-			bool exists = true;
+			bool exists;
 			try
 			{
 				exists = new S3FileInfo(Client, Bucket, objectName).Exists;
@@ -280,9 +315,9 @@ namespace GeneXus.Storage.GXAmazonS3
 			return StorageUri + StorageUtils.EncodeUrl(newName);
 		}
 
-		private static S3CannedACL GetCannedACL(GxFileType destFileType)
+		private S3CannedACL GetCannedACL(GxFileType destFileType)
 		{
-			return (destFileType.HasFlag(GxFileType.Private)) ? S3CannedACL.Private : S3CannedACL.PublicRead;
+			return defaultAcl.HasFlag(GxFileType.Private) || destFileType.HasFlag(GxFileType.Private) ? S3CannedACL.Private : S3CannedACL.PublicRead;
 		}
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
@@ -338,7 +373,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				AddObjectMetadata(objectRequest.Metadata, tableName, fieldName, resourceKey);
 				PutObjectResponse result = PutObject(objectRequest);
 
-				return "https://" + Bucket + ".s3.amazonaws.com/" + resourceKey;
+				return StorageUri + resourceKey;
 			}
 			catch (Exception ex)
 			{
@@ -468,6 +503,11 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 			objectName = null;
 			return false;
+		}
+
+		public override string GetName()
+		{
+			return Name;
 		}
 	}
 }

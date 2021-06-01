@@ -432,12 +432,14 @@ public class GxExternalFileInfo : IGxFileInfo
 			_url = storageObjectFullname;
 		}
 		else {
-			if (fileType.HasFlag(GxFileType.Attribute)) //Attributes multimedia consider Storage Provider Folder 
+			if (fileType.HasFlag(GxFileType.Private)) //Attributes multimedia consider Storage Provider Folder 
 			{
 				_url = provider.GetBaseURL() + storageObjectFullname;
 				_name = _url.Replace(provider.StorageUri, string.Empty);
 				if (_name.StartsWith("/"))
+				{
 					_name = _name.Substring(1, _name.Length - 1);
+				}
 			}
 		}		
 		_fileTypeAtt = fileType;
@@ -640,11 +642,9 @@ public class GxExternalFileInfo : IGxFileInfo
 [Flags]
 public enum GxFileType
 {
-	Public = 0,
-	Private = 1,
-	Attribute = 2, 
-	PublicAttribute = Attribute | Public,
-	PrivateAttribute = Attribute | Private,
+	Default = 0,
+	Public = 1,
+	Private = 2
 }
 
 public class GxFile
