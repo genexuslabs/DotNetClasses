@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
@@ -32,7 +33,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -140,8 +140,8 @@ namespace GeneXus.Application
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
-		const string SDSVC_PREFIX = "sdsvc_";
 		const string SDSVC_METHO_SUFFIX = "DL";
+		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
 
 
 		public Dictionary<string,string> servicesPathUrl = new Dictionary<string, string>();
@@ -503,24 +503,26 @@ namespace GeneXus.Application
 					}
 					else
 					{
-						if (path.StartsWith(SDSVC_PREFIX))
+						if (SDSVC_PATTERN.IsMatch(path))
 						{
+							string controllerWithMth = path;
 							if (questionMarkIdx >= 0)
 							{
 								// rest/module1/module2/sdsvc_service/method?parameters
-								controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
+								controllerWithMth = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);
 								if (path.Length > questionMarkIdx + 1)
 									parms = path.Substring(questionMarkIdx + 1);
 							}
 
-							int idx = path.LastIndexOfAny(urlSeparator);
-							if (idx > 0 && idx < path.Length - 1)
+							int idx = controllerWithMth.LastIndexOfAny(urlSeparator);
+							if (idx > 0 && idx < controllerWithMth.Length - 1)
 							{
-								controller = path.Substring(0, idx);
-								method = $"{path.Substring(idx + 1)}{SDSVC_METHO_SUFFIX}";
+								controller = controllerWithMth.Substring(0, idx);
+								method = $"{controllerWithMth.Substring(idx + 1)}{SDSVC_METHO_SUFFIX}";
 								result.Add(new ControllerInfo() { Name = controller, Parameters = parms, MethodName = method });
 							}
-						}else if (questionMarkIdx >= 0)
+						}
+						else if (questionMarkIdx >= 0)
 						{
 							// rest/module1/module2/service?paramaters
 							controller = path.Substring(0, questionMarkIdx).TrimEnd(urlSeparator);

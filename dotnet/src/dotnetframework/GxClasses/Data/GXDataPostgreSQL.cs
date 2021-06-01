@@ -42,7 +42,7 @@ namespace GeneXus.Data
 #else
 						_npgsqlAssembly = Assembly.LoadFrom(assemblyPath);
 #endif
-						GXLogging.Debug(log, "Npgsql Loaded:" + _npgsqlAssembly.FullName + " location: " + _npgsqlAssembly.Location + " CodeBase:" + _npgsqlAssembly.CodeBase);
+						GXLogging.Debug(log, "Npgsql Loaded:" + _npgsqlAssembly.FullName + " location: " + _npgsqlAssembly.Location);
 					}
 
 				}

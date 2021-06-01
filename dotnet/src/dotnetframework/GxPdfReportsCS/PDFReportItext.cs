@@ -2630,25 +2630,20 @@ namespace com.genexus.reports
 		public static float OPTIMAL_MINIMU_BAR_WIDTH_LARGE_FONT = 0.68f;
 		public static int LARGE_FONT_SIZE = 10;
 
-		static Const()
-		{
-			FONT_SUBSTITUTES_TTF_TYPE1 = new string[12][];
-			FONT_SUBSTITUTES_TTF_TYPE1[0] = new string[2]{"Arial", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[1] = new string[2]{"Courier New", "Courier"};
-			FONT_SUBSTITUTES_TTF_TYPE1[2] = new string[2]{"Fixedsys", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[3] = new string[2]{"Modern", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[4] = new string[2]{"MS Sans Serif", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[5] = new string[2]{"MS Serif", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[6] = new string[2]{"Roman", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[7] = new string[2]{"Script", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[8] = new string[2]{"System", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[9] = new string[2]{"Times New Roman", "Times"};
-			FONT_SUBSTITUTES_TTF_TYPE1[10] = new string[2]{"\uff2d\uff33 \u660e\u671d", "Japanese"};
-			FONT_SUBSTITUTES_TTF_TYPE1[11] = new string[2]{"\uff2d\uff33 \u30b4\u30b7\u30c3\u30af", "Japanese2"};
-		}
-    
-		public static String [][]FONT_SUBSTITUTES_TTF_TYPE1 ;
-                                                                  
+		public static string[][] FONT_SUBSTITUTES_TTF_TYPE1 = {new string[]  { "Arial", "Helvetica" },
+			new string[]{ "Courier New", "Courier" },
+			new string[]{"Fixedsys", "Helvetica"},
+			new string[]{"Modern", "Helvetica"},
+			new string[]{"MS Sans Serif", "Helvetica"},
+			new string[]{"MS Serif", "Helvetica"},
+			new string[]{"Roman", "Helvetica"},
+			new string[]{"Script", "Helvetica"},
+			new string[]{"System", "Helvetica"},
+			new string[]{"Times New Roman", "Times"},
+			new string[]{"\uff2d\uff33 \u660e\u671d", "Japanese"},
+			new string[]{"\uff2d\uff33 \u30b4\u30b7\u30c3\u30af", "Japanese2"}};
+		
+
 		public static String REGISTRY_FONT_SUBSTITUTES_ENTRY = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\FontSubstitutes"; 
 		public static String REGISTRY_FONT_SUBSTITUTES_ENTRY_NT = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes"; 
 
@@ -2887,23 +2882,16 @@ namespace com.genexus.reports
 
 	public class PDFFont
 	{
-		public static String[][] base14;
-
-		static PDFFont()
-		{
-			base14 = new string[10][];
-			
-			base14[0]= new string[5]{"sansserif",	"/Helvetica",	"/Helvetica-Bold","/Helvetica-Oblique",	"/Helvetica-BoldOblique"};
-			base14[1]= new string[5]{"monospaced",	"/Courier",	"/Courier-Bold","/Courier-Oblique",	"/Courier-BoldOblique"};
-			base14[2]= new string[5]{"timesroman",	"/Times-Roman",	"/Times-Bold",	"/Times-Italic",	"/Times-BoldItalic"};
-			base14[3]= new string[5]{"courier",	    "/Courier",	"/Courier-Bold","/Courier-Oblique",	"/Courier-BoldOblique"};
-			base14[4]= new string[5]{"helvetica",	"/Helvetica",	"/Helvetica-Bold","/Helvetica-Oblique",	"/Helvetica-BoldOblique"};
-			base14[5]= new string[5]{"dialog",	    "/Courier",	"/Courier-Bold","/Courier-Oblique",	"/Courier-BoldOblique"};
-			base14[6]= new string[5]{"dialoginput",	"/Courier",	"/Courier-Bold","/Courier-Oblique",	"/Courier-BoldOblique"};
-			base14[7]= new string[5]{"symbol",      "/Symbol",     "/Symbol", "/Symbol",          "/Symbol"};
-			base14[8]= new string[5]{"times",       "/Times-Roman", "/Times-Bold", "/Times-Italic", "/Times-BoldItalic"};
-			base14[9]= new string[5]{"zapfdingbats", "/ZapfDingBats", "/ZapfDingBats", "/ZapfDingBats", "/ZapfDingBats"};
-		}
+		public static string[][] base14 = {new string[]{"sansserif",    "/Helvetica",   "/Helvetica-Bold","/Helvetica-Oblique", "/Helvetica-BoldOblique"},
+			new string[]{"monospaced",  "/Courier", "/Courier-Bold","/Courier-Oblique", "/Courier-BoldOblique"},
+				new string[]{"timesroman",  "/Times-Roman", "/Times-Bold",  "/Times-Italic",    "/Times-BoldItalic"},
+				new string[]{"courier",     "/Courier", "/Courier-Bold","/Courier-Oblique", "/Courier-BoldOblique"},
+				new string[]{"helvetica",   "/Helvetica",   "/Helvetica-Bold","/Helvetica-Oblique", "/Helvetica-BoldOblique"},
+				new string[]{"dialog",      "/Courier", "/Courier-Bold","/Courier-Oblique", "/Courier-BoldOblique"},
+				new string[]{"dialoginput", "/Courier", "/Courier-Bold","/Courier-Oblique", "/Courier-BoldOblique"},
+				new string[]{"symbol",      "/Symbol",     "/Symbol", "/Symbol",          "/Symbol"},
+				new string[]{"times",       "/Times-Roman", "/Times-Bold", "/Times-Italic", "/Times-BoldItalic"},
+				new string[]{"zapfdingbats", "/ZapfDingBats", "/ZapfDingBats", "/ZapfDingBats", "/ZapfDingBats"} };
 
 		public static bool isType1(String fontName)
 		{
@@ -2930,23 +2918,15 @@ namespace com.genexus.reports
 	}
 	public class Type1FontMetrics
 	{
-		public static String [][] CJKNames;
-		static Type1FontMetrics()
-		{
-			CJKNames = new string[8][];
-			// Adobe Acrobat Reader 6
-			CJKNames[0] = new string[2]{"SimplifiedChinese", "AdobeSongStd-Light-Acro"};
-			CJKNames[1] = new string[2]{"TraditionalChinese", "AdobeMingStd-Light-Acro"};
-			CJKNames[2] = new string[2]{"Japanese", "KozMinPro-Regular-Acro"};
-			CJKNames[3] = new string[2]{"Japanese2", "KozGoPro-Medium-Acro"};
-			CJKNames[4] = new string[2]{"Korean", "AdobeMyungjoStd-Medium-Acro"};
-			// Adobe Acrobat Reader 5
-			CJKNames[5] = new string[2]{"SimplifiedChineseAcro5", "STSongStd-Light-Acro"};
-			CJKNames[6] = new string[2]{"TraditionalChineseAcro5", "MSungStd-Light-Acro"};
-			CJKNames[7] = new string[2]{"KoreanAcro5", "HYSMyeongJoStd-Medium-Acro"};
-											 
-		}
-
+		public static string[][] CJKNames = {new string[] { "SimplifiedChinese", "AdobeSongStd-Light-Acro" },
+			new string[] {"TraditionalChinese", "AdobeMingStd-Light-Acro"},
+			new string[] {"Japanese", "KozMinPro-Regular-Acro"},
+			new string[] {"Japanese2", "KozGoPro-Medium-Acro"},
+			new string[] {"Korean", "AdobeMyungjoStd-Medium-Acro"},
+			new string[] {"SimplifiedChineseAcro5", "STSongStd-Light-Acro"},
+			new string[] {"TraditionalChineseAcro5", "MSungStd-Light-Acro"},
+			new string[] {"KoreanAcro5", "HYSMyeongJoStd-Medium-Acro"}
+		};
 	}
 
 	public class MSPDFFontDescriptor 

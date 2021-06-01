@@ -1,6 +1,5 @@
 <Project>
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<SignAssembly>false</SignAssembly>
 		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -10,7 +9,7 @@
 		<ApplicationIcon >$(MSBuildThisFileDirectory)\src\resources\Default_App.ico</ApplicationIcon>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'!='netcoreapp3.1'">
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -43,7 +42,7 @@
 	</UsingTask>
 
 
-	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true'">
+	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND ('$(TargetFramework)'=='netcoreapp3.1' OR '$(TargetFramework)'=='net5.0')">
 		<ReplaceFileText
        InputFilename="$(OutDir)$(ProjectName).deps.json"
        OutputFilename="$(OutDir)$(ProjectName).deps.json"
@@ -54,7 +53,8 @@
        OutputFilename="$(OutDir)$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Web\.Core"
        ReplacementText="GxClasses.Web" />
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(ProjectName).deps.json" />
+	   <MakeDir Directories="$(TargetFramework)"/>
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(TargetFramework)\$(ProjectName).deps.json" />
 	</Target>
 
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">

@@ -38,12 +38,19 @@ namespace GeneXus.Http
 		#region InternalKeys
 		GXNavigationHelper InternalKeyNavigationHelper;
 		string InternalKeyAjaxEncryptionKey; 
-		Hashtable InternalKeyGxTheme; 
-		string InternalKeyGxLanguage; 
-		#endregion
+		Hashtable InternalKeyGxTheme;
+		string InternalKeyGxLanguage;
+#if NETCORE
+		string InternalKeyGxNewSession;
+#endif
+#endregion
 		public GxWebSession()
         {
         }
+		internal GxWebSession(HttpSessionState session)
+		{
+			_httpSession = session;
+		}
         public GxWebSession(IGxContext context)
         {
             if (context.HttpContext != null)
@@ -170,19 +177,26 @@ namespace GeneXus.Http
 		{
 			InternalKeyNavigationHelper = Get<GXNavigationHelper>(GxContext.GX_NAV_HELPER);
 			InternalKeyAjaxEncryptionKey = Get<string>(CryptoImpl.AJAX_ENCRYPTION_KEY);
-			InternalKeyGxLanguage = Get(GxContext.GXLanguage);
+			InternalKeyGxLanguage = Get<string>(GxContext.GXLanguage);
 			InternalKeyGxTheme = Get<Hashtable>(GxContext.GXTheme);
+#if NETCORE
+			InternalKeyGxNewSession = Get<string>(HttpContextExtensions.NEWSESSION);
+#endif
 		}
 		private void RestoreInternalKeys()
 		{
 			if (InternalKeyNavigationHelper!=null)
-				Set(GxContext.GX_NAV_HELPER, InternalKeyNavigationHelper);
+				Set<GXNavigationHelper>(GxContext.GX_NAV_HELPER, InternalKeyNavigationHelper);
 			if (InternalKeyAjaxEncryptionKey != null)
-				Set(CryptoImpl.AJAX_ENCRYPTION_KEY, InternalKeyAjaxEncryptionKey);
+				Set<string>(CryptoImpl.AJAX_ENCRYPTION_KEY, InternalKeyAjaxEncryptionKey);
 			if (InternalKeyGxLanguage != null)
-				Set(GxContext.GXLanguage, InternalKeyGxLanguage);
+				Set<string>(GxContext.GXLanguage, InternalKeyGxLanguage);
 			if (InternalKeyGxTheme != null)
-				Set(GxContext.GXTheme, InternalKeyGxTheme);
+				Set<Hashtable>(GxContext.GXTheme, InternalKeyGxTheme);
+#if NETCORE
+			if (InternalKeyGxNewSession != null)
+				Set<string>(HttpContextExtensions.NEWSESSION, InternalKeyGxNewSession);
+#endif
 		}
 		public void Clear()
         {

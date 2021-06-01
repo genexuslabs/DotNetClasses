@@ -132,18 +132,18 @@ namespace GeneXus.Utils
 					else
 						
 					user = user + "@" + _RequestUri.Host.ToString();
-				} 
-			
+				}
+#pragma warning disable SYSLIB0014 // ServicePointManager 			
 				_ServicePoint = ServicePointManager.FindServicePoint( _RequestUri, _Proxy);
 			} 
 			else 
 			{
 				
 				_ServicePoint = ServicePointManager.FindServicePoint( _RequestUri,null);
-
+#pragma warning disable SYSLIB0014 // ServicePointManager 
 			}
 
-			if(!DoLogin(user,pass)) 
+			if (!DoLogin(user,pass)) 
 				ProcessApplicationError("Login Failed.");
 
 		}
