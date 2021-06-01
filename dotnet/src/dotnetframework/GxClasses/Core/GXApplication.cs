@@ -690,7 +690,7 @@ namespace GeneXus.Application
 						ext = ext.TrimStart('.');
 					string filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
-					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
+					GxFile file = new GxFile(tempDir, filePath, GxFileType.Private);
 					filePath = file.Create(pf.InputStream);
 					string fileGuid = GxUploadHelper.GetUploadFileGuid();
 					fileToken = GxUploadHelper.GetUploadFileId(fileGuid);

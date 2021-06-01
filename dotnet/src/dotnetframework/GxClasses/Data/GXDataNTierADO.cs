@@ -105,7 +105,7 @@ namespace GeneXus.Data.NTier.ADO
 
         public string getBLOBFile(int id, string extension, string name)
         {
-            string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.PrivateAttribute);
+            string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.Private);
             return getBLOBFile(id, extension, name, fileName, true);
         }
 
@@ -127,7 +127,7 @@ namespace GeneXus.Data.NTier.ADO
 					}
 				}
 				if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute), _gxDbCommand.Conn.DataStore.Context);
+                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.Private), _gxDbCommand.Conn.DataStore.Context);
                 fileName = new FileInfo(fileName).FullName;
             }
             catch (IOException e)
@@ -149,7 +149,7 @@ namespace GeneXus.Data.NTier.ADO
 					string filePath = PathUtil.SafeCombine(_gxDbCommand.Conn.MultimediaPath, fileName);
 					try
 					{
-						GxFile file = new GxFile(string.Empty, filePath, GxFileType.PublicAttribute);
+						GxFile file = new GxFile(string.Empty, filePath, GxFileType.Public);
 						if (file.Exists())
 						{
 							return filePath;
@@ -331,13 +331,13 @@ namespace GeneXus.Data.NTier.ADO
 
         public string getBLOBFile(int id, string extension, string name)
         {
-            string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.PrivateAttribute);
+            string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.Private);
             String value = getBLOBFile(id, extension, name, fileName, true);
 			TraceRow("getBLOBFile - index : ", id.ToString(), " value:", (value!=null ? value.ToString() : string.Empty));
 			return value;
 		}
 
-        private string getBLOBFile(int id, string extension, string name, string fileName, bool temporary, GxFileType fileType = GxFileType.PrivateAttribute)
+        private string getBLOBFile(int id, string extension, string name, string fileName, bool temporary, GxFileType fileType = GxFileType.Private)
         {
             GxFile file = null;
             Stream fs = null;
@@ -433,7 +433,7 @@ namespace GeneXus.Data.NTier.ADO
 
 					try
 					{
-						GxFile file = new GxFile(string.Empty, filePath, GxFileType.PublicAttribute);
+						GxFile file = new GxFile(string.Empty, filePath, GxFileType.Public);
 
 						if (file.Exists())
 						{
@@ -441,7 +441,7 @@ namespace GeneXus.Data.NTier.ADO
 						}
 						else
 						{
-							return getBLOBFile(id, FileUtil.GetFileType(gxdbFileUri), FileUtil.GetFileName(gxdbFileUri), filePath, false, GxFileType.PublicAttribute);
+							return getBLOBFile(id, FileUtil.GetFileType(gxdbFileUri), FileUtil.GetFileName(gxdbFileUri), filePath, false, GxFileType.Public);
 						}
 					}
 					catch (ArgumentException)
@@ -617,7 +617,7 @@ namespace GeneXus.Data.NTier.ADO
 							{
 								try
 								{
-									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image_gxi, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.PublicAttribute);
+									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image_gxi, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.Public);
 									GXLogging.Debug(log, "Copy file already in ExternalProvider:", multimediaUri);
 								}
 								catch (Exception ex)
@@ -726,7 +726,7 @@ namespace GeneXus.Data.NTier.ADO
 			string multimediaUri;
 			using (fileStream)
 			{
-				multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, externalFileName, tableName, fieldName, GxFileType.PublicAttribute);
+				multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, externalFileName, tableName, fieldName, GxFileType.Public);
 				GXLogging.Debug(log, "Upload file to ExternalProvider:", multimediaUri);
 			}
 
