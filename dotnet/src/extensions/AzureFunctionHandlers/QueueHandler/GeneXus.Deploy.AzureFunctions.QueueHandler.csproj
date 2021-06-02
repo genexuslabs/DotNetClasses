@@ -12,16 +12,6 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
 		<PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.11" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Include="GeneXusServerlessAPI">
-			<HintPath>..\..\libs\GeneXusServerlessAPI.dll</HintPath>
-		</Reference>
-	</ItemGroup>
 	<ItemGroup>
 		<Content Include="$(OutDir)\bin\function.deps.json">
 			<Pack>true</Pack>
@@ -31,5 +21,13 @@
 			<Pack>true</Pack>
 			<PackagePath>\lib\$(TargetFramework)</PackagePath>
 		</Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="GeneXusServerlessAPI">
+	    <HintPath>..\lib\GeneXusServerlessAPI.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 </Project>
