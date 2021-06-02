@@ -1,18 +1,36 @@
-using NUnit.Framework;
+using System;
+using Functions.Tests;
+using GeneXus.Deploy.AzureFunctions.QueueHandler;
+using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Queue;
+using Xunit;
 
-namespace AzureFunctionsTest
+namespace Extensiones.AzureFunctions
 {
-	public class Tests
+	public class AzureTriggerTests
 	{
-		[SetUp]
-		public void Setup()
-		{
-		}
+		private readonly ILogger logger = TestFactory.CreateLogger(LoggerTypes.List);
 
-		[Test]
-		public void Test1()
+		[Fact]
+		public void HttpQueueTriggerHandler()
 		{
-			Assert.Pass();
+			try
+			{
+				CloudQueueMessage myQueueItem = new CloudQueueMessage("contentTest", "popReceiptTest");
+				Microsoft.Azure.WebJobs.ExecutionContext context = new Microsoft.Azure.WebJobs.ExecutionContext();
+				context.FunctionDirectory = ".";
+				QueueTriggerHandler.Run(myQueueItem, logger, context);
+				ListLogger listLogger = logger as ListLogger;
+				foreach (string msg in listLogger.Logs)
+				{
+					//check msgs are ok
+				}
+				Assert.Equal(10, listLogger.Logs.Count);
+			}catch(Exception)
+			{
+				//Exception should not be thrown
+			}
 		}
 	}
+
 }
