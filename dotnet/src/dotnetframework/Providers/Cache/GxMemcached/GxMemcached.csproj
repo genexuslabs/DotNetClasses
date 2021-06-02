@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GxMemcached</RootNamespace>
 		<AssemblyName>GxMemcached</AssemblyName>
 		<PackageTags>Memcached Cache</PackageTags>

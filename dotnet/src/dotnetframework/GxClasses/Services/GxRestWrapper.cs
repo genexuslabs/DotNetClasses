@@ -81,11 +81,6 @@ namespace GeneXus.Application
 				_gxContext.CloseConnections();
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="key"></param>
-		/// <returns></returns>
 		public virtual Task MethodBodyExecute(object key)
 		{
 			try
@@ -630,41 +625,36 @@ namespace GeneXus.Application
 		}
 		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
 		{
-			var serializer = new Newtonsoft.Json.JsonSerializer();
-
-			serializer.Converters.Add(new SDTConverter());
-			TextWriter ms = new StringWriter();
+			string json;
+			var knownTypes = new List<Type>();
+			foreach (var k in parameters.Keys)
+			{
+				var val = parameters[k];
+				knownTypes.Add(val.GetType());
+			}
 			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
 			{
 				string key = parameters.First().Key;
-				using (var writer = new Newtonsoft.Json.JsonTextWriter(ms))
-				{
-					serializer.Serialize(writer, parameters[key]);
-				}
+				json = JSONHelper.WCFSerialize(parameters[key], Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
-				using (var writer = new Newtonsoft.Json.JsonTextWriter(ms))
-				{
-					serializer.Serialize(writer, parameters);
-				}
+				json = JSONHelper.WCFSerialize(parameters, Encoding.UTF8, knownTypes, true); 
 			}
-			_httpContext.Response.Write(ms.ToString()); // Use intermediate StringWriter in order to avoid chunked response
+			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
 		}
 		protected Task Serialize(object value)
 		{
-			var serializer = new Newtonsoft.Json.JsonSerializer();
-			serializer.Converters.Add(new SDTConverter());
 #if NETCORE
 			var responseStream = _httpContext.Response.Body;
 #else
 			var responseStream = _httpContext.Response.OutputStream;
 #endif
-			using (var writer = new Newtonsoft.Json.JsonTextWriter(new StreamWriter(responseStream)))
-			{
-				serializer.Serialize(writer, value);
-			}
+			var knownTypes = new List<Type>();
+			knownTypes.Add(value.GetType());
+		
+			JSONHelper.WCFSerialize(value, Encoding.UTF8, knownTypes, responseStream);
 			return Task.CompletedTask;
 		}
 
@@ -695,10 +685,19 @@ namespace GeneXus.Application
 		protected static object MakeRestType(object v)
 		{
 			Type vType = v.GetType();
-			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) //Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+			Type itemType;
+			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
 			{
-				Type itemType = v.GetType().GetGenericArguments()[0];
-				Type restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+				Type restItemType=null;
+				itemType = v.GetType().GetGenericArguments()[0];
+				if (typeof(IGXBCCollection).IsAssignableFrom(vType))//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				{
+					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+				}
+				if (restItemType == null)//Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+				{
+					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+				}
 				bool isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
 				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
 				return Activator.CreateInstance(genericListItemType, new object[] { v , isWrapped });
