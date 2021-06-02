@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\QueueHandler\GeneXus.Deploy.AzureFunctions.QueueHandler.csproj" />
+    <ProjectReference Include="..\..\GeneXus.Deploy.AzureFunctions.Handlers\GeneXus.Deploy.AzureFunctions.Handlers.csproj" />
   </ItemGroup>
 
 </Project>

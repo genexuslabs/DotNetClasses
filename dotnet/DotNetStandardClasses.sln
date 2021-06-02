@@ -131,13 +131,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azurefunctionhandlers", "az
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extensions", "extensions", "{C6AFB6A3-FF0B-4970-B1F1-10BCD3D932B2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.QueueHandler", "src\extensions\AzureFunctionHandlers\QueueHandler\GeneXus.Deploy.AzureFunctions.QueueHandler.csproj", "{53D0E7E1-8499-47CC-BF18-AD9DDA419E6C}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.ServiceBusHandler", "src\extensions\AzureFunctionHandlers\ServiceBusHandler\GeneXus.Deploy.AzureFunctions.ServiceBusHandler.csproj", "{FD624D6A-8115-4E95-85E0-F288BA4E81FD}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.TimerHandler", "src\extensions\AzureFunctionHandlers\TimerHandler\GeneXus.Deploy.AzureFunctions.TimerHandler.csproj", "{B146E9FB-F8FA-4A61-8D27-6925EBDC877E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunctionsTest", "src\extensions\AzureFunctionHandlers\test\AzureFunctionsTest\AzureFunctionsTest.csproj", "{3F9C6DA0-DAD7-4AEA-9D33-E7C6ABBE2644}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureFunctionsTest", "src\extensions\AzureFunctionHandlers\test\AzureFunctionsTest\AzureFunctionsTest.csproj", "{3F9C6DA0-DAD7-4AEA-9D33-E7C6ABBE2644}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{AB9B0648-FEC3-45AE-BCBC-47DD15573FF5}"
 EndProject
@@ -146,6 +140,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureInteropTests", "src\extensions\AzureFunctionHandlers\test\Interop\AzureInteropTests.csproj", "{01ED4998-DC55-4454-A9FC-EAD791A029D0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "amyprochandler", "src\extensions\AzureFunctionHandlers\test\amyprocedurehandler\amyprochandler.csproj", "{35B1168E-5363-4D58-A6FE-5CD5598FE6D7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.Handlers", "src\extensions\AzureFunctionHandlers\GeneXus.Deploy.AzureFunctions.Handlers\GeneXus.Deploy.AzureFunctions.Handlers.csproj", "{77FC7176-714E-487A-A854-9BA75EFED591}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -353,18 +349,6 @@ Global
 		{2238FCB1-3A83-46C2-873E-82DA4266069D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2238FCB1-3A83-46C2-873E-82DA4266069D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2238FCB1-3A83-46C2-873E-82DA4266069D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{53D0E7E1-8499-47CC-BF18-AD9DDA419E6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{53D0E7E1-8499-47CC-BF18-AD9DDA419E6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{53D0E7E1-8499-47CC-BF18-AD9DDA419E6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{53D0E7E1-8499-47CC-BF18-AD9DDA419E6C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FD624D6A-8115-4E95-85E0-F288BA4E81FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FD624D6A-8115-4E95-85E0-F288BA4E81FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FD624D6A-8115-4E95-85E0-F288BA4E81FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FD624D6A-8115-4E95-85E0-F288BA4E81FD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B146E9FB-F8FA-4A61-8D27-6925EBDC877E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B146E9FB-F8FA-4A61-8D27-6925EBDC877E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B146E9FB-F8FA-4A61-8D27-6925EBDC877E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B146E9FB-F8FA-4A61-8D27-6925EBDC877E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3F9C6DA0-DAD7-4AEA-9D33-E7C6ABBE2644}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3F9C6DA0-DAD7-4AEA-9D33-E7C6ABBE2644}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F9C6DA0-DAD7-4AEA-9D33-E7C6ABBE2644}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -377,6 +361,10 @@ Global
 		{35B1168E-5363-4D58-A6FE-5CD5598FE6D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35B1168E-5363-4D58-A6FE-5CD5598FE6D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35B1168E-5363-4D58-A6FE-5CD5598FE6D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77FC7176-714E-487A-A854-9BA75EFED591}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77FC7176-714E-487A-A854-9BA75EFED591}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77FC7176-714E-487A-A854-9BA75EFED591}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77FC7176-714E-487A-A854-9BA75EFED591}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -441,14 +429,12 @@ Global
 		{E2FB8843-503A-4A22-923E-B12510233127} = {79C9ECC6-2935-4C43-BF32-94698547F584}
 		{2238FCB1-3A83-46C2-873E-82DA4266069D} = {79C9ECC6-2935-4C43-BF32-94698547F584}
 		{BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0} = {C6AFB6A3-FF0B-4970-B1F1-10BCD3D932B2}
-		{53D0E7E1-8499-47CC-BF18-AD9DDA419E6C} = {41E1D031-799F-484F-85DE-7A30AF1A6FBA}
-		{FD624D6A-8115-4E95-85E0-F288BA4E81FD} = {41E1D031-799F-484F-85DE-7A30AF1A6FBA}
-		{B146E9FB-F8FA-4A61-8D27-6925EBDC877E} = {41E1D031-799F-484F-85DE-7A30AF1A6FBA}
 		{3F9C6DA0-DAD7-4AEA-9D33-E7C6ABBE2644} = {AB9B0648-FEC3-45AE-BCBC-47DD15573FF5}
 		{AB9B0648-FEC3-45AE-BCBC-47DD15573FF5} = {BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}
 		{41E1D031-799F-484F-85DE-7A30AF1A6FBA} = {BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}
 		{01ED4998-DC55-4454-A9FC-EAD791A029D0} = {AB9B0648-FEC3-45AE-BCBC-47DD15573FF5}
 		{35B1168E-5363-4D58-A6FE-5CD5598FE6D7} = {AB9B0648-FEC3-45AE-BCBC-47DD15573FF5}
+		{77FC7176-714E-487A-A854-9BA75EFED591} = {41E1D031-799F-484F-85DE-7A30AF1A6FBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
