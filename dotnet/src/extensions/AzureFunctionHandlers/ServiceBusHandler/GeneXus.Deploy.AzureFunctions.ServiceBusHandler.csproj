@@ -16,12 +16,11 @@
     </ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
-
 	<ItemGroup>
 		<Reference Include="GeneXusServerlessAPI">
-			<HintPath>..\..\libs\GeneXusServerlessAPI.dll</HintPath>
+			<HintPath>..\lib\GeneXusServerlessAPI.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
