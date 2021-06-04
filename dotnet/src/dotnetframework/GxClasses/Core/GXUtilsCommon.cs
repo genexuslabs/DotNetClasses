@@ -3271,8 +3271,6 @@ namespace GeneXus.Utils
 	public class FileUtil
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.FileUtil));
-
-		private static object syncObj = new object();
 		public static byte DeleteFile(string fileName)
 		{
 			try
@@ -3367,20 +3365,8 @@ namespace GeneXus.Utils
 		}
 		public static string getTempFileName(string baseDir, string name, string extension, GxFileType fileType = GxFileType.Public)
 		{
-			String fileName;
-			name = FileUtil.FileNamePrettify(name);
-
-			lock (syncObj)
-			{
-				name = FixFileName(name, string.Empty);
-				fileName = tempFileName(baseDir, name, extension);
-				GxFile file = new GxFile(baseDir, fileName, fileType);
-				while (file.FileInfo.Exist(fileName))
-				{
-					fileName = tempFileName(baseDir, name, extension);
-				}
-			}
-			return fileName.Trim();
+			name = FixFileName(FileUtil.FileNamePrettify(name), string.Empty);
+			return tempFileName(baseDir, name, extension);
 		}
 
 		private static string tempFileName(string baseDir, string name, string extension)
