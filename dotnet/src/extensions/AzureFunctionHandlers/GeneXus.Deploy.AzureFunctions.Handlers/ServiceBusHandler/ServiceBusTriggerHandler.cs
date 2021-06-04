@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using Newtonsoft.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using GeneXus.Application;
@@ -47,67 +46,24 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 		private static Message SetupMessage(FunctionContext context, string item)
 		{
 			Message message = new Message();
-			message.Body = System.Text.Encoding.UTF8.GetBytes(item);
+			message.MessageProperties = new List<Message.MessageProperty>();
+			message.Body = item;
 
-			if (context.BindingContext.BindingData.TryGetValue("MessageId", out var messageIdObj) && messageIdObj != null)
+			if (context.BindingContext.BindingData.TryGetValue("MessageId", out var MessageIdObj) && MessageIdObj != null)
 			{
-				message.MessageId = messageIdObj.ToString();
+				message.MessageId = MessageIdObj.ToString();
 
-				if (context.BindingContext.BindingData.TryGetValue("Label", out var LabelObj) && LabelObj != null)
+				foreach (string key in context.BindingContext.BindingData.Keys)
 				{
-					message.Label = LabelObj.ToString();
+					Message.MessageProperty messageProperty = new Message.MessageProperty();
+					messageProperty.key = key;
+					messageProperty.value = context.BindingContext.BindingData[key].ToString();
+					message.MessageProperties.Add(messageProperty);
 				}
-				if (context.BindingContext.BindingData.TryGetValue("Size", out var SizeObj) && SizeObj != null)
-				{
-					message.Size = SizeObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("ScheduledEnqueueTimeUtc", out var ScheduledEnqueueTimeUtcObj) && ScheduledEnqueueTimeUtcObj != null)
-				{
-					message.ScheduledEnqueueTimeUtc = ScheduledEnqueueTimeUtcObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("ReplyTo", out var ReplyToObj) && ReplyToObj != null)
-				{
-					message.ReplyTo = ReplyToObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("ContentType", out var ContentTypeObj) && ContentTypeObj != null)
-				{
-					message.ContentType = ContentTypeObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("To", out var ToObj) && ToObj != null)
-				{
-					message.To = ToObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("CorrelationId", out var CorrelationIdObj) && CorrelationIdObj != null)
-				{
-					message.CorrelationId = CorrelationIdObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("TimeToLive", out var TimeToLiveObj) && TimeToLiveObj != null)
-				{
-					message.TimeToLive = TimeToLiveObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("ReplyToSessionId", out var ReplyToSessionIdObj) && ReplyToSessionIdObj != null)
-				{
-					message.ReplyToSessionId = ReplyToSessionIdObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("SessionId", out var SessionIdObj) && SessionIdObj != null)
-				{
-					message.SessionId = SessionIdObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("ViaPartitionKey", out var ViaPartitionKeyObj) && ViaPartitionKeyObj != null)
-				{
-					message.ViaPartitionKey = ViaPartitionKeyObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("PartitionKey", out var PartitionKeyObj) && PartitionKeyObj != null)
-				{
-					message.PartitionKey = PartitionKeyObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("ExpiresAtUtc", out var ExpiresAtUtcObj) && ExpiresAtUtcObj != null)
-				{
-					message.ExpiresAtUtc = ExpiresAtUtcObj.ToString();
-				}
+
 				if (context.BindingContext.BindingData.TryGetValue("UserProperties", out var customProperties) && customProperties != null)
 				{
-					var customHeaders = JsonConvert.DeserializeObject<Dictionary<string, Object>>(customProperties.ToString());
+					var customHeaders = JSONHelper.Deserialize<Dictionary<string, Object>>(customProperties.ToString());
 
 					if (customHeaders != null)
 						message.UserProperties = customHeaders;
@@ -115,7 +71,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				if (context.BindingContext.BindingData.TryGetValue("SystemProperties", out var systemProperties) && systemProperties != null)
 				{
 					Message.SystemPropertiesCollection systemHeaders = new Message.SystemPropertiesCollection();
-					systemHeaders = System.Text.Json.JsonSerializer.Deserialize<Message.SystemPropertiesCollection>(systemProperties.ToString());
+					systemHeaders = JSONHelper.Deserialize<Message.SystemPropertiesCollection>(systemProperties.ToString());
 					if (systemHeaders != null)
 						message.SystemProperties = systemHeaders;
 				}
@@ -129,10 +85,8 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 		private static void ProcessMessage(FunctionContext context, ILogger log, Message message)
 		{
 			string gxProcedure = FunctionReferences.GetFunctionEntryPoint(context, log, message.MessageId);
-			log.LogInformation($"gxprocedure {gxProcedure}");
-
 			string exMessage;
-			if (string.IsNullOrEmpty(gxProcedure))
+			if (!string.IsNullOrEmpty(gxProcedure))
 			{
 				try
 				{
@@ -173,39 +127,35 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 
 							if (parameters[0].ParameterType == typeof(string))
 							{
-								string queueMessageSerialized = JsonConvert.SerializeObject(message);
+								string queueMessageSerialized = JSONHelper.Serialize(message);
 								parametersdata = new object[] { queueMessageSerialized, null };
 							}
 							else
 							{
 								//Initialization
 
-								Type CustomPayloadItemType = ClassLoader.FindType(FunctionReferences.GeneXusServerlessAPIAssembly, FunctionReferences.EventCustomPayloadItemFullClassName, null);
-								Type baseCollection = typeof(GXBaseCollection<>);
-								IList CustomPayload = (IList)Activator.CreateInstance(baseCollection.MakeGenericType(CustomPayloadItemType), new object[] { gxcontext, "CustomPayloadItem", "ServerlessAPI" });
+								Type EventMessagesType = parameters[0].ParameterType; //SdtEventMessages
+								GxUserType EventMessages = (GxUserType)Activator.CreateInstance(EventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
 
-								GxUserType EventMessageItem = (GxUserType)ClassLoader.GetInstance(FunctionReferences.GeneXusServerlessAPIAssembly, FunctionReferences.EventMessageFullClassName, new object[] { gxcontext });
-								GxUserType EventMessages = (GxUserType)ClassLoader.GetInstance(FunctionReferences.GeneXusServerlessAPIAssembly, FunctionReferences.EventMessagesFullClassName, new object[] { gxcontext });
+								IList EventMessage = (IList)ClassLoader.GetPropValue(EventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
+								Type EventMessageItemType = EventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
+
+								GxUserType EventMessageItem = (GxUserType)Activator.CreateInstance(EventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
+								IList CustomPayload = (IList)ClassLoader.GetPropValue(EventMessageItem, "gxTpr_Eventmessagecustompayload");//instance of GXBaseCollection<SdtEventCustomPayload_CustomPayloadItem>
+
+								Type CustomPayloadItemType = CustomPayload.GetType().GetGenericArguments()[0];//SdtEventCustomPayload_CustomPayloadItem
 
 								//Payload
-
-								Type t = message.GetType();
-								PropertyInfo[] props = t.GetProperties();
 								GxUserType CustomPayloadItem;
 
-								foreach (var prop in props)
-									if (prop.GetIndexParameters().Length == 0)
+								foreach (var messageProp in message.MessageProperties)
+								{
+									if ((messageProp.key != "UserProperties") & (messageProp.key != "SystemProperties"))
 									{
-										if ((prop.Name != "Body") & (prop.Name != "UserProperties") & (prop.Name != "SystemProperties"))
-										{
-											CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, prop.Name, Convert.ToString(prop.GetValue(message)), gxcontext);
-											CustomPayload.Add(CustomPayloadItem);
-										}
+										CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, messageProp.key, Convert.ToString(messageProp.value), gxcontext);
+										CustomPayload.Add(CustomPayloadItem);
 									}
-
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "Body", Encoding.UTF8.GetString(message.Body), gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
-
+								}
 								//user Properties
 								if (message.UserProperties.Count > 0)
 								{
@@ -229,24 +179,25 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 											CustomPayload.Add(CustomPayloadItem);
 										}
 								}
+
 								//Event
 
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageid", message.MessageId);
-								if (message.SystemProperties != null)
-									ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedate", message.SystemProperties.EnqueuedTimeUtc);
+								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageid", message.MessageId);	
+								Message.MessageProperty enqueuedTimeUtcProp = message.MessageProperties.Find(x => x.key == "EnqueuedTimeUtc");
+							//	if (enqueuedTimeUtcProp != null)
+							//		ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedate", Convert.ToDateTime(enqueuedTimeUtcProp.value));
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.ServiceBusMessage);
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagecustompayload", CustomPayload);
 
 								//List of Events
-								IList events = (IList)ClassLoader.GetPropValue(EventMessages, "gxTpr_Eventmessage");
+								EventMessage.Add(EventMessageItem);
 								parametersdata = new object[] { EventMessages, null };
 								
 								try
 								{
 									method.Invoke(objgxproc, parametersdata);
-									GxUserType EventMessageResponse = (GxUserType)ClassLoader.GetInstance(FunctionReferences.GeneXusServerlessAPIAssembly, FunctionReferences.EventMessageResponseFullClassName, new object[] { gxcontext });
-									EventMessageResponse = (GxUserType)parametersdata[1];
+									GxUserType EventMessageResponse = parametersdata[1] as GxUserType;//SdtEventMessageResponse
 
 									//Error handling
 
@@ -289,23 +240,15 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 		}
 		internal class Message
 		{
+			public Message()
+			{ }
+
+			public string MessageId;
 			public IDictionary<string, object> UserProperties { get; set; }
-			public string Size { get; set; }
-			public string ScheduledEnqueueTimeUtc { get; set; }
-			public string ReplyTo { get; set; }
-			public string ContentType { get; set; }
-			public string To { get; set; }
-			public string Label { get; set; }
-			public string CorrelationId { get; set; }
-			public string TimeToLive { get; set; }
-			public string ReplyToSessionId { get; set; }
-			internal SystemPropertiesCollection SystemProperties { get; set; }
-			public string SessionId { get; set; }
-			public string ViaPartitionKey { get; set; }
-			public string PartitionKey { get; set; }
-			public string MessageId { get; set; }
-			public byte[] Body { get; set; }
-			public string ExpiresAtUtc { get; set; }
+			public SystemPropertiesCollection SystemProperties { get; set; }
+			public string Body { get; set; }
+
+			public List<MessageProperty> MessageProperties;
 			internal class SystemPropertiesCollection
 			{
 				public bool IsLockTokenSet { get; }
@@ -317,6 +260,13 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				public string DeadLetterSource { get; }
 				public long EnqueuedSequenceNumber { get; }
 				public DateTime EnqueuedTimeUtc { get; }
+			}
+			internal class MessageProperty
+			{
+				public string key { get; set; }
+				public string value { get; set; }
+				public MessageProperty()
+				{ }
 			}
 		}
 	}
