@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Azure.Functions.Worker;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
@@ -10,6 +9,8 @@ using GeneXus.Application;
 using GeneXus.Utils;
 using System.Collections;
 using GeneXus.Metadata;
+using System.Collections.Generic;
+using System.Globalization;
 
 namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 {
@@ -36,35 +37,19 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 		private static QueueMessage SetupMessage(FunctionContext context, string item)
 		{
 			QueueMessage message = new QueueMessage();
-			message.AsString = item;
+			message.MessageProperties = new List<QueueMessage.MessageProperty>();
+			message.Body = item;
 
 			if (context.BindingContext.BindingData.TryGetValue("Id", out var messageIdObj) && messageIdObj != null)
 			{
 				message.Id = messageIdObj.ToString();
-
-				if (context.BindingContext.BindingData.TryGetValue("DequeueCount", out var DequeueCountObj) && DequeueCountObj != null)
+		
+				foreach (string key in context.BindingContext.BindingData.Keys)
 				{
-					message.DequeueCount = DequeueCountObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("AsBytes", out var AsBytesObj) && AsBytesObj != null)
-				{
-					message.AsBytes = System.Text.Encoding.UTF8.GetBytes(AsBytesObj.ToString());
-				}
-				if (context.BindingContext.BindingData.TryGetValue("ExpirationTime", out var ExpiresOnObj) && ExpiresOnObj != null)
-				{
-					message.ExpirationTime = ExpiresOnObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("InsertionTime", out var InsertedOnObj) && InsertedOnObj != null)
-				{
-					message.InsertionTime = InsertedOnObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("NextVisibleTime", out var NextVisibleOnObj) && NextVisibleOnObj != null)
-				{
-					message.NextVisibleTime = NextVisibleOnObj.ToString();
-				}
-				if (context.BindingContext.BindingData.TryGetValue("PopReceipt", out var PopReceiptObj) && PopReceiptObj != null)
-				{
-					message.PopReceipt = PopReceiptObj.ToString();
+					QueueMessage.MessageProperty messageProperty = new QueueMessage.MessageProperty();
+					messageProperty.key = key;
+					messageProperty.value = context.BindingContext.BindingData[key].ToString();
+					message.MessageProperties.Add(messageProperty);
 				}
 			}
 			else
@@ -77,7 +62,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 		{
 			string gxProcedure = FunctionReferences.GetFunctionEntryPoint(context, log, queueMessage.Id);
 			string exMessage;
-			if (string.IsNullOrEmpty(gxProcedure))
+			if (!string.IsNullOrEmpty(gxProcedure))
 			{
 				try
 				{
@@ -118,8 +103,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 
 							if (parameters[0].ParameterType == typeof(string))
 							{
-								//string queueMessageSerialized = JSONHelper.Serialize(myQueueItem);
-								string queueMessageSerialized = JsonConvert.SerializeObject(queueMessage);
+								string queueMessageSerialized = JSONHelper.Serialize(queueMessage);
 								parametersdata = new object[] { queueMessageSerialized, null };
 							}
 							else
@@ -138,31 +122,21 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 								Type CustomPayloadItemType = CustomPayload.GetType().GetGenericArguments()[0];//SdtEventCustomPayload_CustomPayloadItem
 
 								//Payload
-								GxUserType CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "Id", queueMessage.Id, gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
 
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "DequeueCount", queueMessage.DequeueCount, gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
+								GxUserType CustomPayloadItem;
 
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ExpirationTime", queueMessage.ExpirationTime, gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
-
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "InsertionTime", queueMessage.InsertionTime, gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
-
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "NextVisibleTime", queueMessage.NextVisibleTime, gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
-
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "PopReceipt", queueMessage.PopReceipt, gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
+								foreach (var messageProp in queueMessage.MessageProperties)
+								{
+									CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, messageProp.key, messageProp.value, gxcontext);
+									CustomPayload.Add(CustomPayloadItem);	
+								}
 
 								//Event
 
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageid", queueMessage.Id);
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedata", queueMessage.AsString);
+								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedata", queueMessage.Body);
 
-
-								//Insertion DateTime?
+								//Insertion DateTime
 
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.QueueMessage);
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
@@ -223,21 +197,21 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 			return CustomPayloadItem;
 
 		}
-		private class QueueMessage
+		internal class QueueMessage
 		{
 			public QueueMessage()
 			{ }
-			public static long MaxMessageSize { get; set; }
-			public static TimeSpan MaxVisibilityTimeout { get; set; }
-			public static int MaxNumberOfMessagesToPeek { get; set; }
-			public byte[] AsBytes { get; set; }
+
+			public List<MessageProperty> MessageProperties;		
 			public string Id { get; set; }
-			public string PopReceipt { get; set; }
-			public string InsertionTime { get; set; }
-			public string ExpirationTime { get; set; }
-			public string NextVisibleTime { get; set; }
-			public string AsString { get; set; }
-			public string DequeueCount { get; set; }
+			public string Body { get; set; }
+			internal class MessageProperty
+			{
+				public string key { get; set; }
+				public string value { get; set; }
+				public MessageProperty()
+				{ }
+			}
 		}
 	}
 }

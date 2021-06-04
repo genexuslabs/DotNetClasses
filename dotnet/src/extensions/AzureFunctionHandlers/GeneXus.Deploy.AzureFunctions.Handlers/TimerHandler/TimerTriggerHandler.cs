@@ -2,8 +2,6 @@ using System;
 using System.Text;
 using System.IO;
 using System.Reflection;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using GeneXus.Application;
@@ -16,14 +14,6 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 {
     public static class TimerTriggerHandler
     {
-		private static GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
-		{
-			GxUserType CustomPayloadItem = (GxUserType)Activator.CreateInstance(customPayloadItemType, new object[] { gxContext });
-			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyid", propertyId);
-			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyvalue", propertyValue);
-			return CustomPayloadItem;
-
-		}
 		public static void Run(MyInfo TimerInfo, FunctionContext context) 
 		{
 			var logger = context.GetLogger("TimerTriggerHandler");
@@ -45,7 +35,7 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 		{
 			string gxProcedure = FunctionReferences.GetFunctionEntryPoint(context, log, messageId);
 			string exMessage;
-			if (string.IsNullOrEmpty(gxProcedure))
+			if (!string.IsNullOrEmpty(gxProcedure))
 			{
 				try
 				{
@@ -86,7 +76,7 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 
 							if (parameters[0].ParameterType == typeof(string))
 							{
-								string queueMessageSerialized = JsonConvert.SerializeObject(TimerInfo);
+								string queueMessageSerialized = JSONHelper.Serialize(TimerInfo);
 								parametersdata = new object[] { queueMessageSerialized, null };
 							}
 							else
@@ -173,7 +163,15 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				throw new Exception(exMessage);
 			}
 		}
-	}
+		private static GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
+		{
+			GxUserType CustomPayloadItem = (GxUserType)Activator.CreateInstance(customPayloadItemType, new object[] { gxContext });
+			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyid", propertyId);
+			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyvalue", propertyValue);
+			return CustomPayloadItem;
+
+		}
+	}	
 	public class MyInfo
 	{
 		public MyScheduleStatus ScheduleStatus { get; set; }

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Azure.Functions.Worker;
+using GeneXus.Utils;
 
 namespace GeneXus.Deploy.AzureFunctions.Handlers.Helpers
 {
@@ -23,6 +23,7 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers.Helpers
 			rootPath = rootPath.Replace(FunctionReferences.FunctionHandlerAssembly, "");
 			string mapFilePath = Path.Combine(rootPath, MappingsFile);
 			string gxProcedure = null;
+
 			if (File.Exists(mapFilePath))
 			{
 				using (StreamReader r = new StreamReader(mapFilePath))
@@ -31,7 +32,8 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers.Helpers
 
 					//The file may have an entry for more than one function.
 
-					List<GxAzMappings> gxMappingsList = JsonConvert.DeserializeObject<List<GxAzMappings>>(gxazMappings);
+					List<GxAzMappings> gxMappingsList = JSONHelper.Deserialize<List<GxAzMappings>>(gxazMappings);
+
 					GxAzMappings map = gxMappingsList.Find(x => x.FunctionName == context.FunctionDefinition.Name);
 					gxProcedure = map.GXEntrypoint;
 				}
