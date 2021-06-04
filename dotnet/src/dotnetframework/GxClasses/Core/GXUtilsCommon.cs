@@ -3372,16 +3372,8 @@ namespace GeneXus.Utils
 
 			lock (syncObj)
 			{
-
 				name = FixFileName(name, string.Empty);
-				if (string.IsNullOrEmpty(name))
-				{
-					fileName = tempFileName(baseDir, name, extension);
-				}
-				else
-				{
-					fileName = PathUtil.SafeCombine(baseDir, name + "." + extension);
-				}
+				fileName = tempFileName(baseDir, name, extension);
 				GxFile file = new GxFile(baseDir, fileName, fileType);
 				while (file.FileInfo.Exist(fileName))
 				{
