@@ -57,7 +57,16 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				{
 					Message.MessageProperty messageProperty = new Message.MessageProperty();
 					messageProperty.key = key;
-					messageProperty.value = context.BindingContext.BindingData[key].ToString();
+
+					string valueStr = context.BindingContext.BindingData[key].ToString().Trim('\"');
+					DateTime valueDateTime;
+					if (DateTime.TryParse(valueStr, out valueDateTime))
+					{						
+						messageProperty.value = valueDateTime.ToUniversalTime().ToString();
+					}
+					else
+						messageProperty.value = context.BindingContext.BindingData[key].ToString();
+
 					message.MessageProperties.Add(messageProperty);
 				}
 
@@ -184,8 +193,12 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageid", message.MessageId);	
 								Message.MessageProperty enqueuedTimeUtcProp = message.MessageProperties.Find(x => x.key == "EnqueuedTimeUtc");
-							//	if (enqueuedTimeUtcProp != null)
-							//		ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedate", Convert.ToDateTime(enqueuedTimeUtcProp.value));
+								if (enqueuedTimeUtcProp != null)
+								{
+									DateTime enqueuedTimeUtc;
+									if (DateTime.TryParse(enqueuedTimeUtcProp.value, out enqueuedTimeUtc))
+									ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedate", enqueuedTimeUtc);
+								}
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.ServiceBusMessage);
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagecustompayload", CustomPayload);
