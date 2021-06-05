@@ -48,7 +48,16 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 				{
 					QueueMessage.MessageProperty messageProperty = new QueueMessage.MessageProperty();
 					messageProperty.key = key;
-					messageProperty.value = context.BindingContext.BindingData[key].ToString();
+
+					string valueStr = context.BindingContext.BindingData[key].ToString().Trim('\"');
+					DateTime valueDateTime;
+					if (DateTime.TryParse(valueStr, out valueDateTime))
+					{
+						messageProperty.value = valueStr;
+					}
+					else
+						messageProperty.value = context.BindingContext.BindingData[key].ToString();
+
 					message.MessageProperties.Add(messageProperty);
 				}
 			}
@@ -135,8 +144,14 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageid", queueMessage.Id);
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedata", queueMessage.Body);
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedate", DateTime.UtcNow);
 
+								QueueMessage.MessageProperty InsertionTimeProp = queueMessage.MessageProperties.Find(x => x.key == "InsertionTime");
+								if (InsertionTimeProp != null)
+								{
+									DateTime InsertionTime;
+									if (DateTime.TryParse(InsertionTimeProp.value, out InsertionTime))
+									ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedate", InsertionTime.ToUniversalTime());
+								}
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.QueueMessage);
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
 								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagecustompayload", CustomPayload);
