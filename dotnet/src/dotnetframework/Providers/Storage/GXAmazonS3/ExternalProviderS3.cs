@@ -247,7 +247,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			return GetCannedACL(fileType) != S3CannedACL.PublicRead;
 		}
 
-		public string Get(string objectName, GxFileType fileType, int urlMinutes = DefaultExpirationMinutes)
+		public string Get(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			if (Exists(objectName, fileType))
 			{
@@ -257,10 +257,10 @@ namespace GeneXus.Storage.GXAmazonS3
 				return string.Empty;
 		}
 
-		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = DefaultExpirationMinutes)
+		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
-			return (isPrivate)? GetPreSignedUrl(objectName, urlMinutes): StorageUri + StorageUtils.EncodeUrl(objectName);
+			return (isPrivate)? GetPreSignedUrl(objectName, ResolveExpirationMinutes(urlMinutes)): StorageUri + StorageUtils.EncodeUrl(objectName);
 			
 		}
 
@@ -521,7 +521,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 		}
 
-		public bool GetObjectNameFromURL(string url, out string objectName)
+		public bool TryGetObjectNameFromURL(string url, out string objectName)
 		{
 			if (url.StartsWith(StorageUri))
 			{
@@ -536,5 +536,6 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			return Name;
 		}
+	
 	}
 }

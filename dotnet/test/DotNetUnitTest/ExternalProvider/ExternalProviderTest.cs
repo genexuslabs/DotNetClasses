@@ -156,10 +156,10 @@ namespace UnitTesting
 		public void TestGetObjectName()
 		{
 			TestUploadPublicMethod();
-			String url = provider.Get(TEST_SAMPLE_FILE_NAME, GxFileType.PublicRead, 10);
+			string url = provider.Get(TEST_SAMPLE_FILE_NAME, GxFileType.PublicRead, 10);
 			Assert.True(UrlExists(url));
-			String objectName = "";
-			provider.GetObjectNameFromURL(url, out objectName);
+			string objectName;
+			provider.TryGetObjectNameFromURL(url, out objectName);
 			Assert.Equal("text.txt", objectName);
 		}
 

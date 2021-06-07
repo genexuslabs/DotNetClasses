@@ -362,7 +362,7 @@ namespace GeneXus.Storage.GXOpenStack
 			return storageUrl + StorageUtils.DELIMITER + publicBucketName + StorageUtils.DELIMITER;
 		}
 
-		public bool GetObjectNameFromURL(string url, out string objectName)
+		public bool TryGetObjectNameFromURL(string url, out string objectName)
 		{
 			string baseUrl = storageUrl + StorageUtils.DELIMITER + publicBucketName + StorageUtils.DELIMITER;
 			if (url.StartsWith(baseUrl))
