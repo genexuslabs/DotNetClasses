@@ -17,7 +17,6 @@ using System.Reflection;
 using GeneXus;
 using GeneXus.Storage;
 using GeneXus.Attributes;
-using GxClasses.Services.Storage;
 
 public interface IGxDirectoryInfo
 {
@@ -210,7 +209,7 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
             searchPattern = "";
         List<string> files = _provider.GetFiles(_name, searchPattern);
 		
-		GxExternalFileInfo[] externalFiles = files.Select(elem => new GxExternalFileInfo(elem, _provider, GxFileType.PublicRead)).ToArray();
+		GxExternalFileInfo[] externalFiles = files.Select(elem => new GxExternalFileInfo(elem, _provider, GxFileType.Default)).ToArray();
         return externalFiles;
     }
 
@@ -443,9 +442,9 @@ public class GxExternalFileInfo : IGxFileInfo
 	}
 
     public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Private)
-    {
-        _name = storageObjectFullname;
-        _provider = provider;
+    {				
+        _name = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, storageObjectFullname);
+		_provider = provider;
         _url = url;
 		_fileTypeAtt = fileType;
 	}
@@ -667,13 +666,13 @@ public class GxFile
             _baseDirectory = _baseDirectory.Substring(0, _baseDirectory.Length - 1);
     }
 
-    public GxFile(string baseDirectory, IGxFileInfo file, GxFileType fileType = GxFileType.PublicRead)
+    public GxFile(string baseDirectory, IGxFileInfo file, GxFileType fileType = GxFileType.Private)
       : this(baseDirectory)
     {
         _file = file;
     }
 
-    public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.PublicRead)
+    public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.Private)
       : this(baseDirectory)
     {
 		if (GxUploadHelper.IsUpload(fileName))
@@ -739,8 +738,7 @@ public class GxFile
 						if (IsAbsoluteUrl(value))
 						{
 							string objName = string.Empty;
-							ExternalProvider p = StorageFactory.GetExternalProviderFromUrl(value, out objName);
-							_file = new GxExternalFileInfo(objName, value, p);
+							_file = new GxExternalFileInfo(objName, value, ServiceFactory.GetExternalProvider());
 						}
 						else
 						{

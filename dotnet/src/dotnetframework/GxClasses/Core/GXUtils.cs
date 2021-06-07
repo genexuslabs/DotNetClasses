@@ -1116,12 +1116,13 @@ namespace GeneXus.Utils
 			try
 			{				
 				ValidProvider();
+				GxFileType acl = GxFileType.PublicRead;
 				if (String.IsNullOrEmpty(storageobjectfullname))
 				{
 					storageobjectfullname = Path.GetFileName(filefullpath);
 				}				
-				string url = provider.Upload(filefullpath, storageobjectfullname, GxFileType.PublicRead);
-				uploadedFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider);
+				string url = provider.Upload(filefullpath, storageobjectfullname, acl);
+				uploadedFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider, acl);
 				return true;
 			}
 			catch (Exception ex)

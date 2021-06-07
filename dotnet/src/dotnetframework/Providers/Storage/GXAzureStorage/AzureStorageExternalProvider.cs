@@ -125,7 +125,7 @@ namespace GeneXus.Storage.GXAzureStorage
 			{
 				SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy();
 				sasConstraints.SharedAccessStartTime = DateTime.UtcNow;
-				sasConstraints.SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes((urlMinutes > 0) ? urlMinutes : 60 * 24 * 7);
+				sasConstraints.SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(ResolveExpirationMinutes(urlMinutes));
 				sasConstraints.Permissions = SharedAccessBlobPermissions.Read;
 				url += blob.GetSharedAccessSignature(sasConstraints);
 			}
@@ -352,7 +352,7 @@ namespace GeneXus.Storage.GXAzureStorage
 			return Upload(newName, fileStream, fileType);
 		}
 
-		public bool GetObjectNameFromURL(string url, out string objectName)
+		public bool TryGetObjectNameFromURL(string url, out string objectName)
 		{
 			string baseUrl = StorageUri + StorageUtils.DELIMITER + PublicContainer.Name + StorageUtils.DELIMITER;
 			if (url.StartsWith(baseUrl))

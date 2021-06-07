@@ -679,16 +679,13 @@ namespace GeneXus.Application
 			if (httpContext != null)
 			{
 				HttpPostedFile pf = httpContext.Request.GetFile(varName);
-				if (pf != null)
+				if (pf != null && pf.ContentLength > 0)
 				{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					FileInfo fi = new FileInfo(pf.FileName);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 					string tempDir = Preferences.getTMP_MEDIA_PATH();
-					string ext = fi.Extension;
+					string ext = Path.GetExtension(pf.FileName);
 					if (ext != null)
 						ext = ext.TrimStart('.');
-					string filePath = FileUtil.getTempFileName(tempDir, "BLOB", ext);
+					string filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
 					GxFile file = new GxFile(tempDir, filePath, GxFileType.Private);
 					filePath = file.Create(pf.InputStream);
@@ -3752,8 +3749,7 @@ namespace GeneXus.Application
 		}
 		public string FileFromBase64(string b64)
 		{
-			string tmpFileName = Guid.NewGuid().ToString();
-			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
+			string filePath = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH());
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromBase64(b64);
 			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), this);
@@ -3769,8 +3765,7 @@ namespace GeneXus.Application
 		}
 		public string FileFromByteArray(byte[] bArray)
 		{
-			string tmpFileName = Guid.NewGuid().ToString();
-			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
+			string filePath = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH());
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromByteArray(bArray);
 			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), this);

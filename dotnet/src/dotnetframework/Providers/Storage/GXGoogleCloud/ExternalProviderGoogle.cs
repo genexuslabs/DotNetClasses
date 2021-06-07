@@ -192,7 +192,7 @@ namespace GeneXus.Storage.GXGoogleCloud
             using (FileStream stream = new FileStream(localFile, FileMode.Open))
 			{
 				Google.Apis.Storage.v1.Data.Object obj = Client.UploadObject(Bucket, objectName, "application/octet-stream", stream, GetUploadOptions(fileType));
-				return GetURL(objectName, fileType, DefaultExpirationMinutes);
+				return GetURL(objectName, fileType);
 			}
 		}
 
@@ -245,10 +245,10 @@ namespace GeneXus.Storage.GXGoogleCloud
 			return string.Empty;
         }
 
-		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 60 * 24 * 7)
+		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			if (fileType.HasFlag(GxFileType.Private))
-				return Signer.Sign(Bucket, StorageUtils.EncodeUrl(objectName), TimeSpan.FromMinutes(urlMinutes), HttpMethod.Get);
+				return Signer.Sign(Bucket, StorageUtils.EncodeUrl(objectName), TimeSpan.FromMinutes(ResolveExpirationMinutes(urlMinutes)), HttpMethod.Get);
 			else
 			{
 				return StorageUri + StorageUtils.EncodeUrl(objectName);
@@ -433,7 +433,7 @@ namespace GeneXus.Storage.GXGoogleCloud
 			fileName = Folder + StorageUtils.DELIMITER + tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + fileName;
 			return Upload(fileName, fileStream, fileType);
 		}
-		public bool GetObjectNameFromURL(string url, out string objectName)
+		public bool TryGetObjectNameFromURL(string url, out string objectName)
 		{
 			string baseUrl = StorageUri;
 			if (url.StartsWith(baseUrl))

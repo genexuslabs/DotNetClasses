@@ -247,9 +247,9 @@ namespace GeneXus.Services
 		List<String> GetFiles(string directoryName, string filter = "");
 		List<String> GetSubDirectories(string directoryName);
 		Stream GetStream(string objectName, GxFileType fileType);
-		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);
-		bool GetObjectNameFromURL(string url, out string objectName);
+		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);		
 		string GetBaseURL();
+		bool TryGetObjectNameFromURL(string objectNameOrUrl, out string providerObjectName);
 		string StorageUri { get; }
 	}
 }
