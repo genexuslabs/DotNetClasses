@@ -3364,7 +3364,7 @@ namespace GeneXus.Utils
 				return uriString;
 			}
 		}
-		public static string getTempFileName(string baseDir, string name, string extension, GxFileType fileType = GxFileType.Public)
+		public static string getTempFileName(string baseDir, string name="", string extension="tmp", GxFileType fileType = GxFileType.Public)
 		{
 			name = FixFileName(FileUtil.FileNamePrettify(name), string.Empty);
 			return tempFileName(baseDir, name, extension);
@@ -3428,10 +3428,17 @@ namespace GeneXus.Utils
 
 		public static string FileNamePrettify(string s)
 		{
-			string str = GXUtil.RemoveDiacritics(s.Trim().ToLower()); //remove accents
-			str = Regex.Replace(str, @"\s+", " ").Trim(); // convert multiple spaces into one space  
-			str = Regex.Replace(str, @"\s", "-"); // //Replace spaces by dashes
-			return str;
+			if (!string.IsNullOrEmpty(s))
+			{
+				string str = GXUtil.RemoveDiacritics(s.Trim().ToLower()); //remove accents
+				str = Regex.Replace(str, @"\s+", " ").Trim(); // convert multiple spaces into one space  
+				str = Regex.Replace(str, @"\s", "-"); // //Replace spaces by dashes
+				return str;
+			}
+			else
+			{
+				return s;
+			}
 		}
 
 		public static string GetFileName(string FileName)
