@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\GeneXus.Deploy.AzureFunctions.Handlers\GeneXus.Deploy.AzureFunctions.Handlers.csproj" />
+    <ProjectReference Include="..\..\Handlers\GeneXus.Deploy.AzureFunctions.Handlers.csproj" />
   </ItemGroup>
 
 </Project>
