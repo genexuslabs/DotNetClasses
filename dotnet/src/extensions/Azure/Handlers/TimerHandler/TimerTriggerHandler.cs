@@ -97,13 +97,13 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 
 								//Payload
 
-								GxUserType CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToString(), gxcontext);
+								GxUserType CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToUniversalTime().ToString(), gxcontext);
 								CustomPayload.Add(CustomPayloadItem);
 
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToString(), gxcontext);
+								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToUniversalTime().ToString(), gxcontext);
 								CustomPayload.Add(CustomPayloadItem);
 
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToString(), gxcontext);
+								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToUniversalTime().ToString(), gxcontext);
 								CustomPayload.Add(CustomPayloadItem);
 
 								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "IsPastDue", TimerInfo.IsPastDue.ToString(), gxcontext);

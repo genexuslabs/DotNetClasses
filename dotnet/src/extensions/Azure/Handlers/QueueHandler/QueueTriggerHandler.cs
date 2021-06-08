@@ -53,7 +53,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 					DateTime valueDateTime;
 					if (DateTime.TryParse(valueStr, out valueDateTime))
 					{
-						messageProperty.value = valueStr;
+						messageProperty.value = valueDateTime.ToUniversalTime().ToString(); 
 					}
 					else
 						messageProperty.value = context.BindingContext.BindingData[key].ToString();
