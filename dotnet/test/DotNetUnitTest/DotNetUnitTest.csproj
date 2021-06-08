@@ -39,5 +39,10 @@
   <ItemGroup>
     <Reference Include="System.Web" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Document.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
 
