@@ -25,4 +25,10 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(OutDir)$(ProjectName).deps.json">
+     <Pack>true</Pack>
+     <PackagePath>./lib/$(TargetFramework)/</PackagePath>
+    </Content>
+  </ItemGroup>
 </Project>
