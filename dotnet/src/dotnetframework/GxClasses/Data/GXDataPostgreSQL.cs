@@ -133,6 +133,7 @@ namespace GeneXus.Data
 			for (int i = 0; i < count; i++)
 			{
 				IDataParameter p = (IDataParameter)cmd.Parameters[i];
+				p.ParameterName = null;
 				if (p.Direction == ParameterDirection.InputOutput || p.Direction == ParameterDirection.Output || p.Direction == ParameterDirection.ReturnValue)
 				{
 					returnParms.Add(i, p);
