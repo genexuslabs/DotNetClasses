@@ -167,6 +167,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 								}
 
 								//Body
+
 								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "Body", message.Body, gxcontext);
 								CustomPayload.Add(CustomPayloadItem);
 

@@ -141,6 +141,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 								}
 
 								//Body
+
 								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "Body", queueMessage.Body, gxcontext);
 								CustomPayload.Add(CustomPayloadItem);
 
