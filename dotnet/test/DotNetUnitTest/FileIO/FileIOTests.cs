@@ -65,5 +65,13 @@ namespace UnitTesting
 				Assert.True(isOK);
 			}
 		}
+
+		[Fact]
+		public void PathUtilGetValidFileName()
+		{
+			string path = "file:///C:/Models/Upload/CSharpModel/web/PublicTempStorage/multimedia/Screen%20Shot%202016-02-15%20at%2011.41.55%20AM_ff107a3ba9fb4564bb4e1bf7f74d5fbf.png";
+			string fileName = PathUtil.GetValidFileName(path, "_");
+			Assert.StartsWith("Screen Shot 2016-02-15 at 11.41.55 AM", fileName);
+		}
 	}
 }

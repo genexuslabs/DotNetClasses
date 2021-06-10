@@ -10,13 +10,13 @@
 	  <None Remove="MS923.txt" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Content Include="applications.json">
+	  <Content Include="FileIO\applications.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="client.exe.config">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="MS923.txt">
+	  <Content Include="FileIO\MS923.txt">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	</ItemGroup>
@@ -40,7 +40,7 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="Document.txt">
+    <None Update="FileIO\Document.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

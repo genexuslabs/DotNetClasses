@@ -14,9 +14,22 @@
    <None Remove="FullTextSearch\Ugly.html" />
  </ItemGroup>
  <ItemGroup>
+   <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+   <Compile Include="..\DotNetUnitTest\FileIO\FileIOTests.cs" Link="FileIO\FileIOTests.cs" />
+ </ItemGroup>
+ <ItemGroup>
    <EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
    </EmbeddedResource>
+   <Content Include="..\DotNetUnitTest\FileIO\applications.json" Link="FileIO\applications.json">
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </Content>
+   <Content Include="..\DotNetUnitTest\FileIO\Document.txt" Link="FileIO\Document.txt">
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </Content>
+   <Content Include="..\DotNetUnitTest\FileIO\MS923.txt" Link="FileIO\MS923.txt">
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </Content>
    <Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
    <Content Include="FullTextSearch\Ugly.html">
      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -43,6 +56,10 @@
     <EmbeddedResource Include="..\DotNetUnitTest\TestModule.MyControl.view" Link="TestModule.MyControl.view">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="FileIO\" />
   </ItemGroup>
 
 </Project>
