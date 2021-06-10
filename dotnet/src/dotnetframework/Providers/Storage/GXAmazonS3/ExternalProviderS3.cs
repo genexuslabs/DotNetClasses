@@ -52,8 +52,9 @@ namespace GeneXus.Storage.GXAmazonS3
 		string Endpoint { get; set; }
 		string Region { get; set; }
 
-		bool ForcePathStyle = false;
-
+		bool forcePathStyle = false;
+		bool customEndpoint = false;
+		
 		public string StorageUri
 		{
 			get {
@@ -84,7 +85,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				credentials = new BasicAWSCredentials(keyId, keySecret);
 			}
 
-			var region = Amazon.RegionEndpoint.GetBySystemName(GetPropertyValue(REGION, REGION_DEPRECATED));
+			var region = Amazon.RegionEndpoint.GetBySystemName(GetPropertyValue(REGION, REGION_DEPRECATED, DEFAULT_REGION));
 
 			AmazonS3Config config = new AmazonS3Config()
 			{
@@ -95,11 +96,12 @@ namespace GeneXus.Storage.GXAmazonS3
 			if (Endpoint == STORAGE_CUSTOM_ENDPOINT_VALUE)
 			{
 				Endpoint = GetPropertyValue(STORAGE_CUSTOM_ENDPOINT, STORAGE_CUSTOM_ENDPOINT_DEPRECATED);
-				ForcePathStyle = true;
-				config.ForcePathStyle = ForcePathStyle;
+				forcePathStyle = true;
+				config.ForcePathStyle = forcePathStyle;
 				config.ServiceURL = Endpoint;
+				customEndpoint = true;
 			}
-		
+
 #if NETCORE
 			if (credentials != null)
 			{
@@ -131,13 +133,20 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private void SetURI()
 		{
-			if (Region == DEFAULT_REGION)
+			if (customEndpoint)
 			{
-				_storageUri = (ForcePathStyle) ? $"{Endpoint}/" : $"https://{Bucket}.{Endpoint}/";
+				_storageUri = !Endpoint.EndsWith("/") ? $"{Endpoint}/{Bucket}/": $"{Endpoint}{Bucket}/";
 			}
 			else
 			{
-				_storageUri = $"https://{Bucket}.{Endpoint.Replace("s3.amazonaws.com", $"s3.{Region.ToLower()}.amazonaws.com")}/";
+				if (Region == DEFAULT_REGION)
+				{
+					_storageUri = (forcePathStyle) ? $"{Endpoint}/" : $"https://{Bucket}.{Endpoint}/";
+				}
+				else
+				{
+					_storageUri = $"https://{Bucket}.{Endpoint.Replace("s3.amazonaws.com", $"s3.{Region.ToLower()}.amazonaws.com")}/";
+				}
 			}
 		}
 
@@ -229,8 +238,8 @@ namespace GeneXus.Storage.GXAmazonS3
 				FilePath = localFile,
 				CannedACL = GetCannedACL(fileType)
 			};
-			PutObjectResponse result = PutObject(objectRequest);
-			return Get(objectName, fileType);
+			PutObject(objectRequest);
+			return GetUrlImpl(objectName, fileType);
 		}
 
 		private bool IsPrivateUpload(GxFileType fileType)
@@ -252,6 +261,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
 			return (isPrivate)? GetPreSignedUrl(objectName, urlMinutes): StorageUri + StorageUtils.EncodeUrl(objectName);
+			
 		}
 
 		private string GetPreSignedUrl(string objectName, int urlMinutes)

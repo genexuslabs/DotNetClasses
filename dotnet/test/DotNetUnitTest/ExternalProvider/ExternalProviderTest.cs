@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using DotNetUnitTest;
 using GeneXus.Storage.GXAmazonS3;
 using GeneXus.Storage.GXAzureStorage;
 using GeneXus.Storage.GXGoogleCloud;
@@ -19,7 +20,7 @@ namespace UnitTesting
 
 		public ExternalProviderTest(string providerName, Type externalProviderType)
 		{
-			if (externalProviderType == typeof(ExternalProviderS3))
+			if (this.GetType() == typeof(ExternalProviderS3Test))
 			{
 				Environment.SetEnvironmentVariable(providerName + "_TEST_ENABLED", "true");
 				Environment.SetEnvironmentVariable("STORAGE_AWSS3_ACCESS_KEY", "AKIAJMQ6SF3Y4IULKD5A");
@@ -29,7 +30,18 @@ namespace UnitTesting
 				Environment.SetEnvironmentVariable("STORAGE_AWSS3_REGION", "us-east-1");
 				Environment.SetEnvironmentVariable("STORAGE_AWSS3_ENDPOINT", "s3.amazonaws.com");
 			}
-			if (externalProviderType == typeof(AzureStorageExternalProvider))
+
+			if (this.GetType() == typeof(ExternalProviderMinioTest))
+			{
+				Environment.SetEnvironmentVariable(providerName + "_TEST_ENABLED", "true");
+				Environment.SetEnvironmentVariable("STORAGE_AWSS3_ACCESS_KEY", "desaint");
+				Environment.SetEnvironmentVariable("STORAGE_AWSS3_SECRET_KEY", "6YafTT3U2YtHS7am");
+				Environment.SetEnvironmentVariable("STORAGE_AWSS3_BUCKET_NAME", "java-classes-unittests");
+				Environment.SetEnvironmentVariable("STORAGE_AWSS3_FOLDER_NAME", "test-minio");
+				Environment.SetEnvironmentVariable("STORAGE_AWSS3_ENDPOINT", "custom");
+				Environment.SetEnvironmentVariable("STORAGE_AWSS3_CUSTOM_ENDPOINT", "http://192.168.254.78:9000");
+			}
+			if (this.GetType() == typeof(ExternalProviderAzureTest))
 			{
 				Environment.SetEnvironmentVariable(providerName + "_TEST_ENABLED", "true");
 				Environment.SetEnvironmentVariable($"STORAGE_{providerName}_ACCESS_KEY", "DNiutn2Evl+MNs0TsGUqgg0IDzYWMoMAhLM7Oju/PLi4BEsIsrSY917M6li3Ml7sxj8W+KFD/LZU49OGI40Slg==");
@@ -39,7 +51,7 @@ namespace UnitTesting
 				Environment.SetEnvironmentVariable($"STORAGE_{providerName}_PRIVATE_CONTAINER_NAME", "contluisprivate");
 			}
 
-			if (externalProviderType == typeof(ExternalProviderGoogle))
+			if (this.GetType() == typeof(ExternalProviderGoogleTest))
 			{
 				Environment.SetEnvironmentVariable(providerName + "_TEST_ENABLED", "true");
 				Environment.SetEnvironmentVariable($"STORAGE_{providerName}_KEY", "{\"type\": \"service_account\",\"project_id\": \"gxjavacloudstorageunittests\",\"private_key_id\": \"37e8c0566cd56c7bb07542fdddd9f46ac64a5ba0\",\"private_key\": \"-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDQFJ0NHKkmZNCP\n824SBcXHa0DeoDy1i7zToD1DYiJzQXZAZg9tm91SKEbbCZWMgslBdUP10c7UsnuU\nkvnZTUpZ2YQ680ySiykjAWildp28e/nLBDVZy0f8N7H94484kOS4fxQs2VoW8MH6\nVzsxxm+3yhHjQfQOD+Obes3YBMXUxb7rs/blp7fYWbXNzyGGcpM0kEm4mRNslTbi\nZmVnuwpkaaYfQEPPYLfxWcwfgfpbXEPIJB+bNw+EN5JOUvYvCdpwdPgNyA6MvQFj\nGLTAbsXCOtFh6TtRjE9LkjTZrLTAT0HJ0kODxCyM4pBgag87iZAJ4nsq/355DIMJ\nJtEy3ZtTAgMBAAECggEAYmS89wxMeBlH/inwLJmKMohm/l7rFjXjrnahQZHQFIwp\n7L3WIdCIUWc2SjE4BF9753YaEs2Jbk6P3Wu6taS0udP/kRinZsxjQWhTIZr7b7t4\nHSX6TGGxwnRbuGC4wtjRLuT4l1SYIyzprQU+uoTJIzFsT/hJ/bRJvqXNXI61Na0J\n/ahzB640y75xe8H5Yw06yWXisqD+eiAxX8TU2SRdcZgcIVWaWLDiKhERk7sBctol\nWYgxm3qzpkA+dcvIoykrhLMZGaX9yDu7V9ueXeksqehZrQjSVx0CYSRi5ONy9bcJ\nnQIO4B0lo5oCh6EzKsYlvzJlAPCLJbs4K9Fxviu7QQKBgQDuRBiqAG9J7CR06TqW\nohdCGG6byZZ6x9wmWz3QVLsijFpiQTfu6XHDgh2A4NDau1hOzoJ21rGN5H3XNC9/\ni+8k4Je1nM14aiomlsgNFEp+gUhR7uR54da31q7Vf1DqcQ8ykqOCZitb6/AF0zhU\nlm8syJF1QAi3H7LMN0Jk3LnQsQKBgQDfkV14rRp0nUIdEp0O49bmD+qphKXFAsYn\nWCt37jq3mgZ2IVOfX94+m6bLUAjb+Ipwn9dT+3PrDlZqHRPMKTGvWdm9+41EyBK3\nvjKiNSyqnw/G/gapJn3aN/Nhp8qzOC+xNUTT9xXRf4cEuw9f19zXSm9niDgN5LS3\nE163+ZMNQwKBgB+J7gXaxuBvHKhJExNLY27BUyrV9VBNUkvVegownRDGqVQmM+Qx\nDHkHqSYdHChH8jmERmq6oogYvbuV0c+9Uyt7ezl0BxKwYuH2xYZNsEqsjEkkKSQl\nC8oL5dqm3qwZyRw1ouUo5wZk5cGvot43h4HTDsYJct3imUVE70nwmbwRAoGAQjh4\ni0oaz/fUoW/l/YcXHEYSp+uWfmh38Sd4mKmD0uZYi50Le+WVms3X9djbBuzzdLCj\nw0hz6WfxyLScLJj3Eo12pYNhMMJiaPJ5ZPqDJHbA4ZxUtL2mAYEZIg/lRniaB89T\nd8V0PP2dLJWL1EPIMizmGrCKifL4ZFHkeHIAUKkCgYAhJsPSmUc852/arUFqzhzM\nmtI/bWUUFeULygoARTSN4SVz/RjDj2MJYSV2N9MAskUKFXmmwNMq/NpJ2KkxlHrV\ned1O6cGAg8VYPpQvf6GOmpnHauePQXWXR3xVB++omRH4lD+J4gMT73dOU5o70V5e\nwY7LJ21G5lim4X1G3zRPOQ==\n-----END PRIVATE KEY-----\n\",\"client_email\": \"github-access@gxjavacloudstorageunittests.iam.gserviceaccount.com\",\"client_id\": \"110489372256464678127\",\"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\"token_uri\": \"https://oauth2.googleapis.com/token\",\"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/github-access%40gxjavacloudstorageunittests.iam.gserviceaccount.com\"}");
