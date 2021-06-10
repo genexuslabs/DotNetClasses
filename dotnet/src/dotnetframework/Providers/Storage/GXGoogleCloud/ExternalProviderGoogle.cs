@@ -32,6 +32,8 @@ namespace GeneXus.Storage.GXGoogleCloud
         String Bucket { get; set; }
         String Folder { get; set; }
         UrlSigner Signer { get; set; }
+		
+
         public string StorageUri
         {
             get { return $"https://{Bucket}.storage.googleapis.com/"; }
