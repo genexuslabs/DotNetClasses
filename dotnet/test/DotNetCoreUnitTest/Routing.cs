@@ -8,7 +8,7 @@ using GeneXus.Utils;
 
 namespace xUnitTesting
 {
-    public class UnitTest1
+    public class Routing
     {
         [Fact]
 		public void TestProcRestInModule()
@@ -18,6 +18,27 @@ namespace xUnitTesting
 			Assert.Equal(2, cList.Count);
 			Assert.Equal(path, cList.First().Name);
         }
+		[Fact]
+		public void TestSdsvc()
+		{
+			string path = "sdsvc_ComputeTotalWeight_Level_Detail/Plate1?gxid=94692756";
+			List<ControllerInfo> cList = RouteController(path);
+			Assert.Single(cList);
+			Assert.Equal("sdsvc_ComputeTotalWeight_Level_Detail", cList[0].Name);
+			Assert.Equal("gxid=94692756", cList[0].Parameters);
+			Assert.Equal("Plate1DL", cList[0].MethodName);
+		}
+		[Fact]
+		public void TestSdsvcInModuleWithParms()
+		{
+			string path = "module1/sdsvc_ComputeTotalWeight_Level_Detail/Plate1?gxid=94692756";
+			List<ControllerInfo> cList = RouteController(path);
+			Assert.Single(cList);
+			Assert.Equal("module1/sdsvc_ComputeTotalWeight_Level_Detail", cList[0].Name);
+			Assert.Equal("gxid=94692756", cList[0].Parameters);
+			Assert.Equal("Plate1DL", cList[0].MethodName);
+		}
+
 		[Fact]
 		public void TestProcRestInModuleWithParms()
 		{
