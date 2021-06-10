@@ -35,12 +35,14 @@ jobs:
     - name: Install .NET Core 5.0
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '5.0.101'
+        dotnet-version: '5.0.x'
 
     - name: Install .NET 6
-      uses: actions/setup-dotnet@v1.7.2
+      uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '6.0.100-preview.3.21202.5'
+        dotnet-version: '6.0.x'
+		include-prerelease: True
+        
     - uses: actions/setup-dotnet@v1
       with:
         source-url: https://nuget.pkg.github.com/genexuslabs/index.json
