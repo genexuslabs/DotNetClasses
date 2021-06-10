@@ -15,15 +15,16 @@ using Google.Cloud.Storage.V1;
 
 namespace GeneXus.Storage.GXGoogleCloud
 {
-	public class ExternalProviderGoogle : ExternalProvider
+	public class ExternalProviderGoogle : ExternalProviderBase, ExternalProvider
     {
-        const int BUCKET_EXISTS = 409;
+		public static String Name = "GOOGLECS";  //Google Cloud Storage
+		const int BUCKET_EXISTS = 409;
         const int OBJECT_NOT_FOUND = 404;
         const string APPLICATION_NAME = "APPLICATION_NAME";
         const string PROJECT_ID = "PROJECT_ID";
         const string KEY = "KEY";
         const string BUCKET = "BUCKET_NAME";
-        const string FOLDER = "FOLDER_NAME";
+		
 
         StorageClient Client { get; set; }
         StorageService Service { get; set; }
@@ -36,35 +37,48 @@ namespace GeneXus.Storage.GXGoogleCloud
             get { return $"https://{Bucket}.storage.googleapis.com/"; }
         }
 
-        public ExternalProviderGoogle()
-			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE))
-        {
-        }
+		public override string GetName()
+		{
+			return Name;
 
-        public ExternalProviderGoogle(GXService providerService)
-        {
+		}
+
+		public ExternalProviderGoogle() : this(null)
+		{
+		}
+
+		public ExternalProviderGoogle(GXService providerService) : base(providerService)
+		{
+			Initialize();
+		}
+
+			
+		private void Initialize()
+		{
             GoogleCredential credentials;
-            using (Stream stream = KeyStream(CryptoImpl.Decrypt(providerService.Properties.Get(KEY))))
-            {
-                credentials = GoogleCredential.FromStream(stream).CreateScoped(StorageService.Scope.CloudPlatform);
-            }
+			string key = GetEncryptedPropertyValue(KEY);
 
-            using (Stream stream = KeyStream(CryptoImpl.Decrypt(providerService.Properties.Get(KEY))))
+            using (Stream stream = KeyStream(key))
             {
-                Signer = UrlSigner.FromServiceAccountData(stream);
-            }
+                credentials = GoogleCredential.FromStream(stream).CreateScoped(StorageService.Scope.CloudPlatform);				
+			}
 
-            Client = StorageClient.Create(credentials);
+			using (Stream stream = KeyStream(key))
+			{
+				Signer = UrlSigner.FromServiceAccountData(stream);
+			}
+
+			Client = StorageClient.Create(credentials);
 
             Service = new StorageService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credentials,
-                ApplicationName = providerService.Properties.Get(APPLICATION_NAME)
+                ApplicationName = GetPropertyValue(APPLICATION_NAME)
             });
 
-            Project = providerService.Properties.Get(PROJECT_ID);
-            Bucket = CryptoImpl.Decrypt(providerService.Properties.Get(BUCKET));
-            Folder = providerService.Properties.Get(FOLDER);
+			Bucket = GetEncryptedPropertyValue(BUCKET);
+			Project = GetPropertyValue(PROJECT_ID);
+            Folder = GetPropertyValue(FOLDER);
 
             CreateBucket();
             CreateFolder(Folder);
@@ -176,7 +190,7 @@ namespace GeneXus.Storage.GXGoogleCloud
             using (FileStream stream = new FileStream(localFile, FileMode.Open))
 			{
 				Google.Apis.Storage.v1.Data.Object obj = Client.UploadObject(Bucket, objectName, "application/octet-stream", stream, GetUploadOptions(fileType));
-				return obj.MediaLink;
+				return GetURL(objectName, fileType, DefaultExpirationMinutes);
 			}
 		}
 
@@ -279,12 +293,12 @@ namespace GeneXus.Storage.GXGoogleCloud
             foreach (Google.Apis.Storage.v1.Data.Object item in Client.ListObjects(Bucket, directoryName))
             {
                 if (!item.Name.EndsWith(StorageUtils.DELIMITER))
-                    Delete(item.Name, GxFileType.Public);
+                    Delete(item.Name, GxFileType.PublicRead);
             }
             foreach (string subdir in GetSubDirectories(directoryName))
                 DeleteDirectory(subdir);
-            if (Exists(directoryName, GxFileType.Public))
-                Delete(directoryName, GxFileType.Public);
+            if (Exists(directoryName, GxFileType.PublicRead))
+                Delete(directoryName, GxFileType.PublicRead);
         }
 
         public bool ExistsDirectory(string directoryName)
@@ -377,13 +391,13 @@ namespace GeneXus.Storage.GXGoogleCloud
                 {
                     if (IsFile(item.Name))
                     {
-                        Copy(item.Name, GxFileType.Public, item.Name.Replace(directoryName, newDirectoryName), GxFileType.Public);
-                        Delete(item.Name, GxFileType.Public);
+                        Copy(item.Name, GxFileType.PublicRead, item.Name.Replace(directoryName, newDirectoryName), GxFileType.PublicRead);
+                        Delete(item.Name, GxFileType.PublicRead);
                     }
                 }
                 CreateDirectory(newDirectoryName);
-                if (Exists(directoryName, GxFileType.Public))
-                    Delete(directoryName, GxFileType.Public);
+                if (Exists(directoryName, GxFileType.PublicRead))
+                    Delete(directoryName, GxFileType.PublicRead);
                 request.PageToken = response.NextPageToken;
             } while (response.NextPageToken != null);
             foreach (string subdir in GetSubDirectories(directoryName))

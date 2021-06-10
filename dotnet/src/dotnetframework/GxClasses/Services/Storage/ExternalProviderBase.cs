@@ -42,7 +42,7 @@ namespace GeneXus.Services
 			}
 		}
 
-		protected String GetEncryptedPropertyValue(String propertyName, String alternativePropertyName)
+		protected String GetEncryptedPropertyValue(String propertyName, String alternativePropertyName = null)
 		{
 			String value = GetEncryptedPropertyValue(propertyName, alternativePropertyName, null);
 			if (value == null)
@@ -71,7 +71,7 @@ namespace GeneXus.Services
 			return value;
 		}
 
-		protected String GetPropertyValue(String propertyName, String alternativePropertyName)
+		protected String GetPropertyValue(String propertyName, String alternativePropertyName = null)
 		{
 			String value = GetPropertyValue(propertyName, alternativePropertyName, null);
 			if (value == null)
@@ -85,26 +85,31 @@ namespace GeneXus.Services
 
 		protected String GetPropertyValue(String propertyName, String alternativePropertyName, String defaultValue)
 		{
-			propertyName = ResolvePropertyName(propertyName);
-			String value = Environment.GetEnvironmentVariable(propertyName);
-			if (String.IsNullOrEmpty(value))
+			String value = String.Empty;
+			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(ResolvePropertyName(propertyName)) : value;
+			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(propertyName) : value;
+			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(alternativePropertyName) : value;
+			value = string.IsNullOrEmpty(value) ? defaultValue : value;
+			return value;
+		}
+
+		private string GetPropertyValueImpl(string propertyName)
+		{
+			String value = String.Empty;
+			if (!string.IsNullOrEmpty(propertyName))
 			{
-				value = Environment.GetEnvironmentVariable(alternativePropertyName);
-			}
-			if (this.service != null)
-			{
-				value = this.service.Properties.Get(propertyName);
-				if (String.IsNullOrEmpty(value))
+				value = Environment.GetEnvironmentVariable(propertyName);
+				if (this.service != null)
 				{
-					value = this.service.Properties.Get(alternativePropertyName);
+					value = this.service.Properties.Get(propertyName);
 				}
 			}
-			return !String.IsNullOrEmpty(value) ? value : defaultValue;
+			return value;
 		}
 
 		protected String ResolvePropertyName(String propertyName)
 		{
-			return String.Format("STORAGE_%s_%s", GetName(), propertyName);
+			return $"STORAGE_{GetName()}_{propertyName}";
 		}
 
 	}

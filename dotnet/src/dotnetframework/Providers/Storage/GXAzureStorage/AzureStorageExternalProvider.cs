@@ -14,8 +14,10 @@ using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace GeneXus.Storage.GXAzureStorage
 {
-	public class AzureStorageExternalProvider : ExternalProvider
+	public class AzureStorageExternalProvider : ExternalProviderBase, ExternalProvider
 	{
+		public static String Name = "AZUREBS"; //Azure Blob Storage
+
 		const string ACCOUNT_NAME = "ACCOUNT_NAME";
 		const string ACCESS_KEY = "ACCESS_KEY";
 		const string PUBLIC_CONTAINER = "PUBLIC_CONTAINER_NAME";
@@ -26,22 +28,35 @@ namespace GeneXus.Storage.GXAzureStorage
 		CloudBlobContainer PublicContainer { get; set; }
 		CloudBlobContainer PrivateContainer { get; set; }
 		CloudBlobClient Client { get; set; }
+		
 		public string StorageUri
 		{
 			get { return $"https://{Account}.blob.core.windows.net"; }
 		}
 
-		public AzureStorageExternalProvider()
-			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE)) { }
-
-		public AzureStorageExternalProvider(GXService providerService)
+		public override string GetName()
 		{
-			Account = CryptoImpl.Decrypt(providerService.Properties.Get(ACCOUNT_NAME));
-			Key = CryptoImpl.Decrypt(providerService.Properties.Get(ACCESS_KEY));
+			return Name;
+		}
 
-			string publicContainer = CryptoImpl.Decrypt(providerService.Properties.Get(PUBLIC_CONTAINER));
-			string privateContainer = CryptoImpl.Decrypt(providerService.Properties.Get(PRIVATE_CONTAINER));
+		public AzureStorageExternalProvider() : this(null)
+		{
+		}
 
+		public AzureStorageExternalProvider(GXService providerService) : base(providerService)
+		{
+			Initialize();
+		}
+
+		private void Initialize()
+		{
+			Account = GetEncryptedPropertyValue(ACCOUNT_NAME);
+			Key = GetEncryptedPropertyValue(ACCESS_KEY);
+
+			string publicContainer = GetEncryptedPropertyValue(PUBLIC_CONTAINER);
+			string privateContainer = GetEncryptedPropertyValue(PRIVATE_CONTAINER);
+
+			
 			StorageCredentials credentials = new StorageCredentials(Account, Key);
 			CloudStorageAccount storageAccount = new CloudStorageAccount(credentials, true);
 
@@ -254,15 +269,15 @@ namespace GeneXus.Storage.GXAzureStorage
 				{
 					CloudBlockBlob blob = (CloudBlockBlob)item;
 					fileName = Path.GetFileName(blob.Name);
-					Copy(blob.Name, GxFileType.Public, newDirectoryName + fileName, GxFileType.Public);
-					Delete(blob.Name, GxFileType.Public);
+					Copy(blob.Name, GxFileType.PublicRead, newDirectoryName + fileName, GxFileType.PublicRead);
+					Delete(blob.Name, GxFileType.PublicRead);
 
 				}
 				else if (item.GetType() == typeof(CloudPageBlob))
 				{
 					CloudPageBlob pageBlob = (CloudPageBlob)item;
 					fileName = Path.GetFileName(pageBlob.Name);
-					Copy(directoryName + fileName, GxFileType.Public, newDirectoryName + fileName, GxFileType.Public);
+					Copy(directoryName + fileName, GxFileType.PublicRead, newDirectoryName + fileName, GxFileType.PublicRead);
 
 				}
 				else if (item.GetType() == typeof(CloudBlobDirectory))

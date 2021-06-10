@@ -95,7 +95,7 @@ namespace GeneXus.Configuration
 
 		private void preprocess(String name, GXProperties properties)
 		{
-			string className = null;
+			string className;
 
 			switch (name)
 			{
@@ -104,37 +104,27 @@ namespace GeneXus.Configuration
 					className = "GeneXus.Storage.GXAmazonS3.ExternalProviderS3";
 					SetDefaultProperty(properties, "STORAGE_PROVIDER_REGION", "us-east-1");
 					SetDefaultProperty(properties, "STORAGE_ENDPOINT", "s3.amazonaws.com");
-					SetEncryptProperty(properties, "STORAGE_PROVIDER_ACCESSKEYID");
-					SetEncryptProperty(properties, "STORAGE_PROVIDER_SECRETACCESSKEY");
-					SetEncryptProperty(properties, "BUCKET_NAME");
+					SetEncryptedProperty(properties, "STORAGE_PROVIDER_ACCESSKEYID");
+					SetEncryptedProperty(properties, "STORAGE_PROVIDER_SECRETACCESSKEY");
+					SetEncryptedProperty(properties, "BUCKET_NAME");
 					break;
 
 				case "AZURESTORAGE":
 					className = "GeneXus.Storage.GXAzureStorage.AzureStorageExternalProvider";
-					SetEncryptProperty(properties, "PUBLIC_CONTAINER_NAME");
-					SetEncryptProperty(properties, "PRIVATE_CONTAINER_NAME");
-					SetEncryptProperty(properties, "ACCOUNT_NAME");
-					SetEncryptProperty(properties, "ACCESS_KEY");
+					SetEncryptedProperty(properties, "PUBLIC_CONTAINER_NAME");
+					SetEncryptedProperty(properties, "PRIVATE_CONTAINER_NAME");
+					SetEncryptedProperty(properties, "ACCOUNT_NAME");
+					SetEncryptedProperty(properties, "ACCESS_KEY");
 					break;
-
-				case "BLUEMIXSTORAGE":
-					className = "GeneXus.Storage.GXBluemix.ExternalProviderBluemix";
-					SetDefaultProperty(properties, "SERVER_URL", "https://identity.open.softlayer.com");
-					SetDefaultProperty(properties, "STORAGE_PROVIDER_REGION", "dallas");
-					SetEncryptProperty(properties, "PUBLIC_BUCKET_NAME");
-					SetEncryptProperty(properties, "PRIVATE_BUCKET_NAME");
-					SetEncryptProperty(properties, "STORAGE_PROVIDER_USER");
-					SetEncryptProperty(properties, "STORAGE_PROVIDER_PASSWORD");
-					break;
-
+			
 				//case "BOX":
 				//	className = "{class}";
 				//	break;
 
 				case "GOOGLE":
 					className = "GeneXus.Storage.GXGoogleCloud.ExternalProviderGoogle";
-					SetEncryptProperty(properties, "KEY");
-					SetEncryptProperty(properties, "BUCKET_NAME");
+					SetEncryptedProperty(properties, "KEY");
+					SetEncryptedProperty(properties, "BUCKET_NAME");
 					break;
 
 				//case "IBMCOS":
@@ -146,9 +136,9 @@ namespace GeneXus.Configuration
 
 				case "OPENSTACKSTORAGE":
 					className = "GeneXus.Storage.GXOpenStack.ExternalProviderOpenStack";
-					SetEncryptProperty(properties, "BUCKET_NAME");
-					SetEncryptProperty(properties, "STORAGE_PROVIDER_USER");
-					SetEncryptProperty(properties, "STORAGE_PROVIDER_PASSWORD");
+					SetEncryptedProperty(properties, "BUCKET_NAME");
+					SetEncryptedProperty(properties, "STORAGE_PROVIDER_USER");
+					SetEncryptedProperty(properties, "STORAGE_PROVIDER_PASSWORD");
 					break;
 
 				default:
@@ -171,7 +161,7 @@ namespace GeneXus.Configuration
 				properties.Set(prop, value);
 		}
 
-		private void SetEncryptProperty(GXProperties properties, String prop)
+		private void SetEncryptedProperty(GXProperties properties, String prop)
 		{
 			String value = properties.Get(prop);
 			if (string.IsNullOrEmpty(value))

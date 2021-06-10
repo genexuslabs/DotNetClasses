@@ -144,7 +144,7 @@ namespace GeneXus.Office
                         string localTemplate = value;
                         if (!Path.IsPathRooted(localTemplate))
                             localTemplate = Path.Combine(GxContext.StaticPhysicalPath(), localTemplate);
-                        ServiceFactory.GetExternalProvider().Upload(localTemplate, template, GxFileType.Public);
+                        ServiceFactory.GetExternalProvider().Upload(localTemplate, template, GxFileType.PublicRead);
                     }
                 }
                 else if (!Path.IsPathRooted(value))
