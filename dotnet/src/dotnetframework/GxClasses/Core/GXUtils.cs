@@ -635,8 +635,11 @@ namespace GeneXus.Utils
 					dlPos = currentLineBytes.Length;
 				_lastPos = dlPos + fldDelimiterBytes.Length;
 
-				if ((dlPos - oPos) > length)
-					retval = GX_ASCDEL_OVERFLOW;
+				if (length > 0)
+				{
+					if ((dlPos - oPos) > length)
+						retval = GX_ASCDEL_OVERFLOW;
+				}
 			}
 
 			if (dlPos < oPos)
