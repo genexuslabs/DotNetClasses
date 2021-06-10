@@ -5,18 +5,16 @@
 		<AssemblyName>DotNetUnitTest</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
-	  <None Remove="applications.json" />
 	  <None Remove="client.exe.config" />
-	  <None Remove="MS923.txt" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Content Include="FileIO\applications.json">
+	  <Content Include="applications.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="client.exe.config">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="FileIO\MS923.txt">
+	  <Content Include="MS923.txt">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	</ItemGroup>
@@ -40,7 +38,7 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="FileIO\Document.txt">
+    <None Update="Document.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
