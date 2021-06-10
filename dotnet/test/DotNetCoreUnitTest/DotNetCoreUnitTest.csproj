@@ -21,15 +21,6 @@
    <EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
    </EmbeddedResource>
-   <Content Include="..\DotNetUnitTest\FileIO\applications.json" Link="FileIO\applications.json">
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </Content>
-   <Content Include="..\DotNetUnitTest\FileIO\Document.txt" Link="FileIO\Document.txt">
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </Content>
-   <Content Include="..\DotNetUnitTest\FileIO\MS923.txt" Link="FileIO\MS923.txt">
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </Content>
    <Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
    <Content Include="FullTextSearch\Ugly.html">
      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -64,7 +55,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\DotNetUnitTest\client.exe.config" Link="client.exe.config">
+    <None Update="Document.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MS923.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

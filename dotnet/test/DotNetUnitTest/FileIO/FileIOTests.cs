@@ -8,6 +8,10 @@ namespace UnitTesting
 {
 	public class FileIOTests
 	{
+		public FileIOTests()
+		{
+			Config.ConfigFileName = "client.exe.config";
+		}
 		[Fact]
 		public void FileSourceTest()
 		{
@@ -27,7 +31,6 @@ namespace UnitTesting
 		[Fact]
 		public void PathSourceTest()
 		{
-			Config.ConfigFileName = "client.exe.config";
 			string blobPath = Preferences.getBLOB_PATH();
 			Assert.True(!string.IsNullOrEmpty(blobPath));
 			Uri uri;
