@@ -1117,7 +1117,7 @@ namespace GeneXus.Utils
 				{
 					storageobjectfullname = Path.GetFileName(filefullpath);
 				}				
-				string url = provider.Upload(filefullpath, storageobjectfullname, GxFileType.Public);
+				string url = provider.Upload(filefullpath, storageobjectfullname, GxFileType.PublicRead);
 				uploadedFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider);
 				return true;
 			}
@@ -1157,7 +1157,7 @@ namespace GeneXus.Utils
                     destFileName = localFile.GetAbsoluteName();
                 else
                     destFileName = Path.Combine(GxContext.StaticPhysicalPath(), localFile.Source);
-                provider.Download(storageobjectfullname, destFileName, GxFileType.Public);
+                provider.Download(storageobjectfullname, destFileName, GxFileType.PublicRead);
                 return true;
             }
 			catch (Exception ex)
@@ -1194,7 +1194,7 @@ namespace GeneXus.Utils
 			try
 			{
 				ValidProvider();
-				string url = provider.Get(storageobjectfullname, GxFileType.Public, 0);
+				string url = provider.Get(storageobjectfullname, GxFileType.PublicRead, 0);
 				if (String.IsNullOrEmpty(url))
 				{
 					GXUtil.ErrorToMessages("Get Error", "File doesn't exists", messages);

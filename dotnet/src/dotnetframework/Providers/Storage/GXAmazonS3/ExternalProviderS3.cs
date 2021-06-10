@@ -16,7 +16,7 @@ namespace GeneXus.Storage.GXAmazonS3
 {
 	public class ExternalProviderS3 : ExternalProviderBase, ExternalProvider
 	{
-		const string Name = "AWSS3";
+		public const string Name = "AWSS3";
 		
 		const string ACCESS_KEY = "ACCESS_KEY";
 		const string SECRET_ACCESS_KEY = "SECRET_KEY";
@@ -66,13 +66,16 @@ namespace GeneXus.Storage.GXAmazonS3
 			return StorageUri + Folder + StorageUtils.DELIMITER;
 		}
 
-		public ExternalProviderS3()
-			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE))
-		{
+		public ExternalProviderS3(): this(null)
+		{			
 		}
 
-		public ExternalProviderS3(GXService providerService)
+		public ExternalProviderS3(GXService providerService): base(providerService)
 		{
+			Initialize();
+		}
+
+		private void Initialize() { 
 			string keyId = GetEncryptedPropertyValue(ACCESS_KEY, ACCESS_KEY_ID_DEPRECATED);
 			string keySecret = GetEncryptedPropertyValue(SECRET_ACCESS_KEY, SECRET_ACCESS_KEY_DEPRECATED);
 			AWSCredentials credentials = null;
@@ -83,20 +86,20 @@ namespace GeneXus.Storage.GXAmazonS3
 
 			var region = Amazon.RegionEndpoint.GetBySystemName(GetPropertyValue(REGION, REGION_DEPRECATED));
 
+			AmazonS3Config config = new AmazonS3Config()
+			{
+				RegionEndpoint = region
+			};
+
 			Endpoint = GetPropertyValue( STORAGE_ENDPOINT , ENDPOINT_DEPRECATED);
 			if (Endpoint == STORAGE_CUSTOM_ENDPOINT_VALUE)
 			{
 				Endpoint = GetPropertyValue(STORAGE_CUSTOM_ENDPOINT, STORAGE_CUSTOM_ENDPOINT_DEPRECATED);
 				ForcePathStyle = true;
+				config.ForcePathStyle = ForcePathStyle;
+				config.ServiceURL = Endpoint;
 			}
-
-			AmazonS3Config config = new AmazonS3Config()
-			{
-				RegionEndpoint = region,
-				ServiceURL = Endpoint,
-				ForcePathStyle = ForcePathStyle
-			};
-						
+		
 #if NETCORE
 			if (credentials != null)
 			{
@@ -210,7 +213,7 @@ namespace GeneXus.Storage.GXAmazonS3
 					BucketName = Bucket,
 					UseClientRegion = true
 				};
-				if (defaultAcl == GxFileType.Public) {
+				if (defaultAcl == GxFileType.PublicRead) {
 					request.CannedACL = S3CannedACL.PublicRead;
 				}
 				PutBucket(request);
@@ -230,9 +233,9 @@ namespace GeneXus.Storage.GXAmazonS3
 			return Get(objectName, fileType);
 		}
 
-		private static bool IsPrivateUpload(GxFileType fileType)
+		private bool IsPrivateUpload(GxFileType fileType)
 		{
-			return fileType.HasFlag(GxFileType.Private);
+			return GetCannedACL(fileType) != S3CannedACL.PublicRead;
 		}
 
 		public string Get(string objectName, GxFileType fileType, int urlMinutes = DefaultExpirationMinutes)
@@ -315,9 +318,19 @@ namespace GeneXus.Storage.GXAmazonS3
 			return StorageUri + StorageUtils.EncodeUrl(newName);
 		}
 
-		private S3CannedACL GetCannedACL(GxFileType destFileType)
+		private S3CannedACL GetCannedACL(GxFileType acl)
 		{
-			return defaultAcl.HasFlag(GxFileType.Private) || destFileType.HasFlag(GxFileType.Private) ? S3CannedACL.Private : S3CannedACL.PublicRead;
+			if (acl == GxFileType.Default)
+			{
+				acl = this.defaultAcl;
+			}
+
+			S3CannedACL accessControl = S3CannedACL.Private;
+			if (acl == GxFileType.PublicRead)
+			{
+				accessControl = S3CannedACL.PublicRead;
+			}
+			return accessControl;
 		}
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
@@ -426,7 +439,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				if (file.Type == FileSystemType.Directory)
 					RenameDirectory(directoryName + "\\" + file.Name, newDirectoryName + "\\" + file.Name);
 				else
-					Rename(directoryName.Replace("\\", StorageUtils.DELIMITER) + StorageUtils.DELIMITER + file.Name, newDirectoryName.Replace("\\", StorageUtils.DELIMITER) + StorageUtils.DELIMITER + file.Name, GxFileType.Public);
+					Rename(directoryName.Replace("\\", StorageUtils.DELIMITER) + StorageUtils.DELIMITER + file.Name, newDirectoryName.Replace("\\", StorageUtils.DELIMITER) + StorageUtils.DELIMITER + file.Name, GxFileType.PublicRead);
 			}
 			s3DirectoryInfo.Delete();
 		}

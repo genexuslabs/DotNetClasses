@@ -209,7 +209,7 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
             searchPattern = "";
         List<string> files = _provider.GetFiles(_name, searchPattern);
 		
-		GxExternalFileInfo[] externalFiles = files.Select(elem => new GxExternalFileInfo(elem, _provider, GxFileType.Public)).ToArray();
+		GxExternalFileInfo[] externalFiles = files.Select(elem => new GxExternalFileInfo(elem, _provider, GxFileType.PublicRead)).ToArray();
         return externalFiles;
     }
 
@@ -412,7 +412,7 @@ public class GxExternalFileInfo : IGxFileInfo
     private string _name;
 	private ExternalProvider _provider;
     private string _url;	
-	private GxFileType _fileTypeAtt = GxFileType.Public;
+	private GxFileType _fileTypeAtt = GxFileType.PublicRead;
 
 	public GxExternalFileInfo(ExternalProvider provider)
     {
@@ -445,7 +445,7 @@ public class GxExternalFileInfo : IGxFileInfo
 		_fileTypeAtt = fileType;
 	}
 
-    public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Public)
+    public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.PublicRead)
     {
         _name = storageObjectFullname;
         _provider = provider;
@@ -643,7 +643,7 @@ public class GxExternalFileInfo : IGxFileInfo
 public enum GxFileType
 {
 	Default = 0,
-	Public = 1,
+	PublicRead = 1,
 	Private = 2
 }
 
@@ -670,13 +670,13 @@ public class GxFile
             _baseDirectory = _baseDirectory.Substring(0, _baseDirectory.Length - 1);
     }
 
-    public GxFile(string baseDirectory, IGxFileInfo file, GxFileType fileType = GxFileType.Public)
+    public GxFile(string baseDirectory, IGxFileInfo file, GxFileType fileType = GxFileType.PublicRead)
       : this(baseDirectory)
     {
         _file = file;
     }
 
-    public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.Public)
+    public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.PublicRead)
       : this(baseDirectory)
     {
 		if (GxUploadHelper.IsUpload(fileName))

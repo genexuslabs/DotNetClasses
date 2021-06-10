@@ -3366,7 +3366,7 @@ namespace GeneXus.Utils
 				return uriString;
 			}
 		}
-		public static string getTempFileName(string baseDir, string name, string extension, GxFileType fileType = GxFileType.Public)
+		public static string getTempFileName(string baseDir, string name, string extension, GxFileType fileType = GxFileType.PublicRead)
 		{
 			String fileName;
 			name = FileUtil.FileNamePrettify(name);
@@ -5265,7 +5265,7 @@ namespace GeneXus.Utils
 				string basePath = Path.Combine(Path.Combine(Preferences.getBLOB_PATH(), MultimediaDirectory));
 				try
 				{
-					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName), GxFileType.Public);
+					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName), GxFileType.PublicRead);
 					return PathToUrl(file.GetURI(), absUrl, context);
 				}
 				catch (ArgumentException ex)
