@@ -13,7 +13,6 @@
 	<ItemGroup>
 		<Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\FileIOTests.cs" Link="FileIO\FileIOTests.cs" />
-		<Compile Include="..\DotNetUnitTest\FullTextSearch\FullTextSearchTests.cs" Link="FullTextSearch\FullTextSearchTests.cs" />
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</EmbeddedResource>
