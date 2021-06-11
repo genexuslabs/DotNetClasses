@@ -8,10 +8,6 @@ namespace UnitTesting
 {
 	public class FileIOTests
 	{
-		public FileIOTests()
-		{
-			Config.ConfigFileName = "client.exe.config";
-		}
 		[Fact]
 		public void FileSourceTest()
 		{
