@@ -29,7 +29,7 @@ namespace UnitTesting
 			File.WriteAllText("cleanhtmlNET.html", prettyHTML);
 #endif
 			Assert.Contains("atencionalcliente@gmail.com", text, StringComparison.OrdinalIgnoreCase);
-			Assert.DoesNotContain("<html><html>", prettyHTML, StringComparison.OrdinalIgnoreCase);
+			Assert.StartsWith("<html>", prettyHTML, StringComparison.OrdinalIgnoreCase);
 
 		}
 	}
