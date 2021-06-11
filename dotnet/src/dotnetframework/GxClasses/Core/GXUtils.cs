@@ -1139,8 +1139,9 @@ namespace GeneXus.Utils
 				{
 					storageobjectfullname=Path.GetFileName(filefullpath);
 				}
-				string url = provider.Upload(filefullpath, storageobjectfullname, GxFileType.Private);
-				uploadedFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider);
+				GxFileType acl = GxFileType.Private;
+				string url = provider.Upload(filefullpath, storageobjectfullname, acl);
+				uploadedFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider, acl);
 				return true;
 			}
 			catch (Exception ex)
@@ -1197,7 +1198,8 @@ namespace GeneXus.Utils
 			try
 			{
 				ValidProvider();
-				string url = provider.Get(storageobjectfullname, GxFileType.PublicRead, 0);
+				GxFileType acl = GxFileType.PublicRead;
+				string url = provider.Get(storageobjectfullname, acl, 0);
 				if (String.IsNullOrEmpty(url))
 				{
 					GXUtil.ErrorToMessages("Get Error", "File doesn't exists", messages);
@@ -1205,7 +1207,7 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					externalFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider);
+					externalFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider, acl);
 					return true;
 				}
 			}
@@ -1222,7 +1224,8 @@ namespace GeneXus.Utils
             try
             {
 				ValidProvider();
-				string url = provider.Get(storageobjectfullname, GxFileType.Private, expirationMinutes);
+				GxFileType acl = GxFileType.Private;
+				string url = provider.Get(storageobjectfullname, acl, expirationMinutes);
 				if (String.IsNullOrEmpty(url))
 				{
 					GXUtil.ErrorToMessages("Get Error", "File doesn't exists", messages);
@@ -1230,7 +1233,7 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					externalFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider, GxFileType.Private);
+					externalFile.FileInfo = new GxExternalFileInfo(storageobjectfullname, url, provider, acl);
 					return true;
 				}
 			}

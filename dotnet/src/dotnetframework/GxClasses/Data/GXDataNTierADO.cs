@@ -617,7 +617,7 @@ namespace GeneXus.Data.NTier.ADO
 							{
 								try
 								{
-									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image_gxi, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.PublicRead);
+									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image_gxi, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.Default);
 									GXLogging.Debug(log, "Copy file already in ExternalProvider:", multimediaUri);
 								}
 								catch (Exception ex)
@@ -635,7 +635,7 @@ namespace GeneXus.Data.NTier.ADO
 									using (var fileStream = new MemoryStream(new WebClient().DownloadData(image_gxi)))
 									{
 										//Cannot pass Http Stream directly, because some Providers (AWS S3) does not support Http Stream.
-										multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.PublicRead);
+										multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.Default);
 										GXLogging.Debug(log, "Upload external file to ExternalProvider:", multimediaUri);
 									}
 #pragma warning disable SYSLIB0014 // WebClient
@@ -657,7 +657,7 @@ namespace GeneXus.Data.NTier.ADO
 								String fileName = PathUtil.GetValidFileName(fileFullName, "_");
 								using (fileStream)
 								{
-									multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(fileName, !GXDbFile.HasToken(fileName), false), tableName, fieldName, GxFileType.PublicRead);
+									multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(fileName, !GXDbFile.HasToken(fileName), false), tableName, fieldName, GxFileType.Default);
 									GXLogging.Debug(log, "Upload file (_gxi) to ExternalProvider:", multimediaUri);
 								}
 							}
@@ -665,7 +665,7 @@ namespace GeneXus.Data.NTier.ADO
 							{
 								try
 								{
-									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.PublicRead);
+									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.Default);
 									GXLogging.Debug(log, "Copy external file in ExternalProvider:", multimediaUri);
 								}
 								catch(Exception e)

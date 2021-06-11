@@ -27,6 +27,16 @@ namespace GeneXus.Services
 
 		public ExternalProviderBase(GXService s)
 		{
+			if (s == null) {
+				try
+				{
+					s = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+				}
+				catch (Exception) {
+					logger.Warn("STORAGE_SERVICE is not activated in CloudServices.config");
+				}
+			}
+			
 			this.service = s;
 			Initialize();
 		}
@@ -39,6 +49,10 @@ namespace GeneXus.Services
 			if (!String.IsNullOrEmpty(aclS))
 			{
 				GxFileType.TryParse(aclS, out this.defaultAcl);
+			}			
+			if (this.defaultAcl == GxFileType.Default)
+			{
+				this.defaultAcl = GxFileType.PublicRead;
 			}
 		}
 
@@ -85,7 +99,7 @@ namespace GeneXus.Services
 
 		protected String GetPropertyValue(String propertyName, String alternativePropertyName, String defaultValue)
 		{
-			String value = String.Empty;
+			String value = null;
 			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(ResolvePropertyName(propertyName)) : value;
 			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(propertyName) : value;
 			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(alternativePropertyName) : value;
@@ -95,7 +109,7 @@ namespace GeneXus.Services
 
 		private string GetPropertyValueImpl(string propertyName)
 		{
-			String value = String.Empty;
+			String value = null;
 			if (!string.IsNullOrEmpty(propertyName))
 			{
 				value = Environment.GetEnvironmentVariable(propertyName);
