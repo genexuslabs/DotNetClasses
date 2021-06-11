@@ -424,7 +424,7 @@ namespace GeneXus.Http
 							thumbnailUrl = url,
 							path = fileToken
 						});
-						GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, fName, ext, gxFile, context);
+						GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, Path.GetFileName(fName), ext, gxFile, context);
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
 					var jsonObj = JSONHelper.Serialize(result);
@@ -476,7 +476,7 @@ namespace GeneXus.Http
 			HttpHelper.SetResponseStatus(localHttpContext, ((int)HttpStatusCode.Created).ToString(), string.Empty);
 			localHttpContext.Response.Write(obj.ToString());
 
-			GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, fName, ext, file, context);
+			GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, $"{Path.GetFileNameWithoutExtension(fName)}.{ext}", ext, file, context);
 		}
 		protected override bool IntegratedSecurityEnabled
 		{
