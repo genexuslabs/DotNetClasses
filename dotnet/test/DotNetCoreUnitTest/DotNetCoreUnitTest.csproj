@@ -11,15 +11,9 @@
    <DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
  </PropertyGroup>
  <ItemGroup>
-   <Compile Include="..\DotNetUnitTest\FullTextSearch\FullTextSearchTests.cs" Link="FullTextSearch\FullTextSearchTests.cs" />
- </ItemGroup>
- <ItemGroup>
    <EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
    </EmbeddedResource>
-   <Content Include="..\DotNetUnitTest\FullTextSearch\Ugly.html" Link="FullTextSearch\Ugly.html">
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </Content>
    <Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
  </ItemGroup>
 
@@ -44,6 +38,12 @@
     <EmbeddedResource Include="..\DotNetUnitTest\TestModule.MyControl.view" Link="TestModule.MyControl.view">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="FullTextSearch\Ugly.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
