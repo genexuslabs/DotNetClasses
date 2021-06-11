@@ -167,7 +167,7 @@ namespace GeneXus.Utils
 		{
 #if NETCORE
 
-			return Uglify.HtmlToText(File.ReadAllText(filename)).Code;
+			return Uglify.HtmlToText(File.ReadAllText(filename), HtmlToTextOptions.None).Code;
 #else
 			object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
 			LoadConfig(rawDoc);
@@ -246,7 +246,7 @@ namespace GeneXus.Utils
 			rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
 			return (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
 #else
-			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true };
+			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true, RemoveOptionalTags=false };
 			return Uglify.Html(text, htmlSettings).Code;
 #endif
 		}
