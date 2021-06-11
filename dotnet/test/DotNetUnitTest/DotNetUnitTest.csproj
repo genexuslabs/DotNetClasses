@@ -35,6 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetframework\GxSearch\GxSearch.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Web" />
@@ -43,6 +44,9 @@
     <None Update="Document.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestResults\" />
   </ItemGroup>
 </Project>
 
