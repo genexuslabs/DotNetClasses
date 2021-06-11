@@ -17,6 +17,7 @@ using System.Reflection;
 using GeneXus;
 using GeneXus.Storage;
 using GeneXus.Attributes;
+using GxClasses.Services.Storage;
 
 public interface IGxDirectoryInfo
 {
@@ -412,7 +413,7 @@ public class GxExternalFileInfo : IGxFileInfo
     private string _name;
 	private ExternalProvider _provider;
     private string _url;	
-	private GxFileType _fileTypeAtt = GxFileType.PublicRead;
+	private GxFileType _fileTypeAtt = GxFileType.Private;
 
 	public GxExternalFileInfo(ExternalProvider provider)
     {
@@ -432,20 +433,16 @@ public class GxExternalFileInfo : IGxFileInfo
 			_url = storageObjectFullname;
 		}
 		else {
-			if (fileType.HasFlag(GxFileType.Private)) //Attributes multimedia consider Storage Provider Folder 
+			/*if (fileType.HasFlag(GxFileType.Private)) //Attributes multimedia consider Storage Provider Folder 
 			{
 				_url = provider.GetBaseURL() + storageObjectFullname;
-				_name = _url.Replace(provider.StorageUri, string.Empty);
-				if (_name.StartsWith("/"))
-				{
-					_name = _name.Substring(1, _name.Length - 1);
-				}
-			}
+				_name = ExternalProviderCommon.getProviderObjectName(provider, storageObjectFullname);
+			}*/
 		}		
 		_fileTypeAtt = fileType;
 	}
 
-    public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.PublicRead)
+    public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Private)
     {
         _name = storageObjectFullname;
         _provider = provider;
