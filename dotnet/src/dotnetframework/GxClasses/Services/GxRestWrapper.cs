@@ -52,8 +52,14 @@ namespace GeneXus.Application
 		private GXProcedure _procWorker;
 		private const string EXECUTE_METHOD = "execute";
 		public String ServiceMethod = "";
+		public Dictionary<String, String> VariableAlias = null;
 		public bool WrappedParameter = false;
 
+		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
+		{
+			ServiceMethod = serviceMethod;
+			VariableAlias = variableAlias;
+		}
 
 		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod) : this(worker, context, gxContext)
 		{
@@ -217,7 +223,7 @@ namespace GeneXus.Application
 		private string SynchronizerMethod()
 		{
 			string method = string.Empty;
-			var queryParameters = ReadQueryParameters();
+			var queryParameters = ReadQueryParameters(this.VariableAlias);
 			string gxevent = string.Empty;
 			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
 				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
@@ -257,7 +263,7 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				var queryParameters = ReadQueryParameters();
+				var queryParameters = ReadQueryParameters(this.VariableAlias);
 				String innerMethod = EXECUTE_METHOD;
 				if (!String.IsNullOrEmpty(this.ServiceMethod))
 				{
@@ -359,11 +365,14 @@ namespace GeneXus.Application
 			}
 			return bodyParameters;
 		}
-		protected IDictionary<string, object> ReadQueryParameters()
+		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
 			var query = _httpContext.Request.GetQueryString();
-			Dictionary<string, object> parameters = query.Keys.Cast<string>()
-					.ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
+			Dictionary<string, object> parameters = new Dictionary<string, object>();
+			if (varAlias == null)
+				parameters = query.Keys.Cast<string>().ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
+			else
+				parameters = query.Keys.Cast<string>().ToDictionary(k => ((varAlias.ContainsKey(k.ToLower()))?varAlias[k.ToLower()].ToLower():k.ToLower()), v => (object)query[v].ToString());
 			return parameters;
 		}
 		public bool IsRestParameter(string parameterName)
@@ -745,5 +754,6 @@ namespace GeneXus.Application
 		public string Parameters { get; set; }
 		public string MethodName { get; set; }
 		public string Verb { get; set; }
+		public Dictionary<string, string> VariableAlias { get; set; }
 	}
 }

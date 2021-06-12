@@ -24,11 +24,14 @@ namespace GeneXus.Http.HttpModules
 		String methodName;
 		String verb;
 		String path;
+		Dictionary<string, string> variableAlias;
 		public string Name { get => name; set => name = value; }
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
 		public string Verb { get => verb; set => verb = value; }
 		public string Path { get => path; set => path = value; }
+		public Dictionary<string, string> VariableAlias { get => variableAlias; set => variableAlias = value; }
+
 	}
 
 	public class MapGroup
@@ -52,7 +55,8 @@ namespace GeneXus.Http.HttpModules
 		public static List<String> servicesPathUrl;
 		public static Dictionary<String, String> servicesBase;
 		public static Dictionary<String, String> servicesClass;
-		public static Dictionary<String, Dictionary<String, String>> servicesMap;
+		public static Dictionary<String, Dictionary<string, SingleMap>> servicesMap;
+
 		//public static Dictionary<String, Dictionary<String, String>> servicesVerbs;
 		public static Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
 
@@ -111,7 +115,7 @@ namespace GeneXus.Http.HttpModules
 			{				
 				servicesPathUrl = new List<String>();
 				servicesBase = new Dictionary<string, string>();				
-				servicesMap = new Dictionary<String, Dictionary<string, string>>();
+				servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 				//servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
 				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
@@ -140,21 +144,23 @@ namespace GeneXus.Http.HttpModules
 							foreach (SingleMap sm in m.Mappings)
 							{
 								if (String.IsNullOrEmpty(sm.Verb))
-									sm.Verb = "GET";								
+									sm.Verb = "GET";
+								if (sm.VariableAlias == null)
+									sm.VariableAlias = new Dictionary<string, string>();
 								if (servicesMap.ContainsKey(mapPathLower))
 								{
 									if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
-									{
-										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);										
+									{										
 										servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
 									}
 								}
 								else
 								{
-									servicesMap.Add(mapPathLower, new Dictionary<string, string>());
 									servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
-									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
 									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+									servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
+									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
 								}							
 							
 							}
