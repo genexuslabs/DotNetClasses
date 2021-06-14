@@ -70,30 +70,30 @@ jobs:
        
     - name: Test External Storage
       run: |
-        export AWSS3_TEST_ENABLED=true
-        export STORAGE_AWSS3_ACCESS_KEY="${{ secrets.AWSS3_ACCESS_KEY }}"
-        export STORAGE_AWSS3_SECRET_KEY="${{ secrets.AWSS3_SECRET_KEY }}"
-        export STORAGE_AWSS3_BUCKET_NAME=genexuss3test
-        export STORAGE_AWSS3_FOLDER_NAME=gxclasses
-        export STORAGE_AWSS3_REGION=us-east-1
-        export IBMCOS_TEST_ENABLED=true
-        export STORAGE_IBMCOS_ACCESS_KEY="${{ secrets.IBMCOS_ACCESS_KEY }}"
-        export STORAGE_IBMCOS_SECRET_KEY="${{ secrets.IBMCOS_SECRET_KEY }}"
-        export STORAGE_IBMCOS_BUCKET_NAME=gxclasses-unit-tests
-        export STORAGE_IBMCOS_FOLDER_NAME=tests
-        export STORAGE_IBMCOS_REGION=us-south
-        export AZUREBS_TEST_ENABLED=true
-        export STORAGE_AZUREBS_ACCESS_KEY="${{ secrets.AZUREBS_ACCESS_KEY }}"
-        export STORAGE_AZUREBS_ACCOUNT_NAME="${{ secrets.AZUREBS_ACCOUNT_NAME }}"
-        export STORAGE_AZUREBS_FOLDER_NAME=tests
-        export STORAGE_AZUREBS_PUBLIC_CONTAINER_NAME=contluispublic
-        export STORAGE_AZUREBS_PRIVATE_CONTAINER_NAME=contluisprivate
-        export GOOGLECS_TEST_ENABLED=true
-        export STORAGE_GOOGLECS_KEY="${{ secrets.GOOGLECS_KEY }}"
-        export STORAGE_GOOGLECS_PROJECT_ID=gxjavacloudstorageunittests
-        export STORAGE_GOOGLECS_BUCKET_NAME=javaclasses-unittests
-        export STORAGE_GOOGLECS_FOLDER_NAME=gxclasses
-        export STORAGE_GOOGLECS_APPLICATION_NAME=gxjavacloudstorageunittests
+        $Env:AWSS3_TEST_ENABLED=true
+        $Env:STORAGE_AWSS3_ACCESS_KEY="${{ secrets.AWSS3_ACCESS_KEY }}"
+        $Env:STORAGE_AWSS3_SECRET_KEY="${{ secrets.AWSS3_SECRET_KEY }}"
+        $Env:STORAGE_AWSS3_BUCKET_NAME=genexuss3test
+        $Env:STORAGE_AWSS3_FOLDER_NAME=gxclasses
+        $Env:STORAGE_AWSS3_REGION=us-east-1
+        $Env:IBMCOS_TEST_ENABLED=true
+        $Env:STORAGE_IBMCOS_ACCESS_KEY="${{ secrets.IBMCOS_ACCESS_KEY }}"
+        $Env:STORAGE_IBMCOS_SECRET_KEY="${{ secrets.IBMCOS_SECRET_KEY }}"
+        $Env:STORAGE_IBMCOS_BUCKET_NAME=gxclasses-unit-tests
+        $Env:STORAGE_IBMCOS_FOLDER_NAME=tests
+        $Env:STORAGE_IBMCOS_REGION=us-south
+        $Env:AZUREBS_TEST_ENABLED=true
+        $Env:STORAGE_AZUREBS_ACCESS_KEY="${{ secrets.AZUREBS_ACCESS_KEY }}"
+        $Env:STORAGE_AZUREBS_ACCOUNT_NAME="${{ secrets.AZUREBS_ACCOUNT_NAME }}"
+        $Env:STORAGE_AZUREBS_FOLDER_NAME=tests
+        $Env:STORAGE_AZUREBS_PUBLIC_CONTAINER_NAME=contluispublic
+        $Env:STORAGE_AZUREBS_PRIVATE_CONTAINER_NAME=contluisprivate
+        $Env:GOOGLECS_TEST_ENABLED=true
+        $Env:STORAGE_GOOGLECS_KEY="${{ secrets.GOOGLECS_KEY }}"
+        $Env:STORAGE_GOOGLECS_PROJECT_ID=gxjavacloudstorageunittests
+        $Env:STORAGE_GOOGLECS_BUCKET_NAME=javaclasses-unittests
+        $Env:STORAGE_GOOGLECS_FOLDER_NAME=gxclasses
+        $Env:STORAGE_GOOGLECS_APPLICATION_NAME=gxjavacloudstorageunittests
         
         dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
 
