@@ -71,4 +71,10 @@
 		</None>
 	</ItemGroup>
 
+  <ItemGroup>
+    <None Update="FullTextSearch\Ugly.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
