@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>DotNetUnitTest</RootNamespace>
@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetframework\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\Providers\Storage\GXAzureStorage\GXAzureStorage.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\Providers\Storage\GXGoogleCloud\GXGoogleCloud.csproj" />
@@ -55,6 +56,9 @@
     <None Update="resources\text.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestResults\" />
   </ItemGroup>
 </Project>
 
