@@ -37,14 +37,13 @@
 	</ItemGroup>
 
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
-  </ItemGroup>
-
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
+		<ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
+		<ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
+		<ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\TestModule.MyControl.view" Link="TestModule.MyControl.view">
@@ -56,7 +55,11 @@
 		<Folder Include="FileIO\" />
 	</ItemGroup>
 
+
 	<ItemGroup>
+		<None Update="FullTextSearch\Ugly.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="Document.txt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -70,11 +73,5 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
-
-  <ItemGroup>
-    <None Update="FullTextSearch\Ugly.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
 </Project>
