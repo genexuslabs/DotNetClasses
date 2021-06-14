@@ -1,4 +1,4 @@
-name: Build
+name: External Storage Tests
 
 on: 
   pull_request:
