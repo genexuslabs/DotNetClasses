@@ -17,7 +17,11 @@ namespace GeneXus.Data
         static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         static Assembly _hanaAssembly;
         const string HanaDbTypeEnum = "Sap.Data.Hana.HanaDbType";
+#if NETCORE
+		const string _hanaAssemblyName = "Sap.Data.Hana.Core.v2.1";
+#else
 		const string _hanaAssemblyName = "Sap.Data.Hana.v3.5";
+#endif
 
 		public static Assembly HanaAssembly
         {
