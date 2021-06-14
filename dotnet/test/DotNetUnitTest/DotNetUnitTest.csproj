@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>DotNetUnitTest</RootNamespace>
@@ -35,9 +35,15 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetframework\GxSearch\GxSearch.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Web" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Document.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="TestResults\" />

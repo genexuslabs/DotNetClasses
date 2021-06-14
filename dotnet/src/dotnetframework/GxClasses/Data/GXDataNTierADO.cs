@@ -146,7 +146,7 @@ namespace GeneXus.Data.NTier.ADO
                 string fileName = GXDbFile.GetFileNameFromUri(gxdbFileUri);
                 if (!String.IsNullOrEmpty(fileName))
 				{
-					string filePath = Path.Combine(_gxDbCommand.Conn.MultimediaPath, fileName);
+					string filePath = PathUtil.SafeCombine(_gxDbCommand.Conn.MultimediaPath, fileName);
 					try
 					{
 						GxFile file = new GxFile(string.Empty, filePath, GxFileType.PublicAttribute);
@@ -429,7 +429,7 @@ namespace GeneXus.Data.NTier.ADO
                 string fileName = GXDbFile.GetFileNameFromUri(gxdbFileUri);
                 if (!String.IsNullOrEmpty(fileName))
                 {
-					string filePath = Path.Combine(_gxDbCommand.Conn.MultimediaPath, fileName);
+					string filePath = PathUtil.SafeCombine(_gxDbCommand.Conn.MultimediaPath, fileName);
 
 					try
 					{

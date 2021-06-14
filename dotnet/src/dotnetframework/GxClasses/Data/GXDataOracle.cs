@@ -1278,7 +1278,7 @@ namespace GeneXus.Data
 		}
 		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
 		{
-			return geo.ToStringSQL();
+			return geo.ToStringSQL("POINT(0 0)");
 		}
 
 		private static readonly string[] ConcatOpValues = new string[] { string.Empty, " || ", string.Empty };

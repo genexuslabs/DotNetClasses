@@ -324,7 +324,6 @@ namespace GeneXus.Utils
 			{
 				return this.PointList[0];
 			}
-
 		}
 
 
@@ -332,7 +331,10 @@ namespace GeneXus.Utils
 		{
 			get
 			{
-				return this.PointList[0].Longitude;
+				if (_innerValue == null)
+					return 0;
+				else
+					return SQLGeographyWrapper.Long(_innerValue);
 			}
 
 		}
@@ -341,7 +343,10 @@ namespace GeneXus.Utils
 		{
 			get
 			{
-				return this.PointList[0].Latitude;
+				if (_innerValue == null)
+					return 0;
+				else
+					return SQLGeographyWrapper.Lat(_innerValue);
 			}
 
 		}
