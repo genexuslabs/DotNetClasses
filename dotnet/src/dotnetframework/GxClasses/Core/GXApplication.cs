@@ -688,14 +688,14 @@ namespace GeneXus.Application
 					string ext = fi.Extension;
 					if (ext != null)
 						ext = ext.TrimStart('.');
-					string filePath = FileUtil.getTempFileName(tempDir, "BLOB", ext);
+					string filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
 					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
 					filePath = file.Create(pf.InputStream);
 					string fileGuid = GxUploadHelper.GetUploadFileGuid();
 					fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
 
-					GxUploadHelper.CacheUploadFile(fileGuid, filePath, pf.FileName, ext, file, gxContext);
+					GxUploadHelper.CacheUploadFile(fileGuid, filePath, Path.GetFileName(pf.FileName), ext, file, gxContext);
 
 				return true;
 				}
@@ -3752,8 +3752,7 @@ namespace GeneXus.Application
 		}
 		public string FileFromBase64(string b64)
 		{
-			string tmpFileName = Guid.NewGuid().ToString();
-			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
+			string filePath = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH());
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromBase64(b64);
 			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), this);
@@ -3769,8 +3768,7 @@ namespace GeneXus.Application
 		}
 		public string FileFromByteArray(byte[] bArray)
 		{
-			string tmpFileName = Guid.NewGuid().ToString();
-			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
+			string filePath = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH());
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromByteArray(bArray);
 			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), this);
