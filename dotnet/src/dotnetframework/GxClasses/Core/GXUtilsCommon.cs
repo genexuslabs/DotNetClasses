@@ -3663,6 +3663,10 @@ namespace GeneXus.Utils
 			if (!IsValidFilePath(path))
 				validPath = GetValidPath(path, "_");
 
+			Uri result;
+			if (Uri.TryCreate(validPath, UriKind.Absolute, out result))
+				validPath = result.LocalPath;
+
 			string fileName = Path.GetFileName(validPath);
 			if (!IsValidFileName(fileName))
 			{
