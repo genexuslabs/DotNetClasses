@@ -43,7 +43,6 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		IAmazonS3 Client { get; set; }
 		string Bucket { get; set; }
-		string Folder { get; set; }
 		string Endpoint { get; set; }
 		string Region { get; set; }
 
@@ -118,7 +117,6 @@ namespace GeneXus.Storage.GXAmazonS3
 
 #endif
 			Bucket = GetEncryptedPropertyValue(BUCKET);
-			Folder = GetPropertyValue(FOLDER);
 			Region = region.SystemName;
 
 			SetURI();
