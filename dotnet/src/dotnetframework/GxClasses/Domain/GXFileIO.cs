@@ -431,13 +431,6 @@ public class GxExternalFileInfo : IGxFileInfo
 		{
 			_url = storageObjectFullname;
 		}
-		else {
-			/*if (fileType.HasFlag(GxFileType.Private)) //Attributes multimedia consider Storage Provider Folder 
-			{
-				_url = provider.GetBaseURL() + storageObjectFullname;
-				_name = ExternalProviderCommon.getProviderObjectName(provider, storageObjectFullname);
-			}*/
-		}		
 		_fileTypeAtt = fileType;
 	}
 
