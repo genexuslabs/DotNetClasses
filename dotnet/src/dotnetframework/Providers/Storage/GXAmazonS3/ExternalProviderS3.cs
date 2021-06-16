@@ -255,11 +255,11 @@ namespace GeneXus.Storage.GXAmazonS3
 		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
-			return (isPrivate)? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).Minutes): StorageUri + StorageUtils.EncodeUrl(objectName);
+			return (isPrivate)? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes): StorageUri + StorageUtils.EncodeUrl(objectName);
 			
 		}
 
-		private string GetPreSignedUrl(string objectName, int urlMinutes)
+		private string GetPreSignedUrl(string objectName, double urlMinutes)
 		{
 			GetPreSignedUrlRequest request = new GetPreSignedUrlRequest
 			{
