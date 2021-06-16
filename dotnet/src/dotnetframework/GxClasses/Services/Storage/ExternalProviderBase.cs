@@ -14,10 +14,10 @@ namespace GeneXus.Services
 		protected static String DEFAULT_EXPIRATION = "DEFAULT_EXPIRATION";
 		protected static String FOLDER = "FOLDER_NAME";
 		protected static String DEFAULT_ACL_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_ACL";
-		protected static String DEFAULT_EXPIRATION_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_EXPIRATION";		
-		protected int defaultExpirationMinutes = 1440;
+		protected static String DEFAULT_EXPIRATION_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_EXPIRATION";
+		protected TimeSpan defaultExpiration = new TimeSpan(24, 0, 0);
 
-
+		
 		protected GxFileType defaultAcl = GxFileType.Private;
 
 		public ExternalProviderBase()
@@ -55,16 +55,20 @@ namespace GeneXus.Services
 				this.defaultAcl = GxFileType.PublicRead;
 			}
 
-			String expirationS = GetPropertyValue(DEFAULT_EXPIRATION, DEFAULT_EXPIRATION, defaultExpirationMinutes.ToString());
+			String expirationS = GetPropertyValue(DEFAULT_EXPIRATION, DEFAULT_EXPIRATION, defaultExpiration.ToString());
 			if (!String.IsNullOrEmpty(expirationS))
 			{
-				Int32.TryParse(expirationS, out this.defaultExpirationMinutes);
+				int minutes;
+				if (Int32.TryParse(expirationS, out minutes) && minutes > 0)
+				{
+					defaultExpiration = new TimeSpan(0, minutes, 0);
+				}
 			}
 		}
 
-		protected int ResolveExpirationMinutes(int expirationMinutes)
+		protected TimeSpan ResolveExpiration(int expirationMinutes)
 		{
-			return expirationMinutes > 0 ? expirationMinutes : defaultExpirationMinutes;
+			return expirationMinutes > 0 ? new TimeSpan(0, expirationMinutes, 0) : defaultExpiration;
 		}
 
 		protected String GetEncryptedPropertyValue(String propertyName, String alternativePropertyName = null)
