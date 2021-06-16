@@ -11,9 +11,6 @@
 		<DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
-		<None Remove="FullTextSearch\Ugly.html" />
-	</ItemGroup>
-	<ItemGroup>
 		<Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\FileIOTests.cs" Link="FileIO\FileIOTests.cs" />
 	</ItemGroup>
