@@ -12,7 +12,7 @@ namespace UnitTesting
 		{
 			Config.ConfigFileName = "client.exe.config";
 		}
-		[Fact]
+		//[Fact]
 		public void FileSourceTest()
 		{
 			GxFileInfo fi = new GxFileInfo(string.Empty);
@@ -27,7 +27,7 @@ namespace UnitTesting
 			Assert.True(fi.FullName == expected);
 
 		}
-		[Fact]
+		//[Fact]
 		public void PathSourceTest()
 		{
 			string blobPath = Preferences.getBLOB_PATH();
@@ -52,7 +52,7 @@ namespace UnitTesting
 			Assert.True(uri.IsAbsoluteUri);
 			//Assert.True(new FileInfo(uri.LocalPath).FullName == new FileInfo("PublicTempStorage/multimedia/myimg_8e1604b16eda43e59694f9aeb0b33e77.jpg").FullName);
 		}
-		[Fact]
+		//[Fact]
 		public void GXDBFilePathTest()
 		{
 			string[] filesName = { "content/../../../document.aspx","content%2f..%2f..%2f..%2fdocument.aspx","content%2f%2e%2e%2f%2e%2e%2f%2e%2e%2fdocument","content%5c%2e%2e%5c%2e%2e%5c%2e%2e%5cdocument",
@@ -68,7 +68,7 @@ namespace UnitTesting
 			}
 		}
 
-		[Fact]
+		//[Fact]
 		public void PathUtilGetValidFileName()
 		{
 			string path = "file:///C:/Models/Upload/CSharpModel/web/PublicTempStorage/multimedia/Screen%20Shot%202016-02-15%20at%2011.41.55%20AM_ff107a3ba9fb4564bb4e1bf7f74d5fbf.png";
