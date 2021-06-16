@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
  <PropertyGroup>
  	<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
 	<NoWarn>CS8032</NoWarn>
@@ -29,13 +29,21 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="..\DotNetUnitTest\TestModule.MyControl.view" Link="TestModule.MyControl.view">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="FullTextSearch\Ugly.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
