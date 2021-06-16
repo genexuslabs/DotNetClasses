@@ -125,7 +125,7 @@ namespace GeneXus.Storage.GXAzureStorage
 			{
 				SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy();
 				sasConstraints.SharedAccessStartTime = DateTime.UtcNow;
-				sasConstraints.SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(ResolveExpiration(urlMinutes).Minutes);
+				sasConstraints.SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(ResolveExpiration(urlMinutes).TotalMinutes);
 				sasConstraints.Permissions = SharedAccessBlobPermissions.Read;
 				url += blob.GetSharedAccessSignature(sasConstraints);
 			}
