@@ -30,7 +30,6 @@ namespace GeneXus.Storage.GXGoogleCloud
         StorageService Service { get; set; }
         String Project { get; set; }
         String Bucket { get; set; }
-        String Folder { get; set; }
         UrlSigner Signer { get; set; }
 		
 
@@ -80,7 +79,6 @@ namespace GeneXus.Storage.GXGoogleCloud
 
 			Bucket = GetEncryptedPropertyValue(BUCKET);
 			Project = GetPropertyValue(PROJECT_ID);
-            Folder = GetPropertyValue(FOLDER);
 
             CreateBucket();
             CreateFolder(Folder);

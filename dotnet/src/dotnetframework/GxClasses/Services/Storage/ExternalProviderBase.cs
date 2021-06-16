@@ -19,6 +19,7 @@ namespace GeneXus.Services
 
 		
 		protected GxFileType defaultAcl = GxFileType.Private;
+		protected string Folder { get; set; }
 
 		public ExternalProviderBase()
 		{
@@ -64,6 +65,7 @@ namespace GeneXus.Services
 					defaultExpiration = new TimeSpan(0, minutes, 0);
 				}
 			}
+			Folder = GetPropertyValue(FOLDER, null, string.Empty);
 		}
 
 		protected TimeSpan ResolveExpiration(int expirationMinutes)
