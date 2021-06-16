@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.IO;
 using GeneXus.Configuration;
 using GeneXus.Utils;
@@ -80,4 +80,4 @@ namespace UnitTesting
 			Assert.StartsWith("Screen Shot 2016-02-15 at 11.41.55 AM", fileName, StringComparison.OrdinalIgnoreCase);
 		}
 	}
-}
+}*/
