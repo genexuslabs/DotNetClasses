@@ -248,7 +248,7 @@ namespace GeneXus.Storage.GXGoogleCloud
 		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			if (fileType.HasFlag(GxFileType.Private))
-				return Signer.Sign(Bucket, StorageUtils.EncodeUrl(objectName), TimeSpan.FromMinutes(ResolveExpirationMinutes(urlMinutes)), HttpMethod.Get);
+				return Signer.Sign(Bucket, StorageUtils.EncodeUrl(objectName), TimeSpan.FromMinutes(ResolveExpiration(urlMinutes).Minutes), HttpMethod.Get);
 			else
 			{
 				return StorageUri + StorageUtils.EncodeUrl(objectName);

@@ -39,11 +39,6 @@ namespace GeneXus.Storage.GXAmazonS3
 		[Obsolete("Use Property STORAGE_CUSTOM_ENDPOINT instead", false)]
 		const string STORAGE_CUSTOM_ENDPOINT_DEPRECATED = "STORAGE_CUSTOM_ENDPOINT";
 		
-		[Obsolete("Use Property BUCKET instead", false)]
-		const string BUCKET_DEPRECATED = "BUCKET_NAME";
-		[Obsolete("Use Property FOLDER instead", false)]
-		const string FOLDER_DEPRECATED = "FOLDER_NAME";
-		
 		string _storageUri;
 
 		IAmazonS3 Client { get; set; }
@@ -92,7 +87,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				RegionEndpoint = region
 			};
 
-			Endpoint = GetPropertyValue( STORAGE_ENDPOINT , ENDPOINT_DEPRECATED);
+			Endpoint = GetPropertyValue(STORAGE_ENDPOINT, ENDPOINT_DEPRECATED);
 			if (Endpoint == STORAGE_CUSTOM_ENDPOINT_VALUE)
 			{
 				Endpoint = GetPropertyValue(STORAGE_CUSTOM_ENDPOINT, STORAGE_CUSTOM_ENDPOINT_DEPRECATED);
@@ -122,8 +117,8 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 
 #endif
-			Bucket = GetEncryptedPropertyValue(BUCKET, BUCKET_DEPRECATED);
-			Folder = GetPropertyValue(FOLDER, FOLDER_DEPRECATED);
+			Bucket = GetEncryptedPropertyValue(BUCKET);
+			Folder = GetPropertyValue(FOLDER);
 			Region = region.SystemName;
 
 			SetURI();
@@ -260,7 +255,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
-			return (isPrivate)? GetPreSignedUrl(objectName, ResolveExpirationMinutes(urlMinutes)): StorageUri + StorageUtils.EncodeUrl(objectName);
+			return (isPrivate)? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).Minutes): StorageUri + StorageUtils.EncodeUrl(objectName);
 			
 		}
 
