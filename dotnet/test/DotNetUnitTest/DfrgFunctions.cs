@@ -1,5 +1,4 @@
 using GeneXus.Application;
-using GeneXus.Configuration;
 using Xunit;
 
 namespace UnitTesting
