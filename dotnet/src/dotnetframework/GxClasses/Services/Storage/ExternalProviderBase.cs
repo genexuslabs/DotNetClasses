@@ -56,7 +56,7 @@ namespace GeneXus.Services
 				this.defaultAcl = GxFileType.PublicRead;
 			}
 
-			String expirationS = GetPropertyValue(DEFAULT_EXPIRATION, DEFAULT_EXPIRATION, defaultExpiration.ToString());
+			String expirationS = GetPropertyValue(DEFAULT_EXPIRATION, DEFAULT_EXPIRATION, defaultExpiration.TotalMinutes.ToString());
 			if (!String.IsNullOrEmpty(expirationS))
 			{
 				int minutes;
