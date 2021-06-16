@@ -8,6 +8,10 @@ namespace UnitTesting
 {
 	public class FileIOTests
 	{
+		public FileIOTests()
+		{
+			Config.ConfigFileName = "client.exe.config";
+		}
 		[Fact]
 		public void FileSourceTest()
 		{
@@ -16,8 +20,6 @@ namespace UnitTesting
 			fi.Source = source;
 			string expected = source;
 			Assert.True(fi.FullName == expected);
-
-			Config.ConfigFileName = "client.exe.config";
 
 			source = "file:///D:/Models/37121/CSharpModel/web/PublicTempStorage/multimedia/iso_8859-1_ad09d880ffad4b42b0e238d17476f476.txt";
 			fi.Source = source;
