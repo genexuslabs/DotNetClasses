@@ -20,6 +20,7 @@ jobs:
       SolutionFile: dotnet\DotNetStandardClasses.sln
     
     runs-on: windows-latest
+    environment: external-storage-tests
 
     steps:
     - name: Checkout
@@ -89,7 +90,7 @@ jobs:
         $Env:STORAGE_AZUREBS_PUBLIC_CONTAINER_NAME="contluispublic"
         $Env:STORAGE_AZUREBS_PRIVATE_CONTAINER_NAME="contluisprivate"
         $Env:GOOGLECS_TEST_ENABLED="true"
-        $Env:STORAGE_GOOGLECS_KEY="${{ secrets.GOOGLECS_KEY }}"
+        $Env:STORAGE_GOOGLECS_KEY='${{ secrets.GOOGLECS_KEY }}'
         $Env:STORAGE_GOOGLECS_PROJECT_ID="gxjavacloudstorageunittests"
         $Env:STORAGE_GOOGLECS_BUCKET_NAME="javaclasses-unittests"
         $Env:STORAGE_GOOGLECS_FOLDER_NAME="gxclasses"
