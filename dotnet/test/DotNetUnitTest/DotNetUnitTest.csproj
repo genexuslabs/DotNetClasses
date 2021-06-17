@@ -1,13 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>DotNetUnitTest</RootNamespace>
 		<AssemblyName>DotNetUnitTest</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
-	  <None Remove="applications.json" />
 	  <None Remove="client.exe.config" />
-	  <None Remove="MS923.txt" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Content Include="applications.json">
@@ -35,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetframework\GxSearch\GxSearch.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Web" />
@@ -43,6 +42,9 @@
     <None Update="Document.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestResults\" />
   </ItemGroup>
 </Project>
 
