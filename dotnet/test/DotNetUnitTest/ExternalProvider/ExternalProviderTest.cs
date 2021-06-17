@@ -16,7 +16,7 @@ namespace UnitTesting
 		private GeneXus.Services.ExternalProvider provider;
 		private static String TEST_SAMPLE_FILE_NAME = "text.txt";
 		private static String TEST_SAMPLE_FILE_PATH = Path.Combine("resources", TEST_SAMPLE_FILE_NAME).ToString(CultureInfo.InvariantCulture);
-
+		
 
 		public ExternalProviderTest(string providerName, Type externalProviderType)
 		{
@@ -24,58 +24,58 @@ namespace UnitTesting
 
 			bool testEnabled = Environment.GetEnvironmentVariable(providerName + "_TEST_ENABLED") == "true";
 
-			Assume.True(testEnabled);
-
+			Skip.IfNot(testEnabled, "Environment variables not set");
 			provider = (GeneXus.Services.ExternalProvider)Activator.CreateInstance(externalProviderType);
 
+			Skip.IfNot(testEnabled);
 			Assert.NotNull(provider);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadPublicMethod()
-		{
+		{			
 			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, GxFileType.PublicRead);
 			EnsureUrl(upload, GxFileType.PublicRead);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadDefaultMethod()
 		{
 			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, GxFileType.Default);
 			EnsureUrl(upload, GxFileType.Default);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadAndCopyDefault()
 		{
 			TestUploadAndCopyByAcl(GxFileType.Default, GxFileType.Default);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadAndCopyPrivate()
 		{
 			TestUploadAndCopyByAcl(GxFileType.Private, GxFileType.Private);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadAndCopyPublic()
 		{
 			TestUploadAndCopyByAcl(GxFileType.PublicRead, GxFileType.PublicRead);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadAndCopyMixed()
 		{
 			TestUploadAndCopyByAcl(GxFileType.Default, GxFileType.Private);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadAndCopyPrivateToPublic()
 		{
 			TestUploadAndCopyByAcl(GxFileType.Private, GxFileType.PublicRead);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadAndCopyPublicToPrivate()
 		{
 			TestUploadAndCopyByAcl(GxFileType.PublicRead, GxFileType.Private);
@@ -97,38 +97,21 @@ namespace UnitTesting
 			EnsureUrl(upload, aclCopy);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestCopyMethod()
 		{
 			String copyFileName = "copy-text.txt";
 			Copy(copyFileName, GxFileType.PublicRead);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestCopyPrivateMethod()
 		{
 			String copyFileName = "copy-text-private.txt";
 			Copy(copyFileName, GxFileType.Private);
-		}
+		}	
 
-		private void Copy(String copyFileName, GxFileType acl)
-		{
-			provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, acl);
-			String upload = provider.Get(TEST_SAMPLE_FILE_NAME, acl, 100);
-			EnsureUrl(upload, acl);
-
-			DeleteSafe(copyFileName);
-			Wait(1000); //Google CDN replication seems to be delayed.
-
-			String urlCopy = TryGet(copyFileName, GxFileType.PublicRead);
-			Assert.False(UrlExists(urlCopy), "URL cannot exist: " + urlCopy);
-
-			provider.Copy("text.txt", acl, copyFileName, acl);
-			upload = provider.Get(copyFileName, acl, 100);
-			EnsureUrl(upload, acl);
-		}
-
-		[Fact]
+		[SkippableFact]
 		public void TestMultimediaUpload()
 		{
 			String copyFileName = "copy-text-private.txt";
@@ -145,7 +128,7 @@ namespace UnitTesting
 			EnsureUrl(upload, acl);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestGetMethod()
 		{
 			TestUploadPublicMethod();
@@ -153,7 +136,7 @@ namespace UnitTesting
 			EnsureUrl(url, GxFileType.PublicRead);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestGetObjectName()
 		{
 			TestUploadPublicMethod();
@@ -164,7 +147,7 @@ namespace UnitTesting
 			Assert.Equal("text.txt", objectName);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestDownloadMethod()
 		{			
 			TestUploadPublicMethod();
@@ -184,7 +167,7 @@ namespace UnitTesting
 			Assert.True(File.Exists(downloadPath));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestDeleteFile()
 		{
 			GxFileType acl = GxFileType.PublicRead;
@@ -197,7 +180,7 @@ namespace UnitTesting
 			Assert.False(UrlExists(url));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestDeleteFilePrivate()
 		{
 			GxFileType acl = GxFileType.Private;
@@ -210,7 +193,7 @@ namespace UnitTesting
 			Assert.False(UrlExists(url));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestUploadPrivateMethod()
 		{
 			GxFileType acl = GxFileType.Private;
@@ -224,6 +207,22 @@ namespace UnitTesting
 
 		}
 
+		private void Copy(String copyFileName, GxFileType acl)
+		{
+			provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, acl);
+			String upload = provider.Get(TEST_SAMPLE_FILE_NAME, acl, 100);
+			EnsureUrl(upload, acl);
+
+			DeleteSafe(copyFileName);
+			Wait(1000); //Google CDN replication seems to be delayed.
+
+			String urlCopy = TryGet(copyFileName, GxFileType.PublicRead);
+			Assert.False(UrlExists(urlCopy), "URL cannot exist: " + urlCopy);
+
+			provider.Copy("text.txt", acl, copyFileName, acl);
+			upload = provider.Get(copyFileName, acl, 100);
+			EnsureUrl(upload, acl);
+		}
 
 		private String TryGet(String objectName, GxFileType acl)
 		{
