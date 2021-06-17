@@ -138,8 +138,9 @@ namespace UnitTesting
 			String upload = provider.Get(TEST_SAMPLE_FILE_NAME, acl, 100);
 			EnsureUrl(upload, acl);
 
-			provider.Delete(copyFileName, acl);
-			provider.Copy("text.txt", acl, copyFileName, acl);
+			DeleteSafe(copyFileName);
+			upload = provider.Copy(TEST_SAMPLE_FILE_NAME, copyFileName, "Table", "Field", acl);
+			provider.TryGetObjectNameFromURL(upload, out copyFileName);
 			upload = TryGet(copyFileName, acl);
 			EnsureUrl(upload, acl);
 		}
@@ -165,16 +166,20 @@ namespace UnitTesting
 
 		[Fact]
 		public void TestDownloadMethod()
-		{
-			String downloadPath = Path.Combine("resources", "test", TEST_SAMPLE_FILE_NAME);
+		{			
 			TestUploadPublicMethod();
 
+			String downloadPath = Path.Combine("resources", "test", TEST_SAMPLE_FILE_NAME);
 			try
 			{
 				File.Delete(downloadPath);
 			}
 			catch (Exception) { }
-
+			try
+			{
+				Directory.CreateDirectory(Path.Combine("resources", "test"));
+			}
+			catch (Exception) { }
 			provider.Download(TEST_SAMPLE_FILE_NAME, downloadPath, GxFileType.PublicRead);
 			Assert.True(File.Exists(downloadPath));
 		}

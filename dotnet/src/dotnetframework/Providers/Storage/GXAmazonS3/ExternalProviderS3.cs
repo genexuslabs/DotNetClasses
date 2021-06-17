@@ -26,6 +26,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		const string REGION = "REGION";
 		const string STORAGE_CUSTOM_ENDPOINT_VALUE = "custom";
 
+		const string DEFAULT_ENDPOINT = "s3.amazonaws.com";
 		const string DEFAULT_REGION = "us-east-1";
 		
 		[Obsolete("Use Property ACCESS_KEY instead", false)]
@@ -86,7 +87,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				RegionEndpoint = region
 			};
 
-			Endpoint = GetPropertyValue(STORAGE_ENDPOINT, ENDPOINT_DEPRECATED);
+			Endpoint = GetPropertyValue(STORAGE_ENDPOINT, ENDPOINT_DEPRECATED, DEFAULT_ENDPOINT);
 			if (Endpoint == STORAGE_CUSTOM_ENDPOINT_VALUE)
 			{
 				Endpoint = GetPropertyValue(STORAGE_CUSTOM_ENDPOINT, STORAGE_CUSTOM_ENDPOINT_DEPRECATED);
@@ -350,7 +351,9 @@ namespace GeneXus.Storage.GXAmazonS3
 				CannedACL = GetCannedACL(destFileType)
 			};
 			if (Path.GetExtension(fileName).Equals(".tmp"))
+			{
 				objectRequest.ContentType = "image/jpeg";
+			}
 			PutObjectResponse result = PutObject(objectRequest);
 			return Get(fileName, destFileType);
 		}
