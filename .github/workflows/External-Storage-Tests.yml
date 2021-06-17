@@ -20,6 +20,7 @@ jobs:
       SolutionFile: dotnet\DotNetStandardClasses.sln
     
     runs-on: windows-latest
+    environment: external-storage-tests
 
     steps:
     - name: Checkout
