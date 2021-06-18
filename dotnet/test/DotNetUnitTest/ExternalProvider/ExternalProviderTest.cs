@@ -3,14 +3,14 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using DotNetUnitTest;
-using GeneXus.Storage.GXAmazonS3;
-using GeneXus.Storage.GXAzureStorage;
-using GeneXus.Storage.GXGoogleCloud;
+using GeneXus.Storage;
 using Xunit;
+
 
 #pragma warning disable CA1031 // Do not catch general exception types
 namespace UnitTesting
 {
+	[Collection("Sequential")]
 	public abstract class ExternalProviderTest
 	{		
 		private GeneXus.Services.ExternalProvider provider;
@@ -123,8 +123,12 @@ namespace UnitTesting
 
 			DeleteSafe(copyFileName);
 			upload = provider.Copy(TEST_SAMPLE_FILE_NAME, copyFileName, "Table", "Field", acl);
-			provider.TryGetObjectNameFromURL(upload, out copyFileName);
-			upload = TryGet(copyFileName, acl);
+
+			copyFileName = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, upload);
+			if (!copyFileName.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+			{
+				upload = TryGet(copyFileName, acl);
+			}
 			EnsureUrl(upload, acl);
 		}
 
