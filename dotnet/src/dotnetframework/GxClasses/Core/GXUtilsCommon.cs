@@ -5304,6 +5304,10 @@ namespace GeneXus.Utils
 		{
 			if (String.IsNullOrEmpty(name) && String.IsNullOrEmpty(type) && !String.IsNullOrEmpty(path))
 			{
+				if (GxUploadHelper.IsUpload(path))
+				{
+					return new GxFile(string.Empty, path, GxFileType.Private).GetName();
+				}
 				string fromPathType = Path.GetExtension(path);
 				if (!String.IsNullOrEmpty(fromPathType) && fromPathType != "tmp")
 				{
