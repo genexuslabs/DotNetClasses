@@ -7,12 +7,11 @@
 		<PackageId>GeneXus.Memcached</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+	  <PackageReference Include="EnyimMemcached" Version="2.16.0" />
+	  <PackageReference Include="System.Text.Json" Version="5.0.2" />
 	</ItemGroup>
 	<ItemGroup>
-		<Reference Include="BeITMemcached">
-		  <HintPath>..\..\..\libs\BeITMemcached.dll</HintPath>
-		</Reference>
+		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 
 </Project>

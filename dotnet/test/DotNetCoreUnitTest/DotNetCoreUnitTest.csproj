@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
   </ItemGroup>
 
   <ItemGroup>
