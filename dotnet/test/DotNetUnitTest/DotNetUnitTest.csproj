@@ -5,9 +5,7 @@
 		<AssemblyName>DotNetUnitTest</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
-	  <None Remove="applications.json" />
 	  <None Remove="client.exe.config" />
-	  <None Remove="MS923.txt" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Content Include="applications.json">

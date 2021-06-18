@@ -17,7 +17,11 @@ namespace GeneXus.Data
         static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         static Assembly _hanaAssembly;
         const string HanaDbTypeEnum = "Sap.Data.Hana.HanaDbType";
-		const string _hanaAssemblyName = "Sap.Data.Hana.v3.5";
+#if NETCORE
+        const string _hanaAssemblyName = "Sap.Data.Hana.Core.v2.1";
+#else
+        const string _hanaAssemblyName = "Sap.Data.Hana.v3.5";
+#endif
 
 		public static Assembly HanaAssembly
         {
@@ -34,7 +38,7 @@ namespace GeneXus.Data
 						_hanaAssembly = asl.LoadFromAssemblyPath(assemblyPath);
 #else
 						GXLogging.Debug(log, "Loading Sap.Data.Hana.v3.5 from GAC");
-                        _hanaAssembly = Assembly.LoadWithPartialName("Sap.Data.Hana.v3.5");
+            _hanaAssembly = Assembly.LoadWithPartialName("Sap.Data.Hana.v3.5");
 #endif
 						GXLogging.Debug(log, $"{_hanaAssemblyName} Loaded:" + _hanaAssembly.FullName + " location: " + _hanaAssembly.Location);
 					}
