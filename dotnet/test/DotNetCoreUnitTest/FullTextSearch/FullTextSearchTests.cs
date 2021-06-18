@@ -6,7 +6,6 @@ using System;
 using GeneXus.Cryptography;
 using GeneXus.Utils;
 using System.IO;
-
 namespace xUnitTesting
 {
 	public class FullTextSearch
@@ -18,8 +17,8 @@ namespace xUnitTesting
 			string html = File.ReadAllText(htmlFileName);
 			string text = DocumentHandler.GetText(htmlFileName, "html");
 			string prettyHTML = DocumentHandler.HTMLClean(html);
-			Assert.Contains("atencionalcliente@gmail.com", text);
-			Assert.DoesNotContain("<html><html>", prettyHTML);
+			Assert.Contains("atencionalcliente@gmail.com", text, StringComparison.OrdinalIgnoreCase);
+			Assert.StartsWith("<html>", prettyHTML, StringComparison.OrdinalIgnoreCase);
 
 		}
 	}
