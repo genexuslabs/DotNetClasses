@@ -96,25 +96,33 @@ namespace GeneXus.Storage.GXGoogleCloud
 
         private void CreateBucket()
         {
-            //objects in bucket are public by default
-            ObjectAccessControl defaultAccess = new ObjectAccessControl();
-            defaultAccess.Entity = "allUsers";
-            defaultAccess.Role = "READER";
+			try
+			{
+				//objects in bucket are public by default
+				ObjectAccessControl defaultAccess = new ObjectAccessControl();
+				defaultAccess.Entity = "allUsers";
+				defaultAccess.Role = "READER";
 
-            Bucket bucket = new Bucket();
-            bucket.Name = Bucket;
-            bucket.DefaultObjectAcl = new List<ObjectAccessControl> { defaultAccess };
-
-            try
-            {
-                Client.CreateBucket(Project, bucket);
-            }
-            catch (GoogleApiException ex)
-            {
-                if (ex.Error.Code != BUCKET_EXISTS)
-                    throw ex;
-            }
-
+				Bucket bucket = new Bucket();
+				bucket.Name = Bucket;
+				bucket.DefaultObjectAcl = new List<ObjectAccessControl> { defaultAccess };
+				
+				if (Client.GetBucket(Bucket) == null)
+				{
+					try
+					{
+						Client.CreateBucket(Project, bucket);
+					}
+					catch (GoogleApiException ex)
+					{
+						if (ex.Error.Code != BUCKET_EXISTS)
+							throw ex;
+					}
+				}
+			}
+			catch (Exception) {
+				//We should not fail when Bucket cannot be created. Bucket should be created beforehand as Credentials may not allow Bucket creation.
+			}
         }
 
         private void CreateFolder(String name, string table = null, string field = null)
