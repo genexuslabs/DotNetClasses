@@ -1,9 +1,6 @@
-using Xunit;
-using GeneXus.Application;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using GeneXus.Cache;
+using Xunit;
 
 namespace xUnitTesting
 {
