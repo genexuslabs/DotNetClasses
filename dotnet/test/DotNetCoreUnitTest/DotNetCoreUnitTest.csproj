@@ -28,13 +28,14 @@
 		</PackageReference>
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
-		<ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
-		<ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
-		<ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
-		<ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
+  </ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\TestModule.MyControl.view" Link="TestModule.MyControl.view">
