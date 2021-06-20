@@ -18,6 +18,7 @@ namespace GeneXus.Cache
 		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(typeof(Memcached));
 
 		MemcachedClient _cache;
+		const int DEFAULT_MEMCACHED_PORT = 11211;
 		public Memcached() 
 		{
 			_cache = InitCache();
@@ -41,7 +42,14 @@ namespace GeneXus.Cache
 			if (!String.IsNullOrEmpty(address))
 			{
 				foreach (string host in address.Split(',', ';', ' ')) {
-					config.AddServer(host);
+					if (!host.Contains(':'))
+					{
+						config.AddServer(host, DEFAULT_MEMCACHED_PORT);
+					}
+					else
+					{
+						config.AddServer(host);
+					}
 				}
 				config.Protocol = MemcachedProtocol.Binary;
 			}
