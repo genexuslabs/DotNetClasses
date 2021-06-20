@@ -51,6 +51,12 @@
 		<Folder Include="FileIO\" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Include="..\DotNetUnitTest\client.exe.config" Link="client.exe.config">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 
 	<ItemGroup>
 		<None Update="FullTextSearch\Ugly.html">
