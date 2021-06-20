@@ -13,20 +13,25 @@
 	<ItemGroup>
 		<Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\FileIOTests.cs" Link="FileIO\FileIOTests.cs" />
+	</ItemGroup>
+	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</EmbeddedResource>
 		<Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
+		<Content Include="FullTextSearch\Ugly.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
-		<PackageReference Include="xunit" Version="2.4.1" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
@@ -37,11 +42,22 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\DotNetUnitTest\TestModule.MyControl.view" Link="TestModule.MyControl.view">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
 	<ItemGroup>
-		<EmbeddedResource Include="..\DotNetUnitTest\TestModule.MyControl.view" Link="TestModule.MyControl.view">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</EmbeddedResource>
+		<Folder Include="FileIO\" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\DotNetUnitTest\client.exe.config" Link="client.exe.config">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 
 	<ItemGroup>
 		<None Update="FullTextSearch\Ugly.html">
