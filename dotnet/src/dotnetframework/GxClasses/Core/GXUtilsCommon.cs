@@ -3405,6 +3405,12 @@ namespace GeneXus.Utils
 		{
 			if (FileName.Trim().Length == 0)
 				return string.Empty;
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				return new GxFile(string.Empty, FileName, GxFileType.Private).GetExtension();
+			}
+
 			string extension = string.Empty;
 			try
 			{
@@ -3444,6 +3450,11 @@ namespace GeneXus.Utils
 		{
 			if (FileName.Trim().Length == 0)
 				return "";
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				FileName = new GxFile(string.Empty, FileName, GxFileType.Private).GetName();
+			}
 			try
 			{
 				return Path.GetFileNameWithoutExtension(FileName);//FileNames with URI or local (exist)
