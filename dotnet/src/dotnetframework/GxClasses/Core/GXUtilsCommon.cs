@@ -3408,6 +3408,12 @@ namespace GeneXus.Utils
 		{
 			if (FileName.Trim().Length == 0)
 				return string.Empty;
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				return new GxFile(string.Empty, FileName, GxFileType.Private).GetExtension();
+			}
+
 			string extension = string.Empty;
 			try
 			{
@@ -3447,6 +3453,11 @@ namespace GeneXus.Utils
 		{
 			if (FileName.Trim().Length == 0)
 				return "";
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				FileName = new GxFile(string.Empty, FileName, GxFileType.Private).GetName();
+			}
 			try
 			{
 				return Path.GetFileNameWithoutExtension(FileName);//FileNames with URI or local (exist)
@@ -3664,6 +3675,10 @@ namespace GeneXus.Utils
 			string validPath = path;
 			if (!IsValidFilePath(path))
 				validPath = GetValidPath(path, "_");
+
+			Uri result;
+			if (Uri.TryCreate(validPath, UriKind.Absolute, out result))
+				validPath = result.LocalPath;
 
 			string fileName = Path.GetFileName(validPath);
 			if (!IsValidFileName(fileName))
@@ -5310,6 +5325,10 @@ namespace GeneXus.Utils
 		{
 			if (String.IsNullOrEmpty(name) && String.IsNullOrEmpty(type) && !String.IsNullOrEmpty(path))
 			{
+				if (GxUploadHelper.IsUpload(path))
+				{
+					return new GxFile(string.Empty, path, GxFileType.Private).GetName();
+				}
 				string fromPathType = Path.GetExtension(path);
 				if (!String.IsNullOrEmpty(fromPathType) && fromPathType != "tmp")
 				{
