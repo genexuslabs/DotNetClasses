@@ -83,7 +83,7 @@ namespace UnitTesting
 
 		public void TestUploadAndCopyByAcl(GxFileType aclUpload, GxFileType aclCopy)
 		{
-			String copyFileName = "test-upload-and-copy.txt";
+			String copyFileName = $"test-upload-and-copy_{new Random().Next()}.txt";
 			DeleteSafe(TEST_SAMPLE_FILE_PATH);
 			DeleteSafe(copyFileName);
 			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, aclUpload);
