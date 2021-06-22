@@ -3,8 +3,7 @@ name: External Storage Tests
 on: 
   pull_request:
     branches:
-      - 'master'
-      - 'beta'
+      - 'master'           
       - 'release-*'
   push:
     branches: 
