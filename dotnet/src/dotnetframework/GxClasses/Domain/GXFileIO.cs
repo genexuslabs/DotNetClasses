@@ -209,7 +209,7 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
             searchPattern = "";
         List<string> files = _provider.GetFiles(_name, searchPattern);
 		
-		GxExternalFileInfo[] externalFiles = files.Select(elem => new GxExternalFileInfo(elem, _provider, GxFileType.Public)).ToArray();
+		GxExternalFileInfo[] externalFiles = files.Select(elem => new GxExternalFileInfo(elem, _provider, GxFileType.Default)).ToArray();
         return externalFiles;
     }
 
@@ -412,7 +412,7 @@ public class GxExternalFileInfo : IGxFileInfo
     private string _name;
 	private ExternalProvider _provider;
     private string _url;	
-	private GxFileType _fileTypeAtt = GxFileType.Public;
+	private GxFileType _fileTypeAtt = GxFileType.Private;
 
 	public GxExternalFileInfo(ExternalProvider provider)
     {
@@ -431,22 +431,13 @@ public class GxExternalFileInfo : IGxFileInfo
 		{
 			_url = storageObjectFullname;
 		}
-		else {
-			if (fileType.HasFlag(GxFileType.Attribute)) //Attributes multimedia consider Storage Provider Folder 
-			{
-				_url = provider.GetBaseURL() + storageObjectFullname;
-				_name = _url.Replace(provider.StorageUri, string.Empty);
-				if (_name.StartsWith("/"))
-					_name = _name.Substring(1, _name.Length - 1);
-			}
-		}		
 		_fileTypeAtt = fileType;
 	}
 
-    public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Public)
-    {
-        _name = storageObjectFullname;
-        _provider = provider;
+    public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Private)
+    {				
+        _name = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, storageObjectFullname);
+		_provider = provider;
         _url = url;
 		_fileTypeAtt = fileType;
 	}
@@ -640,11 +631,9 @@ public class GxExternalFileInfo : IGxFileInfo
 [Flags]
 public enum GxFileType
 {
-	Public = 0,
-	Private = 1,
-	Attribute = 2, 
-	PublicAttribute = Attribute | Public,
-	PrivateAttribute = Attribute | Private,
+	Default = 0,
+	PublicRead = 1,
+	Private = 2
 }
 
 public class GxFile
@@ -670,13 +659,13 @@ public class GxFile
             _baseDirectory = _baseDirectory.Substring(0, _baseDirectory.Length - 1);
     }
 
-    public GxFile(string baseDirectory, IGxFileInfo file, GxFileType fileType = GxFileType.Public)
+    public GxFile(string baseDirectory, IGxFileInfo file, GxFileType fileType = GxFileType.Private)
       : this(baseDirectory)
     {
         _file = file;
     }
 
-    public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.Public)
+    public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.Private)
       : this(baseDirectory)
     {
 		if (GxUploadHelper.IsUpload(fileName))
@@ -742,8 +731,7 @@ public class GxFile
 						if (IsAbsoluteUrl(value))
 						{
 							string objName = string.Empty;
-							ExternalProvider p = StorageFactory.GetExternalProviderFromUrl(value, out objName);
-							_file = new GxExternalFileInfo(objName, value, p);
+							_file = new GxExternalFileInfo(objName, value, ServiceFactory.GetExternalProvider());
 						}
 						else
 						{

@@ -37,6 +37,8 @@ using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.Drawing.Drawing2D;
+using GeneXus.Storage;
+using GeneXus.Services;
 
 namespace GeneXus.Utils
 {
@@ -3363,7 +3365,7 @@ namespace GeneXus.Utils
 				return uriString;
 			}
 		}
-		public static string getTempFileName(string baseDir, string name="", string extension="tmp", GxFileType fileType = GxFileType.Public)
+		public static string getTempFileName(string baseDir, string name="", string extension="tmp", GxFileType fileType = GxFileType.Private)
 		{
 			name = FixFileName(FileUtil.FileNamePrettify(name), string.Empty);
 			return tempFileName(baseDir, name, extension);
@@ -5256,7 +5258,14 @@ namespace GeneXus.Utils
 		public static string ResolveUri(string uriString, bool absUrl, IGxContext context = null)
 		{
 			if (String.IsNullOrEmpty(uriString))
-				return "";
+				return string.Empty;
+
+			string providerObjectName;
+			if (PathUtil.IsAbsoluteUrl(uriString) && StorageFactory.TryGetProviderObjectName(ServiceFactory.GetExternalProvider(), uriString, out providerObjectName))
+			{
+				return new GxFile(string.Empty, providerObjectName).GetURI();
+			}
+
 			if (schemeRegex.IsMatch(uriString))
 			{
 				string fileName = schemeRegex.Replace(uriString, "");
@@ -5264,7 +5273,7 @@ namespace GeneXus.Utils
 				string basePath = Path.Combine(Path.Combine(Preferences.getBLOB_PATH(), MultimediaDirectory));
 				try
 				{
-					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName), GxFileType.PublicAttribute);
+					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName));
 					return PathToUrl(file.GetURI(), absUrl, context);
 				}
 				catch (ArgumentException ex)

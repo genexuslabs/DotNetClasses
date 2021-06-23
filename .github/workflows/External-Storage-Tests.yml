@@ -1,0 +1,106 @@
+name: External Storage Tests
+
+on: 
+  pull_request:
+    branches:
+      - 'master'           
+      - 'release-*'
+  push:
+    branches: 
+      - 'master'
+      - 'beta'
+      - 'release-*'
+
+jobs:
+  build:
+    env:
+      GIT_REF: ${{ github.ref }}
+      GIT_SHA: ${{ github.sha }}
+      Configuration: Release
+      SolutionFile: dotnet\DotNetStandardClasses.sln
+    
+    runs-on: windows-latest
+    environment: external-storage-tests
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    
+    - name: Install .NET Core 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
+
+    - name: Install .NET Core 5.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '5.0.x'
+
+    - name: Install .NET 6
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '6.0.x'
+        include-prerelease: True
+        
+    - uses: actions/setup-dotnet@v1
+      with:
+        source-url: https://nuget.pkg.github.com/genexuslabs/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Calculate environment variables
+      run: |     
+        $IsPrerelease = !($Env:GIT_REF -match 'release-[0-9]+(?:\.[0-9]+)?$')
+        echo "IsPrerelease=$IsPrerelease" >> $env:GITHUB_ENV
+
+        $COMMIT_NUMBER = @($(git rev-list --count origin/master..), $(git rev-list --count HEAD))[$IsPrerelease]
+
+        echo "COMMIT_NUMBER=$COMMIT_NUMBER" >> $env:GITHUB_ENV
+
+    - name: Calculate package version
+      env:
+        PackageVersionString: ./.github/generatePackageVersion.ps1
+      run: |
+        $NuGetPackageVersion = & "$Env:PackageVersionString"
+        
+        Write-Output "Packge version to be used: $NuGetPackageVersion"
+
+        echo "NuGetPackageVersion=$NuGetPackageVersion" >> $env:GITHUB_ENV
+
+    - name: Restore packages
+      run: dotnet restore $Env:SolutionFile
+
+    - name: Build
+      run: dotnet build $Env:SolutionFile --no-restore --configuration $Env:Configuration
+       
+    - name: Test External Storage
+      run: |
+        $Env:AWSS3_TEST_ENABLED="true"
+        $Env:STORAGE_AWSS3_ACCESS_KEY="${{ secrets.AWSS3_ACCESS_KEY }}"
+        $Env:STORAGE_AWSS3_SECRET_KEY="${{ secrets.AWSS3_SECRET_KEY }}"
+        $Env:STORAGE_AWSS3_BUCKET_NAME="genexus-s3-test"
+        $Env:STORAGE_AWSS3_FOLDER_NAME="gxclasses"
+        $Env:STORAGE_AWSS3_REGION="us-east-1"
+        $Env:IBMCOS_TEST_ENABLED="true"
+        $Env:STORAGE_IBMCOS_ACCESS_KEY="${{ secrets.IBMCOS_ACCESS_KEY }}"
+        $Env:STORAGE_IBMCOS_SECRET_KEY="${{ secrets.IBMCOS_SECRET_KEY }}"
+        $Env:STORAGE_IBMCOS_BUCKET_NAME="gxclasses-unit-tests"
+        $Env:STORAGE_IBMCOS_FOLDER_NAME="tests"
+        $Env:STORAGE_IBMCOS_REGION="us-south"
+        $Env:AZUREBS_TEST_ENABLED="true"
+        $Env:STORAGE_AZUREBS_ACCESS_KEY="${{ secrets.AZUREBS_ACCESS_KEY }}"
+        $Env:STORAGE_AZUREBS_ACCOUNT_NAME="${{ secrets.AZUREBS_ACCOUNT_NAME }}"
+        $Env:STORAGE_AZUREBS_FOLDER_NAME="tests"
+        $Env:STORAGE_AZUREBS_PUBLIC_CONTAINER_NAME="contluispublic"
+        $Env:STORAGE_AZUREBS_PRIVATE_CONTAINER_NAME="contluisprivate"
+        $Env:GOOGLECS_TEST_ENABLED="true"
+        $Env:STORAGE_GOOGLECS_KEY='${{ secrets.GOOGLECS_KEY }}'
+        $Env:STORAGE_GOOGLECS_PROJECT_ID="gxjavacloudstorageunittests"
+        $Env:STORAGE_GOOGLECS_BUCKET_NAME="javaclasses-unittests"
+        $Env:STORAGE_GOOGLECS_FOLDER_NAME="gxclasses"
+        $Env:STORAGE_GOOGLECS_APPLICATION_NAME="gxjavacloudstorageunittests"
+        
+        dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
+

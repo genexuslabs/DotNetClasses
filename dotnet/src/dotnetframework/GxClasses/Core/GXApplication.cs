@@ -679,18 +679,15 @@ namespace GeneXus.Application
 			if (httpContext != null)
 			{
 				HttpPostedFile pf = httpContext.Request.GetFile(varName);
-				if (pf != null)
+				if (pf != null && pf.ContentLength > 0)
 				{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					FileInfo fi = new FileInfo(pf.FileName);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 					string tempDir = Preferences.getTMP_MEDIA_PATH();
-					string ext = fi.Extension;
+					string ext = Path.GetExtension(pf.FileName);
 					if (ext != null)
 						ext = ext.TrimStart('.');
 					string filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
-					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
+					GxFile file = new GxFile(tempDir, filePath, GxFileType.Private);
 					filePath = file.Create(pf.InputStream);
 					string fileGuid = GxUploadHelper.GetUploadFileGuid();
 					fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
