@@ -52,7 +52,11 @@ namespace GeneXus.Data
             {
                 ParsePostgresException(ex, m_sErrorType);
             }
-            else if (ex.GetType() == typeof(GxADODataException))
+			else if (m_sErrorType == "Sap.Data.Hana.HanaException")
+			{
+				ParseHanaException(ex);
+			}
+			else if (ex.GetType() == typeof(GxADODataException))
 			{
 				GxADODataException adoex = (GxADODataException)ex;
 				m_iErrorCode = adoex.DBMSErrorCode;
@@ -63,6 +67,12 @@ namespace GeneXus.Data
 			{
 				m_sErrorInfo = ex.Message;
 			}
+		}
+		private void ParseHanaException(Exception ex)
+		{
+			m_sErrorInfo = (string)ClassLoader.GetPropValue(ex, "Message");
+			m_sDBMSErrorInfo = m_sErrorInfo;
+			m_iErrorCode = (int)ClassLoader.GetPropValue(ex, "NativeError");
 		}
 		private void ParseOracleManagedException(Exception ex)
 		{
