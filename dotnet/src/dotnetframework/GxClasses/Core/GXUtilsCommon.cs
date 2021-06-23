@@ -5264,7 +5264,7 @@ namespace GeneXus.Utils
 			string providerObjectName;
 			if (PathUtil.IsAbsoluteUrl(uriString) && StorageFactory.TryGetProviderObjectName(ServiceFactory.GetExternalProvider(), uriString, out providerObjectName))
 			{
-				return new GxFile(string.Empty, providerObjectName).GetURI();
+				return new GxFile(string.Empty, providerObjectName, GxFileType.Default).GetURI();
 			}
 
 			if (schemeRegex.IsMatch(uriString))
