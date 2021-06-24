@@ -722,21 +722,26 @@ public class GxFile
 					}
 					else
 					{
+						_file = null;
 						if (GxUploadHelper.IsUpload(value))
 						{
 							_uploadFileId = value;
 							value = GxUploadHelper.UploadPath(value);
+							ExternalProvider provider = ServiceFactory.GetExternalProvider();
+							_file = (provider != null)? new GxExternalFileInfo(value, String.Empty, provider): _file;
 						}
-						
-						if (IsAbsoluteUrl(value))
+
+						if (_file == null)
 						{
-							string objName = string.Empty;
-							_file = new GxExternalFileInfo(objName, value, ServiceFactory.GetExternalProvider());
-						}
-						else
-						{
-							_file = new GxFileInfo(_baseDirectory);
-							_file.Source = value;
+							if (IsAbsoluteUrl(value))
+							{
+								_file =new GxExternalFileInfo(value, value, ServiceFactory.GetExternalProvider());
+							}
+							else
+							{
+								_file = new GxFileInfo(_baseDirectory);
+								_file.Source = value;
+							}
 						}
 
 						_lastError = 0;
