@@ -692,7 +692,7 @@ namespace GeneXus.Application
 					string fileGuid = GxUploadHelper.GetUploadFileGuid();
 					fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
 
-					GxUploadHelper.CacheUploadFile(fileGuid, filePath, Path.GetFileName(pf.FileName), ext, file, gxContext);
+					GxUploadHelper.CacheUploadFile(fileGuid, Path.GetFileName(pf.FileName), ext, file, gxContext);
 
 				return true;
 				}

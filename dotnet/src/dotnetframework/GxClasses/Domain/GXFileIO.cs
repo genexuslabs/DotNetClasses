@@ -421,22 +421,31 @@ public class GxExternalFileInfo : IGxFileInfo
         _url = "";
     }
 
-    public GxExternalFileInfo(string storageObjectFullname, ExternalProvider provider, GxFileType fileType)
+    public GxExternalFileInfo(string objectPath, ExternalProvider provider, GxFileType fileType)
     {
-		storageObjectFullname = storageObjectFullname!=null ? storageObjectFullname.Replace('\\', '/') : storageObjectFullname;
-		_name = storageObjectFullname;
+		objectPath = !String.IsNullOrEmpty(objectPath) ? objectPath.Replace('\\', '/') : objectPath;
         _provider = provider;
-		Uri result;
-		if (Uri.TryCreate(storageObjectFullname, UriKind.Absolute, out result) && result.IsAbsoluteUri)
-		{
-			_url = storageObjectFullname;
-		}
 		_fileTypeAtt = fileType;
+		_name = objectPath;
+
+		Uri result;
+		if (Uri.TryCreate(objectPath, UriKind.Absolute, out result) && result.IsAbsoluteUri)
+		{
+			_url = objectPath;
+		}
+		else {
+			string folderName = ((ExternalProviderBase)provider).Folder;
+			if (!string.IsNullOrEmpty(folderName) && !_name.StartsWith(folderName))
+			{
+				_name = $"{folderName}{StorageUtils.DELIMITER}{_name}";
+				_url = $"{provider.GetBaseURL()}{StorageUtils.DELIMITER}{_name}";
+			}
+		}
 	}
 
-    public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Private)
+    public GxExternalFileInfo(string objectPath, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Private)
     {				
-        _name = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, storageObjectFullname);
+        _name = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, objectPath);
 		_provider = provider;
         _url = url;
 		_fileTypeAtt = fileType;

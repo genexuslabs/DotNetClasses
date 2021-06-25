@@ -29,10 +29,10 @@ namespace GeneXus.Utils
 		{
 			return httpContext.Request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase);
 		}
-		internal static void CacheUploadFile(string fileGuid, string savedFileName, string localfileName, string ext, GxFile file, IGxContext gxContext)
+		internal static void CacheUploadFile(string fileGuid, string realFileName, string realFileExtension, GxFile temporalFile, IGxContext gxContext)
 		{
-			CacheAPI.FilesCache.Set(fileGuid, JSONHelper.Serialize(new UploadCachedFile() { path = savedFileName, fileExtension = ext, fileName = localfileName }), GxRestPrefix.UPLOAD_TIMEOUT);
-			GXFileWatcher.Instance.AddTemporaryFile(file, gxContext);
+			CacheAPI.FilesCache.Set(fileGuid, JSONHelper.Serialize(new UploadCachedFile() { path = temporalFile.GetAbsoluteName(), fileExtension = realFileExtension, fileName = realFileName }), GxRestPrefix.UPLOAD_TIMEOUT);
+			GXFileWatcher.Instance.AddTemporaryFile(temporalFile, gxContext);
 		}
 		internal static string GetUploadFileGuid()
 		{
