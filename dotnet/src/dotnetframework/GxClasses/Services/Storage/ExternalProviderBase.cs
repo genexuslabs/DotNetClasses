@@ -19,7 +19,7 @@ namespace GeneXus.Services
 
 		
 		protected GxFileType defaultAcl = GxFileType.Private;
-		protected string Folder { get; set; }
+		public string Folder { get; set; }
 
 		public ExternalProviderBase()
 		{
