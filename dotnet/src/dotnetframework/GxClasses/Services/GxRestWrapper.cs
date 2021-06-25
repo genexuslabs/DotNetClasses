@@ -123,8 +123,7 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-
-				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters);				
+				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
@@ -265,11 +264,12 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters);			
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
 				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
@@ -282,24 +282,27 @@ namespace GeneXus.Application
 			}
 		}
 
-		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters)
+		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
 		{
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
+					wrapped = false;
 					Object v = outputParameters.First().Value;
 
 					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 					{
-
 						wrapped = (v as IGxGenericCollectionWrapped).GetIsWrapped();
 					}
-					else
+					if (v is IGxGenericCollectionItem item)
 					{
-						wrapped = false;
+						if (item.Sdt is GxSilentTrnSdt)
+						{
+							wrapped = (parCount>1)?true:false;
+						}
 					}
-				}
+				}			
 			}
 			return wrapped;
 		}

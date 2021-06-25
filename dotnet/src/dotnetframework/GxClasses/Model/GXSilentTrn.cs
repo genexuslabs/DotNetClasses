@@ -569,7 +569,13 @@ namespace GeneXus.Utils
 		}
 	}
 
-
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxOmitEmptyCollection : Attribute
+	{
+		public GxOmitEmptyCollection()
+		{
+		}
+	}
 
 	[DataContract]
 	public class GxGenericCollectionItem<T> : IGxGenericCollectionItem where T : GxUserType, new()
@@ -728,6 +734,7 @@ namespace GeneXus.Utils
 #if !NETCORE
 	[XmlSerializerFormat]
 #endif
+	[GxOmitEmptyCollection]
 	[XmlRoot(ElementName = "Message")]
 	[XmlType(TypeName = "Message", Namespace = "GeneXus")]
 	[Serializable]
@@ -832,6 +839,7 @@ namespace GeneXus.Utils
 	}
 
 	[DataContract(Name = @"Messages.Message", Namespace = "GeneXus")]
+	[GxOmitEmptyCollection]
 	public class SdtMessages_Message_RESTInterface : GxGenericCollectionItem<SdtMessages_Message>, System.Web.SessionState.IRequiresSessionState
 	{
 		public SdtMessages_Message_RESTInterface()
