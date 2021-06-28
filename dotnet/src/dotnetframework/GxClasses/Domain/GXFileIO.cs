@@ -437,8 +437,8 @@ public class GxExternalFileInfo : IGxFileInfo
 			string folderName = ((ExternalProviderBase)provider).Folder;
 			if (!string.IsNullOrEmpty(folderName) && !_name.StartsWith(folderName))
 			{
+				_url = $"{provider.GetBaseURL()}{_name}";
 				_name = $"{folderName}{StorageUtils.DELIMITER}{_name}";
-				_url = $"{provider.GetBaseURL()}{StorageUtils.DELIMITER}{_name}";
 			}
 		}
 	}
