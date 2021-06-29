@@ -360,13 +360,19 @@ namespace GeneXus.Storage.GXAzureStorage
 				objectName = url.Replace(baseUrl, string.Empty);
 				return true;
 			}
+			baseUrl = StorageUri + StorageUtils.DELIMITER + PrivateContainer.Name + StorageUtils.DELIMITER;
+			if (url.StartsWith(baseUrl))
+			{
+				objectName = url.Replace(baseUrl, string.Empty);
+				return true;
+			}
 			objectName = null;
 			return false;
 		}
 
 		public string GetBaseURL()
 		{
-			return StorageUri + StorageUtils.DELIMITER + PublicContainer.Name + StorageUtils.DELIMITER;
+			return StorageUri + StorageUtils.DELIMITER + PrivateContainer.Name + StorageUtils.DELIMITER;
 		}
 
 	}
