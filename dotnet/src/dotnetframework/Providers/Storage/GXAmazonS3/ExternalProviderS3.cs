@@ -266,6 +266,10 @@ namespace GeneXus.Storage.GXAmazonS3
 				Key = objectName,
 				Expires = DateTime.Now.AddMinutes(urlMinutes)
 			};
+			if (customEndpoint && StorageUri.StartsWith("http://"))
+			{
+				request.Protocol = Protocol.HTTP;
+			}
 			return Client.GetPreSignedURL(request);
 		}
 
