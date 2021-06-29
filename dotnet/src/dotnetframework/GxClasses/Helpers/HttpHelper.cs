@@ -64,6 +64,8 @@ namespace GeneXus.Http
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
 		public const string ASPX = ".aspx";
 		public const string GXOBJECT = "/gxobject";
+		public const string HttpPostMethod= "POST";
+		public const string HttpGetMethod = "GET";
 
 		public static void SetResponseStatus(HttpContext httpContext, string statusCode, string statusDescription)
 		{
