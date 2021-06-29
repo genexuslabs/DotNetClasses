@@ -157,7 +157,7 @@ namespace GeneXus.Storage.GXGoogleCloud
                 obj.ContentType = MimeMapping.GetMimeMapping(fileName);
 			
             Client.UploadObject(obj, stream, GetUploadOptions(fileType));
-            return StorageUri + StorageUtils.EncodeUrl(fileName);
+			return GetURL(fileName, fileType);
         }
 
         private Dictionary<string, string> CreateObjectMetadata(string tableName, string fieldName, string name)
@@ -172,7 +172,7 @@ namespace GeneXus.Storage.GXGoogleCloud
         public string Copy(string objectName, GxFileType sourceFileType, string newName, GxFileType targetFileType)
 		{			
 			Client.CopyObject(Bucket, objectName, Bucket, newName, GetCopyOptions(targetFileType));
-			return GetURL(objectName, targetFileType, 0);
+			return GetURL(objectName, targetFileType);
 		}
 
 		private static CopyObjectOptions GetCopyOptions(GxFileType fileType)
@@ -442,6 +442,12 @@ namespace GeneXus.Storage.GXGoogleCloud
 		public bool TryGetObjectNameFromURL(string url, out string objectName)
 		{
 			string baseUrl = StorageUri;
+			if (url.StartsWith(baseUrl))
+			{
+				objectName = url.Replace(baseUrl, string.Empty);
+				return true;
+			}
+			baseUrl = $"https://storage.googleapis.com/{Bucket}/";
 			if (url.StartsWith(baseUrl))
 			{
 				objectName = url.Replace(baseUrl, string.Empty);
