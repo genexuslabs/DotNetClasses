@@ -492,11 +492,11 @@ namespace GeneXus.Utils
 		{
 			if (wcfContext != null)
 			{
-				return HttpMethod.Post.Method == wcfContext.IncomingRequest.Method;
+				return HttpHelper.HttpPostMethod == wcfContext.IncomingRequest.Method;
 			}
 			else if (httpContext != null)
 			{
-				return HttpMethod.Post.Method == httpContext.Request.HttpMethod;
+				return HttpHelper.HttpPostMethod == httpContext.Request.HttpMethod;
 			}
 			else return false;
 		}
