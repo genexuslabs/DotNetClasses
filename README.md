@@ -81,7 +81,7 @@ For the following steps must be executed from inside ```dotnet``` directory:
 ## How to build a specific project?
 - ```dotnet build project.csproj```
 
-## How to copy assemblies to build directory?
+## How to test your changes with a GeneXus installation?
 - ```dotnet msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
 
 It compiles the solution and copies the .NET assemblies to the folder build/**gxnet/bin**.
