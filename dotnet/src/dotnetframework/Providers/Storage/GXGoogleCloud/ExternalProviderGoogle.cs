@@ -202,10 +202,11 @@ namespace GeneXus.Storage.GXGoogleCloud
 			}
 		}
 
-		private static UploadObjectOptions GetUploadOptions(GxFileType fileType)
+		private UploadObjectOptions GetUploadOptions(GxFileType fileType)
 		{
 			UploadObjectOptions options = new UploadObjectOptions();
-			if (fileType.HasFlag(GxFileType.Private))
+
+			if (fileType.HasFlag(GxFileType.Private) || fileType == GxFileType.Default && this.defaultAcl == GxFileType.Private)
 				options.PredefinedAcl = PredefinedObjectAcl.ProjectPrivate;
 			else
 				options.PredefinedAcl = PredefinedObjectAcl.PublicRead;

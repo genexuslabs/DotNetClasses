@@ -102,9 +102,13 @@ namespace GeneXus.Storage.GXAzureStorage
 
 			return blob;
 		}
-
+		
 		private bool IsPrivateFile(GxFileType fileType)
 		{
+			if (fileType == GxFileType.Default)
+			{
+				return this.defaultAcl == GxFileType.Private;
+			}
 			return fileType.HasFlag(GxFileType.Private);
 		}
 
