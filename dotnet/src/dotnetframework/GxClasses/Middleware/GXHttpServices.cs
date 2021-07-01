@@ -406,7 +406,7 @@ namespace GeneXus.Http
 
 						ext = FileUtil.GetFileType(fName);
 						string tempDir = Preferences.getTMP_MEDIA_PATH();
-						GxFile gxFile = new GxFile(tempDir, FileUtil.getTempFileName(tempDir));
+						GxFile gxFile = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);
 
 						gxFile.Create(hpf.InputStream);
 						string uri = gxFile.GetURI();
@@ -459,7 +459,7 @@ namespace GeneXus.Http
 			string ext, fName;
 			ext = context.ExtensionForContentType(contentType);
 			string tempDir = Preferences.getTMP_MEDIA_PATH();			
-			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir));
+			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);
 			file.Create(istream);
 
 			JObject obj = new JObject();

@@ -151,6 +151,11 @@ namespace GeneXus.Storage.GXOpenStack
 			return GetURL(externalFileName, fileType);
 		}
 
+		public string GetUrl(string externalFileName, GxFileType fileType, int urlMinutes)
+		{
+			return GetURL(externalFileName, fileType);
+		}
+
 		public void Delete(string objectName, GxFileType fileType)
 		{
 			openstackFilesProvider.DeleteObject(GetBucket(fileType), objectName);

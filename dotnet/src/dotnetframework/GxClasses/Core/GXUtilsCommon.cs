@@ -3411,7 +3411,7 @@ namespace GeneXus.Utils
 
 			if (GxUploadHelper.IsUpload(FileName))
 			{
-				return new GxFile(string.Empty, FileName, GxFileType.Private).GetExtension();
+				return new GxFile(string.Empty, FileName, GxFileType.PrivateAttribute).GetExtension();
 			}
 
 			string extension = string.Empty;
@@ -3456,7 +3456,7 @@ namespace GeneXus.Utils
 
 			if (GxUploadHelper.IsUpload(FileName))
 			{
-				FileName = new GxFile(string.Empty, FileName, GxFileType.Private).GetName();
+				FileName = new GxFile(string.Empty, FileName, GxFileType.PrivateAttribute).GetName();
 			}
 			try
 			{
@@ -5264,7 +5264,7 @@ namespace GeneXus.Utils
 			string providerObjectName;
 			if (PathUtil.IsAbsoluteUrl(uriString) && StorageFactory.TryGetProviderObjectName(ServiceFactory.GetExternalProvider(), uriString, out providerObjectName))
 			{
-				return new GxFile(string.Empty, providerObjectName, GxFileType.Default).GetURI();
+				return new GxFile(string.Empty, providerObjectName, GxFileType.DefaultAttribute).GetURI();
 			}
 
 			if (schemeRegex.IsMatch(uriString))
@@ -5274,7 +5274,7 @@ namespace GeneXus.Utils
 				string basePath = Path.Combine(Path.Combine(Preferences.getBLOB_PATH(), MultimediaDirectory));
 				try
 				{
-					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName));
+					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName), GxFileType.PrivateAttribute);
 					return PathToUrl(file.GetURI(), absUrl, context);
 				}
 				catch (ArgumentException ex)
@@ -5327,7 +5327,7 @@ namespace GeneXus.Utils
 			{
 				if (GxUploadHelper.IsUpload(path))
 				{
-					return new GxFile(string.Empty, path, GxFileType.Private).GetName();
+					return new GxFile(string.Empty, path, GxFileType.PrivateAttribute).GetName();
 				}
 				string fromPathType = Path.GetExtension(path);
 				if (!String.IsNullOrEmpty(fromPathType) && fromPathType != "tmp")

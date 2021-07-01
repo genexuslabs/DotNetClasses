@@ -903,7 +903,7 @@ namespace GeneXus.Data
 							{
 								if (ServiceFactory.GetExternalProvider() != null) 
 								{
-									GxFile file = new GxFile(string.Empty, fileNameParm, GxFileType.Private);
+									GxFile file = new GxFile(string.Empty, fileNameParm, GxFileType.PrivateAttribute);
 									if (file.Exists())
 									{
 										binary = file.ToByteArray();
