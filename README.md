@@ -84,8 +84,13 @@ For the following steps must be executed from inside ```dotnet``` directory:
 ## How to test your changes with a GeneXus installation?
 - ```dotnet msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
 
-It compiles the solution and copies the .NET assemblies to the folder build/**gxnet/bin**.
+It compiles the solution and copies all the .NET assemblies to the folder build/gxnet*/bin**. Then, you can copy those files to a GeneXus installation or to your web application directory.
 
+You can use the following parameters to customize the deploy:
+- TargetFramework: only the assemblies that are generated for this framework will be deployed. Valid values are: `net462` (for GeneXus C# generator) and `net5` (for GeneXus NetCore generator).
+- DeployDirectory: specifies a GeneXus installation directory.
+
+Samples:
 - ```dotnet msbuild /t:build;CopyAssemblies /p:DeployDirectory=C:\Genexus /p:TargetFramework=net462 DotNetStandardClasses.sln```
 
 It copies .NET framework assemblies to the folder C:\Genexus\gxnet\bin
