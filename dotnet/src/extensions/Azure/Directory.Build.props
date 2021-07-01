@@ -1,0 +1,7 @@
+<Project>
+	<PropertyGroup>
+		<DeployDirectoryPlatformBin>\DeploymentTargets\AzureFunctions\AzFunctionFiles\bin</DeployDirectoryPlatformBin>
+	</PropertyGroup>
+</Project>
+
+
