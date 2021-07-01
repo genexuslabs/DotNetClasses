@@ -33,10 +33,10 @@
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectoryPlatformBin>\gxnetcore\bin</DeployDirectoryPlatformBin>
+		<DeployDirectoryPlatformBin>gxnetcore\bin</DeployDirectoryPlatformBin>
 	</PropertyGroup>
 	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectoryPlatformBin>\gxnet\bin</DeployDirectoryPlatformBin>
+		<DeployDirectoryPlatformBin>gxnet\bin</DeployDirectoryPlatformBin>
 	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">

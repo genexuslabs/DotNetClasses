@@ -13,6 +13,13 @@
 		<DeployDirectory>$(MSBuildThisFileDirectory)build</DeployDirectory>
 		<!--Set a default deploy dir-->
 	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(DeployDirectory)'!=''">
+		<DeployDirectoryWithSep>$(DeployDirectory)\</DeployDirectoryWithSep>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(DeployDirectory)'==''">
+		<DeployDirectoryWithSep/>
+	</PropertyGroup>
 
 	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
@@ -63,8 +70,8 @@
 	</Target>
 
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)$(TargetFileName)')">
-		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectory)$(DeployDirectoryPlatformBin)"></Message>
-		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectory)$(DeployDirectoryPlatformBin)" />
+		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectoryWithSep)$(DeployDirectoryPlatformBin)"></Message>
+		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectoryWithSep)$(DeployDirectoryPlatformBin)" />
 	</Target>
 
 </Project>
