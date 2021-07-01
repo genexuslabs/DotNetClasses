@@ -155,7 +155,7 @@
 		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" PrivateAssets="All" />
 		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" PrivateAssets="All" />
 		<PackageReference Include="Npgsql" Version="3.2.7" PrivateAssets="All" />
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.31" PrivateAssets="All" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.110" PrivateAssets="All" />
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" PrivateAssets="All" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />

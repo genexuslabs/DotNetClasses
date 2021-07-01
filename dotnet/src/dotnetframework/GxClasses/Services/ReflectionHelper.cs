@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using GeneXus.Utils;
@@ -89,7 +90,7 @@ namespace GeneXus.Application
 			}
 			else if (typeof(IConvertible).IsAssignableFrom(newType))
 			{
-				return Convert.ChangeType(value, newType);
+				return Convert.ChangeType(value, newType, CultureInfo.InvariantCulture);
 			}
 			else if (newType == typeof(Guid) && Guid.TryParse(value.ToString(), out Guid guidResult))
 			{
