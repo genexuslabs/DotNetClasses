@@ -86,11 +86,11 @@ For the following steps must be executed from inside ```dotnet``` directory:
 
 It compiles the solution and copies the .NET assemblies to the folder build/**gxnet/bin**.
 
-- ```dotnet msbuild /t:build;CopyAssemblies /p:TargetFramework=net462 DotNetStandardClasses.sln```
+- ```dotnet msbuild /t:build;CopyAssemblies /p:DeployDirectory=C:\Genexus /p:TargetFramework=net462 DotNetStandardClasses.sln```
 
 It copies .NET framework assemblies to the folder C:\Genexus\gxnet\bin
 
-- ```dotnet msbuild /t:CopyAssemblies /p:DeployDirectory=C:\Genexus\gxnetcore\bin /p:TargetFramework=net5.0 DotNetStandardClasses.sln ```
+- ```dotnet msbuild /t:CopyAssemblies /p:DeployDirectory=C:\Genexus /p:TargetFramework=net5.0 DotNetStandardClasses.sln ```
 
 It copies .NET 5 assemblies to the folder C:\Genexus\gxnetcore\bin
 

@@ -8,13 +8,16 @@
 	<PropertyGroup Condition="'$(OutputType)' == 'Exe' OR '$(OutputType)' == 'WinExe'">
 		<ApplicationIcon >$(MSBuildThisFileDirectory)\src\resources\Default_App.ico</ApplicationIcon>
 	</PropertyGroup>
+	
 	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectory>$(MSBuildThisFileDirectory)build\gxnet\bin</DeployDirectory>
-		<!--Set a default directory-->
+		<DeployDirectory>$(MSBuildThisFileDirectory)build</DeployDirectory>
+		<!--Set a default deploy dir-->
 	</PropertyGroup>
 	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectory>$(MSBuildThisFileDirectory)build\gxnetcore\bin</DeployDirectory>
-		<!--Set a default directory-->
+		<DeployDirectoryPlatformBin>\gxnetcore\bin</DeployDirectoryPlatformBin>
+	</PropertyGroup>
+	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+		<DeployDirectoryPlatformBin>\gxnet\bin</DeployDirectoryPlatformBin>
 	</PropertyGroup>
 
 	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
@@ -66,8 +69,8 @@
 	</Target>
 
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)')">
-		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectory)"></Message>
-		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectory)" />
+		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectory)$(DeployDirectoryPlatformBin)"></Message>
+		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectory)$(DeployDirectoryPlatformBin)" />
 	</Target>
 
 </Project>
