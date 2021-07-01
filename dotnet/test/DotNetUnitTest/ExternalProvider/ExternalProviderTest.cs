@@ -233,6 +233,10 @@ namespace UnitTesting
 			String getValue = "";
 			try
 			{
+				if (this is ExternalProviderGoogleTest)
+				{
+					objectName = objectName.Replace("%2F", "/"); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
+				}
 				getValue = provider.Get(objectName, acl, 5);
 			}
 			catch (Exception)
