@@ -206,7 +206,7 @@ namespace GeneXus.Storage.GXGoogleCloud
 		{
 			UploadObjectOptions options = new UploadObjectOptions();
 
-			if (fileType.HasFlag(GxFileType.Private) || fileType == GxFileType.Default && this.defaultAcl == GxFileType.Private)
+			if (fileType.HasFlag(GxFileType.Private) || fileType.HasFlag(GxFileType.Default) && this.defaultAcl == GxFileType.Private)
 				options.PredefinedAcl = PredefinedObjectAcl.ProjectPrivate;
 			else
 				options.PredefinedAcl = PredefinedObjectAcl.PublicRead;
@@ -252,9 +252,27 @@ namespace GeneXus.Storage.GXGoogleCloud
 			return string.Empty;
         }
 
-		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 0)
+		public string GetUrl(string objectName, GxFileType fileType, int urlMinutes)
+		{
+			return GetURL(objectName, fileType, urlMinutes);			
+		}
+
+		private bool IsPrivateResource(GxFileType fileType)
 		{
 			if (fileType.HasFlag(GxFileType.Private))
+			{
+				return true;
+			}
+			if (fileType.HasFlag(GxFileType.PublicRead))
+			{
+				return false;
+			}
+			return (this.defaultAcl == GxFileType.PublicRead) ? false : true;
+		}
+
+		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 0)
+		{
+			if (IsPrivateResource(fileType))
 				return Signer.Sign(Bucket, StorageUtils.EncodeUrl(objectName), ResolveExpiration(urlMinutes), HttpMethod.Get);
 			else
 			{
@@ -287,7 +305,10 @@ namespace GeneXus.Storage.GXGoogleCloud
 
         public long GetLength(string objectName, GxFileType fileType)
 		{
-            return (long)Client.GetObject(Bucket, objectName).Size.GetValueOrDefault();
+			System.Diagnostics.Debug.Assert(false);
+			var obj = Client.GetObject(Bucket, objectName);
+			return (long)obj.Size.GetValueOrDefault();
+			
         }
 
         public void CreateDirectory(string directoryName)

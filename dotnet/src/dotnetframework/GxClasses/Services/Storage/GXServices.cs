@@ -231,6 +231,7 @@ namespace GeneXus.Services
 		string Upload(string localFile, string objectName, GxFileType fileType);
 		void Download(string objectName, string localFile, GxFileType fileType);
 		string Get(string objectName, GxFileType fileType, int urlMinutes);
+		string GetUrl(string objectName, GxFileType fileType, int urlMinutes);
 		void Delete(string objectName, GxFileType fileType);
 		bool Exists(string objectName, GxFileType fileType);
 		string Rename(string objectName, string newName, GxFileType fileType);

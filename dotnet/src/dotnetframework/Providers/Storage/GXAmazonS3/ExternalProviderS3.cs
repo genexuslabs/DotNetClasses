@@ -251,6 +251,11 @@ namespace GeneXus.Storage.GXAmazonS3
 				return string.Empty;
 		}
 
+		public string GetUrl(string objectName, GxFileType fileType, int urlMinutes = 0)
+		{			
+			return GetUrlImpl(objectName, fileType, urlMinutes);
+		}
+
 		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
@@ -332,17 +337,14 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private S3CannedACL GetCannedACL(GxFileType acl)
 		{
-			if (acl == GxFileType.Default)
-			{
-				acl = this.defaultAcl;
+			if (acl.HasFlag(GxFileType.Private)) { 
+				return S3CannedACL.Private;
 			}
-
-			S3CannedACL accessControl = S3CannedACL.Private;
-			if (acl == GxFileType.PublicRead)
+			if (acl.HasFlag(GxFileType.PublicRead))
 			{
-				accessControl = S3CannedACL.PublicRead;
-			}
-			return accessControl;
+				return S3CannedACL.PublicRead;
+			}			
+			return (this.defaultAcl == GxFileType.PublicRead) ? S3CannedACL.PublicRead : S3CannedACL.Private;
 		}
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)

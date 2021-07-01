@@ -435,7 +435,7 @@ public class GxExternalFileInfo : IGxFileInfo
 		}
 		else {
 			string folderName = ((ExternalProviderBase)provider).Folder;
-			if (!string.IsNullOrEmpty(folderName) && !_name.StartsWith(folderName))
+			if (!string.IsNullOrEmpty(folderName) && fileType.HasFlag(GxFileType.Attribute) && !_name.StartsWith(folderName))
 			{
 				_url = $"{provider.GetBaseURL()}{_name}";
 				_name = $"{folderName}{StorageUtils.DELIMITER}{_name}";
@@ -576,12 +576,8 @@ public class GxExternalFileInfo : IGxFileInfo
 
 	private string URL
 	{
-		get {
-			if (string.IsNullOrEmpty(_url))
-			{
-				_url = _provider.Get(_name, _fileTypeAtt, 0);
-			}
-			return _url;
+		get {			
+			return _provider.GetUrl(_name, _fileTypeAtt, 0);
 		}
 	}
 
@@ -642,7 +638,10 @@ public enum GxFileType
 {
 	Default = 0,
 	PublicRead = 1,
-	Private = 2
+	Private = 2,
+	Attribute = 8,
+	DefaultAttribute = Attribute | Default,
+	PrivateAttribute = Attribute | Private
 }
 
 public class GxFile

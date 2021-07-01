@@ -51,7 +51,7 @@ namespace GeneXus.Services
 			{
 				GxFileType.TryParse(aclS, out this.defaultAcl);
 			}			
-			if (this.defaultAcl == GxFileType.Default)
+			if (this.defaultAcl.HasFlag(GxFileType.Default))
 			{
 				this.defaultAcl = GxFileType.PublicRead;
 			}
