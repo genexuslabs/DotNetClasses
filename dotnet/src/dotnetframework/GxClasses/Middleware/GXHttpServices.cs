@@ -405,8 +405,9 @@ namespace GeneXus.Http
 							fName = hpf.FileName;
 
 						ext = FileUtil.GetFileType(fName);
-						savedFileName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), FileUtil.GetFileName(fName), string.IsNullOrEmpty(ext) ? "tmp" : ext);
-						GxFile gxFile = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
+						string tempDir = Preferences.getTMP_MEDIA_PATH();
+						savedFileName = FileUtil.getTempFileName(tempDir);
+						GxFile gxFile = new GxFile(tempDir, savedFileName, GxFileType.Private);
 
 						gxFile.Create(hpf.InputStream);
 						string uri = gxFile.GetURI();
@@ -422,7 +423,7 @@ namespace GeneXus.Http
 							thumbnailUrl = url,
 							path = fileToken
 						});
-						GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, fName, ext, gxFile, context);
+						GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, Path.GetFileName(fName), ext, gxFile, context);
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
 					var jsonObj = JSONHelper.Serialize(result);
@@ -458,9 +459,9 @@ namespace GeneXus.Http
 		{
 			string savedFileName, ext, fName;
 			ext = context.ExtensionForContentType(contentType);
-
-			savedFileName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), "BLOB", string.IsNullOrEmpty(ext) ? "tmp" : ext);
-			GxFile file = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
+			string tempDir = Preferences.getTMP_MEDIA_PATH();
+			savedFileName = FileUtil.getTempFileName(tempDir);
+			GxFile file = new GxFile(tempDir, savedFileName, GxFileType.Private);
 			file.Create(istream);
 
 			JObject obj = new JObject();
@@ -474,7 +475,7 @@ namespace GeneXus.Http
 			HttpHelper.SetResponseStatus(localHttpContext, ((int)HttpStatusCode.Created).ToString(), string.Empty);
 			localHttpContext.Response.Write(obj.ToString());
 
-			GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, fName, ext, file, context);
+			GxUploadHelper.CacheUploadFile(fileGuid, savedFileName, $"{Path.GetFileNameWithoutExtension(fName)}.{ext}", ext, file, context);
 		}
 		protected override bool IntegratedSecurityEnabled
 		{

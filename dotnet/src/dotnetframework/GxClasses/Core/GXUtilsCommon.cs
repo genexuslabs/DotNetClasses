@@ -3272,8 +3272,6 @@ namespace GeneXus.Utils
 	public class FileUtil
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.FileUtil));
-
-		private static object syncObj = new object();
 		public static byte DeleteFile(string fileName)
 		{
 			try
@@ -3366,30 +3364,10 @@ namespace GeneXus.Utils
 				return uriString;
 			}
 		}
-		public static string getTempFileName(string baseDir, string name, string extension, GxFileType fileType = GxFileType.Public)
+		public static string getTempFileName(string baseDir, string name="", string extension="tmp", GxFileType fileType = GxFileType.Public)
 		{
-			String fileName;
-			name = FileUtil.FileNamePrettify(name);
-
-			lock (syncObj)
-			{
-
-				name = FixFileName(name, string.Empty);
-				if (string.IsNullOrEmpty(name))
-				{
-					fileName = tempFileName(baseDir, name, extension);
-				}
-				else
-				{
-					fileName = Path.Combine(baseDir, name + "." + extension);
-				}
-				GxFile file = new GxFile(baseDir, fileName, fileType);
-				while (file.FileInfo.Exist(fileName))
-				{
-					fileName = tempFileName(baseDir, name, extension);
-				}
-			}
-			return fileName.Trim();
+			name = FixFileName(FileUtil.FileNamePrettify(name), string.Empty);
+			return tempFileName(baseDir, name, extension);
 		}
 
 		private static string tempFileName(string baseDir, string name, string extension)
@@ -3397,11 +3375,11 @@ namespace GeneXus.Utils
 			string fileName;
 			try
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			catch (ArgumentException)//Illegal characters in path
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			return fileName;
 		}
@@ -3428,6 +3406,12 @@ namespace GeneXus.Utils
 		{
 			if (FileName.Trim().Length == 0)
 				return string.Empty;
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				return new GxFile(string.Empty, FileName, GxFileType.Private).GetExtension();
+			}
+
 			string extension = string.Empty;
 			try
 			{
@@ -3450,16 +3434,28 @@ namespace GeneXus.Utils
 
 		public static string FileNamePrettify(string s)
 		{
-			string str = GXUtil.RemoveDiacritics(s.Trim().ToLower()); //remove accents
-			str = Regex.Replace(str, @"\s+", " ").Trim(); // convert multiple spaces into one space  
-			str = Regex.Replace(str, @"\s", "-"); // //Replace spaces by dashes
-			return str;
+			if (!string.IsNullOrEmpty(s))
+			{
+				string str = GXUtil.RemoveDiacritics(s.Trim().ToLower()); //remove accents
+				str = Regex.Replace(str, @"\s+", " ").Trim(); // convert multiple spaces into one space  
+				str = Regex.Replace(str, @"\s", "-"); // //Replace spaces by dashes
+				return str;
+			}
+			else
+			{
+				return s;
+			}
 		}
 
 		public static string GetFileName(string FileName)
 		{
 			if (FileName.Trim().Length == 0)
 				return "";
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				FileName = new GxFile(string.Empty, FileName, GxFileType.Private).GetName();
+			}
 			try
 			{
 				return Path.GetFileNameWithoutExtension(FileName);//FileNames with URI or local (exist)
@@ -3678,6 +3674,10 @@ namespace GeneXus.Utils
 			if (!IsValidFilePath(path))
 				validPath = GetValidPath(path, "_");
 
+			Uri result;
+			if (Uri.TryCreate(validPath, UriKind.Absolute, out result))
+				validPath = result.LocalPath;
+
 			string fileName = Path.GetFileName(validPath);
 			if (!IsValidFileName(fileName))
 			{
@@ -3687,6 +3687,10 @@ namespace GeneXus.Utils
 				return fileName;
 		}
 
+		internal static string SafeCombine(string basePath, string fileName)
+		{
+			return Path.Combine(basePath, Path.GetFileName(fileName));
+		}
 	}
 
 	public class GXUtil
@@ -5261,7 +5265,7 @@ namespace GeneXus.Utils
 				string basePath = Path.Combine(Path.Combine(Preferences.getBLOB_PATH(), MultimediaDirectory));
 				try
 				{
-					GxFile file = new GxFile(string.Empty, Path.Combine(basePath, fileName), GxFileType.PublicAttribute);
+					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName), GxFileType.PublicAttribute);
 					return PathToUrl(file.GetURI(), absUrl, context);
 				}
 				catch (ArgumentException ex)
@@ -5275,16 +5279,7 @@ namespace GeneXus.Utils
 		public static string GenerateUri(string file, bool addToken, bool addScheme)
 		{
 			string name = GetFileName(file);
-			try
-			{
-				name = Uri.UnescapeDataString(name);
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Warn(log, ex, "GenerateUri escape unnecesary ", name);
-			}
 			string type = GetFileType(file);
-
 
 			string scheme = addScheme ? $"{GXDbFile.Scheme}:" : string.Empty;
 
@@ -5321,6 +5316,10 @@ namespace GeneXus.Utils
 		{
 			if (String.IsNullOrEmpty(name) && String.IsNullOrEmpty(type) && !String.IsNullOrEmpty(path))
 			{
+				if (GxUploadHelper.IsUpload(path))
+				{
+					return new GxFile(string.Empty, path, GxFileType.Private).GetName();
+				}
 				string fromPathType = Path.GetExtension(path);
 				if (!String.IsNullOrEmpty(fromPathType) && fromPathType != "tmp")
 				{

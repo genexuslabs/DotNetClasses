@@ -64,6 +64,8 @@ namespace GeneXus.Http
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
 		public const string ASPX = ".aspx";
 		public const string GXOBJECT = "/gxobject";
+		public const string HttpPostMethod= "POST";
+		public const string HttpGetMethod = "GET";
 
 		public static void SetResponseStatus(HttpContext httpContext, string statusCode, string statusDescription)
 		{
@@ -231,9 +233,9 @@ namespace GeneXus.Http
 					string ext = fi.Extension;
 					if (ext != null)
 						ext = ext.TrimStart('.');
-					filePath = FileUtil.getTempFileName(tempDir, "BLOB", ext);
+					filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
-					GxFile file = new GxFile(tempDir, filePath);
+					GxFile file = new GxFile(tempDir, filePath, GxFileType.Private);
 #if NETCORE
 					filePath = file.Create(pf.OpenReadStream());
 #else
@@ -517,21 +519,25 @@ namespace GeneXus.Http
 	public static class HttpContextExtensions
 	{
 #if NETCORE
-		static string NEWSESSION = "gxnewSession";
+		internal static string NEWSESSION = "GXNEWSESSION";
 		public static void NewSessionCheck(this HttpContext context)
 		{
-			if (string.IsNullOrEmpty(context.Session.GetString(NEWSESSION)))
+			GxWebSession websession = new GxWebSession(new HttpSessionState(context.Session));
+			string value = websession.Get<string>(NEWSESSION);
+			if (string.IsNullOrEmpty(value))
 			{
-				context.Session.SetString(NEWSESSION, true.ToString());
+				websession.Set<string>(NEWSESSION, true.ToString());
 			}
 			else
 			{
-				context.Session.SetString(NEWSESSION, false.ToString());
+				websession.Set<string>(NEWSESSION, false.ToString());
 			}
 		}
 		public static bool IsNewSession(this HttpContext context)
 		{
-			return string.IsNullOrEmpty(context.Session.GetString(NEWSESSION)) || context.Session.GetString(NEWSESSION) == true.ToString();
+			GxWebSession websession = new GxWebSession(new HttpSessionState(context.Session));
+			string value=websession.Get<string>(NEWSESSION);
+			return string.IsNullOrEmpty(value) || value == true.ToString();
 		}
 #else
 		public static bool IsNewSession(this HttpContext context)
