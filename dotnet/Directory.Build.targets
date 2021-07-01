@@ -16,12 +16,6 @@
 		<DeployDirectory>$(MSBuildThisFileDirectory)build</DeployDirectory>
 		<!--Set a default deploy dir-->
 	</PropertyGroup>
-	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectoryPlatformBin>\gxnetcore\bin</DeployDirectoryPlatformBin>
-	</PropertyGroup>
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectoryPlatformBin>\gxnet\bin</DeployDirectoryPlatformBin>
-	</PropertyGroup>
 
 	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
@@ -71,9 +65,9 @@
 		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(TargetFramework)\$(ProjectName).deps.json" />
 	</Target>
 
-	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)')">
+	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)$(TargetFileName)')">
 		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectory)$(DeployDirectoryPlatformBin)"></Message>
-		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectory)$(DeployDirectoryPlatformBin)" />
+		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectory)$(DeployDirectoryPlatformBin)" />
 	</Target>
 
 </Project>
