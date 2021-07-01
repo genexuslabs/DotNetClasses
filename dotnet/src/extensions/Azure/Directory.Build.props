@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<DeployDirectoryPlatformBin>\DeploymentTargets\AzureFunctions\AzFunctionFiles\bin</DeployDirectoryPlatformBin>
+		<DeployDirectoryPlatformBin>DeploymentTargets\AzureFunctions\AzFunctionFiles\bin</DeployDirectoryPlatformBin>
 	</PropertyGroup>
 </Project>
 
