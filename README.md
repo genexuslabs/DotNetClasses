@@ -84,7 +84,15 @@ For the following steps must be executed from inside ```dotnet``` directory:
 ## How to copy assemblies to build directory?
 - ```dotnet msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
 
-It copies the .NET assemblies to the folder build/**gxnet/bin** and .NET Core assemblies to build/**gxnetcore/bin**
+It compiles the solution and copies the .NET assemblies to the folder build/**gxnet/bin**.
+
+- ```dotnet msbuild /t:build;CopyAssemblies /p:TargetFramework=net462 DotNetStandardClasses.sln```
+
+It copies .NET framework assemblies to the folder C:\Genexus\gxnet\bin
+
+- ```dotnet msbuild /t:CopyAssemblies /p:DeployDirectory=C:\Genexus\gxnetcore\bin /p:TargetFramework=net5.0 DotNetStandardClasses.sln ```
+
+It copies .NET 5 assemblies to the folder C:\Genexus\gxnetcore\bin
 
 ## Advanced information
 
