@@ -31,6 +31,13 @@
 		<NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023</NoWarn>
 		<IsPackable>true</IsPackable>
 	</PropertyGroup>
+	
+	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+		<DeployDirectoryPlatformBin>gxnetcore\bin</DeployDirectoryPlatformBin>
+	</PropertyGroup>
+	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+		<DeployDirectoryPlatformBin>gxnet\bin</DeployDirectoryPlatformBin>
+	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">
 		<Message Importance="high" Text="FileVersion:$(FileVersionWithoutRevision)"></Message>
