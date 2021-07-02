@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Http;
 using TZ4Net;
 using GxClasses.Helpers;
 using System.Net;
+using GeneXus.Mime;
 #endif
 using GeneXus.Web.Security;
 
@@ -5585,7 +5586,33 @@ namespace GeneXus.Utils
 	public class StorageUtils
 	{
 		public const string DELIMITER = "/";
+		public static string DEFAULT_TMP_CONTENT_TYPE = "image/jpeg";
+		public static string DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
+		public static bool TryGetContentType(string fileName, out string mimeType, string defaultValue = null)
+		{
+			mimeType = defaultValue;
+			string extension = Path.GetExtension(fileName);
+			if (!string.IsNullOrEmpty(extension))
+			{
+				if (fileName.EndsWith(".tmp"))
+				{
+					mimeType = DEFAULT_TMP_CONTENT_TYPE;
+				}
+				else
+				{
+					try
+					{
+						mimeType = MimeMapping.GetMimeMapping(fileName);
+					}
+					catch (Exception)
+					{
+					}
+				}
+			}
+			return mimeType != null;
+
+		}
 		public static string EncodeUrl(string objectName)
 		{
 			if (!Uri.IsWellFormedUriString(objectName, UriKind.RelativeOrAbsolute))

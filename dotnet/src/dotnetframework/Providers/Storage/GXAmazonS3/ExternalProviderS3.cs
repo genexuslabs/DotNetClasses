@@ -279,10 +279,13 @@ namespace GeneXus.Storage.GXAmazonS3
 				BucketName = Bucket,
 				Key = fileName,
 				InputStream = stream,
-				CannedACL = GetCannedACL(destFileType)
+				CannedACL = GetCannedACL(destFileType),
+
 			};
-			if (Path.GetExtension(fileName).Equals(".tmp"))
-				objectRequest.ContentType = "image/jpeg";
+			if (StorageUtils.TryGetContentType(fileName, out string mimeType))
+			{
+				objectRequest.ContentType = mimeType;
+			}
 			PutObjectResponse result = PutObject(objectRequest);
 			return Get(fileName, destFileType);
 		}
@@ -301,8 +304,15 @@ namespace GeneXus.Storage.GXAmazonS3
 				SourceKey = url,
 				DestinationBucket = Bucket,
 				DestinationKey = resourceKey,
-				CannedACL = GetCannedACL(destFileType)
+				CannedACL = GetCannedACL(destFileType),
+				MetadataDirective = S3MetadataDirective.REPLACE
 			};
+
+			if (StorageUtils.TryGetContentType(newName, out string mimeType, StorageUtils.DEFAULT_CONTENT_TYPE))
+			{
+				request.ContentType = mimeType;
+			}
+
 			AddObjectMetadata(request.Metadata, tableName, fieldName, resourceKey);
 			CopyObject(request);
 
@@ -322,6 +332,12 @@ namespace GeneXus.Storage.GXAmazonS3
 					InputStream = fileStream,
 					CannedACL = GetCannedACL(destFileType)
 				};
+
+				if (StorageUtils.TryGetContentType(fileName, out string mimeType))
+				{
+					objectRequest.ContentType = mimeType;
+				}
+
 				AddObjectMetadata(objectRequest.Metadata, tableName, fieldName, resourceKey);
 				PutObjectResponse result = PutObject(objectRequest);
 

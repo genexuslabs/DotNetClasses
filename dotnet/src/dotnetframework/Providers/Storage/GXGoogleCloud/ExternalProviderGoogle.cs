@@ -129,12 +129,12 @@ namespace GeneXus.Storage.GXGoogleCloud
             obj.Name = fileName;
             obj.Bucket = Bucket;
 
-            if (Path.GetExtension(fileName).Equals(".tmp"))
-                obj.ContentType = "image/jpeg";
-            else
-                obj.ContentType = MimeMapping.GetMimeMapping(fileName);
-			
-            Client.UploadObject(obj, stream, GetUploadOptions(fileType));
+			if (StorageUtils.TryGetContentType(fileName, out string mimeType, StorageUtils.DEFAULT_CONTENT_TYPE))
+			{
+				obj.ContentType = mimeType;
+			}
+
+			Client.UploadObject(obj, stream, GetUploadOptions(fileType));
             return StorageUri + StorageUtils.EncodeUrl(fileName);
         }
 
@@ -175,7 +175,8 @@ namespace GeneXus.Storage.GXGoogleCloud
 		{
             using (FileStream stream = new FileStream(localFile, FileMode.Open))
 			{
-				Google.Apis.Storage.v1.Data.Object obj = Client.UploadObject(Bucket, objectName, "application/octet-stream", stream, GetUploadOptions(fileType));
+				StorageUtils.TryGetContentType(objectName, out string mimeType, StorageUtils.DEFAULT_CONTENT_TYPE);
+				Google.Apis.Storage.v1.Data.Object obj = Client.UploadObject(Bucket, objectName, mimeType, stream, GetUploadOptions(fileType));
 				return obj.MediaLink;
 			}
 		}
@@ -246,8 +247,12 @@ namespace GeneXus.Storage.GXGoogleCloud
              
 			Google.Apis.Storage.v1.Data.Object obj = Client.CopyObject(Bucket, url, Bucket, newName, GetCopyOptions(fileType));
             obj.Metadata = CreateObjectMetadata(tableName, fieldName, newName);
-            Client.UpdateObject(obj);
-            return GetURL(newName, fileType, 0);
+			if (StorageUtils.TryGetContentType(newName, out string mimeType, StorageUtils.DEFAULT_CONTENT_TYPE))
+			{
+				obj.ContentType = mimeType;
+			}
+			Client.UpdateObject(obj);
+			return GetURL(newName, fileType, 0);
         }
 
         public Stream GetStream(string objectName, GxFileType fileType)
