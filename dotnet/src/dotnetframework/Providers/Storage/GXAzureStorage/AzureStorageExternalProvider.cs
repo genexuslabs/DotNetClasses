@@ -175,10 +175,11 @@ namespace GeneXus.Storage.GXAzureStorage
 		public string Upload(string fileName, Stream stream, GxFileType fileType)
 		{
 			CloudBlockBlob blob = GetCloudBlockBlob(fileName, fileType);
-			if (Path.GetExtension(fileName).Equals(".tmp"))
-				blob.Properties.ContentType = "image/jpeg";
-			else
-				blob.Properties.ContentType = MimeMapping.GetMimeMapping(fileName);
+
+			if (TryGetContentType(fileName, out string mimeType))
+			{
+				blob.Properties.ContentType = mimeType;
+			}
 
 			blob.UploadFromStreamAsync(stream).GetAwaiter().GetResult();
 			return GetURL(blob, fileType);
@@ -194,8 +195,14 @@ namespace GeneXus.Storage.GXAzureStorage
 				targetBlob.Metadata["Table"] = tableName;
 				targetBlob.Metadata["Field"] = fieldName;
 				targetBlob.Metadata["KeyValue"] = StorageUtils.EncodeUrl(newName);
+				
+				if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
+				{
+					targetBlob.Properties.ContentType = mimeType;
+				}
 
 				targetBlob.StartCopyAsync(sourceBlob).GetAwaiter().GetResult();
+				targetBlob.SetPropertiesAsync().GetAwaiter().GetResult(); //Required to apply new object metadata
 				return GetURL(targetBlob, fileType);
 			}
 			return string.Empty;

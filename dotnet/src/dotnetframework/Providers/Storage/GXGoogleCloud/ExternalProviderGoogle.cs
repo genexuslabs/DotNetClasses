@@ -151,11 +151,11 @@ namespace GeneXus.Storage.GXGoogleCloud
             obj.Name = fileName;
             obj.Bucket = Bucket;
 
-            if (Path.GetExtension(fileName).Equals(".tmp"))
-                obj.ContentType = "image/jpeg";
-            else
-                obj.ContentType = MimeMapping.GetMimeMapping(fileName);
-			
+			if (TryGetContentType(fileName, out string mimeType, DEFAULT_CONTENT_TYPE))
+			{
+				obj.ContentType = mimeType;
+			}
+
             Client.UploadObject(obj, stream, GetUploadOptions(fileType));
 			return GetURL(fileName, fileType);
         }
@@ -197,7 +197,8 @@ namespace GeneXus.Storage.GXGoogleCloud
 		{
             using (FileStream stream = new FileStream(localFile, FileMode.Open))
 			{
-				Google.Apis.Storage.v1.Data.Object obj = Client.UploadObject(Bucket, objectName, "application/octet-stream", stream, GetUploadOptions(fileType));
+				TryGetContentType(objectName, out string mimeType, DEFAULT_CONTENT_TYPE);
+				Google.Apis.Storage.v1.Data.Object obj = Client.UploadObject(Bucket, objectName, mimeType, stream, GetUploadOptions(fileType));
 				return GetURL(objectName, fileType);
 			}
 		}
@@ -254,7 +255,7 @@ namespace GeneXus.Storage.GXGoogleCloud
 
 		public string GetUrl(string objectName, GxFileType fileType, int urlMinutes)
 		{
-			return GetURL(objectName, fileType, urlMinutes);			
+			return GetURL(objectName, fileType, urlMinutes);
 		}
 
 		private bool IsPrivateResource(GxFileType fileType)
@@ -286,8 +287,13 @@ namespace GeneXus.Storage.GXGoogleCloud
             url = StorageUtils.DecodeUrl(url.Replace(StorageUri, string.Empty));
              
 			Google.Apis.Storage.v1.Data.Object obj = Client.CopyObject(Bucket, url, Bucket, newName, GetCopyOptions(fileType));
+			
             obj.Metadata = CreateObjectMetadata(tableName, fieldName, newName);
-            Client.UpdateObject(obj);
+			if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
+			{
+				obj.ContentType = mimeType;
+			}
+			Client.UpdateObject(obj);
             return GetURL(newName, fileType, 0);
         }
 
@@ -305,10 +311,8 @@ namespace GeneXus.Storage.GXGoogleCloud
 
         public long GetLength(string objectName, GxFileType fileType)
 		{
-			System.Diagnostics.Debug.Assert(false);
 			var obj = Client.GetObject(Bucket, objectName);
 			return (long)obj.Size.GetValueOrDefault();
-			
         }
 
         public void CreateDirectory(string directoryName)
