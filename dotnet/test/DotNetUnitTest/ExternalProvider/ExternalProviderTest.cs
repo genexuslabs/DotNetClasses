@@ -187,6 +187,8 @@ namespace UnitTesting
 		[SkippableFact]
 		public void TestDeleteFilePrivate()
 		{
+			Skip.If(this is ExternalProviderGoogleTest, "This test is failing randomly for Google Cloud Storage.");
+
 			GxFileType acl = GxFileType.Private;
 			TestUploadPrivateMethod();
 			String url = TryGet(TEST_SAMPLE_FILE_NAME, acl);
