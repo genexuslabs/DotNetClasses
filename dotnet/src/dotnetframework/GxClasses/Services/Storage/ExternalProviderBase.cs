@@ -1,6 +1,12 @@
 using System;
+using System.IO;
 using GeneXus.Encryption;
 using log4net;
+#if NETCORE
+using GeneXus.Mime;
+#else
+using System.Web;
+#endif
 
 namespace GeneXus.Services
 {
@@ -16,7 +22,8 @@ namespace GeneXus.Services
 		protected static String DEFAULT_ACL_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_ACL";
 		protected static String DEFAULT_EXPIRATION_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_EXPIRATION";
 		protected TimeSpan defaultExpiration = new TimeSpan(24, 0, 0);
-
+		protected static string DEFAULT_TMP_CONTENT_TYPE = "image/jpeg";
+		protected static string DEFAULT_CONTENT_TYPE = "application/octet-stream";
 		
 		protected GxFileType defaultAcl = GxFileType.Private;
 		public string Folder { get; set; }
@@ -143,5 +150,28 @@ namespace GeneXus.Services
 			return $"STORAGE_{GetName()}_{propertyName}";
 		}
 
+		protected bool TryGetContentType(string fileName, out string mimeType, string defaultValue = null)
+		{
+			mimeType = defaultValue;
+			string extension = Path.GetExtension(fileName);
+			if (!string.IsNullOrEmpty(extension))
+			{
+				if (fileName.EndsWith(".tmp"))
+				{
+					mimeType = DEFAULT_TMP_CONTENT_TYPE;
+				}
+				else
+				{
+					try
+					{
+						mimeType = MimeMapping.GetMimeMapping(fileName);
+					}
+					catch (Exception)
+					{
+					}
+				}
+			}
+			return mimeType != null;
+		}
 	}
 }
