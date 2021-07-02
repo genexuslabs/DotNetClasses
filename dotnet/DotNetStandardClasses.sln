@@ -125,6 +125,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynService.Core", "src\dotn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynServiceOData", "src\dotnetcore\DynService\OData\DynServiceOData.csproj", "{2238FCB1-3A83-46C2-873E-82DA4266069D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azurefunctionhandlers", "azurefunctionhandlers", "{BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extensions", "extensions", "{C6AFB6A3-FF0B-4970-B1F1-10BCD3D932B2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{41E1D031-799F-484F-85DE-7A30AF1A6FBA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctions.Handlers", "src\extensions\Azure\Handlers\GeneXus.Deploy.AzureFunctions.Handlers.csproj", "{621ABC85-7479-4D0F-AB48-97A53E82C8B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -327,6 +335,10 @@ Global
 		{2238FCB1-3A83-46C2-873E-82DA4266069D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2238FCB1-3A83-46C2-873E-82DA4266069D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2238FCB1-3A83-46C2-873E-82DA4266069D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{621ABC85-7479-4D0F-AB48-97A53E82C8B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{621ABC85-7479-4D0F-AB48-97A53E82C8B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{621ABC85-7479-4D0F-AB48-97A53E82C8B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{621ABC85-7479-4D0F-AB48-97A53E82C8B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -389,6 +401,9 @@ Global
 		{79C9ECC6-2935-4C43-BF32-94698547F584} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 		{E2FB8843-503A-4A22-923E-B12510233127} = {79C9ECC6-2935-4C43-BF32-94698547F584}
 		{2238FCB1-3A83-46C2-873E-82DA4266069D} = {79C9ECC6-2935-4C43-BF32-94698547F584}
+		{BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0} = {C6AFB6A3-FF0B-4970-B1F1-10BCD3D932B2}
+		{41E1D031-799F-484F-85DE-7A30AF1A6FBA} = {BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}
+		{621ABC85-7479-4D0F-AB48-97A53E82C8B3} = {41E1D031-799F-484F-85DE-7A30AF1A6FBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
