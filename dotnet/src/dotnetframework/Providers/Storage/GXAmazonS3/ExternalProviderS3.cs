@@ -337,14 +337,22 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private S3CannedACL GetCannedACL(GxFileType acl)
 		{
-			if (acl.HasFlag(GxFileType.Private)) { 
+			if (acl.HasFlag(GxFileType.Private))
+			{
 				return S3CannedACL.Private;
 			}
-			if (acl.HasFlag(GxFileType.PublicRead))
+			else if (acl.HasFlag(GxFileType.PublicRead))
 			{
 				return S3CannedACL.PublicRead;
-			}			
-			return (this.defaultAcl == GxFileType.PublicRead) ? S3CannedACL.PublicRead : S3CannedACL.Private;
+			}
+			else if (this.defaultAcl == GxFileType.Private)
+			{
+				return S3CannedACL.Private;
+			}
+			else
+			{
+				return S3CannedACL.PublicRead;
+			}
 		}
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)

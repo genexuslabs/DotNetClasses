@@ -56,11 +56,7 @@ namespace GeneXus.Services
 			String aclS = GetPropertyValue(DEFAULT_ACL, DEFAULT_ACL_DEPRECATED, "");
 			if (!String.IsNullOrEmpty(aclS))
 			{
-				GxFileType.TryParse(aclS, out this.defaultAcl);
-			}			
-			if (this.defaultAcl.HasFlag(GxFileType.Default))
-			{
-				this.defaultAcl = GxFileType.PublicRead;
+				this.defaultAcl = aclS.Equals("Private") ? GxFileType.Private : GxFileType.PublicRead;
 			}
 
 			String expirationS = GetPropertyValue(DEFAULT_EXPIRATION, DEFAULT_EXPIRATION, defaultExpiration.TotalMinutes.ToString());

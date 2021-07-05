@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using DotNetUnitTest;
+using GeneXus.Services;
 using GeneXus.Storage;
 using Xunit;
 
@@ -12,16 +13,17 @@ namespace UnitTesting
 {
 	[Collection("Sequential")]
 	public abstract class ExternalProviderTest
-	{		
+	{
 		private GeneXus.Services.ExternalProvider provider;
-		private static String TEST_SAMPLE_FILE_NAME = "text.txt";
-		private static String TEST_SAMPLE_FILE_PATH = Path.Combine("resources", TEST_SAMPLE_FILE_NAME).ToString(CultureInfo.InvariantCulture);
+		private static String TEST_SAMPLE_FILE_NAME = $"text{new Random().Next(1, 100)}.txt";
+		private static String TEST_SAMPLE_FILE_PATH = Path.Combine("resources", "text.txt").ToString(CultureInfo.InvariantCulture);
+		private bool defaultAclPrivate;
 		
-
-		public ExternalProviderTest(string providerName, Type externalProviderType)
-		{
+		public ExternalProviderTest(string providerName, Type externalProviderType, bool isPrivate)
+		{			
+			defaultAclPrivate = isPrivate;
+			Environment.SetEnvironmentVariable($"STORAGE_{providerName}_DEFAULT_ACL", defaultAclPrivate ? GxFileType.Private.ToString() : GxFileType.PublicRead.ToString());
 			
-
 			bool testEnabled = Environment.GetEnvironmentVariable(providerName + "_TEST_ENABLED") == "true";
 
 			Skip.IfNot(testEnabled, "Environment variables not set");
@@ -31,11 +33,23 @@ namespace UnitTesting
 			Assert.NotNull(provider);
 		}
 
+		public ExternalProviderTest(string providerName, Type externalProviderType) : this(providerName, externalProviderType, false)
+		{
+
+		}
+
 		[SkippableFact]
 		public void TestUploadPublicMethod()
-		{			
+		{
 			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, GxFileType.PublicRead);
 			EnsureUrl(upload, GxFileType.PublicRead);
+		}
+
+		[SkippableFact]
+		public void TestUploadPrivateSubfolderMethod()
+		{
+			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, $"folder/folder2/folder3/{TEST_SAMPLE_FILE_NAME}", GxFileType.Private);
+			EnsureUrl(upload, GxFileType.Private);
 		}
 
 		[SkippableFact]
@@ -43,6 +57,13 @@ namespace UnitTesting
 		{
 			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, GxFileType.Default);
 			EnsureUrl(upload, GxFileType.Default);
+		}
+
+		[SkippableFact]
+		public void TestUploadDefaultAttributeMethod()
+		{
+			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, GxFileType.DefaultAttribute);
+			EnsureUrl(upload, GxFileType.DefaultAttribute);
 		}
 
 		[SkippableFact]
@@ -83,17 +104,18 @@ namespace UnitTesting
 
 		public void TestUploadAndCopyByAcl(GxFileType aclUpload, GxFileType aclCopy)
 		{
-			String copyFileName = $"test-upload-and-copy_{new Random().Next()}.txt";
+			string copySourceName = $"test-source-upload-and-copy_{new Random().Next()}.txt";
+			String copyTargetName = $"test-upload-and-copy_{new Random().Next()}.txt";
 			DeleteSafe(TEST_SAMPLE_FILE_PATH);
-			DeleteSafe(copyFileName);
-			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, aclUpload);
-			Assert.True(UrlExists(upload), "Not found URL: " + upload);
+			DeleteSafe(copyTargetName);
+			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, copySourceName, aclUpload);
+			EnsureUrl(upload, aclUpload);
 
-			String copyUrl = TryGet(copyFileName, aclCopy);
+			String copyUrl = TryGet(copyTargetName, aclCopy);
 			Assert.False(UrlExists(copyUrl), "URL cannot exist: " + copyUrl);
 
-			provider.Copy(TEST_SAMPLE_FILE_NAME, aclUpload, copyFileName, aclCopy);
-			upload = provider.Get(copyFileName, aclCopy, 100);
+			provider.Copy(copySourceName, aclUpload, copyTargetName, aclCopy);
+			upload = provider.Get(copyTargetName, aclCopy, 100);
 			EnsureUrl(upload, aclCopy);
 		}
 
@@ -109,20 +131,21 @@ namespace UnitTesting
 		{
 			String copyFileName = "copy-text-private.txt";
 			Copy(copyFileName, GxFileType.Private);
-		}	
+		}
 
 		[SkippableFact]
 		public void TestMultimediaUpload()
 		{
+			string sourceFile = $"folder1/folder2/folder3{TEST_SAMPLE_FILE_NAME}";
 			String copyFileName = "copy-text-private.txt";
 			GxFileType acl = GxFileType.Private;
 
-			provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, acl);
-			String upload = provider.Get(TEST_SAMPLE_FILE_NAME, acl, 100);
+			provider.Upload(TEST_SAMPLE_FILE_PATH, sourceFile, acl);
+			String upload = provider.Get(sourceFile, acl, 100);
 			EnsureUrl(upload, acl);
 
 			DeleteSafe(copyFileName);
-			upload = provider.Copy(TEST_SAMPLE_FILE_NAME, copyFileName, "Table", "Field", acl);
+			upload = provider.Copy(sourceFile, copyFileName, "Table", "Field", acl);
 
 			copyFileName = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, upload);
 			if (!copyFileName.StartsWith("http", StringComparison.OrdinalIgnoreCase))
@@ -136,7 +159,7 @@ namespace UnitTesting
 		public void TestGetMethod()
 		{
 			TestUploadPublicMethod();
-			String url = provider.Get("text.txt", GxFileType.PublicRead, 10);
+			String url = provider.Get(TEST_SAMPLE_FILE_NAME, GxFileType.PublicRead, 10);
 			EnsureUrl(url, GxFileType.PublicRead);
 		}
 
@@ -148,12 +171,12 @@ namespace UnitTesting
 			Assert.True(UrlExists(url));
 			string objectName;
 			provider.TryGetObjectNameFromURL(url, out objectName);
-			Assert.Equal("text.txt", objectName);
+			Assert.Equal(TEST_SAMPLE_FILE_NAME, objectName);
 		}
 
 		[SkippableFact]
 		public void TestDownloadMethod()
-		{			
+		{
 			TestUploadPublicMethod();
 
 			String downloadPath = Path.Combine("resources", "test", TEST_SAMPLE_FILE_NAME);
@@ -190,12 +213,9 @@ namespace UnitTesting
 			Skip.If(this is ExternalProviderGoogleTest, "This test is failing randomly for Google Cloud Storage.");
 
 			GxFileType acl = GxFileType.Private;
-			TestUploadPrivateMethod();
-			String url = TryGet(TEST_SAMPLE_FILE_NAME, acl);
-			EnsureUrl(url, acl);
+			provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, acl);
 			provider.Delete(TEST_SAMPLE_FILE_NAME, acl);
-
-			url = TryGet(TEST_SAMPLE_FILE_NAME, acl);
+			String url = TryGet(TEST_SAMPLE_FILE_NAME, acl);
 			Assert.False(UrlExists(url));
 		}
 
@@ -225,7 +245,7 @@ namespace UnitTesting
 			String urlCopy = TryGet(copyFileName, GxFileType.PublicRead);
 			Assert.False(UrlExists(urlCopy), "URL cannot exist: " + urlCopy);
 
-			provider.Copy("text.txt", acl, copyFileName, acl);
+			provider.Copy(TEST_SAMPLE_FILE_NAME, acl, copyFileName, acl);
 			upload = provider.Get(copyFileName, acl, 100);
 			EnsureUrl(upload, acl);
 		}
@@ -235,7 +255,7 @@ namespace UnitTesting
 			String getValue = "";
 			try
 			{
-				if (this is ExternalProviderGoogleTest)
+				if (((ExternalProviderBase)provider).GetName() == GeneXus.Storage.GXGoogleCloud.ExternalProviderGoogle.Name)
 				{
 					objectName = objectName.Replace("%2F", "/"); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
 				}
@@ -282,18 +302,37 @@ namespace UnitTesting
 		}
 
 		private static void Wait(int milliseconds)
-		{			
+		{
 			System.Threading.Thread.Sleep(milliseconds);
 		}
 
-		private static void EnsureUrl(String signedOrUnsignedUrl, GxFileType acl)
+		private void EnsureUrl(String signedOrUnsignedUrl, GxFileType acl)
 		{
-			Assert.True(UrlExists(signedOrUnsignedUrl), "Resource not found: " + signedOrUnsignedUrl);
-			if (acl == GxFileType.Private)
+			Assert.True(UrlExists(signedOrUnsignedUrl), "URL not found: " + signedOrUnsignedUrl);
+			if (IsPrivateFile(acl))
 			{
-				String noSignedUrl = signedOrUnsignedUrl.Substring(0, signedOrUnsignedUrl.IndexOf('?') + 1);
-				Assert.False(UrlExists(noSignedUrl), "Resource must be private: " + noSignedUrl);
+				if (!(this is ExternalProviderMinioTest)) //Minio local installation not supported
+				{
+					String noSignedUrl = signedOrUnsignedUrl.Substring(0, signedOrUnsignedUrl.IndexOf('?') + 1);
+					Assert.False(UrlExists(noSignedUrl), "URL must be private: " + noSignedUrl);
+				}
 			}
+			else
+			{
+				Assert.False(signedOrUnsignedUrl.Contains("?"), "URL cannot be signed");
+			}
+		}
+		private bool IsPrivateFile(GxFileType acl)
+		{
+			if (acl.HasFlag(GxFileType.Private))
+			{
+				return true;
+			}
+			else if (acl.HasFlag(GxFileType.PublicRead))
+			{
+				return false;
+			}
+			return defaultAclPrivate;
 		}
 
 #pragma warning disable CA1054 // Uri parameters should not be strings
