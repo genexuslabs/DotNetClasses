@@ -175,14 +175,34 @@ namespace GeneXus.Storage.GXGoogleCloud
 			return GetURL(objectName, targetFileType);
 		}
 
-		private static CopyObjectOptions GetCopyOptions(GxFileType fileType)
+		
+
+		private PredefinedObjectAcl GetPredefinedAcl(GxFileType acl)
 		{
-			CopyObjectOptions options = new CopyObjectOptions();
-			if (fileType.HasFlag(GxFileType.Private))
-				options.DestinationPredefinedAcl = PredefinedObjectAcl.ProjectPrivate;
-			else
-				options.DestinationPredefinedAcl = PredefinedObjectAcl.PublicRead;
-			return options;
+			PredefinedObjectAcl objectPredefinedObjectAcl = PredefinedObjectAcl.PublicRead;
+			if (acl.HasFlag(GxFileType.Private))
+			{
+				objectPredefinedObjectAcl = PredefinedObjectAcl.ProjectPrivate;
+			}
+			else if (acl.HasFlag(GxFileType.PublicRead))
+			{
+				objectPredefinedObjectAcl = PredefinedObjectAcl.PublicRead;
+			}
+			else if (this.defaultAcl == GxFileType.Private)
+			{
+				objectPredefinedObjectAcl = PredefinedObjectAcl.Private;
+			}
+			return objectPredefinedObjectAcl;
+		}
+
+		private CopyObjectOptions GetCopyOptions(GxFileType acl)
+		{
+			return new CopyObjectOptions() { DestinationPredefinedAcl = GetPredefinedAcl(acl) };
+		}
+
+		private UploadObjectOptions GetUploadOptions(GxFileType acl)
+		{
+			return new UploadObjectOptions() { PredefinedAcl = GetPredefinedAcl(acl) };			
 		}
 
 		public void Delete(string objectName, GxFileType fileType)
@@ -203,16 +223,7 @@ namespace GeneXus.Storage.GXGoogleCloud
 			}
 		}
 
-		private UploadObjectOptions GetUploadOptions(GxFileType fileType)
-		{
-			UploadObjectOptions options = new UploadObjectOptions();
-
-			if (fileType.HasFlag(GxFileType.Private) || fileType.HasFlag(GxFileType.Default) && this.defaultAcl == GxFileType.Private)
-				options.PredefinedAcl = PredefinedObjectAcl.ProjectPrivate;
-			else
-				options.PredefinedAcl = PredefinedObjectAcl.PublicRead;
-			return options;
-		}
+		
 
 		public void Download(string objectName, string localFile, GxFileType fileType)
         {

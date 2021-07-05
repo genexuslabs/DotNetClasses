@@ -91,7 +91,8 @@ namespace GeneXus.Storage.GXAzureStorage
 		private CloudBlockBlob GetCloudBlockBlob(string externalFileName, GxFileType fileType)
 		{
 			CloudBlockBlob blob;
-			if (fileType.HasFlag(GxFileType.Private))
+
+			if (IsPrivateFile(fileType))
 			{
 				blob = PrivateContainer.GetBlockBlobReference(externalFileName);
 			}
@@ -103,17 +104,24 @@ namespace GeneXus.Storage.GXAzureStorage
 			return blob;
 		}
 		
-		private bool IsPrivateFile(GxFileType fileType)
-		{			
-			if (fileType.HasFlag(GxFileType.Private))
+		private bool IsPrivateFile(GxFileType acl)
+		{
+			if (acl.HasFlag(GxFileType.Private))
 			{
 				return true;
 			}
-			if (fileType.HasFlag(GxFileType.PublicRead))
+			else if (acl.HasFlag(GxFileType.PublicRead))
 			{
 				return false;
 			}
-			return (this.defaultAcl == GxFileType.PublicRead) ? false : true;
+			else if (this.defaultAcl == GxFileType.Private)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		public string Get(string objectName, GxFileType fileType, int urlMinutes)
