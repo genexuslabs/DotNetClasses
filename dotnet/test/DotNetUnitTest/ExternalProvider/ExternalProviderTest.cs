@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net;
@@ -14,23 +15,26 @@ namespace UnitTesting
 	[Collection("Sequential")]
 	public abstract class ExternalProviderTest
 	{
+		
 		private GeneXus.Services.ExternalProvider provider;
-		private static String TEST_SAMPLE_FILE_NAME = $"text{new Random().Next(1, 100)}.txt";
-		private static String TEST_SAMPLE_FILE_PATH = Path.Combine("resources", "text.txt").ToString(CultureInfo.InvariantCulture);
+		private String TEST_SAMPLE_FILE_NAME = $"text{new Random().Next(1, 10000)}.txt";
+		private String TEST_SAMPLE_FILE_PATH;
 		private bool defaultAclPrivate;
 		
 		public ExternalProviderTest(string providerName, Type externalProviderType, bool isPrivate)
 		{			
 			defaultAclPrivate = isPrivate;
 			Environment.SetEnvironmentVariable($"STORAGE_{providerName}_DEFAULT_ACL", defaultAclPrivate ? GxFileType.Private.ToString() : GxFileType.PublicRead.ToString());
-			
 			bool testEnabled = Environment.GetEnvironmentVariable(providerName + "_TEST_ENABLED") == "true";
 
+						
 			Skip.IfNot(testEnabled, "Environment variables not set");
 			provider = (GeneXus.Services.ExternalProvider)Activator.CreateInstance(externalProviderType);
-
-			Skip.IfNot(testEnabled);
+			
 			Assert.NotNull(provider);
+
+			TEST_SAMPLE_FILE_PATH = Path.Combine("resources", TEST_SAMPLE_FILE_NAME).ToString(CultureInfo.InvariantCulture);
+			File.WriteAllText(TEST_SAMPLE_FILE_PATH, "This is a Sample Test from External Storage GeneXus .NET Generator Unit Tests");
 		}
 
 		public ExternalProviderTest(string providerName, Type externalProviderType) : this(providerName, externalProviderType, false)
@@ -207,11 +211,10 @@ namespace UnitTesting
 			Assert.False(UrlExists(url));
 		}
 
+
 		[SkippableFact]
 		public void TestDeleteFilePrivate()
-		{
-			Skip.If(this is ExternalProviderGoogleTest, "This test is failing randomly for Google Cloud Storage.");
-
+		{			
 			GxFileType acl = GxFileType.Private;
 			provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, acl);
 			provider.Delete(TEST_SAMPLE_FILE_NAME, acl);
@@ -233,6 +236,34 @@ namespace UnitTesting
 
 		}
 
+
+		[SkippableFact]
+		public void TestEmptyFolder()
+		{
+			GxFileType acl = GxFileType.PublicRead;
+			string folderName = $"folderTemp{new Random().Next(1, 100)}";
+			
+			provider.DeleteDirectory(folderName);
+
+			List<string> urls = new List<string>();
+
+			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/test1.png", acl));
+			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/text2.txt", acl));
+			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/text3.txt", acl));
+			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/text4.txt", acl));
+			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/test1.png", acl));
+
+
+			var files = provider.GetFiles(folderName);
+			Assert.Equal(4, files.Count);
+	
+			provider.DeleteDirectory(folderName);
+
+			files = provider.GetFiles(folderName);
+			Assert.Empty(files);
+			
+		}
+
 		private void Copy(String copyFileName, GxFileType acl)
 		{
 			provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, acl);
@@ -240,7 +271,7 @@ namespace UnitTesting
 			EnsureUrl(upload, acl);
 
 			DeleteSafe(copyFileName);
-			Wait(1000); //Google CDN replication seems to be delayed.
+			Wait(500); //Google CDN replication seems to be delayed.
 
 			String urlCopy = TryGet(copyFileName, GxFileType.PublicRead);
 			Assert.False(UrlExists(urlCopy), "URL cannot exist: " + urlCopy);
@@ -250,6 +281,8 @@ namespace UnitTesting
 			EnsureUrl(upload, acl);
 		}
 
+
+		
 		private String TryGet(String objectName, GxFileType acl)
 		{
 			String getValue = "";
@@ -313,6 +346,7 @@ namespace UnitTesting
 			{
 				if (!(this is ExternalProviderMinioTest)) //Minio local installation not supported
 				{
+					Skip.If(this is ExternalProviderMinioTest);
 					String noSignedUrl = signedOrUnsignedUrl.Substring(0, signedOrUnsignedUrl.IndexOf('?') + 1);
 					Assert.False(UrlExists(noSignedUrl), "URL must be private: " + noSignedUrl);
 				}

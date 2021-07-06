@@ -202,15 +202,12 @@ namespace GeneXus.Storage.GXGoogleCloud
 
 		private UploadObjectOptions GetUploadOptions(GxFileType acl)
 		{
-			return new UploadObjectOptions() { PredefinedAcl = GetPredefinedAcl(acl) };			
+			return new UploadObjectOptions() { PredefinedAcl = GetPredefinedAcl(acl) };
 		}
 
 		public void Delete(string objectName, GxFileType fileType)
 		{
-            Google.Apis.Storage.v1.Data.Object obj = new Google.Apis.Storage.v1.Data.Object();
-            obj.Name = objectName;
-            obj.Bucket = Bucket;
-            Client.DeleteObject(obj);
+			Client.DeleteObject(Bucket, objectName);
         }
 
         public string Upload(string localFile, string objectName, GxFileType fileType)
@@ -257,6 +254,7 @@ namespace GeneXus.Storage.GXGoogleCloud
 
         public string Get(string objectName, GxFileType fileType, int urlMinutes)
         {
+			objectName = objectName.Replace("%2F", "/"); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
 			if (Exists(objectName, fileType))
 			{
 				return GetURL(objectName, fileType, urlMinutes);
@@ -482,12 +480,14 @@ namespace GeneXus.Storage.GXGoogleCloud
 			if (url.StartsWith(baseUrl))
 			{
 				objectName = url.Replace(baseUrl, string.Empty);
+				objectName = objectName.Replace("%2F", "/"); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
 				return true;
 			}
 			baseUrl = $"https://storage.googleapis.com/{Bucket}/";
 			if (url.StartsWith(baseUrl))
 			{
 				objectName = url.Replace(baseUrl, string.Empty);
+				objectName = objectName.Replace("%2F", "/"); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
 				return true;
 			}
 			objectName = null;
