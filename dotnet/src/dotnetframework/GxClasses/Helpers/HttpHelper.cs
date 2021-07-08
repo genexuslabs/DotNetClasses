@@ -235,7 +235,7 @@ namespace GeneXus.Http
 						ext = ext.TrimStart('.');
 					filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
-					GxFile file = new GxFile(tempDir, filePath, GxFileType.Private);
+					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
 #if NETCORE
 					filePath = file.Create(pf.OpenReadStream());
 #else
