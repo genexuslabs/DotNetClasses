@@ -9,12 +9,19 @@ using GeneXus.Utils;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
 using System.Collections;
 using GeneXus.Metadata;
+using System.Linq;
 
 namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 {
-    public static class TimerTriggerHandler
+    public class TimerTriggerHandler
     {
-		public static void Run(MyInfo TimerInfo, FunctionContext context) 
+		private ICallMappings _callmappings;
+
+		public TimerTriggerHandler(ICallMappings callMappings)
+		{
+			_callmappings = callMappings;
+		}
+		public void Run(MyInfo TimerInfo, FunctionContext context) 
 		{
 			var logger = context.GetLogger("TimerTriggerHandler");
 			string functionName = context.FunctionDefinition.Name;
@@ -31,10 +38,14 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				throw ex;
 			}
 		}
-		private static void ProcessMessage(FunctionContext context, ILogger log, MyInfo TimerInfo, string messageId)
+		private void ProcessMessage(FunctionContext context, ILogger log, MyInfo TimerInfo, string messageId)
 		{
-			string gxProcedure = FunctionReferences.GetFunctionEntryPoint(context, log, messageId);
+			CallMappings callmap = (CallMappings)_callmappings;
+
+			GxAzMappings map = callmap.mappings is object ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+			string gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
 			string exMessage;
+
 			if (!string.IsNullOrEmpty(gxProcedure))
 			{
 				try
@@ -164,7 +175,7 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				throw new Exception(exMessage);
 			}
 		}
-		private static GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
+		private GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
 		{
 			GxUserType CustomPayloadItem = (GxUserType)Activator.CreateInstance(customPayloadItemType, new object[] { gxContext });
 			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyid", propertyId);
