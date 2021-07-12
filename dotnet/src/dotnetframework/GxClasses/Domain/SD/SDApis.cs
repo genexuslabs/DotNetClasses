@@ -122,6 +122,15 @@ namespace GX
 				return deviceType;
 			}
 		}
+
+		public enum DeviceTypeEnum
+		{
+			iOS = 0,
+			Android = 1,
+			Blackberry = 2,
+			Windows = 3,
+			Web = 4
+		}
 	}
 	public class SDServerAPI
 	{
