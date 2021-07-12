@@ -4,12 +4,12 @@ namespace GxClasses.Helpers
 {
 	internal class EnvVarReader
 	{
-		private const string ENVVAR_PREFIX = "GX_";
+		internal const string ENVVAR_PREFIX = "GX_";
 		public static bool GetEnvironmentValue(string name, out string value)
 		{
 			try
 			{
-				value = Environment.GetEnvironmentVariable($"{ENVVAR_PREFIX}{name.ToUpper()}");
+				value = Environment.GetEnvironmentVariable($"{name.ToUpper()}");
 				if (!string.IsNullOrEmpty(value))
 					return true;
 
