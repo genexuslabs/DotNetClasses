@@ -39,7 +39,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 			catch (Exception ex) //Catch System exception and retry
 			{
 				log.LogError(ex.ToString());
-				throw ex;
+				throw;
 			}
 		}
 		private GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
@@ -241,11 +241,11 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 										log.LogInformation("(GX function handler) Function finished execution.");
 									}
 								}
-								catch (Exception ex)
+								catch (Exception)
 								{
 									exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
 									log.LogError(exMessage);
-									throw (ex); //Throw the exception so the runtime can Retry the operation.
+									throw; //Throw the exception so the runtime can Retry the operation.
 								}
 							}
 						}
@@ -256,10 +256,10 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 						throw new Exception(exMessage);
 					}
 				}
-				catch (Exception ex)
+				catch (Exception)
 				{
 					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
-					throw (ex); //Throw the exception so the runtime can Retry the operation.
+					throw; //Throw the exception so the runtime can Retry the operation.
 				}
 			}
 			else

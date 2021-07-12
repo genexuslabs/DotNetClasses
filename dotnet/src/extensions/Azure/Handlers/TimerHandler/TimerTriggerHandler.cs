@@ -35,7 +35,7 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 			catch (Exception ex) //Catch System exception and retry
 			{
 				logger.LogError(ex.ToString());
-				throw ex;
+				throw;
 			}
 		}
 		private void ProcessMessage(FunctionContext context, ILogger log, MyInfo TimerInfo, string messageId)
@@ -150,10 +150,10 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 									log.LogInformation("(GX function handler) Function finished execution.");
 								}
 							}
-							catch (Exception ex)
+							catch (Exception)
 							{
 								log.LogError("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, messageId);
-								throw ex; //Throw the exception so the runtime can Retry the operation.
+								throw; //Throw the exception so the runtime can Retry the operation.
 							}
 						}
 					}
@@ -163,10 +163,10 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 						throw new Exception(exMessage);
 					}
 				}
-				catch (Exception ex)
+				catch (Exception)
 				{
 					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, messageId);
-					throw ex; //Throw the exception so the runtime can Retry the operation.
+					throw; //Throw the exception so the runtime can Retry the operation.
 				}
 			}
 			else
