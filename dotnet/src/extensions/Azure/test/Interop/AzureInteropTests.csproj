@@ -10,8 +10,8 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<ProjectReference Include="..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
-		<ProjectReference Include="..\amyprocedurehandler\amyprochandler.csproj" />
+		<ProjectReference Include="..\..\..\..\..\..\..\..\..\DotNetClassesBetaParaSubirCambiosPerfAzFunc\DotNetClasses\dotnet\src\dotnetcore\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\..\..\..\..\..\..\..\DotNetClassesBetaParaSubirCambiosPerfAzFunc\DotNetClasses\dotnet\src\extensions\Azure\test\amyprocedurehandler\amyprochandler.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="client.exe.config">
