@@ -583,6 +583,12 @@ namespace GeneXus.Http
 	internal class GXOAuthAccessToken : GXHttpHandler, IRequiresSessionState
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GXOAuthAccessToken));
+		const string OTP_USER_ACCESS_CODE_SENT = "400";
+		const string TFA_USER_MUST_VALIDATE = "410";
+		const string TOKEN_EXPIRED = "103";
+		const int ACCEPTED = 202;
+		const int FORBIDDEN = 403;
+
 		public GXOAuthAccessToken()
 		{
 			this.context = new GxContext();
@@ -660,7 +666,18 @@ namespace GeneXus.Http
 					if (result != null)
 					{
 						string messagePermission = result.Description;
-						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, result.Code, messagePermission);
+						string statusCode = result.Code;
+
+						if (statusCode == OTP_USER_ACCESS_CODE_SENT || statusCode == TFA_USER_MUST_VALIDATE)
+						{
+							statusCode = ACCEPTED.ToString();
+							localHttpContext.Response.StatusCode = ACCEPTED;
+						}
+						else if(statusCode == TOKEN_EXPIRED)
+						{
+							statusCode = FORBIDDEN.ToString();
+						}
+						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, statusCode, messagePermission);
 						if (GXUtil.ContainsNoAsciiCharacter(messagePermission))
 						{
 							messagePermission = string.Format("{0}{1}", GxRestPrefix.ENCODED_PREFIX, Uri.EscapeDataString(messagePermission));
