@@ -78,6 +78,9 @@ namespace GeneXus.Http
 					case "201":
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Created;
 						break;
+					case "202":
+						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Accepted;
+						break;
 					case "400":
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
 						break;
@@ -87,7 +90,7 @@ namespace GeneXus.Http
 					case "409":
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Conflict;
 						break;
-					case "103":
+					case "403":
 						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Forbidden;
 						break;
 					case "500":
@@ -112,6 +115,9 @@ namespace GeneXus.Http
 						case "201":
 							httpContext.Response.StatusCode = (int)HttpStatusCode.Created;
 							break;
+						case "202":
+							httpContext.Response.StatusCode = (int)HttpStatusCode.Accepted;
+							break;
 						case "400":
 							httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 							break;
@@ -121,7 +127,7 @@ namespace GeneXus.Http
 						case "409":
 							httpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
 							break;
-						case "103":
+						case "403":
 							httpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
 							break;
 						case "500":
