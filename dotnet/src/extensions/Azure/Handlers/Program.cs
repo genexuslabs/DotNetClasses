@@ -1,19 +1,65 @@
+using System.IO;
+using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+using GxClasses.Web;
+using GxClasses.Web.Middleware;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Azure.Functions.Worker.Configuration;
 
-namespace AllFunctions
+namespace GeneXus.Deploy.AzureFunctions.Handlers
 {
-    public class Program
-    {
-        public static void Main()
-        {
-            var host = new HostBuilder()
-                .ConfigureFunctionsWorkerDefaults()
-                .Build();
+	public class Program
+	{
+		static async Task Main()
+		{
+			
+			string routePrefix = GetRoutePrefix();
+			GXRouting.ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-            host.Run();
-        }
-    }
+			var host = new HostBuilder()
+				.ConfigureFunctionsWorkerDefaults()
+				.ConfigureServices(services =>
+				{
+					services.AddSingleton<IGXRouting, GXRouting>(x => new GXRouting(routePrefix));
+				})
+				.Build();
+			
+			await host.RunAsync();
+		}
+
+		//public void ConfigureServices(IServiceCollection services)
+		//{
+			//services.AddMvc();
+			//services.AddHttpContextAccessor();
+		//}
+		private static string GetRoutePrefix()
+		{
+			//Read host.json file to get Route prefix
+			string ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			string hostFile = "host.json";
+			string hostFilePath = Path.Combine(ContentRootPath, hostFile);
+
+			//Default Azure value
+			string routePrefix = "api"; 
+
+			if (File.Exists(hostFilePath))
+			{
+				string hostFileContent = File.ReadAllText(hostFilePath);			
+				using (JsonDocument doc = JsonDocument.Parse(hostFileContent))
+				{
+					JsonElement root = doc.RootElement;
+					if (root.TryGetProperty("extensions", out JsonElement extensionsElement))
+					{
+						if (extensionsElement.TryGetProperty("http", out JsonElement httpElement))
+							{
+							if (httpElement.TryGetProperty("routePrefix", out JsonElement routeElement))
+									routePrefix = routeElement.GetString();
+							}
+					}
+				}		
+			}
+			return routePrefix;
+		}
+	}
 }

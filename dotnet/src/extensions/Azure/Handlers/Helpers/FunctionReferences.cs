@@ -10,12 +10,14 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers.Helpers
 	public static class FunctionReferences
 	{
 		public const string MappingsFile = "gxazmappings.json";
+		public const string MetadataFile = "Functions.metadata";
 		public const string GeneXusServerlessAPIAssembly = "GeneXusServerlessAPI";
 		public const string EventCustomPayloadItemFullClassName = "GeneXus.Programs.genexusserverlessapi.SdtEventCustomPayload_CustomPayloadItem";
 		public const string EventMessageFullClassName = "GeneXus.Programs.genexusserverlessapi.SdtEventMessage";
 		public const string EventMessagesFullClassName = "GeneXus.Programs.genexusserverlessapi.SdtEventMessages";
 		public const string EventMessageResponseFullClassName = "GeneXus.Programs.genexusserverlessapi.SdtEventMessageResponse";
 		public const string FunctionHandlerAssembly = "GeneXus.Deploy.AzureFunctions.Handlers.dll";
+
 		public static string GetFunctionEntryPoint(FunctionContext context, ILogger log, string id)
 		{
 			//Get json file to know the GX procedure to call
@@ -46,6 +48,4 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers.Helpers
 			return gxProcedure;
 		}
 	}
-
-	
 }
