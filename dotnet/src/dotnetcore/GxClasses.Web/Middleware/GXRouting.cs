@@ -273,6 +273,7 @@ namespace GxClasses.Web.Middleware
 			}
 
 			controllerWithParms = path.Remove(0, basePath.Length + 1);
+			controllerWithParms = controllerWithParms.StartsWith("/") ? controllerWithParms.Remove(0, 1) : controllerWithParms;
 			return controllerWithParms;
 
 		}
