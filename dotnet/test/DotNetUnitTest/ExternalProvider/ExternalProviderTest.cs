@@ -15,26 +15,30 @@ namespace UnitTesting
 	[Collection("Sequential")]
 	public abstract class ExternalProviderTest
 	{
-		
+
 		private GeneXus.Services.ExternalProvider provider;
-		private String TEST_SAMPLE_FILE_NAME = $"text{new Random().Next(1, 10000)}.txt";
-		private String TEST_SAMPLE_FILE_PATH;
+		private String testRunId;
+		private String testFileName;
+		private String testFilePath;
 		private bool defaultAclPrivate;
-		
+
 		public ExternalProviderTest(string providerName, Type externalProviderType, bool isPrivate)
-		{			
+		{
 			defaultAclPrivate = isPrivate;
 			Environment.SetEnvironmentVariable($"STORAGE_{providerName}_DEFAULT_ACL", defaultAclPrivate ? GxFileType.Private.ToString() : GxFileType.PublicRead.ToString());
 			bool testEnabled = Environment.GetEnvironmentVariable(providerName + "_TEST_ENABLED") == "true";
 
-						
+
 			Skip.IfNot(testEnabled, "Environment variables not set");
 			provider = (GeneXus.Services.ExternalProvider)Activator.CreateInstance(externalProviderType);
-			
+
 			Assert.NotNull(provider);
 
-			TEST_SAMPLE_FILE_PATH = Path.Combine("resources", TEST_SAMPLE_FILE_NAME).ToString(CultureInfo.InvariantCulture);
-			File.WriteAllText(TEST_SAMPLE_FILE_PATH, "This is a Sample Test from External Storage GeneXus .NET Generator Unit Tests");
+			testRunId = new Random().Next(1, 10000).ToString(CultureInfo.InvariantCulture);
+			testFileName = $"text{testRunId}.txt";
+			testFilePath = Path.Combine("resources", testFileName).ToString(CultureInfo.InvariantCulture);
+
+			File.WriteAllText(testFilePath, "This is a Sample Test from External Storage GeneXus .NET Generator Unit Tests");
 		}
 
 		public ExternalProviderTest(string providerName, Type externalProviderType) : this(providerName, externalProviderType, false)
@@ -45,28 +49,28 @@ namespace UnitTesting
 		[SkippableFact]
 		public void TestUploadPublicMethod()
 		{
-			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, GxFileType.PublicRead);
+			String upload = provider.Upload(testFilePath, testFileName, GxFileType.PublicRead);
 			EnsureUrl(upload, GxFileType.PublicRead);
 		}
 
 		[SkippableFact]
 		public void TestUploadPrivateSubfolderMethod()
 		{
-			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, $"folder/folder2/folder3/{TEST_SAMPLE_FILE_NAME}", GxFileType.Private);
+			String upload = provider.Upload(testFilePath, $"folder/folder2/folder3/{testFileName}", GxFileType.Private);
 			EnsureUrl(upload, GxFileType.Private);
 		}
 
 		[SkippableFact]
 		public void TestUploadDefaultMethod()
 		{
-			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, GxFileType.Default);
+			String upload = provider.Upload(testFilePath, testFileName, GxFileType.Default);
 			EnsureUrl(upload, GxFileType.Default);
 		}
 
 		[SkippableFact]
 		public void TestUploadDefaultAttributeMethod()
 		{
-			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, GxFileType.DefaultAttribute);
+			String upload = provider.Upload(testFilePath, testFileName, GxFileType.DefaultAttribute);
 			EnsureUrl(upload, GxFileType.DefaultAttribute);
 		}
 
@@ -108,11 +112,11 @@ namespace UnitTesting
 
 		public void TestUploadAndCopyByAcl(GxFileType aclUpload, GxFileType aclCopy)
 		{
-			string copySourceName = $"test-source-upload-and-copy_{new Random().Next()}.txt";
-			String copyTargetName = $"test-upload-and-copy_{new Random().Next()}.txt";
-			DeleteSafe(TEST_SAMPLE_FILE_PATH);
+			string copySourceName = BuildRandomTextFileName("test-source-upload-and-copy");
+			String copyTargetName = BuildRandomTextFileName("test-upload-and-copy");
+			DeleteSafe(testFilePath);
 			DeleteSafe(copyTargetName);
-			String upload = provider.Upload(TEST_SAMPLE_FILE_PATH, copySourceName, aclUpload);
+			String upload = provider.Upload(testFilePath, copySourceName, aclUpload);
 			EnsureUrl(upload, aclUpload);
 
 			String copyUrl = TryGet(copyTargetName, aclCopy);
@@ -126,25 +130,30 @@ namespace UnitTesting
 		[SkippableFact]
 		public void TestCopyMethod()
 		{
-			String copyFileName = "copy-text.txt";
+			string copyFileName = BuildRandomTextFileName("text-copy");
 			Copy(copyFileName, GxFileType.PublicRead);
+		}
+
+		private string BuildRandomTextFileName(string name)
+		{
+			return $"{name}_{testRunId}.txt";
 		}
 
 		[SkippableFact]
 		public void TestCopyPrivateMethod()
 		{
-			String copyFileName = "copy-text-private.txt";
+			String copyFileName = BuildRandomTextFileName("copy-text-private");
 			Copy(copyFileName, GxFileType.Private);
 		}
 
 		[SkippableFact]
 		public void TestMultimediaUpload()
 		{
-			string sourceFile = $"folder1/folder2/folder3{TEST_SAMPLE_FILE_NAME}";
-			String copyFileName = "copy-text-private.txt";
+			string sourceFile = $"folder1/folder2/folder3{testFileName}";
+			String copyFileName = BuildRandomTextFileName("copy-text-private");
 			GxFileType acl = GxFileType.Private;
 
-			provider.Upload(TEST_SAMPLE_FILE_PATH, sourceFile, acl);
+			provider.Upload(testFilePath, sourceFile, acl);
 			String upload = provider.Get(sourceFile, acl, 100);
 			EnsureUrl(upload, acl);
 
@@ -163,7 +172,7 @@ namespace UnitTesting
 		public void TestGetMethod()
 		{
 			TestUploadPublicMethod();
-			String url = provider.Get(TEST_SAMPLE_FILE_NAME, GxFileType.PublicRead, 10);
+			String url = provider.Get(testFileName, GxFileType.PublicRead, 10);
 			EnsureUrl(url, GxFileType.PublicRead);
 		}
 
@@ -171,11 +180,11 @@ namespace UnitTesting
 		public void TestGetObjectName()
 		{
 			TestUploadPublicMethod();
-			string url = provider.Get(TEST_SAMPLE_FILE_NAME, GxFileType.PublicRead, 10);
+			string url = provider.Get(testFileName, GxFileType.PublicRead, 10);
 			Assert.True(UrlExists(url));
 			string objectName;
 			provider.TryGetObjectNameFromURL(url, out objectName);
-			Assert.Equal(TEST_SAMPLE_FILE_NAME, objectName);
+			Assert.Equal(testFileName, objectName);
 		}
 
 		[SkippableFact]
@@ -183,7 +192,7 @@ namespace UnitTesting
 		{
 			TestUploadPublicMethod();
 
-			String downloadPath = Path.Combine("resources", "test", TEST_SAMPLE_FILE_NAME);
+			String downloadPath = Path.Combine("resources", "test", testFileName);
 			try
 			{
 				File.Delete(downloadPath);
@@ -194,7 +203,7 @@ namespace UnitTesting
 				Directory.CreateDirectory(Path.Combine("resources", "test"));
 			}
 			catch (Exception) { }
-			provider.Download(TEST_SAMPLE_FILE_NAME, downloadPath, GxFileType.PublicRead);
+			provider.Download(testFileName, downloadPath, GxFileType.PublicRead);
 			Assert.True(File.Exists(downloadPath));
 		}
 
@@ -203,22 +212,22 @@ namespace UnitTesting
 		{
 			GxFileType acl = GxFileType.PublicRead;
 			TestUploadPublicMethod();
-			String url = TryGet(TEST_SAMPLE_FILE_NAME, acl);
+			String url = TryGet(testFileName, acl);
 			EnsureUrl(url, acl);
-			provider.Delete(TEST_SAMPLE_FILE_NAME, acl);
+			provider.Delete(testFileName, acl);
 
-			url = TryGet(TEST_SAMPLE_FILE_NAME, acl);
+			url = TryGet(testFileName, acl);
 			Assert.False(UrlExists(url));
 		}
 
 
 		[SkippableFact]
 		public void TestDeleteFilePrivate()
-		{			
+		{
 			GxFileType acl = GxFileType.Private;
-			provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, acl);
-			provider.Delete(TEST_SAMPLE_FILE_NAME, acl);
-			String url = TryGet(TEST_SAMPLE_FILE_NAME, acl);
+			provider.Upload(testFilePath, testFileName, acl);
+			provider.Delete(testFileName, acl);
+			String url = TryGet(testFileName, acl);
 			Assert.False(UrlExists(url));
 		}
 
@@ -226,10 +235,10 @@ namespace UnitTesting
 		public void TestUploadPrivateMethod()
 		{
 			GxFileType acl = GxFileType.Private;
-			String externalFileName = "text-private-2.txt";
+			String externalFileName = BuildRandomTextFileName("text-private-2");
 
 			DeleteSafe(externalFileName);
-			String signedUrl = provider.Upload(TEST_SAMPLE_FILE_PATH, externalFileName, acl);
+			String signedUrl = provider.Upload(testFilePath, externalFileName, acl);
 			EnsureUrl(signedUrl, acl);
 			signedUrl = provider.Get(externalFileName, acl, 10);
 			EnsureUrl(signedUrl, acl);
@@ -242,32 +251,32 @@ namespace UnitTesting
 		{
 			GxFileType acl = GxFileType.PublicRead;
 			string folderName = $"folderTemp{new Random().Next(1, 100)}";
-			
+
 			provider.DeleteDirectory(folderName);
 
 			List<string> urls = new List<string>();
 
-			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/test1.png", acl));
-			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/text2.txt", acl));
-			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/text3.txt", acl));
-			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/text4.txt", acl));
-			urls.Add(provider.Upload(TEST_SAMPLE_FILE_PATH, $"{folderName}/test1.png", acl));
+			urls.Add(provider.Upload(testFilePath, $"{folderName}/test1.png", acl));
+			urls.Add(provider.Upload(testFilePath, $"{folderName}/text2.txt", acl));
+			urls.Add(provider.Upload(testFilePath, $"{folderName}/text3.txt", acl));
+			urls.Add(provider.Upload(testFilePath, $"{folderName}/text4.txt", acl));
+			urls.Add(provider.Upload(testFilePath, $"{folderName}/test1.png", acl));
 
 
 			var files = provider.GetFiles(folderName);
 			Assert.Equal(4, files.Count);
-	
+
 			provider.DeleteDirectory(folderName);
 
 			files = provider.GetFiles(folderName);
 			Assert.Empty(files);
-			
+
 		}
 
 		private void Copy(String copyFileName, GxFileType acl)
 		{
-			provider.Upload(TEST_SAMPLE_FILE_PATH, TEST_SAMPLE_FILE_NAME, acl);
-			String upload = provider.Get(TEST_SAMPLE_FILE_NAME, acl, 100);
+			provider.Upload(testFilePath, testFileName, acl);
+			String upload = provider.Get(testFileName, acl, 100);
 			EnsureUrl(upload, acl);
 
 			DeleteSafe(copyFileName);
@@ -276,13 +285,13 @@ namespace UnitTesting
 			String urlCopy = TryGet(copyFileName, GxFileType.PublicRead);
 			Assert.False(UrlExists(urlCopy), "URL cannot exist: " + urlCopy);
 
-			provider.Copy(TEST_SAMPLE_FILE_NAME, acl, copyFileName, acl);
+			provider.Copy(testFileName, acl, copyFileName, acl);
 			upload = provider.Get(copyFileName, acl, 100);
 			EnsureUrl(upload, acl);
 		}
 
 
-		
+
 		private String TryGet(String objectName, GxFileType acl)
 		{
 			String getValue = "";
