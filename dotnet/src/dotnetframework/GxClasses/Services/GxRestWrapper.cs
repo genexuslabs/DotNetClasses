@@ -52,8 +52,14 @@ namespace GeneXus.Application
 		private GXProcedure _procWorker;
 		private const string EXECUTE_METHOD = "execute";
 		public String ServiceMethod = "";
+		public Dictionary<String, String> VariableAlias = null;
 		public bool WrappedParameter = false;
 
+		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
+		{
+			ServiceMethod = serviceMethod;
+			VariableAlias = variableAlias;
+		}
 
 		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod) : this(worker, context, gxContext)
 		{
@@ -123,8 +129,7 @@ namespace GeneXus.Application
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-
-				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters);				
+				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
@@ -218,7 +223,7 @@ namespace GeneXus.Application
 		private string SynchronizerMethod()
 		{
 			string method = string.Empty;
-			var queryParameters = ReadQueryParameters();
+			var queryParameters = ReadQueryParameters(this.VariableAlias);
 			string gxevent = string.Empty;
 			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
 				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
@@ -258,18 +263,19 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				var queryParameters = ReadQueryParameters();
+				var queryParameters = ReadQueryParameters(this.VariableAlias);
 				String innerMethod = EXECUTE_METHOD;
 				if (!String.IsNullOrEmpty(this.ServiceMethod))
 				{
 					innerMethod = this.ServiceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters);			
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
 				return Serialize(outputParameters, wrapped);
 			}
 			catch (Exception e)
@@ -282,24 +288,27 @@ namespace GeneXus.Application
 			}
 		}
 
-		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters)
+		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
 		{
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
+					wrapped = false;
 					Object v = outputParameters.First().Value;
 
 					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 					{
-
 						wrapped = (v as IGxGenericCollectionWrapped).GetIsWrapped();
 					}
-					else
+					if (v is IGxGenericCollectionItem item)
 					{
-						wrapped = true;
+						if (item.Sdt is GxSilentTrnSdt)
+						{
+							wrapped = (parCount>1)?true:false;
+						}
 					}
-				}
+				}			
 			}
 			return wrapped;
 		}
@@ -360,11 +369,14 @@ namespace GeneXus.Application
 			}
 			return bodyParameters;
 		}
-		protected IDictionary<string, object> ReadQueryParameters()
+		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
 			var query = _httpContext.Request.GetQueryString();
-			Dictionary<string, object> parameters = query.Keys.Cast<string>()
-					.ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
+			Dictionary<string, object> parameters = new Dictionary<string, object>();
+			if (varAlias == null)
+				parameters = query.Keys.Cast<string>().ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
+			else
+				parameters = query.Keys.Cast<string>().ToDictionary(k => ((varAlias.ContainsKey(k.ToLower()))?varAlias[k.ToLower()].ToLower():k.ToLower()), v => (object)query[v].ToString());
 			return parameters;
 		}
 		public bool IsRestParameter(string parameterName)
@@ -679,7 +691,11 @@ namespace GeneXus.Application
 		{
 			foreach (var key in parameters.Keys.ToList())
 			{
-				parameters[key] = MakeRestType(parameters[key]);
+				object o = MakeRestType(parameters[key]);
+				if (o == null)
+					parameters.Remove(key);
+				else
+					parameters[key] = o;
 			}
 		}
 		protected static object MakeRestType(object v)
@@ -699,8 +715,16 @@ namespace GeneXus.Application
 					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
 				}
 				bool isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
+				bool isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
 				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
-				return Activator.CreateInstance(genericListItemType, new object[] { v , isWrapped });
+				object c = Activator.CreateInstance(genericListItemType, new object[] { v, isWrapped});
+				// Empty collection serialized w/ noproperty
+				if (c is IList restList)
+				{
+					if (restList.Count == 0 && !isEmpty)
+						return null;
+				}
+				return c;			
 			}
 			else if (typeof(GxUserType).IsAssignableFrom(vType)) //SDTType convert to SDTType_RESTInterface
 			{
@@ -746,5 +770,6 @@ namespace GeneXus.Application
 		public string Parameters { get; set; }
 		public string MethodName { get; set; }
 		public string Verb { get; set; }
+		public Dictionary<string, string> VariableAlias { get; set; }
 	}
 }

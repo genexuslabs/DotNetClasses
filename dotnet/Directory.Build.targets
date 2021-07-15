@@ -11,6 +11,18 @@
 	<PropertyGroup Condition="'$(OutputType)' == 'Exe' OR '$(OutputType)' == 'WinExe'">
 		<ApplicationIcon >$(MSBuildThisFileDirectory)\src\resources\Default_App.ico</ApplicationIcon>
 	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+		<DeployDirectory>$(MSBuildThisFileDirectory)build</DeployDirectory>
+		<!--Set a default deploy dir-->
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(DeployDirectory)'!=''">
+		<DeployDirectoryWithSep>$(DeployDirectory)\</DeployDirectoryWithSep>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(DeployDirectory)'==''">
+		<DeployDirectoryWithSep/>
+	</PropertyGroup>
 
 	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
@@ -60,9 +72,9 @@
 		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(TargetFramework)\$(ProjectName).deps.json" />
 	</Target>
 
-	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!=''">
-		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnetcore/bin" Condition="'$(TargetFramework)'=='netcoreapp3.1'"/>
-		<Copy SourceFiles="$(ProjectDir)/$(OutDir)$(TargetFileName)" DestinationFolder="$(MSBuildThisFileDirectory)/build/gxnet/bin" Condition="'$(TargetFramework)'!='netcoreapp3.1'"/>
+	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)$(TargetFileName)')">
+		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectoryWithSep)$(DeployDirectoryPlatformBin)"></Message>
+		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectoryWithSep)$(DeployDirectoryPlatformBin)" />
 	</Target>
 
 </Project>

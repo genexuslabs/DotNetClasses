@@ -64,6 +64,8 @@ namespace GeneXus.Http
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
 		public const string ASPX = ".aspx";
 		public const string GXOBJECT = "/gxobject";
+		public const string HttpPostMethod= "POST";
+		public const string HttpGetMethod = "GET";
 
 		public static void SetResponseStatus(HttpContext httpContext, string statusCode, string statusDescription)
 		{
@@ -231,9 +233,9 @@ namespace GeneXus.Http
 					string ext = fi.Extension;
 					if (ext != null)
 						ext = ext.TrimStart('.');
-					filePath = FileUtil.getTempFileName(tempDir, "BLOB", ext);
+					filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
-					GxFile file = new GxFile(tempDir, filePath);
+					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
 #if NETCORE
 					filePath = file.Create(pf.OpenReadStream());
 #else

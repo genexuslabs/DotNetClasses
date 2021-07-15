@@ -63,12 +63,14 @@ namespace GeneXus.Application
 			.UseStartup<Startup>()
 			.Build();
 
-		public static IWebHost BuildWebHostPort(string[] args, string port) =>
-		   WebHost.CreateDefaultBuilder(args)
-				.ConfigureLogging(logging => logging.AddConsole())
-				.UseUrls($"http://*:{port}")
-			   .UseStartup<Startup>()
-			   .Build();
+		public static IWebHost BuildWebHostPort(string[] args, string port)
+		{
+			return WebHost.CreateDefaultBuilder(args)
+				 .ConfigureLogging(logging => logging.AddConsole())
+				 .UseUrls(Preferences.HttpProtocolSecure() ? $"{Uri.UriSchemeHttps}://*:{port}" : $"{Uri.UriSchemeHttp}://*:{port}")
+				.UseStartup<Startup>()
+				.Build();
+		}
 	}
 
 	public static class GXHandlerExtensions

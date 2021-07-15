@@ -10,14 +10,21 @@ using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
 using GeneXus.Utils;
 using GeneXus.Metadata;
 using System.Collections;
+using System.Linq;
 
 //https://github.com/Azure/azure-functions-dotnet-worker/issues/384
 
 namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 {
-	public static class ServiceBusTriggerHandler
+	public class ServiceBusTriggerHandler
 	{
-		public static void Run(string myQueueItem, FunctionContext context)
+		private ICallMappings _callmappings;
+
+		public ServiceBusTriggerHandler(ICallMappings callMappings)
+		{
+			_callmappings = callMappings;
+		}
+		public void Run(string myQueueItem, FunctionContext context)
 		{
 			var log = context.GetLogger("ServiceBusTriggerHandler");
 			string functionName = context.FunctionDefinition.Name;
@@ -32,10 +39,10 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 			catch (Exception ex) //Catch System exception and retry
 			{
 				log.LogError(ex.ToString());
-				throw ex;
+				throw;
 			}
 		}
-		private static GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
+		private GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
 		{
 			GxUserType CustomPayloadItem = (GxUserType)Activator.CreateInstance(customPayloadItemType, new object[] { gxContext });
 			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyid", propertyId);
@@ -43,7 +50,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 			return CustomPayloadItem;
 
 		}
-		private static Message SetupMessage(FunctionContext context, string item)
+		private Message SetupMessage(FunctionContext context, string item)
 		{
 			Message message = new Message();
 			message.MessageProperties = new List<Message.MessageProperty>();
@@ -91,10 +98,14 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 			}
 			return message;
 		}
-		private static void ProcessMessage(FunctionContext context, ILogger log, Message message)
+		private void ProcessMessage(FunctionContext context, ILogger log, Message message)
 		{
-			string gxProcedure = FunctionReferences.GetFunctionEntryPoint(context, log, message.MessageId);
+			CallMappings callmap = (CallMappings)_callmappings;
+			GxAzMappings map = callmap.mappings is object ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+			string gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
+
 			string exMessage;
+
 			if (!string.IsNullOrEmpty(gxProcedure))
 			{
 				try
@@ -230,11 +241,11 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 										log.LogInformation("(GX function handler) Function finished execution.");
 									}
 								}
-								catch (Exception ex)
+								catch (Exception)
 								{
 									exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
 									log.LogError(exMessage);
-									throw (ex); //Throw the exception so the runtime can Retry the operation.
+									throw; //Throw the exception so the runtime can Retry the operation.
 								}
 							}
 						}
@@ -245,10 +256,10 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 						throw new Exception(exMessage);
 					}
 				}
-				catch (Exception ex)
+				catch (Exception)
 				{
 					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
-					throw (ex); //Throw the exception so the runtime can Retry the operation.
+					throw; //Throw the exception so the runtime can Retry the operation.
 				}
 			}
 			else
