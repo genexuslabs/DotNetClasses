@@ -108,7 +108,6 @@ namespace GeneXus.Application
 
 		public Startup(IHostingEnvironment env)
 		{
-			System.Diagnostics.Debugger.Launch();
 
 			var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)

@@ -42,7 +42,7 @@ namespace GxClasses.Web.Middleware
 
 		const string PRIVATE_DIR = "private";
 		public Dictionary<string, string> servicesPathUrl = new Dictionary<string, string>();
-		public Dictionary<String, Dictionary<string, string>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
+		public Dictionary<String, Dictionary<string, SingleMap>> servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
 		public Dictionary<string, List<string>> servicesValidPath = new Dictionary<string, List<string>>();
 		public string restBaseURL;
@@ -56,7 +56,7 @@ namespace GxClasses.Web.Middleware
 
 		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
 											Dictionary<string, List<string>> sValid,
-											Dictionary<string, Dictionary<string, string>> sMap,
+											Dictionary<string, Dictionary<string, SingleMap>> sMap,
 											Dictionary<string, Dictionary<Tuple<string, string>, string>> sMapData,
 											string basePath, string verb, string path)
 		{
@@ -85,10 +85,11 @@ namespace GxClasses.Web.Middleware
 								//	sVerb[basePath].TryGetValue(path.ToLower(), out httpverb);
 								//else
 								//	httpverb = "";
-								string mth = sMap[basePath][value];
+								string mth = sMap[basePath][value].ServiceMethod;
+								Dictionary<string, string> vMap = sMap[basePath][value].VariableAlias;
 								if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
 									parms = path.Substring(questionMarkIdx + 1);
-								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = mth, Verb = verb });
+								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = parms, MethodName = mth, Verb = verb, VariableAlias = vMap });
 								GXLogging.Debug(log, $"Controller found Name:{apiPaths[basePath]} Parameters:{parms} MethodName:{mth} Verb={verb}");
 							}
 							else
@@ -183,7 +184,8 @@ namespace GxClasses.Web.Middleware
 					
 					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesValidPath, servicesMap, servicesMapData, actualPath, context.Request.Method, controllerWithParms);
 					GxRestWrapper controller = null;
-					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name, c.MethodName)) != null);
+					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name, c.MethodName, c.VariableAlias)) != null);
+					
 
 					if (controller != null)
 					{
@@ -292,7 +294,7 @@ namespace GxClasses.Web.Middleware
 			GXLogging.Debug(log, $"ServiceInPath path:{path} not found");
 			return false;
 		}
-		public GxRestWrapper GetController(HttpContext context, string controller, string methodName)
+		public GxRestWrapper GetController(HttpContext context, string controller, string methodName, Dictionary<string, string> variableAlias)
 		{
 			GXLogging.Debug(log, $"GetController:{controller} method:{methodName}");
 			GxContext gxContext = GxContext.CreateDefaultInstance();
@@ -328,7 +330,7 @@ namespace GxClasses.Web.Middleware
 				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 				GXProcedure proc = controllerInstance as GXProcedure;
 				if (proc != null)
-					return new GxRestWrapper(proc, context, gxContext, methodName);
+					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias);
 				else
 					GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{asssemblycontroller} nspace:{nspace} controller:{controller}");
 			}
@@ -394,23 +396,27 @@ namespace GxClasses.Web.Middleware
 								sm.Verb = "GET";
 							if (String.IsNullOrEmpty(sm.Path))
 								sm.Path = sm.Name;
+							if (sm.VariableAlias == null)
+								sm.VariableAlias = new Dictionary<string, string>();
 							if (servicesMap.ContainsKey(mapPathLower))
 							{
 								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
 								{
 									servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
-									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+									
 									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
 								}
 							}
 							else
 							{
 								servicesValidPath.Add(mapPathLower, new List<string>());
 								servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
-								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
+								
 								servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string, string>, string>());
 								servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+								servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
+								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
 							}
 						}
 					}
@@ -496,6 +502,7 @@ namespace GxClasses.Web.Middleware
 		String path = "";
 		String implementation = "";
 		String methodName = "";
+		Dictionary<string, string> variableAlias = new Dictionary<string, string>();
 
 		[DataMember()]
 		public string Name { get => name; set => name = value; }
@@ -512,5 +519,7 @@ namespace GxClasses.Web.Middleware
 		[DataMember()]
 		public string Verb { get => verb; set => verb = value; }
 
+		[DataMember()]
+		public Dictionary<string, string> VariableAlias { get => variableAlias; set => variableAlias = value; }
 	}
 }
