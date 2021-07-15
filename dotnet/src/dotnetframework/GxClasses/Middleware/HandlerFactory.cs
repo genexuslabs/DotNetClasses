@@ -64,7 +64,7 @@ namespace GeneXus.HttpHandlerFactory
 				if (GXAPIModule.servicesMapData.ContainsKey(actualPath) &&
 					GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out String mapName))
 				{
-					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out String value))
+					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
 					{
 						String tmpController = objClass;
 						String asssemblycontroller = tmpController;
@@ -78,7 +78,7 @@ namespace GeneXus.HttpHandlerFactory
 						var gxContext = GxContext.CreateDefaultInstance();
 						var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
 						gxContext.HttpContext = context;
-						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value);
+						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value.ServiceMethod, value.VariableAlias);
 						return restWrapper;
 					}
 				}
