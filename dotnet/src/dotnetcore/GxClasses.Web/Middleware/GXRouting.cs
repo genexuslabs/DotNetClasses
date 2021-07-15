@@ -468,7 +468,7 @@ namespace GxClasses.Web.Middleware
 	}
 
 	[DataContract()]
-	internal class MapGroup
+	public class MapGroup
 	{	
 		String _objectType;
 		String _name;
@@ -489,7 +489,7 @@ namespace GxClasses.Web.Middleware
 	}
 
 	[DataContract()]
-	internal class SingleMap
+	public class SingleMap
 	{
 		String verb = "GET";
 		String name = "";
