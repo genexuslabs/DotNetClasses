@@ -145,7 +145,6 @@ namespace GeneXus.Application
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
-		const string SDSVC_METHO_SUFFIX = "DL";
 		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
 
 
@@ -526,7 +525,7 @@ namespace GeneXus.Application
 							if (idx > 0 && idx < controllerWithMth.Length - 1)
 							{
 								controller = controllerWithMth.Substring(0, idx);
-								method = $"{controllerWithMth.Substring(idx + 1)}{SDSVC_METHO_SUFFIX}";
+								method = $"{controllerWithMth.Substring(idx + 1)}{ReflectionHelper.METHOD_WITH_SUFFIX_PATTERN}";
 								result.Add(new ControllerInfo() { Name = controller, Parameters = parms, MethodName = method });
 							}
 						}

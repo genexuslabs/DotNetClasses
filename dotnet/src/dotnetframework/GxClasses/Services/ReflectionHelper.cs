@@ -15,6 +15,7 @@ namespace GeneXus.Application
     {
 		const string ISO_8601_TIME_SEPARATOR= "T";
 		const string ISO_8601_TIME_SEPARATOR_1 = ":";
+		public const char METHOD_WITH_SUFFIX_PATTERN = '*';
 		public static void CallBCMethod(object instance, String methodName, IList<string> inParametersValues)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -29,10 +30,24 @@ namespace GeneXus.Application
 			else
 				return false;
 		}
-
+		public static bool SearchMethod(MemberInfo info, Object obj)
+		{
+			return info.Name.StartsWith(obj.ToString(), StringComparison.OrdinalIgnoreCase);
+		}
 		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context=null)
 		{
-			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+			MethodInfo methodInfo;
+			Type instanceType = instance.GetType();
+			if (methodName.EndsWith(METHOD_WITH_SUFFIX_PATTERN))
+			{
+				MemberFilter memberFilter = new MemberFilter(SearchMethod);
+				MemberInfo memberInfo = instanceType.FindMembers(MemberTypes.Method, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase, memberFilter, methodName.TrimEnd(METHOD_WITH_SUFFIX_PATTERN))[0];
+				methodInfo = instanceType.GetMethod(memberInfo.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+			}
+			else
+			{
+				methodInfo = instanceType.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+			}
 			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, context);
 			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
 
