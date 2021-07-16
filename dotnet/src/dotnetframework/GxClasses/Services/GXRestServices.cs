@@ -347,9 +347,9 @@ namespace GeneXus.Utils
 		}
 		public void SetError(string code, string message)
 		{
-			HttpHelper.SetResponseStatusAndJsonError(httpContext, code, message);
+			HttpHelper.SetError(httpContext, code, message);
 		}
-        public void WebException(Exception ex)
+		public void WebException(Exception ex)
 		{
             GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
 
@@ -422,7 +422,7 @@ namespace GeneXus.Utils
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
 						if (!isOK)
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -436,7 +436,7 @@ namespace GeneXus.Utils
 						}
 						else
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);
