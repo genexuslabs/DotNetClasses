@@ -303,11 +303,11 @@ namespace GeneXus.Utils
 				{
 					msglistItem msgItem = (msglistItem)msg[0];
 					if (msgItem.gxTpr_Id.Contains("NotFound"))
-						SetError("404", msgItem.gxTpr_Description);
+						SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else if (msgItem.gxTpr_Id.Contains("WasChanged"))
-						SetError("409", msgItem.gxTpr_Description);
+						SetError(HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else
-						SetError("400", msgItem.gxTpr_Description);
+						SetError(HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 				}
 			}
 
