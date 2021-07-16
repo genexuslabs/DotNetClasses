@@ -5,6 +5,7 @@ using System.Linq;
 using System;
 using GeneXus.Cryptography;
 using GeneXus.Utils;
+using GxClasses.Web.Middleware;
 
 namespace xUnitTesting
 {
@@ -129,7 +130,7 @@ namespace xUnitTesting
 			Dictionary<String, Dictionary<String, SingleMap>> servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 			Dictionary<string, Dictionary<Tuple<string, string>, string>> servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 			Dictionary<string, List<string>> sValid = new Dictionary<string, List<string>>();			 
-			return Startup.GetRouteController(servicesPathUrl, sValid, servicesMap, servicesMapData, "", "GET", path);						
+			return GXRouting.GetRouteController(servicesPathUrl, sValid, servicesMap, servicesMapData, "", "GET", path);						
 		}
 	}
 }
