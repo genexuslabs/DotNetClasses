@@ -98,7 +98,7 @@ namespace GeneXus.Http
 			catch (Exception ex)
 			{
 				SendResponseStatus(500, ex.Message);
-				HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, "500", ex.Message);
+				HttpHelper.SetError(context.HttpContext, "500", ex.Message);
 			}
 			finally
 			{
@@ -184,12 +184,12 @@ namespace GeneXus.Http
 			catch (GxClassLoaderException cex)
 			{
 				SendResponseStatus(404, cex.Message);
-				HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, "404", cex.Message);
+				HttpHelper.SetError(context.HttpContext, "404", cex.Message);
 			}
 			catch (Exception ex)
 			{
 				SendResponseStatus(500, ex.Message);
-				HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, "500", ex.Message);
+				HttpHelper.SetError(context.HttpContext, "500", ex.Message);
 			}
 			finally
 			{
@@ -438,7 +438,7 @@ namespace GeneXus.Http
 			catch (Exception e)
 			{
 				SendResponseStatus(500, e.Message);
-				HttpHelper.SetResponseStatusAndJsonError(localHttpContext, HttpStatusCode.InternalServerError.ToString(), e.Message);
+				HttpHelper.SetError(localHttpContext, HttpStatusCode.InternalServerError.ToString(), e.Message);
 			}
 			finally
 			{
@@ -582,11 +582,6 @@ namespace GeneXus.Http
 	internal class GXOAuthAccessToken : GXHttpHandler, IRequiresSessionState
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GXOAuthAccessToken));
-		const string OTP_USER_ACCESS_CODE_SENT = "400";
-		const string TFA_USER_MUST_VALIDATE = "410";
-		const string TOKEN_EXPIRED = "103";
-		const int ACCEPTED = 202;
-		const int FORBIDDEN = 403;
 
 		public GXOAuthAccessToken()
 		{
@@ -661,27 +656,22 @@ namespace GeneXus.Http
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 				if (!flag)
 				{
-					localHttpContext.Response.StatusCode = 401;
+
+					string httpStatusCode = "401";
 					if (result != null)
 					{
 						string messagePermission = result.Description;
-						string statusCode = result.Code;
 
-						if (statusCode == OTP_USER_ACCESS_CODE_SENT || statusCode == TFA_USER_MUST_VALIDATE)
-						{
-							statusCode = ACCEPTED.ToString();
-							localHttpContext.Response.StatusCode = ACCEPTED;
-						}
-						else if(statusCode == TOKEN_EXPIRED)
-						{
-							statusCode = FORBIDDEN.ToString();
-						}
-						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, statusCode, messagePermission);
+						HttpHelper.SetGamError(context.HttpContext, result.Code, messagePermission);
 						if (GXUtil.ContainsNoAsciiCharacter(messagePermission))
 						{
 							messagePermission = string.Format("{0}{1}", GxRestPrefix.ENCODED_PREFIX, Uri.EscapeDataString(messagePermission));
 						}
 						localHttpContext.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, messagePermission));
+					}
+					else
+					{
+						HttpHelper.SetResponseStatus(context.HttpContext, httpStatusCode, string.Empty);
 					}
 				}
 				else
