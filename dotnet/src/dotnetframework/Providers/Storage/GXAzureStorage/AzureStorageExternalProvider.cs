@@ -198,8 +198,9 @@ namespace GeneXus.Storage.GXAzureStorage
 			CloudBlockBlob sourceBlob = GetCloudBlockBlob(sourceUrl, GxFileType.Private);
 			if (sourceBlob.ExistsAsync().GetAwaiter().GetResult())
 			{
-				CloudBlockBlob targetBlob = GetCloudBlockBlob(newName, fileType);
 				newName = tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + newName;
+				CloudBlockBlob targetBlob = GetCloudBlockBlob(newName, fileType);
+				
 				targetBlob.Metadata["Table"] = tableName;
 				targetBlob.Metadata["Field"] = fieldName;
 				targetBlob.Metadata["KeyValue"] = StorageUtils.EncodeUrl(newName);
