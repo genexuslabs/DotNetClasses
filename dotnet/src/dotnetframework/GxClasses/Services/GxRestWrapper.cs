@@ -634,7 +634,7 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			return SetError("500", ex.Message);
+			return SetError(HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
 		}
 		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
 		{

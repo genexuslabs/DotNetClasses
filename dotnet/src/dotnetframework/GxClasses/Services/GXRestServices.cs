@@ -140,7 +140,7 @@ namespace GeneXus.Utils
         {
             JsonFault detail = null;
             var knownTypes = new List<Type>();
-            string code = "500"; //Internal server error
+            string code = HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT); 
             if ((error is FaultException) && (error.GetType().GetProperty("Detail") != null))
             {
                 detail = (error.GetType().GetProperty("Detail").GetGetMethod().Invoke(error, null) as JsonFault);
@@ -359,7 +359,7 @@ namespace GeneXus.Utils
             }
             else
             {
-                SetError("500", ex.Message);
+                SetError(HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
             }
         }
 		public bool IsAuthenticated(string synchronizer)
