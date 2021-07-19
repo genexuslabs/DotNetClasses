@@ -5,7 +5,13 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Test\**" />
+    <EmbeddedResource Remove="Test\**" />
+    <None Remove="Test\**" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="4.2.1" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="4.0.4" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.0.1" />
@@ -14,6 +20,7 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />  
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
     <ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
