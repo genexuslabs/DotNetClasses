@@ -97,7 +97,6 @@ namespace GeneXus.Http
 			}
 			catch (Exception ex)
 			{
-				SendResponseStatus((int)HttpStatusCode.InternalServerError, ex.Message);
 				HttpHelper.SetError(context.HttpContext, HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
 			}
 			finally
@@ -183,12 +182,10 @@ namespace GeneXus.Http
 			}
 			catch (GxClassLoaderException cex)
 			{
-				SendResponseStatus((int)HttpStatusCode.NotFound, cex.Message);
 				HttpHelper.SetError(context.HttpContext, HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), cex.Message);
 			}
 			catch (Exception ex)
 			{
-				SendResponseStatus((int)HttpStatusCode.InternalServerError, ex.Message);
 				HttpHelper.SetError(context.HttpContext, HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
 			}
 			finally
@@ -438,7 +435,6 @@ namespace GeneXus.Http
 			}
 			catch (Exception e)
 			{
-				SendResponseStatus(500, e.Message);
 				HttpHelper.SetError(localHttpContext, HttpStatusCode.InternalServerError.ToString(), e.Message);
 			}
 			finally
@@ -529,7 +525,7 @@ namespace GeneXus.Http
 			catch (Exception e)
 			{
 				localHttpContext.Response.Write(e.Message);
-				localHttpContext.Response.StatusCode = 500;
+				localHttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 			}
 		}
 
@@ -551,14 +547,14 @@ namespace GeneXus.Http
 				bool isOK;
 				GxSecurityProvider.Provider.oauthgetuser(context, out userJson, out isOK);
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-				localHttpContext.Response.StatusCode = 200;
+				localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
 				localHttpContext.Response.Write(userJson);
 				context.CloseConnections();
 			}
 			catch (Exception e)
 			{
 				localHttpContext.Response.Write(e.Message);
-				localHttpContext.Response.StatusCode = 500;
+				localHttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 			}
 		}
 		protected override bool IntegratedSecurityEnabled
