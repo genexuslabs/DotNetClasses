@@ -51,19 +51,21 @@ namespace GeneXus.Application
 		protected IGxContext _gxContext;
 		private GXProcedure _procWorker;
 		private const string EXECUTE_METHOD = "execute";
-		public String ServiceMethod = "";
-		public Dictionary<String, String> VariableAlias = null;
+		private string _serviceMethod = string.Empty;
+		private Dictionary<string, string> _variableAlias = null;
+		private string _serviceMethodPattern;
 		public bool WrappedParameter = false;
 
-		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
+		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
 		{
-			ServiceMethod = serviceMethod;
-			VariableAlias = variableAlias;
+			_serviceMethod = serviceMethod;
+			_variableAlias = variableAlias;
 		}
 
-		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod) : this(worker, context, gxContext)
+		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, string serviceMethod, string serviceMethodPattern) : this(worker, context, gxContext)
 		{
-			ServiceMethod = serviceMethod;
+			_serviceMethod = serviceMethod;
+			_serviceMethodPattern = serviceMethodPattern;
 		}
 
 		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext):this(context, gxContext)
@@ -124,9 +126,9 @@ namespace GeneXus.Application
 					wrapped = false;
 				}				
 
-				if (!String.IsNullOrEmpty(this.ServiceMethod))
+				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
-					innerMethod = this.ServiceMethod;
+					innerMethod = this._serviceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
@@ -223,7 +225,7 @@ namespace GeneXus.Application
 		private string SynchronizerMethod()
 		{
 			string method = string.Empty;
-			var queryParameters = ReadQueryParameters(this.VariableAlias);
+			var queryParameters = ReadQueryParameters(this._variableAlias);
 			string gxevent = string.Empty;
 			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
 				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
@@ -263,13 +265,24 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				var queryParameters = ReadQueryParameters(this.VariableAlias);
-				String innerMethod = EXECUTE_METHOD;
-				if (!String.IsNullOrEmpty(this.ServiceMethod))
+				var queryParameters = ReadQueryParameters(this._variableAlias);
+				string innerMethod = EXECUTE_METHOD;
+				Dictionary<string, object> outputParameters;
+				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
-					innerMethod = this.ServiceMethod;
+					innerMethod = _serviceMethodPattern;
+					outputParameters = ReflectionHelper.CallMethodPattern(_procWorker, innerMethod, queryParameters);
 				}
-				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				else 
+				{
+					if (!string.IsNullOrEmpty(_serviceMethod))
+					{
+						innerMethod = _serviceMethod;
+					}
+
+					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				}
+				
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
@@ -287,7 +300,6 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-
 		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
 		{
 			if (worker.IsApiObject)
@@ -769,6 +781,7 @@ namespace GeneXus.Application
 		public string Name { get; set; }
 		public string Parameters { get; set; }
 		public string MethodName { get; set; }
+		public string MethodPattern { get; set; }
 		public string Verb { get; set; }
 		public Dictionary<string, string> VariableAlias { get; set; }
 	}
