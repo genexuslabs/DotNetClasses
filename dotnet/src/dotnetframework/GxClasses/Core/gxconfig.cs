@@ -25,6 +25,7 @@ namespace GeneXus.Configuration
 	using System.Runtime.Serialization.Json;
 	using System.Collections.Generic;
 	using GxClasses.Helpers;
+	using System.Text;
 
 	public class Config
 	{
@@ -560,6 +561,14 @@ namespace GeneXus.Configuration
 							logConfig(logConfigSource);
 						else
 							logConfig(logConfigFile);
+					}
+					try
+					{
+						Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+					}
+					catch (Exception ex)
+					{
+						GXLogging.Info(log, "Could not register encoding provider", ex.Message);
 					}
 #endif
 				}
