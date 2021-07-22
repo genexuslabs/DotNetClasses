@@ -2,8 +2,11 @@ using System.Net;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 
-namespace GeneXus.Deploy.AzureFunctions.Handlers.Dummies
+namespace HttpTriggerDummy
 {
+	// This is a dummy class.
+	// The purpose of this class is to force the Net SDK to generate all the configuration files
+	// needed for running under Net 5 framework.
 	public static class HttpTriggerCSharp1
 	{
 		[Function("HttpTriggerCSharp1")]
