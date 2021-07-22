@@ -17,6 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	<ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
+	<ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
