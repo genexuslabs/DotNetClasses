@@ -303,9 +303,15 @@ namespace GeneXus.Application
 			app.UseMvc(routes =>
 			{
 				foreach (String serviceBasePath in servicesBase)
-				{
-					GXLogging.Debug(log, $"MapRoute: {serviceBasePath}{{*{UrlTemplateControllerWithParms}}}");
-					routes.MapRoute($"{serviceBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
+				{			
+					String tmpPath = serviceBasePath.Replace(VirtualPath + "/", "");
+					foreach (String sPath in gxRouting.servicesValidPath[tmpPath])
+					{
+						var s = serviceBasePath + sPath;
+						routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
+					}
+					//GXLogging.Debug(log, $"MapRoute: {serviceBasePath}{{*{UrlTemplateControllerWithParms}}}");
+					//routes.MapRoute($"{serviceBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				}
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
