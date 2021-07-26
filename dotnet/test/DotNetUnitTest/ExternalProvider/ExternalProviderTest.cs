@@ -222,6 +222,8 @@ namespace UnitTesting
 						
 			bool exist = provider.ExistsDirectory(folderName);
 			Assert.True(exist);
+			provider.ExistsDirectory(folderName + "/");
+			Assert.True(exist);
 		}
 
 		[SkippableFact]
