@@ -5,6 +5,7 @@ using System.Linq;
 using System;
 using GeneXus.Cryptography;
 using GeneXus.Utils;
+using GxClasses.Web.Middleware;
 
 namespace xUnitTesting
 {
@@ -26,7 +27,7 @@ namespace xUnitTesting
 			Assert.Single(cList);
 			Assert.Equal("sdsvc_ComputeTotalWeight_Level_Detail", cList[0].Name);
 			Assert.Equal("gxid=94692756", cList[0].Parameters);
-			Assert.Equal("Plate1DL", cList[0].MethodName);
+			Assert.Equal("Plate1", cList[0].MethodPattern);
 		}
 		[Fact]
 		public void TestSdsvcInModuleWithParms()
@@ -36,7 +37,7 @@ namespace xUnitTesting
 			Assert.Single(cList);
 			Assert.Equal("module1/sdsvc_ComputeTotalWeight_Level_Detail", cList[0].Name);
 			Assert.Equal("gxid=94692756", cList[0].Parameters);
-			Assert.Equal("Plate1DL", cList[0].MethodName);
+			Assert.Equal("Plate1", cList[0].MethodPattern);
 		}
 
 		[Fact]
@@ -126,10 +127,10 @@ namespace xUnitTesting
 		private List<ControllerInfo> RouteController(string path)
 		{
 			Dictionary<String, String> servicesPathUrl = new Dictionary<String, String>();
-			Dictionary<String, Dictionary<String, String>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
+			Dictionary<String, Dictionary<String, SingleMap>> servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 			Dictionary<string, Dictionary<Tuple<string, string>, string>> servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 			Dictionary<string, List<string>> sValid = new Dictionary<string, List<string>>();			 
-			return Startup.GetRouteController(servicesPathUrl, sValid, servicesMap, servicesMapData, "", "GET", path);						
+			return GXRouting.GetRouteController(servicesPathUrl, sValid, servicesMap, servicesMapData, "", "GET", path);						
 		}
 	}
 }
