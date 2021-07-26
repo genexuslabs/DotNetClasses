@@ -1,9 +1,8 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Web;
-using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 using Google;
@@ -352,27 +351,15 @@ namespace GeneXus.Storage.GXGoogleCloud
         public bool ExistsDirectory(string directoryName)
         {
             directoryName = StorageUtils.NormalizeDirectoryName(directoryName);
-            bool exists = false;
-            ObjectsResource.ListRequest request = Service.Objects.List(Bucket);
-            request.Delimiter = StorageUtils.DELIMITER;
-            Google.Apis.Storage.v1.Data.Objects response;
-            do
-            {
-                response = request.Execute();
-                if (response.Prefixes != null && response.Prefixes.Contains(directoryName))
-                {
-                    exists = true;
-                }
-            } while (response.NextPageToken != null);
-            return exists;
-        }
+			return Client.ListObjects(Bucket, directoryName).Any();
+		}
 
         public string GetDirectory(string directoryName)
         {
             if (ExistsDirectory(directoryName))
                 return Bucket + StorageUtils.DELIMITER + directoryName;
-            else
-                return "";
+
+			return String.Empty;
         }
 
         public List<string> GetFiles(string directoryName, string filter = "")
