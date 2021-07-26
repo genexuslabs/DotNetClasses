@@ -230,7 +230,7 @@ namespace GeneXus.Cache
 			switch (reader.TokenType)
 			{
 				case JsonTokenType.True:
-					return false;
+					return true;
 				case JsonTokenType.False:
 					return false;
 				case JsonTokenType.Number:
