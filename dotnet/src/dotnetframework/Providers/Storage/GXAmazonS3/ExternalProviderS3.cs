@@ -331,6 +331,12 @@ namespace GeneXus.Storage.GXAmazonS3
 				DestinationKey = newName,
 				CannedACL = GetCannedACL(destFileType)
 			};
+
+			if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
+			{
+				request.ContentType = mimeType;
+			}
+
 			CopyObject(request);
 			return StorageUri + StorageUtils.EncodeUrl(newName);
 		}

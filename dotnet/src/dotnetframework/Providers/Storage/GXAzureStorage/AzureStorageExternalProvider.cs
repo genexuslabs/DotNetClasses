@@ -176,6 +176,10 @@ namespace GeneXus.Storage.GXAzureStorage
 		{
 			CloudBlockBlob sourceBlob = GetCloudBlockBlob(objectName, sourceFileType);
 			CloudBlockBlob targetBlob = GetCloudBlockBlob(newName, destFileType);
+			if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
+			{
+				targetBlob.Properties.ContentType = mimeType;
+			}
 			targetBlob.StartCopyAsync(sourceBlob).GetAwaiter().GetResult();
 			return GetURL(targetBlob, destFileType);
 		}
