@@ -22,8 +22,8 @@ namespace DotNetUnitTest.GXMail
 			string appId = Environment.GetEnvironmentVariable("EWS_APPID");
 			string secret = Environment.GetEnvironmentVariable("EWS_SECRET");
 			string tentantId = Environment.GetEnvironmentVariable("EWS_TENANTID");
+			string mailAddress = Environment.GetEnvironmentVariable("EWS_ADDRESS");
 
-		
 			Skip.If(String.IsNullOrEmpty(appId), "Skipped because AppId is empty");
 			Skip.If(String.IsNullOrEmpty(secret), "Skipped because Secret is empty");
 			Skip.If(String.IsNullOrEmpty(tentantId), "Skipped because TenantId is empty");
@@ -34,7 +34,7 @@ namespace DotNetUnitTest.GXMail
 			session.SetProperty(ExchangeSession.TenantIdProperty, tentantId);
 			session.SetProperty("ExchangeVersion", "Exchange2013_SP1");
 
-			session.UserName = "ggallotti@genexus.onmicrosoft.com";
+			session.UserName = mailAddress;
 
 			session.Login();
 
@@ -52,7 +52,6 @@ namespace DotNetUnitTest.GXMail
 			GXMailMessage m = new GXMailMessage();
 			
 			m.To.Add(new GXMailRecipient(session.UserName, session.UserName));
-			m.To.Add(new GXMailRecipient("Gonzalo", "ggallotti@genexus.com"));
 			m.From = new GXMailRecipient(session.UserName, session.UserName);
 			m.Subject = mailSubject;
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
