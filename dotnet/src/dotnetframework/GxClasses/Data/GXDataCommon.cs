@@ -4403,8 +4403,12 @@ namespace GeneXus.Data
 		}
 		public Guid GetGuid(int i)
 		{
-            if (computeSizeInBytes) readBytes += 16;
-            return (Guid)block.Item(pos, i);
+			if (computeSizeInBytes) readBytes += 16;
+			object value = block.Item(pos, i);
+			if (value is Guid)
+				return (Guid)value;
+			else
+				return Guid.Parse(value as string);
 		}
 		public object this[string name] 
 		{
