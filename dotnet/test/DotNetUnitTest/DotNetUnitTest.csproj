@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetframework\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\Providers\Storage\GXAzureStorage\GXAzureStorage.csproj" />
