@@ -27,7 +27,7 @@ namespace xUnitTesting
 			Assert.Single(cList);
 			Assert.Equal("sdsvc_ComputeTotalWeight_Level_Detail", cList[0].Name);
 			Assert.Equal("gxid=94692756", cList[0].Parameters);
-			Assert.Equal("Plate1DL", cList[0].MethodName);
+			Assert.Equal("Plate1", cList[0].MethodPattern);
 		}
 		[Fact]
 		public void TestSdsvcInModuleWithParms()
@@ -37,7 +37,7 @@ namespace xUnitTesting
 			Assert.Single(cList);
 			Assert.Equal("module1/sdsvc_ComputeTotalWeight_Level_Detail", cList[0].Name);
 			Assert.Equal("gxid=94692756", cList[0].Parameters);
-			Assert.Equal("Plate1DL", cList[0].MethodName);
+			Assert.Equal("Plate1", cList[0].MethodPattern);
 		}
 
 		[Fact]

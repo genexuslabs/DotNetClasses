@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using GeneXus.Utils;
-
 using Type = System.Type;
 
 namespace GeneXus.Application
@@ -29,13 +28,27 @@ namespace GeneXus.Application
 			else
 				return false;
 		}
-
+		public static bool SearchMethod(MemberInfo info, object obj)
+		{
+			return info.Name.StartsWith(obj.ToString(), StringComparison.OrdinalIgnoreCase);
+		}
+		public static Dictionary<string, object> CallMethodPattern(object instance, String methodPattern, IDictionary<string, object> parameters, IGxContext context = null)
+		{
+			Type instanceType = instance.GetType();
+			MemberFilter memberFilter = new MemberFilter(SearchMethod);
+			MemberInfo memberInfo = instanceType.FindMembers(MemberTypes.Method, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase, memberFilter, methodPattern)[0];
+			MethodInfo methodInfo = instanceType.GetMethod(memberInfo.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+			return CallMethodImpl(instance, methodInfo, parameters, context);
+		}
 		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context=null)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+			return CallMethodImpl(instance, methodInfo, parameters, context);
+		}
+		static Dictionary<string, object> CallMethodImpl(object instance, MethodInfo methodInfo, IDictionary<string, object> parameters, IGxContext context)
+		{
 			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, context);
 			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
-
 			return ProcessParametersAfterInvoke(methodInfo, parametersForInvocation, returnParm);
 		}
 		public static bool MethodHasInputParameters(object instance, String methodName)
