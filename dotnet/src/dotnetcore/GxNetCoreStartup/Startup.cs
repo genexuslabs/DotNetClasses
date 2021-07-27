@@ -293,25 +293,23 @@ namespace GeneXus.Application
 				ContentTypeProvider = provider
 			});
 			
-			foreach( String p in gxRouting.servicesPathUrl.Keys)
+			foreach( string p in gxRouting.servicesPathUrl.Keys)
 			{
 				 servicesBase.Add( string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
 			}
 
 			var restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
-
+			var apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
 			app.UseMvc(routes =>
 			{
-				foreach (String serviceBasePath in servicesBase)
+				foreach (string serviceBasePath in servicesBase)
 				{			
-					String tmpPath = serviceBasePath.Replace(VirtualPath + "/", "");
-					foreach (String sPath in gxRouting.servicesValidPath[tmpPath])
+					string tmpPath = string.IsNullOrEmpty(apiBasePath) ? serviceBasePath : serviceBasePath.Replace(apiBasePath, string.Empty);
+					foreach (string sPath in gxRouting.servicesValidPath[tmpPath])
 					{
 						var s = serviceBasePath + sPath;
 						routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
 					}
-					//GXLogging.Debug(log, $"MapRoute: {serviceBasePath}{{*{UrlTemplateControllerWithParms}}}");
-					//routes.MapRoute($"{serviceBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				}
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
