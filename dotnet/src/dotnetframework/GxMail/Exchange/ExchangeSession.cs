@@ -1,9 +1,8 @@
 using Microsoft.Exchange.WebServices.Data;
+using Microsoft.Identity.Client;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace GeneXus.Mail.Exchange
 {
@@ -26,7 +25,18 @@ namespace GeneXus.Mail.Exchange
         private Folder _currentFolder;
         private ExchangeVersion _version = ExchangeVersion.Exchange2007_SP1;
 
-        private static PropertySet MailProps = new PropertySet(BasePropertySet.IdOnly,
+		// OAuth Support
+		private string _appId;
+		private string _clientSecret;
+		private string _tenantId;
+		private bool _useOAuth;
+
+		public const string TenantIdProperty = "TentantId";
+		public const string ClientSecretProperty = "ClientSecret";
+		public const string AppIdProperty = "AppId";
+		
+
+		private static PropertySet MailProps = new PropertySet(BasePropertySet.IdOnly,
                                                                                  EmailMessageSchema.InternetMessageId, // Message-ID
                                                                                  EmailMessageSchema.From, // From
                                                                                  EmailMessageSchema.ToRecipients, // To
@@ -48,37 +58,53 @@ namespace GeneXus.Mail.Exchange
 
         public void SetProperty(String key, String value)
         {
-            if (key == "ExchangeVersion")
-            {
-                switch (value)
-                {
-                    case "Exchange2007_SP1":
-                        _version = ExchangeVersion.Exchange2007_SP1;
-                        break;
-                    case "Exchange2010":
-                        _version = ExchangeVersion.Exchange2010;
-                        break;
-                    case "Exchange2010_SP1":
-                        _version = ExchangeVersion.Exchange2010_SP1;
-                        break;
-                    case "Exchange2010_SP2":
-                        _version = ExchangeVersion.Exchange2010_SP2;
-                        break;
-                    case "Exchange2013":
-                        _version = ExchangeVersion.Exchange2013;
-                        break;
-                    case "Exchange2013_SP1":
-                        _version = ExchangeVersion.Exchange2013_SP1;
-                        break;
-                    default:                        
-                        break;
-                }
-            }
+			switch (key)
+			{
+				case ClientSecretProperty:
+					_clientSecret = value;
+					_useOAuth = true;
+					break;
+				case AppIdProperty:
+					_appId = value;
+					_useOAuth = true;
+					break;
+				case TenantIdProperty:
+					_tenantId = value;
+					_useOAuth = true;
+					break;
+				case "ExchangeVersion":
+					switch (value)
+					{
+						case "Exchange2007_SP1":
+							_version = ExchangeVersion.Exchange2007_SP1;
+							break;
+						case "Exchange2010":
+							_version = ExchangeVersion.Exchange2010;
+							break;
+						case "Exchange2010_SP1":
+							_version = ExchangeVersion.Exchange2010_SP1;
+							break;
+						case "Exchange2010_SP2":
+							_version = ExchangeVersion.Exchange2010_SP2;
+							break;
+						case "Exchange2013":
+							_version = ExchangeVersion.Exchange2013;
+							break;
+						case "Exchange2013_SP1":
+							_version = ExchangeVersion.Exchange2013_SP1;
+							break;
+						default:
+							break;
+					}
+					break;
+				default:
+					break;
+			}
         }
 
         public void Login(GXMailServiceSession sessionInfo)
         {
-            if (String.IsNullOrEmpty(_userName) || String.IsNullOrEmpty(_password))
+            if (!_useOAuth && (String.IsNullOrEmpty(_userName) || String.IsNullOrEmpty(_password)))
             {
                 throw new BadCredentialsException();
             }
@@ -98,7 +124,32 @@ namespace GeneXus.Mail.Exchange
 
             try
             {
-                _service = Service.ConnectToService(userConfig);
+				if (_useOAuth)
+				{
+					var cca = ConfidentialClientApplicationBuilder
+						.Create(_appId)
+						.WithClientSecret(_clientSecret)
+						.WithTenantId(_tenantId)
+						.Build();
+
+					// The permission scope required for EWS access
+					var ewsScopes = new string[] { "https://outlook.office365.com/.default" };
+
+					//Make the token request
+					var authTask = cca.AcquireTokenForClient(ewsScopes).ExecuteAsync();
+					authTask.Wait();
+					var authResult = authTask.Result;
+					
+					_service = new ExchangeService();
+					_service.Url = new Uri("https://outlook.office365.com/EWS/Exchange.asmx");
+					_service.Credentials = new OAuthCredentials(authResult.AccessToken);
+					_service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, userConfig.EmailAddress);
+					_service.HttpHeaders.Add("X-AnchorMailbox", userConfig.EmailAddress);
+				}
+				else
+				{
+					_service = Service.ConnectToService(userConfig);
+				}
                 UpdateMailCount();
             }
             catch (Exception e)
@@ -625,5 +676,5 @@ namespace GeneXus.Mail.Exchange
                 HandleError(7);
             }
         }
-    }
+    }	
 }
