@@ -121,7 +121,7 @@ namespace GeneXus.Http
 		}
 		private static HttpStatusCode MapStatusCode(string statusCode)
 		{
-			if (Enum.TryParse<HttpStatusCode>(statusCode, out HttpStatusCode result))
+			if (Enum.TryParse<HttpStatusCode>(statusCode, out HttpStatusCode result) && Enum.IsDefined(typeof(HttpStatusCode), result))
 				return result;
 			else
 				return HttpStatusCode.Unauthorized;
