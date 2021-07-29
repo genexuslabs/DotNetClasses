@@ -33,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />

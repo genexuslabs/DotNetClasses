@@ -35,9 +35,9 @@ namespace GeneXus.Encryption
 
 		private static ConcurrentDictionary<string, object> convertedKeys = new ConcurrentDictionary<string, object>();
 
-		public static String Encrypt64(String value, String key)
+		public static string Encrypt64(string value, string key)
 		{
-			if (string.IsNullOrEmpty(key) || key.Length != 32)
+			if (!IsValidKey(key))
 				throw new InvalidKeyException();
 
 			try
@@ -53,11 +53,24 @@ namespace GeneXus.Encryption
 				throw new InvalidKeyException();
 			}
 		}
-
+		private static string InverseKey(string key)
+		{
+			if (!IsValidKey(key))
+				throw new InvalidKeyException();
+			else
+			{
+				int len = key.Length / 2;
+				return key.Substring(len) + key.Substring(0, len);
+			}
+		}
+		private static bool IsValidKey(string key)
+		{
+			return (!string.IsNullOrEmpty(key) && key.Length % 2 == 0);
+		}
 		public static string Encrypt(string value, string key, bool inverseKey)
 		{
 			if (inverseKey)
-				key = key.Substring(16) + key.Substring(0, 16);
+				key = InverseKey(key);
 
 			return Encrypt(value, key);
 		}
@@ -71,7 +84,7 @@ namespace GeneXus.Encryption
 		{
 			string key = GetServerKey();
 			if (inverseKey)
-				key = key.Substring(16) + key.Substring(0, 16);
+				key = InverseKey(key);
 
 			return Encrypt(value, key);
 		}
@@ -119,7 +132,7 @@ namespace GeneXus.Encryption
 			if (string.IsNullOrEmpty(key))
 				key = GetServerKey();
 			if (inverseKey)
-				key = key.Substring(16) + key.Substring(0, 16);
+				key = InverseKey(key);
 
 			tmpBuf = Decrypt64(cfgBuf, key);
 			if (tmpBuf.Length < 6)
@@ -143,7 +156,7 @@ namespace GeneXus.Encryption
 		}
 
 
-		private static byte[] convertKey(String a)
+		private static byte[] convertKey(string a)
 		{
 			byte[] bout = new byte[a.Length / 2];
 
@@ -172,22 +185,22 @@ namespace GeneXus.Encryption
 			return b;
 		}
 
-		public static String encrypt16(String value, String key)
+		public static string encrypt16(string value, string key)
 		{
 			return "";
 		}
 
-		public static String decrypt16(String value, String key)
+		public static string decrypt16(string value, string key)
 		{
 			return "";
 		}
 
-		public static String Decrypt64(String value, String key)
+		public static string Decrypt64(string value, string key)
 		{
 			if (string.IsNullOrEmpty(value) || value.Trim().Length == 0)
 				return "";
 
-			if (string.IsNullOrEmpty(key) || key.Length != 32)
+			if (!IsValidKey(key))
 				throw new InvalidKeyException();
 
 			value = value.TrimEnd(' ');
@@ -304,7 +317,7 @@ namespace GeneXus.Encryption
 			return key;
 		}
 
-		public static String calcChecksum(String value, int start, int end, int length)
+		public static string calcChecksum(string value, int start, int end, int length)
 		{
 			int ret = 0;
 
@@ -322,12 +335,12 @@ namespace GeneXus.Encryption
 			return result;
 		}
 
-		public static String CheckSum(String value, int length)
+		public static string CheckSum(string value, int length)
 		{
 			return calcChecksum(value, 0, value.Length, length);
 		}
 
-		public static String addchecksum(String value, int length)
+		public static string addchecksum(string value, int length)
 		{
 			return value + calcChecksum(value, 0, value.Length, length);
 		}
@@ -363,7 +376,7 @@ namespace GeneXus.Encryption
 
 			return output;
 		}
-		private static String toString(byte[] ba, int offset, int length)
+		private static string toString(byte[] ba, int offset, int length)
 		{
 			char[] buf = new char[length * 2];
 			for (int i = offset, j = 0, k; i < offset + length;)
@@ -372,7 +385,7 @@ namespace GeneXus.Encryption
 				buf[j++] = HEX_DIGITS[(Twofish_Algorithm.ror((uint)k, 32, 4)/* >>> 4*/) & 0x0F];
 				buf[j++] = HEX_DIGITS[k & 0x0F];
 			}
-			return new String(buf);
+			return new string(buf);
 		}
 
 		public static byte[] decrypt(byte[] input, Object key)
