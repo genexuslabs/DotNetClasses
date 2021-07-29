@@ -147,6 +147,48 @@ namespace UnitTesting
 		}
 
 		[SkippableFact]
+		public void TestDirectoryNotExists()
+		{
+			string folderName = $"ThisFolderDoesNotExists";
+			DeleteSafe(folderName);
+			bool exist = provider.ExistsDirectory(folderName);
+			Assert.False(exist);
+		}
+		[SkippableFact]
+		public void TestDirectoryExists()
+		{
+			string folderName = $"ThisFolderDoesExists";
+			string fileName = "file.tmp";
+			provider.Upload(testFilePath, $"{folderName}/{fileName}", GxFileType.PublicRead);
+						
+			bool exist = provider.ExistsDirectory(folderName);
+			Assert.True(exist);
+			provider.ExistsDirectory(folderName + "/");
+			Assert.True(exist);
+		}
+
+		[SkippableFact]
+		public void TestFileNotExists()
+		{
+			string fileName = $"ThisFolderDoesNotExists/file.pdf";
+			DeleteSafe(fileName);
+			bool exist = provider.Exists(fileName, GxFileType.Private);
+			Assert.False(exist);
+		}
+
+		[SkippableFact]
+		public void TestFileExists()
+		{
+			string folderName = $"ThisFolderDoesExists";
+			string fileName = "file.tmp";
+			string objectPath = $"{folderName}/{fileName}";
+			provider.Upload(testFilePath, objectPath, GxFileType.PublicRead);
+
+			bool exist = provider.Exists(objectPath, GxFileType.PublicRead);
+			Assert.True(exist);
+		}
+
+		[SkippableFact]
 		public void TestMultimediaUpload()
 		{
 			string sourceFile = $"folder1/folder2/folder3{testFileName}";
