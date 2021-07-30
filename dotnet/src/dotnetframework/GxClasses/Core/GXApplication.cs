@@ -2861,21 +2861,11 @@ namespace GeneXus.Application
 		{
 			try
 			{
-#if NETCORE
-				var request = _HttpContext.Request;
-				if (request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase))
-				{
-					if (request.PathBase != null && request.PathBase.HasValue)
-						return request.PathBase.Value + "/";
-					else
-						return Config.ScriptPath + "/";
-				}
-#endif
 				string appPath = _HttpContext.Request.GetApplicationPath();
 				if (appPath.EndsWith("/"))
-					return _HttpContext.Request.GetApplicationPath();
+					return appPath;
 				else
-					return _HttpContext.Request.GetApplicationPath() + "/";
+					return appPath + "/";
 			}
 			catch
 			{
