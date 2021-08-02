@@ -1,0 +1,15 @@
+<Project>
+	<PropertyGroup>
+		<AssemblyVersion>17.4.0</AssemblyVersion>
+		<FileVersion>17.4.0</FileVersion>
+		<CopyrightYear>$([System.DateTime]::UtcNow.ToString("yyyy"))</CopyrightYear>
+		<Copyright>Copyright © 1988-$(CopyrightYear) GeneXus. All Rights Reserved</Copyright>
+		<AssemblyOriginatorKeyFile Condition="'$(GENEXUS_SECURITY_MODULE_SNK_FILE)'!=''">$(GENEXUS_SECURITY_MODULE_SNK_FILE)</AssemblyOriginatorKeyFile>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<Authors>GeneXus</Authors>
+		<SignAssembly Condition="'$(AssemblyOriginatorKeyFile)'!=''">true</SignAssembly>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningLevel>4</WarningLevel>
+		<NoWarn>NU5105;CS0618;CS8032</NoWarn>
+	</PropertyGroup>
+</Project>

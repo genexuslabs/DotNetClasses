@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup>
+    <TargetFramework>net47</TargetFramework>
+    <RootNamespace>GeneXusFtps</RootNamespace>
+    <AssemblyName>GeneXusFtpsImpl</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj"/>
+  </ItemGroup>
+	<ItemGroup>
+    <PackageReference Include="FluentFTP" Version="31.3.2" />
+  </ItemGroup>
+</Project>
