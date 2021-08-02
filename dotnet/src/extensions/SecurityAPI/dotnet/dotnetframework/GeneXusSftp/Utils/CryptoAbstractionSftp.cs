@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -36,11 +36,16 @@ namespace Sftp.GeneXusSftpUtils
             Randomizer.GetBytes(data);
 #else
             if (data == null)
-                throw new ArgumentNullException("data");
+#pragma warning disable CA1507 // Use nameof to express symbol names
+				throw new ArgumentNullException("data");
+#pragma warning restore CA1507 // Use nameof to express symbol names
 
-            System.Security.Cryptography.RNGCryptoServiceProvider Crypto = new System.Security.Cryptography.RNGCryptoServiceProvider();
-            byte[] Buffer = new byte[256];
-            Crypto.GetBytes(Buffer);
+			using (System.Security.Cryptography.RNGCryptoServiceProvider Crypto = new System.Security.Cryptography.RNGCryptoServiceProvider())
+			{
+				byte[] Buffer = new byte[256];
+				Crypto.GetBytes(Buffer);
+			}
+				
             /*var buffer = Windows.Security.Cryptography.CryptographicBuffer.GenerateRandom((uint)data.Length);
             System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.CopyTo(buffer, data);*/
 #endif

@@ -1,4 +1,4 @@
-﻿
+
 using GeneXusCryptography.AsymmetricUtils;
 using GeneXusCryptography.Commons;
 using GeneXusCryptography.Hash;
@@ -36,7 +36,7 @@ namespace GeneXusCryptography.Asymmetric
         public string DoEncrypt_WithPrivateKey(string hashAlgorithm, string asymmetricEncryptionPadding, PrivateKeyManager key, string plainText)
         {
 
-            if (this.HasError())
+            if (this.HasError() || key == null)
             {
                 return "";
             }
@@ -47,7 +47,7 @@ namespace GeneXusCryptography.Asymmetric
         public string DoEncrypt_WithPublicKey(string hashAlgorithm, string asymmetricEncryptionPadding, CertificateX509 certificate, string plainText)
         {
 
-            if (this.HasError())
+            if (this.HasError() || certificate == null)
             {
                 return "";
             }
@@ -58,7 +58,7 @@ namespace GeneXusCryptography.Asymmetric
         public string DoDecrypt_WithPrivateKey(string hashAlgorithm, string asymmetricEncryptionPadding, PrivateKeyManager key, string encryptedInput)
         {
 
-            if (this.HasError())
+            if (this.HasError() || key == null)
             {
                 return "";
             }
@@ -69,7 +69,7 @@ namespace GeneXusCryptography.Asymmetric
         public string DoDecrypt_WithPublicKey(string hashAlgorithm, string asymmetricEncryptionPadding, CertificateX509 certificate, string encryptedInput)
         {
 
-            if (this.HasError())
+            if (this.HasError() || certificate == null)
             {
                 return "";
             }

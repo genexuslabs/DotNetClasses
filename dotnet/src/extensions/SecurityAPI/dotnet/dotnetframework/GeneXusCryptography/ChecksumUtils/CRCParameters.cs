@@ -1,11 +1,13 @@
-﻿using System.Security;
+using System.Security;
 
 
 namespace GeneXusCryptography.ChecksumUtils
 {
 	[SecuritySafeCritical]
-    public struct CRCParameters
-    {
+#pragma warning disable CA1815 // Override equals and operator equals on value types
+	public struct CRCParameters
+#pragma warning restore CA1815 // Override equals and operator equals on value types
+	{
         private int _width;  
         public int Width
         {

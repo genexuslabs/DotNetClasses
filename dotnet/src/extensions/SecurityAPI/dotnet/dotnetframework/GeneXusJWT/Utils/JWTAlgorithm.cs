@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Security;
@@ -14,11 +14,12 @@ namespace GeneXusJWT.GenexusJWTUtils
     }
 
     [SecuritySafeCritical]
-    public class JWTAlgorithmUtils
+    public static class JWTAlgorithmUtils
     {
         public static string valueOf(JWTAlgorithm jWTAlgorithm, Error error)
         {
-            switch (jWTAlgorithm)
+			if(error == null) return "Unrecognized algorithm";
+			switch (jWTAlgorithm)
             {
                 case JWTAlgorithm.HS256:
                     return "HS256";
@@ -43,7 +44,13 @@ namespace GeneXusJWT.GenexusJWTUtils
 
         public static JWTAlgorithm getJWTAlgorithm(string jWTAlgorithm, Error error)
         {
-            switch (jWTAlgorithm.ToUpper().Trim())
+			if(error == null) return JWTAlgorithm.NONE;
+			if (jWTAlgorithm == null)
+			{
+				error.setError("JA002", "Unrecognized algorithm");
+				return JWTAlgorithm.NONE;
+			}
+            switch (jWTAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "HS256":
                     return JWTAlgorithm.HS256;
@@ -66,9 +73,12 @@ namespace GeneXusJWT.GenexusJWTUtils
             }
         }
 
-        public static JWTAlgorithm getJWTAlgorithm_forVerification(string jWTAlgorithm, Error error)
-        {
-            switch (jWTAlgorithm)
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		public static JWTAlgorithm getJWTAlgorithm_forVerification(string jWTAlgorithm, Error error)
+#pragma warning restore CA1707 // Identifiers should not contain underscores
+		{
+			if(error == null) return JWTAlgorithm.NONE;
+			switch (jWTAlgorithm)
             {
                 case SecurityAlgorithms.RsaSha256:
                     return JWTAlgorithm.RS256;

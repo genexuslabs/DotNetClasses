@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using SecurityAPICommons.Commons;
@@ -10,18 +10,24 @@ namespace GeneXusJWT.GenexusJWTClaims
     public class Claims
     {
 
-        protected List<Claim> _claims;
+#pragma warning disable CA1051 // Do not declare visible instance fields
+		protected List<Claim> _claims;
+#pragma warning restore CA1051 // Do not declare visible instance fields
 
-        [SecuritySafeCritical]
+		[SecuritySafeCritical]
         public Claims()
         {
             _claims = new List<Claim>();
         }
 
         [SecuritySafeCritical]
-        public bool setClaim(string key, object value, Error error)
-        {
-            Claim claim = new Claim(key, value);
+#pragma warning disable IDE0060 // Remove unused parameter
+#pragma warning disable CA1801 // Remove unused parameter
+		public bool setClaim(string key, object value, Error error)
+#pragma warning restore CA1801 // Remove unused parameter
+#pragma warning restore IDE0060 // Remove unused parameter
+		{
+			Claim claim = new Claim(key, value);
             _claims.Add(claim);
             return true;
         }
@@ -33,8 +39,11 @@ namespace GeneXusJWT.GenexusJWTClaims
         }
 
         [SecuritySafeCritical]
-        public virtual object getClaimValue(string key, Error error)
-        {
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		public virtual object getClaimValue(string key, Error _error)
+#pragma warning restore CA1707 // Identifiers should not contain underscores
+		{
+			if (_error == null) return "";
             for (int i = 0; i < _claims.Count; i++)
             {
                 if (SecurityUtils.compareStrings(key, _claims.ElementAt(i).getKey()))
@@ -42,7 +51,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                     return _claims.ElementAt(i).getValue();
                 }
             }
-            error.setError("CL001", "Could not find a claim with" + key + " key value");
+            _error.setError("CL001", "Could not find a claim with" + key + " key value");
             return "";
         }
 

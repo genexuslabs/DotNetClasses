@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace GeneXusCryptography.AsymmetricUtils
     /// Implements AsymmetricSigningAlgorithm assiciated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class AsymmetricSigningAlgorithmUtils
+    public static class AsymmetricSigningAlgorithmUtils
     {
 
         /// <summary>
@@ -34,7 +34,14 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>AsymmetricSigningAlgorithm enum representation</returns>
         public static AsymmetricSigningAlgorithm getAsymmetricSigningAlgorithm(string asymmetricSigningAlgorithm, Error error)
         {
-            switch (asymmetricSigningAlgorithm.ToUpper().Trim())
+			if (error == null) return AsymmetricSigningAlgorithm.NONE;
+			if (asymmetricSigningAlgorithm == null)
+			{
+				error.setError("AE005", "Unrecognized AsymmetricSigningAlgorithm");
+				return AsymmetricSigningAlgorithm.NONE;
+			}
+
+			switch (asymmetricSigningAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "RSA":
                     return AsymmetricSigningAlgorithm.RSA;
@@ -53,6 +60,7 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>string value of the algorithm</returns>
         public static string valueOf(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, Error error)
         {
+			if (error == null) return "";
             switch (asymmetricSigningAlgorithm)
             {
                 case AsymmetricSigningAlgorithm.RSA:

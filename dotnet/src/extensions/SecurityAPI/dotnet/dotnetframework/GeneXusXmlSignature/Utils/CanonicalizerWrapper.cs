@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -9,14 +9,22 @@ namespace GeneXusXmlSignature.GeneXusUtils
     [SecuritySafeCritical]
     public enum CanonicalizerWrapper
     {
-        NONE, ALGO_ID_C14N_WITH_COMMENTS, ALGO_ID_C14N_OMIT_COMMENTS, ALGO_ID_C14N_EXCL_OMIT_COMMENTS, ALGO_ID_C14N_EXCL_WITH_COMMENTS
-    }
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		NONE, ALGO_ID_C14N_WITH_COMMENTS, ALGO_ID_C14N_OMIT_COMMENTS, ALGO_ID_C14N_EXCL_OMIT_COMMENTS, ALGO_ID_C14N_EXCL_WITH_COMMENTS
+#pragma warning restore CA1707 // Identifiers should not contain underscores
+	}
 
     [SecuritySafeCritical]
-    public class CanonicalizerWrapperUtils
+    public static class CanonicalizerWrapperUtils
     {
         public static CanonicalizerWrapper getCanonicalizerWrapper(string canonicalizerWrapper, Error error)
         {
+			if(error == null) return CanonicalizerWrapper.NONE;
+			if ( canonicalizerWrapper == null)
+			{
+				error.setError("CM001", "Unrecognized CanonicalizationMethod: " + canonicalizerWrapper);
+				return CanonicalizerWrapper.NONE;
+			}
             switch (canonicalizerWrapper.Trim())
             {
                 case "C14n_WITH_COMMENTS":
@@ -35,6 +43,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string valueOf(CanonicalizerWrapper canonicalizerWrapper, Error error)
         {
+			if (error == null) return "";
             switch (canonicalizerWrapper)
             {
                 case CanonicalizerWrapper.ALGO_ID_C14N_WITH_COMMENTS:
@@ -53,6 +62,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string valueOfInternal(CanonicalizerWrapper canonicalizerWrapper, Error error)
         {
+			if (error == null) return "";
             switch (canonicalizerWrapper)
             {
                 case CanonicalizerWrapper.ALGO_ID_C14N_WITH_COMMENTS:
@@ -71,6 +81,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string getCanonicalizationMethodAlorithm(CanonicalizerWrapper canonicalizerWrapper, Error error)
         {
+			if (error == null) return null;
             switch (canonicalizerWrapper)
             {
                 case CanonicalizerWrapper.ALGO_ID_C14N_WITH_COMMENTS:

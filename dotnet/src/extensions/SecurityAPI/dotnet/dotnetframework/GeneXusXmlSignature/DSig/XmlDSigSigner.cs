@@ -1,4 +1,4 @@
-﻿using GeneXusXmlSignature.GeneXusCommons;
+using GeneXusXmlSignature.GeneXusCommons;
 using System;
 using System.Security;
 using System.Xml;
@@ -31,31 +31,76 @@ namespace GeneXusXmlSignature.GeneXusDSig
         public bool DoSignFile(string xmlFilePath, PrivateKeyManager key, CertificateX509 certificate, string outputPath, DSigOptions options)
         {
             this.error.cleanError();
+			if(certificate == null)
+			{
+				this.error.setError("DS000", "Certificate parameter is null");
+				return false;
+			}
+			if(options == null)
+			{
+				this.error.setError("DS000", "Options parameter is null");
+				return false;
+			}
             return doSignFilePKCS12(xmlFilePath, key, certificate, options.DSigSignatureType, options.Canonicalization, outputPath, options.KeyInfoType, options.XmlSchemaPath);
         }
 
         public bool DoSignFileElement(string xmlFilePath, string xPath, PrivateKeyManager key, CertificateX509 certificate, string outputPath, DSigOptions options)
         {
             this.error.cleanError();
-            return doSignFileElementPKCS12(xmlFilePath, xPath, key, certificate, options.DSigSignatureType, options.Canonicalization, outputPath, options.KeyInfoType, options.XmlSchemaPath, options.IdentifierAttribute);
+			if (certificate == null)
+			{
+				this.error.setError("DS000", "Certificate parameter is null");
+				return false;
+			}
+			if (options == null)
+			{
+				this.error.setError("DS000", "Options parameter is null");
+				return false;
+			}
+			return doSignFileElementPKCS12(xmlFilePath, xPath, key, certificate, options.DSigSignatureType, options.Canonicalization, outputPath, options.KeyInfoType, options.XmlSchemaPath, options.IdentifierAttribute);
         }
 
         public string DoSign(string xmlInput, PrivateKeyManager key, CertificateX509 certificate, DSigOptions options)
         {
             this.error.cleanError();
-            return doSignPKCS12(xmlInput, key, certificate, options.DSigSignatureType, options.Canonicalization, options.KeyInfoType, options.XmlSchemaPath);
+			if (certificate == null)
+			{
+				this.error.setError("DS000", "Certificate parameter is null");
+				return "";
+			}
+			if (options == null)
+			{
+				this.error.setError("DS000", "Options parameter is null");
+				return "";
+			}
+			return doSignPKCS12(xmlInput, key, certificate, options.DSigSignatureType, options.Canonicalization, options.KeyInfoType, options.XmlSchemaPath);
         }
 
         public string DoSignElement(string xmlInput, string xPath, PrivateKeyManager key, CertificateX509 certificate, DSigOptions options)
         {
             this.error.cleanError();
-            return doSignElementPKCS12(xmlInput, xPath, key, certificate, options.DSigSignatureType, options.Canonicalization, options.KeyInfoType, options.XmlSchemaPath, options.IdentifierAttribute);
+			if (certificate == null)
+			{
+				this.error.setError("DS000", "Certificate parameter is null");
+				return "";
+			}
+			if (options == null)
+			{
+				this.error.setError("DS000", "Options parameter is null");
+				return "";
+			}
+			return doSignElementPKCS12(xmlInput, xPath, key, certificate, options.DSigSignatureType, options.Canonicalization, options.KeyInfoType, options.XmlSchemaPath, options.IdentifierAttribute);
         }
 
         public bool DoVerify(string xmlSigned, DSigOptions options)
         {
             this.error.cleanError();
-            XmlDocument xmlDoc = SignatureUtils.documentFromString(xmlSigned, options.XmlSchemaPath, this.error);
+			if (options == null)
+			{
+				this.error.setError("DS000", "Options parameter is null");
+				return false;
+			}
+			XmlDocument xmlDoc = SignatureUtils.documentFromString(xmlSigned, options.XmlSchemaPath, this.error);
             if (this.HasError())
             {
                 return false;
@@ -68,6 +113,11 @@ namespace GeneXusXmlSignature.GeneXusDSig
         public bool DoVerifyFile(string xmlFilePath, DSigOptions options)
         {
             this.error.cleanError();
+			if(options == null)
+			{
+				this.error.setError("DS000", "Options parameter is null");
+				return false;
+			}
             if (!SignatureUtils.validateExtensionXML(xmlFilePath))
             {
                 this.error.setError("DS001", "The file is not an xml file");
@@ -84,7 +134,17 @@ namespace GeneXusXmlSignature.GeneXusDSig
         public bool DoVerifyWithCert(string xmlSigned, CertificateX509 certificate, DSigOptions options)
         {
             this.error.cleanError();
-            if (!certificate.Inicialized)
+			if(certificate == null)
+			{
+				this.error.setError("DS003", "Certificate not loaded");
+				return false;
+			}
+			if(options == null)
+			{
+				this.error.setError("DS003", "Options is null");
+				return false;
+			}
+			if (!certificate.Inicialized)
             {
                 this.error.setError("DS003", "Certificate not loaded");
                 return false;
@@ -99,12 +159,22 @@ namespace GeneXusXmlSignature.GeneXusDSig
             {
                 return false;
             }
-            return verify(xmlDoc, certificate, options.IdentifierAttribute);
+            return verify(xmlDoc, certificate);
         }
 
         public bool DoVerifyFileWithCert(string xmlFilePath, CertificateX509 certificate, DSigOptions options)
         {
             this.error.cleanError();
+			if(certificate == null)
+			{
+				this.error.setError("DS005", "Certificate not loaded");
+				return false;
+			}
+			if(options == null)
+			{
+				this.error.setError("DS005", "Options is null");
+				return false;
+			}
             if (!certificate.Inicialized)
             {
                 this.error.setError("DS005", "Certificate not loaded");
@@ -120,10 +190,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
                 return false;
             }
             XmlDocument xmlDoc = SignatureUtils.documentFromFile(xmlFilePath, options.XmlSchemaPath, this.error);
-            return verify(xmlDoc, certificate, options.IdentifierAttribute);
-
-
-
+            return verify(xmlDoc, certificate);
 
         }
 
@@ -265,6 +332,11 @@ namespace GeneXusXmlSignature.GeneXusDSig
         private string Sign(XmlDocument xmlInput, PrivateKeyManager key, CertificateX509 certificate,
                 string dSigType, string canonicalizationType, string keyInfoType, string xpath, string id)
         {
+			if(!SecurityUtils.compareStrings(dSigType, "ENVELOPED"))
+			{
+				this.error.setError("DS040", "Not implemented DSigType");
+				return "";
+			}
             bool flag = inicializeInstanceVariables(key, certificate);
             if (!flag)
             {
@@ -393,7 +465,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
             // xmlInput.DocumentElement.AppendChild(xmlInput.ImportNode(xmlDigitalSignature, true));
 
 
-            return SignatureUtils.XMLDocumentToString(xmlInput, this.error);
+            return SignatureUtils.XMLDocumentToString(xmlInput);
 
         }
 
@@ -534,7 +606,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
 
         }
 
-        private bool verify(XmlDocument doc, CertificateX509 certificate, string id)
+        private bool verify(XmlDocument doc, CertificateX509 certificate)
         {
             /***WHITESPACES***/
             doc.PreserveWhitespace = true;
@@ -579,7 +651,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
         }
 
 
-        private void addCanonTransform(Reference reference, CanonicalizerWrapper canonW)
+        private static void addCanonTransform(Reference reference, CanonicalizerWrapper canonW)
         {
 
             switch (canonW)
@@ -620,10 +692,10 @@ namespace GeneXusXmlSignature.GeneXusDSig
         private static XmlDsigXPathTransform CreateXPathTransform(string XPathString)
         {
             // Create a new XMLDocument object.
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new XmlDocument() { XmlResolver = null };
 
-            // Create a new XmlElement.
-            XmlElement xPathElem = doc.CreateElement("XPath");
+			// Create a new XmlElement.
+			XmlElement xPathElem = doc.CreateElement("XPath");
 
             // Set the element text to the value
             // of the XPath string.
@@ -638,7 +710,5 @@ namespace GeneXusXmlSignature.GeneXusDSig
             // Return the XML that represents the transform.
             return xForm;
         }
-
-
-    }
+	}
 }

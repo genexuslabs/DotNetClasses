@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,9 +24,9 @@ namespace SecurityAPICommons.Config
         }
 
         [SecuritySafeCritical]
-        public string getEncoding()
+        public static string getEncoding()
         {
-            return Global.GLOBAL_ENCODING;
+            return SecurityApiGlobal.GLOBALENCODING;
         }
 
         [SecuritySafeCritical]
@@ -34,7 +34,7 @@ namespace SecurityAPICommons.Config
         {
             if (AvailableEncodingUtils.existsEncoding(enc))
             {
-                Global.GLOBAL_ENCODING = enc;
+                SecurityApiGlobal.GLOBALENCODING = enc;
             }
             else
             {
@@ -50,7 +50,7 @@ namespace SecurityAPICommons.Config
         public byte[] getBytes(string inputText)
         {
             byte[] output = null;
-            String encoding = Global.GLOBAL_ENCODING;
+            String encoding = SecurityApiGlobal.GLOBALENCODING;
             AvailableEncoding aEncoding = AvailableEncodingUtils.getAvailableEncoding(encoding, this.error);
             if (this.HasError())
             {
@@ -65,8 +65,11 @@ namespace SecurityAPICommons.Config
                     return null;
                 }
             }
-            catch (Exception e)
-            {
+
+#pragma warning disable CA1031 // Do not catch general exception types
+			catch (Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
+			{
                 this.error.setError("EU001", e.Message);
                 return null;
             }
@@ -84,7 +87,7 @@ namespace SecurityAPICommons.Config
         public string getString(byte[] inputBytes)
         {
             String res = null;
-            String encoding = Global.GLOBAL_ENCODING;
+            String encoding = SecurityApiGlobal.GLOBALENCODING;
 
             AvailableEncoding aEncoding = AvailableEncodingUtils.getAvailableEncoding(encoding, this.error);
             if (this.HasError())
@@ -102,8 +105,10 @@ namespace SecurityAPICommons.Config
                     return "";
                 }
             }
-            catch (Exception e)
-            {
+#pragma warning disable CA1031 // Do not catch general exception types
+			catch (Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
+			{
                 this.error.setError("EU002", e.Message);
                 return "";
             }

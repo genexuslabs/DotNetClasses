@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -13,12 +13,18 @@ namespace GeneXusXmlSignature.GeneXusUtils
     }
 
     [SecuritySafeCritical]
-    public class MessageDigestAlgorithmWrapperUtils
+    public static class MessageDigestAlgorithmWrapperUtils
     {
         public static MessageDigestAlgorithmWrapper getMessageDigestAlgorithmWrapper(string messageDigestAlgorithmWrapper,
         Error error)
         {
-            switch (messageDigestAlgorithmWrapper.ToUpper().Trim())
+			if(error == null) return MessageDigestAlgorithmWrapper.NONE;
+			if (messageDigestAlgorithmWrapper == null)
+			{
+				error.setError("MD001", "Algorithm not found: " + messageDigestAlgorithmWrapper);
+				return MessageDigestAlgorithmWrapper.NONE;
+			}
+            switch (messageDigestAlgorithmWrapper.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "SHA1":
                     return MessageDigestAlgorithmWrapper.SHA1;
@@ -34,6 +40,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string valueOf(MessageDigestAlgorithmWrapper messageDigestAlgorithmWrapper, Error error)
         {
+			if (error == null) return null;
             switch (messageDigestAlgorithmWrapper)
             {
                 case MessageDigestAlgorithmWrapper.SHA1:
@@ -50,6 +57,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string getDigestMethod(MessageDigestAlgorithmWrapper messageDigestAlgorithmWrapper, Error error)
         {
+			if (error == null) return null;
             switch (messageDigestAlgorithmWrapper)
             {
                 case MessageDigestAlgorithmWrapper.SHA1:

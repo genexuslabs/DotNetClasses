@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Security;
@@ -22,6 +22,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public bool setClaim(string key, string value, Error error)
         {
+			if (error == null) return false;
             if (RegisteredClaimUtils.exists(key))
             {
                 return base.setClaim(key, value, error);
@@ -35,6 +36,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public bool setTimeValidatingClaim(string key, string value, string customValidationSeconds, Error error)
         {
+			if (error == null) return false;
             if (RegisteredClaimUtils.exists(key) && RegisteredClaimUtils.isTimeValidatingClaim(key))
             {
                 Int32 date = 0;
@@ -48,7 +50,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                     error.setError("RC004", "Incorrect date format. Expected yyyy/MM/dd HH:mm:ss");
                     return false;
                 }
-                return setClaim(key, date.ToString(), error);
+                return setClaim(key, date.ToString(CultureInfo.InvariantCulture), error);
             }
             else
             {
@@ -77,7 +79,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                 return 0;
             }
 
-            return long.Parse(stringTime);
+            return long.Parse(stringTime, CultureInfo.InvariantCulture);
 
         }
 
@@ -89,6 +91,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public override object getClaimValue(string key, Error error)
         {
+			if (error == null) return "";
             if (RegisteredClaimUtils.exists(key))
             {
                 for (int i = 0; i < _claims.Count; i++)

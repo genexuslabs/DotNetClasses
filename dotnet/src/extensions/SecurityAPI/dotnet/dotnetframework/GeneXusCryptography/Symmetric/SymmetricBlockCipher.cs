@@ -1,4 +1,4 @@
-﻿
+
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
@@ -61,7 +61,7 @@ namespace GeneXusCryptography.Symmetric
 
             IBlockCipher engine = getCipherEngine(algorithm);
             IAeadBlockCipher bbc = getAEADCipherMode(engine, mode);
-            if (this.error.existsError() && !(string.Compare(this.error.Code, "SB016", true) == 0))
+            if (this.error.existsError() && !(string.Compare(this.error.SecApiCode, "SB016", true, System.Globalization.CultureInfo.InvariantCulture) == 0))
             {
                 return "";
             }
@@ -134,7 +134,7 @@ namespace GeneXusCryptography.Symmetric
 
             IBlockCipher engine = getCipherEngine(algorithm);
             IAeadBlockCipher bbc = getAEADCipherMode(engine, mode);
-            if (this.error.existsError() && !(string.Compare(this.error.Code, "SB016", true) == 0))
+            if (this.error.existsError() && !(string.Compare(this.error.SecApiCode, "SB016", true, System.Globalization.CultureInfo.InvariantCulture) == 0))
             {
                 return "";
             }
@@ -199,7 +199,7 @@ namespace GeneXusCryptography.Symmetric
             }
 
             BufferedBlockCipher bbc = getCipher(algorithm, mode, padding);
-            if (this.error.existsError() && !(string.Compare(this.error.Code, "SB016", true) == 0))
+            if (this.error.existsError() && !(string.Compare(this.error.SecApiCode, "SB016", true, System.Globalization.CultureInfo.InvariantCulture) == 0))
             {
                 return "";
             }
@@ -285,7 +285,7 @@ namespace GeneXusCryptography.Symmetric
             }
 
             BufferedBlockCipher bbc = getCipher(algorithm, mode, padding);
-            if (this.error.existsError() && !(string.Compare(this.error.Code, "SB016", true) == 0))
+            if (this.error.existsError() && !(string.Compare(this.error.SecApiCode, "SB016", true, System.Globalization.CultureInfo.InvariantCulture) == 0))
             {
                 return "";
             }
@@ -386,7 +386,7 @@ namespace GeneXusCryptography.Symmetric
         /// <param name="mode">string SymmetricBlockModes enum, symmetric block mode name</param>
         /// <param name="padding">string SymmetricBlockPadding enum, symmetric block padding name</param>
         /// <returns>boolean true if it uses CTS</returns>
-        private bool usesCTS(SymmetricBlockMode mode, SymmetricBlockPadding padding)
+        private static bool usesCTS(SymmetricBlockMode mode, SymmetricBlockPadding padding)
         {
             return mode == SymmetricBlockMode.CTS || padding == SymmetricBlockPadding.WITHCTS;
         }

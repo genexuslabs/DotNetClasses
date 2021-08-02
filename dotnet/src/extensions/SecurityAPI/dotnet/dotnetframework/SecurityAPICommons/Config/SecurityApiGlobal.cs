@@ -1,14 +1,14 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
 
 
 namespace SecurityAPICommons.Config
 {
 
-    public static class Global
+    public static class SecurityApiGlobal
     {
         private static string global_encoding = "UTF_8";
-        public static string GLOBAL_ENCODING
+        public static string GLOBALENCODING
         {
             get
             {
@@ -24,7 +24,7 @@ namespace SecurityAPICommons.Config
             }
         }
         private static string global_keyContainerName = "";
-        public static string GLOBAL_KEY_COONTAINER_NAME
+        public static string GLOBALKEYCOONTAINERNAME
         {
             get
             {

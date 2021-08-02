@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -13,11 +13,17 @@ namespace GeneXusXmlSignature.GeneXusUtils
     }
 
     [SecuritySafeCritical]
-    public class TransformsWrapperUtils
+    public static class TransformsWrapperUtils
     {
         public static TransformsWrapper getTransformsWrapper(string transformsWrapper, Error error)
         {
-            switch (transformsWrapper.ToUpper().Trim())
+			if(error == null) return TransformsWrapper.NONE;
+			if ( transformsWrapper == null)
+			{
+				error.setError("TW001", "Unrecognized transformation: " + transformsWrapper);
+				return TransformsWrapper.NONE;
+			}
+            switch (transformsWrapper.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "ENVELOPED":
                     return TransformsWrapper.ENVELOPED;
@@ -34,6 +40,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string valueOf(TransformsWrapper transformsWrapper, Error error)
         {
+			if (error == null) return null;
             switch (transformsWrapper)
             {
                 case TransformsWrapper.ENVELOPED:
@@ -50,6 +57,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string getSignatureTypeTransform(TransformsWrapper transformsWrapper, Error error)
         {
+			if (error == null) return null;
             switch (transformsWrapper)
             {
                 case TransformsWrapper.ENVELOPED:

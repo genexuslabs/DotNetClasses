@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace SecurityAPICommons.Keys
     /// Implements SymmetricKeyType associated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class SymmetricKeyTypeUtils
+    public static class SymmetricKeyTypeUtils
     {
         /// <summary>
         /// Mapping between string name and SymmetricKeyType enum representation
@@ -32,7 +32,14 @@ namespace SecurityAPICommons.Keys
         /// <returns>SymmetricKeyType enum representation</returns>
         public static SymmetricKeyType getSymmetricKeyType(string symmetricKeyType, Error error)
         {
-            switch (symmetricKeyType.ToUpper().Trim())
+			if (error == null) return SymmetricKeyType.NONE;
+			if(symmetricKeyType == null)
+			{
+				error.setError("SK001", "Unrecognized key type");
+				return SymmetricKeyType.NONE;
+			}
+
+			switch (symmetricKeyType.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "GENERICRANDOM":
                     return SymmetricKeyType.GENERICRANDOM;
@@ -49,6 +56,7 @@ namespace SecurityAPICommons.Keys
         /// <returns>string value of key type in string</returns>
         public static string valueOf(SymmetricKeyType symmetricKeyType, Error error)
         {
+			if (error == null) return "";
             switch (symmetricKeyType)
             {
                 case SymmetricKeyType.GENERICRANDOM:

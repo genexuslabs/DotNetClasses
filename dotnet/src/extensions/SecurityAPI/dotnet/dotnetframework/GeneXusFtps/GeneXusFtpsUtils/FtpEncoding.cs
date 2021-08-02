@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using System;
 using System.Security;
 
@@ -11,12 +11,18 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 	}
 
 	[SecuritySafeCritical]
-	public class FtpEncodingUtils
+	public static class FtpEncodingUtils
 	{
 		[SecuritySafeCritical]
 		public static FtpEncoding getFtpEncoding(String ftpEncoding, Error error)
 		{
-			switch (ftpEncoding.ToUpper().Trim())
+			if(error == null) return FtpEncoding.NONE;
+			if (ftpEncoding == null)
+			{
+				error.setError("FE001", "Unknown encoding");
+				return FtpEncoding.NONE;
+			}
+			switch (ftpEncoding.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
 			{
 				case "BINARY":
 					return FtpEncoding.BINARY;
@@ -31,6 +37,7 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 		[SecuritySafeCritical]
 		public static String valueOf(FtpEncoding ftpEncoding, Error error)
 		{
+			if (error == null) return "";
 			switch (ftpEncoding)
 			{
 				case FtpEncoding.BINARY:

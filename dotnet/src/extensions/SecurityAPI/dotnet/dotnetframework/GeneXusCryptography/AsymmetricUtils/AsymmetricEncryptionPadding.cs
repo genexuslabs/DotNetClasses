@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +22,7 @@ namespace GeneXusCryptography.AsymmetricUtils
     /// Implements AsymmetricEncryptionPadding associated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class AsymmetricEncryptionPaddingUtils
+    public static class AsymmetricEncryptionPaddingUtils
     {
         /// <summary>
         /// Mapping between string name and AsymmetricEncryptionPadding enum representation
@@ -32,7 +32,14 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>AsymmetricEncryptionPadding enum representation</returns>
         public static AsymmetricEncryptionPadding getAsymmetricEncryptionPadding(string asymmetricEncryptionPadding, Error error)
         {
-            switch (asymmetricEncryptionPadding.ToUpper().Trim())
+			if (error == null) return AsymmetricEncryptionPadding.NOPADDING;
+			if( asymmetricEncryptionPadding == null)
+			{
+				error.setError("AE003", "Unrecognized AsymmetricEncryptionPadding");
+				return AsymmetricEncryptionPadding.NOPADDING;
+			}
+
+			switch (asymmetricEncryptionPadding.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "NOPADDING":
                     return AsymmetricEncryptionPadding.NOPADDING;
@@ -55,6 +62,7 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>string name of asymmetricEncryptionPadding</returns>
         public static string valueOf(AsymmetricEncryptionPadding asymmetricEncryptionPadding, Error error)
         {
+			if (error == null) return "";
             switch (asymmetricEncryptionPadding)
             {
                 case AsymmetricEncryptionPadding.NOPADDING:

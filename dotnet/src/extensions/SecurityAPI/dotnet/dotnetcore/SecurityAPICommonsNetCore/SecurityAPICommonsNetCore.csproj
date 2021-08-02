@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -22,7 +22,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\SecurityAPIObject.cs" Link="Commons\SecurityAPIObject.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\AvailableEncoding.cs" Link="Config\AvailableEncoding.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\EncodingUtil.cs" Link="Config\EncodingUtil.cs" />
-    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\Global.cs" Link="Config\Global.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\SecurityApiGlobal.cs" Link="Config\Global.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\Base64Encoder.cs" Link="Encoders\Base64Encoder.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\HexaEncoder.cs" Link="Encoders\HexaEncoder.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\CertificateX509.cs" Link="Keys\CertificateX509.cs" />

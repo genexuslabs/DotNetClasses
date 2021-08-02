@@ -41,6 +41,16 @@ namespace GeneXusJWT.GenexusJWT
         public string DoCreate(string algorithm, PrivateClaims privateClaims, JWTOptions options)
         {
             this.error.cleanError();
+			if(options == null)
+			{
+				this.error.setError("JW000", "Options parameter is null");
+				return "";
+			}
+			if(privateClaims == null)
+			{
+				this.error.setError("JW000", "PrivateClaims parameter is null");
+				return "";
+			}
             if (options.HasError())
             {
                 this.error = options.GetError();
@@ -154,19 +164,34 @@ namespace GeneXusJWT.GenexusJWT
         [SecuritySafeCritical]
         public bool DoVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options)
         {
+			if(options == null)
+			{
+				this.error.setError("JW000", "Options parameter is null");
+				return false;
+			}
             return DoVerify(token, expectedAlgorithm, privateClaims, options, true, true);
         }
 
         [SecuritySafeCritical]
         public bool DoVerifyJustSignature(String token, String expectedAlgorithm, JWTOptions options)
         {
-            return DoVerify(token, expectedAlgorithm, null, options, false, false);
+			if (options == null)
+			{
+				this.error.setError("JW000", "Options parameter is null");
+				return false;
+			}
+			return DoVerify(token, expectedAlgorithm, null, options, false, false);
         }
 
         [SecuritySafeCritical]
         public bool DoVerifySignature(String token, String expectedAlgorithm, JWTOptions options)
         {
-            return DoVerify(token, expectedAlgorithm, null, options, false, true);
+			if (options == null)
+			{
+				this.error.setError("JW000", "Options parameter is null");
+				return false;
+			}
+			return DoVerify(token, expectedAlgorithm, null, options, false, true);
         }
 
         [SecuritySafeCritical]
@@ -388,21 +413,21 @@ namespace GeneXusJWT.GenexusJWT
                     else if (obj.GetType() == typeof(int))
                     {
                         int value = (int)obj;
-                        netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), value.ToString(), System.Security.Claims.ClaimValueTypes.Integer32);
+                        netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), value.ToString(System.Globalization.CultureInfo.InvariantCulture), System.Security.Claims.ClaimValueTypes.Integer32);
                     }
                     else if (obj.GetType() == typeof(long))
                     {
                         long value = (long)obj;
-                        netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), value.ToString(), System.Security.Claims.ClaimValueTypes.Integer64);
+                        netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), value.ToString(System.Globalization.CultureInfo.InvariantCulture), System.Security.Claims.ClaimValueTypes.Integer64);
                     }
                     else if (obj.GetType() == typeof(double))
                     {
                         double value = (double)obj;
-                        netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), value.ToString(), System.Security.Claims.ClaimValueTypes.Double);
+                        netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), value.ToString(System.Globalization.CultureInfo.InvariantCulture), System.Security.Claims.ClaimValueTypes.Double);
                     }else if (obj.GetType() == typeof(bool))
 					{
                         bool value = (bool)obj;
-                        netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), value.ToString(), System.Security.Claims.ClaimValueTypes.Boolean);
+                        netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), value.ToString(System.Globalization.CultureInfo.InvariantCulture), System.Security.Claims.ClaimValueTypes.Boolean);
 					}
 					else
 					{
@@ -501,7 +526,7 @@ namespace GeneXusJWT.GenexusJWT
             }
             return true;
         }
-        private bool isRevoqued(JwtSecurityToken jwtToken, JWTOptions options)
+        private static bool isRevoqued(JwtSecurityToken jwtToken, JWTOptions options)
         {
             RevocationList rList = options.getRevocationList();
             return rList.isInRevocationList(jwtToken.Payload.Jti);
@@ -593,13 +618,13 @@ namespace GeneXusJWT.GenexusJWT
 
                     else if (((opt == int16) || (opt == int32) || (opt == int64)) && ((ott == int16) || (ott == int32) || (ott == int64)))
                     {
-                        if (Convert.ToInt32(op) != Convert.ToInt32(ot))
+                        if (Convert.ToInt32(op, System.Globalization.CultureInfo.InvariantCulture) != Convert.ToInt32(ot, System.Globalization.CultureInfo.InvariantCulture))
                         {
                             return false;
                         }
                     }else if(opt == typeof(bool))
 					{      
-                        if(Convert.ToBoolean(op) != Convert.ToBoolean(ot))
+                        if(Convert.ToBoolean(op, System.Globalization.CultureInfo.InvariantCulture) != Convert.ToBoolean(ot, System.Globalization.CultureInfo.InvariantCulture))
 						{
                             return false;
 						}
@@ -635,7 +660,7 @@ namespace GeneXusJWT.GenexusJWT
             }
         }
 
-        private bool VerifyHeader(JwtSecurityToken jwtToken, JWTOptions options)
+        private static bool VerifyHeader(JwtSecurityToken jwtToken, JWTOptions options)
         {
             int claimsNumber = jwtToken.Header.Count;
             HeaderParameters parameters = options.GetHeaderParameters();
@@ -684,7 +709,7 @@ namespace GeneXusJWT.GenexusJWT
 
         }
 
-        private bool isRegistered(string claimKey, RegisteredClaims registeredClaims)
+        private static bool isRegistered(string claimKey, RegisteredClaims registeredClaims)
         {
 
             List<Claim> registeredClaimsList = registeredClaims.getAllClaims();
@@ -698,7 +723,7 @@ namespace GeneXusJWT.GenexusJWT
             return false;
         }
 
-        private bool isPublic(string claimKey, PublicClaims publicClaims)
+        private static bool isPublic(string claimKey, PublicClaims publicClaims)
         {
             List<Claim> publicClaimsList = publicClaims.getAllClaims();
             foreach (Claim s in publicClaimsList)

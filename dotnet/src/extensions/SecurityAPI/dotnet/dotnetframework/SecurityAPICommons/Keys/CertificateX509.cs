@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Security;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -17,8 +17,8 @@ using SecurityAPICommons.Utils;
 namespace SecurityAPICommons.Keys
 {
     [SecuritySafeCritical]
-    public class CertificateX509 : Certificate
-    {
+    public sealed class CertificateX509 : Certificate, IDisposable
+	{
         private string publicKeyAlgorithm;
         private X509Certificate2 cert;
         public X509Certificate2 Cert => cert;
@@ -98,8 +98,10 @@ namespace SecurityAPICommons.Keys
             {
                 result = loadPublicKeyFromFile(certificatePath, alias, password);
             }
-            catch (Exception)
-            {
+#pragma warning disable CA1031 // Do not catch general exception types
+			catch (Exception)
+#pragma warning restore CA1031 // Do not catch general exception types
+			{
                 this.error.setError("CE001", "Invalid certificate or could not found bouncy castle assembly");
                 return false;
             }
@@ -181,7 +183,7 @@ namespace SecurityAPICommons.Keys
                 return "ECDSA";
             }
             string aux1 = aux[0].Replace("-", "");
-            return aux1.ToUpper();
+            return aux1.ToUpper(System.Globalization.CultureInfo.InvariantCulture);
         }
 
         [SecuritySafeCritical]
@@ -193,7 +195,7 @@ namespace SecurityAPICommons.Keys
                 return "ECDSA";
             }
             string[] aux = this.publicKeyAlgorithm.Split(new string[] { "with" }, StringSplitOptions.None);
-            return aux[1].ToUpper();
+            return aux[1].ToUpper(System.Globalization.CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -214,11 +216,11 @@ namespace SecurityAPICommons.Keys
                     {
                         parmsECDSA = PublicKeyFactory.CreateKey(this.subjectPublicKeyInfo);
                     }
-                    catch (IOException e)
+                    catch (IOException)
                     {
                         this.error.setError("AE010", "Not ECDSA key");
                         return null;
-                        throw e;
+                        throw;
                     }
                     return parmsECDSA;
                 default:
@@ -258,11 +260,11 @@ namespace SecurityAPICommons.Keys
             {
                 parms = (RsaKeyParameters)PublicKeyFactory.CreateKey(this.subjectPublicKeyInfo);
             }
-            catch (IOException e)
+            catch (IOException)
             {
                 this.error.setError("AE014", "Not RSA key");
                 return null;
-                throw e;
+                throw;
             }
 
             return parms;
@@ -294,7 +296,7 @@ namespace SecurityAPICommons.Keys
             if (SecurityUtils.extensionIs(path, ".jks"))
             {
                 this.error.setError("CE006", "Java Key Stores not allowed on .Net applications");
-                throw new Exception("Java Key Stores not allowed on .Net applications");
+               // throw new Exception("Java Key Stores not allowed on .Net applications");
             }
             return flag;
         }
@@ -368,12 +370,15 @@ namespace SecurityAPICommons.Keys
 
             try
             {
-                fs = new FileStream(path, FileMode.Open);
-                X509CertificateParser parser = new X509CertificateParser();
-                cert = parser.ReadCertificate(fs);
+				using (fs = new FileStream(path, FileMode.Open))
+				{
+					X509CertificateParser parser = new X509CertificateParser();
+					cert = parser.ReadCertificate(fs);
+				}
+					
             }
-            catch
-            {
+			catch
+			{
                 this.error.setError("CE009", "Certificate coud not be loaded");
                 return false;
                 // throw new FileLoadException(path + " certificate coud not be loaded");
@@ -397,8 +402,8 @@ namespace SecurityAPICommons.Keys
             {
                 return cert.PublicKey.Key;
             }
-            catch (Exception)
-            {
+			catch (Exception)
+			{
                 this.error.setError("CE010", "Error casting public key data");
                 return null;
             }
@@ -416,8 +421,10 @@ namespace SecurityAPICommons.Keys
                 {
                      alg = cert.PublicKey.Key;
                 }
-                catch (Exception e)
-                {
+#pragma warning disable CA1031 // Do not catch general exception types
+				catch (Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
+				{
                     this.error.setError("CE016", e.Message);
                     return null;
                 }
@@ -426,7 +433,10 @@ namespace SecurityAPICommons.Keys
                 try
                 {
                     alg =  cert.GetECDsaPublicKey();
-                }catch(Exception e)
+#pragma warning disable CA1031 // Do not catch general exception types
+				}
+				catch(Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
 				{
                     this.error.setError("CE15", e.Message);
                     return null;
@@ -464,13 +474,17 @@ namespace SecurityAPICommons.Keys
             try
             {
                 pkcs12 = new Pkcs12StoreBuilder().Build();
-                pkcs12.Load(new FileStream(path, FileMode.Open, FileAccess.Read), password.ToCharArray());
+				using(FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+				{
+					pkcs12.Load(fs, password.ToCharArray());
+				}
+                
 
             }
 
-            catch
-            {
-                this.error.setError("CE013", path + "not found.");
+			catch (Exception e)
+			{
+                this.error.setError("CE013", e.Message);
                 // throw new FileLoadException(path + "not found.");
             }
 
@@ -507,8 +521,10 @@ namespace SecurityAPICommons.Keys
                 streamReader.Close();
                 pemReader.Reader.Close();
             }
-            catch
-            {
+#pragma warning disable CA1031 // Do not catch general exception types
+			catch
+#pragma warning restore CA1031 // Do not catch general exception types
+			{
                 this.error.setError("CE015", "Error closing StreamReader/ PemReader for certificates");
             }
         }
@@ -520,5 +536,16 @@ namespace SecurityAPICommons.Keys
             System.Security.Cryptography.X509Certificates.X509Certificate x509certificate = DotNetUtilities.ToX509Certificate(cert);
             this.cert = new X509Certificate2(x509certificate);
         }
-    }
+
+#pragma warning disable CA1063 // Implement IDisposable Correctly
+		public void Dispose()
+#pragma warning restore CA1063 // Implement IDisposable Correctly
+		{
+			if(this.cert != null)
+			{
+				this.cert.Dispose();
+				this.cert = null;
+			}
+		}
+	}
 }

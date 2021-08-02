@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Renci.SshNet.Abstractions;
 using System.Collections;
 using System.Collections.Generic;
@@ -69,38 +69,56 @@ namespace Sftp.GeneXusSftpUtils
         /// <exception cref="FormatException">Thrown if the given arguments cannor be parsed into a valid host entry</exception>
         public void AddHost(string hostname, UInt16 portNumber, string keyType, byte[] pubKey, bool storeHostnameHashed, string marker = "")
         {
-            string hostNameWithPort = string.Format("[{0}:{1}]", hostname, portNumber);
-            string hostnameSection;
+#pragma warning disable CA1305 // Specify IFormatProvider
+			string hostNameWithPort = string.Format("[{0}:{1}]", hostname, portNumber);
+#pragma warning restore CA1305 // Specify IFormatProvider
+			string hostnameSection;
 
             if (!string.IsNullOrEmpty(marker))
             {
-                if (!marker.StartsWith("@"))
-                    throw new FormatException("The given host marker must be prefixed with \'@\'.  See the \'man 8 sshd\' section about known_hosts for more details on markers");
-                marker = string.Format("{0} ", marker);
-            }
+#pragma warning disable CA1307 // Specify StringComparison
+				if (!marker.StartsWith("@"))
+#pragma warning restore CA1307 // Specify StringComparison
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+					throw new FormatException("The given host marker must be prefixed with \'@\'.  See the \'man 8 sshd\' section about known_hosts for more details on markers");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
+#pragma warning disable CA1305 // Specify IFormatProvider
+				marker = string.Format("{0} ", marker);
+#pragma warning restore CA1305 // Specify IFormatProvider
+			}
 
             if (storeHostnameHashed)
             {
                 byte[] salt = new byte[20];
                 Sftp.GeneXusSftpUtils.CryptoAbstractionSftp.GenerateRandom(salt);
 
-                HMACSHA1 hmac = new HMACSHA1(salt);
-                byte[] hash = hmac.ComputeHash(Encoding.ASCII.GetBytes(hostNameWithPort));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
+				HMACSHA1 hmac = new HMACSHA1(salt);
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
+#pragma warning restore CA2000 // Dispose objects before losing scope
+				byte[] hash = hmac.ComputeHash(Encoding.ASCII.GetBytes(hostNameWithPort));
 
-                hostnameSection = string.Format("|1|{0}|{1}", Convert.ToBase64String(salt), Convert.ToBase64String(hash));
-            }
+#pragma warning disable CA1305 // Specify IFormatProvider
+				hostnameSection = string.Format("|1|{0}|{1}", Convert.ToBase64String(salt), Convert.ToBase64String(hash));
+#pragma warning restore CA1305 // Specify IFormatProvider
+			}
             else
             {
                 hostnameSection = hostNameWithPort;
             }
 
-            string hostToParse = string.Format("{3}{0} {1} {2}", hostnameSection, keyType, Convert.ToBase64String(pubKey), marker);
+#pragma warning disable CA1305 // Specify IFormatProvider
+			string hostToParse = string.Format("{3}{0} {1} {2}", hostnameSection, keyType, Convert.ToBase64String(pubKey), marker);
+#pragma warning restore CA1305 // Specify IFormatProvider
 
-            KnownHost newHost;
+			KnownHost newHost;
             if (!KnownHost.TryParse(hostToParse, out newHost))
-                throw new FormatException("Malformed input: Failed to create entry.  If you specified a marker, ensure it is valid (see the \'man 8 sshd\' section on known_hosts for more details on markers)");
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+				throw new FormatException("Malformed input: Failed to create entry.  If you specified a marker, ensure it is valid (see the \'man 8 sshd\' section on known_hosts for more details on markers)");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
-            _knownHosts.Add(newHost);
+			_knownHosts.Add(newHost);
         }
 
         /// <summary>
@@ -145,9 +163,11 @@ namespace Sftp.GeneXusSftpUtils
                 KnownHost.HostValidationResponse typeOfMatch = host.MatchesPubKey(hostname, keyType, pubKey, port);
 
                 if (typeOfMatch == KnownHost.HostValidationResponse.KeyRevoked)
-                    throw new Exception("The given host-pubkey pair is marked as revoked");
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+					throw new Exception("The given host-pubkey pair is marked as revoked");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
-                foundMatch = foundMatch || (typeOfMatch == KnownHost.HostValidationResponse.Matches);
+				foundMatch = foundMatch || (typeOfMatch == KnownHost.HostValidationResponse.Matches);
             }
 
             return foundMatch;

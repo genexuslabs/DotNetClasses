@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -9,15 +9,23 @@ namespace GeneXusXmlSignature.GeneXusUtils
     [SecuritySafeCritical]
     public enum XmlSignatureWrapper
     {
-        NONE, RSA_SHA1, RSA_SHA256, RSA_SHA512, ECDSA_SHA1, ECDSA_SHA256,
-    }
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		NONE, RSA_SHA1, RSA_SHA256, RSA_SHA512, ECDSA_SHA1, ECDSA_SHA256,
+#pragma warning restore CA1707 // Identifiers should not contain underscores
+	}
 
     [SecuritySafeCritical]
-    public class XMLSignatureWrapperUtils
+    public static class XMLSignatureWrapperUtils
     {
         public static XmlSignatureWrapper getXMLSignatureWrapper(string xMLSignatureWrapper, Error error)
         {
-            switch (xMLSignatureWrapper.ToUpper().Trim())
+			if(error == null) return XmlSignatureWrapper.NONE;
+			if (xMLSignatureWrapper == null)
+			{
+				error.setError("XS001", "Unrecognized algorithm: " + xMLSignatureWrapper);
+				return XmlSignatureWrapper.NONE;
+			}
+            switch (xMLSignatureWrapper.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "RSA_SHA1":
                     return XmlSignatureWrapper.RSA_SHA1;
@@ -37,6 +45,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string valueOf(XmlSignatureWrapper xMLSignatureWrapper, Error error)
         {
+			if (error == null) return null;
             switch (xMLSignatureWrapper)
             {
                 case XmlSignatureWrapper.RSA_SHA1:
@@ -57,6 +66,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string getSignatureMethodAlgorithm(XmlSignatureWrapper xMLSignatureWrapper, Error error)
         {
+			if (error == null) return null;
             switch (xMLSignatureWrapper)
             {
                 case XmlSignatureWrapper.RSA_SHA1:

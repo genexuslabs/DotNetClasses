@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 
@@ -18,6 +18,7 @@ namespace SecurityAPICommons.Utils
 		[SecuritySafeCritical]
 		public void SetExtension(string value)
 		{
+			if (value == null) return;
 			if (value[0] != '.')
 			{
 				value = "." + value;

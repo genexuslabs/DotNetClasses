@@ -1,4 +1,4 @@
-﻿using GeneXusCryptography.ChecksumUtils;
+using GeneXusCryptography.ChecksumUtils;
 using GeneXusCryptography.Commons;
 using GeneXusCryptography.Hash;
 using GeneXusCryptography.HashUtils;
@@ -39,12 +39,13 @@ namespace GeneXusCryptography.Checksum
 		[SecuritySafeCritical]
 		public bool VerifyChecksum(string input, string inputType, string checksumAlgorithm, string digest)
 		{
+			if (digest == null) return false;
 			string result = GenerateChecksum(input, inputType, checksumAlgorithm);
 			if (SecurityUtils.compareStrings(result, "") || this.HasError())
 			{
 				return false;
 			}
-			string resCompare = digest.ToUpper().Contains("0X") ? "0X" + result : result;
+			string resCompare = digest.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Contains("0X") ? "0X" + result : result;
 			return SecurityUtils.compareStrings(resCompare, digest);
 		}
 
@@ -65,13 +66,13 @@ namespace GeneXusCryptography.Checksum
 			switch (parms.Width)
 			{
 				case 8:
-					return aux.ToString("X2");
+					return aux.ToString("X2", System.Globalization.CultureInfo.InvariantCulture);
 				case 16:
-					return aux.ToString("X4");
+					return aux.ToString("X4", System.Globalization.CultureInfo.InvariantCulture);
 				case 32:
-					return aux.ToString("X8");
+					return aux.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
 				default:
-					return aux.ToString("X");
+					return aux.ToString("X", System.Globalization.CultureInfo.InvariantCulture);
 			}
 		}
 
@@ -105,10 +106,10 @@ namespace GeneXusCryptography.Checksum
 				this.error.setError("HS001", "Error encoding hexa");
 				return "";
 			}
-			return result.ToUpper().Trim();
+			return result.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim();
 		}
 
-		private long CalculateCRC(byte[] input, CRCParameters parms)
+		private static long CalculateCRC(byte[] input, CRCParameters parms)
 		{
 			long curValue = parms.Init;
 			long topBit = 1L << (parms.Width - 1);
@@ -150,7 +151,7 @@ namespace GeneXusCryptography.Checksum
 			return curValue & mask;
 		}
 
-		private long Reflect(long input, int count)
+		private static long Reflect(long input, int count)
 		{
 			long ret = input;
 			for (int idx = 0; idx < count; idx++)

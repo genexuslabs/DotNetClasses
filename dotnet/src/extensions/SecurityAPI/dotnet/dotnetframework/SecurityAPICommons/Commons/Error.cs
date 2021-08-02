@@ -1,4 +1,4 @@
-﻿
+
 using System.Security;
 
 namespace SecurityAPICommons.Commons
@@ -7,15 +7,17 @@ namespace SecurityAPICommons.Commons
     /// Implements logging functions
     /// </summary>
     [SecuritySafeCritical]
-    public class Error
-    {
+#pragma warning disable CA1716 // Identifiers should not match keywords
+	public class Error
+#pragma warning restore CA1716 // Identifiers should not match keywords
+	{
         private bool exists;
         private string code;
 
         /// <summary>
         /// Error.code getter
         /// </summary>
-        public string Code
+        public string SecApiCode
         {
             get { return code; }
         }

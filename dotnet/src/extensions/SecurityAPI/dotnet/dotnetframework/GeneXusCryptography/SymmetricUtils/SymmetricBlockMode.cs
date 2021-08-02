@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -15,16 +15,18 @@ namespace GeneXusCryptography.SymmetricUtils
     public enum SymmetricBlockMode
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        NONE, ECB, CBC, CFB, CTR, CTS, GOFB, OFB, OPENPGPCFB, SIC, /* AEAD */ AEAD_EAX, AEAD_GCM, AEAD_KCCM, AEAD_CCM
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		NONE, ECB, CBC, CFB, CTR, CTS, GOFB, OFB, OPENPGPCFB, SIC, /* AEAD */ AEAD_EAX, AEAD_GCM, AEAD_KCCM, AEAD_CCM
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-    }
+	}
 
 
     /// <summary>
     /// Implements SymmetricBlockMode associated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class SymmetricBlockModeUtils
+    public static class SymmetricBlockModeUtils
     {
         /// <summary>
         /// Mapping between string name and SymmetricBlockMode enum representation
@@ -34,7 +36,14 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>SymmetricBlockMode enum representation</returns>
         public static SymmetricBlockMode getSymmetricBlockMode(string symmetricBlockMode, Error error)
         {
-            switch (symmetricBlockMode.ToUpper().Trim())
+			if (error == null) return SymmetricBlockMode.NONE;
+			if(symmetricBlockMode == null)
+			{
+				error.setError("SB005", "Unrecognized SymmetricBlockMode");
+				return SymmetricBlockMode.NONE;
+			}
+
+			switch (symmetricBlockMode.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "ECB":
                     return SymmetricBlockMode.ECB;
@@ -79,7 +88,9 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>SymmetricBlockMode name value in string</returns>
         public static string valueOf(SymmetricBlockMode symmetricBlockMode, Error error)
         {
-            switch (symmetricBlockMode)
+			if (error == null) return "Unrecognized operation mode";
+
+			switch (symmetricBlockMode)
             {
                 case SymmetricBlockMode.ECB:
                     return "ECB";
@@ -125,6 +136,7 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>boolean true if operation mode is AEAD type</returns>
         public static bool isAEAD(SymmetricBlockMode symmetricBlockMode, Error error)
         {
+			if (error == null) return false;
             switch (symmetricBlockMode)
             {
                 case SymmetricBlockMode.AEAD_EAX:
