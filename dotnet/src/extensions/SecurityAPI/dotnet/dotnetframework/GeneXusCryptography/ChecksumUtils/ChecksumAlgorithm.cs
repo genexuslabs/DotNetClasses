@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using System.Security;
 
 
@@ -7,21 +7,29 @@ namespace GeneXusCryptography.ChecksumUtils
 	[SecuritySafeCritical]
 	public enum ChecksumAlgorithm
 	{
+#pragma warning disable CA1707 // Identifiers should not contain underscores
 		NONE, CRC8, CRC8_CDMA2000, CRC8_DARC, CRC8_DVB_S2, CRC8_EBU, CRC8_I_CODE, CRC8_ITU, CRC8_MAXIM, CRC8_ROHC, CRC8_WCDMA,
 		CRC16_AUG_CCITT, CRC16_CCITT_FALSE, CRC16_ARC, CRC16_BUYPASS, CRC16_CDMA2000, CRC16_DDS_110, CRC16_DECT_R,
 		CRC16_DECT_X, CRC16_DNP, CRC16_EN_13757, CRC16_GENIBUS, CRC16_MAXIM, CRC16_MCRF4XX, CRC16_RIELLO, CRC16_T10_DIF,
 		CRC16_TELEDISK, CRC16_TMS_37157, CRC16_USB, CRC_A, CRC16_KERMIT, CRC16_MODBUS, CRC16_X_25, CRC16_XMODEM, CRC32,
 		CRC32_BZIP2, CRC32C, CRC32D, CRC32_MPEG_2, CRC32_POSIX, CRC32Q, CRC32_JAMCRC, CRC32_XFER, MD5, SHA1, SHA256,
 		SHA512,
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 	}
 
 	[SecuritySafeCritical]
-	public class ChecksumAlgorithmUtils
+	public static class ChecksumAlgorithmUtils
 	{
 		
 		public static ChecksumAlgorithm getChecksumAlgorithm(string checksumAlgorithm, Error error)
 		{
-			switch (checksumAlgorithm.ToUpper().Trim())
+			if(error == null) return ChecksumAlgorithm.NONE;
+			if (checksumAlgorithm == null)
+			{
+				error.setError("CA001", "Unrecognized checksum algorithm");
+				return ChecksumAlgorithm.NONE;
+			}
+			switch (checksumAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
 			{
 				case "CRC8":
 					return ChecksumAlgorithm.CRC8;
@@ -123,6 +131,8 @@ namespace GeneXusCryptography.ChecksumUtils
 
 		public static string valueOf(ChecksumAlgorithm checksumAlgorithm, Error error)
 		{
+			if (error == null) return null;
+
 			switch (checksumAlgorithm)
 			{
 				case ChecksumAlgorithm.CRC8:
@@ -239,6 +249,7 @@ namespace GeneXusCryptography.ChecksumUtils
 
 		public static CRCParameters getParameters(ChecksumAlgorithm checksumAlgorithm, Error error)
 		{
+			if (error == null) return new CRCParameters(0, 0x00, 0x00, false, false, 0x00);
 			switch (checksumAlgorithm)
 			{
 				case ChecksumAlgorithm.CRC8:

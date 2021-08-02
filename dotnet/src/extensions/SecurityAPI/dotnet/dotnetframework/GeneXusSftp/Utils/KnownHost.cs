@@ -1,4 +1,4 @@
-﻿using Renci.SshNet.Security.Cryptography;
+using Renci.SshNet.Security.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,30 +63,42 @@ namespace Sftp.GeneXusSftpUtils
 
         private KnownHost(string hostName, string keyType, string base64Pubkey, HostPubkeyMarker marker)
         {
-            _isHashed = hostName.StartsWith("|");
+#pragma warning disable CA1307 // Specify StringComparison
+			_isHashed = hostName.StartsWith("|");
+#pragma warning restore CA1307 // Specify StringComparison
 
-            if (_isHashed)
+			if (_isHashed)
             {
-                if (!hostName.StartsWith(HashedHostSignifier))
-                    throw new FormatException("The hashed section was not properly composed");
+#pragma warning disable CA1307 // Specify StringComparison
+				if (!hostName.StartsWith(HashedHostSignifier))
+#pragma warning restore CA1307 // Specify StringComparison
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+					throw new FormatException("The hashed section was not properly composed");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
-                string[] splitHashedSection = hostName.Split('|');
+				string[] splitHashedSection = hostName.Split('|');
                 if (splitHashedSection.Length != 4)
-                    throw new FormatException("The hashed section was not properly composed");
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+					throw new FormatException("The hashed section was not properly composed");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
-                _hashSalt = Convert.FromBase64String(splitHashedSection[2]);
+				_hashSalt = Convert.FromBase64String(splitHashedSection[2]);
 
                 if (_hashSalt.Length != 20)
-                    throw new ArgumentException("The salt must be exacly 20 bytes");
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+					throw new ArgumentException("The salt must be exacly 20 bytes");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
-                _hashedHostName = Convert.FromBase64String(splitHashedSection[3]);
+				_hashedHostName = Convert.FromBase64String(splitHashedSection[3]);
             }
             else
             {
                 _plaintextHostPatterns = GetPatternList(hostName);
                 if (_plaintextHostPatterns.Count == 0)
-                    throw new FormatException("No hostname patterns given");
-            }
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+					throw new FormatException("No hostname patterns given");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
+			}
 
             _keyType = keyType;
             _pubKey = Convert.FromBase64String(base64Pubkey);
@@ -120,12 +132,16 @@ namespace Sftp.GeneXusSftpUtils
         private static bool UnsafeTryParse(string hostLine, out KnownHost host)
         {
             host = null;
-            if (string.IsNullOrEmpty(hostLine) || hostLine.StartsWith("#"))
-                return false;
+#pragma warning disable CA1307 // Specify StringComparison
+			if (string.IsNullOrEmpty(hostLine) || hostLine.StartsWith("#"))
+#pragma warning restore CA1307 // Specify StringComparison
+				return false;
 
-            bool hasSpecialPrefix = hostLine.StartsWith("@");
+#pragma warning disable CA1307 // Specify StringComparison
+			bool hasSpecialPrefix = hostLine.StartsWith("@");
+#pragma warning restore CA1307 // Specify StringComparison
 
-            string[] sectionedLine = hostLine.Split(' ');
+			string[] sectionedLine = hostLine.Split(' ');
             if (hasSpecialPrefix && sectionedLine.Length < 4)
                 return false;
             else if (sectionedLine.Length < 3)
@@ -174,21 +190,27 @@ namespace Sftp.GeneXusSftpUtils
             }
         }
 
-        private HostValidationResponse ValidateKeySignature(string hostname, string keyType, byte[] keyToCheck)
+#pragma warning disable CA1822
+#pragma warning disable CA1801
+		private HostValidationResponse ValidateKeySignature(string hostname, string keyType, byte[] keyToCheck)
         {
             //TODO: Return HostValidationResponse.ValidSignature if the key is signed by this Certificate Authority
             return HostValidationResponse.InvalidSignature;
         }
+#pragma warning restore CA1801
+#pragma warning restore CA1822
 
-        /// <summary>
-        /// Writes this KnownHost as an openssh known_hosts formatted line
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
+		/// <summary>
+		/// Writes this KnownHost as an openssh known_hosts formatted line
+		/// </summary>
+		/// <returns></returns>
+		public override string ToString()
         {
             string hostnameSection = _isHashed
-                ? string.Format("{0}{1}|{2}", HashedHostSignifier, Convert.ToBase64String(_hashSalt), Convert.ToBase64String(_hashedHostName))
-                : string.Join(",", _plaintextHostPatterns.Select(x => x.Item1));
+#pragma warning disable CA1305 // Specify IFormatProvider
+				? string.Format("{0}{1}|{2}", HashedHostSignifier, Convert.ToBase64String(_hashSalt), Convert.ToBase64String(_hashedHostName))
+#pragma warning restore CA1305 // Specify IFormatProvider
+				: string.Join(",", _plaintextHostPatterns.Select(x => x.Item1));
 
             string specialPrefix = string.Empty;
             switch (_hostMarker)
@@ -201,8 +223,10 @@ namespace Sftp.GeneXusSftpUtils
                     break;
             }
 
-            return string.Format("{0}{1} {2} {3}", specialPrefix, hostnameSection, _keyType, Convert.ToBase64String(_pubKey));
-        }
+#pragma warning disable CA1305 // Specify IFormatProvider
+			return string.Format("{0}{1} {2} {3}", specialPrefix, hostnameSection, _keyType, Convert.ToBase64String(_pubKey));
+#pragma warning restore CA1305 // Specify IFormatProvider
+		}
 
         private bool ValidateHostName(string host, UInt16 port)
         {
@@ -212,10 +236,14 @@ namespace Sftp.GeneXusSftpUtils
                 //or hostname with port
                 if (port == DefaultSshPortNumber && ValidateHashedHostName(host))
                     return true;
-                return ValidateHashedHostName(string.Format("[{0}:{1}]", host, port));
-            }
-            return ValidatePlaintextHostName(string.Format("[{0}:{1}]", host, port));
-        }
+#pragma warning disable CA1305 // Specify IFormatProvider
+				return ValidateHashedHostName(string.Format("[{0}:{1}]", host, port));
+#pragma warning restore CA1305 // Specify IFormatProvider
+			}
+#pragma warning disable CA1305 // Specify IFormatProvider
+			return ValidatePlaintextHostName(string.Format("[{0}:{1}]", host, port));
+#pragma warning restore CA1305 // Specify IFormatProvider
+		}
 
         [SecuritySafeCritical]
         private bool ValidateHashedHostName(string hostAndPort)
@@ -225,8 +253,12 @@ namespace Sftp.GeneXusSftpUtils
             byte[] hashToCompare_netcore = hmac_netcore.ComputeHash(Encoding.ASCII.GetBytes(hostAndPort));
             return _hashedHostName.SequenceEqual(hashToCompare_netcore);
 #else
-            HMACSHA1 hmac = new HMACSHA1(_hashSalt);
-            byte[] hashToCompare = hmac.ComputeHash(Encoding.ASCII.GetBytes(hostAndPort));
+#pragma warning disable CA2000 // Dispose objects before losing scope
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
+			HMACSHA1 hmac = new HMACSHA1(_hashSalt);
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
+#pragma warning restore CA2000 // Dispose objects before losing scope
+			byte[] hashToCompare = hmac.ComputeHash(Encoding.ASCII.GetBytes(hostAndPort));
 
             return _hashedHostName.SequenceEqual(hashToCompare);
 #endif
@@ -237,8 +269,10 @@ namespace Sftp.GeneXusSftpUtils
             bool foundAtLeastOneMatch = false;
             foreach (Tuple<string, Regex> possibleMatch in _plaintextHostPatterns)
             {
-                bool negateMatch = possibleMatch.Item1.StartsWith("!");
-                bool foundMatch = possibleMatch.Item2.IsMatch(hostAndPort);
+#pragma warning disable CA1307 // Specify StringComparison
+				bool negateMatch = possibleMatch.Item1.StartsWith("!");
+#pragma warning restore CA1307 // Specify StringComparison
+				bool foundMatch = possibleMatch.Item2.IsMatch(hostAndPort);
                 if (foundMatch && negateMatch)
                     return false;
 
@@ -285,11 +319,15 @@ namespace Sftp.GeneXusSftpUtils
         {
             hostPattern = null;
 
-            bool squareBraceOpens = input.StartsWith("[");
-            bool squareBraceCloses = input.EndsWith("]");
+#pragma warning disable CA1307 // Specify StringComparison
+			bool squareBraceOpens = input.StartsWith("[");
+#pragma warning restore CA1307 // Specify StringComparison
+#pragma warning disable CA1307 // Specify StringComparison
+			bool squareBraceCloses = input.EndsWith("]");
+#pragma warning restore CA1307 // Specify StringComparison
 
-            //Opening/Closing braces must be matched
-            if (squareBraceOpens ^ squareBraceCloses)
+			//Opening/Closing braces must be matched
+			if (squareBraceOpens ^ squareBraceCloses)
                 return false;
 
             if (squareBraceOpens)
@@ -301,12 +339,16 @@ namespace Sftp.GeneXusSftpUtils
             }
             else
             {
-                hostPattern = string.Format("[{0}:{1}]", input, DefaultSshPortString);
-            }
+#pragma warning disable CA1305 // Specify IFormatProvider
+				hostPattern = string.Format("[{0}:{1}]", input, DefaultSshPortString);
+#pragma warning restore CA1305 // Specify IFormatProvider
+			}
 
-            //Strip the negation operand if present
-            if (hostPattern.StartsWith("[!"))
-                hostPattern = hostPattern.Remove(1, 1);
+			//Strip the negation operand if present
+#pragma warning disable CA1307 // Specify StringComparison
+			if (hostPattern.StartsWith("[!"))
+#pragma warning restore CA1307 // Specify StringComparison
+				hostPattern = hostPattern.Remove(1, 1);
 
             return true;
         }

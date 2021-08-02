@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace GeneXusCryptography.AsymmetricUtils
     /// Implements AsymmetricEncryptionAlgorithm assoaciated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class AsymmetricEncryptionAlgorithmUtils
+    public static class AsymmetricEncryptionAlgorithmUtils
     {
 
         /// <summary>
@@ -34,7 +34,13 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>AsymmetricEncryptionAlgorithm enum representation</returns>
         public static AsymmetricEncryptionAlgorithm getAsymmetricEncryptionAlgorithm(string asymmetricEncryptionAlgorithm, Error error)
         {
-            switch (asymmetricEncryptionAlgorithm.ToUpper().Trim())
+			if (error == null) return AsymmetricEncryptionAlgorithm.NONE;
+			if(asymmetricEncryptionAlgorithm == null)
+			{
+				error.setError("AE001", "Unrecognized AsymmetricEncryptionAlgorithm");
+				return AsymmetricEncryptionAlgorithm.NONE;
+			}
+            switch (asymmetricEncryptionAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "RSA":
                     return AsymmetricEncryptionAlgorithm.RSA;
@@ -51,6 +57,7 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>string asymmetricEncryptionAlgorithm name</returns>
         public static string valueOf(AsymmetricEncryptionAlgorithm asymmetricEncryptionAlgorithm, Error error)
         {
+			if (error == null) return "";
             switch (asymmetricEncryptionAlgorithm)
             {
                 case AsymmetricEncryptionAlgorithm.RSA:

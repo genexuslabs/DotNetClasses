@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using SecurityAPICommons.Utils;
 using Renci.SshNet;
 using Renci.SshNet.Common;
@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 namespace Sftp.GeneXusSftp
 {
     [SecuritySafeCritical]
-    public class SftpClient : ISftpClientObject
-    {
+    public sealed class SftpClient : ISftpClientObject, IDisposable
+	{
 
         private Renci.SshNet.SftpClient channel;
         private static KnownHostStore _knownHosts;
@@ -40,6 +40,11 @@ namespace Sftp.GeneXusSftp
         [SecuritySafeCritical]
         public override bool Connect(SftpOptions options)
         {
+			if(options == null)
+			{
+				this.error.setError("SF000", "Options parameter is null");
+				return false;
+			}
             if (options.HasError())
             {
                 this.error = options.GetError();
@@ -132,7 +137,7 @@ namespace Sftp.GeneXusSftp
             }
             if (remoteDir.Length > 1)
             {
-                if (remoteDir.StartsWith("\\") || remoteDir.StartsWith("/"))
+                if (remoteDir.StartsWith("\\", StringComparison.Ordinal) || remoteDir.StartsWith("/", StringComparison.Ordinal))
                 {
                     remoteDir = remoteDir.Substring(1, remoteDir.Length - 1);
                 }
@@ -168,7 +173,7 @@ namespace Sftp.GeneXusSftp
                     rDir += GetFileNamne(localPath);
                     if (rDir.Length > 1)
                     {
-                        if (rDir.StartsWith("\\") || rDir.StartsWith("/"))
+                        if (rDir.StartsWith("\\", StringComparison.Ordinal) || rDir.StartsWith("/", StringComparison.Ordinal))
                         {
                             rDir = rDir.Substring(1, rDir.Length - 1);
                         }
@@ -366,7 +371,7 @@ namespace Sftp.GeneXusSftp
                 pathArr = path.Split('\\');
             }
 
-            return pathArr.Last().ToString();
+            return pathArr.Last().ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
 
         private static bool CanTrustHost(string hostname, HostKeyEventArgs e)
@@ -412,7 +417,14 @@ namespace Sftp.GeneXusSftp
             }
         }
 
-
-    }
+		public void Dispose()
+		{
+			if(this.channel != null)
+			{
+				this.channel.Dispose();
+				this.channel = null;
+			}
+		}
+	}
 
 }

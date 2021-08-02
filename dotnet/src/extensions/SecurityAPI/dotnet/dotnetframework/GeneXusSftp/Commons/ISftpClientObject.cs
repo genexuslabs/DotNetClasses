@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using Sftp.GeneXusSftp;
 using System;
 using System.Collections.Generic;
@@ -14,8 +14,10 @@ namespace Sftp.GeneXusCommons
     {
         public abstract bool Connect(SftpOptions options);
         public abstract bool Put(string localPath, string remoteDir);
-        public abstract bool Get(string remoteFilePath, string localDir);
-        public abstract void Disconnect();
+#pragma warning disable CA1716 // Identifiers should not match keywords
+		public abstract bool Get(string remoteFilePath, string localDir);
+#pragma warning restore CA1716 // Identifiers should not match keywords
+		public abstract void Disconnect();
 
         public abstract string GetWorkingDirectory();
     }

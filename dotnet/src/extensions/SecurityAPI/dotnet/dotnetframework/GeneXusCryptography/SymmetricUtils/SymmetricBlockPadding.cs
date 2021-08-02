@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace GeneXusCryptography.SymmetricUtils
     /// Implements SymmetricBlockPadding associated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class SymmetricBlockPaddingUtils
+    public static class SymmetricBlockPaddingUtils
     {
         /// <summary>
         /// Mapping between string name and SymmetricBlockPadding enum representation
@@ -33,7 +33,13 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>SymmetricBlockPadding enum representation</returns>
         public static SymmetricBlockPadding getSymmetricBlockPadding(string symmetricBlockPadding, Error error)
         {
-            switch (symmetricBlockPadding.ToUpper().Trim())
+			if (error == null) return SymmetricBlockPadding.NOPADDING;
+			if(symmetricBlockPadding == null)
+			{
+				error.setError("SB008", "Unrecognized SymmetricBlockPadding");
+				return SymmetricBlockPadding.NOPADDING;
+			}
+            switch (symmetricBlockPadding.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "NOPADDING":
                     return SymmetricBlockPadding.NOPADDING;
@@ -62,7 +68,8 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>string name value of SymmetricBlockPadding</returns>
         public static string valueOf(SymmetricBlockPadding symmetricBlockPadding, Error error)
         {
-            switch (symmetricBlockPadding)
+			if(error == null) return "Unrecognized block padding";
+			switch (symmetricBlockPadding)
             {
                 case SymmetricBlockPadding.NOPADDING:
                     return "NOPADDING";

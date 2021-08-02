@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Security;
@@ -78,15 +78,18 @@ namespace SecurityAPICommons.Keys
         /// <returns>string Hexa fixed length secure random generated key</returns>
         private string genericKeyGenerator(int length)
         {
-            System.Security.Cryptography.RNGCryptoServiceProvider rngCsp = new System.Security.Cryptography.RNGCryptoServiceProvider();
-            Byte[] result = new Byte[length / 8];
-            rngCsp.GetBytes(result);
-            string res = toHexaString(result);
-            if (this.error.existsError())
-            {
-                return "";
-            }
-            return res;
+			using (System.Security.Cryptography.RNGCryptoServiceProvider rngCsp = new System.Security.Cryptography.RNGCryptoServiceProvider())
+			{
+				Byte[] result = new Byte[length / 8];
+				rngCsp.GetBytes(result);
+				string res = toHexaString(result);
+
+				if (this.error.existsError())
+				{
+					return "";
+				}
+				return res;
+			}
         }
 
 

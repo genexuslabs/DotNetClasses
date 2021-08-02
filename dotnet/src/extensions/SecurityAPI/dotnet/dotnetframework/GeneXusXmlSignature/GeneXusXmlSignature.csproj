@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup>
     <TargetFramework>net47</TargetFramework>
 	  <RootNamespace>GeneXusXmlSignature</RootNamespace>
     <AssemblyName>GeneXusXmlSignatureImpl</AssemblyName>
+	 <NoWarn>CA1031</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />

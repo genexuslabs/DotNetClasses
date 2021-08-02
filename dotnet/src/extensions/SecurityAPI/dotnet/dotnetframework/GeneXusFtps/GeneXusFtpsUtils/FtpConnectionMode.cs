@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using System;
 using System.Security;
 
@@ -11,12 +11,18 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 	}
 
 	[SecuritySafeCritical]
-	public class FtpConnectionModeUtils
+	public static class FtpConnectionModeUtils
 	{
 		[SecuritySafeCritical]
 		public static FtpConnectionMode getFtpMode(String ftpMode, Error error)
 		{
-			switch (ftpMode.ToUpper().Trim())
+			if(error == null) return FtpConnectionMode.NONE;
+			if (ftpMode == null)
+			{
+				error.setError("FM001", "Unrecognized FtpMode");
+				return FtpConnectionMode.NONE;
+			}
+			switch (ftpMode.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
 			{
 				case "ACTIVE":
 					return FtpConnectionMode.ACTIVE;
@@ -31,6 +37,7 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 		[SecuritySafeCritical]
 		public static String valueOf(FtpConnectionMode ftpMode, Error error)
 		{
+			if (error == null) return "";
 			switch (ftpMode)
 			{
 				case FtpConnectionMode.ACTIVE:

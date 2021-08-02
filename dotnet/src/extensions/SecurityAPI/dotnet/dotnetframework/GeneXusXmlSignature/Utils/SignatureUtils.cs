@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security;
 using SecurityAPICommons.Commons;
 using System.Xml;
@@ -12,19 +12,27 @@ namespace GeneXusXmlSignature.GeneXusUtils
     internal class SignatureUtils
 
     {
-        internal static XmlDocument documentFromFile(string path, string schemapath, Error error)
-        {
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.PreserveWhitespace = true;
-            try
-            {
-                xmlDoc.Load(path);
-            }
-            catch (Exception)
-            {
-                error.setError("SU001", "Unable to load file");
-                return null;
-            }
+		internal static XmlDocument documentFromFile(string path, string schemapath, Error error)
+		{
+			XmlDocument xmlDoc = new XmlDocument() { XmlResolver = null };
+			xmlDoc.PreserveWhitespace = true;
+			using (FileStream fs = File.OpenRead(path))
+			{
+				using (XmlReader reader = XmlReader.Create(fs, new XmlReaderSettings() { XmlResolver = null }))
+				{
+					try
+					{
+						xmlDoc.Load(reader);
+					}
+					catch (Exception)
+					{
+						error.setError("SU001", "Unable to load file");
+						return null;
+					}
+				}
+
+			}
+		
             if (schemapath != null && !SecurityUtils.compareStrings(schemapath, ""))
             {
                 if (!validateExtensionSchema(schemapath))
@@ -53,17 +61,26 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         internal static XmlDocument documentFromString(string xmlString, string schemapath, Error error)
         {
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.PreserveWhitespace = true;
-            try
-            {
-                xmlDoc.LoadXml(xmlString);
-            }
-            catch (Exception)
-            {
-                error.setError("SU005", "Error reading XML");
-                return null;
-            }
+
+
+			XmlDocument xmlDoc = new XmlDocument() { XmlResolver = null };
+			xmlDoc.PreserveWhitespace = true;
+
+			using (StringReader sreader = new StringReader(xmlString))
+			{
+				using (XmlReader reader = XmlReader.Create(sreader, new XmlReaderSettings() { XmlResolver = null }))
+				{
+					try
+					{
+						xmlDoc.Load(reader);
+					}
+					catch (Exception)
+					{
+						error.setError("SU005", "Error reading XML");
+						return null;
+					}
+				}
+			}
             if (schemapath != null && !SecurityUtils.compareStrings(schemapath, ""))
             {
                 if (!validateExtensionSchema(schemapath))
@@ -92,7 +109,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         }
 
-        internal static string XMLDocumentToString(XmlDocument doc, Error error)
+        internal static string XMLDocumentToString(XmlDocument doc)
         {
             doc.PreserveWhitespace = true;
             using (var stringWriter = new StringWriter())

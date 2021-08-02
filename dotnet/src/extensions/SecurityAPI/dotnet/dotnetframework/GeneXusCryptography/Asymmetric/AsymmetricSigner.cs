@@ -1,4 +1,4 @@
-﻿
+
 using GeneXusCryptography.AsymmetricUtils;
 using GeneXusCryptography.Hash;
 using GeneXusCryptography.HashUtils;
@@ -36,13 +36,24 @@ namespace GeneXusCryptography.Asymmetric
         [SecuritySafeCritical]
         public string DoSign(PrivateKeyManager key, string hashAlgorithm, string plainText)
         {
-            return DoSignPKCS12(key, hashAlgorithm, plainText);
+			if(key == null)
+			{
+				this.error.setError("AE000", "Key parameter is null");
+				return "";
+			}
+
+           return DoSignPKCS12(key, hashAlgorithm, plainText);
         }
 
         [SecuritySafeCritical]
         public bool DoVerify(CertificateX509 cert, string plainText, string signature)
         {
-            return DoVerifyPKCS12(cert, plainText, signature);
+			if (cert == null)
+			{
+				this.error.setError("AE000", "Cert parameter is null");
+				return false;
+			}
+			return DoVerifyPKCS12(cert, plainText, signature);
         }
 
         /********EXTERNAL OBJECT PUBLIC METHODS  - END ********/
@@ -292,13 +303,17 @@ namespace GeneXusCryptography.Asymmetric
                 catch (DataLengthException dle)
                 {
                     this.error.setError("AE053", "RSA signing error");
-                    throw new DataLengthException("RSA signing error", dle);
-                }
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+					throw new DataLengthException("RSA signing error", dle);
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
+				}
                 catch (CryptoException ce)
                 {
                     this.error.setError("AE053", "RSA signing error");
-                    throw new CryptoException("RSA signing error", ce);
-                }
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+					throw new CryptoException("RSA signing error", ce);
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
+				}
                 this.error.cleanError();
                 return Base64.ToBase64String(outputBytes);
             }

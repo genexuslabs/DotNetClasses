@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -13,10 +13,16 @@ namespace GeneXusXmlSignature.GeneXusUtils
     }
 
     [SecuritySafeCritical]
-    public class KeyInfoTypeUtils
+    public static class KeyInfoTypeUtils
     {
         public static KeyInfoType getKeyInfoType(string keyInfoType, Error error)
         {
+			if(error == null) return KeyInfoType.NONE;
+			if (keyInfoType == null)
+			{
+				error.setError("KI001", "Unrecognized KeyInfoType");
+				return KeyInfoType.NONE;
+			}
             switch (keyInfoType.Trim())
             {
                 case "NONE":
@@ -34,6 +40,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
         public static string valueOf(KeyInfoType keyInfoType, Error error)
         {
+			if (error == null) return "";
             switch (keyInfoType)
             {
                 case KeyInfoType.NONE:

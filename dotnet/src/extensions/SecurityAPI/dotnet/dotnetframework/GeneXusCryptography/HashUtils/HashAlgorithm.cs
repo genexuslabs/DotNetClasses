@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -17,9 +17,11 @@ namespace GeneXusCryptography.HashUtils
     {
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        NONE, MD5, SHA1, SHA224, SHA256, SHA384, SHA512, BLAKE2B_224, BLAKE2B_256, BLAKE2B_384, BLAKE2B_512, BLAKE2S_128, BLAKE2S_160, BLAKE2S_224, BLAKE2S_256, GOST3411_2012_256, GOST3411_2012_512, GOST3411, KECCAK_224, KECCAK_256, KECCAK_288, KECCAK_384, KECCAK_512, MD2, MD4, RIPEMD128, RIPEMD160, RIPEMD256, RIPEMD320, SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE_128, SHAKE_256, SM3, TIGER, WHIRLPOOL
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		NONE, MD5, SHA1, SHA224, SHA256, SHA384, SHA512, BLAKE2B_224, BLAKE2B_256, BLAKE2B_384, BLAKE2B_512, BLAKE2S_128, BLAKE2S_160, BLAKE2S_224, BLAKE2S_256, GOST3411_2012_256, GOST3411_2012_512, GOST3411, KECCAK_224, KECCAK_256, KECCAK_288, KECCAK_384, KECCAK_512, MD2, MD4, RIPEMD128, RIPEMD160, RIPEMD256, RIPEMD320, SHA3_224, SHA3_256, SHA3_384, SHA3_512, SHAKE_128, SHAKE_256, SM3, TIGER, WHIRLPOOL
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-    }
+	}
     /// <summary>
     /// Implements HashAlgorithm associated functions
     /// </summary>
@@ -34,8 +36,14 @@ namespace GeneXusCryptography.HashUtils
         /// <param name="error">Error type for error management</param>
         /// <returns>HashAlgorithm enum representation</returns>
         public static HashAlgorithm getHashAlgorithm(string hashAlgorithm, Error error)
-        {
-            switch (hashAlgorithm.ToUpper().Trim())
+		{
+			if(error == null) return HashAlgorithm.NONE; 
+			if (hashAlgorithm == null)
+			{
+				error.setError("HA001", "Unrecognized HashAlgorihm");
+				return HashAlgorithm.NONE;
+			}
+            switch (hashAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "MD5":
                     return HashAlgorithm.MD5;
@@ -125,7 +133,8 @@ namespace GeneXusCryptography.HashUtils
         /// <returns>string name value of HashAlgorithm</returns>
         public static string valueOf(HashAlgorithm hashAlgorithm, Error error)
         {
-            switch (hashAlgorithm)
+			if(error == null) return "Unrecognized algorithm";
+			switch (hashAlgorithm)
             {
                 case HashAlgorithm.MD5:
                     return "MD5";

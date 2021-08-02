@@ -1,4 +1,4 @@
-﻿
+
 using System.Security;
 using SecurityAPICommons.Commons;
 
@@ -11,10 +11,11 @@ namespace GeneXusXmlSignature.GeneXusUtils
     }
 
     [SecuritySafeCritical]
-    public class SignatureElementTypeUtils
+    public static class SignatureElementTypeUtils
     {
         public static string ValueOf(SignatureElementType signatureElementType, Error error)
         {
+			if (error == null) return "";
             switch (signatureElementType)
             {
                 case SignatureElementType.id:

@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -15,11 +15,12 @@ namespace GeneXusJWT.GenexusJWTClaims
     }
 
     [SecuritySafeCritical]
-    public class RegisteredClaimUtils
+    public static class RegisteredClaimUtils
     {
         public static string valueOf(RegisteredClaim registeredClaim, Error error)
         {
-            switch (registeredClaim)
+			if(error == null) return "Unknown registered claim";
+			switch (registeredClaim)
             {
                 case RegisteredClaim.iss:
                     return "iss";
@@ -44,6 +45,12 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public static RegisteredClaim getRegisteredClaim(string registeredClaim, Error error)
         {
+			if(error == null) return RegisteredClaim.NONE;
+			if (registeredClaim == null)
+			{
+				error.setError("RC002", "Unknown registered Claim");
+				return RegisteredClaim.NONE;
+			}
             switch (registeredClaim.Trim())
             {
                 case "iss":
@@ -68,6 +75,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public static bool exists(string value)
         {
+			if (value == null) return false;
             switch (value.Trim())
             {
                 case "iss":
@@ -85,6 +93,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public static bool isTimeValidatingClaim(string claimKey)
         {
+			if (claimKey == null) return false;
             switch (claimKey.Trim())
             {
                 case "iat":
@@ -98,11 +107,19 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public static bool validateClaim(string registeredClaimKey, string registeredClaimValue, long registeredClaimCustomTime, JwtSecurityToken token, Error error)
         {
+			
+			if (error == null) return false;
             RegisteredClaim claim = RegisteredClaimUtils.getRegisteredClaim(registeredClaimKey, error);
             if (error.existsError())
             {
                 return false;
             }
+
+			if(token == null)
+			{
+				error.setError("RC000", "Token parameter is null");
+				return false;
+			}
             Int32 newTime = 0;
             switch (claim)
             {

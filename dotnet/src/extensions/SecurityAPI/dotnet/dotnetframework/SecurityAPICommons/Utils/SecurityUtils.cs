@@ -1,4 +1,4 @@
-﻿
+
 using Org.BouncyCastle.Utilities.Encoders;
 using SecurityAPICommons.Commons;
 using System;
@@ -8,7 +8,7 @@ using System.Security;
 namespace SecurityAPICommons.Utils
 {
     [SecuritySafeCritical]
-    public class SecurityUtils
+    public static class SecurityUtils
     {
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace SecurityAPICommons.Utils
         {
             if(one != null && two != null)
             {
-                return string.Compare(one, two, true) == 0;
+                return string.Compare(one, two, true, System.Globalization.CultureInfo.InvariantCulture) == 0;
             }
             else
             {
@@ -40,7 +40,7 @@ namespace SecurityAPICommons.Utils
         [SecuritySafeCritical]
         public static bool extensionIs(string path, string ext)
         {
-            return string.Compare(getFileExtension(path), ext, true) == 0;
+            return string.Compare(getFileExtension(path), ext, true, System.Globalization.CultureInfo.InvariantCulture) == 0;
         }
         /// <summary>
         /// Gets a file extension from the file's path
@@ -68,13 +68,13 @@ namespace SecurityAPICommons.Utils
 		[SecuritySafeCritical]
 		public static byte[] GetHexa(string hex, string code, Error error)
 		{
+			if (error == null) return null;
 			byte[] output;
 			try
 			{
 				output = Hex.Decode(hex);
 			}
-			catch (Exception e)
-			{
+			catch (Exception e)			{
 				error.setError(code, e.Message);
 				return null;
 			}

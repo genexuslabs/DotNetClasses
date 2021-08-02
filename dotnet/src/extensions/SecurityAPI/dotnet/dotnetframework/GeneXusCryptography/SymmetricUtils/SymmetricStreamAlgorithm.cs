@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -23,7 +23,7 @@ namespace GeneXusCryptography.SymmetricUtils
     /// Implements SymmetricStreamAlgorithm associated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class SymmetricStreamAlgorithmUtils
+    public static class SymmetricStreamAlgorithmUtils
     {
         /// <summary>
         /// Mapping between String name and SymmetricStreamAlgorithm enum representation
@@ -33,7 +33,14 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>SymmetricStreamAlgorithm enum representation</returns>
         public static SymmetricStreamAlgorithm getSymmetricStreamAlgorithm(String symmetricStreamAlgorithm, Error error)
         {
-            switch (symmetricStreamAlgorithm.ToUpper().Trim())
+			if (error == null) return SymmetricStreamAlgorithm.NONE;
+			if( symmetricStreamAlgorithm == null)
+			{
+				error.setError("SS001", "Unrecognized SymmetricStreamAlgorithm");
+				return SymmetricStreamAlgorithm.NONE;
+			}
+
+			switch (symmetricStreamAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "RC4":
                     return SymmetricStreamAlgorithm.RC4;
@@ -64,7 +71,8 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>String SymmetrcStreamAlgorithm name value</returns>
         public static String valueOf(SymmetricStreamAlgorithm symmetrcStreamAlgorithm, Error error)
         {
-            switch (symmetrcStreamAlgorithm)
+			if(error == null) return "Unrecognized algorithm";
+			switch (symmetrcStreamAlgorithm)
             {
                 case SymmetricStreamAlgorithm.RC4:
                     return "RC4";
@@ -96,6 +104,7 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>array int with fixed length 3 with key, if array[0]=0 is range, else fixed values</returns>
         public static int[] getKeySize(SymmetricStreamAlgorithm algorithm, Error error)
         {
+			if (error == null) return null;
             int[] keySize = new int[3];
             switch (algorithm)
             {

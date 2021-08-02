@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -15,15 +15,17 @@ namespace GeneXusCryptography.SymmetricUtils
     public enum SymmetricBlockAlgorithm
     {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        NONE, AES, BLOWFISH, CAMELLIA, CAST5, CAST6, DES, TRIPLEDES, DSTU7624_128, DSTU7624_256, DSTU7624_512, GOST28147, NOEKEON, RC2, RC532, RC564, RC6, RIJNDAEL_128, RIJNDAEL_160, RIJNDAEL_192, RIJNDAEL_224, RIJNDAEL_256, SEED, SERPENT, SKIPJACK, SM4, TEA, THREEFISH_256, THREEFISH_512, THREEFISH_1024, TWOFISH, XTEA
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		NONE, AES, BLOWFISH, CAMELLIA, CAST5, CAST6, DES, TRIPLEDES, DSTU7624_128, DSTU7624_256, DSTU7624_512, GOST28147, NOEKEON, RC2, RC532, RC564, RC6, RIJNDAEL_128, RIJNDAEL_160, RIJNDAEL_192, RIJNDAEL_224, RIJNDAEL_256, SEED, SERPENT, SKIPJACK, SM4, TEA, THREEFISH_256, THREEFISH_512, THREEFISH_1024, TWOFISH, XTEA
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-    }
+	}
 
     /// <summary>
     /// Implements SymmetricBlockAlgorithm associated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class SymmetricBlockAlgorithmUtils
+    public static class SymmetricBlockAlgorithmUtils
     {
         /// <summary>
         /// Mapping between string name and SymmetricBlockAlgorithm enum representation
@@ -33,7 +35,13 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>SymmetricBlockAlgorithm enum representaton</returns>
         public static SymmetricBlockAlgorithm getSymmetricBlockAlgorithm(string symmetricBlockAlgorithm, Error error)
         {
-            switch (symmetricBlockAlgorithm.ToUpper().Trim())
+			if(error == null) return SymmetricBlockAlgorithm.NONE;
+			if(symmetricBlockAlgorithm == null)
+			{
+				error.setError("SB001", "Unrecognized SymmetricBlockAlgorithm");
+				return SymmetricBlockAlgorithm.NONE;
+			}
+			switch (symmetricBlockAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
             {
                 case "AES":
                     return SymmetricBlockAlgorithm.AES;
@@ -113,7 +121,10 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>value of SymmetricBlockAlgorithm in string</returns>
         public static string valueOf(SymmetricBlockAlgorithm symmetricBlockAlgorithm, Error error)
         {
-            switch (symmetricBlockAlgorithm)
+			if (error == null) return "SymmetricBlockAlgorithm";
+
+
+			switch (symmetricBlockAlgorithm)
             {
                 case SymmetricBlockAlgorithm.AES:
                     return "AES";
@@ -191,6 +202,7 @@ namespace GeneXusCryptography.SymmetricUtils
         /// <returns>the specific block size for the algorithm, algorithm unknown if 0</returns>
         public static int getBlockSize(SymmetricBlockAlgorithm algorithm, Error error)
         {
+			if (error == null) return 0;
             switch (algorithm)
             {
 

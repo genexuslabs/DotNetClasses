@@ -1,4 +1,4 @@
-﻿using Org.BouncyCastle.Utilities.Encoders;
+using Org.BouncyCastle.Utilities.Encoders;
 using SecurityAPICommons.Commons;
 using SecurityAPICommons.Config;
 using SecurityAPICommons.Utils;
@@ -11,15 +11,23 @@ namespace GeneXusCryptography.ChecksumUtils
 	[SecuritySafeCritical]
 	public enum ChecksumInputType
 	{
+#pragma warning disable CA1707 // Identifiers should not contain underscores
 		NONE, BASE64, HEX, TXT, ASCII, LOCAL_FILE,
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 	}
 
 	[SecuritySafeCritical]
-	public class ChecksumInputTypeUtils
+	public static class ChecksumInputTypeUtils
 	{
 		public static ChecksumInputType getChecksumInputType(string checksumInputType, Error error)
 		{
-			switch (checksumInputType.ToUpper().Trim())
+			if(error == null) return ChecksumInputType.NONE;
+			if (checksumInputType == null)
+			{
+				error.setError("CI001", "Unrecognized checksum input type");
+				return ChecksumInputType.NONE;
+			}
+			switch (checksumInputType.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
 			{
 				case "BASE64":
 					return ChecksumInputType.BASE64;
@@ -39,6 +47,7 @@ namespace GeneXusCryptography.ChecksumUtils
 
 		public static string valueOf(ChecksumInputType checksumInputType, Error error)
 		{
+			if (error == null) return "";
 			switch (checksumInputType)
 			{
 				case ChecksumInputType.BASE64:
@@ -59,6 +68,7 @@ namespace GeneXusCryptography.ChecksumUtils
 
 		public static byte[] getBytes(ChecksumInputType checksumInputType, string input, Error error)
 		{
+			if (error == null) return null;
 			EncodingUtil eu = new EncodingUtil();
 			byte[] aux = null;
 			switch (checksumInputType)

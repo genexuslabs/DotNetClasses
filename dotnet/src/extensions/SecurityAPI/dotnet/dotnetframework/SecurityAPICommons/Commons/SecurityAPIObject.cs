@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,16 +13,27 @@ namespace SecurityAPICommons.Commons
     [SecuritySafeCritical]
     public class SecurityAPIObject
     {
-        [SecuritySafeCritical]
-        public Error error;
 
-        /// <summary>
-        /// SecurityObject constructor
-        /// </summary>
-        [SecuritySafeCritical]
+
+        
+#pragma warning disable CA1051 // Do not declare visible instance fields
+		private Error _error;
+#pragma warning restore CA1051 // Do not declare visible instance fields
+
+		
+		public Error error
+		{
+			get { return _error; }
+			set { _error = value; }
+		}
+
+		/// <summary>
+		/// SecurityObject constructor
+		/// </summary>
+		[SecuritySafeCritical]
         public SecurityAPIObject()
         {
-            error = new Error();
+            _error = new Error();
 
         }
 
@@ -34,7 +45,7 @@ namespace SecurityAPICommons.Commons
         [SecuritySafeCritical]
         public Error GetError()
         {
-            return error;
+            return _error;
         }
 
 
@@ -45,7 +56,7 @@ namespace SecurityAPICommons.Commons
         [SecuritySafeCritical]
         public bool HasError()
         {
-            return error.existsError();
+            return _error.existsError();
         }
 
 
@@ -56,7 +67,7 @@ namespace SecurityAPICommons.Commons
         [SecuritySafeCritical]
         public string GetErrorCode()
         {
-            return error.GetCode();
+            return _error.GetCode();
         }
 
         /// <summary>
@@ -66,7 +77,7 @@ namespace SecurityAPICommons.Commons
         [SecuritySafeCritical]
         public string GetErrorDescription()
         {
-            return error.GetDescription();
+            return _error.GetDescription();
         }
 
     }

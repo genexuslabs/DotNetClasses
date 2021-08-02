@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using System;
 using System.Security;
 
@@ -11,12 +11,18 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 	}
 
 	[SecuritySafeCritical]
-	public class FtpEncryptionModeUtils
+	public static class FtpEncryptionModeUtils
 	{
 		[SecuritySafeCritical]
 		public static FtpEncryptionMode getFtpEncryptionMode(String ftpEncryptionMode, Error error)
 		{
-			switch (ftpEncryptionMode.ToUpper().Trim())
+			if(error == null) return FtpEncryptionMode.NONE;
+			if (ftpEncryptionMode == null)
+			{
+				error.setError("EM001", "Unknown encryption mode");
+				return FtpEncryptionMode.NONE;
+			}
+			switch (ftpEncryptionMode.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
 			{
 				case "IMPLICIT":
 					return FtpEncryptionMode.IMPLICIT;
@@ -31,6 +37,7 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 		[SecuritySafeCritical]
 		public static String valueOf(FtpEncryptionMode ftpEncryptionMode, Error error)
 		{
+			if (error == null) return "";
 			switch (ftpEncryptionMode)
 			{
 				case FtpEncryptionMode.IMPLICIT:

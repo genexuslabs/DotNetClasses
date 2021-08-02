@@ -235,7 +235,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 
 		private void bulkTest(PrivateKeyManager privateKey, CertificateX509 cert, string hashAlgorithm)
 		{
-			string enc = Global.GLOBAL_ENCODING;
+			string enc = SecurityApiGlobal.GLOBALENCODING;
 			if (SecurityUtils.compareStrings(enc, "UTF_32") || SecurityUtils.compareStrings(enc, "UTF_32BE")
 					|| SecurityUtils.compareStrings(enc, "UTF_32LE"))
 			{

@@ -1,4 +1,4 @@
-﻿
+
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace GeneXusCryptography.PasswordDerivation
     /// Implements PasswordDerivationAlgorithm associated functions
     /// </summary>
     [SecuritySafeCritical]
-    public class PasswordDerivationAlgorithmUtils
+    public static class PasswordDerivationAlgorithmUtils
     {
         /// <summary>
         /// Mapping between string name and PasswordDerivationAlgorithm enum representation
@@ -32,7 +32,13 @@ namespace GeneXusCryptography.PasswordDerivation
         /// <returns>PasswordDerivationAlgorithm enum representation</returns>
         public static PasswordDerivationAlgorithm getPasswordDerivationAlgorithm(string passwordDerivationAlgorithm, Error error)
         {
-            switch (passwordDerivationAlgorithm.Trim())
+			if (error == null) return PasswordDerivationAlgorithm.NONE;
+			if(passwordDerivationAlgorithm == null)
+			{
+				error.setError("PD001", "Unrecognized PasswordDerivationAlgorithm");
+				return PasswordDerivationAlgorithm.NONE;
+			}
+			switch (passwordDerivationAlgorithm.Trim())
             {
                 case "SCrypt":
                     return PasswordDerivationAlgorithm.SCrypt;
@@ -53,7 +59,8 @@ namespace GeneXusCryptography.PasswordDerivation
         /// <returns>PasswordDerivationAlgorithm value in string</returns>
         public static string valueOf(PasswordDerivationAlgorithm passwordDerivationAlgorithm, Error error)
         {
-            switch (passwordDerivationAlgorithm)
+			if(error == null) return "Unrecognized algorithm";
+			switch (passwordDerivationAlgorithm)
             {
                 case PasswordDerivationAlgorithm.SCrypt:
                     return "SCrypt";

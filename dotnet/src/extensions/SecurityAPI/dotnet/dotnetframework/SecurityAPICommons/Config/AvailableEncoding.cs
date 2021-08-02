@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,16 +11,24 @@ namespace SecurityAPICommons.Config
     [SecuritySafeCritical]
     public enum AvailableEncoding
     {
-        NONE, UTF_8, UTF_16, UTF_16BE, UTF_16LE, UTF_32, UTF_32BE, UTF_32LE, SJIS, GB2312
-    }
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		NONE, UTF_8, UTF_16, UTF_16BE, UTF_16LE, UTF_32, UTF_32BE, UTF_32LE, SJIS, GB2312
+#pragma warning restore CA1707 // Identifiers should not contain underscores
+	}
 
     [SecuritySafeCritical]
-    public class AvailableEncodingUtils
+    public static class AvailableEncodingUtils
     {
         public static AvailableEncoding getAvailableEncoding(string encoding, Error error)
         {
+			if(error == null) return AvailableEncoding.NONE;
+			if (encoding == null)
+			{
+				error.setError("AE001", "Unknown encoding or not available");
+				return AvailableEncoding.NONE;
+			}
             encoding = encoding.Replace("-", "_");
-            encoding = encoding.ToUpper();
+            encoding = encoding.ToUpper(System.Globalization.CultureInfo.InvariantCulture);
             switch (encoding.Trim())
             {
                 case "UTF_8":
@@ -49,8 +57,9 @@ namespace SecurityAPICommons.Config
 
         public static bool existsEncoding(string encoding)
         {
+			if(encoding == null) return  false;
             encoding = encoding.Replace("-", "_");
-            encoding = encoding.ToUpper();
+            encoding = encoding.ToUpper(System.Globalization.CultureInfo.InvariantCulture);
             switch (encoding)
             {
                 case "UTF_8":
@@ -97,6 +106,7 @@ namespace SecurityAPICommons.Config
 
         public static string encapsulateGetString(byte[] input, AvailableEncoding availableEncoding, Error error)
         {
+			if (error == null) return "";
             const string strUniRepChr = "�"; //Unicode Character 'REPLACEMENT CHARACTER' (U+FFFD)
             switch (availableEncoding)
             {
@@ -191,6 +201,7 @@ namespace SecurityAPICommons.Config
 
         public static byte[] encapsulateeGetBytes(string input, AvailableEncoding availableEncoding, Error error)
         {
+			if (error == null) return null;
             const string strUniRepChr = "�"; //Unicode Character 'REPLACEMENT CHARACTER' (U+FFFD)
             switch (availableEncoding)
             {

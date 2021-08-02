@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Oiw;
 using Org.BouncyCastle.Asn1.Pkcs;
@@ -19,6 +19,7 @@ using SecurityAPICommons.Commons;
 using SecurityAPICommons.Utils;
 using Org.BouncyCastle.Utilities.Encoders;
 using System.Security.AccessControl;
+using System.Globalization;
 
 namespace SecurityAPICommons.Keys
 {
@@ -67,8 +68,10 @@ namespace SecurityAPICommons.Keys
             {
                 loadKeyFromFile(privateKeyPath, alias, password);
             }
-            catch (Exception e)
-            {
+#pragma warning disable CA1031 // Do not catch general exception types
+			catch (Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
+			{
 				this.error.setError("PK018", e.Message);
                 return false;
             }
@@ -106,7 +109,9 @@ namespace SecurityAPICommons.Keys
 				{
 					encoded = Base64.ToBase64String(this.privateKeyInfo.GetEncoded());
 				}
+#pragma warning disable CA1031 // Do not catch general exception types
 				catch (Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
 				{
 					this.error.setError("PK0017", e.Message);
 					return "";
@@ -164,11 +169,11 @@ namespace SecurityAPICommons.Keys
                 //https://social.msdn.microsoft.com/Forums/vstudio/en-US/7ea48fd0-8d6b-43ed-b272-1a0249ae490f/systemsecuritycryptographycryptographicexception-the-system-cannot-find-the-file-specified?forum=clr#37d4d83d-0eb3-497a-af31-030f5278781a
                 CspParameters cspParameters = new CspParameters();
                 cspParameters.Flags = CspProviderFlags.UseMachineKeyStore;
-                if (SecurityUtils.compareStrings(Config.Global.GLOBAL_KEY_COONTAINER_NAME, ""))
+                if (SecurityUtils.compareStrings(Config.SecurityApiGlobal.GLOBALKEYCOONTAINERNAME, ""))
                 {
                     string uid = Guid.NewGuid().ToString();
                     cspParameters.KeyContainerName = uid;
-                    Config.Global.GLOBAL_KEY_COONTAINER_NAME = uid;
+                    Config.SecurityApiGlobal.GLOBALKEYCOONTAINERNAME = uid;
                     System.Security.Principal.SecurityIdentifier userId = new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WindowsIdentity.GetCurrent().User.ToString());
                     CryptoKeyAccessRule rule = new CryptoKeyAccessRule(userId, CryptoKeyRights.FullControl, AccessControlType.Allow);
                     cspParameters.CryptoKeySecurity = new CryptoKeySecurity();
@@ -176,7 +181,7 @@ namespace SecurityAPICommons.Keys
                 }
                 else
                 {
-                    cspParameters.KeyContainerName = Config.Global.GLOBAL_KEY_COONTAINER_NAME;
+                    cspParameters.KeyContainerName = Config.SecurityApiGlobal.GLOBALKEYCOONTAINERNAME;
 
                 }
                 /****System.Security.Cryptography.CryptographicException: The system cannot find the file specified.****/
@@ -217,11 +222,11 @@ namespace SecurityAPICommons.Keys
                 {
                     parmsECDSA = PrivateKeyFactory.CreateKey(this.privateKeyInfo);
                 }
-                catch (IOException e)
+                catch (IOException )
                 {
                     this.error.setError("AE007", "Not ECDSA key");
                     return null;
-                    throw e;
+                    throw;
                 }
                 return parmsECDSA;
             }
@@ -260,11 +265,11 @@ namespace SecurityAPICommons.Keys
             {
                 parms = (RsaKeyParameters)PrivateKeyFactory.CreateKey(this.privateKeyInfo);
             }
-            catch (IOException e)
+            catch (IOException)
             {
                 this.error.setError("AE013", "Not RSA key");
                 return null;
-                throw e;
+                throw;
             }
             return parms;
         }
@@ -287,7 +292,7 @@ namespace SecurityAPICommons.Keys
             {
                 return "ECDSA";
             }
-            return this.privateKeyAlgorithm.ToUpper();
+            return this.privateKeyAlgorithm.ToUpper(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -342,8 +347,10 @@ namespace SecurityAPICommons.Keys
             try
             {
                 pkcs12 = new Pkcs12StoreBuilder().Build();
-                pkcs12.Load(new FileStream(path, FileMode.Open, FileAccess.Read), password.ToCharArray());
-
+				using(FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+				{
+					pkcs12.Load(fs, password.ToCharArray());
+				}
             }
 
             catch
@@ -452,8 +459,10 @@ namespace SecurityAPICommons.Keys
                 streamReader.Close();
                 pemReader.Reader.Close();
             }
-            catch
-            {
+#pragma warning disable CA1031 // Do not catch general exception types
+			catch
+#pragma warning restore CA1031 // Do not catch general exception types
+			{
                 this.error.setError("PK012", "Error closing StreamReader/ PemReader for certificates");
             }
         }
@@ -555,11 +564,11 @@ namespace SecurityAPICommons.Keys
                 //https://social.msdn.microsoft.com/Forums/vstudio/en-US/7ea48fd0-8d6b-43ed-b272-1a0249ae490f/systemsecuritycryptographycryptographicexception-the-system-cannot-find-the-file-specified?forum=clr#37d4d83d-0eb3-497a-af31-030f5278781a
                 CspParameters cspParameters = new CspParameters();
                 cspParameters.Flags = CspProviderFlags.UseMachineKeyStore;
-                if (SecurityUtils.compareStrings(Config.Global.GLOBAL_KEY_COONTAINER_NAME, ""))
+                if (SecurityUtils.compareStrings(Config.SecurityApiGlobal.GLOBALKEYCOONTAINERNAME, ""))
                 {
                     string uid = Guid.NewGuid().ToString();
                     cspParameters.KeyContainerName = uid;
-                    Config.Global.GLOBAL_KEY_COONTAINER_NAME = uid;
+                    Config.SecurityApiGlobal.GLOBALKEYCOONTAINERNAME = uid;
                     System.Security.Principal.SecurityIdentifier userId = new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WindowsIdentity.GetCurrent().User.ToString());
                     CryptoKeyAccessRule rule = new CryptoKeyAccessRule(userId, CryptoKeyRights.FullControl, AccessControlType.Allow);
                     cspParameters.CryptoKeySecurity = new CryptoKeySecurity();
@@ -567,7 +576,7 @@ namespace SecurityAPICommons.Keys
                 }
                 else
                 {
-                    cspParameters.KeyContainerName = Config.Global.GLOBAL_KEY_COONTAINER_NAME;
+                    cspParameters.KeyContainerName = Config.SecurityApiGlobal.GLOBALKEYCOONTAINERNAME;
 
                 }
                 /****System.Security.Cryptography.CryptographicException: The system cannot find the file specified.****/
@@ -581,9 +590,16 @@ namespace SecurityAPICommons.Keys
                     byte[] privKeyBytes8 = Convert.FromBase64String(b64Encoded);//Encoding.UTF8.GetBytes(privKeyEcc);
                 try
                 {
-                    ECDsaCng pubCNG = new ECDsaCng(CngKey.Import(privKeyBytes8, CngKeyBlobFormat.Pkcs8PrivateBlob));
-                    alg = pubCNG;
-                }catch(Exception e)
+					
+					using (ECDsaCng pubCNG = new ECDsaCng(CngKey.Import(privKeyBytes8, CngKeyBlobFormat.Pkcs8PrivateBlob)))
+					{
+						alg = pubCNG;
+					}
+					
+#pragma warning disable CA1031 // Do not catch general exception types
+				}
+				catch(Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
 				{
                     this.error.setError("PK022", e.Message);
                     return null;

@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using System;
 using System.Security;
 
@@ -8,16 +8,24 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 	public enum FtpsProtocol
 	{
 
+#pragma warning disable CA1707 // Identifiers should not contain underscores
 		NONE, TLS1_0, TLS1_1, TLS1_2, SSLv2, SSLv3
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 	}
 
 	[SecuritySafeCritical]
-	public class FtpsProtocolUtils
+	public static class FtpsProtocolUtils
 	{
 
 		[SecuritySafeCritical]
 		public static FtpsProtocol getFtpsProtocol(String ftpsProtocol, Error error)
 		{
+			if(error == null) return FtpsProtocol.NONE;
+			if (ftpsProtocol == null)
+			{
+				error.setError("FP001", "Unknown protocol");
+				return FtpsProtocol.NONE;
+			}
 			switch (ftpsProtocol.Trim())
 			{
 				case "TLS1_0":
@@ -41,6 +49,7 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 		[SecuritySafeCritical]
 		public static String valueOf(FtpsProtocol ftpsProtocol, Error error)
 		{
+			if (error == null) return "";
 			switch (ftpsProtocol)
 			{
 				case FtpsProtocol.TLS1_0:
