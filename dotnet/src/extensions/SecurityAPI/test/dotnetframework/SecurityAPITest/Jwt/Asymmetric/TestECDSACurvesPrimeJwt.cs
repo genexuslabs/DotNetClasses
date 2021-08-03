@@ -1,4 +1,4 @@
-﻿using GeneXusJWT.GenexusComons;
+using GeneXusJWT.GenexusComons;
 using GeneXusJWT.GenexusJWT;
 using GeneXusJWT.GenexusJWTClaims;
 using GeneXusJWT.GenexusJWTUtils;

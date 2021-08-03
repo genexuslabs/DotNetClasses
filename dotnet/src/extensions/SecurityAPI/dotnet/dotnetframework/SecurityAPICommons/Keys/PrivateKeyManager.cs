@@ -109,9 +109,7 @@ namespace SecurityAPICommons.Keys
 				{
 					encoded = Base64.ToBase64String(this.privateKeyInfo.GetEncoded());
 				}
-#pragma warning disable CA1031 // Do not catch general exception types
 				catch (Exception e)
-#pragma warning restore CA1031 // Do not catch general exception types
 				{
 					this.error.setError("PK0017", e.Message);
 					return "";
@@ -590,16 +588,15 @@ namespace SecurityAPICommons.Keys
                     byte[] privKeyBytes8 = Convert.FromBase64String(b64Encoded);//Encoding.UTF8.GetBytes(privKeyEcc);
                 try
                 {
-					
-					using (ECDsaCng pubCNG = new ECDsaCng(CngKey.Import(privKeyBytes8, CngKeyBlobFormat.Pkcs8PrivateBlob)))
-					{
-						alg = pubCNG;
-					}
-					
-#pragma warning disable CA1031 // Do not catch general exception types
+
+#pragma warning disable CA2000 // Dispose objects before losing scope
+					ECDsaCng pubCNG = new ECDsaCng(CngKey.Import(privKeyBytes8, CngKeyBlobFormat.Pkcs8PrivateBlob));
+#pragma warning restore CA2000 // Dispose objects before losing scope
+					alg = pubCNG;
+
+
 				}
 				catch(Exception e)
-#pragma warning restore CA1031 // Do not catch general exception types
 				{
                     this.error.setError("PK022", e.Message);
                     return null;
