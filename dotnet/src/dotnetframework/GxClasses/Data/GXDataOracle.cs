@@ -550,6 +550,7 @@ namespace GeneXus.Data
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxODPManagedOracle));
 		static Assembly _odpAssembly;
 		const string OracleDbTypeEnum = "Oracle.ManagedDataAccess.Client.OracleDbType";
+		const string OracleAssemblyName = "Oracle.ManagedDataAccess";
 
 		public static Assembly OdpAssembly
 		{
@@ -559,11 +560,11 @@ namespace GeneXus.Data
 				{
 					if (_odpAssembly == null)
 					{
-						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), "Oracle.ManagedDataAccess.dll");
+						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{OracleAssemblyName}.dll");
 						GXLogging.Debug(log, "Loading Oracle.ManagedDataAccess from:" + assemblyPath);
 #if NETCORE
 						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-						_odpAssembly = asl.LoadFromAssemblyPath(assemblyPath);
+						_odpAssembly = asl.LoadFromAssemblyName(new AssemblyName(OracleAssemblyName));
 #else
 						if (File.Exists(assemblyPath))
 						{
