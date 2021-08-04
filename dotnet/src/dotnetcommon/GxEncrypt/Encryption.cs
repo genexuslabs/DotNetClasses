@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Linq;
 
 namespace GeneXus.Encryption
 {
@@ -28,6 +29,7 @@ namespace GeneXus.Encryption
 		public static string AJAX_SECURITY_TOKEN = "AJAX_SECURITY_TOKEN";
 		public static string GX_AJAX_PRIVATE_KEY = "E7C360308E854317711A3D9983B98975";
 		public static string GX_AJAX_PRIVATE_IV = "C01D04B1610243D2A2AF23E7952E8B18";
+		private static readonly int[] VALID_KEY_LENGHT_IN_BYTES = { 32, 48, 64 };
 		const char NULL_CHARACTER = (char)0;
 
 		private static int CHECKSUM_LENGTH = 6;
@@ -65,7 +67,7 @@ namespace GeneXus.Encryption
 		}
 		private static bool IsValidKey(string key)
 		{
-			return (!string.IsNullOrEmpty(key) && key.Length % 2 == 0);
+			return (!string.IsNullOrEmpty(key) && VALID_KEY_LENGTH_IN_BYTES.Contains(key.Length));
 		}
 		public static string Encrypt(string value, string key, bool inverseKey)
 		{
