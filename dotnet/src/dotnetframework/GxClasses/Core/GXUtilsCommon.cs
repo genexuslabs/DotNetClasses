@@ -3529,7 +3529,7 @@ namespace GeneXus.Utils
 		}
 		public static bool IsAbsoluteUrlOrAnyScheme(string url)
 		{
-			return (!String.IsNullOrEmpty(url)) && (IsAbsoluteUrl(url) || url.StartsWith("/") || scheme.IsMatch(url));
+			return (!String.IsNullOrEmpty(url)) && (IsAbsoluteUrl(url) || scheme.IsMatch(url));
 		}
 
 		public static bool HasUrlQueryString(string url)
