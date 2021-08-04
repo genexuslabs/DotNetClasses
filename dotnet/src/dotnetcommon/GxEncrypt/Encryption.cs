@@ -67,7 +67,7 @@ namespace GeneXus.Encryption
 		}
 		private static bool IsValidKey(string key)
 		{
-			return (!string.IsNullOrEmpty(key) && VALID_KEY_LENGTH_IN_BYTES.Contains(key.Length));
+			return (!string.IsNullOrEmpty(key) && VALID_KEY_LENGHT_IN_BYTES.Contains(key.Length));
 		}
 		public static string Encrypt(string value, string key, bool inverseKey)
 		{
