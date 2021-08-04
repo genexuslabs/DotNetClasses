@@ -815,8 +815,9 @@ namespace GeneXus.Http
 #if NETCORE
 			if (request.PathBase.HasValue)
 				return request.PathBase.Value;
-			else
-				if (request.Path.HasValue && request.Path.Value.LastIndexOf('/') > 0)
+			else if (!string.IsNullOrEmpty(Config.ScriptPath))
+				return Config.ScriptPath;
+			else if (request.Path.HasValue && request.Path.Value.LastIndexOf('/') > 0)
 				return request.Path.Value.Substring(0, request.Path.Value.LastIndexOf('/'));
 			else
 				return string.Empty;

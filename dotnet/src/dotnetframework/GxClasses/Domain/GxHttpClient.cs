@@ -973,7 +973,7 @@ namespace GeneXus.Http.Client
 
 		public string GetHeader(string name)
 		{
-			if (_respHeaders != null)
+			if (_respHeaders != null && _respHeaders.Get(name)!=null)
 				return _respHeaders.Get(name);
 			else
 				return string.Empty;
