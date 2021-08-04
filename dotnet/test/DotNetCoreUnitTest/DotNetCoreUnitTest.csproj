@@ -48,10 +48,6 @@
     </EmbeddedResource>
   </ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="FileIO\" />
-	</ItemGroup>
-
 
 	<ItemGroup>
 		<None Update="FullTextSearch\Ugly.html">
