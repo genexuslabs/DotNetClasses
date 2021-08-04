@@ -18,7 +18,7 @@ namespace GeneXus.Application
 		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName, string scriptPath)
 		{
 			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray() ;
-			if (PathUtil.IsAbsoluteUrlOrAnyScheme(key))
+			if (PathUtil.IsAbsoluteUrlOrAnyScheme(key) || key.StartsWith("/"))
 			{
 				if (parms.Length > 0)
 				{
