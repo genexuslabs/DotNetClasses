@@ -30,7 +30,7 @@ namespace GeneXus.Metadata
 
 #if NETCORE
 				var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-				Assembly assem = asl.LoadFromAssemblyPath(Path.Combine(FileUtil.GetStartupDirectory(), assemblyName + ".dll"));
+				Assembly assem = asl.LoadFromAssemblyName(new AssemblyName(assemblyName));
 				Type classType = assem.GetType(fullClassName, true, true);
 #else
 				Assembly assem = Assembly.Load(new AssemblyName(assemblyName));
