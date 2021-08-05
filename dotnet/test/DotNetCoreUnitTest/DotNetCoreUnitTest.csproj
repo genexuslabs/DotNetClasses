@@ -10,8 +10,17 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
 	</PropertyGroup>
-	<ItemGroup>
-		<Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+	<ItemGroup>		
+	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3PrivateTest.cs" Link="ExternalProvider\ExternalProviderS3PrivateTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderTest.cs" Link="ExternalProvider\ExternalProviderTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderMinioTest.cs" Link="ExternalProvider\ExternalProviderMinioTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderAzurePrivateTest.cs" Link="ExternalProvider\ExternalProviderAzurePrivateTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderAzureTest.cs" Link="ExternalProvider\ExternalProviderAzureTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGooglePrivateTest.cs" Link="ExternalProvider\ExternalProviderGooglePrivateTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGoogleTest.cs" Link="ExternalProvider\ExternalProviderGoogleTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderOracleTest.cs" Link="ExternalProvider\ExternalProviderOracleTest.cs" />		
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
@@ -30,6 +39,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,6 +49,9 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXGoogleCloudNetCore\GXGoogleCloudNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,6 +76,9 @@
 		</None>
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="resources\text.txt">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
