@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+	  <DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
+	  <AppDesignerFolder>Properties</AppDesignerFolder>
+	  <SignAssembly>false</SignAssembly>
+	  <AssemblyName>GXGoogleCloud</AssemblyName>
+	  <PackageTags>Google Cloud</PackageTags>
+  	  <PackageId>GeneXus.Google.Cloud</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>   
+    <Compile Include="..\..\..\..\dotnetframework\Providers\Storage\GXGoogleCloud\ExternalProviderGoogle.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Apis.Storage.v1" Version="1.27.1.888" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+    <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+</Project>
