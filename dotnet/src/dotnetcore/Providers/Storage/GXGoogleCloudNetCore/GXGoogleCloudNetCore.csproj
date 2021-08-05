@@ -7,7 +7,7 @@
 	  <SignAssembly>false</SignAssembly>
 	  <AssemblyName>GXGoogleCloud</AssemblyName>
 	  <PackageTags>Google Cloud</PackageTags>
-  	  <PackageId>GeneXus.Google.Cloud</PackageId>
+  	  <PackageId>GeneXus.Google.Cloud.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>   
