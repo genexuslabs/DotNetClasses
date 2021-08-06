@@ -1414,18 +1414,7 @@ namespace GeneXus.Http
 		}
 		protected string Decrypt64(string value, string key)
 		{
-			string sRet = string.Empty;
-			try
-			{
-				sRet = Crypto.Decrypt64(value, key);
-			}
-			catch (InvalidKeyException)
-			{
-				context.SetCookie("GX_SESSION_ID", string.Empty, string.Empty, DateTime.MinValue, string.Empty, context.GetHttpSecure());
-				GXLogging.Error(log, "440 Invalid encryption key");
-				SendResponseStatus(440, "Session timeout");
-			}
-			return sRet;
+			return Decrypt64(value, key, false);
 		}
 		private string Decrypt64(string value, string key, bool safeEncoding)
 		{
@@ -1444,18 +1433,7 @@ namespace GeneXus.Http
 		}
 		protected string UriDecrypt64(string value, string key)
 		{
-			string sRet = string.Empty;
-			try
-			{
-				sRet = Crypto.Decrypt64(value, key, true);
-			}
-			catch (InvalidKeyException)
-			{
-				context.SetCookie("GX_SESSION_ID", string.Empty, string.Empty, DateTime.MinValue, string.Empty, context.GetHttpSecure());
-				GXLogging.Error(log, "440 Invalid encryption key");
-				SendResponseStatus(440, "Session timeout");
-			}
-			return sRet;
+			return Decrypt64(value, key, true);
 		}
 
 		protected string DecryptAjaxCall(string encrypted)
