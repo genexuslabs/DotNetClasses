@@ -5,6 +5,8 @@ using System.IO;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Microsoft.IdentityModel.Tokens;
+using System.Security;
+
 namespace GeneXus.Encryption
 {
 
@@ -60,6 +62,7 @@ namespace GeneXus.Encryption
 				throw new InvalidKeyException();
 			}
 		}
+		[SecuritySafeCritical]
 		static string ConvertToBase64Url(byte[] value)
 		{
 			return Base64UrlEncoder.Encode(value);
@@ -224,7 +227,7 @@ namespace GeneXus.Encryption
 				throw new InvalidKeyException();
 			}
 		}
-
+		[SecuritySafeCritical]
 		static byte[] ConvertFromBase64Url(string value)
 		{
 			return Base64UrlEncoder.DecodeBytes(value);
