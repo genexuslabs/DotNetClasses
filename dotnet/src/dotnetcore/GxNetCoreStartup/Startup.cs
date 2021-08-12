@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.HttpHandlerFactory;
@@ -106,7 +105,7 @@ namespace GeneXus.Application
 
 		private GXRouting gxRouting;
 
-		public Startup(IHostingEnvironment env)
+		public Startup(Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
 		{
 
 			var builder = new ConfigurationBuilder()
@@ -203,7 +202,7 @@ namespace GeneXus.Application
 				});
 			}
 		}
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			var baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
 			
