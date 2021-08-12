@@ -25,7 +25,7 @@ namespace GeneXus.Data
 		static Assembly _npgsqlAssembly;
 		private bool _byteaOutputEscape;
 		const string NpgsqlDbTypeEnum = "NpgsqlTypes.NpgsqlDbType";
-
+		const string NpgsqlAssemblyName = "Npgsql";
 		public static Assembly NpgsqlAssembly
 		{
 			get
@@ -34,11 +34,11 @@ namespace GeneXus.Data
 				{
 					if (_npgsqlAssembly == null)
 					{
-						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), "Npgsql.dll");
+						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{NpgsqlAssemblyName}.dll");
 						GXLogging.Debug(log, "Loading Npgsql.dll from:" + assemblyPath);
 #if NETCORE
 						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-						_npgsqlAssembly = asl.LoadFromAssemblyPath(assemblyPath);
+						_npgsqlAssembly = asl.LoadFromAssemblyName(new AssemblyName(NpgsqlAssemblyName));
 #else
 						_npgsqlAssembly = Assembly.LoadFrom(assemblyPath);
 #endif

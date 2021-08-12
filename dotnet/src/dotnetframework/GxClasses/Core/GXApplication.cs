@@ -2199,7 +2199,7 @@ namespace GeneXus.Application
 		{
 			String fout = file.Trim();
 
-			if (PathUtil.IsAbsoluteUrl(file) || file.StartsWith("//") || (file.Length > 2 && file[1] == ':'))
+			if (PathUtil.IsAbsoluteUrlOrAnyScheme(file) || file.StartsWith("//"))
 			{
 				return fout;
 			}
@@ -2738,14 +2738,14 @@ namespace GeneXus.Application
 			try
 			{
 #if NETCORE
-				return _HttpContext.Request.Host.Host;
+				return _HttpContext.Connection.RemoteIpAddress.ToString();
 #else
                 return _HttpContext.Request.UserHostAddress;
 #endif
 			}
 			catch
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 
