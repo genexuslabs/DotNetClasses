@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup>
+    <TargetFramework>net47</TargetFramework>
+    <RootNamespace>GeneXusJWT</RootNamespace>
+    <AssemblyName>GeneXusJWTImpl</AssemblyName>
+	 <NoWarn>CA1031, CA1720, CA1812, CA1724</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AppConfig>App.$(Configuration).config</AppConfig>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="App.Debug.config" />
+    <None Include="packages.config" />
+    <None Include="App.Release.config" />
+  </ItemGroup>
+    <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="6.5.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Logging" Version="6.5.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj"/>
+  </ItemGroup>
+</Project>

@@ -4,6 +4,8 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Microsoft.IdentityModel.Tokens;
+using System.Security;
 
 namespace GeneXus.Encryption
 {
@@ -35,7 +37,11 @@ namespace GeneXus.Encryption
 
 		private static ConcurrentDictionary<string, object> convertedKeys = new ConcurrentDictionary<string, object>();
 
-		public static String Encrypt64(String value, String key)
+		public static string Encrypt64(string value, string key)
+		{
+			return Encrypt64(value, key, false);
+		}
+		public static string Encrypt64(string value, string key, bool safeEncoding)
 		{
 			if (string.IsNullOrEmpty(key) || key.Length != 32)
 				throw new InvalidKeyException();
@@ -46,14 +52,21 @@ namespace GeneXus.Encryption
 					return string.Empty;
 
 				byte[] str = encrypt(Encoding.UTF8.GetBytes(value), ConvertedKey(key));
-				return Convert.ToBase64String(str, 0, str.Length);
+				if (safeEncoding)
+					return ConvertToBase64Url(str);
+				else
+					return Convert.ToBase64String(str, 0, str.Length);
 			}
 			catch (Exception)
 			{
 				throw new InvalidKeyException();
 			}
 		}
-
+		[SecuritySafeCritical]
+		static string ConvertToBase64Url(byte[] value)
+		{
+			return Base64UrlEncoder.Encode(value);
+		}
 		public static string Encrypt(string value, string key, bool inverseKey)
 		{
 			if (inverseKey)
@@ -84,7 +97,7 @@ namespace GeneXus.Encryption
 
 		public static string Decrypt(string cfgBuf, string key, bool inverseKey)
 		{
-			string ret = "";
+			string ret = string.Empty;
 			Decrypt(ref ret, cfgBuf, inverseKey, key);
 			return ret;
 		}
@@ -101,7 +114,7 @@ namespace GeneXus.Encryption
 
 		public static string Decrypt(string cfgBuf, bool inverseKey)
 		{
-			string ret = "";
+			string ret = string.Empty;
 			Decrypt(ref ret, cfgBuf, inverseKey, null);
 			return ret;
 		}
@@ -143,7 +156,7 @@ namespace GeneXus.Encryption
 		}
 
 
-		private static byte[] convertKey(String a)
+		private static byte[] convertKey(string a)
 		{
 			byte[] bout = new byte[a.Length / 2];
 
@@ -172,20 +185,24 @@ namespace GeneXus.Encryption
 			return b;
 		}
 
-		public static String encrypt16(String value, String key)
+		public static string encrypt16(string value, string key)
 		{
-			return "";
+			return string.Empty;
 		}
 
-		public static String decrypt16(String value, String key)
+		public static string decrypt16(string value, string key)
 		{
-			return "";
+			return string.Empty;
 		}
 
-		public static String Decrypt64(String value, String key)
+		public static string Decrypt64(string value, string key)
+		{
+			return Decrypt64(value, key, false);
+		}
+		public static string Decrypt64(string value, string key, bool safeEncoding)
 		{
 			if (string.IsNullOrEmpty(value) || value.Trim().Length == 0)
-				return "";
+				return string.Empty;
 
 			if (string.IsNullOrEmpty(key) || key.Length != 32)
 				throw new InvalidKeyException();
@@ -194,8 +211,15 @@ namespace GeneXus.Encryption
 
 			try
 			{
-
-				byte[] str = decrypt(new Base64Decoder(value.ToCharArray()).GetDecoded(), ConvertedKey(key));
+				byte[] str;
+				if (safeEncoding)
+				{
+					str = decrypt(ConvertFromBase64Url(value), ConvertedKey(key));
+				}
+				else
+				{
+					str = decrypt(new Base64Decoder(value.ToCharArray()).GetDecoded(), ConvertedKey(key));
+				}
 				return Encoding.UTF8.GetString(str, 0, str.Length).TrimEnd(' ');
 			}
 			catch (Exception)
@@ -203,7 +227,11 @@ namespace GeneXus.Encryption
 				throw new InvalidKeyException();
 			}
 		}
-
+		[SecuritySafeCritical]
+		static byte[] ConvertFromBase64Url(string value)
+		{
+			return Base64UrlEncoder.DecodeBytes(value);
+		}
 
 		public static int getCheckSumLength()
 		{
@@ -304,7 +332,7 @@ namespace GeneXus.Encryption
 			return key;
 		}
 
-		public static String calcChecksum(String value, int start, int end, int length)
+		public static string calcChecksum(string value, int start, int end, int length)
 		{
 			int ret = 0;
 
@@ -317,17 +345,16 @@ namespace GeneXus.Encryption
 
 		static string inttohex(int intval)
 		{
-			string result = "";
-			result = intval.ToString("X");
+			string result = intval.ToString("X");
 			return result;
 		}
 
-		public static String CheckSum(String value, int length)
+		public static string CheckSum(string value, int length)
 		{
 			return calcChecksum(value, 0, value.Length, length);
 		}
 
-		public static String addchecksum(String value, int length)
+		public static string addchecksum(string value, int length)
 		{
 			return value + calcChecksum(value, 0, value.Length, length);
 		}
@@ -363,7 +390,7 @@ namespace GeneXus.Encryption
 
 			return output;
 		}
-		private static String toString(byte[] ba, int offset, int length)
+		private static string toString(byte[] ba, int offset, int length)
 		{
 			char[] buf = new char[length * 2];
 			for (int i = offset, j = 0, k; i < offset + length;)
@@ -372,7 +399,7 @@ namespace GeneXus.Encryption
 				buf[j++] = HEX_DIGITS[(Twofish_Algorithm.ror((uint)k, 32, 4)/* >>> 4*/) & 0x0F];
 				buf[j++] = HEX_DIGITS[k & 0x0F];
 			}
-			return new String(buf);
+			return new string(buf);
 		}
 
 		public static byte[] decrypt(byte[] input, Object key)

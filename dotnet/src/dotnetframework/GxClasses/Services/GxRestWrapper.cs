@@ -657,7 +657,7 @@ namespace GeneXus.Application
 				var val = parameters[k];
 				knownTypes.Add(val.GetType());
 			}
-			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
+			if (parameters.Count == 1 && !wrapped && !PrimitiveType(knownTypes[0])) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
 			{
 				string key = parameters.First().Key;
 				json = JSONHelper.WCFSerialize(parameters[key], Encoding.UTF8, knownTypes, true);
@@ -668,6 +668,10 @@ namespace GeneXus.Application
 			}
 			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
+		}
+		private bool PrimitiveType(Type type)
+		{
+			return type.IsPrimitive || type == typeof(string) || type.IsValueType;
 		}
 		protected Task Serialize(object value)
 		{
