@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>GeneXusSecurityAPICommonsNetCoreImpl</AssemblyName>
+    <Version>17.4.0</Version>
+		<NoWarn>CA1031, CA1801</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+   
+  </PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
+	</PropertyGroup>
+	<PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
+		<DefineConstants>NETCORE</DefineConstants>
+</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Certificate.cs" Link="Commons\Certificate.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Error.cs" Link="Commons\Error.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Key.cs" Link="Commons\Key.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\PrivateKey.cs" Link="Commons\PrivateKey.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\SecurityAPIObject.cs" Link="Commons\SecurityAPIObject.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\AvailableEncoding.cs" Link="Config\AvailableEncoding.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\EncodingUtil.cs" Link="Config\EncodingUtil.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\SecurityApiGlobal.cs" Link="Config\Global.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\Base64Encoder.cs" Link="Encoders\Base64Encoder.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\HexaEncoder.cs" Link="Encoders\HexaEncoder.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\CertificateX509.cs" Link="Keys\CertificateX509.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\PrivateKeyManager.cs" Link="Keys\PrivateKeyManager.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\SymmetricKeyGenerator.cs" Link="Keys\SymmetricKeyGenerator.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\SymmetricKeyType.cs" Link="Keys\SymmetricKeyType.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Utils\ExtensionsWhiteList.cs" Link="Utils\ExtensionsWhiteList.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Utils\SecurityUtils.cs" Link="Utils\SecurityUtils.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
+    <PackageReference Include="System.Security.Cryptography.Cng" Version="4.7.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Encoders\" />
+    <Folder Include="Keys\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
+
+</Project>
