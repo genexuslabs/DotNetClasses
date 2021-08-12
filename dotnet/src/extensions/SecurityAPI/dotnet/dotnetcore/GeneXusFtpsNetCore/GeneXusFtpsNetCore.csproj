@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>GeneXusFtpsNetCoreImpl</AssemblyName>
+    <Version>17.4.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+   
+  </PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
+	</PropertyGroup>
+	<PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GeneXusFtps\GeneXusCommons\IFtpsClientObject.cs" Link="GeneXusCommons\IFtpsClientObject.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusFtps\GeneXusFtpsUtils\FtpConnectionMode.cs" Link="GeneXusFtpsUtils\FtpConnectionMode.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusFtps\GeneXusFtpsUtils\FtpEncoding.cs" Link="GeneXusFtpsUtils\FtpEncoding.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusFtps\GeneXusFtpsUtils\FtpEncryptionMode.cs" Link="GeneXusFtpsUtils\FtpEncryptionMode.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusFtps\GeneXusFtpsUtils\FtpsProtocol.cs" Link="GeneXusFtpsUtils\FtpsProtocol.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusFtps\GeneXusFtps\FtpsClient.cs" Link="GeneXusFtps\FtpsClient.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusFtps\GeneXusFtps\FtpsOptions.cs" Link="GeneXusFtps\FtpsOptions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentFTP" Version="31.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityAPICommonsNetCore\SecurityAPICommonsNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="GeneXusCommons\" />
+    <Folder Include="GeneXusFtps\" />
+    <Folder Include="GeneXusFtpsUtils\" />
+  </ItemGroup>
+
+</Project>
