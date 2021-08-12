@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup>
+    <TargetFramework>net47</TargetFramework>
+    <RootNamespace>GeneXusCryptography</RootNamespace>
+    <AssemblyName>GeneXusCryptographyImpl</AssemblyName>
+	 <NoWarn>CA1031, CA1801, CA1724</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
+  </ItemGroup>
+</Project>

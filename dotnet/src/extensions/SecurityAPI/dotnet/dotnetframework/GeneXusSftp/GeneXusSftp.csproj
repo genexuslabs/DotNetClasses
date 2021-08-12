@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup>
+    <TargetFramework>net47</TargetFramework>
+    <RootNamespace>GeneXusSftp</RootNamespace>
+    <AssemblyName>GeneXusSftpClientImpl</AssemblyName>
+	 <NoWarn>CA1031</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Neon.SSH.NET">
+      <HintPath>..\..\resources\Neon.SSH.NET.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj"/>
+  </ItemGroup>
+</Project>

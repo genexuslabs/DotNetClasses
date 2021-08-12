@@ -2738,14 +2738,14 @@ namespace GeneXus.Application
 			try
 			{
 #if NETCORE
-				return _HttpContext.Request.Host.Host;
+				return _HttpContext.Connection.RemoteIpAddress.ToString();
 #else
                 return _HttpContext.Request.UserHostAddress;
 #endif
 			}
 			catch
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 
