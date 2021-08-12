@@ -447,7 +447,8 @@ namespace GeneXus.Application
 		}
 		public static Task SetError(HttpContext context, string code, string message)
 		{
-			return HttpHelper.SetResponseStatusAndJsonErrorAsync(context, code, message);
+			HttpHelper.SetError(context, code, message);
+			return Task.CompletedTask;
 		}
 		public bool IsAuthenticated(string synchronizer)
 		{
@@ -510,7 +511,7 @@ namespace GeneXus.Application
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(_gxContext, token, out isOK);
 						if (!isOK)
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -524,7 +525,7 @@ namespace GeneXus.Application
 						}
 						else
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);
@@ -645,7 +646,7 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			return SetError("500", ex.Message);
+			return SetError(HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
 		}
 		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
 		{
