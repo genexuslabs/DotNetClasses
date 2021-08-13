@@ -388,7 +388,12 @@ namespace GeneXus.Application
 			if (varAlias == null)
 				parameters = query.Keys.Cast<string>().ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
 			else
-				parameters = query.Keys.Cast<string>().ToDictionary(k => ((varAlias.ContainsKey(k.ToLower()))?varAlias[k.ToLower()].ToLower():k.ToLower()), v => (object)query[v].ToString());
+			{
+				parameters = query.Keys.Cast<string>().ToDictionary(k => (varAlias.ContainsKey(k.ToLower()) ? varAlias[k.ToLower()].ToLower() :(varAlias.ContainsValue(k.ToLower())? "_" + k.ToLower() :k.ToLower())), v => (object)query[v].ToString());
+				List<string> keysToDelete = parameters.Keys.Where(v => v[0] == '_').ToList();
+				foreach (var key in keysToDelete)					
+						parameters.Remove(key);
+			}
 			return parameters;
 		}
 		public bool IsRestParameter(string parameterName)
