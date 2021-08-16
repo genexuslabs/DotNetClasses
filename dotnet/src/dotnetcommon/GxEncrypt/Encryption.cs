@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Linq;
 using Microsoft.IdentityModel.Tokens;
 using System.Security;
 
@@ -30,6 +31,7 @@ namespace GeneXus.Encryption
 		public static string AJAX_SECURITY_TOKEN = "AJAX_SECURITY_TOKEN";
 		public static string GX_AJAX_PRIVATE_KEY = "E7C360308E854317711A3D9983B98975";
 		public static string GX_AJAX_PRIVATE_IV = "C01D04B1610243D2A2AF23E7952E8B18";
+		private static readonly int[] VALID_KEY_LENGHT_IN_BYTES = { 32, 48, 64 };
 		const char NULL_CHARACTER = (char)0;
 
 		private static int CHECKSUM_LENGTH = 6;
@@ -43,7 +45,7 @@ namespace GeneXus.Encryption
 		}
 		public static string Encrypt64(string value, string key, bool safeEncoding)
 		{
-			if (string.IsNullOrEmpty(key) || key.Length != 32)
+			if (!IsValidKey(key))
 				throw new InvalidKeyException();
 
 			try
@@ -62,15 +64,30 @@ namespace GeneXus.Encryption
 				throw new InvalidKeyException();
 			}
 		}
-		[SecuritySafeCritical]
+		private static string InverseKey(string key)
+		{
+			if (!IsValidKey(key))
+				throw new InvalidKeyException();
+			else
+			{
+				int len = key.Length / 2;
+				return key.Substring(len) + key.Substring(0, len);
+			}
+		}
+		private static bool IsValidKey(string key)
+		{
+			return (!string.IsNullOrEmpty(key) && VALID_KEY_LENGHT_IN_BYTES.Contains(key.Length));
+    }
+
+    [SecuritySafeCritical]
 		static string ConvertToBase64Url(byte[] value)
 		{
 			return Base64UrlEncoder.Encode(value);
-		}
+    }
 		public static string Encrypt(string value, string key, bool inverseKey)
 		{
 			if (inverseKey)
-				key = key.Substring(16) + key.Substring(0, 16);
+				key = InverseKey(key);
 
 			return Encrypt(value, key);
 		}
@@ -84,7 +101,7 @@ namespace GeneXus.Encryption
 		{
 			string key = GetServerKey();
 			if (inverseKey)
-				key = key.Substring(16) + key.Substring(0, 16);
+				key = InverseKey(key);
 
 			return Encrypt(value, key);
 		}
@@ -132,7 +149,7 @@ namespace GeneXus.Encryption
 			if (string.IsNullOrEmpty(key))
 				key = GetServerKey();
 			if (inverseKey)
-				key = key.Substring(16) + key.Substring(0, 16);
+				key = InverseKey(key);
 
 			tmpBuf = Decrypt64(cfgBuf, key);
 			if (tmpBuf.Length < 6)
@@ -204,7 +221,7 @@ namespace GeneXus.Encryption
 			if (string.IsNullOrEmpty(value) || value.Trim().Length == 0)
 				return string.Empty;
 
-			if (string.IsNullOrEmpty(key) || key.Length != 32)
+			if (!IsValidKey(key))
 				throw new InvalidKeyException();
 
 			value = value.TrimEnd(' ');
