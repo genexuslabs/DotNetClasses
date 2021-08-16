@@ -140,7 +140,7 @@ namespace GeneXus.Utils
         {
             JsonFault detail = null;
             var knownTypes = new List<Type>();
-            string code = "500"; //Internal server error
+            string code = HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT); 
             if ((error is FaultException) && (error.GetType().GetProperty("Detail") != null))
             {
                 detail = (error.GetType().GetProperty("Detail").GetGetMethod().Invoke(error, null) as JsonFault);
@@ -303,11 +303,11 @@ namespace GeneXus.Utils
 				{
 					msglistItem msgItem = (msglistItem)msg[0];
 					if (msgItem.gxTpr_Id.Contains("NotFound"))
-						SetError("404", msgItem.gxTpr_Description);
+						SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else if (msgItem.gxTpr_Id.Contains("WasChanged"))
-						SetError("409", msgItem.gxTpr_Description);
+						SetError(HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else
-						SetError("400", msgItem.gxTpr_Description);
+						SetError(HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 				}
 			}
 
@@ -347,9 +347,9 @@ namespace GeneXus.Utils
 		}
 		public void SetError(string code, string message)
 		{
-			HttpHelper.SetResponseStatusAndJsonError(httpContext, code, message);
+			HttpHelper.SetError(httpContext, code, message);
 		}
-        public void WebException(Exception ex)
+		public void WebException(Exception ex)
 		{
             GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
 
@@ -359,7 +359,7 @@ namespace GeneXus.Utils
             }
             else
             {
-                SetError("500", ex.Message);
+                SetError(HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
             }
         }
 		public bool IsAuthenticated(string synchronizer)
@@ -422,7 +422,7 @@ namespace GeneXus.Utils
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
 						if (!isOK)
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -436,7 +436,7 @@ namespace GeneXus.Utils
 						}
 						else
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);

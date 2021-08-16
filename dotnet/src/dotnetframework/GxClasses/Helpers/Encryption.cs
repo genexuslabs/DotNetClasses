@@ -6,17 +6,24 @@ namespace GeneXus.Encryption
 	public class Crypto
 	{
 
-		public static String Encrypt64(String value, String key)
+		public static string Encrypt64(string value, string key)
 		{
 			return CryptoImpl.Encrypt64(value, key);
 		}
-		
-		public static String Decrypt64(String value, String key)
+		public static string Encrypt64(string value, string key, bool safeEncoding)
+		{
+			return CryptoImpl.Encrypt64(value, key, safeEncoding);
+		}
+
+		public static string Decrypt64(string value, string key)
 		{
 			return CryptoImpl.Decrypt64(value, key);
 		}
 
-		
+		public static string Decrypt64(string value, string key, bool safeEncoding)
+		{
+			return CryptoImpl.Decrypt64(value, key, safeEncoding);
+		}
 		public static string GetServerKey()
 		{
 			return CryptoImpl.GetServerKey();
@@ -28,7 +35,7 @@ namespace GeneXus.Encryption
 		}
 
 
-		public static String CheckSum(String value, int length)
+		public static string CheckSum(string value, int length)
 		{
 			return CryptoImpl.CheckSum(value, length);
 		}

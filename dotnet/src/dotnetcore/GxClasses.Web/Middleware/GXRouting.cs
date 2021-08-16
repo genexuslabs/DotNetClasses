@@ -169,13 +169,20 @@ namespace GxClasses.Web.Middleware
 				{
 					string controllerWithParms = string.Empty;
 					if (!AzureRuntime)
+					{
 						controllerWithParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
+						if (String.IsNullOrEmpty(controllerWithParms) && !String.IsNullOrEmpty(actualPath))
+						{
+							var controllerPath = path.ToLower().Split(actualPath).Last<string>();
+							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
+						}					
+					}
 					else
 					{
 						controllerWithParms = GetGxRouteValue(path);
 						GXLogging.Debug(log, $"Running Azure functions. ControllerWithParms :{controllerWithParms} path:{path}");
 					}
-					
+				
 					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesValidPath, servicesMap, servicesMapData, actualPath, context.Request.Method, controllerWithParms);
 					GxRestWrapper controller = null;
 					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c)) != null);
@@ -395,8 +402,21 @@ namespace GxClasses.Web.Middleware
 								sm.Verb = "GET";
 							if (String.IsNullOrEmpty(sm.Path))
 								sm.Path = sm.Name;
+							else
+							{
+								sm.Path = Regex.Replace(sm.Path, "^/|/$", "");
+							}
 							if (sm.VariableAlias == null)
 								sm.VariableAlias = new Dictionary<string, string>();
+							else
+							{
+								Dictionary<string, string> vMap = new Dictionary<string, string>();
+								foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+								{
+									vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+								}
+								sm.VariableAlias = vMap;
+							}
 							if (servicesMap.ContainsKey(mapPathLower))
 							{
 								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
