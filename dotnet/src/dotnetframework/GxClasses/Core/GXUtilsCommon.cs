@@ -3969,7 +3969,7 @@ namespace GeneXus.Utils
 			string value = parm.ToString();
 			if (!String.IsNullOrEmpty(gxkey))
 			{
-				string strValue = Crypto.Decrypt64(value.ToString(), gxkey);
+				string strValue = Crypto.Decrypt64(value.ToString(), gxkey, true);
 				if ((String.CompareOrdinal(StringUtil.Right(strValue, 6).TrimEnd(' '),
 					Crypto.CheckSum(StringUtil.Left(strValue, (short)(StringUtil.Len(strValue) - 6)), 6).TrimEnd(' ')) == 0))
 				{
