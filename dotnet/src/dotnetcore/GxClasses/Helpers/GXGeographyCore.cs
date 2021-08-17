@@ -61,6 +61,10 @@ namespace GeneXus.Utils
 				return null;
 			}
 		}
+		internal static bool IsNull(object instance)
+		{
+			return (instance == null || instance == NTSGeographyWrapper.NullSQLGeography);
+		}
 
 		internal static object STGeometryType(object instance)
 		{
@@ -652,18 +656,17 @@ namespace GeneXus.Utils
 				// Parse
 				_innerValue = NTSGeographyWrapper.Parse(geoText);
 				// SRID, Type & Points X, Y
-				if ((!NTSGeographyWrapper.IsValid(_innerValue)) && _innerValue != null)
+				if (_innerValue != null && !NTSGeographyWrapper.IsNull(_innerValue) &&  !NTSGeographyWrapper.IsValid(_innerValue))
 				{
-					//_innerValue = NTSGeographyWrapper.MakeValid(_innerValue);
-				}
+					//_innerValue = NTSGeographyWrapper.MakeValid(_innerValue);	
+					this.srid = NTSGeographyWrapper.Srid(_innerValue);
+					this.setGXGeoType(NTSGeographyWrapper.STGeometryType(_innerValue).ToString());
 
-				this.srid = NTSGeographyWrapper.Srid(_innerValue);
-
-				this.setGXGeoType(NTSGeographyWrapper.STGeometryType(_innerValue).ToString());
-				if (GeographicType == GeoGraphicTypeValue.Point)
-				{
-					this.Point.Longitude = NTSGeographyWrapper.Long(_innerValue);
-					this.Point.Latitude = NTSGeographyWrapper.Lat(_innerValue);
+					if (GeographicType == GeoGraphicTypeValue.Point)
+					{
+						this.Point.Longitude = NTSGeographyWrapper.Long(_innerValue);
+						this.Point.Latitude = NTSGeographyWrapper.Lat(_innerValue);
+					}
 				}
 			}
 			catch (Exception ex)
