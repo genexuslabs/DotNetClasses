@@ -1,3 +1,4 @@
+using log4net;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Identity.Client;
 using System;
@@ -9,6 +10,7 @@ namespace GeneXus.Mail.Exchange
 {
 	public class ExchangeSession : IMailService
 	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(ExchangeSession));
 		private string _attachDir = string.Empty;
 		private string _userName = string.Empty;
 		private string _password = string.Empty;
@@ -187,6 +189,7 @@ namespace GeneXus.Mail.Exchange
 			}
 			catch (Exception e)
 			{
+				log.Error("Exchange Login Error", e);
 				HandleError(e, 3);
 				_service = null;
 			}
