@@ -34,7 +34,7 @@ namespace GeneXus.Mail.Exchange
 		private string _tenantId;
 		private AuthenticationType _authenticationType = Exchange.AuthenticationType.Basic;
 
-		public const string TenantIdProperty = "TentantId";
+		public const string TenantIdProperty = "TenantId";
 		public const string ClientSecretProperty = "ClientSecret";
 		public const string AppIdProperty = "AppId";
 		public const string AuthenticationType = "AuthenticationType";
