@@ -70,90 +70,76 @@ namespace GeneXus.Http
 		public const string GXOBJECT = "/gxobject";
 		public const string HttpPostMethod= "POST";
 		public const string HttpGetMethod = "GET";
+		internal const string INT_FORMAT="D";
+		const string GAM_CODE_OTP_USER_ACCESS_CODE_SENT = "400";
+		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
+		const string GAM_CODE_TOKEN_EXPIRED = "103";
 
 		public static void SetResponseStatus(HttpContext httpContext, string statusCode, string statusDescription)
+		{
+			HttpStatusCode httpStatusCode = MapStatusCode(statusCode);
+			SetResponseStatus(httpContext, httpStatusCode, statusDescription);
+		}
+		public static void SetResponseStatus(HttpContext httpContext, HttpStatusCode httpStatusCode, string statusDescription)
 		{
 #if !NETCORE
 			var wcfcontext = WebOperationContext.Current;
 			if (wcfcontext != null)
 			{
-				switch (statusCode)
-				{
-					case "201":
-						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Created;
-						break;
-					case "400":
-						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-						break;
-					case "404":
-						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
-						break;
-					case "409":
-						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Conflict;
-						break;
-					case "103":
-						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Forbidden;
-						break;
-					case "500":
-						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-						break;
-					default:
-						wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], statusCode, string.Empty));
-						wcfcontext.OutgoingResponse.StatusCode = HttpStatusCode.Unauthorized;
-						break;
+				wcfcontext.OutgoingResponse.StatusCode = httpStatusCode;
+				if (httpStatusCode==HttpStatusCode.Unauthorized){
+					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty));
 				}
 				if (!string.IsNullOrEmpty(statusDescription))
 					wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
-				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
+				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", httpStatusCode, statusDescription));
 			}
 			else
 			{
 #endif
-				if (httpContext != null)
+			if (httpContext != null)
+			{
+				httpContext.Response.StatusCode = (int)httpStatusCode;
+				if (httpStatusCode == HttpStatusCode.Unauthorized)
 				{
-					switch (statusCode)
-					{
-						case "201":
-							httpContext.Response.StatusCode = (int)HttpStatusCode.Created;
-							break;
-						case "400":
-							httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-							break;
-						case "404":
-							httpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
-							break;
-						case "409":
-							httpContext.Response.StatusCode = (int)HttpStatusCode.Conflict;
-							break;
-						case "103":
-							httpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-							break;
-						case "500":
-							httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-							break;
-						default:
-							httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], statusCode, string.Empty);
-							httpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-							break;
-					}
+					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty);
+				}
+
 #if !NETCORE
 					if (!string.IsNullOrEmpty(statusDescription))
 						httpContext.Response.StatusDescription =  statusDescription.Replace(Environment.NewLine, string.Empty);
-					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
+					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", httpStatusCode, statusDescription));
 				}
 			}
 #else
-					if (!string.IsNullOrEmpty(statusDescription))
-						httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
-					GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusDescription));
-				}
+				if (!string.IsNullOrEmpty(statusDescription))
+					httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
+				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", httpStatusCode, statusDescription));
+			}
 
 #endif
 		}
-
-		public static void SetResponseStatusAndJsonError(HttpContext httpContext, string statusCode, string statusDescription)
+		private static HttpStatusCode MapStatusCode(string statusCode)
 		{
-			SetResponseStatus(httpContext, statusCode, statusDescription);
+			if (Enum.TryParse<HttpStatusCode>(statusCode, out HttpStatusCode result) && Enum.IsDefined(typeof(HttpStatusCode), result))
+				return result;
+			else
+				return HttpStatusCode.Unauthorized;
+		}
+		internal static HttpStatusCode GamCodeToHttpStatus(string code)
+		{
+			if (code == GAM_CODE_OTP_USER_ACCESS_CODE_SENT || code == GAM_CODE_TFA_USER_MUST_VALIDATE)
+			{
+				return HttpStatusCode.Accepted;
+			}
+			else if (code == GAM_CODE_TOKEN_EXPIRED)
+			{
+				return HttpStatusCode.Forbidden;
+			}
+			return HttpStatusCode.Unauthorized;
+		}
+		public static void SetJsonError(HttpContext httpContext, string statusCode, string statusDescription)
+		{
 			if (httpContext != null)//<serviceHostingEnvironment aspNetCompatibilityEnabled="false" /> web.config
 			{
 				httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
@@ -170,15 +156,16 @@ namespace GeneXus.Http
 			}
 #endif
 		}
-		public static Task SetResponseStatusAndJsonErrorAsync(HttpContext httpContext, string statusCode, string statusDescription)
+		public static void SetGamError(HttpContext httpContext, string code, string message)
+		{
+			SetResponseStatus(httpContext, GamCodeToHttpStatus(code), message);
+			SetJsonError(httpContext, code, message);
+		}
+		public static void SetError(HttpContext httpContext, string statusCode, string statusDescription)
 		{
 			SetResponseStatus(httpContext, statusCode, statusDescription);
-			httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-			var jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
-			httpContext.Response.Write(JSONHelper.Serialize(jsonError));
-			return Task.CompletedTask;
+			SetJsonError(httpContext, statusCode, statusDescription);
 		}
-
 		public static String OatuhUnauthorizedHeader(string realm, string errCode, string errDescription)
 		{
 			if (string.IsNullOrEmpty(errDescription))
@@ -815,8 +802,9 @@ namespace GeneXus.Http
 #if NETCORE
 			if (request.PathBase.HasValue)
 				return request.PathBase.Value;
-			else
-				if (request.Path.HasValue && request.Path.Value.LastIndexOf('/') > 0)
+			else if (!string.IsNullOrEmpty(Config.ScriptPath))
+				return Config.ScriptPath;
+			else if (request.Path.HasValue && request.Path.Value.LastIndexOf('/') > 0)
 				return request.Path.Value.Substring(0, request.Path.Value.LastIndexOf('/'));
 			else
 				return string.Empty;

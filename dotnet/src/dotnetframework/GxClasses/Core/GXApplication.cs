@@ -2199,7 +2199,7 @@ namespace GeneXus.Application
 		{
 			String fout = file.Trim();
 
-			if (PathUtil.IsAbsoluteUrl(file) || file.StartsWith("//") || (file.Length > 2 && file[1] == ':'))
+			if (PathUtil.IsAbsoluteUrlOrAnyScheme(file) || file.StartsWith("//"))
 			{
 				return fout;
 			}
@@ -2738,14 +2738,14 @@ namespace GeneXus.Application
 			try
 			{
 #if NETCORE
-				return _HttpContext.Request.Host.Host;
+				return _HttpContext.Connection.RemoteIpAddress.ToString();
 #else
                 return _HttpContext.Request.UserHostAddress;
 #endif
 			}
 			catch
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 
@@ -2861,21 +2861,11 @@ namespace GeneXus.Application
 		{
 			try
 			{
-#if NETCORE
-				var request = _HttpContext.Request;
-				if (request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase))
-				{
-					if (request.PathBase != null && request.PathBase.HasValue)
-						return request.PathBase.Value + "/";
-					else
-						return Config.ScriptPath + "/";
-				}
-#endif
 				string appPath = _HttpContext.Request.GetApplicationPath();
 				if (appPath.EndsWith("/"))
-					return _HttpContext.Request.GetApplicationPath();
+					return appPath;
 				else
-					return _HttpContext.Request.GetApplicationPath() + "/";
+					return appPath + "/";
 			}
 			catch
 			{

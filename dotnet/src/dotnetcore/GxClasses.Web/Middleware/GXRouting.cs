@@ -37,7 +37,6 @@ namespace GxClasses.Web.Middleware
 		public bool AzureRuntime;
 		public static string AzureFunctionName;
 
-		const string SDSVC_METHO_SUFFIX = "DL";
 		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
 
 		const string PRIVATE_DIR = "private";
@@ -80,11 +79,6 @@ namespace GxClasses.Web.Middleware
 						{
 							if (sMapData[basePath].TryGetValue(Tuple.Create(path.ToLower(), verb), out string value))
 							{
-								//string httpverb = "";
-								//if (sVerb.ContainsKey(basePath))
-								//	sVerb[basePath].TryGetValue(path.ToLower(), out httpverb);
-								//else
-								//	httpverb = "";
 								string mth = sMap[basePath][value].ServiceMethod;
 								Dictionary<string, string> vMap = sMap[basePath][value].VariableAlias;
 								if (questionMarkIdx > 0 && path.Length > questionMarkIdx + 1)
@@ -95,7 +89,7 @@ namespace GxClasses.Web.Middleware
 							else
 							{
 								// Method not allowed
-								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = "", MethodName = "", Verb = "" });
+								result.Add(new ControllerInfo() { Name = apiPaths[basePath], Parameters = string.Empty, MethodName = string.Empty, Verb = string.Empty });
 								GXLogging.Debug(log, $"Controller found (Method not allowed) Name:{apiPaths[basePath]}");
 								return result;
 							}
@@ -120,8 +114,8 @@ namespace GxClasses.Web.Middleware
 							if (idx > 0 && idx < controllerWithMth.Length - 1)
 							{
 								controller = controllerWithMth.Substring(0, idx);
-								method = $"{controllerWithMth.Substring(idx + 1)}{SDSVC_METHO_SUFFIX}";
-								result.Add(new ControllerInfo() { Name = controller, Parameters = parms, MethodName = method });
+								method = $"{controllerWithMth.Substring(idx + 1)}";
+								result.Add(new ControllerInfo() { Name = controller, Parameters = parms, MethodPattern = method });
 							}
 						}
 						else if (questionMarkIdx >= 0)
@@ -170,21 +164,28 @@ namespace GxClasses.Web.Middleware
 			try
 			{
 				string path = context.Request.Path.ToString();
-				string actualPath = "";
+				string actualPath = string.Empty;
 				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath))
 				{
-					string controllerWithParms = "";
+					string controllerWithParms = string.Empty;
 					if (!AzureRuntime)
+					{
 						controllerWithParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
+						if (String.IsNullOrEmpty(controllerWithParms) && !String.IsNullOrEmpty(actualPath))
+						{
+							var controllerPath = path.ToLower().Split(actualPath).Last<string>();
+							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
+						}					
+					}
 					else
 					{
 						controllerWithParms = GetGxRouteValue(path);
 						GXLogging.Debug(log, $"Running Azure functions. ControllerWithParms :{controllerWithParms} path:{path}");
 					}
-					
+				
 					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesValidPath, servicesMap, servicesMapData, actualPath, context.Request.Method, controllerWithParms);
 					GxRestWrapper controller = null;
-					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c.Name, c.MethodName, c.VariableAlias)) != null);
+					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c)) != null);
 					
 
 					if (controller != null)
@@ -258,7 +259,6 @@ namespace GxClasses.Web.Middleware
 
 		internal string GetGxRouteValue(string path)
 		{
-			string controllerWithParms = "";
 			//Not API Objects
 			string basePath = restBaseURL;
 
@@ -274,14 +274,14 @@ namespace GxClasses.Web.Middleware
 				}			
 			}
 
-			controllerWithParms = path.Remove(0, basePath.Length + 1);
+			string controllerWithParms = path.Remove(0, basePath.Length + 1);
 			controllerWithParms = controllerWithParms.StartsWith("/") ? controllerWithParms.Remove(0, 1) : controllerWithParms;
 			return controllerWithParms;
 
 		}
 		public bool ServiceInPath(String path, out String actualPath)
 		{
-			actualPath = "";
+			actualPath = string.Empty;
 			foreach (String subPath in servicesPathUrl.Keys)
 			{
 				if (path.ToLower().Contains($"/{subPath.ToLower()}"))
@@ -296,17 +296,23 @@ namespace GxClasses.Web.Middleware
 		}
 		public GxRestWrapper GetController(HttpContext context, string controller, string methodName, Dictionary<string, string> variableAlias)
 		{
-			GXLogging.Debug(log, $"GetController:{controller} method:{methodName}");
+			return GetController(context, new ControllerInfo() { Name = controller, MethodName = methodName, VariableAlias = variableAlias });
+		}
+		public GxRestWrapper GetController(HttpContext context, ControllerInfo controllerInfo)
+		{
+			string controller = controllerInfo.Name;
+			string methodName = controllerInfo.MethodName;
+			string methodPattern = controllerInfo.MethodPattern;
+			Dictionary<string, string> variableAlias = controllerInfo.VariableAlias;
+			GXLogging.Debug(log, $"GetController:{controller} method:{methodName} methodPattern:{methodPattern}");
 			GxContext gxContext = GxContext.CreateDefaultInstance();
-			//	IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
-			//	gxContext.HttpContext = new GxHttpContextAccesor(contextAccessor);
 			gxContext.HttpContext = context;
 			context.NewSessionCheck();
 			string nspace;
 			Config.GetValueOf("AppMainNamespace", out nspace);
 
 			String tmpController = controller;
-			String addNspace = "";
+			String addNspace = string.Empty;
 			String asssemblycontroller = tmpController;
 
 
@@ -349,11 +355,11 @@ namespace GxClasses.Web.Middleware
 					if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
 						controllerClassName = controllerClassName.Substring(nspace.Length + 1);
 					else
-						nspace = String.Empty;
+						nspace = string.Empty;
 					var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 					GXProcedure proc = controllerInstance as GXProcedure;
 					if (proc != null)
-						return new GxRestWrapper(proc, context, gxContext, methodName);
+						return new GxRestWrapper(proc, context, gxContext, methodName, methodPattern);
 					else
 						GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{controllerAssemblyName} nspace:{nspace} controller:{controllerClassName}");
 				}
@@ -396,8 +402,21 @@ namespace GxClasses.Web.Middleware
 								sm.Verb = "GET";
 							if (String.IsNullOrEmpty(sm.Path))
 								sm.Path = sm.Name;
+							else
+							{
+								sm.Path = Regex.Replace(sm.Path, "^/|/$", "");
+							}
 							if (sm.VariableAlias == null)
 								sm.VariableAlias = new Dictionary<string, string>();
+							else
+							{
+								Dictionary<string, string> vMap = new Dictionary<string, string>();
+								foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+								{
+									vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+								}
+								sm.VariableAlias = vMap;
+							}
 							if (servicesMap.ContainsKey(mapPathLower))
 							{
 								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
@@ -497,11 +516,11 @@ namespace GxClasses.Web.Middleware
 	[DataContract()]
 	public class SingleMap
 	{
-		String verb = "GET";
-		String name = "";
-		String path = "";
-		String implementation = "";
-		String methodName = "";
+		string verb = "GET";
+		string name = string.Empty;
+		string path = string.Empty;
+		string implementation = string.Empty;
+		string methodName = string.Empty;
 		Dictionary<string, string> variableAlias = new Dictionary<string, string>();
 
 		[DataMember()]

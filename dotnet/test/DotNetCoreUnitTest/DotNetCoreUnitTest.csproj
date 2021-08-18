@@ -24,6 +24,7 @@
 	</ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
@@ -33,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
@@ -46,10 +48,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="FileIO\" />
-	</ItemGroup>
 
 
 	<ItemGroup>

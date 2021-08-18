@@ -35,7 +35,7 @@ namespace GeneXus.Data
 						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{_hanaAssemblyName}.dll");
 						GXLogging.Debug(log, $"Loading {_hanaAssemblyName} from:" + assemblyPath);
 						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-						_hanaAssembly = asl.LoadFromAssemblyPath(assemblyPath);
+						_hanaAssembly = asl.LoadFromAssemblyName(new AssemblyName(_hanaAssemblyName));
 #else
 						GXLogging.Debug(log, "Loading Sap.Data.Hana.v3.5 from GAC");
             _hanaAssembly = Assembly.LoadWithPartialName("Sap.Data.Hana.v3.5");

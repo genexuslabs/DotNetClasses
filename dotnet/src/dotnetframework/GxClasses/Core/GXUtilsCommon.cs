@@ -3520,10 +3520,17 @@ namespace GeneXus.Utils
 	}
 	public class PathUtil
 	{
+		const string schemeRegEx = @"^([a-z][a-z0-9+\-.]*):";
+		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
+
 		public static bool IsAbsoluteUrl(string url)
 		{
 			Uri result;
 			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp);
+		}
+		public static bool IsAbsoluteUrlOrAnyScheme(string url)
+		{
+			return (!String.IsNullOrEmpty(url)) && (IsAbsoluteUrl(url) || scheme.IsMatch(url));
 		}
 
 		public static bool HasUrlQueryString(string url)
@@ -3963,7 +3970,7 @@ namespace GeneXus.Utils
 			string value = parm.ToString();
 			if (!String.IsNullOrEmpty(gxkey))
 			{
-				string strValue = Crypto.Decrypt64(value.ToString(), gxkey);
+				string strValue = Crypto.Decrypt64(value.ToString(), gxkey, true);
 				if ((String.CompareOrdinal(StringUtil.Right(strValue, 6).TrimEnd(' '),
 					Crypto.CheckSum(StringUtil.Left(strValue, (short)(StringUtil.Len(strValue) - 6)), 6).TrimEnd(' ')) == 0))
 				{
