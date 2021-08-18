@@ -372,6 +372,14 @@ namespace GeneXus.Utils
 		}
 		public void Add(Object o, int idx)
 		{
+			T TObject = ConvertToT(o);
+			if (idx == 0)
+				Add(TObject);
+			else
+				Insert(idx - 1, TObject);
+		}
+		private T ConvertToT(Object o)
+		{
 			T TObject;
 			if (typeof(T).IsAssignableFrom(o.GetType()))
 				TObject = (T)o;
@@ -400,12 +408,8 @@ namespace GeneXus.Utils
 				else
 					TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
 			}
-			if (idx == 0)
-				Add(TObject);
-			else
-				Insert(idx - 1, TObject);
+			return TObject;
 		}
-
 		public void RemoveItem(int idx)
 		{
 			if (idx <= 0 || idx > Count)
@@ -430,7 +434,8 @@ namespace GeneXus.Utils
 		}
 		public int IndexOf(object value)
 		{
-			return base.IndexOf((T)value) + 1;
+			T TObject = ConvertToT(value);
+			return base.IndexOf(TObject) + 1;
 		}
 
 		public virtual void writexml(GXXMLWriter oWriter, string sName)

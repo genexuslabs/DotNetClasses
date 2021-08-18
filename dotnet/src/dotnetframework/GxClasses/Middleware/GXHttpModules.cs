@@ -109,14 +109,14 @@ namespace GeneXus.Http.HttpModules
 			return false;
 		}
 		
-		public void ServicesGroupSetting(String webPath)
+		public void ServicesGroupSetting(string webPath)
 		{
 			if (!String.IsNullOrEmpty(webPath) && servicesMap == null)
 			{				
-				servicesPathUrl = new List<String>();
+				servicesPathUrl = new List<string>();
 				servicesBase = new Dictionary<string, string>();				
-				servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
-				//servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
+				servicesMap = new Dictionary<string, Dictionary<string, SingleMap>>();
+				//servicesVerbs = new Dictionary<string, Dictionary<string, string>>();
 				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
 
@@ -147,6 +147,15 @@ namespace GeneXus.Http.HttpModules
 									sm.Verb = "GET";
 								if (sm.VariableAlias == null)
 									sm.VariableAlias = new Dictionary<string, string>();
+								else
+								{
+									Dictionary<string, string> vMap = new Dictionary<string, string>();
+									foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+									{
+										vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+									}
+									sm.VariableAlias = vMap;
+								}							
 								if (servicesMap.ContainsKey(mapPathLower))
 								{
 									if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
@@ -157,12 +166,10 @@ namespace GeneXus.Http.HttpModules
 								}
 								else
 								{
-									
 									servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
 									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
 									servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
 									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
-									
 								}							
 							
 							}
