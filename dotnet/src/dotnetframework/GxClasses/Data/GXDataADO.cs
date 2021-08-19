@@ -2703,9 +2703,9 @@ namespace GeneXus.Data.ADO
 						return new GxDb2ISeries(id);
 				case "db2":
 					return new GxDb2();
+#endif
 				case "informix":
 					return new GxInformix(id);
-#endif
 				case "hana":
 					return new GxHana();
 				case "service":
