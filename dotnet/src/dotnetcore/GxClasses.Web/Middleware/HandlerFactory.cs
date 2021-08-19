@@ -100,6 +100,9 @@ namespace GeneXus.HttpHandlerFactory
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Handler Factory failed creating {url}", ex);
+				while (ex.InnerException != null)
+					ex = ex.InnerException;
+				context.Response.Write($"Handler Factory failed creating {url} {ex.Message}");
 				await Task.FromException(ex);
 			}
 			finally
