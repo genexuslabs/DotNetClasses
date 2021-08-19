@@ -49,10 +49,27 @@ namespace GeneXus.Data
 				{
 					if (_ifxAssembly == null)
 					{
-						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{InformixAssemblyName}.dll");
-						GXLogging.Debug(log, $"Loading {InformixAssemblyName}.dll from:" + assemblyPath);
 #if NETCORE
-						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
+						string informixDir = Environment.GetEnvironmentVariable("INFORMIXDIR");
+						string assemblyPath = FileUtil.GetStartupDirectory();
+						string informixBinDir = null;
+						if (!string.IsNullOrEmpty(informixDir)) {
+							try
+							{
+								informixBinDir = Path.Combine(informixDir, "bin");
+
+							}catch(Exception ex)
+							{
+								GXLogging.Warn(log, $"Error reading INFORMIXDIR env var", ex);
+							}
+							if (!string.IsNullOrEmpty(informixBinDir) && File.Exists(Path.Combine(informixBinDir, $"{InformixAssemblyName}.dll")))
+							{
+								assemblyPath = informixBinDir;
+							}
+						}
+						GXLogging.Debug(log, $"Loading {InformixAssemblyName}.dll from:" + assemblyPath);
+
+						var asl = new AssemblyLoader(assemblyPath);
 						_ifxAssembly = asl.LoadFromAssemblyName(new AssemblyName(InformixAssemblyName));
 #else
 						GXLogging.Debug(log, $"Loading {InformixAssemblyName} from GAC");
