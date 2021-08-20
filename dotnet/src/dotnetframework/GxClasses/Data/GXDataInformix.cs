@@ -549,6 +549,16 @@ namespace GeneXus.Data
 				return base.GetDecimal(i);
 			}
 		}
+#if NETCORE
+		public override Guid GetGuid(int i)
+		{
+			readBytes += 16;
+			if (reader.GetFieldType(i) == typeof(string))
+				return new Guid(reader.GetString(i));
+			else
+				return reader.GetGuid(i);
+		}
+#endif
 		public override object GetValue(int i)
 		{
 			if (reader.GetFieldType(i) == typeof(decimal))
