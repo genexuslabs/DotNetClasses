@@ -103,6 +103,12 @@ namespace GeneXus.Data
 						values[i] = result;
 						GXLogging.Debug(log, "GetValues decimal:" + result);
 					}
+#if NETCORE
+					else if (reader.GetFieldType(i) == typeof(DateTime))
+					{
+						values[i] = reader.GetDateTime(i); //IfxDateTime
+					}
+#endif
 					else
 					{
 						values[i] = reader.GetValue(i);
@@ -208,6 +214,9 @@ namespace GeneXus.Data
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Text");
 				case GXType.DateTime2: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "DateTime");
 				case GXType.UniqueIdentifier:return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Char");
+#if NETCORE
+				case GXType.Boolean: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Bit");
+#endif
 				default: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, type.ToString());
 			}
 		}
