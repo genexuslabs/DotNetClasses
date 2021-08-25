@@ -97,7 +97,7 @@ namespace GeneXus.Http
 			}
 			catch (Exception ex)
 			{
-				HttpHelper.SetError(context.HttpContext, HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
+				HttpHelper.SetUnexpectedError(context.HttpContext, HttpStatusCode.InternalServerError, ex);
 			}
 			finally
 			{
@@ -182,11 +182,11 @@ namespace GeneXus.Http
 			}
 			catch (GxClassLoaderException cex)
 			{
-				HttpHelper.SetError(context.HttpContext, HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), cex.Message);
+				HttpHelper.SetUnexpectedError(context.HttpContext, HttpStatusCode.NotFound, cex);
 			}
 			catch (Exception ex)
 			{
-				HttpHelper.SetError(context.HttpContext, HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
+				HttpHelper.SetUnexpectedError(context.HttpContext, HttpStatusCode.InternalServerError, ex);
 			}
 			finally
 			{
@@ -434,7 +434,7 @@ namespace GeneXus.Http
 			}
 			catch (Exception e)
 			{
-				HttpHelper.SetError(localHttpContext, HttpStatusCode.InternalServerError.ToString(), e.Message);
+				HttpHelper.SetUnexpectedError(localHttpContext, HttpStatusCode.InternalServerError, e);
 			}
 			finally
 			{
