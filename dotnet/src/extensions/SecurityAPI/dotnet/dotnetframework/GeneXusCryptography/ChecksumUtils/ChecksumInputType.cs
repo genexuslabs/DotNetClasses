@@ -104,14 +104,7 @@ namespace GeneXusCryptography.ChecksumUtils
 					}
 					break;
 				case ChecksumInputType.LOCAL_FILE:
-					try
-					{
-						aux = System.IO.File.ReadAllBytes(input);
-					}
-					catch (Exception e)
-					{
-						error.setError("CI005", e.Message);
-					}
+					aux = SecurityUtils.getFileBytes(input, error);
 					break;
 				default:
 					error.setError("CI006", "Unrecognized checksum input type");
