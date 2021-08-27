@@ -7,8 +7,8 @@ using System.Text;
 using Jayrock.Json;
 using System.Runtime.Serialization;
 using GeneXus.Configuration;
-#if NETCORE
 using System.Linq;
+#if NETCORE
 using System.Buffers.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;

@@ -120,7 +120,6 @@ namespace GeneXus.Utils
 
 		protected int handle;
 
-
 		public GxSilentTrn()
 		{
 		}
@@ -132,8 +131,6 @@ namespace GeneXus.Utils
 		{
 			return parms[index];
 		}
-
-		
 
 		public msglist GX_msglist
 		{
@@ -181,7 +178,6 @@ namespace GeneXus.Utils
 			if( Transaction != null) 
 				Transaction.Save();
 		}
-
   
         public virtual bool Insert()
         {
@@ -577,6 +573,18 @@ namespace GeneXus.Utils
 		}
 	}
 
+	[AttributeUsage(AttributeTargets.Parameter)]
+	public sealed class GxJsonFormatAttribute : Attribute
+	{
+		string jsonformat;
+		public GxJsonFormatAttribute(string format)
+		{
+			jsonformat = format;
+		}
+		public string JsonFormat { get => jsonformat; set => jsonformat = value; }
+	}
+
+
 	[DataContract]
 	public class GxGenericCollectionItem<T> : IGxGenericCollectionItem where T : GxUserType, new()
 	{
@@ -600,6 +608,7 @@ namespace GeneXus.Utils
 		}
 
 		public bool isWrappedInCollection = true;
+
 		public override string ToString()
 		{
 			string s = "";
@@ -731,6 +740,7 @@ namespace GeneXus.Utils
         {
         }
     }
+
 #if !NETCORE
 	[XmlSerializerFormat]
 #endif
