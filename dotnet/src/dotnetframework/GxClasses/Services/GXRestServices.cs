@@ -326,6 +326,10 @@ namespace GeneXus.Utils
 				AddHeader(WARNING_HEADER, header.ToString());
 			}
 		}
+		public void SetError(string code, string message)
+		{
+			HttpHelper.SetError(httpContext, code, message);
+		}
 		public void WebException(Exception ex)
 		{
             GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
