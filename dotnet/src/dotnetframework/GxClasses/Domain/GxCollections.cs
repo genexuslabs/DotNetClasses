@@ -1010,6 +1010,21 @@ namespace GeneXus.Utils
 		public short opened;
 	}
 
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxJsonName : Attribute
+	{
+		string _jsonName;
+		public GxJsonName(String name)
+		{
+			_jsonName = name;
+		}
+		public string Name
+		{
+			get { return this._jsonName;  }
+			set { this._jsonName = value; }
+		}
+	}
+
 	[Serializable]
 	[XmlType(IncludeInSchema = false)]
 	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable

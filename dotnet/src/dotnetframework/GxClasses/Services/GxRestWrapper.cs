@@ -669,7 +669,22 @@ namespace GeneXus.Application
 			}
 			else
 			{
-				json = JSONHelper.WCFSerialize(parameters, Encoding.UTF8, knownTypes, true); 
+				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
+				foreach (KeyValuePair<string,object> kv in parameters)
+				{
+					string strKey = kv.Key;
+					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
+					if (ut != null)
+					{						
+						Type uType = ut.Sdt.GetType();
+						var attributes = uType.GetCustomAttributes(true);
+						GxJsonName jsonName = (GxJsonName) attributes.Where(a => a.GetType() == typeof(GxJsonName)).FirstOrDefault();
+						if (jsonName != null)
+							strKey = jsonName.Name;
+					}
+					serializablePars.Add(strKey, kv.Value);
+				}
+				json = JSONHelper.WCFSerialize(serializablePars, Encoding.UTF8, knownTypes, true); 
 			}
 			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
@@ -702,24 +717,19 @@ namespace GeneXus.Application
 			foreach (var k in outputParameters.Keys.ToList())
 			{
 				GxUserType p = outputParameters[k] as GxUserType;
-				if ((p != null) && !(p.ShouldSerializeSdtJson()))
+				if ((p != null) && !p.ShouldSerializeSdtJson())
 				{
 					outputParameters.Remove(k);
 				}
-			}
-			MakeRestTypes(outputParameters);
-		}
-		private static void MakeRestTypes(Dictionary<string, object> parameters)
-		{
-			foreach (var key in parameters.Keys.ToList())
-			{
-				object o = MakeRestType(parameters[key]);
+				object o = MakeRestType(outputParameters[k]);
 				if (o == null)
-					parameters.Remove(key);
+					outputParameters.Remove(k);
 				else
-					parameters[key] = o;
-			}
+					outputParameters[k] = o;
+
+			}			
 		}
+		
 		protected static object MakeRestType(object v)
 		{
 			Type vType = v.GetType();
