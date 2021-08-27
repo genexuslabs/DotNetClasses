@@ -721,12 +721,14 @@ namespace GeneXus.Application
 				{
 					outputParameters.Remove(k);
 				}
-				object o = MakeRestType(outputParameters[k]);
-				if (o == null)
-					outputParameters.Remove(k);
 				else
-					outputParameters[k] = o;
-
+				{
+					object o = MakeRestType(outputParameters[k]);
+					if (o == null)
+						outputParameters.Remove(k);
+					else
+						outputParameters[k] = o;
+				}
 			}			
 		}
 		
