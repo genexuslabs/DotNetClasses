@@ -703,7 +703,6 @@ namespace GeneXus.Application
 						if (jsonName != null)
 							strKey = jsonName.Name;
 					}
-
 					if (PrimitiveType(kv.Value.GetType()) && fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
 					{
 						object strVal = ((DateTime)kv.Value).ToString(fmtParameters[kv.Key]);
