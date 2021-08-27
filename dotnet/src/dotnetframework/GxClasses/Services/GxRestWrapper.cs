@@ -132,11 +132,12 @@ namespace GeneXus.Application
 					innerMethod = this._serviceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
-				return Serialize(outputParameters, wrapped);
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -269,6 +270,7 @@ namespace GeneXus.Application
 				var queryParameters = ReadQueryParameters(this._variableAlias);
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
+				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
 				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
 					innerMethod = _serviceMethodPattern;
@@ -282,6 +284,7 @@ namespace GeneXus.Application
 					}
 
 					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+					formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				}
 				
 				int parCount = outputParameters.Count;
@@ -290,7 +293,7 @@ namespace GeneXus.Application
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
-				return Serialize(outputParameters, wrapped);
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -655,7 +658,7 @@ namespace GeneXus.Application
 			HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
 			return Task.CompletedTask;
 		}
-		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
+		protected Task Serialize(Dictionary<string, object> parameters, Dictionary<string, string> fmtParameters, bool wrapped)
 		{
 			string json;
 			var knownTypes = new List<Type>();
@@ -667,14 +670,23 @@ namespace GeneXus.Application
 			if (parameters.Count == 1 && !wrapped && !PrimitiveType(knownTypes[0])) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
 			{
 				string key = parameters.First().Key;
-				json = JSONHelper.WCFSerialize(parameters[key], Encoding.UTF8, knownTypes, true);
+				object strVal = null;
+				if (PrimitiveType(parameters[key].GetType()) && fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+				{
+					strVal = ((DateTime)parameters[key]).ToString(fmtParameters[key]);
+				}
+				else {
+					strVal = parameters[key];
+				}
+				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
 				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
 				foreach (KeyValuePair<string,object> kv in parameters)
 				{
-					string strKey = kv.Key;
+					string strKey = kv.Key;					
+
 					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
 					if (ut != null)
 					{						
@@ -684,7 +696,14 @@ namespace GeneXus.Application
 						if (jsonName != null)
 							strKey = jsonName.Name;
 					}
-					serializablePars.Add(strKey, kv.Value);
+
+					if (PrimitiveType(kv.Value.GetType()) && fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
+					{
+						object strVal = ((DateTime)kv.Value).ToString(fmtParameters[kv.Key]);
+						serializablePars.Add(strKey, strVal);
+					}
+					else
+						serializablePars.Add(strKey, kv.Value);
 				}
 				json = JSONHelper.WCFSerialize(serializablePars, Encoding.UTF8, knownTypes, true); 
 			}
