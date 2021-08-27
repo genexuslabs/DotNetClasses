@@ -683,7 +683,8 @@ namespace GeneXus.Application
 				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
 				foreach (KeyValuePair<string,object> kv in parameters)
 				{
-					string strKey = kv.Key;					
+					string strKey = kv.Key;
+
 					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
 					if (ut != null)
 					{						
@@ -693,6 +694,7 @@ namespace GeneXus.Application
 						if (jsonName != null)
 							strKey = jsonName.Name;
 					}
+
 					if (PrimitiveType(kv.Value.GetType()) && fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
 					{
 						object strVal = ((DateTime)kv.Value).ToString(fmtParameters[kv.Key]);
