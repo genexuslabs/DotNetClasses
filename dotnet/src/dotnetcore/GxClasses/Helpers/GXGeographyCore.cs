@@ -653,21 +653,27 @@ namespace GeneXus.Utils
 			}
 			try
 			{
-				// Parse
 				_innerValue = NTSGeographyWrapper.Parse(geoText);
 				// SRID, Type & Points X, Y
-				if (_innerValue != null && !NTSGeographyWrapper.IsNull(_innerValue) &&  !NTSGeographyWrapper.IsValid(_innerValue))
+				if (_innerValue != null && !NTSGeographyWrapper.IsNull(_innerValue))
 				{
-					//_innerValue = NTSGeographyWrapper.MakeValid(_innerValue);	
-					this.srid = NTSGeographyWrapper.Srid(_innerValue);
-					this.setGXGeoType(NTSGeographyWrapper.STGeometryType(_innerValue).ToString());
-
-					if (GeographicType == GeoGraphicTypeValue.Point)
+					if (NTSGeographyWrapper.IsValid(_innerValue))
 					{
-						this.Point.Longitude = NTSGeographyWrapper.Long(_innerValue);
-						this.Point.Latitude = NTSGeographyWrapper.Lat(_innerValue);
+						//_innerValue = NTSGeographyWrapper.MakeValid(_innerValue);	
+						this.srid = NTSGeographyWrapper.Srid(_innerValue);
+						this.setGXGeoType(NTSGeographyWrapper.STGeometryType(_innerValue).ToString());
+
+						if (GeographicType == GeoGraphicTypeValue.Point)
+						{
+							this.Point.Longitude = NTSGeographyWrapper.Long(_innerValue);
+							this.Point.Latitude = NTSGeographyWrapper.Lat(_innerValue);
+						}
 					}
+					else
+						setNullGeography();
 				}
+				else
+					setNullGeography();
 			}
 			catch (Exception ex)
 			{
@@ -679,22 +685,24 @@ namespace GeneXus.Utils
 					}
 					else
 					{
-						// Cannot parse value
-						_innerValue = NTSGeographyWrapper.NullSQLGeography;
-						this.geoText = "";
-						this.Point.Longitude = 0;
-						this.Point.Latitude = 0;
+						setNullGeography();
 					}
 				}
 				else
 				{
-					// Cannot parse value
-					_innerValue = NTSGeographyWrapper.NullSQLGeography;
-					this.geoText = "";
-					this.Point.Longitude = 0;
-					this.Point.Latitude = 0;
+					setNullGeography();
+					
 				}
 			}
+		}
+
+		void setNullGeography()
+		{
+			// Cannot parse value
+			_innerValue = NTSGeographyWrapper.NullSQLGeography;
+			this.geoText = "";
+			this.Point.Longitude = 0;
+			this.Point.Latitude = 0;
 		}
 
 		override public String ToString()
@@ -933,7 +941,6 @@ namespace GeneXus.Utils
 			}
 			return ArrayOfPoints;
 		}
-
 	}
 
 	public class PointT
@@ -951,6 +958,5 @@ namespace GeneXus.Utils
 	{
 		public Line[] Points;
 	}
-
 
 }
