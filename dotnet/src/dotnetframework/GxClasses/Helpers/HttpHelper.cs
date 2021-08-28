@@ -261,19 +261,9 @@ namespace GeneXus.Http
 					if (response.IsSuccessStatusCode)
 					{
 						statusCode = HttpStatusCode.OK;
-						using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
+						using (HttpContent content = response.Content)
 						{
-							buffer = new byte[8192];
-							var isMoreToRead = true;
-							do
-							{
-								var read = contentStream.ReadAsync(buffer, 0, buffer.Length).Result;
-								if (read == 0)
-								{
-									isMoreToRead = false;
-								}
-							}
-							while (isMoreToRead);
+							return content.ReadAsByteArrayAsync().Result;
 						}
 					}
 					else
