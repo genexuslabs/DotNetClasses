@@ -212,7 +212,6 @@ namespace GeneXus.Utils
             }
         }
 
-
         public Geospatial(object value)
 		{
             Geospatial geo = value as Geospatial;
@@ -331,7 +330,6 @@ namespace GeneXus.Utils
 			}
 		}
 
-
 		public double Longitude
 		{
 			get
@@ -341,7 +339,6 @@ namespace GeneXus.Utils
 				else
 					return SQLGeographyWrapper.Long(_innerValue);
 			}
-
 		}
 
 		public double Latitude
@@ -611,24 +608,28 @@ namespace GeneXus.Utils
 				// Sql Server Text
 				_innerValue = SQLGeographyWrapper.Parse(geoText);
 
-				if (_innerValue != null && (!SQLGeographyWrapper.IsNull(_innerValue)) && (!SQLGeographyWrapper.IsValid(_innerValue)))
+				if (_innerValue != null && (!SQLGeographyWrapper.IsNull(_innerValue)))
 				{
-					_innerValue = SQLGeographyWrapper.MakeValid(_innerValue);
-
-					this.srid = ((SqlInt32)ClassLoader.GetPropValue(_innerValue, "STSrid")).Value;
-
-					this.setGXGeoType(SQLGeographyWrapper.STGeometryType(_innerValue).ToString());
-					if (GeographicType == GeoGraphicTypeValue.Point)
+					if (!SQLGeographyWrapper.IsValid(_innerValue))
+						_innerValue = SQLGeographyWrapper.MakeValid(_innerValue);
+					
+					if (SQLGeographyWrapper.IsValid(_innerValue))
 					{
-						this.Point.Longitude = SQLGeographyWrapper.Long(_innerValue);
-						this.Point.Latitude = SQLGeographyWrapper.Lat(_innerValue);
+						this.srid = ((SqlInt32)ClassLoader.GetPropValue(_innerValue, "STSrid")).Value;
+						this.setGXGeoType(SQLGeographyWrapper.STGeometryType(_innerValue).ToString());
+						if (GeographicType == GeoGraphicTypeValue.Point)
+						{
+							this.Point.Longitude = SQLGeographyWrapper.Long(_innerValue);
+							this.Point.Latitude = SQLGeographyWrapper.Lat(_innerValue);
+						}
 					}
+					else
+						setNullGeography();
 				}
 				else
 				{					
 						setNullGeography();
 				}
-				
 			}
 			catch (ArgumentException ex)
 			{
