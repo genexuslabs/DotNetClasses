@@ -652,7 +652,14 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
+			if (ex is FormatException)
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.BadRequest, ex);
+			}
+			else
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
+			}
 			return Task.CompletedTask;
 		}
 		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
