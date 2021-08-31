@@ -338,7 +338,11 @@ namespace GeneXus.Utils
             {
                 throw ex;
             }
-            else
+            else if (ex is FormatException)
+			{
+				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.BadRequest, ex);
+			}
+			else
             {
 				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.InternalServerError, ex);
             }
