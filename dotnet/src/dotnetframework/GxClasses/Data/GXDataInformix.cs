@@ -18,6 +18,13 @@ using System.IO;
 
 namespace GeneXus.Data
 {
+	internal static class GxInformixSQL
+	{
+		internal static string ServerDateTimeStmt = "SELECT CURRENT YEAR TO SECOND FROM informix.SYSTABLES WHERE tabname = 'systables'";
+		internal static string ServerDateTimeStmtMs = "SELECT CURRENT YEAR TO FRACTION(3) FROM informix.SYSTABLES WHERE tabname = 'systables'";
+		internal static string ServerUserIdStmt = "SELECT USER";
+		internal static string TimeoutSentence = "SET LOCK MODE TO WAIT";
+	}
 	public class GxInformix : GxDataRecord
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -310,11 +317,11 @@ namespace GeneXus.Data
 		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
-			return "SELECT CURRENT YEAR TO SECOND FROM informix.SYSTABLES WHERE tabname = 'systables'";
+			return GxInformixSQL.ServerDateTimeStmt;
 		}
 		public override string GetServerDateTimeStmtMs(IGxConnection connection)
 		{
-			return "SELECT CURRENT YEAR TO FRACTION(3) FROM informix.SYSTABLES WHERE tabname = 'systables'";
+			return GxInformixSQL.ServerDateTimeStmtMs;
 		}
 		public override string GetServerVersionStmt()
 		{
@@ -322,7 +329,7 @@ namespace GeneXus.Data
 		}
 		public override string GetServerUserIdStmt()
 		{
-			return "SELECT USER";
+			return GxInformixSQL.ServerUserIdStmt;
 		}
 		public override void SetTimeout(IGxConnectionManager connManager, IGxConnection connection, int handle)
 		{
@@ -333,9 +340,9 @@ namespace GeneXus.Data
 		public override string SetTimeoutSentence(long milliseconds)
 		{
 			if (milliseconds > 0)
-				return "SET LOCK MODE TO WAIT " + milliseconds / 1000;
+				return $"{GxInformixSQL.TimeoutSentence} " + milliseconds / 1000;
 			else
-				return "SET LOCK MODE TO WAIT";
+				return GxInformixSQL.TimeoutSentence;
 		}
 
 		public override bool ProcessError(int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)

@@ -2696,16 +2696,24 @@ namespace GeneXus.Data.ADO
 						return new GxOracle();
 					else
 						return new GxODPOracle();
+#endif
 				case "as400":
+#if NETCORE
+					return new GxDb2ISeriesIds();
+#else
 					if (Config.GetValueOf("Connection-" + id + "-PROVIDER", out cfgBuf) && cfgBuf.ToLower() == "his")
 						return new GxISeriesHIS(id);
 					else
 						return new GxDb2ISeries(id);
+#endif
 				case "db2":
 					return new GxDb2();
-#endif
 				case "informix":
+#if NETCORE
+					return new GxInformixIds();
+#else
 					return new GxInformix(id);
+#endif
 				case "hana":
 					return new GxHana();
 				case "service":
