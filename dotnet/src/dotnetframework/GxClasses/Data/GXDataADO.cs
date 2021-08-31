@@ -2699,7 +2699,7 @@ namespace GeneXus.Data.ADO
 #endif
 				case "as400":
 #if NETCORE
-					return new GxDb2ISeriesIds();
+					return new GxDb2ISeriesIds(id);
 #else
 					if (Config.GetValueOf("Connection-" + id + "-PROVIDER", out cfgBuf) && cfgBuf.ToLower() == "his")
 						return new GxISeriesHIS(id);
