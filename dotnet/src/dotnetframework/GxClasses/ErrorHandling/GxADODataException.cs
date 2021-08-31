@@ -91,11 +91,11 @@ namespace GeneXus.Data
 			{
 				ParseSQLiteException(ex);
 			}
-			else if (m_sErrorType == "IBM.Data.DB2.DB2Exception")
+#endif
+			else if (m_sErrorType == $"{GxDb2.Db2AssemblyName}.DB2Exception")
 			{
 				ParseDB2Exception(ex);
 			}
-#endif
 			else if (m_sErrorType == $"{GxInformix.InformixAssemblyName}.IfxException")
 			{
 				ParseIfxException(ex);
