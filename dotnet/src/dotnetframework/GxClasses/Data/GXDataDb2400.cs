@@ -3,9 +3,9 @@ using System.Data;
 using System.Data.Common;
 using System.Reflection;
 using System.Text;
-
+#if !NETCORE
 using Microsoft.HostIntegration.MsDb2Client;
-
+#endif
 using log4net;
 using GeneXus.Application;
 using GeneXus.Cache;
@@ -17,334 +17,6 @@ using System.Globalization;
 
 namespace GeneXus.Data
 {
-	public class GxISeriesHIS : GxDataRecord
-	{
-
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-		private bool m_UseCharInDate;
-		private string m_InitialCatalog;
-		private string m_SqlPackage;
-
-        public static string SQL_NULL_DATE = "00000000";
-
-		public GxISeriesHIS(string id)
-		{
-			string userCharInDate;
-			bool isConfigured = Config.GetValueOf("Connection-"+id+"-DB2400_DATE_DATATYPE",out userCharInDate);
-			
-			m_UseCharInDate= !isConfigured || (isConfigured && userCharInDate.ToLower()=="character");
-
-			string str="";
-			Config.GetValueOf("Connection-"+id+"-Catalog",out str);
-			m_InitialCatalog=str;
-
-			Config.GetValueOf("Connection-"+id+"-Package",out str);
-			m_SqlPackage=str;
-		}
-
-		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId, 
-			string userPassword,string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
-		{
-			if (m_connectionString == null)
-				m_connectionString=BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
-
-			return new Db2ISeriesHISConnectionWrapper(m_connectionString,connectionCache, isolationLevel);
-		}
-
-		
-		protected override string BuildConnectionString(string datasourceName, string userId, 
-			string userPassword,string databaseName, string port, string schema, string extra)
-		{
-	
-			StringBuilder connectionString = new StringBuilder();
-			connectionString.Append("Provider=DB2OLEDB;Network Port=446;Network Transport Library=TCP;");
-
-			if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Network Address"))
-			{
-				connectionString.AppendFormat("Network Address={0};",datasourceName);
-			}
-			if (userId!=null)
-			{
-				connectionString.AppendFormat("User ID={0};Password={1};",userId,userPassword);
-			}
-			if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Default Qualifier"))
-			{
-				connectionString.AppendFormat("Default Qualifier={0};", databaseName);
-			}
-			if (!String.IsNullOrEmpty(m_InitialCatalog) && !hasKey(extra, "Initial Catalog"))
-			{
-				connectionString.AppendFormat("Initial Catalog={0};", m_InitialCatalog);
-			}
-			if (!string.IsNullOrEmpty(m_SqlPackage) && !hasKey(extra, "Package Collection"))
-			{
-				connectionString.AppendFormat("Package Collection={0}", m_SqlPackage);
-			}
-
-			if (extra!=null)
-			{
-				string res = ParseAdditionalData(extra,"integrated security");
-				res = ParseAdditionalData(res,"librarylist");
-
-				if (!res.StartsWith(";") && res.Length>1)	connectionString.Append(";");
-				connectionString.Append(res);
-			}
-			return connectionString.ToString();
-
-		}
-
-		protected override string ParseAdditionalData(string data,string extractWord)
-		{
-			char[] sep = {';'};
-			StringBuilder res=new StringBuilder("");
-			data = data.Replace("=,", "=");
-			string [] props = data.Split(sep);
-			foreach (string s in props)
-			{
-				if ( s!=null && s.Length>0 && !s.ToLower().StartsWith(extractWord))
-				{
-					if (s.ToLower().StartsWith("database"))
-					{
-						res.Append(s.ToUpper().Replace("DATABASE","Default Qualifier"));
-					}
-					else
-					{
-						res.Append(s);
-					}
-					res.Append(';');
-				}
-			}
-			return res.ToString();
-		}
-
-		public override IDbDataParameter CreateParameter()
-		{
-			return new MsDb2Parameter();
-		}
-		public override  IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
-		{
-			MsDb2Parameter parm =new MsDb2Parameter();
-			parm.MsDb2Type = GXTypeToMsDb2Type(dbtype);
-			
-			parm.Size = gxlength;
-			parm.Scale= (byte)gxdec;
-			parm.Precision = (byte)gxlength;
-			parm.ParameterName=name;
-			return parm;
-		}
-		private MsDb2Type GXTypeToMsDb2Type(object type)
-		{
-			if (type is MsDb2Type)
-				return (MsDb2Type)type;
-
-			switch (type)
-			{
-				case GXType.Int16: return MsDb2Type.SmallInt;
-				case GXType.Int32: return MsDb2Type.Int;
-				case GXType.Int64: return MsDb2Type.BigInt;
-				case GXType.Number: return MsDb2Type.Double;
-				case GXType.DateTime2:
-				case GXType.DateTime: return MsDb2Type.Timestamp;
-				case GXType.Date: return MsDb2Type.Date;
-				case GXType.UniqueIdentifier:
-				case GXType.DateAsChar:
-				case GXType.Char: return MsDb2Type.Char;
-				case GXType.VarChar: return MsDb2Type.VarChar;
-				case GXType.Blob: return MsDb2Type.VarBinary;
-				default: return MsDb2Type.Char;
-			}
-		}
-        public override DbDataAdapter CreateDataAdapeter()
-        {
-            return new MsDb2DataAdapter();
-        }
-		public override IDataReader GetDataReader(
-			IGxConnectionManager connManager,
-			IGxConnection con, 
-			GxParameterCollection parameters ,
-			string stmt, ushort fetchSize, 
-			bool forFirst, int handle, 
-			bool cached, SlidingTime expiration,
-			bool hasNested,
-			bool dynStmt)
-		{
-		
-			IDataReader idatareader;
-			GXLogging.Debug(log, "ExecuteReader: client cursor=" + hasNested +", handle '"+ handle + "'"+ ", hashcode " + this.GetHashCode());
-			idatareader= new GxDataReader(connManager,this, con,parameters,stmt,fetchSize,forFirst,handle,cached,expiration,dynStmt);
-			return idatareader;
-		}
-		public override void SetParameter(IDbDataParameter parameter, Object value)
-		{
-			if (value!=null)
-			{
-				parameter.Value = CheckDataLength(value, parameter);
-			}
-			else
-				parameter.Value = DBNull.Value;
-		}
-		public override string GetServerDateTimeStmt(IGxConnection connection)
-		{
-			return "SELECT CURRENT_TIMESTAMP FROM SYSIBM.SYSDUMMY1";
-		}
-		public override string GetServerDateTimeStmtMs(IGxConnection connection)
-		{
-			return GetServerDateTimeStmt(connection);
-		}
-		public override string GetServerUserIdStmt()
-		{
-			return null;
-		}
-		public override string GetServerVersionStmt()
-		{
-			throw new GxNotImplementedException();
-		}
-		public override bool ProcessError( int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
-			
-		{
-			
-			GXLogging.Debug(log, "ProcessError: dbmsErrorCode=" + dbmsErrorCode +", emsg '"+ emsg + "'"+ ", status " + status);
-			switch (dbmsErrorCode)
-			{
-				case -911:		// Locked
-					retry = Retry(errMask, retryCount);
-					if (retry)
-						status=110;// Locked - Retry
-					else 
-						status=103;//Locked
-					return retry;
-				case -803:		// Duplicated record
-					status = 1; 
-					break;
-				case -519:		// File not found
-				case -372:		// File not found
-				case -204:		// File not found
-					status = 105; 
-					break;
-				case -530:		// Parent key not found
-					if ((errMask & GxErrorMask.GX_MASKFOREIGNKEY) > 0)
-						status = 500;		// ForeignKeyError
-					break;
-				default:
-					return false;
-			}
-			return true;
-		}
-		public override string ToDbmsConstant(DateTime Value)
-		{
-			if (Value == System.DateTime.MinValue) 
-				return "'0001-01-01'";
-			return "TIMESTAMP('"+
-				Value.Year.ToString()+ "-"+
-				Value.Month.ToString()+"-"+
-				Value.Day.ToString()+"-"+
-				Value.Hour.ToString()+"."+
-				Value.Minute.ToString()+"."+
-				Value.Second.ToString()+"')";
-		}
-
-		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)
-		{
-			GXLogging.Debug(log, "GetDateTime - index : " + i);
-			DateTime value;
-			if (m_UseCharInDate)
-			{
-				string valueString = base.GetString (cmd, DR, i);
-                if (valueString == SQL_NULL_DATE || valueString.Trim().Length == 0)  
-					value = DateTimeUtil.NullDate();
-				else
-                    DateTime.TryParseExact(valueString, "yyyyMMdd", CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out value);
-				
-				GXLogging.Debug(log, "GetDateTime as Char - value1 : " + value + " string " + valueString);
-			}
-			else
-			{
-				value = DR.GetDateTime(i);
-				GXLogging.Debug(log, "GetDateTime - value2 : " + value);
-			}
-			return value;
-		}
-		
-		public override Object Net2DbmsDateTime(IDbDataParameter parm, DateTime dateValue)
-		{
-
-			MsDb2Parameter idb2parameter = (MsDb2Parameter)parm;
-			if (m_UseCharInDate && idb2parameter.MsDb2Type==MsDb2Type.Char && idb2parameter.Size==8)
-			{
-				string resString;
-				if (dateValue.Equals(DateTimeUtil.NullDate()))
-				{
-                    resString = SQL_NULL_DATE;
-				}
-				else
-				{	
-					resString=DateTimeUtil.getYYYYMMDD(dateValue);
-				}
-				return resString;
-			}
-			else
-			{
-				return dateValue;
-			}
-		}
-		public override void GetValues(IDataReader reader,ref object[] values)
-		{
-			if (values!=null)
-			{
-				for (int i=0; i<values.Length; i++)
-				{	/* The iDB2Decimal value is too large to fit into a Decimal. Use ToString() to retrieve the value instead */
-					if (!reader.IsDBNull(i) && reader.GetFieldType(i)==typeof(Decimal))
-						values[i] = reader.GetDecimal(i);
-					else
-						values[i] = reader.GetValue(i);
-				}
-			}
-		}
-		internal override object CloneParameter(IDbDataParameter p)
-		{
-			return ((ICloneable)p).Clone();
-		}
-
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
-		{
-			return 	con.ConnectionCache.GetAvailablePreparedCommand(stmt);
-		}
-
-		public override IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters)
-		{
-			IDbCommand cmd = GetCachedCommand(con, stmt);
-
-			if (cmd==null)
-			{
-				cmd = con.InternalConnection.CreateCommand();
-				cmd.CommandText=stmt;
-				cmd.Connection=con.InternalConnection.InternalConnection;
-				
-				for (int j=0; j< parameters.Count; j++)
-				{
-					cmd.Parameters.Add(CloneParameter(parameters[j]));
-				}
-				cmd.Transaction=con.BeginTransaction();
-				
-				con.ConnectionCache.AddPreparedCommand(stmt, cmd);
-			}
-			else
-			{
-				if (parameters.Count>0)
-				{
-					for (int j=0; j< parameters.Count; j++)
-					{
-						((IDbDataParameter)cmd.Parameters[j]).Value=parameters[j].Value;
-
-					}
-				}
-				cmd.Connection=con.InternalConnection.InternalConnection;
-				cmd.Transaction=con.BeginTransaction();
-			}
-			return cmd;
-		}
-
-	}
 	public class GxDb2ISeriesDataReader : GxDataReader
 	{
 		public GxDb2ISeriesDataReader( IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters ,
@@ -368,6 +40,80 @@ namespace GeneXus.Data
 			else 
 				return base.GetValue( i);
 
+		}
+
+	}
+	sealed internal class Db2ISeriesConnectionWrapper : GxAbstractConnectionWrapper
+	{
+		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		public Db2ISeriesConnectionWrapper()
+		{
+			try
+			{
+				_connection = (IDbConnection)ClassLoader.CreateInstance(GxDb2ISeries.iAssembly, "IBM.Data.DB2.iSeries.iDB2Connection");
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "iSeries data provider Ctr error " + ex.Message + ex.StackTrace);
+				throw ex;
+			}
+		}
+
+		public Db2ISeriesConnectionWrapper(String connectionString, GxConnectionCache connCache, IsolationLevel isolationLevel)
+		{
+			try
+			{
+				_connection = (IDbConnection)ClassLoader.CreateInstance(GxDb2ISeries.iAssembly, "IBM.Data.DB2.iSeries.iDB2Connection", new object[] { connectionString });
+				m_isolationLevel = isolationLevel;
+				m_connectionCache = connCache;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "iSeries data provider Ctr error " + ex.Message + ex.StackTrace);
+				throw ex;
+			}
+		}
+		override public void Open()
+		{
+			try
+			{
+				InternalConnection.Open();
+				if (!m_autoCommit)
+				{
+					m_transaction = InternalConnection.BeginTransaction(m_isolationLevel);
+				}
+				else
+				{
+					m_transaction = null;
+				}
+
+			}
+			catch (Exception e)
+			{
+				GXLogging.Error(log, "Return GxConnection.Open Error m_isolationLevel:" + m_isolationLevel, e);
+				throw (new GxADODataException(e));
+			}
+		}
+
+		override public void Close()
+		{
+			try
+			{
+				InternalConnection.Close();
+			}
+			catch (Exception ex)
+			{
+				throw new DataException(ex.Message, ex);
+			}
+		}
+
+		override public IDbCommand CreateCommand()
+		{
+			return InternalConnection.CreateCommand();
+		}
+		public override DbDataAdapter CreateDataAdapter()
+		{
+			throw new GxNotImplementedException();
 		}
 
 	}
@@ -906,7 +652,7 @@ namespace GeneXus.Data
 		}
 
 	}
-
+#if !NETCORE
 
 	public class GxAccess : GxDataRecord
 	{
@@ -1071,80 +817,334 @@ namespace GeneXus.Data
 		}
 
 	}
-
-
-	sealed internal class Db2ISeriesConnectionWrapper : GxAbstractConnectionWrapper 
+	public class GxISeriesHIS : GxDataRecord
 	{
+
 		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        public Db2ISeriesConnectionWrapper()
-        {
-            try
-            {
-                _connection = (IDbConnection)ClassLoader.CreateInstance(GxDb2ISeries.iAssembly, "IBM.Data.DB2.iSeries.iDB2Connection");
-            }
-            catch (Exception ex)
-            {
-                GXLogging.Error(log, "iSeries data provider Ctr error " + ex.Message + ex.StackTrace);
-                throw ex;
-            }
-        }
+		private bool m_UseCharInDate;
+		private string m_InitialCatalog;
+		private string m_SqlPackage;
 
-		public Db2ISeriesConnectionWrapper(String connectionString, GxConnectionCache connCache, IsolationLevel isolationLevel)
+		public static string SQL_NULL_DATE = "00000000";
+
+		public GxISeriesHIS(string id)
 		{
-            try
-            {
-                _connection = (IDbConnection)ClassLoader.CreateInstance(GxDb2ISeries.iAssembly, "IBM.Data.DB2.iSeries.iDB2Connection", new object[] { connectionString });
-                m_isolationLevel = isolationLevel;
-                m_connectionCache = connCache;
-            }
-            catch (Exception ex)
-            {
-                GXLogging.Error(log, "iSeries data provider Ctr error " + ex.Message + ex.StackTrace);
-                throw ex;
-            }
-        }
-		override public void Open() 
+			string userCharInDate;
+			bool isConfigured = Config.GetValueOf("Connection-" + id + "-DB2400_DATE_DATATYPE", out userCharInDate);
+
+			m_UseCharInDate = !isConfigured || (isConfigured && userCharInDate.ToLower() == "character");
+
+			string str = "";
+			Config.GetValueOf("Connection-" + id + "-Catalog", out str);
+			m_InitialCatalog = str;
+
+			Config.GetValueOf("Connection-" + id + "-Package", out str);
+			m_SqlPackage = str;
+		}
+
+		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
 		{
-			try 
+			if (m_connectionString == null)
+				m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
+			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+
+			return new Db2ISeriesHISConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
+		}
+
+
+		protected override string BuildConnectionString(string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra)
+		{
+
+			StringBuilder connectionString = new StringBuilder();
+			connectionString.Append("Provider=DB2OLEDB;Network Port=446;Network Transport Library=TCP;");
+
+			if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Network Address"))
 			{
-				InternalConnection.Open();
-				if (!m_autoCommit)
+				connectionString.AppendFormat("Network Address={0};", datasourceName);
+			}
+			if (userId != null)
+			{
+				connectionString.AppendFormat("User ID={0};Password={1};", userId, userPassword);
+			}
+			if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Default Qualifier"))
+			{
+				connectionString.AppendFormat("Default Qualifier={0};", databaseName);
+			}
+			if (!String.IsNullOrEmpty(m_InitialCatalog) && !hasKey(extra, "Initial Catalog"))
+			{
+				connectionString.AppendFormat("Initial Catalog={0};", m_InitialCatalog);
+			}
+			if (!string.IsNullOrEmpty(m_SqlPackage) && !hasKey(extra, "Package Collection"))
+			{
+				connectionString.AppendFormat("Package Collection={0}", m_SqlPackage);
+			}
+
+			if (extra != null)
+			{
+				string res = ParseAdditionalData(extra, "integrated security");
+				res = ParseAdditionalData(res, "librarylist");
+
+				if (!res.StartsWith(";") && res.Length > 1) connectionString.Append(";");
+				connectionString.Append(res);
+			}
+			return connectionString.ToString();
+
+		}
+
+		protected override string ParseAdditionalData(string data, string extractWord)
+		{
+			char[] sep = { ';' };
+			StringBuilder res = new StringBuilder("");
+			data = data.Replace("=,", "=");
+			string[] props = data.Split(sep);
+			foreach (string s in props)
+			{
+				if (s != null && s.Length > 0 && !s.ToLower().StartsWith(extractWord))
 				{
-					m_transaction = InternalConnection.BeginTransaction(m_isolationLevel);  
+					if (s.ToLower().StartsWith("database"))
+					{
+						res.Append(s.ToUpper().Replace("DATABASE", "Default Qualifier"));
+					}
+					else
+					{
+						res.Append(s);
+					}
+					res.Append(';');
 				}
-				else
-				{
-					m_transaction =null;
-				}
-
 			}
-			catch(Exception e)
-			{
-				GXLogging.Error(log, "Return GxConnection.Open Error m_isolationLevel:"+m_isolationLevel  , e);
-				throw (new GxADODataException(e));
-			}
+			return res.ToString();
 		}
 
-		override public void Close() 
+		public override IDbDataParameter CreateParameter()
 		{
-			try 
-			{
-				InternalConnection.Close();
-			}
-			catch(Exception ex) 
-			{
-				throw new DataException(ex.Message, ex);
-			}
+			return new MsDb2Parameter();
 		}
-
-		override public IDbCommand CreateCommand() 
+		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
-            return InternalConnection.CreateCommand();
+			MsDb2Parameter parm = new MsDb2Parameter();
+			parm.MsDb2Type = GXTypeToMsDb2Type(dbtype);
+
+			parm.Size = gxlength;
+			parm.Scale = (byte)gxdec;
+			parm.Precision = (byte)gxlength;
+			parm.ParameterName = name;
+			return parm;
 		}
-		public override DbDataAdapter CreateDataAdapter()
+		private MsDb2Type GXTypeToMsDb2Type(object type)
+		{
+			if (type is MsDb2Type)
+				return (MsDb2Type)type;
+
+			switch (type)
+			{
+				case GXType.Int16: return MsDb2Type.SmallInt;
+				case GXType.Int32: return MsDb2Type.Int;
+				case GXType.Int64: return MsDb2Type.BigInt;
+				case GXType.Number: return MsDb2Type.Double;
+				case GXType.DateTime2:
+				case GXType.DateTime: return MsDb2Type.Timestamp;
+				case GXType.Date: return MsDb2Type.Date;
+				case GXType.UniqueIdentifier:
+				case GXType.DateAsChar:
+				case GXType.Char: return MsDb2Type.Char;
+				case GXType.VarChar: return MsDb2Type.VarChar;
+				case GXType.Blob: return MsDb2Type.VarBinary;
+				default: return MsDb2Type.Char;
+			}
+		}
+		public override DbDataAdapter CreateDataAdapeter()
+		{
+			return new MsDb2DataAdapter();
+		}
+		public override IDataReader GetDataReader(
+			IGxConnectionManager connManager,
+			IGxConnection con,
+			GxParameterCollection parameters,
+			string stmt, ushort fetchSize,
+			bool forFirst, int handle,
+			bool cached, SlidingTime expiration,
+			bool hasNested,
+			bool dynStmt)
+		{
+
+			IDataReader idatareader;
+			GXLogging.Debug(log, "ExecuteReader: client cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
+			idatareader = new GxDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
+			return idatareader;
+		}
+		public override void SetParameter(IDbDataParameter parameter, Object value)
+		{
+			if (value != null)
+			{
+				parameter.Value = CheckDataLength(value, parameter);
+			}
+			else
+				parameter.Value = DBNull.Value;
+		}
+		public override string GetServerDateTimeStmt(IGxConnection connection)
+		{
+			return "SELECT CURRENT_TIMESTAMP FROM SYSIBM.SYSDUMMY1";
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
+		}
+		public override string GetServerUserIdStmt()
+		{
+			return null;
+		}
+		public override string GetServerVersionStmt()
 		{
 			throw new GxNotImplementedException();
 		}
+		public override bool ProcessError(int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
+
+		{
+
+			GXLogging.Debug(log, "ProcessError: dbmsErrorCode=" + dbmsErrorCode + ", emsg '" + emsg + "'" + ", status " + status);
+			switch (dbmsErrorCode)
+			{
+				case -911:      // Locked
+					retry = Retry(errMask, retryCount);
+					if (retry)
+						status = 110;// Locked - Retry
+					else
+						status = 103;//Locked
+					return retry;
+				case -803:      // Duplicated record
+					status = 1;
+					break;
+				case -519:      // File not found
+				case -372:      // File not found
+				case -204:      // File not found
+					status = 105;
+					break;
+				case -530:      // Parent key not found
+					if ((errMask & GxErrorMask.GX_MASKFOREIGNKEY) > 0)
+						status = 500;       // ForeignKeyError
+					break;
+				default:
+					return false;
+			}
+			return true;
+		}
+		public override string ToDbmsConstant(DateTime Value)
+		{
+			if (Value == System.DateTime.MinValue)
+				return "'0001-01-01'";
+			return "TIMESTAMP('" +
+				Value.Year.ToString() + "-" +
+				Value.Month.ToString() + "-" +
+				Value.Day.ToString() + "-" +
+				Value.Hour.ToString() + "." +
+				Value.Minute.ToString() + "." +
+				Value.Second.ToString() + "')";
+		}
+
+		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)
+		{
+			GXLogging.Debug(log, "GetDateTime - index : " + i);
+			DateTime value;
+			if (m_UseCharInDate)
+			{
+				string valueString = base.GetString(cmd, DR, i);
+				if (valueString == SQL_NULL_DATE || valueString.Trim().Length == 0)
+					value = DateTimeUtil.NullDate();
+				else
+					DateTime.TryParseExact(valueString, "yyyyMMdd", CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles.None, out value);
+
+				GXLogging.Debug(log, "GetDateTime as Char - value1 : " + value + " string " + valueString);
+			}
+			else
+			{
+				value = DR.GetDateTime(i);
+				GXLogging.Debug(log, "GetDateTime - value2 : " + value);
+			}
+			return value;
+		}
+
+		public override Object Net2DbmsDateTime(IDbDataParameter parm, DateTime dateValue)
+		{
+
+			MsDb2Parameter idb2parameter = (MsDb2Parameter)parm;
+			if (m_UseCharInDate && idb2parameter.MsDb2Type == MsDb2Type.Char && idb2parameter.Size == 8)
+			{
+				string resString;
+				if (dateValue.Equals(DateTimeUtil.NullDate()))
+				{
+					resString = SQL_NULL_DATE;
+				}
+				else
+				{
+					resString = DateTimeUtil.getYYYYMMDD(dateValue);
+				}
+				return resString;
+			}
+			else
+			{
+				return dateValue;
+			}
+		}
+		public override void GetValues(IDataReader reader, ref object[] values)
+		{
+			if (values != null)
+			{
+				for (int i = 0; i < values.Length; i++)
+				{   /* The iDB2Decimal value is too large to fit into a Decimal. Use ToString() to retrieve the value instead */
+					if (!reader.IsDBNull(i) && reader.GetFieldType(i) == typeof(Decimal))
+						values[i] = reader.GetDecimal(i);
+					else
+						values[i] = reader.GetValue(i);
+				}
+			}
+		}
+		internal override object CloneParameter(IDbDataParameter p)
+		{
+			return ((ICloneable)p).Clone();
+		}
+
+		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		{
+			return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
+		}
+
+		public override IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters)
+		{
+			IDbCommand cmd = GetCachedCommand(con, stmt);
+
+			if (cmd == null)
+			{
+				cmd = con.InternalConnection.CreateCommand();
+				cmd.CommandText = stmt;
+				cmd.Connection = con.InternalConnection.InternalConnection;
+
+				for (int j = 0; j < parameters.Count; j++)
+				{
+					cmd.Parameters.Add(CloneParameter(parameters[j]));
+				}
+				cmd.Transaction = con.BeginTransaction();
+
+				con.ConnectionCache.AddPreparedCommand(stmt, cmd);
+			}
+			else
+			{
+				if (parameters.Count > 0)
+				{
+					for (int j = 0; j < parameters.Count; j++)
+					{
+						((IDbDataParameter)cmd.Parameters[j]).Value = parameters[j].Value;
+
+					}
+				}
+				cmd.Connection = con.InternalConnection.InternalConnection;
+				cmd.Transaction = con.BeginTransaction();
+			}
+			return cmd;
+		}
 
 	}
+
+#endif
 }

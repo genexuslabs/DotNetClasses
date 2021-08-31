@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
@@ -34,6 +34,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataHana.cs" Link="Data\GXDataHana.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataInformix.cs" Link="Data\GXDataInformix.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataDb2.cs" Link="Data\GXDataDb2.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataDb2400.cs" Link="Data\GXDataDb2400.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Diagnostics\Log.cs" Link="Diagnostics\Log.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Diagnostics\GXDebugManager.cs" Link="Diagnostics\GXDebugManager.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXLDAP.cs" Link="Domain\GXLDAP.cs" />

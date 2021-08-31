@@ -14,61 +14,79 @@ namespace GeneXus.Data
 {
 	public class GxInformixIds : GxDb2
 	{
-		static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+		GxInformix informixCommon = new GxInformix();
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
-			return GxInformixSQL.ServerDateTimeStmt;
+			return informixCommon.GetServerDateTimeStmt(connection);
 		}
 		public override string GetServerDateTimeStmtMs(IGxConnection connection)
 		{
-			return GxInformixSQL.ServerDateTimeStmtMs;
+			return informixCommon.GetServerDateTimeStmtMs(connection);
 		}
 		public override string GetServerVersionStmt()
 		{
-			throw new GxNotImplementedException();
+			return informixCommon.GetServerVersionStmt();
 		}
 		public override string GetServerUserIdStmt()
 		{
-			return GxInformixSQL.ServerUserIdStmt;
+			return informixCommon.GetServerUserIdStmt();
 		}
 		public override void SetTimeout(IGxConnectionManager connManager, IGxConnection connection, int handle)
-{
-			GXLogging.Debug(log, "Set Lock Timeout to " + m_lockTimeout / 1000);
-			IDbCommand cmd = GetCommand(connection, SetTimeoutSentence(m_lockTimeout), new GxParameterCollection());
-			cmd.ExecuteNonQuery();
+		{
+			informixCommon.SetTimeout(connManager, connection, handle);
 		}
 		public override string SetTimeoutSentence(long milliseconds)
 		{
-			if (milliseconds > 0)
-				return $"{GxInformixSQL.TimeoutSentence} " + milliseconds / 1000;
-			else
-				return GxInformixSQL.TimeoutSentence;
+			return informixCommon.SetTimeoutSentence(milliseconds);
+		}
+		public override bool ProcessError(int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
+		{
+			return informixCommon.ProcessError(dbmsErrorCode, emsg, errMask, con, ref status, ref retry, retryCount);
 		}
 	}
 	public class GxDb2ISeriesIds : GxDb2
 	{
-
+		const string DEFAULT_ISERIES_PORT = "446";
+		GxDb2ISeries iseriesCommon;
+		public GxDb2ISeriesIds(string id) {
+			iseriesCommon = new GxDb2ISeries(id);
+		}
 		public override string GetServerDateTimeStmtMs(IGxConnection connection)
 		{
-			return GetServerDateTimeStmt(connection);
+			return iseriesCommon.GetServerDateTimeStmt(connection);
 		}
 
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
-			string namingConvention = GetParameterValue(connection.Data, "Naming");
-			if (namingConvention.Equals("system", StringComparison.OrdinalIgnoreCase))
-				return "SELECT CURRENT_TIMESTAMP FROM SYSIBM/SYSDUMMY1";
-			else
-				return "SELECT CURRENT_TIMESTAMP FROM SYSIBM.SYSDUMMY1";
+			return iseriesCommon.GetServerDateTimeStmt(connection);
 		}
 		public override string GetServerUserIdStmt()
 		{
-			return null;
+			return iseriesCommon.GetServerUserIdStmt();
 		}
 		public override string GetServerVersionStmt()
 		{
-			throw new GxNotImplementedException();
+			return iseriesCommon.GetServerVersionStmt();
+		}
+		public override bool ProcessError(int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
+		{
+			return iseriesCommon.ProcessError(dbmsErrorCode, emsg, errMask, con, ref status, ref retry, retryCount);
+		}
+		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt)
+		{
+			return iseriesCommon.Net2DbmsDateTime(parm, dt);
+		}
+		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)
+		{
+			return iseriesCommon.Dbms2NetDate(cmd, DR, i);
+		}
+		protected override string BuildConnectionString(string datasourceName, string userId, string userPassword, string databaseName, string port, string schema, string extra)
+		{
+			if (string.IsNullOrEmpty(port))
+			{
+				port = DEFAULT_ISERIES_PORT;
+			}
+			return base.BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 		}
 	}
 	public class GxDb2 : GxDataRecord
@@ -185,7 +203,11 @@ namespace GeneXus.Data
 		public override  IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
             IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(Db2Assembly, $"{Db2AssemblyName}.DB2Parameter");
+#if NETCORE
+			parm.DbType = GXTypeToDbType((GXType)dbtype);
+#else
 			ClassLoader.SetPropValue(parm, "DB2Type", GXTypeToDB2DbType((GXType)dbtype));
+#endif
 
 			ClassLoader.SetPropValue(parm, "Size", gxlength);//This property is used for binary and strings types
             ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);//This property is used only for decimal and numeric input parameters
@@ -193,9 +215,36 @@ namespace GeneXus.Data
             ClassLoader.SetPropValue(parm, "ParameterName", name);
 			return parm;
 		}
+		private DbType GXTypeToDbType(object type)
+		{
+			if (!(type is GXType))
+				return (DbType)type;
+
+			switch (type)
+			{
+				case GXType.Byte: return DbType.Binary;
+				case GXType.Int16: return DbType.Int16;
+				case GXType.Int32: return DbType.Int32;
+				case GXType.Int64: return DbType.Int64;
+				case GXType.Number: return DbType.Single;
+				case GXType.DateTime: return DbType.DateTime;
+				case GXType.DateTime2: return DbType.DateTime2;
+				case GXType.Date: return DbType.Date;
+				case GXType.Boolean: return DbType.Boolean;
+				case GXType.UniqueIdentifier:
+				case GXType.VarChar:
+				case GXType.Char: return DbType.String;
+				case GXType.Blob: return DbType.Binary;
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+					return DbType.String;
+				default: return DbType.String;
+			}
+		}
 		private Object GXTypeToDB2DbType(GXType type)
 		{
-
 			switch (type)
 			{
 				case GXType.Int16: return ClassLoader.GetEnumValue(_db2Assembly, dB2DbTypeEnum, "SmallInt");
@@ -257,10 +306,13 @@ namespace GeneXus.Data
 		}
 		public override bool IsBlobType(IDbDataParameter idbparameter)
 		{
-
-            object otype = ClassLoader.GetPropValue(idbparameter, "DB2Type");
+#if NETCORE
+			return idbparameter.DbType == DbType.Binary;
+#else
+			object otype = ClassLoader.GetPropValue(idbparameter, "DB2Type");
             object blobType = ClassLoader.GetEnumValue(Db2Assembly, dB2DbTypeEnum, "Blob");
             return (int)otype == (int)blobType;
+#endif
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, Object value)
