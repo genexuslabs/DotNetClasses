@@ -380,33 +380,36 @@ namespace GeneXus.Utils
 		}
 		private T ConvertToT(Object o)
 		{
-			T TObject;
-			if (typeof(T).IsAssignableFrom(o.GetType()))
-				TObject = (T)o;
-			else if (typeof(IGxJSONAble).IsAssignableFrom(typeof(T)))
+			T TObject=default(T);
+			if (o != null)
 			{
+				if (typeof(T).IsAssignableFrom(o.GetType()))
+					TObject = (T)o;
+				else if (typeof(IGxJSONAble).IsAssignableFrom(typeof(T)))
+				{
 
-				TObject = (T)Activator.CreateInstance(typeof(T));
-				((IGxJSONAble)TObject).FromJSONObject(o);
-			}
-			else
-			{
-				if (typeof(T) == typeof(Geospatial))
-				{
-					object g = (Geospatial)(string)o;
-					TObject = (T)g;
-				}
-				else if (typeof(T) == typeof(Guid))
-				{
-					object g = new Guid(o.ToString());
-					TObject = (T)g;
-				}
-				else if (o is IConvertible)
-				{
-					TObject = (T)Convert.ChangeType(o, typeof(T));
+					TObject = (T)Activator.CreateInstance(typeof(T));
+					((IGxJSONAble)TObject).FromJSONObject(o);
 				}
 				else
-					TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
+				{
+					if (typeof(T) == typeof(Geospatial))
+					{
+						object g = (Geospatial)(string)o;
+						TObject = (T)g;
+					}
+					else if (typeof(T) == typeof(Guid))
+					{
+						object g = new Guid(o.ToString());
+						TObject = (T)g;
+					}
+					else if (o is IConvertible)
+					{
+						TObject = (T)Convert.ChangeType(o, typeof(T));
+					}
+					else
+						TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
+				}
 			}
 			return TObject;
 		}
@@ -1008,6 +1011,21 @@ namespace GeneXus.Utils
 	public class GxCursorBase
 	{
 		public short opened;
+	}
+
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxJsonName : Attribute
+	{
+		string _jsonName;
+		public GxJsonName(String name)
+		{
+			_jsonName = name;
+		}
+		public string Name
+		{
+			get { return this._jsonName;  }
+			set { this._jsonName = value; }
+		}
 	}
 
 	[Serializable]
