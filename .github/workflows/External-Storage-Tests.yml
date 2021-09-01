@@ -12,7 +12,7 @@ on:
       - 'release-*'
 
 jobs:
-  build:
+  test-external-storages:
     env:
       GIT_REF: ${{ github.ref }}
       GIT_SHA: ${{ github.sha }}
