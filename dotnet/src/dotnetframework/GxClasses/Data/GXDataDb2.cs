@@ -101,7 +101,7 @@ namespace GeneXus.Data
 		const string dB2DbTypeEnum = "IBM.Data.Db2.DB2Type";
 #else
 		internal static string Db2AssemblyName = "IBM.Data.DB2";
-		const string dB2DbTypeEnum = "IBM.Data.Db2.DB2Type";
+		const string dB2DbTypeEnum = "IBM.Data.DB2.DB2Type";
 #endif
 
 		public static Assembly Db2Assembly
