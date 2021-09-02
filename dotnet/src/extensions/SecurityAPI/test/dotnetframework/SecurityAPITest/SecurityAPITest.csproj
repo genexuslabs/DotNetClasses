@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<TargetFramework>net471</TargetFramework>
 		<IsPublishable>false</IsPublishable>
@@ -9,7 +8,7 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 	
-   <ItemGroup>
+	 <ItemGroup>
     <PackageReference Include="FubarDev.FtpServer" Version="3.1.1" />
     <PackageReference Include="Microsoft.CodeCoverage" Version="16.10.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
