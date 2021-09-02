@@ -3,7 +3,7 @@
 		<TargetFramework>net47</TargetFramework>
 		<AssemblyName>GeneXusSecurityAPICommonsImpl</AssemblyName>
 		<NoWarn>CA1031, CA1801</NoWarn>
-		
+		<PackageId>GeneXus.Security.Common</PackageId>
 	</PropertyGroup>
 
   <ItemGroup>
