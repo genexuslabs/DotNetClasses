@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
-    <AssemblyName>GeneXusFtpsNetCoreImpl</AssemblyName>
-    <Version>17.4.0</Version>
-  </PropertyGroup>
+		<AssemblyName>GeneXusFtpsNetCoreImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<PackageId>GeneXus.Ftps.Core</PackageId>
+	</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
    

@@ -3,7 +3,8 @@
     <TargetFramework>net47</TargetFramework>
     <RootNamespace>GeneXusCryptography</RootNamespace>
     <AssemblyName>GeneXusCryptographyImpl</AssemblyName>
-	 <NoWarn>CA1031, CA1801, CA1724</NoWarn>
+    <NoWarn>CA1031, CA1801, CA1724</NoWarn>
+    <PackageId>GeneXus.Cryptography.Core</PackageId>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj"/>

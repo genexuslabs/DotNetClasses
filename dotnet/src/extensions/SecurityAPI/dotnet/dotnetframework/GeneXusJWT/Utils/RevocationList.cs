@@ -1,8 +1,7 @@
-﻿
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
-using GenexusJWT.GenexusJWTUtils;
 using SecurityAPICommons.Utils;
 using SecurityAPICommons.Commons;
 
