@@ -252,7 +252,7 @@ namespace GxClasses.Web.Middleware
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "ProcessRestRequest", ex);
-				GxRestWrapper.SetError(context, Convert.ToInt32(HttpStatusCode.InternalServerError).ToString(), ex.Message);
+				HttpHelper.SetUnexpectedError(context, HttpStatusCode.InternalServerError, ex); 
 				return Task.CompletedTask;
 			}
 		}

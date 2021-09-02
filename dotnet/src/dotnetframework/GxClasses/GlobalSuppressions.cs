@@ -3,8 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Attributes.GXApi")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "<Pending>", Scope = "member", Target = "~F:GeneXus.Helpers.ThemeData.name")]
 
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Utils.JsonFault.JsonFaultDetail")]// This file is used by Code Analysis to maintain SuppressMessage 
-
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Data.GxSqlite.GetConnectionString(System.String,System.String)~System.String")]// attributes that are applied to this project.
 
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Data.GxDataRecord.GetBinary(System.String,System.Boolean)~System.Byte[]")]// Project-level suppressions either have no target or are given 
