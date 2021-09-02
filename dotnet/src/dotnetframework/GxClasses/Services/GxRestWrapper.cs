@@ -26,6 +26,7 @@ using System.Collections;
 using Jayrock.Json;
 
 
+
 namespace GeneXus.Application
 
 {
@@ -651,7 +652,15 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			return SetError(HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
+			if (ex is FormatException)
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.BadRequest, ex);
+			}
+			else
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
+			}
+			return Task.CompletedTask;
 		}
 		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
 		{
@@ -669,7 +678,22 @@ namespace GeneXus.Application
 			}
 			else
 			{
-				json = JSONHelper.WCFSerialize(parameters, Encoding.UTF8, knownTypes, true); 
+				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
+				foreach (KeyValuePair<string,object> kv in parameters)
+				{
+					string strKey = kv.Key;
+					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
+					if (ut != null)
+					{						
+						Type uType = ut.Sdt.GetType();
+						var attributes = uType.GetCustomAttributes(true);
+						GxJsonName jsonName = (GxJsonName) attributes.Where(a => a.GetType() == typeof(GxJsonName)).FirstOrDefault();
+						if (jsonName != null)
+							strKey = jsonName.Name;
+					}
+					serializablePars.Add(strKey, kv.Value);
+				}
+				json = JSONHelper.WCFSerialize(serializablePars, Encoding.UTF8, knownTypes, true); 
 			}
 			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
@@ -702,24 +726,21 @@ namespace GeneXus.Application
 			foreach (var k in outputParameters.Keys.ToList())
 			{
 				GxUserType p = outputParameters[k] as GxUserType;
-				if ((p != null) && !(p.ShouldSerializeSdtJson()))
+				if ((p != null) && !p.ShouldSerializeSdtJson())
 				{
 					outputParameters.Remove(k);
 				}
-			}
-			MakeRestTypes(outputParameters);
-		}
-		private static void MakeRestTypes(Dictionary<string, object> parameters)
-		{
-			foreach (var key in parameters.Keys.ToList())
-			{
-				object o = MakeRestType(parameters[key]);
-				if (o == null)
-					parameters.Remove(key);
 				else
-					parameters[key] = o;
-			}
+				{
+					object o = MakeRestType(outputParameters[k]);
+					if (o == null)
+						outputParameters.Remove(k);
+					else
+						outputParameters[k] = o;
+				}
+			}			
 		}
+		
 		protected static object MakeRestType(object v)
 		{
 			Type vType = v.GetType();

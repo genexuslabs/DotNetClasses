@@ -126,7 +126,7 @@ namespace GeneXus.Http
 			else
 				return HttpStatusCode.Unauthorized;
 		}
-		internal static HttpStatusCode GamCodeToHttpStatus(string code)
+		private static HttpStatusCode GamCodeToHttpStatus(string code)
 		{
 			if (code == GAM_CODE_OTP_USER_ACCESS_CODE_SENT || code == GAM_CODE_TFA_USER_MUST_VALIDATE)
 			{
@@ -138,12 +138,12 @@ namespace GeneXus.Http
 			}
 			return HttpStatusCode.Unauthorized;
 		}
-		public static void SetJsonError(HttpContext httpContext, string statusCode, string statusDescription)
+		private static void SetJsonError(HttpContext httpContext, string statusCode, string statusDescription)
 		{
 			if (httpContext != null)//<serviceHostingEnvironment aspNetCompatibilityEnabled="false" /> web.config
 			{
 				httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-				var jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
+				WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
 				httpContext.Response.Write(JSONHelper.Serialize(jsonError));
 			}
 #if !NETCORE
@@ -151,22 +151,34 @@ namespace GeneXus.Http
 			{
 				var wcfcontext = WebOperationContext.Current;
 				wcfcontext.OutgoingResponse.ContentType = MediaTypesNames.ApplicationJson;
-				JsonFault jsonFault = new JsonFault(statusDescription, statusCode);
-				throw new FaultException<JsonFault>(jsonFault, new FaultReason(statusDescription));
+				WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
+				throw new FaultException<WrappedJsonError>(jsonError, new FaultReason(statusDescription));
 			}
 #endif
 		}
-		public static void SetGamError(HttpContext httpContext, string code, string message)
+		internal static void SetGamError(HttpContext httpContext, string code, string message)
 		{
 			SetResponseStatus(httpContext, GamCodeToHttpStatus(code), message);
 			SetJsonError(httpContext, code, message);
 		}
-		public static void SetError(HttpContext httpContext, string statusCode, string statusDescription)
+		internal static void TraceUnexpectedError(Exception ex)
+		{
+			GXLogging.Error(log, "Error executing REST service", ex);
+		}
+
+		internal static void SetUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, Exception ex)
+		{
+			TraceUnexpectedError(ex);
+			string statusCodeStr = statusCode.ToString(INT_FORMAT);
+			SetResponseStatus(httpContext, statusCode, statusCode.ToString());
+			SetJsonError(httpContext, statusCodeStr, statusCode.ToString());
+		}
+		internal static void SetError(HttpContext httpContext, string statusCode, string statusDescription)
 		{
 			SetResponseStatus(httpContext, statusCode, statusDescription);
 			SetJsonError(httpContext, statusCode, statusDescription);
 		}
-		public static String OatuhUnauthorizedHeader(string realm, string errCode, string errDescription)
+		internal static String OatuhUnauthorizedHeader(string realm, string errCode, string errDescription)
 		{
 			if (string.IsNullOrEmpty(errDescription))
 				return String.Format("OAuth realm=\"{0}\"", realm);
@@ -261,19 +273,9 @@ namespace GeneXus.Http
 					if (response.IsSuccessStatusCode)
 					{
 						statusCode = HttpStatusCode.OK;
-						using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
+						using (HttpContent content = response.Content)
 						{
-							buffer = new byte[8192];
-							var isMoreToRead = true;
-							do
-							{
-								var read = contentStream.ReadAsync(buffer, 0, buffer.Length).Result;
-								if (read == 0)
-								{
-									isMoreToRead = false;
-								}
-							}
-							while (isMoreToRead);
+							return content.ReadAsByteArrayAsync().Result;
 						}
 					}
 					else

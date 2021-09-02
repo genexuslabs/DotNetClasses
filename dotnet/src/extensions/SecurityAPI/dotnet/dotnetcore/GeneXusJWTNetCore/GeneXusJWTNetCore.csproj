@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <AssemblyName>GeneXusJWTNetCoreImpl</AssemblyName>
-    <Version>17.4.0</Version>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<AssemblyName>GeneXusJWTNetCoreImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<PackageId>GeneXus.JWT.Core</PackageId>
+	</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     
@@ -31,7 +32,6 @@
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\DateUtil.cs" Link="Utils\DateUtil.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\GUID.cs" Link="Utils\GUID.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\JWTAlgorithm.cs" Link="Utils\JWTAlgorithm.cs" />
-    <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\JWTUtils.cs" Link="Utils\JWTUtils.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\KeyPair.cs" Link="Utils\KeyPair.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\RevocationList.cs" Link="Utils\RevocationList.cs" />
   </ItemGroup>
