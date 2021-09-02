@@ -4243,16 +4243,16 @@ namespace GeneXus.Utils
 				else
 				{
 #if NETCORE
-                    var basicAuthenticationHeader = GetBasicAuthenticationHeaderValue(cntxt.HttpContext);
-                    if (basicAuthenticationHeader.IsValidBasicAuthenticationHeaderValue)
-                    {
-                        s = basicAuthenticationHeader.UserIdentifier;
-                    }
-                    else
-                    {
+					BasicAuthenticationHeaderValue basicAuthenticationHeader = GetBasicAuthenticationHeaderValue(cntxt.HttpContext);
+					if (basicAuthenticationHeader != null && basicAuthenticationHeader.IsValidBasicAuthenticationHeaderValue)
+					{
+						s = basicAuthenticationHeader.UserIdentifier;
+					}
+					else
+					{
 						if (IsWindowsPlatform)
 							s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-                    }
+					}
 #else
 					s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
 					GXLogging.Debug(log, "UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name: ", s);
@@ -4284,10 +4284,15 @@ namespace GeneXus.Utils
 #if NETCORE
         private static BasicAuthenticationHeaderValue GetBasicAuthenticationHeaderValue(HttpContext context)
         {
-            var basicAuthenticationHeader = context.Request.Headers["Authorization"]
-                .FirstOrDefault(header => header.StartsWith("Basic", StringComparison.OrdinalIgnoreCase));
-            var decodedHeader = new BasicAuthenticationHeaderValue(basicAuthenticationHeader);
-            return decodedHeader;
+			if (context == null)
+				return null;
+			else
+			{
+				var basicAuthenticationHeader = context.Request.Headers["Authorization"]
+					.FirstOrDefault(header => header.StartsWith("Basic", StringComparison.OrdinalIgnoreCase));
+				var decodedHeader = new BasicAuthenticationHeaderValue(basicAuthenticationHeader);
+				return decodedHeader;
+			}
         }
 #endif
 #if NETCORE
