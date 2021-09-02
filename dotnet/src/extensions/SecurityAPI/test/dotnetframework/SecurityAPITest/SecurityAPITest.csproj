@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net471</TargetFramework>
-    <IsPublishable>false</IsPublishable>
-    <RootNamespace>SecurityAPITest</RootNamespace>
-    <AssemblyName>SecurityAPITest</AssemblyName>
-    <NoWarn>CS0618,CA1707</NoWarn>
+	<PropertyGroup>
+		<TargetFramework>net471</TargetFramework>
+		<IsPublishable>false</IsPublishable>
+		<RootNamespace>SecurityAPITest</RootNamespace>
+		<AssemblyName>SecurityAPITest</AssemblyName>
+		<NoWarn>CS0618,CA1707</NoWarn>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
 	
-    </PropertyGroup>
-   <ItemGroup>
+	 <ItemGroup>
     <PackageReference Include="FubarDev.FtpServer" Version="3.1.1" />
     <PackageReference Include="Microsoft.CodeCoverage" Version="16.10.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
