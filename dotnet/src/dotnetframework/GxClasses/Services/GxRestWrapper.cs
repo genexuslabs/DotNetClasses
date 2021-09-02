@@ -26,6 +26,7 @@ using System.Collections;
 using Jayrock.Json;
 
 
+
 namespace GeneXus.Application
 
 {
@@ -651,7 +652,15 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			return SetError(HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
+			if (ex is FormatException)
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.BadRequest, ex);
+			}
+			else
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
+			}
+			return Task.CompletedTask;
 		}
 		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
 		{
