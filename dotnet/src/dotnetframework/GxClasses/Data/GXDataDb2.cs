@@ -227,8 +227,8 @@ namespace GeneXus.Data
 				case GXType.Int32: return DbType.Int32;
 				case GXType.Int64: return DbType.Int64;
 				case GXType.Number: return DbType.Decimal;
-				case GXType.DateTime: return DbType.DateTime;
-				case GXType.DateTime2: return DbType.DateTime2;
+				case GXType.DateTime: 
+				case GXType.DateTime2: return DbType.DateTime;
 				case GXType.Date: return DbType.Date;
 				case GXType.Boolean: return DbType.Boolean;
 				case GXType.UniqueIdentifier:
