@@ -910,12 +910,12 @@ namespace GeneXus.Data.ADO
 		{
             get
             {
-                if (connection != null && ((connection.State & ConnectionState.Closed) == 0))
+                if (connection != null && ((connection.State & ConnectionState.Closed) == 0) && !string.IsNullOrEmpty(connection.Database))
                     return connection.Database;
                 else if (string.IsNullOrEmpty(databaseName) && data != null)
                 {
-                    string databaseNameFromData = string.Empty;
-                    int dbPos = data.ToLower().IndexOf("database=");
+					string databaseNameFromData;
+					int dbPos = data.ToLower().IndexOf("database=");
                     if (dbPos >= 0)
                     {
                         dbPos += 9;
