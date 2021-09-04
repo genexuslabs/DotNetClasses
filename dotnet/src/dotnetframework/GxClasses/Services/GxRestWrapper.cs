@@ -678,13 +678,18 @@ namespace GeneXus.Application
 			{
 				string key = parameters.First().Key;
 				object strVal = null;
-				if (PrimitiveType(parameters[key].GetType()) && fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+				if (parameters[key].GetType() == typeof(DateTime))
 				{
-					strVal = ((DateTime)parameters[key]).ToString(fmtParameters[key]);
-				}
-				else {
+					DateTime udt = ((DateTime)parameters[key]).ToUniversalTime();
+					if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+					{
+						strVal = udt.ToString(fmtParameters[key], CultureInfo.InvariantCulture);
+					}
+					else
+						strVal = udt;
+				}				
+				else
 					strVal = parameters[key];
-				}
 				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
 			}
 			else
@@ -692,7 +697,7 @@ namespace GeneXus.Application
 				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
 				foreach (KeyValuePair<string,object> kv in parameters)
 				{
-					string strKey = kv.Key;
+					string strKey = kv.Key;					
 
 					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
 					if (ut != null)
@@ -703,11 +708,16 @@ namespace GeneXus.Application
 						if (jsonName != null)
 							strKey = jsonName.Name;
 					}
-
-					if (PrimitiveType(kv.Value.GetType()) && fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
+					if (kv.Value.GetType() == typeof(DateTime))
 					{
-						object strVal = ((DateTime)kv.Value).ToString(fmtParameters[kv.Key]);
-						serializablePars.Add(strKey, strVal);
+						DateTime udt = ((DateTime)kv.Value).ToUniversalTime();
+						if (fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
+						{
+							object strVal = udt.ToString(fmtParameters[kv.Key], CultureInfo.InvariantCulture);
+							serializablePars.Add(strKey, strVal);
+						}
+						else
+							serializablePars.Add(strKey, udt);
 					}
 					else
 						serializablePars.Add(strKey, kv.Value);
