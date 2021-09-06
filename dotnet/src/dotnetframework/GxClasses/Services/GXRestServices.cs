@@ -134,9 +134,9 @@ namespace GeneXus.Utils
         {
 			WrappedJsonError detail;
             var knownTypes = new List<Type>();
-			string message = HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError);
-			string code = HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT); 
-            if ((error is FaultException) && (error.GetType().GetProperty("Detail") != null))
+			string message = HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest);
+			string code = HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT);
+			if ((error is FaultException) && (error.GetType().GetProperty("Detail") != null))
             {
                 detail = (error.GetType().GetProperty("Detail").GetGetMethod().Invoke(error, null) as WrappedJsonError);
                 knownTypes.Add(detail.GetType());
