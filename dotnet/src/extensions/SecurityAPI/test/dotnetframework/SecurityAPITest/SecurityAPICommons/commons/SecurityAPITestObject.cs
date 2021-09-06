@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using SecurityAPICommons.Commons;
 using SecurityAPICommons.Utils;
@@ -8,7 +8,8 @@ using System.Reflection;
 
 namespace SecurityAPITest.SecurityAPICommons.commons
 {
-	public class RunIfRunSettingsConfigured : Attribute, ITestAction
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class RunIfRunSettingsConfigured : Attribute, ITestAction
 	{
 		public ActionTargets Targets { get; private set; }
 

@@ -30,6 +30,7 @@
 		<RepositoryCommit>$(GIT_SHA)</RepositoryCommit>
 		<NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023</NoWarn>
 		<IsPackable>true</IsPackable>
+		<DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
