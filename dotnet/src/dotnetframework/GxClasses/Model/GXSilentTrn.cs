@@ -573,6 +573,18 @@ namespace GeneXus.Utils
 		}
 	}
 
+	[AttributeUsage(AttributeTargets.Parameter)]
+	public sealed class GxJsonFormatAttribute : Attribute
+	{
+		string jsonformat;
+		public GxJsonFormatAttribute(string format)
+		{
+			jsonformat = format;
+		}
+		public string JsonFormat { get => jsonformat; set => jsonformat = value; }
+	}
+
+
 	[DataContract]
 	public class GxGenericCollectionItem<T> : IGxGenericCollectionItem where T : GxUserType, new()
 	{

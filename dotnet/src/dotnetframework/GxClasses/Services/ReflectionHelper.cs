@@ -6,6 +6,8 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using GeneXus.Utils;
+using System.Linq;
+
 using Type = System.Type;
 
 namespace GeneXus.Application
@@ -148,6 +150,28 @@ namespace GeneXus.Application
 			return ConvertStringToNewNonNullableType(value, newType, context);
 		}
 
+		public static Dictionary<string, string> ParametersFormat(object instance, string methodName)
+		{
+			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
+						
+			Dictionary<string, string> formatList = new Dictionary<string, string>();
+			var methodParameters = methodInfo.GetParameters();			
+			foreach (var methodParameter in methodParameters)
+			{
+				var gxParameterName = GxParameterName(methodParameter.Name);
+				if (IsByRefParameter(methodParameter))
+				{
+					string fmt = "";
+					var attributes = methodParameter.GetCustomAttributes(true);
+					GxJsonFormatAttribute attFmt = (GxJsonFormatAttribute)attributes.Where(a => a.GetType() == typeof(GxJsonFormatAttribute)).FirstOrDefault();
+					if (attFmt != null)
+						fmt = attFmt.JsonFormat;
+					formatList.Add(gxParameterName, fmt);
+				}
+			}
+			return formatList;
+		}
+
 		private static Dictionary<string, object> ProcessParametersAfterInvoke(MethodInfo methodInfo, object[] parametersForInvocation, object returnParm)
 		{
 			Dictionary<string, object> outputParameters = new Dictionary<string, object>();
@@ -166,6 +190,8 @@ namespace GeneXus.Application
 				outputParameters.Add(string.Empty, returnParm);
 			return outputParameters;
 		}
+
+
 		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters, IGxContext context=null)
 		{
 			var methodParameters = methodInfo.GetParameters();
