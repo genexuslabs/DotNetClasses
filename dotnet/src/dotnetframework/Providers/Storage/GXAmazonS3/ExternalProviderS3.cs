@@ -364,11 +364,13 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
 		{
+			MemoryStream ms = new MemoryStream();
+			stream.CopyTo(ms);//can determine PutObjectRequest.Headers.ContentLength. Avoid error Could not determine content length
 			PutObjectRequest objectRequest = new PutObjectRequest()
 			{
 				BucketName = Bucket,
 				Key = fileName,
-				InputStream = stream,
+				InputStream = ms,
 				CannedACL = GetCannedACL(destFileType)
 			};
 			if (TryGetContentType(fileName, out string mimeType)) {
