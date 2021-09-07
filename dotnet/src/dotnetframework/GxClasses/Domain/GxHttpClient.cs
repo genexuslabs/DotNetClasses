@@ -319,12 +319,15 @@ namespace GeneXus.Http.Client
 			else
 				sPort = ":" + _port.ToString();
 			sHost = _host;
-			if (sHost.StartsWith("//"))
-				sHost = sHost.Substring(2, sHost.Length - 2);
-			if (sHost.EndsWith("/"))
-				sHost = sHost.Substring(0, sHost.Length - 1);
+			if (!string.IsNullOrEmpty(sHost))
+			{
+				if (sHost.StartsWith("//"))
+					sHost = sHost.Substring(2, sHost.Length - 2);
+				if (sHost.EndsWith("/"))
+					sHost = sHost.Substring(0, sHost.Length - 1);
+			}
 			sBaseUrl = _baseUrl;
-			if (sBaseUrl.StartsWith("/"))
+			if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
 				sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
 			_url = _scheme + sHost + sPort + "/" + sBaseUrl;
 			if (_url.EndsWith("/"))
