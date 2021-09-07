@@ -736,6 +736,9 @@
 		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\xmlIDSchema.xsd" Link="Temp\xmlIDSchema.xsd">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\flag.jpg" Link="Temp\flag.jpg">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 	
 	
