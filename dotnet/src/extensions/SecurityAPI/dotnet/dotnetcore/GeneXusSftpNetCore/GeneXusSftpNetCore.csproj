@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
-    <AssemblyName>GeneXusSftpNetCoreImpl</AssemblyName>
-    <Version>17.4.0</Version>
-  </PropertyGroup>
+		<AssemblyName>GeneXusSftpNetCoreImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<PackageId>GeneXus.Sftp.Core</PackageId>
+	</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     

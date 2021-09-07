@@ -1,12 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net471</TargetFramework>
-    <IsPublishable>false</IsPublishable>
-    <RootNamespace>SecurityAPITest</RootNamespace>
-    <AssemblyName>SecurityAPITest</AssemblyName>
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net471</TargetFramework>
+		<IsPublishable>false</IsPublishable>
+		<RootNamespace>SecurityAPITest</RootNamespace>
+		<AssemblyName>SecurityAPITest</AssemblyName>
+		<NoWarn>CS0618,CA1707</NoWarn>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
-   <ItemGroup>
+	
+	 <ItemGroup>
     <PackageReference Include="FubarDev.FtpServer" Version="3.1.1" />
     <PackageReference Include="Microsoft.CodeCoverage" Version="16.10.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
@@ -403,9 +405,13 @@
     <None Update="Temp\xmlIDSchema.xsd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="Temp\flag.jpg">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dummycerts\Test_sha1_1024_DER\" />
   </ItemGroup>
+
 
 </Project>

@@ -1,12 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <IsPublishable>false</IsPublishable>
-  </PropertyGroup>
- 
-
-  
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<IsPublishable>false</IsPublishable>
+		<NoWarn>CS0618,CA1707</NoWarn>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+   
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
   </PropertyGroup>
 
@@ -735,6 +734,9 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\xmlIDSchema.xsd" Link="Temp\xmlIDSchema.xsd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\flag.jpg" Link="Temp\flag.jpg">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

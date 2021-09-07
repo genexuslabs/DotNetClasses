@@ -26,6 +26,7 @@ using System.Collections;
 using Jayrock.Json;
 
 
+
 namespace GeneXus.Application
 
 {
@@ -131,11 +132,12 @@ namespace GeneXus.Application
 					innerMethod = this._serviceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
-				return Serialize(outputParameters, wrapped);
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -268,6 +270,7 @@ namespace GeneXus.Application
 				var queryParameters = ReadQueryParameters(this._variableAlias);
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
+				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
 				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
 					innerMethod = _serviceMethodPattern;
@@ -281,6 +284,7 @@ namespace GeneXus.Application
 					}
 
 					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+					formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				}
 				
 				int parCount = outputParameters.Count;
@@ -289,7 +293,7 @@ namespace GeneXus.Application
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
-				return Serialize(outputParameters, wrapped);
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -651,9 +655,17 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			return SetError(HttpStatusCode.InternalServerError.ToString(HttpHelper.INT_FORMAT), ex.Message);
+			if (ex is FormatException)
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.BadRequest, ex);
+			}
+			else
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
+			}
+			return Task.CompletedTask;
 		}
-		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
+		protected Task Serialize(Dictionary<string, object> parameters, Dictionary<string, string> fmtParameters, bool wrapped)
 		{
 			string json;
 			var knownTypes = new List<Type>();
@@ -665,14 +677,28 @@ namespace GeneXus.Application
 			if (parameters.Count == 1 && !wrapped && !PrimitiveType(knownTypes[0])) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
 			{
 				string key = parameters.First().Key;
-				json = JSONHelper.WCFSerialize(parameters[key], Encoding.UTF8, knownTypes, true);
+				object strVal = null;
+				if (parameters[key].GetType() == typeof(DateTime))
+				{
+					DateTime udt = ((DateTime)parameters[key]).ToUniversalTime();
+					if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+					{
+						strVal = udt.ToString(fmtParameters[key], CultureInfo.InvariantCulture);
+					}
+					else
+						strVal = udt;
+				}				
+				else
+					strVal = parameters[key];
+				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
 				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
 				foreach (KeyValuePair<string,object> kv in parameters)
 				{
-					string strKey = kv.Key;
+					string strKey = kv.Key;					
+
 					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
 					if (ut != null)
 					{						
@@ -682,7 +708,19 @@ namespace GeneXus.Application
 						if (jsonName != null)
 							strKey = jsonName.Name;
 					}
-					serializablePars.Add(strKey, kv.Value);
+					if (kv.Value.GetType() == typeof(DateTime))
+					{
+						DateTime udt = ((DateTime)kv.Value).ToUniversalTime();
+						if (fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
+						{
+							object strVal = udt.ToString(fmtParameters[kv.Key], CultureInfo.InvariantCulture);
+							serializablePars.Add(strKey, strVal);
+						}
+						else
+							serializablePars.Add(strKey, udt);
+					}
+					else
+						serializablePars.Add(strKey, kv.Value);
 				}
 				json = JSONHelper.WCFSerialize(serializablePars, Encoding.UTF8, knownTypes, true); 
 			}
