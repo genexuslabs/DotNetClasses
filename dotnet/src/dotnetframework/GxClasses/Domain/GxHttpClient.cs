@@ -204,7 +204,7 @@ namespace GeneXus.Http.Client
 			get { return _host; }
 			set
 			{
-				_host = value!=null ? value.Trim(): string.Empty;
+				_host = value == null ? value : value.Trim();
 				buildUrl();
 			}
 		}
@@ -213,7 +213,7 @@ namespace GeneXus.Http.Client
 			get { return _wsdlUrl; }
 			set
 			{
-				_wsdlUrl = value;
+				_wsdlUrl = value == null ? value : value.Trim();
 			}
 		}
 		public string BaseURL
@@ -221,7 +221,7 @@ namespace GeneXus.Http.Client
 			get { return _baseUrl; }
 			set
 			{
-				_baseUrl = value;
+				_baseUrl = value == null ? value : value.Trim();
 				buildUrl();
 			}
 		}
