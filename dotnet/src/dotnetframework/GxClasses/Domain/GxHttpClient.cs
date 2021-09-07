@@ -64,7 +64,7 @@ namespace GeneXus.Http.Client
 		string _proxyHost;
 		int _proxyPort;
 		short _errCode=0;
-		string _errDescription = "";
+		string _errDescription = string.Empty;
 		NameValueCollection _headers;
 		NameValueCollection _formVars;
 		MultiPartTemplate _multipartTemplate;
@@ -129,17 +129,17 @@ namespace GeneXus.Http.Client
 		{
 			_headers = new NameValueCollection();
 			_formVars = new NameValueCollection();
-			_host = "";
-			_wsdlUrl = "";
-			_baseUrl = "";
-			_url = "";
+			_host = string.Empty;
+			_wsdlUrl = string.Empty;
+			_baseUrl = string.Empty;
+			_url = string.Empty;
 			_authCollection = new ArrayList();
 			_authProxyCollection = new ArrayList();
 			_certificateCollection = new X509Certificate2Collection();
 			IncludeCookies = true;
 
 
-			_proxyHost = "";
+			_proxyHost = string.Empty;
 			try
 			{
 #if NETCORE
@@ -204,7 +204,7 @@ namespace GeneXus.Http.Client
 			get { return _host; }
 			set
 			{
-				_host = value;
+				_host = value!=null ? value.Trim(): string.Empty;
 				buildUrl();
 			}
 		}
@@ -315,7 +315,7 @@ namespace GeneXus.Http.Client
 		{
 			string sPort, sHost, sBaseUrl;
 			if (_port == 0)
-				sPort = (Secure == 1) ? ":443" : "";
+				sPort = (Secure == 1) ? ":443" : string.Empty;
 			else
 				sPort = ":" + _port.ToString();
 			sHost = _host;
@@ -742,7 +742,7 @@ namespace GeneXus.Http.Client
 			Byte[] Buffer = new Byte[1024];
 
 			_errCode = 0;
-			_errDescription = "";
+			_errDescription = string.Empty;
 
 			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
 			try
