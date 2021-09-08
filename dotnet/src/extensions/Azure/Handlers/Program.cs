@@ -2,11 +2,14 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using GeneXus.Cache;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
+using GeneXus.Services;
 using GxClasses.Web;
 using GxClasses.Web.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using StackExchange.Redis;
 
 namespace GeneXus.Deploy.AzureFunctions.Handlers
 {
@@ -14,6 +17,7 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
     {
 		static async Task Main()
         {
+
 			string roothPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			string routePrefix = GetRoutePrefix();
 			GXRouting.ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -27,6 +31,17 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 				.ConfigureServices(services =>
 				{
 					services.AddSingleton<IGXRouting, GXRouting>(x => new GXRouting(routePrefix));
+				})
+				.ConfigureServices(services =>
+				{
+					ISessionService sessionService = GXSessionServiceFactory.GetProvider();
+					if (sessionService != null)
+					{
+						services.AddSingleton<ICacheService2>(x => new Redis(sessionService));
+						ConnectionMultiplexer.SetFeatureFlag("preventthreadtheft", true);
+					}
+					else
+						services.AddSingleton<ICacheService2>(x => new InProcessCache());
 				})
 				.Build();
 

@@ -5,12 +5,14 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using GeneXus.Cache;
 using GxClasses.Web;
 using GxClasses.Web.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
@@ -25,10 +27,13 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public static Dictionary<string, List<string>> servicesValidPath = new Dictionary<string, List<string>>();
 
 		private IGXRouting _gxRouting;
+		private ICacheService2 _redis;
 
-		public HttpTriggerHandler(IGXRouting gxRouting)
+		public HttpTriggerHandler(IGXRouting gxRouting, ICacheService2 redis)
 		{
 			_gxRouting = gxRouting;
+			if (redis != null & redis.GetType() == typeof(Redis))
+				_redis = redis;
 		}
 		public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
 			FunctionContext executionContext)
@@ -38,13 +43,70 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			logger.LogInformation($"GeneXus Http trigger handler. Function processed: {executionContext.FunctionDefinition.Name}.");
 
 			var httpResponseData = req.CreateResponse();
-			HttpContext httpAzureContextAccessor = new GXHttpAzureContextAccessor(req, httpResponseData);
+			HttpContext httpAzureContextAccessor = new GXHttpAzureContextAccessor(req, httpResponseData, _redis);
 
 			GXRouting.ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			GXRouting.AzureFunctionName = executionContext.FunctionDefinition.Name;
 
 			_gxRouting.ProcessRestRequest(httpAzureContextAccessor);
 			return httpResponseData;
+		}
+	}
+
+	public class RedisHttpSession : ISession
+	{
+
+		string _sessionId;
+		private Redis _redis;
+		public RedisHttpSession(ICacheService2 redis, string sessionId)
+		{
+			_redis = (Redis)redis;
+			_sessionId = sessionId;
+		}
+		public bool IsAvailable => throw new NotImplementedException();
+
+		public string Id => _sessionId;
+
+		public IEnumerable<string> Keys => throw new NotImplementedException();
+		
+		private IEnumerable<string> convert<String>(IEnumerable<RedisKey> enumerable)
+		{
+			foreach (RedisKey key in enumerable)
+				yield return key;
+		}
+		public void Clear()
+		{
+			_redis.ClearCache(Id);
+		}
+
+		public Task CommitAsync(CancellationToken cancellationToken = default)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task LoadAsync(CancellationToken cancellationToken = default)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Remove(string key)
+		{
+			_redis.ClearKey(key);
+		}
+
+		public void Set(string key, byte[] value)
+		{
+			_redis.Set(Id, key, value, 5); //5 minutes of duration time
+		}
+
+		public bool TryGetValue(string key, out byte[] value)
+		{
+			if (_redis.Get(Id,key,out value) && value != null)
+			{
+				return true;
+			}
+			value = null;
+			return false;
 		}
 	}
 	public class MockHttpSession : ISession

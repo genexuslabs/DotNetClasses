@@ -12,13 +12,15 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.0.1" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.0.3" OutputItemType="Analyzer" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />  
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
+    <PackageReference Include="StackExchange.Redis" Version="2.2.50" />  
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
-	<ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
-	<ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
+    <ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
+    <ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
+    <ProjectReference Include="..\..\..\dotnetcore\Providers\Cache\GxRedis\GxRedis.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
