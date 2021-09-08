@@ -21,6 +21,15 @@ namespace GeneXus.Cache
 		IDatabase _redisDatabase;
 		ConfigurationOptions _redisConnectionOptions;
 		private const int REDIS_DEFAULT_PORT = 6379;
+
+		public Redis(ISessionService service)
+		{
+			if (service is GxRedisSession)
+			{
+				_redisConnectionOptions = ConfigurationOptions.Parse(service.ConnectionString);
+			}
+			_redisConnectionOptions.AllowAdmin = true;
+		}
 		public Redis()
 		{
 			GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
