@@ -2374,7 +2374,7 @@ namespace GeneXus.Data
             readBytes += 1;
             return reader.GetBoolean(i);
 		}
-        public Guid GetGuid(int i)
+        public virtual Guid GetGuid(int i)
         {
             readBytes += 16;
             return reader.GetGuid(i);

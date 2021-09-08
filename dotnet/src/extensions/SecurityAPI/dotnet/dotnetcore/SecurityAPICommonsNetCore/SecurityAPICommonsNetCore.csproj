@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
 		<AssemblyName>GeneXusSecurityAPICommonsNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<NoWarn>CA1031, CA1801</NoWarn>
-		<PackageId>GeneXus.Security.Common.Core</PackageId>
+		<PackageId>GeneXus.SecurityApi.Common.Core</PackageId>
 	</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

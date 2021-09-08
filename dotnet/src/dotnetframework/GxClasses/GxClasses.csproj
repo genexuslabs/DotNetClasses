@@ -81,4 +81,8 @@
 		<ProjectReference Include="..\GxXsl\GxXsl.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="ErrorHandling\" />
+	</ItemGroup>
+
 </Project>
