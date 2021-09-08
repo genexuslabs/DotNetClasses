@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net47</TargetFramework>
 	  <RootNamespace>GeneXusXmlSignature</RootNamespace>
     <AssemblyName>GeneXusXmlSignatureImpl</AssemblyName>
 	 <NoWarn>CA1031</NoWarn>

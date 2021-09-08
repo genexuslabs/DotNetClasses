@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net47</TargetFramework>
     <RootNamespace>GeneXusJWT</RootNamespace>
     <AssemblyName>GeneXusJWTImpl</AssemblyName>
 	 <NoWarn>CA1031, CA1720, CA1812, CA1724</NoWarn>

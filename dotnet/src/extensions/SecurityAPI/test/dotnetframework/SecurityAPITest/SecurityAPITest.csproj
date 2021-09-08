@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net462</TargetFramework>
+		<TargetFramework>net471</TargetFramework>
 		<IsPublishable>false</IsPublishable>
 		<RootNamespace>SecurityAPITest</RootNamespace>
 		<AssemblyName>SecurityAPITest</AssemblyName>
