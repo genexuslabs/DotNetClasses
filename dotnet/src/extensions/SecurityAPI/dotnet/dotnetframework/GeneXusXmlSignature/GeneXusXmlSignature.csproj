@@ -4,7 +4,7 @@
 	  <RootNamespace>GeneXusXmlSignature</RootNamespace>
     <AssemblyName>GeneXusXmlSignatureImpl</AssemblyName>
 	 <NoWarn>CA1031</NoWarn>
-	 <PackageId>GeneXus.XMLSignature</PackageId>
+	 <PackageId>GeneXus.SecurityApi.XmlSignature</PackageId>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />
