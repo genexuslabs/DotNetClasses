@@ -22,12 +22,9 @@ namespace GeneXus.Cache
 		ConfigurationOptions _redisConnectionOptions;
 		private const int REDIS_DEFAULT_PORT = 6379;
 
-		public Redis(ISessionService service)
+		public Redis(string connectionString)
 		{
-			if (service is GxRedisSession)
-			{
-				_redisConnectionOptions = ConfigurationOptions.Parse(service.ConnectionString);
-			}
+			_redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
 			_redisConnectionOptions.AllowAdmin = true;
 		}
 		public Redis()
