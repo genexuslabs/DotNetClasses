@@ -69,7 +69,7 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 - Visual Studio 2019 >= 16.8
 - dotnet SDK 3.1 
 - .NET 6 
-- .NET Framework 4.6.2 DevPack
+- .NET Framework 4.7 DevPack
 
 # Instructions
 For the following steps must be executed from inside ```dotnet``` directory:

@@ -1,4 +1,6 @@
 
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Signers;
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -32,7 +34,7 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <param name="asymmetricSigningAlgorithm">string asymmetricSigningAlgorithm</param>
         /// <param name="error">Error type for error management</param>
         /// <returns>AsymmetricSigningAlgorithm enum representation</returns>
-        public static AsymmetricSigningAlgorithm getAsymmetricSigningAlgorithm(string asymmetricSigningAlgorithm, Error error)
+        public static AsymmetricSigningAlgorithm GetAsymmetricSigningAlgorithm(string asymmetricSigningAlgorithm, Error error)
         {
 			if (error == null) return AsymmetricSigningAlgorithm.NONE;
 			if (asymmetricSigningAlgorithm == null)
@@ -58,7 +60,7 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <param name="asymmetricSigningAlgorithm">AsymmetricSigningAlgorithm enum, algorithm name</param>
         /// <param name="error">Error type for error management</param>
         /// <returns>string value of the algorithm</returns>
-        public static string valueOf(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, Error error)
+        public static string ValueOf(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, Error error)
         {
 			if (error == null) return "";
             switch (asymmetricSigningAlgorithm)
@@ -73,12 +75,34 @@ namespace GeneXusCryptography.AsymmetricUtils
             }
         }
 
-        /// <summary>
-        /// Manage Enumerable enum 
-        /// </summary>
-        /// <typeparam name="AsymmetricSigningAlgorithm">AsymmetricSigningAlgorithm enum</typeparam>
-        /// <returns>Enumerated values</returns>
-        internal static IEnumerable<AsymmetricSigningAlgorithm> GetValues<AsymmetricSigningAlgorithm>()
+		public static ISigner GetSigner(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, IDigest hash, Error error)
+		{
+			if(error == null) return null;
+			if (hash == null)
+			{
+				error.setError("AE008", "Hash digest is null");
+				return null;
+			}
+			ISigner sig = null;
+			switch (asymmetricSigningAlgorithm)
+			{
+				case AsymmetricSigningAlgorithm.RSA:
+					sig = new RsaDigestSigner(hash);
+					break;
+				case AsymmetricSigningAlgorithm.ECDSA:
+					ECDsaSigner dsaSigner = new ECDsaSigner();
+					sig = new DsaDigestSigner(dsaSigner, hash);
+					break;
+			}
+			return sig;
+		}
+
+		/// <summary>
+		/// Manage Enumerable enum 
+		/// </summary>
+		/// <typeparam name="AsymmetricSigningAlgorithm">AsymmetricSigningAlgorithm enum</typeparam>
+		/// <returns>Enumerated values</returns>
+		internal static IEnumerable<AsymmetricSigningAlgorithm> GetValues<AsymmetricSigningAlgorithm>()
         {
             return Enum.GetValues(typeof(AsymmetricSigningAlgorithm)).Cast<AsymmetricSigningAlgorithm>();
         }

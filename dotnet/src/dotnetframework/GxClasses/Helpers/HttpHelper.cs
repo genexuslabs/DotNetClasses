@@ -27,6 +27,7 @@ using System.Linq;
 using GeneXus.Data;
 using System.Runtime.Serialization;
 using GeneXus.Mime;
+using System.Text.RegularExpressions;
 
 namespace GeneXus.Http
 {
@@ -74,6 +75,7 @@ namespace GeneXus.Http
 		const string GAM_CODE_OTP_USER_ACCESS_CODE_SENT = "400";
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
+		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
 
 		public static void SetResponseStatus(HttpContext httpContext, string statusCode, string statusDescription)
 		{
@@ -170,8 +172,13 @@ namespace GeneXus.Http
 		{
 			TraceUnexpectedError(ex);
 			string statusCodeStr = statusCode.ToString(INT_FORMAT);
-			SetResponseStatus(httpContext, statusCode, statusCode.ToString());
-			SetJsonError(httpContext, statusCodeStr, statusCode.ToString());
+			string statusCodeDesc = StatusCodeToTitle(statusCode);
+			SetResponseStatus(httpContext, statusCode, statusCodeDesc);
+			SetJsonError(httpContext, statusCodeStr, statusCodeDesc);
+		}
+		internal static string StatusCodeToTitle(HttpStatusCode statusCode)
+		{
+			return CapitalsToTitle.Replace(statusCode.ToString(), " ");
 		}
 		internal static void SetError(HttpContext httpContext, string statusCode, string statusDescription)
 		{

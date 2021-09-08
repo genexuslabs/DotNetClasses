@@ -31,13 +31,50 @@ namespace SecurityAPICommons.Utils
             
         }
 
-        /// <summary>
-        /// Verifies if the file has some extension type
-        /// </summary>
-        /// <param name="path">path to the file</param>
-        /// <param name="ext">extension of the file</param>
-        /// <returns>true if the file has the extension</returns>
-        [SecuritySafeCritical]
+		[SecuritySafeCritical]
+		public static byte[] getFileBytes(string path, Error error)
+		{
+			byte[] aux = null;
+			try
+			{
+				aux = System.IO.File.ReadAllBytes(path);
+			}
+			catch (Exception e)
+			{
+				if (error != null)
+				{
+					error.setError("SU001", e.Message);
+				}
+			}
+			return aux;
+		}
+
+		[SecuritySafeCritical]
+		public static Stream getFileStream(string pathInput, Error error)
+		{
+			Stream aux = null;
+			try
+			{
+				aux = new FileStream(pathInput, FileMode.Open);
+			}
+			catch (Exception e)
+			{
+				if(error != null)
+				{
+					error.setError("SU002", e.Message);
+				}
+				
+			}
+			return aux;
+		}
+
+		/// <summary>
+		/// Verifies if the file has some extension type
+		/// </summary>
+		/// <param name="path">path to the file</param>
+		/// <param name="ext">extension of the file</param>
+		/// <returns>true if the file has the extension</returns>
+		[SecuritySafeCritical]
         public static bool extensionIs(string path, string ext)
         {
             return string.Compare(getFileExtension(path), ext, true, System.Globalization.CultureInfo.InvariantCulture) == 0;
