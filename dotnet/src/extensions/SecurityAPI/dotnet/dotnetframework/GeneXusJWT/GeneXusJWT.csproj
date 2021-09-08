@@ -4,7 +4,7 @@
     <RootNamespace>GeneXusJWT</RootNamespace>
     <AssemblyName>GeneXusJWTImpl</AssemblyName>
 	 <NoWarn>CA1031, CA1720, CA1812, CA1724</NoWarn>
-	 <PackageId>GeneXus.JWT.Core</PackageId>
+	 <PackageId>GeneXus.SecurityApi.Jwt</PackageId>
   </PropertyGroup>
   <PropertyGroup>
     <AppConfig>App.$(Configuration).config</AppConfig>

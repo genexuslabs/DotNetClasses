@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup>
     <TargetFramework>net47</TargetFramework>
     <RootNamespace>GeneXusFtps</RootNamespace>
     <AssemblyName>GeneXusFtpsImpl</AssemblyName>
 	  <NoWarn>CA1031</NoWarn>
-	  <PackageId>GeneXus.Ftps</PackageId>
+	  <PackageId>GeneXus.SecurityApi.Ftps</PackageId>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj"/>

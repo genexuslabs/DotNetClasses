@@ -4,7 +4,7 @@
 		<TargetFramework>net5.0</TargetFramework>
 		<AssemblyName>GeneXusXMLSignatureNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
-		<PackageId>GeneXus.XMLSignature.Core</PackageId>
+		<PackageId>GeneXus.SecurityApi.XmlSignature.Core</PackageId>
 	</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

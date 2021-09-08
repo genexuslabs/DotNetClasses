@@ -910,12 +910,12 @@ namespace GeneXus.Data.ADO
 		{
             get
             {
-                if (connection != null && ((connection.State & ConnectionState.Closed) == 0))
+                if (connection != null && ((connection.State & ConnectionState.Closed) == 0) && !string.IsNullOrEmpty(connection.Database))
                     return connection.Database;
                 else if (string.IsNullOrEmpty(databaseName) && data != null)
                 {
-                    string databaseNameFromData = string.Empty;
-                    int dbPos = data.ToLower().IndexOf("database=");
+					string databaseNameFromData;
+					int dbPos = data.ToLower().IndexOf("database=");
                     if (dbPos >= 0)
                     {
                         dbPos += 9;
@@ -2696,14 +2696,22 @@ namespace GeneXus.Data.ADO
 						return new GxOracle();
 					else
 						return new GxODPOracle();
+#endif
 				case "as400":
+#if NETCORE
+					return new GxDb2ISeriesIds(id);
+#else
 					if (Config.GetValueOf("Connection-" + id + "-PROVIDER", out cfgBuf) && cfgBuf.ToLower() == "his")
 						return new GxISeriesHIS(id);
 					else
 						return new GxDb2ISeries(id);
+#endif
 				case "db2":
 					return new GxDb2();
 				case "informix":
+#if NETCORE
+					return new GxInformixIds();
+#else
 					return new GxInformix(id);
 #endif
 				case "hana":

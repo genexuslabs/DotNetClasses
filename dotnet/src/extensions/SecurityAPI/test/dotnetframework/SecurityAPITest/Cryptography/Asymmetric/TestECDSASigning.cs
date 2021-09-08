@@ -1,4 +1,4 @@
-﻿using SecurityAPITest.SecurityAPICommons.commons;
+using SecurityAPITest.SecurityAPICommons.commons;
 using NUnit.Framework;
 using SecurityAPICommons.Config;
 using SecurityAPICommons.Keys;
@@ -14,6 +14,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 		private static string path_ecdsa_sha256;
 
 		private static string plainText;
+		private static string filePath;
 
 		private static string alias;
 		private static string password;
@@ -29,6 +30,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			path_ecdsa_sha256 = Path.Combine(BASE_PATH, "dummycerts", "ECDSA_sha256");
 
 			plainText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam venenatis ex sit amet risus pellentesque, a faucibus quam ultrices. Ut tincidunt quam eu aliquam maximus. Quisque posuere risus at erat blandit eleifend. Curabitur viverra rutrum volutpat. Donec quis quam tellus. Aenean fermentum elementum augue, a semper risus scelerisque sit amet. Nullam vitae sapien vitae dui ullamcorper dapibus quis quis leo. Sed neque felis, pellentesque in risus et, lobortis ultricies nulla. Quisque quis quam risus. Donec vestibulum, lectus vel vestibulum eleifend, velit ante volutpat lacus, ut mattis quam ligula eget est. Sed et pulvinar lectus. In mollis turpis non ipsum vehicula, sit amet rutrum nibh dictum. Duis consectetur convallis ex, eu ultricies enim bibendum vel. Vestibulum vel libero nibh. Morbi nec odio mattis, vestibulum quam blandit, pretium orci.Aenean pellentesque tincidunt nunc a malesuada. Etiam gravida fermentum mi, at dignissim dui aliquam quis. Nullam vel lobortis libero. Phasellus non gravida posuere";
+			filePath = Path.Combine(BASE_PATH, "Temp", "flag.jpg");
 
 			alias = "1";
 			password = "dummy";
@@ -116,12 +118,26 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 
 		}
 
-		
 		private void bulkTest(PrivateKeyManager key, CertificateX509 cert, string hashAlgorithm)
+		{
+			bulkTestText(key, cert, hashAlgorithm);
+			bulkTestFile(key, cert, hashAlgorithm);
+		}
+
+		private void bulkTestText(PrivateKeyManager key, CertificateX509 cert, string hashAlgorithm)
 		{
 			AsymmetricSigner asymSig = new AsymmetricSigner();
 			string signature = asymSig.DoSign(key, hashAlgorithm, plainText);
 			bool result = asymSig.DoVerify(cert, plainText, signature);
+			Assert.IsTrue(result);
+			True(result, asymSig);
+		}
+
+		private void bulkTestFile(PrivateKeyManager key, CertificateX509 cert, string hashAlgorithm)
+		{
+			AsymmetricSigner asymSig = new AsymmetricSigner();
+			string signature = asymSig.DoSignFile(key, hashAlgorithm, filePath);
+			bool result = asymSig.DoVerifyFile(cert, filePath, signature);
 			Assert.IsTrue(result);
 			True(result, asymSig);
 		}

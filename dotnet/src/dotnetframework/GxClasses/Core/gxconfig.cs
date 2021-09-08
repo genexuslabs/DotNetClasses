@@ -740,7 +740,30 @@ namespace GeneXus.Configuration
 		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
 		const string YES = "1";
 		const string NO = "0";
-
+		static string defaultDatastore;
+		const string DEFAULT_DS = "Default";
+		internal static string DefaultDatastore
+		{
+			get
+			{
+				if (defaultDatastore == null)
+				{
+					if (Config.GetValueOf("DataStore-Default", out string strDefaultDS))
+					{
+						defaultDatastore = strDefaultDS;
+					}
+					else
+					{
+						defaultDatastore = DEFAULT_DS;
+					}
+				}
+				return defaultDatastore;
+			}
+			set
+			{
+				defaultDatastore = value;
+			}
+		}
 		public static string RemoteLocation
 		{
 			get
