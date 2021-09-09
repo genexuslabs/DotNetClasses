@@ -3410,7 +3410,7 @@ namespace GeneXus.Application
 		}
 
 		internal bool IsStandalone => this._session is GxSession || this._isSumbited || this.HttpContext == null;
-
+		internal bool IsSubmited => this._isSumbited;
 		internal void SetSession(IGxSession value)
 		{
 			if (value != null)
