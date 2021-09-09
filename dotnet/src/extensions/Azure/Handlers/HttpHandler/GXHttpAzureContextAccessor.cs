@@ -57,7 +57,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				if (!isSecure)
 					isSecure = requestData.Url.Scheme == "https";
 
-				sessionCookie.Expires = DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc); 
+				sessionCookie.Expires = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc); 
 				sessionCookie.Path = "";
 				sessionCookie.Domain = "";
 				sessionCookie.HttpOnly = true;
