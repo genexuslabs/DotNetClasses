@@ -3,25 +3,6 @@ root = true
 [*]
 charset = utf-8
 indent_style = tab
-dotnet_diagnostic.CA1501.severity=error
-dotnet_diagnostic.CA1505.severity=error
-dotnet_diagnostic.CA1810.severity=error
-dotnet_diagnostic.CA1812.severity=error
-dotnet_diagnostic.CA1813.severity=error
-dotnet_diagnostic.CA1814.severity=error
-dotnet_diagnostic.CA1815.severity=error
-dotnet_diagnostic.CA1819.severity=error
-dotnet_diagnostic.CA1821.severity=error
-dotnet_diagnostic.CA1823.severity=error
-dotnet_diagnostic.CA1802.severity=error
-dotnet_diagnostic.CA1724.severity=error
-dotnet_diagnostic.CA1827.severity=error
-dotnet_diagnostic.CA1828.severity=error
-dotnet_diagnostic.CA1829.severity=error
-dotnet_diagnostic.CA1836.severity=error
-dotnet_diagnostic.CA1307.severity=error
-dotnet_diagnostic.CA2243.severity=error
-
 
 [*.cs]
 tab_width = 4
@@ -29,8 +10,3 @@ trim_trailing_whitespace = true
 csharp_new_line_before_open_brace = all
 csharp_preserve_single_line_statements = true
 dotnet_sort_system_directives_first = true 
-dotnet_diagnostic.CA1820.severity=error
-dotnet_diagnostic.CA1824.severity=error
-dotnet_diagnostic.CA1507.severity=error
-dotnet_diagnostic.CA1841.severity=error
-csharp_style_var_for_built_in_types=false:error

@@ -57,19 +57,19 @@ namespace TZ4Net
 		{
 			if (bitConverter==null)
 			{
-				throw new ArgumentNullException(nameof(bitConverter));
+				throw new ArgumentNullException("bitConverter");
 			}
 			if (stream==null)
 			{
-				throw new ArgumentNullException(nameof(stream));
+				throw new ArgumentNullException("stream");
 			}
 			if (encoding==null)
 			{
-				throw new ArgumentNullException(nameof(encoding));
+				throw new ArgumentNullException("encoding");
 			}
 			if (!stream.CanRead)
 			{
-				throw new ArgumentException("Stream isn't writable", nameof(stream));
+				throw new ArgumentException("Stream isn't writable", "stream");
 			}
 			this.stream = stream;
 			this.bitConverter = bitConverter;
@@ -296,15 +296,15 @@ namespace TZ4Net
 			CheckDisposed();
 			if (buffer==null)
 			{
-				throw new ArgumentNullException(nameof(buffer));
+				throw new ArgumentNullException("buffer");
 			}
 			if (index < 0)
 			{
-				throw new ArgumentOutOfRangeException(nameof(index));
+				throw new ArgumentOutOfRangeException("index");
 			}
 			if (count < 0)
 			{
-				throw new ArgumentOutOfRangeException(nameof(index));
+				throw new ArgumentOutOfRangeException("index");
 			}
 			if (count+index > buffer.Length)
 			{
@@ -370,15 +370,15 @@ namespace TZ4Net
 			CheckDisposed();
 			if (buffer==null)
 			{
-				throw new ArgumentNullException(nameof(buffer));
+				throw new ArgumentNullException("buffer");
 			}
 			if (index < 0)
 			{
-				throw new ArgumentOutOfRangeException(nameof(index));
+				throw new ArgumentOutOfRangeException("index");
 			}
 			if (count < 0)
 			{
-				throw new ArgumentOutOfRangeException(nameof(index));
+				throw new ArgumentOutOfRangeException("index");
 			}
 			if (count+index > buffer.Length)
 			{
@@ -412,7 +412,7 @@ namespace TZ4Net
 			CheckDisposed();
 			if (count < 0)
 			{
-				throw new ArgumentOutOfRangeException(nameof(count));
+				throw new ArgumentOutOfRangeException("count");
 			}
 			byte[] ret = new byte[count];
 			int index=0;

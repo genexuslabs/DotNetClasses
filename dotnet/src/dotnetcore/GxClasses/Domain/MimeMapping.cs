@@ -11,7 +11,7 @@ namespace GeneXus.Mime
 		public static string GetMimeMapping(string fileName)
 		{
 			if (fileName == null)
-				throw new ArgumentNullException(nameof(fileName));
+				throw new ArgumentNullException("fileName");
 			return MimeMapping._mappingDictionary.GetMimeMapping(fileName);
 		}
 

@@ -18,7 +18,7 @@ namespace GeneXus.WebControls
 		public Unit(double value, UnitType type)
 		{
 			if (value < (double)short.MinValue || value > (double)short.MaxValue)
-				throw new ArgumentOutOfRangeException(nameof(value));
+				throw new ArgumentOutOfRangeException("value");
 			this.value = type != UnitType.Pixel ? value : (double)(int)value;
 			this.type = type;
 		}
