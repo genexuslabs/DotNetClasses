@@ -42,7 +42,7 @@ namespace GeneXus.Procedure
 		protected string Gx_out = "";
         protected string Gx_docfmt = "";
         protected string Gx_docname = "";
-        
+		const int SLEEP_BETWEEN_CHECKS_ON_THREADS = 500;
 		public const int IN_NEW_UTL = -2;
 		private bool disconnectUserAtCleanup;
 #if !NETCORE
@@ -90,6 +90,9 @@ namespace GeneXus.Procedure
 		}
 		private void exitApplication(bool flushBatchCursor)
 		{
+			if (IsMain && !(context as GxContext).IsSubmited)
+				WaitForThreadPoolEnd();
+
 			if (flushBatchCursor)
 			{
 				foreach (IGxDataStore ds in context.DataStores)
@@ -113,6 +116,19 @@ namespace GeneXus.Procedure
 			}
 #endif
 			
+		}
+		void WaitForThreadPoolEnd()
+		{
+			bool working = true;
+			ThreadPool.GetMaxThreads(out int maxWorkerThreads, out _);
+			while (working)
+			{
+				ThreadPool.GetAvailableThreads(out int workerThreads, out _);
+				if (workerThreads == maxWorkerThreads)
+					working = false;
+				else
+					Thread.Sleep(SLEEP_BETWEEN_CHECKS_ON_THREADS);
+			}
 		}
 		protected virtual bool BatchCursorHolder() { return false; }
 		protected virtual void printHeaders(){}
