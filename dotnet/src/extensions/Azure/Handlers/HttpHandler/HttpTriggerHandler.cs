@@ -55,7 +55,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 	public class RedisHttpSession : ISession
 	{
-
+		const int AZURE_SESSION_TIMEOUT_IN_MINUTES = 5;
 		string _sessionId;
 		private Redis _redis;
 		public RedisHttpSession(ICacheService2 redis, string sessionId)
@@ -96,7 +96,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 		public void Set(string key, byte[] value)
 		{
-			_redis.Set(Id, key, value, 5); //5 minutes of duration time
+			_redis.Set(Id, key, value, AZURE_SESSION_TIMEOUT_IN_MINUTES); 
 		}
 
 		public bool TryGetValue(string key, out byte[] value)

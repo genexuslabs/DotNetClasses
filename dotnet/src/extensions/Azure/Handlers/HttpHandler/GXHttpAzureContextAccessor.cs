@@ -28,6 +28,8 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		{
 			if (redis != null)
 				_redis = redis;
+
+			bool isSecure = false;
 			foreach (var header in requestData.Headers)
 			{
 				string[] values = new Microsoft.Extensions.Primitives.StringValues(header.Value.Select(val => val).ToArray());
@@ -37,6 +39,10 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				{
 					sessionId = CookieValue(defaultHttpContext.Request.Headers[header.Key], AzureSessionId);
 				}
+
+				if (!isSecure)
+					isSecure = GetSecureConnection(header.Key, defaultHttpContext.Request.Headers[header.Key]);
+
 			}
 			defaultHttpContext.Request.Method = requestData.Method;
 			defaultHttpContext.Request.Body = requestData.Body;
@@ -47,10 +53,15 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			{
 				sessionId = Guid.NewGuid().ToString();
 				HttpCookie sessionCookie = new HttpCookie(AzureSessionId, sessionId);
+				
+				if (!isSecure)
+					isSecure = requestData.Url.Scheme == "https";
+
 				sessionCookie.Expires = DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc); 
 				sessionCookie.Path = "";
 				sessionCookie.Domain = "";
 				sessionCookie.HttpOnly = true;
+				sessionCookie.Secure = isSecure;
 
 				responseData.Cookies.Append(sessionCookie);
 				GXLogging.Debug(log, $"Create new Azure Session Id :{sessionId}");
@@ -58,7 +69,16 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 			httpResponseData = new GxHttpAzureResponse(defaultHttpContext, responseData);
 		}
+		private bool GetSecureConnection(string headerKey, string headerValue)
+		{
+			if ((headerKey == "Front-End-Https") & (headerValue == "on"))
+				return true;
+			
+			if ((headerKey == "X-Forwarded-Proto") & (headerValue == "https"))
+				return true;
 
+			return false;
+		}
 		private string CookieValue(string header, string name)
 		{
 			string[] words = header.Split(';');
@@ -66,7 +86,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			foreach (var word in words)
 			{
 				string[] parts = word.Split('=');
-				if (parts[0].Trim() == AzureSessionId)
+				if (parts[0].Trim() == name)
 					return parts[1];
 			}
 			return string.Empty;
