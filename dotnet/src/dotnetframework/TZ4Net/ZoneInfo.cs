@@ -614,11 +614,11 @@ namespace TZ4Net
 		{
 			if (name == null) 
 			{
-				throw new System.ArgumentNullException("name", "Name can not be null.");
+				throw new System.ArgumentNullException(nameof(name), "Name can not be null.");
 			}
 			if (dir == null) 
 			{
-				throw new System.ArgumentNullException("dir", "Directory name can not be null.");
+				throw new System.ArgumentNullException(nameof(dir), "Directory name can not be null.");
 			}
 			if (Array.IndexOf(AllDirs, dir) < 0) 
 			{
@@ -1026,7 +1026,7 @@ namespace TZ4Net
 				}
 				if (bits-- < 0) 
 				{
-					throw new ArgumentException(string.Format("Bad time: {0}. Binary search failed.", time), "time");
+					throw new ArgumentException(string.Format("Bad time: {0}. Binary search failed.", time), nameof(time));
 				}
 				if (bits < 0) 
 				{
@@ -1074,7 +1074,7 @@ namespace TZ4Net
 		{
 			if (dir == null) 
 			{
-				throw new ArgumentNullException("dir", "Directory name can not be null.");
+				throw new ArgumentNullException(nameof(dir), "Directory name can not be null.");
 			}
 #if !NETCORE
 			ResourceManager rm = new ResourceManager(resRootName, Assembly.GetExecutingAssembly());
