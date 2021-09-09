@@ -1328,7 +1328,7 @@ namespace GeneXus.Utils
 					tagCloseIndex--;
 				}
 
-				if (!string.IsNullOrEmpty(defaultNamespace) || forceDefaultNamespace || prefixes.Keys.Contains(""))
+				if (!string.IsNullOrEmpty(defaultNamespace) || forceDefaultNamespace || prefixes.ContainsKey(""))
 				{
 					string currentTagSubstring = xml.Substring(tagOpenIndex, tagCloseIndex - tagOpenIndex);
 					int nsIndex = currentTagSubstring.IndexOf("xmlns=");
