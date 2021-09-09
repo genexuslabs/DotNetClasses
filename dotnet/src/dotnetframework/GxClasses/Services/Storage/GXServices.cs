@@ -119,9 +119,9 @@ namespace GeneXus.Services
 			service.Properties = properties;
 			service.AllowMultiple = string.IsNullOrEmpty(allowMultiple) ? false : bool.Parse(allowMultiple);
 			if (service.AllowMultiple)
-				services.Add($"{service.Type}:{service.Name}", service);
+				services[$"{service.Type}:{service.Name}"] = service;
 			else
-				services.Add(type, service);
+				services[type] = service;
 
 		}
 
