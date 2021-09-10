@@ -126,9 +126,9 @@ namespace SecurityAPICommons.Keys
                 flag = true;
 
             }
-            catch (FormatException)
+            catch (Exception e)
             {
-                this.error.setError("CE002", "Error loading certificate from base64");
+                this.error.setError("CE002", e.Message);
                 flag = false;
             }
             return flag;
@@ -146,9 +146,9 @@ namespace SecurityAPICommons.Keys
             {
                 return Convert.ToBase64String(this.cert.Export(X509ContentType.Cert));
             }
-            catch (CryptographicException)
+            catch (Exception e)
             {
-                this.error.setError("CE004", "Error encoding certificate to base64");
+                this.error.setError("CE004", e.Message);
                 return "";
             }
 
