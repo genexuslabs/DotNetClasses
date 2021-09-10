@@ -63,11 +63,11 @@ namespace Amazon.S3.IO
 		{
 			if (String.IsNullOrEmpty(bucket))
 			{
-				throw new ArgumentNullException("bucket");
+				throw new ArgumentNullException(nameof(bucket));
 			}
 			if (String.IsNullOrEmpty(key) || String.Equals(key, "\\"))
 			{
-				throw new ArgumentNullException("key");
+				throw new ArgumentNullException(nameof(key));
 			}
 
 			if (key.EndsWith("\\", StringComparison.Ordinal))
@@ -75,7 +75,7 @@ namespace Amazon.S3.IO
 				throw new ArgumentException("key is a directory name");
 			}
 
-			this.s3Client = s3Client ?? throw new ArgumentNullException("s3Client");
+			this.s3Client = s3Client ?? throw new ArgumentNullException(nameof(s3Client));
 			this.bucket = bucket;
 			this.key = key;
 		}
@@ -319,7 +319,7 @@ namespace Amazon.S3.IO
 		{
 			if (s3Client == null)
 			{
-				throw new ArgumentNullException("s3Client");
+				throw new ArgumentNullException(nameof(s3Client));
 			}
 			if (String.IsNullOrEmpty(bucket) && !String.IsNullOrEmpty(key))
 			{

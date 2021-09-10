@@ -600,7 +600,7 @@ namespace GeneXus.Http
 			if (MultipartRequestHelper.IsMultipartContentType(request.ContentType))
 			{
 				if (request.Form.Files != null)
-					return request.Form.Files.Count();
+					return request.Form.Files.Count;
 			}
 			return 0;
 #else
