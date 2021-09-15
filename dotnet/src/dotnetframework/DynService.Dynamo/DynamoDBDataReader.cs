@@ -17,8 +17,9 @@ namespace GeneXus.Data.Dynamo
 	{
 		private RequestWrapper mRequest;
 		private ResponseWrapper mResponse;
-		private int mCurrentPosition = -1;
+		private int mCurrentPosition;
 		private IODataMap2[] selectList;
+		private DynamoDBRecordEntry currentEntry = null;
 
 		private int ItemCount
 		{
@@ -36,24 +37,26 @@ namespace GeneXus.Data.Dynamo
 			}
 		}
 
+		private void CheckCurrentPosition()
+		{
+			if (currentEntry == null)
+				throw new ServiceException(ServiceError.RecordNotFound);
+		}
+
 		public DynamoDBDataReader(ServiceCursorDef cursorDef, RequestWrapper request, IDataParameterCollection parameters)
 		{
 			Query query = cursorDef.Query as Query;
 			selectList = query.SelectList;
 			mRequest = request;
 			mResponse = mRequest.Read();
+			mCurrentPosition = -1;
 		}
 
 		public object this[string name]
 		{
 			get
 			{
-				if (mCurrentPosition >= 0 && mCurrentPosition < ItemCount)
-				{
-					return Items[mCurrentPosition][name].S;
-				}
-				throw new ArgumentOutOfRangeException(nameof(name));
-
+				throw new NotImplementedException();
 			}
 		}
 
@@ -61,16 +64,7 @@ namespace GeneXus.Data.Dynamo
 		{
 			get
 			{
-				if (mCurrentPosition >= 0 && mCurrentPosition < ItemCount)
-				{
-					int j = 0;
-					foreach (var col in Items[mCurrentPosition])
-					{
-						if (j == i)
-							return col.Value.S;
-					}
-				}
-				throw new ArgumentOutOfRangeException(nameof(i));
+				throw new NotImplementedException();
 			}
 		}
 
@@ -178,7 +172,7 @@ namespace GeneXus.Data.Dynamo
 
 		public Type GetFieldType(int i)
 		{
-			throw new NotImplementedException();
+			return selectList[i].GetValue(DynamoDBConnection.NewServiceContext(), currentEntry).GetType();
 		}
 
 		public float GetFloat(int i)
@@ -214,14 +208,11 @@ namespace GeneXus.Data.Dynamo
 
 		public int GetOrdinal(string name)
 		{
-			int j = 0;
-			foreach (var col in Items[mCurrentPosition])
-			{
-				if (col.Key.ToLower() == name.ToLower())
-					return j;
-				j++;
-			}
-			throw new ArgumentOutOfRangeException(nameof(name));
+			CheckCurrentPosition();
+			int ordinal = currentEntry.CurrentRow.ToList().FindIndex(col => col.Key.ToLower() == name.ToLower());
+			if (ordinal == -1)
+				throw new ArgumentOutOfRangeException(nameof(name));
+			else return ordinal;
 		}
 
 		public DataTable GetSchemaTable()
@@ -260,7 +251,7 @@ namespace GeneXus.Data.Dynamo
 
 		private AttributeValue GetAttValue(int i)
 		{
-			return (AttributeValue)selectList[i].GetValue(NewServiceContext(), new DynamoDBRecordEntry(Items[mCurrentPosition]));
+			return (AttributeValue)selectList[i].GetValue(DynamoDBConnection.NewServiceContext(), currentEntry);
 		}
 
 		public int GetValues(object[] values)
@@ -281,12 +272,15 @@ namespace GeneXus.Data.Dynamo
 		public bool NextResult()
 		{
 			mCurrentPosition++;
-			return (mCurrentPosition < ItemCount);
+			currentEntry = (mCurrentPosition < ItemCount) ? new DynamoDBRecordEntry(Items[mCurrentPosition]) : null;
+			return currentEntry != null;
 		}
 
 		public bool Read()
-		{			
-			if (mCurrentPosition == ItemCount && mCurrentPosition > 0)
+		{
+			if (NextResult())
+				return true;
+			else if (mCurrentPosition > 0 && mResponse.LastEvaluatedKey?.Count > 0)
 			{
 				mResponse = mRequest.Read(mResponse.LastEvaluatedKey);
 				/*
@@ -295,15 +289,11 @@ namespace GeneXus.Data.Dynamo
 				 * The result set contains the last_evaluated_key field. If more data is available for the operation,
 				 * this key contains information about the last evaluated key. Otherwise, the key remains empty.
 				 * */
+				mCurrentPosition = -1;
+				return NextResult();
 			}
-			mCurrentPosition++;
-			return (mCurrentPosition < ItemCount);
+			return false;
 		}
-		internal IOServiceContext NewServiceContext()
-		{
-			return null;
-		}
-
 	}
 
 	public class GxDynamoDBCacheDataReader : GxCacheDataReader

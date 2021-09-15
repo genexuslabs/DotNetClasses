@@ -11,10 +11,12 @@ namespace GeneXus.Data.Dynamo
 {
 	public class DynamoDBMap : Map
 	{
-
-		public DynamoDBMap(string name): base(name)
-		{			
+		internal bool NeedsAttributeMap { get; private set; }
+		public DynamoDBMap(string name): base(RemoveSharp(name))
+		{
+			NeedsAttributeMap = name.StartsWith("#");
 		}
+		private static string RemoveSharp(string name) => name.StartsWith("#") ? name.Substring(1) : name;
 
 		public override object GetValue(IOServiceContext context, RecordEntryRow currentEntry)
 		{
@@ -25,7 +27,7 @@ namespace GeneXus.Data.Dynamo
 			return val;
 		}
 
-		public override void SetValue(IOServiceContext context, RecordEntryRow currentEntry, object value)
+		public override void SetValue(RecordEntryRow currentEntry, object value)
 		{
 			throw new NotImplementedException();
 		}		

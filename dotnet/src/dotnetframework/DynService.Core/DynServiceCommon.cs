@@ -106,7 +106,7 @@ namespace GeneXus.Data.NTier
 	{
 		object GetValue(IOServiceContext serviceContext, RecordEntryRow currentEntry);
 		string GetName(IOServiceContext serviceContext);
-		void SetValue(IOServiceContext serviceContext, RecordEntryRow currentEntry, object value);
+		void SetValue(RecordEntryRow currentEntry, object value);
 	}
 
 
@@ -129,7 +129,7 @@ namespace GeneXus.Data.NTier
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetValue(IOServiceContext context, RecordEntryRow currentEntry, object value)
+		public virtual void SetValue(RecordEntryRow currentEntry, object value)
 		{
 			throw new NotImplementedException();
 		}
