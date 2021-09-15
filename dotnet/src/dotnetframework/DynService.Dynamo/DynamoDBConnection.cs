@@ -33,7 +33,9 @@ namespace GeneXus.Data.NTier
 		private readonly string CLIENT_ID = "User Id";
 		private readonly string CLIENT_SECRET = "password";
 		private readonly string REGION = "region";
+		private readonly string LOCAL_URL = "LocalUrl";
 		private AmazonDynamoDBClient mDynamoDB;
+		private AmazonDynamoDBConfig mConfig;
 		private AWSCredentials mCredentials;
 		private RegionEndpoint mRegion = RegionEndpoint.USEast1;
 
@@ -49,9 +51,14 @@ namespace GeneXus.Data.NTier
 
 		private void InitializeDBConnection()
 		{
-
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = this.ConnectionString;
+			mConfig = new AmazonDynamoDBConfig();
+			string mLocalUrl = null;
+			if (builder.TryGetValue(LOCAL_URL, out object localUrl))
+			{
+				mLocalUrl = localUrl.ToString();
+			}
 			if (builder.TryGetValue(CLIENT_ID, out object clientId) && builder.TryGetValue(CLIENT_SECRET, out object clientSecret))
 			{
 				mCredentials = new BasicAWSCredentials(clientId.ToString(), clientSecret.ToString());
@@ -60,12 +67,17 @@ namespace GeneXus.Data.NTier
 			{
 				mRegion = RegionEndpoint.GetBySystemName(region.ToString());
 			}
+			if (localUrl != null)
+				mConfig.ServiceURL = mLocalUrl;
+			else mConfig.RegionEndpoint = mRegion;
 		}
+
 		private bool Initialize()
 		{
 			InitializeDBConnection();
 			State = ConnectionState.Executing;
-			mDynamoDB = new Amazon.DynamoDBv2.AmazonDynamoDBClient(mCredentials, mRegion);
+
+			mDynamoDB = new AmazonDynamoDBClient(mCredentials, mConfig);
 			return true;
 		}
 
@@ -195,32 +207,48 @@ namespace GeneXus.Data.NTier
 		{
 			dataReader = null;
 			req = null;
+			ScanRequest scanReq = null;
+			QueryRequest queryReq = null;
 			if (query is Scan)
 			{
-				req = new ScanRequest
+				req = scanReq = new ScanRequest
 				{
 					TableName = query.TableName,
-					ProjectionExpression = String.Join(",", query.Projection),
-					
+					ProjectionExpression = String.Join(",", query.Projection),					
 				};
 				if (queryFilters.Length > 0)
 				{
-					((ScanRequest)req).FilterExpression = String.Join(" AND ", queryFilters);
-					((ScanRequest)req).ExpressionAttributeValues = values;
+					scanReq.FilterExpression = String.Join(" AND ", queryFilters);
+					scanReq.ExpressionAttributeValues = values;
 				}
 			}
 			else
 			{
-				req = new QueryRequest
+				req = queryReq = new QueryRequest
 				{
 					TableName = query.TableName,
 					KeyConditionExpression = String.Join(" AND ", query.Filters),
 					ExpressionAttributeValues = values,
-					ProjectionExpression = String.Join(",", query.Projection),
-					
+					ProjectionExpression = String.Join(",", query.Projection),					
 				};
 			}
+			Dictionary<string, string> expressionAttributeNames = null;
+			foreach (string mappedName in query.SelectList.Where(selItem => (selItem as DynamoDBMap)?.NeedsAttributeMap == true).Select(selItem => selItem.GetName(NewServiceContext())))
+			{
+				expressionAttributeNames = scanReq.ExpressionAttributeNames ?? new Dictionary<string, string>();
+				string key = $"#{ mappedName }";
+				string value = mappedName;
+				expressionAttributeNames.Add(key, value);
+			}
+			if(expressionAttributeNames != null)
+			{
+				if(scanReq != null)
+					scanReq.ExpressionAttributeNames = expressionAttributeNames;
+				else if(queryReq != null)
+					queryReq.ExpressionAttributeNames = expressionAttributeNames;
+			}
 		}
+		internal static IOServiceContext NewServiceContext() => null;
 
 	}
 }
