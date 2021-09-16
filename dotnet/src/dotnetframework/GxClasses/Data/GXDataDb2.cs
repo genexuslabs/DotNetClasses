@@ -373,7 +373,8 @@ namespace GeneXus.Data
 					status = 1; 
 					break;
 #if NETCORE
-				case -204:      // File not found 
+				case -204:      // File not found
+				case -454:      //The signature provided in the definition for routine "DB2SCHEMA.FUNCTION_NAME" matches the signature of some other routine.
 					if (GxContext.isReorganization) //ERROR [42704] [IBM][DB2/LINUXX8664] SQL0204N  "DB2SCHEMA.FUNCTION_NAME" is an undefined name.
 					{
 						return false;
