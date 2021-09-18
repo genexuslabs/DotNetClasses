@@ -555,7 +555,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			if (url.StartsWith(StorageUri))
 			{
-				objectName = url.Replace(StorageUri, string.Empty);
+				objectName = StorageUtils.StripQueryString(url.Replace(StorageUri, string.Empty));
 				return true;
 			}
 			objectName = null;
