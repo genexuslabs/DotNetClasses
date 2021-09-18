@@ -372,7 +372,7 @@ namespace GeneXus.Storage.GXOpenStack
 			string baseUrl = storageUrl + StorageUtils.DELIMITER + publicBucketName + StorageUtils.DELIMITER;
 			if (url.StartsWith(baseUrl))
 			{
-				objectName = url.Replace(baseUrl, string.Empty);
+				objectName = StorageUtils.StripQueryString(url.Replace(baseUrl, string.Empty));
 				return true;
 			}
 			objectName = null;

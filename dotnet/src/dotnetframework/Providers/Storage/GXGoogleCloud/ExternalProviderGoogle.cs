@@ -467,14 +467,14 @@ namespace GeneXus.Storage.GXGoogleCloud
 			if (url.StartsWith(baseUrl))
 			{
 				objectName = url.Replace(baseUrl, string.Empty);
-				objectName = objectName.Replace("%2F", "/"); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
+				objectName = StorageUtils.StripQueryString(objectName.Replace("%2F", "/")); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
 				return true;
 			}
 			baseUrl = $"https://storage.googleapis.com/{Bucket}/";
 			if (url.StartsWith(baseUrl))
 			{
 				objectName = url.Replace(baseUrl, string.Empty);
-				objectName = objectName.Replace("%2F", "/"); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
+				objectName = StorageUtils.StripQueryString(objectName.Replace("%2F", "/")); //Google Cloud Storage Bug. https://github.com/googleapis/google-cloud-dotnet/pull/3677
 				return true;
 			}
 			objectName = null;
