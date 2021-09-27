@@ -63,7 +63,7 @@ namespace GeneXus.HttpHandlerFactory
 				String objClass = GXAPIModule.servicesBase[actualPath];
 				if (cname0.LastIndexOf("/") == (cname0.Length - 1))
 					cname0 = cname0.Substring(0, cname0.Length - 1);
-				String objectName = cname0.Remove(0, actualPath.Length);s
+				String objectName = cname0.Remove(0, actualPath.Length);
 				if (GXAPIModule.servicesMapData.ContainsKey(actualPath) &&
 					GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out String mapName))
 				{
