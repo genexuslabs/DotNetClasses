@@ -387,13 +387,13 @@ namespace GeneXus.Storage.GXAzureStorage
 			string baseUrl = StorageUri + StorageUtils.DELIMITER + PublicContainer.Name + StorageUtils.DELIMITER;
 			if (url.StartsWith(baseUrl))
 			{
-				objectName = StorageUtils.StripQueryString(url.Replace(baseUrl, string.Empty));
+				objectName = url.Replace(baseUrl, string.Empty);
 				return true;
 			}
 			baseUrl = StorageUri + StorageUtils.DELIMITER + PrivateContainer.Name + StorageUtils.DELIMITER;
 			if (url.StartsWith(baseUrl))
 			{
-				objectName = StorageUtils.StripQueryString(url.Replace(baseUrl, string.Empty));
+				objectName = url.Replace(baseUrl, string.Empty);
 				return true;
 			}
 			objectName = null;

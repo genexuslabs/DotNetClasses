@@ -664,7 +664,7 @@ namespace GeneXus.Data.NTier.ADO
 								try
 								{
 									string imageRelativePath = image;
-									if (ServiceFactory.GetExternalProvider().TryGetObjectNameFromURL(image, out string objectName)) 
+									if (StorageFactory.TryGetProviderObjectName(ServiceFactory.GetExternalProvider(), image, out string objectName)) 
 									{
 										imageRelativePath = objectName;
 									}
