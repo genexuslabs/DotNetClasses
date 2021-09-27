@@ -5605,7 +5605,6 @@ namespace GeneXus.Utils
 	public class StorageUtils
 	{
 		public const string DELIMITER = "/";
-		const char QUERY_DELIMITER = '?';
 
 		public static string EncodeUrl(string objectName)
 		{
@@ -5621,13 +5620,7 @@ namespace GeneXus.Utils
 				url = newUrl;
 			return url;
 		}
-		public static string StripQueryString(string url)
-		{
-			if (!string.IsNullOrEmpty(url) && url.Contains(QUERY_DELIMITER))
-				return url.Split('?')[0];
-			else
-				return url;
-		}
+
 		public static String NormalizeDirectoryName(String directoryName)
 		{
 			directoryName = directoryName.Replace("\\", DELIMITER);
