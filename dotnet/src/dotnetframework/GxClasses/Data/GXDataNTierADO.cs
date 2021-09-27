@@ -659,7 +659,7 @@ namespace GeneXus.Data.NTier.ADO
 									GXLogging.Debug(log, "Upload file (_gxi) to ExternalProvider:", multimediaUri);
 								}
 							}
-							else //relative image_gxi name=> Assume image is a local file on the cloud, because storageService is Enabled. 
+							else //relative image_gxi name=> Assume image is a local file on the cloud because storageService is Enabled. 
 							{
 								try
 								{
