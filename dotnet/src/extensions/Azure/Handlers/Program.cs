@@ -40,7 +40,7 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 					{ 
 						connectionString = sessionService.ConnectionString;
 						services.AddSingleton<ICacheService2>(x => new Redis(connectionString));
-						ConnectionMultiplexer.SetFeatureFlag("preventthreadtheft", true);
+						//ConnectionMultiplexer.SetFeatureFlag("preventthreadtheft", true);
 					}
 					else
 						services.AddSingleton<ICacheService2>(x => new InProcessCache());
