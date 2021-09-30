@@ -648,23 +648,27 @@ namespace GeneXus.Data.NTier.ADO
 						else 
 						{
 							Uri uri;
-							string fileFullName = string.Empty;
 							if (Uri.TryCreate(image_gxi, UriKind.Absolute, out uri)) //file://
 							{
-								fileFullName = uri.AbsolutePath;
+								string fileFullName = uri.AbsolutePath;
 								Stream fileStream = new FileStream(fileFullName, FileMode.Open, FileAccess.Read);
-								String fileName = PathUtil.GetValidFileName(fileFullName, "_");
+								string fileName = PathUtil.GetValidFileName(fileFullName, "_");
 								using (fileStream)
 								{
 									multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(fileName, !GXDbFile.HasToken(fileName), false), tableName, fieldName, GxFileType.DefaultAttribute);
 									GXLogging.Debug(log, "Upload file (_gxi) to ExternalProvider:", multimediaUri);
 								}
 							}
-							else //relative image name=> Assume it is a local file on the cloud, because storageService is Enabled.
+							else //relative image_gxi name=> Assume image is a local file on the cloud because storageService is Enabled. 
 							{
 								try
 								{
-									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.DefaultAttribute);
+									string imageRelativePath = image;
+									if (StorageFactory.TryGetProviderObjectName(ServiceFactory.GetExternalProvider(), image, out string objectName)) 
+									{
+										imageRelativePath = objectName;
+									}
+									multimediaUri = ServiceFactory.GetExternalProvider().Copy(imageRelativePath, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.DefaultAttribute);
 									GXLogging.Debug(log, "Copy external file in ExternalProvider:", multimediaUri);
 								}
 								catch(Exception e)
@@ -681,7 +685,7 @@ namespace GeneXus.Data.NTier.ADO
 					//image_gxi is empty => process image
 					else if (!String.IsNullOrEmpty(image))
 					{
-						var fileName = PathUtil.GetValidFileName(image, "_");
+						string fileName = PathUtil.GetValidFileName(image, "_");
 
 						try
 						{

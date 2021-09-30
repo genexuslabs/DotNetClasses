@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Metadata;
 using GeneXus.Utils;
@@ -371,9 +372,20 @@ namespace GeneXus.Data
 				case -803:		// Duplicated record
 					status = 1; 
 					break;
-				case -204:		// File not found
+#if NETCORE
+				case -204:      // File not found
+				case -454:      //The signature provided in the definition for routine "DB2SCHEMA.FUNCTION_NAME" matches the signature of some other routine.
+					if (GxContext.isReorganization) //ERROR [42704] [IBM][DB2/LINUXX8664] SQL0204N  "DB2SCHEMA.FUNCTION_NAME" is an undefined name.
+					{
+						return false;
+					}
+					status = 105;
+					break;
+#else
+				case -204:      // File not found
 					status = 105; 
 					break;
+#endif
 				case -530:		// Parent key not found
 					if ((errMask & GxErrorMask.GX_MASKFOREIGNKEY) == 0)
 					{
