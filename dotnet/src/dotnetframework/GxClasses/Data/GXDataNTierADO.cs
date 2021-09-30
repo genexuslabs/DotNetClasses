@@ -586,8 +586,8 @@ namespace GeneXus.Data.NTier.ADO
 		//Second execution of Dataprovider that updates images, CategoryImage = calendar.Link(), image_gxi=https://chatteatest.s3.amazonaws.com/TestPGXReleased/Category/CategoryImage/calendar_dc0ca2d9335a484cbdc2d21fc7568af7.png, copy falla, multimediaUri = image_gxi;
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 		public void SetParameterMultimedia(int id, string image_gxi, string image, string tableName, string fieldName)
-		{
-			
+{
+			GXLogging.Debug(log, "SetParameterMultimedia image_gxi:", image_gxi + " image:" + image);
 			bool storageServiceEnabled = !string.IsNullOrEmpty(tableName) && !string.IsNullOrEmpty(fieldName) && (GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null);
 			string imageUploadName=image;
 			if (GxUploadHelper.IsUpload(image))
