@@ -589,11 +589,16 @@ namespace GeneXus.Data.NTier.ADO
 		{
 			
 			bool storageServiceEnabled = !string.IsNullOrEmpty(tableName) && !string.IsNullOrEmpty(fieldName) && (GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null);
-
+			string imageUploadName=image;
 			if (GxUploadHelper.IsUpload(image))
+			{
+				imageUploadName = GxUploadHelper.UploadName(image);
 				image = GxUploadHelper.UploadPath(image);
+			}
 			if (GxUploadHelper.IsUpload(image_gxi))
+			{
 				image_gxi = GxUploadHelper.UploadPath(image_gxi);
+			}
 
 			if (String.IsNullOrEmpty(image))
 			{
@@ -609,10 +614,9 @@ namespace GeneXus.Data.NTier.ADO
 					{
 						if (PathUtil.IsAbsoluteUrl(image_gxi)) //http://, https://, ftp://
 						{
-							string objectName;
 							//file is already on the cloud p.e. https://s3.amazonaws.com/Test/PublicTempStorage/multimedia/Image_ad013b5b050c4bf199f544b5561d9b92.png
 							//Must be copied to https://s3.amazonaws.com/Test/TableName/FieldName/Image_ad013b5b050c4bf199f544b5561d9b92.png
-							if (ServiceFactory.GetExternalProvider().TryGetObjectNameFromURL(image_gxi, out objectName)) 
+							if (ServiceFactory.GetExternalProvider().TryGetObjectNameFromURL(image_gxi, out _)) 
 							{
 								try
 								{
@@ -685,7 +689,7 @@ namespace GeneXus.Data.NTier.ADO
 					//image_gxi is empty => process image
 					else if (!String.IsNullOrEmpty(image))
 					{
-						string fileName = PathUtil.GetValidFileName(image, "_");
+						string fileName = PathUtil.GetValidFileName(imageUploadName, "_");
 
 						try
 						{
