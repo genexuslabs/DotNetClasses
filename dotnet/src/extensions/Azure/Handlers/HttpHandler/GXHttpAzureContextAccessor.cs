@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Cache;
 using GeneXus.Services;
+using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -57,7 +58,10 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				if (!isSecure)
 					isSecure = requestData.Url.Scheme == "https";
 
-				sessionCookie.Expires = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc); 
+				
+				//sessionCookie.Expires = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
+				if (!DateTime.MinValue.Equals(DateTimeUtil.NullDate()))
+					sessionCookie.Expires = DateTime.MinValue;
 				sessionCookie.Path = "";
 				sessionCookie.Domain = "";
 				sessionCookie.HttpOnly = true;
