@@ -721,7 +721,7 @@ namespace GeneXus.Data.NTier.ADO
 					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(image_gxi, "_"), !GXDbFile.HasToken(image_gxi), true);
 				//image_gxi is empty => process image
 				else if (!String.IsNullOrEmpty(image))
-					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(image, "_"), !GXDbFile.HasToken(image), true);
+					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(imageUploadName, "_"), !GXDbFile.HasToken(imageUploadName), true);
 				_gxDbCommand.SetParameter(id - 1, multimediaUri);
 			}
 		}
