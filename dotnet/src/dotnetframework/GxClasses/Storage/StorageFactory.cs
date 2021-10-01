@@ -17,7 +17,7 @@ namespace GeneXus.Storage
 					providerObjectName = providerObjectName.Substring(0, idx);
 				}
 
-				// We store in Url Encoded Urls. If the parameter is an absolute URL, we need to decode the ObjectName to get the real Object Name.
+				// We store in DB, Path Encoded Urls. If the parameter is an absolute URL, we need to decode the ObjectName to get the real Object Name.
 				if (providerObjectName != null && PathUtil.IsAbsoluteUrl(objectNameOrUrl))
 					providerObjectName = StorageUtils.DecodeUrl(providerObjectName);
 				return true;
