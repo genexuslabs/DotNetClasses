@@ -142,7 +142,7 @@ namespace GeneXus.Storage.GXAzureStorage
 
 		private string GetURL(CloudBlockBlob blob, GxFileType fileType, int urlMinutes = 0)
 		{
-			string url = StorageUri + StorageUtils.DELIMITER + blob.Container.Name + StorageUtils.DELIMITER + StorageUtils.EncodeUrl(blob.Name);
+			string url = StorageUri + StorageUtils.DELIMITER + blob.Container.Name + StorageUtils.DELIMITER + StorageUtils.EncodeUrlPath(blob.Name);
 			if (IsPrivateFile(fileType))
 			{
 				SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy();
@@ -207,7 +207,7 @@ namespace GeneXus.Storage.GXAzureStorage
 				
 				targetBlob.Metadata["Table"] = tableName;
 				targetBlob.Metadata["Field"] = fieldName;
-				targetBlob.Metadata["KeyValue"] = StorageUtils.EncodeUrl(newName);
+				targetBlob.Metadata["KeyValue"] = StorageUtils.EncodeUrlPath(newName);
 				
 				if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
 				{
