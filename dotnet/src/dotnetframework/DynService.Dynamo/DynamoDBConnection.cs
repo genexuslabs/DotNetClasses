@@ -95,11 +95,11 @@ namespace GeneXus.Data.NTier
 					DynamoDBHelper.GXToDynamoQueryParameter("", values, parm);
 				}
 			}
-			var pattern = @"\((.*) = :(.*)\)";
+			string pattern = @"\((.*) = :(.*)\)";
 			Dictionary<string, AttributeValue> keyCondition = new Dictionary<string, AttributeValue>();
 			List<string> filters = new List<string>();
 
-			foreach (var keyFilter in query.Filters)
+			foreach (string keyFilter in query.Filters)
 			{
 				var match = Regex.Match(keyFilter, pattern);
 				String varName = match.Groups[2].Value;
@@ -184,7 +184,7 @@ namespace GeneXus.Data.NTier
 
 			filters.AddRange(query.Filters);
 			
-			foreach (var item in query.Vars)
+			foreach (VarValue item in query.Vars)
 			{
 				values.Add(item.Name, DynamoDBHelper.ToAttributeValue(item));
 			}

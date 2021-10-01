@@ -9,7 +9,6 @@ namespace GeneXus.Data.NTier
 {
 	public class DynamoDBDataStoreHelper: DataStoreHelperBase
 	{
-
 		public DynamoDBMap Map(string name)
 		{
 			return new DynamoDBMap(name);

@@ -681,7 +681,7 @@ namespace GeneXus.Data.NTier.ADO
 					//image_gxi is empty => process image
 					else if (!String.IsNullOrEmpty(image))
 					{
-						var fileName = PathUtil.GetValidFileName(image, "_");
+						string fileName = PathUtil.GetValidFileName(image, "_");
 
 						try
 						{

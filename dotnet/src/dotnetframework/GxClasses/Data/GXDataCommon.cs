@@ -4242,7 +4242,7 @@ namespace GeneXus.Data
 		public virtual DateTime GetDateTime(int i)
 		{
 			if (computeSizeInBytes) readBytes += 8;
-			var value = block.Item(pos,i);
+			object value = block.Item(pos,i);
 
 			if (value is DateTime)
 				return (DateTime)value;

@@ -24,7 +24,9 @@ namespace GeneXus.Data.NTier
 		public string[] Filters { get; set; } = Array.Empty<string>();
 		public string[] AssignAtts { get; set; } = Array.Empty<string>();
 		public IODataMap2[] SelectList { get; set; } = Array.Empty<IODataMap2>();
-		public VarValue[] Vars { get; set; } = Array.Empty<VarValue>();
+
+		private List<VarValue> mVarValues = new List<VarValue>();
+		public IEnumerable<VarValue> Vars { get { return mVarValues; } }
 		public CursorType CursorType { get; set; } = CursorType.Select;
 
 		public Query(object dataStoreHelper)
@@ -66,11 +68,11 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
-		public Query SetVars(VarValue[] vars)
-		{
-			Vars = vars;
-			return this;
-		}
+//		public Query SetVars(VarValue[] vars)
+//		{
+//			Vars = vars;
+//			return this;
+//		}
 
 		public Query SetType(CursorType cType)
 		{
@@ -78,6 +80,11 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
+		public Query AddParm(GXType gxType, object parm)
+		{
+			mVarValues.Add(new VarValue($":parm{ mVarValues.Count + 1 }", gxType, parm));
+			return this;
+		}
 	}
 
 	public class VarValue
@@ -89,6 +96,7 @@ namespace GeneXus.Data.NTier
 		public VarValue(string name, GXType type, object value)
 		{
 			Name = name;
+			Type = type;
 			Value = value;
 		}
 
