@@ -5612,16 +5612,15 @@ namespace GeneXus.Utils
 					.Insert(index, replace);
 		}
 
-		public static string EncodeUrlPath(string relativeUrl)
+		public static string EncodeUrlPath(string objectNameOrRelativeUrl)
 		{
-			string objectName = relativeUrl;
-			int idx = relativeUrl.LastIndexOf(StorageUtils.DELIMITER);
+			int idx = objectNameOrRelativeUrl.LastIndexOf(StorageUtils.DELIMITER);
 			if (idx > 0)
 			{
-				objectName = relativeUrl.Substring(idx + 1);
-				return ReplaceAt(relativeUrl, idx + 1, objectName.Length, HttpUtility.UrlEncode(objectName));
+				string objectName = objectNameOrRelativeUrl.Substring(idx + 1);
+				return ReplaceAt(objectNameOrRelativeUrl, idx + 1, objectName.Length, HttpUtility.UrlEncode(objectName));
 			}
-			return HttpUtility.UrlEncode(objectName);
+			return HttpUtility.UrlEncode(objectNameOrRelativeUrl);
 		}
 
 		public static string DecodeUrl(string url)
