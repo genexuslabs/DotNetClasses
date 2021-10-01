@@ -48,6 +48,7 @@ namespace GeneXus.Data
 	public class GxDb2ISeriesIds : GxDb2
 	{
 		const string DEFAULT_ISERIES_PORT = "446";
+		const string DEFAULT_ISERIES_DB = "*LOCAL";
 		GxDb2ISeries iseriesCommon;
 		public GxDb2ISeriesIds(string id) {
 			iseriesCommon = new GxDb2ISeries(id);
@@ -73,9 +74,25 @@ namespace GeneXus.Data
 		{
 			return iseriesCommon.ProcessError(dbmsErrorCode, emsg, errMask, con, ref status, ref retry, retryCount);
 		}
-		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt)
+		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dateValue)
 		{
-			return iseriesCommon.Net2DbmsDateTime(parm, dt);
+			if (iseriesCommon.UseCharInDate && parm.DbType == DbType.String && parm.Size == 8)
+			{
+				string resString;
+				if (dateValue.Equals(DateTimeUtil.NullDate()))
+				{
+					resString = GxDb2ISeries.SQL_NULL_DATE;
+				}
+				else
+				{
+					resString = DateTimeUtil.getYYYYMMDD(dateValue);
+				}
+				return resString;
+			}
+			else
+			{
+				return dateValue;
+			}
 		}
 		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
@@ -87,6 +104,12 @@ namespace GeneXus.Data
 			{
 				port = DEFAULT_ISERIES_PORT;
 			}
+			if (!string.IsNullOrEmpty(extra))
+			{
+				extra = ParseAdditionalData(extra, "naming");
+			}
+			extra = ReplaceKeyword(extra, "database", "CurrentSchema");
+			databaseName = DEFAULT_ISERIES_DB;
 			return base.BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 		}
 	}
