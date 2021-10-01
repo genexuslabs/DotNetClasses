@@ -5613,7 +5613,7 @@ namespace GeneXus.Utils
 					.Insert(index, replace);
 		}
 
-		public static string EncodeRelativeURLPath(string relativeUrl)
+		public static string EncodeUrlPath(string relativeUrl)
 		{
 			string objectName = relativeUrl;
 			int idx = relativeUrl.LastIndexOf(StorageUtils.DELIMITER);

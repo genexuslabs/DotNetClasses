@@ -282,10 +282,10 @@ namespace GeneXus.Storage.GXGoogleCloud
 		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			if (IsPrivateResource(fileType))
-				return Signer.Sign(Bucket, StorageUtils.EncodeRelativeURLPath(objectName), ResolveExpiration(urlMinutes), HttpMethod.Get);
+				return Signer.Sign(Bucket, StorageUtils.EncodeUrlPath(objectName), ResolveExpiration(urlMinutes), HttpMethod.Get);
 			else
 			{
-				return StorageUri + StorageUtils.EncodeRelativeURLPath(objectName);
+				return StorageUri + StorageUtils.EncodeUrlPath(objectName);
 			}
 		}
 		
