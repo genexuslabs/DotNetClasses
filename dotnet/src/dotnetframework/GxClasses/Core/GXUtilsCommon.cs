@@ -5625,9 +5625,9 @@ namespace GeneXus.Utils
 			if (idx > 0)
 			{
 				string objectName = objectNameOrRelativeUrl.Substring(idx + 1);
-				return ReplaceAt(objectNameOrRelativeUrl, idx + 1, objectName.Length, HttpUtility.UrlEncode(objectName));
+				return ReplaceAt(objectNameOrRelativeUrl, idx + 1, objectName.Length, Uri.EscapeDataString(objectName));
 			}
-			return HttpUtility.UrlEncode(objectNameOrRelativeUrl);
+			return Uri.EscapeDataString(objectNameOrRelativeUrl);
 		}
 
 		public static string DecodeUrl(string url)
