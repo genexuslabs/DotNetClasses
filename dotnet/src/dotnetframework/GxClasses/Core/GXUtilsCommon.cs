@@ -5612,6 +5612,13 @@ namespace GeneXus.Utils
 					.Insert(index, replace);
 		}
 
+		[Obsolete("EncodeUrl is deprecated as it would give unexpected results for some urls. Use EncodeUrlPath instead", false)]
+		public static string EncodeUrl(string objectName) { 
+			if (!Uri.IsWellFormedUriString(objectName, UriKind.RelativeOrAbsolute))
+				return HttpUtility.UrlPathEncode(objectName);
+			return objectName;
+		}
+
 		public static string EncodeUrlPath(string objectNameOrRelativeUrl)
 		{
 			int idx = objectNameOrRelativeUrl.LastIndexOf(StorageUtils.DELIMITER);
