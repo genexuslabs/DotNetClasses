@@ -669,7 +669,7 @@ namespace GeneXus.Utils
                             string uploadPath = (string)info.GetValue(source, null);
 							if (GxUploadHelper.IsUpload(uploadPath)) //File upload from SD
 							{
-								info.SetValue(this, GxUploadHelper.UploadPath(uploadPath), null);
+								info.SetValue(this, uploadPath, null);
 								PropertyInfo info_gxi = source.Sdt.GetType().GetProperty(info.Name + "_gxi");//gxi reset
 								if (info_gxi != null)
 									info_gxi.SetValue(this.Sdt, string.Empty, null);
