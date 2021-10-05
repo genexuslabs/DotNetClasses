@@ -586,14 +586,19 @@ namespace GeneXus.Data.NTier.ADO
 		//Second execution of Dataprovider that updates images, CategoryImage = calendar.Link(), image_gxi=https://chatteatest.s3.amazonaws.com/TestPGXReleased/Category/CategoryImage/calendar_dc0ca2d9335a484cbdc2d21fc7568af7.png, copy falla, multimediaUri = image_gxi;
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 		public void SetParameterMultimedia(int id, string image_gxi, string image, string tableName, string fieldName)
-		{
-			
+{
+			GXLogging.Debug(log, "SetParameterMultimedia image_gxi:", image_gxi + " image:" + image);
 			bool storageServiceEnabled = !string.IsNullOrEmpty(tableName) && !string.IsNullOrEmpty(fieldName) && (GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null);
-
+			string imageUploadName=image;
 			if (GxUploadHelper.IsUpload(image))
+			{
+				imageUploadName = GxUploadHelper.UploadName(image);
 				image = GxUploadHelper.UploadPath(image);
+			}
 			if (GxUploadHelper.IsUpload(image_gxi))
+			{
 				image_gxi = GxUploadHelper.UploadPath(image_gxi);
+			}
 
 			if (String.IsNullOrEmpty(image))
 			{
@@ -609,10 +614,9 @@ namespace GeneXus.Data.NTier.ADO
 					{
 						if (PathUtil.IsAbsoluteUrl(image_gxi)) //http://, https://, ftp://
 						{
-							string objectName;
 							//file is already on the cloud p.e. https://s3.amazonaws.com/Test/PublicTempStorage/multimedia/Image_ad013b5b050c4bf199f544b5561d9b92.png
 							//Must be copied to https://s3.amazonaws.com/Test/TableName/FieldName/Image_ad013b5b050c4bf199f544b5561d9b92.png
-							if (ServiceFactory.GetExternalProvider().TryGetObjectNameFromURL(image_gxi, out objectName)) 
+							if (ServiceFactory.GetExternalProvider().TryGetObjectNameFromURL(image_gxi, out _)) 
 							{
 								try
 								{
@@ -685,7 +689,7 @@ namespace GeneXus.Data.NTier.ADO
 					//image_gxi is empty => process image
 					else if (!String.IsNullOrEmpty(image))
 					{
-						string fileName = PathUtil.GetValidFileName(image, "_");
+						string fileName = PathUtil.GetValidFileName(imageUploadName, "_");
 
 						try
 						{
@@ -717,7 +721,7 @@ namespace GeneXus.Data.NTier.ADO
 					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(image_gxi, "_"), !GXDbFile.HasToken(image_gxi), true);
 				//image_gxi is empty => process image
 				else if (!String.IsNullOrEmpty(image))
-					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(image, "_"), !GXDbFile.HasToken(image), true);
+					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(imageUploadName, "_"), !GXDbFile.HasToken(imageUploadName), true);
 				_gxDbCommand.SetParameter(id - 1, multimediaUri);
 			}
 		}
