@@ -1263,7 +1263,10 @@ namespace GeneXus.Utils
 		{
 			return true;
 		}
-
+		public virtual bool SdtSerializeAsNull()
+		{
+			return false;
+		}
 		public virtual object Clone()
 		{
 			return base.MemberwiseClone();
