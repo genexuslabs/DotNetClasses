@@ -719,7 +719,7 @@ namespace GeneXus.Application
 				}				
 				else
 					strVal = parameters[key];
-				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
+				json = JSONHelper.WCFSerialize( strVal, Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
@@ -781,8 +781,10 @@ namespace GeneXus.Application
 
 		private static void RestProcess(Dictionary<string, object> outputParameters)
 		{
+
 			foreach (string k in outputParameters.Keys.ToList())
 			{
+				System.Diagnostics.Debugger.Launch();
 				GxUserType p = outputParameters[k] as GxUserType;
 				if ((p != null) && !p.ShouldSerializeSdtJson())
 				{
