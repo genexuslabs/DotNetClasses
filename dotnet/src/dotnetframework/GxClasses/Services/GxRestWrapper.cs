@@ -792,6 +792,7 @@ namespace GeneXus.Application
 				else
 				{
 					object o = MakeRestType(outputParameters[k]);
+
 					if (p !=null && p.SdtSerializeAsNull())
 					{						
 						outputParameters[k] = JNull.Value;
