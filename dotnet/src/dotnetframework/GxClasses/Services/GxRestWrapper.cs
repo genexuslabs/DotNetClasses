@@ -766,8 +766,7 @@ namespace GeneXus.Application
 				{
 					object o = MakeRestType(outputParameters[k]);
 					if (p.SdtSerializeAsNull())
-					{
-						System.Diagnostics.Debugger.Launch();
+					{						
 						outputParameters[k] = JNull.Value;
 					}
 					else
