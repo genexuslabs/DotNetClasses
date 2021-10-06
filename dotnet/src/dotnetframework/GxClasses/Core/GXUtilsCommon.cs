@@ -5607,19 +5607,33 @@ namespace GeneXus.Utils
 	{
 		public const string DELIMITER = "/";
 
-		public static string EncodeUrl(string objectName)
+		private static string ReplaceAt(string str, int index, int length, string replace)
 		{
+			return str.Remove(index, Math.Min(length, str.Length - index))
+					.Insert(index, replace);
+		}
+
+		[Obsolete("EncodeUrl is deprecated as it would give unexpected results for some urls. Use EncodeUrlPath instead", false)]
+		public static string EncodeUrl(string objectName) { 
 			if (!Uri.IsWellFormedUriString(objectName, UriKind.RelativeOrAbsolute))
 				return HttpUtility.UrlPathEncode(objectName);
 			return objectName;
 		}
 
+		public static string EncodeUrlPath(string objectNameOrRelativeUrl)
+		{
+			int idx = objectNameOrRelativeUrl.LastIndexOf(StorageUtils.DELIMITER);
+			if (idx > 0)
+			{
+				string objectName = objectNameOrRelativeUrl.Substring(idx + 1);
+				return ReplaceAt(objectNameOrRelativeUrl, idx + 1, objectName.Length, Uri.EscapeDataString(objectName));
+			}
+			return Uri.EscapeDataString(objectNameOrRelativeUrl);
+		}
+
 		public static string DecodeUrl(string url)
 		{
-			string newUrl;
-			while ((newUrl = HttpUtility.UrlDecode(url)) != url)
-				url = newUrl;
-			return url;
+			return HttpUtility.UrlDecode(url);
 		}
 
 		public static String NormalizeDirectoryName(String directoryName)

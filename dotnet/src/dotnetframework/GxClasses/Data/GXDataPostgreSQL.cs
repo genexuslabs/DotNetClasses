@@ -11,6 +11,7 @@ using System.Reflection;
 using System.IO;
 using System.Collections.Generic;
 using GeneXus.Configuration;
+using System.Text.RegularExpressions;
 #if NETCORE
 using GxClasses.Helpers;
 #endif
@@ -474,7 +475,17 @@ namespace GeneXus.Data
 					//dbmsErrorCode=5632, error: 42p01: no existe la tabla â«ivafechafacturaâ»
 					return false;
 				}
-
+			if (emsg.IndexOf("42704") != -1)
+			{
+				// Type does not exists ( when creating geographic types without postgis extension)
+				// Second part of the condition for non-english installations when error is localized.
+				Regex rx = new Regex(@"42704.*Type.*does not exist", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+				if (rx.IsMatch(emsg) || emsg.IndexOf("\"geography\"") != -1)
+				{
+					status = 999;
+					return false;
+				}
+			}
 			if (    //duplicate key violates unique constraint //ERRO: 23505: duplicar chave viola a restriÃ§Ã£o de unicidade "nfe010_pkey"
 				emsg.IndexOf("23505") != -1 ||
 				(emsg.IndexOf("duplicate key") != -1 && emsg.IndexOf("unique") != -1) ||
