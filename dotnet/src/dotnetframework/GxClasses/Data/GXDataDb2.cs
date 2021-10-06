@@ -121,6 +121,7 @@ namespace GeneXus.Data
 		public static string SQL_NULL_DATE_8="00000000";
         static Assembly _db2Assembly;
 #if NETCORE
+		object[] lastReadValues;
 		internal static string Db2AssemblyName = "IBM.Data.Db2";
 		const string dB2DbTypeEnum = "IBM.Data.Db2.DB2Type";
 #else
@@ -220,7 +221,30 @@ namespace GeneXus.Data
                 return Guid.Empty;
             }
         }
-        public override IDbDataParameter CreateParameter()
+#if NETCORE
+		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i)
+		{
+			try
+			{
+				return base.GetString(cmd, DR, i);
+			}
+			catch (InvalidOperationException ex)//There is no more data to return with DB2Clob fields
+			{
+				GXLogging.Warn(log, "GetString couldn't read value with GetString", ex);
+				if (lastReadValues != null && DR.GetFieldType(i)== typeof(string))
+				{
+					return Convert.ToString(lastReadValues[i-1]);
+				}
+				throw ex;
+			}
+		}
+		public override void GetValues(IDataReader reader, ref object[] values)
+		{
+			base.GetValues(reader, ref values);
+			lastReadValues = values;
+		}
+#endif
+		public override IDbDataParameter CreateParameter()
 		{
             return (IDbDataParameter)ClassLoader.CreateInstance(Db2Assembly, $"{Db2AssemblyName}.DB2Parameter");
 		}
