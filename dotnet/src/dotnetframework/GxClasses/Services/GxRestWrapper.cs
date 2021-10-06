@@ -784,7 +784,6 @@ namespace GeneXus.Application
 
 			foreach (string k in outputParameters.Keys.ToList())
 			{
-				System.Diagnostics.Debugger.Launch();
 				GxUserType p = outputParameters[k] as GxUserType;
 				if ((p != null) && !p.ShouldSerializeSdtJson())
 				{
