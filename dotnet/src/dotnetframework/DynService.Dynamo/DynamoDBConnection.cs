@@ -34,6 +34,7 @@ namespace GeneXus.Data.NTier
 		private readonly string CLIENT_SECRET = "password";
 		private readonly string REGION = "region";
 		private readonly string LOCAL_URL = "LocalUrl";
+		private readonly char[] SHARP_CHARS = new char[] { '#' };
 		private AmazonDynamoDBClient mDynamoDB;
 		private AmazonDynamoDBConfig mConfig;
 		private AWSCredentials mCredentials;
@@ -87,25 +88,26 @@ namespace GeneXus.Data.NTier
 			Query query = cursorDef.Query as Query;
 
 			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
-			if (parms.Count > 0)
+			foreach (KeyValuePair<string, string> asg in query.AssignAtts)
 			{
-				for (int i = 0; i < parms.Count; i++)
-				{
-					ServiceParameter parm = parms[i] as ServiceParameter;
-					DynamoDBHelper.GXToDynamoQueryParameter("", values, parm);
-				}
+				string name = asg.Key.TrimStart(SHARP_CHARS);
+				string parmName = asg.Value.Substring(1);
+				DynamoDBHelper.AddAttributeValue(name, values, parms[parmName] as ServiceParameter);
 			}
+
 			string pattern = @"\((.*) = :(.*)\)";
 			Dictionary<string, AttributeValue> keyCondition = new Dictionary<string, AttributeValue>();
 			List<string> filters = new List<string>();
 
 			foreach (string keyFilter in query.Filters)
 			{
-				var match = Regex.Match(keyFilter, pattern);
-				String varName = match.Groups[2].Value;
+				Match match = Regex.Match(keyFilter, pattern);
+				string varName = match.Groups[2].Value;
 				if (match.Groups.Count > 1)
 				{
-					keyCondition[match.Groups[1].Value] = values[varName];
+					string name = match.Groups[1].Value.TrimStart(SHARP_CHARS);
+					DynamoDBHelper.AddAttributeValue(varName, values, parms[varName] as ServiceParameter);
+					keyCondition[name] = values[varName];
 				}
 			}
 			AmazonDynamoDBRequest request = null;
@@ -138,7 +140,6 @@ namespace GeneXus.Data.NTier
 						TableName = query.TableName,
 						Key = keyCondition,
 						AttributeUpdates = ToAttributeUpdates(keyCondition, values)
-						
 					};
 					mDynamoDB.UpdateItem((UpdateItemRequest)request);
 					break;
@@ -235,7 +236,7 @@ namespace GeneXus.Data.NTier
 			Dictionary<string, string> expressionAttributeNames = null;
 			foreach (string mappedName in query.SelectList.Where(selItem => (selItem as DynamoDBMap)?.NeedsAttributeMap == true).Select(selItem => selItem.GetName(NewServiceContext())))
 			{
-				expressionAttributeNames = scanReq.ExpressionAttributeNames ?? new Dictionary<string, string>();
+				expressionAttributeNames = expressionAttributeNames ?? new Dictionary<string, string>();
 				string key = $"#{ mappedName }";
 				string value = mappedName;
 				expressionAttributeNames.Add(key, value);
