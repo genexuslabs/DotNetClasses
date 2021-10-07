@@ -106,8 +106,8 @@ namespace GeneXus.Data.NTier
 				if (match.Groups.Count > 1)
 				{
 					string name = match.Groups[1].Value.TrimStart(SHARP_CHARS);
-					DynamoDBHelper.AddAttributeValue(varName, values, parms[varName] as ServiceParameter);
-					keyCondition[name] = values[varName];
+					DynamoDBHelper.AddAttributeValue(name, values, parms[varName] as ServiceParameter);
+					keyCondition[name] = values[name];
 				}
 			}
 			AmazonDynamoDBRequest request = null;
