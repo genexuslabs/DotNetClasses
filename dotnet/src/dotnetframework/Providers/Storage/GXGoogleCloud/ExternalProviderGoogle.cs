@@ -285,14 +285,14 @@ namespace GeneXus.Storage.GXGoogleCloud
 		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			if (IsPrivateResource(fileType))
-				return Signer.Sign(Bucket, StorageUtils.EncodeUrlPath(objectName), ResolveExpiration(urlMinutes), HttpMethod.Get);
+				return Signer.Sign(Bucket, objectName, ResolveExpiration(urlMinutes), HttpMethod.Get);
 			else
 			{
 				return StorageUri + StorageUtils.EncodeUrlPath(objectName);
 			}
 		}
-		
-        public string Copy(string url, string newName, string tableName, string fieldName, GxFileType fileType)
+
+		public string Copy(string url, string newName, string tableName, string fieldName, GxFileType fileType)
 		{
 			newName = Folder + StorageUtils.DELIMITER + tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + newName;
 			url = StorageUtils.DecodeUrl(url.Replace(StorageUri, string.Empty));
