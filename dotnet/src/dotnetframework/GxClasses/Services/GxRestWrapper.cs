@@ -128,17 +128,17 @@ namespace GeneXus.Application
 					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
 					wrapped = false;
 				}				
-
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-				}
+				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
-				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
+				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
