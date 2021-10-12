@@ -2419,7 +2419,7 @@ namespace GeneXus.Data
 
 		public Type GetFieldType(int i)
 		{
-			throw (new GxNotImplementedException());
+			return reader.GetFieldType(i);
 		}
 		public float GetFloat(int i)
 		{
