@@ -28,7 +28,7 @@ namespace GeneXus.HttpHandlerFactory
 			string cname0 = (fname.Contains("."))? fname.Substring(0, fname.LastIndexOf('.')).ToLower():fname.ToLower();
 			string actualPath = "";
 			
-			else if (cname0 == "gxoauthlogout")
+			if (cname0 == "gxoauthlogout")
 			{
 				return new GeneXus.Http.GXOAuthLogout();
 			}
