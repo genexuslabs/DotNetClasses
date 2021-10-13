@@ -3084,7 +3084,7 @@ namespace GeneXus.Http
 
 		public static void AddResponsiveMetaHeaders(GXRadio meta)
 		{
-			TryAddMetaHeader(meta, "viewport", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no");
+			System.Diagnostics.Debugger.Launch();
 			TryAddMetaHeader(meta, "apple-mobile-web-app-capable", "yes");
 		}
 
@@ -3093,7 +3093,7 @@ namespace GeneXus.Http
 			ListItem item = meta.Items.FindByValue(key);
 			if (item == null)
 			{
-				meta.addItem(key, value, 0);
+				meta.addItem(key, value, 0);o
 			}
 		}
 	}
