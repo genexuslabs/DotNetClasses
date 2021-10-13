@@ -135,6 +135,7 @@ namespace GeneXus.Application
 					innerMethod = this._serviceMethod;
 				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 
 				setWorkerStatus(_procWorker);
@@ -287,17 +288,15 @@ namespace GeneXus.Application
 					{
 						innerMethod = _serviceMethod;
 					}
-
 					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
 					formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				}
-				
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);	
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
