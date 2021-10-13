@@ -297,7 +297,7 @@ namespace GeneXus.Http
 			}
 		}
 	}
-	
+
 	class HttpResponseWriter : TextWriter
 	{
 		private HttpResponse response;
@@ -326,47 +326,7 @@ namespace GeneXus.Http
 		}
 	}
 
-	internal class GXResourceProvider : GXHttpHandler
-	{
-		internal static string PROVIDER_NAME = "GXResourceProvider.aspx";
-		public GXResourceProvider()
-		{
-			this.context = new GxContext();
-		}
-		public override void webExecute()
-		{
-			string resourceType = this.GetNextPar();
-			if (string.Compare(resourceType.Trim(), "image", true) == 0)
-			{
-				string imageGUID = this.GetNextPar();
-				string kbId = this.GetNextPar();
-				string theme = this.GetNextPar();
-				this.context.setAjaxCallMode();
-				this.context.SetDefaultTheme(theme);
-				if (Guid.TryParse(imageGUID, out Guid sanitizedGuid))
-				{
-					string imagePath = this.context.GetImagePath(sanitizedGuid.ToString(), kbId, theme);
-					if (!string.IsNullOrEmpty(imagePath))
-					{
-						this.context.HttpContext.Response.Clear();
-						this.context.HttpContext.Response.ContentType = MediaTypesNames.TextPlain;
-#if NETCORE
-						this.context.HttpContext.Response.Write(imagePath);
-#else
-						this.context.HttpContext.Response.Output.WriteLine(imagePath);
-						this.context.HttpContext.Response.End();
-#endif
-						return;
-					}
-				}
-			}
-			this.SendResponseStatus((int)HttpStatusCode.NotFound, "Resource not found");
-		}
-	}
-
-
-
-
+	
 	internal class GXObjectUploadServices : GXHttpHandler, IReadOnlySessionState
 	{
 		public GXObjectUploadServices()
