@@ -27,11 +27,8 @@ namespace GeneXus.HttpHandlerFactory
 			string fname = relativeURL.Substring(relativeURL.LastIndexOf('~') + 2);
 			string cname0 = (fname.Contains("."))? fname.Substring(0, fname.LastIndexOf('.')).ToLower():fname.ToLower();
 			string actualPath = "";
-			if (cname0 == "gxresourceprovider")
-			{
-				return new GeneXus.Http.GXResourceProvider();
-			}
-			else if (cname0 == "gxreor")
+
+			if (cname0 == "gxreor")
 			{
 				return new GeneXus.Http.GXReorServices();
 			}
