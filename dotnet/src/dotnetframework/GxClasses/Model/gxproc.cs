@@ -80,10 +80,21 @@ namespace GeneXus.Procedure
 				action(x);
 			};
 		}
+		protected void ExitApp()
+		{
+			exitApplication(BatchCursorHolder());
+		}
 		protected void exitApplication()
 		{
-			foreach (IGxDataStore ds in context.DataStores)
-				ds.Connection.FlushBatchCursors(this);
+			exitApplication(true);
+		}
+		private void exitApplication(bool flushBatchCursor)
+		{
+			if (flushBatchCursor)
+			{
+				foreach (IGxDataStore ds in context.DataStores)
+					ds.Connection.FlushBatchCursors(this);
+			}
 
 			if (IsMain)
 				dbgInfo?.OnExit();
@@ -103,7 +114,7 @@ namespace GeneXus.Procedure
 #endif
 			
 		}
-
+		protected virtual bool BatchCursorHolder() { return false; }
 		protected virtual void printHeaders(){}
 		protected virtual void printFooters(){}
 
@@ -112,33 +123,49 @@ namespace GeneXus.Procedure
             return Encrypt64(GXUtil.GetHash(GeneXus.Web.Security.WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
         }
 
-        protected String Encrypt64(String value, String key)
-        {
-            String sRet = "";
-            try
-            {
-                sRet = Crypto.Encrypt64(value, key);
-            }
-            catch (InvalidKeyException)
-            {
-                GXLogging.Error(log, "440 Invalid encryption key");
-            }
-            return sRet;
-        }
+		protected string Encrypt64(string value, string key)
+		{
+			return Encrypt64(value, key, false);
+		}
+		private string Encrypt64(string value, string key, bool safeEncoding)
+		{
+			string sRet = string.Empty;
+			try
+			{
+				sRet = Crypto.Encrypt64(value, key, safeEncoding);
+			}
+			catch (InvalidKeyException)
+			{
+				GXLogging.Error(log, "440 Invalid encryption key");
+			}
+			return sRet;
+		}
+		protected string UriEncrypt64(string value, string key)
+		{
+			return Encrypt64(value, key, true);
+		}
 
-        protected String Decrypt64(String value, String key)
-        {
-            String sRet = "";
-            try
-            {
-                sRet = Crypto.Decrypt64(value, key);
-            }
-            catch (InvalidKeyException)
-            {
-                GXLogging.Error(log, "440 Invalid encryption key");
-            }
-            return sRet;
-        }
+		protected string Decrypt64(string value, string key)
+		{
+			return Decrypt64(value, key, false);
+		}
+		private string Decrypt64(string value, string key, bool safeEncoding)
+		{
+			String sRet = string.Empty;
+			try
+			{
+				sRet = Crypto.Decrypt64(value, key, safeEncoding);
+			}
+			catch (InvalidKeyException)
+			{
+				GXLogging.Error(log, "440 Invalid encryption key");
+			}
+			return sRet;
+		}
+		protected string UriDecrypt64(string value, string key)
+		{
+			return Decrypt64(value, key, true);
+		}
 		public msglist GX_msglist 
 		{
 			get	{ return context.GX_msglist ; }
@@ -230,7 +257,7 @@ namespace GeneXus.Procedure
 			getPrinter().GxSetDocName(fileName);
             getPrinter().GxSetDocFormat(fileExtension);
 			context.PrintReportAtClient(fileName, printerRule);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile(Preferences.getBLOB_PATH(), new GxFileInfo(fileName, Preferences.getBLOB_PATH())), context.HttpContext);
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile(Preferences.getBLOB_PATH(), new GxFileInfo(fileName, Preferences.getBLOB_PATH())), context);
 		}
 
 		protected bool initPrinter(String outputTo, int gxXPage, int gxYPage, string iniFile, string form, string printer, int mode, int orientation, int pageSize, int pageLength, int pageWidth, int scale, int copies, int defSrc, int quality, int color, int duplex)

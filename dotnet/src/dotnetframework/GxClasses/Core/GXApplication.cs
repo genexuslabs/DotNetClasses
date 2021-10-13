@@ -672,27 +672,29 @@ namespace GeneXus.Application
 			return string.Empty;
 		}
 
-		public static bool GetHttpRequestPostedFile(HttpContext httpContext, string varName, out string filePath)
+		public static bool GetHttpRequestPostedFile(IGxContext gxContext, string varName, out string fileToken)
 		{
-			filePath = null;
+			var httpContext = gxContext.HttpContext;
+			fileToken = null;
 			if (httpContext != null)
 			{
 				HttpPostedFile pf = httpContext.Request.GetFile(varName);
-				if (pf != null)
+				if (pf != null && pf.ContentLength > 0)
 				{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					FileInfo fi = new FileInfo(pf.FileName);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 					string tempDir = Preferences.getTMP_MEDIA_PATH();
-					string ext = fi.Extension;
+					string ext = Path.GetExtension(pf.FileName);
 					if (ext != null)
 						ext = ext.TrimStart('.');
-					filePath = FileUtil.getTempFileName(tempDir, "BLOB", ext);
+					string filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
 					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
 					filePath = file.Create(pf.InputStream);
-					GXFileWatcher.Instance.AddTemporaryFile(file, httpContext);
-					return true;
+					string fileGuid = GxUploadHelper.GetUploadFileGuid();
+					fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
+
+					GxUploadHelper.CacheUploadFile(fileGuid, Path.GetFileName(pf.FileName), ext, file, gxContext);
+
+				return true;
 				}
 			}
 			return false;
@@ -2197,7 +2199,7 @@ namespace GeneXus.Application
 		{
 			String fout = file.Trim();
 
-			if (PathUtil.IsAbsoluteUrl(file) || file.StartsWith("//") || (file.Length > 2 && file[1] == ':'))
+			if (PathUtil.IsAbsoluteUrlOrAnyScheme(file) || file.StartsWith("//"))
 			{
 				return fout;
 			}
@@ -2736,14 +2738,14 @@ namespace GeneXus.Application
 			try
 			{
 #if NETCORE
-				return _HttpContext.Request.Host.Host;
+				return _HttpContext.Connection.RemoteIpAddress.ToString();
 #else
                 return _HttpContext.Request.UserHostAddress;
 #endif
 			}
 			catch
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 
@@ -2861,9 +2863,9 @@ namespace GeneXus.Application
 			{
 				string appPath = _HttpContext.Request.GetApplicationPath();
 				if (appPath.EndsWith("/"))
-					return _HttpContext.Request.GetApplicationPath();
+					return appPath;
 				else
-					return _HttpContext.Request.GetApplicationPath() + "/";
+					return appPath + "/";
 			}
 			catch
 			{
@@ -3013,15 +3015,15 @@ namespace GeneXus.Application
 			return String.Empty;
 		}
 		static String[][] contentTypes = new string[][] {
-															 new string[] {"txt" , "text/plain"},
-															 new string[] {"rtx" , "text/richtext"},
-															 new string[] {"htm" , MediaTypesNames.TextHtml},
-															 new string[] {"html", MediaTypesNames.TextHtml},
-															 new string[] {"xml" , "text/xml"},
-															 new string[] {"rtf" , "text/rtf"},
+															 new string[] {"txt"	, "text/plain"},
+															 new string[] {"rtx"	, "text/richtext"},
+															 new string[] {"htm"	, MediaTypesNames.TextHtml},
+															 new string[] {"html"	, MediaTypesNames.TextHtml},
+															 new string[] {"xml"	, "text/xml"},
+															 new string[] {"rtf"	, "text/rtf"},
 															 new string[] {"a3gpp"  , "audio/3gpp"},
 															 new string[] {"aif"    , "audio/x-aiff"},
-															 new string[] {"au" , "audio/basic"},
+															 new string[] {"au"		, "audio/basic"},
 															 new string[] {"m4a"    , "audio/mp4"},
 															 new string[] {"mp3"    , "audio/mpeg"},
 															 new string[] {"wav"    , "audio/wav"},
@@ -3030,18 +3032,20 @@ namespace GeneXus.Application
 															 new string[] {"ram"    , "audio/x-pn-realaudio"},
 															 new string[] {"bmp"    , "image/bmp"},
 															 new string[] {"gif"    , "image/gif"},
-															 new string[] {"jpeg", "image/jpeg"},
-															 new string[] {"jpe"    , "image/jpeg"},
 															 new string[] {"jpg"    , "image/jpeg"},
-															 new string[] {"jfif", "image/pjpeg"},
+															 new string[] {"jpeg"	, "image/jpeg"},
+															 new string[] {"jpe"    , "image/jpeg"},
+															 new string[] {"jpg"    , "application/jpg"},
+															 new string[] {"jpeg"   , "application/jpeg"},
+															 new string[] {"jfif"	, "image/pjpeg"},
 															 new string[] {"tif"    , "image/tiff"},
-															 new string[] {"tiff", "image/tiff"},
+															 new string[] {"tiff"	, "image/tiff"},
 															 new string[] {"png"    , "image/png"},
 															 new string[] {"png"    , "image/x-png"},
 															 new string[] {"mpg"    , "video/mpeg"},
-															 new string[] {"mpeg", "video/mpeg"},
+															 new string[] {"mpeg"	, "video/mpeg"},
 															 new string[] {"mov"    , "video/quicktime"},
-															 new string[] {"qt" , "video/quicktime"},
+															 new string[] {"qt"		, "video/quicktime"},
 															 new string[] {"avi"    , "video/x-msvideo"},
 															 new string[] {"mp4"    , "video/mp4"},
 															 new string[] {"divx"   , "video/x-divx"},
@@ -3049,14 +3053,14 @@ namespace GeneXus.Application
 															 new string[] {"3g2"    , "video/3gpp2"},
 															 new string[] {"exe"    , "application/octet-stream"},
 															 new string[] {"dll"    , "application/x-msdownload"},
-															 new string[] {"ps" , "application/postscript"},
+															 new string[] {"ps"		, "application/postscript"},
 															 new string[] {"pdf"    , "application/pdf"},
 															 new string[] {"tgz"    , "application/x-compressed"},
 															 new string[] {"zip"    , "application/zip"},
 															 new string[] {"zip"    , "application/x-zip-compressed"},
 															 new string[] {"tar"    , "application/x-tar"},
 															 new string[] {"rar"    , "application/x-rar-compressed"},
-															 new string[] {"gz" , "application/x-gzip"}
+															 new string[] {"gz"		, "application/x-gzip"}
 														 };
 
 		public int GetSoapErr()
@@ -3197,7 +3201,7 @@ namespace GeneXus.Application
 		~GxContext()
 		{
 			GxUserInfo.RemoveHandle(_handle);
-			GXFileWatcher.Instance.DeleteTemporaryFiles();
+			GXFileWatcher.Instance.DeleteTemporaryFiles(_handle);
 		}
 		public void SetProperty(string key, string value)
 		{
@@ -3253,7 +3257,9 @@ namespace GeneXus.Application
 		public string PathToUrl(string path)
 		{
 			GXLogging.Debug(log, "PathToUrl:", () => GetContextPath() + " relativePath:" + PathToRelativeUrl(path));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			return Uri.EscapeUriString(GetContextPath()) + PathToRelativeUrl(path, false);
+#pragma warning disable SYSLIB0013 // EscapeUriString
 		}
 
 		public string PathToRelativeUrl(string path)
@@ -3286,7 +3292,9 @@ namespace GeneXus.Application
 				Resource = Resource.Substring(Resource.LastIndexOf("/") + 1);
 			}
 
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			Resource = StringUtil.ReplaceLast(Resource, fileName, Uri.EscapeUriString(fileName));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			if (relativeToServer)
 				return scriptPath + Resource;
 			return Resource;
@@ -3731,11 +3739,10 @@ namespace GeneXus.Application
 		}
 		public string FileFromBase64(string b64)
 		{
-			string tmpFileName = Guid.NewGuid().ToString();
-			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
+			string filePath = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH());
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromBase64(b64);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), HttpContext);
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), this);
 			return filePath;
 		}
 
@@ -3748,11 +3755,10 @@ namespace GeneXus.Application
 		}
 		public string FileFromByteArray(byte[] bArray)
 		{
-			string tmpFileName = Guid.NewGuid().ToString();
-			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
+			string filePath = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH());
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromByteArray(bArray);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), HttpContext);
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), this);
 			return filePath;
 		}
 
@@ -3804,7 +3810,7 @@ namespace GeneXus.Application
 		{
 			return !String.IsNullOrEmpty(StringUtil.RTrim(wjLoc));
 		}
-		#region IGxContext Members
+#region IGxContext Members
 
 		private const string CLIENT_ID_HEADER = "GX_CLIENT_ID";
 		public string ClientID
@@ -3833,7 +3839,7 @@ namespace GeneXus.Application
 
 		public GXSOAPContext SoapContext { get; set; }
 
-		#endregion
+#endregion
 	}
 	public class GxXmlContext
 	{

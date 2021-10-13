@@ -119,9 +119,9 @@ namespace GeneXus.Services
 			service.Properties = properties;
 			service.AllowMultiple = string.IsNullOrEmpty(allowMultiple) ? false : bool.Parse(allowMultiple);
 			if (service.AllowMultiple)
-				services.Add($"{service.Type}:{service.Name}", service);
+				services[$"{service.Type}:{service.Name}"] = service;
 			else
-				services.Add(type, service);
+				services[type] = service;
 
 		}
 
@@ -231,6 +231,7 @@ namespace GeneXus.Services
 		string Upload(string localFile, string objectName, GxFileType fileType);
 		void Download(string objectName, string localFile, GxFileType fileType);
 		string Get(string objectName, GxFileType fileType, int urlMinutes);
+		string GetUrl(string objectName, GxFileType fileType, int urlMinutes);
 		void Delete(string objectName, GxFileType fileType);
 		bool Exists(string objectName, GxFileType fileType);
 		string Rename(string objectName, string newName, GxFileType fileType);
@@ -247,9 +248,9 @@ namespace GeneXus.Services
 		List<String> GetFiles(string directoryName, string filter = "");
 		List<String> GetSubDirectories(string directoryName);
 		Stream GetStream(string objectName, GxFileType fileType);
-		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);
-		bool GetObjectNameFromURL(string url, out string objectName);
+		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);		
 		string GetBaseURL();
+		bool TryGetObjectNameFromURL(string objectNameOrUrl, out string providerObjectName);
 		string StorageUri { get; }
 	}
 }

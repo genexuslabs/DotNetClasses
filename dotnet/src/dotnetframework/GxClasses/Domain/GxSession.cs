@@ -38,12 +38,19 @@ namespace GeneXus.Http
 		#region InternalKeys
 		GXNavigationHelper InternalKeyNavigationHelper;
 		string InternalKeyAjaxEncryptionKey; 
-		Hashtable InternalKeyGxTheme; 
-		string InternalKeyGxLanguage; 
-		#endregion
+		Hashtable InternalKeyGxTheme;
+		string InternalKeyGxLanguage;
+#if NETCORE
+		string InternalKeyGxNewSession;
+#endif
+#endregion
 		public GxWebSession()
         {
         }
+		internal GxWebSession(HttpSessionState session)
+		{
+			_httpSession = session;
+		}
         public GxWebSession(IGxContext context)
         {
             if (context.HttpContext != null)
@@ -169,16 +176,27 @@ namespace GeneXus.Http
 		private void BackupInternalKeys()
 		{
 			InternalKeyNavigationHelper = Get<GXNavigationHelper>(GxContext.GX_NAV_HELPER);
-			InternalKeyAjaxEncryptionKey = Get(CryptoImpl.AJAX_ENCRYPTION_KEY);
-			InternalKeyGxLanguage = Get(GxContext.GXLanguage);
+			InternalKeyAjaxEncryptionKey = Get<string>(CryptoImpl.AJAX_ENCRYPTION_KEY);
+			InternalKeyGxLanguage = Get<string>(GxContext.GXLanguage);
 			InternalKeyGxTheme = Get<Hashtable>(GxContext.GXTheme);
+#if NETCORE
+			InternalKeyGxNewSession = Get<string>(HttpContextExtensions.NEWSESSION);
+#endif
 		}
 		private void RestoreInternalKeys()
 		{
-			Set(GxContext.GX_NAV_HELPER, InternalKeyNavigationHelper);
-			Set(CryptoImpl.AJAX_ENCRYPTION_KEY, InternalKeyAjaxEncryptionKey);
-			Set(GxContext.GXLanguage, InternalKeyGxLanguage);
-			Set(GxContext.GXTheme, InternalKeyGxTheme);
+			if (InternalKeyNavigationHelper!=null)
+				Set<GXNavigationHelper>(GxContext.GX_NAV_HELPER, InternalKeyNavigationHelper);
+			if (InternalKeyAjaxEncryptionKey != null)
+				Set<string>(CryptoImpl.AJAX_ENCRYPTION_KEY, InternalKeyAjaxEncryptionKey);
+			if (InternalKeyGxLanguage != null)
+				Set<string>(GxContext.GXLanguage, InternalKeyGxLanguage);
+			if (InternalKeyGxTheme != null)
+				Set<Hashtable>(GxContext.GXTheme, InternalKeyGxTheme);
+#if NETCORE
+			if (InternalKeyGxNewSession != null)
+				Set<string>(HttpContextExtensions.NEWSESSION, InternalKeyGxNewSession);
+#endif
 		}
 		public void Clear()
         {

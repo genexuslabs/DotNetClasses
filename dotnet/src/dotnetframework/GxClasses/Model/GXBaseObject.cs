@@ -20,6 +20,7 @@ namespace GeneXus.Application
 			get { return _Context; }
 			
 		}
+		virtual public bool UploadEnabled() { return false; }
 		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
 		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
 		public bool IsSynchronizer2 { get { return IsSynchronizer; } }
@@ -27,10 +28,7 @@ namespace GeneXus.Application
 
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
-		[Obsolete("IntegratedSecurityPermissionName is deprecated, it is here for compatibility.Use ExecutePermissionPrefix instead", false)]
-		protected virtual string IntegratedSecurityPermissionName { get { return ""; } }
 		protected virtual bool IsSynchronizer { get { return false; } }
-		[Obsolete("It is here for backward compatibility", false)]
 		protected virtual string ExecutePermissionPrefix { get { return ""; } }
 
 		public virtual void CallWebObject(string url)

@@ -1,37 +1,59 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
- <PropertyGroup>
-	<TargetFramework>netcoreapp3.1</TargetFramework>
-</PropertyGroup>
- <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-   <DefineConstants>TRACE;NETCORE</DefineConstants>
- </PropertyGroup>
- <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-   <DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
- </PropertyGroup>
- <ItemGroup>
-   <EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </EmbeddedResource>
-   <Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
- </ItemGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+		<NoWarn>CS8032</NoWarn>
+		<RollForward>Major</RollForward>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>TRACE;NETCORE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>		
+	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3PrivateTest.cs" Link="ExternalProvider\ExternalProviderS3PrivateTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderTest.cs" Link="ExternalProvider\ExternalProviderTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderMinioTest.cs" Link="ExternalProvider\ExternalProviderMinioTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderAzurePrivateTest.cs" Link="ExternalProvider\ExternalProviderAzurePrivateTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderAzureTest.cs" Link="ExternalProvider\ExternalProviderAzureTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGooglePrivateTest.cs" Link="ExternalProvider\ExternalProviderGooglePrivateTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGoogleTest.cs" Link="ExternalProvider\ExternalProviderGoogleTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderOracleTest.cs" Link="ExternalProvider\ExternalProviderOracleTest.cs" />		
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
+		<Content Include="FullTextSearch\Ugly.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="TestResults\" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXGoogleCloudNetCore\GXGoogleCloudNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,5 +61,27 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
+
+
+	<ItemGroup>
+		<None Update="FullTextSearch\Ugly.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Document.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="MS923.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="applications.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="resources\text.txt">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

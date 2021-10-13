@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
     <NoWarn>1701;1702;NU1701</NoWarn>
 	<DefineConstants>NETCORE</DefineConstants>
   	<PackageTags>Itext PDF Report</PackageTags>
@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="iTextSharp" Version="5.5.13" />
+    <PackageReference Include="iTextSharp" Version="5.5.13.1" />
     <PackageReference Include="log4net" Version="2.0.11" />
     <PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
       <PrivateAssets>all</PrivateAssets>

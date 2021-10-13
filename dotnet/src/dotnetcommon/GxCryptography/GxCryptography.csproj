@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net462;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
 		<RootNamespace>GxCryptography</RootNamespace>
-		<NoWarn>618;1607;1698</NoWarn>
+		<NoWarn>618;1607;1698;SYSLIB0021;SYSLIB0027;SYSLIB0028;SYSLIB0023</NoWarn>
 		<AssemblyName>GxCryptography</AssemblyName>
 		<PackageTags>Data Access</PackageTags>
 		<PackageId>GeneXus.Cryptography</PackageId>
