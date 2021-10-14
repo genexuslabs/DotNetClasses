@@ -3092,7 +3092,7 @@ namespace GeneXus.Http
 			ListItem item = meta.Items.FindByValue(key);
 			if (item == null)
 			{
-				meta.addItem(key, value, 0);o
+				meta.addItem(key, value, 0);
 			}
 		}
 	}
