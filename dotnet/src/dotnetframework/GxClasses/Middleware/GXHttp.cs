@@ -3083,7 +3083,7 @@ namespace GeneXus.Http
 
 		public static void AddResponsiveMetaHeaders(GXRadio meta)
 		{
-			System.Diagnostics.Debugger.Launch();
+			TryAddMetaHeader(meta, "viewport", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no");
 			TryAddMetaHeader(meta, "apple-mobile-web-app-capable", "yes");
 		}
 
