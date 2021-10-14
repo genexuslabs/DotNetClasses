@@ -71,15 +71,11 @@ namespace GeneXus.Data.Dynamo
 					};
 					break;
 				default:
-					//DynamoDB does not support empty values
 					string valueS = value.ToString().Replace("%", string.Empty);
-					if (!string.IsNullOrEmpty(valueS))
-					{ 
-						attValue = new AttributeValue
-						{
-							S = valueS
-						};
-					}
+					attValue = new AttributeValue
+					{
+						S = valueS
+					};
 					break;
 			}
 			return attValue;
