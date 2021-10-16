@@ -1805,7 +1805,7 @@ namespace GeneXus.Http
 #if NETCORE
 			ControlOutputWriter = new HtmlTextWriter(localHttpContext);
 			LoadParameters(localHttpContext.Request.QueryString.Value);
-			context.httpAjaxContext.GetAjaxEncryptionKey(); //Save encryption key in session
+			context.httpAjaxContext.GetAjaxEncryptionKey(); //Save encryption key in session.
 #else
 			ControlOutputWriter = new HtmlTextWriter(localHttpContext.Response.Output);
 			LoadParameters(localHttpContext.Request.Url.Query);
