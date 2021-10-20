@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<AssemblyName>GeneXusXMLSignatureNetCoreImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<PackageId>GeneXus.SecurityApi.XmlSignature.Core</PackageId>
+	</PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    
+  </PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
+	</PropertyGroup>
+	<PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Commons\DSigOptions.cs" Link="Commons\DSigOptions.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Commons\IXmlDSigSignerObject.cs" Link="Commons\IXmlDSigSignerObject.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\DSig\XmlDSigSigner.cs" Link="DSig\XmlDSigSigner.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\AsymmetricSigningAlgorithm.cs" Link="Utils\AsymmetricSigningAlgorithm.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\CanonicalizerWrapper.cs" Link="Utils\CanonicalizerWrapper.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\Constants.cs" Link="Utils\Constants.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\KeyInfoType.cs" Link="Utils\KeyInfoType.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\MessageDigestAlgorithmWrapper.cs" Link="Utils\MessageDigestAlgorithmWrapper.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\SignatureElementType.cs" Link="Utils\SignatureElementType.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\SignatureUtils.cs" Link="Utils\SignatureUtils.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\TransformsWrapper.cs" Link="Utils\TransformsWrapper.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusXmlSignature\Utils\XmlSignatureWrapper.cs" Link="Utils\XmlSignatureWrapper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityAPICommonsNetCore\SecurityAPICommonsNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Commons\" />
+    <Folder Include="DSig\" />
+  </ItemGroup>
+
+</Project>

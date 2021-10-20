@@ -149,7 +149,7 @@ namespace GeneXus.Reorg
         public void ExecBeforeReorg()
         {
             ArrayList stmts = ParseStmtFile(ReorgScriptType.Before);
-            IGxDataStore dsDefault = context.GetDataStore("Default");
+            IGxDataStore dsDefault = context.GetDataStore(Preferences.DefaultDatastore);
             foreach (string stmt in stmts)
             {
 				AddMsg(GXResourceManager.GetMessage("GXM_executing", new object[] { stmt}), null);
@@ -167,7 +167,7 @@ namespace GeneXus.Reorg
 			ExecDataInitialization();
             DeleteResumeFile();
 			ArrayList stmts = ParseStmtFile(ReorgScriptType.After);
-            IGxDataStore dsDefault = context.GetDataStore("Default");
+            IGxDataStore dsDefault = context.GetDataStore(Preferences.DefaultDatastore);
             foreach (string stmt in stmts)
             {
 				AddMsg(GXResourceManager.GetMessage("GXM_executing", new object[] { stmt }), null);

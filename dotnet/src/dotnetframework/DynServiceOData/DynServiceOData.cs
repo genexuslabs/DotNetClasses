@@ -1278,13 +1278,6 @@ namespace GeneXus.Data.NTier
 		}
 	}
 
-	internal class ODataDbCommand : ServiceCommand
-	{
-		internal ODataDbCommand(IDbConnection conn) : base(conn)
-		{
-		}
-	}
-
 	public class QueryExpression
 	{
 		public string For { get; set; }

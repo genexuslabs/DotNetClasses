@@ -1,4 +1,4 @@
-﻿using GeneXus.Metadata;
+using GeneXus.Metadata;
 using log4net;
 using System;
 using System.Net;
@@ -12,23 +12,35 @@ namespace GeneXus.Mail.Smtp
 	{
 
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(SMTPMailClient));
-
-		public static bool ValidateConnection(SmtpClient smtp, string senderAddress)
-		{			
-			string assFullName = typeof(SmtpClient).Assembly.FullName;
-			Type smtpTransportType = GetType($"System.Net.Mail.SmtpTransport, {assFullName}");
+#if NETCORE
+		const string SMTP_TRANSPORT = "_transport";
+		const string SMTP_CONNECTION = "_connection";
+#else
+		const string SMTP_TRANSPORT = "transport";
+		const string SMTP_CONNECTION = "connection";
+#endif
+		const string SMTP_GET_CONNECTION = "GetConnection";
+		const string SMTP_TRANSPORT_TYPE = "System.Net.Mail.SmtpTransport";
+		const string SMTP_MAIL_COMMAND_TYPE = "System.Net.Mail.MailCommand";
+		public static bool ValidateConnection(SmtpClient smtp, string senderAddress, bool checkUnicodeSupport=true)
+		{
+			Assembly ass = typeof(SmtpClient).Assembly;
+			Type smtpTransportType = ass.GetType(SMTP_TRANSPORT_TYPE);
 			object SmtpTransport = null;
 			try
 			{
-				SmtpTransport = GetFieldValue(smtp, "transport");
+				SmtpTransport = SmtpTransportField(smtp);
 				if (SmtpTransport != null)
 				{
 					senderAddress = (string.IsNullOrEmpty(senderAddress)) ? "test@gmail.com" : senderAddress;
-					Execute(smtpTransportType, SmtpTransport, "GetConnection", new object[1] { smtp.ServicePoint });
-					var connection = GetFieldValue(SmtpTransport, "connection");
-					Type mailCommandType = GetType($"System.Net.Mail.MailCommand, {assFullName}");
-					Boolean isUnicodeSupported = (Boolean)Execute(typeof(SmtpClient), smtp, "IsUnicodeSupported", null);					
-					Execute(mailCommandType, null, "Send", new object[] { connection, Encoding.ASCII.GetBytes("MAIL FROM:"), new MailAddress(senderAddress), isUnicodeSupported });					
+					SmtpGetConnection(smtpTransportType, SmtpTransport, smtp);
+					var connection = SmtpConnectionField(SmtpTransport);
+					if (checkUnicodeSupport)
+					{
+						Type mailCommandType = ass.GetType(SMTP_MAIL_COMMAND_TYPE);
+						Boolean isUnicodeSupported = (Boolean)Execute(typeof(SmtpClient), smtp, "IsUnicodeSupported", null);
+						Execute(mailCommandType, null, "Send", new object[] { connection, Encoding.ASCII.GetBytes("MAIL FROM:"), new MailAddress(senderAddress), isUnicodeSupported });
+					}
 				}
 			}
 			catch (TargetInvocationException e)
@@ -58,16 +70,26 @@ namespace GeneXus.Mail.Smtp
 			}
 			return true;
 		}
-
+		internal static object SmtpTransportField(SmtpClient smtp)
+		{
+			return GetFieldValue(smtp, SMTP_TRANSPORT);
+		}
+		internal static object SmtpConnectionField(object smtpTransport)
+		{
+			return GetFieldValue(smtpTransport, SMTP_CONNECTION);
+		}
+		internal static void SmtpGetConnection(Type smtpTransportType, object SmtpTransport, SmtpClient smtp)
+		{
+#if NETCORE
+			Execute(SmtpTransport.GetType(), SmtpTransport, SMTP_GET_CONNECTION, new object[] { smtp.Host, smtp.Port});
+#else
+			Execute(smtpTransportType, SmtpTransport, SMTP_GET_CONNECTION, new object[] { smtp.ServicePoint });
+#endif
+		}
 		private static object GetFieldValue(object instance, string FieldName)
 		{
 			FieldInfo fInfo = instance.GetType().GetField(FieldName, BindingFlags.NonPublic | BindingFlags.Instance);
 			return fInfo.GetValue(instance);
-		}
-
-		private static Type GetType(string type)
-		{
-			return Type.GetType(type);
 		}
 
 		private static object Execute(Type type, object instance, string methodName, object[] parms)

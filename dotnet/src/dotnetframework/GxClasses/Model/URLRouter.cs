@@ -15,8 +15,6 @@ namespace GeneXus.Application
 
 		static ConcurrentDictionary<string, string> routerList;
 		const string RESOURCE_PATTERN = "*.rewrite";
-		const string schemeRegEx = @"^([a-z][a-z0-9+\-.]*):";
-		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
 		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName, string scriptPath)
 		{
 			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray();

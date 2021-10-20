@@ -14,8 +14,10 @@ using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace GeneXus.Storage.GXAzureStorage
 {
-	public class AzureStorageExternalProvider : ExternalProvider
+	public class AzureStorageExternalProvider : ExternalProviderBase, ExternalProvider
 	{
+		public static String Name = "AZUREBS"; //Azure Blob Storage
+
 		const string ACCOUNT_NAME = "ACCOUNT_NAME";
 		const string ACCESS_KEY = "ACCESS_KEY";
 		const string PUBLIC_CONTAINER = "PUBLIC_CONTAINER_NAME";
@@ -26,22 +28,35 @@ namespace GeneXus.Storage.GXAzureStorage
 		CloudBlobContainer PublicContainer { get; set; }
 		CloudBlobContainer PrivateContainer { get; set; }
 		CloudBlobClient Client { get; set; }
+		
 		public string StorageUri
 		{
 			get { return $"https://{Account}.blob.core.windows.net"; }
 		}
 
-		public AzureStorageExternalProvider()
-			: this(ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE)) { }
-
-		public AzureStorageExternalProvider(GXService providerService)
+		public override string GetName()
 		{
-			Account = CryptoImpl.Decrypt(providerService.Properties.Get(ACCOUNT_NAME));
-			Key = CryptoImpl.Decrypt(providerService.Properties.Get(ACCESS_KEY));
+			return Name;
+		}
 
-			string publicContainer = CryptoImpl.Decrypt(providerService.Properties.Get(PUBLIC_CONTAINER));
-			string privateContainer = CryptoImpl.Decrypt(providerService.Properties.Get(PRIVATE_CONTAINER));
+		public AzureStorageExternalProvider() : this(null)
+		{
+		}
 
+		public AzureStorageExternalProvider(GXService providerService) : base(providerService)
+		{
+			Initialize();
+		}
+
+		private void Initialize()
+		{
+			Account = GetEncryptedPropertyValue(ACCOUNT_NAME);
+			Key = GetEncryptedPropertyValue(ACCESS_KEY);
+
+			string publicContainer = GetEncryptedPropertyValue(PUBLIC_CONTAINER);
+			string privateContainer = GetEncryptedPropertyValue(PRIVATE_CONTAINER);
+
+			
 			StorageCredentials credentials = new StorageCredentials(Account, Key);
 			CloudStorageAccount storageAccount = new CloudStorageAccount(credentials, true);
 
@@ -76,7 +91,8 @@ namespace GeneXus.Storage.GXAzureStorage
 		private CloudBlockBlob GetCloudBlockBlob(string externalFileName, GxFileType fileType)
 		{
 			CloudBlockBlob blob;
-			if (fileType.HasFlag(GxFileType.Private))
+
+			if (IsPrivateFile(fileType))
 			{
 				blob = PrivateContainer.GetBlockBlobReference(externalFileName);
 			}
@@ -87,10 +103,25 @@ namespace GeneXus.Storage.GXAzureStorage
 
 			return blob;
 		}
-
-		private bool IsPrivateFile(GxFileType fileType)
+		
+		private bool IsPrivateFile(GxFileType acl)
 		{
-			return fileType.HasFlag(GxFileType.Private);
+			if (acl.HasFlag(GxFileType.Private))
+			{
+				return true;
+			}
+			else if (acl.HasFlag(GxFileType.PublicRead))
+			{
+				return false;
+			}
+			else if (this.defaultAcl == GxFileType.Private)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		public string Get(string objectName, GxFileType fileType, int urlMinutes)
@@ -103,14 +134,20 @@ namespace GeneXus.Storage.GXAzureStorage
 			return string.Empty;
 		}
 
+		public string GetUrl(string objectName, GxFileType fileType, int urlMinutes = 0)
+		{
+			CloudBlockBlob blob = GetCloudBlockBlob(objectName, fileType);
+			return GetURL(blob, fileType, urlMinutes);
+		}
+
 		private string GetURL(CloudBlockBlob blob, GxFileType fileType, int urlMinutes = 0)
 		{
-			string url = StorageUri + StorageUtils.DELIMITER + blob.Container.Name + StorageUtils.DELIMITER + StorageUtils.EncodeUrl(blob.Name);
+			string url = StorageUri + StorageUtils.DELIMITER + blob.Container.Name + StorageUtils.DELIMITER + StorageUtils.EncodeUrlPath(blob.Name);
 			if (IsPrivateFile(fileType))
 			{
 				SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy();
 				sasConstraints.SharedAccessStartTime = DateTime.UtcNow;
-				sasConstraints.SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes((urlMinutes > 0) ? urlMinutes : 60 * 24 * 7);
+				sasConstraints.SharedAccessExpiryTime = DateTime.UtcNow.AddMinutes(ResolveExpiration(urlMinutes).TotalMinutes);
 				sasConstraints.Permissions = SharedAccessBlobPermissions.Read;
 				url += blob.GetSharedAccessSignature(sasConstraints);
 			}
@@ -146,10 +183,11 @@ namespace GeneXus.Storage.GXAzureStorage
 		public string Upload(string fileName, Stream stream, GxFileType fileType)
 		{
 			CloudBlockBlob blob = GetCloudBlockBlob(fileName, fileType);
-			if (Path.GetExtension(fileName).Equals(".tmp"))
-				blob.Properties.ContentType = "image/jpeg";
-			else
-				blob.Properties.ContentType = MimeMapping.GetMimeMapping(fileName);
+
+			if (TryGetContentType(fileName, out string mimeType))
+			{
+				blob.Properties.ContentType = mimeType;
+			}
 
 			blob.UploadFromStreamAsync(stream).GetAwaiter().GetResult();
 			return GetURL(blob, fileType);
@@ -160,13 +198,20 @@ namespace GeneXus.Storage.GXAzureStorage
 			CloudBlockBlob sourceBlob = GetCloudBlockBlob(sourceUrl, GxFileType.Private);
 			if (sourceBlob.ExistsAsync().GetAwaiter().GetResult())
 			{
-				CloudBlockBlob targetBlob = GetCloudBlockBlob(newName, fileType);
 				newName = tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + newName;
+				CloudBlockBlob targetBlob = GetCloudBlockBlob(newName, fileType);
+				
 				targetBlob.Metadata["Table"] = tableName;
 				targetBlob.Metadata["Field"] = fieldName;
-				targetBlob.Metadata["KeyValue"] = StorageUtils.EncodeUrl(newName);
+				targetBlob.Metadata["KeyValue"] = StorageUtils.EncodeUrlPath(newName);
+				
+				if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
+				{
+					targetBlob.Properties.ContentType = mimeType;
+				}
 
 				targetBlob.StartCopyAsync(sourceBlob).GetAwaiter().GetResult();
+				targetBlob.SetPropertiesAsync().GetAwaiter().GetResult(); //Required to apply new object metadata
 				return GetURL(targetBlob, fileType);
 			}
 			return string.Empty;
@@ -254,15 +299,15 @@ namespace GeneXus.Storage.GXAzureStorage
 				{
 					CloudBlockBlob blob = (CloudBlockBlob)item;
 					fileName = Path.GetFileName(blob.Name);
-					Copy(blob.Name, GxFileType.Public, newDirectoryName + fileName, GxFileType.Public);
-					Delete(blob.Name, GxFileType.Public);
+					Copy(blob.Name, GxFileType.PublicRead, newDirectoryName + fileName, GxFileType.PublicRead);
+					Delete(blob.Name, GxFileType.PublicRead);
 
 				}
 				else if (item.GetType() == typeof(CloudPageBlob))
 				{
 					CloudPageBlob pageBlob = (CloudPageBlob)item;
 					fileName = Path.GetFileName(pageBlob.Name);
-					Copy(directoryName + fileName, GxFileType.Public, newDirectoryName + fileName, GxFileType.Public);
+					Copy(directoryName + fileName, GxFileType.PublicRead, newDirectoryName + fileName, GxFileType.PublicRead);
 
 				}
 				else if (item.GetType() == typeof(CloudBlobDirectory))
@@ -337,9 +382,15 @@ namespace GeneXus.Storage.GXAzureStorage
 			return Upload(newName, fileStream, fileType);
 		}
 
-		public bool GetObjectNameFromURL(string url, out string objectName)
+		public bool TryGetObjectNameFromURL(string url, out string objectName)
 		{
 			string baseUrl = StorageUri + StorageUtils.DELIMITER + PublicContainer.Name + StorageUtils.DELIMITER;
+			if (url.StartsWith(baseUrl))
+			{
+				objectName = url.Replace(baseUrl, string.Empty);
+				return true;
+			}
+			baseUrl = StorageUri + StorageUtils.DELIMITER + PrivateContainer.Name + StorageUtils.DELIMITER;
 			if (url.StartsWith(baseUrl))
 			{
 				objectName = url.Replace(baseUrl, string.Empty);
@@ -351,7 +402,7 @@ namespace GeneXus.Storage.GXAzureStorage
 
 		public string GetBaseURL()
 		{
-			return StorageUri + StorageUtils.DELIMITER + PublicContainer.Name + StorageUtils.DELIMITER;
+			return StorageUri + StorageUtils.DELIMITER + PrivateContainer.Name + StorageUtils.DELIMITER;
 		}
 
 	}

@@ -672,29 +672,27 @@ namespace GeneXus.Application
 			return string.Empty;
 		}
 
-		public static bool GetHttpRequestPostedFile(HttpContext httpContext, string varName, out string fileToken)
+		public static bool GetHttpRequestPostedFile(IGxContext gxContext, string varName, out string fileToken)
 		{
+			var httpContext = gxContext.HttpContext;
 			fileToken = null;
 			if (httpContext != null)
 			{
 				HttpPostedFile pf = httpContext.Request.GetFile(varName);
-				if (pf != null)
+				if (pf != null && pf.ContentLength > 0)
 				{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					FileInfo fi = new FileInfo(pf.FileName);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 					string tempDir = Preferences.getTMP_MEDIA_PATH();
-					string ext = fi.Extension;
+					string ext = Path.GetExtension(pf.FileName);
 					if (ext != null)
 						ext = ext.TrimStart('.');
-					string filePath = FileUtil.getTempFileName(tempDir, "BLOB", ext);
+					string filePath = FileUtil.getTempFileName(tempDir);
 					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
 					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
 					filePath = file.Create(pf.InputStream);
 					string fileGuid = GxUploadHelper.GetUploadFileGuid();
 					fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
 
-					GxUploadHelper.CacheUploadFile(fileGuid, filePath, pf.FileName, ext, file, httpContext);
+					GxUploadHelper.CacheUploadFile(fileGuid, Path.GetFileName(pf.FileName), ext, file, gxContext);
 
 				return true;
 				}
@@ -2201,7 +2199,7 @@ namespace GeneXus.Application
 		{
 			String fout = file.Trim();
 
-			if (PathUtil.IsAbsoluteUrl(file) || file.StartsWith("//") || (file.Length > 2 && file[1] == ':'))
+			if (PathUtil.IsAbsoluteUrlOrAnyScheme(file) || file.StartsWith("//"))
 			{
 				return fout;
 			}
@@ -2740,14 +2738,14 @@ namespace GeneXus.Application
 			try
 			{
 #if NETCORE
-				return _HttpContext.Request.Host.Host;
+				return _HttpContext.Connection.RemoteIpAddress.ToString();
 #else
                 return _HttpContext.Request.UserHostAddress;
 #endif
 			}
 			catch
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 
@@ -2863,21 +2861,11 @@ namespace GeneXus.Application
 		{
 			try
 			{
-#if NETCORE
-				var request = _HttpContext.Request;
-				if (request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase))
-				{
-					if (request.PathBase != null && request.PathBase.HasValue)
-						return request.PathBase.Value + "/";
-					else
-						return Config.ScriptPath + "/";
-				}
-#endif
 				string appPath = _HttpContext.Request.GetApplicationPath();
 				if (appPath.EndsWith("/"))
-					return _HttpContext.Request.GetApplicationPath();
+					return appPath;
 				else
-					return _HttpContext.Request.GetApplicationPath() + "/";
+					return appPath + "/";
 			}
 			catch
 			{
@@ -3213,7 +3201,7 @@ namespace GeneXus.Application
 		~GxContext()
 		{
 			GxUserInfo.RemoveHandle(_handle);
-			GXFileWatcher.Instance.DeleteTemporaryFiles();
+			GXFileWatcher.Instance.DeleteTemporaryFiles(_handle);
 		}
 		public void SetProperty(string key, string value)
 		{
@@ -3269,7 +3257,9 @@ namespace GeneXus.Application
 		public string PathToUrl(string path)
 		{
 			GXLogging.Debug(log, "PathToUrl:", () => GetContextPath() + " relativePath:" + PathToRelativeUrl(path));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			return Uri.EscapeUriString(GetContextPath()) + PathToRelativeUrl(path, false);
+#pragma warning disable SYSLIB0013 // EscapeUriString
 		}
 
 		public string PathToRelativeUrl(string path)
@@ -3302,7 +3292,9 @@ namespace GeneXus.Application
 				Resource = Resource.Substring(Resource.LastIndexOf("/") + 1);
 			}
 
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			Resource = StringUtil.ReplaceLast(Resource, fileName, Uri.EscapeUriString(fileName));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			if (relativeToServer)
 				return scriptPath + Resource;
 			return Resource;
@@ -3747,11 +3739,10 @@ namespace GeneXus.Application
 		}
 		public string FileFromBase64(string b64)
 		{
-			string tmpFileName = Guid.NewGuid().ToString();
-			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
+			string filePath = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH());
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromBase64(b64);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), HttpContext);
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), this);
 			return filePath;
 		}
 
@@ -3764,11 +3755,10 @@ namespace GeneXus.Application
 		}
 		public string FileFromByteArray(byte[] bArray)
 		{
-			string tmpFileName = Guid.NewGuid().ToString();
-			string filePath = Path.Combine(Preferences.getTMP_MEDIA_PATH(), "Blob" + tmpFileName);
+			string filePath = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH());
 			GxFile auxFile = new GxFile(GetPhysicalPath(), filePath, GxFileType.Private);
 			auxFile.FromByteArray(bArray);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), HttpContext);
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile("", new GxFileInfo(filePath, "")), this);
 			return filePath;
 		}
 
@@ -3820,7 +3810,7 @@ namespace GeneXus.Application
 		{
 			return !String.IsNullOrEmpty(StringUtil.RTrim(wjLoc));
 		}
-		#region IGxContext Members
+#region IGxContext Members
 
 		private const string CLIENT_ID_HEADER = "GX_CLIENT_ID";
 		public string ClientID
@@ -3849,7 +3839,7 @@ namespace GeneXus.Application
 
 		public GXSOAPContext SoapContext { get; set; }
 
-		#endregion
+#endregion
 	}
 	public class GxXmlContext
 	{

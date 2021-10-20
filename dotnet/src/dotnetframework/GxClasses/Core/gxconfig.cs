@@ -25,6 +25,7 @@ namespace GeneXus.Configuration
 	using System.Runtime.Serialization.Json;
 	using System.Collections.Generic;
 	using GxClasses.Helpers;
+	using System.Text;
 
 	public class Config
 	{
@@ -531,19 +532,44 @@ namespace GeneXus.Configuration
 					}
 
 #else
-					var appSettings = "appsettings.json";
-					var clientConfig = "client.exe.config";
-					var logConfigFile = GxContext.IsHttpContext ? "log.config":"log.console.config";
-					if (File.Exists(Path.Combine(FileUtil.GetBasePath(), appSettings)))
+					string basePath = FileUtil.GetBasePath();
+					string currentDir = Directory.GetCurrentDirectory();
+					string startupDir = FileUtil.GetStartupDirectory();
+					string appSettings = "appsettings.json";
+					string clientConfig = "client.exe.config";
+					string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
+
+					if (File.Exists(Path.Combine(basePath, appSettings)))
 					{
-						_config = loadConfigJson(appSettings);
+						_config = loadConfigJson(basePath, appSettings);
+						logConfig(Path.Combine(basePath, logConfigFile));
+					}
+					else if (File.Exists(appSettings))
+					{
+						_config = loadConfigJson(currentDir, appSettings);
+						logConfig(logConfigFile);
+					}
+					else if (File.Exists(Path.Combine(startupDir, appSettings)))
+					{
+						_config = loadConfigJson(startupDir, appSettings);
+						logConfig(Path.Combine(startupDir, logConfigFile));
 					}
 					else if (File.Exists(clientConfig))
 					{
-						_config = loadConfig(clientConfig);
+						_config = loadConfig(clientConfig, out logConfigSource);
+						if (!string.IsNullOrEmpty(logConfigSource))
+							logConfig(logConfigSource);
+						else
+							logConfig(logConfigFile);
 					}
-					if (File.Exists(logConfigFile))
-						logConfig(logConfigFile);
+					try
+					{
+						Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+					}
+					catch (Exception ex)
+					{
+						GXLogging.Info(log, "Could not register encoding provider", ex.Message);
+					}
 #endif
 				}
 				return _config;
@@ -552,12 +578,12 @@ namespace GeneXus.Configuration
 
 #if NETCORE
 		public static string ScriptPath { get; set; }
-		static NameValueCollection loadConfigJson(string appSettings)
+		static NameValueCollection loadConfigJson(string baseDir, string appSettings)
 		{
 			if (ConfigRoot == null)
 			{
 				var builder = new ConfigurationBuilder()
-					.SetBasePath(FileUtil.GetBasePath())
+					.SetBasePath(baseDir)
 					.AddJsonFile(appSettings, optional: false, reloadOnChange: true)
 
 					.AddEnvironmentVariables();
@@ -594,9 +620,9 @@ namespace GeneXus.Configuration
 				try
 				{
 #if NETCORE
-					var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-					if (filename != null)
+					if (filename != null && File.Exists(filename))
 					{
+						var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 						XmlConfigurator.ConfigureAndWatch(logRepository, new FileInfo(filename));
 						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", filename);
 					}
@@ -711,8 +737,33 @@ namespace GeneXus.Configuration
 		private static int exposeMetadata = -1;
 		public static string DefaultRewriteFile = "rewrite.config";
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
+		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
 		const string YES = "1";
-
+		const string NO = "0";
+		static string defaultDatastore;
+		const string DEFAULT_DS = "Default";
+		internal static string DefaultDatastore
+		{
+			get
+			{
+				if (defaultDatastore == null)
+				{
+					if (Config.GetValueOf("DataStore-Default", out string strDefaultDS))
+					{
+						defaultDatastore = strDefaultDS;
+					}
+					else
+					{
+						defaultDatastore = DEFAULT_DS;
+					}
+				}
+				return defaultDatastore;
+			}
+			set
+			{
+				defaultDatastore = value;
+			}
+		}
 		public static string RemoteLocation
 		{
 			get
@@ -773,6 +824,13 @@ namespace GeneXus.Configuration
 			get
 			{
 				return Config.GetValueOf(USE_NAMED_PARAMETERS, YES) == YES;
+			}
+		}
+		public static bool WFCDateTimeMillis
+		{
+			get
+			{
+				return Config.GetValueOf(REST_DATES_WITH_MILLIS, NO) == YES;
 			}
 		}
 		public static bool MustSetupDB()

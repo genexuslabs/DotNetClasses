@@ -17,7 +17,7 @@ namespace GeneXus.Search
 	public class GxSearchUtils
 	{
 #if NETCORE
-		public static Assembly m_GxSearchAssembly = new AssemblyLoader(FileUtil.GetStartupDirectory()).LoadFromAssemblyPath(Path.Combine(FileUtil.GetStartupDirectory(), "GxSearch.dll"));
+		public static Assembly m_GxSearchAssembly = new AssemblyLoader(FileUtil.GetStartupDirectory()).LoadFromAssemblyName(new AssemblyName("GxSearch"));
 #else
 		public static Assembly m_GxSearchAssembly = Assembly.Load(new AssemblyName("GxSearch"));
 #endif

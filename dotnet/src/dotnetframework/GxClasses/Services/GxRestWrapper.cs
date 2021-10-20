@@ -26,6 +26,7 @@ using System.Collections;
 using Jayrock.Json;
 
 
+
 namespace GeneXus.Application
 
 {
@@ -51,13 +52,21 @@ namespace GeneXus.Application
 		protected IGxContext _gxContext;
 		private GXProcedure _procWorker;
 		private const string EXECUTE_METHOD = "execute";
-		public String ServiceMethod = "";
+		private string _serviceMethod = string.Empty;
+		private Dictionary<string, string> _variableAlias = null;
+		private string _serviceMethodPattern;
 		public bool WrappedParameter = false;
 
-
-		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod) : this(worker, context, gxContext)
+		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
 		{
-			ServiceMethod = serviceMethod;
+			_serviceMethod = serviceMethod;
+			_variableAlias = variableAlias;
+		}
+
+		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, string serviceMethod, string serviceMethodPattern) : this(worker, context, gxContext)
+		{
+			_serviceMethod = serviceMethod;
+			_serviceMethodPattern = serviceMethodPattern;
 		}
 
 		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext):this(context, gxContext)
@@ -81,11 +90,6 @@ namespace GeneXus.Application
 				_gxContext.CloseConnections();
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="key"></param>
-		/// <returns></returns>
 		public virtual Task MethodBodyExecute(object key)
 		{
 			try
@@ -123,17 +127,17 @@ namespace GeneXus.Application
 					wrapped = false;
 				}				
 
-				if (!String.IsNullOrEmpty(this.ServiceMethod))
+				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
-					innerMethod = this.ServiceMethod;
+					innerMethod = this._serviceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-
-				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters);				
+				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
+				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
-				return Serialize(outputParameters, wrapped);
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -223,7 +227,7 @@ namespace GeneXus.Application
 		private string SynchronizerMethod()
 		{
 			string method = string.Empty;
-			var queryParameters = ReadQueryParameters();
+			var queryParameters = ReadQueryParameters(this._variableAlias);
 			string gxevent = string.Empty;
 			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
 				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
@@ -263,19 +267,33 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				var queryParameters = ReadQueryParameters();
-				String innerMethod = EXECUTE_METHOD;
-				if (!String.IsNullOrEmpty(this.ServiceMethod))
+				var queryParameters = ReadQueryParameters(this._variableAlias);
+				string innerMethod = EXECUTE_METHOD;
+				Dictionary<string, object> outputParameters;
+				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
+				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
-					innerMethod = this.ServiceMethod;
+					innerMethod = _serviceMethodPattern;
+					outputParameters = ReflectionHelper.CallMethodPattern(_procWorker, innerMethod, queryParameters);
 				}
-				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				else 
+				{
+					if (!string.IsNullOrEmpty(_serviceMethod))
+					{
+						innerMethod = _serviceMethod;
+					}
+
+					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+					formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
+				}
+				
+				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters);			
-				return Serialize(outputParameters, wrapped);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -286,25 +304,27 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-
-		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters)
+		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
 		{
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
+					wrapped = false;
 					Object v = outputParameters.First().Value;
 
 					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 					{
-
 						wrapped = (v as IGxGenericCollectionWrapped).GetIsWrapped();
 					}
-					else
+					if (v is IGxGenericCollectionItem item)
 					{
-						wrapped = true;
+						if (item.Sdt is GxSilentTrnSdt)
+						{
+							wrapped = (parCount>1)?true:false;
+						}
 					}
-				}
+				}			
 			}
 			return wrapped;
 		}
@@ -365,11 +385,19 @@ namespace GeneXus.Application
 			}
 			return bodyParameters;
 		}
-		protected IDictionary<string, object> ReadQueryParameters()
+		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
 			var query = _httpContext.Request.GetQueryString();
-			Dictionary<string, object> parameters = query.Keys.Cast<string>()
-					.ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
+			Dictionary<string, object> parameters = new Dictionary<string, object>();
+			if (varAlias == null)
+				parameters = query.Keys.Cast<string>().ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
+			else
+			{
+				parameters = query.Keys.Cast<string>().ToDictionary(k => (varAlias.ContainsKey(k.ToLower()) ? varAlias[k.ToLower()].ToLower() :(varAlias.ContainsValue(k.ToLower())? "_" + k.ToLower() :k.ToLower())), v => (object)query[v].ToString());
+				List<string> keysToDelete = parameters.Keys.Where(v => v[0] == '_').ToList();
+				foreach (var key in keysToDelete)					
+						parameters.Remove(key);
+			}
 			return parameters;
 		}
 		public bool IsRestParameter(string parameterName)
@@ -428,7 +456,8 @@ namespace GeneXus.Application
 		}
 		public static Task SetError(HttpContext context, string code, string message)
 		{
-			return HttpHelper.SetResponseStatusAndJsonErrorAsync(context, code, message);
+			HttpHelper.SetError(context, code, message);
+			return Task.CompletedTask;
 		}
 		public bool IsAuthenticated(string synchronizer)
 		{
@@ -491,7 +520,7 @@ namespace GeneXus.Application
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(_gxContext, token, out isOK);
 						if (!isOK)
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -505,7 +534,7 @@ namespace GeneXus.Application
 						}
 						else
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);
@@ -626,45 +655,93 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			return SetError("500", ex.Message);
-		}
-		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
-		{
-			var serializer = new Newtonsoft.Json.JsonSerializer();
-
-			serializer.Converters.Add(new SDTConverter());
-			TextWriter ms = new StringWriter();
-			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
+			if (ex is FormatException)
 			{
-				string key = parameters.First().Key;
-				using (var writer = new Newtonsoft.Json.JsonTextWriter(ms))
-				{
-					serializer.Serialize(writer, parameters[key]);
-				}
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.BadRequest, ex);
 			}
 			else
 			{
-				using (var writer = new Newtonsoft.Json.JsonTextWriter(ms))
-				{
-					serializer.Serialize(writer, parameters);
-				}
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
 			}
-			_httpContext.Response.Write(ms.ToString()); // Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
+		}
+		protected Task Serialize(Dictionary<string, object> parameters, Dictionary<string, string> fmtParameters, bool wrapped)
+		{
+			string json;
+			var knownTypes = new List<Type>();
+			foreach (var k in parameters.Keys)
+			{
+				var val = parameters[k];
+				knownTypes.Add(val.GetType());
+			}
+			if (parameters.Count == 1 && !wrapped && !PrimitiveType(knownTypes[0])) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
+			{
+				string key = parameters.First().Key;
+				object strVal = null;
+				if (parameters[key].GetType() == typeof(DateTime))
+				{
+					DateTime udt = ((DateTime)parameters[key]).ToUniversalTime();
+					if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+					{
+						strVal = udt.ToString(fmtParameters[key], CultureInfo.InvariantCulture);
+					}
+					else
+						strVal = udt;
+				}				
+				else
+					strVal = parameters[key];
+				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
+			}
+			else
+			{
+				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
+				foreach (KeyValuePair<string,object> kv in parameters)
+				{
+					string strKey = kv.Key;					
+
+					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
+					if (ut != null)
+					{						
+						Type uType = ut.Sdt.GetType();
+						var attributes = uType.GetCustomAttributes(true);
+						GxJsonName jsonName = (GxJsonName) attributes.Where(a => a.GetType() == typeof(GxJsonName)).FirstOrDefault();
+						if (jsonName != null)
+							strKey = jsonName.Name;
+					}
+					if (kv.Value.GetType() == typeof(DateTime))
+					{
+						DateTime udt = ((DateTime)kv.Value).ToUniversalTime();
+						if (fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
+						{
+							object strVal = udt.ToString(fmtParameters[kv.Key], CultureInfo.InvariantCulture);
+							serializablePars.Add(strKey, strVal);
+						}
+						else
+							serializablePars.Add(strKey, udt);
+					}
+					else
+						serializablePars.Add(strKey, kv.Value);
+				}
+				json = JSONHelper.WCFSerialize(serializablePars, Encoding.UTF8, knownTypes, true); 
+			}
+			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
+			return Task.CompletedTask;
+		}
+		private bool PrimitiveType(Type type)
+		{
+			return type.IsPrimitive || type == typeof(string) || type.IsValueType;
 		}
 		protected Task Serialize(object value)
 		{
-			var serializer = new Newtonsoft.Json.JsonSerializer();
-			serializer.Converters.Add(new SDTConverter());
 #if NETCORE
 			var responseStream = _httpContext.Response.Body;
 #else
 			var responseStream = _httpContext.Response.OutputStream;
 #endif
-			using (var writer = new Newtonsoft.Json.JsonTextWriter(new StreamWriter(responseStream)))
-			{
-				serializer.Serialize(writer, value);
-			}
+			var knownTypes = new List<Type>();
+			knownTypes.Add(value.GetType());
+		
+			JSONHelper.WCFSerialize(value, Encoding.UTF8, knownTypes, responseStream);
 			return Task.CompletedTask;
 		}
 
@@ -678,30 +755,48 @@ namespace GeneXus.Application
 			foreach (var k in outputParameters.Keys.ToList())
 			{
 				GxUserType p = outputParameters[k] as GxUserType;
-				if ((p != null) && !(p.ShouldSerializeSdtJson()))
+				if ((p != null) && !p.ShouldSerializeSdtJson())
 				{
 					outputParameters.Remove(k);
 				}
-			}
-			MakeRestTypes(outputParameters);
+				else
+				{
+					object o = MakeRestType(outputParameters[k]);
+					if (o == null)
+						outputParameters.Remove(k);
+					else
+						outputParameters[k] = o;
+				}
+			}			
 		}
-		private static void MakeRestTypes(Dictionary<string, object> parameters)
-		{
-			foreach (var key in parameters.Keys.ToList())
-			{
-				parameters[key] = MakeRestType(parameters[key]);
-			}
-		}
+		
 		protected static object MakeRestType(object v)
 		{
 			Type vType = v.GetType();
-			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) //Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+			Type itemType;
+			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
 			{
-				Type itemType = v.GetType().GetGenericArguments()[0];
-				Type restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+				Type restItemType=null;
+				itemType = v.GetType().GetGenericArguments()[0];
+				if (typeof(IGXBCCollection).IsAssignableFrom(vType))//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				{
+					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+				}
+				if (restItemType == null)//Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+				{
+					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+				}
 				bool isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
+				bool isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
 				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
-				return Activator.CreateInstance(genericListItemType, new object[] { v , isWrapped });
+				object c = Activator.CreateInstance(genericListItemType, new object[] { v, isWrapped});
+				// Empty collection serialized w/ noproperty
+				if (c is IList restList)
+				{
+					if (restList.Count == 0 && !isEmpty)
+						return null;
+				}
+				return c;			
 			}
 			else if (typeof(GxUserType).IsAssignableFrom(vType)) //SDTType convert to SDTType_RESTInterface
 			{
@@ -746,6 +841,8 @@ namespace GeneXus.Application
 		public string Name { get; set; }
 		public string Parameters { get; set; }
 		public string MethodName { get; set; }
+		public string MethodPattern { get; set; }
 		public string Verb { get; set; }
+		public Dictionary<string, string> VariableAlias { get; set; }
 	}
 }

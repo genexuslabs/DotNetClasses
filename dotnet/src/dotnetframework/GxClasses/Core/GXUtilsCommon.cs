@@ -37,6 +37,8 @@ using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.Drawing.Drawing2D;
+using GeneXus.Storage;
+using GeneXus.Services;
 
 namespace GeneXus.Utils
 {
@@ -2630,19 +2632,19 @@ namespace GeneXus.Utils
 		public string Time()
 		{
 			return DateTime.Now.ToString(TimeFormatFromSize(8, -1, ":"), cultureInfo);
-        }
+		}
 
-        static public DateTime AddMth(DateTime dt, int cantMonths)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddMonths(cantMonths);
-        }
-        static public DateTime AddYr(DateTime dt, int cantYears)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddYears(cantYears);
+		static public DateTime AddMth(DateTime dt, int cantMonths)
+		{
+			if (dt == nullDate && cantMonths < 0)
+				return nullDate;
+			return dt.AddMonths(cantMonths);
+		}
+		static public DateTime AddYr(DateTime dt, int cantYears)
+		{
+			if (dt == nullDate && cantYears < 0)
+				return nullDate;
+			return dt.AddYears(cantYears);
         }
         static public DateTime DateEndOfMonth(DateTime dt)
         {
@@ -2691,30 +2693,29 @@ namespace GeneXus.Utils
 		}
         static public int DDiff(DateTime dtMinu, DateTime dtSust)
         {
-            return Convert.ToInt32((dtMinu - dtSust).TotalDays);
-        }
-        static public DateTime TAdd(DateTime dt, int seconds)
-        {
-            if (dt == nullDate)
-                return nullDate;            
-            return dt.AddSeconds(seconds);
-        }
-        static public DateTime TAddMs(DateTime dt, double seconds)
-        {
-
-            if (dt == nullDate)
-                return nullDate;
-            if (seconds % 1 == 0)
-                return dt.AddSeconds((int)seconds);
-            else
-                return dt.AddMilliseconds(seconds * 1000);
-        }
-        static public DateTime DAdd(DateTime dt, int days)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddDays(days);
-        }
+			return Convert.ToInt32((dtMinu - dtSust).TotalDays);
+		}
+		static public DateTime TAdd(DateTime dt, int seconds)
+		{
+			if (dt == nullDate && seconds < 0)
+				return nullDate;
+			return dt.AddSeconds(seconds);
+		}
+		static public DateTime TAddMs(DateTime dt, double seconds)
+		{
+			if (dt == nullDate && seconds < 0)
+				return nullDate;
+			if (seconds % 1 == 0)
+				return dt.AddSeconds((int)seconds);
+			else
+				return dt.AddMilliseconds(seconds * 1000);
+		}
+		static public DateTime DAdd(DateTime dt, int days)
+		{
+			if (dt == nullDate && days < 0)
+				return nullDate;
+			return dt.AddDays(days);
+		}
         public DateTime CToT(string strDate, int picFmt, int ampmFmt)
         {
             if (isNullDateTime(strDate, picFmt, ampmFmt))
@@ -3272,8 +3273,6 @@ namespace GeneXus.Utils
 	public class FileUtil
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.FileUtil));
-
-		private static object syncObj = new object();
 		public static byte DeleteFile(string fileName)
 		{
 			try
@@ -3366,30 +3365,10 @@ namespace GeneXus.Utils
 				return uriString;
 			}
 		}
-		public static string getTempFileName(string baseDir, string name, string extension, GxFileType fileType = GxFileType.Public)
+		public static string getTempFileName(string baseDir, string name="", string extension="tmp", GxFileType fileType = GxFileType.Private)
 		{
-			String fileName;
-			name = FileUtil.FileNamePrettify(name);
-
-			lock (syncObj)
-			{
-
-				name = FixFileName(name, string.Empty);
-				if (string.IsNullOrEmpty(name))
-				{
-					fileName = tempFileName(baseDir, name, extension);
-				}
-				else
-				{
-					fileName = Path.Combine(baseDir, name + "." + extension);
-				}
-				GxFile file = new GxFile(baseDir, fileName, fileType);
-				while (file.FileInfo.Exist(fileName))
-				{
-					fileName = tempFileName(baseDir, name, extension);
-				}
-			}
-			return fileName.Trim();
+			name = FixFileName(FileUtil.FileNamePrettify(name), string.Empty);
+			return tempFileName(baseDir, name, extension);
 		}
 
 		private static string tempFileName(string baseDir, string name, string extension)
@@ -3397,11 +3376,11 @@ namespace GeneXus.Utils
 			string fileName;
 			try
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			catch (ArgumentException)//Illegal characters in path
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			return fileName;
 		}
@@ -3428,6 +3407,12 @@ namespace GeneXus.Utils
 		{
 			if (FileName.Trim().Length == 0)
 				return string.Empty;
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				return new GxFile(string.Empty, FileName, GxFileType.PrivateAttribute).GetExtension();
+			}
+
 			string extension = string.Empty;
 			try
 			{
@@ -3450,16 +3435,28 @@ namespace GeneXus.Utils
 
 		public static string FileNamePrettify(string s)
 		{
-			string str = GXUtil.RemoveDiacritics(s.Trim().ToLower()); //remove accents
-			str = Regex.Replace(str, @"\s+", " ").Trim(); // convert multiple spaces into one space  
-			str = Regex.Replace(str, @"\s", "-"); // //Replace spaces by dashes
-			return str;
+			if (!string.IsNullOrEmpty(s))
+			{
+				string str = GXUtil.RemoveDiacritics(s.Trim().ToLower()); //remove accents
+				str = Regex.Replace(str, @"\s+", " ").Trim(); // convert multiple spaces into one space  
+				str = Regex.Replace(str, @"\s", "-"); // //Replace spaces by dashes
+				return str;
+			}
+			else
+			{
+				return s;
+			}
 		}
 
 		public static string GetFileName(string FileName)
 		{
 			if (FileName.Trim().Length == 0)
 				return "";
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				FileName = new GxFile(string.Empty, FileName, GxFileType.PrivateAttribute).GetName();
+			}
 			try
 			{
 				return Path.GetFileNameWithoutExtension(FileName);//FileNames with URI or local (exist)
@@ -3522,10 +3519,17 @@ namespace GeneXus.Utils
 	}
 	public class PathUtil
 	{
+		const string schemeRegEx = @"^([a-z][a-z0-9+\-.]*):";
+		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
+
 		public static bool IsAbsoluteUrl(string url)
 		{
 			Uri result;
 			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp);
+		}
+		public static bool IsAbsoluteUrlOrAnyScheme(string url)
+		{
+			return (!String.IsNullOrEmpty(url)) && (IsAbsoluteUrl(url) || scheme.IsMatch(url));
 		}
 
 		public static bool HasUrlQueryString(string url)
@@ -3548,7 +3552,9 @@ namespace GeneXus.Utils
 			{
 				string fileName = Path.GetFileNameWithoutExtension(blobPath);
 				blobPath = RelativePath(blobPath);
+#pragma warning disable SYSLIB0013 // EscapeUriString
 				return StringUtil.ReplaceLast(blobPath, fileName, Uri.EscapeUriString(fileName));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			}
 		}
 		public static bool AbsoluteUri(string fileName, out Uri result)
@@ -3676,6 +3682,10 @@ namespace GeneXus.Utils
 			if (!IsValidFilePath(path))
 				validPath = GetValidPath(path, "_");
 
+			Uri result;
+			if (Uri.TryCreate(validPath, UriKind.Absolute, out result))
+				validPath = result.LocalPath;
+
 			string fileName = Path.GetFileName(validPath);
 			if (!IsValidFileName(fileName))
 			{
@@ -3685,6 +3695,10 @@ namespace GeneXus.Utils
 				return fileName;
 		}
 
+		internal static string SafeCombine(string basePath, string fileName)
+		{
+			return Path.Combine(basePath, Path.GetFileName(fileName));
+		}
 	}
 
 	public class GXUtil
@@ -3955,7 +3969,7 @@ namespace GeneXus.Utils
 			string value = parm.ToString();
 			if (!String.IsNullOrEmpty(gxkey))
 			{
-				string strValue = Crypto.Decrypt64(value.ToString(), gxkey);
+				string strValue = Crypto.Decrypt64(value.ToString(), gxkey, true);
 				if ((String.CompareOrdinal(StringUtil.Right(strValue, 6).TrimEnd(' '),
 					Crypto.CheckSum(StringUtil.Left(strValue, (short)(StringUtil.Len(strValue) - 6)), 6).TrimEnd(' ')) == 0))
 				{
@@ -4229,16 +4243,16 @@ namespace GeneXus.Utils
 				else
 				{
 #if NETCORE
-                    var basicAuthenticationHeader = GetBasicAuthenticationHeaderValue(cntxt.HttpContext);
-                    if (basicAuthenticationHeader.IsValidBasicAuthenticationHeaderValue)
-                    {
-                        s = basicAuthenticationHeader.UserIdentifier;
-                    }
-                    else
-                    {
+					BasicAuthenticationHeaderValue basicAuthenticationHeader = GetBasicAuthenticationHeaderValue(cntxt.HttpContext);
+					if (basicAuthenticationHeader != null && basicAuthenticationHeader.IsValidBasicAuthenticationHeaderValue)
+					{
+						s = basicAuthenticationHeader.UserIdentifier;
+					}
+					else
+					{
 						if (IsWindowsPlatform)
 							s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-                    }
+					}
 #else
 					s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
 					GXLogging.Debug(log, "UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name: ", s);
@@ -4270,10 +4284,15 @@ namespace GeneXus.Utils
 #if NETCORE
         private static BasicAuthenticationHeaderValue GetBasicAuthenticationHeaderValue(HttpContext context)
         {
-            var basicAuthenticationHeader = context.Request.Headers["Authorization"]
-                .FirstOrDefault(header => header.StartsWith("Basic", StringComparison.OrdinalIgnoreCase));
-            var decodedHeader = new BasicAuthenticationHeaderValue(basicAuthenticationHeader);
-            return decodedHeader;
+			if (context == null)
+				return null;
+			else
+			{
+				var basicAuthenticationHeader = context.Request.Headers["Authorization"]
+					.FirstOrDefault(header => header.StartsWith("Basic", StringComparison.OrdinalIgnoreCase));
+				var decodedHeader = new BasicAuthenticationHeaderValue(basicAuthenticationHeader);
+				return decodedHeader;
+			}
         }
 #endif
 #if NETCORE
@@ -5251,7 +5270,14 @@ namespace GeneXus.Utils
 		public static string ResolveUri(string uriString, bool absUrl, IGxContext context = null)
 		{
 			if (String.IsNullOrEmpty(uriString))
-				return "";
+				return string.Empty;
+
+			string providerObjectName;
+			if (PathUtil.IsAbsoluteUrl(uriString) && StorageFactory.TryGetProviderObjectName(ServiceFactory.GetExternalProvider(), uriString, out providerObjectName))
+			{
+				return new GxFile(string.Empty, providerObjectName, GxFileType.DefaultAttribute).GetURI();
+			}
+
 			if (schemeRegex.IsMatch(uriString))
 			{
 				string fileName = schemeRegex.Replace(uriString, "");
@@ -5259,7 +5285,7 @@ namespace GeneXus.Utils
 				string basePath = Path.Combine(Path.Combine(Preferences.getBLOB_PATH(), MultimediaDirectory));
 				try
 				{
-					GxFile file = new GxFile(string.Empty, Path.Combine(basePath, fileName), GxFileType.PublicAttribute);
+					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName), GxFileType.PrivateAttribute);
 					return PathToUrl(file.GetURI(), absUrl, context);
 				}
 				catch (ArgumentException ex)
@@ -5273,16 +5299,7 @@ namespace GeneXus.Utils
 		public static string GenerateUri(string file, bool addToken, bool addScheme)
 		{
 			string name = GetFileName(file);
-			try
-			{
-				name = Uri.UnescapeDataString(name);
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Warn(log, ex, "GenerateUri escape unnecesary ", name);
-			}
 			string type = GetFileType(file);
-
 
 			string scheme = addScheme ? $"{GXDbFile.Scheme}:" : string.Empty;
 
@@ -5319,6 +5336,10 @@ namespace GeneXus.Utils
 		{
 			if (String.IsNullOrEmpty(name) && String.IsNullOrEmpty(type) && !String.IsNullOrEmpty(path))
 			{
+				if (GxUploadHelper.IsUpload(path))
+				{
+					return new GxFile(string.Empty, path, GxFileType.PrivateAttribute).GetName();
+				}
 				string fromPathType = Path.GetExtension(path);
 				if (!String.IsNullOrEmpty(fromPathType) && fromPathType != "tmp")
 				{
@@ -5585,19 +5606,33 @@ namespace GeneXus.Utils
 	{
 		public const string DELIMITER = "/";
 
-		public static string EncodeUrl(string objectName)
+		private static string ReplaceAt(string str, int index, int length, string replace)
 		{
+			return str.Remove(index, Math.Min(length, str.Length - index))
+					.Insert(index, replace);
+		}
+
+		[Obsolete("EncodeUrl is deprecated as it would give unexpected results for some urls. Use EncodeUrlPath instead", false)]
+		public static string EncodeUrl(string objectName) { 
 			if (!Uri.IsWellFormedUriString(objectName, UriKind.RelativeOrAbsolute))
 				return HttpUtility.UrlPathEncode(objectName);
 			return objectName;
 		}
 
+		public static string EncodeUrlPath(string objectNameOrRelativeUrl)
+		{
+			int idx = objectNameOrRelativeUrl.LastIndexOf(StorageUtils.DELIMITER);
+			if (idx > 0)
+			{
+				string objectName = objectNameOrRelativeUrl.Substring(idx + 1);
+				return ReplaceAt(objectNameOrRelativeUrl, idx + 1, objectName.Length, Uri.EscapeDataString(objectName));
+			}
+			return Uri.EscapeDataString(objectNameOrRelativeUrl);
+		}
+
 		public static string DecodeUrl(string url)
 		{
-			string newUrl;
-			while ((newUrl = HttpUtility.UrlDecode(url)) != url)
-				url = newUrl;
-			return url;
+			return HttpUtility.UrlDecode(url);
 		}
 
 		public static String NormalizeDirectoryName(String directoryName)

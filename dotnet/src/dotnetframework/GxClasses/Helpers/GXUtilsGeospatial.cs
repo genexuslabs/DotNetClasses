@@ -80,6 +80,11 @@ namespace GeneXus.Utils
 				return _nullSQLGeography;
 			}
 		}
+		internal static bool IsNull(object instance)
+		{
+			return (bool)ClassLoader.GetPropValue(instance, "IsNull");
+		}
+
 		internal static object STGeometryType(object instance)
 		{
 			return ClassLoader.Invoke(instance, "STGeometryType", null);
@@ -100,7 +105,7 @@ namespace GeneXus.Utils
         internal static bool IsValid(object instance)
         {
             try
-            {
+            {			
                 return ((SqlBoolean)ClassLoader.Invoke(instance, "STIsValid", null)).Value;
             }
             catch (MissingMethodException ex) {
@@ -206,7 +211,6 @@ namespace GeneXus.Utils
                 this.FromJSON(value.ToString());                
             }
         }
-
 
         public Geospatial(object value)
 		{
@@ -324,24 +328,27 @@ namespace GeneXus.Utils
 			{
 				return this.PointList[0];
 			}
-
 		}
-
 
 		public double Longitude
 		{
 			get
 			{
-				return this.PointList[0].Longitude;
+				if (_innerValue == null)
+					return 0;
+				else
+					return SQLGeographyWrapper.Long(_innerValue);
 			}
-
 		}
 
 		public double Latitude
 		{
 			get
 			{
-				return this.PointList[0].Latitude;
+				if (_innerValue == null)
+					return 0;
+				else
+					return SQLGeographyWrapper.Lat(_innerValue);
 			}
 
 		}
@@ -597,21 +604,31 @@ namespace GeneXus.Utils
             
             
 			try
-			{
+			{			
 				// Sql Server Text
 				_innerValue = SQLGeographyWrapper.Parse(geoText);
-                if ((!SQLGeographyWrapper.IsValid(_innerValue)) && _innerValue !=null )
-                {
-                    _innerValue = SQLGeographyWrapper.MakeValid(_innerValue);
-                }    
-     
-                this.srid = ((SqlInt32)ClassLoader.GetPropValue(_innerValue, "STSrid")).Value;
 
-                this.setGXGeoType(SQLGeographyWrapper.STGeometryType(_innerValue).ToString());
-				if (GeographicType == GeoGraphicTypeValue.Point)
+				if (_innerValue != null && (!SQLGeographyWrapper.IsNull(_innerValue)))
 				{
-					this.Point.Longitude = SQLGeographyWrapper.Long(_innerValue);
-					this.Point.Latitude = SQLGeographyWrapper.Lat(_innerValue);
+					if (!SQLGeographyWrapper.IsValid(_innerValue))
+						_innerValue = SQLGeographyWrapper.MakeValid(_innerValue);
+					
+					if (SQLGeographyWrapper.IsValid(_innerValue))
+					{
+						this.srid = ((SqlInt32)ClassLoader.GetPropValue(_innerValue, "STSrid")).Value;
+						this.setGXGeoType(SQLGeographyWrapper.STGeometryType(_innerValue).ToString());
+						if (GeographicType == GeoGraphicTypeValue.Point)
+						{
+							this.Point.Longitude = SQLGeographyWrapper.Long(_innerValue);
+							this.Point.Latitude = SQLGeographyWrapper.Lat(_innerValue);
+						}
+					}
+					else
+						setNullGeography();
+				}
+				else
+				{					
+						setNullGeography();
 				}
 			}
 			catch (ArgumentException ex)
@@ -626,11 +643,7 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					// Cannot parse value
-					this.InnerValue = SQLGeographyWrapper.NullSQLGeography;
-					this.geoText = "";
-					this.Point.Longitude = 0;
-					this.Point.Latitude = 0;
+					setNullGeography();
 				}
 			}
 			catch (FormatException ex)
@@ -663,29 +676,17 @@ namespace GeneXus.Utils
 						}
 						catch (Exception)
 						{
-							// Can't convert to geography set as null.
-							_innerValue = SQLGeographyWrapper.NullSQLGeography;
-							this.geoText = "";
-							this.Point.Longitude = 0;
-							this.Point.Latitude = 0;
+							setNullGeography();
 						}
 					}
 					else
 					{
-						// Cannot parse value
-						_innerValue = SQLGeographyWrapper.NullSQLGeography;
-						this.geoText = "";
-						this.Point.Longitude = 0;
-						this.Point.Latitude = 0;
+						setNullGeography();
 					}
 				}
 				else
 				{
-					// Cannot parse value
-					_innerValue = SQLGeographyWrapper.NullSQLGeography;
-					this.geoText = "";
-					this.Point.Longitude = 0;
-					this.Point.Latitude = 0;
+					setNullGeography();
 				}
 			}
 		}
@@ -694,6 +695,15 @@ namespace GeneXus.Utils
         {
 			return this.ToStringSQL("");
         }
+
+		void setNullGeography()
+		{
+			// Cannot parse value
+			_innerValue = SQLGeographyWrapper.NullSQLGeography;
+			this.geoText = "";
+			this.Point.Longitude = 0;
+			this.Point.Latitude = 0;
+		}
 
         public String ToStringESQL()
         {

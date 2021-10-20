@@ -10,8 +10,7 @@ using GeneXus.Application;
 using System.Collections.Generic;
 using GeneXus.Services;
 using System.Net;
-using System.Diagnostics;
-using System.Linq;
+using GeneXus.Storage;
 
 namespace GeneXus.Data.NTier.ADO
 {
@@ -105,7 +104,7 @@ namespace GeneXus.Data.NTier.ADO
 
         public string getBLOBFile(int id, string extension, string name)
         {
-            string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.PrivateAttribute);
+            string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.Private);
             return getBLOBFile(id, extension, name, fileName, true);
         }
 
@@ -127,7 +126,7 @@ namespace GeneXus.Data.NTier.ADO
 					}
 				}
 				if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute), _gxDbCommand.Conn.DataStore.Context.HttpContext);
+                    GXFileWatcher.Instance.AddTemporaryFile(new GxFile(_gxDbCommand.Conn.BlobPath, new GxFileInfo(fileName, _gxDbCommand.Conn.BlobPath), GxFileType.PrivateAttribute), _gxDbCommand.Conn.DataStore.Context);
                 fileName = new FileInfo(fileName).FullName;
             }
             catch (IOException e)
@@ -146,10 +145,10 @@ namespace GeneXus.Data.NTier.ADO
                 string fileName = GXDbFile.GetFileNameFromUri(gxdbFileUri);
                 if (!String.IsNullOrEmpty(fileName))
 				{
-					string filePath = Path.Combine(_gxDbCommand.Conn.MultimediaPath, fileName);
+					string filePath = PathUtil.SafeCombine(_gxDbCommand.Conn.MultimediaPath, fileName);
 					try
 					{
-						GxFile file = new GxFile(string.Empty, filePath, GxFileType.PublicAttribute);
+						GxFile file = new GxFile(string.Empty, filePath, GxFileType.DefaultAttribute);
 						if (file.Exists())
 						{
 							return filePath;
@@ -331,7 +330,7 @@ namespace GeneXus.Data.NTier.ADO
 
         public string getBLOBFile(int id, string extension, string name)
         {
-            string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.PrivateAttribute);
+            string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.Private);
             String value = getBLOBFile(id, extension, name, fileName, true);
 			TraceRow("getBLOBFile - index : ", id.ToString(), " value:", (value!=null ? value.ToString() : string.Empty));
 			return value;
@@ -345,7 +344,7 @@ namespace GeneXus.Data.NTier.ADO
             int bufferSize = 4096;
             byte[] outbyte = new byte[bufferSize];
             long retval;
-            long startIndex = 0;
+			long startIndex;
             bool streamClosed = false;
             try
             {
@@ -386,7 +385,7 @@ namespace GeneXus.Data.NTier.ADO
 				TraceRow("GetBlobFile fileName:" + fileName + ", retval bytes:" + retval);
 
                 if (temporary)
-                    GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context.HttpContext);
+                    GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context);
 
 				fileName = file.GetURI();
             }
@@ -429,11 +428,11 @@ namespace GeneXus.Data.NTier.ADO
                 string fileName = GXDbFile.GetFileNameFromUri(gxdbFileUri);
                 if (!String.IsNullOrEmpty(fileName))
                 {
-					string filePath = Path.Combine(_gxDbCommand.Conn.MultimediaPath, fileName);
+					string filePath = PathUtil.SafeCombine(_gxDbCommand.Conn.MultimediaPath, fileName);
 
 					try
 					{
-						GxFile file = new GxFile(string.Empty, filePath, GxFileType.PublicAttribute);
+						GxFile file = new GxFile(string.Empty, filePath, GxFileType.DefaultAttribute);
 
 						if (file.Exists())
 						{
@@ -441,7 +440,7 @@ namespace GeneXus.Data.NTier.ADO
 						}
 						else
 						{
-							return getBLOBFile(id, FileUtil.GetFileType(gxdbFileUri), FileUtil.GetFileName(gxdbFileUri), filePath, false, GxFileType.PublicAttribute);
+							return getBLOBFile(id, FileUtil.GetFileType(gxdbFileUri), FileUtil.GetFileName(gxdbFileUri), filePath, false, GxFileType.DefaultAttribute);
 						}
 					}
 					catch (ArgumentException)
@@ -456,7 +455,7 @@ namespace GeneXus.Data.NTier.ADO
 
         public string getMultimediaUri(int id)
         {
-            return GXDbFile.ResolveUri(getVarchar(id), true, _gxDbCommand.Conn.DataStore.Context);
+            return getMultimediaUri(id, true);
         }
 
 		public string getMultimediaUri(int id, bool absUrl)
@@ -587,14 +586,19 @@ namespace GeneXus.Data.NTier.ADO
 		//Second execution of Dataprovider that updates images, CategoryImage = calendar.Link(), image_gxi=https://chatteatest.s3.amazonaws.com/TestPGXReleased/Category/CategoryImage/calendar_dc0ca2d9335a484cbdc2d21fc7568af7.png, copy falla, multimediaUri = image_gxi;
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 		public void SetParameterMultimedia(int id, string image_gxi, string image, string tableName, string fieldName)
-		{
-			
+{
+			GXLogging.Debug(log, "SetParameterMultimedia image_gxi:", image_gxi + " image:" + image);
 			bool storageServiceEnabled = !string.IsNullOrEmpty(tableName) && !string.IsNullOrEmpty(fieldName) && (GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null);
-
+			string imageUploadName=image;
 			if (GxUploadHelper.IsUpload(image))
+			{
+				imageUploadName = GxUploadHelper.UploadName(image);
 				image = GxUploadHelper.UploadPath(image);
+			}
 			if (GxUploadHelper.IsUpload(image_gxi))
+			{
 				image_gxi = GxUploadHelper.UploadPath(image_gxi);
+			}
 
 			if (String.IsNullOrEmpty(image))
 			{
@@ -610,14 +614,13 @@ namespace GeneXus.Data.NTier.ADO
 					{
 						if (PathUtil.IsAbsoluteUrl(image_gxi)) //http://, https://, ftp://
 						{
-							string objectName;
 							//file is already on the cloud p.e. https://s3.amazonaws.com/Test/PublicTempStorage/multimedia/Image_ad013b5b050c4bf199f544b5561d9b92.png
 							//Must be copied to https://s3.amazonaws.com/Test/TableName/FieldName/Image_ad013b5b050c4bf199f544b5561d9b92.png
-							if (ServiceFactory.GetExternalProvider().GetObjectNameFromURL(image_gxi, out objectName)) 
+							if (ServiceFactory.GetExternalProvider().TryGetObjectNameFromURL(image_gxi, out _)) 
 							{
 								try
 								{
-									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image_gxi, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.PublicAttribute);
+									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image_gxi, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.DefaultAttribute);
 									GXLogging.Debug(log, "Copy file already in ExternalProvider:", multimediaUri);
 								}
 								catch (Exception ex)
@@ -631,12 +634,14 @@ namespace GeneXus.Data.NTier.ADO
 							{
 								try
 								{
+#pragma warning disable SYSLIB0014 // WebClient
 									using (var fileStream = new MemoryStream(new WebClient().DownloadData(image_gxi)))
 									{
 										//Cannot pass Http Stream directly, because some Providers (AWS S3) does not support Http Stream.
-										multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.Public);
+										multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.DefaultAttribute);
 										GXLogging.Debug(log, "Upload external file to ExternalProvider:", multimediaUri);
 									}
+#pragma warning disable SYSLIB0014 // WebClient
 								}
 								catch (WebException)
 								{
@@ -647,23 +652,27 @@ namespace GeneXus.Data.NTier.ADO
 						else 
 						{
 							Uri uri;
-							string fileFullName = string.Empty;
 							if (Uri.TryCreate(image_gxi, UriKind.Absolute, out uri)) //file://
 							{
-								fileFullName = uri.AbsolutePath;
+								string fileFullName = uri.AbsolutePath;
 								Stream fileStream = new FileStream(fileFullName, FileMode.Open, FileAccess.Read);
-								String fileName = PathUtil.GetValidFileName(fileFullName, "_");
+								string fileName = PathUtil.GetValidFileName(fileFullName, "_");
 								using (fileStream)
 								{
-									multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(fileName, !GXDbFile.HasToken(fileName), false), tableName, fieldName, GxFileType.Public);
+									multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, GXDbFile.GenerateUri(fileName, !GXDbFile.HasToken(fileName), false), tableName, fieldName, GxFileType.DefaultAttribute);
 									GXLogging.Debug(log, "Upload file (_gxi) to ExternalProvider:", multimediaUri);
 								}
 							}
-							else //relative image name=> Assume it is a local file on the cloud, because storageService is Enabled.
+							else //relative image_gxi name=> Assume image is a local file on the cloud because storageService is Enabled. 
 							{
 								try
 								{
-									multimediaUri = ServiceFactory.GetExternalProvider().Copy(image, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.Public);
+									string imageRelativePath = image;
+									if (StorageFactory.TryGetProviderObjectName(ServiceFactory.GetExternalProvider(), image, out string objectName)) 
+									{
+										imageRelativePath = objectName;
+									}
+									multimediaUri = ServiceFactory.GetExternalProvider().Copy(imageRelativePath, GXDbFile.GenerateUri(image_gxi, !GXDbFile.HasToken(image_gxi), false), tableName, fieldName, GxFileType.DefaultAttribute);
 									GXLogging.Debug(log, "Copy external file in ExternalProvider:", multimediaUri);
 								}
 								catch(Exception e)
@@ -680,7 +689,7 @@ namespace GeneXus.Data.NTier.ADO
 					//image_gxi is empty => process image
 					else if (!String.IsNullOrEmpty(image))
 					{
-						var fileName = PathUtil.GetValidFileName(image, "_");
+						string fileName = PathUtil.GetValidFileName(imageUploadName, "_");
 
 						try
 						{
@@ -692,9 +701,11 @@ namespace GeneXus.Data.NTier.ADO
 							}
 							else
 							{
+#pragma warning disable SYSLIB0014 // WebClient
 								WebClient c = new WebClient();
 								fileStream = new MemoryStream(c.DownloadData(image));
 								//Cannot pass Http Stream directly, because some Providers (AWS S3) does not support Http Stream.
+#pragma warning disable SYSLIB0014 // WebClient
 							}
 							string externalFileName = GXDbFile.GenerateUri(fileName, !GXDbFile.HasToken(fileName), false);
 							multimediaUri = PushToExternalProvider(fileStream, externalFileName, tableName, fieldName);
@@ -710,7 +721,7 @@ namespace GeneXus.Data.NTier.ADO
 					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(image_gxi, "_"), !GXDbFile.HasToken(image_gxi), true);
 				//image_gxi is empty => process image
 				else if (!String.IsNullOrEmpty(image))
-					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(image, "_"), !GXDbFile.HasToken(image), true);
+					multimediaUri = GXDbFile.GenerateUri(PathUtil.GetValidFileName(imageUploadName, "_"), !GXDbFile.HasToken(imageUploadName), true);
 				_gxDbCommand.SetParameter(id - 1, multimediaUri);
 			}
 		}
@@ -722,7 +733,7 @@ namespace GeneXus.Data.NTier.ADO
 			string multimediaUri;
 			using (fileStream)
 			{
-				multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, externalFileName, tableName, fieldName, GxFileType.PublicAttribute);
+				multimediaUri = ServiceFactory.GetExternalProvider().Save(fileStream, externalFileName, tableName, fieldName, GxFileType.DefaultAttribute);
 				GXLogging.Debug(log, "Upload file to ExternalProvider:", multimediaUri);
 			}
 
@@ -872,6 +883,29 @@ namespace GeneXus.Data.NTier.ADO
 								continue;
 							_gxDbCommand.AddParameter(p.Name, p.GxType, p.Size, p.Scale);
 							_gxDbCommand.ParmDefinition.Add(p);
+							pos++;
+						}
+					}
+				}
+			}
+		}
+		List<ParDef> ICursor.DynamicParameters => _dynamicParameters;
+		List<ParDef> _dynamicParameters = new List<ParDef>();
+		protected virtual void bindDynamicParms(Object[] ptb)
+		{
+			int pos = 1;
+			if (ptb != null)
+			{
+				_dynamicParameters.Clear();
+				if (ptb.Length > 0)
+				{
+					if (ptb[0] is ParDef)
+					{
+						foreach (ParDef p in ptb)
+						{
+							if (p.Return)
+								continue;
+							_dynamicParameters.Add(p);
 							pos++;
 						}
 					}
@@ -1111,6 +1145,7 @@ namespace GeneXus.Data.NTier.ADO
                     dynStmt = ((DataStoreHelperBase)parent).getDynamicStatement(cursorNum, connectionProvider.getDynConstraints());
                 _stmt = (string)dynStmt[0];
 
+				bindDynamicParms(_parmBinds);
                 List<object> newParmBinds = new List<object>();
                 parmHasValue = (short[])dynStmt[1];
                 for (int i = 0; i < _parmBinds.Length; i++)

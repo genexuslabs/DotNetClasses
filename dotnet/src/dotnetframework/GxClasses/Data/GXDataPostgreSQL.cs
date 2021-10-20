@@ -9,6 +9,9 @@ using System.Collections;
 using GeneXus.Metadata;
 using System.Reflection;
 using System.IO;
+using System.Collections.Generic;
+using GeneXus.Configuration;
+using System.Text.RegularExpressions;
 #if NETCORE
 using GxClasses.Helpers;
 #endif
@@ -21,8 +24,9 @@ namespace GeneXus.Data
 		const string ConnectionStringEncoding = "encoding";
 		private byte[] _buffer;
 		static Assembly _npgsqlAssembly;
+		private bool _byteaOutputEscape;
 		const string NpgsqlDbTypeEnum = "NpgsqlTypes.NpgsqlDbType";
-
+		const string NpgsqlAssemblyName = "Npgsql";
 		public static Assembly NpgsqlAssembly
 		{
 			get
@@ -31,15 +35,15 @@ namespace GeneXus.Data
 				{
 					if (_npgsqlAssembly == null)
 					{
-						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), "Npgsql.dll");
+						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{NpgsqlAssemblyName}.dll");
 						GXLogging.Debug(log, "Loading Npgsql.dll from:" + assemblyPath);
 #if NETCORE
 						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-						_npgsqlAssembly = asl.LoadFromAssemblyPath(assemblyPath);
+						_npgsqlAssembly = asl.LoadFromAssemblyName(new AssemblyName(NpgsqlAssemblyName));
 #else
 						_npgsqlAssembly = Assembly.LoadFrom(assemblyPath);
 #endif
-						GXLogging.Debug(log, "Npgsql Loaded:" + _npgsqlAssembly.FullName + " location: " + _npgsqlAssembly.Location + " CodeBase:" + _npgsqlAssembly.CodeBase);
+						GXLogging.Debug(log, "Npgsql Loaded:" + _npgsqlAssembly.FullName + " location: " + _npgsqlAssembly.Location);
 					}
 
 				}
@@ -61,6 +65,12 @@ namespace GeneXus.Data
 				}
 			}
 #endif
+			string cfgBuf;
+			if (Config.GetValueOf("postgresql_bytea_output", out cfgBuf))
+			{
+				if (cfgBuf.Equals("escape", StringComparison.OrdinalIgnoreCase))
+					_byteaOutputEscape = true;
+			}
 		}
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
@@ -124,6 +134,7 @@ namespace GeneXus.Data
 			for (int i = 0; i < count; i++)
 			{
 				IDataParameter p = (IDataParameter)cmd.Parameters[i];
+				p.ParameterName = null; //Force TrimmedName empty and Positional Parameters for StoredProcedures, to avoid Case Sensitive 
 				if (p.Direction == ParameterDirection.InputOutput || p.Direction == ParameterDirection.Output || p.Direction == ParameterDirection.ReturnValue)
 				{
 					returnParms.Add(i, p);
@@ -251,7 +262,7 @@ namespace GeneXus.Data
 			{
 				if (fieldOffset == 0)
 				{
-					_buffer = (byte[])DR.GetValue(i);
+					_buffer = ByteaTextToByteArray((byte[])DR.GetValue(i));
 				}
 				int count = 0;
 				for (long index = fieldOffset; index < fieldOffset + length && index < _buffer.Length; index++)
@@ -260,6 +271,88 @@ namespace GeneXus.Data
 					count++;
 				}
 				return count;
+			}
+		}
+		//ByteArrayToByteaTextEscaped
+		protected override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
+		{
+			if (_byteaOutputEscape)
+			{
+				List<byte> binary = new List<byte>(byteArray.Length * 5);
+				foreach (byte b in byteArray)
+					if (b >= 0x20 && b < 0x7F && b != 0x27 && b != 0x5C)
+						binary.Add(b);
+					else
+					{
+						binary.Add(ASCIIByteBackSlash);
+						binary.Add((byte)(ASCIIByteb0 + (7 & (b >> 6))));
+						binary.Add((byte)(ASCIIByteb0 + (7 & (b >> 3))));
+						binary.Add((byte)(ASCIIByteb0 + (7 & b)));
+					}
+				base.SetBinary(parameter, binary.ToArray());
+			}
+			else
+			{
+				base.SetBinary(parameter, byteArray);
+			}
+		}
+		byte ASCIIByteBackSlash = (byte)'\\';
+		byte ASCIIBytex = (byte)'x';
+		byte ASCIIByteb0 = (byte)'0';
+		byte ASCIIByteb7 = (byte)'7';
+
+		private byte[] ByteaTextToByteArray(byte[] BackendData)
+		{
+			try
+			{
+				int byteAPosition = 0;
+				int byteALength = BackendData.Length;
+				if (byteALength >= 2 && BackendData[0] == ASCIIByteBackSlash && BackendData[1] == ASCIIBytex)
+				{
+					// PostgreSQL 8.5+'s bytea_output=hex format
+					byte[] result = new byte[(byteALength - 2) / 2];
+					int k = 0;
+					for (byteAPosition = 2; byteAPosition < byteALength; byteAPosition += 2)
+					{
+						result[k] = FastConverter.ToByteHexFormat(BackendData, byteAPosition);
+						k++;
+					}
+					return result;
+				}
+				else
+				{
+					MemoryStream ms = new MemoryStream();
+					while (byteAPosition < byteALength)
+					{
+						byte octalValue;
+						byte b = BackendData[byteAPosition];
+						if (b >= 0x20 && b < 0x7F && b != 0x27 && b != 0x5C)
+						{
+							octalValue = BackendData[byteAPosition];
+							byteAPosition++;
+							ms.WriteByte((Byte)octalValue);
+						}
+						else if (BackendData[byteAPosition] == ASCIIByteBackSlash &&
+								byteAPosition + 3 < byteALength &&
+								BackendData[byteAPosition + 1] >= ASCIIByteb0 && BackendData[byteAPosition + 1] <= ASCIIByteb7 &&
+								BackendData[byteAPosition + 2] >= ASCIIByteb0 && BackendData[byteAPosition + 2] <= ASCIIByteb7 &&
+								BackendData[byteAPosition + 3] >= ASCIIByteb0 && BackendData[byteAPosition + 3] <= ASCIIByteb7)
+						{
+							octalValue = FastConverter.ToByteEscapeFormat(BackendData, byteAPosition + 1);
+							byteAPosition += 4;
+							ms.WriteByte((Byte)octalValue);
+						}
+						else
+						{
+							return BackendData;
+						}
+					}
+					return ms.ToArray();
+				}
+			}catch(Exception ex)
+			{
+				GXLogging.Error(log, "ByteaTextToByteArray error", ex);
+				return BackendData;
 			}
 		}
 		public override void DisposeCommand(IDbCommand command)
@@ -382,7 +475,17 @@ namespace GeneXus.Data
 					//dbmsErrorCode=5632, error: 42p01: no existe la tabla â«ivafechafacturaâ»
 					return false;
 				}
-
+			if (emsg.IndexOf("42704") != -1)
+			{
+				// Type does not exists ( when creating geographic types without postgis extension)
+				// Second part of the condition for non-english installations when error is localized.
+				Regex rx = new Regex(@"42704.*Type.*does not exist", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+				if (rx.IsMatch(emsg) || emsg.IndexOf("\"geography\"") != -1)
+				{
+					status = 999;
+					return false;
+				}
+			}
 			if (    //duplicate key violates unique constraint //ERRO: 23505: duplicar chave viola a restriÃ§Ã£o de unicidade "nfe010_pkey"
 				emsg.IndexOf("23505") != -1 ||
 				(emsg.IndexOf("duplicate key") != -1 && emsg.IndexOf("unique") != -1) ||
@@ -523,5 +626,65 @@ namespace GeneXus.Data
 			reader = memoryDataReader;
 		}
 	}
+	internal class FastConverter
+	{
+		private static readonly byte[] HexFormatLookupTableLow = new byte[] {
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		};
+		private static readonly byte[] HexFormatLookupTableHigh = new byte[] {
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		};
+		private static readonly byte[] EscapeFormatLookupTable = new byte[] {
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		};
+		public static byte ToByteHexFormat(byte[] str, int index)
+		{
+			byte b1 = HexFormatLookupTableHigh[str[index]];
+			if (b1 == 255)
+				throw new IOException(string.Format("Expected a hex character, got {0}", str[index]));
 
+			byte b2 = HexFormatLookupTableLow[str[++index]];
+			if (b2 == 255)
+				throw new IOException(string.Format("Expected a hex character, got {0}", str[index]));
+
+			return (byte)(b1 | b2);
+		}
+		public static byte ToByteEscapeFormat(byte[] str, int index)
+		{
+			byte b1 = (byte)(EscapeFormatLookupTable[str[index]] << 6);
+			if (b1 == 255)
+				throw new IOException(string.Format("Expected an octal character, got {0}", str[index]));
+
+			byte b2 = (byte)(EscapeFormatLookupTable[str[++index]] << 3);
+			if (b2 == 255)
+				throw new IOException(string.Format("Expected an octal character, got {0}", str[index]));
+
+			byte b3 = EscapeFormatLookupTable[str[++index]];
+			if (b3 == 255)
+				throw new IOException(string.Format("Expected an octal character, got {0}", str[index]));
+
+			return (byte)(b1 | b2 | b3);
+		}
+	}
 }
