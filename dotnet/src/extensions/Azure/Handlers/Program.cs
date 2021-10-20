@@ -35,12 +35,9 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 				.ConfigureServices(services =>
 				{
 					ISessionService sessionService = GXSessionServiceFactory.GetProvider();
-					string connectionString = "";
 					if (sessionService is GxRedisSession)
 					{ 
-						connectionString = sessionService.ConnectionString;
-						services.AddSingleton<ICacheService2>(x => new Redis(connectionString));
-						//ConnectionMultiplexer.SetFeatureFlag("preventthreadtheft", true);
+						services.AddSingleton<ICacheService2>(x => new Redis(sessionService.ConnectionString, sessionService.SessionTimeout));
 					}
 					else
 						services.AddSingleton<ICacheService2>(x => new InProcessCache());
