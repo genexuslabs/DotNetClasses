@@ -96,7 +96,10 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 		public void Set(string key, byte[] value)
 		{
-			_redis.Set(Id, key, value, AZURE_SESSION_TIMEOUT_IN_MINUTES); 
+			if (_redis.redisSessionTimeout != 0)
+				_redis.Set(Id, key, value, _redis.redisSessionTimeout);
+			else
+				_redis.Set(Id, key, value, AZURE_SESSION_TIMEOUT_IN_MINUTES);
 		}
 
 		public bool TryGetValue(string key, out byte[] value)

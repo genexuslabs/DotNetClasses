@@ -15,6 +15,7 @@ namespace GeneXus.Services
 		static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
 		static string SESSION_SCHEMA = "SESSION_PROVIDER_SCHEMA";
 		static string SESSION_TABLE_NAME = "SESSION_PROVIDER_TABLE_NAME";
+		static string SESSION_TIMEOUT = "SESSION_PROVIDER_SESSION_TIMEOUT";
 		public static ISessionService GetProvider()
 		{
 			var instance = GXServices.Instance?.Get(GXServices.SESSION_SERVICE);
@@ -22,7 +23,7 @@ namespace GeneXus.Services
 			{
 				if (instance.Name.Equals(REDIS, StringComparison.OrdinalIgnoreCase))
 				{
-					return new GxRedisSession(instance.Properties.Get(SESSION_ADDRESS), CryptoImpl.Decrypt(instance.Properties.Get(SESSION_PASSWORD)), instance.Properties.Get(SESSION_INSTANCE));
+					return new GxRedisSession(instance.Properties.Get(SESSION_ADDRESS), CryptoImpl.Decrypt(instance.Properties.Get(SESSION_PASSWORD)), instance.Properties.Get(SESSION_INSTANCE), int.Parse(instance.Properties.Get(SESSION_TIMEOUT)));
 				}
 				else if (instance.Name.Equals(DATABASE, StringComparison.OrdinalIgnoreCase))
 				{
@@ -36,7 +37,7 @@ namespace GeneXus.Services
 	}
 	public class GxRedisSession : ISessionService
 	{
-		public GxRedisSession(string host, string password, string instanceName)
+		public GxRedisSession(string host, string password, string instanceName, int sessionTimeout)
 		{
 			ConnectionString = $"{host}";
 			if (!string.IsNullOrEmpty(password))
@@ -44,9 +45,11 @@ namespace GeneXus.Services
 				ConnectionString += $",password={password}";
 			}
 			InstanceName = instanceName;
+			SessionTimeout = sessionTimeout;
 		}
 		public string ConnectionString { get; }
 		public string InstanceName { get; }
+		public int SessionTimeout { get; }
 
 		public string Schema => throw new NotImplementedException();
 
@@ -71,6 +74,8 @@ namespace GeneXus.Services
 		public string TableName { get; }
 
 		public string InstanceName => throw new NotImplementedException();
+
+		public int SessionTimeout => throw new NotImplementedException();
 	}
 
 	public interface ISessionService
@@ -79,5 +84,6 @@ namespace GeneXus.Services
 		string Schema { get; }
 		string TableName { get; }
 		string InstanceName { get; }
+		int SessionTimeout { get; }
 	}
 }
