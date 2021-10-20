@@ -19,7 +19,7 @@ namespace GeneXus.Application
 		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
 		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName, string scriptPath)
 		{
-			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray() ;
+			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray();
 			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/") || string.IsNullOrEmpty(key) || scheme.IsMatch(key))
 			{
 				if (parms.Length > 0)
