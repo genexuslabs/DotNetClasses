@@ -21,11 +21,18 @@ namespace GeneXus.Cache
 		IDatabase _redisDatabase;
 		ConfigurationOptions _redisConnectionOptions;
 		private const int REDIS_DEFAULT_PORT = 6379;
-
+		public int redisSessionTimeout;
 		public Redis(string connectionString)
 		{
 			_redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
 			_redisConnectionOptions.AllowAdmin = true;
+		}
+
+		public Redis(string connectionString, int sessionTimeout)
+		{
+			_redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
+			_redisConnectionOptions.AllowAdmin = true;
+			redisSessionTimeout = sessionTimeout;
 		}
 		public Redis()
 		{
