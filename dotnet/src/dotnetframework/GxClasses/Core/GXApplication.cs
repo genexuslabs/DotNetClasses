@@ -3055,6 +3055,7 @@ namespace GeneXus.Application
 															 new string[] {"dll"    , "application/x-msdownload"},
 															 new string[] {"ps"		, "application/postscript"},
 															 new string[] {"pdf"    , "application/pdf"},
+															 new string[] {"svg"    , "image/svg+xml"},
 															 new string[] {"tgz"    , "application/x-compressed"},
 															 new string[] {"zip"    , "application/zip"},
 															 new string[] {"zip"    , "application/x-zip-compressed"},
