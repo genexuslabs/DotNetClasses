@@ -100,7 +100,7 @@ namespace GeneXus.Cache
 
 		public async Task<bool> KeyExpireAsync(string cacheid, string key, TimeSpan expiry, CommandFlags flags = CommandFlags.None)
 		{	
-			return await RedisDatabase.KeyExpireAsync(Key(cacheid, key), expiry, flags);
+			return await RedisDatabase.KeyExpireAsync(Key(cacheid, key), expiry, flags).ConfigureAwait(false);
 		}
 
 		public bool KeyExists(string cacheid, string key)
@@ -110,7 +110,7 @@ namespace GeneXus.Cache
 
 		public async Task<bool> KeyExistsAsync(string cacheid, string key)
 		{
-			return await RedisDatabase.KeyExistsAsync(Key(cacheid, key));
+			return await RedisDatabase.KeyExistsAsync(Key(cacheid, key)).ConfigureAwait(false);
 		}
 		private bool Get<T>(string key, out T value)
 		{
