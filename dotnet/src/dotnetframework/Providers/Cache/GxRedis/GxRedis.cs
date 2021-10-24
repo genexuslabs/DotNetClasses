@@ -11,6 +11,7 @@ using log4net;
 using StackExchange.Redis;
 using System.Reflection;
 using System.Security;
+using System.Threading.Tasks;
 
 namespace GeneXus.Cache
 {
@@ -97,6 +98,20 @@ namespace GeneXus.Cache
 			}
 		}
 
+		public async Task<bool> KeyExpireAsync(string cacheid, string key, TimeSpan expiry, CommandFlags flags = CommandFlags.None)
+		{	
+			return await RedisDatabase.KeyExpireAsync(Key(cacheid, key), expiry, flags);
+		}
+
+		public bool KeyExists(string cacheid, string key)
+		{
+			return RedisDatabase.KeyExists(Key(cacheid, key));
+		}
+
+		public async Task<bool> KeyExistsAsync(string cacheid, string key)
+		{
+			return await RedisDatabase.KeyExistsAsync(Key(cacheid, key));
+		}
 		private bool Get<T>(string key, out T value)
 		{
 			if (default(T) == null)
@@ -161,7 +176,7 @@ namespace GeneXus.Cache
 
 		private void Set<T>(string key, T value, int duration)
 		{
-			GXLogging.Debug(log, "Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());
+			GXLogging.Debug(log, "Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());		
 			if (duration > 0)
 				RedisDatabase.StringSet(key, Serialize(value), TimeSpan.FromMinutes(duration));
 			else
