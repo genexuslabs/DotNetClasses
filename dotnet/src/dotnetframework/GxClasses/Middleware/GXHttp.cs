@@ -1517,7 +1517,6 @@ namespace GeneXus.Http
 				context.httpAjaxContext.AddNavigationHidden();
 				context.httpAjaxContext.AddThemeHidden(context.GetTheme());
 				context.httpAjaxContext.AddStylesHidden();
-				context.httpAjaxContext.AddResourceProvider(GXResourceProvider.PROVIDER_NAME);
 				if (IsSpaRequest())
 				{
 					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse(" + context.getJSONResponse() + ");</script>");
