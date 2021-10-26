@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using GeneXus.Utils;
 using System.IO;
 using System.Globalization;
-using System.Net.Http;
 
 namespace GeneXus.MapServices
 {
@@ -118,21 +117,6 @@ namespace GeneXus.MapServices
 
 		public static LocationInfo GetCurrentLocation(int minAccuracy, int timeout, bool includeHAndS, bool ignoreErrors)
 		{
-			if (Application.GxContext.IsHttpContext)
-			{
-				string ip = Application.GxContext.Current.GetRemoteAddress();
-				using (HttpClient client = new HttpClient())
-				{
-					using (HttpResponseMessage response = client.GetAsync(new Uri("http://ipinfo.io/" + ip)).Result)
-					{
-						using (HttpContent content = response.Content)
-						{
-							string info = content.ReadAsStringAsync().Result;
-						}
-					}
-				}
-				return new LocationInfo { };
-			}
 			return new LocationInfo { };
 		}
 
