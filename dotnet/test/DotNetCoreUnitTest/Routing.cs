@@ -9,7 +9,7 @@ using GxClasses.Web.Middleware;
 
 namespace xUnitTesting
 {
-    public class Routing
+    public class RoutingTest
     {
         [Fact]
 		public void TestProcRestInModule()
