@@ -98,19 +98,18 @@ namespace GeneXus.Cache
 			}
 		}
 
-		public async Task<bool> KeyExpireAsync(string cacheid, string key, TimeSpan expiry, CommandFlags flags = CommandFlags.None)
-		{	
-			return await RedisDatabase.KeyExpireAsync(Key(cacheid, key), expiry, flags).ConfigureAwait(false);
+		public bool KeyExpire(string cacheid, string key, TimeSpan expiry, CommandFlags flags = CommandFlags.None)
+		{
+			Task<bool> t = RedisDatabase.KeyExpireAsync(Key(cacheid, key), expiry, flags);
+			t.Wait();
+			return t.Result;
 		}
 
 		public bool KeyExists(string cacheid, string key)
 		{
-			return RedisDatabase.KeyExists(Key(cacheid, key));
-		}
-
-		public async Task<bool> KeyExistsAsync(string cacheid, string key)
-		{
-			return await RedisDatabase.KeyExistsAsync(Key(cacheid, key)).ConfigureAwait(false);
+			Task<bool> t = RedisDatabase.KeyExistsAsync(Key(cacheid, key));
+			t.Wait();
+			return t.Result;
 		}
 		private bool Get<T>(string key, out T value)
 		{

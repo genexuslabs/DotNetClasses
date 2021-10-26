@@ -82,13 +82,15 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			_redis.ClearCache(AzureRedisCacheId);
 		}
 
-		public async Task<bool> RefreshSessionAsync(string sessionId)
+		public bool RefreshSession(string sessionId)
 		{
 			if (_redis.Get(AzureRedisCacheId, sessionId, out Dictionary<string, byte[]> value))
 			{
 				int refreshTimeout = (_redis.redisSessionTimeout == 0 )? SESSION_TIMEOUT_IN_MINUTES : _redis.redisSessionTimeout;
 				if (value != null)
-					return await _redis.KeyExpireAsync(AzureRedisCacheId, sessionId, TimeSpan.FromMinutes(refreshTimeout), CommandFlags.None);
+				{
+					return (_redis.KeyExpire(AzureRedisCacheId, sessionId, TimeSpan.FromMinutes(refreshTimeout), CommandFlags.None));
+				}
 			}
 			return false;	
 		}
@@ -136,15 +138,11 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			value = null;
 			return false;
 		}
-
 		public bool SessionKeyExists(string sessionId)
 		{
-			return _redis.KeyExists(AzureRedisCacheId, sessionId);
+			return (_redis.KeyExists(AzureRedisCacheId, sessionId));
 		}
-		public async Task<bool> SessionKeyExistsAsync(string sessionId)
-		{
-			return await _redis.KeyExistsAsync(AzureRedisCacheId, sessionId);
-		}
+
 	}
 	public class MockHttpSession : ISession
 	{
