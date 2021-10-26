@@ -43,10 +43,6 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				return new GeneXus.Http.GXOAuthAccessToken();
 			}
-			else if (cname0 == "gx_valid_service")
-			{
-				return new GeneXus.Http.GXValidService();
-			}
 			else if (cname0 == "gxmulticall")
 			{
 				return new GeneXus.Http.GXMultiCall();
