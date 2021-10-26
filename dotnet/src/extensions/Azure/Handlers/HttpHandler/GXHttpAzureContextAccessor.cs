@@ -60,12 +60,11 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				{
 					RedisHttpSession redisHttpSession = (RedisHttpSession)Session;
 					//Check if session is in cache
-					Task<bool> exists = redisHttpSession.SessionKeyExistsAsync(sessionId);
-					exists.Wait();
-					if (exists.Result)
+					if (redisHttpSession.SessionKeyExists(sessionId))
 					{ 
-						Task<bool> t = redisHttpSession.RefreshSessionAsync(sessionId);
-						t.Wait();
+						bool success = redisHttpSession.RefreshSession(sessionId);
+						if (!success)
+							GXLogging.Debug(log, $"Azure Serverless: Session could not be refreshed :{sessionId}");
 					}
 				}
 			}
