@@ -15,14 +15,17 @@ namespace GeneXus.Application
 
 		static ConcurrentDictionary<string, string> routerList;
 		const string RESOURCE_PATTERN = "*.rewrite";
+		const string schemeRegEx = @"^([a-z][a-z0-9+\-.]*):";
+		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
 		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName, string scriptPath)
 		{
-			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray() ;
-			if (PathUtil.IsAbsoluteUrlOrAnyScheme(key) || key.StartsWith("/"))
+			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray();
+			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/") || string.IsNullOrEmpty(key) || scheme.IsMatch(key))
 			{
 				if (parms.Length > 0)
 				{
-					return $"{key}{ConvertParmsToQueryString(parms, parmsName)}";
+					string[] noParmsName = Array.Empty<string>();
+					return $"{key}{ConvertParmsToQueryString(parms, noParmsName)}";
 				}
 				else
 				{
