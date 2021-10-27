@@ -4298,7 +4298,7 @@ namespace GeneXus.Data
 		}
 		public virtual bool IsDBNull(int i)
 		{
-			return (block.Item(pos, i) == DBNull.Value) || (block.Item(pos, i) is DBNull);
+			return (block.Item(pos, i) == DBNull.Value) || (block.Item(pos, i) is DBNull || block.Item(pos, i) == null);
 		}
 		public char GetChar(int i)
 		{
