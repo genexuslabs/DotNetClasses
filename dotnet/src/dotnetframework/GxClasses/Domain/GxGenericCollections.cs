@@ -270,6 +270,11 @@ namespace GeneXus.Utils
 			{
 				if (!string.IsNullOrEmpty(s))
 				{
+					if (string.IsNullOrEmpty(sName))
+						sName = GxUserType.XmlNameAttribute(typeof(T));
+					if (string.IsNullOrEmpty(sNamespace))
+						sNamespace = GxUserType.XmlNameSpaceAttribute(typeof(T));
+
 					base.Clear();
 					GXBaseCollection<T> deserialized = GXXmlSerializer.Deserialize<GXBaseCollection<T>>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);
 					GXXmlSerializer.SetSoapError(context, serializationErrors);
@@ -316,6 +321,10 @@ namespace GeneXus.Utils
 		}
 		public virtual string ToXml(bool includeHeader, bool includeState, string rootName, string sNameSpace)
 		{
+			if (string.IsNullOrEmpty(rootName))
+				rootName = GxUserType.XmlNameAttribute(typeof(T));
+			if (string.IsNullOrEmpty(sNameSpace))
+				sNameSpace = GxUserType.XmlNameSpaceAttribute(typeof(T));
 			XmlAttributeOverrides ov = null;
 			if (!includeState)
 			{
