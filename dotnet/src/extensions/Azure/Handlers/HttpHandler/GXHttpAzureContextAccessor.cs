@@ -4,8 +4,13 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using GeneXus.Cache;
+using GeneXus.Services;
+using GeneXus.Utils;
+using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -16,19 +21,95 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 	{
 		DefaultHttpContext defaultHttpContext = new DefaultHttpContext();
 		public HttpResponse httpResponseData;
-		public GXHttpAzureContextAccessor(HttpRequestData requestData, HttpResponseData responseData)
+		private ICacheService2 _redis;
+		private string sessionId;
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXHttpAzureContextAccessor));
+		internal const string AzureSessionId = "GX_AZURE_SESSIONID";
+		public GXHttpAzureContextAccessor(HttpRequestData requestData, HttpResponseData responseData, ICacheService2 redis)
 		{
+			if (redis != null)
+				_redis = redis;
+
+			bool isSecure = false;
 			foreach (var header in requestData.Headers)
 			{
 				string[] values = new Microsoft.Extensions.Primitives.StringValues(header.Value.Select(val => val).ToArray());
 				defaultHttpContext.Request.Headers[header.Key] = new Microsoft.Extensions.Primitives.StringValues(values);
+
+				if (header.Key == "Cookie")
+				{
+					sessionId = CookieValue(defaultHttpContext.Request.Headers[header.Key], AzureSessionId);
+				}
+
+				if (!isSecure)
+					isSecure = GetSecureConnection(header.Key, defaultHttpContext.Request.Headers[header.Key]);
+
 			}
 			defaultHttpContext.Request.Method = requestData.Method;
 			defaultHttpContext.Request.Body = requestData.Body;
 			defaultHttpContext.Request.Path = PathString.FromUriComponent(requestData.Url);
 			defaultHttpContext.Request.QueryString = QueryString.FromUriComponent(requestData.Url);
 
+			if (string.IsNullOrEmpty(sessionId))
+			{
+				CreateSessionId(isSecure, responseData, requestData);
+			}
+			else //Refresh the session timestamp
+			{
+				if (Session is RedisHttpSession)
+				{
+					RedisHttpSession redisHttpSession = (RedisHttpSession)Session;
+					//Check if session is in cache
+					if (redisHttpSession.SessionKeyExists(sessionId))
+					{ 
+						bool success = redisHttpSession.RefreshSession(sessionId);
+						if (!success)
+							GXLogging.Debug(log, $"Azure Serverless: Session could not be refreshed :{sessionId}");
+					}
+				}
+			}
+
 			httpResponseData = new GxHttpAzureResponse(defaultHttpContext, responseData);
+		}
+		private bool GetSecureConnection(string headerKey, string headerValue)
+		{
+			if ((headerKey == "Front-End-Https") & (headerValue == "on"))
+				return true;
+			
+			if ((headerKey == "X-Forwarded-Proto") & (headerValue == "https"))
+				return true;
+
+			return false;
+		}
+		private void CreateSessionId(bool isSecure, HttpResponseData responseData, HttpRequestData requestData)
+		{
+			sessionId = Guid.NewGuid().ToString();
+			HttpCookie sessionCookie = new HttpCookie(AzureSessionId, sessionId);
+
+			if (!isSecure)
+				isSecure = requestData.Url.Scheme == "https";
+
+			if (!DateTime.MinValue.Equals(DateTimeUtil.NullDate()))
+				sessionCookie.Expires = DateTime.MinValue;
+			sessionCookie.Path = "";
+			sessionCookie.Domain = "";
+			sessionCookie.HttpOnly = true;
+			sessionCookie.Secure = isSecure;
+
+			responseData.Cookies.Append(sessionCookie);
+			GXLogging.Debug(log, $"Create new Azure Session Id :{sessionId}");
+		}
+		private string CookieValue(string header, string name)
+		{
+			string[] words = header.Split(';');
+
+			foreach (var word in words)
+			{
+				string[] parts = word.Split('=');
+				if (parts[0].Trim() == name)
+					return parts[1];
+			}
+			return string.Empty;
 		}
 		public override IFeatureCollection Features => defaultHttpContext.Features;
 
@@ -45,8 +126,16 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public override IServiceProvider RequestServices { get => defaultHttpContext.RequestServices; set => defaultHttpContext.RequestServices = value; }
 		public override CancellationToken RequestAborted { get => defaultHttpContext.RequestAborted; set => defaultHttpContext.RequestAborted = value; }
 		public override string TraceIdentifier { get => defaultHttpContext.TraceIdentifier; set => defaultHttpContext.TraceIdentifier = value; }
-		public override ISession Session { get => new MockHttpSession(); set => defaultHttpContext.Session = value; }
+		public override ISession Session {
 
+			get
+			{
+				if ((_redis != null) & (sessionId != null))
+					return new RedisHttpSession(_redis, sessionId);
+				else return new MockHttpSession();
+			}
+
+			set => defaultHttpContext.Session = value; }
 		public override void Abort()
 		{
 			//throw new NotImplementedException();
