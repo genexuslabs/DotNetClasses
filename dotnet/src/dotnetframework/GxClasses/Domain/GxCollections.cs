@@ -2259,11 +2259,11 @@ namespace GeneXus.Utils
 			JObject jObj = JSONHelper.ReadJSON<JObject>(s, Messages);
 			if (jObj != null)
 			{
-				foreach (DictionaryEntry item in jObj)
+				foreach (string name in jObj.Names) //.Names keeps the original order
 				{
 					lock (syncObj)
 					{
-						this.Set(item.Key.ToString(), JSONHelper.WriteJSON<dynamic>(item.Value));
+						this.Set(name, JSONHelper.WriteJSON<dynamic>(jObj[name]));
 					}
 				}
 				return true;
