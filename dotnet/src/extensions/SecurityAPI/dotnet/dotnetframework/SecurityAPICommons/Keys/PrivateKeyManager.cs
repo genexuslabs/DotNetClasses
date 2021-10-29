@@ -90,7 +90,7 @@ namespace SecurityAPICommons.Keys
 			{
 				res = ReadBase64(base64);
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
 				this.error.setError("PK0015", e.Message);
 				return false;

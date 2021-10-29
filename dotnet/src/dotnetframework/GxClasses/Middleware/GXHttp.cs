@@ -1517,7 +1517,6 @@ namespace GeneXus.Http
 				context.httpAjaxContext.AddNavigationHidden();
 				context.httpAjaxContext.AddThemeHidden(context.GetTheme());
 				context.httpAjaxContext.AddStylesHidden();
-				context.httpAjaxContext.AddResourceProvider(GXResourceProvider.PROVIDER_NAME);
 				if (IsSpaRequest())
 				{
 					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse(" + context.getJSONResponse() + ");</script>");
@@ -3082,7 +3081,7 @@ namespace GeneXus.Http
 
 		public static void AddResponsiveMetaHeaders(GXRadio meta)
 		{
-			TryAddMetaHeader(meta, "viewport", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no");
+			TryAddMetaHeader(meta, "viewport", "width=device-width, initial-scale=1, maximum-scale=4");
 			TryAddMetaHeader(meta, "apple-mobile-web-app-capable", "yes");
 		}
 

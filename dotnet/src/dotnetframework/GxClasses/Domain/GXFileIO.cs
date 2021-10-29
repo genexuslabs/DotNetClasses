@@ -417,8 +417,8 @@ public class GxExternalFileInfo : IGxFileInfo
 	public GxExternalFileInfo(ExternalProvider provider)
     {
         _provider = provider;
-        _name = "";
-        _url = "";
+        _name = string.Empty;
+        _url = string.Empty;
     }
 
     public GxExternalFileInfo(string objectPath, ExternalProvider provider, GxFileType fileType)

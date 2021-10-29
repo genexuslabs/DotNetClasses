@@ -2632,19 +2632,19 @@ namespace GeneXus.Utils
 		public string Time()
 		{
 			return DateTime.Now.ToString(TimeFormatFromSize(8, -1, ":"), cultureInfo);
-        }
+		}
 
-        static public DateTime AddMth(DateTime dt, int cantMonths)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddMonths(cantMonths);
-        }
-        static public DateTime AddYr(DateTime dt, int cantYears)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddYears(cantYears);
+		static public DateTime AddMth(DateTime dt, int cantMonths)
+		{
+			if (dt == nullDate && cantMonths < 0)
+				return nullDate;
+			return dt.AddMonths(cantMonths);
+		}
+		static public DateTime AddYr(DateTime dt, int cantYears)
+		{
+			if (dt == nullDate && cantYears < 0)
+				return nullDate;
+			return dt.AddYears(cantYears);
         }
         static public DateTime DateEndOfMonth(DateTime dt)
         {
@@ -2693,30 +2693,29 @@ namespace GeneXus.Utils
 		}
         static public int DDiff(DateTime dtMinu, DateTime dtSust)
         {
-            return Convert.ToInt32((dtMinu - dtSust).TotalDays);
-        }
-        static public DateTime TAdd(DateTime dt, int seconds)
-        {
-            if (dt == nullDate)
-                return nullDate;            
-            return dt.AddSeconds(seconds);
-        }
-        static public DateTime TAddMs(DateTime dt, double seconds)
-        {
-
-            if (dt == nullDate)
-                return nullDate;
-            if (seconds % 1 == 0)
-                return dt.AddSeconds((int)seconds);
-            else
-                return dt.AddMilliseconds(seconds * 1000);
-        }
-        static public DateTime DAdd(DateTime dt, int days)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddDays(days);
-        }
+			return Convert.ToInt32((dtMinu - dtSust).TotalDays);
+		}
+		static public DateTime TAdd(DateTime dt, int seconds)
+		{
+			if (dt == nullDate && seconds < 0)
+				return nullDate;
+			return dt.AddSeconds(seconds);
+		}
+		static public DateTime TAddMs(DateTime dt, double seconds)
+		{
+			if (dt == nullDate && seconds < 0)
+				return nullDate;
+			if (seconds % 1 == 0)
+				return dt.AddSeconds((int)seconds);
+			else
+				return dt.AddMilliseconds(seconds * 1000);
+		}
+		static public DateTime DAdd(DateTime dt, int days)
+		{
+			if (dt == nullDate && days < 0)
+				return nullDate;
+			return dt.AddDays(days);
+		}
         public DateTime CToT(string strDate, int picFmt, int ampmFmt)
         {
             if (isNullDateTime(strDate, picFmt, ampmFmt))
@@ -5607,19 +5606,33 @@ namespace GeneXus.Utils
 	{
 		public const string DELIMITER = "/";
 
-		public static string EncodeUrl(string objectName)
+		private static string ReplaceAt(string str, int index, int length, string replace)
 		{
+			return str.Remove(index, Math.Min(length, str.Length - index))
+					.Insert(index, replace);
+		}
+
+		[Obsolete("EncodeUrl is deprecated as it would give unexpected results for some urls. Use EncodeUrlPath instead", false)]
+		public static string EncodeUrl(string objectName) { 
 			if (!Uri.IsWellFormedUriString(objectName, UriKind.RelativeOrAbsolute))
 				return HttpUtility.UrlPathEncode(objectName);
 			return objectName;
 		}
 
+		public static string EncodeUrlPath(string objectNameOrRelativeUrl)
+		{
+			int idx = objectNameOrRelativeUrl.LastIndexOf(StorageUtils.DELIMITER);
+			if (idx > 0)
+			{
+				string objectName = objectNameOrRelativeUrl.Substring(idx + 1);
+				return ReplaceAt(objectNameOrRelativeUrl, idx + 1, objectName.Length, Uri.EscapeDataString(objectName));
+			}
+			return Uri.EscapeDataString(objectNameOrRelativeUrl);
+		}
+
 		public static string DecodeUrl(string url)
 		{
-			string newUrl;
-			while ((newUrl = HttpUtility.UrlDecode(url)) != url)
-				url = newUrl;
-			return url;
+			return HttpUtility.UrlDecode(url);
 		}
 
 		public static String NormalizeDirectoryName(String directoryName)

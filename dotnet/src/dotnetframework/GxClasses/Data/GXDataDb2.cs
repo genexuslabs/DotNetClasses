@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Metadata;
 using GeneXus.Utils;
@@ -47,6 +48,7 @@ namespace GeneXus.Data
 	public class GxDb2ISeriesIds : GxDb2
 	{
 		const string DEFAULT_ISERIES_PORT = "446";
+		const string DEFAULT_ISERIES_DB = "*LOCAL";
 		GxDb2ISeries iseriesCommon;
 		public GxDb2ISeriesIds(string id) {
 			iseriesCommon = new GxDb2ISeries(id);
@@ -72,9 +74,25 @@ namespace GeneXus.Data
 		{
 			return iseriesCommon.ProcessError(dbmsErrorCode, emsg, errMask, con, ref status, ref retry, retryCount);
 		}
-		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt)
+		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dateValue)
 		{
-			return iseriesCommon.Net2DbmsDateTime(parm, dt);
+			if (iseriesCommon.UseCharInDate && parm.DbType == DbType.String && parm.Size == 8)
+			{
+				string resString;
+				if (dateValue.Equals(DateTimeUtil.NullDate()))
+				{
+					resString = GxDb2ISeries.SQL_NULL_DATE;
+				}
+				else
+				{
+					resString = DateTimeUtil.getYYYYMMDD(dateValue);
+				}
+				return resString;
+			}
+			else
+			{
+				return dateValue;
+			}
 		}
 		public override DateTime Dbms2NetDate(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
@@ -86,6 +104,12 @@ namespace GeneXus.Data
 			{
 				port = DEFAULT_ISERIES_PORT;
 			}
+			if (!string.IsNullOrEmpty(extra))
+			{
+				extra = ParseAdditionalData(extra, "naming");
+			}
+			extra = ReplaceKeyword(extra, "database", "CurrentSchema");
+			databaseName = DEFAULT_ISERIES_DB;
 			return base.BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 		}
 	}
@@ -97,6 +121,7 @@ namespace GeneXus.Data
 		public static string SQL_NULL_DATE_8="00000000";
         static Assembly _db2Assembly;
 #if NETCORE
+		object[] lastReadValues;
 		internal static string Db2AssemblyName = "IBM.Data.Db2";
 		const string dB2DbTypeEnum = "IBM.Data.Db2.DB2Type";
 #else
@@ -196,7 +221,30 @@ namespace GeneXus.Data
                 return Guid.Empty;
             }
         }
-        public override IDbDataParameter CreateParameter()
+#if NETCORE
+		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i)
+		{
+			try
+			{
+				return base.GetString(cmd, DR, i);
+			}
+			catch (InvalidOperationException ex)//There is no more data to return with DB2Clob fields
+			{
+				GXLogging.Warn(log, "GetString couldn't read value with GetString", ex);
+				if (lastReadValues != null && DR.GetFieldType(i)== typeof(string))
+				{
+					return Convert.ToString(lastReadValues[i-1]);
+				}
+				throw ex;
+			}
+		}
+		public override void GetValues(IDataReader reader, ref object[] values)
+		{
+			base.GetValues(reader, ref values);
+			lastReadValues = values;
+		}
+#endif
+		public override IDbDataParameter CreateParameter()
 		{
             return (IDbDataParameter)ClassLoader.CreateInstance(Db2Assembly, $"{Db2AssemblyName}.DB2Parameter");
 		}
@@ -371,9 +419,20 @@ namespace GeneXus.Data
 				case -803:		// Duplicated record
 					status = 1; 
 					break;
-				case -204:		// File not found
+#if NETCORE
+				case -204:      // File not found
+				case -454:      //The signature provided in the definition for routine "DB2SCHEMA.FUNCTION_NAME" matches the signature of some other routine.
+					if (GxContext.isReorganization) //ERROR [42704] [IBM][DB2/LINUXX8664] SQL0204N  "DB2SCHEMA.FUNCTION_NAME" is an undefined name.
+					{
+						return false;
+					}
+					status = 105;
+					break;
+#else
+				case -204:      // File not found
 					status = 105; 
 					break;
+#endif
 				case -530:		// Parent key not found
 					if ((errMask & GxErrorMask.GX_MASKFOREIGNKEY) == 0)
 					{
