@@ -632,7 +632,7 @@ namespace GeneXus.Http
 #if NETCORE
 				if (localHttpContext.Request.HasFormContentType)
 				{
-					foreach (var key in localHttpContext.Request.Form.Keys)
+					foreach (string key in localHttpContext.Request.Form.Keys)
 					{
 						_formVars.Add(key, localHttpContext.Request.Form[key][0]);
 					}

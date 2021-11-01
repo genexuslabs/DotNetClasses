@@ -2212,7 +2212,7 @@ namespace GeneXus.Utils
 		public string ToJSonString()
 		{
 			JObject jObj = new JObject();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 
 				jObj.Accumulate(item.ToString(), this.Get(item.ToString()));
@@ -2266,7 +2266,7 @@ namespace GeneXus.Utils
 		public object GetJSONObject()
 		{
 			JObject jObj = new JObject();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 
 				jObj.Accumulate(item.ToString(), this.Get(item.ToString()));
@@ -2297,7 +2297,7 @@ namespace GeneXus.Utils
 		public override string ToString()
 		{
 			StringBuilder values = new StringBuilder();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 				values.Append(this[item.ToString()]);
 			}
@@ -2615,7 +2615,7 @@ namespace GeneXus.Utils
 			else if (ienumerableType != null)
 			{
 				IList lst = (IList)Activator.CreateInstance((typeof(List<>).MakeGenericType(ienumerableType)));
-				foreach (var item in i as IEnumerable)
+				foreach (object item in i as IEnumerable)
 					lst.Add(item);
 				o = lst;
 			}
