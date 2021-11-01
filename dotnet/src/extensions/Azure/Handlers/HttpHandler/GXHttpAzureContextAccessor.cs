@@ -52,23 +52,21 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 			if (string.IsNullOrEmpty(sessionId))
 			{
-				sessionId = Guid.NewGuid().ToString();
-				HttpCookie sessionCookie = new HttpCookie(AzureSessionId, sessionId);
-				
-				if (!isSecure)
-					isSecure = requestData.Url.Scheme == "https";
-
-				
-				//sessionCookie.Expires = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
-				if (!DateTime.MinValue.Equals(DateTimeUtil.NullDate()))
-					sessionCookie.Expires = DateTime.MinValue;
-				sessionCookie.Path = "";
-				sessionCookie.Domain = "";
-				sessionCookie.HttpOnly = true;
-				sessionCookie.Secure = isSecure;
-
-				responseData.Cookies.Append(sessionCookie);
-				GXLogging.Debug(log, $"Create new Azure Session Id :{sessionId}");
+				CreateSessionId(isSecure, responseData, requestData);
+			}
+			else //Refresh the session timestamp
+			{
+				if (Session is RedisHttpSession)
+				{
+					RedisHttpSession redisHttpSession = (RedisHttpSession)Session;
+					//Check if session is in cache
+					if (redisHttpSession.SessionKeyExists(sessionId))
+					{ 
+						bool success = redisHttpSession.RefreshSession(sessionId);
+						if (!success)
+							GXLogging.Debug(log, $"Azure Serverless: Session could not be refreshed :{sessionId}");
+					}
+				}
 			}
 
 			httpResponseData = new GxHttpAzureResponse(defaultHttpContext, responseData);
@@ -82,6 +80,24 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				return true;
 
 			return false;
+		}
+		private void CreateSessionId(bool isSecure, HttpResponseData responseData, HttpRequestData requestData)
+		{
+			sessionId = Guid.NewGuid().ToString();
+			HttpCookie sessionCookie = new HttpCookie(AzureSessionId, sessionId);
+
+			if (!isSecure)
+				isSecure = requestData.Url.Scheme == "https";
+
+			if (!DateTime.MinValue.Equals(DateTimeUtil.NullDate()))
+				sessionCookie.Expires = DateTime.MinValue;
+			sessionCookie.Path = "";
+			sessionCookie.Domain = "";
+			sessionCookie.HttpOnly = true;
+			sessionCookie.Secure = isSecure;
+
+			responseData.Cookies.Append(sessionCookie);
+			GXLogging.Debug(log, $"Create new Azure Session Id :{sessionId}");
 		}
 		private string CookieValue(string header, string name)
 		{
@@ -114,7 +130,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 			get
 			{
-				if (_redis != null)
+				if ((_redis != null) & (sessionId != null))
 					return new RedisHttpSession(_redis, sessionId);
 				else return new MockHttpSession();
 			}

@@ -1431,6 +1431,11 @@ namespace GeneXus.Utils
 				return false;
 			try
 			{
+				if (string.IsNullOrEmpty(sName))
+					sName = XmlNameAttribute(GetType());
+				if (string.IsNullOrEmpty(sNamespace))
+					sNamespace = XmlNameSpaceAttribute(GetType());
+
 				GxUserType deserialized = GXXmlSerializer.Deserialize<GxUserType>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);
 				GXXmlSerializer.SetSoapError(context, serializationErrors);
 				deserialized.context = this.context;
@@ -1467,8 +1472,29 @@ namespace GeneXus.Utils
 		{
 			return ToXml(false, name, sNameSpace);
 		}
+		internal static string XmlNameAttribute(Type sdtType)
+		{
+			XmlTypeAttribute typeAtt = sdtType.GetCustomAttributes<XmlTypeAttribute>().FirstOrDefault();
+			if (typeAtt != null)
+				return typeAtt.TypeName;
+			else
+				return string.Empty;
+		}
+		internal static string XmlNameSpaceAttribute(Type sdtType)
+		{
+			XmlTypeAttribute typeAtt = sdtType.GetCustomAttributes<XmlTypeAttribute>().FirstOrDefault();
+			if (typeAtt != null)
+				return typeAtt.Namespace;
+			else
+				return string.Empty;
+		}
 		public virtual string ToXml(bool includeHeader, bool includeState, string rootName, string sNameSpace)
 		{
+			if (string.IsNullOrEmpty(rootName))
+				rootName = XmlNameAttribute(GetType());
+			if (string.IsNullOrEmpty(sNameSpace))
+				sNameSpace = XmlNameSpaceAttribute(GetType());
+
 			XmlAttributeOverrides ov = null;
 
 			if (!includeState)
@@ -2215,7 +2241,7 @@ namespace GeneXus.Utils
 		public string ToJSonString()
 		{
 			JObject jObj = new JObject();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 
 				jObj.Accumulate(item.ToString(), this.Get(item.ToString()));
@@ -2233,11 +2259,11 @@ namespace GeneXus.Utils
 			JObject jObj = JSONHelper.ReadJSON<JObject>(s, Messages);
 			if (jObj != null)
 			{
-				foreach (DictionaryEntry item in jObj)
+				foreach (string name in jObj.Names) //.Names keeps the original order
 				{
 					lock (syncObj)
 					{
-						this.Set(item.Key.ToString(), JSONHelper.WriteJSON<dynamic>(item.Value));
+						this.Set(name, JSONHelper.WriteJSON<dynamic>(jObj[name]));
 					}
 				}
 				return true;
@@ -2269,7 +2295,7 @@ namespace GeneXus.Utils
 		public object GetJSONObject()
 		{
 			JObject jObj = new JObject();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 
 				jObj.Accumulate(item.ToString(), this.Get(item.ToString()));
@@ -2300,7 +2326,7 @@ namespace GeneXus.Utils
 		public override string ToString()
 		{
 			StringBuilder values = new StringBuilder();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 				values.Append(this[item.ToString()]);
 			}
@@ -2618,7 +2644,7 @@ namespace GeneXus.Utils
 			else if (ienumerableType != null)
 			{
 				IList lst = (IList)Activator.CreateInstance((typeof(List<>).MakeGenericType(ienumerableType)));
-				foreach (var item in i as IEnumerable)
+				foreach (object item in i as IEnumerable)
 					lst.Add(item);
 				o = lst;
 			}

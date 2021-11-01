@@ -55,14 +55,17 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 	public class RedisHttpSession : ISession
 	{
-		const int AZURE_SESSION_TIMEOUT_IN_MINUTES = 5;
+		const int SESSION_TIMEOUT_IN_MINUTES = 5;
+		const string AzureRedisCacheId = "REDIS_CACHE_SESSION_ID";
 		string _sessionId;
 		private Redis _redis;
+		public Dictionary<string, byte[]> data;
 		public RedisHttpSession(ICacheService2 redis, string sessionId)
 		{
 			_redis = (Redis)redis;
-			_sessionId = sessionId;
+			_sessionId = sessionId; 
 		}
+
 		public bool IsAvailable => throw new NotImplementedException();
 
 		public string Id => _sessionId;
@@ -76,7 +79,20 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		}
 		public void Clear()
 		{
-			_redis.ClearCache(Id);
+			_redis.ClearCache(AzureRedisCacheId);
+		}
+
+		public bool RefreshSession(string sessionId)
+		{
+			if (_redis.Get(AzureRedisCacheId, sessionId, out Dictionary<string, byte[]> value))
+			{
+				int refreshTimeout = (_redis.redisSessionTimeout == 0 )? SESSION_TIMEOUT_IN_MINUTES : _redis.redisSessionTimeout;
+				if (value != null)
+				{
+					return (_redis.KeyExpire(AzureRedisCacheId, sessionId, TimeSpan.FromMinutes(refreshTimeout), CommandFlags.None));
+				}
+			}
+			return false;	
 		}
 
 		public Task CommitAsync(CancellationToken cancellationToken = default)
@@ -96,21 +112,37 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 		public void Set(string key, byte[] value)
 		{
+			if (!_redis.Get(AzureRedisCacheId, Id, out Dictionary<string, byte[]> data))
+				data = new Dictionary<string, byte[]>();
+			data[key] = value;
+
 			if (_redis.redisSessionTimeout != 0)
-				_redis.Set(Id, key, value, _redis.redisSessionTimeout);
+				_redis.Set(AzureRedisCacheId, Id, data, _redis.redisSessionTimeout);
 			else
-				_redis.Set(Id, key, value, AZURE_SESSION_TIMEOUT_IN_MINUTES);
+				_redis.Set(AzureRedisCacheId, Id, data, SESSION_TIMEOUT_IN_MINUTES);			
 		}
 
 		public bool TryGetValue(string key, out byte[] value)
 		{
-			if (_redis.Get(Id,key,out value) && value != null)
+			if (_redis.Get(AzureRedisCacheId, Id, out Dictionary<string, byte[]> data))
 			{
-				return true;
+				if (data != null)
+				{
+					if (data.TryGetValue(key, out byte[] keyvalue))
+					{ 
+						value = keyvalue;
+						return true;
+					}
+				}
 			}
 			value = null;
 			return false;
 		}
+		public bool SessionKeyExists(string sessionId)
+		{
+			return (_redis.KeyExists(AzureRedisCacheId, sessionId));
+		}
+
 	}
 	public class MockHttpSession : ISession
 	{

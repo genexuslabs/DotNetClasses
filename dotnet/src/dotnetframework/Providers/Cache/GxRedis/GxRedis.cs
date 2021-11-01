@@ -11,6 +11,7 @@ using log4net;
 using StackExchange.Redis;
 using System.Reflection;
 using System.Security;
+using System.Threading.Tasks;
 
 namespace GeneXus.Cache
 {
@@ -97,6 +98,19 @@ namespace GeneXus.Cache
 			}
 		}
 
+		public bool KeyExpire(string cacheid, string key, TimeSpan expiry, CommandFlags flags = CommandFlags.None)
+		{
+			Task<bool> t = RedisDatabase.KeyExpireAsync(Key(cacheid, key), expiry, flags);
+			t.Wait();
+			return t.Result;
+		}
+
+		public bool KeyExists(string cacheid, string key)
+		{
+			Task<bool> t = RedisDatabase.KeyExistsAsync(Key(cacheid, key));
+			t.Wait();
+			return t.Result;
+		}
 		private bool Get<T>(string key, out T value)
 		{
 			if (default(T) == null)
@@ -161,7 +175,7 @@ namespace GeneXus.Cache
 
 		private void Set<T>(string key, T value, int duration)
 		{
-			GXLogging.Debug(log, "Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());
+			GXLogging.Debug(log, "Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());		
 			if (duration > 0)
 				RedisDatabase.StringSet(key, Serialize(value), TimeSpan.FromMinutes(duration));
 			else
@@ -218,7 +232,9 @@ namespace GeneXus.Cache
 			{
 				return null;
 			}
-			return JsonSerializer.Serialize(o);
+			JsonSerializerOptions opts = new JsonSerializerOptions();
+			opts.Converters.Add(new DBNullConverter());
+			return JsonSerializer.Serialize(o, opts);
 		}
 
 		static T Deserialize<T>(string value)
@@ -230,41 +246,6 @@ namespace GeneXus.Cache
 			JsonSerializerOptions opts = new JsonSerializerOptions();
 			opts.Converters.Add(new ObjectToInferredTypesConverter());
 			return JsonSerializer.Deserialize<T>(value, opts);
-		}
-	}
-	public class ObjectToInferredTypesConverter: JsonConverter<object>
-	{
-		public override bool CanConvert(Type typeToConvert)
-		{
-			return typeof(object) == typeToConvert;
-		}
-		public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-		{
-			switch (reader.TokenType)
-			{
-				case JsonTokenType.True:
-					return true;
-				case JsonTokenType.False:
-					return false;
-				case JsonTokenType.Number:
-					if (reader.TryGetInt64(out long l))
-						return l;
-					else return reader.GetDouble();
-				case JsonTokenType.String:
-					if (reader.TryGetDateTime(out DateTime datetime))
-						return datetime;
-					else return reader.GetString();
-				default:
-					using (JsonDocument document = JsonDocument.ParseValue(ref reader))
-					{
-						return document.RootElement.Clone().ToString();
-					}
-			}
-		}
-
-		public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
-		{
-			throw new NotImplementedException();
 		}
 	}
 }
