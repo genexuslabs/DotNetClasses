@@ -18,6 +18,8 @@ using Microsoft.AspNetCore.Http;
 using TZ4Net;
 using GxClasses.Helpers;
 using System.Net;
+using NUglify;
+using NUglify.Html;
 #endif
 using GeneXus.Web.Security;
 
@@ -4025,7 +4027,21 @@ namespace GeneXus.Utils
 			string number = padding + character.ToString();
 			buffer.Append("&#" + number + ";");
 		}
-
+#if NETCORE
+		internal static string HTMLClean(string text)
+		{
+			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true };
+			htmlSettings.RemoveScriptStyleTypeAttribute = false;
+			htmlSettings.RemoveOptionalTags = false;
+			htmlSettings.AttributeQuoteChar = '\'';
+			htmlSettings.RemoveAttributeQuotes = false;
+			htmlSettings.MinifyCss = false;
+			htmlSettings.MinifyCssAttributes = false;
+			htmlSettings.MinifyJsAttributes = false;
+			htmlSettings.MinifyJs = false;
+			return Uglify.Html(text, htmlSettings).Code;
+		}
+#endif
 		static public string ValueEncode(string sText)
 		{
 			return ValueEncode(sText, false, false);
