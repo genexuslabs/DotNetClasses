@@ -2403,7 +2403,7 @@ namespace GeneXus.Application
                 case "CACHE-CONTROL":
                     var Cache = _HttpContext.Response.Cache;
                     string[] values = value.Split(',');
-                    foreach (var v in values)
+                    foreach (string v in values)
                     {
                         switch (v.Trim().ToUpper())
                         {
@@ -3800,7 +3800,7 @@ namespace GeneXus.Application
 			IGxSession newSession = newContext.GetSession();
 			if (parentSession != null && newSession != null)
 			{
-				foreach (var item in copyKeys)
+				foreach (string item in copyKeys)
 				{
 					newSession.Set(item, parentSession.Get(item));
 				}
