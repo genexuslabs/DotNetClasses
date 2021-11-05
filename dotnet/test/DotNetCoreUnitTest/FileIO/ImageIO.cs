@@ -25,7 +25,7 @@ namespace UnitTesting
 			imageUrl = "/hostrelative/image.png";
 			context.StaticContentBase = string.Empty;
 			url = context.GetCompleteURL(imageUrl);
-			Assert.StartsWith(context.GetContextPath(), url);
+			Assert.StartsWith(context.GetContextPath(), url, StringComparison.InvariantCulture);
 		}
 	}
 }
