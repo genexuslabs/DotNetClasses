@@ -4,7 +4,7 @@
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
 		<AssemblyName>GeneXusSecurityAPICommonsNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
-		<NoWarn>CA1031, CA1801</NoWarn>
+		<NoWarn>CA1031, CA1801, SYSLIB0023, SYSLIB0027, CA1416</NoWarn>
 		<PackageId>GeneXus.SecurityApi.Common.Core</PackageId>
 	</PropertyGroup>
 
