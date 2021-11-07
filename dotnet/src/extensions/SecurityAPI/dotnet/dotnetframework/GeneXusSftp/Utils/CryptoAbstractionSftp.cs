@@ -17,7 +17,7 @@ namespace Sftp.GeneXusSftpUtils
         /// <param name="length">The length of the array generate.</param>
         public static byte[] GenerateRandom(int length)
         {
-            var random = new byte[length];
+			byte[] random = new byte[length];
             GenerateRandom(random);
             return random;
         }
