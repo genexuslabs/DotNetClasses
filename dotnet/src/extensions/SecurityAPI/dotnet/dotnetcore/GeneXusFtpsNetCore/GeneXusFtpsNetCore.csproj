@@ -1,12 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<TargetFramework>net5.0</TargetFramework>
 		<AssemblyName>GeneXusFtpsNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<PackageId>GeneXus.SecurityApi.Ftps.Core</PackageId>
 	</PropertyGroup>
-	<PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+   
+  </PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
+	</PropertyGroup>
+	<PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
 		<DefineConstants>NETCORE</DefineConstants>
 	</PropertyGroup>
 

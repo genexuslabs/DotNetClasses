@@ -1,16 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<TargetFramework>net5.0</TargetFramework>
 		<AssemblyName>GeneXusSecurityAPICommonsNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<NoWarn>CA1031, CA1801</NoWarn>
 		<PackageId>GeneXus.SecurityApi.Common.Core</PackageId>
 	</PropertyGroup>
 
-	<PropertyGroup>
-		<DefineConstants>NETCORE</DefineConstants>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+   
   </PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
+	</PropertyGroup>
+	<PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
+		<DefineConstants>NETCORE</DefineConstants>
+</PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Certificate.cs" Link="Commons\Certificate.cs" />
