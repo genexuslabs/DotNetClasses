@@ -246,16 +246,7 @@ namespace GeneXus.Utils
 			rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
 			return (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
 #else
-			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true};
-			htmlSettings.RemoveScriptStyleTypeAttribute = false;
-			htmlSettings.RemoveOptionalTags = false;
-			htmlSettings.AttributeQuoteChar = '\'';
-			htmlSettings.RemoveAttributeQuotes = false;
-			htmlSettings.MinifyCss = false;
-			htmlSettings.MinifyCssAttributes = false;
-			htmlSettings.MinifyJsAttributes = false;
-			htmlSettings.MinifyJs = false;
-			return Uglify.Html(text, htmlSettings).Code;
+			return GXUtil.HTMLClean(text);
 #endif
 		}
 	}
