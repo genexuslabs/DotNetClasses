@@ -3023,6 +3023,7 @@ namespace GeneXus.Application
 															 new string[] {"rtf"	, "text/rtf"},
 															 new string[] {"a3gpp"  , "audio/3gpp"},
 															 new string[] {"aif"    , "audio/x-aiff"},
+															 new string[] {"aif"    , "audio/aiff"},
 															 new string[] {"au"		, "audio/basic"},
 															 new string[] {"m4a"    , "audio/mp4"},
 															 new string[] {"mp3"    , "audio/mpeg"},
@@ -3047,6 +3048,7 @@ namespace GeneXus.Application
 															 new string[] {"mov"    , "video/quicktime"},
 															 new string[] {"qt"		, "video/quicktime"},
 															 new string[] {"avi"    , "video/x-msvideo"},
+															 new string[] {"m4a"	, "audio/x-m4a"},
 															 new string[] {"mp4"    , "video/mp4"},
 															 new string[] {"divx"   , "video/x-divx"},
 															 new string[] {"3gp"    , "video/3gpp"},
@@ -3061,6 +3063,7 @@ namespace GeneXus.Application
 															 new string[] {"zip"    , "application/x-zip-compressed"},
 															 new string[] {"tar"    , "application/x-tar"},
 															 new string[] {"rar"    , "application/x-rar-compressed"},
+															 new string[] { "ram"	, "audio/vnd.rn-realaudio" },
 															 new string[] {"gz"		, "application/x-gzip"}
 														 };
 
