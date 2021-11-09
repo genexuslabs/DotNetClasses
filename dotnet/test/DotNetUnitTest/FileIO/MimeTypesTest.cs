@@ -22,8 +22,8 @@ namespace UnitTesting
 			extensions.Add(new string[] { "zip", "application/x-zip-compressed" });
 			extensions.Add(new string[] { "rar", "application/x-rar-compressed" });
 			extensions.Add(new string[] { "m4a", "audio/x-m4a" });
+			extensions.Add(new string[] { "m4a", "audio/mp4" });
 			extensions.Add(new string[] { "aif", "audio/aiff" });
-			extensions.Add(new string[] { "m4a", "audio/x-m4a" });
 			extensions.Add(new string[] { "ram", "audio/vnd.rn-realaudio" });
 
 			foreach (string[] map in extensions)

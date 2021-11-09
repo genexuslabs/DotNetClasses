@@ -3026,6 +3026,7 @@ namespace GeneXus.Application
 															 new string[] {"aif"    , "audio/aiff"},
 															 new string[] {"au"		, "audio/basic"},
 															 new string[] {"m4a"    , "audio/mp4"},
+															 new string[] {"m4a"    , "audio/x-m4a"},
 															 new string[] {"mp3"    , "audio/mpeg"},
 															 new string[] {"wav"    , "audio/wav"},
 															 new string[] {"wav"    , "audio/x-wav"},
@@ -3063,7 +3064,7 @@ namespace GeneXus.Application
 															 new string[] {"zip"    , "application/x-zip-compressed"},
 															 new string[] {"tar"    , "application/x-tar"},
 															 new string[] {"rar"    , "application/x-rar-compressed"},
-															 new string[] { "ram"	, "audio/vnd.rn-realaudio" },
+															 new string[] {"ram"	, "audio/vnd.rn-realaudio" },
 															 new string[] {"gz"		, "application/x-gzip"}
 														 };
 
