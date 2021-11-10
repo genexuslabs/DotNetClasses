@@ -78,10 +78,19 @@ namespace SecurityAPICommons.Keys
         /// <returns>string Hexa fixed length secure random generated key</returns>
         private string genericKeyGenerator(int length)
         {
+			Byte[] result = new Byte[length / 8];
+
+#if NETCORE
+			var arraySpan = new Span<byte>(result);
+			System.Security.Cryptography.RandomNumberGenerator.Fill(arraySpan);
+#else
+
 			using (System.Security.Cryptography.RNGCryptoServiceProvider rngCsp = new System.Security.Cryptography.RNGCryptoServiceProvider())
 			{
-				Byte[] result = new Byte[length / 8];
+				
 				rngCsp.GetBytes(result);
+			}
+#endif
 				string res = toHexaString(result);
 
 				if (this.error.existsError())
@@ -89,7 +98,7 @@ namespace SecurityAPICommons.Keys
 					return "";
 				}
 				return res;
-			}
+			
         }
 
 
