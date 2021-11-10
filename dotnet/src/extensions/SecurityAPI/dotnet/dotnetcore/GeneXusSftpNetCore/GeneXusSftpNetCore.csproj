@@ -5,7 +5,6 @@
 		<AssemblyName>GeneXusSftpNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<PackageId>GeneXus.SecurityApi.Sftp.Core</PackageId>
-		<NoWarn>SYSLIB0023</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup>
