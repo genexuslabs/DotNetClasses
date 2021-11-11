@@ -267,9 +267,10 @@ namespace GxClasses.Web.Middleware
 			{
 				foreach (var mlist in map.Value)
 				{
-					if (mlist.Key == AzureFunctionName)
+					if (mlist.Key.ToLower() == AzureFunctionName.ToLower())
 					{
-						basePath = string.IsNullOrEmpty(restBaseURL) ? $"{map.Key}" :$"{restBaseURL}/{map.Key}";
+						if (path.ToLower().Contains(map.Key.ToLower()))
+							basePath = string.IsNullOrEmpty(restBaseURL) ? $"{map.Key}" :$"{restBaseURL}/{map.Key}";
 					}
 				}
 			}
