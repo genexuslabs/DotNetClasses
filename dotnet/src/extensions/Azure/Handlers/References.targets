@@ -1,0 +1,28 @@
+<Project>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\Providers\Cache\GxRedis\GxRedis.csproj" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ApplicationInsights" Version="1.0.0-preview4" Condition="$(TargetFramework) == 'net6.0'">
+			<ExcludeAssets>all</ExcludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Remove="DummyProgram.cs" />
+		<Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json">
+			<Pack>true</Pack>
+			<PackagePath>./lib/net6.0/</PackagePath>
+		</Content>
+		<Content Include="$(OutputPath)net5.0\$(MSBuildProjectName).deps.json">
+			<Pack>true</Pack>
+			<PackagePath>./lib/net5.0/</PackagePath>
+		</Content>
+		<Content Include="$(MSBuildProjectName).csproj;Annotations\AnnotationsPlaceHolder.cs;Properties\launchSettings.json;host.json;local.settings.json;DummyProgram.cs">
+			<Pack>true</Pack>
+			<PackagePath>./src/</PackagePath>
+		</Content>
+	</ItemGroup>
+
+</Project>
