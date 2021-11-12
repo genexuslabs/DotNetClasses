@@ -1939,7 +1939,7 @@ namespace GeneXus.Application
 			String userAgent;
 			try
 			{
-				if (_HttpContext != null)
+				if (_HttpContext != null && _HttpContext.Request!=null)
 					userAgent = _HttpContext.Request.GetUserAgent();
 				else
 					return 0;
