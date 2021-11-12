@@ -348,7 +348,7 @@ namespace GeneXus.Http.Server
 					else
 						return String.Empty;
 #else
-					return _context.HttpContext.Features.Get<IHttpConnectionFeature>()?.RemoteIpAddress.ToString();
+					return _context.HttpContext.GetUserHostAddress();
 #endif
 				}
 				catch 

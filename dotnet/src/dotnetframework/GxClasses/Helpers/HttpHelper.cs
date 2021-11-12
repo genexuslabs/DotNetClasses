@@ -546,6 +546,19 @@ namespace GeneXus.Http
 			return context.Session.IsNewSession;
 		}
 #endif
+		public static string GetUserHostAddress(this HttpContext context)
+		{
+#if NETCORE
+			IPAddress address = context.Connection.RemoteIpAddress;
+			if (address.IsIPv4MappedToIPv6)
+				return context.Connection.RemoteIpAddress.MapToIPv4().ToString();
+			else
+				return context.Connection.RemoteIpAddress.ToString();
+#else
+			return context.request.UserHostAddress;
+#endif
+		}
+
 	}
 
 	public static class HttpRequestExtensions

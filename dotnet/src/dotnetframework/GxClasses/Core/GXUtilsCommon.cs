@@ -41,6 +41,7 @@ using System.Collections.Concurrent;
 using System.Drawing.Drawing2D;
 using GeneXus.Storage;
 using GeneXus.Services;
+using GeneXus.Http;
 
 namespace GeneXus.Utils
 {
@@ -4557,15 +4558,6 @@ namespace GeneXus.Utils
 			return Entry;
 		}
 
-#if NETCORE
-        private static string WrkSt(IGxContext gxContext, object httpContext)
-
-        {
-        return string.Empty;
-        }
-#else
-
-
 		private static string WrkSt(IGxContext gxContext, HttpContext httpContext)
 		{
 			try
@@ -4579,10 +4571,14 @@ namespace GeneXus.Utils
 				}
 				else if (httpContext != null)
 				{
+#if !NETCORE
 					if ((Config.GetValueOf("WRKST_COMPATIBILITY", out prop) && prop.Equals("1"))) //WRKST_COMPATIBILITY=YES at config.gx
 						wrkst = httpContext.Server.MachineName;
 					else
-						wrkst = httpContext.Request.UserHostAddress;
+						wrkst = httpContext.GetUserHostAddress();
+#else
+					wrkst = httpContext.GetUserHostAddress();
+#endif
 					GXLogging.Debug(log, "WrkSt= &HttpRequest.Remoteaddress");
 				}
 				else //Win
@@ -4598,7 +4594,6 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-#endif
 
 		internal static string NormalizeEncodingName(string enc1)
 		{
