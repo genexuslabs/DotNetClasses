@@ -4562,14 +4562,11 @@ namespace GeneXus.Utils
 				}
 				else if (httpContext != null)
 				{
-#if !NETCORE
 					if ((Config.GetValueOf("WRKST_COMPATIBILITY", out prop) && prop.Equals("1"))) //WRKST_COMPATIBILITY=YES at config.gx
-						wrkst = httpContext.Server.MachineName;
+						wrkst = httpContext.ServerMachineName();
 					else
-						wrkst = httpContext.Request.UserHostAddress;
-#else
-					wrkst = httpContext.GetUserHostAddress();
-#endif
+						wrkst = httpContext.GetUserHostAddress();
+
 					GXLogging.Debug(log, "WrkSt= &HttpRequest.Remoteaddress");
 				}
 				else //Win
