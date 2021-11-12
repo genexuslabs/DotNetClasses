@@ -555,7 +555,7 @@ namespace GeneXus.Http
 			else
 				return context.Connection.RemoteIpAddress.ToString();
 #else
-			return context.request.UserHostAddress;
+			return context.Request.UserHostAddress;
 #endif
 		}
 
