@@ -8,6 +8,7 @@
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ApplicationInsights" Version="1.0.0-preview4" Condition="$(TargetFramework) == 'net6.0'">
 			<ExcludeAssets>all</ExcludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Remove="DummyProgram.cs" />
