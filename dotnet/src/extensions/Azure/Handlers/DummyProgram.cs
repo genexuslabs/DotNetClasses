@@ -5,7 +5,7 @@ using Microsoft.Azure.Functions.Worker.Configuration;
 
 namespace AllFunctions
 {
-    public class DummyProgram
+    public class Program
     {
         public static void Main()
         {
