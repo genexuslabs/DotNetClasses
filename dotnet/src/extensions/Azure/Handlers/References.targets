@@ -1,5 +1,6 @@
 <Project>
 	<ItemGroup>
+		<PackageReference Include="log4net" Version="2.0.11" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
