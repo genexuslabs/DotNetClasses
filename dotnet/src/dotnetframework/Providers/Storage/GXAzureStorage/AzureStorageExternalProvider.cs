@@ -192,8 +192,20 @@ namespace GeneXus.Storage.GXAzureStorage
 			{
 				blob.Properties.ContentType = mimeType;
 			}
-
-			blob.UploadFromStreamAsync(stream).GetAwaiter().GetResult();
+			
+			using (MemoryStream ms = new MemoryStream())
+			{
+				/*
+				 * WA for Issue Azure SDK: 
+					https://github.com/Azure/azure-sdk-for-net/issues/10814
+					https://github.com/Azure/azure-storage-net-data-movement/issues/148
+					https://github.com/Azure/azure-storage-net/issues/864
+				 * */
+				stream.Position = 0;
+				stream.CopyTo(ms);
+				ms.Position = 0;
+				blob.UploadFromStreamAsync(ms).GetAwaiter().GetResult();
+			}
 			return GetURL(blob, fileType);
 		}
 
