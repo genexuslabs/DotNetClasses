@@ -386,19 +386,32 @@ namespace GeneXus.Application
 		}
 		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
-			var query = _httpContext.Request.GetQueryString();
+			NameValueCollection query = _httpContext.Request.GetQueryString();
 			Dictionary<string, object> parameters = new Dictionary<string, object>();
-			if (varAlias == null)
-				parameters = query.Keys.Cast<string>().ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
-			else
+			foreach(string k in query.AllKeys)
 			{
-				parameters = query.Keys.Cast<string>().ToDictionary(k => (varAlias.ContainsKey(k.ToLower()) ? varAlias[k.ToLower()].ToLower() :(varAlias.ContainsValue(k.ToLower())? "_" + k.ToLower() :k.ToLower())), v => (object)query[v].ToString());
-				List<string> keysToDelete = parameters.Keys.Where(v => v[0] == '_').ToList();
-				foreach (var key in keysToDelete)					
-						parameters.Remove(key);
+				if (k!=null)
+				{
+					string keyLowercase = k.ToLower();
+					if (varAlias==null)
+						parameters[keyLowercase] = query[k];
+					else
+					{
+						if (varAlias.ContainsKey(keyLowercase))
+						{
+							string alias = varAlias[keyLowercase].ToLower();
+							parameters[alias] = query[k];
+						}
+						else if (!varAlias.ContainsValue(keyLowercase))
+						{
+							parameters[keyLowercase] = query[k];
+						}
+					}
+				}
 			}
 			return parameters;
 		}
+
 		public bool IsRestParameter(string parameterName)
 		{
 			try

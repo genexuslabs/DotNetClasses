@@ -41,6 +41,7 @@ using System.Collections.Concurrent;
 using System.Drawing.Drawing2D;
 using GeneXus.Storage;
 using GeneXus.Services;
+using GeneXus.Http;
 
 namespace GeneXus.Utils
 {
@@ -2867,10 +2868,13 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(dt.Year,dt.Month,dt.Day,0,0,0,0);
 			//return dtRet; 
 			//This is more efficient than creating a new datetime..
-			dt = dt.AddMilliseconds(dt.Millisecond * -1);
-			dt = dt.AddSeconds(dt.Second * -1);
-			dt = dt.AddMinutes(dt.Minute * -1);
-			dt = dt.AddHours(dt.Hour * -1);
+			if (dt.Millisecond != 0 || dt.Second != 0 || dt.Minute != 0 || dt.Hour != 0)
+			{
+				dt = dt.AddMilliseconds(dt.Millisecond * -1);
+				dt = dt.AddSeconds(dt.Second * -1);
+				dt = dt.AddMinutes(dt.Minute * -1);
+				dt = dt.AddHours(dt.Hour * -1);
+			}
 			return dt;
 		}
 		public static DateTime ResetDate(DateTime dt)
@@ -2878,9 +2882,12 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(1,1,1,dt.Hour,dt.Minute,dt.Second);
 			//return dtRet;
 			//This is more efficient than creating a new datetime.
-			dt = dt.AddDays((dt.Day * -1) + 1);
-			dt = dt.AddMonths((dt.Month * -1) + 1);
-			dt = dt.AddYears((dt.Year * -1) + 1);
+			if (dt.Day != 1 || dt.Month != 1 || dt.Year != 1)
+			{
+				dt = dt.AddDays((dt.Day * -1) + 1);
+				dt = dt.AddMonths((dt.Month * -1) + 1);
+				dt = dt.AddYears((dt.Year * -1) + 1);
+			}
 			return dt;
 		}
 		public static DateTime ResetMilliseconds(DateTime dt)
@@ -2888,7 +2895,10 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(dt.Year,dt.Month,dt.Day,dt.Hour,dt.Minute,dt.Second,0);
 			//reutrn dtRet;
 			//This is more efficient than creating a new datetime.
-			dt = dt.AddMilliseconds(dt.Millisecond * -1);
+			if (dt.Millisecond != 0)
+			{
+				dt = dt.AddMilliseconds(dt.Millisecond * -1);
+			}
 			return dt;
 		}
 		public static DateTime ResetMillisecondsTicks(DateTime dt)
@@ -4548,15 +4558,6 @@ namespace GeneXus.Utils
 			return Entry;
 		}
 
-#if NETCORE
-        private static string WrkSt(IGxContext gxContext, object httpContext)
-
-        {
-        return string.Empty;
-        }
-#else
-
-
 		private static string WrkSt(IGxContext gxContext, HttpContext httpContext)
 		{
 			try
@@ -4571,9 +4572,10 @@ namespace GeneXus.Utils
 				else if (httpContext != null)
 				{
 					if ((Config.GetValueOf("WRKST_COMPATIBILITY", out prop) && prop.Equals("1"))) //WRKST_COMPATIBILITY=YES at config.gx
-						wrkst = httpContext.Server.MachineName;
+						wrkst = httpContext.ServerMachineName();
 					else
-						wrkst = httpContext.Request.UserHostAddress;
+						wrkst = httpContext.GetUserHostAddress();
+
 					GXLogging.Debug(log, "WrkSt= &HttpRequest.Remoteaddress");
 				}
 				else //Win
@@ -4589,7 +4591,6 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-#endif
 
 		internal static string NormalizeEncodingName(string enc1)
 		{
