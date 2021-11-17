@@ -546,7 +546,7 @@ namespace GeneXus.Http
 			return context.Session.IsNewSession;
 		}
 #endif
-		public static string ServerMachineName(this HttpContext context)
+		internal static string GetServerMachineName(this HttpContext context)
 		{
 #if NETCORE
 			IPAddress address = context.Connection.LocalIpAddress;
