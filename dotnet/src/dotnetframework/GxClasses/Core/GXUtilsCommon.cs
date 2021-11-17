@@ -4563,7 +4563,7 @@ namespace GeneXus.Utils
 				else if (httpContext != null)
 				{
 					if ((Config.GetValueOf("WRKST_COMPATIBILITY", out prop) && prop.Equals("1"))) //WRKST_COMPATIBILITY=YES at config.gx
-						wrkst = httpContext.ServerMachineName();
+						wrkst = httpContext.GetServerMachineName();
 					else
 						wrkst = httpContext.GetUserHostAddress();
 
