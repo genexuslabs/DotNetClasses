@@ -553,7 +553,7 @@ namespace SecurityAPICommons.Keys
                     string serializedPrivate = Convert.ToBase64String(serializedPrivateBytes);
                     RsaPrivateCrtKeyParameters privateKey = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(serializedPrivate));
 #if NETCORE
- alg = DotNetUtilities.ToRSA(privateKey);
+					alg = DotNetUtilities.ToRSA(privateKey);
 #else
 
 
@@ -584,10 +584,18 @@ namespace SecurityAPICommons.Keys
             }
             else if (SecurityUtils.compareStrings("ECDSA", algorithm))
                 {
-                    string b64Encoded = this.ToBase64();
+#if NETCORE
+				if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+				{
+					this.error.setError("PK025", "ECDSA JWT signature not implemented for Net on Linux systems");
+					return null;
+				}
+#endif
+
+				string b64Encoded = this.ToBase64();
                     byte[] privKeyBytes8 = Convert.FromBase64String(b64Encoded);//Encoding.UTF8.GetBytes(privKeyEcc);
-                try
-                {
+				try
+				{
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
 					ECDsaCng pubCNG = new ECDsaCng(CngKey.Import(privKeyBytes8, CngKeyBlobFormat.Pkcs8PrivateBlob));
@@ -596,10 +604,10 @@ namespace SecurityAPICommons.Keys
 
 
 				}
-				catch(Exception e)
+				catch (Exception e)
 				{
-                    this.error.setError("PK022", e.Message);
-                    return null;
+					this.error.setError("PK022", e.Message);
+					return null;
 				}
                 }
                 else
