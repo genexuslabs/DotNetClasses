@@ -9,6 +9,7 @@ using GxClasses.Web;
 using GxClasses.Web.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using StackExchange.Redis;
 
 namespace GeneXus.Deploy.AzureFunctions.Handlers
 {
