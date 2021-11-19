@@ -482,7 +482,7 @@ namespace GeneXus.Http.Client
 				reqStream.Write(MultiPart.EndBoundaryBytes, 0, MultiPart.EndBoundaryBytes.Length);
 		}
 
-		void setHeaders(HttpWebRequest req)
+		void setHeaders(HttpRequestMessage request, CookieContainer cookies)
 		{
 			HttpContentHeaders contentHeaders = request.Content.Headers;
 			HttpRequestHeaders headers = request.Headers;
