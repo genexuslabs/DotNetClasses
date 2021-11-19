@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel;
@@ -477,11 +478,11 @@ namespace GeneXus.Utils
 		{
 			if (wcfContext != null)
 			{
-				return HttpHelper.HttpPostMethod == wcfContext.IncomingRequest.Method;
+				return HttpMethod.Post.Method == wcfContext.IncomingRequest.Method;
 			}
 			else if (httpContext != null)
 			{
-				return HttpHelper.HttpPostMethod == httpContext.Request.HttpMethod;
+				return HttpMethod.Post.Method == httpContext.Request.HttpMethod;
 			}
 			else return false;
 		}
