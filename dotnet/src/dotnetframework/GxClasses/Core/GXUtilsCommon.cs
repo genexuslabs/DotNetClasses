@@ -2868,10 +2868,13 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(dt.Year,dt.Month,dt.Day,0,0,0,0);
 			//return dtRet; 
 			//This is more efficient than creating a new datetime..
-			dt = dt.AddMilliseconds(dt.Millisecond * -1);
-			dt = dt.AddSeconds(dt.Second * -1);
-			dt = dt.AddMinutes(dt.Minute * -1);
-			dt = dt.AddHours(dt.Hour * -1);
+			if (dt.Millisecond != 0 || dt.Second != 0 || dt.Minute != 0 || dt.Hour != 0)
+			{
+				dt = dt.AddMilliseconds(dt.Millisecond * -1);
+				dt = dt.AddSeconds(dt.Second * -1);
+				dt = dt.AddMinutes(dt.Minute * -1);
+				dt = dt.AddHours(dt.Hour * -1);
+			}
 			return dt;
 		}
 		public static DateTime ResetDate(DateTime dt)
@@ -2879,9 +2882,12 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(1,1,1,dt.Hour,dt.Minute,dt.Second);
 			//return dtRet;
 			//This is more efficient than creating a new datetime.
-			dt = dt.AddDays((dt.Day * -1) + 1);
-			dt = dt.AddMonths((dt.Month * -1) + 1);
-			dt = dt.AddYears((dt.Year * -1) + 1);
+			if (dt.Day != 1 || dt.Month != 1 || dt.Year != 1)
+			{
+				dt = dt.AddDays((dt.Day * -1) + 1);
+				dt = dt.AddMonths((dt.Month * -1) + 1);
+				dt = dt.AddYears((dt.Year * -1) + 1);
+			}
 			return dt;
 		}
 		public static DateTime ResetMilliseconds(DateTime dt)
@@ -2889,7 +2895,10 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(dt.Year,dt.Month,dt.Day,dt.Hour,dt.Minute,dt.Second,0);
 			//reutrn dtRet;
 			//This is more efficient than creating a new datetime.
-			dt = dt.AddMilliseconds(dt.Millisecond * -1);
+			if (dt.Millisecond != 0)
+			{
+				dt = dt.AddMilliseconds(dt.Millisecond * -1);
+			}
 			return dt;
 		}
 		public static DateTime ResetMillisecondsTicks(DateTime dt)
