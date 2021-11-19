@@ -2737,11 +2737,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-#if NETCORE
-				return _HttpContext.Connection.RemoteIpAddress.ToString();
-#else
-                return _HttpContext.Request.UserHostAddress;
-#endif
+				return _HttpContext.GetUserHostAddress();
 			}
 			catch
 			{
