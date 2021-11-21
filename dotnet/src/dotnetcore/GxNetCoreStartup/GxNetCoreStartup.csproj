@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
 		<PackageTags>GxNetCoreStartup</PackageTags>
@@ -34,9 +34,6 @@
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\Jayrock.dll</HintPath>
 		</Reference>
-	</ItemGroup>
-	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 	<ItemGroup>
