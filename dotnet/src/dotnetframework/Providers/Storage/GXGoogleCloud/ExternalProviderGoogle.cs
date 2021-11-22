@@ -131,16 +131,19 @@ namespace GeneXus.Storage.GXGoogleCloud
                 name += table + StorageUtils.DELIMITER;
             if (field != null)
                 name += field + StorageUtils.DELIMITER;
-            Google.Apis.Storage.v1.Data.Object folder = new Google.Apis.Storage.v1.Data.Object();
-            folder.Name = name;
-            folder.Bucket = Bucket;
-
-            UploadObjectOptions options = new UploadObjectOptions();
-            options.PredefinedAcl = PredefinedObjectAcl.PublicRead;
-
+            
             using (var stream = new MemoryStream())
             {
-                Client.UploadObject(folder, stream, options);
+				Service.Objects.Insert(
+					bucket: Bucket,
+					stream: stream,
+					contentType: "application/x-directory",
+					body: new Google.Apis.Storage.v1.Data.Object()
+					{
+						Name = name,
+						Bucket = Bucket
+					}
+				).Upload();
             }
         }
 
@@ -282,10 +285,10 @@ namespace GeneXus.Storage.GXGoogleCloud
 		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			if (IsPrivateResource(fileType))
-				return Signer.Sign(Bucket, StorageUtils.EncodeUrl(objectName), ResolveExpiration(urlMinutes), HttpMethod.Get);
+				return Signer.Sign(Bucket, objectName, ResolveExpiration(urlMinutes), HttpMethod.Get);
 			else
 			{
-				return StorageUri + StorageUtils.EncodeUrl(objectName);
+				return StorageUri + StorageUtils.EncodeUrlPath(objectName);
 			}
 		}
 		

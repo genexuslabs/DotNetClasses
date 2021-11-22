@@ -162,12 +162,6 @@ namespace GeneXus.Mail
 
         private Encoding GetEncoding()
         {
-            
-            string cult;
-            if (GeneXus.Configuration.Config.GetValueOf("Culture", out cult) && cult == "ja-JP")
-            {
-                return Encoding.GetEncoding("ISO-2022-JP");
-            }
             return Encoding.UTF8;
         }
 

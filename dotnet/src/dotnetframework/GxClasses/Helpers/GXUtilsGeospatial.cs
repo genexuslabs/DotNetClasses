@@ -890,9 +890,8 @@ namespace GeneXus.Utils
                     object currentRing = ClassLoader.Invoke(geoInstance, "RingN", new object[] { j });
                     SqlInt32 p = (SqlInt32)ClassLoader.Invoke(currentRing, "STNumPoints", null);
 
-                    for (int i = 1; i < p.Value; i++)
+                    for (int i = 1; i <= p.Value; i++)
                     {
-
                         double[] CurrentPoint = new double[2];
                         object currentPoint = ClassLoader.Invoke(currentRing, "STPointN", new object[] { i });
                         CurrentPoint[0] = SQLGeographyWrapper.Long(currentPoint);

@@ -1939,7 +1939,7 @@ namespace GeneXus.Application
 			String userAgent;
 			try
 			{
-				if (_HttpContext != null)
+				if (_HttpContext != null && _HttpContext.Request!=null)
 					userAgent = _HttpContext.Request.GetUserAgent();
 				else
 					return 0;
@@ -2403,7 +2403,7 @@ namespace GeneXus.Application
                 case "CACHE-CONTROL":
                     var Cache = _HttpContext.Response.Cache;
                     string[] values = value.Split(',');
-                    foreach (var v in values)
+                    foreach (string v in values)
                     {
                         switch (v.Trim().ToUpper())
                         {
@@ -2737,11 +2737,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-#if NETCORE
-				return _HttpContext.Connection.RemoteIpAddress.ToString();
-#else
-                return _HttpContext.Request.UserHostAddress;
-#endif
+				return _HttpContext.GetUserHostAddress();
 			}
 			catch
 			{
@@ -3055,6 +3051,7 @@ namespace GeneXus.Application
 															 new string[] {"dll"    , "application/x-msdownload"},
 															 new string[] {"ps"		, "application/postscript"},
 															 new string[] {"pdf"    , "application/pdf"},
+															 new string[] {"svg"    , "image/svg+xml"},
 															 new string[] {"tgz"    , "application/x-compressed"},
 															 new string[] {"zip"    , "application/zip"},
 															 new string[] {"zip"    , "application/x-zip-compressed"},
@@ -3799,7 +3796,7 @@ namespace GeneXus.Application
 			IGxSession newSession = newContext.GetSession();
 			if (parentSession != null && newSession != null)
 			{
-				foreach (var item in copyKeys)
+				foreach (string item in copyKeys)
 				{
 					newSession.Set(item, parentSession.Get(item));
 				}
