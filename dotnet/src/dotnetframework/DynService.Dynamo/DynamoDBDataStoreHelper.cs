@@ -10,6 +10,9 @@ namespace GeneXus.Data.NTier
 {
 	public class DynamoDBDataStoreHelper: DataStoreHelperBase
 	{
+		public DynamoQuery NewQuery() => new DynamoQuery(this);
+		public DynamoQuery NewScan() => new DynamoScan(this);
+
 		public DynamoDBMap Map(string name)
 		{
 			return new DynamoDBMap(name);
@@ -55,5 +58,33 @@ namespace GeneXus.Data.NTier
 		}
 	}
 	
+	public static class DynamoFluentExtensions
+	{
+		public static Query OrderBy(this Query dynamoQuery, string index) 
+		{
+			return (dynamoQuery as DynamoQuery)?.OrderBy(index);
+		}
+	}
 
+	public class DynamoQuery : Query
+	{
+		public string Index { get; set; } = null;
+		public bool ScanIndexForward = true;
+		private const string RANGE_KEY_INDEX = "RangeKey";
+		private static readonly char[] indexTrimChars = new char[] { '(', ')' };
+
+		public DynamoQuery OrderBy(string index)
+		{
+			if(index.StartsWith("("))
+			{
+				ScanIndexForward = false;
+				index = index.Trim(indexTrimChars);
+			}
+			if (index != RANGE_KEY_INDEX)
+				Index = index;
+			return this;
+		}
+
+		public DynamoQuery(DynamoDBDataStoreHelper dataStoreHelper) : base(dataStoreHelper) { }
+	}
 }
