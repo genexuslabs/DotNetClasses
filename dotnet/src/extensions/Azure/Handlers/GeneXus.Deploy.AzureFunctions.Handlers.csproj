@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
@@ -42,7 +42,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json">
+    <Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
      <Pack>true</Pack>
      <PackagePath>./lib/net6.0/</PackagePath>
     </Content>
