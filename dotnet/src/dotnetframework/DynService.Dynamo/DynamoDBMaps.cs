@@ -14,9 +14,9 @@ namespace GeneXus.Data.Dynamo
 		internal bool NeedsAttributeMap { get; private set; }
 		public DynamoDBMap(string name): base(RemoveSharp(name))
 		{
-			NeedsAttributeMap = name.StartsWith("#");
+			NeedsAttributeMap = name.StartsWith("#", StringComparison.InvariantCulture);
 		}
-		private static string RemoveSharp(string name) => name.StartsWith("#") ? name.Substring(1) : name;
+		private static string RemoveSharp(string name) => name.StartsWith("#", StringComparison.InvariantCulture) ? name.Substring(1) : name;
 
 		public override object GetValue(IOServiceContext context, RecordEntryRow currentEntry)
 		{

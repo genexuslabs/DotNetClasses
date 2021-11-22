@@ -156,7 +156,7 @@ namespace GeneXus.Data.NTier
 			Dictionary<string, AttributeValueUpdate> updates = new Dictionary<string, AttributeValueUpdate>();
 			foreach (var item in values)
 			{
-				if (!keyConditions.ContainsKey(item.Key) && !item.Key.StartsWith("AV")) 
+				if (!keyConditions.ContainsKey(item.Key) && !item.Key.StartsWith("AV", StringComparison.InvariantCultureIgnoreCase)) 
 				{
 					updates[item.Key] = new AttributeValueUpdate(item.Value, AttributeAction.PUT);
 				}

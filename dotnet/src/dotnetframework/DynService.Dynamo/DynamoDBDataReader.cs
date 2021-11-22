@@ -19,7 +19,7 @@ namespace GeneXus.Data.Dynamo
 		private ResponseWrapper mResponse;
 		private int mCurrentPosition;
 		private IODataMap2[] selectList;
-		private DynamoDBRecordEntry currentEntry = null;
+		private DynamoDBRecordEntry currentEntry;
 
 		private int ItemCount
 		{

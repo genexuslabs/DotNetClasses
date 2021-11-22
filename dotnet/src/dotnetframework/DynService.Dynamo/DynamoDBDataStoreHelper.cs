@@ -68,14 +68,14 @@ namespace GeneXus.Data.NTier
 
 	public class DynamoQuery : Query
 	{
-		public string Index { get; set; } = null;
+		public string Index { get; set; }
 		public bool ScanIndexForward = true;
 		private const string RANGE_KEY_INDEX = "RangeKey";
 		private static readonly char[] indexTrimChars = new char[] { '(', ')' };
 
 		public DynamoQuery OrderBy(string index)
 		{
-			if(index.StartsWith("("))
+			if(index.StartsWith("(", StringComparison.InvariantCulture))
 			{
 				ScanIndexForward = false;
 				index = index.Trim(indexTrimChars);
