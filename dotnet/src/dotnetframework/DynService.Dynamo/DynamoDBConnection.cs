@@ -33,7 +33,10 @@ namespace GeneXus.Data.NTier
 		private readonly string CLIENT_ID = "User Id";
 		private readonly string CLIENT_SECRET = "password";
 		private readonly string REGION = "region";
+		private readonly string LOCAL_URL = "LocalUrl";
+		private readonly char[] SHARP_CHARS = new char[] { '#' };
 		private AmazonDynamoDBClient mDynamoDB;
+		private AmazonDynamoDBConfig mConfig;
 		private AWSCredentials mCredentials;
 		private RegionEndpoint mRegion = RegionEndpoint.USEast1;
 
@@ -49,9 +52,14 @@ namespace GeneXus.Data.NTier
 
 		private void InitializeDBConnection()
 		{
-
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = this.ConnectionString;
+			mConfig = new AmazonDynamoDBConfig();
+			string mLocalUrl = null;
+			if (builder.TryGetValue(LOCAL_URL, out object localUrl))
+			{
+				mLocalUrl = localUrl.ToString();
+			}
 			if (builder.TryGetValue(CLIENT_ID, out object clientId) && builder.TryGetValue(CLIENT_SECRET, out object clientSecret))
 			{
 				mCredentials = new BasicAWSCredentials(clientId.ToString(), clientSecret.ToString());
@@ -60,12 +68,17 @@ namespace GeneXus.Data.NTier
 			{
 				mRegion = RegionEndpoint.GetBySystemName(region.ToString());
 			}
+			if (localUrl != null)
+				mConfig.ServiceURL = mLocalUrl;
+			else mConfig.RegionEndpoint = mRegion;
 		}
+
 		private bool Initialize()
 		{
 			InitializeDBConnection();
 			State = ConnectionState.Executing;
-			mDynamoDB = new Amazon.DynamoDBv2.AmazonDynamoDBClient(mCredentials, mRegion);
+
+			mDynamoDB = new AmazonDynamoDBClient(mCredentials, mConfig);
 			return true;
 		}
 
@@ -75,25 +88,26 @@ namespace GeneXus.Data.NTier
 			Query query = cursorDef.Query as Query;
 
 			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
-			if (parms.Count > 0)
+			foreach (KeyValuePair<string, string> asg in query.AssignAtts)
 			{
-				for (int i = 0; i < parms.Count; i++)
-				{
-					ServiceParameter parm = parms[i] as ServiceParameter;
-					DynamoDBHelper.GXToDynamoQueryParameter("", values, parm);
-				}
+				string name = asg.Key.TrimStart(SHARP_CHARS);
+				string parmName = asg.Value.Substring(1);
+				DynamoDBHelper.AddAttributeValue(name, values, parms[parmName] as ServiceParameter);
 			}
-			var pattern = @"\((.*) = :(.*)\)";
+
+			string pattern = @"\((.*) = :(.*)\)";
 			Dictionary<string, AttributeValue> keyCondition = new Dictionary<string, AttributeValue>();
 			List<string> filters = new List<string>();
 
-			foreach (var keyFilter in query.Filters)
+			foreach (string keyFilter in query.Filters)
 			{
-				var match = Regex.Match(keyFilter, pattern);
-				String varName = match.Groups[2].Value;
+				Match match = Regex.Match(keyFilter, pattern);
+				string varName = match.Groups[2].Value;
 				if (match.Groups.Count > 1)
 				{
-					keyCondition[match.Groups[1].Value] = values[varName];
+					string name = match.Groups[1].Value.TrimStart(SHARP_CHARS);
+					DynamoDBHelper.AddAttributeValue(name, values, parms[varName] as ServiceParameter);
+					keyCondition[name] = values[name];
 				}
 			}
 			AmazonDynamoDBRequest request = null;
@@ -126,7 +140,6 @@ namespace GeneXus.Data.NTier
 						TableName = query.TableName,
 						Key = keyCondition,
 						AttributeUpdates = ToAttributeUpdates(keyCondition, values)
-						
 					};
 					mDynamoDB.UpdateItem((UpdateItemRequest)request);
 					break;
@@ -143,7 +156,7 @@ namespace GeneXus.Data.NTier
 			Dictionary<string, AttributeValueUpdate> updates = new Dictionary<string, AttributeValueUpdate>();
 			foreach (var item in values)
 			{
-				if (!keyConditions.ContainsKey(item.Key) && !item.Key.StartsWith("AV")) 
+				if (!keyConditions.ContainsKey(item.Key) && !item.Key.StartsWith("AV", StringComparison.InvariantCultureIgnoreCase)) 
 				{
 					updates[item.Key] = new AttributeValueUpdate(item.Value, AttributeAction.PUT);
 				}
@@ -155,7 +168,7 @@ namespace GeneXus.Data.NTier
 		{			
 			
 			Initialize();
-			Query query = cursorDef.Query as Query;
+			DynamoQuery query = cursorDef.Query as DynamoQuery;
 			Dictionary<string, AttributeValue> valuesAux = new Dictionary<string, AttributeValue>();
 			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
 			if (parms.Count > 0)
@@ -166,13 +179,8 @@ namespace GeneXus.Data.NTier
 					DynamoDBHelper.GXToDynamoQueryParameter(":", values, parm);
 				}
 			}
-			
-			List<string> filtersAux = new List<string>();
-			List<string> filters = new List<string>();
-
-			filters.AddRange(query.Filters);
-			
-			foreach (var item in query.Vars)
+					
+			foreach (VarValue item in query.Vars)
 			{
 				values.Add(item.Name, DynamoDBHelper.ToAttributeValue(item));
 			}
@@ -181,7 +189,7 @@ namespace GeneXus.Data.NTier
 			{
 				DynamoDBDataReader dataReader;
 				AmazonDynamoDBRequest req;
-				CreateDynamoQuery(query, values, filters.ToArray(), out dataReader, out req);
+				CreateDynamoQuery(query, values, out dataReader, out req);
 				RequestWrapper reqWrapper = new RequestWrapper(mDynamoDB, req);
 				dataReader = new DynamoDBDataReader(cursorDef, reqWrapper, parms);
 				return dataReader;
@@ -191,36 +199,54 @@ namespace GeneXus.Data.NTier
 			catch (Exception e) { throw e; }
 		}
 
-		private static void CreateDynamoQuery(Query query, Dictionary<string, AttributeValue> values, String[] queryFilters, out DynamoDBDataReader dataReader, out AmazonDynamoDBRequest req)
+		private static void CreateDynamoQuery(DynamoQuery query, Dictionary<string, AttributeValue> values, out DynamoDBDataReader dataReader, out AmazonDynamoDBRequest req)
 		{
 			dataReader = null;
 			req = null;
-			if (query is Scan)
+			ScanRequest scanReq = null;
+			QueryRequest queryReq = null;
+			if (query is DynamoScan)
 			{
-				req = new ScanRequest
+				req = scanReq = new ScanRequest
 				{
 					TableName = query.TableName,
-					ProjectionExpression = String.Join(",", query.Projection),
-					
+					ProjectionExpression = String.Join(",", query.Projection),					
 				};
-				if (queryFilters.Length > 0)
+				if (query.Filters.Length > 0)
 				{
-					((ScanRequest)req).FilterExpression = String.Join(" AND ", queryFilters);
-					((ScanRequest)req).ExpressionAttributeValues = values;
+					scanReq.FilterExpression = String.Join(" AND ", query.Filters);
+					scanReq.ExpressionAttributeValues = values;
 				}
 			}
 			else
 			{
-				req = new QueryRequest
+				req = queryReq = new QueryRequest
 				{
 					TableName = query.TableName,
 					KeyConditionExpression = String.Join(" AND ", query.Filters),
 					ExpressionAttributeValues = values,
 					ProjectionExpression = String.Join(",", query.Projection),
-					
+					IndexName = query.Index,
+					ScanIndexForward = query.ScanIndexForward,
 				};
 			}
+			Dictionary<string, string> expressionAttributeNames = null;
+			foreach (string mappedName in query.SelectList.Where(selItem => (selItem as DynamoDBMap)?.NeedsAttributeMap == true).Select(selItem => selItem.GetName(NewServiceContext())))
+			{
+				expressionAttributeNames = expressionAttributeNames ?? new Dictionary<string, string>();
+				string key = $"#{ mappedName }";
+				string value = mappedName;
+				expressionAttributeNames.Add(key, value);
+			}
+			if(expressionAttributeNames != null)
+			{
+				if(scanReq != null)
+					scanReq.ExpressionAttributeNames = expressionAttributeNames;
+				else if(queryReq != null)
+					queryReq.ExpressionAttributeNames = expressionAttributeNames;
+			}
 		}
+		internal static IOServiceContext NewServiceContext() => null;
 
 	}
 }
