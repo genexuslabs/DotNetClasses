@@ -18,9 +18,9 @@ using Microsoft.AspNetCore.Http;
 using TZ4Net;
 using GxClasses.Helpers;
 using System.Net;
+#endif
 using NUglify;
 using NUglify.Html;
-#endif
 using GeneXus.Web.Security;
 
 using System.Web;
@@ -62,10 +62,10 @@ namespace GeneXus.Utils
 		{
 			lock (random)
 			{
-				var bytes = new Byte[8];
+				byte[] bytes = new Byte[8];
 				random.GetBytes(bytes);
 
-				var ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11);
+				ulong ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11);
 				double d = ul / (double)(1UL << 53);
 				return d;
 			}
@@ -4037,7 +4037,6 @@ namespace GeneXus.Utils
 			string number = padding + character.ToString();
 			buffer.Append("&#" + number + ";");
 		}
-#if NETCORE
 		internal static string HTMLClean(string text)
 		{
 			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true };
@@ -4051,7 +4050,6 @@ namespace GeneXus.Utils
 			htmlSettings.MinifyJs = false;
 			return Uglify.Html(text, htmlSettings).Code;
 		}
-#endif
 		static public string ValueEncode(string sText)
 		{
 			return ValueEncode(sText, false, false);
@@ -4314,7 +4312,7 @@ namespace GeneXus.Utils
 				return null;
 			else
 			{
-				var basicAuthenticationHeader = context.Request.Headers["Authorization"]
+				string basicAuthenticationHeader = context.Request.Headers["Authorization"]
 					.FirstOrDefault(header => header.StartsWith("Basic", StringComparison.OrdinalIgnoreCase));
 				var decodedHeader = new BasicAuthenticationHeaderValue(basicAuthenticationHeader);
 				return decodedHeader;
