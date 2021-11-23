@@ -22,9 +22,12 @@ namespace GeneXus.Data.NTier
 		public string[] Projection { get; set; } = Array.Empty<string>();
 		public string[] OrderBys { get; set; } = Array.Empty<string>();
 		public string[] Filters { get; set; } = Array.Empty<string>();
-		public string[] AssignAtts { get; set; } = Array.Empty<string>();
+		private List<KeyValuePair<string, string>> mAssignAtts;
+		public IEnumerable<KeyValuePair<string, string>> AssignAtts { get { return mAssignAtts ?? Array.Empty<KeyValuePair<string, string>>() as IEnumerable<KeyValuePair<string, string>>; } } 
 		public IODataMap2[] SelectList { get; set; } = Array.Empty<IODataMap2>();
-		public VarValue[] Vars { get; set; } = Array.Empty<VarValue>();
+
+		private List<VarValue> mVarValues;
+		public IEnumerable<VarValue> Vars { get { return (mVarValues ?? Array.Empty<VarValue>() as IEnumerable<VarValue>); } }
 		public CursorType CursorType { get; set; } = CursorType.Select;
 
 		public Query(object dataStoreHelper)
@@ -54,9 +57,10 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
-		public Query Set(string[] assignAtts)
+		public Query Set(string name, string value)
 		{
-			AssignAtts = assignAtts;			
+			mAssignAtts = mAssignAtts ?? new List<KeyValuePair<string, string>>();
+			mAssignAtts.Add(new KeyValuePair<string, string>(name, value));
 			return this;
 		}
 
@@ -66,11 +70,6 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
-		public Query SetVars(VarValue[] vars)
-		{
-			Vars = vars;
-			return this;
-		}
 
 		public Query SetType(CursorType cType)
 		{
@@ -78,6 +77,12 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
+		public Query AddParm(GXType gxType, object parm)
+		{
+			mVarValues = mVarValues ?? new List<VarValue>();
+			mVarValues.Add(new VarValue($":parm{ mVarValues.Count + 1 }", gxType, parm));
+			return this;
+		}
 	}
 
 	public class VarValue
@@ -89,6 +94,7 @@ namespace GeneXus.Data.NTier
 		public VarValue(string name, GXType type, object value)
 		{
 			Name = name;
+			Type = type;
 			Value = value;
 		}
 

@@ -16,11 +16,19 @@ namespace GeneXus.Data.Dynamo
 			return ToAttributeValue(GxService.GXTypeToDbType(var.Type), var.Value, false);			
 		}
 
-		internal static void GXToDynamoQueryParameter(string prefix, Dictionary<string, AttributeValue> dynParm, ServiceParameter parm)
+		internal static void GXToDynamoQueryParameter(string prefix, Dictionary<string, AttributeValue> dynParm, ServiceParameter parm) => AddAttributeValue($"{prefix}{parm.ParameterName}", dynParm, parm);
+
+		internal static bool AddAttributeValue(string parmName, Dictionary<string, AttributeValue> dynParm, ServiceParameter parm)
 		{
-			AttributeValue v = ToAttributeValue(parm.DbType, parm.Value, true);
-			if (v != null)
-				dynParm[$"{prefix}{parm.ParameterName}"] = v;
+			if (parm == null)
+				return false;
+			AttributeValue value = ToAttributeValue(parm.DbType, parm.Value, true);
+			if (value != null)
+			{
+				dynParm[parmName] = value;
+				return true;
+			}
+			return false;
 		}
 
 		private static AttributeValue ToAttributeValue(DbType dbType, Object value, bool skipEmpty)
@@ -63,15 +71,11 @@ namespace GeneXus.Data.Dynamo
 					};
 					break;
 				default:
-					//DynamoDB does not support empty values
 					string valueS = value.ToString().Replace("%", string.Empty);
-					if (!string.IsNullOrEmpty(valueS))
-					{ 
-						attValue = new AttributeValue
-						{
-							S = valueS
-						};
-					}
+					attValue = new AttributeValue
+					{
+						S = valueS
+					};
 					break;
 			}
 			return attValue;

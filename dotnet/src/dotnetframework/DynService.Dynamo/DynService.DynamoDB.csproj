@@ -8,10 +8,16 @@
 		<PackageId>GeneXus.DynService.DynamoDB</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.83" />
+		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.103" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\DynService.Core\DynService.Core.csproj" />
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Update="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.2">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	</ItemGroup>
 </Project>

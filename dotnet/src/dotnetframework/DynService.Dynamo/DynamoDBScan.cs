@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace GeneXus.Data.NTier
 {
-	public class Scan: Query
+	public class DynamoScan : DynamoQuery
 	{
-		public Scan(object dataStoreHelper):base(dataStoreHelper)
+		public DynamoScan(DynamoDBDataStoreHelper dataStoreHelper):base(dataStoreHelper)
 		{
 			
 		}
