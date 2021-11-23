@@ -578,6 +578,7 @@ namespace GeneXus.Http.Client
 			else
 				req.Version = HttpVersion.Version11;
 		}
+		[SecuritySafeCritical]
 		HttpResponseMessage ExecuteRequest(string method, string requestUrl, CookieContainer cookies)
 		{
 			GXLogging.Debug(log, String.Format("Start NetCore HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
@@ -588,7 +589,7 @@ namespace GeneXus.Http.Client
 #if NETCORE
 			HttpClientHandler handler;
 #else
-			HttpClientHandler handler;
+			WinHttpHandler handler;
 #endif
 			request = new HttpRequestMessage();
 			request.RequestUri = new Uri(requestUrl);
@@ -596,18 +597,18 @@ namespace GeneXus.Http.Client
 			handler = new HttpClientHandler();
 			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
 #else
-			handler = new HttpClientHandler();
-			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
+			handler = new WinHttpHandler();
+			handler.ServerCredentials = getCredentialCache(request.RequestUri, _authCollection);
 #endif
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 			}
 			handler.CookieContainer = cookies;
-#if NETCORE
+
 			foreach (X509Certificate2 cert in _certificateCollection)
 				handler.ClientCertificates.Add(cert);
-#endif
+
 			request.Method = new HttpMethod(method);
 			setHttpVersion(request);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
