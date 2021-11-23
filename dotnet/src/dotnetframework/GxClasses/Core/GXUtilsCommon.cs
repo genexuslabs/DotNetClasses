@@ -4037,7 +4037,7 @@ namespace GeneXus.Utils
 			string number = padding + character.ToString();
 			buffer.Append("&#" + number + ";");
 		}
-		internal static string HTMLClean(string text)
+		public static string HTMLClean(string text)
 		{
 			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true };
 			htmlSettings.RemoveScriptStyleTypeAttribute = false;
