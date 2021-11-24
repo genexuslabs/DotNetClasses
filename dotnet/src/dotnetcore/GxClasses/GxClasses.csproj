@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
@@ -175,6 +175,9 @@
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
   
   <ItemGroup>
