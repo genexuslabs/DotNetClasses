@@ -42,6 +42,7 @@ using System.Drawing.Drawing2D;
 using GeneXus.Storage;
 using GeneXus.Services;
 using GeneXus.Http;
+using System.Security;
 
 namespace GeneXus.Utils
 {
@@ -4037,6 +4038,7 @@ namespace GeneXus.Utils
 			string number = padding + character.ToString();
 			buffer.Append("&#" + number + ";");
 		}
+		[SecuritySafeCritical]
 		public static string HTMLClean(string text)
 		{
 			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true };
