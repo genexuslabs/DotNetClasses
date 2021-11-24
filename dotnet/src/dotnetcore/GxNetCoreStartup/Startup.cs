@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.HttpHandlerFactory;
@@ -106,7 +105,7 @@ namespace GeneXus.Application
 
 		private GXRouting gxRouting;
 
-		public Startup(IHostingEnvironment env)
+		public Startup(Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
 		{
 
 			var builder = new ConfigurationBuilder()
@@ -203,7 +202,7 @@ namespace GeneXus.Application
 				});
 			}
 		}
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			var baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
 			
@@ -293,19 +292,23 @@ namespace GeneXus.Application
 				ContentTypeProvider = provider
 			});
 			
-			foreach( String p in gxRouting.servicesPathUrl.Keys)
+			foreach( string p in gxRouting.servicesPathUrl.Keys)
 			{
 				 servicesBase.Add( string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
 			}
 
 			var restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
-
+			var apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
 			app.UseMvc(routes =>
 			{
-				foreach (String serviceBasePath in servicesBase)
-				{
-					GXLogging.Debug(log, $"MapRoute: {serviceBasePath}{{*{UrlTemplateControllerWithParms}}}");
-					routes.MapRoute($"{serviceBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
+				foreach (string serviceBasePath in servicesBase)
+				{			
+					string tmpPath = string.IsNullOrEmpty(apiBasePath) ? serviceBasePath : serviceBasePath.Replace(apiBasePath, string.Empty);
+					foreach (string sPath in gxRouting.servicesValidPath[tmpPath])
+					{
+						var s = serviceBasePath + sPath;
+						routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
+					}
 				}
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });

@@ -142,7 +142,7 @@ namespace GeneXus.Storage.GXAzureStorage
 
 		private string GetURL(CloudBlockBlob blob, GxFileType fileType, int urlMinutes = 0)
 		{
-			string url = StorageUri + StorageUtils.DELIMITER + blob.Container.Name + StorageUtils.DELIMITER + StorageUtils.EncodeUrl(blob.Name);
+			string url = StorageUri + StorageUtils.DELIMITER + blob.Container.Name + StorageUtils.DELIMITER + StorageUtils.EncodeUrlPath(blob.Name);
 			if (IsPrivateFile(fileType))
 			{
 				SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy();
@@ -192,8 +192,20 @@ namespace GeneXus.Storage.GXAzureStorage
 			{
 				blob.Properties.ContentType = mimeType;
 			}
-
-			blob.UploadFromStreamAsync(stream).GetAwaiter().GetResult();
+			
+			using (MemoryStream ms = new MemoryStream())
+			{
+				/*
+				 * WA for Issue Azure SDK: 
+					https://github.com/Azure/azure-sdk-for-net/issues/10814
+					https://github.com/Azure/azure-storage-net-data-movement/issues/148
+					https://github.com/Azure/azure-storage-net/issues/864
+				 * */
+				stream.Position = 0;
+				stream.CopyTo(ms);
+				ms.Position = 0;
+				blob.UploadFromStreamAsync(ms).GetAwaiter().GetResult();
+			}
 			return GetURL(blob, fileType);
 		}
 
@@ -207,7 +219,7 @@ namespace GeneXus.Storage.GXAzureStorage
 				
 				targetBlob.Metadata["Table"] = tableName;
 				targetBlob.Metadata["Field"] = fieldName;
-				targetBlob.Metadata["KeyValue"] = StorageUtils.EncodeUrl(newName);
+				targetBlob.Metadata["KeyValue"] = StorageUtils.EncodeUrlPath(newName);
 				
 				if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
 				{

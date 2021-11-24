@@ -2374,7 +2374,7 @@ namespace GeneXus.Data
             readBytes += 1;
             return reader.GetBoolean(i);
 		}
-        public Guid GetGuid(int i)
+        public virtual Guid GetGuid(int i)
         {
             readBytes += 16;
             return reader.GetGuid(i);
@@ -2419,7 +2419,7 @@ namespace GeneXus.Data
 
 		public Type GetFieldType(int i)
 		{
-			throw (new GxNotImplementedException());
+			return reader.GetFieldType(i);
 		}
 		public float GetFloat(int i)
 		{
@@ -4298,7 +4298,7 @@ namespace GeneXus.Data
 		}
 		public virtual bool IsDBNull(int i)
 		{
-			return (block.Item(pos, i) == DBNull.Value) || (block.Item(pos, i) is DBNull);
+			return (block.Item(pos, i) == DBNull.Value) || (block.Item(pos, i) is DBNull || block.Item(pos, i) == null);
 		}
 		public char GetChar(int i)
 		{

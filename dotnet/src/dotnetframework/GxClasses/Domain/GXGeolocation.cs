@@ -10,7 +10,9 @@ using GeneXus.Utils;
 using System.Globalization;
 using GeneXus;
 using GeneXus.Configuration;
+#if NETCORE
 using System.Net.Http;
+#endif
 
 namespace GX
 {

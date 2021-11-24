@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<AssemblyName>GeneXusJWTNetCoreImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<PackageId>GeneXus.SecurityApi.Jwt.Core</PackageId>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Commons\DateUtilObject.cs" Link="Commons\DateUtilObject.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Commons\GUIDObject.cs" Link="Commons\GUIDObject.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Commons\IJWTObject.cs" Link="Commons\IJWTObject.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Commons\JWTOptions.cs" Link="Commons\JWTOptions.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\Claim.cs" Link="JWTClaims\Claim.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\Claims.cs" Link="JWTClaims\Claims.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\HeaderParameters.cs" Link="JWTClaims\HeaderParameters.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\PrivateClaims.cs" Link="JWTClaims\PrivateClaims.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\PublicClaims.cs" Link="JWTClaims\PublicClaims.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\RegisteredClaim.cs" Link="JWTClaims\RegisteredClaim.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\RegisteredClaims.cs" Link="JWTClaims\RegisteredClaims.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\JWT\JWTCreator.cs" Link="JWT\JWTCreator.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\DateUtil.cs" Link="Utils\DateUtil.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\GUID.cs" Link="Utils\GUID.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\JWTAlgorithm.cs" Link="Utils\JWTAlgorithm.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\KeyPair.cs" Link="Utils\KeyPair.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\RevocationList.cs" Link="Utils\RevocationList.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="6.5.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Logging" Version="6.5.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityAPICommonsNetCore\SecurityAPICommonsNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Commons\" />
+    <Folder Include="JWTClaims\" />
+    <Folder Include="JWT\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
+
+</Project>

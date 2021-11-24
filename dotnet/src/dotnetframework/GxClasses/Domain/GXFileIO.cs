@@ -417,8 +417,8 @@ public class GxExternalFileInfo : IGxFileInfo
 	public GxExternalFileInfo(ExternalProvider provider)
     {
         _provider = provider;
-        _name = "";
-        _url = "";
+        _name = string.Empty;
+        _url = string.Empty;
     }
 
     public GxExternalFileInfo(string objectPath, ExternalProvider provider, GxFileType fileType)
@@ -1127,13 +1127,13 @@ public class GxFile
 		return string.Empty;
 #endif
 	}
-#if !NETCORE
 	[MethodImpl(MethodImplOptions.Synchronized)]
     public string HtmlClean()
     {
         try
         {
-            object rawDoc = Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll")).CreateInstance("NTidy.TidyDocument");
+#if !NETCORE
+			object rawDoc = Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll")).CreateInstance("NTidy.TidyDocument");
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg")))
             {
                 rawDoc.GetType().GetMethod("LoadConfig").Invoke(rawDoc, new object[] { Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg") });
@@ -1141,7 +1141,10 @@ public class GxFile
             rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { _file.FullName });
             rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
             String htmlcleaned = (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
-            return htmlcleaned;
+			return htmlcleaned;
+#else
+			return GXUtil.HTMLClean(ReadAllText(string.Empty));
+#endif
         }
         catch (Exception ex)
         {
@@ -1149,7 +1152,7 @@ public class GxFile
             return "";
         }
     }
-#endif
+
 	public bool HasExtension()
     {
         return System.IO.Path.HasExtension(this.GetAbsoluteName());

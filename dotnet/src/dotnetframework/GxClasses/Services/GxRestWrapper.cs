@@ -26,6 +26,7 @@ using System.Collections;
 using Jayrock.Json;
 
 
+
 namespace GeneXus.Application
 
 {
@@ -131,11 +132,12 @@ namespace GeneXus.Application
 					innerMethod = this._serviceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
-				return Serialize(outputParameters, wrapped);
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -268,6 +270,7 @@ namespace GeneXus.Application
 				var queryParameters = ReadQueryParameters(this._variableAlias);
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
+				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
 				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
 					innerMethod = _serviceMethodPattern;
@@ -281,6 +284,7 @@ namespace GeneXus.Application
 					}
 
 					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+					formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				}
 				
 				int parCount = outputParameters.Count;
@@ -289,7 +293,7 @@ namespace GeneXus.Application
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
-				return Serialize(outputParameters, wrapped);
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -383,14 +387,32 @@ namespace GeneXus.Application
 		}
 		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
-			var query = _httpContext.Request.GetQueryString();
+			NameValueCollection query = _httpContext.Request.GetQueryString();
 			Dictionary<string, object> parameters = new Dictionary<string, object>();
-			if (varAlias == null)
-				parameters = query.Keys.Cast<string>().ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
-			else
-				parameters = query.Keys.Cast<string>().ToDictionary(k => ((varAlias.ContainsKey(k.ToLower()))?varAlias[k.ToLower()].ToLower():k.ToLower()), v => (object)query[v].ToString());
+			foreach(string k in query.AllKeys)
+			{
+				if (k!=null)
+				{
+					string keyLowercase = k.ToLower();
+					if (varAlias==null)
+						parameters[keyLowercase] = query[k];
+					else
+					{
+						if (varAlias.ContainsKey(keyLowercase))
+						{
+							string alias = varAlias[keyLowercase].ToLower();
+							parameters[alias] = query[k];
+						}
+						else if (!varAlias.ContainsValue(keyLowercase))
+						{
+							parameters[keyLowercase] = query[k];
+						}
+					}
+				}
+			}
 			return parameters;
 		}
+
 		public bool IsRestParameter(string parameterName)
 		{
 			try
@@ -447,7 +469,8 @@ namespace GeneXus.Application
 		}
 		public static Task SetError(HttpContext context, string code, string message)
 		{
-			return HttpHelper.SetResponseStatusAndJsonErrorAsync(context, code, message);
+			HttpHelper.SetError(context, code, message);
+			return Task.CompletedTask;
 		}
 		public bool IsAuthenticated(string synchronizer)
 		{
@@ -510,7 +533,7 @@ namespace GeneXus.Application
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(_gxContext, token, out isOK);
 						if (!isOK)
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -524,7 +547,7 @@ namespace GeneXus.Application
 						}
 						else
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);
@@ -645,9 +668,17 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			return SetError("500", ex.Message);
+			if (ex is FormatException)
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.BadRequest, ex);
+			}
+			else
+			{
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
+			}
+			return Task.CompletedTask;
 		}
-		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
+		protected Task Serialize(Dictionary<string, object> parameters, Dictionary<string, string> fmtParameters, bool wrapped)
 		{
 			string json;
 			var knownTypes = new List<Type>();
@@ -656,17 +687,62 @@ namespace GeneXus.Application
 				var val = parameters[k];
 				knownTypes.Add(val.GetType());
 			}
-			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
+			if (parameters.Count == 1 && !wrapped && !PrimitiveType(knownTypes[0])) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
 			{
 				string key = parameters.First().Key;
-				json = JSONHelper.WCFSerialize(parameters[key], Encoding.UTF8, knownTypes, true);
+				object strVal = null;
+				if (parameters[key].GetType() == typeof(DateTime))
+				{
+					DateTime udt = ((DateTime)parameters[key]).ToUniversalTime();
+					if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+					{
+						strVal = udt.ToString(fmtParameters[key], CultureInfo.InvariantCulture);
+					}
+					else
+						strVal = udt;
+				}				
+				else
+					strVal = parameters[key];
+				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
-				json = JSONHelper.WCFSerialize(parameters, Encoding.UTF8, knownTypes, true); 
+				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
+				foreach (KeyValuePair<string,object> kv in parameters)
+				{
+					string strKey = kv.Key;					
+
+					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
+					if (ut != null)
+					{						
+						Type uType = ut.Sdt.GetType();
+						var attributes = uType.GetCustomAttributes(true);
+						GxJsonName jsonName = (GxJsonName) attributes.Where(a => a.GetType() == typeof(GxJsonName)).FirstOrDefault();
+						if (jsonName != null)
+							strKey = jsonName.Name;
+					}
+					if (kv.Value.GetType() == typeof(DateTime))
+					{
+						DateTime udt = ((DateTime)kv.Value).ToUniversalTime();
+						if (fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
+						{
+							object strVal = udt.ToString(fmtParameters[kv.Key], CultureInfo.InvariantCulture);
+							serializablePars.Add(strKey, strVal);
+						}
+						else
+							serializablePars.Add(strKey, udt);
+					}
+					else
+						serializablePars.Add(strKey, kv.Value);
+				}
+				json = JSONHelper.WCFSerialize(serializablePars, Encoding.UTF8, knownTypes, true); 
 			}
 			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
+		}
+		private bool PrimitiveType(Type type)
+		{
+			return type.IsPrimitive || type == typeof(string) || type.IsValueType;
 		}
 		protected Task Serialize(object value)
 		{
@@ -692,24 +768,21 @@ namespace GeneXus.Application
 			foreach (var k in outputParameters.Keys.ToList())
 			{
 				GxUserType p = outputParameters[k] as GxUserType;
-				if ((p != null) && !(p.ShouldSerializeSdtJson()))
+				if ((p != null) && !p.ShouldSerializeSdtJson())
 				{
 					outputParameters.Remove(k);
 				}
-			}
-			MakeRestTypes(outputParameters);
-		}
-		private static void MakeRestTypes(Dictionary<string, object> parameters)
-		{
-			foreach (var key in parameters.Keys.ToList())
-			{
-				object o = MakeRestType(parameters[key]);
-				if (o == null)
-					parameters.Remove(key);
 				else
-					parameters[key] = o;
-			}
+				{
+					object o = MakeRestType(outputParameters[k]);
+					if (o == null)
+						outputParameters.Remove(k);
+					else
+						outputParameters[k] = o;
+				}
+			}			
 		}
+		
 		protected static object MakeRestType(object v)
 		{
 			Type vType = v.GetType();

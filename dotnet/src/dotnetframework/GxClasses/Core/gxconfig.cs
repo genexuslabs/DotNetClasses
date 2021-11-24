@@ -719,6 +719,7 @@ namespace GeneXus.Configuration
 		static string _applicationPath = "";
 		static int maximumOpenCursors;
 		static int compatibleEmptyString = -1;
+		static int blankStringAsEmpty = -1;
 		static int useBase64ViewState = -1;
 		static int oldSTR = -1;
 		static int instrumented = -1;
@@ -740,7 +741,30 @@ namespace GeneXus.Configuration
 		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
 		const string YES = "1";
 		const string NO = "0";
-
+		static string defaultDatastore;
+		const string DEFAULT_DS = "Default";
+		internal static string DefaultDatastore
+		{
+			get
+			{
+				if (defaultDatastore == null)
+				{
+					if (Config.GetValueOf("DataStore-Default", out string strDefaultDS))
+					{
+						defaultDatastore = strDefaultDS;
+					}
+					else
+					{
+						defaultDatastore = DEFAULT_DS;
+					}
+				}
+				return defaultDatastore;
+			}
+			set
+			{
+				defaultDatastore = value;
+			}
+		}
 		public static string RemoteLocation
 		{
 			get
@@ -949,6 +973,23 @@ namespace GeneXus.Configuration
 				}
 			}
 			return (compatibleEmptyString == 1);
+		}
+
+		public static bool BlankStringAsEmpty()
+		{
+			string data;
+			if (blankStringAsEmpty == -1)
+			{
+				if (Config.GetValueOf("BlankStringAsEmpty", out data) && data.Trim().Equals("1"))
+				{
+					blankStringAsEmpty = 1;
+				}
+				else
+				{
+					blankStringAsEmpty = 0;
+				}
+			}
+			return (blankStringAsEmpty == 1);
 		}
 		public static bool UseBase64ViewState()
 		{

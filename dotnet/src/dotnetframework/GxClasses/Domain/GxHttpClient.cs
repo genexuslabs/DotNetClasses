@@ -64,7 +64,7 @@ namespace GeneXus.Http.Client
 		string _proxyHost;
 		int _proxyPort;
 		short _errCode=0;
-		string _errDescription = "";
+		string _errDescription = string.Empty;
 		NameValueCollection _headers;
 		NameValueCollection _formVars;
 		MultiPartTemplate _multipartTemplate;
@@ -129,17 +129,17 @@ namespace GeneXus.Http.Client
 		{
 			_headers = new NameValueCollection();
 			_formVars = new NameValueCollection();
-			_host = "";
-			_wsdlUrl = "";
-			_baseUrl = "";
-			_url = "";
+			_host = string.Empty;
+			_wsdlUrl = string.Empty;
+			_baseUrl = string.Empty;
+			_url = string.Empty;
 			_authCollection = new ArrayList();
 			_authProxyCollection = new ArrayList();
 			_certificateCollection = new X509Certificate2Collection();
 			IncludeCookies = true;
 
 
-			_proxyHost = "";
+			_proxyHost = string.Empty;
 			try
 			{
 #if NETCORE
@@ -204,7 +204,7 @@ namespace GeneXus.Http.Client
 			get { return _host; }
 			set
 			{
-				_host = value;
+				_host = value == null ? value : value.Trim();
 				buildUrl();
 			}
 		}
@@ -213,7 +213,7 @@ namespace GeneXus.Http.Client
 			get { return _wsdlUrl; }
 			set
 			{
-				_wsdlUrl = value;
+				_wsdlUrl = value == null ? value : value.Trim();
 			}
 		}
 		public string BaseURL
@@ -221,7 +221,7 @@ namespace GeneXus.Http.Client
 			get { return _baseUrl; }
 			set
 			{
-				_baseUrl = value;
+				_baseUrl = value == null ? value : value.Trim();
 				buildUrl();
 			}
 		}
@@ -315,16 +315,19 @@ namespace GeneXus.Http.Client
 		{
 			string sPort, sHost, sBaseUrl;
 			if (_port == 0)
-				sPort = (Secure == 1) ? ":443" : "";
+				sPort = (Secure == 1) ? ":443" : string.Empty;
 			else
 				sPort = ":" + _port.ToString();
 			sHost = _host;
-			if (sHost.StartsWith("//"))
-				sHost = sHost.Substring(2, sHost.Length - 2);
-			if (sHost.EndsWith("/"))
-				sHost = sHost.Substring(0, sHost.Length - 1);
+			if (!string.IsNullOrEmpty(sHost))
+			{
+				if (sHost.StartsWith("//"))
+					sHost = sHost.Substring(2, sHost.Length - 2);
+				if (sHost.EndsWith("/"))
+					sHost = sHost.Substring(0, sHost.Length - 1);
+			}
 			sBaseUrl = _baseUrl;
-			if (sBaseUrl.StartsWith("/"))
+			if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
 				sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
 			_url = _scheme + sHost + sPort + "/" + sBaseUrl;
 			if (_url.EndsWith("/"))
@@ -390,7 +393,7 @@ namespace GeneXus.Http.Client
 			}
 			if (vars.Count > 0)
 			{
-				var buffer = string.Join(variableSeparator(), vars.ToArray());
+				string buffer = string.Join(variableSeparator(), vars.ToArray());
 				StreamWriter sw = new StreamWriter(reqStream);
 				sw.Write(buffer);
 				sw.Flush();
@@ -465,8 +468,8 @@ namespace GeneXus.Http.Client
 					name = Path.GetFileNameWithoutExtension(s);
 				}
 				SendStream.Write(MultiPart.Boundarybytes, 0, MultiPart.Boundarybytes.Length);
-				var header = string.Format(MultiPart.HeaderTemplate, name, s, MimeMapping.GetMimeMapping(s));
-				var headerbytes = Encoding.UTF8.GetBytes(header);
+				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeMapping.GetMimeMapping(s));
+				byte[] headerbytes = Encoding.UTF8.GetBytes(header);
 				SendStream.Write(headerbytes, 0, headerbytes.Length);
 			}
 		}
@@ -742,7 +745,7 @@ namespace GeneXus.Http.Client
 			Byte[] Buffer = new Byte[1024];
 
 			_errCode = 0;
-			_errDescription = "";
+			_errDescription = string.Empty;
 
 			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
 			try
@@ -962,7 +965,7 @@ namespace GeneXus.Http.Client
 		{
 #if NETCORE
 			_respHeaders = new NameValueCollection();
-			foreach (var key in resp.Headers.AllKeys)
+			foreach (string key in resp.Headers.AllKeys)
 			{
 				_respHeaders.Add(key, resp.Headers[key]);
 			}
@@ -973,7 +976,7 @@ namespace GeneXus.Http.Client
 
 		public string GetHeader(string name)
 		{
-			if (_respHeaders != null)
+			if (_respHeaders != null && _respHeaders.Get(name)!=null)
 				return _respHeaders.Get(name);
 			else
 				return string.Empty;

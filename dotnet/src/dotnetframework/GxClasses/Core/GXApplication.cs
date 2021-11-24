@@ -1939,7 +1939,7 @@ namespace GeneXus.Application
 			String userAgent;
 			try
 			{
-				if (_HttpContext != null)
+				if (_HttpContext != null && _HttpContext.Request!=null)
 					userAgent = _HttpContext.Request.GetUserAgent();
 				else
 					return 0;
@@ -2199,7 +2199,7 @@ namespace GeneXus.Application
 		{
 			String fout = file.Trim();
 
-			if (PathUtil.IsAbsoluteUrl(file) || file.StartsWith("//") || (file.Length > 2 && file[1] == ':'))
+			if (PathUtil.IsAbsoluteUrlOrAnyScheme(file) || file.StartsWith("//"))
 			{
 				return fout;
 			}
@@ -2403,7 +2403,7 @@ namespace GeneXus.Application
                 case "CACHE-CONTROL":
                     var Cache = _HttpContext.Response.Cache;
                     string[] values = value.Split(',');
-                    foreach (var v in values)
+                    foreach (string v in values)
                     {
                         switch (v.Trim().ToUpper())
                         {
@@ -2737,15 +2737,11 @@ namespace GeneXus.Application
 		{
 			try
 			{
-#if NETCORE
-				return _HttpContext.Request.Host.Host;
-#else
-                return _HttpContext.Request.UserHostAddress;
-#endif
+				return _HttpContext.GetUserHostAddress();
 			}
 			catch
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 
@@ -2861,21 +2857,11 @@ namespace GeneXus.Application
 		{
 			try
 			{
-#if NETCORE
-				var request = _HttpContext.Request;
-				if (request.GetRawUrl().EndsWith(HttpHelper.GXOBJECT, StringComparison.OrdinalIgnoreCase))
-				{
-					if (request.PathBase != null && request.PathBase.HasValue)
-						return request.PathBase.Value + "/";
-					else
-						return Config.ScriptPath + "/";
-				}
-#endif
 				string appPath = _HttpContext.Request.GetApplicationPath();
 				if (appPath.EndsWith("/"))
-					return _HttpContext.Request.GetApplicationPath();
+					return appPath;
 				else
-					return _HttpContext.Request.GetApplicationPath() + "/";
+					return appPath + "/";
 			}
 			catch
 			{
@@ -3033,8 +3019,11 @@ namespace GeneXus.Application
 															 new string[] {"rtf"	, "text/rtf"},
 															 new string[] {"a3gpp"  , "audio/3gpp"},
 															 new string[] {"aif"    , "audio/x-aiff"},
+															 new string[] {"aif"    , "audio/aiff"},
 															 new string[] {"au"		, "audio/basic"},
 															 new string[] {"m4a"    , "audio/mp4"},
+															 new string[] {"m4a"    , "audio/x-m4a"},
+															 new string[] {"mp4"    , "video/mp4"},
 															 new string[] {"mp3"    , "audio/mpeg"},
 															 new string[] {"wav"    , "audio/wav"},
 															 new string[] {"wav"    , "audio/x-wav"},
@@ -3057,7 +3046,6 @@ namespace GeneXus.Application
 															 new string[] {"mov"    , "video/quicktime"},
 															 new string[] {"qt"		, "video/quicktime"},
 															 new string[] {"avi"    , "video/x-msvideo"},
-															 new string[] {"mp4"    , "video/mp4"},
 															 new string[] {"divx"   , "video/x-divx"},
 															 new string[] {"3gp"    , "video/3gpp"},
 															 new string[] {"3g2"    , "video/3gpp2"},
@@ -3065,11 +3053,13 @@ namespace GeneXus.Application
 															 new string[] {"dll"    , "application/x-msdownload"},
 															 new string[] {"ps"		, "application/postscript"},
 															 new string[] {"pdf"    , "application/pdf"},
+															 new string[] {"svg"    , "image/svg+xml"},
 															 new string[] {"tgz"    , "application/x-compressed"},
 															 new string[] {"zip"    , "application/zip"},
 															 new string[] {"zip"    , "application/x-zip-compressed"},
 															 new string[] {"tar"    , "application/x-tar"},
 															 new string[] {"rar"    , "application/x-rar-compressed"},
+															 new string[] {"ram"	, "audio/vnd.rn-realaudio" },
 															 new string[] {"gz"		, "application/x-gzip"}
 														 };
 
@@ -3809,7 +3799,7 @@ namespace GeneXus.Application
 			IGxSession newSession = newContext.GetSession();
 			if (parentSession != null && newSession != null)
 			{
-				foreach (var item in copyKeys)
+				foreach (string item in copyKeys)
 				{
 					newSession.Set(item, parentSession.Get(item));
 				}
