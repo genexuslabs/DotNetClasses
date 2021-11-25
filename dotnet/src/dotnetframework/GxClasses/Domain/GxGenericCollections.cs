@@ -271,9 +271,10 @@ namespace GeneXus.Utils
 				if (!string.IsNullOrEmpty(s))
 				{
 					if (string.IsNullOrEmpty(sName))
+					{
 						sName = GxUserType.XmlNameAttribute(typeof(T));
-					if (string.IsNullOrEmpty(sNamespace))
 						sNamespace = GxUserType.XmlNameSpaceAttribute(typeof(T));
+					}
 
 					base.Clear();
 					GXBaseCollection<T> deserialized = GXXmlSerializer.Deserialize<GXBaseCollection<T>>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);

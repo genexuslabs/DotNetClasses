@@ -1429,9 +1429,10 @@ namespace GeneXus.Utils
 			try
 			{
 				if (string.IsNullOrEmpty(sName))
+				{
 					sName = XmlNameAttribute(GetType());
-				if (string.IsNullOrEmpty(sNamespace))
 					sNamespace = XmlNameSpaceAttribute(GetType());
+				}
 
 				GxUserType deserialized = GXXmlSerializer.Deserialize<GxUserType>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);
 				GXXmlSerializer.SetSoapError(context, serializationErrors);
