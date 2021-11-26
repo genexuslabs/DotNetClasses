@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,14 +29,11 @@ namespace GeneXus.Notifications
 
         private void UpdateProgress()
         {
-            if (running)
-            {
-                GXWebNotificationInfo notif = new GXWebNotificationInfo();
-                notif.Id = GXWebProgressIndicator.ID;
-                notif.GroupName = GXWebProgressIndicator.ID;
-                notif.Message = info;
-                notification.Notify(notif);
-            }
+            GXWebNotificationInfo notif = new GXWebNotificationInfo();
+            notif.Id = GXWebProgressIndicator.ID;
+            notif.GroupName = GXWebProgressIndicator.ID;
+            notif.Message = info;
+            notification.Notify(notif);
         }
 
         public void ShowWithTitle(string title)
