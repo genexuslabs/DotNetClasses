@@ -191,7 +191,7 @@ namespace GeneXus.Utils
 
 			foreach (T obj in this)
 			{
-				string xml = obj.ToXml(false, includeState, itemName, itemNamespace);
+				string xml = obj.ToXmlFixedNameAndNamespace(false, includeState, itemName, itemNamespace);
 				xml = GxUserType.UpdateNodeDefaultNamespace(xml, "", true, null);
 				oWriter.WriteRawText(xml);
 			}
@@ -239,7 +239,7 @@ namespace GeneXus.Utils
 				T currObject = new T();
 				currObject.context = this.context;
 				string xml = GxUserType.UpdateNodeDefaultNamespace(oReader.ReadRawXML(), null, false, this.GetPrefixesInContext());
-				currObject.FromXml(xml, itemName, oReader.NamespaceURI);
+				currObject.FromXmlFixedNameAndNamespace(xml, null, itemName, oReader.NamespaceURI);
 				Add(currObject);
 				oReader.Read();
 			}
@@ -271,10 +271,9 @@ namespace GeneXus.Utils
 				if (!string.IsNullOrEmpty(s))
 				{
 					if (string.IsNullOrEmpty(sName))
-					{
 						sName = GxUserType.XmlNameAttribute(typeof(T));
+					if (string.IsNullOrEmpty(sNamespace))
 						sNamespace = GxUserType.XmlNameSpaceAttribute(typeof(T));
-					}
 
 					base.Clear();
 					GXBaseCollection<T> deserialized = GXXmlSerializer.Deserialize<GXBaseCollection<T>>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);
