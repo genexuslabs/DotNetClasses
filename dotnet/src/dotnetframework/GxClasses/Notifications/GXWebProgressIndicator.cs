@@ -12,7 +12,6 @@ namespace GeneXus.Notifications
         private static string ID = "GX_PROGRESS_BAR";
         private GXWebNotification notification;
         private GXWebProgressIndicatorInfo info;
-        private bool running;
 
         public GXWebProgressIndicator(IGxContext gxContext)
         {
@@ -22,7 +21,6 @@ namespace GeneXus.Notifications
 
         public void Show()
         {
-            running = true;
             info.Action = "0";
             UpdateProgress();
         }
@@ -38,7 +36,6 @@ namespace GeneXus.Notifications
 
         public void ShowWithTitle(string title)
         {
-            running = true;
             Title = title;
             info.Action = "1";
             UpdateProgress();
@@ -46,7 +43,6 @@ namespace GeneXus.Notifications
 
         public void ShowWithTitleAndDescription(string title, string desc)
         {
-            running = true;
             Title = title;
             Description = desc;
             info.Action = "2";
@@ -57,7 +53,6 @@ namespace GeneXus.Notifications
         {
             info.Action = "3";
             UpdateProgress();
-            running = false;
         }
 
         public string Class
