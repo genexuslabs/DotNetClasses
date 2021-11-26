@@ -1280,7 +1280,7 @@ namespace GeneXus.Utils
 			try
 			{
 				string xml = UpdateNodeDefaultNamespace(oReader.ReadRawXML(), null, false, this.GetPrefixesInContext());
-				FromXml(xml, sName, oReader.NamespaceURI);
+				FromXmlFixedNameAndNamespace(xml, null, sName, oReader.NamespaceURI);
 				return 1;
 			}
 			catch (Exception ex)
@@ -1415,28 +1415,35 @@ namespace GeneXus.Utils
 
 		public virtual bool FromXml(string s)
 		{
-			return FromXml(s, "");
+			return FromXml(s, String.Empty);
 		}
 		public virtual bool FromXml(string s, string sName)
 		{
-			return FromXml(s, sName, "");
+			return FromXml(s, sName, String.Empty);
 		}
 		public virtual bool FromXml(string s, string sName, string sNamespace)
 		{
 			return FromXml(s, null, sName, sNamespace);
 		}
+		
 		public virtual bool FromXml(string s, GXBaseCollection<SdtMessages_Message> Messages, string sName, string sNamespace)
+		{
+			if (string.IsNullOrEmpty(sName))
+				sName = XmlNameAttribute(GetType());
+
+			if (string.IsNullOrEmpty(sNamespace))
+				sNamespace = XmlNameSpaceAttribute(GetType());
+
+			return FromXmlFixedNameAndNamespace(s, Messages, sName, sNamespace);
+
+		}
+		internal bool FromXmlFixedNameAndNamespace(string s, GXBaseCollection<SdtMessages_Message> Messages, string sName, string sNamespace)
 		{
 			if (string.IsNullOrEmpty(s))
 				return false;
+			
 			try
 			{
-				if (string.IsNullOrEmpty(sName))
-				{
-					sName = XmlNameAttribute(GetType());
-					sNamespace = XmlNameSpaceAttribute(GetType());
-				}
-
 				GxUserType deserialized = GXXmlSerializer.Deserialize<GxUserType>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);
 				GXXmlSerializer.SetSoapError(context, serializationErrors);
 				deserialized.context = this.context;
@@ -1495,7 +1502,11 @@ namespace GeneXus.Utils
 				rootName = XmlNameAttribute(GetType());
 			if (string.IsNullOrEmpty(sNameSpace))
 				sNameSpace = XmlNameSpaceAttribute(GetType());
+			return ToXmlFixedNameAndNamespace(includeHeader, includeState, rootName, sNameSpace);	
 
+		}
+		internal string ToXmlFixedNameAndNamespace(bool includeHeader, bool includeState, string rootName, string sNameSpace)
+		{
 			XmlAttributeOverrides ov = null;
 
 			if (!includeState)
