@@ -393,7 +393,7 @@ namespace GeneXus.Http.Client
 			}
 			if (vars.Count > 0)
 			{
-				var buffer = string.Join(variableSeparator(), vars.ToArray());
+				string buffer = string.Join(variableSeparator(), vars.ToArray());
 				StreamWriter sw = new StreamWriter(reqStream);
 				sw.Write(buffer);
 				sw.Flush();
@@ -468,8 +468,8 @@ namespace GeneXus.Http.Client
 					name = Path.GetFileNameWithoutExtension(s);
 				}
 				SendStream.Write(MultiPart.Boundarybytes, 0, MultiPart.Boundarybytes.Length);
-				var header = string.Format(MultiPart.HeaderTemplate, name, s, MimeMapping.GetMimeMapping(s));
-				var headerbytes = Encoding.UTF8.GetBytes(header);
+				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeMapping.GetMimeMapping(s));
+				byte[] headerbytes = Encoding.UTF8.GetBytes(header);
 				SendStream.Write(headerbytes, 0, headerbytes.Length);
 			}
 		}
@@ -965,7 +965,7 @@ namespace GeneXus.Http.Client
 		{
 #if NETCORE
 			_respHeaders = new NameValueCollection();
-			foreach (var key in resp.Headers.AllKeys)
+			foreach (string key in resp.Headers.AllKeys)
 			{
 				_respHeaders.Add(key, resp.Headers[key]);
 			}

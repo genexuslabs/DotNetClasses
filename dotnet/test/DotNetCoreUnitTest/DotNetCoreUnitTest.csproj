@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net5.0</TargetFrameworks>
 		<NoWarn>CS8032</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
@@ -21,6 +21,7 @@
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGooglePrivateTest.cs" Link="ExternalProvider\ExternalProviderGooglePrivateTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGoogleTest.cs" Link="ExternalProvider\ExternalProviderGoogleTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderOracleTest.cs" Link="ExternalProvider\ExternalProviderOracleTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\FileIO\MimeTypesTest.cs" Link="FileIO\MimeTypesTest.cs" />		
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
@@ -32,15 +33,22 @@
 		</Content>
 	</ItemGroup>
 
+	
+	
   <ItemGroup>
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+		<PackageReference Include="xunit" Version="2.4.1" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="3.0.2">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
 
   <ItemGroup>

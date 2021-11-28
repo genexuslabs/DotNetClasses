@@ -35,11 +35,9 @@ namespace GeneXus.HttpHandlerFactory
 		private readonly AppSettings _appSettings;
 		private string _basePath;
 		static Dictionary<string, Type> _aspxObjects = new Dictionary<string, Type>(){
-												{"gxresourceprovider",typeof(GXResourceProvider)},
 												{"gxoauthlogout",typeof(GXOAuthLogout)},
 												{"gxoauthuserinfo",typeof(GXOAuthUserInfo)},
 												{"gxoauthaccesstoken",typeof(GXOAuthAccessToken)},
-												{"gx_valid_service",typeof(GXValidService)},
 												{"gxmulticall",typeof(GXMultiCall)}};
 		static Dictionary<string, string> _aspxRewrite = new Dictionary<string, string>(){
 												{"oauth/access_token","gxoauthaccesstoken.aspx"},

@@ -333,7 +333,11 @@ namespace GeneXus.Data
 				return false;
 			}
 		}
-        public override DbDataAdapter CreateDataAdapeter()
+
+		internal bool UseCharInDate { get { return m_UseCharInDate; }}
+		internal string InitialCatalog { get { return m_InitialCatalog; } set { m_InitialCatalog = value; } }
+
+		public override DbDataAdapter CreateDataAdapeter()
         {
             Type iAdapter = iAssembly.GetType("IBM.Data.DB2.iSeries.iDB2DataAdapter");
             return (DbDataAdapter)Activator.CreateInstance(iAdapter);
