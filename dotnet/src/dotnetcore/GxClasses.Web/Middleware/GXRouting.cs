@@ -263,16 +263,21 @@ namespace GxClasses.Web.Middleware
 			string basePath = restBaseURL;
 
 			//API Objects
+			string AzureFunctionShortName = AzureFunctionName.Substring(AzureFunctionName.LastIndexOf(".") + 1);
+
 			foreach (var map in servicesMap)
 			{
-				foreach (var mlist in map.Value)
+				if (AzureFunctionName.Replace(".","/").ToLower().Contains(map.Key))
 				{
-					if (mlist.Key.ToLower() == AzureFunctionName.ToLower())
+					foreach (var mlist in map.Value)
 					{
-						if (path.ToLower().Contains(map.Key.ToLower()))
-							basePath = string.IsNullOrEmpty(restBaseURL) ? $"{map.Key}" :$"{restBaseURL}/{map.Key}";
+						if (mlist.Key.ToLower() == AzureFunctionShortName.ToLower())
+						{
+							if (path.ToLower().Contains(map.Key.ToLower()))
+								basePath = string.IsNullOrEmpty(restBaseURL) ? $"{map.Key}" : $"{restBaseURL}/{map.Key}";
+						}
 					}
-				}
+				}			
 			}
 
 			string controllerWithParms = path.Remove(0, basePath.Length + 1);
