@@ -22,6 +22,7 @@
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGooglePrivateTest.cs" Link="ExternalProvider\ExternalProviderGooglePrivateTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGoogleTest.cs" Link="ExternalProvider\ExternalProviderGoogleTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderOracleTest.cs" Link="ExternalProvider\ExternalProviderOracleTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\FileIO\MimeTypesTest.cs" Link="FileIO\MimeTypesTest.cs" />		
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
