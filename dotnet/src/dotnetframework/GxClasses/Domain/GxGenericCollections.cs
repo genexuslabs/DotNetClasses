@@ -191,7 +191,7 @@ namespace GeneXus.Utils
 
 			foreach (T obj in this)
 			{
-				string xml = obj.ToXml(false, includeState, itemName, itemNamespace);
+				string xml = obj.ToXmlFixedNameAndNamespace(false, includeState, itemName, itemNamespace);
 				xml = GxUserType.UpdateNodeDefaultNamespace(xml, "", true, null);
 				oWriter.WriteRawText(xml);
 			}
@@ -239,7 +239,7 @@ namespace GeneXus.Utils
 				T currObject = new T();
 				currObject.context = this.context;
 				string xml = GxUserType.UpdateNodeDefaultNamespace(oReader.ReadRawXML(), null, false, this.GetPrefixesInContext());
-				currObject.FromXml(xml, itemName, oReader.NamespaceURI);
+				currObject.FromXmlFixedNameAndNamespace(xml, null, itemName, oReader.NamespaceURI);
 				Add(currObject);
 				oReader.Read();
 			}
