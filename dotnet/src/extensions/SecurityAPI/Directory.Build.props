@@ -4,6 +4,7 @@
 		<AssemblyVersion>17.4.0</AssemblyVersion>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)/SecurityAPIModule.snk</AssemblyOriginatorKeyFile>
 		<NoWarn>CA1031</NoWarn>
+		<SignAssembly>true</SignAssembly>
 	</PropertyGroup>
 </Project>
 

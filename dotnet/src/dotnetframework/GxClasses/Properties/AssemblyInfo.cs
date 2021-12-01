@@ -5,6 +5,5 @@ using System.Resources;
 
 [assembly: AssemblyTitle("GeneXus Std Classes")]
 [assembly: AssemblyDescription("GeneXus Std Classes")]
-[assembly: AllowPartiallyTrustedCallers] 
-
+[assembly: AllowPartiallyTrustedCallers]
 [assembly: NeutralResourcesLanguageAttribute("en")]

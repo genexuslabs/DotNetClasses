@@ -21,5 +21,14 @@ namespace xUnitTesting
 			Assert.StartsWith("<html>", prettyHTML, StringComparison.OrdinalIgnoreCase);
 
 		}
+		[Fact]
+		public void FileHtmlClean()
+		{
+			GxFile file = new GxFile();
+			string htmlFileName = Path.Combine("FullTextSearch", "Ugly.html");
+			file.Source = htmlFileName;
+			string prettyHTML = file.HtmlClean();
+			Assert.StartsWith("<html>", prettyHTML, StringComparison.OrdinalIgnoreCase);
+		}
 	}
 }

@@ -43,77 +43,6 @@ namespace GeneXus.Http
 	using System.Diagnostics;
 #endif
 
-	internal class GXValidService : GXHttpHandler, IRequiresSessionState
-	{
-		public GXValidService()
-		{
-			this.context = new GxContext();
-
-		}
-		public override void webExecute()
-		{
-			try
-			{
-				NameValueCollection parms = context.HttpContext.Request.GetQueryString();
-
-				string gxobj = parms["object"];
-				string attribute = parms["att"];
-				string json = null;
-
-				GxStringCollection gxparms = new GxStringCollection();
-				if (parms.Count > 2)
-				{
-					for (int i = 2; i < parms.Count; i++)
-						gxparms.Add(parms[i]);
-				}
-				if (!string.IsNullOrEmpty(gxobj) && !string.IsNullOrEmpty(attribute))
-				{
-					string nspace;
-					if (!Config.GetValueOf("AppMainNamespace", out nspace))
-						nspace = "GeneXus.Programs";
-					GXHttpHandler handler = (GXHttpHandler)ClassLoader.GetInstance(gxobj, nspace + "." + gxobj, null);
-					handler.initialize();
-
-					json = (string)handler.GetType().InvokeMember("rest_" + attribute.ToUpper(), BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod, null, handler, new object[] { gxparms });
-					handler.GetType().InvokeMember("cleanup", BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod, null, handler, null);
-				}
-				if (!string.IsNullOrEmpty(json))
-				{
-                    if (context.IsMultipartRequest)
-                        this.context.HttpContext.Response.ContentType = MediaTypesNames.TextHtml;
-                    else
-                        this.context.HttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-#if NETCORE
-					this.context.HttpContext.Response.Write(json);
-#else
-					this.context.HttpContext.Response.Output.WriteLine(json);
-#endif
-
-				}
-				else
-				{
-					this.SendResponseStatus((int)HttpStatusCode.NotFound, "Resource not found");
-				}
-			}
-			catch (Exception ex)
-			{
-				HttpHelper.SetUnexpectedError(context.HttpContext, HttpStatusCode.InternalServerError, ex);
-			}
-			finally
-			{
-				try
-				{
-					context.CloseConnections();
-				}
-				catch
-				{
-
-				}
-			}
-
-		}
-
-	}
 	internal class GXMultiCall : GXHttpHandler, IRequiresSessionState
 	{
 		static string EXECUTE_METHOD = "execute";
@@ -297,7 +226,7 @@ namespace GeneXus.Http
 			}
 		}
 	}
-	
+
 	class HttpResponseWriter : TextWriter
 	{
 		private HttpResponse response;
@@ -326,47 +255,7 @@ namespace GeneXus.Http
 		}
 	}
 
-	internal class GXResourceProvider : GXHttpHandler
-	{
-		internal static string PROVIDER_NAME = "GXResourceProvider.aspx";
-		public GXResourceProvider()
-		{
-			this.context = new GxContext();
-		}
-		public override void webExecute()
-		{
-			string resourceType = this.GetNextPar();
-			if (string.Compare(resourceType.Trim(), "image", true) == 0)
-			{
-				string imageGUID = this.GetNextPar();
-				string kbId = this.GetNextPar();
-				string theme = this.GetNextPar();
-				this.context.setAjaxCallMode();
-				this.context.SetDefaultTheme(theme);
-				if (Guid.TryParse(imageGUID, out Guid sanitizedGuid))
-				{
-					string imagePath = this.context.GetImagePath(sanitizedGuid.ToString(), kbId, theme);
-					if (!string.IsNullOrEmpty(imagePath))
-					{
-						this.context.HttpContext.Response.Clear();
-						this.context.HttpContext.Response.ContentType = MediaTypesNames.TextPlain;
-#if NETCORE
-						this.context.HttpContext.Response.Write(imagePath);
-#else
-						this.context.HttpContext.Response.Output.WriteLine(imagePath);
-						this.context.HttpContext.Response.End();
-#endif
-						return;
-					}
-				}
-			}
-			this.SendResponseStatus((int)HttpStatusCode.NotFound, "Resource not found");
-		}
-	}
-
-
-
-
+	
 	internal class GXObjectUploadServices : GXHttpHandler, IReadOnlySessionState
 	{
 		public GXObjectUploadServices()

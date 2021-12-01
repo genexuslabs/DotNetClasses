@@ -858,7 +858,8 @@ namespace GeneXus.Data
 	}
 	//Microsoft data provider
 	public class GxOracle : GxDataRecord
-	{
+{
+		const string BLANK_STRING = " ";
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxOracle));
 #if !NETCORE
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
@@ -906,6 +907,18 @@ namespace GeneXus.Data
 			}
 			return connectionString.ToString();
 
+		}
+		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i)
+		{
+			if (!Preferences.CompatibleEmptyStringAsNull() && Preferences.BlankStringAsEmpty())
+			{
+				string value = base.GetString(cmd, DR, i);
+					if (!string.IsNullOrEmpty(value) && value == BLANK_STRING)
+				{
+					return string.Empty;
+				}
+			}
+			return base.GetString(cmd, DR, i);
 		}
 		public override long GetBytes(IGxDbCommand cmd, IDataRecord DR, int i, long fieldOffset, byte[] buffer, int bufferOffset, int length)
 		{
@@ -1066,7 +1079,7 @@ namespace GeneXus.Data
 		{
 			if (!Preferences.CompatibleEmptyStringAsNull() && (String.IsNullOrEmpty(value) || String.IsNullOrEmpty(value.TrimEnd(' '))))
 			{
-				SetParameter(parameter, " ");
+				SetParameter(parameter, BLANK_STRING);
 			}
 			else
 			{
@@ -1078,7 +1091,7 @@ namespace GeneXus.Data
 		{
 			if (!Preferences.CompatibleEmptyStringAsNull() && (String.IsNullOrEmpty(value) || String.IsNullOrEmpty(value.TrimEnd(' '))))
 			{
-				value = " ";
+				value = BLANK_STRING;
 			}
 			else
 			{
@@ -1129,7 +1142,7 @@ namespace GeneXus.Data
 		{
 			if (!Preferences.CompatibleEmptyStringAsNull() && (String.IsNullOrEmpty(value) || String.IsNullOrEmpty(value.TrimEnd(' '))))
 			{
-				SetParameter(parameter, " ");
+				SetParameter(parameter, BLANK_STRING);
 			}
 			else
 			{

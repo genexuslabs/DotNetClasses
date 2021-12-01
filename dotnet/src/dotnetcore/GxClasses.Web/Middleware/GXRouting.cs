@@ -269,15 +269,15 @@ namespace GxClasses.Web.Middleware
 				{
 					if (mlist.Key == AzureFunctionName)
 					{
-						basePath = $"{restBaseURL}/{map.Key}";
+						basePath = string.IsNullOrEmpty(restBaseURL) ? $"{map.Key}" :$"{restBaseURL}/{map.Key}";
 					}
-				}			
+				}
 			}
 
 			string controllerWithParms = path.Remove(0, basePath.Length + 1);
 			controllerWithParms = controllerWithParms.StartsWith("/") ? controllerWithParms.Remove(0, 1) : controllerWithParms;
 			return controllerWithParms;
-
+			
 		}
 		public bool ServiceInPath(String path, out String actualPath)
 		{
