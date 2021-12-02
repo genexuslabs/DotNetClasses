@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using GeneXus.Data.Dynamo;
 
 namespace GeneXus.Data.NTier.DynamoDB
 {
@@ -34,12 +35,24 @@ namespace GeneXus.Data.NTier.DynamoDB
 			if (mReq is ScanRequest)
 			{
 				((ScanRequest)mReq).ExclusiveStartKey = lastEvaluatedKey;
-				return new ResponseWrapper(mDynamoDB.Scan((ScanRequest)mReq));
+				ScanResponse scanResponse;
+#if NETCORE
+				scanResponse = DynamoDBHelper.RunSync<ScanResponse>(() => mDynamoDB.ScanAsync((ScanRequest)mReq));
+#else
+				scanResponse = mDynamoDB.Scan((ScanRequest)mReq);
+#endif
+				return new ResponseWrapper(scanResponse);
 			}
 			if (mReq is QueryRequest)
 			{
 				((QueryRequest)mReq).ExclusiveStartKey = lastEvaluatedKey;
-				return new ResponseWrapper(mDynamoDB.Query((QueryRequest)mReq));
+				QueryResponse queryResponse;
+#if NETCORE
+				queryResponse = DynamoDBHelper.RunSync<QueryResponse>(() => mDynamoDB.QueryAsync((QueryRequest)mReq));
+#else
+				queryResponse = mDynamoDB.Query((QueryRequest)mReq);
+#endif
+				return new ResponseWrapper(queryResponse);
 			}
 			throw new NotImplementedException();
 		}

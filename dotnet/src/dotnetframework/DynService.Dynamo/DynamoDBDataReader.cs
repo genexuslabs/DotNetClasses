@@ -2,14 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
 using GeneXus.Cache;
-using GeneXus.Data.Dynamo;
 using GeneXus.Data.NTier;
 using GeneXus.Data.NTier.DynamoDB;
-using log4net;
 
 namespace GeneXus.Data.Dynamo
 {
@@ -222,7 +218,7 @@ namespace GeneXus.Data.Dynamo
 
 		public string GetString(int i)
 		{
-			return GetAttValue(i).S;
+			return DynamoDBHelper.GetString(GetAttValue(i));
 		}
 
 		public object GetValue(int i)
@@ -233,16 +229,13 @@ namespace GeneXus.Data.Dynamo
 			if (attValue.IsBOOLSet)
 			{
 				value = attValue.BOOL;
-			}
-			if (attValue.S != null)
+			}else if (attValue.S != null || attValue.IsLSet || attValue.IsMSet)
 			{
-				value = attValue.S;
-			}
-			if (attValue.N != null)
+				value = DynamoDBHelper.GetString(attValue);
+			}else if (attValue.N != null)
 			{
 				value = attValue.N;
-			}
-			if (attValue.B != null)
+			}else if (attValue.B != null)
 			{
 				value = attValue.B;
 			}
@@ -322,7 +315,6 @@ namespace GeneXus.Data.Dynamo
 			return decimal.Parse(GetAttValue(i).N);
 		}
 
-
 		public override short GetInt16(int i)
 		{
 			return short.Parse(GetAttValue(i).N);
@@ -340,7 +332,7 @@ namespace GeneXus.Data.Dynamo
 
 		public override string GetString(int i)
 		{
-			return GetAttValue(i).S;
+			return DynamoDBHelper.GetString(GetAttValue(i));
 		}
 
 		public override bool GetBoolean(int i)

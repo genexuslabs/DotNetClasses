@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<DefineConstants>NETCORE</DefineConstants>
+		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
+		<AssemblyName>GeneXus.Data.DynService.DynamoDB</AssemblyName>
+		<SignAssembly>false</SignAssembly>
+		<PackageTags>DynamoDB</PackageTags>
+		<PackageId>GeneXus.DynService.DynamoDB</PackageId>
+	</PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\dotnetframework\DynService.Dynamo\DynamoDBConnection.cs" Link="DynamoDBConnection.cs" />
+    <Compile Include="..\..\..\dotnetframework\DynService.Dynamo\DynamoDBDataReader.cs" Link="DynamoDBDataReader.cs" />
+    <Compile Include="..\..\..\dotnetframework\DynService.Dynamo\DynamoDBDataStoreHelper.cs" Link="DynamoDBDataStoreHelper.cs" />
+    <Compile Include="..\..\..\dotnetframework\DynService.Dynamo\DynamoDBHelper.cs" Link="DynamoDBHelper.cs" />
+    <Compile Include="..\..\..\dotnetframework\DynService.Dynamo\DynamoDBMaps.cs" Link="DynamoDBMaps.cs" />
+    <Compile Include="..\..\..\dotnetframework\DynService.Dynamo\DynamoDBRequestWrapper.cs" Link="DynamoDBRequestWrapper.cs" />
+    <Compile Include="..\..\..\dotnetframework\DynService.Dynamo\DynamoDBResponseWrapper.cs" Link="DynamoDBResponseWrapper.cs" />
+    <Compile Include="..\..\..\dotnetframework\DynService.Dynamo\DynamoDBScan.cs" Link="DynamoDBScan.cs" />
+  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.103" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Core\DynService.Core.csproj" />
+		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Update="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.2">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+</Project>

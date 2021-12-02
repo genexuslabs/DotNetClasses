@@ -1,16 +1,27 @@
 using Amazon.DynamoDBv2.Model;
 using GeneXus.Data.NTier;
+using GeneXus.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GeneXus.Data.Dynamo
 {
 	internal class DynamoDBHelper
-	{		
+	{
+#if NETCORE
+		private static readonly TaskFactory mTaskFactory = new
+			  TaskFactory(CancellationToken.None,
+						  TaskCreationOptions.None,
+						  TaskContinuationOptions.None,
+						  TaskScheduler.Default);
+		internal static TResult RunSync<TResult>(Func<Task<TResult>> func) => mTaskFactory.StartNew<Task<TResult>>(func).Unwrap<TResult>().GetAwaiter().GetResult();
+#endif
+
 		internal static AttributeValue ToAttributeValue(VarValue var)
 		{
 			return ToAttributeValue(GxService.GXTypeToDbType(var.Type), var.Value, false);			
@@ -80,5 +91,33 @@ namespace GeneXus.Data.Dynamo
 			}
 			return attValue;
 		}
+
+		public static string GetString(AttributeValue attValue)
+		{
+			string value = attValue.S;
+			if (value != null)
+				return value;
+			else if (attValue.NS.Count > 0)
+				return SetToString(attValue.NS);
+			else if (attValue.SS.Count > 0)
+				return SetToString(attValue.SS);
+			else if (attValue.IsMSet)
+				return JSONHelper.Serialize(ConvertToDictionary(attValue.M), Encoding.UTF8);
+			else if (attValue.IsLSet)
+				return JSONHelper.Serialize<List<string>>(attValue.L.Select(item => GetString(item)).ToList());
+			return null;
+		}
+
+		private static Dictionary<string, string> ConvertToDictionary(Dictionary<string, AttributeValue> m)
+		{
+			Dictionary<string, string> dict = new Dictionary<string, string>();
+			foreach (KeyValuePair<string, AttributeValue> keyValues in m)
+			{
+				dict.Add(keyValues.Key, GetString(keyValues.Value));
+			}
+			return dict;
+		}
+
+		private static string SetToString(List<string> nS) => $"[ { string.Join(", ", nS) } ]";
 	}
 }
