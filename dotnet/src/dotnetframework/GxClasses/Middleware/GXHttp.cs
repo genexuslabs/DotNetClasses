@@ -209,8 +209,8 @@ namespace GeneXus.Http
 
 #if !NETCORE
 		protected IGxContext _Context;                  
-#endif
 		bool _isMain;
+#endif
 		bool _isStatic;
 		string staticContentBase;
 
@@ -267,7 +267,9 @@ namespace GeneXus.Http
 		public virtual void initialize_properties() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void webExecute() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
+#if !NETCORE
 		public virtual void cleanup() { }
+#endif
 		public virtual bool SupportAjaxEvent() { return false; }
 		public virtual String AjaxOnSessionTimeout() { return "Ignore"; }
 #if !NETCORE
@@ -1780,14 +1782,14 @@ namespace GeneXus.Http
 		{ return false; }
 
 #if !NETCORE
-	private const int STACKSIZE = 1024 * 1024 * 2;
-#endif
-
+		private const int STACKSIZE = 1024 * 1024 * 2;
 		public bool IsMain
 		{
 			set { _isMain = value; }
 			get { return _isMain; }
 		}
+#endif
+
 
 		public void ProcessRequest(HttpContext httpContext)
 		{

@@ -114,9 +114,6 @@ namespace GeneXus.Utils
 #if NETCORE
 	public abstract class GxSilentTrn:GXBaseObject
 	{
-		public bool IsMain;
-
-		public virtual void cleanup() { }
 
 		protected int handle;
 
