@@ -123,7 +123,11 @@ namespace GeneXus.Data.NTier
 						TableName = query.TableName,
 						Key = keyCondition
 					};
+#if NETCORE
+					DynamoDBHelper.RunSync<DeleteItemResponse>(() => mDynamoDB.DeleteItemAsync((DeleteItemRequest)request));
+#else
 					mDynamoDB.DeleteItem((DeleteItemRequest)request);
+#endif
 
 					break;
 				case ServiceCursorDef.CursorType.Insert:
@@ -132,7 +136,11 @@ namespace GeneXus.Data.NTier
 						TableName = query.TableName,
 						Item = values
 					};
+#if NETCORE
+					DynamoDBHelper.RunSync<PutItemResponse>(() => mDynamoDB.PutItemAsync((PutItemRequest)request));
+#else
 					mDynamoDB.PutItem((PutItemRequest)request);
+#endif
 					break;
 				case ServiceCursorDef.CursorType.Update:
 					request = new UpdateItemRequest
@@ -141,7 +149,11 @@ namespace GeneXus.Data.NTier
 						Key = keyCondition,
 						AttributeUpdates = ToAttributeUpdates(keyCondition, values)
 					};
+#if NETCORE
+					DynamoDBHelper.RunSync<UpdateItemResponse>(() => mDynamoDB.UpdateItemAsync((UpdateItemRequest)request));
+#else
 					mDynamoDB.UpdateItem((UpdateItemRequest)request);
+#endif
 					break;
 
 				default:
