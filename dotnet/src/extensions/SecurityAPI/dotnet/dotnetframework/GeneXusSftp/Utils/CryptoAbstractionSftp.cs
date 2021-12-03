@@ -17,7 +17,7 @@ namespace Sftp.GeneXusSftpUtils
         /// <param name="length">The length of the array generate.</param>
         public static byte[] GenerateRandom(int length)
         {
-            var random = new byte[length];
+			byte[] random = new byte[length];
             GenerateRandom(random);
             return random;
         }
@@ -39,16 +39,22 @@ namespace Sftp.GeneXusSftpUtils
 #pragma warning disable CA1507 // Use nameof to express symbol names
 				throw new ArgumentNullException("data");
 #pragma warning restore CA1507 // Use nameof to express symbol names
+			byte[] Buffer = new byte[256];
+#if NETCORE
+			var arraySpan = new Span<byte>(Buffer);
+			System.Security.Cryptography.RandomNumberGenerator.Fill(arraySpan);
+#else
 
 			using (System.Security.Cryptography.RNGCryptoServiceProvider Crypto = new System.Security.Cryptography.RNGCryptoServiceProvider())
 			{
-				byte[] Buffer = new byte[256];
+				
 				Crypto.GetBytes(Buffer);
 			}
+#endif
 				
             /*var buffer = Windows.Security.Cryptography.CryptographicBuffer.GenerateRandom((uint)data.Length);
             System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.CopyTo(buffer, data);*/
 #endif
-        }
+		}
     }
 }
