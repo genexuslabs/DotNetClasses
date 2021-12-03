@@ -4390,9 +4390,8 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-
-		[Obsolete("UserId with string dataSource is deprecated, use UserId((string key, IGxContext cntxt, IDataStoreProvider dataStore) instead", false)]
-		public static string UserId(string key, IGxContext cntxt, string id)
+		[Obsolete("UserId(string key, IGxContext cntxt, string dataSource) with string dataSource is deprecated, use UserId((string key, IGxContext cntxt, IDataStoreProvider dataStore) instead", false)]
+		public static string UserId(string key, IGxContext cntxt, string dataSource)
 		{
 			try
 			{
@@ -4400,7 +4399,7 @@ namespace GeneXus.Utils
 				if (key.ToUpper() == "SERVER" && !(Config.GetValueOf("LOGIN_AS_USERID", out prop) && prop.Equals("1")))
 				{
 					GXLogging.Debug(log, "UserId= user in ConnectionString");
-					IGxDataStore dstore = cntxt.GetDataStore(id);
+					IGxDataStore dstore = cntxt.GetDataStore(dataSource);
 					if (dstore != null)
 						return (dstore.UserId);
 				}
