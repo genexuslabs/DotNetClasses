@@ -1,0 +1,8 @@
+<Project>
+	<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../../../'))" />
+	<PropertyGroup Condition="$(TargetFramework) == 'net6.0'">
+		<GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+	</PropertyGroup>
+</Project>
+
+
