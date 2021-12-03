@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GeneXus.Data.DynService.Fabric</RootNamespace>
@@ -18,7 +18,7 @@
 		<Reference Include="System.Web.Extensions" />
 		<Reference Include="System.Data.DataSetExtensions" />
 		<Reference Include="Microsoft.CSharp" />
-		<ProjectReference Include="..\DynService.Core\DynService.Core.csproj"/>
+		<ProjectReference Include="..\..\dotnetcommon\DynService.Core\DynService.Core.csproj"/>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
 	</ItemGroup>
 	<ItemGroup>

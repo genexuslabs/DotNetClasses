@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;net5.0;net6.0</TargetFrameworks>
+		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
+		<AssemblyName>GeneXus.Data.DynService.Core</AssemblyName>
+		<NoWarn>CA1812</NoWarn>
+		<PackageTags>Dynservice</PackageTags>
+		<PackageId>GeneXus.DynService.Core</PackageId>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)'!='net462'">
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'!='net462'">
+		<ProjectReference Include="..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
+		<ProjectReference Include="..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+</Project>
