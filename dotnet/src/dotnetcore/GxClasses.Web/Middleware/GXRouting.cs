@@ -261,7 +261,7 @@ namespace GxClasses.Web.Middleware
 		{
 			//Not API Objects
 			string basePath = restBaseURL;
-			string pathWithNoBase = path.Remove(0, basePath.Length + 2);
+			string pathWithNoBase = string.IsNullOrEmpty(basePath) ? path.Substring(1) : path.Substring(basePath.Length + 2);
 
 			//API Objects
 			string AzureFunctionShortName = AzureFunctionName.Substring(AzureFunctionName.LastIndexOf(".") + 1);
