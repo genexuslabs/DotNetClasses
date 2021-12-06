@@ -727,6 +727,7 @@ namespace GeneXus.Configuration
 		static string blobPath;
 		static string blobPathFolderName;
 		static int blankEmptyDates = -1;
+		static int ignoreAddOnEmptyDate = -1;
 		static int setupDB = -1;
 		static HTMLDocType docType = HTMLDocType.UNDEFINED;
 		static int docTypeDTD = -1;
@@ -898,7 +899,29 @@ namespace GeneXus.Configuration
 			}
 
 		}
+		public static bool IgnoreAddOnEmptyDates
+		{
+			get
+			{
+				if (ignoreAddOnEmptyDate == -1)
+				{
+					string val;
+					if (Config.GetValueOf("IGNORE_ADD_ON_EMPTY_DATE", out val) && val == "1")
+					{
+						ignoreAddOnEmptyDate = 1;
+						return true;
+					}
+					else
+					{
+						ignoreAddOnEmptyDate = 0;
+						return false;
+					}
+				}
+				else return (ignoreAddOnEmptyDate == 1);
+			}
 
+		}
+		
 		public static bool BlankEmptyDates
 		{
 			get
