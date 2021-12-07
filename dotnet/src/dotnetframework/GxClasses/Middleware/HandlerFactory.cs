@@ -147,7 +147,7 @@ namespace GeneXus.HttpHandlerFactory
 			}
             if (objType != null)
             {
-				if (!objType.IsAssignableFrom(typeof(IHttpHandler)))
+				if (!typeof(IHttpHandler).IsAssignableFrom(objType))
 				{
 					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
 					handlerToReturn=null;
