@@ -18,11 +18,8 @@ using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
 using System.Collections.Concurrent;
 
-#if NETCORE
 using NUglify;
 using NUglify.Html;
-using System.Web;
-#endif
 
 namespace GeneXus.Utils
 {
@@ -155,54 +152,65 @@ namespace GeneXus.Utils
 	public class NTidyHTMLHandler : IDocumentHandler
 	{
 #if !NETCORE
-        Assembly ntidy;
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.DocumentHandler));
+		Assembly ntidy;
 #endif
         public NTidyHTMLHandler()
         {
 #if !NETCORE
-			ntidy =  Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll"));
-#endif
-        }
-		public String GetText(string filename)
-		{
-#if NETCORE
-
-			return Uglify.HtmlToText(File.ReadAllText(filename), HtmlToTextOptions.None).Code;
-#else
-			object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
-			LoadConfig(rawDoc);
-			int status = (int)rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { filename });
-			if (status != 0)
-			{
-				rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
-			}
-
-			object tidyNode = rawDoc.GetType().GetProperty("Html").GetValue(rawDoc, null);
-			return getText(tidyNode);
-#endif
-		}
-		public String GetTextFromString(string text)
-		{
-#if NETCORE
-			text = Uglify.HtmlToText(text).Code;
-#else
-			object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
-			LoadConfig(rawDoc);
-			rawDoc.GetType().GetMethod("LoadString").Invoke(rawDoc, new object[] { text });
-			if (rawDoc == null)
-			{
-				return text;
-			}
 			try
 			{
+				ntidy =  Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll"));
+			}catch (Exception ex)
+			{
+				GXLogging.Warn(log, "Error loading ntidy", ex);
+			}
+#endif
+        }
+		public string GetText(string filename)
+		{
+#if !NETCORE
+
+			if (ntidy!=null)
+			{
+				object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
+				LoadConfig(rawDoc);
+				int status = (int)rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { filename });
+				if (status != 0)
+				{
+					rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
+				}
+
 				object tidyNode = rawDoc.GetType().GetProperty("Html").GetValue(rawDoc, null);
 				return getText(tidyNode);
 			}
-			catch
 #endif
+			return Uglify.HtmlToText(File.ReadAllText(filename), HtmlToTextOptions.None).Code;
+		}
+		public String GetTextFromString(string text)
+		{
+#if !NETCORE
+			if (ntidy!=null)
 			{
-				return text;
+				object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
+				LoadConfig(rawDoc);
+				rawDoc.GetType().GetMethod("LoadString").Invoke(rawDoc, new object[] { text });
+				if (rawDoc == null)
+				{
+					return text;
+				}
+				try
+				{
+					object tidyNode = rawDoc.GetType().GetProperty("Html").GetValue(rawDoc, null);
+					return getText(tidyNode);
+				}
+				catch
+				{
+					return text;
+				}
 			}
+#endif
+			return Uglify.HtmlToText(text).Code;
 		}
 
 		private String getText(object node)
@@ -239,15 +247,16 @@ namespace GeneXus.Utils
 		internal string HTMLClean(string text)
 		{
 #if !NETCORE
-			object rawDoc = Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll")).CreateInstance("NTidy.TidyDocument");
-
-			LoadConfig(rawDoc);
-			rawDoc.GetType().GetMethod("LoadString").Invoke(rawDoc, new object[] { text });
-			rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
-			return (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
-#else
-			return GXUtil.HTMLClean(text);
+			if (ntidy!=null)
+			{
+				object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
+				LoadConfig(rawDoc);
+				rawDoc.GetType().GetMethod("LoadString").Invoke(rawDoc, new object[] { text });
+				rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
+				return (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
+			}
 #endif
+			return GXUtil.HTMLClean(text);
 		}
 	}
 

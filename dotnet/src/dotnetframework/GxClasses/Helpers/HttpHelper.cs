@@ -546,6 +546,41 @@ namespace GeneXus.Http
 			return context.Session.IsNewSession;
 		}
 #endif
+		internal static string GetServerMachineName(this HttpContext context)
+		{
+#if NETCORE
+			IPAddress address = context.Connection.LocalIpAddress;
+			if (address!=null)
+			{
+				if (address.IsIPv4MappedToIPv6)
+					return address.MapToIPv4().ToString();
+				else
+					return address.ToString();
+			}
+			else
+				return string.Empty;
+#else
+			return context.Server.MachineName;
+#endif
+		}
+		
+		public static string GetUserHostAddress(this HttpContext context)
+		{
+#if NETCORE
+			IPAddress address = context.Connection.RemoteIpAddress;
+			if (address != null)
+			{
+				if (address.IsIPv4MappedToIPv6)
+					return address.MapToIPv4().ToString();
+				else
+					return address.ToString();
+			}
+			else
+				return string.Empty;
+#else
+			return context.Request.UserHostAddress;
+#endif
+		}
 	}
 
 	public static class HttpRequestExtensions
