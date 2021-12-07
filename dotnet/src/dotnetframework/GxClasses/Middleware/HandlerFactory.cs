@@ -147,24 +147,24 @@ namespace GeneXus.HttpHandlerFactory
 			}
             if (objType != null)
             {
-				try
+				if (!objType.IsAssignableFrom(typeof(IHttpHandler)))
 				{
-					if (!objType.IsAssignableFrom(typeof(IHttpHandler)))
-					{
-						context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-						handlerToReturn=null;
-						GXLogging.Error(log, objType.FullName + " is not an Http Service");
-					}
-					else
+					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+					handlerToReturn=null;
+					GXLogging.Error(log, objType.FullName + " is not an Http Service");
+				}
+				else
+				{
+					try
 					{
 						handlerToReturn = (IHttpHandler)Activator.CreateInstance(objType, null);
 					}
-				}
-				catch (Exception e)
-				{
-					GXLogging.Error(log, "GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").", e);
-					GXLogging.Error(log, "Inner Exception", e.InnerException);
-					throw e;
+					catch (Exception e)
+					{
+						GXLogging.Error(log, "GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").", e);
+						GXLogging.Error(log, "Inner Exception", e.InnerException);
+						throw e;
+					}
 				}
 			}
 			else
