@@ -261,23 +261,36 @@ namespace GxClasses.Web.Middleware
 		{
 			//Not API Objects
 			string basePath = restBaseURL;
+			string pathWithNoBase = string.IsNullOrEmpty(basePath) ? path.Substring(1) : path.Substring(basePath.Length + 2);
 
 			//API Objects
+			string AzureFunctionShortName = AzureFunctionName.Substring(AzureFunctionName.LastIndexOf(".") + 1);
+			string controllerWithParms = "";
 			foreach (var map in servicesMap)
 			{
-				foreach (var mlist in map.Value)
+				if (path.ToLower().Contains(map.Key.ToLower()))
 				{
-					if (mlist.Key == AzureFunctionName)
+					foreach (var mlist in map.Value)
 					{
-						basePath = string.IsNullOrEmpty(restBaseURL) ? $"{map.Key}" :$"{restBaseURL}/{map.Key}";
+						if (mlist.Key.ToLower() == AzureFunctionShortName.ToLower())
+						{
+
+							controllerWithParms = mlist.Value.Path;
+							if (pathWithNoBase.ToLower().EndsWith(controllerWithParms.ToLower()))
+							{
+								if (pathWithNoBase.Remove(pathWithNoBase.Length - controllerWithParms.Length).ToLower() == map.Key.ToLower())
+									return controllerWithParms;
+							}
+						}
 					}
 				}
 			}
 
-			string controllerWithParms = path.Remove(0, basePath.Length + 1);
+			controllerWithParms = path.Remove(0, basePath.Length + 1);
 			controllerWithParms = controllerWithParms.StartsWith("/") ? controllerWithParms.Remove(0, 1) : controllerWithParms;
 			return controllerWithParms;
-			
+
+
 		}
 		public bool ServiceInPath(String path, out String actualPath)
 		{
