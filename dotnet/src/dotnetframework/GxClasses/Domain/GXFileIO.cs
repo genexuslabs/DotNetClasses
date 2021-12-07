@@ -1111,7 +1111,6 @@ public class GxFile
 	}
     public string XsltApply(string xslFileName)
     {
-#if !NETCORE
         XmlReaderSettings readerSettings = new XmlReaderSettings();
         readerSettings.CheckCharacters = false;
         try
@@ -1123,9 +1122,6 @@ public class GxFile
             GXLogging.Warn(log, "XsltApply Error", ex);
             return GxXsltImpl.ApplyOld(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
-#else
-		return string.Empty;
-#endif
 	}
 	[MethodImpl(MethodImplOptions.Synchronized)]
     public string HtmlClean()

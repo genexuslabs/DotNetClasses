@@ -12,6 +12,7 @@
 	</PropertyGroup>
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+		<Compile Include="..\DotNetUnitTest\FileIO\Xslt.cs" Link="FileIO\Xslt.cs" />
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3PrivateTest.cs" Link="ExternalProvider\ExternalProviderS3PrivateTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderTest.cs" Link="ExternalProvider\ExternalProviderTest.cs" />		
@@ -27,6 +28,9 @@
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</EmbeddedResource>
+		<Content Include="..\DotNetUnitTest\resources\xml\error.xml" Link="resources\xml\error.xml">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
 		<Content Include="FullTextSearch\Ugly.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -90,6 +94,18 @@
 		<None Update="resources\text.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Folder Include="resources\xml\" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <None Include="..\DotNetUnitTest\resources\xml\xmlTohtml1.xsl" Link="resources\xml\xmlTohtml1.xsl">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>
