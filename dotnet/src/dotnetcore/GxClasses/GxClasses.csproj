@@ -175,6 +175,7 @@
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+		<ProjectReference Include="..\GxXsl\GxXsl.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
