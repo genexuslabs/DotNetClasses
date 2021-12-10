@@ -21,6 +21,9 @@ namespace GeneXus.Metadata
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Metadata.ClassLoader));
 
+#if NETCORE
+		private const string GXWEBPROCEDURE_TYPE = "GeneXus.Procedure.GXWebProcedure";
+#endif
 		static public Object GetInstance(string assemblyName, string fullClassName, Object[] constructorArgs)
 		{
 
@@ -319,10 +322,11 @@ namespace GeneXus.Metadata
 			GXLogging.Debug(log, "Execute assembly '" + assmbly + "', namespace '" + nspace + "'  class '" + className + "' mthd '" + mthd + "'");
 
 			Type objType = FindType(assmbly, nspace, className, Assembly.GetCallingAssembly());
+
 #if NETCORE
-			if (typeof(IHttpHandler).IsAssignableFrom(objType))
+			if (typeof(IHttpHandler).IsAssignableFrom(objType) && (objType.BaseType.FullName!=GXWEBPROCEDURE_TYPE))
 #else
-			if (objType.IsSubclassOf(typeof(GeneXus.Http.GXHttpHandler)))
+			if (objType.IsSubclassOf(typeof(GeneXus.Http.GXHttpHandler)) && !objType.IsSubclassOf(typeof(Procedure.GXWebProcedure)))
 #endif
 			throw new GxClassLoaderException(": (" + assmbly + "). Loading of web object not allowed in WebExecute.");
 			Object o = Activator.CreateInstance(objType, constructorArgs);
