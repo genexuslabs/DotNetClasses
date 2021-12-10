@@ -19,9 +19,6 @@
 	<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.0.3" OutputItemType="Analyzer" Condition="$(TargetFramework) == 'net5.0'" />
 	<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.2" Condition="$(TargetFramework) == 'net6.0'" />
 	<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.1.0" Condition="$(TargetFramework) == 'net5.0'" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ApplicationInsights" Version="1.0.0-preview4" Condition="$(TargetFramework) == 'net6.0'" >
-		<ExcludeAssets>all</ExcludeAssets>
-	</PackageReference>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.593" />  
   </ItemGroup>
