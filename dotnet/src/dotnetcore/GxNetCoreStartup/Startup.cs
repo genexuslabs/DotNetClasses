@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
 using GeneXus.Utils;
+using GxClasses.Helpers;
 using GxClasses.Web.Middleware;
 using log4net;
 using Microsoft.AspNetCore;
@@ -100,7 +102,10 @@ namespace GeneXus.Application
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
-		
+		const string SWAGGER_DEFAULT_YAML = "default.yaml";
+		const string DEVELOPER_MENU = "developermenu.html";
+		const string SWAGGER_SUFFIX = "swagger";
+
 		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
@@ -204,7 +209,7 @@ namespace GeneXus.Application
 		}
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
-			var baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
+			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
 			
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
@@ -231,6 +236,7 @@ namespace GeneXus.Application
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
+			ConfigureSwaggerUI(app, baseVirtualPath);
 
 			if (Directory.Exists(Path.Combine(LocalPath, RESOURCES_FOLDER)))
 			{
@@ -297,8 +303,8 @@ namespace GeneXus.Application
 				 servicesBase.Add( string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
 			}
 
-			var restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
-			var apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
+			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
+			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
 			app.UseMvc(routes =>
 			{
 				foreach (string serviceBasePath in servicesBase)
@@ -306,7 +312,7 @@ namespace GeneXus.Application
 					string tmpPath = string.IsNullOrEmpty(apiBasePath) ? serviceBasePath : serviceBasePath.Replace(apiBasePath, string.Empty);
 					foreach (string sPath in gxRouting.servicesValidPath[tmpPath])
 					{
-						var s = serviceBasePath + sPath;
+						string s = serviceBasePath + sPath;
 						routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
 					}
 				}
@@ -315,7 +321,7 @@ namespace GeneXus.Application
 			});
 
 			app.UseWebSockets();
-			var basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
+			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = basePath;
 			app.MapWebSocketManager($"{basePath}/gxwebsocket.svc");
 
@@ -325,6 +331,31 @@ namespace GeneXus.Application
 							appBranch.UseGXHandlerFactory(basePath);
 						});
 			app.UseEnableRequestRewind();
+		}
+
+		private void ConfigureSwaggerUI(IApplicationBuilder app, string baseVirtualPath)
+		{
+			try
+			{
+				foreach(string yaml in Directory.GetFiles(LocalPath, "*.yaml")) {
+					FileInfo finfo = new FileInfo(yaml);
+					app.UseSwaggerUI(options =>
+					{
+						options.SwaggerEndpoint($"{baseVirtualPath}/{finfo.Name}", finfo.Name);
+						options.RoutePrefix =$"{baseVirtualPath.TrimStart('/')}/{finfo.Name}/{SWAGGER_SUFFIX}";
+					});
+					if (finfo.Name.Equals(SWAGGER_DEFAULT_YAML, StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(LocalPath, DEVELOPER_MENU)))
+						app.UseSwaggerUI(options =>
+						{
+							options.SwaggerEndpoint($"{baseVirtualPath}/{SWAGGER_DEFAULT_YAML}", SWAGGER_DEFAULT_YAML);
+							options.RoutePrefix =$"{baseVirtualPath.TrimStart('/')}/{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
+						});
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("Errpr loading SwaggerUI " + ex.Message);
+			}
 		}
 
 		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)
