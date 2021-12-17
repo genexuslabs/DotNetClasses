@@ -4,7 +4,6 @@ using System.IO;
 using System.Collections;
 using System.Threading;
 using System.Text;
-using iTextSharp.text.io;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 using System.Globalization;
@@ -21,6 +20,7 @@ using System.Collections.Generic;
 using System.Security;
 using GeneXus;
 using GeneXus.Utils;
+using System.Reflection;
 
 namespace com.genexus.reports
 {
@@ -44,7 +44,11 @@ namespace com.genexus.reports
 		private bool fontUnderline;
 		private bool fontStrikethru;
 		private int fontSize;
-		private BaseColor backColor, foreColor;
+#if ITEXT4
+		private Color backColor, foreColor, templateColorFill;
+#else
+		private BaseColor backColor, foreColor, templateColorFill;
+#endif
 		private Stream outputStream = null; 
 											
 		private ParseINI props = new ParseINI();
@@ -73,7 +77,6 @@ namespace com.genexus.reports
 		private BaseFont templateFont;
 		private int templateFontSize;
 		private bool backFill = true;
-		private BaseColor templateColorFill;
 		private int templateAlignment;
 		private int pages = 0;
 		private bool templateCreated = false;
@@ -667,7 +670,7 @@ namespace com.genexus.reports
 
 				if (backMode != 0)
 				{
-					cb.SetColorFill(new BaseColor(backRed, backGreen, backBlue));
+					cb.SetColorFill(GetColor(backRed, backGreen, backBlue));
 					cb.FillStroke();
 				}
 				cb.ClosePathStroke();
@@ -706,7 +709,7 @@ namespace com.genexus.reports
 					roundRectangle(cb, x1, y1, w, h,
 						cRadioTL, cRadioTR,
 						cRadioBL, cRadioBR);
-					cb.SetColorFill(new BaseColor(backRed, backGreen, backBlue));
+					cb.SetColorFill(GetColor(backRed, backGreen, backBlue));
 					cb.FillStroke();
 					cb.SetLineWidth(penAux);
 
@@ -893,8 +896,8 @@ namespace com.genexus.reports
 			this.fontUnderline = fontUnderline;
 			this.fontStrikethru = fontStrikethru;
 			this.fontSize = fontSize;
-			foreColor = new BaseColor(foreRed, foreGreen, foreBlue);
-			backColor = new BaseColor(backRed, backGreen, backBlue);
+			foreColor = GetColor(foreRed, foreGreen, foreBlue);
+			backColor = GetColor(backRed, backGreen, backBlue);
 
 			backFill = (backMode != 0);
 			try
@@ -1067,8 +1070,11 @@ namespace com.genexus.reports
 			{
 				if (!asianFontsDllLoaded)
 				{
-					StreamUtil.AddToResourceSearch(System.Reflection.Assembly.Load("iTextAsian"));
-					asianFontsDllLoaded = true;
+#if ITEXT4
+					BaseFont.AddToResourceSearch(Assembly.Load("iTextAsian"));
+#else
+					iTextSharp.text.io.StreamUtil.AddToResourceSearch(Assembly.Load("iTextAsian"));
+#endif
 				}
 			}
 			catch (Exception ae)
@@ -1189,8 +1195,7 @@ namespace com.genexus.reports
 			{
 				
 				StyleSheet styles = new StyleSheet();
-				TrueTypeFont ttFont = baseFont as TrueTypeFont;
-				if (ttFont != null)
+				if (IsTrueType(baseFont))
 				{
 					Hashtable locations = GetFontLocations();
 					foreach (string fontName in locations.Keys)
@@ -1229,17 +1234,17 @@ namespace com.genexus.reports
 				 rightAux + leftMargin,
 				drawingPageHeight - topAux);
 
-				Col.SetSimpleColumn(rect);
-				simulationCol.SetSimpleColumn(rect);
+				SetSimpleColumn(Col, rect);
+				SetSimpleColumn(simulationCol, rect);
 				
 				try
 				{
-					List<IElement> objects = HTMLWorker.ParseToList(new StringReader(sTxt), styles);
-					for (int k = 0; k < objects.Count; ++k)
+					IEnumerable objects = HTMLWorker.ParseToList(new StringReader(sTxt), styles);
+					foreach (object element in objects)
 					{
 						if (PageHeightExceeded(bottomAux, drawingPageHeight))
 						{
-							simulationCol.AddElement((IElement)objects[k]);
+							simulationCol.AddElement((IElement)element);
 							simulationCol.Go(true);
 
 							if (simulationCol.YLine < bottomMargin)
@@ -1251,20 +1256,20 @@ namespace com.genexus.reports
 								GxEndPage();
 								GxStartPage();
 								simulationCol = new ColumnText(null);
-								simulationCol.SetSimpleColumn(rect);
-								simulationCol.AddElement((IElement)objects[k]);
+								SetSimpleColumn(simulationCol, rect);
+								simulationCol.AddElement((IElement)element);
 
 								Col = new ColumnText(cb);
 								Col.Alignment = ColumnAlignment(alignment);
-								Col.SetSimpleColumn(rect);
+								SetSimpleColumn(Col, rect);
 							}
 						}
 
-						Paragraph p = objects[k] as Paragraph;
+						Paragraph p = element as Paragraph;
 						if (p != null)
 							p.Alignment = ColumnAlignment(alignment);
 
-						Col.AddElement(objects[k]);
+						Col.AddElement((IElement)element);
 						Col.Go();
 					}
 				}
@@ -1508,6 +1513,7 @@ namespace com.genexus.reports
 				}
 			}
 		}
+
 		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
 		{
 			return bottomAux > drawingPageHeight;
@@ -1521,7 +1527,7 @@ namespace com.genexus.reports
 			Col.RunDirection = runDirection;
 			Col.Alignment = alignment;
 			Col.SetLeading(leading, 1);
-			Col.SetSimpleColumn(rect);
+			SetSimpleColumn(Col, rect);
 			Col.AddText(p);
 			Col.Go(true);
 			return Col;
@@ -1553,7 +1559,7 @@ namespace com.genexus.reports
 				Col.SetLeading(0, 1);
 			else
 				Col.SetLeading(leading, 1);
-			Col.SetSimpleColumn(rect);
+			SetSimpleColumn(Col, rect);
 			Col.AddText(p);
 			Col.Go();
 		}
@@ -2127,6 +2133,32 @@ namespace com.genexus.reports
 			M_bot = bot;
 		}
 
+#if ITEXT4
+		private Color GetColor(int backRed, int backGreen, int backBlue)
+		{
+			return new Color(backRed, backGreen, backBlue);
+		}
+#else
+		private BaseColor GetColor(int backRed, int backGreen, int backBlue)
+		{
+			return new BaseColor(backRed, backGreen, backBlue);
+		}
+
+#endif
+		private bool IsTrueType(BaseFont baseFont)
+		{
+#if ITEXT4
+			return baseFont.FontType == BaseFont.FONT_TYPE_TT;
+#else
+			TrueTypeFont ttFont = baseFont as TrueTypeFont;
+			return ttFont != null;
+#endif
+		}
+
+		private void SetSimpleColumn(ColumnText col, Rectangle rect)
+		{
+			col.SetSimpleColumn(rect.Left, rect.Bottom, rect.Right, rect.Top);
+		}
 	}
 
 	public class ParseINI
@@ -2159,7 +2191,7 @@ namespace com.genexus.reports
 			this.filename = Path.GetFullPath(filename);
 			try
 			{
-				var inputFileNameOrTemplate = filename;
+				string inputFileNameOrTemplate = filename;
 				if (!String.IsNullOrEmpty(template) && !File.Exists(filename) && File.Exists(template))
 				{
 					inputFileNameOrTemplate = Path.GetFullPath(template);
