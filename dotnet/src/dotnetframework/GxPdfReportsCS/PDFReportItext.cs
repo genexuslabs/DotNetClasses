@@ -1075,6 +1075,7 @@ namespace com.genexus.reports
 #else
 					iTextSharp.text.io.StreamUtil.AddToResourceSearch(Assembly.Load("iTextAsian"));
 #endif
+					asianFontsDllLoaded = true;
 				}
 			}
 			catch (Exception ae)
