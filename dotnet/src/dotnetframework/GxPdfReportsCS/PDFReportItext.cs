@@ -21,6 +21,7 @@ using System.Security;
 using GeneXus;
 using GeneXus.Utils;
 using System.Reflection;
+using GeneXus.Metadata;
 
 namespace com.genexus.reports
 {
@@ -44,11 +45,9 @@ namespace com.genexus.reports
 		private bool fontUnderline;
 		private bool fontStrikethru;
 		private int fontSize;
-#if ITEXT4
-		private Color backColor, foreColor, templateColorFill;
-#else
-		private BaseColor backColor, foreColor, templateColorFill;
-#endif
+
+		//Color for, BaseColor for => Itext5
+		private object backColor, foreColor, templateColorFill;
 		private Stream outputStream = null; 
 											
 		private ParseINI props = new ParseINI();
@@ -99,6 +98,7 @@ namespace com.genexus.reports
 		int STYLE_NONE_CONST = 1;
 		int runDirection;
 		int justifiedType;
+		static Assembly iTextAssembly = typeof(Document).Assembly;
 
 		public bool GxOpenDoc(string fileName)
 		{
@@ -670,7 +670,7 @@ namespace com.genexus.reports
 
 				if (backMode != 0)
 				{
-					cb.SetColorFill(GetColor(backRed, backGreen, backBlue));
+					ClassLoader.Invoke(cb, "SetColorFill", new object[] { GetColor(backRed, backGreen, backBlue) });
 					cb.FillStroke();
 				}
 				cb.ClosePathStroke();
@@ -709,7 +709,7 @@ namespace com.genexus.reports
 					roundRectangle(cb, x1, y1, w, h,
 						cRadioTL, cRadioTR,
 						cRadioBL, cRadioBR);
-					cb.SetColorFill(GetColor(backRed, backGreen, backBlue));
+					ClassLoader.Invoke(cb, "SetColorFill", new object[] { GetColor(backRed, backGreen, backBlue) });
 					cb.FillStroke();
 					cb.SetLineWidth(penAux);
 
@@ -1070,11 +1070,12 @@ namespace com.genexus.reports
 			{
 				if (!asianFontsDllLoaded)
 				{
-#if ITEXT4
-					BaseFont.AddToResourceSearch(Assembly.Load("iTextAsian"));
-#else
-					iTextSharp.text.io.StreamUtil.AddToResourceSearch(Assembly.Load("iTextAsian"));
-#endif
+					Assembly itextAsian = Assembly.Load("iTextAsian");
+					if (IsItext4())
+						ClassLoader.InvokeStatic(iTextAssembly, "iTextSharp.text.pdf.BaseFont", "AddToResourceSearch", new object[] { itextAsian });
+					else
+						ClassLoader.InvokeStatic(iTextAssembly, "iTextSharp.text.io.StreamUtil", "AddToResourceSearch", new object[] { itextAsian });
+
 					asianFontsDllLoaded = true;
 				}
 			}
@@ -1082,6 +1083,10 @@ namespace com.genexus.reports
 			{
 				GXLogging.Debug(log,"LoadAsianFontsDll error", ae);
 			}
+		}
+		private bool IsItext4()
+		{
+			return iTextAssembly.GetName().Version.Major==4;
 		}
 		public void setAsianFont(String fontName, String style)
 		{
@@ -1147,13 +1152,13 @@ namespace com.genexus.reports
 
 			if (printRectangle && (border == 1 || backFill))
 			{
-				GxDrawRect(left, top, right, bottom, border, foreColor.R, foreColor.G, foreColor.B, backFill ? 1 : 0, backColor.R, backColor.G, backColor.B, 0, 0);
+				GxDrawRect(left, top, right, bottom, border, GetColorR(foreColor), GetColorG(foreColor), GetColorB(foreColor), backFill ? 1 : 0, GetColorR(backColor), GetColorG(backColor), GetColorB(backColor), 0, 0);
 			}
 			Font font = new Font(baseFont, fontSize);
 			int arabicOptions = 0;
 			PdfContentByte cb = writer.DirectContent;
 			cb.SetFontAndSize(baseFont, fontSize);
-			cb.SetColorFill(foreColor);
+			ClassLoader.Invoke(cb, "SetColorFill", new object[] { foreColor });
 			sTxt = sTxt.TrimEnd(TRIM_CHARS);
 			float captionHeight = baseFont.GetFontDescriptor(BaseFont.CAPHEIGHT, fontSize);
 			float rectangleWidth = baseFont.GetWidthPoint(sTxt, fontSize);
@@ -1240,7 +1245,7 @@ namespace com.genexus.reports
 				
 				try
 				{
-					IEnumerable objects = HTMLWorker.ParseToList(new StringReader(sTxt), styles);
+					IEnumerable objects = (IEnumerable)ClassLoader.InvokeStatic(iTextAssembly, typeof(HTMLWorker).FullName, "ParseToList", new object[] { new StringReader(sTxt), styles });
 					foreach (object element in objects)
 					{
 						if (PageHeightExceeded(bottomAux, drawingPageHeight))
@@ -1318,7 +1323,7 @@ namespace com.genexus.reports
 					else
 						barcode.X = Const.OPTIMAL_MINIMU_BAR_WIDTH_LARGE_FONT;
 
-					Image imageCode = barcode.CreateImageWithBarcode(cb, backFill ? backColor : null, foreColor);
+					Image imageCode = (Image)ClassLoader.Invoke(barcode, "CreateImageWithBarcode", new object[] { cb, backFill ? backColor : null, foreColor });
 					imageCode.SetAbsolutePosition(leftAux + leftMargin, rectangle.Bottom);
 					barcode.BarHeight = rectangle.Height;
 					imageCode.ScaleToFit(rectangle.Width, rectangle.Height);
@@ -1348,7 +1353,7 @@ namespace com.genexus.reports
 							rectangle = new iTextSharp.text.Rectangle(leftAux + leftMargin, (float)this.pageSize.Top - bottomAux - topMargin - bottomMargin, leftAux + leftMargin + rectangleWidth, (float)this.pageSize.Top - topAux - topMargin - bottomMargin);
 							break;
 					}
-					rectangle.BackgroundColor = backColor;
+					ClassLoader.SetPropValue(rectangle, "BackgroundColor", backColor);
 					try
 					{
 						document.Add(rectangle);
@@ -1366,7 +1371,7 @@ namespace com.genexus.reports
 				if (fontUnderline)
 				{
 					GXLogging.Debug(log,"underlineSeparation: " + underlineSeparation);
-					GXLogging.Debug(log,"Kerning: " + baseFont.GetKerning('a', 'b'));
+					GXLogging.Debug(log,"Kerning: " + GetKerning(baseFont, 'a', 'b'));
 
 					underline = new iTextSharp.text.Rectangle(0, 0);
 					switch (alignment)
@@ -1391,7 +1396,7 @@ namespace com.genexus.reports
 								this.pageSize.Top - bottomAux - topMargin - bottomMargin + startHeight - underlineHeight);
 							break;
 					}
-					underline.BackgroundColor = foreColor;
+					ClassLoader.SetPropValue(underline, "BackgroundColor", foreColor);
 					try
 					{
 						document.Add(underline);
@@ -1409,7 +1414,7 @@ namespace com.genexus.reports
 					float strikethruSeparation = lineHeight / 2;
 
 					GXLogging.Debug(log,"underlineSeparation: " + underlineSeparation);
-					GXLogging.Debug(log,"Kerning: " + baseFont.GetKerning('a', 'b'));
+					GXLogging.Debug(log,"Kerning: " + GetKerning(baseFont,'a', 'b'));
 					switch (alignment)
 					{
 						case 1: // Center Alignment
@@ -1432,7 +1437,7 @@ namespace com.genexus.reports
 								this.pageSize.Top - bottomAux - topMargin - bottomMargin + startHeight - underlineHeight + strikethruSeparation);
 							break;
 					}
-					underline.BackgroundColor = foreColor;
+					ClassLoader.SetPropValue(underline, "BackgroundColor", foreColor);
 					try
 					{
 						document.Add(underline);
@@ -1513,6 +1518,30 @@ namespace com.genexus.reports
 					}
 				}
 			}
+		}
+
+		private int GetColorB(object backColor)
+		{
+			return (int)ClassLoader.GetPropValue(backColor, "B");
+		}
+
+		private int GetColorG(object backColor)
+		{
+			return (int)ClassLoader.GetPropValue(backColor, "G");
+		}
+
+		private int GetColorR(object backColor)
+		{
+			return (int)ClassLoader.GetPropValue(backColor, "R");
+		}
+
+		private int GetKerning(BaseFont baseFont, char v1, char v2)
+		{
+			if (IsItext4())
+				return baseFont.GetKerning(v1, v2);
+			else
+				return (int)ClassLoader.Invoke(baseFont, "GetKerning", new object[] {(int)Char.GetNumericValue(v1), (int)Char.GetNumericValue(v2) });
+			
 		}
 
 		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
@@ -1753,7 +1782,7 @@ namespace com.genexus.reports
 			{
 				template.BeginText();
 				template.SetFontAndSize(templateFont, templateFontSize);
-				template.SetColorFill(templateColorFill);
+				ClassLoader.Invoke(template, "SetColorFill", new object[] { templateColorFill });
 				switch (templateAlignment)
 				{
 					case 1: // Center Alignment
@@ -2134,26 +2163,19 @@ namespace com.genexus.reports
 			M_bot = bot;
 		}
 
-#if ITEXT4
-		private Color GetColor(int backRed, int backGreen, int backBlue)
+		private object GetColor(int backRed, int backGreen, int backBlue)
 		{
-			return new Color(backRed, backGreen, backBlue);
-		}
-#else
-		private BaseColor GetColor(int backRed, int backGreen, int backBlue)
-		{
-			return new BaseColor(backRed, backGreen, backBlue);
+			Type color;
+			if (IsItext4())
+				color = iTextAssembly.GetType("iTextSharp.text.Color"); 
+			else
+				color = iTextAssembly.GetType("iTextSharp.text.BaseColor"); 
+			return ClassLoader.CreateInstance(iTextAssembly, color.FullName, new object[] { backRed, backGreen, backBlue });
 		}
 
-#endif
 		private bool IsTrueType(BaseFont baseFont)
 		{
-#if ITEXT4
 			return baseFont.FontType == BaseFont.FONT_TYPE_TT;
-#else
-			TrueTypeFont ttFont = baseFont as TrueTypeFont;
-			return ttFont != null;
-#endif
 		}
 
 		private void SetSimpleColumn(ColumnText col, Rectangle rect)
