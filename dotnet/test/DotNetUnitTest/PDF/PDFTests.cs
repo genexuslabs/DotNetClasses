@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using GeneXus.Programs;
 using GeneXus.Utils;
 using Xunit;
@@ -32,6 +34,14 @@ namespace UnitTesting
 				Console.WriteLine(ex.ToString());	
 			}
 			Assert.True(File.Exists(report));
+		}
+		[Fact]
+		public void TestIText4LGPLIsUsed()
+		{
+			Assembly pdfReports = Assembly.Load("GxPdfReportsCS");
+			AssemblyName itextsharp = pdfReports.GetReferencedAssemblies().First(t => t.Name=="itextsharp");
+
+			Assert.Equal(4, itextsharp.Version.Major);
 		}
 
 	}
