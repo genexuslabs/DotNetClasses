@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net5.0</TargetFrameworks>
-		<NoWarn>CS8032</NoWarn>
+		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -23,6 +23,7 @@
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGoogleTest.cs" Link="ExternalProvider\ExternalProviderGoogleTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderOracleTest.cs" Link="ExternalProvider\ExternalProviderOracleTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\FileIO\MimeTypesTest.cs" Link="FileIO\MimeTypesTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\PDF\apdfbasictest.cs" Link="PDF\apdfbasictest.cs" />		
 		<Compile Include="..\DotNetUnitTest\PDF\PDFTests.cs" Link="PDF\PDFTests.cs" />		
 	</ItemGroup>
 	<ItemGroup>
@@ -41,6 +42,7 @@
 	
 	
   <ItemGroup>
+	  <PackageReference Include="iTextSharp" Version="5.5.13.1" />
 
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
@@ -62,6 +64,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
