@@ -64,6 +64,7 @@ namespace GeneXus.Http.Client
 		Stream _receiveStream;
 		int _timeout = 30000;
 		short _statusCode = 0;
+		int _maxConnPerRoute = Preferences.GetHttpClientMaxConnectionPerRoute();
 		string _proxyHost;
 		int _proxyPort;
 		short _errCode = 0;
@@ -71,6 +72,7 @@ namespace GeneXus.Http.Client
 		NameValueCollection _headers;
 		NameValueCollection _formVars;
 		MultiPartTemplate _multipartTemplate;
+
 
 		string _scheme = "http://";
 		string _host;
@@ -80,16 +82,20 @@ namespace GeneXus.Http.Client
 		string _url;
 		string _statusDescription = string.Empty;
 		IGxContext _context;
+		static object syncRoot = new Object();
 #if NETCORE
 		IWebProxy _proxyObject;
+		private static HttpClientHandler handlerInstance;
 #else
 		WebProxy _proxyObject;
+		private static WinHttpHandler handlerInstance;
 #endif
 		ArrayList _authCollection;
 		ArrayList _authProxyCollection;
 		X509Certificate2Collection _certificateCollection;
 		Encoding _encoding;
 		Encoding _contentEncoding;
+		
 
 		public MultiPartTemplate MultiPart
 		{
@@ -124,6 +130,29 @@ namespace GeneXus.Http.Client
 			}
 		}
 
+#if NETCORE
+		private HttpClientHandler GetHandler()
+		{
+			lock (syncRoot)
+			{
+				if (handlerInstance == null)
+					handlerInstance = new HttpClientHandler();
+				handlerInstance.MaxConnectionsPerServer = _maxConnPerRoute;
+			}
+			return handlerInstance;
+		}
+#else
+		private WinHttpHandler GetHandler()
+		{
+			lock (syncRoot)
+			{
+				if (handlerInstance == null)
+					handlerInstance = new WinHttpHandler();
+				handlerInstance.MaxConnectionsPerServer = _maxConnPerRoute;
+			}
+			return handlerInstance;
+		}
+#endif
 		public GxHttpClient(IGxContext context) : this()
 		{
 			_context = context;
@@ -586,20 +615,17 @@ namespace GeneXus.Http.Client
 			HttpClient client;
 			int BytesRead;
 			Byte[] Buffer = new Byte[1024];
-#if NETCORE
-			HttpClientHandler handler;
-#else
-			WinHttpHandler handler;
-#endif
+
 			request = new HttpRequestMessage();
 			request.RequestUri = new Uri(requestUrl);
 #if NETCORE
-			handler = new HttpClientHandler();
+			HttpClientHandler handler = GetHandler();
 			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
 #else
-			handler = new WinHttpHandler();
+			WinHttpHandler handler = GetHandler();
 			handler.ServerCredentials = getCredentialCache(request.RequestUri, _authCollection);
 #endif
+
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -617,6 +643,7 @@ namespace GeneXus.Http.Client
 			client = new HttpClient(handler);
 			client.Timeout = TimeSpan.FromMilliseconds(_timeout);
 			client.BaseAddress = request.RequestUri;
+
 			using (MemoryStream reqStream = new MemoryStream())
 			{
 				sendVariables(reqStream);
@@ -701,7 +728,7 @@ namespace GeneXus.Http.Client
 				HttpClientExecute(method, name);
 			}
 		}
-		
+
 		public void HttpClientExecute(string method, string name)
 		{
 			HttpResponseMessage response = null;
