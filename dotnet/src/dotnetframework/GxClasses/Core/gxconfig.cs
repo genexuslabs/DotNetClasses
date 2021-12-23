@@ -743,6 +743,7 @@ namespace GeneXus.Configuration
 		const string NO = "0";
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";
+		static int httpclient_max_per_route = -1;
 		internal static string DefaultDatastore
 		{
 			get
@@ -1290,6 +1291,32 @@ namespace GeneXus.Configuration
 				return theme;
 			else
 				return "";
+		}
+
+		public static int GetHttpClientMaxConnectionPerRoute()
+		{
+			if (httpclient_max_per_route == 0)
+			{
+				try
+				{
+					string strmax;
+					if (Config.GetValueOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
+					{
+						httpclient_max_per_route = Convert.ToInt32(strmax);
+					}
+					else
+					{
+						httpclient_max_per_route = 1000;
+					}
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, "HttpClientMaxPerRoute error", ex);
+					httpclient_max_per_route = 1000;
+				}
+			}
+			return httpclient_max_per_route;
+
 		}
 	}
 }
