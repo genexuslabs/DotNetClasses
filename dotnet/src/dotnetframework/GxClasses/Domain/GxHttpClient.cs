@@ -64,7 +64,7 @@ namespace GeneXus.Http.Client
 		Stream _receiveStream;
 		int _timeout = 30000;
 		short _statusCode = 0;
-		int _maxConnPerRoute = Preferences.GetHttpClientMaxConnectionPerRoute();
+		static int _maxConnPerRoute = Preferences.GetHttpClientMaxConnectionPerRoute();
 		string _proxyHost;
 		int _proxyPort;
 		short _errCode = 0;
