@@ -356,7 +356,9 @@ namespace GxClasses.Web.Middleware
 			else
 			{
 				string controllerLower = controller.ToLower();
-				string svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
+				string svcFile = Path.Combine(ContentRootPath, $"{controller}.svc");
+				if (!File.Exists(svcFile))
+					svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
 				if (File.Exists(svcFile))
 				{
 					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
