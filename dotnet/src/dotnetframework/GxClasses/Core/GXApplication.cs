@@ -3634,7 +3634,7 @@ namespace GeneXus.Application
 
 												if (parts.Length > 5 && !string.IsNullOrEmpty(parts[5]))
 												{
-													foreach (string density in parts[5].Split('|'))
+													foreach (string density in parts[5].Split('|', StringSplitOptions.RemoveEmptyEntries))
 													{
 														if (!m_imagesDensity.ContainsKey(imagePath))
 															m_imagesDensity[imagePath] = new HashSet<string>();
