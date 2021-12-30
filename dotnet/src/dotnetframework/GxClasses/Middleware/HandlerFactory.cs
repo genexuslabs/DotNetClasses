@@ -52,7 +52,7 @@ namespace GeneXus.HttpHandlerFactory
 				String objClass = GXAPIModule.servicesBase[actualPath];
 				if (cname0.LastIndexOf("/") == (cname0.Length - 1))
 					cname0 = cname0.Substring(0, cname0.Length - 1);
-				String objectName = cname0.Substring(cname0.LastIndexOf("/") + 1);
+				String objectName = cname0.Remove(0, actualPath.Length);
 				if (GXAPIModule.servicesMapData.ContainsKey(actualPath) &&
 					GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out String mapName))
 				{
@@ -143,18 +143,27 @@ namespace GeneXus.HttpHandlerFactory
 			}
             if (objType != null)
             {
-				try
+				if (!objType.IsAssignableFrom(typeof(IHttpHandler)))
 				{
-					handlerToReturn = (IHttpHandler)Activator.CreateInstance(objType, null);
+					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+					handlerToReturn=null;
+					GXLogging.Error(log, objType.FullName + " is not an Http Service");
 				}
-				catch (Exception e)
+				else
 				{
-					GXLogging.Error(log, "GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").", e);
-					GXLogging.Error(log, "Inner Exception", e.InnerException);
-					throw e;
+					try
+					{
+						handlerToReturn = (IHttpHandler)Activator.CreateInstance(objType, null);
+					}
+					catch (Exception e)
+					{
+						GXLogging.Error(log, "GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").", e);
+						GXLogging.Error(log, "Inner Exception", e.InnerException);
+						throw e;
+					}
 				}
-            }
-            else
+			}
+			else
             {
                 
                 handlerToReturn = (IHttpHandler)System.Web.UI.PageParser.GetCompiledPageInstance(url, pathTranslated, context);

@@ -19,6 +19,8 @@ using TZ4Net;
 using GxClasses.Helpers;
 using System.Net;
 #endif
+using NUglify;
+using NUglify.Html;
 using GeneXus.Web.Security;
 
 using System.Web;
@@ -39,6 +41,8 @@ using System.Collections.Concurrent;
 using System.Drawing.Drawing2D;
 using GeneXus.Storage;
 using GeneXus.Services;
+using GeneXus.Http;
+using System.Security;
 
 namespace GeneXus.Utils
 {
@@ -59,10 +63,10 @@ namespace GeneXus.Utils
 		{
 			lock (random)
 			{
-				var bytes = new Byte[8];
+				byte[] bytes = new Byte[8];
 				random.GetBytes(bytes);
 
-				var ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11);
+				ulong ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11);
 				double d = ul / (double)(1UL << 53);
 				return d;
 			}
@@ -2636,13 +2640,13 @@ namespace GeneXus.Utils
 
 		static public DateTime AddMth(DateTime dt, int cantMonths)
 		{
-			if (dt == nullDate && cantMonths < 0)
+			if (dt == nullDate && (cantMonths < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddMonths(cantMonths);
 		}
 		static public DateTime AddYr(DateTime dt, int cantYears)
 		{
-			if (dt == nullDate && cantYears < 0)
+			if (dt == nullDate && (cantYears < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddYears(cantYears);
         }
@@ -2697,13 +2701,13 @@ namespace GeneXus.Utils
 		}
 		static public DateTime TAdd(DateTime dt, int seconds)
 		{
-			if (dt == nullDate && seconds < 0)
+			if (dt == nullDate && (seconds < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddSeconds(seconds);
 		}
 		static public DateTime TAddMs(DateTime dt, double seconds)
 		{
-			if (dt == nullDate && seconds < 0)
+			if (dt == nullDate && (seconds < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			if (seconds % 1 == 0)
 				return dt.AddSeconds((int)seconds);
@@ -2712,7 +2716,7 @@ namespace GeneXus.Utils
 		}
 		static public DateTime DAdd(DateTime dt, int days)
 		{
-			if (dt == nullDate && days < 0)
+			if (dt == nullDate && (days < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddDays(days);
 		}
@@ -2865,10 +2869,13 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(dt.Year,dt.Month,dt.Day,0,0,0,0);
 			//return dtRet; 
 			//This is more efficient than creating a new datetime..
-			dt = dt.AddMilliseconds(dt.Millisecond * -1);
-			dt = dt.AddSeconds(dt.Second * -1);
-			dt = dt.AddMinutes(dt.Minute * -1);
-			dt = dt.AddHours(dt.Hour * -1);
+			if (dt.Millisecond != 0 || dt.Second != 0 || dt.Minute != 0 || dt.Hour != 0)
+			{
+				dt = dt.AddMilliseconds(dt.Millisecond * -1);
+				dt = dt.AddSeconds(dt.Second * -1);
+				dt = dt.AddMinutes(dt.Minute * -1);
+				dt = dt.AddHours(dt.Hour * -1);
+			}
 			return dt;
 		}
 		public static DateTime ResetDate(DateTime dt)
@@ -2876,9 +2883,12 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(1,1,1,dt.Hour,dt.Minute,dt.Second);
 			//return dtRet;
 			//This is more efficient than creating a new datetime.
-			dt = dt.AddDays((dt.Day * -1) + 1);
-			dt = dt.AddMonths((dt.Month * -1) + 1);
-			dt = dt.AddYears((dt.Year * -1) + 1);
+			if (dt.Day != 1 || dt.Month != 1 || dt.Year != 1)
+			{
+				dt = dt.AddDays((dt.Day * -1) + 1);
+				dt = dt.AddMonths((dt.Month * -1) + 1);
+				dt = dt.AddYears((dt.Year * -1) + 1);
+			}
 			return dt;
 		}
 		public static DateTime ResetMilliseconds(DateTime dt)
@@ -2886,7 +2896,10 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(dt.Year,dt.Month,dt.Day,dt.Hour,dt.Minute,dt.Second,0);
 			//reutrn dtRet;
 			//This is more efficient than creating a new datetime.
-			dt = dt.AddMilliseconds(dt.Millisecond * -1);
+			if (dt.Millisecond != 0)
+			{
+				dt = dt.AddMilliseconds(dt.Millisecond * -1);
+			}
 			return dt;
 		}
 		public static DateTime ResetMillisecondsTicks(DateTime dt)
@@ -4025,7 +4038,20 @@ namespace GeneXus.Utils
 			string number = padding + character.ToString();
 			buffer.Append("&#" + number + ";");
 		}
-
+		[SecuritySafeCritical]
+		public static string HTMLClean(string text)
+		{
+			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true };
+			htmlSettings.RemoveScriptStyleTypeAttribute = false;
+			htmlSettings.RemoveOptionalTags = false;
+			htmlSettings.AttributeQuoteChar = '\'';
+			htmlSettings.RemoveAttributeQuotes = false;
+			htmlSettings.MinifyCss = false;
+			htmlSettings.MinifyCssAttributes = false;
+			htmlSettings.MinifyJsAttributes = false;
+			htmlSettings.MinifyJs = false;
+			return Uglify.Html(text, htmlSettings).Code;
+		}
 		static public string ValueEncode(string sText)
 		{
 			return ValueEncode(sText, false, false);
@@ -4288,7 +4314,7 @@ namespace GeneXus.Utils
 				return null;
 			else
 			{
-				var basicAuthenticationHeader = context.Request.Headers["Authorization"]
+				string basicAuthenticationHeader = context.Request.Headers["Authorization"]
 					.FirstOrDefault(header => header.StartsWith("Basic", StringComparison.OrdinalIgnoreCase));
 				var decodedHeader = new BasicAuthenticationHeaderValue(basicAuthenticationHeader);
 				return decodedHeader;
@@ -4364,9 +4390,8 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-
-		[Obsolete("UserId with string dataSource is deprecated, use UserId((string key, IGxContext cntxt, IDataStoreProvider dataStore) instead", false)]
-		public static string UserId(string key, IGxContext cntxt, string id)
+		[Obsolete("UserId(string key, IGxContext cntxt, string dataSource) with string dataSource is deprecated, use UserId((string key, IGxContext cntxt, IDataStoreProvider dataStore) instead", false)]
+		public static string UserId(string key, IGxContext cntxt, string dataSource)
 		{
 			try
 			{
@@ -4374,7 +4399,7 @@ namespace GeneXus.Utils
 				if (key.ToUpper() == "SERVER" && !(Config.GetValueOf("LOGIN_AS_USERID", out prop) && prop.Equals("1")))
 				{
 					GXLogging.Debug(log, "UserId= user in ConnectionString");
-					IGxDataStore dstore = cntxt.GetDataStore(id);
+					IGxDataStore dstore = cntxt.GetDataStore(dataSource);
 					if (dstore != null)
 						return (dstore.UserId);
 				}
@@ -4532,15 +4557,6 @@ namespace GeneXus.Utils
 			return Entry;
 		}
 
-#if NETCORE
-        private static string WrkSt(IGxContext gxContext, object httpContext)
-
-        {
-        return string.Empty;
-        }
-#else
-
-
 		private static string WrkSt(IGxContext gxContext, HttpContext httpContext)
 		{
 			try
@@ -4555,9 +4571,10 @@ namespace GeneXus.Utils
 				else if (httpContext != null)
 				{
 					if ((Config.GetValueOf("WRKST_COMPATIBILITY", out prop) && prop.Equals("1"))) //WRKST_COMPATIBILITY=YES at config.gx
-						wrkst = httpContext.Server.MachineName;
+						wrkst = httpContext.GetServerMachineName();
 					else
-						wrkst = httpContext.Request.UserHostAddress;
+						wrkst = httpContext.GetUserHostAddress();
+
 					GXLogging.Debug(log, "WrkSt= &HttpRequest.Remoteaddress");
 				}
 				else //Win
@@ -4573,7 +4590,6 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-#endif
 
 		internal static string NormalizeEncodingName(string enc1)
 		{

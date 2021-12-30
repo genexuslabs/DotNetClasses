@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<AssemblyName>GxXsl</AssemblyName>
+		<RootNamespace>GxXsl</RootNamespace>
+		<PackageTags>XML xsl apply</PackageTags>
+		<PackageId>GeneXus.Xsl.Core</PackageId>
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\..\dotnetframework\GxXsl\XslApply.cs" Link="XslApply.cs" />
+	</ItemGroup>
+
+</Project>
