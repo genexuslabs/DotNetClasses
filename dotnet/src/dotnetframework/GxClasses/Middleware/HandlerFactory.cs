@@ -27,12 +27,8 @@ namespace GeneXus.HttpHandlerFactory
 			string fname = relativeURL.Substring(relativeURL.LastIndexOf('~') + 2);
 			string cname0 = (fname.Contains("."))? fname.Substring(0, fname.LastIndexOf('.')).ToLower():fname.ToLower();
 			string actualPath = "";
-
-			if (cname0 == "gxreor")
-			{
-				return new GeneXus.Http.GXReorServices();
-			}
-			else if (cname0 == "gxoauthlogout")
+			
+			if (cname0 == "gxoauthlogout")
 			{
 				return new GeneXus.Http.GXOAuthLogout();
 			}
@@ -71,10 +67,10 @@ namespace GeneXus.HttpHandlerFactory
 							asssemblycontroller = addNspace + "." + tmpController;
 							nspace += "." + addNspace;
 						}
-						GxContext gxContext = GxContext.CreateDefaultInstance();
-						object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
+						var gxContext = GxContext.CreateDefaultInstance();
+						var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
 						gxContext.HttpContext = context;
-						GxRestWrapper restWrapper = new GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias);
+						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value.ServiceMethod, value.VariableAlias);
 						return restWrapper;
 					}
 				}
@@ -147,7 +143,7 @@ namespace GeneXus.HttpHandlerFactory
 			}
             if (objType != null)
             {
-				if (!typeof(IHttpHandler).IsAssignableFrom(objType))
+				if (!objType.IsAssignableFrom(typeof(IHttpHandler)))
 				{
 					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
 					handlerToReturn=null;
