@@ -150,7 +150,7 @@ namespace GeneXus.HttpHandlerFactory
 				if (!typeof(IHttpHandler).IsAssignableFrom(objType))
 				{
 					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-					handlerToReturn=null;
+					handlerToReturn = null;
 					GXLogging.Error(log, objType.FullName + " is not an Http Service");
 				}
 				else
@@ -169,7 +169,6 @@ namespace GeneXus.HttpHandlerFactory
 			}
 			else
             {
-                
                 handlerToReturn = (IHttpHandler)System.Web.UI.PageParser.GetCompiledPageInstance(url, pathTranslated, context);
             }
 			return handlerToReturn;
