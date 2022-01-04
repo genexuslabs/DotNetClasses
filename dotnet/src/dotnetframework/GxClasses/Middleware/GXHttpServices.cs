@@ -73,8 +73,8 @@ namespace GeneXus.Http
 				if (!Config.GetValueOf("AppMainNamespace", out nspace))
 					nspace = "GeneXus.Programs";
 #if NETCORE
-				var controllerInstance = ClassLoader.FindInstance(gxobj, nspace, gxobj, new Object[] { context }, Assembly.GetEntryAssembly());
-				GXProcedure proc = controllerInstance as GXProcedure;
+				object controllerInstance = ClassLoader.FindInstance(gxobj, nspace, gxobj, new Object[] { context }, Assembly.GetEntryAssembly());
+				GXBaseObject proc = controllerInstance as GXBaseObject;
 				if (proc != null)
 				{
 					handler = new GxRestWrapper(proc, localHttpContext, context as GxContext);

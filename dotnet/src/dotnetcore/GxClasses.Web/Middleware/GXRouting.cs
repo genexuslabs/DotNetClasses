@@ -173,7 +173,7 @@ namespace GxClasses.Web.Middleware
 						controllerWithParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
 						if (String.IsNullOrEmpty(controllerWithParms) && !String.IsNullOrEmpty(actualPath))
 						{
-							var controllerPath = path.ToLower().Split(actualPath).Last<string>();
+							string controllerPath = path.ToLower().Split(actualPath).Last<string>();
 							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
 						}					
 					}
@@ -347,7 +347,7 @@ namespace GxClasses.Web.Middleware
 				controller = tmpController;
 				GXLogging.Debug(log, $"FindController:{controller} namespace:{nspace} assembly:{asssemblycontroller}");
 				object controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-				GXProcedure proc = controllerInstance as GXProcedure;
+				GXBaseObject proc = controllerInstance as GXBaseObject;
 				if (proc != null)
 					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias);
 				else
@@ -372,7 +372,7 @@ namespace GxClasses.Web.Middleware
 					else
 						nspace = string.Empty;
 					object controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-					GXProcedure proc = controllerInstance as GXProcedure;
+					GXBaseObject proc = controllerInstance as GXBaseObject;
 					if (proc != null)
 						return new GxRestWrapper(proc, context, gxContext, methodName, methodPattern);
 					else
