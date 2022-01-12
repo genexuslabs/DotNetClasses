@@ -1,4 +1,4 @@
-﻿using SecurityAPICommons.Commons;
+using SecurityAPICommons.Commons;
 using SecurityAPICommons.Config;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.Utilities.Encoders;
@@ -78,5 +78,33 @@ namespace SecurityAPICommons.Encoders
             this.error.cleanError();
             return result;
         }
-    }
+
+		[SecuritySafeCritical]
+		public bool isHexa(String input)
+		{
+			this.error.cleanError();
+			try
+			{
+				Hex.Decode(fixString(input));
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+			return true;
+		}
+
+		private String fixString(String input)
+		{
+			if (!input.Contains("-"))
+			{
+				return input;
+			}
+			else
+			{
+				String inputStr = input.Replace("-", "");
+				return inputStr;
+			}
+		}
+	}
 }
