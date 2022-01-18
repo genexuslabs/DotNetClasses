@@ -22,7 +22,7 @@
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" PrivateAssets="All" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" PrivateAssets="All" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" PrivateAssets="All" />
-		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.2.3" />
+		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.2.3" PrivateAssets="All" />
 	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj">
