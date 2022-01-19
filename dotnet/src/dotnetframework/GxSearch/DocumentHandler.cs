@@ -14,12 +14,12 @@ using log4net;
 using GeneXus.Search;
 using System.Runtime.CompilerServices;
 using System.Reflection;
-using iTextSharp.text.pdf;
-using iTextSharp.text.pdf.parser;
 using System.Collections.Concurrent;
 
 using NUglify;
 using NUglify.Html;
+using UglyToad.PdfPig.Content;
+using UglyToad.PdfPig;
 
 namespace GeneXus.Utils
 {
@@ -291,17 +291,18 @@ namespace GeneXus.Utils
             StringBuilder text = new StringBuilder();
 
             if (File.Exists(fileName) && fileName.EndsWith(".pdf"))
-            {                
-                PdfReader pdfReader = new PdfReader(fileName);                
-                for (int page = 1; page <= pdfReader.NumberOfPages; page++)
-                {                    
-                    ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
-                    string currentText = PdfTextExtractor.GetTextFromPage(pdfReader, page, strategy);
+            {
 
-                    currentText = Encoding.UTF8.GetString(ASCIIEncoding.Convert(Encoding.Default, Encoding.UTF8, Encoding.Default.GetBytes(currentText)));
-                    text.Append(currentText);
-                }
-                pdfReader.Close();
+				using (PdfDocument document = PdfDocument.Open(fileName))
+				{
+					foreach (Page page in document.GetPages())
+					{
+						string currentText = page.Text;
+
+						text.Append(currentText);
+						text.Append(' ');
+					}
+				}
             }
             return text.ToString();
         }
