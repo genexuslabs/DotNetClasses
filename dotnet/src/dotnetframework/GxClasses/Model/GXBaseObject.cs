@@ -14,12 +14,27 @@ namespace GeneXus.Application
 	{
 		private Dictionary<string, string> callTargetsByObject = new Dictionary<string, string>();
 		protected IGxContext _Context;
+		bool _isMain;
+		protected bool _isApi;
+
 		public virtual IGxContext context
 		{
 			set { _Context = value; }
 			get { return _Context; }
 			
 		}
+		public bool IsMain
+		{
+			set { _isMain = value; }
+			get { return _isMain; }
+		}
+		public bool IsApiObject
+		{
+			set { _isApi = value; }
+			get { return _isApi; }
+		}
+		public virtual void cleanup() { }
+
 		virtual public bool UploadEnabled() { return false; }
 		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
 		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
