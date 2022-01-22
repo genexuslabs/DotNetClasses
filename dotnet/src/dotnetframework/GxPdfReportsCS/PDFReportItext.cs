@@ -1245,7 +1245,13 @@ namespace com.genexus.reports
 				
 				try
 				{
-					IEnumerable objects = (IEnumerable)ClassLoader.InvokeStatic(iTextAssembly, typeof(HTMLWorker).FullName, "ParseToList", new object[] { new StringReader(sTxt), styles });
+					PdfPCell cell = GetPdfCell();
+					PdfPTable t = GetPdfTable(rightAux - leftAux);
+
+					bool firstPar = true;
+					ICollection objects = (ICollection)ClassLoader.InvokeStatic(iTextAssembly, typeof(HTMLWorker).FullName, "ParseToList", new object[] { new StringReader(sTxt), styles });
+					bool drawWithTable = IsItext4() && DrawWithTable(objects);
+					
 					foreach (object element in objects)
 					{
 						if (PageHeightExceeded(bottomAux, drawingPageHeight))
@@ -1259,24 +1265,54 @@ namespace com.genexus.reports
 
 								bottomAux -= drawingPageHeight;
 
+								if (drawWithTable)
+								{
+									ClassLoader.Invoke(t, "AddCell", new object[] { cell });
+									t.WriteSelectedRows(0, -1, leftAux + leftMargin, drawingPageHeight - topAux, cb);
+								}
+
 								GxEndPage();
 								GxStartPage();
 								simulationCol = new ColumnText(null);
 								SetSimpleColumn(simulationCol, rect);
 								simulationCol.AddElement((IElement)element);
 
-								Col = new ColumnText(cb);
-								Col.Alignment = ColumnAlignment(alignment);
-								SetSimpleColumn(Col, rect);
+								if (drawWithTable)
+								{
+									cell = GetPdfCell();
+									t = GetPdfTable(rightAux - leftAux);
+								}
+								else
+								{
+									Col = new ColumnText(cb);
+									Col.Alignment = ColumnAlignment(alignment);
+									SetSimpleColumn(Col, rect);
+								}
+
 							}
 						}
-
 						Paragraph p = element as Paragraph;
 						if (p != null)
+						{
 							p.Alignment = ColumnAlignment(alignment);
-
-						Col.AddElement((IElement)element);
-						Col.Go();
+							if (firstPar && drawWithTable)
+							{
+								p.SetLeading(0, 1);
+								firstPar = false;
+							}
+						}
+						if (drawWithTable)
+							cell.AddElement((IElement)element);
+						else
+						{
+							Col.AddElement((IElement)element);
+							Col.Go();
+						}
+					}
+					if (drawWithTable)
+					{
+						ClassLoader.Invoke(t, "AddCell", new object[] { cell });
+						t.WriteSelectedRows(0, -1, leftAux + leftMargin, drawingPageHeight - topAux, cb);
 					}
 				}
 				catch (Exception ex1)
@@ -1518,6 +1554,43 @@ namespace com.genexus.reports
 					}
 				}
 			}
+		}
+
+		private PdfPTable GetPdfTable(float totalWidth)
+		{
+			PdfPTable table = new PdfPTable(1);
+			table.TotalWidth = totalWidth;
+			return table;
+		}
+
+		private PdfPCell GetPdfCell()
+		{
+			PdfPCell cell = new PdfPCell();
+			cell.Border = Rectangle.NO_BORDER;
+			cell.Padding = 0;
+			return cell;
+		}
+
+		private bool DrawWithTable(ICollection objects)
+		{
+			bool allImages = true;
+			foreach (object element in objects)
+			{
+				Paragraph p = element as Paragraph;
+				if (p != null)
+				{
+					foreach (Chunk ch in p.Chunks)
+					{
+						if (!ch.HasAttributes() || ch.Attributes["IMAGE"] == null)
+							return false;
+					}
+				}
+				else
+				{
+					allImages = false;
+				}
+			}
+			return allImages;
 		}
 
 		private int GetColorB(object backColor)
