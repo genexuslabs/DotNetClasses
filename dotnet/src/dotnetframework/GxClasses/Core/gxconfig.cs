@@ -1318,7 +1318,7 @@ namespace GeneXus.Configuration
 
 		public static int GetHttpClientMaxConnectionPerRoute()
 		{
-			if (httpclient_max_per_route == 0)
+			if (httpclient_max_per_route == -1)
 			{
 				try
 				{
