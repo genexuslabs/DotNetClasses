@@ -59,6 +59,10 @@ namespace GeneXus.HttpHandlerFactory
 		private const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
 		private const string GXFLOW_NSPACE = "GXflow.Programs";
 		private static List<string> GxNamespaces;
+
+		public HandlerFactory()
+		{
+		}
 		public HandlerFactory(RequestDelegate next, IOptions<AppSettings> appSettings)
 		{
 			_appSettings = appSettings.Value; 
