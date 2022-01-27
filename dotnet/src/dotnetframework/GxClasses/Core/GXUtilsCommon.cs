@@ -2640,13 +2640,13 @@ namespace GeneXus.Utils
 
 		static public DateTime AddMth(DateTime dt, int cantMonths)
 		{
-			if (dt == nullDate && cantMonths < 0)
+			if (dt == nullDate && (cantMonths < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddMonths(cantMonths);
 		}
 		static public DateTime AddYr(DateTime dt, int cantYears)
 		{
-			if (dt == nullDate && cantYears < 0)
+			if (dt == nullDate && (cantYears < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddYears(cantYears);
         }
@@ -2701,13 +2701,13 @@ namespace GeneXus.Utils
 		}
 		static public DateTime TAdd(DateTime dt, int seconds)
 		{
-			if (dt == nullDate && seconds < 0)
+			if (dt == nullDate && (seconds < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddSeconds(seconds);
 		}
 		static public DateTime TAddMs(DateTime dt, double seconds)
 		{
-			if (dt == nullDate && seconds < 0)
+			if (dt == nullDate && (seconds < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			if (seconds % 1 == 0)
 				return dt.AddSeconds((int)seconds);
@@ -2716,7 +2716,7 @@ namespace GeneXus.Utils
 		}
 		static public DateTime DAdd(DateTime dt, int days)
 		{
-			if (dt == nullDate && days < 0)
+			if (dt == nullDate && (days < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddDays(days);
 		}
@@ -4390,9 +4390,8 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-
-		[Obsolete("UserId with string dataSource is deprecated, use UserId((string key, IGxContext cntxt, IDataStoreProvider dataStore) instead", false)]
-		public static string UserId(string key, IGxContext cntxt, string id)
+		[Obsolete("UserId(string key, IGxContext cntxt, string dataSource) with string dataSource is deprecated, use UserId((string key, IGxContext cntxt, IDataStoreProvider dataStore) instead", false)]
+		public static string UserId(string key, IGxContext cntxt, string dataSource)
 		{
 			try
 			{
@@ -4400,7 +4399,7 @@ namespace GeneXus.Utils
 				if (key.ToUpper() == "SERVER" && !(Config.GetValueOf("LOGIN_AS_USERID", out prop) && prop.Equals("1")))
 				{
 					GXLogging.Debug(log, "UserId= user in ConnectionString");
-					IGxDataStore dstore = cntxt.GetDataStore(id);
+					IGxDataStore dstore = cntxt.GetDataStore(dataSource);
 					if (dstore != null)
 						return (dstore.UserId);
 				}

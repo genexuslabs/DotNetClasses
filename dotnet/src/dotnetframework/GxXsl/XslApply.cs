@@ -10,7 +10,11 @@ public class GxXsltImpl
 		StringReader srXml = new StringReader(xml);
 		XPathDocument xpdXml = new XPathDocument(srXml);
 		XPathDocument xpdXslt = new XPathDocument(xslFileName);
+#if NETCORE
+		xsltE.Load(xpdXslt);
+#else
 		xsltE.Load(xpdXslt, null, System.Reflection.Assembly.GetCallingAssembly().Evidence);
+#endif
 		StringWriter result = new StringWriter();
 		xsltE.Transform(xpdXml, null, result, null);
 		return result.ToString();
@@ -20,8 +24,12 @@ public class GxXsltImpl
         XslTransform xsltE = new XslTransform();
 		XPathDocument xpdXml = new XPathDocument(fileFullName);
 		XPathDocument xpdXslt = new XPathDocument(xslFileName);
-        xsltE.Load(xpdXslt, new XmlUrlResolver(), System.Reflection.Assembly.GetCallingAssembly().Evidence);
-        StringWriter result = new StringWriter();
+#if NETCORE
+        xsltE.Load(xpdXslt, new XmlUrlResolver());
+#else
+		xsltE.Load(xpdXslt, new XmlUrlResolver(), System.Reflection.Assembly.GetCallingAssembly().Evidence);
+#endif
+		StringWriter result = new StringWriter();
         xsltE.Transform(xpdXml, null, result, null);
         return result.ToString();
     }
