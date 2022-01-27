@@ -82,7 +82,10 @@ namespace GeneXus.Utils
 				{
 					using (StringReader sr = new StringReader(serialized))
 					{
-						deserialized = (T)(xmls.Deserialize(sr));
+						using (XmlReader xmlReader = XmlReader.Create(sr, new XmlReaderSettings {CheckCharacters=false }))
+						{
+							deserialized = (T)(xmls.Deserialize(xmlReader));
+						}
 					}
 				}
 				catch (InvalidOperationException ex)
@@ -163,13 +166,14 @@ namespace GeneXus.Utils
 			string s;
 			using (MemoryStream stream = new MemoryStream())
 			{
-				XmlWriter xmlw = XmlWriter.Create(stream, new System.Xml.XmlWriterSettings()
+				XmlWriter xmlw = XmlWriter.Create(stream, new XmlWriterSettings()
 				{
 					OmitXmlDeclaration = !includeHeader,
 					Indent = indentElements,
 					IndentChars = "\t",
-					Encoding = Encoding.UTF8
-				});
+					Encoding = Encoding.UTF8,
+					CheckCharacters = false
+			});
 				XmlSerializerNamespaces xmlns = new XmlSerializerNamespaces();
 				xmlns.Add(string.Empty, sNameSpace);
 				xmls.Serialize(xmlw, instance, xmlns);
