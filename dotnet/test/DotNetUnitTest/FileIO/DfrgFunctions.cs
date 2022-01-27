@@ -57,6 +57,7 @@ namespace UnitTesting
 			if (context.FileIOInstance.dfrnext() == 0)
 			{
 				code = context.FileIOInstance.dfrgtxt(out line, 10);
+				Assert.Equal(MS923_CONTENT.Substring(0, 10), line);
 				Assert.Equal(-6, code);
 			}
 			code = context.FileIOInstance.dfrclose();
@@ -68,6 +69,7 @@ namespace UnitTesting
 			if (context.FileIOInstance.dfrnext() == 0)
 			{
 				code = context.FileIOInstance.dfrgtxt(out line, 10);
+				Assert.Equal(MS923_CONTENT.Substring(0,10), line);
 				Assert.Equal(-6, code);
 			}
 			code = context.FileIOInstance.dfrclose();
