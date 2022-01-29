@@ -52,26 +52,26 @@ namespace GeneXus.Application
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
 		protected HttpContext _httpContext;
 		protected IGxContext _gxContext;
-		private GXProcedure _procWorker;
+		private GXBaseObject _procWorker;
 		private const string EXECUTE_METHOD = "execute";
 		private string _serviceMethod = string.Empty;
 		private Dictionary<string, string> _variableAlias = null;
 		private string _serviceMethodPattern;
 		public bool WrappedParameter = false;
 
-		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
 		{
 			_serviceMethod = serviceMethod;
 			_variableAlias = variableAlias;
 		}
 
-		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, string serviceMethod, string serviceMethodPattern) : this(worker, context, gxContext)
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, string serviceMethodPattern) : this(worker, context, gxContext)
 		{
 			_serviceMethod = serviceMethod;
 			_serviceMethodPattern = serviceMethodPattern;
 		}
 
-		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext):this(context, gxContext)
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext):this(context, gxContext)
 		{
 			_procWorker = worker;
 		}
@@ -158,7 +158,7 @@ namespace GeneXus.Application
 			return MethodBodyExecute(null);
 		}
 
-		private void setWorkerStatus(GXProcedure _procWorker)
+		private void setWorkerStatus(GXBaseObject _procWorker)
 		{			
 			if (ReflectionHelper.HasMethod(_procWorker, "getrestcode"))
 			{
@@ -184,23 +184,23 @@ namespace GeneXus.Application
 			return ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
 		}
-		private string PreProcessReplicatorParameteres(GXProcedure procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
+		private string PreProcessReplicatorParameteres(GXBaseObject procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
 		{
 			var methodInfo = procWorker.GetType().GetMethod(innerMethod);
 			object[] parametersForInvocation = ReflectionHelper.ProcessParametersForInvoke(methodInfo, bodyParameters);
-			var synchroInfo = parametersForInvocation[1];
+			object synchroInfo = parametersForInvocation[1];
 			return synchroInfo.GetType().GetProperty(Synchronizer.SYNCHRONIZER_INFO).GetValue(synchroInfo) as string;
 
 		}
 
-		private bool IsCoreEventReplicator(GXProcedure procWorker)
+		private bool IsCoreEventReplicator(GXBaseObject procWorker)
 		{
 			return procWorker.GetType().FullName == Synchronizer.CORE_OFFLINE_EVENT_REPLICATOR; 
 		}
 
-		private void PreProcessSynchronizerParameteres(GXProcedure instance, string method, Dictionary<string, object> bodyParameters)
+		private void PreProcessSynchronizerParameteres(GXBaseObject instance, string method, Dictionary<string, object> bodyParameters)
 		{
-			var gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
+			string gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
 			GxUnknownObjectCollection hashList;
 			if (bodyParameters.ContainsKey(string.Empty))
 				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[string.Empty], typeof(GxUnknownObjectCollection));
@@ -306,7 +306,7 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-		bool GetWrappedStatus(GXProcedure worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
+		bool GetWrappedStatus(GXBaseObject worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
 		{
 			if (worker.IsApiObject)
 			{
@@ -684,9 +684,9 @@ namespace GeneXus.Application
 		{
 			string json;
 			var knownTypes = new List<Type>();
-			foreach (var k in parameters.Keys)
+			foreach (string k in parameters.Keys)
 			{
-				var val = parameters[k];
+				object val = parameters[k];
 				knownTypes.Add(val.GetType());
 			}
 			if (parameters.Count == 1 && !wrapped && !PrimitiveType(knownTypes[0])) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
@@ -718,7 +718,7 @@ namespace GeneXus.Application
 					if (ut != null)
 					{						
 						Type uType = ut.Sdt.GetType();
-						var attributes = uType.GetCustomAttributes(true);
+						object[] attributes = uType.GetCustomAttributes(true);
 						GxJsonName jsonName = (GxJsonName) attributes.Where(a => a.GetType() == typeof(GxJsonName)).FirstOrDefault();
 						if (jsonName != null)
 							strKey = jsonName.Name;
@@ -767,8 +767,7 @@ namespace GeneXus.Application
 
 		private static void RestProcess(Dictionary<string, object> outputParameters)
 		{
-			
-			foreach (var k in outputParameters.Keys.ToList())
+			foreach (string k in outputParameters.Keys.ToList())
 			{
 				GxUserType p = outputParameters[k] as GxUserType;
 				if ((p != null) && !p.ShouldSerializeSdtJson())

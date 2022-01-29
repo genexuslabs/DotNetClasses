@@ -148,7 +148,7 @@ namespace GxClasses.Helpers
 						}
 						else
 						{
-							var foundDlls = Directory.GetFileSystemEntries(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), assemblyName.Name + ".dll", SearchOption.AllDirectories);
+							string[] foundDlls = Directory.GetFileSystemEntries(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), assemblyName.Name + ".dll", SearchOption.AllDirectories);
 							if (foundDlls.Any())
 							{
 								ass = LoadFromAssemblyPath(foundDlls[0]);
@@ -162,7 +162,7 @@ namespace GxClasses.Helpers
 				}
 				catch (FileNotFoundException) //>ExecutingAssembly>.deps.json does not exist (p.e. deployed procs command line)
 				{
-					var assemblyPath = Path.Combine(folderPath, assemblyName.Name + ".dll");
+					string assemblyPath = Path.Combine(folderPath, assemblyName.Name + ".dll");
 					if (File.Exists(assemblyPath))
 					{
 						ass = Default.LoadFromAssemblyPath(assemblyPath);

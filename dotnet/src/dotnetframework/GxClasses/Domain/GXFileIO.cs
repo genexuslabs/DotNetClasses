@@ -1111,7 +1111,6 @@ public class GxFile
 	}
     public string XsltApply(string xslFileName)
     {
-#if !NETCORE
         XmlReaderSettings readerSettings = new XmlReaderSettings();
         readerSettings.CheckCharacters = false;
         try
@@ -1123,9 +1122,6 @@ public class GxFile
             GXLogging.Warn(log, "XsltApply Error", ex);
             return GxXsltImpl.ApplyOld(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
-#else
-		return string.Empty;
-#endif
 	}
 	[MethodImpl(MethodImplOptions.Synchronized)]
     public string HtmlClean()
@@ -1133,18 +1129,28 @@ public class GxFile
         try
         {
 #if !NETCORE
-			object rawDoc = Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll")).CreateInstance("NTidy.TidyDocument");
-            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg")))
-            {
-                rawDoc.GetType().GetMethod("LoadConfig").Invoke(rawDoc, new object[] { Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg") });
-            }
-            rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { _file.FullName });
-            rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
-            String htmlcleaned = (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
-			return htmlcleaned;
-#else
-			return GXUtil.HTMLClean(ReadAllText(string.Empty));
+			Assembly ntidy=null;
+			try
+			{
+				ntidy =  Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll"));
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Warn(log, "Error loading ntidy", ex);
+			}
+			if (ntidy!=null)
+			{
+				object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
+				if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg")))
+				{
+					rawDoc.GetType().GetMethod("LoadConfig").Invoke(rawDoc, new object[] { Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg") });
+				}
+				rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { _file.FullName });
+				rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
+				return (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
+			}
 #endif
+			return GXUtil.HTMLClean(ReadAllText(string.Empty));
         }
         catch (Exception ex)
         {

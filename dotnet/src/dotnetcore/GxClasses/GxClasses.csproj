@@ -168,13 +168,14 @@
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" PrivateAssets="All" />
 		<PackageReference Include="System.Drawing.Common" Version="4.7.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" PrivateAssets="All" />
-		<PackageReference Include="NUglify" Version="1.13.11" PrivateAssets="All"/>
+		<PackageReference Include="NUglify" Version="1.16.4" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+		<ProjectReference Include="..\GxXsl\GxXsl.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
