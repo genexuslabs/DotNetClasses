@@ -1939,7 +1939,7 @@ namespace GeneXus.Application
 			String userAgent;
 			try
 			{
-				if (_HttpContext != null)
+				if (_HttpContext != null && _HttpContext.Request!=null)
 					userAgent = _HttpContext.Request.GetUserAgent();
 				else
 					return 0;
@@ -2737,11 +2737,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-#if NETCORE
-				return _HttpContext.Connection.RemoteIpAddress.ToString();
-#else
-                return _HttpContext.Request.UserHostAddress;
-#endif
+				return _HttpContext.GetUserHostAddress();
 			}
 			catch
 			{
@@ -3023,8 +3019,11 @@ namespace GeneXus.Application
 															 new string[] {"rtf"	, "text/rtf"},
 															 new string[] {"a3gpp"  , "audio/3gpp"},
 															 new string[] {"aif"    , "audio/x-aiff"},
+															 new string[] {"aif"    , "audio/aiff"},
 															 new string[] {"au"		, "audio/basic"},
 															 new string[] {"m4a"    , "audio/mp4"},
+															 new string[] {"m4a"    , "audio/x-m4a"},
+															 new string[] {"mp4"    , "video/mp4"},
 															 new string[] {"mp3"    , "audio/mpeg"},
 															 new string[] {"wav"    , "audio/wav"},
 															 new string[] {"wav"    , "audio/x-wav"},
@@ -3047,7 +3046,6 @@ namespace GeneXus.Application
 															 new string[] {"mov"    , "video/quicktime"},
 															 new string[] {"qt"		, "video/quicktime"},
 															 new string[] {"avi"    , "video/x-msvideo"},
-															 new string[] {"mp4"    , "video/mp4"},
 															 new string[] {"divx"   , "video/x-divx"},
 															 new string[] {"3gp"    , "video/3gpp"},
 															 new string[] {"3g2"    , "video/3gpp2"},
@@ -3061,6 +3059,7 @@ namespace GeneXus.Application
 															 new string[] {"zip"    , "application/x-zip-compressed"},
 															 new string[] {"tar"    , "application/x-tar"},
 															 new string[] {"rar"    , "application/x-rar-compressed"},
+															 new string[] {"ram"	, "audio/vnd.rn-realaudio" },
 															 new string[] {"gz"		, "application/x-gzip"}
 														 };
 
@@ -3589,7 +3588,8 @@ namespace GeneXus.Application
 						else
 							imageFiles = Directory.GetFiles(dir, "*.txt");
 
-						string KBPrefix = "";
+						string KBPrefix = String.Empty;
+						char[] densitySeparator = new char[] { '|' };
 						for (int i = 0; i < imageFiles.Length; i++)
 						{
 							if (imageFiles[i].EndsWith(IMAGES_TXT, StringComparison.OrdinalIgnoreCase))
@@ -3635,7 +3635,7 @@ namespace GeneXus.Application
 
 												if (parts.Length > 5 && !string.IsNullOrEmpty(parts[5]))
 												{
-													foreach (string density in parts[5].Split('|'))
+													foreach (string density in parts[5].Split(densitySeparator, StringSplitOptions.RemoveEmptyEntries))
 													{
 														if (!m_imagesDensity.ContainsKey(imagePath))
 															m_imagesDensity[imagePath] = new HashSet<string>();
