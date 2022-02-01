@@ -41,6 +41,11 @@ namespace GeneXus.Application
 		public bool IsSynchronizer2 { get { return IsSynchronizer; } }
 		public string ExecutePermissionPrefix2 { get { return ExecutePermissionPrefix; } }
 
+		public virtual string ServiceExecutePermissionPrefix { get { return string.Empty; } }
+		public virtual string ServiceDeletePermissionPrefix { get { return string.Empty; } }
+		public virtual string ServiceInsertPermissionPrefix { get { return string.Empty; } }
+		public virtual string ServiceUpdatePermissionPrefix { get { return string.Empty; } }
+
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
 		protected virtual bool IsSynchronizer { get { return false; } }
