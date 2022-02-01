@@ -49,7 +49,7 @@ namespace GeneXus.Application
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
 		protected virtual bool IsSynchronizer { get { return false; } }
-		protected virtual string ExecutePermissionPrefix { get { return ""; } }
+		protected virtual string ExecutePermissionPrefix { get { return String.Empty; } }
 
 		public virtual void CallWebObject(string url)
 		{
