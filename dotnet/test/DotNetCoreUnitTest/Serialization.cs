@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Encryption;
 using GeneXus.Http;
-using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
 using Xunit;
 
@@ -22,6 +22,15 @@ namespace xUnitTesting
 
 			await authMiddleware.Invoke(httpContext);
 		}
+		[Fact]
+		public async Task TestSessionCookieContainer()
+		{
+			var httpContext = new DefaultHttpContext() { Session = new MockHttpSession() };
+			var authMiddleware = new MyAuthMiddleware(next: (innerHttpContext) => Task.FromResult(0));
+
+			await authMiddleware.SessionCookieContainerSerialization(httpContext);
+		}
+
 	}
 	public class MyAuthMiddleware
 	{
@@ -30,6 +39,22 @@ namespace xUnitTesting
 		public MyAuthMiddleware(RequestDelegate next)
 		{
 			_next = next;
+		}
+		public async Task SessionCookieContainerSerialization(HttpContext context)
+		{
+			GxContext gxcontext = new GxContext();
+			gxcontext.HttpContext = context;
+			string url = "https://test.net";
+			CookieContainer container = gxcontext.GetCookieContainer(url, true);
+			Cookie cookie = new Cookie("ROUTEID", ".http3");
+			cookie.Path = "/";
+			cookie.Expires = DateTime.MinValue;
+			cookie.Domain = "test.net";
+			container.Add(cookie);
+			gxcontext.UpdateSessionCookieContainer();
+			container = gxcontext.GetCookieContainer(url, true);
+			Assert.Equal(1, container.Count);
+			await _next(context);
 		}
 
 		public async Task Invoke(HttpContext context)

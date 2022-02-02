@@ -280,9 +280,10 @@ namespace GeneXus.Utils
 			{
 				try
 				{
+					var settings = SerializationSettings(knownTypes);
 					using (MemoryStream stream = new MemoryStream(encoding.GetBytes(kbObject)))
 					{
-						DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), knownTypes);
+						DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
 #pragma warning disable SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
 						return (T)serializer.ReadObject(stream);
 #pragma warning restore SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
