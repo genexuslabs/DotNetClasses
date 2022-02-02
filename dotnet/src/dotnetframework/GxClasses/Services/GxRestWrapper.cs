@@ -82,7 +82,7 @@ namespace GeneXus.Application
 			if (_httpContext != null)_httpContext.Response.ContentType = "application/json; charset=utf-8";		
 			RunAsMain = true;
 		}
-		protected virtual GXBaseObject Worker
+		internal virtual GXBaseObject Worker
 		{
 			get { return _procWorker; }
 		}
