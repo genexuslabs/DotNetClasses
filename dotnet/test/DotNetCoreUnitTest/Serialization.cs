@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Encryption;
 using GeneXus.Http;
-using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
 using Xunit;
 
@@ -14,6 +13,7 @@ namespace xUnitTesting
 {
 	public class CoreSerializationTest
 	{
+
 		[Fact]
 		public async Task TestSessionRenew()
 		{
