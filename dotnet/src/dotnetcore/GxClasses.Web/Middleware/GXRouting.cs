@@ -173,8 +173,21 @@ namespace GxClasses.Web.Middleware
 						controllerWithParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
 						if (String.IsNullOrEmpty(controllerWithParms) && !String.IsNullOrEmpty(actualPath))
 						{
+							if (context.Request.RouteValues.Count > 0)
+							{
+								foreach (IRouter r in context.GetRouteData().Routers)
+								{
+									Route current_r = r as Route;
+									if (current_r != null)
+									{
+										path = current_r.ParsedTemplate.TemplateText;
+										break;
+									}
+								}
+							}
 							string controllerPath = path.ToLower().Split(actualPath).Last<string>();
 							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
+					
 						}					
 					}
 					else
@@ -545,6 +558,7 @@ namespace GxClasses.Web.Middleware
 		string verb = "GET";
 		string name = string.Empty;
 		string path = string.Empty;
+		string pathregexp = string.Empty;
 		string implementation = string.Empty;
 		string methodName = string.Empty;
 		Dictionary<string, string> variableAlias = new Dictionary<string, string>();
@@ -554,6 +568,9 @@ namespace GxClasses.Web.Middleware
 
 		[DataMember()]
 		public string Path { get => path; set => path = value; }
+
+		[DataMember()]
+		public string PathRegexp { get => pathregexp; set => pathregexp = value; }
 
 		[DataMember()]
 		public string ServiceMethod { get => methodName; set => methodName = value; }
