@@ -121,7 +121,7 @@ namespace GeneXus.Application
 				_procWorker.IsMain = true;
 				if (bodyParameters == null)
 					bodyParameters = ReadBodyParameters();
-
+				addPathParameters(bodyParameters);
 				if (_procWorker.IsSynchronizer2)
 				{
 					innerMethod = SynchronizerMethod();
@@ -269,7 +269,8 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				var queryParameters = ReadQueryParameters(this._variableAlias);
+				IDictionary<string,object> queryParameters = ReadQueryParameters(this._variableAlias);
+				addPathParameters(queryParameters);
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
 				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
@@ -413,8 +414,19 @@ namespace GeneXus.Application
 				}
 			}
 			return parameters;
+		} 
+		
+		protected void addPathParameters(IDictionary<string, object> parameters)
+		{
+#if NETCORE
+			var route = _httpContext.Request.RouteValues;
+			foreach (KeyValuePair<string, object> kv in route)
+			{
+				parameters.Add(kv.Key, kv.Value);
+			}
+#endif
 		}
-
+		
 		public bool IsRestParameter(string parameterName)
 		{
 			try
