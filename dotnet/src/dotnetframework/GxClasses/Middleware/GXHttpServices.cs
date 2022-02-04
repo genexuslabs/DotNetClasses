@@ -73,6 +73,9 @@ namespace GeneXus.Http
 #if NETCORE
 
 				handler = new GXRouting(string.Empty).GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
+				if (handler ==null) {
+					throw new GxClassLoaderException($"{gxobj} not found");
+				}
 #else
 				string nspace;
 				if (!Config.GetValueOf("AppMainNamespace", out nspace))
