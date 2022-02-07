@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnetframework", "dotnetframework", "{F900A4AD-7249-41B4-B918-CB9E8C73747C}"
 EndProject
@@ -187,6 +187,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxXsl", "src\dotnetcore\GxXsl\GxXsl.csproj", "{30E7E437-F9B0-42B8-9144-A8E8F972B462}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXDynamicCall", "src\dotnetframework\GxDynamicCall\GXDynamicCall.csproj", "{E2DB7ED3-0E15-4B0D-B199-B84EB467DBD3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -462,6 +464,10 @@ Global
 		{30E7E437-F9B0-42B8-9144-A8E8F972B462}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30E7E437-F9B0-42B8-9144-A8E8F972B462}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30E7E437-F9B0-42B8-9144-A8E8F972B462}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2DB7ED3-0E15-4B0D-B199-B84EB467DBD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2DB7ED3-0E15-4B0D-B199-B84EB467DBD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2DB7ED3-0E15-4B0D-B199-B84EB467DBD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2DB7ED3-0E15-4B0D-B199-B84EB467DBD3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -552,6 +558,7 @@ Global
 		{B59F76D8-FDB2-4F51-89DB-F15E9BDFF1DC} = {420E8A4A-11D9-42E9-BFB7-4325EA7330B8}
 		{D97E17A4-C945-4BF3-957E-F73142C4C6D0} = {947E032A-C385-4586-96E3-FC7D2767F082}
 		{30E7E437-F9B0-42B8-9144-A8E8F972B462} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
+		{E2DB7ED3-0E15-4B0D-B199-B84EB467DBD3} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
