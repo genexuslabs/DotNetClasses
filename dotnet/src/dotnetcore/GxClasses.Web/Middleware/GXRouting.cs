@@ -384,7 +384,7 @@ namespace GxClasses.Web.Middleware
 				object controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 				GXBaseObject proc = controllerInstance as GXBaseObject;
 				if (proc != null)
-					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias);
+					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias, null);
 				else
 					GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{asssemblycontroller} nspace:{nspace} controller:{controller}");
 			}
