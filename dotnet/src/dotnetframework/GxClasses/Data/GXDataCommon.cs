@@ -346,6 +346,12 @@ namespace GeneXus.Data
 
 		public abstract IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec);
 
+		public string BuildConnectionStringImpl(string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra)
+		{
+			return BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
+		}
+
 		protected abstract string BuildConnectionString(string datasourceName, string userId, 
 			string userPassword,string databaseName, string port, string schema,  string extra); 
 
