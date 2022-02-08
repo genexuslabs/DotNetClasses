@@ -3,6 +3,7 @@ using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Data.NTier.ADO;
+using GeneXus.Diagnostics;
 using GeneXus.Management;
 using GeneXus.Reorg;
 using GeneXus.Utils;
@@ -2394,7 +2395,8 @@ namespace GeneXus.Data.ADO
 	
 	public class GxDataStore : IGxDataStore
 	{
-        string id;
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDataStore));
+		string id;
 		IGxConnection connection;
 		int handle;		
 		GxDataRecord datarecord;
@@ -2482,6 +2484,20 @@ namespace GeneXus.Data.ADO
                 if (cfgBuf.IndexOf(',') > 0)
                     cfgBuf = cfgBuf.Split(',')[0];
 				datarecord = getDbmsDataRecord(id, cfgBuf);
+				if (Config.GetValueOf("CustomDataRecord", out string customDataRecordFullyQualifiedName))
+				{
+					try
+					{
+						Type customDataReader = Type.GetType(customDataRecordFullyQualifiedName, false);
+						if (customDataReader!=null)
+						{
+							datarecord = (GxDataRecord)Activator.CreateInstance(customDataReader, datarecord);
+						}
+					}catch (Exception ex)
+{
+						GXLogging.Error(log, "Error creating CustomDataRecord " + customDataRecordFullyQualifiedName, ex);
+					}
+				}
 			}
 			else
 			{
