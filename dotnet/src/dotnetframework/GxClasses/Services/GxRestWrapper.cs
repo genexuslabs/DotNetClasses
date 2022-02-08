@@ -427,9 +427,12 @@ namespace GeneXus.Application
 				parameters.Add(kv.Key, kv.Value);
 			}
 #else
-			foreach(KeyValuePair<string,object> kv in _routeParms)
+			if(_routeParms != null)
 			{
-				parameters.Add(kv.Key, kv.Value);
+				foreach(KeyValuePair<string,object> kv in _routeParms)
+				{
+					parameters.Add(kv.Key, kv.Value);
+				}
 			}
 #endif
 		}
