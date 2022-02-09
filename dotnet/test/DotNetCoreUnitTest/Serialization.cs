@@ -14,6 +14,7 @@ namespace xUnitTesting
 {
 	public class CoreSerializationTest
 	{
+
 		[Fact]
 		public async Task TestSessionRenew()
 		{
