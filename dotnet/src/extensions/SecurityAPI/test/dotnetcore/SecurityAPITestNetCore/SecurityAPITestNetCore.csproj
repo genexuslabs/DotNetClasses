@@ -1,13 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net5.0</TargetFramework>
+		<TargetFramework>net6.0</TargetFramework>
 		<IsPublishable>false</IsPublishable>
 		<NoWarn>CS0618,CA1707</NoWarn>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
    
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
-  </PropertyGroup>
 
   <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
     <DefineConstants>NETCORE</DefineConstants>
