@@ -56,13 +56,15 @@ namespace GeneXus.Application
 		private const string EXECUTE_METHOD = "execute";
 		private string _serviceMethod = string.Empty;
 		private Dictionary<string, string> _variableAlias = null;
+		private Dictionary<string, object> _routeParms= null;
 		private string _serviceMethodPattern;
 		public bool WrappedParameter = false;
 
-		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias, Dictionary<string,object> routeParms) : this(worker, context, gxContext)
 		{
 			_serviceMethod = serviceMethod;
 			_variableAlias = variableAlias;
+			_routeParms = routeParms;
 		}
 
 		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, string serviceMethodPattern) : this(worker, context, gxContext)
@@ -423,6 +425,14 @@ namespace GeneXus.Application
 			foreach (KeyValuePair<string, object> kv in route)
 			{
 				parameters.Add(kv.Key, kv.Value);
+			}
+#else
+			if(_routeParms != null)
+			{
+				foreach(KeyValuePair<string,object> kv in _routeParms)
+				{
+					parameters.Add(kv.Key, kv.Value);
+				}
 			}
 #endif
 		}
