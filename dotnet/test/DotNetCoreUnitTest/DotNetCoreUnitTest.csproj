@@ -80,6 +80,9 @@
 
 
 	<ItemGroup>
+		<None Update="apps\append.svc">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="FullTextSearch\Ugly.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -132,6 +135,7 @@
 
 
 	<ItemGroup>
+	  <Folder Include="apps\" />
 	  <Folder Include="PDF\" />
 	  <Folder Include="resources\xml\" />
 	</ItemGroup>
