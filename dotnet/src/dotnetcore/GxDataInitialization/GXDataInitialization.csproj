@@ -5,6 +5,7 @@
 		<PackageTags>DataInitialization</PackageTags>
 		<PackageId>GeneXus.DataInitialization.Core</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
+		<DefineConstants>NETCORE</DefineConstants>
 	</PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
