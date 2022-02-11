@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<AssemblyName>GeneXusCryptographyNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<PackageId>GeneXus.SecurityApi.Cryptography.Core</PackageId>
