@@ -592,11 +592,6 @@ namespace TZ4Net
 		private static string[] primaryNames;
 
 		/// <summary>
-		/// Caches foreign aliases for later reuse.
-		/// </summary>
-		private static string[] foreignAliases;
-
-		/// <summary>
 		/// Holds the current timezone defined by the client. If not null, 
 		/// it overrides the the setting from TZ environment variable. 
 		/// </summary>
@@ -1563,7 +1558,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets all Olson timezone names.
 		/// </summary>
-		public static string[] AllNames
+		private static string[] AllNames
 		{
 			get 
 			{
@@ -1580,7 +1575,7 @@ namespace TZ4Net
 		/// Gets primary Olson timezone names obtained by mapping all Unicode aliased defined in 'Time Zone Localization' draft document.
 		/// See http://www.unicode.org/cldr/data/docs/design/formatting/time_zone_localization.html for more details.
 		/// </summary>
-		public static string[] AllPrimaryNames
+		private static string[] AllPrimaryNames
 		{
 			get 
 			{
@@ -1632,7 +1627,7 @@ namespace TZ4Net
 		/// <summary>
 		///  Gets zone's all daylight saving time periods.  
 		/// </summary>
-		public DaylightTime[] AllTimeChanges 
+		private DaylightTime[] AllTimeChanges 
 		{
 			get 
 			{
@@ -1798,111 +1793,15 @@ namespace TZ4Net
 
 
 		/// <summary>
-		/// Gets all supported Win32 Ids defined by Unicode CLDR supplemental data.
-		/// </summary>
-		public static string[] AllWin32Ids 
-		{
-			get 
-			{
-				Debug.Assert(UnicodeWin32Map != null);
-				return (string[])new ArrayList(UnicodeWin32Map.Keys).ToArray(typeof(string));
-			}
-		}
-
-
-		/// <summary>
-		/// Gets all supported Win32 names defined by Unicode CLDR supplemental data.
-		/// </summary>
-		public static string[] AllWin32Names 
-		{
-			get 
-			{
-				Debug.Assert(Win32NameToOlsonMap != null);
-				return (string[])new ArrayList(Win32NameToOlsonMap.Keys).ToArray(typeof(string));
-			}
-		}
-
-
-		/// <summary>
 		/// Gets all supported Unicode aliases defined in 'Time Zone Localization' draft document.
 		/// See http://www.unicode.org/cldr/data/docs/design/formatting/time_zone_localization.html
 		/// </summary>
-		public static string[] AllAliases
+		private static string[] AllAliases
 		{
 			get 
 			{
 				Debug.Assert(UnicodeAliasMap != null);
 				return (string[])new ArrayList(UnicodeAliasMap.Keys).ToArray(typeof(string));
-			}
-		}
-
-
-		/// <summary>
-		/// Gets Unicode aliases defined in 'Time Zone Localization' draft document which are not supported olson names.
-		/// See http://www.unicode.org/cldr/data/docs/design/formatting/time_zone_localization.html for more details.
-		/// Added to list new supported TZIDs introduced by Unicode mapping, like "PST", "EST" etc.
-		/// </summary>
-		public static string[] AllForeignAliases
-		{
-			get 
-			{
-				if (foreignAliases == null) 
-				{
-					ArrayList res = new ArrayList();
-					foreach(string alias in AllAliases) 
-					{
-						if (Array.IndexOf(AllNames, alias) == -1) 
-						{
-							res.Add(alias);
-						}
-					}
-					foreignAliases = (string[])res.ToArray(typeof(string));
-				}
-				return foreignAliases;
-			}
-		}
-
-				
-		/// <summary>
-		/// Gets all supported registry Win32 names.
-		/// </summary>
-		public static string[] AllRegistryWin32Names
-		{
-			get 
-			{
-				Debug.Assert(RegistryWin32NameToOlsonMap != null);
-				return (string[])new ArrayList(RegistryWin32NameToOlsonMap.Keys).ToArray(typeof(string));
-			}
-		}
-
-
-		/// <summary>
-		/// Gets all supported military/NATO letters.
-		/// </summary>
-		public static string[] AllMilitaryLetters
-		{
-			get 
-			{
-				Debug.Assert(MilitaryMap != null);
-				return (string[])new ArrayList(MilitaryMap.Keys).ToArray(typeof(string));
-			}
-		}
-
-
-		/// <summary>
-		/// Gets all supported military/NATO names.
-		/// </summary>
-		public static string[] AllMilitaryNames
-		{
-			get 
-			{
-				ArrayList res = new ArrayList();
-				Debug.Assert(MilitaryMap != null);
-				foreach(MilitaryMapValue value in MilitaryMap.Values)
-				{
-					res.Add(value.MilitaryName);
-				}
-				return (string[])res.ToArray(typeof(string));
 			}
 		}
 
@@ -2404,7 +2303,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets the list of all primary abbreviations.
 		/// </summary>
-		public static string[] AllPrimaryAbbreviations 
+		private static string[] AllPrimaryAbbreviations 
 		{
 			get 
 			{
@@ -2425,7 +2324,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets the list of all abbreviations.
 		/// </summary>
-		public static string[] AllAbbreviations 
+		private static string[] AllAbbreviations 
 		{
 			get 
 			{

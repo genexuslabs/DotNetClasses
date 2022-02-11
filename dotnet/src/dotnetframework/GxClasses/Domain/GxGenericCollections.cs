@@ -191,7 +191,7 @@ namespace GeneXus.Utils
 
 			foreach (T obj in this)
 			{
-				string xml = obj.ToXml(false, includeState, itemName, itemNamespace);
+				string xml = obj.ToXmlFixedNameAndNamespace(false, includeState, itemName, itemNamespace);
 				xml = GxUserType.UpdateNodeDefaultNamespace(xml, "", true, null);
 				oWriter.WriteRawText(xml);
 			}
@@ -239,7 +239,7 @@ namespace GeneXus.Utils
 				T currObject = new T();
 				currObject.context = this.context;
 				string xml = GxUserType.UpdateNodeDefaultNamespace(oReader.ReadRawXML(), null, false, this.GetPrefixesInContext());
-				currObject.FromXml(xml, itemName, oReader.NamespaceURI);
+				currObject.FromXmlFixedNameAndNamespace(xml, null, itemName, oReader.NamespaceURI);
 				Add(currObject);
 				oReader.Read();
 			}
@@ -270,6 +270,11 @@ namespace GeneXus.Utils
 			{
 				if (!string.IsNullOrEmpty(s))
 				{
+					if (string.IsNullOrEmpty(sName))
+						sName = GxUserType.XmlNameAttribute(typeof(T));
+					if (string.IsNullOrEmpty(sNamespace))
+						sNamespace = GxUserType.XmlNameSpaceAttribute(typeof(T));
+
 					base.Clear();
 					GXBaseCollection<T> deserialized = GXXmlSerializer.Deserialize<GXBaseCollection<T>>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);
 					GXXmlSerializer.SetSoapError(context, serializationErrors);
@@ -316,6 +321,10 @@ namespace GeneXus.Utils
 		}
 		public virtual string ToXml(bool includeHeader, bool includeState, string rootName, string sNameSpace)
 		{
+			if (string.IsNullOrEmpty(rootName))
+				rootName = GxUserType.XmlNameAttribute(typeof(T));
+			if (string.IsNullOrEmpty(sNameSpace))
+				sNameSpace = GxUserType.XmlNameSpaceAttribute(typeof(T));
 			XmlAttributeOverrides ov = null;
 			if (!includeState)
 			{
@@ -647,7 +656,6 @@ namespace GeneXus.Utils
 		}
 		private bool IsEqualComparedByKey(T item, params object[] key)
 		{
-#if !NETCORE
 			try
 			{
 				Object[][] itemKey = item.GetBCKey();
@@ -674,9 +682,6 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Error in IsEqualComparedByKey", ex);
 				return false;
 			}
-#else
-			return false;
-#endif
 		}
 	}
 }

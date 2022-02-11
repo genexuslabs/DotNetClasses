@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
 		<PackageTags>Redis</PackageTags>
 		<PackageId>GeneXus.Redis.Core</PackageId>
 	</PropertyGroup>
@@ -19,7 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.11" />
-    <PackageReference Include="ServiceStack.Redis" Version="5.1.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.593" />
   </ItemGroup>
 
   <ItemGroup>

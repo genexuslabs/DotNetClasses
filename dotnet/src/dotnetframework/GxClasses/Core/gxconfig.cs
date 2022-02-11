@@ -25,6 +25,7 @@ namespace GeneXus.Configuration
 	using System.Runtime.Serialization.Json;
 	using System.Collections.Generic;
 	using GxClasses.Helpers;
+	using System.Text;
 
 	public class Config
 	{
@@ -352,6 +353,9 @@ namespace GeneXus.Configuration
 		}
 		public static CultureInfo GetCultureForLang(string lang)
 		{
+			if (string.IsNullOrEmpty(StringUtil.Trim(lang)) && Config.GetValueOf("LANG_NAME", out string kbLanguage))
+				lang = kbLanguage;
+
 			string culture = lang;
 			switch (culture.ToLower())
 			{
@@ -395,11 +399,12 @@ namespace GeneXus.Configuration
 				return new CultureInfo(CultureInfo.CurrentCulture.Name);
 			}
 		}
-		const string Log4NetShortName = "log4net";
-		static Version Log4NetVersion = new Version(2, 0, 11);
 
 #if NETCORE
 		public static IConfigurationRoot ConfigRoot { get; set; }
+		const string Log4NetShortName = "log4net";
+		static Version Log4NetVersion = new Version(2, 0, 11);
+
 		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
@@ -430,29 +435,43 @@ namespace GeneXus.Configuration
 			return null;
 		}
 #else
+		static Dictionary<string, Version> AssemblyRedirect = new Dictionary<string, Version>
+		{
+			{"log4net", new Version(2, 0, 11) },
+			{ "System.Threading.Tasks.Extensions", new Version(4, 2, 0, 1) },
+			{ "System.Runtime.CompilerServices.Unsafe", new Version(4, 0, 4, 1) },
+			{ "System.Buffers", new Version(4, 0, 3, 0)},
+			{ "System.Memory",new Version(4, 0, 1, 1) }
+		};
+
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
 			var requestedAssembly = new AssemblyName(args.Name);
-			if (requestedAssembly.Name != Log4NetShortName)
-				return null;
-
-			requestedAssembly.Version = Log4NetVersion;
-
-			AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
-
-			return Assembly.Load(requestedAssembly);
+			if (AssemblyRedirect.ContainsKey(requestedAssembly.Name) && requestedAssembly.Version != AssemblyRedirect[requestedAssembly.Name])
+			{
+				requestedAssembly.Version = AssemblyRedirect[requestedAssembly.Name];
+				return Assembly.Load(requestedAssembly);
+			}
+			else return null;
 		}
 #endif
 		
 		static NameValueCollection config
 		{
-			[SecuritySafeCritical]
+			[SecuritySafeCritical] 
 			get
 			{
 				if (!configLoaded || _config == null)
 				{
-					AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+					try
+					{
+						AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+					}
+					catch (Exception ex)
+					{
+						GXLogging.Info(log, ".NET trust level is lower than full", ex.Message);
+					}
 					string logConfigSource;
 					configLoaded = true;
 					if (configFileName != null)
@@ -509,19 +528,44 @@ namespace GeneXus.Configuration
 					}
 
 #else
-					var appSettings = "appsettings.json";
-					var clientConfig = "client.exe.config";
-					var logConfigFile = GxContext.IsHttpContext ? "log.config":"log.console.config";
-					if (File.Exists(Path.Combine(FileUtil.GetBasePath(), appSettings)))
+					string basePath = FileUtil.GetBasePath();
+					string currentDir = Directory.GetCurrentDirectory();
+					string startupDir = FileUtil.GetStartupDirectory();
+					string appSettings = "appsettings.json";
+					string clientConfig = "client.exe.config";
+					string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
+
+					if (File.Exists(Path.Combine(basePath, appSettings)))
 					{
-						_config = loadConfigJson(appSettings);
+						_config = loadConfigJson(basePath, appSettings);
+						logConfig(Path.Combine(basePath, logConfigFile));
+					}
+					else if (File.Exists(appSettings))
+					{
+						_config = loadConfigJson(currentDir, appSettings);
+						logConfig(logConfigFile);
+					}
+					else if (File.Exists(Path.Combine(startupDir, appSettings)))
+					{
+						_config = loadConfigJson(startupDir, appSettings);
+						logConfig(Path.Combine(startupDir, logConfigFile));
 					}
 					else if (File.Exists(clientConfig))
 					{
-						_config = loadConfig(clientConfig);
+						_config = loadConfig(clientConfig, out logConfigSource);
+						if (!string.IsNullOrEmpty(logConfigSource))
+							logConfig(logConfigSource);
+						else
+							logConfig(logConfigFile);
 					}
-					if (File.Exists(logConfigFile))
-						logConfig(logConfigFile);
+					try
+					{
+						Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+					}
+					catch (Exception ex)
+					{
+						GXLogging.Info(log, "Could not register encoding provider", ex.Message);
+					}
 #endif
 				}
 				return _config;
@@ -529,12 +573,13 @@ namespace GeneXus.Configuration
 		}
 
 #if NETCORE
-		static NameValueCollection loadConfigJson(string appSettings)
+		public static string ScriptPath { get; set; }
+		static NameValueCollection loadConfigJson(string baseDir, string appSettings)
 		{
 			if (ConfigRoot == null)
 			{
 				var builder = new ConfigurationBuilder()
-					.SetBasePath(FileUtil.GetBasePath())
+					.SetBasePath(baseDir)
 					.AddJsonFile(appSettings, optional: false, reloadOnChange: true)
 
 					.AddEnvironmentVariables();
@@ -568,9 +613,9 @@ namespace GeneXus.Configuration
 				try
 				{
 #if NETCORE
-					var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-					if (filename != null)
+					if (filename != null && File.Exists(filename))
 					{
+						var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 						XmlConfigurator.ConfigureAndWatch(logRepository, new FileInfo(filename));
 						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", filename);
 					}
@@ -673,6 +718,7 @@ namespace GeneXus.Configuration
 		static string _applicationPath = "";
 		static int maximumOpenCursors;
 		static int compatibleEmptyString = -1;
+		static int blankStringAsEmpty = -1;
 		static int useBase64ViewState = -1;
 		static int oldSTR = -1;
 		static int instrumented = -1;
@@ -680,6 +726,7 @@ namespace GeneXus.Configuration
 		static string blobPath;
 		static string blobPathFolderName;
 		static int blankEmptyDates = -1;
+		static int ignoreAddOnEmptyDate = -1;
 		static int setupDB = -1;
 		static HTMLDocType docType = HTMLDocType.UNDEFINED;
 		static int docTypeDTD = -1;
@@ -691,8 +738,34 @@ namespace GeneXus.Configuration
 		private static int exposeMetadata = -1;
 		public static string DefaultRewriteFile = "rewrite.config";
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
+		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
 		const string YES = "1";
-
+		const string NO = "0";
+		static string defaultDatastore;
+		const string DEFAULT_DS = "Default";
+		static int httpclient_max_per_route = -1;
+		internal static string DefaultDatastore
+		{
+			get
+			{
+				if (defaultDatastore == null)
+				{
+					if (Config.GetValueOf("DataStore-Default", out string strDefaultDS))
+					{
+						defaultDatastore = strDefaultDS;
+					}
+					else
+					{
+						defaultDatastore = DEFAULT_DS;
+					}
+				}
+				return defaultDatastore;
+			}
+			set
+			{
+				defaultDatastore = value;
+			}
+		}
 		public static string RemoteLocation
 		{
 			get
@@ -753,6 +826,13 @@ namespace GeneXus.Configuration
 			get
 			{
 				return Config.GetValueOf(USE_NAMED_PARAMETERS, YES) == YES;
+			}
+		}
+		public static bool WFCDateTimeMillis
+		{
+			get
+			{
+				return Config.GetValueOf(REST_DATES_WITH_MILLIS, NO) == YES;
 			}
 		}
 		public static bool MustSetupDB()
@@ -819,7 +899,29 @@ namespace GeneXus.Configuration
 			}
 
 		}
+		public static bool IgnoreAddOnEmptyDates
+		{
+			get
+			{
+				if (ignoreAddOnEmptyDate == -1)
+				{
+					string val;
+					if (Config.GetValueOf("IGNORE_ADD_ON_EMPTY_DATE", out val) && val == "1")
+					{
+						ignoreAddOnEmptyDate = 1;
+						return true;
+					}
+					else
+					{
+						ignoreAddOnEmptyDate = 0;
+						return false;
+					}
+				}
+				else return (ignoreAddOnEmptyDate == 1);
+			}
 
+		}
+		
 		public static bool BlankEmptyDates
 		{
 			get
@@ -894,6 +996,23 @@ namespace GeneXus.Configuration
 				}
 			}
 			return (compatibleEmptyString == 1);
+		}
+
+		public static bool BlankStringAsEmpty()
+		{
+			string data;
+			if (blankStringAsEmpty == -1)
+			{
+				if (Config.GetValueOf("BlankStringAsEmpty", out data) && data.Trim().Equals("1"))
+				{
+					blankStringAsEmpty = 1;
+				}
+				else
+				{
+					blankStringAsEmpty = 0;
+				}
+			}
+			return (blankStringAsEmpty == 1);
 		}
 		public static bool UseBase64ViewState()
 		{
@@ -1194,6 +1313,32 @@ namespace GeneXus.Configuration
 				return theme;
 			else
 				return "";
+		}
+
+		public static int GetHttpClientMaxConnectionPerRoute()
+		{
+			if (httpclient_max_per_route == -1)
+			{
+				try
+				{
+					string strmax;
+					if (Config.GetValueOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
+					{
+						httpclient_max_per_route = Convert.ToInt32(strmax);
+					}
+					else
+					{
+						httpclient_max_per_route = 1000;
+					}
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, "HttpClientMaxPerRoute error", ex);
+					httpclient_max_per_route = 1000;
+				}
+			}
+			return httpclient_max_per_route;
+
 		}
 	}
 }

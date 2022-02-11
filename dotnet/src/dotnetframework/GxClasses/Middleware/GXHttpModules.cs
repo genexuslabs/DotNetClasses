@@ -13,6 +13,7 @@ using System.Reflection;
 using log4net;
 using System.Web.SessionState;
 using System.Web.Configuration;
+using System.Security;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -23,11 +24,14 @@ namespace GeneXus.Http.HttpModules
 		String methodName;
 		String verb;
 		String path;
+		Dictionary<string, string> variableAlias;
 		public string Name { get => name; set => name = value; }
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
 		public string Verb { get => verb; set => verb = value; }
 		public string Path { get => path; set => path = value; }
+		public Dictionary<string, string> VariableAlias { get => variableAlias; set => variableAlias = value; }
+
 	}
 
 	public class MapGroup
@@ -51,7 +55,8 @@ namespace GeneXus.Http.HttpModules
 		public static List<String> servicesPathUrl;
 		public static Dictionary<String, String> servicesBase;
 		public static Dictionary<String, String> servicesClass;
-		public static Dictionary<String, Dictionary<String, String>> servicesMap;
+		public static Dictionary<String, Dictionary<string, SingleMap>> servicesMap;
+
 		//public static Dictionary<String, Dictionary<String, String>> servicesVerbs;
 		public static Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
 
@@ -104,14 +109,14 @@ namespace GeneXus.Http.HttpModules
 			return false;
 		}
 		
-		public void ServicesGroupSetting(String webPath)
+		public void ServicesGroupSetting(string webPath)
 		{
 			if (!String.IsNullOrEmpty(webPath) && servicesMap == null)
 			{				
-				servicesPathUrl = new List<String>();
+				servicesPathUrl = new List<string>();
 				servicesBase = new Dictionary<string, string>();				
-				servicesMap = new Dictionary<String, Dictionary<string, string>>();
-				//servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
+				servicesMap = new Dictionary<string, Dictionary<string, SingleMap>>();
+				//servicesVerbs = new Dictionary<string, Dictionary<string, string>>();
 				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
 
@@ -123,40 +128,53 @@ namespace GeneXus.Http.HttpModules
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 						object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
 #pragma warning restore SCS0018
-					MapGroup m = p as MapGroup;
-					if (m != null)
-					{
-						if (String.IsNullOrEmpty(m.BasePath))
+						MapGroup m = p as MapGroup;
+						if (m != null)
 						{
-							m.BasePath = REST_BASE_URL;
-						}
-						String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
-						String mapPathLower = mapPath.ToLower();
-						servicesPathUrl.Add(mapPathLower);
-						servicesBase.Add(mapPathLower, m.Name.ToLower());
-						servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
-						foreach (SingleMap sm in m.Mappings)
-						{
-							if (String.IsNullOrEmpty(sm.Verb))
-  								sm.Verb = "GET";
-							if (servicesMap.ContainsKey(mapPathLower))
+
+							if (String.IsNullOrEmpty(m.BasePath))
 							{
-								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+								m.BasePath = REST_BASE_URL;
+							}
+							String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
+							String mapPathLower = mapPath.ToLower();
+							servicesPathUrl.Add(mapPathLower);
+							servicesBase.Add(mapPathLower, m.Name.ToLower());
+							servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
+							foreach (SingleMap sm in m.Mappings)
+							{
+								if (String.IsNullOrEmpty(sm.Verb))
+									sm.Verb = "GET";
+								if (sm.VariableAlias == null)
+									sm.VariableAlias = new Dictionary<string, string>();
+								else
 								{
-									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-   								    servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());					
-					  			}
-						  }
-						  else
-						  {
-								  servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-								  servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
-								  servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-								  servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name);
-						  }
-								
-						}						
+									Dictionary<string, string> vMap = new Dictionary<string, string>();
+									foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+									{
+										vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+									}
+									sm.VariableAlias = vMap;
+								}							
+								if (servicesMap.ContainsKey(mapPathLower))
+								{
+									if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+									{										
+										servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+									}
+								}
+								else
+								{
+									servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
+									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+									servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
+									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+								}							
+							
+							}
 						}
+
 					}
 				}
 			}
@@ -164,23 +182,30 @@ namespace GeneXus.Http.HttpModules
 	}
 	public class GXSessionModule : IHttpModule
 	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXSessionModule));
 		HttpApplication App;
 		const string ASPNETSESSION_COOKIE = "ASP.NET_SessionId";
 		string cookieName= ASPNETSESSION_COOKIE;
 
 		public void Init(HttpApplication app)
 		{
-				SessionStateSection sessionStateSection = (SessionStateSection) System.Configuration.ConfigurationManager.GetSection("system.web/sessionState");
+			App = app;
+			try
+			{
+				SessionStateSection sessionStateSection = (SessionStateSection)System.Configuration.ConfigurationManager.GetSection("system.web/sessionState");
 				if (sessionStateSection != null)
 					cookieName = sessionStateSection.CookieName;
-
-				App = app;
 				IHttpModule module = app.Modules["Session"];
 				if (module.GetType() == typeof(SessionStateModule))
 				{
 					SessionStateModule stateModule = (SessionStateModule)module;
 					stateModule.Start += (Session_Start);
 				}
+			}catch(SecurityException ex)
+			{
+				GXLogging.Info(log, ".NET trust level is lower than full", ex.Message);
+				app.EndRequest += Session_Start;
+			}
 		}
 
 		private void Session_Start(object sender, EventArgs e)
@@ -189,7 +214,7 @@ namespace GeneXus.Http.HttpModules
 			{
 				HttpCookie sessionCookie = RetrieveResponseCookie(App.Response, cookieName);
 
-				if (sessionCookie != null)
+				if (sessionCookie != null && !sessionCookie.Secure)
 				{
 					sessionCookie.Secure = true;
 					App.Response.SetCookie(sessionCookie);

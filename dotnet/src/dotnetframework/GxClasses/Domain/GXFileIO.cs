@@ -209,7 +209,7 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
             searchPattern = "";
         List<string> files = _provider.GetFiles(_name, searchPattern);
 		
-		GxExternalFileInfo[] externalFiles = files.Select(elem => new GxExternalFileInfo(elem, _provider, GxFileType.Public)).ToArray();
+		GxExternalFileInfo[] externalFiles = files.Select(elem => new GxExternalFileInfo(elem, _provider, GxFileType.Default)).ToArray();
         return externalFiles;
     }
 
@@ -412,41 +412,41 @@ public class GxExternalFileInfo : IGxFileInfo
     private string _name;
 	private ExternalProvider _provider;
     private string _url;	
-	private GxFileType _fileTypeAtt = GxFileType.Public;
+	private GxFileType _fileTypeAtt = GxFileType.Private;
 
 	public GxExternalFileInfo(ExternalProvider provider)
     {
         _provider = provider;
-        _name = "";
-        _url = "";
+        _name = string.Empty;
+        _url = string.Empty;
     }
 
-    public GxExternalFileInfo(string storageObjectFullname, ExternalProvider provider, GxFileType fileType)
+    public GxExternalFileInfo(string objectPath, ExternalProvider provider, GxFileType fileType)
     {
-		storageObjectFullname = storageObjectFullname!=null ? storageObjectFullname.Replace('\\', '/') : storageObjectFullname;
-		_name = storageObjectFullname;
+		objectPath = !String.IsNullOrEmpty(objectPath) ? objectPath.Replace('\\', '/') : objectPath;
         _provider = provider;
+		_fileTypeAtt = fileType;
+		_name = objectPath;
+
 		Uri result;
-		if (Uri.TryCreate(storageObjectFullname, UriKind.Absolute, out result) && result.IsAbsoluteUri)
+		if (Uri.TryCreate(objectPath, UriKind.Absolute, out result) && result.IsAbsoluteUri)
 		{
-			_url = storageObjectFullname;
+			_url = objectPath;
 		}
 		else {
-			if (fileType.HasFlag(GxFileType.Attribute)) //Attributes multimedia consider Storage Provider Folder 
+			string folderName = ((ExternalProviderBase)provider).Folder;
+			if (!string.IsNullOrEmpty(folderName) && fileType.HasFlag(GxFileType.Attribute) && !_name.StartsWith(folderName))
 			{
-				_url = provider.GetBaseURL() + storageObjectFullname;
-				_name = _url.Replace(provider.StorageUri, string.Empty);
-				if (_name.StartsWith("/"))
-					_name = _name.Substring(1, _name.Length - 1);
+				_url = $"{provider.GetBaseURL()}{_name}";
+				_name = $"{folderName}{StorageUtils.DELIMITER}{_name}";
 			}
-		}		
-		_fileTypeAtt = fileType;
+		}
 	}
 
-    public GxExternalFileInfo(string storageObjectFullname, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Public)
-    {
-        _name = storageObjectFullname;
-        _provider = provider;
+    public GxExternalFileInfo(string objectPath, string url, ExternalProvider provider, GxFileType fileType = GxFileType.Private)
+    {				
+        _name = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, objectPath);
+		_provider = provider;
         _url = url;
 		_fileTypeAtt = fileType;
 	}
@@ -576,12 +576,8 @@ public class GxExternalFileInfo : IGxFileInfo
 
 	private string URL
 	{
-		get {
-			if (string.IsNullOrEmpty(_url))
-			{
-				_url = _provider.Get(_name, _fileTypeAtt, 0);
-			}
-			return _url;
+		get {			
+			return _provider.GetUrl(_name, _fileTypeAtt, 0);
 		}
 	}
 
@@ -640,11 +636,12 @@ public class GxExternalFileInfo : IGxFileInfo
 [Flags]
 public enum GxFileType
 {
-	Public = 0,
-	Private = 1,
-	Attribute = 2, 
-	PublicAttribute = Attribute | Public,
-	PrivateAttribute = Attribute | Private,
+	Default = 0,
+	PublicRead = 1,
+	Private = 2,
+	Attribute = 8,
+	DefaultAttribute = Attribute | Default,
+	PrivateAttribute = Attribute | Private
 }
 
 public class GxFile
@@ -657,6 +654,7 @@ public class GxFile
     int _lastError;
     string _lastErrorDescription;
 	string _source;
+	string _uploadFileId;
     public GxFile()
         : this(GxContext.StaticPhysicalPath())
     {
@@ -669,15 +667,20 @@ public class GxFile
             _baseDirectory = _baseDirectory.Substring(0, _baseDirectory.Length - 1);
     }
 
-    public GxFile(string baseDirectory, IGxFileInfo file, GxFileType fileType = GxFileType.Public)
+    public GxFile(string baseDirectory, IGxFileInfo file, GxFileType fileType = GxFileType.Private)
       : this(baseDirectory)
     {
         _file = file;
     }
 
-    public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.Public)
+    public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.Private)
       : this(baseDirectory)
     {
+		if (GxUploadHelper.IsUpload(fileName))
+		{
+			_uploadFileId = fileName;
+			fileName = GxUploadHelper.UploadPath(fileName);
+		}
 		fileName = fileName.Trim();
 		if ((GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null) && !Path.IsPathRooted(fileName))
             _file = new GxExternalFileInfo(fileName, ServiceFactory.GetExternalProvider(), fileType);
@@ -727,16 +730,26 @@ public class GxFile
 					}
 					else
 					{
-						if (IsAbsoluteUrl(value))
+						_file = null;
+						if (GxUploadHelper.IsUpload(value))
 						{
-							string objName = string.Empty;
-							ExternalProvider p = StorageFactory.GetExternalProviderFromUrl(value, out objName);
-							_file = new GxExternalFileInfo(objName, value, p);
+							_uploadFileId = value;
+							value = GxUploadHelper.UploadPath(value);
+							ExternalProvider provider = ServiceFactory.GetExternalProvider();
+							_file = (provider != null)? new GxExternalFileInfo(value, String.Empty, provider): _file;
 						}
-						else
+
+						if (_file == null)
 						{
-							_file = new GxFileInfo(_baseDirectory);
-							_file.Source = value;
+							if (IsAbsoluteUrl(value))
+							{
+								_file =new GxExternalFileInfo(value, value, ServiceFactory.GetExternalProvider());
+							}
+							else
+							{
+								_file = new GxFileInfo(_baseDirectory);
+								_file.Source = value;
+							}
 						}
 
 						_lastError = 0;
@@ -928,7 +941,11 @@ public class GxFile
     {
         _lastError = 0;
         _lastErrorDescription = "";
-        if (!validSource())
+		if (!string.IsNullOrEmpty(_uploadFileId))
+		{
+			return GxUploadHelper.UploadName(_uploadFileId);
+		}
+		if (!validSource())
             return "";
         if (!Exists())
         {
@@ -959,7 +976,11 @@ public class GxFile
 
     public string GetExtension()
     {
-        if (this.HasExtension())
+		if (!string.IsNullOrEmpty(_uploadFileId))
+		{
+			return GxUploadHelper.UploadExtension(_uploadFileId);
+		}
+		else if (this.HasExtension())
             return System.IO.Path.GetExtension(this.GetAbsoluteName()).Replace(".", "");
         else
             return string.Empty;
@@ -1090,7 +1111,6 @@ public class GxFile
 	}
     public string XsltApply(string xslFileName)
     {
-#if !NETCORE
         XmlReaderSettings readerSettings = new XmlReaderSettings();
         readerSettings.CheckCharacters = false;
         try
@@ -1102,25 +1122,35 @@ public class GxFile
             GXLogging.Warn(log, "XsltApply Error", ex);
             return GxXsltImpl.ApplyOld(FileUtil.NormalizeSource(xslFileName, _baseDirectory), _file.FullName);
         }
-#else
-		return string.Empty;
-#endif
 	}
-#if !NETCORE
 	[MethodImpl(MethodImplOptions.Synchronized)]
     public string HtmlClean()
     {
         try
         {
-            object rawDoc = Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll")).CreateInstance("NTidy.TidyDocument");
-            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg")))
-            {
-                rawDoc.GetType().GetMethod("LoadConfig").Invoke(rawDoc, new object[] { Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg") });
-            }
-            rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { _file.FullName });
-            rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
-            String htmlcleaned = (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
-            return htmlcleaned;
+#if !NETCORE
+			Assembly ntidy=null;
+			try
+			{
+				ntidy =  Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll"));
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Warn(log, "Error loading ntidy", ex);
+			}
+			if (ntidy!=null)
+			{
+				object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
+				if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg")))
+				{
+					rawDoc.GetType().GetMethod("LoadConfig").Invoke(rawDoc, new object[] { Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tidy.cfg") });
+				}
+				rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { _file.FullName });
+				rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
+				return (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
+			}
+#endif
+			return GXUtil.HTMLClean(ReadAllText(string.Empty));
         }
         catch (Exception ex)
         {
@@ -1128,7 +1158,7 @@ public class GxFile
             return "";
         }
     }
-#endif
+
 	public bool HasExtension()
     {
         return System.IO.Path.HasExtension(this.GetAbsoluteName());

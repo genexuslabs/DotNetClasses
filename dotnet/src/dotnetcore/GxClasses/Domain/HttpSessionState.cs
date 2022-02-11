@@ -1,10 +1,36 @@
-﻿using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Reflection;
 using Microsoft.AspNetCore.Http;
 
 namespace GeneXus.Http
 {
+	internal static class CookieContainerHelper
+	{
+		public static CookieCollection GetCookies(this CookieContainer container)
+		{
+			CookieCollection allCookies = new CookieCollection();
+			Hashtable domainTable = (Hashtable)container.GetType()
+				.GetRuntimeFields()
+				.First(x => x.Name == "m_domainTable")
+				.GetValue(container);
+
+			FieldInfo pathListField = null;
+			foreach (object domain in domainTable.Values)
+			{
+				SortedList pathList = (SortedList)(pathListField ??= domain.GetType()
+					.GetRuntimeFields()
+					.First(x => x.Name == "m_list"))
+					.GetValue(domain);
+
+				foreach (CookieCollection cookies in pathList.GetValueList())
+					allCookies.Add(cookies);
+			}
+			return allCookies;
+		}
+	}
 	internal class HttpSessionState 
 	{
 		ISession session;
@@ -16,32 +42,15 @@ namespace GeneXus.Http
 
 		public string SessionID { get { return session.Id; } internal set { } }
 		
-		public object this[string name] { get { return ByteArrayToObject(session.Get(name)); } set { session.Set(name, ObjectToByteArray(value)); } }
-
-		private byte[] ObjectToByteArray(Object obj)
-		{
-			if (obj == null)
-				return null;
-
-			BinaryFormatter bf = new BinaryFormatter();
-			MemoryStream ms = new MemoryStream();
-			bf.Serialize(ms, obj);
-
-			return ms.ToArray();
-		}
-
-		// Convert a byte array to an Object
-		private Object ByteArrayToObject(byte[] arrBytes)
-		{
-			if (arrBytes == null)
-				return null;
-			MemoryStream memStream = new MemoryStream();
-			BinaryFormatter binForm = new BinaryFormatter();
-			memStream.Write(arrBytes, 0, arrBytes.Length);
-			memStream.Seek(0, SeekOrigin.Begin);
-			Object obj = (Object)binForm.Deserialize(memStream);
-
-			return obj;
+		public string this[string name] {
+			get
+			{
+				return session.GetString(name);
+			}
+			set
+			{
+				session.SetString(name, value);
+			}
 		}
 		internal void Remove(string key)
 		{

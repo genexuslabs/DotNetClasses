@@ -860,8 +860,8 @@ namespace GeneXus.Data
 
 			if (inLocalStorage && validFileName)
             {
-                if (GxRestUtil.IsUpload(fileName))
-                    fileName = GxRestUtil.UploadPath(fileName);
+                if (GxUploadHelper.IsUpload(fileName))
+                    fileName = GxUploadHelper.UploadPath(fileName);
 
 				bool ok = PathUtil.AbsoluteUri(fileName, out uri);
 				if (ok && uri != null)
@@ -903,7 +903,7 @@ namespace GeneXus.Data
 							{
 								if (ServiceFactory.GetExternalProvider() != null) 
 								{
-									GxFile file = new GxFile(string.Empty, fileNameParm, GxFileType.Private);
+									GxFile file = new GxFile(string.Empty, fileNameParm, GxFileType.PrivateAttribute);
 									if (file.Exists())
 									{
 										binary = file.ToByteArray();
@@ -2374,7 +2374,7 @@ namespace GeneXus.Data
             readBytes += 1;
             return reader.GetBoolean(i);
 		}
-        public Guid GetGuid(int i)
+        public virtual Guid GetGuid(int i)
         {
             readBytes += 16;
             return reader.GetGuid(i);
@@ -2419,7 +2419,7 @@ namespace GeneXus.Data
 
 		public Type GetFieldType(int i)
 		{
-			throw (new GxNotImplementedException());
+			return reader.GetFieldType(i);
 		}
 		public float GetFloat(int i)
 		{
@@ -4298,7 +4298,7 @@ namespace GeneXus.Data
 		}
 		public virtual bool IsDBNull(int i)
 		{
-			return (block.Item(pos, i) == DBNull.Value) || (block.Item(pos, i) is DBNull);
+			return (block.Item(pos, i) == DBNull.Value) || (block.Item(pos, i) is DBNull || block.Item(pos, i) == null);
 		}
 		public char GetChar(int i)
 		{
@@ -4403,8 +4403,12 @@ namespace GeneXus.Data
 		}
 		public Guid GetGuid(int i)
 		{
-            if (computeSizeInBytes) readBytes += 16;
-            return (Guid)block.Item(pos, i);
+			if (computeSizeInBytes) readBytes += 16;
+			object value = block.Item(pos, i);
+			if (value is Guid)
+				return (Guid)value;
+			else
+				return Guid.Parse(value as string);
 		}
 		public object this[string name] 
 		{

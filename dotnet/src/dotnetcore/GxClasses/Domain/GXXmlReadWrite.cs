@@ -154,9 +154,11 @@ namespace GeneXus.XML
 				
 				if (URL.ToLower().StartsWith("http:"))
 				{
+#pragma warning disable SYSLIB0014 // WebRequest
 					HttpWebRequest request = (HttpWebRequest) WebRequest.Create(URL);
 					WebResponse response = request.GetResponse();
 					StreamReader sr = new StreamReader(response.GetResponseStream(), documentEncoding);
+#pragma warning disable SYSLIB0014 // WebRequest
 					Resolver.Myself = new Uri(URL);
 					XMLInput = sr;
 				}

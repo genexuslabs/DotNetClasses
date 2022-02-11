@@ -26,9 +26,11 @@ using System.Collections;
 using Jayrock.Json;
 
 
+
 namespace GeneXus.Application
 
 {
+
 	internal static class Synchronizer
 	{
 		internal const string SYNC_METHOD_ALL = "gxAllSync";
@@ -38,6 +40,7 @@ namespace GeneXus.Application
 		internal const string CORE_OFFLINE_EVENT_REPLICATOR = "GeneXus.Core.genexus.sd.synchronization.offlineeventreplicator";
 		internal const string SYNCHRONIZER_INFO = "gxTpr_Synchronizer";
 	}
+
 #if NETCORE
 	public class GxRestWrapper
 #else
@@ -47,18 +50,26 @@ namespace GeneXus.Application
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
 		protected HttpContext _httpContext;
 		protected IGxContext _gxContext;
-		private GXProcedure _procWorker;
+		private GXBaseObject _procWorker;
 		private const string EXECUTE_METHOD = "execute";
-		public String ServiceMethod = "";
+		private string _serviceMethod = string.Empty;
+		private Dictionary<string, string> _variableAlias = null;
+		private string _serviceMethodPattern;
 		public bool WrappedParameter = false;
 
-
-		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext, String serviceMethod) : this(worker, context, gxContext)
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
 		{
-			ServiceMethod = serviceMethod;
+			_serviceMethod = serviceMethod;
+			_variableAlias = variableAlias;
 		}
 
-		public GxRestWrapper(GXProcedure worker, HttpContext context, IGxContext gxContext):this(context, gxContext)
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, string serviceMethodPattern) : this(worker, context, gxContext)
+		{
+			_serviceMethod = serviceMethod;
+			_serviceMethodPattern = serviceMethodPattern;
+		}
+
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext):this(context, gxContext)
 		{
 			_procWorker = worker;
 		}
@@ -66,10 +77,10 @@ namespace GeneXus.Application
 		{
 			_httpContext = context;
 			_gxContext = gxContext;
-			AddHeader("Content-type", "application/json; charset=utf-8"); //MediaTypesNames.ApplicationJson);
+			if (_httpContext != null)_httpContext.Response.ContentType = "application/json; charset=utf-8";		
 			RunAsMain = true;
 		}
-		protected virtual GXBaseObject Worker
+		internal virtual GXBaseObject Worker
 		{
 			get { return _procWorker; }
 		}
@@ -97,6 +108,12 @@ namespace GeneXus.Application
 				{
 					return Task.CompletedTask;
 				}
+				if (Worker.UploadEnabled() && GxUploadHelper.IsUploadURL(_httpContext))
+				{
+					GXObjectUploadServices gxobject = new GXObjectUploadServices(_gxContext);
+					gxobject.webExecute();
+					return Task.CompletedTask;
+				}
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
@@ -108,17 +125,19 @@ namespace GeneXus.Application
 					innerMethod = SynchronizerMethod();
 					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
 					wrapped = false;
-				}
-				
-				if (!String.IsNullOrEmpty(this.ServiceMethod))
+				}				
+
+				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
-					innerMethod = this.ServiceMethod;
+					innerMethod = this._serviceMethod;
 				}
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
+				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
+				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
-				MakeRestTypes(outputParameters);
-				return Serialize(outputParameters, wrapped);
+				RestProcess(outputParameters);
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -129,6 +148,7 @@ namespace GeneXus.Application
 				Cleanup();
 
 			}
+			
 		}
 
 		public virtual Task Post()
@@ -136,7 +156,7 @@ namespace GeneXus.Application
 			return MethodBodyExecute(null);
 		}
 
-		private void setWorkerStatus(GXProcedure _procWorker)
+		private void setWorkerStatus(GXBaseObject _procWorker)
 		{			
 			if (ReflectionHelper.HasMethod(_procWorker, "getrestcode"))
 			{
@@ -162,23 +182,23 @@ namespace GeneXus.Application
 			return ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
 		}
-		private string PreProcessReplicatorParameteres(GXProcedure procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
+		private string PreProcessReplicatorParameteres(GXBaseObject procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
 		{
 			var methodInfo = procWorker.GetType().GetMethod(innerMethod);
 			object[] parametersForInvocation = ReflectionHelper.ProcessParametersForInvoke(methodInfo, bodyParameters);
-			var synchroInfo = parametersForInvocation[1];
+			object synchroInfo = parametersForInvocation[1];
 			return synchroInfo.GetType().GetProperty(Synchronizer.SYNCHRONIZER_INFO).GetValue(synchroInfo) as string;
 
 		}
 
-		private bool IsCoreEventReplicator(GXProcedure procWorker)
+		private bool IsCoreEventReplicator(GXBaseObject procWorker)
 		{
 			return procWorker.GetType().FullName == Synchronizer.CORE_OFFLINE_EVENT_REPLICATOR; 
 		}
 
-		private void PreProcessSynchronizerParameteres(GXProcedure instance, string method, Dictionary<string, object> bodyParameters)
+		private void PreProcessSynchronizerParameteres(GXBaseObject instance, string method, Dictionary<string, object> bodyParameters)
 		{
-			var gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
+			string gxParameterName = instance.GetType().GetMethod(method).GetParameters().First().Name.ToLower();
 			GxUnknownObjectCollection hashList;
 			if (bodyParameters.ContainsKey(string.Empty))
 				hashList = (GxUnknownObjectCollection)ReflectionHelper.ConvertStringToNewType(bodyParameters[string.Empty], typeof(GxUnknownObjectCollection));
@@ -207,7 +227,7 @@ namespace GeneXus.Application
 		private string SynchronizerMethod()
 		{
 			string method = string.Empty;
-			var queryParameters = ReadQueryParameters();
+			var queryParameters = ReadQueryParameters(this._variableAlias);
 			string gxevent = string.Empty;
 			if (queryParameters.ContainsKey(Synchronizer.SYNC_EVENT_PARAMETER))
 				gxevent = (string)queryParameters[Synchronizer.SYNC_EVENT_PARAMETER];
@@ -247,25 +267,33 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				var queryParameters = ReadQueryParameters();
-				String innerMethod = EXECUTE_METHOD;
-				if (!String.IsNullOrEmpty(this.ServiceMethod))
+				var queryParameters = ReadQueryParameters(this._variableAlias);
+				string innerMethod = EXECUTE_METHOD;
+				Dictionary<string, object> outputParameters;
+				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
+				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
-					innerMethod = this.ServiceMethod;
+					innerMethod = _serviceMethodPattern;
+					outputParameters = ReflectionHelper.CallMethodPattern(_procWorker, innerMethod, queryParameters);
 				}
-				var outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+				else 
+				{
+					if (!string.IsNullOrEmpty(_serviceMethod))
+					{
+						innerMethod = _serviceMethod;
+					}
+
+					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
+					formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
+				}
+				
+				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
-				MakeRestTypes(outputParameters);
+				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				if (_procWorker.IsApiObject)
-				{
-					if (outputParameters.Count == 1 && outputParameters.First().Value.GetType().GetInterfaces().Contains(typeof(ICollection)))
-					{
-						wrapped = true;
-					}
-				}
-				return Serialize(outputParameters, wrapped);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
+				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
 			{
@@ -276,6 +304,31 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
+		bool GetWrappedStatus(GXBaseObject worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
+		{
+			if (worker.IsApiObject)
+			{
+				if (outputParameters.Count == 1)
+				{
+					wrapped = false;
+					Object v = outputParameters.First().Value;
+
+					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
+					{
+						wrapped = (v as IGxGenericCollectionWrapped).GetIsWrapped();
+					}
+					if (v is IGxGenericCollectionItem item)
+					{
+						if (item.Sdt is GxSilentTrnSdt)
+						{
+							wrapped = (parCount>1)?true:false;
+						}
+					}
+				}			
+			}
+			return wrapped;
+		}
+
 		public bool RunAsMain
 		{
 			get;set;
@@ -332,13 +385,34 @@ namespace GeneXus.Application
 			}
 			return bodyParameters;
 		}
-		protected IDictionary<string, object> ReadQueryParameters()
+		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
-			var query = _httpContext.Request.GetQueryString();
-			Dictionary<string, object> parameters = query.Keys.Cast<string>()
-					.ToDictionary(k => k.ToLower(), v => (object)query[v].ToString());
+			NameValueCollection query = _httpContext.Request.GetQueryString();
+			Dictionary<string, object> parameters = new Dictionary<string, object>();
+			foreach(string k in query.AllKeys)
+			{
+				if (k!=null)
+				{
+					string keyLowercase = k.ToLower();
+					if (varAlias==null)
+						parameters[keyLowercase] = query[k];
+					else
+					{
+						if (varAlias.ContainsKey(keyLowercase))
+						{
+							string alias = varAlias[keyLowercase].ToLower();
+							parameters[alias] = query[k];
+						}
+						else if (!varAlias.ContainsValue(keyLowercase))
+						{
+							parameters[keyLowercase] = query[k];
+						}
+					}
+				}
+			}
 			return parameters;
 		}
+
 		public bool IsRestParameter(string parameterName)
 		{
 			try
@@ -395,7 +469,8 @@ namespace GeneXus.Application
 		}
 		public static Task SetError(HttpContext context, string code, string message)
 		{
-			return HttpHelper.SetResponseStatusAndJsonErrorAsync(context, code, message);
+			HttpHelper.SetError(context, code, message);
+			return Task.CompletedTask;
 		}
 		public bool IsAuthenticated(string synchronizer)
 		{
@@ -434,7 +509,7 @@ namespace GeneXus.Application
 		{
 			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
 		}
-		private bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
+		protected bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{
 			if (!objIntegratedSecurityEnabled)
 			{
@@ -458,7 +533,7 @@ namespace GeneXus.Application
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(_gxContext, token, out isOK);
 						if (!isOK)
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -472,16 +547,8 @@ namespace GeneXus.Application
 						}
 						else
 						{
-							SetError(result.Code, result.Description);
-							if (sessionOk)
-							{
-								SetStatusCode(HttpStatusCode.Forbidden);
-							}
-							else
-							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(_gxContext.GetServerName(), result.Code, result.Description));
-								SetStatusCode(HttpStatusCode.Unauthorized);
-							}
+							HttpStatusCode defaultStatusCode = sessionOk ? HttpStatusCode.Forbidden : HttpStatusCode.Unauthorized;
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description, defaultStatusCode);
 							return false;
 						}
 					}
@@ -536,7 +603,7 @@ namespace GeneXus.Application
 		{
 			if (_httpContext != null)
 			{
-				_httpContext.Response.Headers[header] =value;
+				_httpContext.Response.Headers[header] = value;
 			}
 		}
 
@@ -593,44 +660,93 @@ namespace GeneXus.Application
 		public Task WebException(Exception ex)
 		{
 			GXLogging.Error(log, "WebException", ex);
-			return SetError("500", ex.Message);
-		}
-		protected Task Serialize(Dictionary<string, object> parameters, bool wrapped)
-		{
-			var serializer = new Newtonsoft.Json.JsonSerializer();
-			serializer.Converters.Add(new SDTConverter());
-			TextWriter ms = new StringWriter();
-			if (parameters.Count == 1 && !wrapped) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
+			if (ex is FormatException)
 			{
-				string key = parameters.First().Key;
-				using (var writer = new Newtonsoft.Json.JsonTextWriter(ms))
-				{
-					serializer.Serialize(writer, parameters[key]);
-				}
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.BadRequest, ex);
 			}
 			else
 			{
-				using (var writer = new Newtonsoft.Json.JsonTextWriter(ms))
-				{
-					serializer.Serialize(writer, parameters);
-				}
+				HttpHelper.SetUnexpectedError(_httpContext, HttpStatusCode.InternalServerError, ex);
 			}
-			_httpContext.Response.Write(ms.ToString()); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
+		}
+		protected Task Serialize(Dictionary<string, object> parameters, Dictionary<string, string> fmtParameters, bool wrapped)
+		{
+			string json;
+			var knownTypes = new List<Type>();
+			foreach (string k in parameters.Keys)
+			{
+				object val = parameters[k];
+				knownTypes.Add(val.GetType());
+			}
+			if (parameters.Count == 1 && !wrapped && !PrimitiveType(knownTypes[0])) //In Dataproviders, with one parameter BodyStyle is WebMessageBodyStyle.Bare, Both requests and responses are not wrapped.
+			{
+				string key = parameters.First().Key;
+				object strVal = null;
+				if (parameters[key].GetType() == typeof(DateTime))
+				{
+					DateTime udt = ((DateTime)parameters[key]).ToUniversalTime();
+					if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+					{
+						strVal = udt.ToString(fmtParameters[key], CultureInfo.InvariantCulture);
+					}
+					else
+						strVal = udt;
+				}				
+				else
+					strVal = parameters[key];
+				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
+			}
+			else
+			{
+				Dictionary<string, object> serializablePars = new Dictionary<string, object>();
+				foreach (KeyValuePair<string,object> kv in parameters)
+				{
+					string strKey = kv.Key;					
+
+					IGxGenericCollectionItem ut = kv.Value as IGxGenericCollectionItem;
+					if (ut != null)
+					{						
+						Type uType = ut.Sdt.GetType();
+						object[] attributes = uType.GetCustomAttributes(true);
+						GxJsonName jsonName = (GxJsonName) attributes.Where(a => a.GetType() == typeof(GxJsonName)).FirstOrDefault();
+						if (jsonName != null)
+							strKey = jsonName.Name;
+					}
+					if (kv.Value.GetType() == typeof(DateTime))
+					{
+						DateTime udt = ((DateTime)kv.Value).ToUniversalTime();
+						if (fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
+						{
+							object strVal = udt.ToString(fmtParameters[kv.Key], CultureInfo.InvariantCulture);
+							serializablePars.Add(strKey, strVal);
+						}
+						else
+							serializablePars.Add(strKey, udt);
+					}
+					else
+						serializablePars.Add(strKey, kv.Value);
+				}
+				json = JSONHelper.WCFSerialize(serializablePars, Encoding.UTF8, knownTypes, true); 
+			}
+			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
+			return Task.CompletedTask;
+		}
+		private bool PrimitiveType(Type type)
+		{
+			return type.IsPrimitive || type == typeof(string) || type.IsValueType;
 		}
 		protected Task Serialize(object value)
 		{
-			var serializer = new Newtonsoft.Json.JsonSerializer();
-			serializer.Converters.Add(new SDTConverter());
 #if NETCORE
 			var responseStream = _httpContext.Response.Body;
 #else
 			var responseStream = _httpContext.Response.OutputStream;
 #endif
-			using (var writer = new Newtonsoft.Json.JsonTextWriter(new StreamWriter(responseStream)))
-			{
-				serializer.Serialize(writer, value);
-			}
+			var knownTypes = new List<Type>();
+			knownTypes.Add(value.GetType());
+		
+			JSONHelper.WCFSerialize(value, Encoding.UTF8, knownTypes, responseStream);
 			return Task.CompletedTask;
 		}
 
@@ -638,23 +754,54 @@ namespace GeneXus.Application
 		{
 			sdt.FromJSonString(value);
 		}
-		private static void MakeRestTypes(Dictionary<string, object> parameters)
+
+		private static void RestProcess(Dictionary<string, object> outputParameters)
 		{
-			foreach (var key in parameters.Keys.ToList())
+			foreach (string k in outputParameters.Keys.ToList())
 			{
-				parameters[key] = MakeRestType(parameters[key]);
-			}
+				GxUserType p = outputParameters[k] as GxUserType;
+				if ((p != null) && !p.ShouldSerializeSdtJson())
+				{
+					outputParameters.Remove(k);
+				}
+				else
+				{
+					object o = MakeRestType(outputParameters[k]);
+					if (o == null)
+						outputParameters.Remove(k);
+					else
+						outputParameters[k] = o;
+				}
+			}			
 		}
+		
 		protected static object MakeRestType(object v)
 		{
 			Type vType = v.GetType();
-			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) //Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+			Type itemType;
+			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
 			{
-				Type itemType = v.GetType().GetGenericArguments()[0];
-				Type restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
-
+				Type restItemType=null;
+				itemType = v.GetType().GetGenericArguments()[0];
+				if (typeof(IGXBCCollection).IsAssignableFrom(vType))//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				{
+					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+				}
+				if (restItemType == null)//Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+				{
+					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+				}
+				bool isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
+				bool isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
 				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
-				return Activator.CreateInstance(genericListItemType, new object[] { v });
+				object c = Activator.CreateInstance(genericListItemType, new object[] { v, isWrapped});
+				// Empty collection serialized w/ noproperty
+				if (c is IList restList)
+				{
+					if (restList.Count == 0 && !isEmpty)
+						return null;
+				}
+				return c;			
 			}
 			else if (typeof(GxUserType).IsAssignableFrom(vType)) //SDTType convert to SDTType_RESTInterface
 			{
@@ -699,6 +846,8 @@ namespace GeneXus.Application
 		public string Name { get; set; }
 		public string Parameters { get; set; }
 		public string MethodName { get; set; }
+		public string MethodPattern { get; set; }
 		public string Verb { get; set; }
+		public Dictionary<string, string> VariableAlias { get; set; }
 	}
 }

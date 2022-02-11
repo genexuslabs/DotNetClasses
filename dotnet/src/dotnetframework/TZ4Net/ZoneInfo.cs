@@ -573,7 +573,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Name of the resource containing the names of databases embedded as assembly resources.
 		/// </summary>
-		private static readonly string resMetaInfoName = "metainfo";
+		private const string resMetaInfoName = "metainfo";
 
 		/// <summary>
 		/// Holds the default zoneinfo directory name. Used when consturctor with no
@@ -614,11 +614,11 @@ namespace TZ4Net
 		{
 			if (name == null) 
 			{
-				throw new System.ArgumentNullException("name", "Name can not be null.");
+				throw new System.ArgumentNullException(nameof(name), "Name can not be null.");
 			}
 			if (dir == null) 
 			{
-				throw new System.ArgumentNullException("dir", "Directory name can not be null.");
+				throw new System.ArgumentNullException(nameof(dir), "Directory name can not be null.");
 			}
 			if (Array.IndexOf(AllDirs, dir) < 0) 
 			{
@@ -1026,7 +1026,7 @@ namespace TZ4Net
 				}
 				if (bits-- < 0) 
 				{
-					throw new ArgumentException(string.Format("Bad time: {0}. Binary search failed.", time), "time");
+					throw new ArgumentException(string.Format("Bad time: {0}. Binary search failed.", time), nameof(time));
 				}
 				if (bits < 0) 
 				{
@@ -1050,7 +1050,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets all zoneinfo directories stored in zoneinfo database.
 		/// </summary>
-		public static string[] AllDirs
+		private static string[] AllDirs
 		{
 			get 
 			{
@@ -1074,7 +1074,7 @@ namespace TZ4Net
 		{
 			if (dir == null) 
 			{
-				throw new ArgumentNullException("dir", "Directory name can not be null.");
+				throw new ArgumentNullException(nameof(dir), "Directory name can not be null.");
 			}
 #if !NETCORE
 			ResourceManager rm = new ResourceManager(resRootName, Assembly.GetExecutingAssembly());
@@ -1100,7 +1100,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets all zoneinfo names in default zoneinfo directory.
 		/// </summary>
-		public static string[] AllNames
+		internal static string[] AllNames
 		{
 			get 
 			{
@@ -1160,7 +1160,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets the unix times of all transitions for this zoneinfo.
 		/// </summary>
-		public long[] AllTransitionClocks
+		internal long[] AllTransitionClocks
 		{
 			get 
 			{
@@ -1174,7 +1174,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets all transition rules of this zoneinfo.
 		/// </summary>
-		public Rule[] AllRules
+		internal Rule[] AllRules
 		{
 			get 
 			{
@@ -1234,7 +1234,7 @@ namespace TZ4Net
 		/// <summary>
 		/// Gets the unix times of all leap second corrections for this zoneinfo.
 		/// </summary>
-		public long[] AllLeapSecondCorrectionClocks
+		private long[] AllLeapSecondCorrectionClocks
 		{
 			get 
 			{

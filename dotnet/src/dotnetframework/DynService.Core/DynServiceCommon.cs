@@ -97,7 +97,7 @@ namespace GeneXus.Data.NTier
 	public class QueryExpression
 	{
 		public string For { get; set; }
-		public string[] Select { get; set; }
+		internal string[] Select { get; set; }
 	}
 				
 	

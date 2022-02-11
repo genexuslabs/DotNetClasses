@@ -66,7 +66,6 @@ namespace GeneXus.Procedure
 		{
 			if (getOutputType() == GxReportUtils.OUTPUT_PDF) { 
 				context.HttpContext.Response.ContentType = MediaTypesNames.ApplicationPdf;
-				context.HttpContext.Response.AddHeader("Content-Disposition", "inline; filename=" + GetType().Name + ".pdf");
 			}
 			else
 				context.HttpContext.Response.ContentType = "text/richtext";
@@ -74,25 +73,29 @@ namespace GeneXus.Procedure
 		protected override void sendCacheHeaders()
 		{
 			string utcNow = DateTime.UtcNow.ToString("ddd, dd MMM yyyy HH':'mm':'ss 'GMT'", CultureInfo.GetCultureInfo("en-US"));
-			if (string.IsNullOrEmpty(context.GetHeader("Expires")))
+			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.CONTENT_DISPOSITION)))
 			{
-				localHttpContext.Response.AddHeader("Expires", utcNow);
+				context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, "inline; filename=" + GetType().Name + ".pdf");
 			}
-			if (string.IsNullOrEmpty(context.GetHeader("Last-Modified")))
+			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.EXPIRES)))
 			{
-				localHttpContext.Response.AddHeader("Last-Modified", utcNow);
+				localHttpContext.Response.AddHeader(HttpHeader.EXPIRES, utcNow);
 			}
-			if (string.IsNullOrEmpty(context.GetHeader("Cache-Control")))
+			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.LAST_MODIFIED)))
+			{
+				localHttpContext.Response.AddHeader(HttpHeader.LAST_MODIFIED, utcNow);
+			}
+			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.CACHE_CONTROL)))
 			{
 				if (getOutputType() == GxReportUtils.OUTPUT_PDF)
 				{
-					localHttpContext.Response.AddHeader("Cache-Control", "must-revalidate,post-check=0, pre-check=0");
+					localHttpContext.Response.AddHeader(HttpHeader.CACHE_CONTROL, "must-revalidate,post-check=0, pre-check=0");
 					//These headers are set by a Reader X bug that causes the report to not be seen in IE when embedded,
 					// only seen after doing F5.
 				}
 				else
 				{
-					localHttpContext.Response.AddHeader("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate");
+					localHttpContext.Response.AddHeader(HttpHeader.CACHE_CONTROL, "max-age=0, no-cache, no-store, must-revalidate");
 				}
 			}
 		}

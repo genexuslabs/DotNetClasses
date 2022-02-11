@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GeneXus.Search</RootNamespace>
 		<AssemblyName>GxSearch</AssemblyName>
 		<PackageTags>Lucene Search</PackageTags>
@@ -8,14 +8,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="iTextSharp" Version="5.5.8" />
+		<PackageReference Include="PdfPig" Version="0.1.5" />
 		<PackageReference Include="log4net" Version="2.0.11" />
-		<PackageReference Include="Lucene.Net" Version="3.0.3"/>
-		<PackageReference Include="Lucene.Net.Contrib" Version="3.0.3"/>
+		<PackageReference Include="Lucene.Net" Version="3.0.3" />
+		<PackageReference Include="Lucene.Net.Contrib" Version="3.0.3" />
+		<PackageReference Include="NUglify" Version="1.16.4" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="Jayrock-JSON">

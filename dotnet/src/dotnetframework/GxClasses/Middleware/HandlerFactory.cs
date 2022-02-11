@@ -27,15 +27,8 @@ namespace GeneXus.HttpHandlerFactory
 			string fname = relativeURL.Substring(relativeURL.LastIndexOf('~') + 2);
 			string cname0 = (fname.Contains("."))? fname.Substring(0, fname.LastIndexOf('.')).ToLower():fname.ToLower();
 			string actualPath = "";
-			if (cname0 == "gxresourceprovider")
-			{
-				return new GeneXus.Http.GXResourceProvider();
-			}
-			else if (cname0 == "gxobject")
-			{
-				return new GeneXus.Http.GXObjectUploadServices();
-			}
-			else if (cname0 == "gxoauthlogout")
+			
+			if (cname0 == "gxoauthlogout")
 			{
 				return new GeneXus.Http.GXOAuthLogout();
 			}
@@ -46,10 +39,6 @@ namespace GeneXus.HttpHandlerFactory
 			else if (cname0 == "gxoauthaccesstoken")
 			{
 				return new GeneXus.Http.GXOAuthAccessToken();
-			}
-			else if (cname0 == "gx_valid_service")
-			{
-				return new GeneXus.Http.GXValidService();
 			}
 			else if (cname0 == "gxmulticall")
 			{
@@ -63,12 +52,11 @@ namespace GeneXus.HttpHandlerFactory
 				String objClass = GXAPIModule.servicesBase[actualPath];
 				if (cname0.LastIndexOf("/") == (cname0.Length - 1))
 					cname0 = cname0.Substring(0, cname0.Length - 1);
-				String objectName = cname0.Substring(cname0.LastIndexOf("/") + 1);				
-				
+				String objectName = cname0.Remove(0, actualPath.Length);
 				if (GXAPIModule.servicesMapData.ContainsKey(actualPath) &&
 					GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out String mapName))
 				{
-					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out String value))
+					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
 					{
 						String tmpController = objClass;
 						String asssemblycontroller = tmpController;
@@ -79,10 +67,10 @@ namespace GeneXus.HttpHandlerFactory
 							asssemblycontroller = addNspace + "." + tmpController;
 							nspace += "." + addNspace;
 						}
-						var gxContext = GxContext.CreateDefaultInstance();
-						var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
+						GxContext gxContext = GxContext.CreateDefaultInstance();
+						object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
 						gxContext.HttpContext = context;
-						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value);
+						GxRestWrapper restWrapper = new GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias);
 						return restWrapper;
 					}
 				}
@@ -155,20 +143,28 @@ namespace GeneXus.HttpHandlerFactory
 			}
             if (objType != null)
             {
-				try
+				if (! typeof(IHttpHandler).IsAssignableFrom(objType))
 				{
-					handlerToReturn = (IHttpHandler)Activator.CreateInstance(objType, null);
+					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+					handlerToReturn = null;
+					GXLogging.Error(log, objType.FullName + " is not an Http Service");
 				}
-				catch (Exception e)
+				else
 				{
-					GXLogging.Error(log, "GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").", e);
-					GXLogging.Error(log, "Inner Exception", e.InnerException);
-					throw e;
+					try
+					{
+						handlerToReturn = (IHttpHandler)Activator.CreateInstance(objType, null);
+					}
+					catch (Exception e)
+					{
+						GXLogging.Error(log, "GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").", e);
+						GXLogging.Error(log, "Inner Exception", e.InnerException);
+						throw e;
+					}
 				}
-            }
-            else
+			}
+			else
             {
-                
                 handlerToReturn = (IHttpHandler)System.Web.UI.PageParser.GetCompiledPageInstance(url, pathTranslated, context);
             }
 			return handlerToReturn;

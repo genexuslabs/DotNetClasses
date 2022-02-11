@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<SignAssembly>false</SignAssembly>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GXDataInitialization</RootNamespace>
 		<AssemblyName>GXDataInitialization</AssemblyName>
 		<PackageTags>DataInitialization</PackageTags>
