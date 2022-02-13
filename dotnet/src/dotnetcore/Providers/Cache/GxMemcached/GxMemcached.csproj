@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
 	<PackageTags>Memcached</PackageTags>
 	<PackageId>GeneXus.Memcached.Core</PackageId>
 	<DefineConstants>NETCORE</DefineConstants>
