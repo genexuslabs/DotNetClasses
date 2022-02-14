@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<PackageTags>GxNetCoreStartup</PackageTags>
 		<PackageId>GeneXus.NetCoreStartup</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
@@ -42,10 +42,6 @@
 		<Content Include="net6.0\$(MSBuildProjectName).deps.json">
 			<Pack>true</Pack>
 			<PackagePath>\content\net6.0\</PackagePath>
-		</Content>
-		<Content Include="net5.0\$(MSBuildProjectName).deps.json">
-			<Pack>true</Pack>
-			<PackagePath>\content\net5.0\</PackagePath>
 		</Content>
 	</ItemGroup>
 
