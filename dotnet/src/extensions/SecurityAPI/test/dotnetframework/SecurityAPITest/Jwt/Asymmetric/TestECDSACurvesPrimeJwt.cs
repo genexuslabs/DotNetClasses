@@ -190,7 +190,18 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			cert.Load(pathCert);
 			string alg = "ES256";
 			string curve = "prime256v1";
+#if NETCORE
+			if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+			{ 
+				bulkTest_shouldntWork(key, cert, alg, curve);
+			}
+			else
+			{
+				bulkTest_shouldWork(key, cert, alg, curve);
+			}
+#else
 			bulkTest_shouldWork(key, cert, alg, curve);
+#endif
 		}
 
 	}

@@ -1,4 +1,4 @@
-﻿using SecurityAPITest.SecurityAPICommons.commons;
+using SecurityAPITest.SecurityAPICommons.commons;
 using NUnit.Framework;
 using SecurityAPICommons.Encoders;
 
@@ -32,5 +32,19 @@ namespace SecurityAPITest.SecurityAPICommons.encoders
             string hexaText = hexa.toHexa(expected_plainText);
             Equals(expected_hexaText, hexaText, hexa);
         }
-    }
+
+		[Test]
+		public void TestIsHexa()
+		{
+			bool isHexaTrue = hexa.isHexa(expected_hexaText);
+			Assert.IsTrue(isHexaTrue);
+			Assert.IsFalse(hexa.HasError());
+			bool isHexaFalse = hexa.isHexa(expected_plainText);
+			Assert.IsFalse(isHexaFalse);
+			Assert.IsFalse(hexa.HasError());
+			bool isHexaTrue_ = hexa.isHexa("68-65-6C-6C-6F-20-77-6F-72-6C-64");
+			Assert.IsTrue(isHexaTrue_);
+			Assert.IsFalse(hexa.HasError());
+		}
+	}
 }

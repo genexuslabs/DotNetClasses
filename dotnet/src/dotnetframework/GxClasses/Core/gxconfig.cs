@@ -354,6 +354,9 @@ namespace GeneXus.Configuration
 		}
 		public static CultureInfo GetCultureForLang(string lang)
 		{
+			if (string.IsNullOrEmpty(StringUtil.Trim(lang)) && Config.GetValueOf("LANG_NAME", out string kbLanguage))
+				lang = kbLanguage;
+
 			string culture = lang;
 			switch (culture.ToLower())
 			{
@@ -719,6 +722,7 @@ namespace GeneXus.Configuration
 		static string _applicationPath = "";
 		static int maximumOpenCursors;
 		static int compatibleEmptyString = -1;
+		static int blankStringAsEmpty = -1;
 		static int useBase64ViewState = -1;
 		static int oldSTR = -1;
 		static int instrumented = -1;
@@ -726,6 +730,7 @@ namespace GeneXus.Configuration
 		static string blobPath;
 		static string blobPathFolderName;
 		static int blankEmptyDates = -1;
+		static int ignoreAddOnEmptyDate = -1;
 		static int setupDB = -1;
 		static HTMLDocType docType = HTMLDocType.UNDEFINED;
 		static int docTypeDTD = -1;
@@ -742,6 +747,7 @@ namespace GeneXus.Configuration
 		const string NO = "0";
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";
+		static int httpclient_max_per_route = -1;
 		internal static string DefaultDatastore
 		{
 			get
@@ -897,7 +903,29 @@ namespace GeneXus.Configuration
 			}
 
 		}
+		public static bool IgnoreAddOnEmptyDates
+		{
+			get
+			{
+				if (ignoreAddOnEmptyDate == -1)
+				{
+					string val;
+					if (Config.GetValueOf("IGNORE_ADD_ON_EMPTY_DATE", out val) && val == "1")
+					{
+						ignoreAddOnEmptyDate = 1;
+						return true;
+					}
+					else
+					{
+						ignoreAddOnEmptyDate = 0;
+						return false;
+					}
+				}
+				else return (ignoreAddOnEmptyDate == 1);
+			}
 
+		}
+		
 		public static bool BlankEmptyDates
 		{
 			get
@@ -972,6 +1000,23 @@ namespace GeneXus.Configuration
 				}
 			}
 			return (compatibleEmptyString == 1);
+		}
+
+		public static bool BlankStringAsEmpty()
+		{
+			string data;
+			if (blankStringAsEmpty == -1)
+			{
+				if (Config.GetValueOf("BlankStringAsEmpty", out data) && data.Trim().Equals("1"))
+				{
+					blankStringAsEmpty = 1;
+				}
+				else
+				{
+					blankStringAsEmpty = 0;
+				}
+			}
+			return (blankStringAsEmpty == 1);
 		}
 		public static bool UseBase64ViewState()
 		{
@@ -1272,6 +1317,32 @@ namespace GeneXus.Configuration
 				return theme;
 			else
 				return "";
+		}
+
+		public static int GetHttpClientMaxConnectionPerRoute()
+		{
+			if (httpclient_max_per_route == -1)
+			{
+				try
+				{
+					string strmax;
+					if (Config.GetValueOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
+					{
+						httpclient_max_per_route = Convert.ToInt32(strmax);
+					}
+					else
+					{
+						httpclient_max_per_route = 1000;
+					}
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, "HttpClientMaxPerRoute error", ex);
+					httpclient_max_per_route = 1000;
+				}
+			}
+			return httpclient_max_per_route;
+
 		}
 	}
 }

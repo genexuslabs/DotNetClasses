@@ -1,0 +1,25 @@
+{
+"ObjectType":"ServiceGroup",
+"Name":"mailmanagement_A",
+"BasePath":"mailmanagementSSO",
+"Mappings":
+[
+{
+"Bodystyle":"Wrapped",
+"Verb":"POST",
+"Name":"enviarmail__post",
+"Path":"enviarmail",
+"VariableAlias": [],
+"ServiceMethod":"gxep_enviarmail__post",
+"Implementation":"MailServices\\SendMail"
+}
+,
+{
+"Bodystyle":"Wrapped",
+"Verb":"POST",
+"Name":"enviarmailv1__post",
+"Path":"enviarmailv1",
+"VariableAlias": [],
+"ServiceMethod":"gxep_enviarmailv1__post",
+"Implementation":"MailServices\\SendMailSMTP_SSORest"
+}]}
