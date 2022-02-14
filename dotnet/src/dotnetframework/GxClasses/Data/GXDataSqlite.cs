@@ -97,7 +97,14 @@ namespace GeneXus.Data
 
 		internal override object CloneParameter(IDbDataParameter p)
 		{
-			return ((ICloneable)p).Clone();
+			IDbDataParameter copy = this.CreateParameter();
+			copy.ParameterName = p.ParameterName;
+			copy.DbType=p.DbType;
+			copy.Value=p.Value;
+			copy.Size=p.Size;
+			copy.Precision=p.Precision;
+			copy.Scale=p.Scale;
+			return copy;
 		}
 		public override void DisposeCommand(IDbCommand command)
 		{
