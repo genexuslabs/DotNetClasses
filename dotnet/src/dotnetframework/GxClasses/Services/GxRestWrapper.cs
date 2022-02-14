@@ -82,7 +82,7 @@ namespace GeneXus.Application
 			if (_httpContext != null)_httpContext.Response.ContentType = "application/json; charset=utf-8";		
 			RunAsMain = true;
 		}
-		protected virtual GXBaseObject Worker
+		internal virtual GXBaseObject Worker
 		{
 			get { return _procWorker; }
 		}
@@ -511,7 +511,7 @@ namespace GeneXus.Application
 		{
 			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
 		}
-		private bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
+		protected bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{
 			if (!objIntegratedSecurityEnabled)
 			{
@@ -549,16 +549,8 @@ namespace GeneXus.Application
 						}
 						else
 						{
-							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
-							if (sessionOk)
-							{
-								SetStatusCode(HttpStatusCode.Forbidden);
-							}
-							else
-							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(_gxContext.GetServerName(), result.Code, result.Description));
-								SetStatusCode(HttpStatusCode.Unauthorized);
-							}
+							HttpStatusCode defaultStatusCode = sessionOk ? HttpStatusCode.Forbidden : HttpStatusCode.Unauthorized;
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description, defaultStatusCode);
 							return false;
 						}
 					}

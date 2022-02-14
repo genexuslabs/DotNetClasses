@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net5.0</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
@@ -80,6 +80,9 @@
 
 
 	<ItemGroup>
+		<None Update="apps\append.svc">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="FullTextSearch\Ugly.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -132,6 +135,7 @@
 
 
 	<ItemGroup>
+	  <Folder Include="apps\" />
 	  <Folder Include="PDF\" />
 	  <Folder Include="resources\xml\" />
 	</ItemGroup>
