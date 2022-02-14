@@ -15,7 +15,7 @@ namespace GeneXus.Data
 		}
 		public override IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters, bool isCursor, bool forFirst, bool isRpc)
 		{
-			return new GXMockDbCommand(base.GetCommand(con, stmt, parameters, isCursor, forFirst, isRpc));
+			return new GXMockDbCommand(dataRecordImpl.GetCommand(con, stmt, parameters, isCursor, forFirst, isRpc));
 		}
 		public override DbDataAdapter CreateDataAdapeter()
 		{
