@@ -135,13 +135,11 @@ namespace GeneXus.Application
 					innerMethod = this._serviceMethod;
 				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-
-				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
-
+				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
-				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -780,7 +778,6 @@ namespace GeneXus.Application
 
 		private static void RestProcess(Dictionary<string, object> outputParameters)
 		{
-
 			foreach (string k in outputParameters.Keys.ToList())
 			{
 				GxUserType p = outputParameters[k] as GxUserType;
@@ -791,7 +788,6 @@ namespace GeneXus.Application
 				else
 				{
 					object o = MakeRestType(outputParameters[k]);
-
 					if (p !=null && p.SdtSerializeAsNull())
 					{						
 						outputParameters[k] = JNull.Value;
