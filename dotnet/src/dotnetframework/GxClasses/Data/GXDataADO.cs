@@ -6,8 +6,10 @@ using GeneXus.Data.NTier.ADO;
 using GeneXus.Diagnostics;
 using GeneXus.Management;
 using GeneXus.Reorg;
+using GeneXus.Services;
 using GeneXus.Utils;
 using GeneXus.XML;
+using GxClasses.Helpers;
 using log4net;
 using System;
 using System.Collections;
@@ -2484,18 +2486,27 @@ namespace GeneXus.Data.ADO
                 if (cfgBuf.IndexOf(',') > 0)
                     cfgBuf = cfgBuf.Split(',')[0];
 				datarecord = getDbmsDataRecord(id, cfgBuf);
-				if (Config.GetValueOf("CustomDataRecord", out string customDataRecordFullyQualifiedName))
+
+				if (GXServices.Instance != null)
 				{
-					try
+					GXService providerService = GXServices.Instance.Get(GXServices.DATA_ACCESS_SERVICE);
+					if (providerService != null)
 					{
-						Type customDataReader = Type.GetType(customDataRecordFullyQualifiedName, false);
-						if (customDataReader!=null)
+						GXLogging.Debug(log, "Loading DATA_ACCESS_SERVICE: ", providerService.ClassName);
+						try
 						{
-							datarecord = (GxDataRecord)Activator.CreateInstance(customDataReader, datarecord);
+#if NETCORE
+							Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(providerService.ClassName);
+#else
+							Type type = Type.GetType(providerService.ClassName, true, true);
+#endif
+							datarecord = (GxDataRecord)Activator.CreateInstance(type, datarecord);
+
 						}
-					}catch (Exception ex)
-{
-						GXLogging.Error(log, "Error creating CustomDataRecord " + customDataRecordFullyQualifiedName, ex);
+						catch (Exception ex)
+						{
+							GXLogging.Error(log, "Error creating CustomDataRecord " + providerService.ClassName, ex);
+						}
 					}
 				}
 			}
