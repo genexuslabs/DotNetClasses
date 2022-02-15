@@ -8,7 +8,7 @@ namespace UnitTesting
 {
 	public class ConfigTest
 	{
-		[Fact]
+		[Fact(Skip="SetEnvironmentVarsBeforeRunning")]
 		public void ConMappingTest()
 		{
 			string customUser = "customUser";
