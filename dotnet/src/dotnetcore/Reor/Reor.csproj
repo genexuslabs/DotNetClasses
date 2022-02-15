@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <PackageTags>Reorg</PackageTags>
+    <PackageId>GeneXus.Reorganization.Core</PackageId>
+    <DefineConstants>NETCORE</DefineConstants>
+    <GxGenerateDepsFile>true</GxGenerateDepsFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\Reor\frmReorg.cs" Link="frmReorg.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
+	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
+	  <PackageReference Include="NetTopologySuite" Version="2.0.0" />
+	  <PackageReference Include="NetTopologySuite.Core" Version="1.15.3" />
+	  <PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
+	  <PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj">
+        <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
+  
+	<ItemGroup>
+		<Content Include="net6.0\$(MSBuildProjectName).deps.json">
+			<Pack>true</Pack>
+			<PackagePath>\content\net6.0\</PackagePath>
+		</Content>
+	</ItemGroup>
+</Project>

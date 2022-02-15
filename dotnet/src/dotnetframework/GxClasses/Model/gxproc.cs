@@ -16,14 +16,12 @@ namespace GeneXus.Procedure
 	using System.Collections.Generic;
 	using GeneXus.XML;
 	using GeneXus.Metadata;
+	using GeneXus.Data;
 
-	public abstract class GXProcedure
+	public abstract class GXProcedure: GXBaseObject
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Procedure.GXProcedure));
-		protected IGxContext _Context;					
-		protected bool _isMain;
 		public abstract void initialize();
-		public abstract void cleanup();
 
 		protected int handle;
 
@@ -79,9 +77,23 @@ namespace GeneXus.Procedure
 				action(x);
 			};
 		}
+		protected void ExitApp()
+		{
+			exitApplication(BatchCursorHolder());
+		}
 		protected void exitApplication()
 		{
-			if(IsMain)
+			exitApplication(true);
+		}
+		private void exitApplication(bool flushBatchCursor)
+		{
+			if (flushBatchCursor)
+			{
+				foreach (IGxDataStore ds in context.DataStores)
+					ds.Connection.FlushBatchCursors(this);
+			}
+
+			if (IsMain)
 				dbgInfo?.OnExit();
 			if (disconnectUserAtCleanup)
 			{
@@ -99,57 +111,62 @@ namespace GeneXus.Procedure
 #endif
 			
 		}
-
+		protected virtual bool BatchCursorHolder() { return false; }
 		protected virtual void printHeaders(){}
 		protected virtual void printFooters(){}
 
         protected string GetEncryptedHash(string value, string key)
         {
-            return Encrypt64(GXUtil.GetHash(GeneXus.Web.Security.WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SECURITY_HASH_ALGORITHM), key);
+            return Encrypt64(GXUtil.GetHash(GeneXus.Web.Security.WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
         }
 
-        protected String Encrypt64(String value, String key)
-        {
-            String sRet = "";
-            try
-            {
-                sRet = Crypto.Encrypt64(value, key);
-            }
-            catch (InvalidKeyException)
-            {
-                GXLogging.Error(log, "440 Invalid encryption key");
-            }
-            return sRet;
-        }
-
-        protected String Decrypt64(String value, String key)
-        {
-            String sRet = "";
-            try
-            {
-                sRet = Crypto.Decrypt64(value, key);
-            }
-            catch (InvalidKeyException)
-            {
-                GXLogging.Error(log, "440 Invalid encryption key");
-            }
-            return sRet;
-        }
-
-        public IGxContext context
+		protected string Encrypt64(string value, string key)
 		{
-			set	{ _Context = value;	}
-			get	{ return _Context;	}
+			return Encrypt64(value, key, false);
+		}
+		private string Encrypt64(string value, string key, bool safeEncoding)
+		{
+			string sRet = string.Empty;
+			try
+			{
+				sRet = Crypto.Encrypt64(value, key, safeEncoding);
+			}
+			catch (InvalidKeyException)
+			{
+				GXLogging.Error(log, "440 Invalid encryption key");
+			}
+			return sRet;
+		}
+		protected string UriEncrypt64(string value, string key)
+		{
+			return Encrypt64(value, key, true);
+		}
+
+		protected string Decrypt64(string value, string key)
+		{
+			return Decrypt64(value, key, false);
+		}
+		private string Decrypt64(string value, string key, bool safeEncoding)
+		{
+			String sRet = string.Empty;
+			try
+			{
+				sRet = Crypto.Decrypt64(value, key, safeEncoding);
+			}
+			catch (InvalidKeyException)
+			{
+				GXLogging.Error(log, "440 Invalid encryption key");
+			}
+			return sRet;
+		}
+		protected string UriDecrypt64(string value, string key)
+		{
+			return Decrypt64(value, key, true);
 		}
 		public msglist GX_msglist 
 		{
 			get	{ return context.GX_msglist ; }
 			set	{ context.GX_msglist = value;}
-		}
-		public bool IsMain
-		{
-			set	{ _isMain = value; }
-			get	{ return _isMain;  }
 		}
 		public void setContextReportHandler()
 		{
@@ -227,7 +244,7 @@ namespace GeneXus.Procedure
 			getPrinter().GxSetDocName(fileName);
             getPrinter().GxSetDocFormat(fileExtension);
 			context.PrintReportAtClient(fileName, printerRule);
-			GXFileWatcher.Instance.AddTemporaryFile(new GxFile(Preferences.getBLOB_PATH(), new GxFileInfo(fileName, Preferences.getBLOB_PATH())));
+			GXFileWatcher.Instance.AddTemporaryFile(new GxFile(Preferences.getBLOB_PATH(), new GxFileInfo(fileName, Preferences.getBLOB_PATH())), context);
 		}
 
 		protected bool initPrinter(String outputTo, int gxXPage, int gxYPage, string iniFile, string form, string printer, int mode, int orientation, int pageSize, int pageLength, int pageWidth, int scale, int copies, int defSrc, int quality, int color, int duplex)
@@ -319,7 +336,11 @@ namespace GeneXus.Procedure
         }
 
 		private XMLPrefixes currentNamespacePrefixes = new XMLPrefixes();
-		
+
+		public void SetNamedPrefixesFromReader(GXXMLReader rdr)
+		{
+			currentNamespacePrefixes.SetNamedPrefixesFromReader(rdr);
+		}
 		public void SetPrefixesFromReader(GXXMLReader rdr)
 		{
 			currentNamespacePrefixes.SetPrefixesFromReader(rdr);
@@ -332,9 +353,13 @@ namespace GeneXus.Procedure
 		{
 			currentNamespacePrefixes.SetPrefixes(new Dictionary<string, string>(pfxs));
 		}
-		public void CallWebObject(string url)
+		public override void CallWebObject(string url)
 		{
 			context.wjLoc = url;
+		}
+
+		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack)
+		{
 		}
 
 		private Diagnostics.GXDebugInfo dbgInfo;

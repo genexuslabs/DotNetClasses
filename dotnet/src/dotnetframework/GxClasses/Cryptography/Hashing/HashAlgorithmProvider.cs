@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Security.Cryptography;
 using GeneXus.Cryptography.CryptoException;
+using GeneXus.Utils;
 
 namespace GeneXus.Cryptography.Hashing
 {
@@ -46,7 +44,7 @@ namespace GeneXus.Cryptography.Hashing
 				default:
 					_hash = HashAlgorithm.Create(algorithm);
 					break;
-		}
+			}
 
 			if (_hash == null)
             {

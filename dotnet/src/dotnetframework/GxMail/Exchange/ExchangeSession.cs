@@ -229,7 +229,7 @@ namespace GeneXus.Mail.Exchange
                 {
                     sf = new SearchFilter.SearchFilterCollection(LogicalOperator.And, new SearchFilter.IsEqualTo(EmailMessageSchema.IsRead, false));
                 }
-                ItemView view = new ItemView(_lastMailCount);
+                ItemView view = new ItemView(Math.Max(_lastMailCount,1));
 
 				_allMail = FindItemsCurrentFolder(sf, view);
             }
@@ -282,7 +282,7 @@ namespace GeneXus.Mail.Exchange
                         }
                     }
                 }
-                if (FetchMessage(msg, MailHeaders))
+                if (FetchMessage(msg, MailHeaders) && msg.InternetMessageHeaders!=null)
                 {
                     foreach (var msgHeader in msg.InternetMessageHeaders)
                     {

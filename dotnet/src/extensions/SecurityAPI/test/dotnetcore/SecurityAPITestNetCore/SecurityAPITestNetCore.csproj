@@ -1,0 +1,742 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<IsPublishable>false</IsPublishable>
+		<NoWarn>CS0618,CA1707</NoWarn>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+   
+  <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
+    <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestAsymmetricDomainSpaces.cs" Link="Cryptography\Asymmetric\TestAsymmetricDomainSpaces.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestECDSASigning.cs" Link="Cryptography\Asymmetric\TestECDSASigning.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestRSAEncryption.cs" Link="Cryptography\Asymmetric\TestRSAEncryption.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestRSASigning.cs" Link="Cryptography\Asymmetric\TestRSASigning.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Checksum\TestChecksum.cs" Link="Cryptography\Checksum\TestChecksum.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Hash\TestHashDomainSpaces.cs" Link="Cryptography\Hash\TestHashDomainSpaces.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Hash\TestHashing.cs" Link="Cryptography\Hash\TestHashing.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Mac\TestCmac.cs" Link="Cryptography\Mac\TestCmac.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Mac\TestHmac.cs" Link="Cryptography\Mac\TestHmac.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\PasswordDerivation\TestPasswordDerivation.cs" Link="Cryptography\PasswordDerivation\TestPasswordDerivation.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestBlockEncryption.cs" Link="Cryptography\Symmetric\TestBlockEncryption.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestStreamEncryption.cs" Link="Cryptography\Symmetric\TestStreamEncryption.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestSymmetricDomainSpaces.cs" Link="Cryptography\Symmetric\TestSymmetricDomainSpaces.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Ftps\TestFtps.cs" Link="Ftps\TestFtps.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Ftps\TestFtpsDomainSpaces.cs" Link="Ftps\TestFtpsDomainSpaces.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestAsymmetricJwt.cs" Link="Jwt\Asymmetric\TestAsymmetricJwt.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesPrimeJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesPrimeJwt.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesSecpJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesSecpJwt.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesSectJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesSectJwt.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtDiverseDataTypes.cs" Link="Jwt\Features\TestJwtDiverseDataTypes.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtHeaderParameters.cs" Link="Jwt\Features\TestJwtHeaderParameters.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtNestedClaims.cs" Link="Jwt\Features\TestJwtNestedClaims.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtRevocationList.cs" Link="Jwt\Features\TestJwtRevocationList.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtVerifyJustSignature.cs" Link="Jwt\Features\TestJwtVerifyJustSignature.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue81664.cs" Link="Jwt\Others\TestIssue81664.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue83649.cs" Link="Jwt\Others\TestIssue83649.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue84142.cs" Link="Jwt\Others\TestIssue84142.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue84859.cs" Link="Jwt\Others\TestIssue84859.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue86867.cs" Link="Jwt\Others\TestIssue86867.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestJwtDomainSpaces.cs" Link="Jwt\Others\TestJwtDomainSpaces.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestJwtOtherFunctions.cs" Link="Jwt\Others\TestJwtOtherFunctions.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Symmetric\TestSymmetricJwt.cs" Link="Jwt\Symmetric\TestSymmetricJwt.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\commons\SecurityAPITestObject.cs" Link="SecurityAPICommons\comons\SecurityAPITestObject.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\encoders\TestBase64.cs" Link="SecurityAPICommons\encoders\TestBase64.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\encoders\TestHexa.cs" Link="SecurityAPICommons\encoders\TestHexa.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PrivateKey.cs" Link="SecurityAPICommons\keys\TestBase64PrivateKey.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PublicKey.cs" Link="SecurityAPICommons\keys\TestBase64PublicKey.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestSftp.cs" Link="Sftp\TestSftp.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestBase64Certificate.cs" Link="XmlSignature\DSig\TestBase64Certificate.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestFindID.cs" Link="XmlSignature\DSig\TestFindID.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestRSASigning.cs" Link="XmlSignature\DSig\TestRSASigning.cs" />
+    <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestXmlSignatureDomainSpaces.cs" Link="XmlSignature\DSig\TestXmlSignatureDomainSpaces.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <PackageReference Include="NUnit" Version="3.13.2" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="3.12.0" />
+    <PackageReference Include="NUnit.Engine" Version="3.12.0" />
+    <PackageReference Include="NUnit.Extension.NUnitProjectLoader" Version="3.6.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\dotnet\dotnetcore\GeneXusCryptographyNetCore\GeneXusCryptographyNetCore.csproj" />
+    <ProjectReference Include="..\..\..\dotnet\dotnetcore\GeneXusFtpsNetCore\GeneXusFtpsNetCore.csproj" />
+    <ProjectReference Include="..\..\..\dotnet\dotnetcore\GeneXusJWTNetCore\GeneXusJWTNetCore.csproj" />
+    <ProjectReference Include="..\..\..\dotnet\dotnetcore\GeneXusSftpNetCore\GeneXusSftpNetCore.csproj" />
+    <ProjectReference Include="..\..\..\dotnet\dotnetcore\GeneXusXmlSignatureNetCore\GeneXusXmlSignatureNetCore.csproj" />
+    <ProjectReference Include="..\..\..\dotnet\dotnetcore\SecurityAPICommonsNetCore\SecurityAPICommonsNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Cryptography\Hash\" />
+    <Folder Include="Cryptography\Mac\" />
+    <Folder Include="Cryptography\Checksum\" />
+    <Folder Include="Cryptography\Symmetric\" />
+    <Folder Include="Cryptography\PasswordDerivation\" />
+    <Folder Include="Ftps\" />
+    <Folder Include="Jwt\Symmetric\" />
+    <Folder Include="SecurityAPICommons\keys\" />
+    <Folder Include="SecurityAPICommons\comons\" />
+    <Folder Include="SecurityAPICommons\encoders\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="dummycerts\ECDSA_sha1\" />
+		<Folder Include="dummycerts\RSA_sha1_1024\" />
+		<Folder Include="dummycerts\ECDSA_sha256\" />
+    <Folder Include="dummycerts\JWT_ECDSA\prime_test\" />
+    <Folder Include="dummycerts\RSA_sha512_2048\" />
+    <Folder Include="dummycerts\RSA_sha256_2048\" />
+    <Folder Include="dummycerts\RSA_sha256_1024\" />
+    <Folder Include="Temp" />
+	
+	
+	  <Folder Include="dummycerts\JWT_ECDSA\prime192v1\" />
+    <Folder Include="dummycerts\JWT_ECDSA\prime192v1\" />
+    <Folder Include="dummycerts\JWT_ECDSA\prime192v2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime192v2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime192v3\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime192v3\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime239v1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime239v1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime239v2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime239v2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime239v3\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime239v3\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime256v1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime256v1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime_test\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime_test\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime_test\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime_test\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\prime_test\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp112r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp112r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp112r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp112r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp128r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp128r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp128r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp128r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp160k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp160k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp160r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp160r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp160r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp160r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp192k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp192k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp224k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp224k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp224r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp224r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp256k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp256k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp384r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp384r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp521r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\secp521r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect113r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect113r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect113r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect113r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect131r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect131r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect131r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect131r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect163k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect163k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect163r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect163r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect163r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect163r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect193r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect193r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect193r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect193r2\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect233k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect233k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect233r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect233r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect239k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect239k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect283k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect283k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect283r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect283r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect409k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect409k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect409r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect409r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect571k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect571k1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect571r1\" />
+      
+    
+    <Folder Include="dummycerts\JWT_ECDSA\sect571r1\" />
+      
+    
+
+  </ItemGroup>
+  
+  
+	<ItemGroup>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha1\sha1_cert.crt" Link="dummycerts\ECDSA_sha1\sha1_cert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha1\sha1_cert.p12" Link="dummycerts\ECDSA_sha1\sha1_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha1\sha1_cert.pem" Link="dummycerts\ECDSA_sha1\sha1_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha1\sha1_key.pem" Link="dummycerts\ECDSA_sha1\sha1_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha1\sha1_cert.p12" Link="sha1_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha1\sha1_cert.pem" Link="sha1_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha1\sha1_key.pem" Link="sha1_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha256\sha256_cert.crt" Link="dummycerts\ECDSA_sha256\sha256_cert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha256\sha256_cert.p12" Link="dummycerts\ECDSA_sha256\sha256_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha256\sha256_cert.pem" Link="dummycerts\ECDSA_sha256\sha256_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\ECDSA_sha256\sha256_key.pem" Link="dummycerts\ECDSA_sha256\sha256_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime192v1\cert.pem" Link="dummycerts\JWT_ECDSA\prime192v1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime192v1\key.pem" Link="dummycerts\JWT_ECDSA\prime192v1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime192v2\cert.pem" Link="dummycerts\JWT_ECDSA\prime192v2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime192v2\key.pem" Link="dummycerts\JWT_ECDSA\prime192v2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime192v3\cert.pem" Link="dummycerts\JWT_ECDSA\prime192v3\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime192v3\key.pem" Link="dummycerts\JWT_ECDSA\prime192v3\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime239v1\cert.pem" Link="dummycerts\JWT_ECDSA\prime239v1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime239v1\key.pem" Link="dummycerts\JWT_ECDSA\prime239v1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime239v2\cert.pem" Link="dummycerts\JWT_ECDSA\prime239v2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime239v2\key.pem" Link="dummycerts\JWT_ECDSA\prime239v2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime239v3\cert.pem" Link="dummycerts\JWT_ECDSA\prime239v3\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime239v3\key.pem" Link="dummycerts\JWT_ECDSA\prime239v3\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime256v1\cert.pem" Link="dummycerts\JWT_ECDSA\prime256v1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime256v1\key.pem" Link="dummycerts\JWT_ECDSA\prime256v1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime_test\cert.pem" Link="dummycerts\JWT_ECDSA\prime_test\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime_test\cert_sha256.pem" Link="dummycerts\JWT_ECDSA\prime_test\cert_sha256.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime_test\cert_sha384.pem" Link="dummycerts\JWT_ECDSA\prime_test\cert_sha384.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime_test\cert_sha512.pem" Link="dummycerts\JWT_ECDSA\prime_test\cert_sha512.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\prime_test\key.pem" Link="dummycerts\JWT_ECDSA\prime_test\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp112r1\cert.pem" Link="dummycerts\JWT_ECDSA\secp112r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp112r1\key.pem" Link="dummycerts\JWT_ECDSA\secp112r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp112r2\cert.pem" Link="dummycerts\JWT_ECDSA\secp112r2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp112r2\key.pem" Link="dummycerts\JWT_ECDSA\secp112r2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp128r1\cert.pem" Link="dummycerts\JWT_ECDSA\secp128r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp128r1\key.pem" Link="dummycerts\JWT_ECDSA\secp128r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp128r2\cert.pem" Link="dummycerts\JWT_ECDSA\secp128r2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp128r2\key.pem" Link="dummycerts\JWT_ECDSA\secp128r2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp160k1\cert.pem" Link="dummycerts\JWT_ECDSA\secp160k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp160k1\key.pem" Link="dummycerts\JWT_ECDSA\secp160k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp160r1\cert.pem" Link="dummycerts\JWT_ECDSA\secp160r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp160r1\key.pem" Link="dummycerts\JWT_ECDSA\secp160r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp160r2\cert.pem" Link="dummycerts\JWT_ECDSA\secp160r2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp160r2\key.pem" Link="dummycerts\JWT_ECDSA\secp160r2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp192k1\cert.pem" Link="dummycerts\JWT_ECDSA\secp192k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp192k1\key.pem" Link="dummycerts\JWT_ECDSA\secp192k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp224k1\cert.pem" Link="dummycerts\JWT_ECDSA\secp224k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp224k1\key.pem" Link="dummycerts\JWT_ECDSA\secp224k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp224r1\cert.pem" Link="dummycerts\JWT_ECDSA\secp224r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp224r1\key.pem" Link="dummycerts\JWT_ECDSA\secp224r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp256k1\cert.pem" Link="dummycerts\JWT_ECDSA\secp256k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp256k1\key.pem" Link="dummycerts\JWT_ECDSA\secp256k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp384r1\cert.pem" Link="dummycerts\JWT_ECDSA\secp384r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp384r1\key.pem" Link="dummycerts\JWT_ECDSA\secp384r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp521r1\cert.pem" Link="dummycerts\JWT_ECDSA\secp521r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\secp521r1\key.pem" Link="dummycerts\JWT_ECDSA\secp521r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect113r1\cert.pem" Link="dummycerts\JWT_ECDSA\sect113r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect113r1\key.pem" Link="dummycerts\JWT_ECDSA\sect113r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect113r2\cert.pem" Link="dummycerts\JWT_ECDSA\sect113r2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect113r2\key.pem" Link="dummycerts\JWT_ECDSA\sect113r2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect131r1\cert.pem" Link="dummycerts\JWT_ECDSA\sect131r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect131r1\key.pem" Link="dummycerts\JWT_ECDSA\sect131r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect131r2\cert.pem" Link="dummycerts\JWT_ECDSA\sect131r2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect131r2\key.pem" Link="dummycerts\JWT_ECDSA\sect131r2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect163k1\cert.pem" Link="dummycerts\JWT_ECDSA\sect163k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect163k1\key.pem" Link="dummycerts\JWT_ECDSA\sect163k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect163r1\cert.pem" Link="dummycerts\JWT_ECDSA\sect163r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect163r1\key.pem" Link="dummycerts\JWT_ECDSA\sect163r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect163r2\cert.pem" Link="dummycerts\JWT_ECDSA\sect163r2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect163r2\key.pem" Link="dummycerts\JWT_ECDSA\sect163r2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect193r1\cert.pem" Link="dummycerts\JWT_ECDSA\sect193r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect193r1\key.pem" Link="dummycerts\JWT_ECDSA\sect193r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect193r2\cert.pem" Link="dummycerts\JWT_ECDSA\sect193r2\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect193r2\key.pem" Link="dummycerts\JWT_ECDSA\sect193r2\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect233k1\cert.pem" Link="dummycerts\JWT_ECDSA\sect233k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect233k1\key.pem" Link="dummycerts\JWT_ECDSA\sect233k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect233r1\cert.pem" Link="dummycerts\JWT_ECDSA\sect233r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect233r1\key.pem" Link="dummycerts\JWT_ECDSA\sect233r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect239k1\cert.pem" Link="dummycerts\JWT_ECDSA\sect239k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect239k1\key.pem" Link="dummycerts\JWT_ECDSA\sect239k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect283k1\cert.pem" Link="dummycerts\JWT_ECDSA\sect283k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect283k1\key.pem" Link="dummycerts\JWT_ECDSA\sect283k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect283r1\cert.pem" Link="dummycerts\JWT_ECDSA\sect283r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect283r1\key.pem" Link="dummycerts\JWT_ECDSA\sect283r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect409k1\cert.pem" Link="dummycerts\JWT_ECDSA\sect409k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect409k1\key.pem" Link="dummycerts\JWT_ECDSA\sect409k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect409r1\cert.pem" Link="dummycerts\JWT_ECDSA\sect409r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect409r1\key.pem" Link="dummycerts\JWT_ECDSA\sect409r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect571k1\cert.pem" Link="dummycerts\JWT_ECDSA\sect571k1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect571k1\key.pem" Link="dummycerts\JWT_ECDSA\sect571k1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect571r1\cert.pem" Link="dummycerts\JWT_ECDSA\sect571r1\cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\JWT_ECDSA\sect571r1\key.pem" Link="dummycerts\JWT_ECDSA\sect571r1\key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha1_1024\sha1d_key.key" Link="dummycerts\RSA_sha1_1024\sha1d_key.key">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha1_1024\sha1d_key.pem" Link="dummycerts\RSA_sha1_1024\sha1d_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha1_1024\sha1e_cert.p12" Link="dummycerts\RSA_sha1_1024\sha1e_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha1_1024\sha1_cert.crt" Link="dummycerts\RSA_sha1_1024\sha1_cert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha1_1024\sha1_cert.p12" Link="dummycerts\RSA_sha1_1024\sha1_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha1_1024\sha1_cert.pem" Link="dummycerts\RSA_sha1_1024\sha1_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha1_1024\sha1_cert.pkcs12" Link="dummycerts\RSA_sha1_1024\sha1_cert.pkcs12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha1_1024\sha1_key.pem" Link="dummycerts\RSA_sha1_1024\sha1_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_1024\sha256d_key.pem" Link="dummycerts\RSA_sha256_1024\sha256d_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_1024\sha256e_cert.p12" Link="dummycerts\RSA_sha256_1024\sha256e_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_1024\sha256_cert.crt" Link="dummycerts\RSA_sha256_1024\sha256_cert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_1024\sha256_cert.p12" Link="dummycerts\RSA_sha256_1024\sha256_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_1024\sha256_cert.pem" Link="dummycerts\RSA_sha256_1024\sha256_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_1024\sha256_key.pem" Link="dummycerts\RSA_sha256_1024\sha256_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_2048\sha256d_key.pem" Link="dummycerts\RSA_sha256_2048\sha256d_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_2048\sha256e_cert.p12" Link="dummycerts\RSA_sha256_2048\sha256e_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_2048\sha256_cert.crt" Link="dummycerts\RSA_sha256_2048\sha256_cert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_2048\sha256_cert.p12" Link="dummycerts\RSA_sha256_2048\sha256_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_2048\sha256_cert.pem" Link="dummycerts\RSA_sha256_2048\sha256_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha256_2048\sha256_key.pem" Link="dummycerts\RSA_sha256_2048\sha256_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha512_2048\sha512d_key.pem" Link="dummycerts\RSA_sha512_2048\sha512d_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha512_2048\sha512e_cert.p12" Link="dummycerts\RSA_sha512_2048\sha512e_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha512_2048\sha512_cert.crt" Link="dummycerts\RSA_sha512_2048\sha512_cert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha512_2048\sha512_cert.p12" Link="dummycerts\RSA_sha512_2048\sha512_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha512_2048\sha512_cert.pem" Link="dummycerts\RSA_sha512_2048\sha512_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\RSA_sha512_2048\sha512_key.pem" Link="dummycerts\RSA_sha512_2048\sha512_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\dummycerts\Test_sha1_1024_DER\dummy.txt" Link="dummycerts\Test_sha1_1024_DER\dummy.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\bookSample.xml" Link="Temp\bookSample.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\ftps\back\dummy.txt" Link="Temp\ftps\back\dummy.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\ftps\ftpstest.txt" Link="Temp\ftps\ftpstest.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\outputTestFilesC\dummy.txt" Link="Temp\outputTestFilesC\dummy.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\outputTestFilesJ\dummy.txt" Link="Temp\outputTestFilesJ\dummy.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\sftptest\key\dummy.txt" Link="Temp\sftptest\key\dummy.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\sftptest\back\dummy.txt" Link="Temp\sftptest\back\dummy.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\sftptest\sftptest1.txt" Link="Temp\sftptest\sftptest1.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\tosign.xml" Link="Temp\tosign.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\xmlID.xml" Link="Temp\xmlID.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\xmlIDSchema.xsd" Link="Temp\xmlIDSchema.xsd">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\dotnetframework\SecurityAPITest\Temp\flag.jpg" Link="Temp\flag.jpg">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	
+	
+</Project>

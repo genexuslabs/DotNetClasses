@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+	  <DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
+	  <AppDesignerFolder>Properties</AppDesignerFolder>
+	  <SignAssembly>false</SignAssembly>
+	  <PackageTags>Azure</PackageTags>
+	  <PackageId>GeneXus.Azure.Core</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\..\dotnetframework\Providers\Storage\GXAzureStorage\AzureStorageExternalProvider.cs" Link="AzureStorageExternalProvider.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+    <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using GeneXus.Cryptography.CryptoException;
+using GeneXus.Utils;
 
 namespace GeneXus.Cryptography.Signing.Standards
 {
@@ -61,55 +62,69 @@ namespace GeneXus.Cryptography.Signing.Standards
         private string SignRSA(string signed, byte[] data)
         {
             RSACryptoServiceProvider rsa;
-            try
-            {
-                rsa = (RSACryptoServiceProvider)_cert.PrivateKey;
-            }
-            catch (Exception)
-            {
-                throw new AlgorithmNotSupportedException("Private Key does not support RSA Sign Algorithm");
-            }
-
-            HashAlgorithm ha = System.Security.Cryptography.HashAlgorithm.Create(_hashAlgorithm);
-            byte[] signature = null;
-            try
-            {				
-				signature = rsa.SignData(data, ha);
-            }
-            catch (CryptographicException)
-            {
+			if (!GXUtil.IsWindowsPlatform)
+			{
+				throw new AlgorithmNotSupportedException("This platform does not support RSA Sign Algorithm");
+			}
+			else
+			{
 				try
 				{
-					RSACryptoServiceProvider rsaClear = new RSACryptoServiceProvider();
-					rsaClear.ImportParameters(rsa.ExportParameters(true));
-					signature = rsaClear.SignData(data, ha);
+					rsa = (RSACryptoServiceProvider)_cert.PrivateKey;
 				}
-				catch (CryptographicException e)
+				catch (Exception)
 				{
-					throw new AlgorithmNotSupportedException(e.Message);
-				}                
-            }
-            return Convert.ToBase64String(signature);
+					throw new AlgorithmNotSupportedException("Private Key does not support RSA Sign Algorithm");
+				}
+
+				HashAlgorithm ha = HashAlgorithm.Create(_hashAlgorithm);
+				byte[] signature = null;
+				try
+				{
+					signature = rsa.SignData(data, ha);
+				}
+				catch (CryptographicException)
+				{
+					try
+					{
+						RSACryptoServiceProvider rsaClear = new RSACryptoServiceProvider();
+						rsaClear.ImportParameters(rsa.ExportParameters(true));
+						signature = rsaClear.SignData(data, ha);
+					}
+					catch (CryptographicException e)
+					{
+						throw new AlgorithmNotSupportedException(e.Message);
+					}
+				}
+				return Convert.ToBase64String(signature);
+			}
         }
 
         private string SignDSA(string signed, string oid, byte[] data)
         {
             DSACryptoServiceProvider dsa;
-            try
-            {
-                dsa = (DSACryptoServiceProvider)_cert.PrivateKey;
-            }
-            catch (Exception)
-            {
-                throw new AlgorithmNotSupportedException("Private Key does not support DSA Sign Algorithm");
-            }
+			if (!GXUtil.IsWindowsPlatform)
+			{
+				throw new AlgorithmNotSupportedException("This platform does not support DSA Sign Algorithm");
+			}
+			else
+			{
+				try
+				{
+					dsa = (DSACryptoServiceProvider)_cert.PrivateKey;
+				}
+				catch (Exception)
+				{
+					throw new AlgorithmNotSupportedException("Private Key does not support DSA Sign Algorithm");
+				}
 
 
-            HashAlgorithm ha = System.Security.Cryptography.HashAlgorithm.Create(_hashAlgorithm);
-            byte[] hash = ha.ComputeHash(data);
-            byte[] signature = dsa.SignHash(hash, oid);
+				HashAlgorithm ha = System.Security.Cryptography.HashAlgorithm.Create(_hashAlgorithm);
+				byte[] hash = ha.ComputeHash(data);
+				byte[] signature = dsa.SignHash(hash, oid);
 
-            return Convert.ToBase64String(signature);
+				return Convert.ToBase64String(signature);
+			}
         }
 
 
@@ -119,7 +134,7 @@ namespace GeneXus.Cryptography.Signing.Standards
             {
                 try
                 {
-                    HashAlgorithm ha = HashAlgorithm.Create(_hashAlgorithm);
+					HashAlgorithm ha = GXUtil.IsWindowsPlatform ? HashAlgorithm.Create(_hashAlgorithm) : null;
                     string oid = CryptoConfig.MapNameToOID(_hashAlgorithm);
                     if (ha != null && !string.IsNullOrEmpty(oid))
                     {

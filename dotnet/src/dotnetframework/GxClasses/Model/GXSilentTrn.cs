@@ -114,12 +114,8 @@ namespace GeneXus.Utils
 #if NETCORE
 	public abstract class GxSilentTrn:GXBaseObject
 	{
-		public bool IsMain;
-
-		public virtual void cleanup() { }
 
 		protected int handle;
-
 
 		public GxSilentTrn()
 		{
@@ -132,8 +128,6 @@ namespace GeneXus.Utils
 		{
 			return parms[index];
 		}
-
-		
 
 		public msglist GX_msglist
 		{
@@ -181,7 +175,6 @@ namespace GeneXus.Utils
 			if( Transaction != null) 
 				Transaction.Save();
 		}
-
   
         public virtual bool Insert()
         {
@@ -499,7 +492,15 @@ namespace GeneXus.Utils
 			return msgs;
 		}
 	}
-	public class GxGenericCollection<T> : List<T> where T : new()
+
+	public interface IGxGenericCollectionWrapped
+	{
+		bool GetIsWrapped();
+		void SetIsWrapped(bool value);
+	}
+
+	public class GxGenericCollection<T> : List<T>, IGxGenericCollectionWrapped
+		where T : new() 
 	{
 		public GxGenericCollection()
 			: base()
@@ -515,11 +516,17 @@ namespace GeneXus.Utils
 				Add((T)x2);
 			}
 		}
+		public GxGenericCollection(IGxCollection x, bool wrapped):this(x)
+		{
+			isWrapped = wrapped;			
+		}
+
 		public void LoadCollection(IGxCollection x)
 		{
 			foreach (IGxGenericCollectionItem x1 in this)
 				x.Add(x1.Sdt);
 		}
+
 		public override string ToString()
 		{
 			string s = "";
@@ -529,11 +536,51 @@ namespace GeneXus.Utils
 			}
 			return s;
 		}
+
+		private bool isWrapped = true;
+
+		public bool GetIsWrapped()
+		{
+			return isWrapped;
+		}
+
+		public void SetIsWrapped(bool value)
+		{
+			isWrapped = value;
+		}
 	}
 	public interface IGxGenericCollectionItem
 	{
 		GxUserType Sdt { get; set; }
 	}
+
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxUnWrappedJson : Attribute
+	{
+		public GxUnWrappedJson()
+		{
+		}
+	}
+
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxOmitEmptyCollection : Attribute
+	{
+		public GxOmitEmptyCollection()
+		{
+		}
+	}
+
+	[AttributeUsage(AttributeTargets.Parameter)]
+	public sealed class GxJsonFormatAttribute : Attribute
+	{
+		string jsonformat;
+		public GxJsonFormatAttribute(string format)
+		{
+			jsonformat = format;
+		}
+		public string JsonFormat { get => jsonformat; set => jsonformat = value; }
+	}
+
 
 	[DataContract]
 	public class GxGenericCollectionItem<T> : IGxGenericCollectionItem where T : GxUserType, new()
@@ -556,6 +603,9 @@ namespace GeneXus.Utils
 		{
 			get { return sdt1.context; }
 		}
+
+		public bool isWrappedInCollection = true;
+
 		public override string ToString()
 		{
 			string s = "";
@@ -614,9 +664,9 @@ namespace GeneXus.Utils
                         if (info.GetCustomAttributes(typeof(GxUpload), false).Length > 0)
                         {
                             string uploadPath = (string)info.GetValue(source, null);
-							if (GxRestUtil.IsUpload(uploadPath)) //File upload from SD
+							if (GxUploadHelper.IsUpload(uploadPath)) //File upload from SD
 							{
-								info.SetValue(this, GxRestUtil.UploadPath(uploadPath), null);
+								info.SetValue(this, uploadPath, null);
 								PropertyInfo info_gxi = source.Sdt.GetType().GetProperty(info.Name + "_gxi");//gxi reset
 								if (info_gxi != null)
 									info_gxi.SetValue(this.Sdt, string.Empty, null);
@@ -687,9 +737,11 @@ namespace GeneXus.Utils
         {
         }
     }
+
 #if !NETCORE
 	[XmlSerializerFormat]
 #endif
+	[GxOmitEmptyCollection]
 	[XmlRoot(ElementName = "Message")]
 	[XmlType(TypeName = "Message", Namespace = "GeneXus")]
 	[Serializable]
@@ -697,7 +749,7 @@ namespace GeneXus.Utils
 	{
 		public SdtMessages_Message()
 		{
-			/* Constructor for serialization */
+			/* Constructor for serialization */		
 		}
 
 		public SdtMessages_Message(IGxContext context)
@@ -794,16 +846,19 @@ namespace GeneXus.Utils
 	}
 
 	[DataContract(Name = @"Messages.Message", Namespace = "GeneXus")]
+	[GxOmitEmptyCollection]
 	public class SdtMessages_Message_RESTInterface : GxGenericCollectionItem<SdtMessages_Message>, System.Web.SessionState.IRequiresSessionState
 	{
 		public SdtMessages_Message_RESTInterface()
 			: base()
 		{
+			isWrappedInCollection = true;
 		}
 
 		public SdtMessages_Message_RESTInterface(SdtMessages_Message psdt)
 			: base(psdt)
 		{
+			isWrappedInCollection = true;
 		}
 
 		[DataMember(Name = "Id", Order = 0)]

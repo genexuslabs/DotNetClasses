@@ -26,16 +26,11 @@ namespace GeneXus.Utils
 
 	public class GXDataInitialization : GXProcedure
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXDataInitialization));
-
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXDataInitialization));
 		public GXDataInitialization()
 		{
-			context = new GxContext();
-			DataStoreUtil.LoadDataStores(context);
+			context = GxContext.CreateDefaultInstance();
 			IsMain = true;
-			string theme = Preferences.GetDefaultTheme();
-			if (!string.IsNullOrEmpty(theme))
-				context.SetDefaultTheme(theme);
 		}
 		public static int Main(string [] args)
 		{
@@ -62,53 +57,57 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.Message);
-				GXLogging.Error(log, ex);
-				return 1;
+				GXLogging.Error(log, "GXDataInitialization ERROR", ex);
+				return GXUtil.HandleException(ex, typeof(GXDataInitialization).Name, args);
 			}
 		}
 		public int ExecDataInitialization(List<DynTrnInitializer> dataProviders)
 		{
-			try
+			string ns;
+			if (Config.GetValueOf("AppMainNamespace", out ns))
 			{
-				string ns;
-				if (Config.GetValueOf("AppMainNamespace", out ns))
+				foreach (DynTrnInitializer dataProvider in dataProviders)
 				{
-					foreach (DynTrnInitializer dataProvider in dataProviders) {
-						Console.WriteLine(GXResourceManager.GetMessage("GXM_runpgm", new object[] { dataProvider.Name }));
 
-						string dataProviderClassName = dataProvider.Name.ToLower();
-						string[] dataProviderClassNameTokens = dataProviderClassName.Split('.');
-						dataProviderClassNameTokens[dataProviderClassNameTokens.Length - 1] = "a" + dataProviderClassNameTokens[dataProviderClassNameTokens.Length - 1];
-						dataProviderClassName = string.Join(".", dataProviderClassNameTokens);
-						var dp = ClassLoader.FindInstance(dataProviderClassName, ns, dataProviderClassName, new Object[] { context }, null);
-						object[] parms = new object[1]; //Dataproviders receive 1 sdt collection parameter
-						ClassLoader.ExecuteVoidRef(dp, "execute", parms);
-						IGxCollection bcs = (IGxCollection)parms[0];
+					string dataProviderClassName = dataProvider.Name.ToLower();
+					string[] dataProviderClassNameTokens = dataProviderClassName.Split('.');
+					dataProviderClassNameTokens[dataProviderClassNameTokens.Length - 1] = "a" + dataProviderClassNameTokens[dataProviderClassNameTokens.Length - 1];
+					dataProviderClassName = string.Join(".", dataProviderClassNameTokens);
+					object dp;
 
-						int idx = 1;
-						while (idx <= bcs.Count)
+#if NETCORE
+
+					Console.WriteLine(GXResourceManager.GetMessage("GXM_runpgm", new object[] { dataProvider.Name }));
+					dp = ClassLoader.FindInstance(dataProviderClassName, ns, dataProviderClassName, new Object[] { context }, null);
+#else
+
+					string clss = string.IsNullOrEmpty(ns) ? dataProviderClassName : string.Format("{0}.{1}", ns, dataProviderClassName);
+					AssemblyName defaultAssemblyNameObj = new AssemblyName(dataProviderClassName);
+					Type objType = Assembly.Load(defaultAssemblyNameObj).GetType(clss);//Assembly.Load instead of ClassLoader.FindInstance so BadImageFormatException can be caught.
+
+					Console.WriteLine(GXResourceManager.GetMessage("GXM_runpgm", new object[] { dataProvider.Name }));
+					dp = Activator.CreateInstance(objType, new Object[] { context });
+#endif
+					object[] parms = new object[1]; //Dataproviders receive 1 sdt collection parameter
+					ClassLoader.ExecuteVoidRef(dp, "execute", parms);
+					IGxCollection bcs = (IGxCollection)parms[0];
+
+					int idx = 1;
+					while (idx <= bcs.Count)
+					{
+						GxSilentTrnSdt bc = ((GxSilentTrnSdt)bcs.Item(idx));
+						if (!bc.InsertOrUpdate() || !bc.Success())
 						{
-							var bc = ((GxSilentTrnSdt)bcs.Item(idx));
-							if (!bc.InsertOrUpdate() || !bc.Success())
-							{
-								Console.WriteLine(MessagesToString(bc.GetMessages()));
-							}
-							idx++;
+							Console.WriteLine(MessagesToString(bc.GetMessages()));
 						}
+						idx++;
 					}
-					if (dataProviders.Count>0)
-						context.CommitDataStores("ExecDataInitialization");
 				}
-				this.cleanup();
-				return 0;
+				if (dataProviders.Count>0)
+					context.CommitDataStores("ExecDataInitialization");
 			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(ex.Message);
-				GXLogging.Error(log, ex);
-				return 1;
-			}
+			this.cleanup();
+			return 0;
 		}
 
 		public override void initialize()

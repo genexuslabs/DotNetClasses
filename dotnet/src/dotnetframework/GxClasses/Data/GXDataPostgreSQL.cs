@@ -1,7 +1,5 @@
 using System;
 using System.Text;
-using Npgsql;
-using NpgsqlTypes;
 using log4net;
 using System.Data;
 using System.Data.Common;
@@ -9,10 +7,13 @@ using GeneXus.Utils;
 using GeneXus.Cache;
 using System.Collections;
 using GeneXus.Metadata;
-#if NETCORE
-using GxClasses.Helpers;
 using System.Reflection;
 using System.IO;
+using System.Collections.Generic;
+using GeneXus.Configuration;
+using System.Text.RegularExpressions;
+#if NETCORE
+using GxClasses.Helpers;
 #endif
 
 namespace GeneXus.Data
@@ -22,20 +23,54 @@ namespace GeneXus.Data
 		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 		const string ConnectionStringEncoding = "encoding";
 		private byte[] _buffer;
+		static Assembly _npgsqlAssembly;
+		private bool _byteaOutputEscape;
+		const string NpgsqlDbTypeEnum = "NpgsqlTypes.NpgsqlDbType";
+		const string NpgsqlAssemblyName = "Npgsql";
+		public static Assembly NpgsqlAssembly
+		{
+			get
+			{
+				try
+				{
+					if (_npgsqlAssembly == null)
+					{
+						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{NpgsqlAssemblyName}.dll");
+						GXLogging.Debug(log, "Loading Npgsql.dll from:" + assemblyPath);
 #if NETCORE
-		static Assembly assembly;
+						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
+						_npgsqlAssembly = asl.LoadFromAssemblyName(new AssemblyName(NpgsqlAssemblyName));
+#else
+						_npgsqlAssembly = Assembly.LoadFrom(assemblyPath);
 #endif
+						GXLogging.Debug(log, "Npgsql Loaded:" + _npgsqlAssembly.FullName + " location: " + _npgsqlAssembly.Location);
+					}
+
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, "Error loading Npgsql", ex);
+				}
+				return _npgsqlAssembly;
+			}
+		}
 		public GxPostgreSql()
 		{
 #if NETCORE
-			if (assembly == null)
+			if (_npgsqlAssembly == null)
 			{
 				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "Npgsql.dll")))
 				{
-					assembly = dynamicContext.Assembly;
+					_npgsqlAssembly = dynamicContext.Assembly;
 				}
 			}
 #endif
+			string cfgBuf;
+			if (Config.GetValueOf("postgresql_bytea_output", out cfgBuf))
+			{
+				if (cfgBuf.Equals("escape", StringComparison.OrdinalIgnoreCase))
+					_byteaOutputEscape = true;
+			}
 		}
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
@@ -70,8 +105,15 @@ namespace GeneXus.Data
 			if (!string.IsNullOrEmpty(extra))
 			{
 				string res = ParseAdditionalData(extra, "integrated security");
-				if (extra.IndexOf(ConnectionStringEncoding, StringComparison.OrdinalIgnoreCase) != extra.LastIndexOf(ConnectionStringEncoding, StringComparison.OrdinalIgnoreCase))
-					res = RemoveDuplicates(res, ConnectionStringEncoding);
+				if (NpgsqlAssembly.GetName().Version.Major == 1)
+				{
+					if (extra.IndexOf(ConnectionStringEncoding, StringComparison.OrdinalIgnoreCase) != extra.LastIndexOf(ConnectionStringEncoding, StringComparison.OrdinalIgnoreCase))
+						res = RemoveDuplicates(res, ConnectionStringEncoding);
+				}
+				else
+				{
+					res = ParseAdditionalData(res, ConnectionStringEncoding); //remove ConnectionStringEncoding unsupported in npgsql > 1.
+				}
 
 				if (!res.StartsWith(";") && res.Length > 1) connectionString.Append(";");
 				connectionString.Append(res);
@@ -92,6 +134,7 @@ namespace GeneXus.Data
 			for (int i = 0; i < count; i++)
 			{
 				IDataParameter p = (IDataParameter)cmd.Parameters[i];
+				p.ParameterName = null; //Force TrimmedName empty and Positional Parameters for StoredProcedures, to avoid Case Sensitive 
 				if (p.Direction == ParameterDirection.InputOutput || p.Direction == ParameterDirection.Output || p.Direction == ParameterDirection.ReturnValue)
 				{
 					returnParms.Add(i, p);
@@ -122,25 +165,52 @@ namespace GeneXus.Data
 		}
 		public override IDbDataParameter CreateParameter()
 		{
-			return new NpgsqlParameter();
+			return (IDbDataParameter)ClassLoader.CreateInstance(NpgsqlAssembly, "Npgsql.NpgsqlParameter");
 		}
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
-			NpgsqlParameter parm = new NpgsqlParameter();
-			parm.NpgsqlDbType = (NpgsqlDbType)dbtype;
-			
-			parm.Size = gxlength;
-			parm.Precision = (byte)gxlength;
-			parm.Scale = (byte)gxdec;
-			parm.ParameterName = name;
+			IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(NpgsqlAssembly, "Npgsql.NpgsqlParameter");
+			ClassLoader.SetPropValue(parm, "NpgsqlDbType", GXTypeToNpgsqlDbType(dbtype));
+			ClassLoader.SetPropValue(parm, "Size", gxlength);
+			ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);
+			ClassLoader.SetPropValue(parm, "Scale", (byte)gxdec);
+			ClassLoader.SetPropValue(parm, "ParameterName", name);
 			return parm;
+
 		}
-#if !NETCORE
+		private Object GXTypeToNpgsqlDbType(object type)
+		{
+			if (!(type is GXType))
+				return type;
+			
+			switch (type)
+			{
+				case GXType.Int16: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Smallint");  
+				case GXType.Int32: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Integer");
+				case GXType.Int64: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Bigint");
+				case GXType.Number: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Numeric");
+				case GXType.DateTime2:
+				case GXType.DateTime: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Timestamp");
+				case GXType.Date: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Date");
+				case GXType.Boolean: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Boolean");
+				case GXType.Char: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Char");
+				case GXType.LongVarChar: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Text");
+				case GXType.VarChar: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Varchar");
+				case GXType.Byte: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Bytea");
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:
+					return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Text");
+				default: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Unknown");
+			}
+		}
         public override DbDataAdapter CreateDataAdapeter()
 		{
-			return new NpgsqlDataAdapter();
+			Type odpAdapter = NpgsqlAssembly.GetType("Npgsql.NpgsqlDataAdapter");
+			return (DbDataAdapter)Activator.CreateInstance(odpAdapter);
 		}
-#endif
 #if NETCORE
 		public override bool MultiThreadSafe
 		{
@@ -162,21 +232,24 @@ namespace GeneXus.Data
 		{
 
 			IDataReader idatareader;
-#if !NETCORE
-			GXLogging.Debug(log, "ExecuteReader: client cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
-			idatareader = new GxDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
-#else
-			if (!hasNested)//Client Cursor
+			if (NpgsqlAssembly.GetName().Version.Major == 1)
 			{
 				GXLogging.Debug(log, "ExecuteReader: client cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
 				idatareader = new GxDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
 			}
-			else //Server Cursor
+			else
 			{
-				GXLogging.Debug(log, "ExecuteReader: server cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
-				idatareader = new GxPostgresqlMemoryDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
+				if (!hasNested)//Client Cursor
+				{
+					GXLogging.Debug(log, "ExecuteReader: client cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
+					idatareader = new GxDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
+				}
+				else //Server Cursor
+				{
+					GXLogging.Debug(log, "ExecuteReader: server cursor=" + hasNested + ", handle '" + handle + "'" + ", hashcode " + this.GetHashCode());
+					idatareader = new GxPostgresqlMemoryDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
+				}
 			}
-#endif
 			return idatareader;
 
 		}
@@ -189,7 +262,7 @@ namespace GeneXus.Data
 			{
 				if (fieldOffset == 0)
 				{
-					_buffer = (byte[])DR.GetValue(i);
+					_buffer = ByteaTextToByteArray((byte[])DR.GetValue(i));
 				}
 				int count = 0;
 				for (long index = fieldOffset; index < fieldOffset + length && index < _buffer.Length; index++)
@@ -199,6 +272,93 @@ namespace GeneXus.Data
 				}
 				return count;
 			}
+		}
+		//ByteArrayToByteaTextEscaped
+		protected override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
+		{
+			if (_byteaOutputEscape)
+			{
+				List<byte> binary = new List<byte>(byteArray.Length * 5);
+				foreach (byte b in byteArray)
+					if (b >= 0x20 && b < 0x7F && b != 0x27 && b != 0x5C)
+						binary.Add(b);
+					else
+					{
+						binary.Add(ASCIIByteBackSlash);
+						binary.Add((byte)(ASCIIByteb0 + (7 & (b >> 6))));
+						binary.Add((byte)(ASCIIByteb0 + (7 & (b >> 3))));
+						binary.Add((byte)(ASCIIByteb0 + (7 & b)));
+					}
+				base.SetBinary(parameter, binary.ToArray());
+			}
+			else
+			{
+				base.SetBinary(parameter, byteArray);
+			}
+		}
+		byte ASCIIByteBackSlash = (byte)'\\';
+		byte ASCIIBytex = (byte)'x';
+		byte ASCIIByteb0 = (byte)'0';
+		byte ASCIIByteb7 = (byte)'7';
+
+		private byte[] ByteaTextToByteArray(byte[] BackendData)
+		{
+			try
+			{
+				int byteAPosition = 0;
+				int byteALength = BackendData.Length;
+				if (byteALength >= 2 && BackendData[0] == ASCIIByteBackSlash && BackendData[1] == ASCIIBytex)
+				{
+					// PostgreSQL 8.5+'s bytea_output=hex format
+					byte[] result = new byte[(byteALength - 2) / 2];
+					int k = 0;
+					for (byteAPosition = 2; byteAPosition < byteALength; byteAPosition += 2)
+					{
+						result[k] = FastConverter.ToByteHexFormat(BackendData, byteAPosition);
+						k++;
+					}
+					return result;
+				}
+				else
+				{
+					MemoryStream ms = new MemoryStream();
+					while (byteAPosition < byteALength)
+					{
+						byte octalValue;
+						byte b = BackendData[byteAPosition];
+						if (b >= 0x20 && b < 0x7F && b != 0x27 && b != 0x5C)
+						{
+							octalValue = BackendData[byteAPosition];
+							byteAPosition++;
+							ms.WriteByte((Byte)octalValue);
+						}
+						else if (BackendData[byteAPosition] == ASCIIByteBackSlash &&
+								byteAPosition + 3 < byteALength &&
+								BackendData[byteAPosition + 1] >= ASCIIByteb0 && BackendData[byteAPosition + 1] <= ASCIIByteb7 &&
+								BackendData[byteAPosition + 2] >= ASCIIByteb0 && BackendData[byteAPosition + 2] <= ASCIIByteb7 &&
+								BackendData[byteAPosition + 3] >= ASCIIByteb0 && BackendData[byteAPosition + 3] <= ASCIIByteb7)
+						{
+							octalValue = FastConverter.ToByteEscapeFormat(BackendData, byteAPosition + 1);
+							byteAPosition += 4;
+							ms.WriteByte((Byte)octalValue);
+						}
+						else
+						{
+							return BackendData;
+						}
+					}
+					return ms.ToArray();
+				}
+			}catch(Exception ex)
+			{
+				GXLogging.Error(log, "ByteaTextToByteArray error", ex);
+				return BackendData;
+			}
+		}
+		public override void DisposeCommand(IDbCommand command)
+		{
+			command.Parameters.Clear();
+			base.DisposeCommand(command);
 		}
 		public override Guid GetGuid(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
@@ -234,7 +394,9 @@ namespace GeneXus.Data
 
 		public override bool IsBlobType(IDbDataParameter idbparameter)
 		{
-			return ((NpgsqlParameter)idbparameter).NpgsqlDbType == NpgsqlDbType.Bytea;
+			object otype = ClassLoader.GetPropValue(idbparameter, "NpgsqlDbType");
+			object blobType = ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Bytea");
+			return (int)otype == (int)blobType;
 		}
 
 		public override DateTime Dbms2NetDateTime(DateTime dt, Boolean precision)
@@ -251,6 +413,11 @@ namespace GeneXus.Data
 			{
 				return base.Net2DbmsDateTime(parm, dt);
 			}
+		}
+
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return GetServerDateTimeStmt(connection);
 		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
@@ -287,9 +454,13 @@ namespace GeneXus.Data
 		{
 			return new Geospatial(DR.GetString(i));
 		}
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
 		{
-			return geo.ToStringSQL();
+			Geospatial geos = geo as Geospatial;
+			if (geos!=null)
+				return geos.ToStringESQL();
+			else
+				return geo.ToStringSQL();
 		}
 
 		public override bool ProcessError(int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
@@ -304,7 +475,17 @@ namespace GeneXus.Data
 					//dbmsErrorCode=5632, error: 42p01: no existe la tabla â«ivafechafacturaâ»
 					return false;
 				}
-
+			if (emsg.IndexOf("42704") != -1)
+			{
+				// Type does not exists ( when creating geographic types without postgis extension)
+				// Second part of the condition for non-english installations when error is localized.
+				Regex rx = new Regex(@"42704.*Type.*does not exist", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+				if (rx.IsMatch(emsg) || emsg.IndexOf("\"geography\"") != -1)
+				{
+					status = 999;
+					return false;
+				}
+			}
 			if (    //duplicate key violates unique constraint //ERRO: 23505: duplicar chave viola a restriÃ§Ã£o de unicidade "nfe010_pkey"
 				emsg.IndexOf("23505") != -1 ||
 				(emsg.IndexOf("duplicate key") != -1 && emsg.IndexOf("unique") != -1) ||
@@ -332,13 +513,10 @@ namespace GeneXus.Data
 				status = 105;
 				return true;
 			}
-#if NETCORE
 			if (dbmsErrorCode == 16389 && emsg.IndexOf("42p06") >= 0) //42p06: ya existe el esquema
 				return true;
-#else
 			if (dbmsErrorCode == 5632 && emsg.IndexOf("42p06") >= 0) //42p06: ya existe el esquema
 				return true;
-#endif
 
 			switch ((int)dbmsErrorCode)
 			{
@@ -361,16 +539,16 @@ namespace GeneXus.Data
 	sealed internal class PostgresqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-		public PostgresqlConnectionWrapper() : base(new NpgsqlConnection())
+		public PostgresqlConnectionWrapper()
 		{
+			_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection");
 		}
 
 		public PostgresqlConnectionWrapper(String connectionString, GxConnectionCache connCache, IsolationLevel isolationLevel) 
 		{
 			try
 			{
-				Type postgresqlConnection = typeof(NpgsqlConnection);
-				_connection = (IDbConnection)ClassLoader.CreateInstance(postgresqlConnection.Assembly, postgresqlConnection.FullName, new object[] { connectionString });
+				_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection", new object[] { connectionString });
 				m_isolationLevel = isolationLevel;
 				m_connectionCache = connCache;
 			}
@@ -413,18 +591,13 @@ namespace GeneXus.Data
 				throw new DataException(ex.Message, ex);
 			}
 		}
-#if !NETCORE
         public override DbDataAdapter CreateDataAdapter()
 		{
 			throw new GxNotImplementedException();
 		}
-#endif
 		override public IDbCommand CreateCommand()
 		{
-			NpgsqlConnection sc = InternalConnection as NpgsqlConnection;
-			if (null == sc)
-				throw new InvalidOperationException("InvalidConnType00" + InternalConnection.GetType().FullName);
-			return sc.CreateCommand();
+			return InternalConnection.CreateCommand();
 		}
 		public override short SetSavePoint(IDbTransaction transaction, string savepointName)
 		{
@@ -445,13 +618,73 @@ namespace GeneXus.Data
 	public class GxPostgresqlMemoryDataReader : GxDataReader
 	{
 		public GxPostgresqlMemoryDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
-			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt) : base(connManager, dr, connection, parameters,
+			string stmt, ushort fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt) : base(connManager, dr, connection, parameters,
 			stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt)
 		{
-			MemoryDataReader memoryDataReader = new MemoryDataReader(reader);
+			MemoryDataReader memoryDataReader = new MemoryDataReader(reader, connection, parameters, stmt, fetchSize, forFirst, cached, expiration);
 			Close();
 			reader = memoryDataReader;
 		}
 	}
+	internal class FastConverter
+	{
+		private static readonly byte[] HexFormatLookupTableLow = new byte[] {
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		};
+		private static readonly byte[] HexFormatLookupTableHigh = new byte[] {
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		};
+		private static readonly byte[] EscapeFormatLookupTable = new byte[] {
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		};
+		public static byte ToByteHexFormat(byte[] str, int index)
+		{
+			byte b1 = HexFormatLookupTableHigh[str[index]];
+			if (b1 == 255)
+				throw new IOException(string.Format("Expected a hex character, got {0}", str[index]));
 
+			byte b2 = HexFormatLookupTableLow[str[++index]];
+			if (b2 == 255)
+				throw new IOException(string.Format("Expected a hex character, got {0}", str[index]));
+
+			return (byte)(b1 | b2);
+		}
+		public static byte ToByteEscapeFormat(byte[] str, int index)
+		{
+			byte b1 = (byte)(EscapeFormatLookupTable[str[index]] << 6);
+			if (b1 == 255)
+				throw new IOException(string.Format("Expected an octal character, got {0}", str[index]));
+
+			byte b2 = (byte)(EscapeFormatLookupTable[str[++index]] << 3);
+			if (b2 == 255)
+				throw new IOException(string.Format("Expected an octal character, got {0}", str[index]));
+
+			byte b3 = EscapeFormatLookupTable[str[++index]];
+			if (b3 == 255)
+				throw new IOException(string.Format("Expected an octal character, got {0}", str[index]));
+
+			return (byte)(b1 | b2 | b3);
+		}
+	}
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -12,19 +11,15 @@ using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 
 using log4net;
-
-using GeneXus.Utils;
 using GeneXus.Search;
 using System.Runtime.CompilerServices;
 using System.Reflection;
-using iTextSharp.text.pdf;
-using iTextSharp.text.pdf.parser;
-using Lucene.Net.Analysis.Snowball;
 using System.Collections.Concurrent;
 
-#if NETCORE
-using TidyManaged;
-#endif
+using NUglify;
+using NUglify.Html;
+using UglyToad.PdfPig.Content;
+using UglyToad.PdfPig;
 
 namespace GeneXus.Utils
 {
@@ -138,10 +133,6 @@ namespace GeneXus.Utils
         [MethodImpl(MethodImplOptions.Synchronized)]
 		static public string HTMLClean(string text)
 		{
-#if NETCORE
-
-			return text;
-#else
 			try
 			{
 				return new NTidyHTMLHandler().HTMLClean(text);
@@ -151,7 +142,6 @@ namespace GeneXus.Utils
 				GXLogging.Error(log,"HTMLClean error", ex);
 				return "";
 			}
-#endif
 		}
 	}
 	public interface IDocumentHandler
@@ -162,57 +152,65 @@ namespace GeneXus.Utils
 	public class NTidyHTMLHandler : IDocumentHandler
 	{
 #if !NETCORE
-        Assembly ntidy;
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.DocumentHandler));
+		Assembly ntidy;
 #endif
         public NTidyHTMLHandler()
         {
 #if !NETCORE
-			ntidy =  Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll"));
+			try
+			{
+				ntidy =  Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll"));
+			}catch (Exception ex)
+			{
+				GXLogging.Warn(log, "Error loading ntidy", ex);
+			}
 #endif
         }
-		public String GetText(string filename)
+		public string GetText(string filename)
 		{
-#if NETCORE
-			using (Document doc = Document.FromFile(filename))
-			{
-				doc.OutputBodyOnly = AutoBool.Yes;
-				doc.Quiet = true;
-				doc.CleanAndRepair();
-				return doc.ToString();
-			}
-#else
-			object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
-			LoadConfig(rawDoc);
-			int status = (int)rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { filename });
-			if (status != 0)
-			{
-				rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
-			}
+#if !NETCORE
 
-			object tidyNode = rawDoc.GetType().GetProperty("Html").GetValue(rawDoc, null);
-			return getText(tidyNode);
+			if (ntidy!=null)
+			{
+				object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
+				LoadConfig(rawDoc);
+				int status = (int)rawDoc.GetType().GetMethod("LoadFile").Invoke(rawDoc, new object[] { filename });
+				if (status != 0)
+				{
+					rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
+				}
+
+				object tidyNode = rawDoc.GetType().GetProperty("Html").GetValue(rawDoc, null);
+				return getText(tidyNode);
+			}
 #endif
+			return Uglify.HtmlToText(File.ReadAllText(filename), HtmlToTextOptions.None).Code;
 		}
 		public String GetTextFromString(string text)
 		{
 #if !NETCORE
-			object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
-			LoadConfig(rawDoc);
-			rawDoc.GetType().GetMethod("LoadString").Invoke(rawDoc, new object[] { text });
-			if (rawDoc == null)
+			if (ntidy!=null)
 			{
-				return text;
+				object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
+				LoadConfig(rawDoc);
+				rawDoc.GetType().GetMethod("LoadString").Invoke(rawDoc, new object[] { text });
+				if (rawDoc == null)
+				{
+					return text;
+				}
+				try
+				{
+					object tidyNode = rawDoc.GetType().GetProperty("Html").GetValue(rawDoc, null);
+					return getText(tidyNode);
+				}
+				catch
+				{
+					return text;
+				}
 			}
-			try
-			{
-				object tidyNode = rawDoc.GetType().GetProperty("Html").GetValue(rawDoc, null);
-				return getText(tidyNode);
-			}
-			catch
 #endif
-			{
-				return text;
-			}
+			return Uglify.HtmlToText(text).Code;
 		}
 
 		private String getText(object node)
@@ -246,17 +244,20 @@ namespace GeneXus.Utils
 				rawDoc.GetType().GetMethod("LoadConfig").Invoke(rawDoc, new object[] { tidyConf });
 			}
 		}
-#if !NETCORE
 		internal string HTMLClean(string text)
 		{
-			object rawDoc = Assembly.LoadFrom(GXUtil.ProcessorDependantAssembly("NTidy.dll")).CreateInstance("NTidy.TidyDocument");
-
-			LoadConfig(rawDoc);
-			rawDoc.GetType().GetMethod("LoadString").Invoke(rawDoc, new object[] { text });
-			rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
-			return (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
-		}
+#if !NETCORE
+			if (ntidy!=null)
+			{
+				object rawDoc = ntidy.CreateInstance("NTidy.TidyDocument");
+				LoadConfig(rawDoc);
+				rawDoc.GetType().GetMethod("LoadString").Invoke(rawDoc, new object[] { text });
+				rawDoc.GetType().GetMethod("CleanAndRepair").Invoke(rawDoc, null);
+				return (string)rawDoc.GetType().GetMethod("ToString").Invoke(rawDoc, null);
+			}
 #endif
+			return GXUtil.HTMLClean(text);
+		}
 	}
 
 	public class TextHandler : IDocumentHandler
@@ -290,17 +291,18 @@ namespace GeneXus.Utils
             StringBuilder text = new StringBuilder();
 
             if (File.Exists(fileName) && fileName.EndsWith(".pdf"))
-            {                
-                PdfReader pdfReader = new PdfReader(fileName);                
-                for (int page = 1; page <= pdfReader.NumberOfPages; page++)
-                {                    
-                    ITextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
-                    string currentText = PdfTextExtractor.GetTextFromPage(pdfReader, page, strategy);
+            {
 
-                    currentText = Encoding.UTF8.GetString(ASCIIEncoding.Convert(Encoding.Default, Encoding.UTF8, Encoding.Default.GetBytes(currentText)));
-                    text.Append(currentText);
-                }
-                pdfReader.Close();
+				using (PdfDocument document = PdfDocument.Open(fileName))
+				{
+					foreach (Page page in document.GetPages())
+					{
+						string currentText = page.Text;
+
+						text.Append(currentText);
+						text.Append(' ');
+					}
+				}
             }
             return text.ToString();
         }

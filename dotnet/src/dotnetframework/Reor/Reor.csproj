@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net462</TargetFramework>
+		<RootNamespace>Reor</RootNamespace>
+		<AssemblyName>Reor</AssemblyName>
+		<NoWarn>CA1501;CA1824</NoWarn>
+		<OutputType>Exe</OutputType>
+		<PackageTags>Reorg</PackageTags>
+		<PackageId>GeneXus.Reorganization</PackageId>
+		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+	</PropertyGroup>
+	  
+
+	<ItemGroup>
+   	 <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+		<Reference Include="System.Windows.Forms">
+			<Name>System.Windows.Forms</Name>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Remove="Resources\imgCancel.Image.png" />
+	  <Content Remove="Resources\imgOk.Image.png" />
+	  <Content Remove="Resources\imgEqual.Image.png" />
+	  <Content Remove="Resources\imgReorg.Image.png" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Resources\imgCancel.Image.png" />
+		<EmbeddedResource Include="Resources\imgOk.Image.png" />
+		<EmbeddedResource Include="Resources\imgEqual.Image.png" />
+		<EmbeddedResource Include="Resources\imgReorg.Image.png" />
+	</ItemGroup>
+</Project>

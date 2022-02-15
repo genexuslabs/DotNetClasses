@@ -10,6 +10,7 @@ using GeneXus.Utils;
 using GeneXus.Http.HttpModules;
 using GeneXus.Metadata;
 using GeneXus.Procedure;
+using System.Net;
 
 namespace GeneXus.HttpHandlerFactory
 {
@@ -20,24 +21,14 @@ namespace GeneXus.HttpHandlerFactory
 
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
 		{
-			IHttpHandler handlerToReturn;
+			IHttpHandler handlerToReturn;			
+
 			string relativeURL = context.Request.AppRelativeCurrentExecutionFilePath;
 			string fname = relativeURL.Substring(relativeURL.LastIndexOf('~') + 2);
 			string cname0 = (fname.Contains("."))? fname.Substring(0, fname.LastIndexOf('.')).ToLower():fname.ToLower();
 			string actualPath = "";
-			if (cname0 == "gxresourceprovider")
-			{
-				return new GeneXus.Http.GXResourceProvider();
-			}
-			else if (cname0 == "gxreor")
-			{
-				return new GeneXus.Http.GXReorServices();
-			}
-			else if (cname0 == "gxobject")
-			{
-				return new GeneXus.Http.GXObjectUploadServices();
-			}
-			else if (cname0 == "gxoauthlogout")
+			
+			if (cname0 == "gxoauthlogout")
 			{
 				return new GeneXus.Http.GXOAuthLogout();
 			}
@@ -49,10 +40,6 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				return new GeneXus.Http.GXOAuthAccessToken();
 			}
-			else if (cname0 == "gx_valid_service")
-			{
-				return new GeneXus.Http.GXValidService();
-			}
 			else if (cname0 == "gxmulticall")
 			{
 				return new GeneXus.Http.GXMultiCall();
@@ -63,15 +50,60 @@ namespace GeneXus.HttpHandlerFactory
 				string nspace;
 				Config.GetValueOf("AppMainNamespace", out nspace);
 				String objClass = GXAPIModule.servicesBase[actualPath];
-				String objectName = cname0.Substring(cname0.LastIndexOf("/") + 1);
-
-				if (GXAPIModule.servicesMap.ContainsKey(actualPath) &&
-					 (GXAPIModule.servicesMap[actualPath].TryGetValue(objectName, out String value)))
+				if (cname0.LastIndexOf("/") == (cname0.Length - 1))
+					cname0 = cname0.Substring(0, cname0.Length - 1);
+				String objectName = cname0.Remove(0, actualPath.Length);
+				if (GXAPIModule.servicesMapData.ContainsKey(actualPath) &&
+					GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out String mapName))
 				{
-					var handler = ClassLoader.FindInstance(objClass, nspace, objClass, null, null);
-					var gxContext = new GxContext();
-					GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXProcedure, context, gxContext, value);					
-					return restWrapper ;
+					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
+					{
+						String tmpController = objClass;
+						String asssemblycontroller = tmpController;
+						if (objClass.Contains("\\"))
+						{
+							tmpController = objClass.Substring(objClass.LastIndexOf("\\") + 1);
+							String addNspace = objClass.Substring(0, objClass.LastIndexOf("\\")).Replace("\\", ".");
+							asssemblycontroller = addNspace + "." + tmpController;
+							nspace += "." + addNspace;
+						}
+						GxContext gxContext = GxContext.CreateDefaultInstance();
+						object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
+						gxContext.HttpContext = context;
+						GxRestWrapper restWrapper = new GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias);
+						return restWrapper;
+					}
+				}
+				else
+				{					
+					if ( requestType.Equals("OPTIONS") && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
+					{
+						// OPTIONS VERB
+						string mthheaders = "OPTIONS,HEAD";
+						bool found = false;
+						foreach (Tuple<string, string> t in GXAPIModule.servicesMapData[actualPath].Keys)
+						{
+							if (t.Item1.Equals(objectName.ToLower()))
+							{
+								mthheaders += "," + t.Item2;
+								found = true;
+							}
+						}
+						if (found)
+						{
+							context.Response.Headers.Add("Allow", mthheaders);
+							context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+							context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+							context.Response.Headers.Add("Access-Control-Allow-Methods", mthheaders);
+							context.Response.End();
+						}
+						else
+						{
+							context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+							context.Response.End();
+						}
+						return null;
+					}
 				}
 				return null;
 			}
@@ -111,20 +143,28 @@ namespace GeneXus.HttpHandlerFactory
 			}
             if (objType != null)
             {
-				try
+				if (! typeof(IHttpHandler).IsAssignableFrom(objType))
 				{
-					handlerToReturn = (IHttpHandler)Activator.CreateInstance(objType, null);
+					context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+					handlerToReturn = null;
+					GXLogging.Error(log, objType.FullName + " is not an Http Service");
 				}
-				catch (Exception e)
+				else
 				{
-					GXLogging.Error(log, "GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").", e);
-					GXLogging.Error(log, "Inner Exception", e.InnerException);
-					throw e;
+					try
+					{
+						handlerToReturn = (IHttpHandler)Activator.CreateInstance(objType, null);
+					}
+					catch (Exception e)
+					{
+						GXLogging.Error(log, "GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").", e);
+						GXLogging.Error(log, "Inner Exception", e.InnerException);
+						throw e;
+					}
 				}
-            }
-            else
+			}
+			else
             {
-                
                 handlerToReturn = (IHttpHandler)System.Web.UI.PageParser.GetCompiledPageInstance(url, pathTranslated, context);
             }
 			return handlerToReturn;
@@ -194,8 +234,7 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				
                 objType = GeneXus.Metadata.ClassLoader.FindType(assemblyName, className, null);
-				if (objType == null)
-					
+				if (objType == null)					
 					objType = Assembly.Load(assemblyName).GetType(className);
 			}
 			catch

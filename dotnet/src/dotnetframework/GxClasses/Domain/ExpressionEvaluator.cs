@@ -7,7 +7,7 @@ using log4net;
 using System.Collections;
 namespace GeneXus.Utils
 {
-	
+
 	/// <summary>
 	/// The format of the expression allows numeric constants, PI, operators +, -, *, / and the following
 	/// mathematical functions (pow, sqrt, cos, sin, tan, acos, asin, atan, floor, round, exp, ln, abs, int, frac, max, min)
@@ -20,18 +20,19 @@ namespace GeneXus.Utils
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.ExpressionEvaluator));
 		internal IGxContext context;
 		internal bool throwExceptions;
-		
+
 		internal GXProperties parms = new GXProperties();
 		internal string ns;
 		internal string expr;
 		internal short errCode;
 		internal string errDescription;
 		internal string parentAssembly;
-		
+
 		short PARAMETER_ERROR = 2;
 		short EXPRESSION_ERROR = 3;
 		short EVALUATION_ERROR = 4;
 		short EXTERNAL_FUNCTION_ERROR = 5;
+		internal bool iifContext = false;
 		public GXProperties Variables
 		{
 			get { return parms; }
@@ -53,11 +54,13 @@ namespace GeneXus.Utils
 		{
 			try
 			{
+				errCode = 0;
+				errDescription = "";
 				return eval(expr).D;
 			}
 			catch (OverflowException e)
 			{
-				throwException(EVALUATION_ERROR, "Overflow: "+e.Message);
+				throwException(EVALUATION_ERROR, "Overflow: " + e.Message);
 				return 0;
 			}
 		}
@@ -91,8 +94,8 @@ namespace GeneXus.Utils
 					String parm = tokenizer.NextToken().Trim();
 					if (String.IsNullOrEmpty(parm))
 						continue;
-					int index = parm.IndexOf((System.Char) '=');
-					if (index == - 1 || System.Char.IsDigit(parm[0]))
+					int index = parm.IndexOf((System.Char)'=');
+					if (index == -1 || System.Char.IsDigit(parm[0]))
 					{
 						throwException(PARAMETER_ERROR, "Parm " + parm + " does not comply with format: 'ParmName=ParmValue'");
 					}
@@ -104,7 +107,7 @@ namespace GeneXus.Utils
 							String parmValue = parm.Substring(index + 1).Trim();
 							if (parmValue.Length > 0 && !System.Char.IsDigit(parmValue[0]))
 							{
-								if(parms.ContainsKey(parmValue))
+								if (parms.ContainsKey(parmValue))
 								{
 									parms[parmName] = parms[parmValue];
 								}
@@ -116,7 +119,7 @@ namespace GeneXus.Utils
 							}
 							parms[parmName] = parmValue;
 						}
-						
+
 						catch (System.Exception e)
 						{
 							throwException(PARAMETER_ERROR, "Parm " + parm + " cannot be evaluated: " + e.Message);
@@ -131,7 +134,7 @@ namespace GeneXus.Utils
 			{
 				this.throwExceptions = value;
 			}
-			
+
 		}
 		public ExpressionEvaluator(IGxContext context)
 		{
@@ -147,7 +150,7 @@ namespace GeneXus.Utils
 			this.context = context;
 			Parms = varParms;
 			string nspace;
-			if ( Config.GetValueOf("AppMainNamespace", out nspace ) )
+			if (Config.GetValueOf("AppMainNamespace", out nspace))
 				ns = nspace;
 			parentAssembly = Assembly.GetCallingAssembly().FullName;
 		}
@@ -177,11 +180,9 @@ namespace GeneXus.Utils
 				return 0;
 			}
 		}
-		
+
 		EvalValue eval(String expression)
 		{
-			errCode = 0;
-			errDescription = "";
 			if (expression.Trim().Length == 0)
 				return throwException(EXPRESSION_ERROR, "Empty expression");
 
@@ -189,10 +190,18 @@ namespace GeneXus.Utils
 			{
 				return throwException(EXPRESSION_ERROR, "The expression '" + expression + "' has unbalanced parenthesis");
 			}
-			Tokenizer tokenizer = new Tokenizer(getTokenizerExpression(expression), "'!+-/*><=" + GE + LE + AND + OR + NE, true);
+			String delim = "'!+-/*><=" + GE + LE + AND + OR + NE;
+			bool useParentheses = false;
+			if (iifContext && (expression.Contains("" + AND) || expression.Contains("" + OR)))
+			{
+				delim = "" + AND + OR;
+				useParentheses = true;
+			}
+			Tokenizer tokenizer = new Tokenizer(getTokenizerExpression(expression), delim, true, useParentheses);
+
 			return evaluate(expression, tokenizer);
 		}
-		
+
 		private EvalValue throwException(short errCod, string errDesc)
 		{
 			if (throwExceptions)
@@ -207,20 +216,20 @@ namespace GeneXus.Utils
 				return 0;
 			}
 		}
-		
-		private const char GE = (char) (0x01);
-		private const char LE = (char) (0x02);
+
+		private const char GE = (char)(0x01);
+		private const char LE = (char)(0x02);
 		private const char AND = (char)(0x03);
 		private const char OR = (char)(0x04);
 		private const char NE = (char)(0x05);
 		private String getTokenizerExpression(String expression)
 		{
 			int index;
-			while ((index = expression.IndexOf("==")) != - 1)
+			while ((index = expression.IndexOf("==")) != -1)
 				expression = expression.Substring(0, (index) - (0)) + expression.Substring(index + 1);
-			while ((index = expression.IndexOf(">=")) != - 1)
+			while ((index = expression.IndexOf(">=")) != -1)
 				expression = expression.Substring(0, (index) - (0)) + GE + expression.Substring(index + 2);
-			while ((index = expression.IndexOf("<=")) != - 1)
+			while ((index = expression.IndexOf("<=")) != -1)
 				expression = expression.Substring(0, (index) - (0)) + LE + expression.Substring(index + 2);
 			while ((index = expression.IndexOf("&&")) != -1)
 				expression = expression.Substring(0, (index) - (0)) + AND + expression.Substring(index + 2);
@@ -238,7 +247,7 @@ namespace GeneXus.Utils
 			return expression;
 		}
 
-		private int indexOfKeyword( string expression, string keyw, int nextIndex)
+		private int indexOfKeyword(string expression, string keyw, int nextIndex)
 		{
 			string exp = expression.ToLower();
 			int index = exp.IndexOf(keyw.ToLower(), nextIndex + 1);
@@ -246,7 +255,7 @@ namespace GeneXus.Utils
 			{
 				if (validKeyword(expression, index, keyw))
 					return index;
-				index = exp.IndexOf(keyw.ToLower(), index+1);
+				index = exp.IndexOf(keyw.ToLower(), index + 1);
 			}
 			return index;
 		}
@@ -280,40 +289,40 @@ namespace GeneXus.Utils
 				}
 
 				string soperador = tokenizer.NextToken();
-				if (String.IsNullOrEmpty( soperador.Trim())) continue;	
+				if (String.IsNullOrEmpty(soperador.Trim())) continue;
 
 				char operador = soperador[0];
-				
+
 				switch (operador)
 				{
 					case '+':
 						termino = evaluate(fullExpression, tokenizer, true);
 						retVal = retVal + termino;
 						break;
-					
+
 					case '-':
 						termino = evaluate(fullExpression, tokenizer, true);
 						retVal = retVal - termino;
 						break;
-					
-					case '*': 
+
+					case '*':
 						termino = eval(tokenizer);
 						retVal = retVal * termino;
 						break;
-					
-					case '/': 
+
+					case '/':
 						termino = eval(tokenizer);
 						if (termino == 0 && errCode == 0)
 							throwException(EVALUATION_ERROR, "Division by zero");
 						if (errCode == 0)
 							retVal = retVal / termino;
 						break;
-					
-					case '>':  return retVal > evaluate(fullExpression, tokenizer)?1:0;
+
+					case '>': return retVal > evaluate(fullExpression, tokenizer) ? 1 : 0;
 
 					case '<': return retVal < evaluate(fullExpression, tokenizer) ? 1 : 0;
 
-					case '=': return retVal == evaluate(fullExpression, tokenizer) ? 1:0;
+					case '=': return retVal == evaluate(fullExpression, tokenizer) ? 1 : 0;
 
 					case GE: return retVal >= evaluate(fullExpression, tokenizer) ? 1 : 0;
 
@@ -326,17 +335,17 @@ namespace GeneXus.Utils
 					case NE: return retVal != evaluate(fullExpression, tokenizer) ? 1 : 0;
 
 					default:
-						throwException( EVALUATION_ERROR, "Unknown operator '" + soperador + "' found in expression '" + fullExpression + "'");
+						throwException(EVALUATION_ERROR, "Unknown operator '" + soperador + "' found in expression '" + fullExpression + "'");
 						break;
 				}
 			}
 			return retVal;
 		}
-		
+
 		private EvalValue eval(Tokenizer tokenizer)
 		{
 			String token = getNextToken(tokenizer);
-			
+
 			if (token.ToUpper().Equals("!".ToUpper()))
 			{
 				// Expresion '!expr'
@@ -345,17 +354,17 @@ namespace GeneXus.Utils
 			if (token.ToUpper().Equals("-".ToUpper()))
 			{
 				// Expresion '-expr'
-				return - eval(tokenizer);
+				return -eval(tokenizer);
 			}
 			if (token.ToUpper().Equals("+".ToUpper()))
 			{
 				// Expresion '+expr'
 				return eval(tokenizer);
 			}
-			
+
 			// Finished processing
 			// So check if it is an expression with parentheses, a number, or a function
-			if (token.StartsWith("("))
+			if (token.StartsWith("(") && token.EndsWith(")"))
 			{
 				// Si es una expresion entre parentesis
 				return eval(token.Substring(1, (token.Length - 1) - (1)).Trim());
@@ -383,120 +392,120 @@ namespace GeneXus.Utils
 					s += tk;
 					tk = tokenizer.NextToken();
 				}
-				return new EvalValue( s);
+				return new EvalValue(s);
 			}
 			if (token.ToUpper().Equals("PI".ToUpper()))
 			{
 				return (decimal)System.Math.PI;
 			}
-			
+
 			if (parms.ContainsKey(token))
 			{
 				// If it is a variable, return its value
 				try
 				{
 					return eval(parms[token]);
-					
+
 				}
 				catch (FormatException e)
 				{
 					throwException(EVALUATION_ERROR, "Variable " + token + " cannot be evaluated: " + e.Message);
 				}
 			}
-			
+
 			//If it is none of this, it must be a function
-			
-			int indexLeftParen = token.IndexOf((System.Char) '(');
-			int indexRightParen = token.LastIndexOf((System.Char) ')');
+
+			int indexLeftParen = token.IndexOf((System.Char)'(');
+			int indexRightParen = token.LastIndexOf((System.Char)')');
 			if (indexLeftParen == -1 || indexRightParen == -1 || indexRightParen <= indexLeftParen)
 			{
 				// If it is not a function, it is a variable without reference
 				return throwException(EVALUATION_ERROR, "Invalid variable reference: " + token);
 			}
-			
+
 			String funcName = token.Substring(0, (indexLeftParen) - (0));
 			return evalFuncCall(funcName, token.Substring(indexLeftParen + 1, (indexRightParen) - (indexLeftParen + 1)));
 		}
-		
+
 		private decimal evalFuncCall(String funcName, String expr)
 		{
-			EvalValue result=0;
+			EvalValue result = 0;
 			if (funcName.ToUpper().Equals("rnd".ToUpper()))
 			{
 				// random function
-				result=(decimal)ThreadSafeRandom.NextDouble();
+				result = (decimal)NumberUtil.Random();
 			}
-			else		
+			else
 				// single variable function
 				if (funcName.ToUpper().Equals("abs".ToUpper()))
 			{
-				result=System.Math.Abs(eval(expr).D);
+				result = System.Math.Abs(eval(expr).D);
 			}
-			else	if (funcName.ToUpper().Equals("int".ToUpper()))
+			else if (funcName.ToUpper().Equals("int".ToUpper()))
 			{
 				result = System.Math.Floor(eval(expr).D);
 			}
-			else	if (funcName.ToUpper().Equals("frac".ToUpper()))
+			else if (funcName.ToUpper().Equals("frac".ToUpper()))
 			{
 				EvalValue value = eval(expr);
 				EvalValue int_part = System.Math.Floor(value.D);
-				result= value - int_part;
+				result = value - int_part;
 			}
-            else if (funcName.ToUpper().Equals("sin".ToUpper()))
+			else if (funcName.ToUpper().Equals("sin".ToUpper()))
 			{
-				result= (decimal)System.Math.Sin(Convert.ToDouble( (decimal)eval(expr)));
+				result = (decimal)System.Math.Sin(Convert.ToDouble((decimal)eval(expr)));
 			}
-			else	if (funcName.ToUpper().Equals("asin".ToUpper()))
+			else if (funcName.ToUpper().Equals("asin".ToUpper()))
 			{
 				result = (decimal)System.Math.Asin(Convert.ToDouble((decimal)eval(expr)));
 			}
-			else	if (funcName.ToUpper().Equals("cos".ToUpper()))
+			else if (funcName.ToUpper().Equals("cos".ToUpper()))
 			{
 				result = (decimal)System.Math.Cos(Convert.ToDouble((decimal)eval(expr)));
 			}
-			else	if (funcName.ToUpper().Equals("acos".ToUpper()))
+			else if (funcName.ToUpper().Equals("acos".ToUpper()))
 			{
 				decimal x = eval(expr).D;
 				if (x > 1 || x < -1)
 					throwException(EVALUATION_ERROR, "Invalid range");
 				result = (decimal)System.Math.Acos(Convert.ToDouble(x));
 			}
-			else	if (funcName.ToUpper().Equals("tan".ToUpper()))
+			else if (funcName.ToUpper().Equals("tan".ToUpper()))
 			{
 				result = (decimal)System.Math.Tan(Convert.ToDouble((decimal)eval(expr)));
 			}
-			else	if (funcName.ToUpper().Equals("atan".ToUpper()))
+			else if (funcName.ToUpper().Equals("atan".ToUpper()))
 			{
 				result = (decimal)System.Math.Atan(Convert.ToDouble((decimal)eval(expr)));
 			}
-			else	if (funcName.ToUpper().Equals("floor".ToUpper()))
+			else if (funcName.ToUpper().Equals("floor".ToUpper()))
 			{
 				result = (decimal)System.Math.Floor(Convert.ToDouble((decimal)eval(expr)));
 			}
-			else	if (funcName.ToUpper().Equals("round".ToUpper()))
+			else if (funcName.ToUpper().Equals("round".ToUpper()))
 			{
-				result=  System.Math.Round(eval(expr));
+				result = System.Math.Round(eval(expr));
 			}
-			else	if (funcName.ToUpper().Equals("ln".ToUpper()) || funcName.ToUpper().Equals("log".ToUpper()))
+			else if (funcName.ToUpper().Equals("ln".ToUpper()) || funcName.ToUpper().Equals("log".ToUpper()))
 			{
 				decimal val = eval(expr);
 				if (val <= 0)
 				{
 					return throwException(EVALUATION_ERROR, "Illegal argument (" + val + ") to function log(" + expr + ")");
 				}
-				result= (decimal)System.Math.Log(Convert.ToDouble( val));
+				result = (decimal)System.Math.Log(Convert.ToDouble(val));
 			}
-			else	if (funcName.ToUpper().Equals("exp".ToUpper()))
+			else if (funcName.ToUpper().Equals("exp".ToUpper()))
 			{
 				result = (decimal)System.Math.Exp(Convert.ToDouble((decimal)eval(expr)));
 			}
-			else		if (funcName.ToUpper().Equals("sqrt".ToUpper()))
+			else if (funcName.ToUpper().Equals("sqrt".ToUpper()))
 			{
 				result = (decimal)System.Math.Sqrt(Convert.ToDouble((decimal)eval(expr)));
 			}
-			else		
-				// internal functions of 2 variables
-				if (funcName.ToUpper().Equals("pow".ToUpper()) || funcName.ToUpper().Equals("max".ToUpper()) || funcName.ToUpper().Equals("min".ToUpper()))
+			else
+		 // internal functions of 2 variables
+		 if (funcName.ToUpper().Equals("pow".ToUpper()) || funcName.ToUpper().Equals("max".ToUpper()) || funcName.ToUpper().Equals("min".ToUpper()))
 			{
 				Tokenizer paramTokenizer = new Tokenizer(expr, ",", true);
 				String sarg1, sarg2;
@@ -506,30 +515,30 @@ namespace GeneXus.Utils
 					paramTokenizer.NextToken();
 					sarg2 = getNextToken(paramTokenizer);
 				}
-				catch (System.ArgumentOutOfRangeException )
+				catch (System.ArgumentOutOfRangeException)
 				{
 					return throwException(EVALUATION_ERROR, "The function " + funcName + " needs 2 arguments");
 				}
-				
+
 				decimal arg1 = eval(sarg1);
 				decimal arg2 = eval(sarg2);
-				
+
 				if (funcName.ToUpper().Equals("pow".ToUpper()))
 				{
-					result= (decimal)System.Math.Pow(Convert.ToDouble( arg1), Convert.ToDouble( arg2));
+					result = (decimal)System.Math.Pow(Convert.ToDouble(arg1), Convert.ToDouble(arg2));
 				}
 				else if (funcName.ToUpper().Equals("max".ToUpper()))
 				{
-					result= System.Math.Max(arg1, arg2);
+					result = System.Math.Max(arg1, arg2);
 				}
 				else if (funcName.ToUpper().Equals("min".ToUpper()))
 				{
-					result= System.Math.Min(arg1, arg2);
+					result = System.Math.Min(arg1, arg2);
 				}
 			}
 			else
-			
-				if (funcName.ToUpper().Equals("iif".ToUpper()))
+
+		 if (funcName.ToUpper().Equals("iif".ToUpper()))
 			{
 				// iif
 				Tokenizer paramTokenizer = new Tokenizer(expr, ",", true);
@@ -546,27 +555,29 @@ namespace GeneXus.Utils
 				{
 					return throwException(EVALUATION_ERROR, "The function " + funcName + " needs 3 arguments");
 				}
+				iifContext = true;
 				bool iif_result = (eval(sarg1) != 0);
+				iifContext = false;
 				if (ErrCode != 0)
 					return result;
 				if (iif_result)
-					result= eval(sarg2);
+					result = eval(sarg2);
 				else
-					result= eval(sarg3);
+					result = eval(sarg3);
 			}
 			else
 			{
-			
-				result= evalExternalFunctionCall(funcName, expr);
+
+				result = evalExternalFunctionCall(funcName, expr);
 			}
 			return result;
 		}
 		private void DynamicExecute(string funcName, object[] callParms)
 		{
 			if (!String.IsNullOrEmpty(parentAssembly))
-				ClassLoader.Execute( parentAssembly, ns, funcName, new object[] { context }, "execute", callParms);
-			else 
-				ClassLoader.Execute( Assembly.GetExecutingAssembly().FullName, ns, funcName, new object[]{context}, "execute",  callParms);
+				ClassLoader.Execute(parentAssembly, ns, funcName, new object[] { context }, "execute", callParms);
+			else
+				ClassLoader.Execute(Assembly.GetExecutingAssembly().FullName, ns, funcName, new object[] { context }, "execute", callParms);
 		}
 		private decimal evalExternalFunctionCall(String funcName, String expr)
 		{
@@ -590,21 +601,21 @@ namespace GeneXus.Utils
 					else
 						functionParms.Add(eValue.S);
 				}
-				
+
 				if (paramTokenizer.HasMoreTokens())
 				{
 					// Consume the ','
 					paramTokenizer.NextToken();
 				}
 			}
-			functionParms.Add((decimal) 0); 
+			functionParms.Add((decimal)0);
 			System.Object[] callParms = new System.Object[functionParms.Count];
 			functionParms.CopyTo(callParms);
-			
+
 			bool pAdded = false;
 			try
 			{
-				
+
 				funcName = funcName.ToLower();
 
 				DynamicExecute(funcName, callParms);
@@ -613,12 +624,12 @@ namespace GeneXus.Utils
 			catch (System.Exception e)
 			{
 				bool retrySuccessful = false;
-				
-				if (!pAdded && e.ToString().IndexOf("ClassNotFoundException") != - 1)
+
+				if (!pAdded && e.ToString().IndexOf("ClassNotFoundException") != -1)
 				{
 					try
 					{
-						
+
 						DynamicExecute("p" + funcName, callParms);
 						retrySuccessful = true;
 					}
@@ -628,25 +639,29 @@ namespace GeneXus.Utils
 				}
 				if (!retrySuccessful)
 				{
-					
+
 					return throwException(EXTERNAL_FUNCTION_ERROR, e.Message);
 				}
 			}
 
 			return Convert.ToDecimal(callParms[callParms.Length - 1], System.Globalization.CultureInfo.InvariantCulture);
 		}
-		
+
 		private String getNextToken(Tokenizer tokenizer)
 		{
 			String token = "";
-			do 
+			do
 			{
 				token += tokenizer.NextToken();
 			}
 			while (!matchParentesis(token) || (String.IsNullOrEmpty(token.Trim()) && tokenizer.HasMoreTokens()));
+			if (tokenizer.useParentheses() && !token.StartsWith("("))
+			{
+				return "(" + token.Trim() + ")";
+			}
 			return token.Trim();
 		}
-		
+
 		private bool matchParentesis(String token)
 		{
 			int cantLeft = 0, cantRight = 0;
@@ -681,16 +696,18 @@ namespace GeneXus.Utils
 
 		/// Char representation of the String to tokenize.
 		private char[] chars;
-			
+
 		//The tokenizer uses the default delimiter set: the space character, the tab character, the newline character, and the carriage-return character and the form-feed character
-		private string delimiters = " \t\n\r\f";		
+		private string delimiters = " \t\n\r\f";
+
+		private bool parentheses;
 
 		/// <summary>
 		/// Initializes a new class instance with a specified string to process
 		/// </summary>
 		/// <param name="source">String to tokenize</param>
 		public Tokenizer(String source)
-		{			
+		{
 			this.chars = source.ToCharArray();
 		}
 
@@ -700,8 +717,8 @@ namespace GeneXus.Utils
 		/// </summary>
 		/// <param name="source">String to tokenize</param>
 		/// <param name="delimiters">String containing the delimiters</param>
-		public Tokenizer(String source, String delimiters):this(source)
-		{			
+		public Tokenizer(String source, String delimiters) : this(source)
+		{
 			this.delimiters = delimiters;
 		}
 
@@ -712,17 +729,22 @@ namespace GeneXus.Utils
 		/// <param name="source">String to tokenize</param>
 		/// <param name="delimiters">String containing the delimiters</param>
 		/// <param name="includeDelims">Determines if delimiters are included in the results.</param>
-		public Tokenizer(String source, String delimiters, bool includeDelims):this(source,delimiters)
+		public Tokenizer(String source, String delimiters, bool includeDelims) : this(source, delimiters)
 		{
 			this.includeDelims = includeDelims;
-		}	
+		}
+
+		public Tokenizer(String str, String delim, bool returnDelims, bool useParentheses) : this(str, delim, returnDelims)
+		{
+			this.parentheses = useParentheses;
+		}
 
 		/// <summary>
 		/// Returns the next token from the token list
 		/// </summary>
 		/// <returns>The string value of the token</returns>
 		public String NextToken()
-		{				
+		{
 			return NextToken(this.delimiters);
 		}
 
@@ -760,11 +782,11 @@ namespace GeneXus.Utils
 			//at the end 
 			if (this.currentPos == this.chars.Length)
 				throw new System.ArgumentOutOfRangeException();
-				//if over a delimiter and delimiters must be returned
-			else if (   (System.Array.IndexOf(delimiters.ToCharArray(),chars[this.currentPos], 0, delimiters.Length) != -1)
-				&& this.includeDelims )                	
+			//if over a delimiter and delimiters must be returned
+			else if ((System.Array.IndexOf(delimiters.ToCharArray(), chars[this.currentPos], 0, delimiters.Length) != -1)
+				&& this.includeDelims)
 				return "" + this.chars[this.currentPos++];
-				//need to get the token wo delimiters.
+			//need to get the token wo delimiters.
 			else
 				return nextToken(delimiters.ToCharArray());
 		}
@@ -772,29 +794,29 @@ namespace GeneXus.Utils
 		//Returns the nextToken wo delimiters
 		private String nextToken(char[] delimiters)
 		{
-			string token="";
+			string token = "";
 			long pos = this.currentPos;
 
 			//skip possible delimiters
-			while (System.Array.IndexOf(delimiters,this.chars[currentPos],0,delimiters.Length) != -1)
+			while (System.Array.IndexOf(delimiters, this.chars[currentPos], 0, delimiters.Length) != -1)
 				//The last one is a delimiter (i.e there is no more tokens)
 				if (++this.currentPos == this.chars.Length)
 				{
 					this.currentPos = pos;
 					throw new System.ArgumentOutOfRangeException();
 				}
-			
+
 			//getting the token
-			while (System.Array.IndexOf(delimiters,this.chars[this.currentPos],0, delimiters.Length) == -1)
+			while (System.Array.IndexOf(delimiters, this.chars[this.currentPos], 0, delimiters.Length) == -1)
 			{
-				token+=this.chars[this.currentPos];
+				token += this.chars[this.currentPos];
 				//the last one is not a delimiter
 				if (++this.currentPos == this.chars.Length)
 					break;
 			}
 			return token;
 		}
-				
+
 		/// <summary>
 		/// Determines if there are more tokens to return from the source string
 		/// </summary>
@@ -804,13 +826,18 @@ namespace GeneXus.Utils
 			string dummyToken;
 			return Peek(out dummyToken);
 		}
+
+		public bool useParentheses()
+		{
+			return parentheses;
+		}
 	}
 
 	public class FastTokenizer
 	{
 		int pos;
 		string s;
-		string delimiters = "!+-/*><=()"+GE+LE+AND+OR+NE;
+		string delimiters = "!+-/*><=()" + GE + LE + AND + OR + NE;
 		string includeDelimiters = "(";
 		private const char GE = (char)(0x01);
 		private const char LE = (char)(0x02);
@@ -835,10 +862,10 @@ namespace GeneXus.Utils
 			while (pos < s.Length)
 			{
 				char c = s[pos++];
-				
+
 				if (delimiters.IndexOf(c) != -1)
 				{
-					
+
 					if (includeDelimiters.IndexOf(c) != -1)
 						tk += c;
 
@@ -851,7 +878,7 @@ namespace GeneXus.Utils
 			return tk;
 		}
 	}
-	
+
 	class EvalValue
 	{
 		string stringValue;
@@ -866,11 +893,11 @@ namespace GeneXus.Utils
 		}
 		public decimal D
 		{
-			get {return decimalValue;}
+			get { return decimalValue; }
 		}
 		public string S
 		{
-			get {return stringValue;}
+			get { return stringValue; }
 		}
 
 		public static EvalValue operator +(EvalValue a, EvalValue b)
@@ -892,7 +919,7 @@ namespace GeneXus.Utils
 			if (a.stringValue == null)
 				return new EvalValue(a.D * b.D);
 			else
-				throw new ArgumentException( "Invalid operation: string * string");
+				throw new ArgumentException("Invalid operation: string * string");
 		}
 		public static EvalValue operator /(EvalValue a, EvalValue b)
 		{
@@ -915,18 +942,18 @@ namespace GeneXus.Utils
 			else
 				throw new ArgumentException("Invalid operation: string < string");
 		}
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-        public override bool Equals(object obj)
-        {
-            EvalValue b = obj as EvalValue;
-            if (stringValue == null)
-                return D == b.D;
-            else
-                return S == b.S;
-        }
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
+		}
+		public override bool Equals(object obj)
+		{
+			EvalValue b = obj as EvalValue;
+			if (stringValue == null)
+				return D == b.D;
+			else
+				return S == b.S;
+		}
 		public static bool operator ==(EvalValue a, EvalValue b)
 		{
 			if (a.stringValue == null)
@@ -971,7 +998,7 @@ namespace GeneXus.Utils
 		}
 		public static implicit operator EvalValue(int a)
 		{
-			return new EvalValue( a);
+			return new EvalValue(a);
 		}
 		public static implicit operator EvalValue(decimal a)
 		{

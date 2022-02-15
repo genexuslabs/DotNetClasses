@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<DefineConstants>NETCORE;</DefineConstants>
+		<DefineConstants>NETCOREAPP1_1</DefineConstants>
+		<PackageId>GeneXus.SDAPI.Core</PackageId>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Platforms\**" />
+    <EmbeddedResource Remove="Platforms\**" />
+    <None Remove="Platforms\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\SDNetAPI\Certificates.cs" Link="Certificates.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\NotificationParameters.cs" Link="NotificationParameters.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\Notifications.cs" Link="Notifications.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\ChannelEvents.cs" Link="PushSharp\Common\ChannelEvents.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\Exceptions.cs" Link="PushSharp\Common\Exceptions.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\Notification.cs" Link="PushSharp\Common\Notification.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\PlatformType.cs" Link="PushSharp\Common\PlatformType.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\PushChannelBase.cs" Link="PushSharp\Common\PushChannelBase.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\PushChannelSettings.cs" Link="PushSharp\Common\PushChannelSettings.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\PushServiceBase.cs" Link="PushSharp\Common\PushServiceBase.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\PushServiceSettings.cs" Link="PushSharp\Common\PushServiceSettings.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Common\PushSettings.cs" Link="PushSharp\Common\PushSettings.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Core\NotificationFactory.cs" Link="PushSharp\Core\NotificationFactory.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\PushSharp\Core\PushService.cs" Link="PushSharp\Core\PushService.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\RemoteNotification.cs" Link="RemoteNotification.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\RemoteNotificationResult.cs" Link="RemoteNotificationResult.cs" />
+    <Compile Include="..\..\dotnetframework\SDNetAPI\Utils.cs" Link="Utils.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Collections" Version="4.3.0" />
+    <PackageReference Include="System.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Json" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+		<Reference Include="Jayrock-JSON">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\Jayrock.dll</HintPath>
+		</Reference>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="PushSharp\Common\" />
+    <Folder Include="PushSharp\Core\" />
+  </ItemGroup>
+</Project>
