@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
-		<NoWarn>CS8032</NoWarn>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -12,6 +12,7 @@
 	</PropertyGroup>
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+		<Compile Include="..\DotNetUnitTest\FileIO\Xslt.cs" Link="FileIO\Xslt.cs" />
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3PrivateTest.cs" Link="ExternalProvider\ExternalProviderS3PrivateTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderTest.cs" Link="ExternalProvider\ExternalProviderTest.cs" />		
@@ -21,26 +22,40 @@
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGooglePrivateTest.cs" Link="ExternalProvider\ExternalProviderGooglePrivateTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGoogleTest.cs" Link="ExternalProvider\ExternalProviderGoogleTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderOracleTest.cs" Link="ExternalProvider\ExternalProviderOracleTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\FileIO\MimeTypesTest.cs" Link="FileIO\MimeTypesTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\PDF\apdfbasictest.cs" Link="PDF\apdfbasictest.cs" />		
+		<Compile Include="..\DotNetUnitTest\PDF\PDFTests.cs" Link="PDF\PDFTests.cs" />		
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</EmbeddedResource>
+		<Content Include="..\DotNetUnitTest\resources\xml\error.xml" Link="resources\xml\error.xml">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
 		<Content Include="FullTextSearch\Ugly.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
+	
+	
   <ItemGroup>
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+	  <PackageReference Include="iTextSharp" Version="5.5.13.2" />
+
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+		<PackageReference Include="xunit" Version="2.4.1" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="3.0.2">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,6 +64,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
@@ -64,6 +80,9 @@
 
 
 	<ItemGroup>
+		<None Update="apps\append.svc">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="FullTextSearch\Ugly.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -79,9 +98,56 @@
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Update="private\api1.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\api_4r.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\c003_api.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\c007_api.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\casosdates.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\casosdatetimes.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\mailmanagement.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\mailmanagementsso.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\mailmanagementv2.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="private\mailmanagement_a.grp.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="resources\text.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Folder Include="apps\" />
+	  <Folder Include="PDF\" />
+	  <Folder Include="resources\xml\" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <None Include="..\DotNetUnitTest\resources\xml\xmlTohtml1.xsl" Link="resources\xml\xmlTohtml1.xsl">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="..\DotNetUnitTest\sample.pdf" Link="sample.pdf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

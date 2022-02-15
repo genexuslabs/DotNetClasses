@@ -335,6 +335,7 @@ namespace GeneXus.Mime
 				this.AddMapping(".stl", "application/vnd.ms-pki.stl");
 				this.AddMapping(".sv4cpio", "application/x-sv4cpio");
 				this.AddMapping(".sv4crc", "application/x-sv4crc");
+				this.AddMapping(".svg", "image/svg+xml");
 				this.AddMapping(".swf", "application/x-shockwave-flash");
 				this.AddMapping(".t", "application/x-troff");
 				this.AddMapping(".tar", "application/x-tar");

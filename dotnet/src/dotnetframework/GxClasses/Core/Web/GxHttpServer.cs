@@ -157,7 +157,14 @@ namespace GeneXus.Http.Server
 				if (eqIdx != -1)
 				{
 					string filename = value.Substring(eqIdx + 1).Trim();
-					value = value.Substring(0, eqIdx + 1) + GXUtil.UrlEncode(filename);
+					try
+					{
+						value = value.Substring(0, eqIdx + 1) + Uri.EscapeDataString(filename);
+					}
+					catch(UriFormatException) //Contains High Surrogate Chars
+					{
+						value = value.Substring(0, eqIdx + 1) + GXUtil.UrlEncode(filename);
+					}
 				}
 			}
 			return value;
@@ -339,7 +346,7 @@ namespace GeneXus.Http.Server
 					else
 						return String.Empty;
 #else
-					return _context.HttpContext.Features.Get<IHttpConnectionFeature>()?.RemoteIpAddress.ToString();
+					return _context.HttpContext.GetUserHostAddress();
 #endif
 				}
 				catch 

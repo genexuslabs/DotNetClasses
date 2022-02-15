@@ -430,9 +430,10 @@ namespace GeneXus.Utils
 			}
 			string fld;
 			short err = getNextFld(length, out fld);
+			fld = stripDelimiters(fld);
+			s=fld;
 			if (err == GX_ASCDEL_SUCCESS)
 			{
-				fld = stripDelimiters(fld);
 				if (length != 0)
 				{
 					try
@@ -441,12 +442,9 @@ namespace GeneXus.Utils
 					}
 					catch
 					{
-						s = fld;
 						return GX_ASCDEL_OVERFLOW;
 					}
 				}
-				else
-					s = fld;
 			}
 			return err;
 		}

@@ -1,18 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net5.0</TargetFramework>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<AssemblyName>GeneXusXMLSignatureNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<PackageId>GeneXus.SecurityApi.XmlSignature.Core</PackageId>
 	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    
-  </PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0'">
-	</PropertyGroup>
-	<PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
+	<PropertyGroup>
 		<DefineConstants>NETCORE</DefineConstants>
 	</PropertyGroup>
   <ItemGroup>

@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<PackageTags>DataInitialization</PackageTags>
 		<PackageId>GeneXus.DataInitialization.Core</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
+		<DefineConstants>NETCORE</DefineConstants>
 	</PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
@@ -28,13 +29,9 @@
   </ItemGroup>
 
    <ItemGroup>
-		<Content Include="netcoreapp3.1\$(MSBuildProjectName).deps.json">
+		<Content Include="net6.0\$(MSBuildProjectName).deps.json">
 			<Pack>true</Pack>
-			<PackagePath>\content\netcoreapp3.1\</PackagePath>
-		</Content>
-		<Content Include="net5.0\$(MSBuildProjectName).deps.json">
-			<Pack>true</Pack>
-			<PackagePath>\content\net5.0\</PackagePath>
+			<PackagePath>\content\net6.0\</PackagePath>
 		</Content>
 	</ItemGroup>
 </Project>

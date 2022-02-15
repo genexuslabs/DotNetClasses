@@ -4,6 +4,7 @@ using GeneXus.Http;
 using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
 using Xunit;
+using System;
 
 namespace UnitTesting
 {
@@ -32,10 +33,10 @@ namespace UnitTesting
 		{
 			string ecryptionTmp = pgmName + UrlEncode(StringUtil.LTrimStr(1, 1, 0)) + "," + UrlEncode(StringUtil.LTrimStr(0, 1, 0)) + "," + UrlEncode(StringUtil.RTrim("jhon@4rtecnology.com")) + "," + UrlEncode(StringUtil.RTrim("John Paul")) + "," + UrlEncode(StringUtil.RTrim("424b25")) + "," + UrlEncode(StringUtil.RTrim("Request"));
 			string encrypted = Encrypt64(ecryptionTmp + Crypto.CheckSum(ecryptionTmp, 6), GXKey);
-			Assert.Contains("//", encrypted);
+			Assert.Contains("//", encrypted, StringComparison.InvariantCulture);
 
 			string uriEncrypted = UriEncrypt64(ecryptionTmp + Crypto.CheckSum(ecryptionTmp, 6), GXKey);
-			Assert.DoesNotContain("//", uriEncrypted);
+			Assert.DoesNotContain("//", uriEncrypted, StringComparison.InvariantCulture);
 
 			string GXDecQS = UriDecrypt64(encrypted, GXKey);
 			bool isMatch = (StringUtil.StrCmp(StringUtil.Right(GXDecQS, 6), Crypto.CheckSum(StringUtil.Left(GXDecQS, (short)(StringUtil.Len(GXDecQS) - 6)), 6)) == 0) && (StringUtil.StrCmp(StringUtil.Substring(GXDecQS, 1, StringUtil.Len(pgmName)), pgmName) == 0);
