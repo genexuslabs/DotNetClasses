@@ -81,9 +81,6 @@
 
 
 	<ItemGroup>
-		<None Update="application.key">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Update="apps\append.svc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
