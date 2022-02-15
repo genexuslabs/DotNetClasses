@@ -24,12 +24,12 @@ namespace GeneXus.Application
 		{
 			_worker = sdt;
 		}
-		protected override GXBaseObject Worker => _worker.trn as GXBaseObject;
+		internal override GXBaseObject Worker => _worker.trn as GXBaseObject;
 		public override Task Post()
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ServiceInsertPermissionPrefix))
 				{
 					return Task.CompletedTask;
 				}
@@ -101,7 +101,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ServiceExecutePermissionPrefix))
 				{
 					return Task.CompletedTask;
 				}
@@ -144,7 +144,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ServiceDeletePermissionPrefix))
 				{
 					return Task.CompletedTask;
 				}
@@ -182,7 +182,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ServiceUpdatePermissionPrefix))
 				{
 					return Task.CompletedTask;
 				}

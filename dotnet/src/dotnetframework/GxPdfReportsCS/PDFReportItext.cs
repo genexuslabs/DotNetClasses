@@ -1231,7 +1231,9 @@ namespace com.genexus.reports
 
 
 				ColumnText Col = new ColumnText(cb);
-				Col.Alignment = ColumnAlignment(alignment);
+				int colAlignment = ColumnAlignment(alignment);
+				if (colAlignment != 0)
+					Col.Alignment = colAlignment;
 				ColumnText simulationCol = new ColumnText(null);
 				float drawingPageHeight = (float)this.pageSize.Top - topMargin - bottomMargin;
 
@@ -1285,7 +1287,8 @@ namespace com.genexus.reports
 								else
 								{
 									Col = new ColumnText(cb);
-									Col.Alignment = ColumnAlignment(alignment);
+									if (colAlignment != 0)
+										Col.Alignment = colAlignment;
 									SetSimpleColumn(Col, rect);
 								}
 
@@ -1294,7 +1297,8 @@ namespace com.genexus.reports
 						Paragraph p = element as Paragraph;
 						if (p != null)
 						{
-							p.Alignment = ColumnAlignment(alignment);
+							if (colAlignment != 0)
+								p.Alignment = colAlignment;
 							if (firstPar && drawWithTable)
 							{
 								p.SetLeading(0, 1);

@@ -5,6 +5,8 @@ using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 #else
 using System.Web.SessionState;
 #endif
@@ -80,7 +82,7 @@ namespace GeneXus.Application
 			if (_httpContext != null)_httpContext.Response.ContentType = "application/json; charset=utf-8";		
 			RunAsMain = true;
 		}
-		protected virtual GXBaseObject Worker
+		internal virtual GXBaseObject Worker
 		{
 			get { return _procWorker; }
 		}
@@ -126,17 +128,16 @@ namespace GeneXus.Application
 					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
 					wrapped = false;
 				}				
-
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-				}
+				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
-				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
+				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -282,17 +283,15 @@ namespace GeneXus.Application
 					{
 						innerMethod = _serviceMethod;
 					}
-
 					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
 					formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				}
-				
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);	
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -509,7 +508,7 @@ namespace GeneXus.Application
 		{
 			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
 		}
-		private bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
+		protected bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{
 			if (!objIntegratedSecurityEnabled)
 			{
@@ -547,16 +546,8 @@ namespace GeneXus.Application
 						}
 						else
 						{
-							HttpHelper.SetGamError(_httpContext, result.Code, result.Description);
-							if (sessionOk)
-							{
-								SetStatusCode(HttpStatusCode.Forbidden);
-							}
-							else
-							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(_gxContext.GetServerName(), result.Code, result.Description));
-								SetStatusCode(HttpStatusCode.Unauthorized);
-							}
+							HttpStatusCode defaultStatusCode = sessionOk ? HttpStatusCode.Forbidden : HttpStatusCode.Unauthorized;
+							HttpHelper.SetGamError(_httpContext, result.Code, result.Description, defaultStatusCode);
 							return false;
 						}
 					}
@@ -703,7 +694,7 @@ namespace GeneXus.Application
 				}				
 				else
 					strVal = parameters[key];
-				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
+				json = JSONHelper.WCFSerialize( strVal, Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
@@ -775,10 +766,17 @@ namespace GeneXus.Application
 				else
 				{
 					object o = MakeRestType(outputParameters[k]);
-					if (o == null)
-						outputParameters.Remove(k);
+					if (p !=null && p.SdtSerializeAsNull())
+					{						
+						outputParameters[k] = JNull.Value;
+					}
 					else
-						outputParameters[k] = o;
+					{
+						if (o == null)
+							outputParameters.Remove(k);
+						else
+							outputParameters[k] = o;
+					}
 				}
 			}			
 		}

@@ -354,6 +354,9 @@ namespace GeneXus.Configuration
 		}
 		public static CultureInfo GetCultureForLang(string lang)
 		{
+			if (string.IsNullOrEmpty(StringUtil.Trim(lang)) && Config.GetValueOf("LANG_NAME", out string kbLanguage))
+				lang = kbLanguage;
+
 			string culture = lang;
 			switch (culture.ToLower())
 			{
