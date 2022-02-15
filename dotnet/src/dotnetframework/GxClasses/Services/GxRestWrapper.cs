@@ -5,6 +5,8 @@ using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 #else
 using System.Web.SessionState;
 #endif
@@ -695,7 +697,7 @@ namespace GeneXus.Application
 				}				
 				else
 					strVal = parameters[key];
-				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
+				json = JSONHelper.WCFSerialize( strVal, Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
@@ -767,10 +769,17 @@ namespace GeneXus.Application
 				else
 				{
 					object o = MakeRestType(outputParameters[k]);
-					if (o == null)
-						outputParameters.Remove(k);
+					if (p !=null && p.SdtSerializeAsNull())
+					{						
+						outputParameters[k] = JNull.Value;
+					}
 					else
-						outputParameters[k] = o;
+					{
+						if (o == null)
+							outputParameters.Remove(k);
+						else
+							outputParameters[k] = o;
+					}
 				}
 			}			
 		}
