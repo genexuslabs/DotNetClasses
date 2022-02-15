@@ -332,7 +332,7 @@ namespace GeneXus.Data
 		{
 			return new GxCacheDataReader (item, computeSize, keyCache);
 		}
-		public IsolationLevel IsolationLevelTrn
+		public virtual IsolationLevel IsolationLevelTrn
 		{
 			get{ return isolationLevel;}
 			set { isolationLevel=value;}
@@ -477,18 +477,18 @@ namespace GeneXus.Data
 		}
 		public virtual string SetTimeoutSentence(long milliseconds){ return null;}
 
-		public int LockTimeout
+		public virtual int LockTimeout
 		{
 			get{ return m_lockTimeout;}
 			set{ m_lockTimeout=value;}
 		}
 
-		public int LockRetryCount
+		public virtual int LockRetryCount
 		{
 			get{ return m_lockRetryCount;}
 			set{ m_lockRetryCount=value;}
 		}
-        public string DataBaseName
+        public virtual string DataBaseName
         {
             get { return m_dataBaseName; }
             set { m_dataBaseName = value; }
@@ -846,7 +846,7 @@ namespace GeneXus.Data
 			return 	con.ConnectionCache.GetPreparedCommand(stmt);
 		}
 
-		public string ConnectionString 
+		public virtual string ConnectionString 
 		{
 			get{ return m_connectionString;}
 			set{ m_connectionString=value;}
@@ -939,7 +939,7 @@ namespace GeneXus.Data
 			}
 		}			
 
-		public string DataSource
+		public virtual string DataSource
 		{
 			get {return m_datasource;}
 			set{m_datasource=value;}

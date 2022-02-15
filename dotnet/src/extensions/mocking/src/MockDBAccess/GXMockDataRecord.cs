@@ -13,6 +13,15 @@ namespace GeneXus.Data
 		{
 			dataRecordImpl=innerInstance; 
 		}
+		public override string DataSource { get => dataRecordImpl.DataSource; set => dataRecordImpl.DataSource=value; }
+		public override string DataBaseName { get => dataRecordImpl.DataBaseName; set => dataRecordImpl.DataBaseName=value; }
+		public override string ConnectionString { get => dataRecordImpl.ConnectionString; set => dataRecordImpl.ConnectionString=value; }
+		public override bool MultiThreadSafe => dataRecordImpl.MultiThreadSafe;
+
+		public override bool AllowsDuplicateParameters => dataRecordImpl.AllowsDuplicateParameters;
+		public override IsolationLevel IsolationLevelTrn { get => dataRecordImpl.IsolationLevelTrn; set => dataRecordImpl.IsolationLevelTrn=value; }
+		public override int LockRetryCount { get => base.LockRetryCount; set => base.LockRetryCount=value; }
+		public override int LockTimeout { get => base.LockTimeout; set => base.LockTimeout=value; }
 		public override IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters, bool isCursor, bool forFirst, bool isRpc)
 		{
 			return new GXMockDbCommand(dataRecordImpl.GetCommand(con, stmt, parameters, isCursor, forFirst, isRpc));
