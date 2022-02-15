@@ -6,10 +6,6 @@ on:
       - 'master'
       - 'beta'
       - 'release-*'
-    paths:
-      - 'dotnet/**'
-    ignore-paths:
-      - '*.md'
 
 jobs:
   dispatchWorkflow:

@@ -1002,7 +1002,7 @@ namespace GeneXus.Http.Client
 
 			setHeaders(req);
 
-			if (method.ToUpper() != "GET")
+			if (!method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) && !method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase))
 			{
 #if !NETCORE
 				using (Stream reqStream = req.GetRequestStream())
