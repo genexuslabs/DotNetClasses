@@ -50,6 +50,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <None Update="application.key">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="confmapping.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
