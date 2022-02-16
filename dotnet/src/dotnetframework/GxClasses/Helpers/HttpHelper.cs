@@ -67,6 +67,14 @@ namespace GeneXus.Http
 	public class HttpHelper
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
+		/*
+		* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+		* Specifying no-cache or max-age=0 indicates that 
+		* clients can cache a resource and must revalidate each time before using it. 
+		* This means HTTP request occurs each time, but it can skip downloading HTTP body if the content is valid.
+		*/
+		public static string CACHE_CONTROL_HEADER_NO_CACHE = "no-cache, max-age=0";
+		public static string CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE = "max-age=0, no-cache, no-store, must-revalidate";
 		public const string ASPX = ".aspx";
 		public const string GXOBJECT = "/gxobject";
 		public const string HttpPostMethod= "POST";
