@@ -53,8 +53,8 @@ namespace GeneXus.HttpHandlerFactory
 				if (cname0.LastIndexOf("/") == (cname0.Length - 1))
 					cname0 = cname0.Substring(0, cname0.Length - 1);
 				String objectName = cname0.Remove(0, actualPath.Length);
-				if (GXAPIModule.servicesMapData.ContainsKey(actualPath) &&
-					GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out String mapName))
+				Dictionary<string, object> routeParms;
+				if (GXAPIModule.servicesMapData.ContainsKey(actualPath) && GetSMap(actualPath, objectName, requestType, out string mapName, out routeParms))					
 				{
 					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
 					{
@@ -67,10 +67,10 @@ namespace GeneXus.HttpHandlerFactory
 							asssemblycontroller = addNspace + "." + tmpController;
 							nspace += "." + addNspace;
 						}
-						GxContext gxContext = GxContext.CreateDefaultInstance();
-						object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
-						gxContext.HttpContext = context;
-						GxRestWrapper restWrapper = new GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias);
+						var gxContext = GxContext.CreateDefaultInstance();
+						var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
+						gxContext.HttpContext = context;						
+						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias, routeParms);
 						return restWrapper;
 					}
 				}
@@ -170,6 +170,36 @@ namespace GeneXus.HttpHandlerFactory
 			return handlerToReturn;
 		}
 
+		public bool  GetSMap(string actualPath, string objectName, string requestType, out string mapName, out Dictionary<string, object> routeParms)
+		{
+			routeParms = null;
+			if (GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out mapName))
+			{				
+				return true;
+			}
+			else
+			{
+				foreach (SingleMap m in GXAPIModule.servicesMap[actualPath].Values)
+				{
+					if (!m.Path.Equals(m.PathRegexp) && GxRegex.IsMatch(objectName, m.PathRegexp))
+					{
+						mapName = m.Name;						
+						routeParms = new Dictionary<string, object>();
+						int i=0;
+						foreach (string smatch in ((GeneXus.Utils.GxRegexMatch)GxRegex.Matches(objectName, m.PathRegexp)[0]).Groups)
+						{
+							string var  = ((GeneXus.Utils.GxRegexMatch)GxRegex.Matches(m.Path, m.PathRegexp)[0]).Groups[i];
+							var = var.Substring(1, var.Length -2);
+							routeParms.Add(var, smatch);
+							i++;
+						}
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		
 		internal static List<string> GetGxNamespaces(HttpContext context, string mainNamespace)
 		{
 			if (GxNamespaces == null)
