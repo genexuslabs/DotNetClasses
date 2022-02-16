@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using GeneXus.Cache;
+using GeneXus.Utils;
 
 namespace GeneXus.Data
 {
@@ -364,7 +366,7 @@ namespace GeneXus.Data
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
 
-			Array.Copy(this._values, values, 0);
+			Array.Copy(this._values, values, this._values.Length);
 
 			return this._values.Length;
 		}
@@ -455,8 +457,13 @@ namespace GeneXus.Data
 		private List<MemoryDataRecord> _records = new List<MemoryDataRecord>();
 
 		private DataTable _schemaDataTable = null;
-
+		private IGxConnection con;
 		private int _currentIndex = -1;
+		private SlidingTime expiration;
+		private bool cached;
+		private string key;
+		private GxArrayList block;
+		private long readBytes;
 
 		#endregion
 
@@ -477,7 +484,8 @@ namespace GeneXus.Data
 
 		}
 
-		public MemoryDataReader(IDataReader reader)
+		public MemoryDataReader(IDataReader reader, IGxConnection connection, GxParameterCollection parameters,
+			string stmt, ushort fetchSize, bool isForFirst, bool withCached, SlidingTime expiration)
 			: this()
 		{
 			if (reader == null) throw new ArgumentNullException(nameof(reader));
@@ -501,6 +509,14 @@ namespace GeneXus.Data
 				}
 
 				this.AddRecord(reader, colnames);
+			}
+			this.cached = withCached;
+			this.con = connection;
+			block = new GxArrayList(fetchSize);
+			if (cached)
+			{
+				this.key = SqlUtil.GetKeyStmtValues(parameters, stmt, isForFirst);
+				this.expiration = expiration;
 			}
 		}
 
@@ -586,9 +602,27 @@ namespace GeneXus.Data
 			else
 				this._currentIndex = 0;
 
+			if (cached)
+			{
+				AddToCache(this._records.Count > 0);
+			}
+
 			return this._records.Count > 0;
 		}
-
+		public void AddToCache(bool hasNext)
+		{
+			if (hasNext)
+			{
+				object[] values = new object[FieldCount];
+				MemoryDataRecord record = this._records[0];
+				record.GetValues(values);
+				block.Add(values);
+			}
+			else
+			{
+				SqlUtil.AddBlockToCache(key, new CacheItem(block, false, block.Count, readBytes), con, expiration != null ? (int)expiration.ItemSlidingExpiration.TotalMinutes : 0);
+			}
+		}
 		public int RecordsAffected
 		{
 			get
@@ -641,7 +675,7 @@ namespace GeneXus.Data
 		public bool GetBoolean(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
+			readBytes += 1;
 			return this._records[0].GetBoolean(i);
 		}
 
@@ -656,7 +690,9 @@ namespace GeneXus.Data
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
 
-			return this._records[0].GetBytes(i, fieldOffset, buffer, bufferoffset, length);
+			long byteCount = this._records[0].GetBytes(i, fieldOffset, buffer, bufferoffset, length);
+			readBytes += byteCount;
+			return byteCount;
 		}
 
 		public char GetChar(int i)
@@ -690,21 +726,21 @@ namespace GeneXus.Data
 		public DateTime GetDateTime(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
+			readBytes += 8;
 			return this._records[0].GetDateTime(i);
 		}
 
 		public decimal GetDecimal(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
+			readBytes += 12;
 			return this._records[0].GetDecimal(i);
 		}
 
 		public double GetDouble(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
+			readBytes += 8;
 			return this._records[0].GetDouble(i);
 		}
 
@@ -725,28 +761,27 @@ namespace GeneXus.Data
 		public Guid GetGuid(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
+			readBytes += 16;
 			return this._records[0].GetGuid(i);
 		}
-
 		public short GetInt16(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
+			readBytes += 2;
 			return this._records[0].GetInt16(i);
 		}
 
 		public int GetInt32(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
+			readBytes += 4;
 			return this._records[0].GetInt32(i);
 		}
 
 		public long GetInt64(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
+			readBytes += 8;
 			return this._records[0].GetInt64(i);
 		}
 
@@ -767,8 +802,9 @@ namespace GeneXus.Data
 		public string GetString(int i)
 		{
 			if (this._isDisposed) throw new ObjectDisposedException(AlreadyClosed);
-
-			return this._records[0].GetString(i);
+			string data = this._records[0].GetString(i);
+			readBytes += 10 + (2 * data.Length);
+			return data;
 		}
 
 		public object GetValue(int i)
@@ -860,7 +896,8 @@ namespace GeneXus.Data
                     }
                     else
                     {
-                        using (MemoryStream memStream = new MemoryStream())
+#pragma warning disable SYSLIB0011 // BinaryFormatter serialization is obsolete and should not be used
+						using (MemoryStream memStream = new MemoryStream())
                         {
                             BinaryFormatter formatter = new BinaryFormatter();
                             formatter.Serialize(memStream, value);
@@ -869,7 +906,8 @@ namespace GeneXus.Data
 
                             return newValue;
                         }
-                    }
+#pragma warning restore SYSLIB0011 //BinaryFormatter serialization is obsolete and should not be used
+					}
 				}
 			}
 		}

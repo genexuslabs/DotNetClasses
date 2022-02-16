@@ -11,21 +11,28 @@ using ManagedFusion.Rewriter.Rules;
 using ManagedFusion.Rewriter.Engines;
 using System.Reflection;
 using log4net;
+using System.Web.SessionState;
+using System.Web.Configuration;
+using System.Security;
 
 namespace GeneXus.Http.HttpModules
 {
 	public class SingleMap
 	{
-		String name;
-		String implementation;
-		String methodName;
-		String verb;
-
+		string name;
+		string implementation;
+		string methodName;
+		string verb;
+		string path;
+		string pathregexp;
+		Dictionary<string, string> variableAlias;
 		public string Name { get => name; set => name = value; }
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
 		public string Verb { get => verb; set => verb = value; }
-
+		public string Path { get => path; set => path = value; } 
+		public string PathRegexp { get => pathregexp; set => pathregexp = value; }
+		public Dictionary<string, string> VariableAlias { get => variableAlias; set => variableAlias = value; }
 
 	}
 
@@ -50,10 +57,13 @@ namespace GeneXus.Http.HttpModules
 		public static List<String> servicesPathUrl;
 		public static Dictionary<String, String> servicesBase;
 		public static Dictionary<String, String> servicesClass;
-		public static Dictionary<String, Dictionary<String, String>> servicesMap;
-		public static Dictionary<String, Dictionary<String, String>> servicesVerbs;
+		public static Dictionary<String, Dictionary<string, SingleMap>> servicesMap;
+
+		//public static Dictionary<String, Dictionary<String, String>> servicesVerbs;
+		public static Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
 
 		const string REST_BASE_URL = "rest/";
+		const string PRIVATE_DIR = "private";
 		private static bool moduleStarted;
 
 		void IHttpModule.Init(HttpApplication context)
@@ -101,60 +111,135 @@ namespace GeneXus.Http.HttpModules
 			return false;
 		}
 		
-		public void ServicesGroupSetting(String webPath)
+		public void ServicesGroupSetting(string webPath)
 		{
 			if (!String.IsNullOrEmpty(webPath) && servicesMap == null)
-			{
-				servicesPathUrl = new List<String>();
+			{				
+				servicesPathUrl = new List<string>();
 				servicesBase = new Dictionary<string, string>();				
-				servicesMap = new Dictionary<String, Dictionary<string, string>>();
-				servicesVerbs = new Dictionary<String, Dictionary<string, string>>();
+				servicesMap = new Dictionary<string, Dictionary<string, SingleMap>>();
+				//servicesVerbs = new Dictionary<string, Dictionary<string, string>>();
+				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 				servicesClass = new Dictionary<String, String>();
 
-				String[] grpFiles = Directory.GetFiles(webPath, "*.grp.json");
-				foreach (String grp in grpFiles)
+				if (Directory.Exists(Path.Combine(webPath, PRIVATE_DIR))) 
 				{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
-#pragma warning restore SCS0018
-					MapGroup m = p as MapGroup;
-					if (m != null)
+					String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
+					foreach (String grp in grpFiles)
 					{
+#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+						object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
+#pragma warning restore SCS0018
+						MapGroup m = p as MapGroup;
+						if (m != null)
+						{
 
-						if (String.IsNullOrEmpty(m.BasePath))
-						{
-							m.BasePath = REST_BASE_URL;
-						}
-						String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
-						String mapPathLower = mapPath.ToLower();
-						servicesPathUrl.Add(mapPathLower);
-						servicesBase.Add(mapPathLower, m.Name.ToLower());
-						servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
-						foreach (SingleMap sm in m.Mappings)
-						{
-							if (servicesMap.ContainsKey(mapPathLower))
+							if (String.IsNullOrEmpty(m.BasePath))
 							{
-								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+								m.BasePath = REST_BASE_URL;
+							}
+							String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
+							String mapPathLower = mapPath.ToLower();
+							servicesPathUrl.Add(mapPathLower);
+							servicesBase.Add(mapPathLower, m.Name.ToLower());
+							servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
+							foreach (SingleMap sm in m.Mappings)
+							{
+								if (String.IsNullOrEmpty(sm.Verb))
+									sm.Verb = "GET";
+								if (sm.VariableAlias == null)
+									sm.VariableAlias = new Dictionary<string, string>();
+								else
 								{
-									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-									servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), (sm.Verb!=null)?sm.Verb:"GET");
+									Dictionary<string, string> vMap = new Dictionary<string, string>();
+									foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+									{
+										vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+									}
+									sm.VariableAlias = vMap;
+								}							
+								if (servicesMap.ContainsKey(mapPathLower))
+								{
+									if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+									{										
+										servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+									}
 								}
-							}
-							else
-							{
-								servicesMap.Add(mapPathLower, new Dictionary<string, string>());
-								servicesVerbs.Add(mapPathLower, new Dictionary<string, string>());
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm.ServiceMethod);
-								servicesVerbs[mapPathLower].Add(sm.Name.ToLower(), (sm.Verb != null) ? sm.Verb : "GET");
+								else
+								{
+									servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
+									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+									servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
+									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+								}							
+							
 							}
 						}
-					}
 
+					}
 				}
 			}
 		}
 	}
+	public class GXSessionModule : IHttpModule
+	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXSessionModule));
+		HttpApplication App;
+		const string ASPNETSESSION_COOKIE = "ASP.NET_SessionId";
+		string cookieName= ASPNETSESSION_COOKIE;
 
+		public void Init(HttpApplication app)
+		{
+			App = app;
+			try
+			{
+				SessionStateSection sessionStateSection = (SessionStateSection)System.Configuration.ConfigurationManager.GetSection("system.web/sessionState");
+				if (sessionStateSection != null)
+					cookieName = sessionStateSection.CookieName;
+				IHttpModule module = app.Modules["Session"];
+				if (module.GetType() == typeof(SessionStateModule))
+				{
+					SessionStateModule stateModule = (SessionStateModule)module;
+					stateModule.Start += (Session_Start);
+				}
+			}catch(SecurityException ex)
+			{
+				GXLogging.Info(log, ".NET trust level is lower than full", ex.Message);
+				app.EndRequest += Session_Start;
+			}
+		}
+
+		private void Session_Start(object sender, EventArgs e)
+		{
+			if (App.Request.GetIsSecureFrontEnd() || App.Request.GetIsSecureConnection() == 1)
+			{
+				HttpCookie sessionCookie = RetrieveResponseCookie(App.Response, cookieName);
+
+				if (sessionCookie != null && !sessionCookie.Secure)
+				{
+					sessionCookie.Secure = true;
+					App.Response.SetCookie(sessionCookie);
+				}
+			}
+		}
+		private HttpCookie RetrieveResponseCookie(HttpResponse currentResponse, string cookieName)
+		{
+			foreach (string key in App.Response.Cookies.Keys)
+			{
+				if (key.Equals(cookieName, StringComparison.OrdinalIgnoreCase))
+				{
+					return App.Response.Cookies[key];
+				}
+			}
+			return null;
+		}
+
+		public void Dispose()
+		{
+			App = null;
+		}
+	}
 	public class GXStaticCacheModule : IHttpModule
     {
         #region IHttpModule Members
@@ -208,6 +293,7 @@ namespace GeneXus.Http.HttpModules
 		private static RewriterModule rewriter;
 		private static bool moduleStarted;
 		private static bool enabled;
+		internal static string physicalApplicationPath;
 		public void Dispose()
 		{
 
@@ -216,7 +302,6 @@ namespace GeneXus.Http.HttpModules
 		{
 			if (!moduleStarted)
 			{
-				string physicalApplicationPath = null;
 				try
 				{
 					physicalApplicationPath = HostingEnvironment.ApplicationPhysicalPath;
@@ -229,7 +314,7 @@ namespace GeneXus.Http.HttpModules
 
 				if (File.Exists(Path.Combine(physicalApplicationPath, Preferences.DefaultRewriteFile)))
 				{
-					ChangeApacheDefaultFileName();
+					ChangeApacheDefaultEngine();
 					Manager.Configuration.Rewriter.AllowIis7TransferRequest = false; //Avoid Too Many Redirects with inverse urles.
 					enabled = true;
 				}
@@ -241,19 +326,33 @@ namespace GeneXus.Http.HttpModules
 				rewriter.Init(context);
 			}
 		}
-		private void ChangeApacheDefaultFileName()
+		private void ChangeApacheDefaultEngine()
 		{
 			try
 			{
-				ApacheEngine engine = (ApacheEngine)typeof(Manager).GetField("_rewriterEngine", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
-				typeof(ApacheEngine).GetProperty("FileName", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(engine, Preferences.DefaultRewriteFile);
+				GxApacheEngine engine = new GxApacheEngine();
+				typeof(Manager).GetField("_rewriterEngine", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, engine);
 				engine.Init();
 			}catch(Exception ex)
 			{
-				GXLogging.Error(log, "Error changing ApacheDefaultFileName", ex);
+				GXLogging.Error(log, "Error changing ChangeApacheDefaultEngine", ex);
 			}
 		}
 
+	}
+	public class GxApacheEngine : ApacheEngine
+	{
+		public GxApacheEngine() : base()
+		{
+		}
+		public override void Init()
+		{
+			Paths.Clear();
+			DirectoryInfo refreshDir = new DirectoryInfo(GXRewriter.physicalApplicationPath);
+			FileInfo file = new FileInfo(Path.Combine(refreshDir.FullName, Preferences.DefaultRewriteFile));
+			Add(HttpContext.Current.Request.ApplicationPath, file);
+			RefreshRules();
+		}
 	}
 	public class GxInverseRuleAction: DefaultRuleAction
 	{

@@ -17,7 +17,7 @@ namespace GeneXus.Search
 	public class GxSearchUtils
 	{
 #if NETCORE
-		public static Assembly m_GxSearchAssembly = new AssemblyLoader(FileUtil.GetStartupDirectory()).LoadFromAssemblyPath(Path.Combine(FileUtil.GetStartupDirectory(), "GxSearch.dll"));
+		public static Assembly m_GxSearchAssembly = new AssemblyLoader(FileUtil.GetStartupDirectory()).LoadFromAssemblyName(new AssemblyName("GxSearch"));
 #else
 		public static Assembly m_GxSearchAssembly = Assembly.Load(new AssemblyName("GxSearch"));
 #endif
@@ -141,7 +141,7 @@ namespace GeneXus.Search
 		public SearchResultCollection()
 		{
 		}
-		public override void FromJSONObject(IJsonFormattable obj)
+		public override void FromJSONObject(dynamic obj)
 		{
 		}
 
@@ -216,7 +216,7 @@ namespace GeneXus.Search
 			AddObjectProperty("Score", Score);
 			AddObjectProperty("Timestamp", TimeStamp);
 		}
-		public void FromJSONObject(Jayrock.Json.IJsonFormattable obj)
+		public void FromJSONObject(dynamic obj)
 		{
 		}
 

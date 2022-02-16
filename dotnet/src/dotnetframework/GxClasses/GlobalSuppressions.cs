@@ -1,7 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
+
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Attributes.GXApi")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1051:Do not declare visible instance fields", Justification = "<Pending>", Scope = "member", Target = "~F:GeneXus.Helpers.ThemeData.name")]
-
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Utils.JsonFault.JsonFaultDetail")]// This file is used by Code Analysis to maintain SuppressMessage 
 
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Data.GxSqlite.GetConnectionString(System.String,System.String)~System.String")]// attributes that are applied to this project.
 
@@ -211,3 +211,30 @@
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1715:Identifiers should have correct prefix", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Services.ExternalProvider")]
 
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Application.GXBaseObject.GetCallTargetFromUrl(System.String)~System.String")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Core.genexus.common.SdtGridState.gxTv_SdtGridState_Inputvalues_IsNull~System.Boolean")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Core.genexus.common.SdtGridState.gxTv_SdtGridState_Inputvalues_IsNull~System.Boolean")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Core.genexus.common.SdtGridState.gxTv_SdtGridState_Inputvalues_SetNull")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Core.genexus.common.SdtGridState.gxTv_SdtGridState_Inputvalues_SetNull")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Core.genexus.common.SdtGridState.initialize")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Core.genexus.common.SdtGridState.ShouldSerializegxTpr_Inputvalues_GxSimpleCollection_Json~System.Boolean")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Core.genexus.common.SdtGridState_RESTInterface.checkSdt(System.Runtime.Serialization.StreamingContext)")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState.gxTpr_Currentpage")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState.gxTpr_Currentpage")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState.gxTpr_Inputvalues")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState.gxTpr_Inputvalues")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState.gxTpr_Orderedby")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState.gxTpr_Orderedby")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_RESTInterface.gxTpr_Currentpage")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_RESTInterface.gxTpr_Currentpage")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_RESTInterface.gxTpr_Inputvalues")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_RESTInterface.gxTpr_Inputvalues")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_RESTInterface.gxTpr_Orderedby")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_RESTInterface.gxTpr_Orderedby")]
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_RESTInterface.sdt")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Core.genexus.common.SdtGridState_RESTInterface")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_InputValuesItem.gxTpr_Name")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_InputValuesItem.gxTpr_Value")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_InputValuesItem_RESTInterface.gxTpr_Name")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Core.genexus.common.SdtGridState_InputValuesItem_RESTInterface.gxTpr_Value")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Core.genexus.common.SdtGridState_InputValuesItem")]
+[assembly: SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.Core.genexus.common.SdtGridState_InputValuesItem_RESTInterface")]

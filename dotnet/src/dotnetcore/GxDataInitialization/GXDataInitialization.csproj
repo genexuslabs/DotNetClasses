@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<PackageTags>DataInitialization</PackageTags>
 		<PackageId>GeneXus.DataInitialization.Core</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
+		<DefineConstants>NETCORE</DefineConstants>
 	</PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
@@ -12,7 +13,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.11" />
 	<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 	<PackageReference Include="NetTopologySuite" Version="2.0.0" />
 	<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" />
@@ -28,9 +29,9 @@
   </ItemGroup>
 
    <ItemGroup>
-		<Content Include="$(ProjectName).deps.json">
+		<Content Include="net6.0\$(MSBuildProjectName).deps.json">
 			<Pack>true</Pack>
-			<PackagePath>\content\</PackagePath>
+			<PackagePath>\content\net6.0\</PackagePath>
 		</Content>
 	</ItemGroup>
 </Project>

@@ -11,16 +11,16 @@ using GeneXus.Utils;
 using GeneXus.Encryption;
 using GeneXus.Application;
 using log4net;
-
+using System.Collections.Generic;
 
 namespace GeneXus.Http
 {
     public interface IGxSession
     {
         void Set(string key, string val);
-		void SetObject(string key, Object val);
+		void Set<T>(string key, T val) where T:class;
 		string Get(string key);
-		Object GetObject(string key);
+		T Get<T>(string key) where T : class;
 		void Remove(string key);		
 		void Destroy();
         void Clear();
@@ -28,17 +28,29 @@ namespace GeneXus.Http
         {
             get;
         }
-
-    }
+		void Renew();
+	}
 
     public class GxWebSession : IGxSession
     {
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GxWebSession));
         private HttpSessionState _httpSession;
-
-        public GxWebSession()
+		#region InternalKeys
+		GXNavigationHelper InternalKeyNavigationHelper;
+		string InternalKeyAjaxEncryptionKey; 
+		Hashtable InternalKeyGxTheme;
+		string InternalKeyGxLanguage;
+#if NETCORE
+		string InternalKeyGxNewSession;
+#endif
+#endregion
+		public GxWebSession()
         {
         }
+		internal GxWebSession(HttpSessionState session)
+		{
+			_httpSession = session;
+		}
         public GxWebSession(IGxContext context)
         {
             if (context.HttpContext != null)
@@ -66,45 +78,66 @@ namespace GeneXus.Http
 
         public void Set(string key, string val)
         {
-            SetObject(key, val);
-        }
-        public void SetObject(string key, object val)
-        {
-            key = GXUtil.NormalizeKey(key);
+			key = GXUtil.NormalizeKey(key);
 			GXLogging.Debug(log, "Set Key" + key + "=" + val);
 			if (_httpSession != null)
 			{
 				GXLogging.Debug(log, "SetObject SessionId : " + _httpSession.SessionID);
 				_httpSession[key] = val;
 			}
-        }
+		}
         public string Get(string key)
         {
-            object value = GetObject(key);
-			if (value != null)
+			key = GXUtil.NormalizeKey(key);
+			if (_httpSession != null)
 			{
-				GXLogging.Debug(log, "Get key: " + key + "=" + value.ToString());
-				return value.ToString();
-			}
-			else
-			{
-				GXLogging.Debug(log, "Get key: " + key + " is Empty");
-				return string.Empty;
-			}
-        }
-		public object GetObject(string key)
-        {
-            key = GXUtil.NormalizeKey(key);
-            if (_httpSession != null)
-            {
 				GXLogging.Debug(log, "GetObject SessionId : " + _httpSession.SessionID);
 				if (_httpSession[key] == null)
-                    return null;
-                return _httpSession[key];
-            }
-            return null;
+				{
+					GXLogging.Debug(log, "Get key: " + key + " is Empty");
+					return string.Empty;
+				}
+				else
+				{
+					object value = _httpSession[key];
+					GXLogging.Debug(log, "Get key: " + key + "=" + value.ToString());
+					return value.ToString();
+				}
+			}
+			return string.Empty;
         }
-        public void Remove(string key)
+		public T Get<T>(string key) where T: class
+		{
+			key = GXUtil.NormalizeKey(key);
+			if (_httpSession != null)
+			{
+				GXLogging.Debug(log, "GetObject SessionId : " + _httpSession.SessionID);
+				if (_httpSession[key] == null)
+					return null;
+#if NETCORE
+				return JSONHelper.DeserializeNullDefaultValue<T>(_httpSession[key]);
+#else
+				return (T)_httpSession[key];
+#endif
+			}
+			return null;
+		}
+		public void Set<T>(string key, T val) where T : class
+		{
+			key = GXUtil.NormalizeKey(key);
+			GXLogging.Debug(log, "Set Key" + key + "=" + val);
+			if (_httpSession != null)
+			{
+				GXLogging.Debug(log, "SetObject SessionId : " + _httpSession.SessionID);
+#if NETCORE
+				_httpSession[key] = JSONHelper.Serialize<T>(val);
+#else
+				_httpSession[key] = val;
+#endif
+			}
+		}
+
+		public void Remove(string key)
         {
             key = GXUtil.NormalizeKey(key);
 			GXLogging.Debug(log, "Remove key: " + key );
@@ -130,17 +163,50 @@ namespace GeneXus.Http
 #endif
             }
         }
-        public void Clear()
+		public void Renew()
+		{
+			if (_httpSession != null)
+			{
+				GXLogging.Debug(log, "Renew sessionId: " + _httpSession.SessionID);
+				BackupInternalKeys();
+				_httpSession.RemoveAll();
+				RestoreInternalKeys();
+			}
+		}
+		private void BackupInternalKeys()
+		{
+			InternalKeyNavigationHelper = Get<GXNavigationHelper>(GxContext.GX_NAV_HELPER);
+			InternalKeyAjaxEncryptionKey = Get<string>(CryptoImpl.AJAX_ENCRYPTION_KEY);
+			InternalKeyGxLanguage = Get<string>(GxContext.GXLanguage);
+			InternalKeyGxTheme = Get<Hashtable>(GxContext.GXTheme);
+#if NETCORE
+			InternalKeyGxNewSession = Get<string>(HttpContextExtensions.NEWSESSION);
+#endif
+		}
+		private void RestoreInternalKeys()
+		{
+			if (InternalKeyNavigationHelper!=null)
+				Set<GXNavigationHelper>(GxContext.GX_NAV_HELPER, InternalKeyNavigationHelper);
+			if (InternalKeyAjaxEncryptionKey != null)
+				Set<string>(CryptoImpl.AJAX_ENCRYPTION_KEY, InternalKeyAjaxEncryptionKey);
+			if (InternalKeyGxLanguage != null)
+				Set<string>(GxContext.GXLanguage, InternalKeyGxLanguage);
+			if (InternalKeyGxTheme != null)
+				Set<Hashtable>(GxContext.GXTheme, InternalKeyGxTheme);
+#if NETCORE
+			if (InternalKeyGxNewSession != null)
+				Set<string>(HttpContextExtensions.NEWSESSION, InternalKeyGxNewSession);
+#endif
+		}
+		public void Clear()
         {
             if (_httpSession != null)
             {
 				GXLogging.Debug(log, "Clear sessionId: " + _httpSession.SessionID);
-				object navHelper = _httpSession[GxContext.GX_NAV_HELPER];
-                string ajaxEncriptionKey = _httpSession[CryptoImpl.AJAX_ENCRYPTION_KEY] as string;
+				BackupInternalKeys();
                 _httpSession.Clear();
-                _httpSession[CryptoImpl.AJAX_ENCRYPTION_KEY] = ajaxEncriptionKey;
-                _httpSession[GxContext.GX_NAV_HELPER] = navHelper;
-            }
+				RestoreInternalKeys();
+			}
         }
         public static bool IsSessionExpired(HttpContext httpContext)
         {
@@ -224,7 +290,7 @@ namespace GeneXus.Http
             key = GXUtil.NormalizeKey(key);
             PutHashValue(key, val);
         }
-		public void SetObject(string key, Object val)
+		public void Set<T>(string key, T val) where T:class
 		{
 			key = GXUtil.NormalizeKey(key);
 			PutHashValue(key, val);
@@ -234,10 +300,10 @@ namespace GeneXus.Http
             key = GXUtil.NormalizeKey(key);
             return GetHashValue(key);
         }
-		public Object GetObject(string key)
+		public T Get<T>(string key) where T:class
 		{
 			key = GXUtil.NormalizeKey(key);
-			return GetHashValueObj(key);
+			return (T)GetHashValueObj(key);
 		}
 
         public void Remove(string key)
@@ -252,6 +318,11 @@ namespace GeneXus.Http
         public void Clear()
         {
             ClearHash();
-        }        
-    }
+        }
+		public void Renew()
+		{
+			Destroy();
+		}
+
+	}
 }

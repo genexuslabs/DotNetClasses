@@ -19,6 +19,8 @@ using TZ4Net;
 using GxClasses.Helpers;
 using System.Net;
 #endif
+using NUglify;
+using NUglify.Html;
 using GeneXus.Web.Security;
 
 using System.Web;
@@ -36,6 +38,11 @@ using System.Drawing;
 using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
+using System.Drawing.Drawing2D;
+using GeneXus.Storage;
+using GeneXus.Services;
+using GeneXus.Http;
+using System.Security;
 
 namespace GeneXus.Utils
 {
@@ -56,10 +63,10 @@ namespace GeneXus.Utils
 		{
 			lock (random)
 			{
-				var bytes = new Byte[8];
+				byte[] bytes = new Byte[8];
 				random.GetBytes(bytes);
 
-				var ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11);
+				ulong ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11);
 				double d = ul / (double)(1UL << 53);
 				return d;
 			}
@@ -1659,6 +1666,7 @@ namespace GeneXus.Utils
 		}
 		public static bool NotNumeric(string num)
 		{
+			num = num.Trim();
 			foreach (char c in num)
 				if (!Char.IsNumber(c))
 					return true;
@@ -2553,16 +2561,19 @@ namespace GeneXus.Utils
 		}
 		public static string TToC2(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", "yyyy-MM-ddTHH:mm:ss", toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, toUTC);
 		}
 
 		public static string TToC3(DateTime dt)
 		{
 			return TToC3(dt, true);
 		}
+		internal const string JsonDateFormatMillis = "yyyy-MM-ddTHH:mm:ss.fff";
+		internal const string JsonDateFormat = "yyyy-MM-ddTHH:mm:ss";
+		
 		public static string TToC3(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", "yyyy-MM-ddTHH:mm:ss.fff", toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, toUTC);
 		}
 
 		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
@@ -2625,19 +2636,19 @@ namespace GeneXus.Utils
 		public string Time()
 		{
 			return DateTime.Now.ToString(TimeFormatFromSize(8, -1, ":"), cultureInfo);
-        }
+		}
 
-        static public DateTime AddMth(DateTime dt, int cantMonths)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddMonths(cantMonths);
-        }
-        static public DateTime AddYr(DateTime dt, int cantYears)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddYears(cantYears);
+		static public DateTime AddMth(DateTime dt, int cantMonths)
+		{
+			if (dt == nullDate && (cantMonths < 0 || Preferences.IgnoreAddOnEmptyDates))
+				return nullDate;
+			return dt.AddMonths(cantMonths);
+		}
+		static public DateTime AddYr(DateTime dt, int cantYears)
+		{
+			if (dt == nullDate && (cantYears < 0 || Preferences.IgnoreAddOnEmptyDates))
+				return nullDate;
+			return dt.AddYears(cantYears);
         }
         static public DateTime DateEndOfMonth(DateTime dt)
         {
@@ -2686,30 +2697,29 @@ namespace GeneXus.Utils
 		}
         static public int DDiff(DateTime dtMinu, DateTime dtSust)
         {
-            return Convert.ToInt32((dtMinu - dtSust).TotalDays);
-        }
-        static public DateTime TAdd(DateTime dt, int seconds)
-        {
-            if (dt == nullDate)
-                return nullDate;            
-            return dt.AddSeconds(seconds);
-        }
-        static public DateTime TAddMs(DateTime dt, double seconds)
-        {
-
-            if (dt == nullDate)
-                return nullDate;
-            if (seconds % 1 == 0)
-                return dt.AddSeconds((int)seconds);
-            else
-                return dt.AddMilliseconds(seconds * 1000);
-        }
-        static public DateTime DAdd(DateTime dt, int days)
-        {
-            if (dt == nullDate)
-                return nullDate;
-            return dt.AddDays(days);
-        }
+			return Convert.ToInt32((dtMinu - dtSust).TotalDays);
+		}
+		static public DateTime TAdd(DateTime dt, int seconds)
+		{
+			if (dt == nullDate && (seconds < 0 || Preferences.IgnoreAddOnEmptyDates))
+				return nullDate;
+			return dt.AddSeconds(seconds);
+		}
+		static public DateTime TAddMs(DateTime dt, double seconds)
+		{
+			if (dt == nullDate && (seconds < 0 || Preferences.IgnoreAddOnEmptyDates))
+				return nullDate;
+			if (seconds % 1 == 0)
+				return dt.AddSeconds((int)seconds);
+			else
+				return dt.AddMilliseconds(seconds * 1000);
+		}
+		static public DateTime DAdd(DateTime dt, int days)
+		{
+			if (dt == nullDate && (days < 0 || Preferences.IgnoreAddOnEmptyDates))
+				return nullDate;
+			return dt.AddDays(days);
+		}
         public DateTime CToT(string strDate, int picFmt, int ampmFmt)
         {
             if (isNullDateTime(strDate, picFmt, ampmFmt))
@@ -2779,10 +2789,15 @@ namespace GeneXus.Utils
 			string[] fmtVec = DateFormatFromPicture(picFmt);
 			string[] fmts = modifyFormatStrings(fmtVec);
 			string oldSeparator = cultureInfo.DateTimeFormat.DateSeparator;
+
 			try
 			{
+				DateTime dValue;
 				if (oldSeparator != "/") cultureInfo.DateTimeFormat.DateSeparator = "/";
-				return DateTime.ParseExact(strDate.Trim(), fmts, cultureInfo.DateTimeFormat, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault);
+				if (DateTime.TryParseExact(strDate.Trim(), fmts, cultureInfo.DateTimeFormat, DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.NoCurrentDateDefault, out dValue))
+					return dValue;
+				else
+					return nullDate;
 			}
 			catch
 			{
@@ -2854,10 +2869,13 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(dt.Year,dt.Month,dt.Day,0,0,0,0);
 			//return dtRet; 
 			//This is more efficient than creating a new datetime..
-			dt = dt.AddMilliseconds(dt.Millisecond * -1);
-			dt = dt.AddSeconds(dt.Second * -1);
-			dt = dt.AddMinutes(dt.Minute * -1);
-			dt = dt.AddHours(dt.Hour * -1);
+			if (dt.Millisecond != 0 || dt.Second != 0 || dt.Minute != 0 || dt.Hour != 0)
+			{
+				dt = dt.AddMilliseconds(dt.Millisecond * -1);
+				dt = dt.AddSeconds(dt.Second * -1);
+				dt = dt.AddMinutes(dt.Minute * -1);
+				dt = dt.AddHours(dt.Hour * -1);
+			}
 			return dt;
 		}
 		public static DateTime ResetDate(DateTime dt)
@@ -2865,9 +2883,12 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(1,1,1,dt.Hour,dt.Minute,dt.Second);
 			//return dtRet;
 			//This is more efficient than creating a new datetime.
-			dt = dt.AddDays((dt.Day * -1) + 1);
-			dt = dt.AddMonths((dt.Month * -1) + 1);
-			dt = dt.AddYears((dt.Year * -1) + 1);
+			if (dt.Day != 1 || dt.Month != 1 || dt.Year != 1)
+			{
+				dt = dt.AddDays((dt.Day * -1) + 1);
+				dt = dt.AddMonths((dt.Month * -1) + 1);
+				dt = dt.AddYears((dt.Year * -1) + 1);
+			}
 			return dt;
 		}
 		public static DateTime ResetMilliseconds(DateTime dt)
@@ -2875,7 +2896,10 @@ namespace GeneXus.Utils
 			//DateTime dtRet = new DateTime(dt.Year,dt.Month,dt.Day,dt.Hour,dt.Minute,dt.Second,0);
 			//reutrn dtRet;
 			//This is more efficient than creating a new datetime.
-			dt = dt.AddMilliseconds(dt.Millisecond * -1);
+			if (dt.Millisecond != 0)
+			{
+				dt = dt.AddMilliseconds(dt.Millisecond * -1);
+			}
 			return dt;
 		}
 		public static DateTime ResetMillisecondsTicks(DateTime dt)
@@ -2980,12 +3004,13 @@ namespace GeneXus.Utils
 				StringUtil.PadL(StringUtil.Str(Month(date), 2, 0), 2, '0') +
 				StringUtil.PadL(StringUtil.Str(Day(date), 2, 0), 2, '0'));
 		}
-		public static string getYYYYMMDDHHMMSS_nosep(DateTime date)
+		public static string getYYYYMMDDHHMMSSnosep(DateTime date, bool hasMilliseconds)
 		{
 			string sDate = getYYYYMMDD(date);
 			sDate += StringUtil.PadL(StringUtil.Str(Hour(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Minute(date), 2, 0), 2, '0');
 			sDate += StringUtil.PadL(StringUtil.Str(Second(date), 2, 0), 2, '0');
+			if (hasMilliseconds) sDate += StringUtil.PadL(StringUtil.Str(MilliSecond(date), 3, 0), 3, '0');
 			return (sDate);
 		}
 		private static DateTime ConvertDateTime(DateTime dt, OlsonTimeZone FromTimezone, OlsonTimeZone ToTimezone)
@@ -3062,11 +3087,17 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		public static string FormatDateTimeParmMS(DateTime date)
+		{
+			if (date.Equals(nullDate))
+				return "";
+			return getYYYYMMDDHHMMSSnosep(date, true);
+		}
 		public static string FormatDateTimeParm(DateTime date)
 		{
 			if (date.Equals(nullDate))
 				return "";
-			return getYYYYMMDDHHMMSS_nosep(date);
+			return getYYYYMMDDHHMMSSnosep(date, false);
 		}
 		public static string FormatDateParm(DateTime date)
 		{
@@ -3112,12 +3143,15 @@ namespace GeneXus.Utils
 					return dtValue;
 			}
 
-			return YMDHMSToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
+			int mil = (valueString.Trim().Length >= 17)? (int)NumberUtil.Val(valueString.Substring(14, 3)):0;
+
+			return YMDHMSMToT((int)NumberUtil.Val(valueString.Substring(0, 4)),
 				(int)NumberUtil.Val(valueString.Substring(4, 2)),
 				(int)NumberUtil.Val(valueString.Substring(6, 2)),
 				(int)NumberUtil.Val(valueString.Substring(8, 2)),
 				(int)NumberUtil.Val(valueString.Substring(10, 2)),
-				(int)NumberUtil.Val(valueString.Substring(12, 2)), false);
+				(int)NumberUtil.Val(valueString.Substring(12, 2)), mil, false);
+
 		}
 		public DateTime ParseDateOrDTimeParm(string valueString)
 		{
@@ -3252,8 +3286,6 @@ namespace GeneXus.Utils
 	public class FileUtil
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.FileUtil));
-
-		private static object syncObj = new object();
 		public static byte DeleteFile(string fileName)
 		{
 			try
@@ -3315,28 +3347,24 @@ namespace GeneXus.Utils
 		{
 			return Path.Combine(FileUtil.GetStartupDirectory(), AppDomain.CurrentDomain.FriendlyName + ".out");
 		}
+#else
+        private static byte RemoteFileExists(string url)
+        {
+            return (byte)0;
+        }
+        //In command line, return the base directory, web.
+        public static string GetBasePath()
+        {
+            return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+        }
+#endif
 		public static string GetStartupDirectory()
 		{
 			string dir = Assembly.GetCallingAssembly().GetName().CodeBase;
 			Uri uri = new Uri(dir);
 			return Path.GetDirectoryName(uri.LocalPath);
 		}
-#else
-        private static byte RemoteFileExists(string url)
-        {
-            return (byte)0;
-        }
-        public static string GetStartupDirectory()
-        {
-            return AppContext.BaseDirectory;
-        }
 
-        //In command line, return the base directory, web.
-        public static string GetBasePath()
-        {
-            return Directory.GetParent(Directory.GetParent(FileUtil.GetStartupDirectory()).FullName).FullName;
-        }
-#endif
 		public static string UriToPath(string uriString)
 		{
 			try
@@ -3350,30 +3378,10 @@ namespace GeneXus.Utils
 				return uriString;
 			}
 		}
-		public static string getTempFileName(string baseDir, string name, string extension, GxFileType fileType = GxFileType.Public)
+		public static string getTempFileName(string baseDir, string name="", string extension="tmp", GxFileType fileType = GxFileType.Private)
 		{
-			String fileName;
-			name = FileUtil.FileNamePrettify(name);
-
-			lock (syncObj)
-			{
-
-				name = FixFileName(name, string.Empty);
-				if (string.IsNullOrEmpty(name))
-				{
-					fileName = tempFileName(baseDir, name, extension);
-				}
-				else
-				{
-					fileName = Path.Combine(baseDir, name + "." + extension);
-				}
-				GxFile file = new GxFile(baseDir, fileName, fileType);
-				while (file.FileInfo.Exist(fileName))
-				{
-					fileName = tempFileName(baseDir, name, extension);
-				}
-			}
-			return fileName.Trim();
+			name = FixFileName(FileUtil.FileNamePrettify(name), string.Empty);
+			return tempFileName(baseDir, name, extension);
 		}
 
 		private static string tempFileName(string baseDir, string name, string extension)
@@ -3381,11 +3389,11 @@ namespace GeneXus.Utils
 			string fileName;
 			try
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			catch (ArgumentException)//Illegal characters in path
 			{
-				fileName = Path.Combine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
+				fileName = PathUtil.SafeCombine(baseDir, $"{name}{NumberUtil.RandomGuid()}.{extension}");
 			}
 			return fileName;
 		}
@@ -3412,6 +3420,12 @@ namespace GeneXus.Utils
 		{
 			if (FileName.Trim().Length == 0)
 				return string.Empty;
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				return new GxFile(string.Empty, FileName, GxFileType.PrivateAttribute).GetExtension();
+			}
+
 			string extension = string.Empty;
 			try
 			{
@@ -3434,16 +3448,28 @@ namespace GeneXus.Utils
 
 		public static string FileNamePrettify(string s)
 		{
-			string str = GXUtil.RemoveDiacritics(s.Trim().ToLower()); //remove accents
-			str = Regex.Replace(str, @"\s+", " ").Trim(); // convert multiple spaces into one space  
-			str = Regex.Replace(str, @"\s", "-"); // //Replace spaces by dashes
-			return str;
+			if (!string.IsNullOrEmpty(s))
+			{
+				string str = GXUtil.RemoveDiacritics(s.Trim().ToLower()); //remove accents
+				str = Regex.Replace(str, @"\s+", " ").Trim(); // convert multiple spaces into one space  
+				str = Regex.Replace(str, @"\s", "-"); // //Replace spaces by dashes
+				return str;
+			}
+			else
+			{
+				return s;
+			}
 		}
 
 		public static string GetFileName(string FileName)
 		{
 			if (FileName.Trim().Length == 0)
 				return "";
+
+			if (GxUploadHelper.IsUpload(FileName))
+			{
+				FileName = new GxFile(string.Empty, FileName, GxFileType.PrivateAttribute).GetName();
+			}
 			try
 			{
 				return Path.GetFileNameWithoutExtension(FileName);//FileNames with URI or local (exist)
@@ -3506,10 +3532,22 @@ namespace GeneXus.Utils
 	}
 	public class PathUtil
 	{
+		const string schemeRegEx = @"^([a-z][a-z0-9+\-.]*):";
+		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
+
 		public static bool IsAbsoluteUrl(string url)
 		{
 			Uri result;
 			return Uri.TryCreate(url, UriKind.Absolute, out result) && (result.Scheme == GXUri.UriSchemeHttp || result.Scheme == GXUri.UriSchemeHttps || result.Scheme == GXUri.UriSchemeFtp);
+		}
+		public static bool IsAbsoluteUrlOrAnyScheme(string url)
+		{
+			return (!String.IsNullOrEmpty(url)) && (IsAbsoluteUrl(url) || scheme.IsMatch(url));
+		}
+
+		public static bool HasUrlQueryString(string url)
+		{
+			return url.Contains("?");
 		}
 
 		public static Uri GetBaseUri()
@@ -3527,7 +3565,9 @@ namespace GeneXus.Utils
 			{
 				string fileName = Path.GetFileNameWithoutExtension(blobPath);
 				blobPath = RelativePath(blobPath);
+#pragma warning disable SYSLIB0013 // EscapeUriString
 				return StringUtil.ReplaceLast(blobPath, fileName, Uri.EscapeUriString(fileName));
+#pragma warning disable SYSLIB0013 // EscapeUriString
 			}
 		}
 		public static bool AbsoluteUri(string fileName, out Uri result)
@@ -3655,6 +3695,10 @@ namespace GeneXus.Utils
 			if (!IsValidFilePath(path))
 				validPath = GetValidPath(path, "_");
 
+			Uri result;
+			if (Uri.TryCreate(validPath, UriKind.Absolute, out result))
+				validPath = result.LocalPath;
+
 			string fileName = Path.GetFileName(validPath);
 			if (!IsValidFileName(fileName))
 			{
@@ -3664,6 +3708,10 @@ namespace GeneXus.Utils
 				return fileName;
 		}
 
+		internal static string SafeCombine(string basePath, string fileName)
+		{
+			return Path.Combine(basePath, Path.GetFileName(fileName));
+		}
 	}
 
 	public class GXUtil
@@ -3934,7 +3982,7 @@ namespace GeneXus.Utils
 			string value = parm.ToString();
 			if (!String.IsNullOrEmpty(gxkey))
 			{
-				string strValue = Crypto.Decrypt64(value.ToString(), gxkey);
+				string strValue = Crypto.Decrypt64(value.ToString(), gxkey, true);
 				if ((String.CompareOrdinal(StringUtil.Right(strValue, 6).TrimEnd(' '),
 					Crypto.CheckSum(StringUtil.Left(strValue, (short)(StringUtil.Len(strValue) - 6)), 6).TrimEnd(' ')) == 0))
 				{
@@ -3990,7 +4038,20 @@ namespace GeneXus.Utils
 			string number = padding + character.ToString();
 			buffer.Append("&#" + number + ";");
 		}
-
+		[SecuritySafeCritical]
+		public static string HTMLClean(string text)
+		{
+			HtmlSettings htmlSettings = new HtmlSettings { PrettyPrint = true };
+			htmlSettings.RemoveScriptStyleTypeAttribute = false;
+			htmlSettings.RemoveOptionalTags = false;
+			htmlSettings.AttributeQuoteChar = '\'';
+			htmlSettings.RemoveAttributeQuotes = false;
+			htmlSettings.MinifyCss = false;
+			htmlSettings.MinifyCssAttributes = false;
+			htmlSettings.MinifyJsAttributes = false;
+			htmlSettings.MinifyJs = false;
+			return Uglify.Html(text, htmlSettings).Code;
+		}
 		static public string ValueEncode(string sText)
 		{
 			return ValueEncode(sText, false, false);
@@ -4208,16 +4269,16 @@ namespace GeneXus.Utils
 				else
 				{
 #if NETCORE
-                    var basicAuthenticationHeader = GetBasicAuthenticationHeaderValue(cntxt.HttpContext);
-                    if (basicAuthenticationHeader.IsValidBasicAuthenticationHeaderValue)
-                    {
-                        s = basicAuthenticationHeader.UserIdentifier;
-                    }
-                    else
-                    {
+					BasicAuthenticationHeaderValue basicAuthenticationHeader = GetBasicAuthenticationHeaderValue(cntxt.HttpContext);
+					if (basicAuthenticationHeader != null && basicAuthenticationHeader.IsValidBasicAuthenticationHeaderValue)
+					{
+						s = basicAuthenticationHeader.UserIdentifier;
+					}
+					else
+					{
 						if (IsWindowsPlatform)
 							s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-                    }
+					}
 #else
 					s = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
 					GXLogging.Debug(log, "UserId= System.Security.Principal.WindowsIdentity.GetCurrent().Name: ", s);
@@ -4249,22 +4310,39 @@ namespace GeneXus.Utils
 #if NETCORE
         private static BasicAuthenticationHeaderValue GetBasicAuthenticationHeaderValue(HttpContext context)
         {
-            var basicAuthenticationHeader = context.Request.Headers["Authorization"]
-                .FirstOrDefault(header => header.StartsWith("Basic", StringComparison.OrdinalIgnoreCase));
-            var decodedHeader = new BasicAuthenticationHeaderValue(basicAuthenticationHeader);
-            return decodedHeader;
+			if (context == null)
+				return null;
+			else
+			{
+				string basicAuthenticationHeader = context.Request.Headers["Authorization"]
+					.FirstOrDefault(header => header.StartsWith("Basic", StringComparison.OrdinalIgnoreCase));
+				var decodedHeader = new BasicAuthenticationHeaderValue(basicAuthenticationHeader);
+				return decodedHeader;
+			}
         }
+#endif
+#if NETCORE
+		static int windowsPlatform = -1;
 #endif
 		public static bool IsWindowsPlatform
 		{
 			get
 			{
 #if NETCORE
-				return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+				if (windowsPlatform == -1)
+					windowsPlatform = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 1 : 0;
+
+				return (windowsPlatform == 1);
 #else
 				return true;
 #endif
 			}
+#if NETCORE
+			set
+			{
+				windowsPlatform = value ? 1 : 0;
+			}
+#endif
 		}
 		static public int DbmsVersion(IGxContext context, string dataSource)
 		{
@@ -4312,9 +4390,8 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-
-		[Obsolete("UserId with string dataSource is deprecated, use UserId((string key, IGxContext cntxt, IDataStoreProvider dataStore) instead", false)]
-		public static string UserId(string key, IGxContext cntxt, string id)
+		[Obsolete("UserId(string key, IGxContext cntxt, string dataSource) with string dataSource is deprecated, use UserId((string key, IGxContext cntxt, IDataStoreProvider dataStore) instead", false)]
+		public static string UserId(string key, IGxContext cntxt, string dataSource)
 		{
 			try
 			{
@@ -4322,7 +4399,7 @@ namespace GeneXus.Utils
 				if (key.ToUpper() == "SERVER" && !(Config.GetValueOf("LOGIN_AS_USERID", out prop) && prop.Equals("1")))
 				{
 					GXLogging.Debug(log, "UserId= user in ConnectionString");
-					IGxDataStore dstore = cntxt.GetDataStore(id);
+					IGxDataStore dstore = cntxt.GetDataStore(dataSource);
 					if (dstore != null)
 						return (dstore.UserId);
 				}
@@ -4480,15 +4557,6 @@ namespace GeneXus.Utils
 			return Entry;
 		}
 
-#if NETCORE
-        private static string WrkSt(IGxContext gxContext, object httpContext)
-
-        {
-        return string.Empty;
-        }
-#else
-
-
 		private static string WrkSt(IGxContext gxContext, HttpContext httpContext)
 		{
 			try
@@ -4503,9 +4571,10 @@ namespace GeneXus.Utils
 				else if (httpContext != null)
 				{
 					if ((Config.GetValueOf("WRKST_COMPATIBILITY", out prop) && prop.Equals("1"))) //WRKST_COMPATIBILITY=YES at config.gx
-						wrkst = httpContext.Server.MachineName;
+						wrkst = httpContext.GetServerMachineName();
 					else
-						wrkst = httpContext.Request.UserHostAddress;
+						wrkst = httpContext.GetUserHostAddress();
+
 					GXLogging.Debug(log, "WrkSt= &HttpRequest.Remoteaddress");
 				}
 				else //Win
@@ -4521,7 +4590,6 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-#endif
 
 		internal static string NormalizeEncodingName(string enc1)
 		{
@@ -5218,7 +5286,14 @@ namespace GeneXus.Utils
 		public static string ResolveUri(string uriString, bool absUrl, IGxContext context = null)
 		{
 			if (String.IsNullOrEmpty(uriString))
-				return "";
+				return string.Empty;
+
+			string providerObjectName;
+			if (PathUtil.IsAbsoluteUrl(uriString) && StorageFactory.TryGetProviderObjectName(ServiceFactory.GetExternalProvider(), uriString, out providerObjectName))
+			{
+				return new GxFile(string.Empty, providerObjectName, GxFileType.DefaultAttribute).GetURI();
+			}
+
 			if (schemeRegex.IsMatch(uriString))
 			{
 				string fileName = schemeRegex.Replace(uriString, "");
@@ -5226,7 +5301,7 @@ namespace GeneXus.Utils
 				string basePath = Path.Combine(Path.Combine(Preferences.getBLOB_PATH(), MultimediaDirectory));
 				try
 				{
-					GxFile file = new GxFile(string.Empty, Path.Combine(basePath, fileName), GxFileType.PublicAttribute);
+					GxFile file = new GxFile(string.Empty, PathUtil.SafeCombine(basePath, fileName), GxFileType.PrivateAttribute);
 					return PathToUrl(file.GetURI(), absUrl, context);
 				}
 				catch (ArgumentException ex)
@@ -5240,16 +5315,7 @@ namespace GeneXus.Utils
 		public static string GenerateUri(string file, bool addToken, bool addScheme)
 		{
 			string name = GetFileName(file);
-			try
-			{
-				name = Uri.UnescapeDataString(name);
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Warn(log, ex, "GenerateUri escape unnecesary ", name);
-			}
 			string type = GetFileType(file);
-
 
 			string scheme = addScheme ? $"{GXDbFile.Scheme}:" : string.Empty;
 
@@ -5286,6 +5352,10 @@ namespace GeneXus.Utils
 		{
 			if (String.IsNullOrEmpty(name) && String.IsNullOrEmpty(type) && !String.IsNullOrEmpty(path))
 			{
+				if (GxUploadHelper.IsUpload(path))
+				{
+					return new GxFile(string.Empty, path, GxFileType.PrivateAttribute).GetName();
+				}
 				string fromPathType = Path.GetExtension(path);
 				if (!String.IsNullOrEmpty(fromPathType) && fromPathType != "tmp")
 				{
@@ -5340,23 +5410,245 @@ namespace GeneXus.Utils
 		}
 	}
 
+	public static class GxImageUtil
+	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxImageUtil));
+
+		private static string ImageAbsolutePath(string originalFileLocation)
+		{
+			return ImageFile(originalFileLocation).GetAbsoluteName();
+		}
+		private static GxFile ImageFile(string originalFileLocation)
+		{
+			return new GxFile(GxContext.StaticPhysicalPath(), originalFileLocation);
+		}
+
+		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
+		{
+			try
+			{
+				int newheight = height;
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Image image = Image.FromFile(ImageAbsolutePath(originalFileLocation)))
+				{
+					// Prevent using images internal thumbnail
+					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+
+					if (keepAspectRatio)
+					{
+						double resize = (double)image.Width / (double)width;//get the resize vector
+						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
+					}//return the image resized to the given heigth and width
+					image.GetThumbnailImage(width, newheight, null, IntPtr.Zero).Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Resize {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string Scale(string imageFile, int percent)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				int width, height;
+				using (Image image = Image.FromFile(originalFileLocation))
+				{
+					width = image.Size.Width * percent / 100;
+					height = image.Size.Height * percent / 100;
+				}
+				return Resize(imageFile, width, height, true);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Scale {imageFile} failed", ex);
+				return imageFile;
+			}
+		}
+		public static string Crop(string imageFile, int X, int Y, int Width, int Height)
+		{
+			try
+			{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					string originalFileLocation = ImageAbsolutePath(imageFile);
+					using (Image OriginalImage = Image.FromFile(originalFileLocation))
+					{
+						using (Bitmap bmp = new Bitmap(Width, Height))
+						{
+							bmp.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+							using (Graphics Graphic = Graphics.FromImage(bmp))
+							{
+								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
+								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
+								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
+								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
+								bmp.Save(ms, OriginalImage.RawFormat);
+							}
+						}
+					}
+					using (FileStream file = new FileStream(originalFileLocation, FileMode.Open, FileAccess.Write))
+					{
+						ms.WriteTo(file);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Crop {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string Rotate(string imageFile, int angle)
+		{
+
+			try
+			{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					string originalFileLocation = ImageAbsolutePath(imageFile);
+					using (Image OriginalImage = Image.FromFile(originalFileLocation))
+					{
+						using (Bitmap rotatedImage = new Bitmap(OriginalImage.Width, OriginalImage.Height))
+						{
+							rotatedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+
+							using (Graphics g = Graphics.FromImage(rotatedImage))
+							{
+								g.TranslateTransform(OriginalImage.Width / 2, OriginalImage.Height / 2);
+								g.RotateTransform(angle);
+								g.TranslateTransform(-OriginalImage.Width / 2, -OriginalImage.Height / 2);
+								g.DrawImage(OriginalImage, new Point(0, 0));
+							}
+							rotatedImage.Save(ms, OriginalImage.RawFormat);
+						}
+					}
+					using (FileStream file = new FileStream(originalFileLocation, FileMode.Open, FileAccess.Write))
+					{
+						ms.WriteTo(file);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Rotate {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string FlipHorizontally(string imageFile) {
+
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
+					bmp.Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Flip Horizontally {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+		public static string FlipVertically(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+					bmp.Save(originalFileLocation);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Flip Vertically {imageFile} failed", ex);
+			}
+			return imageFile;
+		}
+
+		public static int GetImageWidth(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					return bmp.Width;
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetImageWidth {imageFile} failed", ex);
+			}
+			return 0;
+		}
+		public static int GetImageHeight(string imageFile)
+		{
+			try
+			{
+				string originalFileLocation = ImageAbsolutePath(imageFile);
+				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				{
+					return bmp.Height;
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetImageHeight {imageFile} failed", ex);
+			}
+			return 0;
+		}
+		public static long GetFileSize(string imageFile)
+		{
+			try
+			{
+				return ImageFile(imageFile).GetLength();
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetFileSize {imageFile} failed", ex);
+			}
+			return 0;
+		}
+	}
 	public class StorageUtils
 	{
 		public const string DELIMITER = "/";
 
-		public static string EncodeUrl(string objectName)
+		private static string ReplaceAt(string str, int index, int length, string replace)
 		{
+			return str.Remove(index, Math.Min(length, str.Length - index))
+					.Insert(index, replace);
+		}
+
+		[Obsolete("EncodeUrl is deprecated as it would give unexpected results for some urls. Use EncodeUrlPath instead", false)]
+		public static string EncodeUrl(string objectName) { 
 			if (!Uri.IsWellFormedUriString(objectName, UriKind.RelativeOrAbsolute))
 				return HttpUtility.UrlPathEncode(objectName);
 			return objectName;
 		}
 
+		public static string EncodeUrlPath(string objectNameOrRelativeUrl)
+		{
+			int idx = objectNameOrRelativeUrl.LastIndexOf(StorageUtils.DELIMITER);
+			if (idx > 0)
+			{
+				string objectName = objectNameOrRelativeUrl.Substring(idx + 1);
+				return ReplaceAt(objectNameOrRelativeUrl, idx + 1, objectName.Length, Uri.EscapeDataString(objectName));
+			}
+			return Uri.EscapeDataString(objectNameOrRelativeUrl);
+		}
+
 		public static string DecodeUrl(string url)
 		{
-			string newUrl;
-			while ((newUrl = HttpUtility.UrlDecode(url)) != url)
-				url = newUrl;
-			return url;
+			return HttpUtility.UrlDecode(url);
 		}
 
 		public static String NormalizeDirectoryName(String directoryName)

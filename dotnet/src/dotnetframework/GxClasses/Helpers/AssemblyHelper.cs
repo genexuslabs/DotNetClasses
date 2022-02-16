@@ -12,7 +12,7 @@ namespace GeneXus.Helpers
 		{
 			Assembly assembly = Assembly.GetCallingAssembly();
 			DateTime datetime = GetBuildDate(assembly);
-			if (datetime==null)
+			if (datetime== DateTime.MinValue)
 				datetime = new FileInfo(assembly.Location).LastWriteTimeUtc;
 
 			return datetime.Ticks.ToString();
@@ -36,7 +36,13 @@ namespace GeneXus.Helpers
 				}
 			}
 
-			return default;
+			return DateTime.MinValue;
 		}
+
+#if !NETCORE
+		public static Type GetRuntimeType(string typeName) => Type.GetType(typeName);
+#else
+		public static Type GetRuntimeType(string typeName) => new GxClasses.Helpers.AssemblyLoader(Utils.FileUtil.GetStartupDirectory()).GetType(typeName);
+#endif
 	}
 }

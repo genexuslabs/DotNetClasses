@@ -35,12 +35,9 @@ namespace GeneXus.HttpHandlerFactory
 		private readonly AppSettings _appSettings;
 		private string _basePath;
 		static Dictionary<string, Type> _aspxObjects = new Dictionary<string, Type>(){
-												{"gxresourceprovider",typeof(GXResourceProvider)},
-												{"gxobject",typeof(GXObjectUploadServices)},
 												{"gxoauthlogout",typeof(GXOAuthLogout)},
 												{"gxoauthuserinfo",typeof(GXOAuthUserInfo)},
 												{"gxoauthaccesstoken",typeof(GXOAuthAccessToken)},
-												{"gx_valid_service",typeof(GXValidService)},
 												{"gxmulticall",typeof(GXMultiCall)}};
 		static Dictionary<string, string> _aspxRewrite = new Dictionary<string, string>(){
 												{"oauth/access_token","gxoauthaccesstoken.aspx"},
@@ -58,7 +55,7 @@ namespace GeneXus.HttpHandlerFactory
 												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
 												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
 												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
-												{"oauth/gam/v2.0/RequestTokenAndUserinfo","aGAMSSORestRequestTokenAndUserInfo_v20.aspx"}};
+												{"oauth/gam/v2.0/requesttokenanduserinfo","aGAMSSORestRequestTokenAndUserInfo_v20.aspx"}};
 		private const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
 		private const string GXFLOW_NSPACE = "GXflow.Programs";
 		private static List<string> GxNamespaces;
@@ -83,10 +80,10 @@ namespace GeneXus.HttpHandlerFactory
 				context.NewSessionCheck();
 				url = context.Request.Path.Value;
 
-				handler = GetHandler(context, context.Request.Method, ObjectUrl(context.Request.Path.Value, _basePath), string.Empty);
+				handler = GetHandler(context, context.Request.Method, ObjectUrl(url, _basePath), string.Empty);
 				context.Response.OnStarting(() =>
 				{
-					if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(".aspx") && string.IsNullOrEmpty(context.Response.ContentType))
+					if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(HttpHelper.ASPX) && string.IsNullOrEmpty(context.Response.ContentType))
 					{
 						context.Response.ContentType = MediaTypesNames.TextHtml;
 						//If no ContentType is specified, the default is text/HTML.
@@ -111,7 +108,7 @@ namespace GeneXus.HttpHandlerFactory
 		public static bool IsAspxHandler(string path, string basePath)
 		{
 			var name = ObjectUrl(path, basePath);
-			return name.EndsWith(".aspx", StringComparison.OrdinalIgnoreCase) || _aspxObjects.ContainsKey(name);
+			return name.EndsWith(HttpHelper.ASPX, StringComparison.OrdinalIgnoreCase) || _aspxObjects.ContainsKey(name);
 		}
 		private static string ObjectUrl(string requestPath, string basePath) 
 		{
@@ -120,13 +117,22 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				lastSegment = lastSegment.Remove(0, basePath.Length);
 			}
-			lastSegment = lastSegment.TrimStart('/');
+			lastSegment = CleanUploadUrlSuffix(lastSegment.TrimStart('/').ToLower());
 			GXLogging.Debug(log, "ObjectUrl:", lastSegment);
 			if (_aspxRewrite.ContainsKey(lastSegment))
 			{
 				return _aspxRewrite[lastSegment];
 			}
 			return lastSegment;
+		}
+		private static string CleanUploadUrlSuffix(string url)
+		{
+			if (url.EndsWith($"{HttpHelper.ASPX}{HttpHelper.GXOBJECT}", StringComparison.OrdinalIgnoreCase))
+			{
+				return url.Substring(0, url.Length - (HttpHelper.GXOBJECT.Length));
+			}
+			else
+				return url;
 		}
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
 		{
@@ -203,7 +209,6 @@ namespace GeneXus.HttpHandlerFactory
             }
 			if (objType ==null)
 				throw new Exception("GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").");
-
 			return handlerToReturn;
 		}
 		internal static List<string> GetGxNamespaces(HttpContext context, string mainNamespace)

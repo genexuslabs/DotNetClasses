@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GxPdfReportsCS</RootNamespace>
 		<AssemblyName>GxPdfReportsCS</AssemblyName>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
@@ -10,7 +10,7 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="log4net" Version="2.0.11" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />

@@ -1,15 +1,12 @@
 using System;
+using System.Collections;
 using System.Globalization;
 using System.Runtime.Serialization;
-using System.Collections;
 using Jayrock.Json;
-using log4net;
-using System.Reflection;
-using GeneXus.Metadata;
-using NetTopologySuite.IO;
-using NetTopologySuite.Geometries;
-using GxClasses.Helpers;
 using GeographicLib;
+using log4net;
+using NetTopologySuite.Geometries;
+using NetTopologySuite.IO;
 
 namespace GeneXus.Utils
 {
@@ -34,9 +31,6 @@ namespace GeneXus.Utils
 
 	class NTSGeographyWrapper
 	{
-
-		private const double EARTH_RADIUS = 6371008.8;
-		private const double DEG_TO_RAD = Math.PI / 180;
 
 		internal static object Parse(String geoText)
 		{
@@ -66,6 +60,10 @@ namespace GeneXus.Utils
 			{
 				return null;
 			}
+		}
+		internal static bool IsNull(object instance)
+		{
+			return (instance == null || instance == NTSGeographyWrapper.NullSQLGeography);
 		}
 
 		internal static object STGeometryType(object instance)
@@ -154,27 +152,6 @@ namespace GeneXus.Utils
 			return dt.s12;
 		}
 
-		/*public static double DistanceSLC(double Lat1, double Lon1, double Lat2, double Lon2)
-		{
-			try
-			{
-				double radLat1 = Lat1 * DEG_TO_RAD;
-				double radLat2 = Lat2 * DEG_TO_RAD;
-				double radLon1 = Lon1 * DEG_TO_RAD;
-				double radLon2 = Lon2 * DEG_TO_RAD;
-
-				// central angle, aka arc segment angular distance
-				double centralAngle = Math.Acos(Math.Sin(radLat1) * Math.Sin(radLat2) +
-						Math.Cos(radLat1) * Math.Cos(radLat2) * Math.Cos(radLon2 - radLon1));
-
-				// great-circle (orthodromic) distance on Earth between 2 points
-				return EARTH_RADIUS * centralAngle;
-			}
-			catch {
-					throw;
-				}
-		}*/
-
 		internal static bool STIntersects(object instanceA, object instanceB)
 		{
 			return ((Geometry)instanceA).Intersects((Geometry)instanceB);
@@ -229,15 +206,15 @@ namespace GeneXus.Utils
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.Geospatial));
 
-		const string EMPTY_GEOMETRY = "GEOMETRYCOLLECTION EMPTY";
+		internal const string EMPTY_GEOMETRY = "GEOMETRYCOLLECTION EMPTY";
 		const string EMPTY_GEOGRAPHY = "GEOGRAPHY EMPTY";
 		const string EMPTY_POINT = "POINT EMPTY";
 		const string EMPTY_LINE = "LINESTRING EMPTY";
 		const string EMPTY_POLY = "POLYGON EMPTY";
 
-		const string ALT_EMPTY_POINT = "POINT(0 0)";
-		const string ALT_EMPTY_LINE = "LINESTRING( 0 0,0 1)";
-		const string ALT_EMPTY_POLY = "POLYGON((0 0, 0 1, 1 0,0 0))";
+		internal const string ALT_EMPTY_POINT = "POINT(0 0)";
+		internal const string ALT_EMPTY_LINE = "LINESTRING( 0 0,0 1)";
+		internal const string ALT_EMPTY_POLY = "POLYGON((0 0, 0 1, 1 0,0 0))";
 		
 		public enum GeoGraphicTypeValue { Point, MultiPoint, Line, MultiLine, Polygon, MultiPolygon, Other };
 
@@ -415,7 +392,7 @@ namespace GeneXus.Utils
 		{
 			get
 			{
-				return this.PointList[0].Longitude;
+				return NTSGeographyWrapper.Long(this._innerValue);
 			}
 		}
 
@@ -423,7 +400,7 @@ namespace GeneXus.Utils
 		{
 			get
 			{
-				return this.PointList[0].Latitude;
+				return NTSGeographyWrapper.Lat(this._innerValue);				
 			}
 		}
 
@@ -676,22 +653,27 @@ namespace GeneXus.Utils
 			}
 			try
 			{
-				// Parse
 				_innerValue = NTSGeographyWrapper.Parse(geoText);
 				// SRID, Type & Points X, Y
-				if ((!NTSGeographyWrapper.IsValid(_innerValue)) && _innerValue != null)
+				if (_innerValue != null && !NTSGeographyWrapper.IsNull(_innerValue))
 				{
-					//_innerValue = NTSGeographyWrapper.MakeValid(_innerValue);
-				}
+					if (NTSGeographyWrapper.IsValid(_innerValue))
+					{
+						//_innerValue = NTSGeographyWrapper.MakeValid(_innerValue);	
+						this.srid = NTSGeographyWrapper.Srid(_innerValue);
+						this.setGXGeoType(NTSGeographyWrapper.STGeometryType(_innerValue).ToString());
 
-				this.srid = NTSGeographyWrapper.Srid(_innerValue);
-
-				this.setGXGeoType(NTSGeographyWrapper.STGeometryType(_innerValue).ToString());
-				if (GeographicType == GeoGraphicTypeValue.Point)
-				{
-					this.Point.Longitude = NTSGeographyWrapper.Long(_innerValue);
-					this.Point.Latitude = NTSGeographyWrapper.Lat(_innerValue);
+						if (GeographicType == GeoGraphicTypeValue.Point)
+						{
+							this.Point.Longitude = NTSGeographyWrapper.Long(_innerValue);
+							this.Point.Latitude = NTSGeographyWrapper.Lat(_innerValue);
+						}
+					}
+					else
+						setNullGeography();
 				}
+				else
+					setNullGeography();
 			}
 			catch (Exception ex)
 			{
@@ -703,22 +685,24 @@ namespace GeneXus.Utils
 					}
 					else
 					{
-						// Cannot parse value
-						_innerValue = NTSGeographyWrapper.NullSQLGeography;
-						this.geoText = "";
-						this.Point.Longitude = 0;
-						this.Point.Latitude = 0;
+						setNullGeography();
 					}
 				}
 				else
 				{
-					// Cannot parse value
-					_innerValue = NTSGeographyWrapper.NullSQLGeography;
-					this.geoText = "";
-					this.Point.Longitude = 0;
-					this.Point.Latitude = 0;
+					setNullGeography();
+					
 				}
 			}
+		}
+
+		void setNullGeography()
+		{
+			// Cannot parse value
+			_innerValue = NTSGeographyWrapper.NullSQLGeography;
+			this.geoText = "";
+			this.Point.Longitude = 0;
+			this.Point.Latitude = 0;
 		}
 
 		override public String ToString()
@@ -957,7 +941,6 @@ namespace GeneXus.Utils
 			}
 			return ArrayOfPoints;
 		}
-
 	}
 
 	public class PointT
@@ -975,6 +958,5 @@ namespace GeneXus.Utils
 	{
 		public Line[] Points;
 	}
-
 
 }

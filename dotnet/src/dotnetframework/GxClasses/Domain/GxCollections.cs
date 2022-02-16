@@ -144,6 +144,27 @@ namespace GeneXus.Utils
 					parameters[index] = value;
 			}
 		}
+		public GxParameterCollection Distinct()
+		{
+			if (Count > 1)
+			{
+				HashSet<string> parms = new HashSet<string>();
+				GxParameterCollection uniqueParms = new GxParameterCollection();
+				for (int j = Count - 1; j >= 0; j--)
+				{
+					if (!parms.Contains(this[j].ParameterName))
+					{
+						uniqueParms.Add(this[j]);
+						parms.Add(this[j].ParameterName);
+					}
+				}
+				return uniqueParms;
+			}
+			else
+			{
+				return this;
+			}
+		}
 	}
 
 	public class GxStringCollection : StringCollection, IGxJSONSerializable, IGxJSONAble
@@ -215,7 +236,7 @@ namespace GeneXus.Utils
 				return false;
 			}
 		}
-		public virtual void FromJSONObject(IJsonFormattable obj)
+		public virtual void FromJSONObject(dynamic obj)
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
@@ -351,40 +372,47 @@ namespace GeneXus.Utils
 		}
 		public void Add(Object o, int idx)
 		{
-			T TObject;
-			if (typeof(T).IsAssignableFrom(o.GetType()))
-				TObject = (T)o;
-			else if (typeof(IGxJSONAble).IsAssignableFrom(typeof(T)))
-			{
-
-				TObject = (T)Activator.CreateInstance(typeof(T));
-				((IGxJSONAble)TObject).FromJSONObject((IJsonFormattable)o);
-			}
-			else
-			{
-				if (typeof(T) == typeof(Geospatial))
-				{
-					object g = (Geospatial)(string)o;
-					TObject = (T)g;
-				}
-				else if (typeof(T) == typeof(Guid))
-				{
-					object g = new Guid(o.ToString());
-					TObject = (T)g;
-				}
-				else if (o is IConvertible)
-				{
-					TObject = (T)Convert.ChangeType(o, typeof(T));
-				}
-				else
-					TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
-			}
+			T TObject = ConvertToT(o);
 			if (idx == 0)
 				Add(TObject);
 			else
 				Insert(idx - 1, TObject);
 		}
+		private T ConvertToT(Object o)
+		{
+			T TObject=default(T);
+			if (o != null)
+			{
+				if (typeof(T).IsAssignableFrom(o.GetType()))
+					TObject = (T)o;
+				else if (typeof(IGxJSONAble).IsAssignableFrom(typeof(T)))
+				{
 
+					TObject = (T)Activator.CreateInstance(typeof(T));
+					((IGxJSONAble)TObject).FromJSONObject(o);
+				}
+				else
+				{
+					if (typeof(T) == typeof(Geospatial))
+					{
+						object g = (Geospatial)(string)o;
+						TObject = (T)g;
+					}
+					else if (typeof(T) == typeof(Guid))
+					{
+						object g = new Guid(o.ToString());
+						TObject = (T)g;
+					}
+					else if (o is IConvertible)
+					{
+						TObject = (T)Convert.ChangeType(o, typeof(T));
+					}
+					else
+						TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
+				}
+			}
+			return TObject;
+		}
 		public void RemoveItem(int idx)
 		{
 			if (idx <= 0 || idx > Count)
@@ -409,7 +437,8 @@ namespace GeneXus.Utils
 		}
 		public int IndexOf(object value)
 		{
-			return base.IndexOf((T)value) + 1;
+			T TObject = ConvertToT(value);
+			return base.IndexOf(TObject) + 1;
 		}
 
 		public virtual void writexml(GXXMLWriter oWriter, string sName)
@@ -614,7 +643,7 @@ namespace GeneXus.Utils
 		}
 		public string ToJavascriptSource(bool includeState)
 		{
-			return GetJSONObject(includeState).ToString();
+			return JSONHelper.WriteJSON<dynamic>(GetJSONObject(includeState));
 		}
 		public string ToJavascriptSource()
 		{
@@ -622,7 +651,7 @@ namespace GeneXus.Utils
 		}
 		public void ToJSON(bool includeState)
 		{
-			((JArray)jsonArr).Clear();
+			jsonArr.Clear();
 			for (int i = 0; i < this.Count; i++)
 			{
 				AddObjectProperty(this[i], includeState);
@@ -666,7 +695,7 @@ namespace GeneXus.Utils
 			bool result = _jsonArr != null;
 			try
 			{
-				FromJSONObject((JArray)jsonArr);
+				FromJSONObject(jsonArr);
 				return result;
 			}
 			catch (Exception ex)
@@ -727,7 +756,7 @@ namespace GeneXus.Utils
 		{
 			return GetJSONObject(true);
 		}
-		public virtual void FromJSONObject(IJsonFormattable obj)
+		public virtual void FromJSONObject(dynamic obj)
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
@@ -897,18 +926,14 @@ namespace GeneXus.Utils
 			return false;
 		}
 
-		public override void FromJSONObject(IJsonFormattable obj)
+		public override void FromJSONObject(dynamic obj)
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
 			for (int i = 0; i < jobj.Length; i++)
 			{
 				IGxJSONAble obj1 = (IGxJSONAble)Activator.CreateInstance(_containedObjType, new object[] { context });
-				JArray jobji = jobj[i] as JArray;
-				if (jobji != null)
-					obj1.FromJSONObject(jobji);
-				else
-					obj1.FromJSONObject((JObject)jobj[i]);
+				obj1.FromJSONObject(jobj[i]);
 				Add(obj1);
 			}
 		}
@@ -988,6 +1013,21 @@ namespace GeneXus.Utils
 		public short opened;
 	}
 
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxJsonName : Attribute
+	{
+		string _jsonName;
+		public GxJsonName(String name)
+		{
+			_jsonName = name;
+		}
+		public string Name
+		{
+			get { return this._jsonName;  }
+			set { this._jsonName = value; }
+		}
+	}
+
 	[Serializable]
 	[XmlType(IncludeInSchema = false)]
 	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable
@@ -997,7 +1037,7 @@ namespace GeneXus.Utils
 
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
-
+		
 		static void loadConfigurator()
 		{
 			if (GxUserType.setupChannelObject == null && !GxUserType.setupChannelInitialized)
@@ -1041,11 +1081,11 @@ namespace GeneXus.Utils
 					_jsonObj = new JObject();
 				return _jsonObj;
 			}
-		}
+		}				
+
 		public GxUserType()
 		{
 		}
-
 
 		public virtual void SetDirty(string fieldName)
 		{
@@ -1178,11 +1218,11 @@ namespace GeneXus.Utils
 		}
 		public string ToJavascriptSource(bool includeState)
 		{
-			return ToJavascriptSource(includeState, true).ToString();
+			return ToJavascriptSource(includeState, true);
 		}
 		public string ToJavascriptSource(bool includeState, bool includeNoInitialized)
 		{
-			return GetJSONObject(includeState, includeNoInitialized).ToString();
+			return JSONHelper.WriteJSON<dynamic>(GetJSONObject(includeState, includeNoInitialized));
 		}
 		public string ToJavascriptSource()
 		{
@@ -1219,7 +1259,14 @@ namespace GeneXus.Utils
 				return false;
 			}
 		}
-
+		public virtual bool ShouldSerializeSdtJson()
+		{
+			return true;
+		}
+		public virtual bool SdtSerializeAsNull()
+		{
+			return false;
+		}
 		public virtual object Clone()
 		{
 			return base.MemberwiseClone();
@@ -1233,7 +1280,7 @@ namespace GeneXus.Utils
 			try
 			{
 				string xml = UpdateNodeDefaultNamespace(oReader.ReadRawXML(), null, false, this.GetPrefixesInContext());
-				FromXml(xml, sName, oReader.NamespaceURI);
+				FromXmlFixedNameAndNamespace(xml, null, sName, oReader.NamespaceURI);
 				return 1;
 			}
 			catch (Exception ex)
@@ -1284,7 +1331,7 @@ namespace GeneXus.Utils
 					tagCloseIndex--;
 				}
 
-				if (!string.IsNullOrEmpty(defaultNamespace) || forceDefaultNamespace || prefixes.Keys.Contains(""))
+				if (!string.IsNullOrEmpty(defaultNamespace) || forceDefaultNamespace || prefixes.ContainsKey(""))
 				{
 					string currentTagSubstring = xml.Substring(tagOpenIndex, tagCloseIndex - tagOpenIndex);
 					int nsIndex = currentTagSubstring.IndexOf("xmlns=");
@@ -1368,20 +1415,33 @@ namespace GeneXus.Utils
 
 		public virtual bool FromXml(string s)
 		{
-			return FromXml(s, "");
+			return FromXml(s, String.Empty);
 		}
 		public virtual bool FromXml(string s, string sName)
 		{
-			return FromXml(s, sName, "");
+			return FromXml(s, sName, String.Empty);
 		}
 		public virtual bool FromXml(string s, string sName, string sNamespace)
 		{
 			return FromXml(s, null, sName, sNamespace);
 		}
+		
 		public virtual bool FromXml(string s, GXBaseCollection<SdtMessages_Message> Messages, string sName, string sNamespace)
+		{
+			if (string.IsNullOrEmpty(sName))
+				sName = XmlNameAttribute(GetType());
+
+			if (string.IsNullOrEmpty(sNamespace))
+				sNamespace = XmlNameSpaceAttribute(GetType());
+
+			return FromXmlFixedNameAndNamespace(s, Messages, sName, sNamespace);
+
+		}
+		internal bool FromXmlFixedNameAndNamespace(string s, GXBaseCollection<SdtMessages_Message> Messages, string sName, string sNamespace)
 		{
 			if (string.IsNullOrEmpty(s))
 				return false;
+			
 			try
 			{
 				GxUserType deserialized = GXXmlSerializer.Deserialize<GxUserType>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);
@@ -1420,7 +1480,32 @@ namespace GeneXus.Utils
 		{
 			return ToXml(false, name, sNameSpace);
 		}
+		internal static string XmlNameAttribute(Type sdtType)
+		{
+			XmlTypeAttribute typeAtt = sdtType.GetCustomAttributes<XmlTypeAttribute>().FirstOrDefault();
+			if (typeAtt != null)
+				return typeAtt.TypeName;
+			else
+				return string.Empty;
+		}
+		internal static string XmlNameSpaceAttribute(Type sdtType)
+		{
+			XmlTypeAttribute typeAtt = sdtType.GetCustomAttributes<XmlTypeAttribute>().FirstOrDefault();
+			if (typeAtt != null)
+				return typeAtt.Namespace;
+			else
+				return string.Empty;
+		}
 		public virtual string ToXml(bool includeHeader, bool includeState, string rootName, string sNameSpace)
+		{
+			if (string.IsNullOrEmpty(rootName))
+				rootName = XmlNameAttribute(GetType());
+			if (string.IsNullOrEmpty(sNameSpace))
+				sNameSpace = XmlNameSpaceAttribute(GetType());
+			return ToXmlFixedNameAndNamespace(includeHeader, includeState, rootName, sNameSpace);	
+
+		}
+		internal string ToXmlFixedNameAndNamespace(bool includeHeader, bool includeState, string rootName, string sNameSpace)
 		{
 			XmlAttributeOverrides ov = null;
 
@@ -1526,13 +1611,14 @@ namespace GeneXus.Utils
 			return v;
 		}
 
-		public void FromJSONObject(IJsonFormattable obj)
+		public void FromJSONObject(dynamic obj)
 		{
 
 			JObject jobj = obj as JObject;
 			if (jobj == null)
 				return;
-			foreach (string name in getFromJSONObjectOrderIterator(jobj.Names))
+			ICollection jsonIterator = getFromJSONObjectOrderIterator(jobj.Names);
+			foreach (string name in jsonIterator)
 			{
 				object currObj = jobj[name];
 				string map = JsonMap(name);
@@ -1540,7 +1626,7 @@ namespace GeneXus.Utils
 
 				if (objProperty != null)
 				{
-					if (currObj != JNull.Value)
+					if (!JSONHelper.IsJsonNull(currObj))
 					{
 						object newValue;
 						if (TryConvertValueToProperty(currObj, objProperty, out newValue))
@@ -1555,7 +1641,7 @@ namespace GeneXus.Utils
 									MethodInfo setBlob = GetMethodInfo("gxtv_" + GetType().Name + "_" + name + "_setblob");
 									if (setBlob != null)
 									{
-										if (HttpHelper.GetHttpRequestPostedFile(context.HttpContext, sVar, out uploadPath))
+										if (HttpHelper.GetHttpRequestPostedFile(context, sVar, out uploadPath))
 										{
 											string fileName = HttpHelper.GetHttpRequestPostedFileName(this.context.HttpContext, sVar);
 											string fileType = HttpHelper.GetHttpRequestPostedFileType(this.context.HttpContext, sVar);
@@ -1564,9 +1650,9 @@ namespace GeneXus.Utils
 										}
 									}
 								}
-								else if (GxRestUtil.IsUpload(uploadPath)) //File upload from SD
+								else if (GxUploadHelper.IsUpload(uploadPath)) //File upload from SD
 								{
-									objProperty.SetValue(this, GxRestUtil.UploadPath(uploadPath), null);
+									objProperty.SetValue(this, uploadPath, null);
 									PropertyInfo info_gxi = this.GetType().GetProperty(objProperty.Name + "_gxi");//gxi reset
 									if (info_gxi != null)
 										info_gxi.SetValue(this, string.Empty, null);
@@ -1602,7 +1688,6 @@ namespace GeneXus.Utils
 							GxSimpleCollection<object> currSimpleColl;
 							IGxJSONAble currJsonProp;
 							CollectionBase currObjColl = currObj as CollectionBase;
-							IJsonFormattable formattableObj = currObj as IJsonFormattable;
 #if !NETCORE
 							GxObjectCollectionBase currColl;
 							if ((currColl = currProp as GxObjectCollectionBase) != null)
@@ -1611,7 +1696,7 @@ namespace GeneXus.Utils
 								if (currObjColl == null) //arays with 1 item often send the item itself and not the whole array
 								{
 									object collItem = currColl.ContainedType.GetConstructor(new Type[] { typeof(IGxContext) }).Invoke(new object[] { currColl.context });
-									((IGxJSONAble)collItem).FromJSONObject(formattableObj);
+									((IGxJSONAble)collItem).FromJSONObject(currObj);
 									currColl.Add(collItem);
 								}
 								else
@@ -1619,7 +1704,7 @@ namespace GeneXus.Utils
 									foreach (object item in currObjColl)
 									{
 										object collItem = currColl.ContainedType.GetConstructor(new Type[] { typeof(IGxContext) }).Invoke(new object[] { currColl.context });
-										((IGxJSONAble)collItem).FromJSONObject((IJsonFormattable)item);
+										((IGxJSONAble)collItem).FromJSONObject(item);
 										currColl.Add(collItem);
 									}
 								}
@@ -1636,7 +1721,7 @@ namespace GeneXus.Utils
 									foreach (object item in currObjColl)
 									{
 										object bcItem = BCType.GetConstructor(new Type[] { typeof(IGxContext) }).Invoke(new object[] { this.context });
-										((IGxJSONAble)bcItem).FromJSONObject((IJsonFormattable)item);
+										((IGxJSONAble)bcItem).FromJSONObject(item);
 										bcColl.BaseAdd(bcItem); //BaseAdd doesn´t change mode in BCs levels.
 									}
 								}
@@ -1651,7 +1736,7 @@ namespace GeneXus.Utils
 							}
 							else if ((currJsonProp = currProp as IGxJSONAble) != null)
 							{
-								currJsonProp.FromJSONObject(formattableObj);
+								currJsonProp.FromJSONObject(currObj);
 							}
 							else if (objProperty.PropertyType == typeof(string) && !(currObj is String))
 							{
@@ -1902,7 +1987,7 @@ namespace GeneXus.Utils
 		void AddObjectProperty(string name, object prop);
 		Object GetJSONObject();
 		Object GetJSONObject(bool includeState);
-		void FromJSONObject(IJsonFormattable obj);
+		void FromJSONObject(dynamic obj);
 		string ToJavascriptSource();
 	}
 	public interface IGxJSONSerializable
@@ -2168,7 +2253,7 @@ namespace GeneXus.Utils
 		public string ToJSonString()
 		{
 			JObject jObj = new JObject();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 
 				jObj.Accumulate(item.ToString(), this.Get(item.ToString()));
@@ -2186,11 +2271,11 @@ namespace GeneXus.Utils
 			JObject jObj = JSONHelper.ReadJSON<JObject>(s, Messages);
 			if (jObj != null)
 			{
-				foreach (DictionaryEntry item in jObj)
+				foreach (string name in jObj.Names) //.Names keeps the original order
 				{
 					lock (syncObj)
 					{
-						this.Set(item.Key.ToString(), item.Value.ToString());
+						this.Set(name, JSONHelper.WriteJSON<dynamic>(jObj[name]));
 					}
 				}
 				return true;
@@ -2222,7 +2307,7 @@ namespace GeneXus.Utils
 		public object GetJSONObject()
 		{
 			JObject jObj = new JObject();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 
 				jObj.Accumulate(item.ToString(), this.Get(item.ToString()));
@@ -2235,7 +2320,7 @@ namespace GeneXus.Utils
 			return GetJSONObject();
 		}
 
-		public void FromJSONObject(IJsonFormattable obj)
+		public void FromJSONObject(dynamic obj)
 		{
 			this.Clear();
 			JObject jObj = obj as JObject;
@@ -2253,7 +2338,7 @@ namespace GeneXus.Utils
 		public override string ToString()
 		{
 			StringBuilder values = new StringBuilder();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 				values.Append(this[item.ToString()]);
 			}
@@ -2571,7 +2656,7 @@ namespace GeneXus.Utils
 			else if (ienumerableType != null)
 			{
 				IList lst = (IList)Activator.CreateInstance((typeof(List<>).MakeGenericType(ienumerableType)));
-				foreach (var item in i as IEnumerable)
+				foreach (object item in i as IEnumerable)
 					lst.Add(item);
 				o = lst;
 			}
@@ -2658,7 +2743,7 @@ namespace GeneXus.Utils
 		string m_value;
 		protected virtual string formatDate(DateTime value, bool useMillis)
 		{
-			return (useMillis) ? value.ToString("yyyy-MM-ddTHH:mm:ss.fff") : value.ToString("yyyy-MM-ddTHH:mm:ss");
+			return (useMillis) ? value.ToString(DateTimeUtil.JsonDateFormatMillis) : value.ToString(DateTimeUtil.JsonDateFormat);
 		}
 
 		public GxDatetimeString(DateTime value)

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.Utils;
@@ -14,14 +15,23 @@ namespace GeneXus.Application
 
 		static ConcurrentDictionary<string, string> routerList;
 		const string RESOURCE_PATTERN = "*.rewrite";
-		const string DONT_USE_NAMED_PARAMETERS = "DontUseNamedParameters";
-		const string OFF = "0";
-
+		const string schemeRegEx = @"^([a-z][a-z0-9+\-.]*):";
+		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
 		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName, string scriptPath)
 		{
-			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray() ;
-			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/"))
-				return key;
+			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray();
+			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/") || string.IsNullOrEmpty(key) || scheme.IsMatch(key))
+			{
+				if (parms.Length > 0)
+				{
+					string[] noParmsName = Array.Empty<string>();
+					return $"{key}{ConvertParmsToQueryString(parms, noParmsName)}";
+				}
+				else
+				{
+					return key;
+				}
+			}
 
 			if (routerList == null)
 			{
@@ -31,12 +41,12 @@ namespace GeneXus.Application
 
 			string[] urlQueryString = key.Split('?');
 			string query = urlQueryString.Length > 1 ? urlQueryString[1] : string.Empty;
-			string path = urlQueryString[0].ToLower();
+			string path = urlQueryString[0];
 
 			string[] parameterValues= string.IsNullOrEmpty(query) ? parms : HttpHelper.GetParameterValues(query);
 
 			string routerKey;
-			bool rewriteMatch = routerList.TryGetValue(path, out routerKey);
+			bool rewriteMatch = routerList.TryGetValue(NormalizedUrlObjectName(path), out routerKey);
 			if (rewriteMatch)
 			{
 				path = string.Format(routerKey, parameterValues);
@@ -49,18 +59,20 @@ namespace GeneXus.Application
 				if (PatternHasParameters(routerKey))
 					result = $"{basePath}{path}";
 				else
-					result = $"{basePath}{path}{ConvertParmsToQueryString(parms, parmsName, path)}";
+					result = $"{basePath}{path}{ConvertParmsToQueryString(parms, parmsName)}";
 			}
 			else if (parms.Length > 0)
 			{
-				result = $"{basePath}{path}{ConvertParmsToQueryString(parms, parmsName, path)}";
+				result = $"{basePath}{path}{ConvertParmsToQueryString(parms, parmsName)}";
 			}
 			else if (!string.IsNullOrEmpty(query))
 			{
 				result = $"{basePath}{path}?{query}";
 			}
-			else
+			else if (!string.IsNullOrEmpty(path))
 				result = $"{basePath}{path}";
+			else
+				result = path;
 
 			return result;
 		}
@@ -79,11 +91,11 @@ namespace GeneXus.Application
 		{
 			return !string.IsNullOrEmpty(routerKey) && routerKey.Contains("{0}");
 		}
-		private static string ConvertParmsToQueryString(string[] parms, string[] parmsName, string routerRule)
+		private static string ConvertParmsToQueryString(string[] parms, string[] parmsName)
 		{
 			if (parms.Length == 0)
 				return string.Empty;
-			bool useNamedParameters = (Configuration.Config.GetValueOf(DONT_USE_NAMED_PARAMETERS, OFF) == OFF) && (parms.Length == parmsName.Length);
+			bool useNamedParameters = Preferences.UseNamedParameters && (parms.Length == parmsName.Length);
 
 			StringBuilder queryString = new StringBuilder("?");
 			string parameterSeparator = useNamedParameters ? "&" : ",";
@@ -102,7 +114,10 @@ namespace GeneXus.Application
 			}
 			return queryString.ToString();
 		}
-
+		private static string NormalizedUrlObjectName(string objectName)
+		{
+			return objectName.ToLower();
+		}
 		private static void Load(string resourcePattern)
 		{
 			string[] files = Directory.GetFiles(GxContext.StaticPhysicalPath(), resourcePattern);
@@ -116,7 +131,7 @@ namespace GeneXus.Application
 						string objectName = map[0];
 						string url = map[1];
 						url = url.Replace(@"\=", "=").Replace(@"\\", @"\");
-						routerList[$"{objectName.ToLower()}.aspx"] = url;
+						routerList[$"{NormalizedUrlObjectName(objectName)}.aspx"] = url;
 					}
 				}
 			}

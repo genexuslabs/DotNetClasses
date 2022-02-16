@@ -9,6 +9,7 @@ using log4net;
 using System.Collections.Generic;
 using GeneXus.Data.ADO;
 using GeneXus.Utils;
+using System.Text;
 
 namespace GeneXus.Data.NTier
 {
@@ -68,6 +69,7 @@ namespace GeneXus.Data.NTier
         int RecordCount { get;}
         void OnCommitEvent(object instance, string method);
         int readNextErrorRecord();
+		List<ParDef> DynamicParameters { get; }
     }
 	public interface IFieldGetter
 	{
@@ -99,6 +101,8 @@ namespace GeneXus.Data.NTier
 	public interface IFieldSetter
 	{
         void SetParameter(int id, Utils.IGeographicNative parm);
+		void SetParameter(int id, Utils.IGeographicNative parm, GXType type);
+		void SetParameterObj(int id, object parm);
         void SetParameter(int id, Guid parm);
         void SetParameter(int id, bool parm);
         void SetParameter(int id, short parm);
@@ -121,6 +125,7 @@ namespace GeneXus.Data.NTier
 		void SetParameterMultimedia(int id, string parm, string imgParm, string tableName, string fieldName);
 		void SetParameterRT(string name, string value);
 		void RestoreParametersRT();
+		List<ParDef> ParameterDefinition { get; }
 	}
 	public interface IDataStoreHelper
 	{
@@ -135,11 +140,132 @@ namespace GeneXus.Data.NTier
 
 	public class DataStoreHelperBase
 	{
-        /*DO NOT ADD INSTANCE VARIABLES IN THIS CLASS, THIS IS REFERENCED BY THE STATIC CURSORDEF ARRAY IN THE XX___DEFAULT, ALL THE VARIABLES HERE LIVE FOREVER*/
+		/*DO NOT ADD INSTANCE VARIABLES IN THIS CLASS, THIS IS REFERENCED BY THE STATIC CURSORDEF ARRAY IN THE XX___DEFAULT, ALL THE VARIABLES HERE LIVE FOREVER*/
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(DataStoreHelperBase));
+		private const string AND = " and ";
+		private const string WHERE = " WHERE ";
 
 		public virtual string getDataStoreName()
 		{
-			return "Default";
+			return Preferences.DefaultDatastore;
+		}
+		public void setParameters(int cursor,
+							   IFieldSetter stmt,
+							   Object[] parms)
+		{
+			List<ParDef> parmdefs = stmt.ParameterDefinition;
+			int idx = 0;
+			int idxParmCollection = 1;
+			object[] parmsValues = new object[parmdefs.Count];
+			foreach (ParDef pdef in parmdefs)
+			{
+				bool valueIsNull = false;
+				try
+				{
+					if (pdef.InOut)
+					{
+						stmt.RegisterInOutParameter(idxParmCollection, null);
+					}
+					else if (pdef.Out)
+					{
+						stmt.RegisterOutParameter(idxParmCollection, null);
+						goto Increment;
+					}
+
+					if (pdef.Nullable)
+					{
+						valueIsNull = (bool)parms[idx];
+						if (valueIsNull)
+						{
+							stmt.setNull(idxParmCollection, DBNull.Value);
+						}
+						idx += 1;
+					}
+					parmsValues[idxParmCollection - 1] = parms[idx];
+					if (!valueIsNull)
+					{
+						switch (pdef.GxType)
+						{
+							case GXType.Char:
+							case GXType.NChar:
+							case GXType.VarChar:
+								if (pdef.AddAtt && !pdef.Preload)
+								{
+									if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
+										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx], pdef.Tbl, pdef.Fld);
+									else
+										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx]);
+								}
+								else
+								{
+									if (pdef.GxType == GXType.VarChar)
+									{
+										if (pdef.ChkEmpty)
+											stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+										else
+											stmt.SetParameterObj(idxParmCollection, parms[idx]); 
+									}
+									else
+									{
+										if (pdef.ChkEmpty)
+											stmt.SetParameterChar(idxParmCollection, (string)parms[idx]);
+										else
+											stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+									}
+								}
+								break;
+							case GXType.NVarChar:
+								if (pdef.ChkEmpty)
+									stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+								else
+									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+								break;
+							case GXType.NClob:
+							case GXType.Clob:
+							case GXType.LongVarChar:
+								if (pdef.ChkEmpty)
+									stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
+								else
+									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+								break;
+							case GXType.Date:
+								stmt.SetParameter(idxParmCollection, (DateTime)parms[idx]);
+								break;
+							case GXType.DateAsChar:
+							case GXType.DateTime:
+								stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx]);
+								break;
+							case GXType.DateTime2:
+								stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx], true);
+								break;
+							case GXType.Blob:
+								stmt.SetParameterBlob(idxParmCollection, (string)parms[idx], pdef.InDB);
+								break;
+							case GXType.UniqueIdentifier:
+								stmt.SetParameter(idxParmCollection, (Guid)parms[idx]);
+								break;
+							case GXType.Geography:
+							case GXType.Geopoint:
+							case GXType.Geoline:
+							case GXType.Geopolygon:
+								stmt.SetParameter(idxParmCollection, (Geospatial)parms[idx], pdef.GxType);
+								break;
+							default:
+								stmt.SetParameterObj(idxParmCollection, parms[idx]);
+								break;
+						}
+					}
+				Increment:
+					idx += 1;
+					idxParmCollection += 1;
+				}
+				catch (InvalidCastException ex)
+				{
+					string msg = this.GetType() + ".setParameters error  parameterName:" + pdef.Name + " parameterType:" + pdef.GxType;
+					GXLogging.Error(log, ex, msg + " value:" + parms[idx]);
+					throw new Exception("Invalid parameter conversion at " + msg, ex);
+				}
+			}
 		}
 		[Obsolete("getDynamicStatement with 2 arguments is deprecated", false)]
         public virtual Object[] getDynamicStatement(int cursor, object[] dynConstraints)
@@ -153,7 +279,14 @@ namespace GeneXus.Data.NTier
         public virtual void getErrorResults(int cursor, IFieldGetter rslt, Object[] buf)
         { 
         }
-
+		public void AddWhere(StringBuilder currentWhere, string condition)
+		{
+			if (currentWhere.Length > 0)
+				currentWhere.Append(AND);
+			else
+				currentWhere.Append(WHERE);
+			currentWhere.Append(condition);
+		}
 	}
 
 	public class DataStoreUtil
@@ -286,10 +419,37 @@ namespace GeneXus.Data.NTier
 
 						if (parmHasValue != null)
 						{
-							Object[] parmsNew = new Object[parms.Length + parmHasValue.Length];
-							parmHasValue.CopyTo(parmsNew, 0);
-							parms.CopyTo(parmsNew, parmHasValue.Length);
-							_dataStoreHelper.setParameters(cursor, oCur.getFieldSetter(), parmsNew);
+							List<ParDef> pdefList = oCur.DynamicParameters;
+							if (pdefList.Count == 0) //Backward compatibility
+							{
+								Object[] parmsNew = new Object[parms.Length + parmHasValue.Length];
+								parmHasValue.CopyTo(parmsNew, 0);
+								parms.CopyTo(parmsNew, parmHasValue.Length);
+								_dataStoreHelper.setParameters(cursor, oCur.getFieldSetter(), parmsNew);
+							}
+							else
+							{
+								List<object> parmsNew = new List<object>();
+								int idx = 0;
+								for (int i=0; i< pdefList.Count; i++)
+								{
+									ParDef pdef = pdefList[i];
+									if (pdef.Nullable)
+									{
+										if (parmHasValue[i] == 0)
+										{
+											parmsNew.Add(parms[idx]);
+										}
+										idx += 1;
+									}
+									if (parmHasValue[i] == 0)
+									{
+										parmsNew.Add(parms[idx]);
+									}
+									idx += 1;
+								}
+								_dataStoreHelper.setParameters(cursor, oCur.getFieldSetter(), parmsNew.ToArray());
+							}
 						}
 						else
 						{
@@ -310,8 +470,9 @@ namespace GeneXus.Data.NTier
 			{
 				oCur.getFieldSetter().RestoreParametersRT();
 			}
-            _dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
 
+			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+			
             _dynConstraints = null;
 
             if (Preferences.Instrumented)
@@ -326,7 +487,7 @@ namespace GeneXus.Data.NTier
 		{
 			ICursor oCur = getCursor(cursor);
 			oCur.readNext();
-			_dataStoreHelper.getResults( cursor, oCur.getFieldGetter(), results[cursor]);
+			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
 			dataStoreRequestCount++;
 
 		}

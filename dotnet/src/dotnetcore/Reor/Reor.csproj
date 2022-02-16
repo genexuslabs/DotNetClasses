@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <PackageTags>Reorg</PackageTags>
     <PackageId>GeneXus.Reorganization.Core</PackageId>
@@ -26,10 +26,10 @@
     </ProjectReference>
   </ItemGroup>
   
-   <ItemGroup>
-		<Content Include="$(ProjectName).deps.json">
+	<ItemGroup>
+		<Content Include="net6.0\$(MSBuildProjectName).deps.json">
 			<Pack>true</Pack>
-			<PackagePath>\content\</PackagePath>
+			<PackagePath>\content\net6.0\</PackagePath>
 		</Content>
 	</ItemGroup>
 </Project>

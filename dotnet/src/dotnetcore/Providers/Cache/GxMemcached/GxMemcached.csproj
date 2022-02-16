@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>net6.0</TargetFrameworks>
 	<PackageTags>Memcached</PackageTags>
 	<PackageId>GeneXus.Memcached.Core</PackageId>
-</PropertyGroup>
+	<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
   <PropertyGroup>
   	<AppDesignerFolder>Properties</AppDesignerFolder>
   	<SignAssembly>false</SignAssembly>
@@ -13,17 +14,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="EnyimMemcachedCore" Version="2.5.3" />
+    <PackageReference Include="log4net" Version="2.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="BeITMemcached">
-      <HintPath>..\..\..\libs\BeITMemcached.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

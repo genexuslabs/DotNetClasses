@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GxSetFrm</RootNamespace>
 		<AssemblyName>GxSetFrm</AssemblyName>
 		<SignAssembly>false</SignAssembly>
@@ -10,6 +10,6 @@
 	</PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 </Project>

@@ -268,7 +268,13 @@ namespace GeneXus.Data
 		{
 			return new GxODPOracleDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
 		}
-
+		public override bool SupportUpdateBatchSize
+		{
+			get
+			{
+				return false;
+			}
+		}
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
 		{
@@ -339,7 +345,9 @@ namespace GeneXus.Data
 		public override int BatchUpdate(DbDataAdapterElem da)
 		{
 			DataRowCollection rows = da.DataTable.Rows;
-			DbParameterCollection parms = da.Adapter.InsertCommand.Parameters;
+			Type iCommand = OdpAssembly.GetType("Oracle.DataAccess.Client.OracleCommand");
+			IDbCommand insertComand = (IDbCommand)ClassLoader.GetPropValue(da.Adapter, "InsertCommand", iCommand);
+			IDataParameterCollection parms = insertComand.Parameters;
 			int columns = da.DataTable.Columns.Count;
 			object[][] values = new object[columns][];
 			for (int i = 0; i < columns; i++)
@@ -355,16 +363,16 @@ namespace GeneXus.Data
 			}
 			for (int i = 0; i < parms.Count; i++)
 			{
-				parms[i].Value = values[i];
+				ClassLoader.SetPropValue(parms[i], "Value", values[i]);
 			}
-			da.Command = da.Adapter.InsertCommand;
 
-			object ocmd = da.Command;
+			da.Command = insertComand;
+			IDbCommand ocmd = da.Command;
 			int oldArrayBindCount = (int)ClassLoader.GetPropValue(ocmd, "ArrayBindCount");
 			ClassLoader.SetPropValue(ocmd, "ArrayBindCount", da.DataTable.Rows.Count);
 			try
 			{
-				da.Command.ExecuteNonQuery();
+				ocmd.ExecuteNonQuery();
 			}
 			catch (Exception ex)
 			{
@@ -372,7 +380,7 @@ namespace GeneXus.Data
 			}
 			finally
 			{
-				foreach (object p in da.Command.Parameters)
+				foreach (object p in ocmd.Parameters)
 				{
 					ClassLoader.SetPropValue(p, "ArrayBindStatus", null);
 					ClassLoader.SetPropValue(p, "ArrayBindSize", null);
@@ -386,6 +394,14 @@ namespace GeneXus.Data
 			}
 			return 0;
 		}
+		public override void SetAdapterInsertCommand(DbDataAdapterElem da, IGxConnection con, string stmt, GxParameterCollection parameters)
+		{
+			Type iCommand = OdpAssembly.GetType("Oracle.DataAccess.Client.OracleCommand");
+			ClassLoader.SetPropValue(da.Adapter, "InsertCommand", iCommand, GetCommand(con, stmt, parameters));
+			object InsertCommand = ClassLoader.GetPropValue(da.Adapter, "InsertCommand", iCommand);
+			ClassLoader.SetPropValue(InsertCommand, "UpdatedRowSource", UpdateRowSource.None);
+		}
+
 		public override DbDataAdapter CreateDataAdapeter()
 		{
 			Type odpAdapter = OdpAssembly.GetType("Oracle.DataAccess.Client.OracleDataAdapter");
@@ -403,15 +419,22 @@ namespace GeneXus.Data
 		}
 		private Object GXTypeToOracleType(GXType type)
 		{
-
+		
 			switch (type)
 			{
 				case GXType.Number: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Decimal");
 				case GXType.NVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "NVarchar2");
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Long");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Varchar2");
+				case GXType.Date:
 				case GXType.DateTime: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Date");
 				case GXType.DateTime2: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "TimeStamp");
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:
+					return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Char");
 				default: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, type.ToString());
 			}
 		}
@@ -527,6 +550,7 @@ namespace GeneXus.Data
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxODPManagedOracle));
 		static Assembly _odpAssembly;
 		const string OracleDbTypeEnum = "Oracle.ManagedDataAccess.Client.OracleDbType";
+		const string OracleAssemblyName = "Oracle.ManagedDataAccess";
 
 		public static Assembly OdpAssembly
 		{
@@ -536,11 +560,11 @@ namespace GeneXus.Data
 				{
 					if (_odpAssembly == null)
 					{
-						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), "Oracle.ManagedDataAccess.dll");
+						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{OracleAssemblyName}.dll");
 						GXLogging.Debug(log, "Loading Oracle.ManagedDataAccess from:" + assemblyPath);
 #if NETCORE
 						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-						_odpAssembly = asl.LoadFromAssemblyPath(assemblyPath);
+						_odpAssembly = asl.LoadFromAssemblyName(new AssemblyName(OracleAssemblyName));
 #else
 						if (File.Exists(assemblyPath))
 						{
@@ -552,7 +576,7 @@ namespace GeneXus.Data
 							_odpAssembly = Assembly.LoadWithPartialName("Oracle.ManagedDataAccess");
 						}
 #endif
-						GXLogging.Debug(log, "Oracle.ManagedDataAccess Loaded:" + _odpAssembly.FullName + " location: " + _odpAssembly.Location + " CodeBase:" + _odpAssembly.CodeBase);
+						GXLogging.Debug(log, "Oracle.ManagedDataAccess Loaded:" + _odpAssembly.FullName + " location: " + _odpAssembly.Location);
 					} 
 
 				}
@@ -714,8 +738,14 @@ namespace GeneXus.Data
 				case GXType.NVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "NVarchar2");
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Long");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Varchar2");
+				case GXType.Date:
 				case GXType.DateTime: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Date");
 				case GXType.DateTime2: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "TimeStamp");
+				case GXType.Geography:
+				case GXType.Geoline:
+				case GXType.Geopoint:
+				case GXType.Geopolygon:
+				case GXType.UniqueIdentifier:return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, "Char");
 				default: return ClassLoader.GetEnumValue(OdpAssembly, OracleDbTypeEnum, type.ToString());
 			}
 		}
@@ -828,7 +858,8 @@ namespace GeneXus.Data
 	}
 	//Microsoft data provider
 	public class GxOracle : GxDataRecord
-	{
+{
+		const string BLANK_STRING = " ";
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxOracle));
 #if !NETCORE
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
@@ -876,6 +907,18 @@ namespace GeneXus.Data
 			}
 			return connectionString.ToString();
 
+		}
+		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i)
+		{
+			if (!Preferences.CompatibleEmptyStringAsNull() && Preferences.BlankStringAsEmpty())
+			{
+				string value = base.GetString(cmd, DR, i);
+					if (!string.IsNullOrEmpty(value) && value == BLANK_STRING)
+				{
+					return string.Empty;
+				}
+			}
+			return base.GetString(cmd, DR, i);
 		}
 		public override long GetBytes(IGxDbCommand cmd, IDataRecord DR, int i, long fieldOffset, byte[] buffer, int bufferOffset, int length)
 		{
@@ -955,6 +998,7 @@ namespace GeneXus.Data
 					case GXType.Byte: return MSOracleProvider.OracleType.Byte;
 					case GXType.Char: return MSOracleProvider.OracleType.Char;
 					case GXType.Clob: return MSOracleProvider.OracleType.Clob;
+					case GXType.Date:
 					case GXType.DateTime: return MSOracleProvider.OracleType.DateTime;
 					case GXType.Int16: return MSOracleProvider.OracleType.Int16;
 					case GXType.Int32: return MSOracleProvider.OracleType.Int32;
@@ -965,6 +1009,7 @@ namespace GeneXus.Data
 					case GXType.NVarChar: return MSOracleProvider.OracleType.NVarChar;
 					case GXType.Raw: return MSOracleProvider.OracleType.Raw;
 					case GXType.VarChar: return MSOracleProvider.OracleType.VarChar;
+					case GXType.UniqueIdentifier: return MSOracleProvider.OracleType.Char;
 					default: return MSOracleProvider.OracleType.Char;
 				}
 			}
@@ -1034,7 +1079,7 @@ namespace GeneXus.Data
 		{
 			if (!Preferences.CompatibleEmptyStringAsNull() && (String.IsNullOrEmpty(value) || String.IsNullOrEmpty(value.TrimEnd(' '))))
 			{
-				SetParameter(parameter, " ");
+				SetParameter(parameter, BLANK_STRING);
 			}
 			else
 			{
@@ -1046,7 +1091,7 @@ namespace GeneXus.Data
 		{
 			if (!Preferences.CompatibleEmptyStringAsNull() && (String.IsNullOrEmpty(value) || String.IsNullOrEmpty(value.TrimEnd(' '))))
 			{
-				value = " ";
+				value = BLANK_STRING;
 			}
 			else
 			{
@@ -1097,7 +1142,7 @@ namespace GeneXus.Data
 		{
 			if (!Preferences.CompatibleEmptyStringAsNull() && (String.IsNullOrEmpty(value) || String.IsNullOrEmpty(value.TrimEnd(' '))))
 			{
-				SetParameter(parameter, " ");
+				SetParameter(parameter, BLANK_STRING);
 			}
 			else
 			{
@@ -1245,9 +1290,9 @@ namespace GeneXus.Data
 		{
 			return new Geospatial(DR.GetString(i));
 		}
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
 		{
-			return geo.ToStringSQL();
+			return geo.ToStringSQL("POINT(0 0)");
 		}
 
 		private static readonly string[] ConcatOpValues = new string[] { string.Empty, " || ", string.Empty };

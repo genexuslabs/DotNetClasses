@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
@@ -59,19 +60,33 @@ namespace GeneXus.Notifications.WebSocket
 
 		private async Task Receive(System.Net.WebSockets.WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)
 		{
-			var receiveBuffer = new byte[1024 * 4];
+			byte[] chunkBuffer = new byte[1024];
 			try
 			{
 				while (socket.State == WebSocketState.Open)
 				{
-					var result = await socket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), CancellationToken.None);
-					handleMessage(result, receiveBuffer);
+					using (MemoryStream ms = new MemoryStream())
+					{
+						var result = await ReadDataFromSocket(socket, chunkBuffer, ms);
+						while (!result.EndOfMessage)
+						{
+							result = await ReadDataFromSocket(socket, chunkBuffer, ms);
+						}
+						handleMessage(result, ms.ToArray());
+					}
 				}
 			}
 			catch (WebSocketException wsex) when (wsex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
 			{
 				Console.WriteLine("ConnectionClosedPrematurely");
 			}
+		}
+
+		private static async Task<WebSocketReceiveResult> ReadDataFromSocket(System.Net.WebSockets.WebSocket socket, byte[] chunkBuffer, MemoryStream ms)
+		{
+			var result = await socket.ReceiveAsync(new ArraySegment<byte>(chunkBuffer), CancellationToken.None);
+			ms.Write(chunkBuffer, 0, result.Count);
+			return result;
 		}
 	}
 }

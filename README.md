@@ -41,13 +41,11 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 | GxConfig | Executable utility to update web.config | GeneXus.Config
 | GxDataInitialization | Executable utility to support dynamic transactions initialization at impact process | GeneXus.DataInitialization(\*)
 
-
 (\*) For .NET Core add suffix ".Core" to Package Id
 
 (\*\*) Package not available for .NET Core
 
 ## Repository Layout
-
 This repository contains projects for .NET and .NET Core. It is organized as follows:
 
 ```
@@ -68,11 +66,13 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 # How to build
 
 ## Requirements
-- Visual Studio 2019 >= 16.3
-- dotnet SDK >= 3.1 
-- .NET Framework >= 4.6 
+- Visual Studio 2022
+- .NET 6 
+- .NET Framework 4.7 DevPack
 
 # Instructions
+For the following steps must be executed from inside ```dotnet``` directory:
+```c:\DotNetClasses>cd dotnet```
 
 ## How to build all projects?
 - ```dotnet build DotNetStandardClasses.sln```
@@ -80,22 +80,34 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 ## How to build a specific project?
 - ```dotnet build project.csproj```
 
-## How to copy assemblies to build directory?
+## How to test your changes with a GeneXus installation?
 - ```dotnet msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
 
-It copies the .NET assemblies to the folder build/**gxnet/bin** and .NET Core assemblies to build/**gxnetcore/bin**
+It compiles the solution and copies all the .NET assemblies to the folder build/gxnet*/bin**. Then, you can copy those files to a GeneXus installation or to your web application directory.
+
+You can use the following parameters to customize the deploy:
+- TargetFramework: only the assemblies that are generated for this framework will be deployed. Valid values are: `net462` (for GeneXus C# generator) and `net6` (for GeneXus NetCore generator).
+- DeployDirectory: specifies a GeneXus installation directory.
+
+Samples:
+- ```dotnet msbuild /t:build;CopyAssemblies /p:DeployDirectory=C:\Genexus /p:TargetFramework=net462 DotNetStandardClasses.sln```
+
+It copies .NET framework assemblies to the folder C:\Genexus\gxnet\bin
+
+- ```dotnet msbuild /t:CopyAssemblies /p:DeployDirectory=C:\Genexus /p:TargetFramework=net6.0 DotNetStandardClasses.sln ```
+
+It copies .NET 6 assemblies to the folder C:\Genexus\gxnetcore\bin
 
 ## Advanced information
 
-### Replacing standard classes mechanism 
-
+### Replacing standard classes mechanism
 How to compile an assembly and replace it in a GeneXus generated application. 
 
 Suppose you do a fix in GxClasses project. In order to get that fix in your generated application follow these steps:
 
 1. Set AssemblyOriginatorKeyFile property in [Directory.Build.props](dotnet/Directory.Build.props) with the full path of your .snk file. It is required to set a strong name for the assembly.
 	- A new .snk file can be created with the command [sn.exe](https://docs.microsoft.com/en-us/dotnet/framework/tools/sn-exe-strong-name-tool) -k keyPair.snk  
-2. Build DotNetStandardClasses.sln and copy ```DotNetClasses\dotnet\src\dotnetframework\GxClasses\bin\Release\net46\GxClasses.dll``` to your ```<KB>\CSharpModel\web\bin directory```
+2. Build DotNetStandardClasses.sln and copy ```DotNetClasses\dotnet\src\dotnetframework\GxClasses\bin\Release\net462\GxClasses.dll``` to your ```<KB>\CSharpModel\web\bin directory```
 3. Patch all the ```<KB>\CSharpModel\web\bin``` assemblies to reference the new GxClasses.dll. To do this run [UpdateAssemblyReference tool](dotnet/tools) with the following parameters
 	```UpdateAssemblyReference.exe -assembly <KB>\CSharpModel\web\bin\GxClasses.dll -d <KB>\CSharpModel\web\bin```
 	- To get UpdateAssemblyReference.exe build [UpdateAssemblyReference.sln](dotnet/tools/updateassemblyreference/UpdateAssemblyReference.sln)

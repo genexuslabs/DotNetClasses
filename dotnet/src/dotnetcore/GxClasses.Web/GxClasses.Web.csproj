@@ -1,18 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-	<DefineConstants>NETCORE;</DefineConstants>
-	<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
-	<PackageId>GeneXus.Classes.Web.Core</PackageId>
-	<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
-	<PackageId>GeneXus.Classes.Web.Core</PackageId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<DefineConstants>NETCORE;</DefineConstants>
+		<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
+		<PackageId>GeneXus.Classes.Web.Core</PackageId>
+		<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
+		<PackageId>GeneXus.Classes.Web.Core</PackageId>
+		<NoWarn>CA1812,CA1819</NoWarn>
+	</PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXGeolocation.cs" Link="Domain\GXGeolocation.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttp.cs" Link="Middleware\GXHttp.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttpServices.cs" Link="Middleware\GXHttpServices.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXRuntime.cs" Link="Domain\GXRuntime.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\GxRestWrapper.cs" Link="Middleware\GxRestWrapper.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Services\ReflectionHelper.cs" Link="Helpers\ReflectionHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\View\GXGridStateHandler.cs" Link="View\GXGridStateHandler.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\View\GXWebControls.cs" Link="View\GXWebControls.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\GXWebProcedure.cs" Link="Model\GXWebProcedure.cs" />
@@ -25,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.11" />
   </ItemGroup>
 
   <ItemGroup>

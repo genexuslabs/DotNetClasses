@@ -22,7 +22,7 @@ namespace GeneXus.Http.Server
 		String _Domain = "";
 		bool _Secure;
 		bool _HttpOnly;
-
+		internal static string GX_SESSION_ID = "GX_SESSION_ID";
 		public GxHttpCookie()
 		{
 			_HttpOnly = HttpOnlyDefault();
@@ -128,11 +128,7 @@ namespace GeneXus.Http.Server
 		{
 			if (Response != null)
 			{
-#if NETCORE
-				Response.WriteAsync(s);
-#else
 				Response.Write(s);
-#endif
 			}			
 		}
 
@@ -140,11 +136,7 @@ namespace GeneXus.Http.Server
 		{
 			if (!string.IsNullOrEmpty(fileName))
 			{
-#if NETCORE
-				Response.SendFileAsync(fileName.Trim());
-#else
 				Response.WriteFile(fileName.Trim());
-#endif
 			}
 		}
 		public void AppendHeader( string name, string value)
@@ -165,7 +157,14 @@ namespace GeneXus.Http.Server
 				if (eqIdx != -1)
 				{
 					string filename = value.Substring(eqIdx + 1).Trim();
-					value = value.Substring(0, eqIdx + 1) + GXUtil.UrlEncode(filename);
+					try
+					{
+						value = value.Substring(0, eqIdx + 1) + Uri.EscapeDataString(filename);
+					}
+					catch(UriFormatException) //Contains High Surrogate Chars
+					{
+						value = value.Substring(0, eqIdx + 1) + GXUtil.UrlEncode(filename);
+					}
 				}
 			}
 			return value;
@@ -285,7 +284,7 @@ namespace GeneXus.Http.Server
 			{
 				if (_httpReq == null)
 					return 0;
-				return (short) GxContext.GetServerPort(_httpReq);
+				return (short) _context.GetServerPort();
 			}
 		}
 		public short Secure
@@ -347,7 +346,7 @@ namespace GeneXus.Http.Server
 					else
 						return String.Empty;
 #else
-					return _context.HttpContext.Features.Get<IHttpConnectionFeature>()?.RemoteIpAddress.ToString();
+					return _context.HttpContext.GetUserHostAddress();
 #endif
 				}
 				catch 

@@ -544,17 +544,17 @@ namespace GeneXus.Data.ADO
 			}
 		}
 
-		public void BeforeCommit()
+		public void FlushBatchCursors(GXBaseObject obj)
 		{
 			ICollection adapters = ConnectionCache.GetDataAdapters();
 			foreach (DbDataAdapterElem elem in adapters)
 			{
-				if (elem.DataTable.Rows.Count > 0)
+				if (elem.DataTable.Rows.Count > 0 && (obj==null || elem.OnCommitEventInstance==obj))
 				{
 					elem.OnCommitEventInstance.GetType().GetMethod(elem.OnCommitEventMethod, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(
 						elem.OnCommitEventInstance, null);
+					elem.DataTable.Rows.Clear();
 				}
-				elem.DataTable.Rows.Clear();
 			}
 		}
 
@@ -910,12 +910,12 @@ namespace GeneXus.Data.ADO
 		{
             get
             {
-                if (connection != null && ((connection.State & ConnectionState.Closed) == 0))
+                if (connection != null && ((connection.State & ConnectionState.Closed) == 0) && !string.IsNullOrEmpty(connection.Database))
                     return connection.Database;
                 else if (string.IsNullOrEmpty(databaseName) && data != null)
                 {
-                    string databaseNameFromData = string.Empty;
-                    int dbPos = data.ToLower().IndexOf("database=");
+					string databaseNameFromData;
+					int dbPos = data.ToLower().IndexOf("database=");
                     if (dbPos >= 0)
                     {
                         dbPos += 9;
@@ -1282,9 +1282,34 @@ namespace GeneXus.Data.ADO
 		}
 #endregion
 	}
-
+	public class ParDef
+	{
+		public string Name { get; set; }
+		public string Tbl { get; set; }
+		public string Fld { get; set; }
+		public GXType GxType { get; set; }
+		public int Size { get; set; }
+		public int Scale { get; set; }
+		public int ImgIdx { get; set; }
+		public bool Nullable { get; set; }
+		public bool ChkEmpty { get; set; }
+		public bool Return { get; set; }
+		public bool InDB { get; set; }
+		public bool AddAtt { get; set; }
+		public bool Preload { get; set; }
+		public bool InOut { get; set; }
+		public bool Out { get; set; }
+		public ParDef(string name, GXType type, int size, int scale)
+		{
+			Name = name;
+			GxType = type;
+			Size = size;
+			Scale = scale;
+		}
+	}
 	public class GxCommand: IGxDbCommand
 	{
+		internal List<ParDef> ParmDefinition;
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxCommand));
 		string stmt;
         String stmtId;
@@ -1335,6 +1360,7 @@ namespace GeneXus.Data.ADO
 			timeToLive=GetTimeToLive(ttl);
 			hasNested=hasNestedCursor;
 			_errorHandler = errorHandler;
+			ParmDefinition = new List<ParDef>();
 			try
 			{
 				dataStore = ds;
@@ -2169,6 +2195,8 @@ namespace GeneXus.Data.ADO
         {
             if (parameters.Count>0)
                 parameters.Clear();
+			if (ParmDefinition.Count > 0)
+				ParmDefinition.Clear();
         }
 		public void AddParameter( string name, Object dbtype, int gxlength, int gxdec)
 		{
@@ -2354,21 +2382,15 @@ namespace GeneXus.Data.ADO
         {
             if (!dataRecord.AllowsDuplicateParameters)
             {
-                int count = parameters.Count;
-                List<String> parms = new List<String>();
-                GxParameterCollection newParameters = new GxParameterCollection();
-                for (int j = 0; j < count; j++)
-                {
-                    if (!parms.Contains(parameters[j].ParameterName))
-                    {
-                        newParameters.Add(parameters[j]);
-                        parms.Add(parameters[j].ParameterName);
-                    }
-                }
-                parameters = newParameters;
+				parameters = parameters.Distinct();
             }
         }
-    }
+
+		internal void AfterCreateCommand()
+		{
+			stmt = dataRecord.AfterCreateCommand(stmt, parameters);
+		}
+	}
 	
 	public class GxDataStore : IGxDataStore
 	{
@@ -2571,7 +2593,7 @@ namespace GeneXus.Data.ADO
 
 			connection.BlobPath = Preferences.getBLOB_PATH();
 			string strCache;
-			connection.Cache=(Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive;
+			connection.Cache=((Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive) && ! GxContext.isReorganization;
 			connection.DataStore = this;
 
 			string isolevel;
@@ -2646,13 +2668,20 @@ namespace GeneXus.Data.ADO
                 case "sqlserver":
                     return new GxSqlServer();
 				case "mysql":
-					bool prepStmt = true;
-					if (Config.GetValueOf("PREPARED_STMT_MYSQL", out cfgBuf))
-					{
-						if (cfgBuf.ToUpper().StartsWith("N"))
-							prepStmt = false;
-					}
+#if NETCORE
+					return new GxMySqlConnector(id);
+#else
+				bool prepStmt = true;
+				if (Config.GetValueOf("PREPARED_STMT_MYSQL", out cfgBuf))
+				{
+					if (cfgBuf.ToUpper().StartsWith("N"))
+						prepStmt = false;
+				}
+				if (Config.GetValueOf("Connection-" + id + "-PROVIDER", out cfgBuf) && cfgBuf.ToLower() == "mysqlconnector")
+					return new GxMySqlConnector(id);
+				else
 					return new GxMySql(id, prepStmt);
+#endif
 				case "sqlite":
                     return new GxSqlite();
                 case "postgresql":
@@ -2667,17 +2696,26 @@ namespace GeneXus.Data.ADO
 						return new GxOracle();
 					else
 						return new GxODPOracle();
+#endif
 				case "as400":
+#if NETCORE
+					return new GxDb2ISeriesIds(id);
+#else
 					if (Config.GetValueOf("Connection-" + id + "-PROVIDER", out cfgBuf) && cfgBuf.ToLower() == "his")
 						return new GxISeriesHIS(id);
 					else
 						return new GxDb2ISeries(id);
-                case "hana":
-                    return new GxHana();
+#endif
 				case "db2":
 					return new GxDb2();
 				case "informix":
+#if NETCORE
+					return new GxInformixIds();
+#else
 					return new GxInformix(id);
+#endif
+				case "hana":
+					return new GxHana();
 				case "service":
 					{
 						string runtimeProvider;
@@ -2685,7 +2723,6 @@ namespace GeneXus.Data.ADO
 						Config.GetValueOf($"Connection-{id}-DatastoreProviderRuntime", out runtimeProvider);
 						return NTier.GxServiceFactory.Create(id, cfgBuf, runtimeProvider);												
 					}
-#endif
 				default:
 					return null;
 			}
@@ -2764,7 +2801,7 @@ namespace GeneXus.Data.ADO
 		}
 		public void Commit()
 		{
-            connection.BeforeCommit();
+            connection.FlushBatchCursors();
 			if (connection.Opened)
 			{
 				connection.commitTransaction();

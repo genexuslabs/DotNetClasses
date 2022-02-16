@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GeneXus.Data.DynService.Fabric</RootNamespace>
 		<AssemblyName>GeneXus.Data.DynService.Fabric</AssemblyName>
 		<SignAssembly>false</SignAssembly>
@@ -9,9 +9,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="log4net" Version="2.0.11" />
 		<PackageReference Include="Microsoft.Net.Http" Version="2.2.29" />
-		<PackageReference Include="System.Net.Http" Version="4.0.0" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Spatial" Version="5.8.3" />
 	</ItemGroup>
 	<ItemGroup>
@@ -23,11 +23,13 @@
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="app.config" />
-		<None Include="gxuploadcc.msbuild">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Include="gxbuildcc.msbuild">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="gxuploadcc.msbuild">
+			<Pack>true</Pack>
+		</Content>
+		<Content Include="gxbuildcc.msbuild">
+			<Pack>true</Pack>
+		</Content>
 	</ItemGroup>
 </Project>
