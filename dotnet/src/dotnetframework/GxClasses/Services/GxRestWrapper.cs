@@ -5,6 +5,8 @@ using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 #else
 using System.Web.SessionState;
 #endif
@@ -54,13 +56,15 @@ namespace GeneXus.Application
 		private const string EXECUTE_METHOD = "execute";
 		private string _serviceMethod = string.Empty;
 		private Dictionary<string, string> _variableAlias = null;
+		private Dictionary<string, object> _routeParms= null;
 		private string _serviceMethodPattern;
 		public bool WrappedParameter = false;
 
-		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias, Dictionary<string,object> routeParms) : this(worker, context, gxContext)
 		{
 			_serviceMethod = serviceMethod;
 			_variableAlias = variableAlias;
+			_routeParms = routeParms;
 		}
 
 		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, string serviceMethodPattern) : this(worker, context, gxContext)
@@ -80,7 +84,7 @@ namespace GeneXus.Application
 			if (_httpContext != null)_httpContext.Response.ContentType = "application/json; charset=utf-8";		
 			RunAsMain = true;
 		}
-		protected virtual GXBaseObject Worker
+		internal virtual GXBaseObject Worker
 		{
 			get { return _procWorker; }
 		}
@@ -119,24 +123,23 @@ namespace GeneXus.Application
 				_procWorker.IsMain = true;
 				if (bodyParameters == null)
 					bodyParameters = ReadBodyParameters();
-
+				addPathParameters(bodyParameters);
 				if (_procWorker.IsSynchronizer2)
 				{
 					innerMethod = SynchronizerMethod();
 					PreProcessSynchronizerParameteres(_procWorker, innerMethod, bodyParameters);
 					wrapped = false;
 				}				
-
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-				}
+				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
-				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
-				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
+				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -267,7 +270,8 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				var queryParameters = ReadQueryParameters(this._variableAlias);
+				IDictionary<string,object> queryParameters = ReadQueryParameters(this._variableAlias);
+				addPathParameters(queryParameters);
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
 				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
@@ -282,17 +286,15 @@ namespace GeneXus.Application
 					{
 						innerMethod = _serviceMethod;
 					}
-
 					outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, queryParameters);
 					formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				}
-				
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);			
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);	
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -411,8 +413,27 @@ namespace GeneXus.Application
 				}
 			}
 			return parameters;
+		} 
+		
+		protected void addPathParameters(IDictionary<string, object> parameters)
+		{
+#if NETCORE
+			var route = _httpContext.Request.RouteValues;
+			foreach (KeyValuePair<string, object> kv in route)
+			{
+				parameters.Add(kv.Key, kv.Value);
+			}
+#else
+			if(_routeParms != null)
+			{
+				foreach(KeyValuePair<string,object> kv in _routeParms)
+				{
+					parameters.Add(kv.Key, kv.Value);
+				}
+			}
+#endif
 		}
-
+		
 		public bool IsRestParameter(string parameterName)
 		{
 			try
@@ -695,7 +716,7 @@ namespace GeneXus.Application
 				}				
 				else
 					strVal = parameters[key];
-				json = JSONHelper.WCFSerialize(strVal, Encoding.UTF8, knownTypes, true);
+				json = JSONHelper.WCFSerialize( strVal, Encoding.UTF8, knownTypes, true);
 			}
 			else
 			{
@@ -767,10 +788,17 @@ namespace GeneXus.Application
 				else
 				{
 					object o = MakeRestType(outputParameters[k]);
-					if (o == null)
-						outputParameters.Remove(k);
+					if (p !=null && p.SdtSerializeAsNull())
+					{						
+						outputParameters[k] = JNull.Value;
+					}
 					else
-						outputParameters[k] = o;
+					{
+						if (o == null)
+							outputParameters.Remove(k);
+						else
+							outputParameters[k] = o;
+					}
 				}
 			}			
 		}
