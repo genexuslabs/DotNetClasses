@@ -204,7 +204,7 @@ namespace GeneXus.Application
 		}
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
-			var baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
+			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
 			
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
@@ -297,8 +297,8 @@ namespace GeneXus.Application
 				 servicesBase.Add( string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
 			}
 
-			var restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
-			var apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
+			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
+			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
 			app.UseMvc(routes =>
 			{
 				foreach (string serviceBasePath in servicesBase)
@@ -306,7 +306,7 @@ namespace GeneXus.Application
 					string tmpPath = string.IsNullOrEmpty(apiBasePath) ? serviceBasePath : serviceBasePath.Replace(apiBasePath, string.Empty);
 					foreach (string sPath in gxRouting.servicesValidPath[tmpPath])
 					{
-						var s = serviceBasePath + sPath;
+						string s = serviceBasePath + sPath;
 						routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
 					}
 				}
@@ -315,7 +315,7 @@ namespace GeneXus.Application
 			});
 
 			app.UseWebSockets();
-			var basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
+			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = basePath;
 			app.MapWebSocketManager($"{basePath}/gxwebsocket.svc");
 

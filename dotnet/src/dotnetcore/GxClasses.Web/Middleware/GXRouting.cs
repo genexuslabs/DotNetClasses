@@ -173,7 +173,7 @@ namespace GxClasses.Web.Middleware
 						controllerWithParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
 						if (String.IsNullOrEmpty(controllerWithParms) && !String.IsNullOrEmpty(actualPath))
 						{
-							var controllerPath = path.ToLower().Split(actualPath).Last<string>();
+							string controllerPath = path.ToLower().Split(actualPath).Last<string>();
 							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
 						}					
 					}
@@ -346,8 +346,8 @@ namespace GxClasses.Web.Middleware
 			{
 				controller = tmpController;
 				GXLogging.Debug(log, $"FindController:{controller} namespace:{nspace} assembly:{asssemblycontroller}");
-				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-				GXProcedure proc = controllerInstance as GXProcedure;
+				object controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+				GXBaseObject proc = controllerInstance as GXBaseObject;
 				if (proc != null)
 					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias);
 				else
@@ -356,21 +356,23 @@ namespace GxClasses.Web.Middleware
 			else
 			{
 				string controllerLower = controller.ToLower();
-				string svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
+				string svcFile = Path.Combine(ContentRootPath, $"{controller}.svc");
+				if (!File.Exists(svcFile))
+					svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
 				if (File.Exists(svcFile))
 				{
-					var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
+					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
 					   .Skip(1)
 					   .TakeWhile(c => c != '"')
 					   .ToArray()).Trim().Split(',');
-					var controllerAssemblyName = controllerAssemblyQualifiedName.Last();
-					var controllerClassName = controllerAssemblyQualifiedName.First();
+					string controllerAssemblyName = controllerAssemblyQualifiedName.Last();
+					string controllerClassName = controllerAssemblyQualifiedName.First();
 					if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
 						controllerClassName = controllerClassName.Substring(nspace.Length + 1);
 					else
 						nspace = string.Empty;
-					var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-					GXProcedure proc = controllerInstance as GXProcedure;
+					object controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+					GXBaseObject proc = controllerInstance as GXBaseObject;
 					if (proc != null)
 						return new GxRestWrapper(proc, context, gxContext, methodName, methodPattern);
 					else
