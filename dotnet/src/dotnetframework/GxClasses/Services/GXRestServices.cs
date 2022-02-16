@@ -529,7 +529,7 @@ namespace GeneXus.Utils
 				status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
 			}
 			AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
-			AddCacheHeaders();
+			SendCacheHeaders();
 
 			if (status == DataUpdateStatus.UpToDate)
 			{
@@ -539,19 +539,9 @@ namespace GeneXus.Utils
 			return true;
 		}
 
-		private void AddCacheHeaders()
+		private void SendCacheHeaders()
 		{
-			// WebPlatform Only
-			if ((int)GX.ClientInformation.DeviceTypeEnum.Web == GX.ClientInformation.DeviceType)
-			{
-				/*
-				* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-				* Specifying no-cache or max-age=0 indicates that 
-				* clients can cache a resource and must revalidate each time before using it. 
-				* This means HTTP request occurs each time, but it can skip downloading HTTP body if the content is valid.
-				*/
-				AddHeader("Cache-Control", "no-cache, max-age=0");
-			}
+			AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE);
 		}
 
 		DateTime HTMLDateToDatetime(string s)
