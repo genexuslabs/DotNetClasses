@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<AssemblyName>GeneXusSftpNetCoreImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<PackageId>GeneXus.SecurityApi.Sftp.Core</PackageId>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GeneXusSftp\Commons\ISftpClientObject.cs" Link="Commons\ISftpClientObject.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusSftp\Sftp\SftpClient.cs" Link="Sftp\SftpClient.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusSftp\Sftp\SftpOptions.cs" Link="Sftp\SftpOptions.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusSftp\Utils\CryptoAbstractionSftp.cs" Link="Utils\CryptoAbstractionSftp.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusSftp\Utils\KnownHost.cs" Link="Utils\KnownHost.cs" />
+    <Compile Include="..\..\dotnetframework\GeneXusSftp\Utils\KnownHostStore.cs" Link="Utils\KnownHostStore.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neon.SSH.NET" Version="1.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityAPICommonsNetCore\SecurityAPICommonsNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Commons\" />
+    <Folder Include="Sftp\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
+
+</Project>

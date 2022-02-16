@@ -6,10 +6,11 @@ using System;
 using GeneXus.Cryptography;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
+using System.IO;
 
 namespace xUnitTesting
 {
-    public class Routing
+    public class RoutingTest
     {
         [Fact]
 		public void TestProcRestInModule()
@@ -131,6 +132,13 @@ namespace xUnitTesting
 			Dictionary<string, Dictionary<Tuple<string, string>, string>> servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
 			Dictionary<string, List<string>> sValid = new Dictionary<string, List<string>>();			 
 			return GXRouting.GetRouteController(servicesPathUrl, sValid, servicesMap, servicesMapData, "", "GET", path);						
+		}
+		[Fact]
+		public void TestLoadGRPC()
+		{
+			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
+			GXRouting routing = new GXRouting("rest");
+			Assert.NotEmpty(routing.servicesMap);
 		}
 	}
 }

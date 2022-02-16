@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<NoWarn>1701;1702;NU1701;NU1603;CS0618</NoWarn>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Lucene Search</PackageTags>
@@ -20,11 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="iTextSharp" Version="5.5.13" />
     <PackageReference Include="log4net" Version="2.0.11" />
     <PackageReference Include="Lucene.Net" Version="3.0.3" />
     <PackageReference Include="Lucene.Net.Contrib" Version="3.0.3" />
-    <PackageReference Include="NUglify" Version="1.13.11" />
+    <PackageReference Include="NUglify" Version="1.16.4" />
+    <PackageReference Include="PdfPig" Version="0.1.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />

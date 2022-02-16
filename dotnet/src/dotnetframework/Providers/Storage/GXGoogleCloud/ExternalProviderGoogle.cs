@@ -1,9 +1,8 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Web;
-using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 using Google;
@@ -132,16 +131,19 @@ namespace GeneXus.Storage.GXGoogleCloud
                 name += table + StorageUtils.DELIMITER;
             if (field != null)
                 name += field + StorageUtils.DELIMITER;
-            Google.Apis.Storage.v1.Data.Object folder = new Google.Apis.Storage.v1.Data.Object();
-            folder.Name = name;
-            folder.Bucket = Bucket;
-
-            UploadObjectOptions options = new UploadObjectOptions();
-            options.PredefinedAcl = PredefinedObjectAcl.PublicRead;
-
+            
             using (var stream = new MemoryStream())
             {
-                Client.UploadObject(folder, stream, options);
+				Service.Objects.Insert(
+					bucket: Bucket,
+					stream: stream,
+					contentType: "application/x-directory",
+					body: new Google.Apis.Storage.v1.Data.Object()
+					{
+						Name = name,
+						Bucket = Bucket
+					}
+				).Upload();
             }
         }
 
@@ -283,10 +285,10 @@ namespace GeneXus.Storage.GXGoogleCloud
 		private string GetURL(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			if (IsPrivateResource(fileType))
-				return Signer.Sign(Bucket, StorageUtils.EncodeUrl(objectName), ResolveExpiration(urlMinutes), HttpMethod.Get);
+				return Signer.Sign(Bucket, objectName, ResolveExpiration(urlMinutes), HttpMethod.Get);
 			else
 			{
-				return StorageUri + StorageUtils.EncodeUrl(objectName);
+				return StorageUri + StorageUtils.EncodeUrlPath(objectName);
 			}
 		}
 		
@@ -347,27 +349,15 @@ namespace GeneXus.Storage.GXGoogleCloud
         public bool ExistsDirectory(string directoryName)
         {
             directoryName = StorageUtils.NormalizeDirectoryName(directoryName);
-            bool exists = false;
-            ObjectsResource.ListRequest request = Service.Objects.List(Bucket);
-            request.Delimiter = StorageUtils.DELIMITER;
-            Google.Apis.Storage.v1.Data.Objects response;
-            do
-            {
-                response = request.Execute();
-                if (response.Prefixes != null && response.Prefixes.Contains(directoryName))
-                {
-                    exists = true;
-                }
-            } while (response.NextPageToken != null);
-            return exists;
-        }
+			return Client.ListObjects(Bucket, directoryName).Any();
+		}
 
         public string GetDirectory(string directoryName)
         {
             if (ExistsDirectory(directoryName))
                 return Bucket + StorageUtils.DELIMITER + directoryName;
-            else
-                return "";
+
+			return String.Empty;
         }
 
         public List<string> GetFiles(string directoryName, string filter = "")

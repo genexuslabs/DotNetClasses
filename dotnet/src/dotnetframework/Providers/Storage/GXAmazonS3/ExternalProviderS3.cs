@@ -259,7 +259,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
-			return (isPrivate)? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes): StorageUri + StorageUtils.EncodeUrl(objectName);
+			return (isPrivate)? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes): StorageUri + StorageUtils.EncodeUrlPath(objectName);
 			
 		}
 
@@ -318,7 +318,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			Copy(objectName, fileType, newName, fileType);
 			Delete(objectName, fileType);
-			return StorageUri + StorageUtils.EncodeUrl(newName);
+			return StorageUri + StorageUtils.EncodeUrlPath(newName);
 		}
 
 		public string Copy(string objectName, GxFileType sourceFileType, string newName, GxFileType destFileType)
@@ -332,7 +332,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				CannedACL = GetCannedACL(destFileType)
 			};
 			CopyObject(request);
-			return StorageUri + StorageUtils.EncodeUrl(newName);
+			return StorageUri + StorageUtils.EncodeUrlPath(newName);
 		}
 
 		private S3CannedACL GetCannedACL(GxFileType acl)
@@ -357,11 +357,13 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
 		{
+			MemoryStream ms = new MemoryStream();
+			stream.CopyTo(ms);//can determine PutObjectRequest.Headers.ContentLength. Avoid error Could not determine content length
 			PutObjectRequest objectRequest = new PutObjectRequest()
 			{
 				BucketName = Bucket,
 				Key = fileName,
-				InputStream = stream,
+				InputStream = ms,
 				CannedACL = GetCannedACL(destFileType)
 			};
 			if (TryGetContentType(fileName, out string mimeType)) {
@@ -375,7 +377,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			url = StorageUtils.DecodeUrl(url);
 			string resourceKey = Folder + StorageUtils.DELIMITER + tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + newName;
-
+			
 			CreateFolder(Folder, tableName, fieldName);
 			url = url.Replace(StorageUri, string.Empty);
 
@@ -397,7 +399,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			AddObjectMetadata(request.Metadata, tableName, fieldName, resourceKey);
 			CopyObject(request);
 
-			return StorageUri + StorageUtils.EncodeUrl(resourceKey);
+			return StorageUri + StorageUtils.EncodeUrlPath(resourceKey);
 		}
 
 		public string Save(Stream fileStream, string fileName, string tableName, string fieldName, GxFileType destFileType)

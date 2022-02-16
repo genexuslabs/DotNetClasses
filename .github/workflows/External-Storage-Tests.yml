@@ -12,7 +12,7 @@ on:
       - 'release-*'
 
 jobs:
-  build:
+  test-external-storages:
     env:
       GIT_REF: ${{ github.ref }}
       GIT_SHA: ${{ github.sha }}
@@ -28,11 +28,6 @@ jobs:
       with:
         fetch-depth: 0
     
-    - name: Install .NET Core 3.1
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '3.1.x'
-
     - name: Install .NET Core 5.0
       uses: actions/setup-dotnet@v1
       with:

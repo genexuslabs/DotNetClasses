@@ -358,3 +358,6 @@ build
 /dotnet/src/dotnetcore/GxNetCoreStartup/netcoreapp3.1/GxNetCoreStartup.deps.json
 /dotnet/src/dotnetcore/Reor/net5.0/Reor.deps.json
 /dotnet/src/dotnetcore/Reor/netcoreapp3.1/Reor.deps.json
+/dotnet/src/dotnetcore/GxDataInitialization/net6.0/GXDataInitialization.deps.json
+/dotnet/src/dotnetcore/GxNetCoreStartup/net6.0/GxNetCoreStartup.deps.json
+/dotnet/src/dotnetcore/Reor/net6.0/Reor.deps.json

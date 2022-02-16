@@ -1,35 +1,30 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ServiceModel.Web;
-using GeneXus.Application;
-using System.Web;
-using System.Net;
-using GeneXus.Data.NTier;
-using GeneXus.Data;
+using System.Collections.Specialized;
 using System.Globalization;
-using GeneXus.Http;
-using GeneXus.Configuration;
-using log4net;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
-using System.ServiceModel;
-using System.Runtime.Serialization.Json;
-using System.ServiceModel.Channels;
-using System.Runtime.Serialization;
-
-using System.Collections.Specialized;
-using GeneXus.Security;
-using GeneXus.Mime;
-using System.Reflection;
+using System.ServiceModel.Web;
+using System.Text;
+using System.Web;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Data;
+using GeneXus.Http;
 using GeneXus.Metadata;
-using System.Net.Http;
-using System.IO;
+using GeneXus.Security;
+using log4net;
 
 namespace GeneXus.Utils
 {
-    public class CustomHttpBehaviorExtensionElement : System.ServiceModel.Configuration.BehaviorExtensionElement
+	public class CustomHttpBehaviorExtensionElement : System.ServiceModel.Configuration.BehaviorExtensionElement
     {
 		protected override object CreateBehavior()
 		{
@@ -138,16 +133,22 @@ namespace GeneXus.Utils
 
         protected virtual Message GetJsonFaultMessage(MessageVersion version, Exception error)
         {
-            JsonFault detail = null;
+			WrappedJsonError detail;
             var knownTypes = new List<Type>();
-            string code = "500"; //Internal server error
-            if ((error is FaultException) && (error.GetType().GetProperty("Detail") != null))
+			string message = HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest);
+			string code = HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT);
+			if ((error is FaultException) && (error.GetType().GetProperty("Detail") != null))
             {
-                detail = (error.GetType().GetProperty("Detail").GetGetMethod().Invoke(error, null) as JsonFault);
+                detail = (error.GetType().GetProperty("Detail").GetGetMethod().Invoke(error, null) as WrappedJsonError);
                 knownTypes.Add(detail.GetType());
-                code = detail.error.Code;
-            }
-            JsonFault jsonFault = new JsonFault(error.Message, code);
+                code = detail.Error.Code;
+				message = detail.Error.Message;
+			}
+			else
+			{
+				HttpHelper.TraceUnexpectedError(error);
+			}
+			WrappedJsonError jsonFault = new WrappedJsonError() { Error = new HttpJsonError() { Code = code, Message = message } };
 #pragma warning disable SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
             var faultMessage = Message.CreateMessage(version, "", jsonFault,new DataContractJsonSerializer(jsonFault.GetType(), knownTypes));
 #pragma warning restore SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
@@ -156,25 +157,6 @@ namespace GeneXus.Utils
         #endregion
     }
 
-    [DataContract]
-    public class JsonFault
-    {
-        public JsonFault(string msg, string cod)
-        {
-            error = new JsonFaultDetail { Message = msg, Code = cod };
-        }
-        [DataMember(Name = "error")]
-        public JsonFaultDetail error;
-
-        [DataContract]
-        public class JsonFaultDetail
-        {
-            [DataMember(Name = "message")]
-            public string Message { get; set; }
-            [DataMember(Name = "code")]
-            public string Code { get; set; }
-        }
-    }
     public class CustomQueryStringConverter : QueryStringConverter
     {
         QueryStringConverter originalConverter;
@@ -303,11 +285,11 @@ namespace GeneXus.Utils
 				{
 					msglistItem msgItem = (msglistItem)msg[0];
 					if (msgItem.gxTpr_Id.Contains("NotFound"))
-						SetError("404", msgItem.gxTpr_Description);
+						HttpHelper.SetError(httpContext, HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else if (msgItem.gxTpr_Id.Contains("WasChanged"))
-						SetError("409", msgItem.gxTpr_Description);
+						HttpHelper.SetError(httpContext, HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else
-						SetError("400", msgItem.gxTpr_Description);
+						HttpHelper.SetError(httpContext, HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 				}
 			}
 
@@ -347,19 +329,23 @@ namespace GeneXus.Utils
 		}
 		public void SetError(string code, string message)
 		{
-			HttpHelper.SetResponseStatusAndJsonError(httpContext, code, message);
+			HttpHelper.SetError(httpContext, code, message);
 		}
-        public void WebException(Exception ex)
+		public void WebException(Exception ex)
 		{
             GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
 
-            if (ex is FaultException<JsonFault>)
+            if (ex is FaultException<WrappedJsonError>)
             {
                 throw ex;
             }
-            else
+            else if (ex is FormatException)
+			{
+				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.BadRequest, ex);
+			}
+			else
             {
-                SetError("500", ex.Message);
+				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.InternalServerError, ex);
             }
         }
 		public bool IsAuthenticated(string synchronizer)
@@ -392,7 +378,7 @@ namespace GeneXus.Utils
 			finally
 			{
 				if (!validSynchronizer)
-					SetError("0", "Invalid Synchronizer " + synchronizer);
+					HttpHelper.SetError(httpContext, "0", "Invalid Synchronizer " + synchronizer);
 			}
 		}
 		public bool IsAuthenticated()
@@ -409,7 +395,7 @@ namespace GeneXus.Utils
 				String token = GetHeader("Authorization");
 				if (token == null)
 				{
-					SetError("0", "This service needs an Authorization Header");
+					HttpHelper.SetError(httpContext, "0", "This service needs an Authorization Header");
 					return false;
 				}
 				else
@@ -422,7 +408,7 @@ namespace GeneXus.Utils
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
 						if (!isOK)
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -436,7 +422,7 @@ namespace GeneXus.Utils
 						}
 						else
 						{
-							SetError(result.Code, result.Description);
+							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);
@@ -492,11 +478,11 @@ namespace GeneXus.Utils
 		{
 			if (wcfContext != null)
 			{
-				return HttpHelper.HttpPostMethod == wcfContext.IncomingRequest.Method;
+				return HttpMethod.Post.Method == wcfContext.IncomingRequest.Method;
 			}
 			else if (httpContext != null)
 			{
-				return HttpHelper.HttpPostMethod == httpContext.Request.HttpMethod;
+				return HttpMethod.Post.Method == httpContext.Request.HttpMethod;
 			}
 			else return false;
 		}

@@ -1,12 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<OutputType>Library</OutputType>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Data Access</PackageTags>
 		<PackageId>GeneXus.Classes.Core</PackageId>
 		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+		<NoWarn>618;1607;1698;SYSLIB0021;SYSLIB0027;SYSLIB0028;SYSLIB0023</NoWarn>
 	</PropertyGroup>
 
    <ItemGroup>
@@ -31,6 +32,9 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataPostgreSQL.cs" Link="Data\GXDataPostgreSQL.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataSqlite.cs" Link="Data\GXDataSqlite.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataHana.cs" Link="Data\GXDataHana.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataInformix.cs" Link="Data\GXDataInformix.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataDb2.cs" Link="Data\GXDataDb2.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Data\GXDataDb2400.cs" Link="Data\GXDataDb2400.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Diagnostics\Log.cs" Link="Diagnostics\Log.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Diagnostics\GXDebugManager.cs" Link="Diagnostics\GXDebugManager.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXLDAP.cs" Link="Domain\GXLDAP.cs" />
@@ -41,6 +45,8 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXUserInfo.cs" Link="Domain\GXUserInfo.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXWindow.cs" Link="Domain\GXWindow.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\Structs.cs" Link="Domain\Structs.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\ErrorHandling\GxADODataException.cs" Link="ErrorHandling\GxADODataException.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\ErrorHandling\GxNotImplementedException.cs" Link="ErrorHandling\GxNotImplementedException.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\AssemblyHelper.cs" Link="Helpers\AssemblyHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\ExpressionEvaluator.cs" Link="Domain\ExpressionEvaluator.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Core\GXApplication.cs" Link="Core\GXApplication.cs" />
@@ -162,12 +168,17 @@
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" PrivateAssets="All" />
 		<PackageReference Include="System.Drawing.Common" Version="4.7.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" PrivateAssets="All" />
+		<PackageReference Include="NUglify" Version="1.16.4" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptographyCommon\GxCryptographyCommon.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxCryptography\GxCryptography.csproj" />
 		<ProjectReference Include="..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
+		<ProjectReference Include="..\GxXsl\GxXsl.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
   
   <ItemGroup>

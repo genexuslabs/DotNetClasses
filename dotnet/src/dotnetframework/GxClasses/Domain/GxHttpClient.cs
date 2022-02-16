@@ -15,10 +15,13 @@ namespace GeneXus.Http.Client
 	using System.Security.Cryptography.X509Certificates;
 	using System.Collections.Generic;
 	using System.Globalization;
-#if !NETCORE
+	using System.Threading.Tasks;
 	using System.Web.Services.Protocols;
 	using System.Web;
-#endif
+	using System.Net.Http.Headers;
+	using System.Net.Http;
+	using System.Security;
+
 
 	public interface IGxHttpClient
 	{
@@ -53,21 +56,23 @@ namespace GeneXus.Http.Client
 	public class GxHttpClient : IGxHttpClient
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.Client.GxHttpClient));
-		public const int _Basic		= 0;
-		public const int _Digest	= 1;
-		public const int _NTLM		= 2;
-		public const int _Kerberos	= 3;
+		public const int _Basic = 0;
+		public const int _Digest = 1;
+		public const int _NTLM = 2;
+		public const int _Kerberos = 3;
 		Stream _sendStream;
 		Stream _receiveStream;
 		int _timeout = 30000;
-		short _statusCode=0;
+		short _statusCode = 0;
+		static int _maxConnPerRoute = Preferences.GetHttpClientMaxConnectionPerRoute();
 		string _proxyHost;
 		int _proxyPort;
-		short _errCode=0;
-		string _errDescription = "";
+		short _errCode = 0;
+		string _errDescription = string.Empty;
 		NameValueCollection _headers;
 		NameValueCollection _formVars;
 		MultiPartTemplate _multipartTemplate;
+
 
 		string _scheme = "http://";
 		string _host;
@@ -75,10 +80,10 @@ namespace GeneXus.Http.Client
 		string _wsdlUrl;
 		string _baseUrl;
 		string _url;
-		string _statusDescription=string.Empty;
+		string _statusDescription = string.Empty;
 		IGxContext _context;
 #if NETCORE
-		IWebProxy _proxyObject;
+		IWebProxy _proxyObject;		
 #else
 		WebProxy _proxyObject;
 #endif
@@ -87,7 +92,8 @@ namespace GeneXus.Http.Client
 		X509Certificate2Collection _certificateCollection;
 		Encoding _encoding;
 		Encoding _contentEncoding;
-		
+
+
 		public MultiPartTemplate MultiPart
 		{
 			get
@@ -116,11 +122,27 @@ namespace GeneXus.Http.Client
 			{
 				if (_receiveStream == null)
 					_receiveStream = new MemoryStream();
-				
+
 				return _receiveStream;
 			}
 		}
 
+#if NETCORE
+		private HttpClientHandler GetHandler()
+		{
+			HttpClientHandler handlerInstance = new HttpClientHandler();
+			handlerInstance.MaxConnectionsPerServer = _maxConnPerRoute;
+			return handlerInstance;
+		}
+#else
+		[SecuritySafeCritical]
+		private WinHttpHandler GetHandler()
+		{
+			WinHttpHandler handlerInstance = new WinHttpHandler();
+			handlerInstance.MaxConnectionsPerServer = _maxConnPerRoute;
+			return handlerInstance;
+		}
+#endif
 		public GxHttpClient(IGxContext context) : this()
 		{
 			_context = context;
@@ -129,22 +151,22 @@ namespace GeneXus.Http.Client
 		{
 			_headers = new NameValueCollection();
 			_formVars = new NameValueCollection();
-			_host = "";
-			_wsdlUrl = "";
-			_baseUrl = "";
-			_url = "";
+			_host = string.Empty;
+			_wsdlUrl = string.Empty;
+			_baseUrl = string.Empty;
+			_url = string.Empty;
 			_authCollection = new ArrayList();
 			_authProxyCollection = new ArrayList();
 			_certificateCollection = new X509Certificate2Collection();
 			IncludeCookies = true;
 
 
-			_proxyHost = "";
+			_proxyHost = string.Empty;
 			try
 			{
 #if NETCORE
 				_proxyObject = WebRequest.GetSystemWebProxy();
-				
+
 #else
 				_proxyObject = WebProxy.GetDefaultProxy();
 				if (_proxyObject != null && _proxyObject.Address != null)
@@ -204,7 +226,7 @@ namespace GeneXus.Http.Client
 			get { return _host; }
 			set
 			{
-				_host = value;
+				_host = value == null ? value : value.Trim();
 				buildUrl();
 			}
 		}
@@ -213,7 +235,7 @@ namespace GeneXus.Http.Client
 			get { return _wsdlUrl; }
 			set
 			{
-				_wsdlUrl = value;
+				_wsdlUrl = value == null ? value : value.Trim();
 			}
 		}
 		public string BaseURL
@@ -221,7 +243,7 @@ namespace GeneXus.Http.Client
 			get { return _baseUrl; }
 			set
 			{
-				_baseUrl = value;
+				_baseUrl = value == null ? value : value.Trim();
 				buildUrl();
 			}
 		}
@@ -315,16 +337,19 @@ namespace GeneXus.Http.Client
 		{
 			string sPort, sHost, sBaseUrl;
 			if (_port == 0)
-				sPort = (Secure == 1) ? ":443" : "";
+				sPort = (Secure == 1) ? ":443" : string.Empty;
 			else
 				sPort = ":" + _port.ToString();
 			sHost = _host;
-			if (sHost.StartsWith("//"))
-				sHost = sHost.Substring(2, sHost.Length - 2);
-			if (sHost.EndsWith("/"))
-				sHost = sHost.Substring(0, sHost.Length - 1);
+			if (!string.IsNullOrEmpty(sHost))
+			{
+				if (sHost.StartsWith("//"))
+					sHost = sHost.Substring(2, sHost.Length - 2);
+				if (sHost.EndsWith("/"))
+					sHost = sHost.Substring(0, sHost.Length - 1);
+			}
 			sBaseUrl = _baseUrl;
-			if (sBaseUrl.StartsWith("/"))
+			if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
 				sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
 			_url = _scheme + sHost + sPort + "/" + sBaseUrl;
 			if (_url.EndsWith("/"))
@@ -339,7 +364,7 @@ namespace GeneXus.Http.Client
 			if (name.Equals("content-type", StringComparison.OrdinalIgnoreCase))
 			{
 				if (value.StartsWith(MediaTypesNames.MultipartFormData, StringComparison.OrdinalIgnoreCase) &&
-					value.IndexOf("boundary=") == -1)       
+					value.IndexOf("boundary=") == -1)
 				{
 					IsMultipart = true;
 					value = MultiPart.ContentType;
@@ -390,7 +415,7 @@ namespace GeneXus.Http.Client
 			}
 			if (vars.Count > 0)
 			{
-				var buffer = string.Join(variableSeparator(), vars.ToArray());
+				string buffer = string.Join(variableSeparator(), vars.ToArray());
 				StreamWriter sw = new StreamWriter(reqStream);
 				sw.Write(buffer);
 				sw.Flush();
@@ -465,8 +490,8 @@ namespace GeneXus.Http.Client
 					name = Path.GetFileNameWithoutExtension(s);
 				}
 				SendStream.Write(MultiPart.Boundarybytes, 0, MultiPart.Boundarybytes.Length);
-				var header = string.Format(MultiPart.HeaderTemplate, name, s, MimeMapping.GetMimeMapping(s));
-				var headerbytes = Encoding.UTF8.GetBytes(header);
+				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeMapping.GetMimeMapping(s));
+				byte[] headerbytes = Encoding.UTF8.GetBytes(header);
 				SendStream.Write(headerbytes, 0, headerbytes.Length);
 			}
 		}
@@ -476,7 +501,326 @@ namespace GeneXus.Http.Client
 				reqStream.Write(MultiPart.EndBoundaryBytes, 0, MultiPart.EndBoundaryBytes.Length);
 		}
 
-		void setHeaders(HttpWebRequest req)
+		void setHeaders(HttpRequestMessage request, CookieContainer cookies)
+		{
+			HttpContentHeaders contentHeaders = request.Content.Headers;
+			HttpRequestHeaders headers = request.Headers;
+			string contentType = null;
+			for (int i = 0; i < _headers.Count; i++)
+			{
+				string currHeader = _headers.Keys[i];
+				string upperHeader = currHeader.ToUpper();
+				switch (upperHeader)
+				{
+					case "CONNECTION":
+						if (_headers[i].ToUpper() == "CLOSE")
+							headers.ConnectionClose = true;
+						break;
+					case "CONTENT-TYPE":
+						contentType = _headers[i].ToString();
+						contentHeaders.ContentType = MediaTypeHeaderValue.Parse(_headers[i].ToString());
+						break;
+					case "ACCEPT":
+						headers.Add("Accept", _headers[i]);
+						break;
+					case "EXPECT":
+						if (string.IsNullOrEmpty(_headers[i]))
+							headers.ExpectContinue = false;
+						else
+							headers.ExpectContinue = true;
+						break;
+					case "REFERER":
+						headers.Referrer = new Uri(_headers[i]);
+						break;
+					case "USER-AGENT":
+						headers.Add("User-Agent", _headers[i]);
+						break;
+					case "DATE":
+						DateTime value;
+						if (DateTime.TryParseExact(_headers[i], "ddd, dd MMM yyyy HH:mm:ss Z", CultureInfo.InvariantCulture, DateTimeStyles.None, out value))
+						{
+							headers.Date = value;
+						}
+						else
+						{
+							headers.Add(currHeader, _headers[i]);
+						}
+						break;
+					case "COOKIE":
+						string allCookies = _headers[i];
+						foreach (string cookie in allCookies.Split(';'))
+						{
+							if (cookie.Contains("="))
+							{
+								cookies.Add(new Uri(request.RequestUri.Host), new Cookie(cookie.Split('=')[0], cookie.Split('=')[1]) { Domain = request.RequestUri.Host });
+							}
+						}
+						break;
+					case "IF-MODIFIED-SINCE":
+						DateTime dt;
+						if (DateTime.TryParse(_headers[i], DateTimeFormatInfo.InvariantInfo, System.Globalization.DateTimeStyles.AdjustToUniversal, out dt))
+							request.Headers.IfModifiedSince = dt;
+						break;
+					default:
+						headers.Add(currHeader, _headers[i]);
+						break;
+				}
+			}
+			string httpConnection;
+			if (Config.GetValueOf("HttpClientConnection", out httpConnection))
+			{
+				if (httpConnection == "Close")
+					headers.ConnectionClose = true;
+				else
+					headers.ConnectionClose = false;
+			}
+			InferContentType(contentType, request);
+		}
+		void InferContentType(string contentType, HttpRequestMessage req)
+		{
+			if (string.IsNullOrEmpty(contentType) && _formVars.Count > 0)
+			{
+				req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+			}
+		}
+
+		void setHttpVersion(HttpRequestMessage req)
+		{
+			string httpVersion;
+			if (Config.GetValueOf("HttpClientHttpVersion", out httpVersion))
+			{
+				if (httpVersion == "1.0")
+					req.Version = HttpVersion.Version10;
+				else
+					req.Version = HttpVersion.Version11;
+			}
+			else
+				req.Version = HttpVersion.Version11;
+		}
+		[SecuritySafeCritical]
+		HttpResponseMessage ExecuteRequest(string method, string requestUrl, CookieContainer cookies)
+		{
+			GXLogging.Debug(log, String.Format("Start NetCore HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
+			HttpRequestMessage request;
+			HttpClient client;
+			int BytesRead;
+			Byte[] Buffer = new Byte[1024];
+
+			request = new HttpRequestMessage();
+			request.RequestUri = new Uri(requestUrl);
+#if NETCORE
+			HttpClientHandler handler = GetHandler();
+			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
+#else
+			WinHttpHandler handler = GetHandler();
+			handler.ServerCredentials = getCredentialCache(request.RequestUri, _authCollection);
+#endif
+
+			if (GXUtil.CompressResponse())
+			{
+				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+			}
+			handler.CookieContainer = cookies;
+
+			foreach (X509Certificate2 cert in _certificateCollection)
+				handler.ClientCertificates.Add(cert);
+
+			request.Method = new HttpMethod(method);
+			setHttpVersion(request);
+			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
+			if (proxy != null)
+				handler.Proxy = proxy;
+			HttpResponseMessage response;
+			using (client = new HttpClient(handler))
+			{
+				client.Timeout = TimeSpan.FromMilliseconds(_timeout);
+				client.BaseAddress = request.RequestUri;
+
+				using (MemoryStream reqStream = new MemoryStream())
+				{
+					sendVariables(reqStream);
+					SendStream.Seek(0, SeekOrigin.Begin);
+					BytesRead = SendStream.Read(Buffer, 0, 1024);
+					GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
+					while (BytesRead > 0)
+					{
+						GXLogging.Debug(log, "reqStream.Write: Buffer.length " + Buffer.Length + ",'" + Encoding.UTF8.GetString(Buffer, 0, Buffer.Length) + "'");
+						reqStream.Write(Buffer, 0, BytesRead);
+						BytesRead = SendStream.Read(Buffer, 0, 1024);
+					}
+					EndMultipartBoundary(reqStream);
+					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
+					reqStream.Seek(0, SeekOrigin.Begin);
+					request.Content = new ByteArrayContent(reqStream.ToArray());
+					setHeaders(request, handler.CookieContainer);
+					response = client.SendAsync(request).GetAwaiter().GetResult();					
+				}				
+			}
+			return response;
+		}
+		void ReadReponseContent(HttpResponseMessage response)
+		{
+			_receiveStream = new MemoryStream();
+			int BytesRead;
+			Byte[] Buffer = new Byte[1024];
+			try
+			{
+				Stream stream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+				string charset;
+				if (response.Content.Headers.ContentType == null)
+					charset = null;
+				else
+					charset = response.Content.Headers.ContentType.CharSet;
+				Buffer = new Byte[1024];
+				BytesRead = stream.Read(Buffer, 0, 1024);
+				GXLogging.Debug(log, "BytesRead " + BytesRead);
+				bool encodingFound = false;
+				if (!string.IsNullOrEmpty(charset))
+				{
+					int idx = charset.IndexOf("charset=");
+					if (idx > 0)
+					{
+						idx += 8;
+						charset = charset.Substring(idx, charset.Length - idx);
+						_encoding = GetEncoding(charset);
+						if (_encoding != null)
+							encodingFound = true;
+					}
+					else
+					{
+						charset = String.Empty;
+					}
+				}
+				while (BytesRead > 0)
+				{
+					if (!encodingFound)
+					{
+						_encoding = DetectEncoding(charset, out encodingFound, Buffer, BytesRead);
+					}
+					_receiveStream.Write(Buffer, 0, BytesRead);
+					BytesRead = stream.Read(Buffer, 0, 1024);
+					GXLogging.Debug(log, "BytesRead " + BytesRead);
+				}
+			}
+			catch (IOException ioEx)
+			{
+				if (_errCode == 1)
+					GXLogging.Warn(log, "Could not read response", ioEx);
+				else
+					throw ioEx;
+			}
+			_receiveStream.Seek(0, SeekOrigin.Begin);
+		}
+		public void Execute(string method, string name)
+		{
+			if (!Config.GetValueOf("useoldhttpclient", out string useOld) || useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+			{
+				WebExecute(method, name);
+			}
+			else
+			{
+				HttpClientExecute(method, name);
+			}
+		}
+
+		public void HttpClientExecute(string method, string name)
+		{
+			HttpResponseMessage response = null;
+			Byte[] Buffer = new Byte[1024];
+			_errCode = 0;
+			_errDescription = string.Empty;
+			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
+			try
+			{
+				string requestUrl = GetRequestURL(name);
+				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
+				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
+				response = ExecuteRequest(method, requestUrl, cookies);
+#if NETCORE
+				if (contextCookies)
+					_context.UpdateSessionCookieContainer();
+#endif
+			}
+#if NETCORE
+			catch (AggregateException aex)
+			{
+				GXLogging.Warn(log, "Error Execute", aex);
+				_errCode = 1;
+				if (aex.InnerException != null)
+					_errDescription = aex.InnerException.Message;
+				else
+					_errDescription = aex.Message;
+				response = new HttpResponseMessage();
+				response.Content = new StringContent(_errDescription);
+				response.StatusCode = HttpStatusCode.InternalServerError;
+			}
+#endif
+			catch (HttpRequestException e)
+			{
+				GXLogging.Warn(log, "Error Execute", e);
+				_errCode = 1;
+				if (e.InnerException != null)
+					_errDescription = e.Message + " " + e.InnerException.Message;
+				else
+					_errDescription = e.Message;
+				response = new HttpResponseMessage();
+				response.Content = new StringContent(_errDescription);
+#if NETCORE
+				response.StatusCode = (HttpStatusCode)(e.StatusCode != null ? e.StatusCode : HttpStatusCode.InternalServerError);
+#else
+				response.StatusCode = HttpStatusCode.InternalServerError;
+#endif
+			}
+			catch (TaskCanceledException e)
+			{
+				GXLogging.Warn(log, "Error Execute", e);
+				_errCode = 1;
+				_errDescription = "The request has timed out. " + e.Message;
+				response = new HttpResponseMessage();
+				response.StatusCode = 0;
+				response.Content = new StringContent("");
+			}
+			catch (Exception e)
+			{
+				GXLogging.Warn(log, "Error Execute", e);
+				_errCode = 1;
+				if (e.InnerException != null)
+					_errDescription = e.Message + " " + e.InnerException.Message;
+				else
+					_errDescription = e.Message;
+				response = new HttpResponseMessage();
+				response.Content = new StringContent(_errDescription);
+				response.StatusCode = HttpStatusCode.InternalServerError;
+			}
+			GXLogging.Debug(log, "Reading response...");
+			if (response == null)
+				return;
+			LoadResponseHeaders(response);
+			ReadReponseContent(response);
+			_statusCode = ((short)response.StatusCode);
+			_statusDescription = response.ReasonPhrase;
+			if (_statusCode != 200 && _errCode != 1)
+			{
+				_errCode = 1;
+				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + response.ReasonPhrase + ".";
+			}
+			ClearSendStream();
+			GXLogging.Debug(log, "_responseString " + ToString());
+		}
+		NameValueCollection _respHeaders;
+		void LoadResponseHeaders(HttpResponseMessage resp)
+		{
+			_respHeaders = new NameValueCollection();
+			foreach (KeyValuePair<string, IEnumerable<string>> header in resp.Headers)
+			{
+				_respHeaders.Add(header.Key, String.Join(",", header.Value));
+			}
+			foreach (KeyValuePair<string, IEnumerable<string>> header in resp.Content.Headers)
+			{
+				_respHeaders.Add(header.Key, String.Join(",", header.Value));
+			}
+		}
+		private void setHeaders(HttpWebRequest req)
 		{
 			string contentType = null;
 			for (int i = 0; i < _headers.Count; i++)
@@ -563,9 +907,9 @@ namespace GeneXus.Http.Client
 			}
 			InferContentType(contentType, req);
 		}
-		void InferContentType(string contentType, HttpWebRequest req)
+		private void InferContentType(string contentType, HttpWebRequest req)
 		{
-			
+
 			if (string.IsNullOrEmpty(contentType) && _formVars.Count > 0)
 			{
 				req.ContentType = "application/x-www-form-urlencoded";
@@ -590,7 +934,7 @@ namespace GeneXus.Http.Client
 			return null;
 		}
 
-		void setHttpVersion(HttpWebRequest req)
+		private void setHttpVersion(HttpWebRequest req)
 		{
 
 			string httpVersion;
@@ -657,8 +1001,8 @@ namespace GeneXus.Http.Client
 				req.Proxy = proxy;
 
 			setHeaders(req);
-			
-			if (method.ToUpper() != "GET")
+
+			if (!method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) && !method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase))
 			{
 #if !NETCORE
 				using (Stream reqStream = req.GetRequestStream())
@@ -734,7 +1078,7 @@ namespace GeneXus.Http.Client
 			return cc;
 		}
 
-		public void Execute(string method, string name)
+		private void WebExecute(string method, string name)
 		{
 			HttpWebRequest req;
 			HttpWebResponse resp = null;
@@ -742,7 +1086,7 @@ namespace GeneXus.Http.Client
 			Byte[] Buffer = new Byte[1024];
 
 			_errCode = 0;
-			_errDescription = "";
+			_errDescription = string.Empty;
 
 			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
 			try
@@ -786,7 +1130,7 @@ namespace GeneXus.Http.Client
 					return;
 			}
 #endif
-			
+
 			GXLogging.Debug(log, "Reading response...");
 			loadResponseHeaders(resp);
 			_receiveStream = new MemoryStream();
@@ -849,7 +1193,7 @@ namespace GeneXus.Http.Client
 			{
 				enc = Encoding.GetEncoding(charset);
 				switch (enc.CodePage)
-				{ 
+				{
 					case 65001:
 						enc = new UTF8Encoding(false);
 						break;
@@ -866,7 +1210,7 @@ namespace GeneXus.Http.Client
 						enc = new UTF32Encoding(true, false);
 						break;
 					default:
-						
+
 						break;
 				}
 			}
@@ -883,7 +1227,7 @@ namespace GeneXus.Http.Client
 			{
 				enc = GetEncoding(charset);
 			}
-			
+
 			if (enc == null)
 			{
 				string responseText = Encoding.ASCII.GetString(Buffer, 0, BytesRead);
@@ -939,8 +1283,8 @@ namespace GeneXus.Http.Client
 #if !NETCORE
 			if (HttpContext.Current != null)
 #endif
-				if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)  
-					pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
+			if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)
+				pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 			using (fs = new FileStream(pathName, FileMode.Create, FileAccess.Write))
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
@@ -957,12 +1301,11 @@ namespace GeneXus.Http.Client
 			}
 		}
 
-		NameValueCollection _respHeaders;
 		void loadResponseHeaders(WebResponse resp)
 		{
 #if NETCORE
 			_respHeaders = new NameValueCollection();
-			foreach (var key in resp.Headers.AllKeys)
+			foreach (string key in resp.Headers.AllKeys)
 			{
 				_respHeaders.Add(key, resp.Headers[key]);
 			}
@@ -973,7 +1316,7 @@ namespace GeneXus.Http.Client
 
 		public string GetHeader(string name)
 		{
-			if (_respHeaders != null)
+			if (_respHeaders != null && _respHeaders.Get(name) != null)
 				return _respHeaders.Get(name);
 			else
 				return string.Empty;

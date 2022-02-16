@@ -24,12 +24,12 @@ namespace GeneXus.Application
 		{
 			_worker = sdt;
 		}
-		protected override GXBaseObject Worker => _worker.trn as GXBaseObject;
+		internal override GXBaseObject Worker => _worker.trn as GXBaseObject;
 		public override Task Post()
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ServiceInsertPermissionPrefix))
 				{
 					return Task.CompletedTask;
 				}
@@ -101,7 +101,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ServiceExecutePermissionPrefix))
 				{
 					return Task.CompletedTask;
 				}
@@ -144,7 +144,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ServiceDeletePermissionPrefix))
 				{
 					return Task.CompletedTask;
 				}
@@ -182,7 +182,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ServiceUpdatePermissionPrefix))
 				{
 					return Task.CompletedTask;
 				}
@@ -267,11 +267,11 @@ namespace GeneXus.Application
 				{
 					msglistItem msgItem = (msglistItem)msg[0];
 					if (msgItem.gxTpr_Id.Contains("NotFound"))
-						return SetError("404", msgItem.gxTpr_Description);
+						return SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else if (msgItem.gxTpr_Id.Contains("WasChanged"))
-						return SetError("409", msgItem.gxTpr_Description);
+						return SetError(HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else
-						return SetError("400", msgItem.gxTpr_Description);
+						return SetError(HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 				}
 			}
 			return Task.CompletedTask;

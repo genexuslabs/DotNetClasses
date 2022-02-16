@@ -372,40 +372,47 @@ namespace GeneXus.Utils
 		}
 		public void Add(Object o, int idx)
 		{
-			T TObject;
-			if (typeof(T).IsAssignableFrom(o.GetType()))
-				TObject = (T)o;
-			else if (typeof(IGxJSONAble).IsAssignableFrom(typeof(T)))
-			{
-
-				TObject = (T)Activator.CreateInstance(typeof(T));
-				((IGxJSONAble)TObject).FromJSONObject(o);
-			}
-			else
-			{
-				if (typeof(T) == typeof(Geospatial))
-				{
-					object g = (Geospatial)(string)o;
-					TObject = (T)g;
-				}
-				else if (typeof(T) == typeof(Guid))
-				{
-					object g = new Guid(o.ToString());
-					TObject = (T)g;
-				}
-				else if (o is IConvertible)
-				{
-					TObject = (T)Convert.ChangeType(o, typeof(T));
-				}
-				else
-					TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
-			}
+			T TObject = ConvertToT(o);
 			if (idx == 0)
 				Add(TObject);
 			else
 				Insert(idx - 1, TObject);
 		}
+		private T ConvertToT(Object o)
+		{
+			T TObject=default(T);
+			if (o != null)
+			{
+				if (typeof(T).IsAssignableFrom(o.GetType()))
+					TObject = (T)o;
+				else if (typeof(IGxJSONAble).IsAssignableFrom(typeof(T)))
+				{
 
+					TObject = (T)Activator.CreateInstance(typeof(T));
+					((IGxJSONAble)TObject).FromJSONObject(o);
+				}
+				else
+				{
+					if (typeof(T) == typeof(Geospatial))
+					{
+						object g = (Geospatial)(string)o;
+						TObject = (T)g;
+					}
+					else if (typeof(T) == typeof(Guid))
+					{
+						object g = new Guid(o.ToString());
+						TObject = (T)g;
+					}
+					else if (o is IConvertible)
+					{
+						TObject = (T)Convert.ChangeType(o, typeof(T));
+					}
+					else
+						TObject = (T)Convert.ChangeType(o.ToString(), typeof(T));
+				}
+			}
+			return TObject;
+		}
 		public void RemoveItem(int idx)
 		{
 			if (idx <= 0 || idx > Count)
@@ -430,7 +437,8 @@ namespace GeneXus.Utils
 		}
 		public int IndexOf(object value)
 		{
-			return base.IndexOf((T)value) + 1;
+			T TObject = ConvertToT(value);
+			return base.IndexOf(TObject) + 1;
 		}
 
 		public virtual void writexml(GXXMLWriter oWriter, string sName)
@@ -1005,6 +1013,21 @@ namespace GeneXus.Utils
 		public short opened;
 	}
 
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxJsonName : Attribute
+	{
+		string _jsonName;
+		public GxJsonName(String name)
+		{
+			_jsonName = name;
+		}
+		public string Name
+		{
+			get { return this._jsonName;  }
+			set { this._jsonName = value; }
+		}
+	}
+
 	[Serializable]
 	[XmlType(IncludeInSchema = false)]
 	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable
@@ -1240,7 +1263,10 @@ namespace GeneXus.Utils
 		{
 			return true;
 		}
-
+		public virtual bool SdtSerializeAsNull()
+		{
+			return false;
+		}
 		public virtual object Clone()
 		{
 			return base.MemberwiseClone();
@@ -1254,7 +1280,7 @@ namespace GeneXus.Utils
 			try
 			{
 				string xml = UpdateNodeDefaultNamespace(oReader.ReadRawXML(), null, false, this.GetPrefixesInContext());
-				FromXml(xml, sName, oReader.NamespaceURI);
+				FromXmlFixedNameAndNamespace(xml, null, sName, oReader.NamespaceURI);
 				return 1;
 			}
 			catch (Exception ex)
@@ -1305,7 +1331,7 @@ namespace GeneXus.Utils
 					tagCloseIndex--;
 				}
 
-				if (!string.IsNullOrEmpty(defaultNamespace) || forceDefaultNamespace || prefixes.Keys.Contains(""))
+				if (!string.IsNullOrEmpty(defaultNamespace) || forceDefaultNamespace || prefixes.ContainsKey(""))
 				{
 					string currentTagSubstring = xml.Substring(tagOpenIndex, tagCloseIndex - tagOpenIndex);
 					int nsIndex = currentTagSubstring.IndexOf("xmlns=");
@@ -1389,20 +1415,33 @@ namespace GeneXus.Utils
 
 		public virtual bool FromXml(string s)
 		{
-			return FromXml(s, "");
+			return FromXml(s, String.Empty);
 		}
 		public virtual bool FromXml(string s, string sName)
 		{
-			return FromXml(s, sName, "");
+			return FromXml(s, sName, String.Empty);
 		}
 		public virtual bool FromXml(string s, string sName, string sNamespace)
 		{
 			return FromXml(s, null, sName, sNamespace);
 		}
+		
 		public virtual bool FromXml(string s, GXBaseCollection<SdtMessages_Message> Messages, string sName, string sNamespace)
+		{
+			if (string.IsNullOrEmpty(sName))
+				sName = XmlNameAttribute(GetType());
+
+			if (string.IsNullOrEmpty(sNamespace))
+				sNamespace = XmlNameSpaceAttribute(GetType());
+
+			return FromXmlFixedNameAndNamespace(s, Messages, sName, sNamespace);
+
+		}
+		internal bool FromXmlFixedNameAndNamespace(string s, GXBaseCollection<SdtMessages_Message> Messages, string sName, string sNamespace)
 		{
 			if (string.IsNullOrEmpty(s))
 				return false;
+			
 			try
 			{
 				GxUserType deserialized = GXXmlSerializer.Deserialize<GxUserType>(this.GetType(), s, sName, sNamespace, out List<string> serializationErrors);
@@ -1441,7 +1480,32 @@ namespace GeneXus.Utils
 		{
 			return ToXml(false, name, sNameSpace);
 		}
+		internal static string XmlNameAttribute(Type sdtType)
+		{
+			XmlTypeAttribute typeAtt = sdtType.GetCustomAttributes<XmlTypeAttribute>().FirstOrDefault();
+			if (typeAtt != null)
+				return typeAtt.TypeName;
+			else
+				return string.Empty;
+		}
+		internal static string XmlNameSpaceAttribute(Type sdtType)
+		{
+			XmlTypeAttribute typeAtt = sdtType.GetCustomAttributes<XmlTypeAttribute>().FirstOrDefault();
+			if (typeAtt != null)
+				return typeAtt.Namespace;
+			else
+				return string.Empty;
+		}
 		public virtual string ToXml(bool includeHeader, bool includeState, string rootName, string sNameSpace)
+		{
+			if (string.IsNullOrEmpty(rootName))
+				rootName = XmlNameAttribute(GetType());
+			if (string.IsNullOrEmpty(sNameSpace))
+				sNameSpace = XmlNameSpaceAttribute(GetType());
+			return ToXmlFixedNameAndNamespace(includeHeader, includeState, rootName, sNameSpace);	
+
+		}
+		internal string ToXmlFixedNameAndNamespace(bool includeHeader, bool includeState, string rootName, string sNameSpace)
 		{
 			XmlAttributeOverrides ov = null;
 
@@ -1588,7 +1652,7 @@ namespace GeneXus.Utils
 								}
 								else if (GxUploadHelper.IsUpload(uploadPath)) //File upload from SD
 								{
-									objProperty.SetValue(this, GxUploadHelper.UploadPath(uploadPath), null);
+									objProperty.SetValue(this, uploadPath, null);
 									PropertyInfo info_gxi = this.GetType().GetProperty(objProperty.Name + "_gxi");//gxi reset
 									if (info_gxi != null)
 										info_gxi.SetValue(this, string.Empty, null);
@@ -2189,7 +2253,7 @@ namespace GeneXus.Utils
 		public string ToJSonString()
 		{
 			JObject jObj = new JObject();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 
 				jObj.Accumulate(item.ToString(), this.Get(item.ToString()));
@@ -2207,11 +2271,11 @@ namespace GeneXus.Utils
 			JObject jObj = JSONHelper.ReadJSON<JObject>(s, Messages);
 			if (jObj != null)
 			{
-				foreach (DictionaryEntry item in jObj)
+				foreach (string name in jObj.Names) //.Names keeps the original order
 				{
 					lock (syncObj)
 					{
-						this.Set(item.Key.ToString(), JSONHelper.WriteJSON<dynamic>(item.Value));
+						this.Set(name, JSONHelper.WriteJSON<dynamic>(jObj[name]));
 					}
 				}
 				return true;
@@ -2243,7 +2307,7 @@ namespace GeneXus.Utils
 		public object GetJSONObject()
 		{
 			JObject jObj = new JObject();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 
 				jObj.Accumulate(item.ToString(), this.Get(item.ToString()));
@@ -2274,7 +2338,7 @@ namespace GeneXus.Utils
 		public override string ToString()
 		{
 			StringBuilder values = new StringBuilder();
-			foreach (var item in this)
+			foreach (object item in this)
 			{
 				values.Append(this[item.ToString()]);
 			}
@@ -2592,7 +2656,7 @@ namespace GeneXus.Utils
 			else if (ienumerableType != null)
 			{
 				IList lst = (IList)Activator.CreateInstance((typeof(List<>).MakeGenericType(ienumerableType)));
-				foreach (var item in i as IEnumerable)
+				foreach (object item in i as IEnumerable)
 					lst.Add(item);
 				o = lst;
 			}

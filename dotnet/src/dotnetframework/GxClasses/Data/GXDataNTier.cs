@@ -147,7 +147,7 @@ namespace GeneXus.Data.NTier
 
 		public virtual string getDataStoreName()
 		{
-			return "Default";
+			return Preferences.DefaultDatastore;
 		}
 		public void setParameters(int cursor,
 							   IFieldSetter stmt,
