@@ -97,8 +97,7 @@ namespace GeneXus.Http
 			if (wcfcontext != null)
 			{
 				wcfcontext.OutgoingResponse.StatusCode = httpStatusCode;
-				if (httpStatusCode
-            HttpStatusCode.Unauthorized){
+				if (httpStatusCode==HttpStatusCode.Unauthorized){
 					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty));
 				}
 				if (!string.IsNullOrEmpty(statusDescription))
