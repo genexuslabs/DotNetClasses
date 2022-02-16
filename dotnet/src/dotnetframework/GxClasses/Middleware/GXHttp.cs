@@ -2023,7 +2023,7 @@ namespace GeneXus.Http
 			if (IsSpaRequest())
 			{
 #if NETCORE
-				localHttpContext.Response.AddHeader("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate");
+				localHttpContext.Response.AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE);
 #else
 				localHttpContext.Response.Cache.SetCacheability(HttpCacheability.NoCache);
 				localHttpContext.Response.Cache.AppendCacheExtension("no-store, must-revalidate");
@@ -2036,7 +2036,7 @@ namespace GeneXus.Http
 				string utcNow = DateTime.UtcNow.ToString("ddd, dd MMM yyyy HH':'mm':'ss 'GMT'", CultureInfo.GetCultureInfo("en-US"));
 				localHttpContext.Response.AddHeader("Expires", utcNow);
 				localHttpContext.Response.AddHeader("Last-Modified", utcNow);
-				localHttpContext.Response.AddHeader("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate");
+				localHttpContext.Response.AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE);
 			}
 		}
 

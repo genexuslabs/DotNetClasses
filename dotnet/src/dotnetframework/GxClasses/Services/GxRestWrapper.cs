@@ -512,12 +512,17 @@ namespace GeneXus.Application
 				status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
 			}
 			AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
+			SendCacheHeaders();
 			if (status == DataUpdateStatus.UpToDate)
 			{
 				SetStatusCode(HttpStatusCode.NotModified);
 				return false;
 			}
 			return true;
+		}
+		private void SendCacheHeaders()
+		{
+			AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE);
 		}
 		DateTime HTMLDateToDatetime(string s)
 		{
