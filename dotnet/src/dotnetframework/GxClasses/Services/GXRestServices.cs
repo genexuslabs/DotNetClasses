@@ -199,7 +199,8 @@ namespace GeneXus.Utils
         }
         public void Cleanup()
         {
-            if (runAsMain)
+			SendCacheHeaders();
+			if (runAsMain)
                 context.CloseConnections();
         }
         public bool RunAsMain
@@ -489,12 +490,12 @@ namespace GeneXus.Utils
 		void AddHeader(string header, string value)
         {
             if (wcfContext != null)
-            {
-                wcfContext.OutgoingResponse.Headers.Add(header, value);
+			{
+				wcfContext.OutgoingResponse.Headers[header]=value;
             }
             else if (httpContext != null)
             {
-                httpContext.Response.AddHeader(header, value);
+                httpContext.Response.Headers[header]= value;
             }
         }
 		public bool ProcessHeaders(string queryId)
@@ -529,7 +530,6 @@ namespace GeneXus.Utils
 				status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
 			}
 			AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
-			SendCacheHeaders();
 
 			if (status == DataUpdateStatus.UpToDate)
 			{
@@ -541,7 +541,8 @@ namespace GeneXus.Utils
 
 		private void SendCacheHeaders()
 		{
-			AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE);
+			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.CACHE_CONTROL)))
+				AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE);
 		}
 
 		DateTime HTMLDateToDatetime(string s)
