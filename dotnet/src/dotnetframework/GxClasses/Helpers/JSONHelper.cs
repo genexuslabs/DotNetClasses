@@ -236,6 +236,8 @@ namespace GeneXus.Utils
 		{
 			try
 			{
+				if (kbObject == JNull.Value || kbObject == null)
+					return "null";
 				var settings = WCFSerializationSettings(knownTypes, useSimpleDictionaryFormat);
 				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
 				using (MemoryStream stream = new MemoryStream())
@@ -250,6 +252,7 @@ namespace GeneXus.Utils
 			}
 			return null;
 		}
+
 		internal static void WCFSerialize<T>(T kbObject, Encoding encoding, IEnumerable<Type> knownTypes, Stream stream) where T : class
 		{
 			try
@@ -263,6 +266,7 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Serialize error ", ex);
 			}
 		}
+
 		static DataContractJsonSerializerSettings SerializationSettings(IEnumerable<Type> knownTypes)
 		{
 			return new DataContractJsonSerializerSettings() { DateTimeFormat = new DateTimeFormat(DateTimeUtil.JsonDateFormatMillis), KnownTypes=knownTypes };
@@ -280,9 +284,10 @@ namespace GeneXus.Utils
 			{
 				try
 				{
+					var settings = SerializationSettings(knownTypes);
 					using (MemoryStream stream = new MemoryStream(encoding.GetBytes(kbObject)))
 					{
-						DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), knownTypes);
+						DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
 #pragma warning disable SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
 						return (T)serializer.ReadObject(stream);
 #pragma warning restore SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
