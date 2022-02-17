@@ -109,7 +109,11 @@ namespace GeneXus.Http
 #endif
 			if (httpContext != null)
 			{
+#if NETCORE
+				httpContext.Response.SetStatusCode((int)httpStatusCode);
+#else
 				httpContext.Response.StatusCode = (int)httpStatusCode;
+#endif
 				if (httpStatusCode == HttpStatusCode.Unauthorized)
 				{
 					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty);
@@ -122,8 +126,7 @@ namespace GeneXus.Http
 				}
 			}
 #else
-				if (!string.IsNullOrEmpty(statusDescription))
-					httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
+				httpContext.SetReasonPhrase(statusDescription);
 				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", httpStatusCode, statusDescription));
 			}
 
@@ -152,7 +155,9 @@ namespace GeneXus.Http
 		{
 			if (httpContext != null)//<serviceHostingEnvironment aspNetCompatibilityEnabled="false" /> web.config
 			{
+#if !NETCORE
 				httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
+#endif
 				WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
 				httpContext.Response.Write(JSONHelper.Serialize(jsonError));
 			}
@@ -482,7 +487,12 @@ namespace GeneXus.Http
 		{
 			response.SendFileAsync(fileName).Wait();
 		}
-		
+		public static void SetStatusCode(this HttpResponse response, int value)
+		{
+			if (!response.HasStarted)
+				response.StatusCode = value;
+		}
+
 	}
 #endif
 	public static class HttpWebRequestExtensions
@@ -587,6 +597,15 @@ namespace GeneXus.Http
 				return string.Empty;
 #else
 			return context.Request.UserHostAddress;
+#endif
+		}
+		public static void SetReasonPhrase(this HttpContext context, string statusDescription)
+		{
+#if NETCORE
+			if (!string.IsNullOrEmpty(statusDescription)  && !context.Response.HasStarted)
+				context.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
+#else
+			context.Response.StatusDescription = statusDescription;
 #endif
 		}
 	}
