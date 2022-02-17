@@ -331,7 +331,9 @@ namespace GeneXus.Data.NTier
 			private bool GetStoredSession()
 			{
 				sapB1ByTokenReacquire = toRemoveCookie = false;
-				object sessionExpiry = new DateTime(Convert.ToInt64(gxSession.Get(SESSION_INFO_EXPIRY)));
+				object sessionExpiry = null;
+				if(Int64.TryParse(gxSession.Get(SESSION_INFO_EXPIRY), out long sessionInfoExpiry))
+					sessionExpiry = new DateTime(sessionInfoExpiry);
 				if (gxSession.Get(SESSION_INFO_ID) != null)
 				{
 					if (sessionExpiry is DateTime)
