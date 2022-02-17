@@ -172,7 +172,6 @@ namespace GeneXus.Data
 		public static string GetDB2String(IDataReader reader, int i)
 		{
             Type idb2Type = (Type)ClassLoader.Invoke(reader, "GetiDB2FieldType", new object[] { i });
-			GXLogging.Debug(log, "GetDB2String field Type: " + idb2Type);
 
             if (idb2Type == iAssembly.GetType("IBM.Data.DB2.iSeries.iDB2CharBitData"))
 			{

@@ -66,8 +66,7 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 # How to build
 
 ## Requirements
-- Visual Studio 2019 >= 16.8
-- dotnet SDK 3.1 
+- Visual Studio 2022
 - .NET 6 
 - .NET Framework 4.7 DevPack
 
