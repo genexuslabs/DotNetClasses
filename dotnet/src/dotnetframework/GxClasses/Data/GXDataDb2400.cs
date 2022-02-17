@@ -317,7 +317,11 @@ namespace GeneXus.Data
 				case GXType.UniqueIdentifier:
 				case GXType.DateAsChar:
 				case GXType.Char: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Char");
-				case GXType.Date: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Date");
+				case GXType.Date:
+					if(m_UseCharInDate)
+						return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Char");
+					else
+						return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Date");
 				case GXType.Clob: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "Clob");
 				case GXType.VarChar: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2VarChar");
 				case GXType.Blob: return ClassLoader.GetEnumValue(iAssembly, iDB2DbTypeEnum, "iDB2Blob");
@@ -948,7 +952,11 @@ namespace GeneXus.Data
 				case GXType.Number: return MsDb2Type.Double;
 				case GXType.DateTime2:
 				case GXType.DateTime: return MsDb2Type.Timestamp;
-				case GXType.Date: return MsDb2Type.Date;
+				case GXType.Date:
+					if(m_UseCharInDate)
+						return MsDb2Type.Char;
+					else
+						return MsDb2Type.Date;
 				case GXType.UniqueIdentifier:
 				case GXType.DateAsChar:
 				case GXType.Char: return MsDb2Type.Char;
