@@ -227,7 +227,11 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				httpResponseData.Headers.Add("Content-Type", value);
 			}
 		}
-		public override IResponseCookies Cookies => throw new NotImplementedException();
+		public override IResponseCookies Cookies
+		{
+			get { return ResponseCookiesFeature.Cookies; }
+
+		} 
 
 		public override bool HasStarted
 		{
