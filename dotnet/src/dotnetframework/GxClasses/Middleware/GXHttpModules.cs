@@ -19,17 +19,19 @@ namespace GeneXus.Http.HttpModules
 {
 	public class SingleMap
 	{
-		String name;
-		String implementation;
-		String methodName;
-		String verb;
-		String path;
+		string name;
+		string implementation;
+		string methodName;
+		string verb;
+		string path;
+		string pathregexp;
 		Dictionary<string, string> variableAlias;
 		public string Name { get => name; set => name = value; }
 		public string ServiceMethod { get => methodName; set => methodName = value; }
 		public string Implementation { get => implementation; set => implementation = value; }
 		public string Verb { get => verb; set => verb = value; }
-		public string Path { get => path; set => path = value; }
+		public string Path { get => path; set => path = value; } 
+		public string PathRegexp { get => pathregexp; set => pathregexp = value; }
 		public Dictionary<string, string> VariableAlias { get => variableAlias; set => variableAlias = value; }
 
 	}
