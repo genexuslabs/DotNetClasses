@@ -32,6 +32,7 @@ namespace GxClasses.Web.Middleware
 		public static string ContentRootPath;
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
+		const string oauthRoute = "/oauth";
 		public static string UrlTemplateControllerWithParms;
 
 		//Azure Functions
@@ -180,7 +181,7 @@ namespace GxClasses.Web.Middleware
 			{
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
-				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath) | (AzureRuntime && path.Contains("/oauth")))
+				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath) | (AzureRuntime && path.Contains(oauthRoute)))
 				{
 					string controllerWithParms = string.Empty;
 					if (!AzureRuntime)
@@ -207,7 +208,7 @@ namespace GxClasses.Web.Middleware
 					}
 					else
 					{
-						if (path.Contains("/oauth") && (AzureDeploy.GAM == "true")) 
+						if (path.Contains(oauthRoute) && (AzureDeploy.GAM == "true")) 
 							return (RouteHttpService(context));
 						controllerWithParms = GetGxRouteValue(path);
 						GXLogging.Debug(log, $"Running Azure functions. ControllerWithParms :{controllerWithParms} path:{path}");
