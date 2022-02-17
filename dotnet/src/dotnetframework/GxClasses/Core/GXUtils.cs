@@ -897,12 +897,18 @@ namespace GeneXus.Utils
 			
 			return txt.Replace(StringUtil.NewLine(), "\n");
 		}
+
 		static public bool IsMatch(string txt, string rex)
+		{
+			return IsMatch(txt, rex, RegexOptions.Multiline);
+		}
+		
+		static public bool IsMatch(string txt, string rex, RegexOptions  options)
 		{
 			resetError();
 			try
 			{
-				Regex r = new Regex(rex, RegexOptions.Multiline);
+				Regex r = new Regex(rex, options);
 				return r.Match(normalizeText(txt)).Success;
 			}
 			catch (Exception e)
@@ -941,12 +947,18 @@ namespace GeneXus.Utils
 			}
 			return new GxSimpleCollection<string>();
 		}
+
 		static public GxUnknownObjectCollection Matches(string txt, string rex)
+		{
+			return Matches(txt,rex, RegexOptions.Multiline);
+		}
+
+		static public GxUnknownObjectCollection Matches(string txt, string rex, RegexOptions options)
 		{
 			resetError();
 			try
 			{
-				Regex r = new Regex(rex, RegexOptions.Multiline);
+				Regex r = new Regex(rex, options);
 				MatchCollection mc = r.Matches(normalizeText(txt));
 				GxUnknownObjectCollection c = new GxUnknownObjectCollection();
 				foreach (Match m in mc)

@@ -56,13 +56,15 @@ namespace GeneXus.Application
 		private const string EXECUTE_METHOD = "execute";
 		private string _serviceMethod = string.Empty;
 		private Dictionary<string, string> _variableAlias = null;
+		private Dictionary<string, object> _routeParms= null;
 		private string _serviceMethodPattern;
 		public bool WrappedParameter = false;
 
-		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias) : this(worker, context, gxContext)
+		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, Dictionary<string,string> variableAlias, Dictionary<string,object> routeParms) : this(worker, context, gxContext)
 		{
 			_serviceMethod = serviceMethod;
 			_variableAlias = variableAlias;
+			_routeParms = routeParms;
 		}
 
 		public GxRestWrapper(GXBaseObject worker, HttpContext context, IGxContext gxContext, string serviceMethod, string serviceMethodPattern) : this(worker, context, gxContext)
@@ -121,7 +123,7 @@ namespace GeneXus.Application
 				_procWorker.IsMain = true;
 				if (bodyParameters == null)
 					bodyParameters = ReadBodyParameters();
-
+				addPathParameters(bodyParameters);
 				if (_procWorker.IsSynchronizer2)
 				{
 					innerMethod = SynchronizerMethod();
@@ -268,7 +270,8 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				var queryParameters = ReadQueryParameters(this._variableAlias);
+				IDictionary<string,object> queryParameters = ReadQueryParameters(this._variableAlias);
+				addPathParameters(queryParameters);
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
 				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
@@ -410,8 +413,27 @@ namespace GeneXus.Application
 				}
 			}
 			return parameters;
+		} 
+		
+		protected void addPathParameters(IDictionary<string, object> parameters)
+		{
+#if NETCORE
+			var route = _httpContext.Request.RouteValues;
+			foreach (KeyValuePair<string, object> kv in route)
+			{
+				parameters.Add(kv.Key, kv.Value);
+			}
+#else
+			if(_routeParms != null)
+			{
+				foreach(KeyValuePair<string,object> kv in _routeParms)
+				{
+					parameters.Add(kv.Key, kv.Value);
+				}
+			}
+#endif
 		}
-
+		
 		public bool IsRestParameter(string parameterName)
 		{
 			try
