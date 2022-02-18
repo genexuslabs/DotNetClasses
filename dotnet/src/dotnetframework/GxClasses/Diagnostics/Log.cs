@@ -30,11 +30,13 @@ namespace GeneXus.Diagnostics
 		static readonly ILog globalLog = LogManager.GetLogger(defaultRepository, defaultUserLogNamespace);
 
 		private static ILog GetLogger(string topic)
-		{			
+		{
 			if (!String.IsNullOrEmpty(topic))
-				return LogManager.GetLogger(defaultRepository, string.Format("{0}.{1}", defaultUserLogNamespace, topic.Trim()));
-			else
-				return globalLog;
+			{
+				string loggerName = topic.StartsWith("$") ? topic.Substring(1) : string.Format("{0}.{1}", defaultUserLogNamespace, topic.Trim());
+				return LogManager.GetLogger(defaultRepository, loggerName);
+			}
+			return globalLog;
 		}
 
 		public static void Write(int logLevel, string message, string topic)
