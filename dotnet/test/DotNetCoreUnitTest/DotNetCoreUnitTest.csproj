@@ -11,6 +11,7 @@
 		<DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>		
+	    <Compile Include="..\DotNetUnitTest\ConfigMappings\ConfigTest.cs" Link="ConfigMappings\ConfigTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\Xslt.cs" Link="FileIO\Xslt.cs" />
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
@@ -39,11 +40,11 @@
 		</Content>
 	</ItemGroup>
 
-	
-	
-  <ItemGroup>
-	  <PackageReference Include="iTextSharp" Version="5.5.13.2" />
 
+
+	<ItemGroup>
+		<PackageReference Include="iTextSharp" Version="5.5.13.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
 		<PackageReference Include="xunit" Version="2.4.1" />
@@ -56,7 +57,7 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
-  </ItemGroup>
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
@@ -81,6 +82,9 @@
 
 	<ItemGroup>
 		<None Update="apps\append.svc">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="confmapping.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="FullTextSearch\Ugly.html">
@@ -136,6 +140,7 @@
 
 	<ItemGroup>
 	  <Folder Include="apps\" />
+	  <Folder Include="ConfigMappings\" />
 	  <Folder Include="PDF\" />
 	  <Folder Include="resources\xml\" />
 	</ItemGroup>
