@@ -45,6 +45,14 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 					isSecure = GetSecureConnection(header.Key, defaultHttpContext.Request.Headers[header.Key]);
 
 			}
+
+			IReadOnlyDictionary<string, object> keyValuePairs = requestData.FunctionContext.BindingContext.BindingData;
+			foreach (var keyValuePair in keyValuePairs)
+			{
+				if ((keyValuePair.Key != "Headers") && (keyValuePair.Key != "Query"))
+					defaultHttpContext.Request.RouteValues.Add(keyValuePair.Key,keyValuePair.Value);
+			}
+
 			defaultHttpContext.Request.Method = requestData.Method;
 			defaultHttpContext.Request.Body = requestData.Body;
 			defaultHttpContext.Request.Path = PathString.FromUriComponent(requestData.Url);
