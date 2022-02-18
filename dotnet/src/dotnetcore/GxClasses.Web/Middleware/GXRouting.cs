@@ -12,6 +12,7 @@ using GeneXus;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Http;
+using GeneXus.HttpHandlerFactory;
 using GeneXus.Metadata;
 using GeneXus.Procedure;
 using GeneXus.Utils;
@@ -31,10 +32,12 @@ namespace GxClasses.Web.Middleware
 		public static string ContentRootPath;
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
+		const string oauthRoute = "/oauth";
 		public static string UrlTemplateControllerWithParms;
 
 		//Azure Functions
 		public bool AzureRuntime;
+		public AzureDeployFeature AzureDeploy = new AzureDeployFeature();
 		public static string AzureFunctionName;
 
 		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
@@ -51,6 +54,7 @@ namespace GxClasses.Web.Middleware
 			restBaseURL = baseURL;
 			ServicesGroupSetting();
 			ServicesFunctionsMetadata();
+			GetAzureDeploy();
 		}
 
 		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
@@ -159,13 +163,25 @@ namespace GxClasses.Web.Middleware
 			}
 			return result;
 		}
+		internal async Task RouteHttpService(HttpContext context)
+		{
+			try
+			{
+				HandlerFactory handlerFactory = new HandlerFactory();
+				await handlerFactory.Invoke(context);
+			}
+			catch (Exception ex)
+			{
+				await Task.FromException(ex);
+			}
+		}
 		public Task ProcessRestRequest(HttpContext context)
 		{
 			try
 			{
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
-				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath))
+				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath) | (AzureRuntime && path.Contains(oauthRoute)))
 				{
 					string controllerWithParms = string.Empty;
 					if (!AzureRuntime)
@@ -173,12 +189,27 @@ namespace GxClasses.Web.Middleware
 						controllerWithParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
 						if (String.IsNullOrEmpty(controllerWithParms) && !String.IsNullOrEmpty(actualPath))
 						{
-							var controllerPath = path.ToLower().Split(actualPath).Last<string>();
+							if (context.Request.RouteValues.Count > 0)
+							{
+								foreach (IRouter r in context.GetRouteData().Routers)
+								{
+									Route current_r = r as Route;
+									if (current_r != null)
+									{
+										path = current_r.ParsedTemplate.TemplateText;
+										break;
+									}
+								}
+							}
+							string controllerPath = path.ToLower().Split(actualPath).Last<string>();
 							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
-						}					
+					
+						}
 					}
 					else
 					{
+						if (path.Contains(oauthRoute) && (AzureDeploy.GAM == "true")) 
+							return (RouteHttpService(context));
 						controllerWithParms = GetGxRouteValue(path);
 						GXLogging.Debug(log, $"Running Azure functions. ControllerWithParms :{controllerWithParms} path:{path}");
 					}
@@ -260,24 +291,42 @@ namespace GxClasses.Web.Middleware
 		internal string GetGxRouteValue(string path)
 		{
 			//Not API Objects
-			string basePath = restBaseURL;
+			string basePath = "";
+			if (AzureDeploy.Deploy == AzureFeature.AzureServerless && !string.IsNullOrEmpty(AzureDeploy.Route))
+				basePath = AzureDeploy.Route;
+			else
+				basePath = restBaseURL;
+
+			string pathWithNoBase = string.IsNullOrEmpty(basePath) ? path.Substring(1) : path.Substring(basePath.Length + 2);
 
 			//API Objects
+			string AzureFunctionShortName = AzureFunctionName.Substring(AzureFunctionName.LastIndexOf(".") + 1);
+			string controllerWithParms = "";
 			foreach (var map in servicesMap)
 			{
-				foreach (var mlist in map.Value)
+				if (path.ToLower().Contains(map.Key.ToLower()))
 				{
-					if (mlist.Key == AzureFunctionName)
+					foreach (var mlist in map.Value)
 					{
-						basePath = string.IsNullOrEmpty(restBaseURL) ? $"{map.Key}" :$"{restBaseURL}/{map.Key}";
+						if (mlist.Key.ToLower() == AzureFunctionShortName.ToLower())
+						{
+
+							controllerWithParms = mlist.Value.Path;
+							if (pathWithNoBase.ToLower().EndsWith(controllerWithParms.ToLower()))
+							{
+								if (pathWithNoBase.Remove(pathWithNoBase.Length - controllerWithParms.Length).ToLower() == map.Key.ToLower())
+									return controllerWithParms;
+							}
+						}
 					}
 				}
 			}
 
-			string controllerWithParms = path.Remove(0, basePath.Length + 1);
+			controllerWithParms = path.Remove(0, basePath.Length + 1);
 			controllerWithParms = controllerWithParms.StartsWith("/") ? controllerWithParms.Remove(0, 1) : controllerWithParms;
 			return controllerWithParms;
-			
+
+
 		}
 		public bool ServiceInPath(String path, out String actualPath)
 		{
@@ -333,31 +382,33 @@ namespace GxClasses.Web.Middleware
 			{
 				controller = tmpController;
 				GXLogging.Debug(log, $"FindController:{controller} namespace:{nspace} assembly:{asssemblycontroller}");
-				var controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-				GXProcedure proc = controllerInstance as GXProcedure;
+				object controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+				GXBaseObject proc = controllerInstance as GXBaseObject;
 				if (proc != null)
-					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias);
+					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias, null);
 				else
 					GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{asssemblycontroller} nspace:{nspace} controller:{controller}");
 			}
 			else
 			{
 				string controllerLower = controller.ToLower();
-				string svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
+				string svcFile = Path.Combine(ContentRootPath, $"{controller}.svc");
+				if (!File.Exists(svcFile))
+					svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
 				if (File.Exists(svcFile))
 				{
-					var controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
+					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
 					   .Skip(1)
 					   .TakeWhile(c => c != '"')
 					   .ToArray()).Trim().Split(',');
-					var controllerAssemblyName = controllerAssemblyQualifiedName.Last();
-					var controllerClassName = controllerAssemblyQualifiedName.First();
+					string controllerAssemblyName = controllerAssemblyQualifiedName.Last();
+					string controllerClassName = controllerAssemblyQualifiedName.First();
 					if (!string.IsNullOrEmpty(nspace) && controllerClassName.StartsWith(nspace))
 						controllerClassName = controllerClassName.Substring(nspace.Length + 1);
 					else
 						nspace = string.Empty;
-					var controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
-					GXProcedure proc = controllerInstance as GXProcedure;
+					object controllerInstance = ClassLoader.FindInstance(controllerAssemblyName, nspace, controllerClassName, new Object[] { gxContext }, Assembly.GetEntryAssembly());
+					GXBaseObject proc = controllerInstance as GXBaseObject;
 					if (proc != null)
 						return new GxRestWrapper(proc, context, gxContext, methodName, methodPattern);
 					else
@@ -377,69 +428,80 @@ namespace GxClasses.Web.Middleware
 		}
 		public void ServicesGroupSetting()
 		{
-			if (Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)))
+			try
 			{
-				string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
-				foreach (String grp in grpFiles)
+				if (Directory.Exists(Path.Combine(ContentRootPath, PRIVATE_DIR)))
 				{
-					object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
-					MapGroup m = p as MapGroup;
-					if (m != null)
+					string[] grpFiles = Directory.GetFiles(Path.Combine(ContentRootPath, PRIVATE_DIR), "*.grp.json");
+					foreach (String grp in grpFiles)
 					{
+						string content = File.ReadAllText(grp);
+						if (!string.IsNullOrEmpty(content))
+						{
+							object p = JSONHelper.Deserialize<MapGroup>(content);
+							MapGroup m = p as MapGroup;
+							if (m != null)
+							{
 
-						if (String.IsNullOrEmpty(m.BasePath))
-						{
-							m.BasePath = restBaseURL;
-						}
-						String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
-						String mapPathLower = mapPath.ToLower();
-						String mNameLower = m.Name.ToLower();
-						servicesPathUrl.Add(mapPathLower, mNameLower);
-						GXLogging.Debug(log, $"addServicesPathUrl key:{mapPathLower} value:{mNameLower}");
-						foreach (SingleMap sm in m.Mappings)
-						{
-							if (sm.Verb == null)
-								sm.Verb = "GET";
-							if (String.IsNullOrEmpty(sm.Path))
-								sm.Path = sm.Name;
-							else
-							{
-								sm.Path = Regex.Replace(sm.Path, "^/|/$", "");
-							}
-							if (sm.VariableAlias == null)
-								sm.VariableAlias = new Dictionary<string, string>();
-							else
-							{
-								Dictionary<string, string> vMap = new Dictionary<string, string>();
-								foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+								if (String.IsNullOrEmpty(m.BasePath))
 								{
-									vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+									m.BasePath = restBaseURL;
 								}
-								sm.VariableAlias = vMap;
-							}
-							if (servicesMap.ContainsKey(mapPathLower))
-							{
-								if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+								string mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
+								string mapPathLower = mapPath.ToLower();
+								string mNameLower = m.Name.ToLower();
+								servicesPathUrl[mapPathLower]= mNameLower;
+								GXLogging.Debug(log, $"addServicesPathUrl key:{mapPathLower} value:{mNameLower}");
+								foreach (SingleMap sm in m.Mappings)
 								{
-									servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
-									
-									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
-									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+									if (sm.Verb == null)
+										sm.Verb = "GET";
+									if (String.IsNullOrEmpty(sm.Path))
+										sm.Path = sm.Name;
+									else
+									{
+										sm.Path = Regex.Replace(sm.Path, "^/|/$", "");
+									}
+									if (sm.VariableAlias == null)
+										sm.VariableAlias = new Dictionary<string, string>();
+									else
+									{
+										Dictionary<string, string> vMap = new Dictionary<string, string>();
+										foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+										{
+											vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+										}
+										sm.VariableAlias = vMap;
+									}
+									if (servicesMap.ContainsKey(mapPathLower))
+									{
+										if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+										{
+											servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
+
+											servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+											servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+										}
+									}
+									else
+									{
+										servicesValidPath.Add(mapPathLower, new List<string>());
+										servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
+
+										servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string, string>, string>());
+										servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+										servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
+										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+									}
 								}
-							}
-							else
-							{
-								servicesValidPath.Add(mapPathLower, new List<string>());
-								servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
-								
-								servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string, string>, string>());
-								servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
-								servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
-								servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
 							}
 						}
 					}
 				}
+			}catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Error Loading Services Group Settings", ex);
+				throw;
 			}
 		}
 
@@ -453,6 +515,16 @@ namespace GxClasses.Web.Middleware
 			if (File.Exists(metadataFilePath))
 			{
 				AzureRuntime = true;
+			}
+		}
+		public void GetAzureDeploy()
+		{
+			string azureDeployFlagFile = Path.Combine(ContentRootPath, "azureflag.json");
+
+			if (File.Exists(azureDeployFlagFile))
+			{
+				string azureFlag = File.ReadAllText(azureDeployFlagFile);
+				AzureDeploy = JSONHelper.Deserialize<AzureDeployFeature>(azureFlag);
 			}
 		}
 	}
@@ -475,11 +547,34 @@ namespace GxClasses.Web.Middleware
 		public List<Binding> bindings { get; set; }
 
 	}
-		public class PropertyList
-		{
-			public bool IsCodeless { get; set; }
-			public string configurationSource { get; set; }
-		}
+
+	public class AzureDeployFeature
+	{
+		[DataMember()]
+		public string Deploy
+		{ get; set; }
+
+		[DataMember()]
+		public string Route
+		{ get; set; }
+
+		[DataMember()]
+		public string GAM
+		{ get; set; }
+
+
+	}
+
+	public static class AzureFeature
+	{
+		public const string AzureServerless = "AzureServerless";
+		public const string AzureHttpFunctions = "AzureHttpFunctions";
+	}
+	public class PropertyList
+	{
+		public bool IsCodeless { get; set; }
+		public string configurationSource { get; set; }
+	}
 
 	public class Binding
 	{
@@ -519,6 +614,7 @@ namespace GxClasses.Web.Middleware
 		string verb = "GET";
 		string name = string.Empty;
 		string path = string.Empty;
+		string pathregexp = string.Empty;
 		string implementation = string.Empty;
 		string methodName = string.Empty;
 		Dictionary<string, string> variableAlias = new Dictionary<string, string>();
@@ -528,6 +624,9 @@ namespace GxClasses.Web.Middleware
 
 		[DataMember()]
 		public string Path { get => path; set => path = value; }
+
+		[DataMember()]
+		public string PathRegexp { get => pathregexp; set => pathregexp = value; }
 
 		[DataMember()]
 		public string ServiceMethod { get => methodName; set => methodName = value; }

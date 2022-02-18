@@ -141,7 +141,6 @@ namespace GeneXus.Configuration
 		{
 			try
 			{
-				sId = GetMappedProperty(sId);
 				sString = config.Get(sId);
 				if (String.IsNullOrEmpty(sString))
 					return false;
@@ -164,8 +163,8 @@ namespace GeneXus.Configuration
 		{
 			if (ConfMapping != null && ConfMapping.ContainsKey(original))
 				return ConfMapping[original];
-
-			return original;
+			else
+				return $"{EnvVarReader.ENVVAR_PREFIX}{original}";
 		}
 
 		static ConcurrentDictionary<string, string> ConfMapping
@@ -354,6 +353,9 @@ namespace GeneXus.Configuration
 		}
 		public static CultureInfo GetCultureForLang(string lang)
 		{
+			if (string.IsNullOrEmpty(StringUtil.Trim(lang)) && Config.GetValueOf("LANG_NAME", out string kbLanguage))
+				lang = kbLanguage;
+
 			string culture = lang;
 			switch (culture.ToLower())
 			{
@@ -442,6 +444,7 @@ namespace GeneXus.Configuration
 			{ "System.Memory",new Version(4, 0, 1, 1) }
 		};
 
+		static string GeoTypesAssembly = "Microsoft.SqlServer.Types";
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
@@ -450,6 +453,10 @@ namespace GeneXus.Configuration
 			{
 				requestedAssembly.Version = AssemblyRedirect[requestedAssembly.Name];
 				return Assembly.Load(requestedAssembly);
+			}
+			else if (requestedAssembly.Name == GeoTypesAssembly && requestedAssembly.Version!=null)
+			{
+				return SQLGeographyWrapper.GeoAssembly;
 			}
 			else return null;
 		}
@@ -480,13 +487,6 @@ namespace GeneXus.Configuration
 							logConfig(logConfigSource);
 						else
 							logConfig(configFileName);
-
-						foreach (string key in _config.Keys)
-						{
-							if (EnvVarReader.GetEnvironmentValue(key, out string envVarValue))
-								_config[key] = envVarValue;
-						}
-
 						return _config;
 					}
 #if !NETCORE
@@ -498,8 +498,9 @@ namespace GeneXus.Configuration
 						_config = ConfigurationSettings.AppSettings;
 						foreach (string key in _config.Keys)
 						{
-							if (EnvVarReader.GetEnvironmentValue(key, out string envVarValue))
-								_config[key] = envVarValue;
+							string value = MappedValue(key, _config[key]);
+							if (value!=_config[key])
+								_config[key] = value;
 						}
 						languages = null;
 						return _config;
@@ -594,10 +595,7 @@ namespace GeneXus.Configuration
 			foreach (var c in ConfigRoot.GetSection("appSettings").GetChildren())
 			{
 				string key = c.Key;
-				string value = c.Value;
-				if (EnvVarReader.GetEnvironmentValue(key, out string envVarValue))
-					value = envVarValue;
-				cfg.Add(key, value);
+				cfg.Add(key, MappedValue(key, c.Value));
 			}
 
 			foreach (var c in ConfigRoot.GetSection("languages").GetChildren())
@@ -674,18 +672,17 @@ namespace GeneXus.Configuration
 						{
 							while (rdr.Read() && !(!rdr.IsStartElement() && rdr.Name.Equals("datastores")))
 								if (!(rdr.IsStartElement() && rdr["key"] == null) && (rdr.IsStartElement()))
-									cfg.Add(rdr["key"], rdr["value"]);
+								{
+									string key = rdr["key"];
+									cfg.Add(key, MappedValue(key, rdr["value"]));
+								}
 						}
 						else if (rdr.Name.Equals("appSettings"))
 						{
 							while (rdr.Read() && rdr.IsStartElement())
 							{
 								string key = rdr["key"];
-								string value = rdr["value"];
-								if (EnvVarReader.GetEnvironmentValue(key, out string envVarValue))
-									value = envVarValue;
-
-								cfg.Add(key, value);
+								cfg.Add(key, MappedValue(key, rdr["value"]));
 							}
 						}
 						else if (rdr.Name.Equals("log4net") && rdr.IsStartElement())
@@ -707,7 +704,14 @@ namespace GeneXus.Configuration
 			}
 			GXLogging.Debug(log, "Return loadConfig");
 			return cfg;
-
+		}
+		private static string MappedValue(string key, string value)
+		{
+			string mappedValue = value;
+			string mappedKey = GetMappedProperty(key);
+			if (EnvVarReader.GetEnvironmentValue(mappedKey, out string envVarValue))
+				mappedValue = envVarValue;
+			return mappedValue;
 
 		}
 	}
@@ -727,6 +731,7 @@ namespace GeneXus.Configuration
 		static string blobPath;
 		static string blobPathFolderName;
 		static int blankEmptyDates = -1;
+		static int ignoreAddOnEmptyDate = -1;
 		static int setupDB = -1;
 		static HTMLDocType docType = HTMLDocType.UNDEFINED;
 		static int docTypeDTD = -1;
@@ -743,6 +748,7 @@ namespace GeneXus.Configuration
 		const string NO = "0";
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";
+		static int httpclient_max_per_route = -1;
 		internal static string DefaultDatastore
 		{
 			get
@@ -898,7 +904,29 @@ namespace GeneXus.Configuration
 			}
 
 		}
+		public static bool IgnoreAddOnEmptyDates
+		{
+			get
+			{
+				if (ignoreAddOnEmptyDate == -1)
+				{
+					string val;
+					if (Config.GetValueOf("IGNORE_ADD_ON_EMPTY_DATE", out val) && val == "1")
+					{
+						ignoreAddOnEmptyDate = 1;
+						return true;
+					}
+					else
+					{
+						ignoreAddOnEmptyDate = 0;
+						return false;
+					}
+				}
+				else return (ignoreAddOnEmptyDate == 1);
+			}
 
+		}
+		
 		public static bool BlankEmptyDates
 		{
 			get
@@ -1290,6 +1318,32 @@ namespace GeneXus.Configuration
 				return theme;
 			else
 				return "";
+		}
+
+		public static int GetHttpClientMaxConnectionPerRoute()
+		{
+			if (httpclient_max_per_route == -1)
+			{
+				try
+				{
+					string strmax;
+					if (Config.GetValueOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
+					{
+						httpclient_max_per_route = Convert.ToInt32(strmax);
+					}
+					else
+					{
+						httpclient_max_per_route = 1000;
+					}
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, "HttpClientMaxPerRoute error", ex);
+					httpclient_max_per_route = 1000;
+				}
+			}
+			return httpclient_max_per_route;
+
 		}
 	}
 }

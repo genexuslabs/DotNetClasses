@@ -50,6 +50,11 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			defaultHttpContext.Request.Path = PathString.FromUriComponent(requestData.Url);
 			defaultHttpContext.Request.QueryString = QueryString.FromUriComponent(requestData.Url);
 
+
+			IHttpRequestFeature requestFeature = defaultHttpContext.Features.Get<IHttpRequestFeature>();
+			requestFeature.RawTarget = defaultHttpContext.Request.Path.HasValue ? defaultHttpContext.Request.Path.Value : String.Empty;
+			defaultHttpContext.Features.Set<IHttpRequestFeature>(requestFeature);
+
 			if (string.IsNullOrEmpty(sessionId))
 			{
 				CreateSessionId(isSecure, responseData, requestData);
@@ -222,7 +227,11 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				httpResponseData.Headers.Add("Content-Type", value);
 			}
 		}
-		public override IResponseCookies Cookies => throw new NotImplementedException();
+		public override IResponseCookies Cookies
+		{
+			get { return ResponseCookiesFeature.Cookies; }
+
+		} 
 
 		public override bool HasStarted
 		{

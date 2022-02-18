@@ -209,8 +209,8 @@ namespace GeneXus.Http
 
 #if !NETCORE
 		protected IGxContext _Context;                  
-#endif
 		bool _isMain;
+#endif
 		bool _isStatic;
 		string staticContentBase;
 
@@ -267,7 +267,9 @@ namespace GeneXus.Http
 		public virtual void initialize_properties() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void webExecute() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
+#if !NETCORE
 		public virtual void cleanup() { }
+#endif
 		public virtual bool SupportAjaxEvent() { return false; }
 		public virtual String AjaxOnSessionTimeout() { return "Ignore"; }
 #if !NETCORE
@@ -316,7 +318,7 @@ namespace GeneXus.Http
 			bool[] eventUseInternalParms;
 			string cmpContext = string.Empty;
 			int grid;
-			string row;
+			string row, pRow = string.Empty;
 			JArray inParmsMetadata;
 			private HashSet<string> inParmsMetadataHash;
 			bool anyError;
@@ -367,13 +369,15 @@ namespace GeneXus.Http
 					row = (string)objMessage["row"];
 				else
 					row = string.Empty;
+				if (objMessage.Contains("pRow"))
+					pRow = (string)objMessage["pRow"];
 				if (objMessage.Contains("gxstate"))
 				{
-					ParseGXStateParms((JObject)objMessage["gxstate"]);
-				}
-				if (objMessage.Contains("fullPost"))
-				{
-					this.targetObj._Context.httpAjaxContext.ParseGXState((JObject)objMessage["fullPost"]);
+                    ParseGXStateParms((JObject)objMessage["gxstate"]);
+                }
+                if (objMessage.Contains("fullPost"))
+                {
+					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
 				}
 			}
 			private void ParseGridsDataParms(JObject gxGrids)
@@ -842,7 +846,7 @@ namespace GeneXus.Http
 
 					if (grid != 0 && !String.IsNullOrEmpty(row))
 					{
-						SetFieldValue("sGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", row);
+						SetFieldValue("sGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", row + pRow);
 						SetFieldValue("nGXsfl_" + grid.ToString(CultureInfo.InvariantCulture) + "_idx", int.Parse(row));
 					}
 					SetFieldValue("wbLoad", true);
@@ -1778,14 +1782,14 @@ namespace GeneXus.Http
 		{ return false; }
 
 #if !NETCORE
-	private const int STACKSIZE = 1024 * 1024 * 2;
-#endif
-
+		private const int STACKSIZE = 1024 * 1024 * 2;
 		public bool IsMain
 		{
 			set { _isMain = value; }
 			get { return _isMain; }
 		}
+#endif
+
 
 		public void ProcessRequest(HttpContext httpContext)
 		{
@@ -2055,7 +2059,7 @@ namespace GeneXus.Http
 			if (IsSpaRequest())
 			{
 #if NETCORE
-				localHttpContext.Response.AddHeader("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate");
+				localHttpContext.Response.AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE);
 #else
 				localHttpContext.Response.Cache.SetCacheability(HttpCacheability.NoCache);
 				localHttpContext.Response.Cache.AppendCacheExtension("no-store, must-revalidate");
@@ -2068,7 +2072,7 @@ namespace GeneXus.Http
 				string utcNow = DateTime.UtcNow.ToString("ddd, dd MMM yyyy HH':'mm':'ss 'GMT'", CultureInfo.GetCultureInfo("en-US"));
 				localHttpContext.Response.AddHeader("Expires", utcNow);
 				localHttpContext.Response.AddHeader("Last-Modified", utcNow);
-				localHttpContext.Response.AddHeader("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate");
+				localHttpContext.Response.AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE);
 			}
 		}
 

@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel;
@@ -198,7 +199,8 @@ namespace GeneXus.Utils
         }
         public void Cleanup()
         {
-            if (runAsMain)
+			SendCacheHeaders();
+			if (runAsMain)
                 context.CloseConnections();
         }
         public bool RunAsMain
@@ -477,30 +479,30 @@ namespace GeneXus.Utils
 		{
 			if (wcfContext != null)
 			{
-				return HttpHelper.HttpPostMethod == wcfContext.IncomingRequest.Method;
+				return HttpMethod.Post.Method == wcfContext.IncomingRequest.Method;
 			}
 			else if (httpContext != null)
 			{
-				return HttpHelper.HttpPostMethod == httpContext.Request.HttpMethod;
+				return HttpMethod.Post.Method == httpContext.Request.HttpMethod;
 			}
 			else return false;
 		}
 		void AddHeader(string header, string value)
         {
             if (wcfContext != null)
-            {
-                wcfContext.OutgoingResponse.Headers.Add(header, value);
+			{
+				wcfContext.OutgoingResponse.Headers[header]=value;
             }
             else if (httpContext != null)
             {
-                httpContext.Response.AddHeader(header, value);
+                httpContext.Response.Headers[header]= value;
             }
         }
-        public bool ProcessHeaders(string queryId)
-        {
-            
+		public bool ProcessHeaders(string queryId)
+		{
+
 			NameValueCollection headers = GetHeaders();
-			String language=null, theme=null, etag=null;
+			String language = null, theme = null, etag = null;
 			if (headers != null)
 			{
 				language = headers["GeneXus-Language"];
@@ -508,34 +510,42 @@ namespace GeneXus.Utils
 				if (!IsPost())
 					etag = headers["If-Modified-Since"];
 			}
-            
+
 			if (!string.IsNullOrEmpty(language))
-                context.SetLanguage(language);
+				context.SetLanguage(language);
 
 			if (!string.IsNullOrEmpty(theme))
 				context.SetTheme(theme);
 
-            DateTime dt = HTMLDateToDatetime(etag);
-            DateTime newDt;
-            DataUpdateStatus status;
-            if (etag == null)
-            {
-                status = DataUpdateStatus.Invalid;
-                GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
-            }
-            else 
-            {
-                status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
-            }
-            AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
-            if (status == DataUpdateStatus.UpToDate)
-            {
-                SetStatusCode(HttpStatusCode.NotModified);
-                return false;
-            }
-            return true;
-        }
-        DateTime HTMLDateToDatetime(string s)
+			DateTime dt = HTMLDateToDatetime(etag);
+			DateTime newDt;
+			DataUpdateStatus status;
+			if (etag == null)
+			{
+				status = DataUpdateStatus.Invalid;
+				GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
+			}
+			else
+			{
+				status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
+			}
+			AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
+
+			if (status == DataUpdateStatus.UpToDate)
+			{
+				SetStatusCode(HttpStatusCode.NotModified);
+				return false;
+			}
+			return true;
+		}
+
+		private void SendCacheHeaders()
+		{
+			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.CACHE_CONTROL)))
+				AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE);
+		}
+
+		DateTime HTMLDateToDatetime(string s)
         {
             // Date Format: RFC 1123
             DateTime dt;
