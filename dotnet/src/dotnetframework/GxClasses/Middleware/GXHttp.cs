@@ -373,11 +373,11 @@ namespace GeneXus.Http
 					pRow = (string)objMessage["pRow"];
 				if (objMessage.Contains("gxstate"))
 				{
-					ParseGXStateParms((JObject)objMessage["gxstate"]);
-				}
-				if (objMessage.Contains("fullPost"))
-				{
-					this.targetObj._Context.httpAjaxContext.ParseGXState((JObject)objMessage["fullPost"]);
+                    ParseGXStateParms((JObject)objMessage["gxstate"]);
+                }
+                if (objMessage.Contains("fullPost"))
+                {
+					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
 				}
 			}
 			private void ParseGridsDataParms(JObject gxGrids)

@@ -204,7 +204,7 @@ namespace GxClasses.Web.Middleware
 							string controllerPath = path.ToLower().Split(actualPath).Last<string>();
 							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
 					
-						}					
+						}
 					}
 					else
 					{
