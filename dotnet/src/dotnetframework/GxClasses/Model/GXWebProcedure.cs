@@ -95,7 +95,7 @@ namespace GeneXus.Procedure
 				}
 				else
 				{
-					localHttpContext.Response.AddHeader(HttpHeader.CACHE_CONTROL, "max-age=0, no-cache, no-store, must-revalidate");
+					localHttpContext.Response.AddHeader(HttpHeader.CACHE_CONTROL, HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE);
 				}
 			}
 		}
