@@ -51,6 +51,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <None Update="confmapping.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Document.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
