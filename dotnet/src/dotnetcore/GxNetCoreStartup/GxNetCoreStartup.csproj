@@ -14,14 +14,11 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1"/>
 		<PackageReference Include="Microsoft.Extensions.Caching.SqlServer" Version="3.1.3" />
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="3.1.7" />
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.2.3" />
 	</ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj">
-    </ProjectReference>
-    <ProjectReference Include="..\GxClasses\GxClasses.csproj">
-    </ProjectReference>
+    <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj"/>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
     <ProjectReference Include="..\GxPdfReportsCS\GxPdfReportsCS.csproj" />
   </ItemGroup>
 	<ItemGroup>
