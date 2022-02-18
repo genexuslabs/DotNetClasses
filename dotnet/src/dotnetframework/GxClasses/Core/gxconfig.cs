@@ -444,6 +444,7 @@ namespace GeneXus.Configuration
 			{ "System.Memory",new Version(4, 0, 1, 1) }
 		};
 
+		static string GeoTypesAssembly = "Microsoft.SqlServer.Types";
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
@@ -452,6 +453,10 @@ namespace GeneXus.Configuration
 			{
 				requestedAssembly.Version = AssemblyRedirect[requestedAssembly.Name];
 				return Assembly.Load(requestedAssembly);
+			}
+			else if (requestedAssembly.Name == GeoTypesAssembly && requestedAssembly.Version!=null)
+			{
+				return SQLGeographyWrapper.GeoAssembly;
 			}
 			else return null;
 		}
