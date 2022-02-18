@@ -14,6 +14,8 @@ namespace GeneXus.Application
 	using System.Web.Configuration;
 #endif
 	using System.Xml;
+	using GeneXus.Http;
+	using System.Collections.Concurrent;
 
 	public class GXFileWatcher : IDisposable
 	{
@@ -23,11 +25,11 @@ namespace GeneXus.Application
 		TimeSpan TIMEOUT;
 		private static bool DISABLED;
 		long TIMEOUT_TICKS;
-		List<GxFile> tmpFiles;
-		Hashtable webappTmpFiles;
-#if !NETCORE
-		Thread t;
-#endif
+		ConcurrentDictionary<int, List<GxFile>> tmpFiles;
+		Dictionary<string,List<GxFile>> webappTmpFiles;
+		bool running=false;
+		CancellationTokenSource cts = new CancellationTokenSource();
+							
 		public static GXFileWatcher Instance
 		{
 			get
@@ -45,7 +47,7 @@ namespace GeneXus.Application
 		}
 		private GXFileWatcher()
 		{
-			webappTmpFiles = new Hashtable();
+			webappTmpFiles = new Dictionary<string, List<GxFile>>();
 			string fwTimeout = string.Empty;
 			long result = 0;
 			string delete;
@@ -123,25 +125,35 @@ namespace GeneXus.Application
 				GXLogging.Error(log, "DeleteFiles error", ex);
 			}
 		}
-		public void AddTemporaryFile(GxFile FileUploaded)
+		public void AddTemporaryFile(GxFile FileUploaded, IGxContext gxcontext)
 		{
 			if (!DISABLED)
 			{
 				GXLogging.Debug(log, "AddTemporaryFile ", FileUploaded.Source);
+				HttpContext httpcontext = gxcontext.HttpContext;
 #if !NETCORE
-				if (HttpContext.Current != null)
+			if (httpcontext==null)
+				httpcontext =HttpContext.Current;
+#endif
+				if (httpcontext != null)
 				{
 					try
 					{
 						string sessionId;
-						if (HttpContext.Current.Session != null)
-							sessionId = HttpContext.Current.Session.SessionID;
+						if (httpcontext.Session != null)
+						{
+#if NETCORE
+							sessionId = httpcontext.Session.Id;
+#else
+							sessionId = httpcontext.Session.SessionID;
+#endif
+						}
 						else
 							sessionId = "nullsession";
 						List<GxFile> sessionTmpFiles;
 						lock (m_SyncRoot)
 						{
-							if (webappTmpFiles.Contains(sessionId))
+							if (webappTmpFiles.ContainsKey(sessionId))
 								sessionTmpFiles = (List<GxFile>)webappTmpFiles[sessionId];
 							else
 								sessionTmpFiles = new List<GxFile>();
@@ -153,32 +165,36 @@ namespace GeneXus.Application
 					{
 						GXLogging.Error(log, "AddTemporaryFile Error", exc);
 					}
-					if (t == null)
+					lock (m_SyncRoot)
 					{
-						GXLogging.Debug(log, "ThreadStart GXFileWatcher.Instance.Run");
-						t = new Thread(new ThreadStart(GXFileWatcher.Instance.Run));
-						t.IsBackground = true;
-						t.Start();
+						if (!running)
+						{
+							running = true;
+							GXLogging.Debug(log, "ThreadStart GXFileWatcher.Instance.Run");
+							ThreadPool.QueueUserWorkItem(new WaitCallback(GXFileWatcher.Instance.Run), cts.Token);
+						}
 					}
 				}
 				else
-#endif
 				{
 					if (tmpFiles == null)
-						tmpFiles = new List<GxFile>();
+						tmpFiles = new ConcurrentDictionary<int, List<GxFile>>();
 					lock (tmpFiles)
 					{
-						tmpFiles.Add(FileUploaded);
+						if (!tmpFiles.ContainsKey(gxcontext.handle))
+							tmpFiles[gxcontext.handle] = new List<GxFile>();
+						tmpFiles[gxcontext.handle].Add(FileUploaded);
 					}
 				}
 			}
 		}
 
-		private void Run()
+		private void Run(object obj)
 		{
 			if (!DISABLED)
 			{
-				while (true)
+				CancellationToken token = (CancellationToken)obj;
+				while (true && !token.IsCancellationRequested)
 				{
 					Thread.Sleep(TIMEOUT);
 					GXLogging.Debug(log, "loop start ");
@@ -193,6 +209,7 @@ namespace GeneXus.Application
 		}
 		private void DeleteWebAppTemporaryFiles(bool disposing)
 		{
+			
 			if (webappTmpFiles != null && webappTmpFiles.Count > 0)
 			{
 				long now = DateTime.Now.Ticks;
@@ -201,21 +218,23 @@ namespace GeneXus.Application
 				{
 					foreach (string sessionId in webappTmpFiles.Keys)
 					{
-						List<string> files = (List<string>)webappTmpFiles[sessionId];
+						List<GxFile> files = new List<GxFile>();
+						webappTmpFiles.TryGetValue(sessionId, out files); 
 						if (files != null && files.Count > 0)
 						{
-							if (disposing || ExpiredFile(files[files.Count - 1], now))
+							var lastFileName = files[files.Count - 1].GetURI();
+							if (disposing || ExpiredFile(lastFileName, now))
 							{
 								try
 								{
 									lock (m_SyncRoot)
 									{
-										foreach (string f in files)
+										foreach (GxFile f in files)
 										{
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-											File.Delete(f);
+											f.Delete();
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-											GXLogging.Debug(log, "File.Delete ", f);
+											GXLogging.Debug(log, "File.Delete ", f.GetURI());
 										}
 									}
 								}
@@ -235,7 +254,9 @@ namespace GeneXus.Application
 				try
 				{
 					foreach (string sessionId in toRemove)
+					{
 						webappTmpFiles.Remove(sessionId);
+					}
 				}
 				catch (Exception ex2)
 				{
@@ -243,19 +264,25 @@ namespace GeneXus.Application
 				}
 			}
 		}
-		public void DeleteTemporaryFiles()
+		public void DeleteTemporaryFiles(int handle)
 		{
+			GXLogging.Debug(log, "DeleteTemporaryFiles handle: " + handle);
 			if (!DISABLED)
 			{
 				if (tmpFiles != null)
 				{
+					
 					lock (tmpFiles)
 					{
-						foreach (GxFile s in tmpFiles)
+						if (tmpFiles.ContainsKey(handle))
 						{
-							s.Delete();
+							foreach (GxFile s in tmpFiles[handle])
+							{
+								s.Delete();
+								GXLogging.Debug(log, "File.Delete ", s.GetAbsoluteName());
+							}
+							tmpFiles[handle].Clear();
 						}
-						tmpFiles.Clear();
 					}
 				}
 			}
@@ -267,9 +294,10 @@ namespace GeneXus.Application
 			if (!DISABLED)
 			{
 				GXLogging.Debug(log, "GXFileWatcher Dispose");
-#if !NETCORE
-				if (t != null && t.IsAlive) t.Abort();
-#endif
+				if (running)
+				{
+					cts.Cancel();
+				}
 				DeleteWebAppTemporaryFiles(true);
 			}
 		}

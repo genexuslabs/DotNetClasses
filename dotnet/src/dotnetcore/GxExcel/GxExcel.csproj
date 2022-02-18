@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <DefineConstants>NETCORE</DefineConstants>
+    <AssemblyName>GxExcelI</AssemblyName>
 	<PackageTags>EPPlus Lite</PackageTags>
 	<PackageId>GeneXus.Excel.Core</PackageId>
   </PropertyGroup>
@@ -16,7 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="EPPlus" Version="4.5.3.2" />
-    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="log4net" Version="2.0.11" />
   </ItemGroup>
 
   <ItemGroup>

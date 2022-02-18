@@ -2,19 +2,24 @@
 	<PropertyGroup>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
-		<MajorFileVersion Condition="!$(GITHUB_REF.EndsWith('master'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
-		<MinorFileVersion>4</MinorFileVersion>
-		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).0</FileVersion>
-		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GITHUB_SHA)</InformationalVersion>
+		<MajorFileVersion Condition="$(GIT_REF.EndsWith('beta'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
+		<MinorFileVersion>17</MinorFileVersion>
+		<RevisionFileVersion Condition="'$(COMMIT_NUMBER)'!=''">$(COMMIT_NUMBER)</RevisionFileVersion>
+		<RevisionFileVersion Condition="'$(COMMIT_NUMBER)'==''">0</RevisionFileVersion>
+		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).$(RevisionFileVersion)</FileVersionWithoutRevision>
+		<FileVersionWithoutRevision Condition="$(GIT_REF.EndsWith('beta')) Or $(GIT_REF.EndsWith('master'))">$(MajorFileVersion).$(MinorFileVersion).0</FileVersionWithoutRevision>
+		<FileVersion>$(FileVersionWithoutRevision).$(RevisionFileVersion)</FileVersion>
+		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GIT_SHA)</InformationalVersion>
 		<Company>GeneXus</Company>
 		<AssemblyCulture></AssemblyCulture>
 		<Product>GeneXus</Product>
 		<AssemblyTrademark></AssemblyTrademark>
-		<Copyright>Copyright © 1988-2019 GeneXus. All Rights Reserved</Copyright>
-		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)GXclasses.snk</AssemblyOriginatorKeyFile>
+		<CopyrightYear>$([System.DateTime]::UtcNow.ToString("yyyy"))</CopyrightYear>
+		<Copyright>Copyright © 1988-$(CopyrightYear) GeneXus. All Rights Reserved</Copyright>
+		<AssemblyOriginatorKeyFile Condition="'$(ARTECH_SNK_FILE)'!=''">$(ARTECH_SNK_FILE)</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>GeneXus</Authors>
-		<SignAssembly>true</SignAssembly>
+		<SignAssembly Condition="'$(AssemblyOriginatorKeyFile)'!=''">true</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningLevel>4</WarningLevel>
 		<RunCodeAnalysis>false</RunCodeAnalysis>
@@ -22,13 +27,20 @@
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
-		<NoWarn>NU5105;CS0618</NoWarn>
+		<RepositoryCommit>$(GIT_SHA)</RepositoryCommit>
+		<NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023</NoWarn>
+		<IsPackable>true</IsPackable>
+		<DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+		<DeployDirectoryPlatformBin>gxnetcore\bin</DeployDirectoryPlatformBin>
+	</PropertyGroup>
+	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+		<DeployDirectoryPlatformBin>gxnet\bin</DeployDirectoryPlatformBin>
 	</PropertyGroup>
 
-	<Target Name="GetFileVersion">
-		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
-	</Target>
-	<Target Name="IsMaster">
-		<Message Importance="high" Text="IsMaster: True" Condition="$(GITHUB_REF.EndsWith('master'))"></Message>
+	<Target Name="GetFileVersionForPackage">
+		<Message Importance="high" Text="FileVersion:$(FileVersionWithoutRevision)"></Message>
 	</Target>
 </Project>

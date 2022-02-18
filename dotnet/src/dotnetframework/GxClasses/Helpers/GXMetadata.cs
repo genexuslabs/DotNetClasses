@@ -21,6 +21,9 @@ namespace GeneXus.Metadata
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Metadata.ClassLoader));
 
+#if NETCORE
+		private const string GXWEBPROCEDURE_TYPE = "GeneXus.Procedure.GXWebProcedure";
+#endif
 		static public Object GetInstance(string assemblyName, string fullClassName, Object[] constructorArgs)
 		{
 
@@ -30,7 +33,7 @@ namespace GeneXus.Metadata
 
 #if NETCORE
 				var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-				Assembly assem = asl.LoadFromAssemblyPath(Path.Combine(FileUtil.GetStartupDirectory(), assemblyName + ".dll"));
+				Assembly assem = asl.LoadFromAssemblyName(new AssemblyName(assemblyName));
 				Type classType = assem.GetType(fullClassName, true, true);
 #else
 				Assembly assem = Assembly.Load(new AssemblyName(assemblyName));
@@ -70,13 +73,13 @@ namespace GeneXus.Metadata
 			}
 		}
         static ConcurrentDictionary<string, Type> loadedAssemblies = new ConcurrentDictionary<string, Type>();
-		static public Type FindType(string defaultAssemblyName, string clss, Assembly defaultAssembly)
+		static public Type FindType(string defaultAssemblyName, string clss, Assembly defaultAssembly, bool ignoreCase = false)
 		{
-			return FindType(defaultAssemblyName, string.Empty, clss, defaultAssembly);
+			return FindType(defaultAssemblyName, string.Empty, clss, defaultAssembly, ignoreCase);
 		}
 		//ns = kb Namespace
 		//clssWithoutNamespace = fullname genexus object (includes module), p.e. genexus.sd.synchronization.offlineeventreplicator
-		static public Type FindType(string defaultAssemblyName, string ns, string clssWithoutNamespace, Assembly defaultAssembly)
+		static public Type FindType(string defaultAssemblyName, string ns, string clssWithoutNamespace, Assembly defaultAssembly, bool ignoreCase = false)
 		{
 
 			string clss = string.IsNullOrEmpty(ns) ? clssWithoutNamespace : string.Format("{0}.{1}", ns, clssWithoutNamespace);
@@ -92,7 +95,7 @@ namespace GeneXus.Metadata
                 {
 					try
 					{
-						objType = defaultAssembly.GetType(clss);
+						objType = ignoreCase? defaultAssembly.GetType(clss, false, ignoreCase): defaultAssembly.GetType(clss);
 					}
 					catch
 					{
@@ -107,7 +110,7 @@ namespace GeneXus.Metadata
 					{
 #if NETCORE
 						Assembly assem = asl.LoadFromAssemblyName(defaultAssemblyNameObj);
-						objType = assem.GetType(clss);
+						objType = ignoreCase ? assem.GetType(clss): assem.GetType(clss, false, ignoreCase);
 #else
 						objType = Assembly.Load(defaultAssemblyNameObj).GetType(clss);
 #endif
@@ -122,7 +125,7 @@ namespace GeneXus.Metadata
 					if (objType == null)
 						
 						if (Assembly.GetEntryAssembly() != null)
-							objType = Assembly.GetEntryAssembly().GetType(clss);
+							objType = ignoreCase ? Assembly.GetEntryAssembly().GetType(clss, false, ignoreCase) : Assembly.GetEntryAssembly().GetType(clss);
 				}
 				catch
 				{
@@ -132,7 +135,7 @@ namespace GeneXus.Metadata
 				{
 					if (objType == null)
 						
-						objType = Assembly.GetCallingAssembly().GetType(clss);
+						objType = ignoreCase ? Assembly.GetCallingAssembly().GetType(clss, false, ignoreCase) : Assembly.GetCallingAssembly().GetType(clss);
 				}
 				catch
 				{
@@ -152,7 +155,7 @@ namespace GeneXus.Metadata
                     
                     foreach (Assembly asby in AppDomain.CurrentDomain.GetAssemblies())
                     {
-                        objType = asby.GetType(clss);
+                        objType = ignoreCase ? asby.GetType(clss, false, ignoreCase) : asby.GetType(clss);
                         if (objType != null)
                             break;
                     }
@@ -190,7 +193,7 @@ namespace GeneXus.Metadata
                             objType = Assembly.LoadFrom(file).GetType(clss);
 #else
 							Assembly assem = asl.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(file)));
-							objType = assem.GetType(clss);
+							objType = ignoreCase ? assem.GetType(clss, false, ignoreCase) : assem.GetType(clss);
 #endif
 							if (objType != null)
                                 break;
@@ -218,9 +221,9 @@ namespace GeneXus.Metadata
 		{
 			return FindInstance(defaultAssemblyName, string.Empty, clss, constructorArgs, defaultAssembly);
 		}
-		static public object FindInstance(string defaultAssemblyName, string nspace, string clss, Object[] constructorArgs, Assembly defaultAssembly)
+		static public object FindInstance(string defaultAssemblyName, string nspace, string clss, Object[] constructorArgs, Assembly defaultAssembly, bool ignoreCase=false)
 		{
-			Type objType = FindType( defaultAssemblyName, nspace, clss, defaultAssembly);
+			Type objType = FindType( defaultAssemblyName, nspace, clss, defaultAssembly, ignoreCase);
 			GXLogging.Debug(log, "CreateInstance, Args ", ConstructorArgsString(constructorArgs));
 			return Activator.CreateInstance(objType, constructorArgs);
 		}
@@ -319,12 +322,13 @@ namespace GeneXus.Metadata
 			GXLogging.Debug(log, "Execute assembly '" + assmbly + "', namespace '" + nspace + "'  class '" + className + "' mthd '" + mthd + "'");
 
 			Type objType = FindType(assmbly, nspace, className, Assembly.GetCallingAssembly());
+
 #if NETCORE
-			if (objType.FullName.Contains("GXHttpHandler"))
+			if (typeof(IHttpHandler).IsAssignableFrom(objType) && (objType.BaseType.FullName!=GXWEBPROCEDURE_TYPE))
 #else
-			if (objType.IsSubclassOf(typeof(GeneXus.Http.GXHttpHandler)))
+			if (objType.IsSubclassOf(typeof(GeneXus.Http.GXHttpHandler)) && !objType.IsSubclassOf(typeof(Procedure.GXWebProcedure)))
 #endif
-				throw new GxClassLoaderException(": (" + assmbly + "). Loading of web object not allowed in WebExecute.");
+			throw new GxClassLoaderException(": (" + assmbly + "). Loading of web object not allowed in WebExecute.");
 			Object o = Activator.CreateInstance(objType, constructorArgs);
 
 			ExecuteVoidRef(o, mthd, args);

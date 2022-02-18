@@ -1,54 +1,81 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using GeneXus.Utils;
-using System.Net;
-using BeIT.MemCached;
-using GeneXus.Configuration;
-using log4net;
-using GeneXus.Services;
 using System.Security;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Enyim.Caching;
+using Enyim.Caching.Configuration;
+using Enyim.Caching.Memcached;
+using GeneXus.Services;
+using GeneXus.Utils;
 
 namespace GeneXus.Cache
 {
 	[SecuritySafeCritical]
 	public class Memcached : ICacheService2
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Memcached));
-		
+		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(typeof(Memcached));
+
 		MemcachedClient _cache;
+		const int DEFAULT_MEMCACHED_PORT = 11211;
 		public Memcached() 
 		{
 			_cache = InitCache();
 		}
 		MemcachedClient InitCache()
 		{
-            GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
-            String address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+			GXServices services = ServiceFactory.GetGXServices();
+			String address = string.Empty;
+			if (services != null)
+			{
+				GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
+				address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+			}
+
+#if NETCORE
+			var loggerFactory = new Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory();
+			MemcachedClientConfiguration config = new MemcachedClientConfiguration(loggerFactory, new MemcachedClientOptions());
+#else
+			MemcachedClientConfiguration config = new MemcachedClientConfiguration();
+#endif
 			if (!String.IsNullOrEmpty(address))
 			{
-				MemcachedClient.Setup("instance", address.Split(',', ';', ' '));
+				foreach (string host in address.Split(',', ';', ' ')) {
+					if (!host.Contains(':'))
+					{
+						config.AddServer(host, DEFAULT_MEMCACHED_PORT);
+					}
+					else
+					{
+						config.AddServer(host);
+					}
+				}
+				config.Protocol = MemcachedProtocol.Binary;
 			}
 			else
 			{
-				MemcachedClient.Setup("instance", new string[] { "127.0.0.1:11211" });
+				config.AddServer("127.0.0.1", 11211);
 			}
-			return MemcachedClient.GetInstance("instance");
+#if NETCORE
+			return new MemcachedClient(loggerFactory, config);
+#else
+			return new MemcachedClient(config);
+#endif
 		}
-
+		[SecurityCritical]
 		private bool Get<T>(string key, out T value)
 		{
 			if (default(T) == null)
 			{
-				value = (T)_cache.Get(key);
+				value = Deserialize<T>(_cache.Get(key) as string);
 				if (value == null) GXLogging.Debug(log, "Get<T>, misses key '" + key + "'");
 
 				return value != null;
 			}
 			else
 			{
-				object oValue = _cache.Get(key);
+				object oValue = Deserialize<T>(_cache.Get(key) as string);
 				if (oValue != null)
 				{
 					value = (T)Convert.ChangeType(oValue, typeof(T));
@@ -62,22 +89,25 @@ namespace GeneXus.Cache
 				}
 			}
 		}
-		[SecuritySafeCritical]
+
 		public IDictionary<string, T> GetAll<T>(string cacheid, IEnumerable<string> keys)
 		{
 			if (keys != null)
 			{
 				var prefixedKeys = Key(cacheid, keys);
-				string[] arrKeys = prefixedKeys.ToArray();
-				object[] result = _cache.Get(arrKeys);
+#if NETCORE
+				IDictionary<string, string> result= _cache.Get<string>(prefixedKeys);
+#else
+				IDictionary<string, object> result= _cache.Get(prefixedKeys);
+#endif
 				Dictionary<string, T> dictionaryResult = new Dictionary<string, T>();
 				int index = 0;
 				foreach (string key in prefixedKeys)
 				{
-					if (result[index] == null)
+					if (!result.ContainsKey(key))
 						dictionaryResult.Add(key, default(T));
 					else
-						dictionaryResult.Add(key, (T)Convert.ChangeType(result[index], typeof(T)));
+						dictionaryResult.Add(key, Deserialize<T>(result[key] as string));
 					index++;
 				}
 				return dictionaryResult;
@@ -86,37 +116,38 @@ namespace GeneXus.Cache
 			{
 				return null;
 			}
+
 		}
-		[SecuritySafeCritical]
+
+
 		public void SetAll<T>(string cacheid, IEnumerable<string> keys, IEnumerable<T> values, int duration = 0)
 		{
 			if (keys != null && values!=null && keys.Count() == values.Count())
 			{
 				var prefixedKeys = Key(cacheid, keys);
-				IDictionary<string, T> dictionary = new Dictionary<string, T>();
 				IEnumerator<T> valuesEnumerator = values.GetEnumerator();
 				foreach (string key in prefixedKeys)
 				{
 					if (valuesEnumerator.MoveNext())
 					{
-						_cache.Set(key, valuesEnumerator.Current, TimeSpan.FromMinutes(duration));
+						_cache.Store(StoreMode.Set, key, Serialize(valuesEnumerator.Current), TimeSpan.FromMinutes(duration));
 					}
 				}
 			}
 		}
-
+	
 		private void Set<T>(string key, T value, int duration)
 		{
 			GXLogging.Debug(log,"Set<T> key:" + key + " value " + value + " valuetype:" + value.GetType());
             if (duration > 0)
-			    _cache.Set(key, value, TimeSpan.FromMinutes(duration));
+				_cache.Store(StoreMode.Set, key, Serialize(value), TimeSpan.FromMinutes(duration));
             else
-                _cache.Set(key, value);
-        }
+				_cache.Store(StoreMode.Set, key, Serialize(value));
+		}
 
 		private void Set<T>(string key, T value)
 		{
-			_cache.Set(key, value);
+			_cache.Store(StoreMode.Set, key, Serialize(value));
 		}
 
 		public bool Get<T>(string cacheid, string key, out T value)
@@ -129,7 +160,7 @@ namespace GeneXus.Cache
 		{
 			Set<T>(Key(cacheid, key), value);
 		}
-
+		[SecuritySafeCritical]
 		public void Set<T>(string cacheid, string key, T value, int durationMinutes)
 		{
 			Set<T>(Key(cacheid, key), value, durationMinutes);
@@ -142,20 +173,18 @@ namespace GeneXus.Cache
 
 		public void ClearKey(string key)
 		{
-			_cache.Delete(key);
+			_cache.Remove(key);
 		}
-		[SecuritySafeCritical]
 		public void ClearCache(string cacheid)
 		{
 			Nullable<long> prefix = new Nullable<long>(KeyPrefix(cacheid).Value + 1);
-			_cache.Set(cacheid, prefix);
+			_cache.Store(StoreMode.Set, cacheid, Serialize(prefix));
 		}
-
 		public void ClearAllCaches()
 		{
 			_cache.FlushAll();
 		}
-
+		[SecurityCritical]
 		private Nullable<long> KeyPrefix(string cacheid)
 		{
 			Nullable<long> prefix;
@@ -166,6 +195,7 @@ namespace GeneXus.Cache
 			}
 			return prefix;
 		}
+		[SecurityCritical]
 		private string Key(string cacheid, string key)
 		{
 			return FormatKey(cacheid, key, KeyPrefix(cacheid));
@@ -179,6 +209,26 @@ namespace GeneXus.Cache
 		{
 			return cacheid + prefix + GXUtil.GetHash(key);
 		}
-
+		static string Serialize(object o)
+		{
+			if (o == null)
+			{
+				return null;
+			}
+			JsonSerializerOptions opts = new JsonSerializerOptions();
+			opts.Converters.Add(new DBNullConverter());
+			return JsonSerializer.Serialize(o, opts);
+		}
+		[SecurityCritical]
+		static T Deserialize<T>(string value)
+		{
+			if (value == null)
+			{
+				return default(T);
+			}
+			JsonSerializerOptions opts = new JsonSerializerOptions();
+			opts.Converters.Add(new ObjectToInferredTypesConverter());
+			return JsonSerializer.Deserialize<T>(value, opts);
+		}
 	}
 }

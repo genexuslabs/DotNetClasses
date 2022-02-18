@@ -95,8 +95,12 @@ namespace GX
 		{
 			get
 			{
-				if (GxContext.Current.HttpContext != null)
-					return GxContext.Current.HttpContext.Request.Headers["PlatformName"];
+				if (GxContext.Current.HttpContext != null) {
+					string platformName = GxContext.Current.HttpContext.Request.Headers["PlatformName"];
+					if (string.IsNullOrEmpty(platformName))
+						platformName = GxContext.Current.HttpContext.Request.Headers["DevicePlatform"];
+					return platformName;
+				}
 				else
 					return string.Empty;
 			}
@@ -117,6 +121,15 @@ namespace GX
 				}
 				return deviceType;
 			}
+		}
+
+		public enum DeviceTypeEnum
+		{
+			iOS = 0,
+			Android = 1,
+			Blackberry = 2,
+			Windows = 3,
+			Web = 4
 		}
 	}
 	public class SDServerAPI

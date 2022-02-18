@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net462</TargetFramework>
 		<AssemblyName>GxExcelI</AssemblyName>
 		<RootNamespace>GxExcelI</RootNamespace>
 		<PackageTags>Excel</PackageTags>
@@ -9,7 +9,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="EPPlus" Version="4.5.3.2" />
-		<PackageReference Include="log4net" Version="2.0.8" />
+		<PackageReference Include="log4net" Version="2.0.11" />
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="Interop.GXOFFICE2Lib">

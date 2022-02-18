@@ -7,9 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-#if NETCORE
 using GxClasses.Helpers;
-#endif
+
 using System.Reflection.Emit;
 
 namespace GeneXus.Services
@@ -18,7 +17,9 @@ namespace GeneXus.Services
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.GXServices));
 		public static string STORAGE_SERVICE = "Storage";
+		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
+		public static string SESSION_SERVICE = "Session";
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
 		private static string[] SERVICES_FILE = new string[] { "CloudServices.dev.config", "CloudServices.config" };
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
@@ -109,8 +110,7 @@ namespace GeneXus.Services
 				reader.Read();
 			}
 
-			GXProperties properties = ProcessProperties(reader);
-
+			GXProperties properties = ProcessProperties(type, name, reader);
 
 			GXService service = new GXService();
 			service.Name = name;
@@ -119,13 +119,13 @@ namespace GeneXus.Services
 			service.Properties = properties;
 			service.AllowMultiple = string.IsNullOrEmpty(allowMultiple) ? false : bool.Parse(allowMultiple);
 			if (service.AllowMultiple)
-				services.Add($"{service.Type}:{service.Name}", service);
+				services[$"{service.Type}:{service.Name}"] = service;
 			else
-				services.Add(type, service);
+				services[type] = service;
 
 		}
 
-		private GXProperties ProcessProperties(GXXMLReader reader)
+		private GXProperties ProcessProperties(string serviceType, string serviceName, GXXMLReader reader)
 		{
 			GXProperties properties = new GXProperties();
 			reader.Read();
@@ -135,6 +135,10 @@ namespace GeneXus.Services
 				string name = reader.Value;
 				reader.ReadType(1, "Value");
 				string value = reader.Value;
+
+				if (EnvVarReader.GetEnvironmentValue(serviceType, serviceName, name, out string envVarValue))
+					value = envVarValue;
+
 				properties.Add(name, value);
 				reader.Read();
 				reader.Read();
@@ -171,11 +175,31 @@ namespace GeneXus.Services
 			return GXServices.Instance;
 		}
 
+		public static ExternalProvider GetExternalProviderAPI()
+		{
+			externalProvider = GetExternalProviderImpl(GXServices.STORAGE_APISERVICE);
+			if (externalProvider == null)
+			{
+				externalProvider = GetExternalProvider();
+			}
+			return externalProvider;
+		}
+
 		public static ExternalProvider GetExternalProvider()
 		{
 			if (externalProvider == null)
 			{
-				GXService providerService = GetGXServices().Get(GXServices.STORAGE_SERVICE);
+				externalProvider = GetExternalProviderImpl(GXServices.STORAGE_SERVICE);
+			}
+			return externalProvider;
+		}
+
+		public static ExternalProvider GetExternalProviderImpl(string service)
+		{
+			ExternalProvider externalProviderImpl = null;
+			if (GetGXServices() != null)
+			{
+				GXService providerService = GetGXServices().Get(service);
 				if (providerService != null)
 				{
 					try
@@ -187,8 +211,7 @@ namespace GeneXus.Services
 #else
 						Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
 #endif
-
-						externalProvider = (ExternalProvider)Activator.CreateInstance(type);
+						externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
 					}
 					catch (Exception e)
 					{
@@ -197,7 +220,7 @@ namespace GeneXus.Services
 					}
 				}
 			}
-			return externalProvider;
+			return externalProviderImpl;
 		}
 	}
 
@@ -208,6 +231,7 @@ namespace GeneXus.Services
 		string Upload(string localFile, string objectName, GxFileType fileType);
 		void Download(string objectName, string localFile, GxFileType fileType);
 		string Get(string objectName, GxFileType fileType, int urlMinutes);
+		string GetUrl(string objectName, GxFileType fileType, int urlMinutes);
 		void Delete(string objectName, GxFileType fileType);
 		bool Exists(string objectName, GxFileType fileType);
 		string Rename(string objectName, string newName, GxFileType fileType);
@@ -224,9 +248,9 @@ namespace GeneXus.Services
 		List<String> GetFiles(string directoryName, string filter = "");
 		List<String> GetSubDirectories(string directoryName);
 		Stream GetStream(string objectName, GxFileType fileType);
-		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);
-		bool GetObjectNameFromURL(string url, out string objectName);
+		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);		
 		string GetBaseURL();
+		bool TryGetObjectNameFromURL(string objectNameOrUrl, out string providerObjectName);
 		string StorageUri { get; }
 	}
 }

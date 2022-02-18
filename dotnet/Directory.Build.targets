@@ -1,18 +1,80 @@
 <Project>
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<SignAssembly>false</SignAssembly>
-		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>   
-		<WarningsNotAsErrors>CS8032;$(WarningsNotAsErrors)</WarningsNotAsErrors>
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+		<WarningsNotAsErrors>CS8032;CS1609;CS1069;$(WarningsNotAsErrors)</WarningsNotAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(OverridePackable)'=='true'">
 		<IsPackable>true</IsPackable>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(OutputType)' == 'Exe' OR '$(OutputType)' == 'WinExe'">
+		<ApplicationIcon >$(MSBuildThisFileDirectory)\src\resources\Default_App.ico</ApplicationIcon>
+	</PropertyGroup>
 	
-	<ItemGroup Condition="'$(TargetFramework)'!='netcoreapp3.1'">
+	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+		<DeployDirectory>$(MSBuildThisFileDirectory)build</DeployDirectory>
+		<!--Set a default deploy dir-->
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(DeployDirectory)'!=''">
+		<DeployDirectoryWithSep>$(DeployDirectory)\</DeployDirectoryWithSep>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(DeployDirectory)'==''">
+		<DeployDirectoryWithSep/>
+	</PropertyGroup>
+
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+
+	<UsingTask
+    TaskName="ReplaceFileText"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<InputFilename ParameterType="System.String" Required="true" />
+			<OutputFilename ParameterType="System.String" Required="true" />
+			<MatchExpression ParameterType="System.String" Required="true" />
+			<ReplacementText ParameterType="System.String" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System"/>
+			<Using Namespace="System.IO"/>
+			<Using Namespace="System.Text.RegularExpressions" />
+			<Code Type="Fragment" Language="cs">
+				<![CDATA[  
+          File.WriteAllText(
+            OutputFilename,
+            Regex.Replace(File.ReadAllText(InputFilename), MatchExpression, ReplacementText)
+            );
+        ]]>
+			</Code>
+		</Task>
+	</UsingTask>
+
+
+	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND ('$(TargetFramework)'=='net6.0')">
+		<ReplaceFileText
+       InputFilename="$(OutDir)$(ProjectName).deps.json"
+       OutputFilename="$(OutDir)$(ProjectName).deps.json"
+       MatchExpression="GeneXus\.Classes\.Core"
+       ReplacementText="GxClasses" />
+		<ReplaceFileText
+       InputFilename="$(OutDir)$(ProjectName).deps.json"
+       OutputFilename="$(OutDir)$(ProjectName).deps.json"
+       MatchExpression="GeneXus\.Classes\.Web\.Core"
+       ReplacementText="GxClasses.Web" />
+	   <MakeDir Directories="$(TargetFramework)"/>
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(TargetFramework)\$(ProjectName).deps.json" />
+	</Target>
+
+	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)$(TargetFileName)')">
+		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectoryWithSep)$(DeployDirectoryPlatformBin)"></Message>
+		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectoryWithSep)$(DeployDirectoryPlatformBin)" />
+	</Target>
 
 </Project>

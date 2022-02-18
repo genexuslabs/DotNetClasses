@@ -4,7 +4,6 @@ using System.IO;
 using System.Collections;
 using System.Threading;
 using System.Text;
-using iTextSharp.text.io;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 using System.Globalization;
@@ -17,13 +16,14 @@ using iTextSharp.text;
 
 using GeneXus.Printer;
 using iTextSharp.text.html.simpleparser;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Security;
 using GeneXus;
-using GeneXus.Configuration;
+using GeneXus.Utils;
+using System.Reflection;
+using GeneXus.Metadata;
 
-namespace com.genexus.reports 
+namespace com.genexus.reports
 {
 
 	internal enum VerticalAlign
@@ -45,7 +45,9 @@ namespace com.genexus.reports
 		private bool fontUnderline;
 		private bool fontStrikethru;
 		private int fontSize;
-		private BaseColor backColor, foreColor;
+
+		//Color for, BaseColor for => Itext5
+		private object backColor, foreColor, templateColorFill;
 		private Stream outputStream = null; 
 											
 		private ParseINI props = new ParseINI();
@@ -74,7 +76,6 @@ namespace com.genexus.reports
 		private BaseFont templateFont;
 		private int templateFontSize;
 		private bool backFill = true;
-		private BaseColor templateColorFill;
 		private int templateAlignment;
 		private int pages = 0;
 		private bool templateCreated = false;
@@ -97,6 +98,7 @@ namespace com.genexus.reports
 		int STYLE_NONE_CONST = 1;
 		int runDirection;
 		int justifiedType;
+		static Assembly iTextAssembly = typeof(Document).Assembly;
 
 		public bool GxOpenDoc(string fileName)
 		{
@@ -125,7 +127,7 @@ namespace com.genexus.reports
 			catch (IOException) { props = new ParseINI(); }
 			
 			String acrobatLocation = props.getGeneralProperty(Const.ACROBAT_LOCATION); 
-			if (acrobatLocation == null)
+			if (acrobatLocation == null && GXUtil.IsWindowsPlatform)
 			{
 				try
 				{
@@ -263,6 +265,9 @@ namespace com.genexus.reports
 				}
 
 				loadProps();
+#if NETCORE
+				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
 			}
 			catch (Exception ex)
 			{
@@ -357,9 +362,17 @@ namespace com.genexus.reports
 				DEBUG = false;
 			}
 			try {
-				Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, "."),
+				string systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+				if (!string.IsNullOrEmpty(systemFolder))
+				{
+					Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, "."),
 															   Path.Combine(
-															   Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.System)).FullName, "fonts")});
+															   Directory.GetParent(systemFolder).FullName, "fonts")});
+				}
+				else
+				{
+					Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, ".")});
+				}
 			}
 			catch (SecurityException ex)
 			{
@@ -392,8 +405,6 @@ namespace com.genexus.reports
 			{
 				GXLogging.Debug(log,"GxDrawRect error", de);
 			}
-			document.AddAuthor(Const.AUTHOR);
-			document.AddCreator(Const.CREATOR);
 			document.Open();
 		}
 
@@ -659,7 +670,7 @@ namespace com.genexus.reports
 
 				if (backMode != 0)
 				{
-					cb.SetColorFill(new BaseColor(backRed, backGreen, backBlue));
+					ClassLoader.Invoke(cb, "SetColorFill", new object[] { GetColor(backRed, backGreen, backBlue) });
 					cb.FillStroke();
 				}
 				cb.ClosePathStroke();
@@ -698,7 +709,7 @@ namespace com.genexus.reports
 					roundRectangle(cb, x1, y1, w, h,
 						cRadioTL, cRadioTR,
 						cRadioBL, cRadioBR);
-					cb.SetColorFill(new BaseColor(backRed, backGreen, backBlue));
+					ClassLoader.Invoke(cb, "SetColorFill", new object[] { GetColor(backRed, backGreen, backBlue) });
 					cb.FillStroke();
 					cb.SetLineWidth(penAux);
 
@@ -885,8 +896,8 @@ namespace com.genexus.reports
 			this.fontUnderline = fontUnderline;
 			this.fontStrikethru = fontStrikethru;
 			this.fontSize = fontSize;
-			foreColor = new BaseColor(foreRed, foreGreen, foreBlue);
-			backColor = new BaseColor(backRed, backGreen, backBlue);
+			foreColor = GetColor(foreRed, foreGreen, foreBlue);
+			backColor = GetColor(backRed, backGreen, backBlue);
 
 			backFill = (backMode != 0);
 			try
@@ -962,7 +973,7 @@ namespace com.genexus.reports
 						fontPath = fontDescriptor.getTrueTypeFontLocation(fontName);
 						if (string.IsNullOrEmpty(fontPath))
 						{
-							baseFont = BaseFont.CreateFont("Helvetica", BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+							baseFont = CreateDefaultFont();
 							foundFont = false;
 						}
 						else
@@ -972,8 +983,6 @@ namespace com.genexus.reports
 					}
 					if (foundFont)
 					{
-						GXLogging.Debug(log,"foundFont");
-
 						if (IsEmbeddedFont(fontName))
 						{
 							baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
@@ -1006,13 +1015,17 @@ namespace com.genexus.reports
 			}
 			catch (DocumentException de)
 			{
-				GXLogging.Debug(log,"GxAttris error", de);
+				GXLogging.Debug(log,"GxAttris DocumentException", de);
 				throw de;
 			}
-			catch (IOException ioe)
+			catch (Exception e)
 			{
-				GXLogging.Debug(log,"GxAttris io error", ioe);
+				GXLogging.Debug(log, "GxAttris error", e);
+				baseFont = CreateDefaultFont();
 			}
+		}
+		private BaseFont CreateDefaultFont() {
+			return BaseFont.CreateFont("Helvetica", BaseFont.WINANSI, BaseFont.NOT_EMBEDDED); 
 		}
 		private string GetFontLocation(string fontName)
 		{
@@ -1057,7 +1070,12 @@ namespace com.genexus.reports
 			{
 				if (!asianFontsDllLoaded)
 				{
-					StreamUtil.AddToResourceSearch(System.Reflection.Assembly.Load("iTextAsian"));
+					Assembly itextAsian = Assembly.Load("iTextAsian");
+					if (IsItext4())
+						ClassLoader.InvokeStatic(iTextAssembly, "iTextSharp.text.pdf.BaseFont", "AddToResourceSearch", new object[] { itextAsian });
+					else
+						ClassLoader.InvokeStatic(iTextAssembly, "iTextSharp.text.io.StreamUtil", "AddToResourceSearch", new object[] { itextAsian });
+
 					asianFontsDllLoaded = true;
 				}
 			}
@@ -1065,6 +1083,10 @@ namespace com.genexus.reports
 			{
 				GXLogging.Debug(log,"LoadAsianFontsDll error", ae);
 			}
+		}
+		private bool IsItext4()
+		{
+			return iTextAssembly.GetName().Version.Major==4;
 		}
 		public void setAsianFont(String fontName, String style)
 		{
@@ -1130,13 +1152,13 @@ namespace com.genexus.reports
 
 			if (printRectangle && (border == 1 || backFill))
 			{
-				GxDrawRect(left, top, right, bottom, border, foreColor.R, foreColor.G, foreColor.B, backFill ? 1 : 0, backColor.R, backColor.G, backColor.B, 0, 0);
+				GxDrawRect(left, top, right, bottom, border, GetColorR(foreColor), GetColorG(foreColor), GetColorB(foreColor), backFill ? 1 : 0, GetColorR(backColor), GetColorG(backColor), GetColorB(backColor), 0, 0);
 			}
 			Font font = new Font(baseFont, fontSize);
 			int arabicOptions = 0;
 			PdfContentByte cb = writer.DirectContent;
 			cb.SetFontAndSize(baseFont, fontSize);
-			cb.SetColorFill(foreColor);
+			ClassLoader.Invoke(cb, "SetColorFill", new object[] { foreColor });
 			sTxt = sTxt.TrimEnd(TRIM_CHARS);
 			float captionHeight = baseFont.GetFontDescriptor(BaseFont.CAPHEIGHT, fontSize);
 			float rectangleWidth = baseFont.GetWidthPoint(sTxt, fontSize);
@@ -1179,8 +1201,7 @@ namespace com.genexus.reports
 			{
 				
 				StyleSheet styles = new StyleSheet();
-				TrueTypeFont ttFont = baseFont as TrueTypeFont;
-				if (ttFont != null)
+				if (IsTrueType(baseFont))
 				{
 					Hashtable locations = GetFontLocations();
 					foreach (string fontName in locations.Keys)
@@ -1208,24 +1229,101 @@ namespace com.genexus.reports
 				bottomAux = (float)convertScale(bottom);
 				topAux = (float)convertScale(top);
 
-				ColumnText Col = new ColumnText(cb);
-				
-				Col.SetSimpleColumn(leftAux + leftMargin,
-				(float)this.pageSize.Top - bottomAux - topMargin - bottomMargin,
-				 rightAux + leftMargin,
-				(float)this.pageSize.Top - topAux - topMargin - bottomMargin);
 
+				ColumnText Col = new ColumnText(cb);
+				int colAlignment = ColumnAlignment(alignment);
+				if (colAlignment != 0)
+					Col.Alignment = colAlignment;
+				ColumnText simulationCol = new ColumnText(null);
+				float drawingPageHeight = (float)this.pageSize.Top - topMargin - bottomMargin;
+
+				Rectangle rect = new Rectangle(leftAux + leftMargin,
+				drawingPageHeight - bottomAux,
+				 rightAux + leftMargin,
+				drawingPageHeight - topAux);
+
+				SetSimpleColumn(Col, rect);
+				SetSimpleColumn(simulationCol, rect);
+				
 				try
 				{
-					List<IElement> objects = HTMLWorker.ParseToList(new StringReader(sTxt), styles);
-					for (int k = 0; k < objects.Count; ++k)
-						Col.AddElement((IElement)objects[k]);
+					PdfPCell cell = GetPdfCell();
+					PdfPTable t = GetPdfTable(rightAux - leftAux);
+
+					bool firstPar = true;
+					ICollection objects = (ICollection)ClassLoader.InvokeStatic(iTextAssembly, typeof(HTMLWorker).FullName, "ParseToList", new object[] { new StringReader(sTxt), styles });
+					bool drawWithTable = IsItext4() && DrawWithTable(objects);
+					
+					foreach (object element in objects)
+					{
+						if (PageHeightExceeded(bottomAux, drawingPageHeight))
+						{
+							simulationCol.AddElement((IElement)element);
+							simulationCol.Go(true);
+
+							if (simulationCol.YLine < bottomMargin)
+							{
+								rect = new Rectangle(leftAux + leftMargin, drawingPageHeight - bottomAux, rightAux + leftMargin, drawingPageHeight - topAux);
+
+								bottomAux -= drawingPageHeight;
+
+								if (drawWithTable)
+								{
+									ClassLoader.Invoke(t, "AddCell", new object[] { cell });
+									t.WriteSelectedRows(0, -1, leftAux + leftMargin, drawingPageHeight - topAux, cb);
+								}
+
+								GxEndPage();
+								GxStartPage();
+								simulationCol = new ColumnText(null);
+								SetSimpleColumn(simulationCol, rect);
+								simulationCol.AddElement((IElement)element);
+
+								if (drawWithTable)
+								{
+									cell = GetPdfCell();
+									t = GetPdfTable(rightAux - leftAux);
+								}
+								else
+								{
+									Col = new ColumnText(cb);
+									if (colAlignment != 0)
+										Col.Alignment = colAlignment;
+									SetSimpleColumn(Col, rect);
+								}
+
+							}
+						}
+						Paragraph p = element as Paragraph;
+						if (p != null)
+						{
+							if (colAlignment != 0)
+								p.Alignment = colAlignment;
+							if (firstPar && drawWithTable)
+							{
+								p.SetLeading(0, 1);
+								firstPar = false;
+							}
+						}
+						if (drawWithTable)
+							cell.AddElement((IElement)element);
+						else
+						{
+							Col.AddElement((IElement)element);
+							Col.Go();
+						}
+					}
+					if (drawWithTable)
+					{
+						ClassLoader.Invoke(t, "AddCell", new object[] { cell });
+						t.WriteSelectedRows(0, -1, leftAux + leftMargin, drawingPageHeight - topAux, cb);
+					}
 				}
 				catch (Exception ex1)
 				{
 					GXLogging.Debug(log, "Error adding html: ", ex1);
 				}
-				Col.Go();
+				
 			}
 			else if (barcode != null)
 			{
@@ -1265,7 +1363,7 @@ namespace com.genexus.reports
 					else
 						barcode.X = Const.OPTIMAL_MINIMU_BAR_WIDTH_LARGE_FONT;
 
-					Image imageCode = barcode.CreateImageWithBarcode(cb, backFill ? backColor : null, foreColor);
+					Image imageCode = (Image)ClassLoader.Invoke(barcode, "CreateImageWithBarcode", new object[] { cb, backFill ? backColor : null, foreColor });
 					imageCode.SetAbsolutePosition(leftAux + leftMargin, rectangle.Bottom);
 					barcode.BarHeight = rectangle.Height;
 					imageCode.ScaleToFit(rectangle.Width, rectangle.Height);
@@ -1295,7 +1393,7 @@ namespace com.genexus.reports
 							rectangle = new iTextSharp.text.Rectangle(leftAux + leftMargin, (float)this.pageSize.Top - bottomAux - topMargin - bottomMargin, leftAux + leftMargin + rectangleWidth, (float)this.pageSize.Top - topAux - topMargin - bottomMargin);
 							break;
 					}
-					rectangle.BackgroundColor = backColor;
+					ClassLoader.SetPropValue(rectangle, "BackgroundColor", backColor);
 					try
 					{
 						document.Add(rectangle);
@@ -1313,7 +1411,7 @@ namespace com.genexus.reports
 				if (fontUnderline)
 				{
 					GXLogging.Debug(log,"underlineSeparation: " + underlineSeparation);
-					GXLogging.Debug(log,"Kerning: " + baseFont.GetKerning('a', 'b'));
+					GXLogging.Debug(log,"Kerning: " + GetKerning(baseFont, 'a', 'b'));
 
 					underline = new iTextSharp.text.Rectangle(0, 0);
 					switch (alignment)
@@ -1338,7 +1436,7 @@ namespace com.genexus.reports
 								this.pageSize.Top - bottomAux - topMargin - bottomMargin + startHeight - underlineHeight);
 							break;
 					}
-					underline.BackgroundColor = foreColor;
+					ClassLoader.SetPropValue(underline, "BackgroundColor", foreColor);
 					try
 					{
 						document.Add(underline);
@@ -1356,7 +1454,7 @@ namespace com.genexus.reports
 					float strikethruSeparation = lineHeight / 2;
 
 					GXLogging.Debug(log,"underlineSeparation: " + underlineSeparation);
-					GXLogging.Debug(log,"Kerning: " + baseFont.GetKerning('a', 'b'));
+					GXLogging.Debug(log,"Kerning: " + GetKerning(baseFont,'a', 'b'));
 					switch (alignment)
 					{
 						case 1: // Center Alignment
@@ -1379,7 +1477,7 @@ namespace com.genexus.reports
 								this.pageSize.Top - bottomAux - topMargin - bottomMargin + startHeight - underlineHeight + strikethruSeparation);
 							break;
 					}
-					underline.BackgroundColor = foreColor;
+					ClassLoader.SetPropValue(underline, "BackgroundColor", foreColor);
 					try
 					{
 						document.Add(underline);
@@ -1461,14 +1559,82 @@ namespace com.genexus.reports
 				}
 			}
 		}
+
+		private PdfPTable GetPdfTable(float totalWidth)
+		{
+			PdfPTable table = new PdfPTable(1);
+			table.TotalWidth = totalWidth;
+			return table;
+		}
+
+		private PdfPCell GetPdfCell()
+		{
+			PdfPCell cell = new PdfPCell();
+			cell.Border = Rectangle.NO_BORDER;
+			cell.Padding = 0;
+			return cell;
+		}
+
+		private bool DrawWithTable(ICollection objects)
+		{
+			bool allImages = true;
+			foreach (object element in objects)
+			{
+				Paragraph p = element as Paragraph;
+				if (p != null)
+				{
+					foreach (Chunk ch in p.Chunks)
+					{
+						if (!ch.HasAttributes() || ch.Attributes["IMAGE"] == null)
+							return false;
+					}
+				}
+				else
+				{
+					allImages = false;
+				}
+			}
+			return allImages;
+		}
+
+		private int GetColorB(object backColor)
+		{
+			return (int)ClassLoader.GetPropValue(backColor, "B");
+		}
+
+		private int GetColorG(object backColor)
+		{
+			return (int)ClassLoader.GetPropValue(backColor, "G");
+		}
+
+		private int GetColorR(object backColor)
+		{
+			return (int)ClassLoader.GetPropValue(backColor, "R");
+		}
+
+		private int GetKerning(BaseFont baseFont, char v1, char v2)
+		{
+			if (IsItext4())
+				return baseFont.GetKerning(v1, v2);
+			else
+				return (int)ClassLoader.Invoke(baseFont, "GetKerning", new object[] {(int)Char.GetNumericValue(v1), (int)Char.GetNumericValue(v2) });
+			
+		}
+
+		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
+		{
+			return bottomAux > drawingPageHeight;
+		}
+
 #pragma warning restore CS0612 // Type or member is obsolete
+
 		ColumnText SimulateDrawColumnText(PdfContentByte cb, Rectangle rect, Paragraph p, float leading, int runDirection, int alignment)
 		{
 			ColumnText Col = new ColumnText(cb);
 			Col.RunDirection = runDirection;
 			Col.Alignment = alignment;
 			Col.SetLeading(leading, 1);
-			Col.SetSimpleColumn(rect);
+			SetSimpleColumn(Col, rect);
 			Col.AddText(p);
 			Col.Go(true);
 			return Col;
@@ -1494,18 +1660,22 @@ namespace com.genexus.reports
 			ColumnText Col = new ColumnText(cb);
 			Col.RunDirection = runDirection;
 
-			if (alignment == Element.ALIGN_JUSTIFIED)
-				Col.Alignment = justifiedType;
-			else
-				Col.Alignment = alignment;
+			Col.Alignment = ColumnAlignment(alignment);
 
 			if (linesCount <= 1)
 				Col.SetLeading(0, 1);
 			else
 				Col.SetLeading(leading, 1);
-			Col.SetSimpleColumn(rect);
+			SetSimpleColumn(Col, rect);
 			Col.AddText(p);
 			Col.Go();
+		}
+		private int ColumnAlignment(int alignment)
+		{
+			if (alignment == Element.ALIGN_JUSTIFIED)
+				return justifiedType;
+			else
+				return alignment;
 		}
 		public void GxClearAttris()
 		{
@@ -1689,7 +1859,7 @@ namespace com.genexus.reports
 			{
 				template.BeginText();
 				template.SetFontAndSize(templateFont, templateFontSize);
-				template.SetColorFill(templateColorFill);
+				ClassLoader.Invoke(template, "SetColorFill", new object[] { templateColorFill });
 				switch (templateAlignment)
 				{
 					case 1: // Center Alignment
@@ -1960,48 +2130,50 @@ namespace com.genexus.reports
 
 		private void loadSubstituteTable()
 		{
-			// Registry substitutes
 			Hashtable tempInverseMappings = new Hashtable();
-			ArrayList table = new ArrayList();
-			String registryEntry = Const.REGISTRY_FONT_SUBSTITUTES_ENTRY;
-			try
-			{ // Win95/98/Me
-				table = nativeCode.getRegistrySubValues(Registry.LocalMachine.Name, Const.REGISTRY_FONT_SUBSTITUTES_ENTRY);
-			}
-			catch(Exception)
+			if (GXUtil.IsWindowsPlatform)
 			{
-				registryEntry = Const.REGISTRY_FONT_SUBSTITUTES_ENTRY_NT;
+				// Registry substitutes
+				ArrayList table = new ArrayList();
+				String registryEntry = Const.REGISTRY_FONT_SUBSTITUTES_ENTRY;
 				try
-				{ // Win NT/2000
-					table = nativeCode.getRegistrySubValues(Registry.LocalMachine.Name, Const.REGISTRY_FONT_SUBSTITUTES_ENTRY_NT);
+				{ // Win95/98/Me
+					table = nativeCode.getRegistrySubValues(Registry.LocalMachine.Name, Const.REGISTRY_FONT_SUBSTITUTES_ENTRY);
 				}
-				catch(Exception){ ; }
-			}
-			for(IEnumerator enu = table.GetEnumerator(); enu.MoveNext();)
-			{
-				String entryName = (String)enu.Current;
-				String fontName = entryName;
-				int index = fontName.IndexOf(',');
-				if(index != -1)
-					fontName = fontName.Substring(0, index);
-				try
+				catch (Exception)
 				{
-					String substitute = nativeCode.getRegistryValue(Registry.LocalMachine.Name, registryEntry, entryName);
-					int index2 = substitute.IndexOf(',');
-					if(index2 != -1)
-						substitute = substitute.Substring(0, index2);
-					fontSubstitutes[fontName]= substitute;
-					ArrayList tempVector = (ArrayList)tempInverseMappings[substitute];
-					if(tempVector == null)
-					{                        
-						tempVector = new ArrayList();
-						tempInverseMappings[substitute]= tempVector;
+					registryEntry = Const.REGISTRY_FONT_SUBSTITUTES_ENTRY_NT;
+					try
+					{ // Win NT/2000
+						table = nativeCode.getRegistrySubValues(Registry.LocalMachine.Name, Const.REGISTRY_FONT_SUBSTITUTES_ENTRY_NT);
 					}
-					tempVector.Add(fontName);                    
+					catch (Exception) {; }
 				}
-				catch(Exception) { ; }
+				for (IEnumerator enu = table.GetEnumerator(); enu.MoveNext();)
+				{
+					String entryName = (String)enu.Current;
+					String fontName = entryName;
+					int index = fontName.IndexOf(',');
+					if (index != -1)
+						fontName = fontName.Substring(0, index);
+					try
+					{
+						String substitute = nativeCode.getRegistryValue(Registry.LocalMachine.Name, registryEntry, entryName);
+						int index2 = substitute.IndexOf(',');
+						if (index2 != -1)
+							substitute = substitute.Substring(0, index2);
+						fontSubstitutes[fontName] = substitute;
+						ArrayList tempVector = (ArrayList)tempInverseMappings[substitute];
+						if (tempVector == null)
+						{
+							tempVector = new ArrayList();
+							tempInverseMappings[substitute] = tempVector;
+						}
+						tempVector.Add(fontName);
+					}
+					catch (Exception) {; }
+				}
 			}
-
 			for(int i = 0; i < Const.FONT_SUBSTITUTES_TTF_TYPE1.Length; i++)
 				fontSubstitutes[Const.FONT_SUBSTITUTES_TTF_TYPE1[i][0]]= Const.FONT_SUBSTITUTES_TTF_TYPE1[i][1];
         
@@ -2068,6 +2240,25 @@ namespace com.genexus.reports
 			M_bot = bot;
 		}
 
+		private object GetColor(int backRed, int backGreen, int backBlue)
+		{
+			Type color;
+			if (IsItext4())
+				color = iTextAssembly.GetType("iTextSharp.text.Color"); 
+			else
+				color = iTextAssembly.GetType("iTextSharp.text.BaseColor"); 
+			return ClassLoader.CreateInstance(iTextAssembly, color.FullName, new object[] { backRed, backGreen, backBlue });
+		}
+
+		private bool IsTrueType(BaseFont baseFont)
+		{
+			return baseFont.FontType == BaseFont.FONT_TYPE_TT;
+		}
+
+		private void SetSimpleColumn(ColumnText col, Rectangle rect)
+		{
+			col.SetSimpleColumn(rect.Left, rect.Bottom, rect.Right, rect.Top);
+		}
 	}
 
 	public class ParseINI
@@ -2100,7 +2291,7 @@ namespace com.genexus.reports
 			this.filename = Path.GetFullPath(filename);
 			try
 			{
-				var inputFileNameOrTemplate = filename;
+				string inputFileNameOrTemplate = filename;
 				if (!String.IsNullOrEmpty(template) && !File.Exists(filename) && File.Exists(template))
 				{
 					inputFileNameOrTemplate = Path.GetFullPath(template);
@@ -2538,10 +2729,7 @@ namespace com.genexus.reports
 		public static String MS_FONT_LOCATION = "Fonts Location (MS)"; 
 		public static String SUN_FONT_LOCATION = "Fonts Location (Sun)"; 
 		public static String FONT_SUBSTITUTES_SECTION = "Fonts Substitutions"; 
-		public static String FONT_METRICS_SECTION = "Font Metrics"; 
-
-		public static String CREATOR = "GeneXus PDF Report Generator";
-		public static String AUTHOR = "GeneXus";
+		public static String FONT_METRICS_SECTION = "Font Metrics";
     
 		public static String DEBUG_SECTION = "Debug";
 		public static String DRAW_IMAGE = "DrawImage"; 
@@ -2574,25 +2762,20 @@ namespace com.genexus.reports
 		public static float OPTIMAL_MINIMU_BAR_WIDTH_LARGE_FONT = 0.68f;
 		public static int LARGE_FONT_SIZE = 10;
 
-		static Const()
-		{
-			FONT_SUBSTITUTES_TTF_TYPE1 = new string[12][];
-			FONT_SUBSTITUTES_TTF_TYPE1[0] = new string[2]{"Arial", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[1] = new string[2]{"Courier New", "Courier"};
-			FONT_SUBSTITUTES_TTF_TYPE1[2] = new string[2]{"Fixedsys", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[3] = new string[2]{"Modern", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[4] = new string[2]{"MS Sans Serif", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[5] = new string[2]{"MS Serif", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[6] = new string[2]{"Roman", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[7] = new string[2]{"Script", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[8] = new string[2]{"System", "Helvetica"};
-			FONT_SUBSTITUTES_TTF_TYPE1[9] = new string[2]{"Times New Roman", "Times"};
-			FONT_SUBSTITUTES_TTF_TYPE1[10] = new string[2]{"\uff2d\uff33 \u660e\u671d", "Japanese"};
-			FONT_SUBSTITUTES_TTF_TYPE1[11] = new string[2]{"\uff2d\uff33 \u30b4\u30b7\u30c3\u30af", "Japanese2"};
-		}
-    
-		public static String [][]FONT_SUBSTITUTES_TTF_TYPE1 ;
-                                                                  
+		public static string[][] FONT_SUBSTITUTES_TTF_TYPE1 = {new string[]  { "Arial", "Helvetica" },
+			new string[]{ "Courier New", "Courier" },
+			new string[]{"Fixedsys", "Helvetica"},
+			new string[]{"Modern", "Helvetica"},
+			new string[]{"MS Sans Serif", "Helvetica"},
+			new string[]{"MS Serif", "Helvetica"},
+			new string[]{"Roman", "Helvetica"},
+			new string[]{"Script", "Helvetica"},
+			new string[]{"System", "Helvetica"},
+			new string[]{"Times New Roman", "Times"},
+			new string[]{"\uff2d\uff33 \u660e\u671d", "Japanese"},
+			new string[]{"\uff2d\uff33 \u30b4\u30b7\u30c3\u30af", "Japanese2"}};
+		
+
 		public static String REGISTRY_FONT_SUBSTITUTES_ENTRY = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\FontSubstitutes"; 
 		public static String REGISTRY_FONT_SUBSTITUTES_ENTRY_NT = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes"; 
 
@@ -2654,7 +2837,7 @@ namespace com.genexus.reports
 		public ArrayList getRegistrySubValues(string key, String entry) 
 		{
 			RegistryKey regkey = findRegKey(key + "\\" + entry);
-			if (regkey!=null)
+			if (regkey != null && GXUtil.IsWindowsPlatform)
 			{
 				string[] values = regkey.GetValueNames();
 				return new ArrayList( values);
@@ -2684,7 +2867,7 @@ namespace com.genexus.reports
 				partialPath += "\\"+splitPath[i];
 
 			RegistryKey rKey = findRegKey(partialPath);
-			if ( rKey != null)
+			if ( rKey != null && GXUtil.IsWindowsPlatform)
 			{
 				object oRet = rKey.GetValue(splitPath[pathItems-1]);
 				if (oRet != null)
@@ -2696,7 +2879,7 @@ namespace com.genexus.reports
 		{
 			string[] splitPath = path.Split('\\');
 			int pathItems = splitPath.Length;
-			if (pathItems < 2)
+			if (pathItems < 2 || !GXUtil.IsWindowsPlatform)
 				return null;
 			RegistryKey baseKey;
 			switch(splitPath[0].ToUpper())
@@ -2831,23 +3014,16 @@ namespace com.genexus.reports
 
 	public class PDFFont
 	{
-		public static String[][] base14;
-
-		static PDFFont()
-		{
-			base14 = new string[10][];
-			
-			base14[0]= new string[5]{"sansserif",	"/Helvetica",	"/Helvetica-Bold","/Helvetica-Oblique",	"/Helvetica-BoldOblique"};
-			base14[1]= new string[5]{"monospaced",	"/Courier",	"/Courier-Bold","/Courier-Oblique",	"/Courier-BoldOblique"};
-			base14[2]= new string[5]{"timesroman",	"/Times-Roman",	"/Times-Bold",	"/Times-Italic",	"/Times-BoldItalic"};
-			base14[3]= new string[5]{"courier",	    "/Courier",	"/Courier-Bold","/Courier-Oblique",	"/Courier-BoldOblique"};
-			base14[4]= new string[5]{"helvetica",	"/Helvetica",	"/Helvetica-Bold","/Helvetica-Oblique",	"/Helvetica-BoldOblique"};
-			base14[5]= new string[5]{"dialog",	    "/Courier",	"/Courier-Bold","/Courier-Oblique",	"/Courier-BoldOblique"};
-			base14[6]= new string[5]{"dialoginput",	"/Courier",	"/Courier-Bold","/Courier-Oblique",	"/Courier-BoldOblique"};
-			base14[7]= new string[5]{"symbol",      "/Symbol",     "/Symbol", "/Symbol",          "/Symbol"};
-			base14[8]= new string[5]{"times",       "/Times-Roman", "/Times-Bold", "/Times-Italic", "/Times-BoldItalic"};
-			base14[9]= new string[5]{"zapfdingbats", "/ZapfDingBats", "/ZapfDingBats", "/ZapfDingBats", "/ZapfDingBats"};
-		}
+		public static string[][] base14 = {new string[]{"sansserif",    "/Helvetica",   "/Helvetica-Bold","/Helvetica-Oblique", "/Helvetica-BoldOblique"},
+			new string[]{"monospaced",  "/Courier", "/Courier-Bold","/Courier-Oblique", "/Courier-BoldOblique"},
+				new string[]{"timesroman",  "/Times-Roman", "/Times-Bold",  "/Times-Italic",    "/Times-BoldItalic"},
+				new string[]{"courier",     "/Courier", "/Courier-Bold","/Courier-Oblique", "/Courier-BoldOblique"},
+				new string[]{"helvetica",   "/Helvetica",   "/Helvetica-Bold","/Helvetica-Oblique", "/Helvetica-BoldOblique"},
+				new string[]{"dialog",      "/Courier", "/Courier-Bold","/Courier-Oblique", "/Courier-BoldOblique"},
+				new string[]{"dialoginput", "/Courier", "/Courier-Bold","/Courier-Oblique", "/Courier-BoldOblique"},
+				new string[]{"symbol",      "/Symbol",     "/Symbol", "/Symbol",          "/Symbol"},
+				new string[]{"times",       "/Times-Roman", "/Times-Bold", "/Times-Italic", "/Times-BoldItalic"},
+				new string[]{"zapfdingbats", "/ZapfDingBats", "/ZapfDingBats", "/ZapfDingBats", "/ZapfDingBats"} };
 
 		public static bool isType1(String fontName)
 		{
@@ -2874,23 +3050,15 @@ namespace com.genexus.reports
 	}
 	public class Type1FontMetrics
 	{
-		public static String [][] CJKNames;
-		static Type1FontMetrics()
-		{
-			CJKNames = new string[8][];
-			// Adobe Acrobat Reader 6
-			CJKNames[0] = new string[2]{"SimplifiedChinese", "AdobeSongStd-Light-Acro"};
-			CJKNames[1] = new string[2]{"TraditionalChinese", "AdobeMingStd-Light-Acro"};
-			CJKNames[2] = new string[2]{"Japanese", "KozMinPro-Regular-Acro"};
-			CJKNames[3] = new string[2]{"Japanese2", "KozGoPro-Medium-Acro"};
-			CJKNames[4] = new string[2]{"Korean", "AdobeMyungjoStd-Medium-Acro"};
-			// Adobe Acrobat Reader 5
-			CJKNames[5] = new string[2]{"SimplifiedChineseAcro5", "STSongStd-Light-Acro"};
-			CJKNames[6] = new string[2]{"TraditionalChineseAcro5", "MSungStd-Light-Acro"};
-			CJKNames[7] = new string[2]{"KoreanAcro5", "HYSMyeongJoStd-Medium-Acro"};
-											 
-		}
-
+		public static string[][] CJKNames = {new string[] { "SimplifiedChinese", "AdobeSongStd-Light-Acro" },
+			new string[] {"TraditionalChinese", "AdobeMingStd-Light-Acro"},
+			new string[] {"Japanese", "KozMinPro-Regular-Acro"},
+			new string[] {"Japanese2", "KozGoPro-Medium-Acro"},
+			new string[] {"Korean", "AdobeMyungjoStd-Medium-Acro"},
+			new string[] {"SimplifiedChineseAcro5", "STSongStd-Light-Acro"},
+			new string[] {"TraditionalChineseAcro5", "MSungStd-Light-Acro"},
+			new string[] {"KoreanAcro5", "HYSMyeongJoStd-Medium-Acro"}
+		};
 	}
 
 	public class MSPDFFontDescriptor 
@@ -2912,44 +3080,48 @@ namespace com.genexus.reports
 				return fontFileLocation;
 			staticMappingsSearched = true;
 
-			try
+			if (GXUtil.IsWindowsPlatform)
 			{
-				RegistryKey FONTS_ENTRY = isWinNT() ? Registry.LocalMachine.OpenSubKey(REGISTRY_FONTS_ENTRY_NT, false) : Registry.LocalMachine.OpenSubKey(REGISTRY_FONTS_ENTRY, false);
-				String [] fontNames = FONTS_ENTRY.GetValueNames();
-				for(int i = 0; i < fontNames.Length; i++)
+				try
 				{
-					String fontNameMs = fontNames[i];
-					
-					if(fontNameMs.EndsWith(TRUE_TYPE_REGISTRY_SIGNATURE))
-					{ 
-						try
-						{
-							
-							String strippedFontName = fontNameMs.Substring(0, fontNameMs.Length - TRUE_TYPE_REGISTRY_SIGNATURE.Length).Trim();
-							String fontFile = (String)FONTS_ENTRY.GetValue(fontNameMs);
-							fontFileLocation = Utilities.findFileInPath(fontFile);
+					RegistryKey FONTS_ENTRY = isWinNT() ? Registry.LocalMachine.OpenSubKey(REGISTRY_FONTS_ENTRY_NT, false) : Registry.LocalMachine.OpenSubKey(REGISTRY_FONTS_ENTRY, false);
+					String[] fontNames = FONTS_ENTRY.GetValueNames();
+					for (int i = 0; i < fontNames.Length; i++)
+					{
+						String fontNameMs = fontNames[i];
 
-							if (fontFile.ToLower().EndsWith("ttc"))
+						if (fontNameMs.EndsWith(TRUE_TYPE_REGISTRY_SIGNATURE))
+						{
+							try
 							{
-								String [] strippedFontNames = strippedFontName.Split(new char[]{'&'});
-								for(int j=0; j<strippedFontNames.Length; j++)
+
+								String strippedFontName = fontNameMs.Substring(0, fontNameMs.Length - TRUE_TYPE_REGISTRY_SIGNATURE.Length).Trim();
+								String fontFile = (String)FONTS_ENTRY.GetValue(fontNameMs);
+								fontFileLocation = Utilities.findFileInPath(fontFile);
+
+								if (fontFile.ToLower().EndsWith("ttc"))
 								{
-									String strippedFontName1 = strippedFontNames[j].Trim();
-									staticProps.setProperty(Const.MS_FONT_LOCATION, strippedFontName1, fontFileLocation + "," + j);
+									String[] strippedFontNames = strippedFontName.Split(new char[] { '&' });
+									for (int j = 0; j < strippedFontNames.Length; j++)
+									{
+										String strippedFontName1 = strippedFontNames[j].Trim();
+										staticProps.setProperty(Const.MS_FONT_LOCATION, strippedFontName1, fontFileLocation + "," + j);
+									}
+								}
+								else
+								{
+									staticProps.setProperty(Const.MS_FONT_LOCATION, strippedFontName, fontFileLocation);
 								}
 							}
-							else
-							{
-								staticProps.setProperty(Const.MS_FONT_LOCATION, strippedFontName, fontFileLocation);
-							}
+							catch (IOException) {; }
 						}
-						catch(IOException) { ;}
 					}
+					FONTS_ENTRY.Close();
 				}
-				FONTS_ENTRY.Close();
-			}
-			catch(Exception ex) {
-				GXLogging.Warn(log,"getTrueTypeFontLocation error", ex);
+				catch (Exception ex)
+				{
+					GXLogging.Warn(log, "getTrueTypeFontLocation error", ex);
+				}
 			}
 			return staticProps.getProperty(Const.MS_FONT_LOCATION, fontName);
 		}  

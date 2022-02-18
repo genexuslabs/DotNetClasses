@@ -33,6 +33,8 @@ namespace GeneXus.Http
 	using GeneXus.Web.Security;
 	using System.Linq;
 	using GeneXus.Procedure;
+	using GxClasses.Web.Middleware;
+
 #else
 	using System.Web.UI;
 	using System.Web.UI.WebControls;
@@ -43,78 +45,6 @@ namespace GeneXus.Http
 	using System.Diagnostics;
 #endif
 
-	internal class GXValidService : GXHttpHandler, IRequiresSessionState
-	{
-		public GXValidService()
-		{
-			this.context = new GxContext();
-
-		}
-		public override void webExecute()
-		{
-			try
-			{
-				NameValueCollection parms = context.HttpContext.Request.GetQueryString();
-
-				string gxobj = parms["object"];
-				string attribute = parms["att"];
-				string json = null;
-
-				GxStringCollection gxparms = new GxStringCollection();
-				if (parms.Count > 2)
-				{
-					for (int i = 2; i < parms.Count; i++)
-						gxparms.Add(parms[i]);
-				}
-				if (!string.IsNullOrEmpty(gxobj) && !string.IsNullOrEmpty(attribute))
-				{
-					string nspace;
-					if (!Config.GetValueOf("AppMainNamespace", out nspace))
-						nspace = "GeneXus.Programs";
-					GXHttpHandler handler = (GXHttpHandler)ClassLoader.GetInstance(gxobj, nspace + "." + gxobj, null);
-					handler.initialize();
-
-					json = (string)handler.GetType().InvokeMember("rest_" + attribute.ToUpper(), BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod, null, handler, new object[] { gxparms });
-					handler.GetType().InvokeMember("cleanup", BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod, null, handler, null);
-				}
-				if (!string.IsNullOrEmpty(json))
-				{
-                    if (context.IsMultipartRequest)
-                        this.context.HttpContext.Response.ContentType = MediaTypesNames.TextHtml;
-                    else
-                        this.context.HttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-#if NETCORE
-					this.context.HttpContext.Response.Write(json);
-#else
-					this.context.HttpContext.Response.Output.WriteLine(json);
-#endif
-
-				}
-				else
-				{
-					this.SendResponseStatus(404, "Resource not found");
-				}
-			}
-			catch (Exception ex)
-			{
-				SendResponseStatus(500, ex.Message);
-				HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, "500", ex.Message);
-			}
-			finally
-			{
-				try
-				{
-					context.CloseConnections();
-				}
-				catch
-				{
-
-				}
-			}
-
-		}
-
-	}
 	internal class GXMultiCall : GXHttpHandler, IRequiresSessionState
 	{
 		static string EXECUTE_METHOD = "execute";
@@ -140,29 +70,27 @@ namespace GeneXus.Http
 				{
 					parmsColl.FromJSonString(jsonStr);
 				}
+#if NETCORE
 
+				handler = new GXRouting(string.Empty).GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
+				if (handler ==null) {
+					throw new GxClassLoaderException($"{gxobj} not found");
+				}
+#else
 				string nspace;
 				if (!Config.GetValueOf("AppMainNamespace", out nspace))
 					nspace = "GeneXus.Programs";
-#if NETCORE
-				var controllerInstance = ClassLoader.FindInstance(gxobj, nspace, gxobj, new Object[] { context }, Assembly.GetEntryAssembly());
-				GXProcedure proc = controllerInstance as GXProcedure;
-				if (proc != null)
-				{
-					handler = new GxRestWrapper(proc, localHttpContext, context as GxContext);
-				}
-				else
-				{
-					var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace, $"Sdt{gxobj}", new Object[] { context }, Assembly.GetEntryAssembly()) as GxSilentTrnSdt;
-					if (sdtInstance != null)
-						handler = new GXBCRestService(sdtInstance, localHttpContext, context as GxContext);
-				}
-#else
-				handler = (Utils.GxRestService)ClassLoader.FindInstance(gxobj, nspace, gxobj + "_services", null, null);
+				handler = (GxRestService)ClassLoader.FindInstance(gxobj, nspace, gxobj + "_services", null, null);
 #endif
 				handler.RunAsMain = false;
 
-				ParameterInfo[] pars = handler.GetType().GetMethod(EXECUTE_METHOD).GetParameters();
+#if NETCORE
+				GXBaseObject worker = handler.Worker;
+#else
+				GxRestService worker = handler;
+#endif
+				ParameterInfo[] pars = worker.GetType().GetMethod(EXECUTE_METHOD).GetParameters();
+
 				int ParmsCount = pars.Length;
 				object[] convertedparms = new object[ParmsCount];
 
@@ -177,19 +105,17 @@ namespace GeneXus.Http
 								convertedparms[i] = convertparm(pars, i, parmValues[idx]);
 							idx++;
 						}
-						handler.GetType().InvokeMember(EXECUTE_METHOD, BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod, null, handler, convertedparms);
+						worker.GetType().InvokeMember(EXECUTE_METHOD, BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod, null, worker, convertedparms);
 					}
 				}
 			}
 			catch (GxClassLoaderException cex)
 			{
-				SendResponseStatus(404, cex.Message);
-				HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, "404", cex.Message);
+				HttpHelper.SetUnexpectedError(context.HttpContext, HttpStatusCode.NotFound, cex);
 			}
 			catch (Exception ex)
 			{
-				SendResponseStatus(500, ex.Message);
-				HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, "500", ex.Message);
+				HttpHelper.SetUnexpectedError(context.HttpContext, HttpStatusCode.InternalServerError, ex);
 			}
 			finally
 			{
@@ -300,7 +226,7 @@ namespace GeneXus.Http
 			}
 		}
 	}
-	
+
 	class HttpResponseWriter : TextWriter
 	{
 		private HttpResponse response;
@@ -329,47 +255,7 @@ namespace GeneXus.Http
 		}
 	}
 
-	internal class GXResourceProvider : GXHttpHandler
-	{
-		internal static string PROVIDER_NAME = "GXResourceProvider.aspx";
-
-		public GXResourceProvider()
-		{
-			this.context = new GxContext();
-		}
-
-		public override void webExecute()
-		{
-			string resourceType = this.GetNextPar();
-			if (string.Compare(resourceType.Trim(), "image", true) == 0)
-			{
-				string imageGUID = this.GetNextPar();
-				string kbId = this.GetNextPar();
-				string theme = this.GetNextPar();
-				this.context.setAjaxCallMode();
-				this.context.SetDefaultTheme(theme);
-				string imagePath = this.context.GetImagePath(imageGUID, kbId, theme);
-				if (!string.IsNullOrEmpty(imagePath))
-				{
-					this.context.HttpContext.Response.Clear();
-					this.context.HttpContext.Response.ContentType = MediaTypesNames.TextPlain;
-#if NETCORE
-					this.context.HttpContext.Response.Write(imagePath);
-#else
-					this.context.HttpContext.Response.Output.WriteLine(imagePath);
-					
-					this.context.HttpContext.Response.End();
-#endif
-					return;
-				}
-			}
-			this.SendResponseStatus(404, "Resource not found");
-		}
-	}
-
-
-
-
+	
 	internal class GXObjectUploadServices : GXHttpHandler, IReadOnlySessionState
 	{
 		public GXObjectUploadServices()
@@ -377,44 +263,52 @@ namespace GeneXus.Http
 			this.context = new GxContext();
 			DataStoreUtil.LoadDataStores(context);
 		}
+		public GXObjectUploadServices(IGxContext ctx)
+		{
+			this.context = ctx;
+		}
 
 		public override void webExecute()
 		{
 			try
 			{
+				string ext, fName;
 				if (context.isMultipartRequest())
 				{
 					localHttpContext.Response.ContentType = MediaTypesNames.TextPlain;
 					var r = new List<UploadFile>();
 					var fileCount = localHttpContext.Request.GetFileCount();
-					for (var i =0; i< fileCount; i++)
+					for (var i = 0; i < fileCount; i++)
 					{
+						string fileGuid = GxUploadHelper.GetUploadFileGuid();
+						string fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
 						var hpf = localHttpContext.Request.GetFile(i);
-						string fileName = string.Empty;
+						fName = string.Empty;
 						string[] files = hpf.FileName.Split(new char[] { '\\' });
 						if (files.Length > 0)
-							fileName = files[files.Length - 1];
+							fName = files[files.Length - 1];
 						else
-							fileName = hpf.FileName;
+							fName = hpf.FileName;
 
-						string ext = FileUtil.GetFileType(fileName);
-						string savedFileName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), FileUtil.GetFileName(fileName), string.IsNullOrEmpty(ext) ? "tmp" : ext);
-						GxFile gxFile = new GxFile(Preferences.getTMP_MEDIA_PATH(), savedFileName);
+						ext = FileUtil.GetFileType(fName);
+						string tempDir = Preferences.getTMP_MEDIA_PATH();
+						GxFile gxFile = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);
 
 						gxFile.Create(hpf.InputStream);
+						string uri = gxFile.GetURI();
+						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);
 
-						GXFileWatcher.Instance.AddTemporaryFile(gxFile);
-
-                        r.Add(new UploadFile()
+						r.Add(new UploadFile()
 						{
-							name = fileName,
+							name = fName,
 							size = gxFile.GetLength(),
-							url = gxFile.GetPath(),
+							url = url,
 							type = context.GetContentType(ext),
 							extension = ext,
-							thumbnailUrl = gxFile.GetPath(),
-                            path = savedFileName
+							thumbnailUrl = url,
+							path = fileToken
 						});
+						GxUploadHelper.CacheUploadFile(fileGuid, Path.GetFileName(fName), ext, gxFile, context);
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
 					var jsonObj = JSONHelper.Serialize(result);
@@ -423,30 +317,13 @@ namespace GeneXus.Http
 				else
 				{
 					Stream istream = localHttpContext.Request.GetInputStream();
-					String contentType = localHttpContext.Request.ContentType;
-					String ext = context.ExtensionForContentType(contentType);
-
-					string fileName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), "BLOB", string.IsNullOrEmpty(ext) ? "tmp" : ext);
-                    GxFile file = new GxFile(Preferences.getTMP_MEDIA_PATH(), fileName);
-                    file.Create(istream);
-
-					Jayrock.Json.JObject obj = new Jayrock.Json.JObject();
-					fileName = file.GetURI();
-                  
-                    String fileGuid =  Guid.NewGuid().ToString("N");
-                    String fileToken= GxRestPrefix.UPLOAD_PREFIX + fileGuid;
-                    CacheAPI.FilesCache.Set(fileGuid, fileName, GxRestPrefix.UPLOAD_TIMEOUT);
-					obj.Put("object_id", fileToken);
-					localHttpContext.Response.AddHeader("GeneXus-Object-Id", fileToken);
-					localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-					localHttpContext.Response.StatusCode = 201;
-					localHttpContext.Response.Write(obj.ToString());
+					string contentType = localHttpContext.Request.ContentType;
+					WcfExecute(istream, contentType);
 				}
 			}
 			catch (Exception e)
 			{
-				SendResponseStatus(500, e.Message);
-				HttpHelper.SetResponseStatusAndJsonError(localHttpContext, HttpStatusCode.InternalServerError.ToString(), e.Message);
+				HttpHelper.SetUnexpectedError(localHttpContext, HttpStatusCode.InternalServerError, e);
 			}
 			finally
 			{
@@ -460,6 +337,28 @@ namespace GeneXus.Http
 				}
 			}
 
+		}
+
+		internal void WcfExecute(Stream istream, string contentType)
+		{
+			string ext, fName;
+			ext = context.ExtensionForContentType(contentType);
+			string tempDir = Preferences.getTMP_MEDIA_PATH();			
+			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);
+			file.Create(istream);
+
+			JObject obj = new JObject();
+			fName = file.GetURI();
+			string fileGuid = GxUploadHelper.GetUploadFileGuid();
+			string fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
+
+			obj.Put("object_id", fileToken);
+			localHttpContext.Response.AddHeader("GeneXus-Object-Id", fileGuid);
+			localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
+			HttpHelper.SetResponseStatus(localHttpContext, HttpStatusCode.Created, string.Empty);
+			localHttpContext.Response.Write(obj.ToString());
+
+			GxUploadHelper.CacheUploadFile(fileGuid, $"{Path.GetFileNameWithoutExtension(fName)}.{ext}", ext, file, context);
 		}
 		protected override bool IntegratedSecurityEnabled
 		{
@@ -476,14 +375,6 @@ namespace GeneXus.Http
 			get
 			{
 				return GAMSecurityLevel.SecurityObject;
-			}
-		}
-
-		protected override string IntegratedSecurityPermissionName
-		{
-			get
-			{
-				return base.IntegratedSecurityPermissionName;
 			}
 		}
 	}
@@ -516,13 +407,13 @@ namespace GeneXus.Http
 				GxSecurityProvider.Provider.oauthlogout(context);
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 				localHttpContext.Response.StatusCode = 200;
-				localHttpContext.Response.Write(new Jayrock.Json.JObject().ToString());
+				localHttpContext.Response.Write(new JObject().ToString());
 				context.CloseConnections();
 			}
 			catch (Exception e)
 			{
 				localHttpContext.Response.Write(e.Message);
-				localHttpContext.Response.StatusCode = 500;
+				localHttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 			}
 		}
 
@@ -544,14 +435,14 @@ namespace GeneXus.Http
 				bool isOK;
 				GxSecurityProvider.Provider.oauthgetuser(context, out userJson, out isOK);
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-				localHttpContext.Response.StatusCode = 200;
+				localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
 				localHttpContext.Response.Write(userJson);
 				context.CloseConnections();
 			}
 			catch (Exception e)
 			{
 				localHttpContext.Response.Write(e.Message);
-				localHttpContext.Response.StatusCode = 500;
+				localHttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 			}
 		}
 		protected override bool IntegratedSecurityEnabled
@@ -571,19 +462,12 @@ namespace GeneXus.Http
 				return GAMSecurityLevel.SecurityObject;
 			}
 		}
-
-		protected override string IntegratedSecurityPermissionName
-		{
-			get
-			{
-				return base.IntegratedSecurityPermissionName;
-			}
-		}
 	}
 
 	internal class GXOAuthAccessToken : GXHttpHandler, IRequiresSessionState
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GXOAuthAccessToken));
+
 		public GXOAuthAccessToken()
 		{
 			this.context = new GxContext();
@@ -657,16 +541,20 @@ namespace GeneXus.Http
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 				if (!flag)
 				{
-					localHttpContext.Response.StatusCode = 401;
 					if (result != null)
 					{
 						string messagePermission = result.Description;
+
+						HttpHelper.SetGamError(context.HttpContext, result.Code, messagePermission);
 						if (GXUtil.ContainsNoAsciiCharacter(messagePermission))
 						{
 							messagePermission = string.Format("{0}{1}", GxRestPrefix.ENCODED_PREFIX, Uri.EscapeDataString(messagePermission));
 						}
-						localHttpContext.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(context.GetServerName(), result.Code, messagePermission));
-						HttpHelper.SetResponseStatusAndJsonError(context.HttpContext, result.Code, messagePermission);
+						localHttpContext.Response.AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, messagePermission));
+					}
+					else
+					{
+						HttpHelper.SetResponseStatus(context.HttpContext, HttpStatusCode.Unauthorized, string.Empty);
 					}
 				}
 				else
@@ -674,17 +562,17 @@ namespace GeneXus.Http
 					if (!isDevice && !isRefreshToken && (gamout == null || String.IsNullOrEmpty((string)gamout["gxTpr_Access_token"])))
 					{
 						if (string.IsNullOrEmpty(avoid_redirect))
-							localHttpContext.Response.StatusCode = 303;
+							localHttpContext.Response.StatusCode = (int)HttpStatusCode.RedirectMethod;
 						else
-							localHttpContext.Response.StatusCode = 200;
+							localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
 						localHttpContext.Response.AddHeader("location", URL);
-						Jayrock.Json.JObject jObj = new Jayrock.Json.JObject();
+						JObject jObj = new JObject();
 						jObj.Put("Location", URL);
 						localHttpContext.Response.Write(jObj.ToString());
 					}
 					else
 					{
-						localHttpContext.Response.StatusCode = 200;
+						localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
 						localHttpContext.Response.Write(gamout.JsonString);
 						
 					}
@@ -693,7 +581,7 @@ namespace GeneXus.Http
 			}
 			catch (Exception e)
 			{
-				localHttpContext.Response.StatusCode = 404;
+				localHttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
 				localHttpContext.Response.Write(e.Message);
 				GXLogging.Error(log, string.Format("Error in access_token service clientId:{0} clientSecret:{1} grantType:{2} userName:{3} scope:{4}", clientId, clientSecret, grantType, userName, scope), e);
 			}

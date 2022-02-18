@@ -8,6 +8,7 @@ using System.IO;
 using Jayrock.Json;
 using GeneXus.SD.Store.Model;
 using System.Collections.Concurrent;
+using System.Net.Http;
 
 namespace GeneXus.SD.Store.Platforms
 {
@@ -239,19 +240,18 @@ namespace GeneXus.SD.Store.Platforms
 
 		private static HttpStatusCode DoPost(string postData, string url, out string response)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(url);
-			request.Method = "POST";
-			request.ContentType = "application/json";
-			request.ContentLength = postData.Length;
-			var data = Encoding.ASCII.GetBytes(postData);
-			using (var stream = request.GetRequestStream())
+			try
 			{
-				stream.Write(data, 0, data.Length);
-			}
-			try {
-				HttpWebResponse responseHttp = (HttpWebResponse)request.GetResponse();
-				response = new StreamReader(responseHttp.GetResponseStream()).ReadToEnd();
-				return responseHttp.StatusCode;
+				using (var client = new HttpClient())
+				{
+					using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url))
+					{
+						request.Content = new StringContent(postData, Encoding.ASCII, "application/json");
+						HttpResponseMessage result = client.SendAsync(request).GetAwaiter().GetResult();
+						response = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+						return result.StatusCode;
+					}
+				}
 			}
 			catch (Exception e)
 			{

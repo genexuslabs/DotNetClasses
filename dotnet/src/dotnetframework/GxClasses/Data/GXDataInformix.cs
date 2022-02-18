@@ -13,6 +13,8 @@ using GeneXus.Configuration;
 using GeneXus.Utils;
 using System.Globalization;
 using GeneXus.Metadata;
+using GxClasses.Helpers;
+using System.IO;
 
 namespace GeneXus.Data
 {
@@ -20,7 +22,13 @@ namespace GeneXus.Data
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 		static Assembly _ifxAssembly;
+#if NETCORE
+		internal static string InformixAssemblyName = "Informix.Net.Core";
+		const string InformixDbTypeEnum = "Informix.Net.Core.IfxType";
+#else
+		internal static string InformixAssemblyName = "IBM.Data.Informix";
 		const string InformixDbTypeEnum = "IBM.Data.Informix.IfxType";
+#endif
 		public static string SQL_NULL_DATE_10 = "0000-00-00";
 		public static string SQL_NULL_DATE_8 = "00000000";
 		private string m_serverInstance;
@@ -41,19 +49,43 @@ namespace GeneXus.Data
 				{
 					if (_ifxAssembly == null)
 					{
-						GXLogging.Debug(log, "Loading IBM.Data.Informix from GAC");
-						_ifxAssembly = Assembly.LoadWithPartialName("IBM.Data.Informix");
-						GXLogging.Debug(log, "IBM.Data.Informix Loaded from GAC");
+#if NETCORE
+						string informixDir = Environment.GetEnvironmentVariable("INFORMIXDIR");
+						string assemblyPath = FileUtil.GetStartupDirectory();
+						string informixBinDir = null;
+						if (!string.IsNullOrEmpty(informixDir)) {
+							try
+							{
+								informixBinDir = Path.Combine(informixDir, "bin");
+
+							}catch(Exception ex)
+							{
+								GXLogging.Warn(log, $"Error reading INFORMIXDIR env var", ex);
+							}
+							if (!string.IsNullOrEmpty(informixBinDir) && File.Exists(Path.Combine(informixBinDir, $"{InformixAssemblyName}.dll")))
+							{
+								assemblyPath = informixBinDir;
+							}
+						}
+						GXLogging.Debug(log, $"Loading {InformixAssemblyName}.dll from:" + assemblyPath);
+
+						var asl = new AssemblyLoader(assemblyPath);
+						_ifxAssembly = asl.LoadFromAssemblyName(new AssemblyName(InformixAssemblyName));
+#else
+						GXLogging.Debug(log, $"Loading {InformixAssemblyName} from GAC");
+						_ifxAssembly = Assembly.LoadWithPartialName(InformixAssemblyName);
+						GXLogging.Debug(log, $"{InformixAssemblyName} Loaded from GAC");
+#endif
 					}
 
 				}
 				catch (Exception ex)
 				{
-					GXLogging.Error(log, "Error loading IBM.Data.Informix from GAC", ex);
+					GXLogging.Error(log, $"Error loading {InformixAssemblyName} from GAC", ex);
 				}
 				if (_ifxAssembly == null)
 				{
-					_ifxAssembly = Assembly.Load("IBM.Data.Informix");
+					_ifxAssembly = Assembly.Load(InformixAssemblyName);
 				}
 				return _ifxAssembly;
 			}
@@ -71,6 +103,12 @@ namespace GeneXus.Data
 						values[i] = result;
 						GXLogging.Debug(log, "GetValues decimal:" + result);
 					}
+#if NETCORE
+					else if (reader.GetFieldType(i) == typeof(DateTime))
+					{
+						values[i] = reader.GetDateTime(i); //IfxDateTime
+					}
+#endif
 					else
 					{
 						values[i] = reader.GetValue(i);
@@ -84,10 +122,16 @@ namespace GeneXus.Data
 		}
 		internal static decimal GetIfxDecimal(IDataReader reader, int i)
 		{
-			decimal result;
-			string ifxDecimal = ClassLoader.Invoke(reader, "GetIfxDecimal", new object[] { i }).ToString();
-			Decimal.TryParse(ifxDecimal, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
-			return result;
+			try
+			{
+				decimal result;
+				string ifxDecimal = ClassLoader.Invoke(reader, "GetIfxDecimal", new object[] { i }).ToString();
+				Decimal.TryParse(ifxDecimal, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
+				return result;
+			}catch(Exception)
+			{
+				return Convert.ToInt64(reader.GetValue(i));
+			}
 		}
 		public override IDataReader GetDataReader(IGxConnectionManager connManager, IGxConnection con, GxParameterCollection parameters, string stmt, ushort fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool hasNested, bool dynStmt)
 		{
@@ -145,13 +189,13 @@ namespace GeneXus.Data
 
 		public override IDbDataParameter CreateParameter()
 		{
-			return (IDbDataParameter)ClassLoader.CreateInstance(IfxAssembly, "IBM.Data.Informix.IfxParameter");
+			return (IDbDataParameter)ClassLoader.CreateInstance(IfxAssembly, $"{InformixAssemblyName}.IfxParameter");
 		}
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			object ifxType = GXTypeToIfxType((GXType)dbtype);
 			object[] args = new object[] { name, ifxType, gxlength };
-			IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(IfxAssembly, "IBM.Data.Informix.IfxParameter", args);
+			IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(IfxAssembly, $"{InformixAssemblyName}.IfxParameter", args);
 			
 			ClassLoader.SetPropValue(parm, "IfxType", ifxType);
 			parm.Precision = (byte)gxdec;
@@ -168,6 +212,11 @@ namespace GeneXus.Data
 				case GXType.Int32: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Integer");
 				case GXType.Int64: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Int8");
 				case GXType.LongVarChar: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Text");
+				case GXType.DateTime2: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "DateTime");
+				case GXType.UniqueIdentifier:return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Char");
+#if NETCORE
+				case GXType.Boolean: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, "Bit");
+#endif
 				default: return ClassLoader.GetEnumValue(IfxAssembly, InformixDbTypeEnum, type.ToString());
 			}
 		}
@@ -178,7 +227,7 @@ namespace GeneXus.Data
 		}
 		public override DbDataAdapter CreateDataAdapeter()
 		{
-			Type odpAdapter = IfxAssembly.GetType("IBM.Data.Informix.IfxDataAdapter");
+			Type odpAdapter = IfxAssembly.GetType($"{InformixAssemblyName}.IfxDataAdapter");
 			return (DbDataAdapter)Activator.CreateInstance(odpAdapter);
 		}
 
@@ -262,6 +311,10 @@ namespace GeneXus.Data
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
 			return "SELECT CURRENT YEAR TO SECOND FROM informix.SYSTABLES WHERE tabname = 'systables'";
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
+			return "SELECT CURRENT YEAR TO FRACTION(3) FROM informix.SYSTABLES WHERE tabname = 'systables'";
 		}
 		public override string GetServerVersionStmt()
 		{
@@ -496,6 +549,16 @@ namespace GeneXus.Data
 				return base.GetDecimal(i);
 			}
 		}
+#if NETCORE
+		public override Guid GetGuid(int i)
+		{
+			readBytes += 16;
+			if (reader.GetFieldType(i) == typeof(string))
+				return new Guid(reader.GetString(i));
+			else
+				return reader.GetGuid(i);
+		}
+#endif
 		public override object GetValue(int i)
 		{
 			if (reader.GetFieldType(i) == typeof(decimal))
@@ -530,7 +593,7 @@ namespace GeneXus.Data
 			try
 			{
 				GXLogging.Debug(log, "Creating Informix data provider ");
-				_connection = (IDbConnection)ClassLoader.CreateInstance(GxInformix.IfxAssembly, "IBM.Data.Informix.IfxConnection");
+				_connection = (IDbConnection)ClassLoader.CreateInstance(GxInformix.IfxAssembly, $"{GxInformix.InformixAssemblyName}.IfxConnection");
 				GXLogging.Debug(log, "Informix data provider created");
 			}
 			catch (Exception ex)
@@ -544,7 +607,7 @@ namespace GeneXus.Data
 		{
 			try
 			{
-				_connection = (IDbConnection)ClassLoader.CreateInstance(GxInformix.IfxAssembly, "IBM.Data.Informix.IfxConnection", new object[] { connectionString });
+				_connection = (IDbConnection)ClassLoader.CreateInstance(GxInformix.IfxAssembly, $"{GxInformix.InformixAssemblyName}.IfxConnection", new object[] { connectionString });
 				m_isolationLevel = isolationLevel;
 				m_connectionCache = connCache;
 			}

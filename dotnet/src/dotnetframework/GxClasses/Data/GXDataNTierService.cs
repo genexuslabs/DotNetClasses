@@ -15,6 +15,7 @@ using GeneXus.Data.NTier.ADO;
 using System.Reflection;
 using GeneXus.Metadata;
 using System.Data.Common;
+using GeneXus.Helpers;
 
 namespace GeneXus.Data.NTier
 {
@@ -28,6 +29,9 @@ namespace GeneXus.Data.NTier
 	public class ServiceException : Exception
 	{
 		public ServiceException(string msg):base(msg)
+		{ }
+
+		public ServiceException(string msg, Exception innerException): base(msg, innerException)
 		{ }
 	}
 
@@ -65,7 +69,7 @@ namespace GeneXus.Data.NTier
 
 		public static GxService Create(string id, string providerId, string serviceClass)		
 		{
-			return (GxService)Activator.CreateInstance(Type.GetType(serviceClass), new object[2] { id, providerId });
+			return (GxService)Activator.CreateInstance(AssemblyHelper.GetRuntimeType(serviceClass), new object[2] { id, providerId });
 		}
 	}
 
@@ -81,7 +85,7 @@ namespace GeneXus.Data.NTier
 
 		public GxService(string id, string providerId, string runtimeClass)
 		{
-			m_ServiceType = Type.GetType(runtimeClass);
+			m_ServiceType = AssemblyHelper.GetRuntimeType(runtimeClass);
 		}
 
 		public GxService(string id, string providerId, Type serviceType)
@@ -154,7 +158,7 @@ namespace GeneXus.Data.NTier
 			return parm;
 		}
 
-		public override Object Net2DbmsGeo(IDbDataParameter parm, IGeographicNative geo)
+		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)
 		{
 			return geo.InnerValue;
 		}
@@ -261,8 +265,11 @@ namespace GeneXus.Data.NTier
 		}
 		public override string GetServerDateTimeStmt(IGxConnection connection)
 		{
+			throw new NotImplementedException();			
+		}
+		public override string GetServerDateTimeStmtMs(IGxConnection connection)
+		{
 			throw new NotImplementedException();
-			
 		}
 		public override string GetServerVersionStmt()
 		{

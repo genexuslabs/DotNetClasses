@@ -1,9 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net46;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net462;net6.0</TargetFrameworks>
 		<RootNamespace>GeneXus.Encryption</RootNamespace>
 		<AssemblyName>GxEncrypt</AssemblyName>
 		<PackageTags>Encrypt64 Decrypt64</PackageTags>
 		<PackageId>GeneXus.Encrypt</PackageId>
 	</PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
+	</ItemGroup>
 </Project>
