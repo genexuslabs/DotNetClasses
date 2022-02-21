@@ -59,10 +59,7 @@ namespace GeneXus.Data
 #if NETCORE
 			if (_npgsqlAssembly == null)
 			{
-				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "Npgsql.dll")))
-				{
-					_npgsqlAssembly = dynamicContext.Assembly;
-				}
+				_npgsqlAssembly = AssemblyLoader.GetAssembly("Npgsql");
 			}
 #endif
 			string cfgBuf;

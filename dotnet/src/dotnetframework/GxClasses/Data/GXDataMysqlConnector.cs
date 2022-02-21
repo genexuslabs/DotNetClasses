@@ -34,11 +34,7 @@ namespace GeneXus.Data
 #if NETCORE
 			if (assembly == null)
 			{
-				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "MySqlConnector.dll")))
-				{
-					assembly = dynamicContext.Assembly;
-				}
-				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "System.Configuration.ConfigurationManager.dll"))) { }
+				assembly = AssemblyLoader.GetAssembly("MySqlConnector");
 			}
 #endif
 
