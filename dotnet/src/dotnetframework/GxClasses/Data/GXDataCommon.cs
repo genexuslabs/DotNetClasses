@@ -772,17 +772,6 @@ namespace GeneXus.Data
 		}
 		public virtual IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters, bool isCursor, bool forFirst, bool isRpc)
 		{
-			return GetCommand(con, stmt, parameters);
-		}
-		protected virtual void PrepareCommand(IDbCommand cmd)
-		{
-		}
-        public virtual int GetCommandTimeout()
-        {
-            return 0;
-        }
-		public virtual IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters)
-		{
 			IDbCommand cmd = GetCachedCommand(con, stmt);
 
 			if (cmd==null)
@@ -790,13 +779,13 @@ namespace GeneXus.Data
 				cmd = con.InternalConnection.CreateCommand();
 				cmd.CommandText=stmt;
 				cmd.Connection=con.InternalConnection.InternalConnection;
-				
-                cmd.CommandTimeout = GetCommandTimeout();
+
+				cmd.CommandTimeout = GetCommandTimeout();
 				AddParameters(cmd, parameters);
 				cmd.Transaction=con.BeginTransaction();
-				
-				PrepareCommand(cmd);
-			    con.ConnectionCache.AddPreparedCommand(stmt, cmd);
+
+				PrepareCommand(cmd, isRpc);
+				con.ConnectionCache.AddPreparedCommand(stmt, cmd);
 			}
 			else
 			{
@@ -804,20 +793,20 @@ namespace GeneXus.Data
 				{
 					if (parameters.Count>0)
 					{
-						for (int j=0; j< parameters.Count; j++)
+						for (int j = 0; j< parameters.Count; j++)
 						{
 							IDbDataParameter idbparameter = (IDbDataParameter)cmd.Parameters[j];
 							object value = parameters[j].Value;
 							idbparameter.Value=value;
-							if( value!=null && IsBlobType(idbparameter))
+							if (value!=null && IsBlobType(idbparameter))
 							{
 								try
 								{
 									idbparameter.Size = ((byte[])idbparameter.Value).Length;
 								}
-								catch(Exception ex)
+								catch (Exception ex)
 								{
-									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex );
+									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex);
 								}
 							}
 						}
@@ -825,7 +814,7 @@ namespace GeneXus.Data
 				}
 				else
 				{
-					
+
 					cmd.Parameters.Clear();
 
 					AddParameters(cmd, parameters);
@@ -834,6 +823,17 @@ namespace GeneXus.Data
 				cmd.Transaction=con.BeginTransaction();
 			}
 			return cmd;
+		}
+		protected virtual void PrepareCommand(IDbCommand cmd, bool isRpc)
+		{
+		}
+        public virtual int GetCommandTimeout()
+        {
+            return 0;
+        }
+		public virtual IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters)
+		{
+			return GetCommand(con, stmt, parameters, false, false, false);
 		}
 
 		public virtual void DisposeCommand(IDbCommand command)
