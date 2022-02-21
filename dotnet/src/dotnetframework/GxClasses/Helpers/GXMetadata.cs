@@ -11,7 +11,6 @@ namespace GeneXus.Metadata
 #if NETCORE
 	using GxClasses.Helpers;
 	using System.Runtime.Loader;
-	using Microsoft.Extensions.DependencyModel;
 	using System.Linq;
 #endif
 	using GeneXus.Application;
