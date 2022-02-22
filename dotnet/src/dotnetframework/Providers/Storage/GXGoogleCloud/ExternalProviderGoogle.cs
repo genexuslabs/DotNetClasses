@@ -172,13 +172,13 @@ namespace GeneXus.Storage.GXGoogleCloud
         }
 
         public string Copy(string objectName, GxFileType sourceFileType, string newName, GxFileType targetFileType)
-		{			
-			Client.CopyObject(Bucket, objectName, Bucket, newName, GetCopyOptions(targetFileType));
+		{
+			Google.Apis.Storage.v1.Data.Object obj = Client.CopyObject(Bucket, objectName, Bucket, newName, GetCopyOptions(targetFileType));
+			SetObjectContentType(newName, obj);
+			Client.UpdateObject(obj);
 			return GetURL(objectName, targetFileType);
 		}
-
 		
-
 		private PredefinedObjectAcl GetPredefinedAcl(GxFileType acl)
 		{
 			PredefinedObjectAcl objectPredefinedObjectAcl = PredefinedObjectAcl.PublicRead;
@@ -293,22 +293,27 @@ namespace GeneXus.Storage.GXGoogleCloud
 		}
 		
         public string Copy(string url, string newName, string tableName, string fieldName, GxFileType fileType)
-        {
-            newName = Folder + StorageUtils.DELIMITER + tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + newName;
-            url = StorageUtils.DecodeUrl(url.Replace(StorageUri, string.Empty));
-             
+		{
+			newName = Folder + StorageUtils.DELIMITER + tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + newName;
+			url = StorageUtils.DecodeUrl(url.Replace(StorageUri, string.Empty));
+
 			Google.Apis.Storage.v1.Data.Object obj = Client.CopyObject(Bucket, url, Bucket, newName, GetCopyOptions(fileType));
-			
-            obj.Metadata = CreateObjectMetadata(tableName, fieldName, newName);
+
+			obj.Metadata = CreateObjectMetadata(tableName, fieldName, newName);
+			SetObjectContentType(newName, obj);
+			Client.UpdateObject(obj);
+			return GetURL(newName, fileType, 0);
+		}
+
+		private void SetObjectContentType(string newName, Google.Apis.Storage.v1.Data.Object obj)
+		{
 			if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
 			{
 				obj.ContentType = mimeType;
-			}
-			Client.UpdateObject(obj);
-            return GetURL(newName, fileType, 0);
-        }
+			}			
+		}
 
-        public Stream GetStream(string objectName, GxFileType fileType)
+		public Stream GetStream(string objectName, GxFileType fileType)
 		{
             var stream = new MemoryStream();
             Client.DownloadObject(Bucket, objectName, stream);
