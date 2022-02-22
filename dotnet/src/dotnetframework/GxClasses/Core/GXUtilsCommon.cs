@@ -5416,11 +5416,11 @@ namespace GeneXus.Utils
 
 		private static string ImageAbsolutePath(string originalFileLocation)
 		{
-			return ImageFile(originalFileLocation).GetAbsoluteName();
+			return ImageFile(originalFileLocation).GetAbsoluteName();			
 		}
 		private static GxFile ImageFile(string originalFileLocation)
 		{
-			return new GxFile(GxContext.StaticPhysicalPath(), originalFileLocation);
+			return new GxLocalReferencedFile(GxContext.StaticPhysicalPath(), originalFileLocation);
 		}
 
 		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
