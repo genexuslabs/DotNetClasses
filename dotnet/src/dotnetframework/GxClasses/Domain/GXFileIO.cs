@@ -17,7 +17,6 @@ using System.Reflection;
 using GeneXus;
 using GeneXus.Storage;
 using GeneXus.Attributes;
-using GeneXus.Configuration;
 
 public interface IGxDirectoryInfo
 {
@@ -456,13 +455,6 @@ public class GxExternalFileInfo : IGxFileInfo
 	{
 		get {
 			return _fileTypeAtt;
-		}
-	}
-
-	public ExternalProvider Provider {
-		get
-		{
-			return _provider; ;
 		}
 	}
 
