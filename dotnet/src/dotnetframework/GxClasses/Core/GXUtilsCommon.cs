@@ -5414,14 +5414,10 @@ namespace GeneXus.Utils
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxImageUtil));
 
-		private static Bitmap BitmapFromStream(string fileName)
+		private static Bitmap BitmapOpenStream(string filePathOrUrl)
 		{
-			return new Bitmap(ImageFile(fileName).GetStream());
-		}
-		private static Image ImageFromStream(string fileName)
-		{
-			return Image.FromStream(ImageFile(fileName).GetStream());
-		}
+			return new Bitmap(ImageFile(filePathOrUrl).GetStream());
+		}		
 		private static string ImageAbsolutePath(string originalFileLocation)
 		{
 			return ImageFile(originalFileLocation).GetAbsoluteName();			
@@ -5584,7 +5580,7 @@ namespace GeneXus.Utils
 		{
 			try
 			{				
-				using (Bitmap bmp = BitmapFromStream(imageFile))
+				using (Bitmap bmp = BitmapOpenStream(imageFile))
 				{
 					return bmp.Width;
 				}
@@ -5599,7 +5595,7 @@ namespace GeneXus.Utils
 		public static int GetImageHeight(string imageFile)
 		{
 			try { 	
-				using (Bitmap bmp = BitmapFromStream(imageFile))
+				using (Bitmap bmp = BitmapOpenStream(imageFile))
 				{
 					return bmp.Height;
 				}
