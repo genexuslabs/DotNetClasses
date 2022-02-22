@@ -1571,35 +1571,6 @@ public class GxFile
     }
 }
 
-public class GxLocalReferencedFile: GxFile
-{
-	private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxLocalReferencedFile));	
-
-	public GxLocalReferencedFile(string baseDirectory, string originalFileLocation) : base(baseDirectory, originalFileLocation)
-	{
-		if (_file is GxExternalFileInfo)  //External Storage File
-		{
-			DownloadToLocalPath(baseDirectory);
-		}
-	}
-
-	private void DownloadToLocalPath(string baseDirectory)
-	{
-		GxExternalFileInfo fileInfo = _file as GxExternalFileInfo;
-		ExternalProvider s = fileInfo.Provider;
-		if (StorageFactory.TryGetProviderObjectName(s, _file.Source, out string objectName))
-		{
-			string fileTempFile = Path.Combine(GxContext.StaticPhysicalPath(), FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH()));
-			s.Download(objectName, fileTempFile, GxFileType.Default);
-			_file = new GxFileInfo(fileTempFile, baseDirectory);
-		}
-		else
-		{
-			log.Error("Could not get object Name of the external file resource");
-		}
-	}
-}
-
 public class GxDirectory
 {
     private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDirectory));

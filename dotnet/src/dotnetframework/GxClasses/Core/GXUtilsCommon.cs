@@ -5414,13 +5414,21 @@ namespace GeneXus.Utils
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxImageUtil));
 
+		private static Bitmap BitmapFromStream(string fileName)
+		{
+			return new Bitmap(ImageFile(fileName).GetStream());
+		}
+		private static Image ImageFromStream(string fileName)
+		{
+			return Image.FromStream(ImageFile(fileName).GetStream());
+		}
 		private static string ImageAbsolutePath(string originalFileLocation)
 		{
 			return ImageFile(originalFileLocation).GetAbsoluteName();			
-		}
+		}		
 		private static GxFile ImageFile(string originalFileLocation)
 		{
-			return new GxLocalReferencedFile(GxContext.StaticPhysicalPath(), originalFileLocation);
+			return new GxFile(GxContext.StaticPhysicalPath(), originalFileLocation);
 		}
 
 		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
@@ -5504,7 +5512,6 @@ namespace GeneXus.Utils
 		}
 		public static string Rotate(string imageFile, int angle)
 		{
-
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
@@ -5576,9 +5583,8 @@ namespace GeneXus.Utils
 		public static int GetImageWidth(string imageFile)
 		{
 			try
-			{
-				string originalFileLocation = ImageAbsolutePath(imageFile);
-				using (Bitmap bmp = new Bitmap(originalFileLocation))
+			{				
+				using (Bitmap bmp = BitmapFromStream(imageFile))
 				{
 					return bmp.Width;
 				}
@@ -5589,12 +5595,11 @@ namespace GeneXus.Utils
 			}
 			return 0;
 		}
+		
 		public static int GetImageHeight(string imageFile)
 		{
-			try
-			{
-				string originalFileLocation = ImageAbsolutePath(imageFile);
-				using (Bitmap bmp = new Bitmap(originalFileLocation))
+			try { 	
+				using (Bitmap bmp = BitmapFromStream(imageFile))
 				{
 					return bmp.Height;
 				}
