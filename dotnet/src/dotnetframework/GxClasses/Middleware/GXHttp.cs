@@ -1594,7 +1594,7 @@ namespace GeneXus.Http
 									}
 									else
 									{
-										var sValue = Value as string;
+										string sValue = Value as string;
 										if (sValue != null)
 										{
 											return Serialize(context.localUtil.Format(sValue, Pic));
@@ -1819,7 +1819,7 @@ namespace GeneXus.Http
 				sendCacheHeaders();
 				GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(httpContext));
 				sendAdditionalHeaders();
-				var clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
+				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
 #endif
 				bool validSession = ValidWebSession();
 				if (validSession && IntegratedSecurityEnabled)
@@ -2201,7 +2201,7 @@ namespace GeneXus.Http
 							_params.Add(GXUtil.UrlDecode(elements[i]));
 						else
 						{
-							var parmNameValue = elements[i].Split('=');
+							string[] parmNameValue = elements[i].Split('=');
 							if (parmNameValue.Length > 1)
 							{
 								parmValue = GXUtil.UrlDecode(parmNameValue[1]);
