@@ -81,6 +81,11 @@ namespace UnitTesting
 			extensions.Add(new string[] { "wav", "audio/wav" });
 			extensions.Add(new string[] { "xml", "text/xml" });
 			extensions.Add(new string[] { "zip", "application/zip" });
+			extensions.Add(new string[] { "xls", "application/vnd.ms-excel" });
+			extensions.Add(new string[] { "xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+			extensions.Add(new string[] { "doc", "application/msword" });
+			extensions.Add(new string[] { "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+			
 			foreach (string[] map in extensions)
 			{
 				string mimeType = context.GetContentType(map[0]);

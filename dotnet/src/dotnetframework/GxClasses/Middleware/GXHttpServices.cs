@@ -33,6 +33,8 @@ namespace GeneXus.Http
 	using GeneXus.Web.Security;
 	using System.Linq;
 	using GeneXus.Procedure;
+	using GxClasses.Web.Middleware;
+
 #else
 	using System.Web.UI;
 	using System.Web.UI.WebControls;
@@ -68,29 +70,27 @@ namespace GeneXus.Http
 				{
 					parmsColl.FromJSonString(jsonStr);
 				}
+#if NETCORE
 
+				handler = new GXRouting(string.Empty).GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
+				if (handler ==null) {
+					throw new GxClassLoaderException($"{gxobj} not found");
+				}
+#else
 				string nspace;
 				if (!Config.GetValueOf("AppMainNamespace", out nspace))
 					nspace = "GeneXus.Programs";
-#if NETCORE
-				object controllerInstance = ClassLoader.FindInstance(gxobj, nspace, gxobj, new Object[] { context }, Assembly.GetEntryAssembly());
-				GXBaseObject proc = controllerInstance as GXBaseObject;
-				if (proc != null)
-				{
-					handler = new GxRestWrapper(proc, localHttpContext, context as GxContext);
-				}
-				else
-				{
-					var sdtInstance = ClassLoader.FindInstance(Config.CommonAssemblyName, nspace, $"Sdt{gxobj}", new Object[] { context }, Assembly.GetEntryAssembly()) as GxSilentTrnSdt;
-					if (sdtInstance != null)
-						handler = new GXBCRestService(sdtInstance, localHttpContext, context as GxContext);
-				}
-#else
-				handler = (Utils.GxRestService)ClassLoader.FindInstance(gxobj, nspace, gxobj + "_services", null, null);
+				handler = (GxRestService)ClassLoader.FindInstance(gxobj, nspace, gxobj + "_services", null, null);
 #endif
 				handler.RunAsMain = false;
 
-				ParameterInfo[] pars = handler.GetType().GetMethod(EXECUTE_METHOD).GetParameters();
+#if NETCORE
+				GXBaseObject worker = handler.Worker;
+#else
+				GxRestService worker = handler;
+#endif
+				ParameterInfo[] pars = worker.GetType().GetMethod(EXECUTE_METHOD).GetParameters();
+
 				int ParmsCount = pars.Length;
 				object[] convertedparms = new object[ParmsCount];
 
@@ -105,7 +105,7 @@ namespace GeneXus.Http
 								convertedparms[i] = convertparm(pars, i, parmValues[idx]);
 							idx++;
 						}
-						handler.GetType().InvokeMember(EXECUTE_METHOD, BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod, null, handler, convertedparms);
+						worker.GetType().InvokeMember(EXECUTE_METHOD, BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod, null, worker, convertedparms);
 					}
 				}
 			}

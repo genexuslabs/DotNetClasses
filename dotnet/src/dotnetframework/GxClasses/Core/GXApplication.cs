@@ -3060,7 +3060,11 @@ namespace GeneXus.Application
 															 new string[] {"tar"    , "application/x-tar"},
 															 new string[] {"rar"    , "application/x-rar-compressed"},
 															 new string[] {"ram"	, "audio/vnd.rn-realaudio" },
-															 new string[] {"gz"		, "application/x-gzip"}
+															 new string[] {"gz"		, "application/x-gzip"},
+															 new string[] {"xls"    , "application/vnd.ms-excel"},
+															 new string[] {"xlsx"	, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+															 new string[] { "doc"	, "application/msword"},
+															 new string[] { "docx"	, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
 														 };
 
 		public int GetSoapErr()
