@@ -12,6 +12,7 @@ using GeneXus;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Http;
+using GeneXus.HttpHandlerFactory;
 using GeneXus.Metadata;
 using GeneXus.Procedure;
 using GeneXus.Utils;
@@ -31,10 +32,12 @@ namespace GxClasses.Web.Middleware
 		public static string ContentRootPath;
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
+		const string oauthRoute = "/oauth";
 		public static string UrlTemplateControllerWithParms;
 
 		//Azure Functions
 		public bool AzureRuntime;
+		public AzureDeployFeature AzureDeploy = new AzureDeployFeature();
 		public static string AzureFunctionName;
 
 		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
@@ -51,6 +54,7 @@ namespace GxClasses.Web.Middleware
 			restBaseURL = baseURL;
 			ServicesGroupSetting();
 			ServicesFunctionsMetadata();
+			GetAzureDeploy();
 		}
 
 		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
@@ -159,13 +163,25 @@ namespace GxClasses.Web.Middleware
 			}
 			return result;
 		}
+		internal async Task RouteHttpService(HttpContext context)
+		{
+			try
+			{
+				HandlerFactory handlerFactory = new HandlerFactory();
+				await handlerFactory.Invoke(context);
+			}
+			catch (Exception ex)
+			{
+				await Task.FromException(ex);
+			}
+		}
 		public Task ProcessRestRequest(HttpContext context)
 		{
 			try
 			{
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
-				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath))
+				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath) | (AzureRuntime && path.Contains(oauthRoute)))
 				{
 					string controllerWithParms = string.Empty;
 					if (!AzureRuntime)
@@ -173,12 +189,27 @@ namespace GxClasses.Web.Middleware
 						controllerWithParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
 						if (String.IsNullOrEmpty(controllerWithParms) && !String.IsNullOrEmpty(actualPath))
 						{
+							if (context.Request.RouteValues.Count > 0)
+							{
+								foreach (IRouter r in context.GetRouteData().Routers)
+								{
+									Route current_r = r as Route;
+									if (current_r != null)
+									{
+										path = current_r.ParsedTemplate.TemplateText;
+										break;
+									}
+								}
+							}
 							string controllerPath = path.ToLower().Split(actualPath).Last<string>();
 							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
-						}					
+					
+						}
 					}
 					else
 					{
+						if (path.Contains(oauthRoute) && (AzureDeploy.GAM == "true")) 
+							return (RouteHttpService(context));
 						controllerWithParms = GetGxRouteValue(path);
 						GXLogging.Debug(log, $"Running Azure functions. ControllerWithParms :{controllerWithParms} path:{path}");
 					}
@@ -260,7 +291,12 @@ namespace GxClasses.Web.Middleware
 		internal string GetGxRouteValue(string path)
 		{
 			//Not API Objects
-			string basePath = restBaseURL;
+			string basePath = "";
+			if (AzureDeploy.Deploy == AzureFeature.AzureServerless && !string.IsNullOrEmpty(AzureDeploy.Route))
+				basePath = AzureDeploy.Route;
+			else
+				basePath = restBaseURL;
+
 			string pathWithNoBase = string.IsNullOrEmpty(basePath) ? path.Substring(1) : path.Substring(basePath.Length + 2);
 
 			//API Objects
@@ -349,7 +385,7 @@ namespace GxClasses.Web.Middleware
 				object controllerInstance = ClassLoader.FindInstance(asssemblycontroller, nspace, controller, new Object[] { gxContext }, Assembly.GetEntryAssembly());
 				GXBaseObject proc = controllerInstance as GXBaseObject;
 				if (proc != null)
-					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias);
+					return new GxRestWrapper(proc, context, gxContext, methodName, variableAlias, null);
 				else
 					GXLogging.Warn(log, $"Controller not found controllerAssemblyName:{asssemblycontroller} nspace:{nspace} controller:{controller}");
 			}
@@ -481,6 +517,16 @@ namespace GxClasses.Web.Middleware
 				AzureRuntime = true;
 			}
 		}
+		public void GetAzureDeploy()
+		{
+			string azureDeployFlagFile = Path.Combine(ContentRootPath, "azureflag.json");
+
+			if (File.Exists(azureDeployFlagFile))
+			{
+				string azureFlag = File.ReadAllText(azureDeployFlagFile);
+				AzureDeploy = JSONHelper.Deserialize<AzureDeployFeature>(azureFlag);
+			}
+		}
 	}
 
 
@@ -501,11 +547,34 @@ namespace GxClasses.Web.Middleware
 		public List<Binding> bindings { get; set; }
 
 	}
-		public class PropertyList
-		{
-			public bool IsCodeless { get; set; }
-			public string configurationSource { get; set; }
-		}
+
+	public class AzureDeployFeature
+	{
+		[DataMember()]
+		public string Deploy
+		{ get; set; }
+
+		[DataMember()]
+		public string Route
+		{ get; set; }
+
+		[DataMember()]
+		public string GAM
+		{ get; set; }
+
+
+	}
+
+	public static class AzureFeature
+	{
+		public const string AzureServerless = "AzureServerless";
+		public const string AzureHttpFunctions = "AzureHttpFunctions";
+	}
+	public class PropertyList
+	{
+		public bool IsCodeless { get; set; }
+		public string configurationSource { get; set; }
+	}
 
 	public class Binding
 	{
@@ -545,6 +614,7 @@ namespace GxClasses.Web.Middleware
 		string verb = "GET";
 		string name = string.Empty;
 		string path = string.Empty;
+		string pathregexp = string.Empty;
 		string implementation = string.Empty;
 		string methodName = string.Empty;
 		Dictionary<string, string> variableAlias = new Dictionary<string, string>();
@@ -554,6 +624,9 @@ namespace GxClasses.Web.Middleware
 
 		[DataMember()]
 		public string Path { get => path; set => path = value; }
+
+		[DataMember()]
+		public string PathRegexp { get => pathregexp; set => pathregexp = value; }
 
 		[DataMember()]
 		public string ServiceMethod { get => methodName; set => methodName = value; }

@@ -126,6 +126,7 @@ namespace GeneXus.Application
 			services.Configure<KestrelServerOptions>(options =>
 			{
 				options.AllowSynchronousIO = true;
+				options.Limits.MaxRequestBodySize = null;
 			});
 			services.Configure<IISServerOptions>(options =>
 			{
