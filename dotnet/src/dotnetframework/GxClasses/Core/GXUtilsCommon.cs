@@ -5479,8 +5479,7 @@ namespace GeneXus.Utils
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Scale {imageFile} failed", ex);
-				throw ex;
-				//return imageFile;
+				return imageFile;
 			}
 		}
 		public static string Crop(string imageFile, int X, int Y, int Width, int Height)
