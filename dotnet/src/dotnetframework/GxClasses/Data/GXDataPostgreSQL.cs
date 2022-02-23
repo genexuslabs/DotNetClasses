@@ -153,10 +153,9 @@ namespace GeneXus.Data
 			reader.Close();
 			return values;
 		}
-		protected override void PrepareCommand(IDbCommand cmd, bool isRpc)
+		protected override void PrepareCommand(IDbCommand cmd)
 		{
-			if (!isRpc)
-				cmd.Prepare();
+			cmd.Prepare();
 		}
 		public override bool AllowsDuplicateParameters
 		{
