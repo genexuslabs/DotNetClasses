@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using GeneXus.Utils;
 using Microsoft.Data.SqlClient;
 
 namespace GxClasses.Helpers
@@ -35,14 +36,22 @@ namespace GxClasses.Helpers
 		public static Assembly GetAssembly(string assemblyName)
 		{
 			AssemblyLoadContext context = GetLoadContext(Assembly.GetExecutingAssembly());
-			return  context.LoadFromAssemblyName(new AssemblyName(assemblyName));
+			string assemblyFileName = $"{assemblyName}.dll";
+			if (File.Exists(assemblyFileName))
+			{
+				return context.LoadFromAssemblyName(new AssemblyName(assemblyName));
+			}
+			else
+			{
+				return context.LoadFromAssemblyPath(Path.Combine(FileUtil.GetStartupDirectory(), assemblyFileName));
+			}
 		}
 		public static Type GetType(string typeFullName)
 		{
 			string typeName = typeFullName.Split(',').First();
 			string assemblyFullName = typeFullName.Substring(typeName.Length + 1);
 			string assemblyName = assemblyFullName.Split(',').First();
-			Assembly assembly = GetAssembly(assemblyName);
+			Assembly assembly = GetAssembly(assemblyName.Trim());
 			return assembly.GetType(typeName);
 		}
 	}
