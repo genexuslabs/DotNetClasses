@@ -126,7 +126,7 @@ namespace GeneXus.Cache
 									try
 									{
 #if NETCORE
-										Type type = AssemblyLoader.GetType(providerService.ClassName);
+										Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(providerService.ClassName);
 #else
 										Type type = Type.GetType(providerService.ClassName, true, true);
 #endif

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -33,25 +34,18 @@ namespace GxClasses.Helpers
 		public AssemblyLoader(string folderPath)
 		{
 		}
-		public static Assembly GetAssembly(string assemblyName)
+		protected override Assembly Load(AssemblyName assemblyName)
 		{
 			AssemblyLoadContext context = GetLoadContext(Assembly.GetExecutingAssembly());
-			string assemblyFileName = $"{assemblyName}.dll";
-			if (File.Exists(assemblyFileName))
-			{
-				return context.LoadFromAssemblyName(new AssemblyName(assemblyName));
-			}
-			else
-			{
-				return context.LoadFromAssemblyPath(Path.Combine(FileUtil.GetStartupDirectory(), assemblyFileName));
-			}
+			string assemblyFileName = $"{assemblyName.Name}.dll";
+			return context.LoadFromAssemblyPath(Path.Combine(FileUtil.GetStartupDirectory(), assemblyFileName));
 		}
-		public static Type GetType(string typeFullName)
+		public Type GetType(string typeFullName)
 		{
 			string typeName = typeFullName.Split(',').First();
 			string assemblyFullName = typeFullName.Substring(typeName.Length + 1);
 			string assemblyName = assemblyFullName.Split(',').First();
-			Assembly assembly = GetAssembly(assemblyName.Trim());
+			Assembly assembly = Load(new AssemblyName(assemblyName.Trim()));
 			return assembly.GetType(typeName);
 		}
 	}
