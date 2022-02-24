@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
 		<TargetFrameworks>net6.0</TargetFrameworks>
 		<PackageTags>GxNetCoreStartup</PackageTags>
@@ -34,6 +34,13 @@
 			<Pack>true</Pack>
 			<PackagePath>\content\net6.0\</PackagePath>
 		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="$(OutputPath)\net6.0\$(MSBuildProjectName).deps.json">
+			<PackageCopyToOutput>true</PackageCopyToOutput>
+			<Pack>true</Pack>
+			<PackagePath>contentFiles\any\any</PackagePath>
+		</None>
 	</ItemGroup>
 
 </Project>
