@@ -37,10 +37,11 @@ namespace GxClasses.Helpers
 			AssemblyLoadContext context = GetLoadContext(Assembly.GetExecutingAssembly());
 			return  context.LoadFromAssemblyName(new AssemblyName(assemblyName));
 		}
-		public Type GetType(string typeFullName)
+		public static Type GetType(string typeFullName)
 		{
 			string typeName = typeFullName.Split(',').First();
-			string assemblyName = typeFullName.Substring(typeName.Length + 1);
+			string assemblyFullName = typeFullName.Substring(typeName.Length + 1);
+			string assemblyName = assemblyFullName.Split(',').First();
 			Assembly assembly = GetAssembly(assemblyName);
 			return assembly.GetType(typeName);
 		}

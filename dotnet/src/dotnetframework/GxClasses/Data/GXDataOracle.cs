@@ -563,8 +563,7 @@ namespace GeneXus.Data
 						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{OracleAssemblyName}.dll");
 						GXLogging.Debug(log, "Loading Oracle.ManagedDataAccess from:" + assemblyPath);
 #if NETCORE
-						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-						_odpAssembly = asl.LoadFromAssemblyName(new AssemblyName(OracleAssemblyName));
+						_odpAssembly = AssemblyLoader.GetAssembly(OracleAssemblyName);
 #else
 						if (File.Exists(assemblyPath))
 						{
