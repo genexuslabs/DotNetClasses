@@ -209,7 +209,7 @@ namespace GeneXus.Services
 #if !NETCORE
 						Type type = Type.GetType(typeFullName, true, true);
 #else
-						Type type = AssemblyLoader.GetType(typeFullName);
+						Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
 #endif
 						externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
 					}

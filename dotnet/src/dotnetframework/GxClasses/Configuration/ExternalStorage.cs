@@ -63,7 +63,7 @@ namespace GeneXus.Configuration
 #if !NETCORE
 				Type type = Type.GetType(typeFullName, true, true);
 #else
-				Type type = AssemblyLoader.GetType(typeFullName);
+				Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(typeFullName);
 #endif
 				this.provider = (ExternalProvider) Activator.CreateInstance(type, new object[] { providerService });
 				

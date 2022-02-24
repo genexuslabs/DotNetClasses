@@ -140,7 +140,8 @@ namespace GeneXus.Data
 #if NETCORE
 						string assemblyPath = FileUtil.GetStartupDirectory();
 						GXLogging.Debug(log, $"Loading {Db2AssemblyName}.dll from:" + assemblyPath);
-						_db2Assembly = AssemblyLoader.GetAssembly(Db2AssemblyName);
+						var asl = new AssemblyLoader(assemblyPath);
+						_db2Assembly = asl.LoadFromAssemblyName(new AssemblyName(Db2AssemblyName));
 #else
 						GXLogging.Debug(log, $"Loading {Db2AssemblyName} from GAC");
                         _db2Assembly = Assembly.LoadWithPartialName(Db2AssemblyName);

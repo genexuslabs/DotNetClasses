@@ -31,7 +31,8 @@ namespace GeneXus.Metadata
 
 
 #if NETCORE
-				Assembly assem = AssemblyLoader.GetAssembly(assemblyName);
+				var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
+				Assembly assem = asl.LoadFromAssemblyName(new AssemblyName(assemblyName));
 				Type classType = assem.GetType(fullClassName, true, true);
 #else
 				Assembly assem = Assembly.Load(new AssemblyName(assemblyName));
@@ -86,6 +87,9 @@ namespace GeneXus.Metadata
 			loadedAssemblies.TryGetValue(clss, out objType);
 			if (objType == null)
             {
+#if NETCORE
+				var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
+#endif
 				if (defaultAssembly != null)
                 {
 					try
@@ -104,7 +108,7 @@ namespace GeneXus.Metadata
 					if (objType == null)
 					{
 #if NETCORE
-						Assembly assem = AssemblyLoader.GetAssembly(defaultAssemblyName);
+						Assembly assem = asl.LoadFromAssemblyName(defaultAssemblyNameObj);
 						objType = ignoreCase ? assem.GetType(clss): assem.GetType(clss, false, ignoreCase);
 #else
 						objType = Assembly.Load(defaultAssemblyNameObj).GetType(clss);
@@ -187,7 +191,7 @@ namespace GeneXus.Metadata
 #if !NETCORE
                             objType = Assembly.LoadFrom(file).GetType(clss);
 #else
-							Assembly assem = AssemblyLoader.GetAssembly(Path.GetFileNameWithoutExtension(file));
+							Assembly assem = asl.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(file)));
 							objType = ignoreCase ? assem.GetType(clss, false, ignoreCase) : assem.GetType(clss);
 #endif
 							if (objType != null)

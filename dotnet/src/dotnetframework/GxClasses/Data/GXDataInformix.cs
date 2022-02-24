@@ -68,7 +68,9 @@ namespace GeneXus.Data
 							}
 						}
 						GXLogging.Debug(log, $"Loading {InformixAssemblyName}.dll from:" + assemblyPath);
-						_ifxAssembly = AssemblyLoader.GetAssembly(InformixAssemblyName);
+
+						var asl = new AssemblyLoader(assemblyPath);
+						_ifxAssembly = asl.LoadFromAssemblyName(new AssemblyName(InformixAssemblyName));
 #else
 						GXLogging.Debug(log, $"Loading {InformixAssemblyName} from GAC");
 						_ifxAssembly = Assembly.LoadWithPartialName(InformixAssemblyName);
