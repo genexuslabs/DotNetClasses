@@ -34,5 +34,12 @@
 			<PackagePath>\content\net6.0\</PackagePath>
 		</Content>
 	</ItemGroup>
+	<ItemGroup>
+		<None Include="$(OutputPath)\net6.0\$(MSBuildProjectName).deps.json">
+			<PackageCopyToOutput>true</PackageCopyToOutput>
+			<Pack>true</Pack>
+			<PackagePath>contentFiles\any\any</PackagePath>
+		</None>
+	</ItemGroup>
 
 </Project>
