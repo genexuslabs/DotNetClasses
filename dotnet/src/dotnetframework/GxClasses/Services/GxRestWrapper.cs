@@ -140,6 +140,7 @@ namespace GeneXus.Application
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
+				SendCacheHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -294,7 +295,8 @@ namespace GeneXus.Application
 				_procWorker.cleanup();
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);	
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
+				SendCacheHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -588,12 +590,7 @@ namespace GeneXus.Application
 		{
 			if (_httpContext != null)
 			{
-#if !NETCORE
-				_httpContext.Response.StatusDescription = statusMessage;
-#else
-				_httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusMessage.Replace(Environment.NewLine, string.Empty);
-
-#endif
+				_httpContext.SetReasonPhrase(statusMessage);
 			}
 		}
 #if NETCORE
@@ -659,12 +656,18 @@ namespace GeneXus.Application
 				status = GxSmartCacheProvider.CheckDataStatus(queryId, dt, out newDt);
 			}
 			AddHeader("Last-Modified", dateTimeToHTMLDate(newDt));
+
 			if (status == DataUpdateStatus.UpToDate)
 			{
 				SetStatusCode(HttpStatusCode.NotModified);
 				return false;
 			}
 			return true;
+		}
+		private void SendCacheHeaders()
+		{
+			if (string.IsNullOrEmpty(_gxContext.GetHeader(HttpHeader.CACHE_CONTROL)))
+				AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE);
 		}
 		DateTime HTMLDateToDatetime(string s)
 		{
