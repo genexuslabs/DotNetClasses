@@ -34,7 +34,7 @@ namespace GeneXus.Data
 #if NETCORE
 			if (assembly == null)
 			{
-				assembly = new AssemblyLoader(FileUtil.GetStartupDirectory()).LoadFromAssemblyName(new AssemblyName("MySqlConnector"));
+				assembly = AssemblyLoader.LoadAssembly(new AssemblyName("MySqlConnector"));
 			}
 #endif
 

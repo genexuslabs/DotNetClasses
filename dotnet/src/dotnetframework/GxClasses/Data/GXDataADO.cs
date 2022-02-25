@@ -2496,7 +2496,7 @@ namespace GeneXus.Data.ADO
 						try
 						{
 #if NETCORE
-							Type type = new AssemblyLoader(FileUtil.GetStartupDirectory()).GetType(providerService.ClassName);
+							Type type = AssemblyLoader.GetType(providerService.ClassName);
 #else
 							Type type = Type.GetType(providerService.ClassName, true, true);
 #endif

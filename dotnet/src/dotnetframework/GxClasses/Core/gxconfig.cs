@@ -409,7 +409,6 @@ namespace GeneXus.Configuration
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
-			AssemblyLoader assemblyLoader = new AssemblyLoader(FileUtil.GetStartupDirectory());
 			var requestedAssembly = new AssemblyName(args.Name);
 			if (requestedAssembly.Name == Log4NetShortName){
 				requestedAssembly.Version = Log4NetVersion;

@@ -38,7 +38,7 @@ namespace GeneXus.Data
 						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{NpgsqlAssemblyName}.dll");
 						GXLogging.Debug(log, "Loading Npgsql.dll from:" + assemblyPath);
 #if NETCORE
-						_npgsqlAssembly = new AssemblyLoader(FileUtil.GetStartupDirectory()).LoadFromAssemblyName(new AssemblyName(NpgsqlAssemblyName));
+						_npgsqlAssembly = AssemblyLoader.LoadAssembly(new AssemblyName(NpgsqlAssemblyName));
 #else
 						_npgsqlAssembly = Assembly.LoadFrom(assemblyPath);
 #endif
@@ -58,7 +58,7 @@ namespace GeneXus.Data
 #if NETCORE
 			if (_npgsqlAssembly == null)
 			{
-				_npgsqlAssembly = new AssemblyLoader(FileUtil.GetStartupDirectory()).LoadFromAssemblyName(new AssemblyName("Npgsql"));
+				_npgsqlAssembly = AssemblyLoader.LoadAssembly(new AssemblyName("Npgsql"));
 			}
 #endif
 			string cfgBuf;
@@ -76,31 +76,7 @@ namespace GeneXus.Data
 			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
 			return new PostgresqlConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 		}
-		string convertToSqlCall(string stmt, GxParameterCollection parameters)
-		{
-			if (parameters == null)
-				return stmt;
-			string pname;
-			StringBuilder sBld = new StringBuilder();
-			for (int i = 0; i < parameters.Count; i++)
-			{
-				if (parameters[i].Direction != ParameterDirection.Output && parameters[i].Direction!= ParameterDirection.ReturnValue)
-				{
-					if (sBld.Length>0)
-						sBld.Append(", ");
-					pname = ":" + parameters[i].ParameterName;
-					sBld.Append(pname);
-				}
-			}
-			return "SELECT " + stmt + "(" + sBld.ToString() + ")";
-		}
 
-		public override IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters, bool isCursor, bool forFirst, bool isRpc)
-		{
-			if (isRpc)
-				stmt = convertToSqlCall(stmt, parameters);
-			return base.GetCommand(con, stmt, parameters, isCursor, forFirst, isRpc);
-		}
 		protected override string BuildConnectionString(string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra)
 		{
@@ -163,34 +139,18 @@ namespace GeneXus.Data
 			IDataReader reader = cmd.ExecuteReader();
 			if (reader.Read())
 			{
-				if (reader.FieldCount > 0 && returnParms.Count>0)
+				int i = 0;
+				for (int j = 0; j < count; j++)
 				{
-					object[] readerValues;
-					if (reader.GetFieldType(0) == typeof(object[]))
-						readerValues = (object[])reader.GetValue(0);
-					else
+					if (returnParms.Contains(j))
 					{
-						readerValues = new object[returnParms.Count];
-						readerValues[0] = reader.GetValue(0);
-					}
-
-					int i = 0;
-					for (int j = 0; j < count; j++)
-					{
-						if (returnParms.Contains(j) && readerValues.Length>i)
-						{
-							values[j] = readerValues[i];
-							i++;
-						}
+						values[j] = reader.GetValue(i);
+						i++;
 					}
 				}
 			}
 			reader.Close();
 			return values;
-		}
-		protected override void PrepareCommand(IDbCommand cmd)
-		{
-			cmd.Prepare();
 		}
 		public override bool AllowsDuplicateParameters
 		{
