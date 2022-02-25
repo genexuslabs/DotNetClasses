@@ -58,10 +58,45 @@ namespace GeneXus.Http
 		RO_SESSION,
 		NO_SESSION,
 	}
+	public interface IDynAjaxEventContext
+	{
+		void Clear();
+		void SetParmHash(string fieldName, object value);
+		bool isParmModified(string fieldName, object value);
+	}
+	public class DynAjaxEventContext: IDynAjaxEventContext
+	{
+		StringDictionary inParmsHashValue = new StringDictionary();
+		public void Clear()
+		{
+			inParmsHashValue.Clear();
+		}
+		public void SetParmHash(string fieldName, object value)
+		{
+			IGxJSONSerializable jsonValue = value as IGxJSONSerializable;
+			if (jsonValue != null)
+			{
+				inParmsHashValue.Add(fieldName, GXUtil.GetHash(jsonValue.ToJSonString()));
+			}
+		}
+		public bool isParmModified(string fieldName, object value)
+		{
+			IGxJSONSerializable jsonValue = value as IGxJSONSerializable;
+			if (value != null)
+			{
+				if (!inParmsHashValue.ContainsKey(fieldName))
+					return true;
+				return GXUtil.GetHash(jsonValue.ToJSonString()) != inParmsHashValue[fieldName];
+			}
+			return true;
+		}
+	}
+
+
 
 	public class HttpAjaxContext : IHttpAjaxContext
 	{
-        private IGxContext _context;
+		private IGxContext _context;
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(HttpAjaxContext));
 		private Stack cmpContents = new Stack();
 		private GXAjaxCommandCollection commands = new GXAjaxCommandCollection();
@@ -75,12 +110,16 @@ namespace GeneXus.Http
 		private JObject _ComponentObjects = new JObject();
 		private JArray _StylesheetsToLoad = new JArray();
         private NameValueCollection _formVars;
+		private IDynAjaxEventContext _DynAjaxEventContext = new DynAjaxEventContext();
+
 #if !NETCORE
 		private GXWebRow _currentGridRow;
 #endif
 		private bool _isJsOutputEnabled = true;
 
 		internal SessionType SessionType { get; set; }
+
+		public IDynAjaxEventContext DynAjaxEventContext { get { return _DynAjaxEventContext; } }
 
 		public string FormCaption { get; set; }
 
@@ -275,7 +314,7 @@ namespace GeneXus.Http
 					try
 					{
 						JObject obj = GetGxObject(AttValues, CmpContext, IsMasterPage);
-						if (obj != null)
+						if (obj != null && DynAjaxEventContext.isParmModified(AttName, SdtObj))
 						{
 							IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
 							if (SdtObjJson != null)
