@@ -18,7 +18,7 @@ namespace GxClasses.Helpers
 		{
 			get => AssemblyLoadContext.GetLoadContext(Assembly.GetExecutingAssembly());
 		}
-		internal static Assembly LoadAssembly(AssemblyName assemblyName) {
+		public static Assembly LoadAssembly(AssemblyName assemblyName) {
 			return LoadContext.LoadFromAssemblyName(assemblyName);
 		}
 
