@@ -713,7 +713,7 @@ namespace GeneXus.Http.Client
 		}
 		public void Execute(string method, string name)
 		{
-			if (!Config.GetValueOf("useoldhttpclient", out string useOld) || useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
 			{
 				WebExecute(method, name);
 			}
