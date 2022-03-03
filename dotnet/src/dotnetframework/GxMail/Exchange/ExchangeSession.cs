@@ -129,69 +129,70 @@ namespace GeneXus.Mail.Exchange
 				userConfig.AutodiscoverUrl = new Uri(sessionInfo.ServerUrl);
 			}
 
-			// The permission scope required for EWS access
-			System.Threading.Tasks.Task<AuthenticationResult> authTask;
-			AuthenticationResult authResult;
-
 			try
 			{
+				System.Threading.Tasks.Task<AuthenticationResult> authTask = null;
+				_service = new ExchangeService();
+				_service.Url = new Uri("https://outlook.office365.com/EWS/Exchange.asmx");
+
+				var pcaOptions = new PublicClientApplicationOptions
+				{
+					ClientId = _appId,
+					TenantId = _tenantId
+				};
+
+				var pca = PublicClientApplicationBuilder
+						.CreateWithApplicationOptions(pcaOptions).Build();
+
+				string accessToken = null;
+
 				switch (_authenticationType)
 				{
-					case Exchange.AuthenticationType.Basic:
-						_service = Service.ConnectToService(userConfig);
+					case Exchange.AuthenticationType.OAuthDelegated:
+						_service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, userConfig.EmailAddress);
+						_service.HttpHeaders.Add("X-AnchorMailbox", userConfig.EmailAddress);
+						accessToken = _password; //Access Token is the Password										
 						break;
+
+					case Exchange.AuthenticationType.OAuthApplication:
+						string[] ewsScopes = new string[] { "https://outlook.office365.com/.default" };
+						_service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, userConfig.EmailAddress);
+						_service.HttpHeaders.Add("X-AnchorMailbox", userConfig.EmailAddress);
+
+						var cca = ConfidentialClientApplicationBuilder
+						.Create(_appId)
+						.WithClientSecret(_clientSecret)
+						.WithTenantId(_tenantId)
+						.Build();
+
+						//Make the token request
+						authTask = cca.AcquireTokenForClient(ewsScopes).ExecuteAsync();
+						break;
+
+					case Exchange.AuthenticationType.OAuthDelegatedInteractive:
+						authTask = pca.AcquireTokenInteractive(new string[] { "https://outlook.office365.com/EWS.AccessAsUser.All" }).ExecuteAsync();
+						break;
+					case Exchange.AuthenticationType.Basic:
 					default:
-						_service = new ExchangeService();
-						_service.Url = new Uri("https://outlook.office365.com/EWS/Exchange.asmx");
-
-						if (_authenticationType == Exchange.AuthenticationType.OAuthApplication)
-						{
-							var ewsScopes = new string[] { "https://outlook.office365.com/.default" };
-							_service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, userConfig.EmailAddress);
-							_service.HttpHeaders.Add("X-AnchorMailbox", userConfig.EmailAddress);
-
-							var cca = ConfidentialClientApplicationBuilder
-							.Create(_appId)
-							.WithClientSecret(_clientSecret)
-							.WithTenantId(_tenantId)
-							.Build();
-
-							//Make the token request
-							authTask = cca.AcquireTokenForClient(ewsScopes).ExecuteAsync();
-						}
-						else
-						{
-							var pcaOptions = new PublicClientApplicationOptions
-							{
-								ClientId = _appId,
-								TenantId = _tenantId
-							};
-							var pca = PublicClientApplicationBuilder
-								.CreateWithApplicationOptions(pcaOptions).Build();
-							var cred = new NetworkCredential(_userName, _password);
-							if (_authenticationType == Exchange.AuthenticationType.OAuthDelegated)
-							{
-								authTask = pca.AcquireTokenByUsernamePassword(new string[] { "https://outlook.office365.com/EWS.AccessAsUser.All" }, cred.UserName, cred.SecurePassword).ExecuteAsync();
-							}
-							else
-							{
-								authTask = pca.AcquireTokenInteractive(new string[] { "https://outlook.office365.com/EWS.AccessAsUser.All" }).ExecuteAsync();
-							}
-						}
-
-						authTask.Wait();
-						authResult = authTask.Result;
-						
-						_service.Credentials = new OAuthCredentials(authResult.AccessToken);
+						var cred = new NetworkCredential(_userName, _password);
+						authTask = pca.AcquireTokenByUsernamePassword(new string[] { "https://outlook.office365.com/EWS.AccessAsUser.All" }, cred.UserName, cred.SecurePassword).ExecuteAsync();
 						break;
 				}
+
+				if (authTask != null)
+				{
+					authTask.Wait();					
+					accessToken = authTask.Result.AccessToken;
+				}
+
+				_service.Credentials = new OAuthCredentials(accessToken);
+
 				UpdateMailCount();
 			}
 			catch (Exception e)
 			{
 				log.Error("Exchange Login Error", e);
-				HandleError(e, 3);
-				_service = null;
+				HandleError(e, 3);				
 			}
 		}
 
@@ -257,7 +258,7 @@ namespace GeneXus.Mail.Exchange
 				email.Body = new MessageBody(BodyType.HTML, gxmessage.HTMLText);
 			}
 
-			foreach (var attach in gxmessage.Attachments)
+			foreach (string attach in gxmessage.Attachments)
 			{
 				string attachFilePath = attach.Trim();
 				if (Path.IsPathRooted(attachFilePath))
