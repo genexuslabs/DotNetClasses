@@ -16,7 +16,8 @@ namespace DotNetUnitTest.GXMail
 			
 		}
 
-		private GXMailServiceSession LoginOAuthApplication()
+		[SkippableFact]
+		public GXMailServiceSession LoginOAuthApplication()
 		{
 			string appId, secret, tentantId;
 			GXMailServiceSession session;
@@ -33,14 +34,50 @@ namespace DotNetUnitTest.GXMail
 			return session;
 		}
 
-		private GXMailServiceSession LoginOAuthDelegate()
+		[SkippableFact]
+		public GXMailServiceSession LoginOAuthDelegate()
 		{
 			string appId, secret, tentantId;
 			GXMailServiceSession session;
 			InitializeSession(out appId, out secret, out tentantId, out session);
 
+			
+
 			session.SetProperty(ExchangeSession.AuthenticationType, AuthenticationType.OAuthDelegated.ToString());
 			session.Password = Environment.GetEnvironmentVariable("EWS_PASSWORD");
+
+			Skip.If(String.IsNullOrEmpty(session.Password), "Skipped because Password is empty");
+
+			session.Login();
+
+			Assert.Equal(0, session.ErrCode);
+			return session;
+		}
+
+		[SkippableFact]
+		public GXMailServiceSession LoginOAuthDelegateInteractive()
+		{
+			string appId, secret, tentantId;
+			GXMailServiceSession session;
+			InitializeSession(out appId, out secret, out tentantId, out session);
+
+			session.SetProperty(ExchangeSession.AuthenticationType, AuthenticationType.OAuthDelegatedInteractive.ToString());
+			session.Password = Environment.GetEnvironmentVariable("EWS_PASSWORD");
+			session.Login();
+
+			Assert.Equal(0, session.ErrCode);
+			return session;
+		}
+
+		[SkippableFact]
+		public GXMailServiceSession LoginOAuthBasic()
+		{
+			string appId, secret, tentantId;
+			GXMailServiceSession session;
+			InitializeSession(out appId, out secret, out tentantId, out session);
+
+			session.SetProperty(ExchangeSession.AuthenticationType, AuthenticationType.Basic.ToString());
+			session.Password = Environment.GetEnvironmentVariable("EWS_BASIC_PASSWORD");
 			session.Login();
 
 			Assert.Equal(0, session.ErrCode);
@@ -71,13 +108,28 @@ namespace DotNetUnitTest.GXMail
 		{
 			var session = LoginOAuthApplication();
 			SendMail(session);
-
 		}
 
 		[SkippableFact]
 		public void SendMailTestOAuthDelegate()
 		{
 			var session = LoginOAuthDelegate();
+			SendMail(session);
+
+		}
+
+		[SkippableFact]
+		public void SendMailTestOAuthDelegateInteractive()
+		{
+			var session = LoginOAuthDelegate();
+			SendMail(session);
+
+		}
+
+		[SkippableFact]
+		public void SendMailTestOAuthBasic()
+		{
+			var session = LoginOAuthBasic();
 			SendMail(session);
 
 		}
@@ -90,6 +142,7 @@ namespace DotNetUnitTest.GXMail
 			GXMailMessage m = new GXMailMessage();
 
 			m.To.Add(new GXMailRecipient(session.UserName, session.UserName));
+			m.To.Add(new GXMailRecipient(Environment.GetEnvironmentVariable("TEST_MAIL_NAME"), Environment.GetEnvironmentVariable("TEST_MAIL_ADDRESS")));
 			m.From = new GXMailRecipient(session.UserName, session.UserName);
 			m.Subject = mailSubject;
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
