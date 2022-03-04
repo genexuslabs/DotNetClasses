@@ -11,9 +11,137 @@ using System.Xml.Serialization;
 
 namespace GeneXus.Utils
 {
+	internal interface IGXUndefined
+	{
+		bool IsUndefined { get; set; }
+	}
+
+	public class GXBaseList<T> : IGXUndefined, IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList
+	{
+
+		List<T> m_list = new List<T>();
+
+		public GXBaseList()
+		{
+			IsUndefined = false;
+		}
+
+		public T this[int index] { get => ((IList<T>)m_list)[index]; set => ((IList<T>)m_list)[index] = value; }
+
+		public bool IsUndefined { get; set; }
+
+		public void AddRange(IEnumerable<T> collection) {
+			m_list.AddRange(collection);
+		}
+		public int Count => ((ICollection<T>)m_list).Count;
+
+		public bool IsReadOnly => ((ICollection<T>)m_list).IsReadOnly;
+
+		public bool IsSynchronized => ((ICollection)m_list).IsSynchronized;
+
+		public object SyncRoot => ((ICollection)m_list).SyncRoot;
+
+		public bool IsFixedSize => ((IList)m_list).IsFixedSize;
+
+		object IList.this[int index] { get => ((IList)m_list)[index]; set => ((IList)m_list)[index] = value; }
+
+		public void Add(T item)
+		{
+			((ICollection<T>)m_list).Add(item);
+			IsUndefined = false;
+		}
+
+		public void Clear()
+		{
+			((ICollection<T>)m_list).Clear();
+			IsUndefined = false;
+		}
+
+		public bool Contains(T item)
+		{
+			return ((ICollection<T>)m_list).Contains(item);
+		}
+
+		public void CopyTo(T[] array, int arrayIndex)
+		{
+			((ICollection<T>)m_list).CopyTo(array, arrayIndex);
+		}
+
+		public IEnumerator<T> GetEnumerator()
+		{
+			return ((IEnumerable<T>)m_list).GetEnumerator();
+		}
+
+		public virtual int IndexOf(T item)
+		{
+			return ((IList<T>)m_list).IndexOf(item);
+		}
+
+		public void Insert(int index, T item)
+		{
+			((IList<T>)m_list).Insert(index, item);
+		}
+
+		public bool Remove(T item)
+		{
+			IsUndefined = false;
+			return ((ICollection<T>)m_list).Remove(item);
+		}
+
+		public void RemoveAt(int index)
+		{
+			IsUndefined = false;
+			((IList<T>)m_list).RemoveAt(index);
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return ((IEnumerable)m_list).GetEnumerator();
+		}
+
+		public void Sort(IComparer<T> comparer)
+		{ 
+			m_list.Sort(comparer);
+		}
+		public void Sort()
+		{
+			m_list.Sort();
+		}
+
+		public void CopyTo(Array array, int index)
+		{
+			((ICollection)m_list).CopyTo(array, index);
+		}
+
+		public virtual int Add(object value)
+		{
+			return ((IList)m_list).Add(value);
+		}
+
+		public bool Contains(object value)
+		{
+			return ((IList)m_list).Contains(value);
+		}
+
+		public virtual int IndexOf(object value)
+		{
+			return ((IList)m_list).IndexOf(value);
+		}
+
+		public void Insert(int index, object value)
+		{
+			((IList)m_list).Insert(index, value);
+		}
+
+		public void Remove(object value)
+		{
+			IsUndefined = false;
+			((IList)m_list).Remove(value);
+		}
+	}
 
 	[Serializable]
-	public class GXBaseCollection<T> : List<T>, IGxXMLSerializable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable where T : GxUserType, IGxXMLSerializable, IGxJSONAble, new()
+	public class GXBaseCollection<T> : GXBaseList<T>, IGxXMLSerializable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable where T : GxUserType, IGxXMLSerializable, IGxJSONAble, new()
 	{
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXBaseCollection<T>));
@@ -109,7 +237,7 @@ namespace GeneXus.Utils
 			else
 				Insert(idx - 1, o as T);
 		}
-		public virtual int Add(object o)
+		public override int Add(object o)
 		{
 			base.Add(o as T);
 			return 0;
@@ -141,7 +269,7 @@ namespace GeneXus.Utils
 			}
 			return collection;
 		}
-		public int IndexOf(object value)
+		public override int IndexOf(object value)
 		{
 			return base.IndexOf((T)value) + 1;
 		}
@@ -364,7 +492,7 @@ namespace GeneXus.Utils
 		{
 			get
 			{
-				return this;
+				return (IList) this;
 			}
 			set
 			{
