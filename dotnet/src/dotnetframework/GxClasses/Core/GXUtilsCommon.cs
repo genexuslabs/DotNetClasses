@@ -2467,14 +2467,41 @@ namespace GeneXus.Utils
 		{
 			return YMDHMSMToT(year, month, day, hour, min, sec, mil, true);
 		}
+		private bool IsValidDate(int year, int month, int day)
+		{
+			if (year < DateTime.MinValue.Year || year > DateTime.MaxValue.Year)
+				return false;
 
+			if (month < 1 || month > 12)
+				return false;
+
+			return day > 0 && day <= DateTime.DaysInMonth(year, month);
+		}
+		private bool IsValidTime(int hour, int min, int sec, int mil)
+		{
+			return hour >= 0 && hour <24 && min >= 0 && min < 60 && sec >= 0 && sec < 60 && mil >= 0 && mil < 1000;
+		}
 		public DateTime YMDHMSMToT(int year, int month, int day, int hour, int min, int sec, int mil, bool centuryConversion)
 		{
 			try
 			{
+
 				int year1 = year;
 				if (centuryConversion)
 					year1 = GetYear(year);
+				if (!IsValidDate(year, month, day))
+				{
+					year=nullDate.Year;
+					month=nullDate.Month;
+					day=nullDate.Day;
+				}
+				if (!IsValidTime(hour, min, sec, mil))
+				{
+					hour=nullDate.Hour;
+					min=nullDate.Minute;
+					sec=nullDate.Second;
+					mil=nullDate.Millisecond;
+				}
 				return new DateTime(year1, month, day, hour, min, sec, mil, cultureInfo.DateTimeFormat.Calendar);
 			}
 			catch
