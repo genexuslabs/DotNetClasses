@@ -2706,6 +2706,10 @@ namespace GeneXus.Utils
 				return nullDate;
 			return dt.AddSeconds(seconds);
 		}
+		static public DateTime TAdd(DateTime dt, decimal seconds)
+		{
+			return TAdd(dt, (int)seconds);
+		}
 		static public DateTime TAddMs(DateTime dt, double seconds)
 		{
 			if (dt == nullDate && (seconds < 0 || Preferences.IgnoreAddOnEmptyDates))
@@ -2720,6 +2724,10 @@ namespace GeneXus.Utils
 			if (dt == nullDate && (days < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddDays(days);
+		}
+		static public DateTime DAdd(DateTime dt, decimal days)
+		{
+			return DAdd(dt, (int)days);
 		}
         public DateTime CToT(string strDate, int picFmt, int ampmFmt)
         {
