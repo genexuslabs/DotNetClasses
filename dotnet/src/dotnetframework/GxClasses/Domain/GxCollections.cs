@@ -288,7 +288,7 @@ namespace GeneXus.Utils
 
 	[Serializable]
 	[CollectionDataContract(Name = "GxSimpleCollection")]
-	public class GxSimpleCollection<T> : List<T>, IGxXMLSerializable, ICloneable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable
+	public class GxSimpleCollection<T> : GXBaseList<T>, IGxXMLSerializable, ICloneable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable
 	{
 
 		protected CollectionBase _jsonArr;
@@ -361,7 +361,7 @@ namespace GeneXus.Utils
 		{
 			return new Geospatial(this[i - 1]);
 		}
-		public int Add(Object o)
+		public override int Add(Object o)
 		{
 			base.Add((T)o);
 			return base.Count;
@@ -435,7 +435,7 @@ namespace GeneXus.Utils
 			collection.AddRange(this);
 			return collection;
 		}
-		public int IndexOf(object value)
+		public override int IndexOf(object value)
 		{
 			T TObject = ConvertToT(value);
 			return base.IndexOf(TObject) + 1;
@@ -1030,14 +1030,15 @@ namespace GeneXus.Utils
 
 	[Serializable]
 	[XmlType(IncludeInSchema = false)]
-	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable
+	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable, IGXUndefined
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GxUserType));
 		protected GXProperties dirties = new GXProperties();
 
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
-		
+		public bool IsUndefined { get; set; }
+
 		static void loadConfigurator()
 		{
 			if (GxUserType.setupChannelObject == null && !GxUserType.setupChannelInitialized)
@@ -1085,9 +1086,10 @@ namespace GeneXus.Utils
 
 		public GxUserType()
 		{
+			IsUndefined = false;
 		}
 
-		public virtual void SetDirty(string fieldName)
+	public virtual void SetDirty(string fieldName)
 		{
 			dirties[fieldName.ToLower()] = "true";
 		}

@@ -58,15 +58,39 @@ namespace GeneXus.Http
 		RO_SESSION,
 		NO_SESSION,
 	}
-	public interface IDynAjaxEventContext
+	internal interface IDynAjaxEventContext
 	{
 		void Clear();
+		void ClearParmsMetadata();
+		bool isInputParm(string key);
 		void SetParmHash(string fieldName, object value);
 		bool isParmModified(string fieldName, object value);
+		JArray inParmsMetadata { get; }
+		HashSet<string> inParmsMetadataHash { get; }
+		JArray outParmsMetadata { get; }
+		HashSet<string> outParmsMetadataHash { get; }
 	}
-	public class DynAjaxEventContext: IDynAjaxEventContext
+	internal class DynAjaxEventContext: IDynAjaxEventContext
 	{
-		StringDictionary inParmsHashValue = new StringDictionary();
+		public JArray inParmsMetadata { get; set; }
+		public HashSet<string> inParmsMetadataHash { get; set; }
+		public JArray outParmsMetadata { get; set; }
+		public HashSet<string> outParmsMetadataHash { get; set; }
+		private StringDictionary inParmsHashValue = new StringDictionary();
+
+		public void ClearParmsMetadata()
+		{
+			inParmsMetadata = new JArray();
+			inParmsMetadataHash = new HashSet<string>();
+			outParmsMetadata = new JArray();
+			outParmsMetadataHash = new HashSet<string>();
+		}
+
+		public bool isInputParm(string key)
+		{
+			return inParmsMetadataHash.Contains(key);
+		}
+
 		public void Clear()
 		{
 			inParmsHashValue.Clear();
@@ -92,8 +116,6 @@ namespace GeneXus.Http
 		}
 	}
 
-
-
 	public class HttpAjaxContext : IHttpAjaxContext
 	{
 		private IGxContext _context;
@@ -108,18 +130,18 @@ namespace GeneXus.Http
 		private JObject _Messages = new JObject();
 		private JArray _Grids = new JArray();
 		private JObject _ComponentObjects = new JObject();
-		private JArray _StylesheetsToLoad = new JArray();
-        private NameValueCollection _formVars;
+		private JArray _StylesheetsToLoad = new JArray(); 
+		private NameValueCollection _formVars;
 		private IDynAjaxEventContext _DynAjaxEventContext = new DynAjaxEventContext();
 
 #if !NETCORE
 		private GXWebRow _currentGridRow;
 #endif
-		private bool _isJsOutputEnabled = true;
+	private bool _isJsOutputEnabled = true;
 
 		internal SessionType SessionType { get; set; }
 
-		public IDynAjaxEventContext DynAjaxEventContext { get { return _DynAjaxEventContext; } }
+		internal IDynAjaxEventContext DynAjaxEventContext { get { return _DynAjaxEventContext; } }
 
 		public string FormCaption { get; set; }
 
@@ -305,6 +327,18 @@ namespace GeneXus.Http
 				}
 			}
 		}
+
+		private bool isUndefinedOutParam(string key, Object SdtObj) {
+
+			if (!DynAjaxEventContext.isInputParm(key))
+			{
+				if (SdtObj is IGXUndefined parm)
+				{
+					return parm.IsUndefined;
+				}
+			}
+			return false;
+		}
         public void ajax_rsp_assign_sdt_attri(String CmpContext, bool IsMasterPage, String AttName, Object SdtObj)
         {
 			if (isJsOutputEnabled)
@@ -314,7 +348,7 @@ namespace GeneXus.Http
 					try
 					{
 						JObject obj = GetGxObject(AttValues, CmpContext, IsMasterPage);
-						if (obj != null && DynAjaxEventContext.isParmModified(AttName, SdtObj))
+						if (obj != null && (DynAjaxEventContext.isParmModified(AttName, SdtObj) || !isUndefinedOutParam( AttName, SdtObj)))
 						{
 							IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
 							if (SdtObjJson != null)
