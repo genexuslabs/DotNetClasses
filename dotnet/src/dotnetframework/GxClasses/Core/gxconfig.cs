@@ -47,6 +47,9 @@ namespace GeneXus.Configuration
 		static ConcurrentDictionary<string, string> s_confMapping;
 		const string CONFMAPPING_FILE = "confmapping.json";
 		static Hashtable languages;
+#if NETCORE
+		static ConcurrentDictionary<string,string> customErrors;
+#endif
 		private static ConcurrentDictionary<string, string> connectionProperties = new ConcurrentDictionary<string, string>();
 
 		public static bool ConfigLog
@@ -267,7 +270,15 @@ namespace GeneXus.Configuration
 		{
 			return GetValueOf(sId, out sString);
 		}
-
+#if NETCORE
+		public static string MapCustomError(string code)
+		{
+			if (customErrors!=null && customErrors.ContainsKey(code))
+				return customErrors[code];
+			else
+				return null;
+		}
+#endif
 		public static string GetLanguageProperty(string language, string property)
 		{
 			string sString = null;
@@ -591,6 +602,7 @@ namespace GeneXus.Configuration
 				ConfigRoot = builder.Build();
 			}
 			languages = new Hashtable(StringComparer.OrdinalIgnoreCase);
+			customErrors = new ConcurrentDictionary<string, string>();
 			NameValueCollection cfg = new NameValueCollection(StringComparer.Ordinal); //Case sensitive
 			foreach (var c in ConfigRoot.GetSection("appSettings").GetChildren())
 			{
@@ -607,7 +619,10 @@ namespace GeneXus.Configuration
 					language[prop.Key] = prop.Value;
 				}
 			}
-
+			foreach (var c in ConfigRoot.GetSection("customErrors").GetChildren())
+			{
+				customErrors[c.Key] = c.Value;
+			}
 			return cfg;
 		}
 #endif
