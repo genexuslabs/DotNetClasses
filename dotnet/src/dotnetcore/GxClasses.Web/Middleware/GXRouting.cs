@@ -274,8 +274,8 @@ namespace GxClasses.Web.Middleware
 					else
 					{
 						GXLogging.Error(log, $"ProcessRestRequest controller not found path:{path} controllerWithParms:{controllerWithParms}");
-						context.Response.StatusCode = (int)HttpStatusCode.NotFound;
 						context.Response.Headers.Clear();
+						return Task.FromException(new PageNotFoundException(path));
 					}
 				}
 				return Task.CompletedTask;
@@ -283,8 +283,8 @@ namespace GxClasses.Web.Middleware
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "ProcessRestRequest", ex);
-				HttpHelper.SetUnexpectedError(context, HttpStatusCode.InternalServerError, ex); 
-				return Task.CompletedTask;
+				HttpHelper.SetUnexpectedError(context, HttpStatusCode.InternalServerError, ex);
+				return Task.FromException(ex);
 			}
 		}
 
