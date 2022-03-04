@@ -332,9 +332,9 @@ namespace GeneXus.Http
 
 			if (!DynAjaxEventContext.isInputParm(key))
 			{
-				if (SdtObj is IGXUndefined parm)
+				if (SdtObj is IGXUnassigned parm)
 				{
-					return parm.IsUndefined;
+					return parm.IsUnassigned;
 				}
 			}
 			return false;

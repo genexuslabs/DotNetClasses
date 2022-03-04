@@ -11,24 +11,24 @@ using System.Xml.Serialization;
 
 namespace GeneXus.Utils
 {
-	internal interface IGXUndefined
+	internal interface IGXUnassigned
 	{
-		bool IsUndefined { get; set; }
+		bool IsUnassigned { get; set; }
 	}
 
-	public class GXBaseList<T> : IGXUndefined, IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList
+	public class GXBaseList<T> : IGXUnassigned, IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList
 	{
 
 		List<T> m_list = new List<T>();
 
 		public GXBaseList()
 		{
-			IsUndefined = false;
+			IsUnassigned = false;
 		}
 
 		public T this[int index] { get => ((IList<T>)m_list)[index]; set => ((IList<T>)m_list)[index] = value; }
 
-		public bool IsUndefined { get; set; }
+		public bool IsUnassigned { get; set; }
 
 		public void AddRange(IEnumerable<T> collection) {
 			m_list.AddRange(collection);
@@ -48,13 +48,13 @@ namespace GeneXus.Utils
 		public void Add(T item)
 		{
 			((ICollection<T>)m_list).Add(item);
-			IsUndefined = false;
+			IsUnassigned = false;
 		}
 
 		public void Clear()
 		{
 			((ICollection<T>)m_list).Clear();
-			IsUndefined = false;
+			IsUnassigned = false;
 		}
 
 		public bool Contains(T item)
@@ -84,13 +84,13 @@ namespace GeneXus.Utils
 
 		public bool Remove(T item)
 		{
-			IsUndefined = false;
+			IsUnassigned = false;
 			return ((ICollection<T>)m_list).Remove(item);
 		}
 
 		public void RemoveAt(int index)
 		{
-			IsUndefined = false;
+			IsUnassigned = false;
 			((IList<T>)m_list).RemoveAt(index);
 		}
 
@@ -135,7 +135,7 @@ namespace GeneXus.Utils
 
 		public void Remove(object value)
 		{
-			IsUndefined = false;
+			IsUnassigned = false;
 			((IList)m_list).Remove(value);
 		}
 	}
