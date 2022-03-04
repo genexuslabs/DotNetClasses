@@ -1030,14 +1030,14 @@ namespace GeneXus.Utils
 
 	[Serializable]
 	[XmlType(IncludeInSchema = false)]
-	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable, IGXUndefined
+	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable, IGXUnassigned
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GxUserType));
 		protected GXProperties dirties = new GXProperties();
 
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
-		public bool IsUndefined { get; set; }
+		public bool IsUnassigned { get; set; }
 
 		static void loadConfigurator()
 		{
@@ -1086,7 +1086,7 @@ namespace GeneXus.Utils
 
 		public GxUserType()
 		{
-			IsUndefined = false;
+			IsUnassigned = false;
 		}
 
 	public virtual void SetDirty(string fieldName)
