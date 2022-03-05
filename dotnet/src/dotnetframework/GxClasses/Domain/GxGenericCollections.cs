@@ -26,6 +26,15 @@ namespace GeneXus.Utils
 			IsUnassigned = false;
 		}
 
+		public static explicit operator List<T>(GXBaseList<T> l)
+		{
+			return l.m_list;
+		}
+		public List<T> ToList(GXBaseList<T> l)
+		{
+			return l.m_list;
+		}
+
 		public T this[int index] { get => ((IList<T>)m_list)[index]; set => ((IList<T>)m_list)[index] = value; }
 
 		public bool IsUnassigned { get; set; }
