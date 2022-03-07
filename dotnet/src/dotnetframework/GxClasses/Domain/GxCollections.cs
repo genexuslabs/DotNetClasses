@@ -291,6 +291,16 @@ namespace GeneXus.Utils
 	public class GxSimpleCollection<T> : GXBaseList<T>, IGxXMLSerializable, ICloneable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable
 	{
 
+		public static explicit operator List<T>(GxSimpleCollection<T> l)
+		{
+			return l.ToList();
+		}
+
+		public List<T> ToList(GxSimpleCollection<T> l)
+		{
+			return ToList(l);
+		}
+
 		protected CollectionBase _jsonArr;
 		protected CollectionBase jsonArr
 		{
