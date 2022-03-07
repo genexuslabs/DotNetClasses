@@ -30,7 +30,7 @@ namespace GeneXus.Utils
 		{
 			return l.m_list;
 		}
-		public List<T> ToList(GXBaseList<T> l)
+		public static List<T> ToList(GXBaseList<T> l)
 		{
 			return l.m_list;
 		}
@@ -175,6 +175,15 @@ namespace GeneXus.Utils
 			{
 				Add(item);
 			}
+		}
+
+		public static explicit operator List<T>(GXBaseCollection<T> l)
+		{
+			return GXBaseList<T>.ToList(l);
+		}
+		public List<T> ToList(GXBaseCollection<T> l)
+		{
+			return GXBaseList<T>.ToList(l);
 		}
 
 		protected CollectionBase jsonArr
