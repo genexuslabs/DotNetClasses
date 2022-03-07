@@ -685,9 +685,9 @@ namespace GeneXus.Http
 					{
 						object TypedValue = getFieldValue(targetObj, parmName);
 						DynAjaxEventContext.SetParmHash(parmName, TypedValue);
-						if (!DynAjaxEventContext.isInputParm(parmName) && TypedValue is IGXUnassigned param)
+						if (!DynAjaxEventContext.isInputParm(parmName) && TypedValue is IGXAssigned param)
 						{
-							param.IsUnassigned = true;
+							param.IsAssigned = false;
 						}
 					}
 				}
