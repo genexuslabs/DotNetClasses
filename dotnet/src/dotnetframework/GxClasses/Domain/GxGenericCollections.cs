@@ -11,141 +11,37 @@ using System.Xml.Serialization;
 
 namespace GeneXus.Utils
 {
-	internal interface IGXUnassigned
+	internal interface IGXAssigned
 	{
-		bool IsUnassigned { get; set; }
+		bool IsAssigned { get; set; }
 	}
 
-	public class GXBaseList<T> : IGXUnassigned, IList<T>, ICollection<T>, IEnumerable<T>, IEnumerable, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList
+	public class GXBaseList<T> : List<T>, IGXAssigned, ICollection<T>, IEnumerable<T>, IEnumerable, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList
 	{
-
-		List<T> m_list = new List<T>();
-
 		public GXBaseList()
 		{
-			IsUnassigned = false;
+			IsAssigned = true;
 		}
+		public bool IsAssigned { get; set; }
 
-		public static explicit operator List<T>(GXBaseList<T> l)
+		public new void Clear() {
+			base.Clear();
+			IsAssigned = true;
+		}
+		public new void RemoveAt(int idx)
 		{
-			return l.m_list;
+			base.RemoveAt(idx);
+			IsAssigned = true;
 		}
-		public static List<T> ToList(GXBaseList<T> l)
+		public new void Add(T TObject)
 		{
-			return l.m_list;
+			base.Add(TObject);
+			IsAssigned = true;
 		}
-
-		public T this[int index] { get => ((IList<T>)m_list)[index]; set => ((IList<T>)m_list)[index] = value; }
-
-		public bool IsUnassigned { get; set; }
-
-		public void AddRange(IEnumerable<T> collection) {
-			m_list.AddRange(collection);
-		}
-		public int Count => ((ICollection<T>)m_list).Count;
-
-		public bool IsReadOnly => ((ICollection<T>)m_list).IsReadOnly;
-
-		public bool IsSynchronized => ((ICollection)m_list).IsSynchronized;
-
-		public object SyncRoot => ((ICollection)m_list).SyncRoot;
-
-		public bool IsFixedSize => ((IList)m_list).IsFixedSize;
-
-		object IList.this[int index] { get => ((IList)m_list)[index]; set => ((IList)m_list)[index] = value; }
-
-		public void Add(T item)
+		public new void Insert(int idx, T TObject)
 		{
-			((ICollection<T>)m_list).Add(item);
-			IsUnassigned = false;
-		}
-
-		public void Clear()
-		{
-			((ICollection<T>)m_list).Clear();
-			IsUnassigned = false;
-		}
-
-		public bool Contains(T item)
-		{
-			return ((ICollection<T>)m_list).Contains(item);
-		}
-
-		public void CopyTo(T[] array, int arrayIndex)
-		{
-			((ICollection<T>)m_list).CopyTo(array, arrayIndex);
-		}
-
-		public IEnumerator<T> GetEnumerator()
-		{
-			return ((IEnumerable<T>)m_list).GetEnumerator();
-		}
-
-		public virtual int IndexOf(T item)
-		{
-			return ((IList<T>)m_list).IndexOf(item);
-		}
-
-		public void Insert(int index, T item)
-		{
-			((IList<T>)m_list).Insert(index, item);
-		}
-
-		public bool Remove(T item)
-		{
-			IsUnassigned = false;
-			return ((ICollection<T>)m_list).Remove(item);
-		}
-
-		public void RemoveAt(int index)
-		{
-			IsUnassigned = false;
-			((IList<T>)m_list).RemoveAt(index);
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return ((IEnumerable)m_list).GetEnumerator();
-		}
-
-		public void Sort(IComparer<T> comparer)
-		{ 
-			m_list.Sort(comparer);
-		}
-		public void Sort()
-		{
-			m_list.Sort();
-		}
-
-		public void CopyTo(Array array, int index)
-		{
-			((ICollection)m_list).CopyTo(array, index);
-		}
-
-		public virtual int Add(object value)
-		{
-			return ((IList)m_list).Add(value);
-		}
-
-		public bool Contains(object value)
-		{
-			return ((IList)m_list).Contains(value);
-		}
-
-		public virtual int IndexOf(object value)
-		{
-			return ((IList)m_list).IndexOf(value);
-		}
-
-		public void Insert(int index, object value)
-		{
-			((IList)m_list).Insert(index, value);
-		}
-
-		public void Remove(object value)
-		{
-			IsUnassigned = false;
-			((IList)m_list).Remove(value);
+			base.Insert(idx - 1, TObject);
+			IsAssigned = true;
 		}
 	}
 
@@ -175,15 +71,6 @@ namespace GeneXus.Utils
 			{
 				Add(item);
 			}
-		}
-
-		public static explicit operator List<T>(GXBaseCollection<T> l)
-		{
-			return GXBaseList<T>.ToList(l);
-		}
-		public List<T> ToList(GXBaseCollection<T> l)
-		{
-			return GXBaseList<T>.ToList(l);
 		}
 
 		protected CollectionBase jsonArr
@@ -255,7 +142,7 @@ namespace GeneXus.Utils
 			else
 				Insert(idx - 1, o as T);
 		}
-		public override int Add(object o)
+		public int Add(object o)
 		{
 			base.Add(o as T);
 			return 0;
@@ -287,7 +174,7 @@ namespace GeneXus.Utils
 			}
 			return collection;
 		}
-		public override int IndexOf(object value)
+		public int IndexOf(object value)
 		{
 			return base.IndexOf((T)value) + 1;
 		}
@@ -671,7 +558,7 @@ namespace GeneXus.Utils
 			_containedName = containedName;
 			_containedXmlNamespace = containedXmlNamespace;
 		}
-		public override int Add(object item)
+		public new int Add(object item)
 		{
 			SetModeNewSilentItem(item as T);
 			base.Add(item);
