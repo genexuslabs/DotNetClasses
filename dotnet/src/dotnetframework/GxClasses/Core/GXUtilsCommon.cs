@@ -5019,7 +5019,11 @@ namespace GeneXus.Utils
 				StringUtil.NewLine() + e.StackTrace);
 		}
 #else
-        public static void SaveToEventLog(string appName, Exception e)
+		public static void SaveToEventLog(string appName, string message)
+		{
+			GXLogging.Error(log, "SaveToEventLog:" + appName + " " + message);
+		}
+		public static void SaveToEventLog(string appName, Exception e)
         {
             string msg = e.Message;
             while (e.InnerException != null)
@@ -5027,7 +5031,7 @@ namespace GeneXus.Utils
                 e = e.InnerException;
                 msg += "\n" + e.Message;
             }
-            GXLogging.Error(log, "SaveToEventLog:" + appName + " " + e.GetType().ToString() + " " + msg);
+            SaveToEventLog(appName, e.GetType().ToString() + " " + msg);
         }
 
 #endif
