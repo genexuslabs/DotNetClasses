@@ -143,7 +143,7 @@ namespace GeneXus.Utils
 			else
 				Insert(idx - 1, o as T);
 		}
-		public int Add(object o)
+		public virtual int Add(object o)
 		{
 			base.Add(o as T);
 			return 0;
@@ -559,7 +559,7 @@ namespace GeneXus.Utils
 			_containedName = containedName;
 			_containedXmlNamespace = containedXmlNamespace;
 		}
-		public new int Add(object item)
+		public override int Add(object item)
 		{
 			SetModeNewSilentItem(item as T);
 			base.Add(item);
