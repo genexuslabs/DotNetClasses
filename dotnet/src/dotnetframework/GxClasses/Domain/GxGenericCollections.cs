@@ -41,7 +41,7 @@ namespace GeneXus.Utils
 		}
 		public new void Insert(int idx, T TObject)
 		{
-			base.Insert(idx - 1, TObject);
+			base.Insert(idx, TObject);
 			IsAssigned = true;
 		}
 	}
