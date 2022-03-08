@@ -216,6 +216,21 @@ namespace GeneXus.Encryption
 		{
 			return Decrypt64(value, key, false);
 		}
+
+		public static bool IsBase64(string base64String)
+		{
+			if (string.IsNullOrEmpty(base64String) || (base64String.Length % 4 != 0))
+				return false;
+			try
+			{
+				Convert.FromBase64String(base64String);
+				return true;
+			}
+			catch (FormatException)
+			{
+				return false;
+			}
+		}
 		public static string Decrypt64(string value, string key, bool safeEncoding)
 		{
 			if (string.IsNullOrEmpty(value) || value.Trim().Length == 0)

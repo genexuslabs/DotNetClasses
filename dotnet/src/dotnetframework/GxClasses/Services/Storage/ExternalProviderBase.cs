@@ -95,7 +95,8 @@ namespace GeneXus.Services
 			{
 				try
 				{
-					value = CryptoImpl.Decrypt(value);
+					if (Encryption.CryptoImpl.IsBase64(value))
+						value = CryptoImpl.Decrypt(value);
 				}
 				catch (Exception)
 				{
