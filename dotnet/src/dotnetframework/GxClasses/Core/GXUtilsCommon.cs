@@ -2439,13 +2439,13 @@ namespace GeneXus.Utils
 		}
 		public DateTime YMDToD(int year, int month, int day)
 		{
-			int year1 = GetYear(year);
-			if (1 <= year1 && year1 <= 9999 && 1 <= month && 1 <= day)
+			int fourDigitsYear = GetYear(year);
+			if (IsValidDate(fourDigitsYear, month, day))
 			//Basic checkups are done before to avoid many calls to the constructor
 			{
 				try
 				{
-					return new DateTime(year1, month, day, cultureInfo.Calendar);
+					return new DateTime(fourDigitsYear, month, day, cultureInfo.Calendar);
 				}
 				catch
 				{
@@ -2486,12 +2486,12 @@ namespace GeneXus.Utils
 			try
 			{
 
-				int year1 = year;
+				int fourDigitsYear = year;
 				if (centuryConversion)
-					year1 = GetYear(year);
-				if (!IsValidDate(year, month, day))
+					fourDigitsYear = GetYear(year);
+				if (!IsValidDate(fourDigitsYear, month, day))
 				{
-					year=nullDate.Year;
+					fourDigitsYear=nullDate.Year;
 					month=nullDate.Month;
 					day=nullDate.Day;
 				}
@@ -2502,7 +2502,7 @@ namespace GeneXus.Utils
 					sec=nullDate.Second;
 					mil=nullDate.Millisecond;
 				}
-				return new DateTime(year1, month, day, hour, min, sec, mil, cultureInfo.DateTimeFormat.Calendar);
+				return new DateTime(fourDigitsYear, month, day, hour, min, sec, mil, cultureInfo.DateTimeFormat.Calendar);
 			}
 			catch
 			{
