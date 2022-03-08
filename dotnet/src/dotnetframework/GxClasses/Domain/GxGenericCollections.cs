@@ -23,7 +23,6 @@ namespace GeneXus.Utils
 			IsAssigned = true;
 		}
 		[XmlIgnore]
-		[NonSerialized]
 		public bool IsAssigned { get; set; }
 
 		public new void Clear() {
