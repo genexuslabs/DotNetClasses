@@ -1037,6 +1037,7 @@ namespace GeneXus.Utils
 
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
+		[XmlIgnore]
 		public bool IsAssigned { get; set; }
 
 		static void loadConfigurator()
