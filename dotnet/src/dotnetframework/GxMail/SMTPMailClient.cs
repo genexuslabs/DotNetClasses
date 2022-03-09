@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Net.Mail;
 using System.IO;
@@ -103,12 +102,12 @@ namespace GeneXus.Mail
 						session.HandleMailException(new GXMailException(re.Message, GXInternetConstants.MAIL_InvalidRecipient));
 					}
 
-					foreach (var item in msg.Attachments)
+					foreach (string item in msg.Attachments)
 					{
 						string fileName = item;
 						try
 						{
-							fileName = System.IO.Path.Combine(attachDir, item);
+							fileName = Path.Combine(attachDir, item);
 							mail.Attachments.Add(new Attachment(fileName));
 						}
 						catch (FileNotFoundException)
