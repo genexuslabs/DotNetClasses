@@ -24,7 +24,9 @@ namespace GeneXus.Mail
         private short timeout;
         private GXMailRecipient sender;
 
-        public GXSMTPSession()
+		public enum AuthMethod {XOAUTH2};
+
+		public GXSMTPSession()
         {
             initialize();
         }
@@ -38,16 +40,26 @@ namespace GeneXus.Mail
         private void initialize()
         {
             string smtpclient = string.Empty;
-            if (Config.GetValueOf("SMTPSession", out smtpclient) && smtpclient == "legacy")
+			string implTakenLogMessage = string.Empty;
+			bool existsSMTPSession = Config.GetValueOf("SMTPSession", out smtpclient);
+			System.Diagnostics.Debugger.Launch();
+			if (existsSMTPSession && smtpclient == "legacy")
             {
                 session = new SMTPSession();
-                GXLogging.Debug(log,"Using SMTP Session legacy implementation");
+				implTakenLogMessage = "Using SMTP Session legacy implementation";
             }
-            else
-            {
+			else if (existsSMTPSession && smtpclient == "SystemNetMail")
+			{
                 session = new SMTPMailClient();
-            }
-            authentication = 0;
+				implTakenLogMessage = "Using SMTP Session MailClient implementation";
+			}
+			else
+			{
+				session = new SMTPMailKit();
+				implTakenLogMessage = "Using SMTP Session MailKit library implementation";
+			}
+			GXLogging.Debug(log,implTakenLogMessage.Trim());
+			authentication = 0;
             secure = 0;
             host = string.Empty;
             userName = string.Empty;
