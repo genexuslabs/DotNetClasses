@@ -5,6 +5,7 @@
 		<RootNamespace>GeneXus.Mail</RootNamespace>
 		<PackageTags>SMTP Exchange POP3</PackageTags>
 		<PackageId>GeneXus.Mail</PackageId>
+		<UserSecretsId>73342154-596b-45e8-b5d6-a6109df18256</UserSecretsId>
 		
 	</PropertyGroup>
 
