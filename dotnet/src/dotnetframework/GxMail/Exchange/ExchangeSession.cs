@@ -110,12 +110,7 @@ namespace GeneXus.Mail.Exchange
 		}
 
 		public void Login(GXMailServiceSession sessionInfo)
-		{
-			if (_authenticationType == Exchange.AuthenticationType.Basic && (string.IsNullOrEmpty(_userName) || string.IsNullOrEmpty(_password)))
-			{
-				throw new BadCredentialsException();
-			}
-
+		{			
 			_session = sessionInfo;
 
 			UserData userConfig = new UserData()
@@ -131,69 +126,94 @@ namespace GeneXus.Mail.Exchange
 
 			try
 			{
-				System.Threading.Tasks.Task<AuthenticationResult> authTask = null;
-				_service = new ExchangeService();
-				_service.Url = new Uri("https://outlook.office365.com/EWS/Exchange.asmx");
-
-				var pcaOptions = new PublicClientApplicationOptions
+				if (_authenticationType == Exchange.AuthenticationType.Basic)
 				{
-					ClientId = _appId,
-					TenantId = _tenantId
-				};
-
-				var pca = PublicClientApplicationBuilder
-						.CreateWithApplicationOptions(pcaOptions).Build();
-
-				string accessToken = null;
-
-				switch (_authenticationType)
-				{
-					case Exchange.AuthenticationType.OAuthDelegated:
-						_service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, userConfig.EmailAddress);
-						_service.HttpHeaders.Add("X-AnchorMailbox", userConfig.EmailAddress);
-						accessToken = _password; //Access Token is the Password										
-						break;
-
-					case Exchange.AuthenticationType.OAuthApplication:
-						string[] ewsScopes = new string[] { "https://outlook.office365.com/.default" };
-						_service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, userConfig.EmailAddress);
-						_service.HttpHeaders.Add("X-AnchorMailbox", userConfig.EmailAddress);
-
-						var cca = ConfidentialClientApplicationBuilder
-						.Create(_appId)
-						.WithClientSecret(_clientSecret)
-						.WithTenantId(_tenantId)
-						.Build();
-
-						//Make the token request
-						authTask = cca.AcquireTokenForClient(ewsScopes).ExecuteAsync();
-						break;
-
-					case Exchange.AuthenticationType.OAuthDelegatedInteractive:
-						authTask = pca.AcquireTokenInteractive(new string[] { "https://outlook.office365.com/EWS.AccessAsUser.All" }).ExecuteAsync();
-						break;
-					case Exchange.AuthenticationType.Basic:
-					default:
-						var cred = new NetworkCredential(_userName, _password);
-						authTask = pca.AcquireTokenByUsernamePassword(new string[] { "https://outlook.office365.com/EWS.AccessAsUser.All" }, cred.UserName, cred.SecurePassword).ExecuteAsync();
-						break;
+					LoginBasic(userConfig);
 				}
-
-				if (authTask != null)
+				else
 				{
-					authTask.Wait();					
-					accessToken = authTask.Result.AccessToken;
+					LoginOAuth(userConfig);
 				}
-
-				_service.Credentials = new OAuthCredentials(accessToken);
 
 				UpdateMailCount();
-			}
+			}			
 			catch (Exception e)
 			{
 				log.Error("Exchange Login Error", e);
-				HandleError(e, 3);				
+				HandleError(e, 3);
 			}
+		}
+
+		private void LoginBasic(UserData userConfig)
+		{
+			if (_authenticationType == Exchange.AuthenticationType.Basic && (string.IsNullOrEmpty(_userName) || string.IsNullOrEmpty(_password)))
+			{
+				throw new BadCredentialsException();
+			}
+
+			_service = Service.ConnectToService(userConfig);
+		}
+
+		private void LoginOAuth(UserData userConfig)
+		{
+			System.Threading.Tasks.Task<AuthenticationResult> authTask = null;
+			_service = new ExchangeService();
+			_service.Url = new Uri("https://outlook.office365.com/EWS/Exchange.asmx");
+
+			var pcaOptions = new PublicClientApplicationOptions
+			{
+				ClientId = _appId,
+				TenantId = _tenantId
+			};
+
+			var pca = PublicClientApplicationBuilder
+					.CreateWithApplicationOptions(pcaOptions).Build();
+
+			string accessToken = null;
+
+			switch (_authenticationType)
+			{
+				case Exchange.AuthenticationType.OAuthDelegated:
+					_service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, userConfig.EmailAddress);
+					_service.HttpHeaders.Add("X-AnchorMailbox", userConfig.EmailAddress);
+					accessToken = _password; //Access Token is the Password										
+					break;
+
+				case Exchange.AuthenticationType.OAuthApplication:
+					string[] ewsScopes = new string[] { "https://outlook.office365.com/.default" };
+					_service.ImpersonatedUserId = new ImpersonatedUserId(ConnectingIdType.SmtpAddress, userConfig.EmailAddress);
+					_service.HttpHeaders.Add("X-AnchorMailbox", userConfig.EmailAddress);
+
+					var cca = ConfidentialClientApplicationBuilder
+					.Create(_appId)
+					.WithClientSecret(_clientSecret)
+					.WithTenantId(_tenantId)
+					.Build();
+
+					//Make the token request
+					authTask = cca.AcquireTokenForClient(ewsScopes).ExecuteAsync();
+					break;
+
+				case Exchange.AuthenticationType.OAuthDelegatedInteractive:
+					authTask = pca.AcquireTokenInteractive(new string[] { "https://outlook.office365.com/EWS.AccessAsUser.All" }).ExecuteAsync();
+					break;
+				case Exchange.AuthenticationType.OAuthUsernamePassword:
+					var cred = new NetworkCredential(_userName, _password);
+					authTask = pca.AcquireTokenByUsernamePassword(new string[] { "https://outlook.office365.com/EWS.AccessAsUser.All" }, cred.UserName, cred.SecurePassword).ExecuteAsync();
+					break;
+				default:
+					throw new NotSupportedException(String.Format("AuthenticationType not supported '{0}' for ExchangeSession", _authenticationType.ToString()));
+			}
+
+			if (authTask != null)
+			{
+				authTask.Wait();
+				accessToken = authTask.Result.AccessToken;
+			}
+
+			_service.Credentials = new OAuthCredentials(accessToken);
+
+
 		}
 
 		public void Logout(GXMailServiceSession sessionInfo)
@@ -717,6 +737,7 @@ namespace GeneXus.Mail.Exchange
 	public enum AuthenticationType
 	{
 		Basic,
+		OAuthUsernamePassword,
 		OAuthDelegated,
 		OAuthDelegatedInteractive,
 		OAuthApplication
