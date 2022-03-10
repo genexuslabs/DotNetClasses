@@ -38,8 +38,7 @@ namespace GeneXus.Data
 						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{NpgsqlAssemblyName}.dll");
 						GXLogging.Debug(log, "Loading Npgsql.dll from:" + assemblyPath);
 #if NETCORE
-						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-						_npgsqlAssembly = asl.LoadFromAssemblyName(new AssemblyName(NpgsqlAssemblyName));
+						_npgsqlAssembly = AssemblyLoader.LoadAssembly(new AssemblyName(NpgsqlAssemblyName));
 #else
 						_npgsqlAssembly = Assembly.LoadFrom(assemblyPath);
 #endif
@@ -59,10 +58,7 @@ namespace GeneXus.Data
 #if NETCORE
 			if (_npgsqlAssembly == null)
 			{
-				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "Npgsql.dll")))
-				{
-					_npgsqlAssembly = dynamicContext.Assembly;
-				}
+				_npgsqlAssembly = AssemblyLoader.LoadAssembly(new AssemblyName("Npgsql"));
 			}
 #endif
 			string cfgBuf;
