@@ -42,7 +42,7 @@ namespace GeneXus.Mail
             string smtpclient = string.Empty;
 			string implTakenLogMessage = string.Empty;
 			bool existsSMTPSession = Config.GetValueOf("SMTPSession", out smtpclient);
-			System.Diagnostics.Debugger.Launch();
+			
 			if (existsSMTPSession && smtpclient == "legacy")
             {
                 session = new SMTPSession();
