@@ -9,7 +9,7 @@ namespace GeneXus.Mail
 	{
 		private IPOP3Session session;
 		private short secure;
-		private short newMessages;        
+		private short newMessages;
 
 		public GXPOP3Session()
 		{
@@ -38,6 +38,7 @@ namespace GeneXus.Mail
 				session.AttachDir = value;
 			}
 		}
+
 
 		public short Secure
 		{
@@ -128,6 +129,30 @@ namespace GeneXus.Mail
 			set
 			{
 				session.Timeout = value;
+			}
+		}
+
+		public short Authentication
+		{
+			get
+			{
+				return (short)session.Authentication;
+			}
+			set
+			{
+				session.Authentication = value;
+			}
+		}
+
+		public string AuthenticationMethod
+		{
+			get
+			{
+				return session.AuthenticationMethod;
+			}
+			set
+			{
+				session.AuthenticationMethod = value;
 			}
 		}
 

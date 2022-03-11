@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -20,6 +20,8 @@ namespace GeneXus.Mail
         string UserName { get; set; }
         string Password { get; set; }
         int Timeout { get; set; }
+		short Authentication { get; set; }
+		string AuthenticationMethod { get; set; }
 
-    }
+	}
 }
