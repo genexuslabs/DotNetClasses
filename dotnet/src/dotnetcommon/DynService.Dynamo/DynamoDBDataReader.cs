@@ -115,7 +115,8 @@ namespace GeneXus.Data.Dynamo
 
 		public bool GetBoolean(int i)
 		{
-			return GetAttValue(i).BOOL;
+			AttributeValue value = GetAttValue(i);
+			return value.IsBOOLSet && value.BOOL;
 		}
 
 		public byte GetByte(int i)
@@ -337,7 +338,8 @@ namespace GeneXus.Data.Dynamo
 
 		public override bool GetBoolean(int i)
 		{
-			return GetAttValue(i).IsBOOLSet;
+			AttributeValue value = GetAttValue(i);
+			return value.IsBOOLSet && value.BOOL;
 		}
 
 		public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
