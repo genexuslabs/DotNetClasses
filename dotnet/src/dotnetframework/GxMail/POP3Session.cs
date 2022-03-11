@@ -13,7 +13,7 @@ using System.Linq;
 namespace GeneXus.Mail.Internals
 {
 	
-    internal class POP3Session : IPOP3Session
+    internal class POP3Session : Pop3SessionBase
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(POP3Session));
 		
@@ -49,7 +49,7 @@ namespace GeneXus.Mail.Internals
 			readerTimeout = -1;			
 		}
 
-		public string AttachDir
+		public override string AttachDir
 		{
 			get
 			{
@@ -65,12 +65,12 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-        public int GetMessageCount()
+        public override int GetMessageCount()
 		{
 			return count;
 		}
 
-		public string Host
+		public override string Host
 		{
 			get
 			{
@@ -82,7 +82,7 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-		public string UserName
+		public override string UserName
 		{
 			get
 			{
@@ -94,7 +94,7 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-		public string Password
+		public override string Password
 		{
             get
             {
@@ -106,7 +106,7 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-		public int Port
+		public override int Port
 		{
 			get
 			{
@@ -118,7 +118,7 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-		public int Timeout
+		public override int Timeout
 		{
 			get
 			{
@@ -131,10 +131,8 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-        public bool DownloadAttachments { get; set; }
-
 		#region Public Methods
-		public void Delete(GXPOP3Session session)
+		public override void Delete(GXPOP3Session session)
 		{
 			try
 			{
@@ -149,7 +147,7 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-		public string GetNextUID(GXPOP3Session session)
+		public override string GetNextUID(GXPOP3Session session)
 		{
             string nextUID = string.Empty;
 			try
@@ -173,7 +171,7 @@ namespace GeneXus.Mail.Internals
             return nextUID;
 		}
 
-		public void Login(GXPOP3Session session)
+		public override void Login(GXPOP3Session session)
 		{
 			secureConnection = (session.Secure == 1);
 			newMessages = (session.NewMessages == 1);
@@ -191,7 +189,7 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-		public void Logout(GXPOP3Session session)
+		public override void Logout(GXPOP3Session session)
 		{
 			try
 			{
@@ -206,7 +204,7 @@ namespace GeneXus.Mail.Internals
 			}
 		}
 
-		public void Receive(GXPOP3Session session, GXMailMessage msg)
+		public override void Receive(GXPOP3Session session, GXMailMessage msg)
 		{
             try
             {
@@ -228,7 +226,7 @@ namespace GeneXus.Mail.Internals
             }
 		}
 
-		public void Skip(GXPOP3Session session)
+		public override void Skip(GXPOP3Session session)
 		{
 			try
 			{
