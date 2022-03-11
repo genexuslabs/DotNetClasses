@@ -16,8 +16,6 @@ namespace GeneXus.Data.NTier
 {
 	public class Query
 	{
-		private object mDataStoreHelper;
-
 		public string TableName { get; set; } = String.Empty;
 		public string[] Projection { get; set; } = Array.Empty<string>();
 		public string[] OrderBys { get; set; } = Array.Empty<string>();
@@ -30,10 +28,8 @@ namespace GeneXus.Data.NTier
 		public IEnumerable<VarValue> Vars { get { return (mVarValues ?? Array.Empty<VarValue>() as IEnumerable<VarValue>); } }
 		public CursorType CursorType { get; set; } = CursorType.Select;
 
-		public Query(object dataStoreHelper)
-		{
-			mDataStoreHelper = dataStoreHelper;
-		}
+		public Query(object dataStoreHelper) { }
+
 		public Query For(string v)
 		{
 			TableName = v;
@@ -77,10 +73,10 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
-		public Query AddParm(GXType gxType, object parm)
+		public Query AddConst(GXType gxType, object parm)
 		{
 			mVarValues = mVarValues ?? new List<VarValue>();
-			mVarValues.Add(new VarValue($":parm{ mVarValues.Count + 1 }", gxType, parm));
+			mVarValues.Add(new VarValue($":const{ mVarValues.Count + 1 }", gxType, parm));
 			return this;
 		}
 	}
@@ -100,13 +96,6 @@ namespace GeneXus.Data.NTier
 
 	}
 
-	public class QueryExpression
-	{
-		public string For { get; set; }
-		internal string[] Select { get; set; }
-	}
-				
-	
 
 	public interface IODataMap2
 	{

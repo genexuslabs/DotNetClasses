@@ -181,7 +181,6 @@ namespace GeneXus.Data.NTier
 			
 			Initialize();
 			DynamoQuery query = cursorDef.Query as DynamoQuery;
-			Dictionary<string, AttributeValue> valuesAux = new Dictionary<string, AttributeValue>();
 			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
 			if (parms.Count > 0)
 			{
@@ -215,10 +214,17 @@ namespace GeneXus.Data.NTier
 		{
 			dataReader = null;
 			req = null;
-			ScanRequest scanReq = null;
-			QueryRequest queryReq = null;
+			Dictionary<string, string> expressionAttributeNames = null;
+			foreach (string mappedName in query.SelectList.Where(selItem => (selItem as DynamoDBMap)?.NeedsAttributeMap == true).Select(selItem => selItem.GetName(NewServiceContext())))
+			{
+				expressionAttributeNames = expressionAttributeNames ?? new Dictionary<string, string>();
+				string key = $"#{ mappedName }";
+				string value = mappedName;
+				expressionAttributeNames.Add(key, value);
+			}
 			if (query is DynamoScan)
 			{
+				ScanRequest scanReq;
 				req = scanReq = new ScanRequest
 				{
 					TableName = query.TableName,
@@ -229,9 +235,12 @@ namespace GeneXus.Data.NTier
 					scanReq.FilterExpression = String.Join(" AND ", query.Filters);
 					scanReq.ExpressionAttributeValues = values;
 				}
+				if (expressionAttributeNames != null)
+					scanReq.ExpressionAttributeNames = expressionAttributeNames;
 			}
 			else
 			{
+				QueryRequest queryReq;
 				req = queryReq = new QueryRequest
 				{
 					TableName = query.TableName,
@@ -241,20 +250,7 @@ namespace GeneXus.Data.NTier
 					IndexName = query.Index,
 					ScanIndexForward = query.ScanIndexForward,
 				};
-			}
-			Dictionary<string, string> expressionAttributeNames = null;
-			foreach (string mappedName in query.SelectList.Where(selItem => (selItem as DynamoDBMap)?.NeedsAttributeMap == true).Select(selItem => selItem.GetName(NewServiceContext())))
-			{
-				expressionAttributeNames = expressionAttributeNames ?? new Dictionary<string, string>();
-				string key = $"#{ mappedName }";
-				string value = mappedName;
-				expressionAttributeNames.Add(key, value);
-			}
-			if(expressionAttributeNames != null)
-			{
-				if(scanReq != null)
-					scanReq.ExpressionAttributeNames = expressionAttributeNames;
-				else if(queryReq != null)
+				if (expressionAttributeNames != null)
 					queryReq.ExpressionAttributeNames = expressionAttributeNames;
 			}
 		}
