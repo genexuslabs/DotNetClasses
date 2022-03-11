@@ -67,6 +67,14 @@ namespace GeneXus.Http
 	public class HttpHelper
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
+		/*
+		* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+		* Specifying no-cache or max-age=0 indicates that 
+		* clients can cache a resource and must revalidate each time before using it. 
+		* This means HTTP request occurs each time, but it can skip downloading HTTP body if the content is valid.
+		*/
+		public static string CACHE_CONTROL_HEADER_NO_CACHE = "no-cache, max-age=0";
+		public static string CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE = "max-age=0, no-cache, no-store, must-revalidate";
 		public const string ASPX = ".aspx";
 		public const string GXOBJECT = "/gxobject";
 		public const string HttpPostMethod= "POST";
@@ -101,7 +109,11 @@ namespace GeneXus.Http
 #endif
 			if (httpContext != null)
 			{
+#if NETCORE
+				httpContext.Response.SetStatusCode((int)httpStatusCode);
+#else
 				httpContext.Response.StatusCode = (int)httpStatusCode;
+#endif
 				if (httpStatusCode == HttpStatusCode.Unauthorized)
 				{
 					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty);
@@ -114,8 +126,7 @@ namespace GeneXus.Http
 				}
 			}
 #else
-				if (!string.IsNullOrEmpty(statusDescription))
-					httpContext.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
+				httpContext.SetReasonPhrase(statusDescription);
 				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", httpStatusCode, statusDescription));
 			}
 
@@ -144,7 +155,9 @@ namespace GeneXus.Http
 		{
 			if (httpContext != null)//<serviceHostingEnvironment aspNetCompatibilityEnabled="false" /> web.config
 			{
+#if !NETCORE
 				httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
+#endif
 				WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
 				httpContext.Response.Write(JSONHelper.Serialize(jsonError));
 			}
@@ -474,7 +487,12 @@ namespace GeneXus.Http
 		{
 			response.SendFileAsync(fileName).Wait();
 		}
-		
+		public static void SetStatusCode(this HttpResponse response, int value)
+		{
+			if (!response.HasStarted)
+				response.StatusCode = value;
+		}
+
 	}
 #endif
 	public static class HttpWebRequestExtensions
@@ -579,6 +597,15 @@ namespace GeneXus.Http
 				return string.Empty;
 #else
 			return context.Request.UserHostAddress;
+#endif
+		}
+		public static void SetReasonPhrase(this HttpContext context, string statusDescription)
+		{
+#if NETCORE
+			if (!string.IsNullOrEmpty(statusDescription)  && !context.Response.HasStarted)
+				context.Features.Get<IHttpResponseFeature>().ReasonPhrase = statusDescription.Replace(Environment.NewLine, string.Empty);
+#else
+			context.Response.StatusDescription = statusDescription;
 #endif
 		}
 	}
