@@ -338,19 +338,22 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				foreach(string yaml in Directory.GetFiles(LocalPath, "*.yaml")) {
+				string baseVirtualPathWithSep = string.IsNullOrEmpty(baseVirtualPath) ? string.Empty: $"{baseVirtualPath.TrimStart('/')}/";
+				foreach (string yaml in Directory.GetFiles(LocalPath, "*.yaml")) {
 					FileInfo finfo = new FileInfo(yaml);
+
 					app.UseSwaggerUI(options =>
 					{
-						options.SwaggerEndpoint($"{baseVirtualPath}/{finfo.Name}", finfo.Name);
-						options.RoutePrefix =$"{baseVirtualPath.TrimStart('/')}/{finfo.Name}/{SWAGGER_SUFFIX}";
+						options.SwaggerEndpoint($"../../{finfo.Name}", finfo.Name);
+						options.RoutePrefix =$"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
 					});
 					if (finfo.Name.Equals(SWAGGER_DEFAULT_YAML, StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(LocalPath, DEVELOPER_MENU)))
 						app.UseSwaggerUI(options =>
 						{
-							options.SwaggerEndpoint($"{baseVirtualPath}/{SWAGGER_DEFAULT_YAML}", SWAGGER_DEFAULT_YAML);
-							options.RoutePrefix =$"{baseVirtualPath.TrimStart('/')}/{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
+							options.SwaggerEndpoint($"../../{SWAGGER_DEFAULT_YAML}", SWAGGER_DEFAULT_YAML);
+							options.RoutePrefix =$"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
 						});
+
 				}
 			}
 			catch (Exception ex)
