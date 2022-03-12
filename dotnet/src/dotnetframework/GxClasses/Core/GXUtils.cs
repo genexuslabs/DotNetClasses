@@ -430,9 +430,10 @@ namespace GeneXus.Utils
 			}
 			string fld;
 			short err = getNextFld(length, out fld);
+			fld = stripDelimiters(fld);
+			s=fld;
 			if (err == GX_ASCDEL_SUCCESS)
 			{
-				fld = stripDelimiters(fld);
 				if (length != 0)
 				{
 					try
@@ -441,12 +442,9 @@ namespace GeneXus.Utils
 					}
 					catch
 					{
-						s = fld;
 						return GX_ASCDEL_OVERFLOW;
 					}
 				}
-				else
-					s = fld;
 			}
 			return err;
 		}
@@ -899,12 +897,18 @@ namespace GeneXus.Utils
 			
 			return txt.Replace(StringUtil.NewLine(), "\n");
 		}
+
 		static public bool IsMatch(string txt, string rex)
+		{
+			return IsMatch(txt, rex, RegexOptions.Multiline);
+		}
+		
+		static public bool IsMatch(string txt, string rex, RegexOptions  options)
 		{
 			resetError();
 			try
 			{
-				Regex r = new Regex(rex, RegexOptions.Multiline);
+				Regex r = new Regex(rex, options);
 				return r.Match(normalizeText(txt)).Success;
 			}
 			catch (Exception e)
@@ -943,12 +947,18 @@ namespace GeneXus.Utils
 			}
 			return new GxSimpleCollection<string>();
 		}
+
 		static public GxUnknownObjectCollection Matches(string txt, string rex)
+		{
+			return Matches(txt,rex, RegexOptions.Multiline);
+		}
+
+		static public GxUnknownObjectCollection Matches(string txt, string rex, RegexOptions options)
 		{
 			resetError();
 			try
 			{
-				Regex r = new Regex(rex, RegexOptions.Multiline);
+				Regex r = new Regex(rex, options);
 				MatchCollection mc = r.Matches(normalizeText(txt));
 				GxUnknownObjectCollection c = new GxUnknownObjectCollection();
 				foreach (Match m in mc)

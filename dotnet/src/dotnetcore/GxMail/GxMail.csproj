@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
 	<NoWarn>1701;1702;NU1701</NoWarn>
 	<DefineConstants>NETCORE</DefineConstants>
 	<PackageTags>SMTP Exchange POP3</PackageTags>
@@ -64,6 +64,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Exchange.WebServices" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.42.0" />
     <PackageReference Include="OpenPop" Version="2.0.6.2" />
 	<PackageReference Include="Org.Mentalis.Security" Version="1.0.0" />
   </ItemGroup>

@@ -24,8 +24,8 @@ namespace GeneXus.Helpers
 			var attribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
 			if (attribute?.InformationalVersion != null)
 			{
-				var value = attribute.InformationalVersion;
-				var index = value.IndexOf(BuildVersionMetadataSuffix);
+				string value = attribute.InformationalVersion;
+				int index = value.IndexOf(BuildVersionMetadataSuffix);
 				if (index > 0)
 				{
 					value = value.Substring(0, index);
@@ -42,7 +42,7 @@ namespace GeneXus.Helpers
 #if !NETCORE
 		public static Type GetRuntimeType(string typeName) => Type.GetType(typeName);
 #else
-		public static Type GetRuntimeType(string typeName) => new GxClasses.Helpers.AssemblyLoader(Utils.FileUtil.GetStartupDirectory()).GetType(typeName);
+		public static Type GetRuntimeType(string typeName) => GxClasses.Helpers.AssemblyLoader.GetType(typeName);
 #endif
 	}
 }
