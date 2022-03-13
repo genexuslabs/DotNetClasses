@@ -105,7 +105,7 @@ namespace GeneXus.Utils
 					file = commandString.Substring(0, startArgs);
 					args = commandString.Substring(startArgs + 1);
 				}
-				file = file.Replace("\'", "").Replace("\"", "");//If the file name was delimited with 'it is changed to ".
+				file = file.Replace("\'", String.Empty).Replace("\"", String.Empty);//If the file name was delimited with 'it is changed to ".
 				Process p = new Process();
 				p.StartInfo.Arguments = args;
 				p.StartInfo.CreateNoWindow = true;
