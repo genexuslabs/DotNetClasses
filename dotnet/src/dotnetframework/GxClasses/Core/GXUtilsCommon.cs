@@ -4762,12 +4762,12 @@ namespace GeneXus.Utils
 #if !NETCORE
 			if (GXProcessHelper.ProcessFactory != null)
 			{
-				return GXProcessHelper.ProcessFactory.GetProcessHelper().Shell(commandString, modal);
+				return GXProcessHelper.ProcessFactory.GetProcessHelper().Shell(commandString, modal, redirectOutput);
 			}
 			else
 				return 0;
 #else
-            return new GxProcess().Shell(commandString, modal);
+			return new GxProcess().Shell(commandString, modal, redirectOutput);
 #endif
 		}
 
