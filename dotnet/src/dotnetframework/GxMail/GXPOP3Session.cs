@@ -23,14 +23,16 @@ namespace GeneXus.Mail
 				implTakenLogMessage = "Using Pop3 Session legacy implementation";
 
 			}
-            else if (openPop == "SystemNetMail")
-            {
-                session = new POP3SessionOpenPop();
-				implTakenLogMessage = "Using Pop3 Session OpenPop.Net implementation";
-			} else
+			/*else if (openPop == "SystemNetMail")	--> USAR ESTE NAMING PARA CUANDO SE QUITE POR DEFECTO LA IMPLEMENTACION MailClient*/
+			else if (openPop == "MailKit")
 			{
 				session = new Pop3MailKit();
 				implTakenLogMessage = "Using Pop3 Session MailKit library implementation";
+			} else
+			{
+				session = new POP3SessionOpenPop();
+				implTakenLogMessage = "Using Pop3 Session OpenPop.Net implementation";
+				
 			}
 			GXLogging.Debug(log, implTakenLogMessage.Trim());
 			secure = 0;
