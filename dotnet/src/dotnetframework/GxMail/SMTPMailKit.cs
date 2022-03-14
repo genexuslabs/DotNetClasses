@@ -23,9 +23,7 @@ namespace GeneXus.Mail
 			attachDir = session.AttachDir;
 			if (session.Port == 465 && session.Secure > 0)
 			{
-				//SMTP over SSL is not supported.
-				session.HandleMailException(new GXMailException("SMTP over SSL (Port 465) not supported. Please use another Port (ex:587)", GXInternetConstants.MAIL_SMTPOverSSLNotSupported));
-				return;
+				GXLogging.Warn(log, "SMTP over SSL (Port 465) may not be supported. If this happen, please try using another Port (ex:587)");
 			}
 
 			client = new SmtpClient();

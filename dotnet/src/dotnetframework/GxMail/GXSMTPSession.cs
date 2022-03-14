@@ -48,15 +48,16 @@ namespace GeneXus.Mail
                 session = new SMTPSession();
 				implTakenLogMessage = "Using SMTP Session legacy implementation";
             }
-			else if (existsSMTPSession && smtpclient == "SystemNetMail")
-			{
-                session = new SMTPMailClient();
-				implTakenLogMessage = "Using SMTP Session MailClient implementation";
-			}
-			else
+			/*else if (existsSMTPSession && smtpclient == "SystemNetMail")	--> USAR ESTE NAMING PARA CUANDO SE QUITE POR DEFECTO LA IMPLEMENTACION MailClient*/
+			else if (existsSMTPSession && smtpclient == "MailKit")
 			{
 				session = new SMTPMailKit();
 				implTakenLogMessage = "Using SMTP Session MailKit library implementation";
+			}
+			else
+			{
+				session = new SMTPMailClient();
+				implTakenLogMessage = "Using SMTP Session MailClient implementation";
 			}
 			GXLogging.Debug(log,implTakenLogMessage.Trim());
 			authentication = 0;
