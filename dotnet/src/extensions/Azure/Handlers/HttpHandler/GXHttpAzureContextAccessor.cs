@@ -57,7 +57,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				{ 
 					JsonNode qKey = queryparams[keyValuePair.Key];
 					if (qKey == null)
-						defaultHttpContext.Request.RouteValues.Add(keyValuePair.Key,keyValuePair.Value);
+						defaultHttpContext.Request.RouteValues.Add(keyValuePair.Key.ToLower(),keyValuePair.Value);
 				}
 			}
 
