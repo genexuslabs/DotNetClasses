@@ -50,6 +50,7 @@
     <Compile Include="..\..\dotnetframework\GxMail\MimeEncoder.cs" Link="MimeEncoder.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\POP3Session.cs" Link="POP3Session.cs" />
 		<Compile Include="..\..\dotnetframework\GxMail\Pop3MailKit.cs" Link="Pop3MailKit.cs" />
+		<Compile Include="..\..\dotnetframework\GxMail\Pop3SessionBase.cs" Link="Pop3SessionBase.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\POP3SessionOpenPop.cs" Link="POP3SessionOpenPop.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\QuotedPrintableDecoder.cs" Link="QuotedPrintableDecoder.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\SMTPMailClient.cs" Link="SMTPMailClient.cs" />
