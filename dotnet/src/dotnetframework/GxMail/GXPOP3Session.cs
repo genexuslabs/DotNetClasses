@@ -17,8 +17,7 @@ namespace GeneXus.Mail
 		{
 			string implTakenLogMessage;
 			Config.GetValueOf("OpenPOP",out string openPop);
-			System.Diagnostics.Debugger.Launch();
-			if (!Environment.Is64BitProcess && string.IsNullOrEmpty(openPop))
+			if (!Environment.Is64BitProcess && openPop == "legacy")
             {
                 session = new POP3Session();
 				implTakenLogMessage = "Using Pop3 Session legacy implementation";

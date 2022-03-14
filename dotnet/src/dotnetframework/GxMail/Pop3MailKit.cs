@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Authentication;
 using log4net;
 using MailKit;
 using MailKit.Security;
@@ -38,20 +39,12 @@ namespace GeneXus.Mail
 
 			try
 			{
-				client.Connect(Host, Port, sessionInfo.Secure == 1 ? SecureSocketOptions.StartTls : SecureSocketOptions.None);
+				client.SslProtocols = sessionInfo.Secure == 1 ? SslProtocols.Tls12 : SslProtocols.None;
+				client.Connect(Host, Port);
 				if (_sessionInfo.Authentication > 0)
 				{
-					if (String.IsNullOrEmpty(_sessionInfo.AuthenticationMethod)) // Caso que se hace Auth Basic
-					{
-						if (String.IsNullOrEmpty(_sessionInfo.UserName) || String.IsNullOrEmpty(_sessionInfo.Password))
-						{
-							throw new BadCredentialsException();
-						}
-						else
-						{
-							client.Authenticate(_sessionInfo.UserName, _sessionInfo.Password);
-						}
-					}
+					if (String.IsNullOrEmpty(_sessionInfo.AuthenticationMethod)) // Caso que se hace Auth Basic					
+						BasicAuth(_sessionInfo, client);
 					else // Caso de otros metodos de autenticacion
 					{
 						switch (_sessionInfo.AuthenticationMethod)
@@ -66,23 +59,16 @@ namespace GeneXus.Mail
 								throw new Exception("Authentication protocol is not supported. Authentication protocol recieved: " + _sessionInfo.AuthenticationMethod);
 						}
 					}
-				}
+				} else
+					BasicAuth(_sessionInfo, client);
 				count = client.Count;
 				uIds = (List<string>)client.GetMessageUids();
 				/*uIds.Insert(0, string.Empty);*/
 
 			}
 			catch (NotSupportedException e)
-			{   // Caso en el que se intenta TLS connection y no es exitoso el intento. Se intenta nuevamente pero son SSL
-				try
-				{
-					log.Warn("Could not establish TLS connection. Next try with SSL", e);
-					client.Connect(Host, Port, SecureSocketOptions.SslOnConnect);
-				}
-				catch (NotSupportedException ex)
-				{
-					LogError("Error logging in", "Could neither establish TLS nor SSL connection.", GXInternetConstants.MAIL_CantLogin, ex, log);
-				}
+			{   // Caso en el que se intenta TLSv1.2 connection y no es exitoso el intento. No se intenta nuevamente con otro protocolo ya que .Net toma Tlsv1.1 e inferiores como deprecados
+				LogError("Error logging in", "Could not establish TLS version as protocol.", GXInternetConstants.MAIL_CantLogin, e, log);
 			}
 			catch (AuthenticationException e)
 			{
@@ -93,6 +79,18 @@ namespace GeneXus.Mail
 				LogError("Login Error", e.Message, MailConstants.MAIL_CantLogin, e, log);
 			}
 
+		}
+
+		private void BasicAuth(GXPOP3Session _sessionInfo, Pop3Client client)
+		{
+			if (String.IsNullOrEmpty(_sessionInfo.UserName) || String.IsNullOrEmpty(_sessionInfo.Password))
+			{
+				throw new BadCredentialsException();
+			}
+			else
+			{
+				client.Authenticate(_sessionInfo.UserName, _sessionInfo.Password);
+			}
 		}
 
 		public override void Logout(GXPOP3Session sessionInfo)
