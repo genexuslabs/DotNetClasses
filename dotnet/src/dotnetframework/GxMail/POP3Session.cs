@@ -25,11 +25,8 @@ namespace GeneXus.Mail.Internals
 		private string host;
 		private int timeout;
 		private int port;
-		private int count;
 		private bool newMessages;
 		private bool secureConnection;
-
-		private int lastReadMessage;
 		private int readerTimeout;
 
 		private SecureSocket connection;
