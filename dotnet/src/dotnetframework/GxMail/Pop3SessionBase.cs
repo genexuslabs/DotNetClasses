@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
+using System.Text.RegularExpressions;
 using log4net;
 
 namespace GeneXus.Mail
@@ -11,6 +10,10 @@ namespace GeneXus.Mail
 	{
 
 		protected GXPOP3Session _sessionInfo;
+		protected int lastReadMessage;
+		protected int count;
+		protected List<string> uIds;
+		private static readonly ILog log = LogManager.GetLogger(typeof(Pop3SessionBase));
 
 		public bool DownloadAttachments { get; set; }
 
@@ -33,6 +36,32 @@ namespace GeneXus.Mail
 		public abstract int GetMessageCount();
 
 		public abstract void Login(GXPOP3Session sessionInfo);
+
+		public abstract void Logout(GXPOP3Session sessionInfo);
+
+		public virtual void Skip(GXPOP3Session sessionInfo)
+		{
+			if (lastReadMessage == count)
+			{
+				LogError("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
+				return;
+			}
+			++lastReadMessage;
+		}
+
+		public abstract void Delete(GXPOP3Session sessionInfo);
+
+		public virtual string GetNextUID(GXPOP3Session session)
+		{
+			if (lastReadMessage == count)
+			{
+				LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
+				return "";
+			}
+			return uIds[lastReadMessage + 1];
+		}
+
+		public abstract void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage);
 
 		protected void LogError(string title, string message, int code, Exception e, ILog log)
 		{
@@ -67,14 +96,26 @@ namespace GeneXus.Mail
 			}
 		}
 
-		public abstract void Logout(GXPOP3Session sessionInfo);
+		protected static void AddHeader(GXMailMessage msg, string key, string value)
+		{
+			if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
+			{
+				msg.Headers[key] = value;
+			}
+		}
 
-		public abstract void Skip(GXPOP3Session sessionInfo);
-
-		public abstract string GetNextUID(GXPOP3Session session);
-
-		public abstract void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage);
-
-		public abstract void Delete(GXPOP3Session sessionInfo);
+		protected string FixFileName(string attachDir, string name)
+		{
+			if (string.IsNullOrEmpty(name))
+			{
+				name = Path.GetRandomFileName();
+			}
+			if (Path.Combine(AttachDir, name).Length > 200)
+			{
+				name = Path.GetRandomFileName().Replace(".", "") + "." + Path.GetExtension(name);
+			}
+			Regex validChars = new Regex(@"[\\\/\*\?\|:<>]");
+			return validChars.Replace(name, "_");
+		}
 	}
 }

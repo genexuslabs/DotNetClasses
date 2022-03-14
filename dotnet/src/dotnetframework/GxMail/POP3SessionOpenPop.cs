@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using OpenPop.Pop3;
 using OpenPop.Pop3.Exceptions;
 using log4net;
@@ -8,7 +7,6 @@ using OpenPop.Mime;
 using System.Net.Mail;
 using System.IO;
 using GeneXus.Utils;
-using System.Text.RegularExpressions;
 using System.Reflection;
 
 namespace GeneXus.Mail
@@ -18,10 +16,6 @@ namespace GeneXus.Mail
         private static readonly ILog log = LogManager.GetLogger(typeof(POP3SessionOpenPop));
 
         private Pop3Client client;
-        
-        private int lastReadMessage;
-        private int count;
-        private List<string> uIds;
 
         public override int GetMessageCount()
         {
@@ -79,16 +73,6 @@ namespace GeneXus.Mail
 				return;
             }
             ++lastReadMessage;            
-        }
-
-        public override string GetNextUID(GXPOP3Session session)
-        {
-            if (lastReadMessage == count)
-            {
-                LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
-                return "";
-            }
-            return uIds[lastReadMessage + 1];
         }
 
 		internal static bool HasCROrLF(string data)
@@ -174,7 +158,7 @@ namespace GeneXus.Mail
 							{
 								gxmessage.DateSent = DateTimeUtil.FromTimeZone(m.Headers.DateSent, "Etc/UTC", GeneXus.Application.GxContext.Current);
 							}
-							gxmessage.DateReceived = GeneXus.Mail.Internals.Pop3.MailMessage.GetMessageDate(m.Headers.Date);
+							gxmessage.DateReceived = Internals.Pop3.MailMessage.GetMessageDate(m.Headers.Date);
 							AddHeader(gxmessage, "DispositionNotificationTo", m.Headers.DispositionNotificationTo.ToString());
 							ProcessMailAttachments(gxmessage, m.FindAllAttachments());
 						}
@@ -214,38 +198,6 @@ namespace GeneXus.Mail
 						LogError("Could not add Attachment", "Failed to save attachment", MailConstants.MAIL_InvalidAttachment, e, log);
 					}
                 }
-            }
-        }
-       
-        private static void AddHeader(GXMailMessage msg, string key, string value)
-        {
-            if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
-            {
-                msg.Headers[key] = value;
-            }
-        }
-
-        private string FixFileName(string attachDir, string name)
-        {
-			if (string.IsNullOrEmpty(name))
-			{
-				name = Path.GetRandomFileName();
-			}
-			if (Path.Combine(AttachDir, name).Length > 200)
-			{
-				name = Path.GetRandomFileName().Replace(".", "") + "." + Path.GetExtension(name);
-			}
-			Regex validChars = new Regex(@"[\\\/\*\?\|:<>]");
-            return validChars.Replace(name, "_");
-        }
-
-        private static void CopyStream(Stream input, Stream output)
-        {
-            byte[] buffer = new byte[8 * 1024];
-            int len;
-            while ((len = input.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                output.Write(buffer, 0, len);
             }
         }
 

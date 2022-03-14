@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using log4net;
+using MailKit;
 using MailKit.Security;
 using MailKit.Net.Pop3;
+using MimeKit;
+using GeneXus.Utils;
+using System.IO;
 
 namespace GeneXus.Mail
 {
@@ -12,9 +16,6 @@ namespace GeneXus.Mail
 		private static readonly ILog log = LogManager.GetLogger(typeof(Pop3MailKit));
 
 		private Pop3Client client;
-		private int count;
-		private List<string> uIds;
-
 
 		public override int GetMessageCount()
 		{
@@ -96,27 +97,176 @@ namespace GeneXus.Mail
 
 		public override void Logout(GXPOP3Session sessionInfo)
 		{
-			throw new NotImplementedException();
+			if (client != null)
+			{
+				client.Disconnect(true);
+				client.Dispose();
+				client = null;
+			}
 		}
 
 		public override void Delete(GXPOP3Session sessionInfo)
 		{
-			throw new NotImplementedException();
-		}
-
-		public override string GetNextUID(GXPOP3Session session)
-		{
-			throw new NotImplementedException();
+			try
+			{
+				client.DeleteMessage(lastReadMessage);
+			} catch (ServiceNotConnectedException e)
+			{
+				LogError("Service not connected", e.Message, MailConstants.MAIL_ServerRepliedErr, e, log);
+			} catch (ServiceNotAuthenticatedException e)
+			{
+				LogError("Service not authenticated", e.Message, MailConstants.MAIL_AuthenticationError, e, log);
+			}
+			catch (Exception e)
+			{
+				LogError("Delete message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e, log);
+			}
 		}
 
 		public override void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage)
 		{
-			throw new NotImplementedException();
+			if (client == null)
+			{
+				LogError("Login Error", "Must login", MailConstants.MAIL_CantLogin, log);
+				return;
+			}
+			if (lastReadMessage == count)
+			{
+				LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
+				return;
+			}
+			try
+			{
+				if (count > lastReadMessage)
+				{
+					MimeMessage msg = client.GetMessage(++lastReadMessage);
+					if (msg != null)
+					{
+						gxmessage.From = new GXMailRecipient(msg.From[0].Name, msg.From[0].ToString());
+						SetRecipient(gxmessage.To, msg.To);
+						SetRecipient(gxmessage.CC, msg.Cc);
+						gxmessage.Subject = msg.Subject;
+						if (!String.IsNullOrEmpty(msg.HtmlBody))
+						{
+							gxmessage.HTMLText = msg.HtmlBody;
+							string plainText = msg.GetTextBody(MimeKit.Text.TextFormat.Text);
+							if (plainText != null)
+							{
+								gxmessage.Text += plainText;
+							}
+						}
+						else
+						{
+							gxmessage.Text = msg.Body.ToString();
+						}
+						if (msg.ReplyTo != null && msg.ReplyTo.Count > 0)
+						{
+							SetRecipient(gxmessage.ReplyTo, msg.ReplyTo);
+						}
+						gxmessage.DateSent = Convert.ToDateTime(GetHeaderFromMimeMessage(msg, "Date"));
+						if (gxmessage.DateSent.Kind == DateTimeKind.Utc && Application.GxContext.Current != null)
+						{
+							gxmessage.DateSent = DateTimeUtil.FromTimeZone(gxmessage.DateSent, "Etc/UTC", GeneXus.Application.GxContext.Current);
+						}
+						gxmessage.DateReceived = Internals.Pop3.MailMessage.GetMessageDate(GetHeaderFromMimeMessage(msg,"Delivery-Date"));
+						AddHeader(gxmessage, "DispositionNotificationTo", GetHeaderFromMimeMessage(msg, "Disposition-Notification-To"));
+						ProcessMailAttachments(gxmessage, msg.Attachments);
+					}
+				}
+			}
+			catch (ServiceNotConnectedException e)
+			{
+				LogError("Service not connected", e.Message, MailConstants.MAIL_ServerRepliedErr, e, log);
+			}
+			catch (ServiceNotAuthenticatedException e)
+			{
+				LogError("Service not authenticated", e.Message, MailConstants.MAIL_AuthenticationError, e, log);
+			}
+			catch (Exception e)
+			{
+				LogError("Receive message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e, log);
+			}
 		}
 
-		public override void Skip(GXPOP3Session sessionInfo)
+		private static void SetRecipient(GXMailRecipientCollection gxColl, InternetAddressList coll)
 		{
-			throw new NotImplementedException();
+			foreach (var to in coll)
+			{
+				gxColl.Add(new GXMailRecipient(to.Name, to.ToString()));
+			}
+		}
+
+		private string GetHeaderFromMimeMessage(MimeMessage msg, string headerValue)
+		{
+			return msg.Headers.Contains(headerValue) ? msg.Headers[msg.Headers.IndexOf(headerValue)].ToString() : null;
+		}
+
+		private void ProcessMailAttachments(GXMailMessage gxmessage, IEnumerable<MimeEntity> attachs)
+		{
+			if (attachs == null || attachs.GetEnumerator().MoveNext())	// Si MoveNext es false significa que el attach viene vacio
+				return;
+
+			if (DownloadAttachments)
+			{
+				if (!Directory.Exists(AttachDir))
+					Directory.CreateDirectory(AttachDir);
+
+				foreach (var attach in attachs)
+				{
+					string attachName = FixFileName(AttachDir, attach is MessagePart ? attach.ContentDisposition?.FileName : ((MimePart)attach).FileName);
+					if (!string.IsNullOrEmpty(attach.ContentId) && attach.ContentDisposition != null && !attach.ContentDisposition.IsAttachment)
+					{
+						string cid = "cid:" + attach.ContentId;
+						attachName = String.Format("{0}_{1}", attach.ContentId, attachName);
+						gxmessage.HTMLText = gxmessage.HTMLText.Replace(cid, attachName);
+					}
+					try
+					{
+						SaveAttachedFile(attach, attachName);
+						gxmessage.Attachments.Add(attachName);
+					}
+					catch (Exception e)
+					{
+						LogError("Could not add Attachment", "Failed to save attachment", MailConstants.MAIL_InvalidAttachment, e, log);
+					}
+				}
+			}
+		}
+
+		private void SaveAttachedFile(MimeEntity attach, string attachName)
+		{
+			using (var stream = File.Create(AttachDir + attachName))
+			{
+				if (attach is MessagePart)
+				{
+					var part = (MessagePart) attach;
+					part.Message.WriteTo(stream);
+				}
+				else
+				{
+					var part = (MimePart) attach;
+					part.Content.DecodeTo(stream);
+				}
+			}
+		}
+
+
+		private String attachDir = string.Empty;
+
+		public override string AttachDir
+		{
+			get
+			{
+				return attachDir;
+			}
+			set
+			{
+				attachDir = value;
+				if (!string.IsNullOrEmpty(value))
+					DownloadAttachments = true;
+				else
+					DownloadAttachments = false;
+			}
 		}
 
 	}
