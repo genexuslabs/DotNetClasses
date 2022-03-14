@@ -19,8 +19,7 @@ namespace GeneXus.Mail
         int Port { get; set; }
         string UserName { get; set; }
         string Password { get; set; }
-        int Timeout { get; set; }
-		short Authentication { get; set; }
+        int Timeout { get; set; }		
 		string AuthenticationMethod { get; set; }
 
 	}

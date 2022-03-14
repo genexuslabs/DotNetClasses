@@ -41,7 +41,7 @@ namespace GeneXus.Mail
 			{
 				client.SslProtocols = sessionInfo.Secure == 1 ? SslProtocols.Tls12 : SslProtocols.None;
 				client.Connect(Host, Port);
-				if (_sessionInfo.Authentication > 0)
+				if (String.IsNullOrEmpty(_sessionInfo.AuthenticationMethod))
 				{
 					if (String.IsNullOrEmpty(_sessionInfo.AuthenticationMethod)) // Caso que se hace Auth Basic					
 						BasicAuth(_sessionInfo, client);

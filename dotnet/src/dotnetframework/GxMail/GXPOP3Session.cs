@@ -144,18 +144,6 @@ namespace GeneXus.Mail
 			}
 		}
 
-		public short Authentication
-		{
-			get
-			{
-				return (short)session.Authentication;
-			}
-			set
-			{
-				session.Authentication = value;
-			}
-		}
-
 		public string AuthenticationMethod
 		{
 			get

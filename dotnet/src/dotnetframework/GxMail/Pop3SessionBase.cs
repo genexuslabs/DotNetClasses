@@ -25,9 +25,7 @@ namespace GeneXus.Mail
 
 		public virtual string Password { get; set; }
 
-		public virtual int Timeout { get; set; }
-
-		public short Authentication { get; set; }
+		public virtual int Timeout { get; set; }		
 
 		public string AuthenticationMethod { get; set; }
 
