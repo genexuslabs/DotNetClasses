@@ -41,23 +41,18 @@ namespace GeneXus.Mail
 			{
 				client.SslProtocols = sessionInfo.Secure == 1 ? SslProtocols.Tls12 : SslProtocols.None;
 				client.Connect(Host, Port);
-				if (String.IsNullOrEmpty(_sessionInfo.AuthenticationMethod))
+				if (!String.IsNullOrEmpty(_sessionInfo.AuthenticationMethod))
 				{
-					if (String.IsNullOrEmpty(_sessionInfo.AuthenticationMethod)) // Caso que se hace Auth Basic					
-						BasicAuth(_sessionInfo, client);
-					else // Caso de otros metodos de autenticacion
+					switch (_sessionInfo.AuthenticationMethod)
 					{
-						switch (_sessionInfo.AuthenticationMethod)
-						{
-							case "XOAUTH2":
-								var oauth2 = new SaslMechanismOAuth2(_sessionInfo.UserName, _sessionInfo.Password);
-								client.Authenticate(oauth2);
-								break;
+						case "XOAUTH2":
+							var oauth2 = new SaslMechanismOAuth2(_sessionInfo.UserName, _sessionInfo.Password);
+							client.Authenticate(oauth2);
+							break;
 
-							default:
-								GXLogging.Error(log, "Authentication protocol is not supported");
-								throw new Exception("Authentication protocol is not supported. Authentication protocol recieved: " + _sessionInfo.AuthenticationMethod);
-						}
+						default:
+							GXLogging.Error(log, "Authentication protocol is not supported");
+							throw new Exception("Authentication protocol is not supported. Authentication protocol recieved: " + _sessionInfo.AuthenticationMethod);
 					}
 				} else
 					BasicAuth(_sessionInfo, client);
