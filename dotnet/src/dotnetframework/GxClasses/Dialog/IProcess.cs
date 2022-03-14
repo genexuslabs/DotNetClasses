@@ -13,6 +13,8 @@ namespace GeneXus.Utils
 		int ExecProcess(string filename, string[] args, string basePath, string executable, DataReceivedEventHandler dataReceived);
 		short OpenPrintDocument(string commandString);
 		int Shell(string commandString, int modal);
+
+		int Shell(string commandString, int modal, int redirectOutput);
 	}
 	public class OSHelper
 	{
@@ -45,7 +47,7 @@ namespace GeneXus.Utils
 						}
 						catch (Exception ex)
 						{
-							var strErrorMsg = $"Error loading Process provider. Check if {OsProviderAssembly}.dll exists ";
+							string strErrorMsg = $"Error loading Process provider. Check if {OsProviderAssembly}.dll exists ";
 							GXLogging.Debug(log, strErrorMsg, ex);
 							throw new Exception(strErrorMsg, ex);
 						}
