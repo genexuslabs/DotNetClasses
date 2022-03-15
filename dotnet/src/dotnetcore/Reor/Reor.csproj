@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net6.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
@@ -12,17 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
-	  <PackageReference Include="NetTopologySuite" Version="2.0.0" />
-	  <PackageReference Include="NetTopologySuite.Core" Version="1.15.3" />
-	  <PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
-	  <PackageReference Include="System.DirectoryServices" Version="4.7.0" PrivateAssets="All" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\GxClasses\GxClasses.csproj">
-        <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
   </ItemGroup>
   
 	<ItemGroup>
@@ -30,5 +22,12 @@
 			<Pack>true</Pack>
 			<PackagePath>\content\net6.0\</PackagePath>
 		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="$(OutputPath)\net6.0\$(MSBuildProjectName).deps.json">
+			<PackageCopyToOutput>true</PackageCopyToOutput>
+			<Pack>true</Pack>
+			<PackagePath>contentFiles\any\any</PackagePath>
+		</None>
 	</ItemGroup>
 </Project>
