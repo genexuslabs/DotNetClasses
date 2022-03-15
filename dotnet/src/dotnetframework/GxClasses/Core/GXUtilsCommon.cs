@@ -2438,13 +2438,13 @@ namespace GeneXus.Utils
 		}
 		public DateTime YMDToD(int year, int month, int day)
 		{
-			int year1 = GetYear(year);
-			if (1 <= year1 && year1 <= 9999 && 1 <= month && 1 <= day)
+			int fourDigitsYear = GetYear(year);
+			if (IsValidDate(fourDigitsYear, month, day))
 			//Basic checkups are done before to avoid many calls to the constructor
 			{
 				try
 				{
-					return new DateTime(year1, month, day, cultureInfo.Calendar);
+					return new DateTime(fourDigitsYear, month, day, cultureInfo.Calendar);
 				}
 				catch
 				{
@@ -2466,15 +2466,42 @@ namespace GeneXus.Utils
 		{
 			return YMDHMSMToT(year, month, day, hour, min, sec, mil, true);
 		}
+		private bool IsValidDate(int year, int month, int day)
+		{
+			if (year < DateTime.MinValue.Year || year > DateTime.MaxValue.Year)
+				return false;
 
+			if (month < 1 || month > 12)
+				return false;
+
+			return day > 0 && day <= DateTime.DaysInMonth(year, month);
+		}
+		private bool IsValidTime(int hour, int min, int sec, int mil)
+		{
+			return hour >= 0 && hour <24 && min >= 0 && min < 60 && sec >= 0 && sec < 60 && mil >= 0 && mil < 1000;
+		}
 		public DateTime YMDHMSMToT(int year, int month, int day, int hour, int min, int sec, int mil, bool centuryConversion)
 		{
 			try
 			{
-				int year1 = year;
+
+				int fourDigitsYear = year;
 				if (centuryConversion)
-					year1 = GetYear(year);
-				return new DateTime(year1, month, day, hour, min, sec, mil, cultureInfo.DateTimeFormat.Calendar);
+					fourDigitsYear = GetYear(year);
+				if (!IsValidDate(fourDigitsYear, month, day))
+				{
+					fourDigitsYear=nullDate.Year;
+					month=nullDate.Month;
+					day=nullDate.Day;
+				}
+				if (!IsValidTime(hour, min, sec, mil))
+				{
+					hour=nullDate.Hour;
+					min=nullDate.Minute;
+					sec=nullDate.Second;
+					mil=nullDate.Millisecond;
+				}
+				return new DateTime(fourDigitsYear, month, day, hour, min, sec, mil, cultureInfo.DateTimeFormat.Calendar);
 			}
 			catch
 			{
@@ -2705,6 +2732,10 @@ namespace GeneXus.Utils
 				return nullDate;
 			return dt.AddSeconds(seconds);
 		}
+		static public DateTime TAdd(DateTime dt, decimal seconds)
+		{
+			return TAdd(dt, (int)seconds);
+		}
 		static public DateTime TAddMs(DateTime dt, double seconds)
 		{
 			if (dt == nullDate && (seconds < 0 || Preferences.IgnoreAddOnEmptyDates))
@@ -2719,6 +2750,10 @@ namespace GeneXus.Utils
 			if (dt == nullDate && (days < 0 || Preferences.IgnoreAddOnEmptyDates))
 				return nullDate;
 			return dt.AddDays(days);
+		}
+		static public DateTime DAdd(DateTime dt, decimal days)
+		{
+			return DAdd(dt, (int)days);
 		}
         public DateTime CToT(string strDate, int picFmt, int ampmFmt)
         {
@@ -4716,17 +4751,22 @@ namespace GeneXus.Utils
             return 0;
 #endif
 		}
+
 		public static int Shell(string commandString, int modal)
+		{
+			return Shell(commandString, modal, 0);
+		}
+		public static int Shell(string commandString, int modal, int redirectOutput)
 		{
 #if !NETCORE
 			if (GXProcessHelper.ProcessFactory != null)
 			{
-				return GXProcessHelper.ProcessFactory.GetProcessHelper().Shell(commandString, modal);
+				return GXProcessHelper.ProcessFactory.GetProcessHelper().Shell(commandString, modal, redirectOutput);
 			}
 			else
 				return 0;
 #else
-            return new GxProcess().Shell(commandString, modal);
+			return new GxProcess().Shell(commandString, modal, redirectOutput);
 #endif
 		}
 
@@ -5014,7 +5054,11 @@ namespace GeneXus.Utils
 				StringUtil.NewLine() + e.StackTrace);
 		}
 #else
-        public static void SaveToEventLog(string appName, Exception e)
+		public static void SaveToEventLog(string appName, string message)
+		{
+			GXLogging.Error(log, "SaveToEventLog:" + appName + " " + message);
+		}
+		public static void SaveToEventLog(string appName, Exception e)
         {
             string msg = e.Message;
             while (e.InnerException != null)
@@ -5022,7 +5066,7 @@ namespace GeneXus.Utils
                 e = e.InnerException;
                 msg += "\n" + e.Message;
             }
-            GXLogging.Error(log, "SaveToEventLog:" + appName + " " + e.GetType().ToString() + " " + msg);
+            SaveToEventLog(appName, e.GetType().ToString() + " " + msg);
         }
 
 #endif
