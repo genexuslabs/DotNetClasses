@@ -21,12 +21,17 @@
 			<PackagePath>\content\net6.0\</PackagePath>
 		</Content>
 	</ItemGroup>
-	<ItemGroup>
-		<None Include="$(OutputPath)\net6.0\$(MSBuildProjectName).deps.json">
-			<PackageCopyToOutput>true</PackageCopyToOutput>
-			<Pack>true</Pack>
-			<PackagePath>contentFiles\any\any</PackagePath>
-		</None>
-	</ItemGroup>
+	<Target Name="CustomContentTarget">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json">
+				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).runtimeconfig.json">
+				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
 
 </Project>
