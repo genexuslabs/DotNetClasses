@@ -109,8 +109,9 @@ namespace GeneXus.Utils
 				Process p = new Process();
 				p.StartInfo.Arguments = args;
 				p.StartInfo.CreateNoWindow = true;
+				bool modalRedirect = modal > 0 && redirectOutput==1;
 
-				if (redirectOutput==1)
+				if (modalRedirect)
 				{
 					p.StartInfo.UseShellExecute = false;
 					//UseShellExecute must be false if RedirectStandardOutput is true
@@ -155,7 +156,7 @@ namespace GeneXus.Utils
 				GXLogging.Debug(log, "Shell Working directory:'" + p.StartInfo.WorkingDirectory + "'");
 				bool res = p.Start();
 				GXLogging.Debug(log, "Shell new process resource is started:" + res);
-				if (redirectOutput==1)
+				if (modalRedirect)
 				{
 					p.BeginOutputReadLine();
 					p.BeginErrorReadLine();
