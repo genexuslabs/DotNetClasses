@@ -11,6 +11,7 @@ using System.Reflection;
 using System.IO;
 using System.Collections.Generic;
 using GeneXus.Configuration;
+using System.Text.RegularExpressions;
 #if NETCORE
 using GxClasses.Helpers;
 #endif
@@ -25,7 +26,7 @@ namespace GeneXus.Data
 		static Assembly _npgsqlAssembly;
 		private bool _byteaOutputEscape;
 		const string NpgsqlDbTypeEnum = "NpgsqlTypes.NpgsqlDbType";
-
+		const string NpgsqlAssemblyName = "Npgsql";
 		public static Assembly NpgsqlAssembly
 		{
 			get
@@ -34,11 +35,10 @@ namespace GeneXus.Data
 				{
 					if (_npgsqlAssembly == null)
 					{
-						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), "Npgsql.dll");
+						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{NpgsqlAssemblyName}.dll");
 						GXLogging.Debug(log, "Loading Npgsql.dll from:" + assemblyPath);
 #if NETCORE
-						var asl = new AssemblyLoader(FileUtil.GetStartupDirectory());
-						_npgsqlAssembly = asl.LoadFromAssemblyPath(assemblyPath);
+						_npgsqlAssembly = AssemblyLoader.LoadAssembly(new AssemblyName(NpgsqlAssemblyName));
 #else
 						_npgsqlAssembly = Assembly.LoadFrom(assemblyPath);
 #endif
@@ -58,10 +58,7 @@ namespace GeneXus.Data
 #if NETCORE
 			if (_npgsqlAssembly == null)
 			{
-				using (var dynamicContext = new AssemblyResolver(Path.Combine(FileUtil.GetStartupDirectory(), "Npgsql.dll")))
-				{
-					_npgsqlAssembly = dynamicContext.Assembly;
-				}
+				_npgsqlAssembly = AssemblyLoader.LoadAssembly(new AssemblyName("Npgsql"));
 			}
 #endif
 			string cfgBuf;
@@ -191,10 +188,10 @@ namespace GeneXus.Data
 			reader.Close();
 			return values;
 		}
-		protected override void PrepareCommand(IDbCommand cmd, bool isRpc)
-		{
-			if (!isRpc)
-				cmd.Prepare();
+		protected override void PrepareCommand(IDbCommand cmd)
+{
+			GXLogging.Debug(log, "Preparing command:" + cmd.CommandText);
+			cmd.Prepare();
 		}
 		public override bool AllowsDuplicateParameters
 		{
@@ -515,7 +512,17 @@ namespace GeneXus.Data
 					//dbmsErrorCode=5632, error: 42p01: no existe la tabla â«ivafechafacturaâ»
 					return false;
 				}
-
+			if (emsg.IndexOf("42704") != -1)
+			{
+				// Type does not exists ( when creating geographic types without postgis extension)
+				// Second part of the condition for non-english installations when error is localized.
+				Regex rx = new Regex(@"42704.*Type.*does not exist", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+				if (rx.IsMatch(emsg) || emsg.IndexOf("\"geography\"") != -1)
+				{
+					status = 999;
+					return false;
+				}
+			}
 			if (    //duplicate key violates unique constraint //ERRO: 23505: duplicar chave viola a restriÃ§Ã£o de unicidade "nfe010_pkey"
 				emsg.IndexOf("23505") != -1 ||
 				(emsg.IndexOf("duplicate key") != -1 && emsg.IndexOf("unique") != -1) ||
