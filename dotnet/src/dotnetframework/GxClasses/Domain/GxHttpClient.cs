@@ -799,7 +799,7 @@ namespace GeneXus.Http.Client
 			ReadReponseContent(response);
 			_statusCode = ((short)response.StatusCode);
 			_statusDescription = response.ReasonPhrase;
-			if (_statusCode != 200 && _errCode != 1)
+			if ((_statusCode >= 400 && _statusCode < 600) && _errCode != 1)
 			{
 				_errCode = 1;
 				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + response.ReasonPhrase + ".";

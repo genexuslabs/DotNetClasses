@@ -77,7 +77,7 @@ namespace GeneXus.HttpHandlerFactory
 		public async Task Invoke(HttpContext context)
 		{
 			IHttpHandler handler=null;
-			var url = string.Empty;
+			string url = string.Empty;
 			try
 			{
 				//context.Request.EnableBuffering(); does not work in 3.1
@@ -85,38 +85,41 @@ namespace GeneXus.HttpHandlerFactory
 				url = context.Request.Path.Value;
 
 				handler = GetHandler(context, context.Request.Method, ObjectUrl(url, _basePath), string.Empty);
-				context.Response.OnStarting(() =>
+				if (handler != null)
 				{
-					if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(HttpHelper.ASPX) && string.IsNullOrEmpty(context.Response.ContentType))
+					context.Response.OnStarting(() =>
 					{
-						context.Response.ContentType = MediaTypesNames.TextHtml;
-						//If no ContentType is specified, the default is text/HTML.
-					}
-					handler.sendAdditionalHeaders();
-					return Task.CompletedTask;
-				});
-
-				handler.ProcessRequest(context);
-				await Task.CompletedTask;
+						if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(HttpHelper.ASPX) && string.IsNullOrEmpty(context.Response.ContentType))
+						{
+							context.Response.ContentType = MediaTypesNames.TextHtml;
+							//If no ContentType is specified, the default is text/HTML.
+						}
+						handler.sendAdditionalHeaders();
+						return Task.CompletedTask;
+					});
+					handler.ProcessRequest(context);
+					await Task.CompletedTask;
+					handler.ControlOutputWriter?.Flush();
+				}
+				else
+				{
+					await Task.FromException(new PageNotFoundException(url));
+				}
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Handler Factory failed creating {url}", ex);
 				await Task.FromException(ex);
 			}
-			finally
-			{
-				handler?.ControlOutputWriter?.Flush();
-			}
 		}
 		public static bool IsAspxHandler(string path, string basePath)
 		{
-			var name = ObjectUrl(path, basePath);
+			string name = ObjectUrl(path, basePath);
 			return name.EndsWith(HttpHelper.ASPX, StringComparison.OrdinalIgnoreCase) || _aspxObjects.ContainsKey(name);
 		}
 		private static string ObjectUrl(string requestPath, string basePath) 
 		{
-			var lastSegment = requestPath;
+			string lastSegment = requestPath;
 			if (!string.IsNullOrEmpty(basePath) && lastSegment.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
 			{
 				lastSegment = lastSegment.Remove(0, basePath.Length);
@@ -144,7 +147,7 @@ namespace GeneXus.HttpHandlerFactory
 
 			IHttpHandler handlerToReturn =null;
 
-			var idx = url.LastIndexOf('.');
+			int idx = url.LastIndexOf('.');
 			string cname0;
 			if (idx >= 0)
 				cname0 = url.Substring(0, url.LastIndexOf('.')).ToLower();
@@ -211,8 +214,6 @@ namespace GeneXus.HttpHandlerFactory
 					throw e;
 				}
             }
-			if (objType ==null)
-				throw new Exception("GeneXus HttpHandlerFactory error: Could not create " + className + " (assembly: " + assemblyName + ").");
 			return handlerToReturn;
 		}
 		internal static List<string> GetGxNamespaces(HttpContext context, string mainNamespace)
@@ -293,4 +294,11 @@ namespace GeneXus.HttpHandlerFactory
 		}
 		
 	}
+	internal class PageNotFoundException:Exception {
+		internal PageNotFoundException(string message):base(message)
+		{
+
+		}
+	}
+
 }
