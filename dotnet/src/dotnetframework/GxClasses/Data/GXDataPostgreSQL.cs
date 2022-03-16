@@ -189,7 +189,8 @@ namespace GeneXus.Data
 			return values;
 		}
 		protected override void PrepareCommand(IDbCommand cmd)
-		{
+{
+			GXLogging.Debug(log, "Preparing command:" + cmd.CommandText);
 			cmd.Prepare();
 		}
 		public override bool AllowsDuplicateParameters
