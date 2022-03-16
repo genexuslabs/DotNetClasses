@@ -5452,9 +5452,8 @@ namespace GeneXus.Utils
 						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
 					}//return the image resized to the given heigth and width
 					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);					
-					Save(output, imageFile, image.RawFormat);
-				}
-				
+					Save(output, imageFile, ImageFormat.Bmp);
+				}				
 			}
 			catch (Exception ex)
 			{
