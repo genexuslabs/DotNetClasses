@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
+using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
 using GeneXus.Utils;
@@ -11,6 +13,7 @@ using log4net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -297,6 +300,11 @@ namespace GeneXus.Application
 			{
 				 servicesBase.Add( string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
 			}
+			app.UseExceptionHandler(new ExceptionHandlerOptions
+			{
+				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
+				AllowStatusCode404Response = true
+			});
 
 			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
 			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
@@ -322,9 +330,14 @@ namespace GeneXus.Application
 
 			app.MapWhen(
 				context => IsAspx(context, basePath),
-						appBranch => {
+						appBranch =>
+						{
 							appBranch.UseGXHandlerFactory(basePath);
 						});
+			app.Run(async context => 
+			{
+				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
+			});
 			app.UseEnableRequestRewind();
 		}
 
@@ -344,6 +357,38 @@ namespace GeneXus.Application
 		{
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
 		}		
+	}
+	public class CustomExceptionHandlerMiddleware
+	{
+		public async Task Invoke(HttpContext httpContext)
+		{
+			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
+			HttpStatusCode httpStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
+			if (ex!=null)
+			{
+				if (ex is PageNotFoundException)
+				{
+					httpStatusCode = HttpStatusCode.NotFound;
+				}
+				else
+				{
+					httpStatusCode = HttpStatusCode.InternalServerError;
+				}
+			}
+			if (httpStatusCode!= HttpStatusCode.OK)
+			{
+				string redirectPage = Config.MapCustomError(httpStatusCode.ToString(HttpHelper.INT_FORMAT));
+				if (!string.IsNullOrEmpty(redirectPage))
+{
+					httpContext.Response.Redirect($"{httpContext.Request.GetApplicationPath()}/{redirectPage}");
+				}
+				else
+				{
+					httpContext.Response.StatusCode = (int)httpStatusCode;
+				}
+			}
+			await Task.CompletedTask;
+		}
 	}
 	public class EnableRequestRewindMiddleware
 	{
