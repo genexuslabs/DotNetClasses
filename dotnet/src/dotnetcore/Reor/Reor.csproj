@@ -1,23 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
-    <OutputType>Exe</OutputType>
-    <PackageTags>Reorg</PackageTags>
-    <PackageId>GeneXus.Reorganization.Core</PackageId>
-    <DefineConstants>NETCORE</DefineConstants>
-    <GxGenerateDepsFile>true</GxGenerateDepsFile>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="..\..\dotnetframework\Reor\frmReorg.cs" Link="frmReorg.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
-  </ItemGroup>
-
 	<PropertyGroup>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<PackageTags>Reorg</PackageTags>
+		<PackageId>GeneXus.Reorganization.Core</PackageId>
+		<DefineConstants>NETCORE</DefineConstants>
+		<GxGenerateDepsFile>true</GxGenerateDepsFile>
 		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="..\..\dotnetframework\Reor\frmReorg.cs" Link="frmReorg.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+	</ItemGroup>
+
 	<Target Name="CustomContentTarget">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json">
