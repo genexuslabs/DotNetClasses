@@ -189,9 +189,12 @@ namespace GeneXus.Data
 			return values;
 		}
 		protected override void PrepareCommand(IDbCommand cmd)
-{
-			GXLogging.Debug(log, "Preparing command:" + cmd.CommandText);
-			cmd.Prepare();
+		{
+			if (NpgsqlAssembly.GetName().Version.Major>1)
+			{
+				GXLogging.Debug(log, "Preparing command:" + cmd.CommandText);
+				cmd.Prepare();
+			}
 		}
 		public override bool AllowsDuplicateParameters
 		{
