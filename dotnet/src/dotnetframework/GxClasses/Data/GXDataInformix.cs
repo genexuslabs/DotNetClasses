@@ -180,7 +180,7 @@ namespace GeneXus.Data
 			}
 		}
 
-		protected override void PrepareCommand(IDbCommand cmd, bool isRpc)
+		protected override void PrepareCommand(IDbCommand cmd)
 		{
 			
 		}
