@@ -63,9 +63,13 @@ namespace GeneXus.Utils
 
 		public int Shell(string commandString, int modal)
 		{
+			return Shell(commandString, modal, 0);
+		}
+		public int Shell(string commandString, int modal, int redirectOutput)
+		{
 			try
 			{
-				GXLogging.Debug(log, "Shell commandString:'", commandString, "',modal:'", modal.ToString(), "'");
+				GXLogging.Debug(log, "Shell commandString:'", commandString, "',modal:'", modal.ToString(), "', redirectOutput:" + redirectOutput);
 				int startArgs;
 				string file, args;
 				commandString = commandString.TrimStart();
@@ -101,14 +105,44 @@ namespace GeneXus.Utils
 					file = commandString.Substring(0, startArgs);
 					args = commandString.Substring(startArgs + 1);
 				}
-				file = file.Replace("\'", "").Replace("\"", "");//If the file name was delimited with 'it is changed to ".
+				file = file.Replace("\'", String.Empty).Replace("\"", String.Empty);//If the file name was delimited with 'it is changed to ".
 				Process p = new Process();
 				p.StartInfo.Arguments = args;
 				p.StartInfo.CreateNoWindow = true;
-				p.StartInfo.UseShellExecute = true;
-				//When UseShellExecute is true, the WorkingDirectory property specifies the location of the executable. 
-				//If WorkingDirectory is an empty string, the current directory is understood to contain the executable.
+				bool modalRedirect = modal > 0 && redirectOutput==1;
 
+				if (modalRedirect)
+				{
+					p.StartInfo.UseShellExecute = false;
+					//UseShellExecute must be false if RedirectStandardOutput is true
+					//When UseShellExecute is false, the FileName property can be either a fully qualified path to the executable,
+					//or a simple executable name that the system will attempt to find within folders specified by the PATH environment variable.
+					p.StartInfo.RedirectStandardOutput = true;
+					p.StartInfo.RedirectStandardError = true;
+					p.OutputDataReceived += Shell_DataReceived;
+					p.ErrorDataReceived += Shell_DataReceived;
+				}
+				else
+				{
+					p.StartInfo.UseShellExecute = true;
+					//When UseShellExecute is true, the WorkingDirectory property specifies the location of the executable. 
+					//If WorkingDirectory is an empty string, the current directory is understood to contain the executable.
+					try
+					{
+						if (Path.IsPathRooted(file))
+						{
+							p.StartInfo.WorkingDirectory = "\"" + Path.GetDirectoryName(file) + "\"";
+						}
+						else
+						{
+							p.StartInfo.WorkingDirectory = GxContext.StaticPhysicalPath();
+						}
+					}
+					catch (Exception e)
+					{
+						GXLogging.Warn(log, "Setting Working Directory", e);
+					}
+				}
 				try
 				{
 					p.StartInfo.FileName = "\"" + file + "\"";
@@ -117,26 +151,16 @@ namespace GeneXus.Utils
 				{
 					GXLogging.Warn(log, "Setting Path Rooted", e);
 				}
-				try
-				{
-					if (Path.IsPathRooted(file))
-					{
-						p.StartInfo.WorkingDirectory = "\"" + Path.GetDirectoryName(file) + "\"";
-					}
-					else
-					{
-						p.StartInfo.WorkingDirectory = GxContext.StaticPhysicalPath();
-					}
-				}
-				catch (Exception e)
-				{
-					GXLogging.Warn(log, "Setting Working Directory", e);
-				}
 
 				GXLogging.Debug(log, "Shell FileName:'" + p.StartInfo.FileName + "',Arguments:'" + p.StartInfo.Arguments + "'");
 				GXLogging.Debug(log, "Shell Working directory:'" + p.StartInfo.WorkingDirectory + "'");
 				bool res = p.Start();
 				GXLogging.Debug(log, "Shell new process resource is started:" + res);
+				if (modalRedirect)
+				{
+					p.BeginOutputReadLine();
+					p.BeginErrorReadLine();
+				}
 
 				if (modal > 0)
 				{
@@ -152,6 +176,12 @@ namespace GeneXus.Utils
 				throw e;
 			}
 
+		}
+
+		private void Shell_DataReceived(object sender, DataReceivedEventArgs e)
+		{
+			if (e.Data != null)
+				Console.WriteLine(e.Data);
 		}
 	}
 }
