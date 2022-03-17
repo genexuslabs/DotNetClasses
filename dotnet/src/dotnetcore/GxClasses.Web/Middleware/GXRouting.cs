@@ -312,11 +312,21 @@ namespace GxClasses.Web.Middleware
 						{
 
 							controllerWithParms = mlist.Value.Path;
-							if (pathWithNoBase.ToLower().EndsWith(controllerWithParms.ToLower()))
+							Regex rx = new Regex(mlist.Value.PathRegexp, RegexOptions.IgnoreCase);
+							MatchCollection matches = rx.Matches(pathWithNoBase.ToLower());
+							if (matches != null)
 							{
-								if (pathWithNoBase.Remove(pathWithNoBase.Length - controllerWithParms.Length).ToLower() == map.Key.ToLower())
+								string uriPath = "";
+								foreach (Match match in matches)
+								{
+									uriPath = match.Value;
+									break;
+								}
+
+								if (pathWithNoBase.Remove(pathWithNoBase.Length - uriPath.Length).ToLower() == map.Key.ToLower())
 									return controllerWithParms;
 							}
+
 						}
 					}
 				}
