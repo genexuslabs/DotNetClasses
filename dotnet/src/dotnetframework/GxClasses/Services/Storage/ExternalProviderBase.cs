@@ -87,7 +87,6 @@ namespace GeneXus.Services
 			}
 			return value;
 		}
-
 		protected String GetEncryptedPropertyValue(String propertyName, String alternativePropertyName, String defaultValue)
 		{
 			String value = GetPropertyValue(propertyName, alternativePropertyName, defaultValue);
@@ -95,7 +94,11 @@ namespace GeneXus.Services
 			{
 				try
 				{
-					value = CryptoImpl.Decrypt(value);
+					string ret = "";
+					if (CryptoImpl.Decrypt(ref ret, value))
+					{
+						value = ret;
+					}
 				}
 				catch (Exception)
 				{
