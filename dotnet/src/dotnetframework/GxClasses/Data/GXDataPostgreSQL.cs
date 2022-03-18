@@ -188,7 +188,7 @@ namespace GeneXus.Data
 			reader.Close();
 			return values;
 		}
-		protected override void PrepareCommand(IDbCommand cmd)
+		public override void PrepareCommand(IDbCommand cmd)
 		{
 			if (NpgsqlAssembly.GetName().Version.Major>1)
 			{
