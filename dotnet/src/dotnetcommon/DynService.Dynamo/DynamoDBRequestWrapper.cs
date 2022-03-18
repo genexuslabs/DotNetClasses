@@ -1,23 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+#if NETCORE
 using GeneXus.Data.Dynamo;
+#endif
 
 namespace GeneXus.Data.NTier.DynamoDB
 {
 	public class RequestWrapper
 	{
-		private AmazonDynamoDBClient mDynamoDB;
-		private AmazonDynamoDBRequest mReq;
-
-		public RequestWrapper()
-		{
-
-		}
+		private readonly AmazonDynamoDBClient mDynamoDB;
+		private readonly AmazonDynamoDBRequest mReq;
 
 		public RequestWrapper(AmazonDynamoDBClient mDynamoDB, AmazonDynamoDBRequest req)
 		{
@@ -35,22 +29,20 @@ namespace GeneXus.Data.NTier.DynamoDB
 			if (mReq is ScanRequest)
 			{
 				((ScanRequest)mReq).ExclusiveStartKey = lastEvaluatedKey;
-				ScanResponse scanResponse;
 #if NETCORE
-				scanResponse = DynamoDBHelper.RunSync<ScanResponse>(() => mDynamoDB.ScanAsync((ScanRequest)mReq));
+				ScanResponse scanResponse = DynamoDBHelper.RunSync<ScanResponse>(() => mDynamoDB.ScanAsync((ScanRequest)mReq));
 #else
-				scanResponse = mDynamoDB.Scan((ScanRequest)mReq);
+				ScanResponse scanResponse = mDynamoDB.Scan((ScanRequest)mReq);
 #endif
 				return new ResponseWrapper(scanResponse);
 			}
 			if (mReq is QueryRequest)
 			{
 				((QueryRequest)mReq).ExclusiveStartKey = lastEvaluatedKey;
-				QueryResponse queryResponse;
 #if NETCORE
-				queryResponse = DynamoDBHelper.RunSync<QueryResponse>(() => mDynamoDB.QueryAsync((QueryRequest)mReq));
+				QueryResponse queryResponse = DynamoDBHelper.RunSync<QueryResponse>(() => mDynamoDB.QueryAsync((QueryRequest)mReq));
 #else
-				queryResponse = mDynamoDB.Query((QueryRequest)mReq);
+				QueryResponse queryResponse = mDynamoDB.Query((QueryRequest)mReq);
 #endif
 				return new ResponseWrapper(queryResponse);
 			}

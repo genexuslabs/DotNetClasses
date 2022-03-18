@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+#if NETCORE
 using System.Threading;
 using System.Threading.Tasks;
+#endif
 
 namespace GeneXus.Data.Dynamo
 {
@@ -24,7 +26,7 @@ namespace GeneXus.Data.Dynamo
 
 		internal static AttributeValue ToAttributeValue(VarValue var)
 		{
-			return ToAttributeValue(GxService.GXTypeToDbType(var.Type), var.Value, false);			
+			return ToAttributeValue(GxService.GXTypeToDbType(var.Type), var.Value);			
 		}
 
 		internal static void GXToDynamoQueryParameter(string prefix, Dictionary<string, AttributeValue> dynParm, ServiceParameter parm) => AddAttributeValue($"{prefix}{parm.ParameterName}", dynParm, parm);
@@ -33,7 +35,7 @@ namespace GeneXus.Data.Dynamo
 		{
 			if (parm == null)
 				return false;
-			AttributeValue value = ToAttributeValue(parm.DbType, parm.Value, true);
+			AttributeValue value = ToAttributeValue(parm.DbType, parm.Value);
 			if (value != null)
 			{
 				dynParm[parmName] = value;
@@ -42,24 +44,24 @@ namespace GeneXus.Data.Dynamo
 			return false;
 		}
 
-		private static AttributeValue ToAttributeValue(DbType dbType, Object value, bool skipEmpty)
+		private static AttributeValue ToAttributeValue(DbType dbType, Object value)
 		{
-			AttributeValue attValue = null;
+			AttributeValue attValue;
 			switch (dbType)
 			{
-				case System.Data.DbType.Binary:
+				case DbType.Binary:
 					throw new NotImplementedException("Binary column not implemented yet");
-				case System.Data.DbType.Boolean:
-				case System.Data.DbType.Byte:
+				case DbType.Boolean:
+				case DbType.Byte:
 					attValue = new AttributeValue
 					{
 						BOOL = (bool)value
 					};
 					break;
-				case System.Data.DbType.Time:
-				case System.Data.DbType.Date:
-				case System.Data.DbType.DateTime2:
-				case System.Data.DbType.DateTime:
+				case DbType.Time:
+				case DbType.Date:
+				case DbType.DateTime2:
+				case DbType.DateTime:
 					attValue = new AttributeValue
 					{
 						S = value.ToString()
@@ -67,15 +69,15 @@ namespace GeneXus.Data.Dynamo
 					break;
 
 				
-				case System.Data.DbType.UInt16:
-				case System.Data.DbType.UInt32:
-				case System.Data.DbType.UInt64:
-				case System.Data.DbType.VarNumeric:
-				case System.Data.DbType.Decimal:
-				case System.Data.DbType.Double:
-				case System.Data.DbType.Int16:
-				case System.Data.DbType.Int32:
-				case System.Data.DbType.Int64:
+				case DbType.UInt16:
+				case DbType.UInt32:
+				case DbType.UInt64:
+				case DbType.VarNumeric:
+				case DbType.Decimal:
+				case DbType.Double:
+				case DbType.Int16:
+				case DbType.Int32:
+				case DbType.Int64:
 					attValue = new AttributeValue
 					{
 						N = value.ToString()

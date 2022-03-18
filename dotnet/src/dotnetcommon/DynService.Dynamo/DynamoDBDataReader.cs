@@ -11,10 +11,10 @@ namespace GeneXus.Data.Dynamo
 {
 	public class DynamoDBDataReader : IDataReader
 	{
-		private RequestWrapper mRequest;
+		private readonly RequestWrapper mRequest;
 		private ResponseWrapper mResponse;
 		private int mCurrentPosition;
-		private IODataMap2[] selectList;
+		private readonly IODataMap2[] selectList;
 		private DynamoDBRecordEntry currentEntry;
 
 		private int ItemCount
@@ -39,7 +39,7 @@ namespace GeneXus.Data.Dynamo
 				throw new ServiceException(ServiceError.RecordNotFound);
 		}
 
-		public DynamoDBDataReader(ServiceCursorDef cursorDef, RequestWrapper request, IDataParameterCollection parameters)
+		public DynamoDBDataReader(ServiceCursorDef cursorDef, RequestWrapper request)
 		{
 			Query query = cursorDef.Query as Query;
 			selectList = query.SelectList;
@@ -136,8 +136,7 @@ namespace GeneXus.Data.Dynamo
 
 		public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
 		{
-			buffer = GetAttValue(i).S.ToCharArray();
-			return buffer.Length;
+			throw new NotImplementedException();
 		}
 
 		public IDataReader GetData(int i)
@@ -152,8 +151,7 @@ namespace GeneXus.Data.Dynamo
 
 		public DateTime GetDateTime(int i)
 		{
-			DateTime dt = new DateTime();
-			DateTime.TryParse(GetAttValue(i).S, out dt);
+			DateTime.TryParse(GetAttValue(i).S, out DateTime dt);
 			return dt;
 		}
 
@@ -300,8 +298,7 @@ namespace GeneXus.Data.Dynamo
 
 		public override DateTime GetDateTime(int i)
 		{
-			DateTime dt = new DateTime();
-			DateTime.TryParse(GetAttValue(i).S, out dt);
+			DateTime.TryParse(GetAttValue(i).S, out DateTime dt);
 			return dt;
 		}
 

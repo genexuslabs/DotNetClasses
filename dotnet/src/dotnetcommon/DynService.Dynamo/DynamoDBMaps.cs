@@ -2,16 +2,12 @@ using Amazon.DynamoDBv2.Model;
 using GeneXus.Data.NTier;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GeneXus.Data.Dynamo
 {
 	public class DynamoDBMap : Map
 	{
-		internal bool NeedsAttributeMap { get; private set; }
+		internal bool NeedsAttributeMap { get; }
 		public DynamoDBMap(string name): base(RemoveSharp(name))
 		{
 			NeedsAttributeMap = name.StartsWith("#", StringComparison.InvariantCulture);
@@ -22,8 +18,7 @@ namespace GeneXus.Data.Dynamo
 		{
 			Dictionary<string, AttributeValue> values = ((DynamoDBRecordEntry)currentEntry).CurrentRow;
 
-			AttributeValue val = null;
-			values.TryGetValue(GetName(context), out val);				
+			values.TryGetValue(GetName(context), out AttributeValue val);				
 			return val;
 		}
 

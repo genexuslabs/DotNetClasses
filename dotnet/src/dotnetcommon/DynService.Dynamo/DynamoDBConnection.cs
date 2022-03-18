@@ -40,16 +40,6 @@ namespace GeneXus.Data.NTier
 		private AWSCredentials mCredentials;
 		private RegionEndpoint mRegion = RegionEndpoint.USEast1;
 
-		public override string ConnectionString
-		{
-			get { return base.ConnectionString; }
-
-			set
-			{
-				base.ConnectionString = value;
-			}
-		}
-
 		private void InitializeDBConnection()
 		{
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
@@ -73,13 +63,12 @@ namespace GeneXus.Data.NTier
 			else mConfig.RegionEndpoint = mRegion;
 		}
 
-		private bool Initialize()
+		private void Initialize()
 		{
 			InitializeDBConnection();
 			State = ConnectionState.Executing;
 
 			mDynamoDB = new AmazonDynamoDBClient(mCredentials, mConfig);
-			return true;
 		}
 
 		public override int ExecuteNonQuery(ServiceCursorDef cursorDef, IDataParameterCollection parms, CommandBehavior behavior)
@@ -97,7 +86,6 @@ namespace GeneXus.Data.NTier
 
 			string pattern = @"\((.*) = :(.*)\)";
 			Dictionary<string, AttributeValue> keyCondition = new Dictionary<string, AttributeValue>();
-			List<string> filters = new List<string>();
 
 			foreach (string keyFilter in query.Filters)
 			{
@@ -110,7 +98,7 @@ namespace GeneXus.Data.NTier
 					keyCondition[name] = values[name];
 				}
 			}
-			AmazonDynamoDBRequest request = null;
+			AmazonDynamoDBRequest request;
 
 			switch (query.CursorType)
 			{
@@ -155,9 +143,6 @@ namespace GeneXus.Data.NTier
 					mDynamoDB.UpdateItem((UpdateItemRequest)request);
 #endif
 					break;
-
-				default:
-					break;
 			}
 
 			return 0;
@@ -198,11 +183,9 @@ namespace GeneXus.Data.NTier
 
 			try
 			{
-				DynamoDBDataReader dataReader;
-				AmazonDynamoDBRequest req;
-				CreateDynamoQuery(query, values, out dataReader, out req);
+				CreateDynamoQuery(query, values, out DynamoDBDataReader dataReader, out AmazonDynamoDBRequest req);
 				RequestWrapper reqWrapper = new RequestWrapper(mDynamoDB, req);
-				dataReader = new DynamoDBDataReader(cursorDef, reqWrapper, parms);
+				dataReader = new DynamoDBDataReader(cursorDef, reqWrapper);
 				return dataReader;
 			}
 			catch (AmazonDynamoDBException e) { throw e; }
