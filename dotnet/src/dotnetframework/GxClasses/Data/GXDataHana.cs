@@ -247,7 +247,7 @@ namespace GeneXus.Data
 				parameter.Value = CheckDataLength(value, parameter);
 			}
 		}
-		protected override void SetBinary(IDbDataParameter parameter, byte[] binary)
+		public override void SetBinary(IDbDataParameter parameter, byte[] binary)
 		{
 			GXLogging.Debug(log, "SetParameter BLOB, binary.length:" + binary.Length);
 			if (binary != null && binary.Length == 0)
@@ -277,7 +277,7 @@ namespace GeneXus.Data
             return "CURENT_USER";
         }
 
-        protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
         {
             return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
         }

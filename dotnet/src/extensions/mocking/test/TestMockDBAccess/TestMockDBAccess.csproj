@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -16,8 +16,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\src\dotnetcore\GxClasses\GxClasses.csproj" />
-	  <ProjectReference Include="..\src\extensions\mocking\src\MockDBAccess\MockDBAccess.csproj" />
+	  <ProjectReference Include="..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	  <ProjectReference Include="..\..\src\MockDBAccess\MockDBAccess.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

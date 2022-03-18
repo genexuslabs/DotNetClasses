@@ -270,7 +270,7 @@ namespace GeneXus.Data
 			}
 		}
 		//ByteArrayToByteaTextEscaped
-		protected override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
+		public override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
 		{
 			if (_byteaOutputEscape)
 			{

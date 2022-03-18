@@ -281,7 +281,7 @@ namespace GeneXus.Data
 		}
 		static DateTime SQLSERVER_NULL_DATE = new DateTime(1753, 1, 1);
 
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 		}
