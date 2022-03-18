@@ -1179,7 +1179,7 @@ namespace GeneXus.Data
 			}
 
 		}
-		protected override void SetBinary(IDbDataParameter parameter, byte[] binary)
+		public override void SetBinary(IDbDataParameter parameter, byte[] binary)
 		{
 			GXLogging.Debug(log, "SetParameter BLOB, binary.length:", () => binary != null ? binary.Length.ToString() : "null");
 			if (binary != null && binary.Length == 0)

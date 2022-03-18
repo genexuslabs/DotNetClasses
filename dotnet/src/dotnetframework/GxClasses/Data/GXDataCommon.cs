@@ -427,7 +427,7 @@ namespace GeneXus.Data
 			SetBinary(parameter, binary);
 		}
 
-		protected virtual void SetBinary(IDbDataParameter parameter, byte[] binary) {
+		public virtual void SetBinary(IDbDataParameter parameter, byte[] binary) {
 			parameter.Value = binary;
 			if (binary != null)
 				parameter.Size = binary.Length;
@@ -749,7 +749,7 @@ namespace GeneXus.Data
             }
             return adapter;
 		}
-        protected virtual DbDataAdapterElem GetCachedDataAdapter(IGxConnection con, string stmt)
+        public virtual DbDataAdapterElem GetCachedDataAdapter(IGxConnection con, string stmt)
         {
             return con.ConnectionCache.GetDataAdapter(stmt);
         }
@@ -774,7 +774,7 @@ namespace GeneXus.Data
 		{
 			return GetCommand(con, stmt, parameters);
 		}
-		protected virtual void PrepareCommand(IDbCommand cmd)
+		public virtual void PrepareCommand(IDbCommand cmd)
 		{
 		}
         public virtual int GetCommandTimeout()
@@ -841,7 +841,7 @@ namespace GeneXus.Data
 			command.Dispose();
 		}
 
-		protected virtual  IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public virtual IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return 	con.ConnectionCache.GetPreparedCommand(stmt);
 		}
@@ -958,7 +958,7 @@ namespace GeneXus.Data
 			}
 			return result;
 		}
-		protected virtual bool hasKey(string data, string key)
+		public virtual bool hasKey(string data, string key)
 		{
 			if (!string.IsNullOrEmpty(data) && data.IndexOf(key, StringComparison.OrdinalIgnoreCase) >= 0)
 			{
@@ -972,7 +972,7 @@ namespace GeneXus.Data
 			}
 			return false;
 		}
-		protected virtual string ParseAdditionalData(string data, string extractWord)
+		public virtual string ParseAdditionalData(string data, string extractWord)
 		{
 			char[] sep = {';'};
 			StringBuilder res=new StringBuilder("");
@@ -987,7 +987,7 @@ namespace GeneXus.Data
 			}
 			return res.ToString();
 		}
-		protected virtual string ReplaceKeyword(string data, string keyword, string newKeyword)
+		public virtual string ReplaceKeyword(string data, string keyword, string newKeyword)
 		{
 			char[] sep = { ';' };
 			StringBuilder res = new StringBuilder("");
@@ -1012,7 +1012,7 @@ namespace GeneXus.Data
 			}
 			return res.ToString();
 		}
-		protected virtual string RemoveDuplicates(string data, string extractWord)
+		public virtual string RemoveDuplicates(string data, string extractWord)
 		{
 			char[] sep = { ';' };
 			StringBuilder res = new StringBuilder("");
@@ -1665,7 +1665,7 @@ namespace GeneXus.Data
 		{
 			return ((ICloneable)p).Clone();
 		}
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			if (multipleDatareadersEnabled)
 			{
