@@ -41,7 +41,7 @@ namespace GeneXus.WebControls
 					}
 				}
 #else
-				var cname = "GxWebStd";
+				string cname = "GxWebStd";
 				string mainNamespace, className;
 				if (Config.GetValueOf("AppMainNamespace", out mainNamespace))
 					className = mainNamespace + "." + cname;
@@ -1658,7 +1658,7 @@ namespace GeneXus.WebControls
             JArray jsonArrValues = (JArray)jsonObj["v"];
             if (jsonArrValues != null)
             {
-                var idx = 1;
+                int idx = 1;
                 for (int i = 0; i < jsonArrValues.Count; i++)
                 {
                     JArray jsonItem = jsonArrValues.GetArray(i);
