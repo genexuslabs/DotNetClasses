@@ -4751,17 +4751,22 @@ namespace GeneXus.Utils
             return 0;
 #endif
 		}
+
 		public static int Shell(string commandString, int modal)
+		{
+			return Shell(commandString, modal, 0);
+		}
+		public static int Shell(string commandString, int modal, int redirectOutput)
 		{
 #if !NETCORE
 			if (GXProcessHelper.ProcessFactory != null)
 			{
-				return GXProcessHelper.ProcessFactory.GetProcessHelper().Shell(commandString, modal);
+				return GXProcessHelper.ProcessFactory.GetProcessHelper().Shell(commandString, modal, redirectOutput);
 			}
 			else
 				return 0;
 #else
-            return new GxProcess().Shell(commandString, modal);
+			return new GxProcess().Shell(commandString, modal, redirectOutput);
 #endif
 		}
 
