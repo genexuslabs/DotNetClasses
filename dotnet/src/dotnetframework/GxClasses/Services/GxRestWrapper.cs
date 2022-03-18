@@ -423,6 +423,7 @@ namespace GeneXus.Application
 			var route = _httpContext.Request.RouteValues;
 			foreach (KeyValuePair<string, object> kv in route)
 			{
+				if (!parameters.ContainsKey(kv.Key))
 				parameters.Add(kv.Key, kv.Value);
 			}
 #else
