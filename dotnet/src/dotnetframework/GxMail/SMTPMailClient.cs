@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Net.Mail;
 using System.IO;
@@ -27,9 +26,7 @@ namespace GeneXus.Mail
 
 			if (session.Port == 465 && session.Secure > 0)
 			{
-				//SMTP over SSL is not supported.
-				session.HandleMailException(new GXMailException("SMTP over SSL (Port 465) not supported. Please use another Port (ex:587)", GXInternetConstants.MAIL_SMTPOverSSLNotSupported));
-				return;
+				GXLogging.Warn(log, "SMTP over SSL (Port 465) may not be supported. If this happen, please try using another Port (ex:587)");
 			}
 
 			if (session.Timeout > 0)
@@ -103,12 +100,12 @@ namespace GeneXus.Mail
 						session.HandleMailException(new GXMailException(re.Message, GXInternetConstants.MAIL_InvalidRecipient));
 					}
 
-					foreach (var item in msg.Attachments)
+					foreach (string item in msg.Attachments)
 					{
 						string fileName = item;
 						try
 						{
-							fileName = System.IO.Path.Combine(attachDir, item);
+							fileName = Path.Combine(attachDir, item);
 							mail.Attachments.Add(new Attachment(fileName));
 						}
 						catch (FileNotFoundException)

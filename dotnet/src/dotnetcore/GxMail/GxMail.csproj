@@ -52,6 +52,7 @@
     <Compile Include="..\..\dotnetframework\GxMail\POP3SessionOpenPop.cs" Link="POP3SessionOpenPop.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\QuotedPrintableDecoder.cs" Link="QuotedPrintableDecoder.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\SMTPMailClient.cs" Link="SMTPMailClient.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\SMTPMailKit.cs" Link="SMTPMailKit.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\SMTPSession.cs" Link="SMTPSession.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\SMTP\SmtpHelper.cs" Link="SMTP\SmtpHelper.cs" />
   </ItemGroup>
@@ -63,7 +64,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.11" />
+    <PackageReference Include="MailKit" Version="3.1.1" />
     <PackageReference Include="Microsoft.Exchange.WebServices" Version="2.2.0" />
+    <PackageReference Include="MimeKit" Version="3.1.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.42.0" />
     <PackageReference Include="OpenPop" Version="2.0.6.2" />
 	<PackageReference Include="Org.Mentalis.Security" Version="1.0.0" />
