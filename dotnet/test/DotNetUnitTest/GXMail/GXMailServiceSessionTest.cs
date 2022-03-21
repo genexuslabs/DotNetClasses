@@ -16,8 +16,8 @@ namespace DotNetUnitTest.GXMail
 			
 		}
 
-		[SkippableFact]
-		public GXMailServiceSession LoginOAuthApplication()
+		
+		private static GXMailServiceSession LoginOAuthApplication()
 		{
 			string appId, secret, tentantId;
 			GXMailServiceSession session;
@@ -34,8 +34,8 @@ namespace DotNetUnitTest.GXMail
 			return session;
 		}
 
-		[SkippableFact]
-		public GXMailServiceSession LoginOAuthDelegate()
+
+		private static GXMailServiceSession LoginOAuthDelegate()
 		{
 			string appId, secret, tentantId;
 			GXMailServiceSession session;
@@ -54,8 +54,7 @@ namespace DotNetUnitTest.GXMail
 			return session;
 		}
 
-		[SkippableFact]
-		public GXMailServiceSession LoginOAuthDelegateInteractive()
+		private static GXMailServiceSession LoginOAuthDelegateInteractive()
 		{
 			string appId, secret, tentantId;
 			GXMailServiceSession session;
@@ -69,18 +68,36 @@ namespace DotNetUnitTest.GXMail
 			return session;
 		}
 
-		[SkippableFact]
-		public GXMailServiceSession LoginOAuthBasic()
+		private static GXMailServiceSession LoginOAuthUserNamePassword()
 		{
 			string appId, secret, tentantId;
 			GXMailServiceSession session;
 			InitializeSession(out appId, out secret, out tentantId, out session);
 
-			session.SetProperty(ExchangeSession.AuthenticationType, AuthenticationType.Basic.ToString());
+			session.SetProperty(ExchangeSession.AuthenticationType, AuthenticationType.OAuthUsernamePassword.ToString());
 			session.Password = Environment.GetEnvironmentVariable("EWS_BASIC_PASSWORD");
 			session.Login();
 
 			Assert.Equal(0, session.ErrCode);
+			return session;
+		}
+
+		private static GXMailServiceSession LoginBasic() //Default
+		{			
+			GXMailServiceSession session;
+			string mailAddress = Environment.GetEnvironmentVariable("EWS_ADDRESS");
+
+			Skip.If(String.IsNullOrEmpty(mailAddress), "Skipped because mailAddress is empty");			
+
+			Assert.NotEmpty(mailAddress);
+
+			session = new GXMailServiceSession();			
+			session.SetProperty("ExchangeVersion", "Exchange2013_SP1");
+			session.UserName = mailAddress;
+			session.Password = Environment.GetEnvironmentVariable("EWS_BASIC_PASSWORD");
+			session.Login();
+
+			
 			return session;
 		}
 
@@ -127,11 +144,17 @@ namespace DotNetUnitTest.GXMail
 		}
 
 		[SkippableFact]
-		public void SendMailTestOAuthBasic()
+		public void SendMailTestOAuthUserNamePassword()
 		{
-			var session = LoginOAuthBasic();
+			var session = LoginOAuthUserNamePassword();
 			SendMail(session);
+		}
 
+		[SkippableFact]
+		public void SendMailTestBasic()
+		{
+			var session = LoginBasic();
+			SendMail(session);
 		}
 
 		private static void SendMail(GXMailServiceSession session)
