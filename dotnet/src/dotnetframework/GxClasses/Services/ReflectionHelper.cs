@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using GeneXus.Utils;
 using System.Linq;
+using Jayrock.Json;
 
 using Type = System.Type;
 
@@ -65,6 +66,33 @@ namespace GeneXus.Application
 				}
 			}
 			return false;
+		}
+
+		public static Dictionary<string, object> GetWrappedParameter(object instance, String methodName, Dictionary<string, object> bodyParameters)
+		{
+			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
+			var methodParameters = methodInfo.GetParameters();
+			List<ParameterInfo> inputParameters = new List<ParameterInfo>();
+			foreach (var methodParameter in methodParameters)
+			{
+				if (!methodParameter.IsOut)
+				{
+					inputParameters.Add(methodParameter);
+				}
+			}
+			if (inputParameters.Count == 1 && bodyParameters.Count>1)
+			{
+				ParameterInfo pInfo = inputParameters[0];
+				if (pInfo.ParameterType.IsSubclassOf(typeof(GxUserType)))
+				{
+					var gxParameterName = GxParameterName(pInfo.Name).ToLower();
+					Dictionary<string, object> parameters = new Dictionary<string,object>();
+					JObject jparms  = new JObject(bodyParameters);
+					parameters.Add(gxParameterName,jparms);					
+					return parameters;						
+				}
+			}
+			return bodyParameters;
 		}
 
 		private static object ConvertSingleJsonItem(object value, Type newType, IGxContext context)
