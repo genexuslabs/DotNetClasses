@@ -49,6 +49,8 @@
     <Compile Include="..\..\dotnetframework\GxMail\MimeDecoder.cs" Link="MimeDecoder.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\MimeEncoder.cs" Link="MimeEncoder.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\POP3Session.cs" Link="POP3Session.cs" />
+		<Compile Include="..\..\dotnetframework\GxMail\Pop3MailKit.cs" Link="Pop3MailKit.cs" />
+		<Compile Include="..\..\dotnetframework\GxMail\Pop3SessionBase.cs" Link="Pop3SessionBase.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\POP3SessionOpenPop.cs" Link="POP3SessionOpenPop.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\QuotedPrintableDecoder.cs" Link="QuotedPrintableDecoder.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\SMTPMailClient.cs" Link="SMTPMailClient.cs" />
@@ -70,6 +72,7 @@
     <PackageReference Include="MimeKit" Version="3.1.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.42.0" />
     <PackageReference Include="OpenPop" Version="2.0.6.2" />
+		<PackageReference Include="MailKit" Version="3.1.1" />
 	<PackageReference Include="Org.Mentalis.Security" Version="1.0.0" />
   </ItemGroup>
 

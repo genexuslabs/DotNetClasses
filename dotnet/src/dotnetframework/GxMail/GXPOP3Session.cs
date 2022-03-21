@@ -1,28 +1,40 @@
 using System;
 using GeneXus.Mail.Internals;
 using GeneXus.Configuration;
+using log4net;
 
 namespace GeneXus.Mail
 {
 	
 	public class GXPOP3Session : GXMailSession
 	{
+		private static readonly ILog log = LogManager.GetLogger(typeof(GXSMTPSession));
 		private IPOP3Session session;
 		private short secure;
-		private short newMessages;        
+		private short newMessages;
 
 		public GXPOP3Session()
 		{
-            string openPop = string.Empty;
-            Config.GetValueOf("OpenPOP",out openPop);
-            if (!Environment.Is64BitProcess && string.IsNullOrEmpty(openPop))
+			string implTakenLogMessage;
+			Config.GetValueOf("OpenPOP",out string openPop);
+			if (!Environment.Is64BitProcess && openPop == "legacy")
             {
                 session = new POP3Session();
-            }
-            else
-            {
-                session = new POP3SessionOpenPop();
-            }           			
+				implTakenLogMessage = "Using Pop3 Session legacy implementation";
+
+			}
+			/*else if (openPop == "SystemNetMail")	--> USAR ESTE NAMING PARA CUANDO SE QUITE POR DEFECTO LA IMPLEMENTACION MailClient*/
+			else if (openPop == "MailKit")
+			{
+				session = new Pop3MailKit();
+				implTakenLogMessage = "Using Pop3 Session MailKit library implementation";
+			} else
+			{
+				session = new POP3SessionOpenPop();
+				implTakenLogMessage = "Using Pop3 Session OpenPop.Net implementation";
+				
+			}
+			GXLogging.Debug(log, implTakenLogMessage.Trim());
 			secure = 0;
 			newMessages = 1;
 		}
@@ -38,6 +50,7 @@ namespace GeneXus.Mail
 				session.AttachDir = value;
 			}
 		}
+
 
 		public short Secure
 		{
@@ -128,6 +141,18 @@ namespace GeneXus.Mail
 			set
 			{
 				session.Timeout = value;
+			}
+		}
+
+		public string AuthenticationMethod
+		{
+			get
+			{
+				return session.AuthenticationMethod;
+			}
+			set
+			{
+				session.AuthenticationMethod = value;
 			}
 		}
 
