@@ -274,8 +274,8 @@ namespace GxClasses.Web.Middleware
 					else
 					{
 						GXLogging.Error(log, $"ProcessRestRequest controller not found path:{path} controllerWithParms:{controllerWithParms}");
-						context.Response.StatusCode = (int)HttpStatusCode.NotFound;
 						context.Response.Headers.Clear();
+						return Task.FromException(new PageNotFoundException(path));
 					}
 				}
 				return Task.CompletedTask;
@@ -283,8 +283,8 @@ namespace GxClasses.Web.Middleware
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "ProcessRestRequest", ex);
-				HttpHelper.SetUnexpectedError(context, HttpStatusCode.InternalServerError, ex); 
-				return Task.CompletedTask;
+				HttpHelper.SetUnexpectedError(context, HttpStatusCode.InternalServerError, ex);
+				return Task.FromException(ex);
 			}
 		}
 
@@ -312,11 +312,21 @@ namespace GxClasses.Web.Middleware
 						{
 
 							controllerWithParms = mlist.Value.Path;
-							if (pathWithNoBase.ToLower().EndsWith(controllerWithParms.ToLower()))
+							Regex rx = new Regex(mlist.Value.PathRegexp, RegexOptions.IgnoreCase);
+							MatchCollection matches = rx.Matches(pathWithNoBase.ToLower());
+							if (matches != null)
 							{
-								if (pathWithNoBase.Remove(pathWithNoBase.Length - controllerWithParms.Length).ToLower() == map.Key.ToLower())
+								string uriPath = "";
+								foreach (Match match in matches)
+								{
+									uriPath = match.Value;
+									break;
+								}
+
+								if (pathWithNoBase.Remove(pathWithNoBase.Length - uriPath.Length).ToLower() == map.Key.ToLower())
 									return controllerWithParms;
 							}
+
 						}
 					}
 				}

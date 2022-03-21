@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +46,21 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 					isSecure = GetSecureConnection(header.Key, defaultHttpContext.Request.Headers[header.Key]);
 
 			}
+
+			IReadOnlyDictionary<string, object> keyValuePairs = requestData.FunctionContext.BindingContext.BindingData;
+			object queryparamsJson = requestData.FunctionContext.BindingContext.BindingData.GetValueOrDefault("Query");
+			JsonNode queryparams = JsonNode.Parse((string)queryparamsJson);
+
+			foreach (var keyValuePair in keyValuePairs)
+			{
+				if ((keyValuePair.Key != "Headers") && (keyValuePair.Key != "Query"))
+				{ 
+					JsonNode qKey = queryparams[keyValuePair.Key];
+					if (qKey == null)
+						defaultHttpContext.Request.RouteValues.Add(keyValuePair.Key.ToLower(),keyValuePair.Value);
+				}
+			}
+
 			defaultHttpContext.Request.Method = requestData.Method;
 			defaultHttpContext.Request.Body = requestData.Body;
 			defaultHttpContext.Request.Path = PathString.FromUriComponent(requestData.Url);
