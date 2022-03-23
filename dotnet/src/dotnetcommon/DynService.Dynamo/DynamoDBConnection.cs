@@ -188,7 +188,13 @@ namespace GeneXus.Data.NTier
 				dataReader = new DynamoDBDataReader(cursorDef, reqWrapper);
 				return dataReader;
 			}
-			catch (AmazonDynamoDBException e) { throw e; }
+			catch (AmazonDynamoDBException e)
+			{
+				if (e.ErrorCode == DynamoDBErrors.ValidationException &&
+				    e.Message.Contains(DynamoDBErrors.ValidationExceptionMessageKey))
+					throw new ServiceException(ServiceError.RecordNotFound); // Handles special case where a string key attribute is filtered with an empty value which is not supported on DynamoDB but should yield a not record found in GX
+				throw e;
+			}
 			catch (AmazonServiceException e) { throw e; }
 			catch (Exception e) { throw e; }
 		}
@@ -239,5 +245,11 @@ namespace GeneXus.Data.NTier
 		}
 		internal static IOServiceContext NewServiceContext() => null;
 
+	}
+
+	public class DynamoDBErrors
+	{
+		public const string ValidationException = "ValidationException";
+		public const string ValidationExceptionMessageKey = "The AttributeValue for a key attribute cannot contain an empty string value.";
 	}
 }
