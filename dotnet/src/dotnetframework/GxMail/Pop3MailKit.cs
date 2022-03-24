@@ -102,7 +102,7 @@ namespace GeneXus.Mail
 		{
 			try
 			{
-				client.DeleteMessage(lastReadMessage);
+				client.DeleteMessage(lastReadMessage-1);
 			} catch (ServiceNotConnectedException e)
 			{
 				LogError("Service not connected", e.Message, MailConstants.MAIL_ServerRepliedErr, e, log);
@@ -132,7 +132,8 @@ namespace GeneXus.Mail
 			{
 				if (count > lastReadMessage)
 				{
-					MimeMessage msg = client.GetMessage(++lastReadMessage);
+					MimeMessage msg = client.GetMessage(lastReadMessage);
+					lastReadMessage++;
 					if (msg != null)
 					{
 						gxmessage.From = new GXMailRecipient(msg.From[0].Name, msg.From[0].ToString());
@@ -156,7 +157,7 @@ namespace GeneXus.Mail
 						{
 							SetRecipient(gxmessage.ReplyTo, msg.ReplyTo);
 						}
-						gxmessage.DateSent = Convert.ToDateTime(GetHeaderFromMimeMessage(msg, "Date"));
+						gxmessage.DateSent = Internals.Pop3.MailMessage.GetMessageDate(GetHeaderFromMimeMessage(msg, "Date"));
 						if (gxmessage.DateSent.Kind == DateTimeKind.Utc && Application.GxContext.Current != null)
 						{
 							gxmessage.DateSent = DateTimeUtil.FromTimeZone(gxmessage.DateSent, "Etc/UTC", GeneXus.Application.GxContext.Current);
