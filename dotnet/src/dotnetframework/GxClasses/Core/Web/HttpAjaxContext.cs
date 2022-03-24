@@ -36,7 +36,9 @@ namespace GeneXus.Http
 		void ajax_rsp_assign_hidden_sdt(String SdtName, Object SdtObj);		
 		void ajax_rsp_assign_prop(String CmpPrefix, bool IsMasterPage, String Control, String Property, String Value, bool sendAjax);
 		void ajax_rsp_assign_uc_prop(String CmpPrefix, bool IsMasterPage, String Control, String Property, String Value);
-        void ajax_rsp_assign_grid(String ControlName, Object GridObj);		
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+        void ajax_rsp_assign_grid(String ControlName, Object GridObj, String Control);		
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 		void AddStylesheetToLoad(String url);
 		void AddStylesHidden();
 		void ajax_rsp_clear();
@@ -129,6 +131,7 @@ namespace GeneXus.Http
 		private Hashtable _LoadCommands = new Hashtable();
 		private JObject _Messages = new JObject();
 		private JArray _Grids = new JArray();
+		private Dictionary<String, int> DicGrids = new Dictionary<String, int>();
 		private JObject _ComponentObjects = new JObject();
 		private JArray _StylesheetsToLoad = new JArray(); 
 		private NameValueCollection _formVars;
@@ -520,12 +523,20 @@ namespace GeneXus.Http
 			}
 		}
 
-		public void ajax_rsp_assign_grid(String GridName, Object GridObj)
+		public void ajax_rsp_assign_grid(String GridName, Object GridObj, String Control)
         {
             try
             {
-                Grids.Add(((IGxJSONAble)GridObj).GetJSONObject());
-            }
+				if (DicGrids.ContainsKey(Control))
+				{
+					Grids[DicGrids[Control]] = ((IGxJSONAble)GridObj).GetJSONObject();
+				}
+				else
+				{
+					Grids.Add(((IGxJSONAble)GridObj).GetJSONObject());
+					DicGrids.Add(Control, Grids.Length - 1);
+				}
+			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "ajax_rsp_assign_grid error", ex);
