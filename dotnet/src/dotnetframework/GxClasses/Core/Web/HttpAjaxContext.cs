@@ -37,7 +37,8 @@ namespace GeneXus.Http
 		void ajax_rsp_assign_prop(String CmpPrefix, bool IsMasterPage, String Control, String Property, String Value, bool sendAjax);
 		void ajax_rsp_assign_uc_prop(String CmpPrefix, bool IsMasterPage, String Control, String Property, String Value);
 #pragma warning disable CA1707 // Identifiers should not contain underscores
-        void ajax_rsp_assign_grid(String ControlName, Object GridObj, String Control);		
+        void ajax_rsp_assign_grid(String ControlName, Object GridObj, String Control);
+		void ajax_rsp_assign_grid(String ControlName, Object GridObj);
 #pragma warning restore CA1707 // Identifiers should not contain underscores
 		void AddStylesheetToLoad(String url);
 		void AddStylesHidden();
@@ -447,6 +448,17 @@ namespace GeneXus.Http
 			if (!context.isAjaxRequest())
 			{
 				ajax_rsp_assign_hidden(Control + "_" + Property, Value);
+			}
+		}
+
+		public void ajax_rsp_assign_grid(String ControlName, Object GridObj) {
+			try
+			{
+				Grids.Add(((IGxJSONAble)GridObj).GetJSONObject());
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "ajax_rsp_assign_grid error", ex);
 			}
 		}
 
