@@ -14,8 +14,8 @@ using Type = System.Type;
 namespace GeneXus.Application
 {
 	public class ReflectionHelper
-    {
-		const string ISO_8601_TIME_SEPARATOR= "T";
+	{
+		const string ISO_8601_TIME_SEPARATOR = "T";
 		const string ISO_8601_TIME_SEPARATOR_1 = ":";
 		public static void CallBCMethod(object instance, String methodName, IList<string> inParametersValues)
 		{
@@ -43,9 +43,26 @@ namespace GeneXus.Application
 			MethodInfo methodInfo = instanceType.GetMethod(memberInfo.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 			return CallMethodImpl(instance, methodInfo, parameters, context);
 		}
-		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context=null)
+
+		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context = null)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+			return CallMethodImpl(instance, methodInfo, parameters, context);
+		}
+		public static IList<object> CallMethod(object instanceOrType, String methodName, IList<object> parameters, bool isStatic = false, IGxContext context = null)
+		{
+			MethodInfo methodInfo;
+			object instance = null;
+			if (isStatic)
+			{
+				methodInfo = ((Type)instanceOrType).GetMethod(methodName, BindingFlags.Static | BindingFlags.Public | BindingFlags.IgnoreCase);
+			}
+			else
+			{
+
+				methodInfo = instanceOrType.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+				instance = instanceOrType;
+			}
 			return CallMethodImpl(instance, methodInfo, parameters, context);
 		}
 		static Dictionary<string, object> CallMethodImpl(object instance, MethodInfo methodInfo, IDictionary<string, object> parameters, IGxContext context)
@@ -53,6 +70,14 @@ namespace GeneXus.Application
 			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, context);
 			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
 			return ProcessParametersAfterInvoke(methodInfo, parametersForInvocation, returnParm);
+		}
+		static IList<object> CallMethodImpl(object instance, MethodInfo methodInfo, IList<object> parameters, IGxContext context)
+		{
+			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, context);
+			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
+			IList<object> parametersAfterInvoke = parametersForInvocation.ToList<object>();
+			parametersAfterInvoke.Add(returnParm);
+			return parametersAfterInvoke;
 		}
 		public static bool MethodHasInputParameters(object instance, String methodName)
 		{
@@ -97,16 +122,16 @@ namespace GeneXus.Application
 
 		private static object ConvertSingleJsonItem(object value, Type newType, IGxContext context)
 		{
-			if (value!= null && value.GetType() == newType)
+			if (value != null && value.GetType() == newType)
 			{
 				return value;
 			}
 			else if (typeof(IGxJSONAble).IsAssignableFrom(newType))
 			{
 				object TObject;
-				if (typeof(GxSilentTrnSdt).IsAssignableFrom(newType) && context!=null)
+				if (typeof(GxSilentTrnSdt).IsAssignableFrom(newType) && context != null)
 				{
-					TObject = Activator.CreateInstance(newType, new object[] { context});
+					TObject = Activator.CreateInstance(newType, new object[] { context });
 				}
 				else
 				{
@@ -145,9 +170,9 @@ namespace GeneXus.Application
 			}
 		}
 
-		private static object ConvertStringToNewNonNullableType(object value, Type newType, IGxContext context=null)
+		private static object ConvertStringToNewNonNullableType(object value, Type newType, IGxContext context = null)
 		{
-			
+
 			if (newType.IsArray)
 			{
 				// For comma separated list
@@ -164,7 +189,7 @@ namespace GeneXus.Application
 			return ConvertSingleJsonItem(value, newType, context);
 		}
 
-		internal static object ConvertStringToNewType(object value, Type newType, IGxContext context=null)
+		internal static object ConvertStringToNewType(object value, Type newType, IGxContext context = null)
 		{
 			// If it's not a nullable type, just pass through the parameters to Convert.ChangeType
 			if (newType.GetTypeInfo().IsGenericType && newType.GetGenericTypeDefinition() != null && newType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
@@ -181,9 +206,9 @@ namespace GeneXus.Application
 		public static Dictionary<string, string> ParametersFormat(object instance, string methodName)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
-						
+
 			Dictionary<string, string> formatList = new Dictionary<string, string>();
-			var methodParameters = methodInfo.GetParameters();			
+			var methodParameters = methodInfo.GetParameters();
 			foreach (var methodParameter in methodParameters)
 			{
 				var gxParameterName = GxParameterName(methodParameter.Name);
@@ -199,6 +224,7 @@ namespace GeneXus.Application
 			}
 			return formatList;
 		}
+
 
 		private static Dictionary<string, object> ProcessParametersAfterInvoke(MethodInfo methodInfo, object[] parametersForInvocation, object returnParm)
 		{
@@ -220,7 +246,7 @@ namespace GeneXus.Application
 		}
 
 
-		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters, IGxContext context=null)
+		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IDictionary<string, object> parameters, IGxContext context = null)
 		{
 			var methodParameters = methodInfo.GetParameters();
 			object[] parametersForInvocation = new object[methodParameters.Length];
@@ -228,14 +254,14 @@ namespace GeneXus.Application
 			foreach (var methodParameter in methodParameters)
 			{
 				object value;
-				
+
 				var gxParameterName = GxParameterName(methodParameter.Name).ToLower();
 				Type parmType = methodParameter.ParameterType;
 				if (IsByRefParameter(methodParameter))
 				{
 					parmType = parmType.GetElementType();
 				}
-				if (parameters!=null && parameters.TryGetValue(gxParameterName, out value))
+				if (parameters != null && parameters.TryGetValue(gxParameterName, out value))
 				{
 					var convertedValue = ConvertStringToNewType(value, parmType, context);
 					parametersForInvocation[idx] = convertedValue;
@@ -244,6 +270,41 @@ namespace GeneXus.Application
 				{
 					var defaultValue = CreateInstance(parmType);
 					parametersForInvocation[idx] = defaultValue;
+				}
+				idx++;
+			}
+			return parametersForInvocation;
+		}
+
+		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IList<object> parameters, IGxContext context = null)
+		{
+			var methodParameters = methodInfo.GetParameters();
+			object[] parametersForInvocation = new object[methodParameters.Length];
+			var idx = 0;
+			foreach (var methodParameter in methodParameters)
+			{
+				Type parmType = methodParameter.ParameterType;
+				if (IsByRefParameter(methodParameter))
+				{
+					parmType = parmType.GetElementType();
+				}
+				object value = parameters.ElementAt(idx);
+				if (!value.GetType().Equals(parmType))
+				{
+					//To avoid convertion from string type
+					if (value.GetType() != typeof(string))
+					{
+						var convertedValue = ConvertStringToNewType(value, parmType, context);
+						parametersForInvocation[idx] = convertedValue;
+					}
+					else
+					{
+						throw new ArgumentException("Type not match", methodParameter.Name);
+					}
+				}
+				else
+				{
+					parametersForInvocation[idx] = value;
 				}
 				idx++;
 			}
