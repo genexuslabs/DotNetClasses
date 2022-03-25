@@ -42,9 +42,26 @@ namespace GeneXus.Application
 			MethodInfo methodInfo = instanceType.GetMethod(memberInfo.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 			return CallMethodImpl(instance, methodInfo, parameters, context);
 		}
+
 		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context=null)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+			return CallMethodImpl(instance, methodInfo, parameters, context);
+		}
+		public static IList<object> CallMethod(object instanceOrType, String methodName, IList<object> parameters, bool isStatic=false , IGxContext context = null)
+		{
+			MethodInfo methodInfo;
+			object instance = null;
+			if (isStatic)
+			{
+				 methodInfo = ((Type)instanceOrType).GetMethod(methodName, BindingFlags.Static | BindingFlags.Public | BindingFlags.IgnoreCase);
+			}
+			else
+			{
+
+				methodInfo = instanceOrType.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+				instance = instanceOrType;
+			}
 			return CallMethodImpl(instance, methodInfo, parameters, context);
 		}
 		static Dictionary<string, object> CallMethodImpl(object instance, MethodInfo methodInfo, IDictionary<string, object> parameters, IGxContext context)
@@ -52,6 +69,14 @@ namespace GeneXus.Application
 			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, context);
 			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
 			return ProcessParametersAfterInvoke(methodInfo, parametersForInvocation, returnParm);
+		}
+		static IList<object> CallMethodImpl(object instance, MethodInfo methodInfo, IList<object> parameters, IGxContext context)
+		{
+			object[] parametersForInvocation = ProcessParametersForInvoke(methodInfo, parameters, context);
+			object returnParm = methodInfo.Invoke(instance, parametersForInvocation);
+			IList<object> parametersAfterInvoke = parametersForInvocation.ToList<object>();
+			parametersAfterInvoke.Add(returnParm);
+			return parametersAfterInvoke;
 		}
 		public static bool MethodHasInputParameters(object instance, String methodName)
 		{
@@ -172,6 +197,7 @@ namespace GeneXus.Application
 			return formatList;
 		}
 
+
 		private static Dictionary<string, object> ProcessParametersAfterInvoke(MethodInfo methodInfo, object[] parametersForInvocation, object returnParm)
 		{
 			Dictionary<string, object> outputParameters = new Dictionary<string, object>();
@@ -216,6 +242,41 @@ namespace GeneXus.Application
 				{
 					var defaultValue = CreateInstance(parmType);
 					parametersForInvocation[idx] = defaultValue;
+				}
+				idx++;
+			}
+			return parametersForInvocation;
+		}
+
+		internal static object[] ProcessParametersForInvoke(MethodInfo methodInfo, IList<object> parameters, IGxContext context = null)
+		{
+			var methodParameters = methodInfo.GetParameters();
+			object[] parametersForInvocation = new object[methodParameters.Length];
+			var idx = 0;
+			foreach (var methodParameter in methodParameters)
+			{
+				Type parmType = methodParameter.ParameterType;
+				if (IsByRefParameter(methodParameter))
+				{
+					parmType = parmType.GetElementType();
+				}
+				object value = parameters.ElementAt(idx);
+				if (!value.GetType().Equals(parmType))
+				{
+					//To avoid convertion from string type
+					if (value.GetType() != typeof(string))
+					{
+						var convertedValue = ConvertStringToNewType(value, parmType, context);
+						parametersForInvocation[idx] = convertedValue;
+					}
+					else
+					{
+						throw new ArgumentException("Type not match", methodParameter.Name);
+					}
+				}
+				else
+				{
+					parametersForInvocation[idx] = value;
 				}
 				idx++;
 			}

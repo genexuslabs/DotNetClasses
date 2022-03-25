@@ -16,7 +16,7 @@
 		<AssemblyTrademark></AssemblyTrademark>
 		<CopyrightYear>$([System.DateTime]::UtcNow.ToString("yyyy"))</CopyrightYear>
 		<Copyright>Copyright © 1988-$(CopyrightYear) GeneXus. All Rights Reserved</Copyright>
-		<AssemblyOriginatorKeyFile Condition="'$(ARTECH_SNK_FILE)'!=''">$(ARTECH_SNK_FILE)</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile >C:\Fuentes\SVN\TRUNK\CommonInfo\Security\Keys\Artech.snk</AssemblyOriginatorKeyFile>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<Authors>GeneXus</Authors>
 		<SignAssembly Condition="'$(AssemblyOriginatorKeyFile)'!=''">true</SignAssembly>
