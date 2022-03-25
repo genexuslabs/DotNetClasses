@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net462;net6.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+		
+	<ProjectReference Include="..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" Condition="'$(TargetFramework)' == 'net6.0'" />
+	<ProjectReference Include="..\..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" Condition="'$(TargetFramework)' == 'net6.0'" />
+	<ProjectReference Include="..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" Condition="'$(TargetFramework)' == 'net462'" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.ServiceModel" Condition="'$(TargetFramework)' == 'net462'" />
+  </ItemGroup>
+
+</Project>
