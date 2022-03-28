@@ -64,7 +64,6 @@ namespace Genexus.DynamicCall
 
 		public void Execute(ref IList<object> parameters, out IList<SdtMessages_Message> errors)
 		{
-			System.Diagnostics.Debugger.Launch();
 			Create(null, out errors);
 			if (errors.Count == 0)
 			{
