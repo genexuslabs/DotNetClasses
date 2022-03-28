@@ -299,7 +299,7 @@ namespace GeneXus.Application
 					}
 					else
 					{
-						throw new ArgumentException("Type not match", methodParameter.Name);
+						throw new ArgumentException("Type does not match", methodParameter.Name);
 					}
 				}
 				else
