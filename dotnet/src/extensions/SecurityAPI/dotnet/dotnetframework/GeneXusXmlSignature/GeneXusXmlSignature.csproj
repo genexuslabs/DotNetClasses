@@ -8,8 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />
-    <PackageReference Include="BouncyCastle" Version="1.8.6.1" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Security" />
