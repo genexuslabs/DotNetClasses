@@ -58,9 +58,15 @@ namespace GeneXus.Data.NTier
 			{
 				mRegion = RegionEndpoint.GetBySystemName(region.ToString());
 			}
+
 			if (localUrl != null)
+			{
 				mConfig.ServiceURL = mLocalUrl;
-			else mConfig.RegionEndpoint = mRegion;
+				if (region != null)
+					mConfig.AuthenticationRegion = region as string;
+			}
+			else
+				mConfig.RegionEndpoint = mRegion;
 		}
 
 		private void Initialize()
