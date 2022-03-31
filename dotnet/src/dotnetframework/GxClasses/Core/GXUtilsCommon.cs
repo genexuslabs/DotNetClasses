@@ -5743,6 +5743,7 @@ namespace GeneXus.Utils
 	}
 	internal class ThreadUtil
 	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ThreadUtil));
 		private static List<ManualResetEvent> events = new List<ManualResetEvent>();
 
 		internal static void Submit(WaitCallback callbak, object state)
@@ -5758,11 +5759,26 @@ namespace GeneXus.Utils
 		}
 		internal static void WaitForEnd()
 		{
+			int remainingSubmits = 0;
 			if (events.Count > 0)
 			{
-				WaitHandle.WaitAll(events.ToArray());
+				foreach (ManualResetEvent e in events)
+				{
+					if (IsPending(e))
+						remainingSubmits++;
+				}
+				if (remainingSubmits>0)
+				{
+					GXLogging.Debug(log, "Waiting for " + remainingSubmits + " submitted procs to end...");
+					WaitHandle.WaitAll(events.ToArray());
+				}
 				events.Clear();
 			}
+		}
+		static bool IsPending(ManualResetEvent eventState)
+		{
+			return !eventState.WaitOne(0);
+
 		}
 	}
 
