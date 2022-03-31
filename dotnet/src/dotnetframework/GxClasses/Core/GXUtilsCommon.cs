@@ -56,7 +56,6 @@ namespace GeneXus.Utils
 		public static string WORKSTATION = "GX_WRKST";
 
 	}
-
 	public class ThreadSafeRandom
 	{
 		private static RNGCryptoServiceProvider random = new RNGCryptoServiceProvider();
@@ -66,6 +65,8 @@ namespace GeneXus.Utils
 			{
 				byte[] bytes = new Byte[8];
 				random.GetBytes(bytes);
+
+				
 
 				ulong ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11);
 				double d = ul / (double)(1UL << 53);
@@ -5738,6 +5739,27 @@ namespace GeneXus.Utils
 				}
 			}
 			return sb.ToString();
+		}
+	}
+	internal class ThreadUtil
+	{
+		private static List<ManualResetEvent> events = new List<ManualResetEvent>();
+
+		internal static void Submit(WaitCallback callbak, object state)
+		{
+			var resetEvent = new ManualResetEvent(false);
+			ThreadPool.QueueUserWorkItem(
+				arg =>
+				{
+					callbak(state);
+					resetEvent.Set();
+				});
+			events.Add(resetEvent);
+		}
+		internal static void WaitForEnd()
+		{
+			if (events.Count > 0)
+				WaitHandle.WaitAll(events.ToArray());
 		}
 	}
 
