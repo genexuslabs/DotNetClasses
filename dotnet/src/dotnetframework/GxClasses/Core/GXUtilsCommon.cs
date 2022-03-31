@@ -5747,7 +5747,7 @@ namespace GeneXus.Utils
 
 		internal static void Submit(WaitCallback callbak, object state)
 		{
-			var resetEvent = new ManualResetEvent(false);
+			ManualResetEvent resetEvent = new ManualResetEvent(false);
 			ThreadPool.QueueUserWorkItem(
 				arg =>
 				{
@@ -5759,7 +5759,10 @@ namespace GeneXus.Utils
 		internal static void WaitForEnd()
 		{
 			if (events.Count > 0)
+			{
 				WaitHandle.WaitAll(events.ToArray());
+				events.Clear();
+			}
 		}
 	}
 
