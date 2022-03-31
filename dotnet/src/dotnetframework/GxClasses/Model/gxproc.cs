@@ -65,6 +65,10 @@ namespace GeneXus.Procedure
 			get{ return disconnectUserAtCleanup;}
 			set{ disconnectUserAtCleanup=value;}
 		}
+		protected void Submit(Action<object> executeMethod, object state)
+		{
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
+		}
 		public static WaitCallback PropagateCulture(WaitCallback action)
 		{
 			var currentCulture = Thread.CurrentThread.CurrentCulture;
@@ -87,6 +91,9 @@ namespace GeneXus.Procedure
 		}
 		private void exitApplication(bool flushBatchCursor)
 		{
+			if (IsMain && !(context as GxContext).IsSubmited)
+				ThreadUtil.WaitForEnd();
+
 			if (flushBatchCursor)
 			{
 				foreach (IGxDataStore ds in context.DataStores)
