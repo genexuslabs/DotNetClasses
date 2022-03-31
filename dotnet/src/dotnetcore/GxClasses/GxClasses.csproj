@@ -153,19 +153,21 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0"  />
+		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 		<PackageReference Include="MySqlConnector" Version="1.0.1" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" />
 		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" />
 		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" />
 		<PackageReference Include="Npgsql" Version="3.2.7" />
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.110" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.110" PrivateAssets="All" />
+		<!--OracleManagedDataAccess has PrivateAssets to avoid deploying the assembly for any datastore-->
+		
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
 		<PackageReference Include="System.Drawing.Common" Version="4.7.0" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1"/>
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" />
 		<PackageReference Include="NUglify" Version="1.16.4" />
 	</ItemGroup>
 
