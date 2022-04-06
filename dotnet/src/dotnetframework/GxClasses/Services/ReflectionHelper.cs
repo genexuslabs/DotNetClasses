@@ -113,8 +113,8 @@ namespace GeneXus.Application
 					var gxParameterName = GxParameterName(pInfo.Name).ToLower();
 					Dictionary<string, object> parameters = new Dictionary<string,object>();
 					JObject jparms  = new JObject(bodyParameters);
-					parameters.Add(gxParameterName,jparms);					
-					return parameters;						
+					parameters.Add(gxParameterName, jparms);
+					return parameters;			
 				}
 			}
 			return bodyParameters;
