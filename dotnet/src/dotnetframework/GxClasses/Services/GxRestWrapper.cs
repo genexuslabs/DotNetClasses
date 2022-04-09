@@ -130,7 +130,8 @@ namespace GeneXus.Application
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-				}
+					bodyParameters = PreProcessApiSdtParameter( _procWorker, innerMethod, bodyParameters, this._variableAlias);
+				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
@@ -146,9 +147,7 @@ namespace GeneXus.Application
 			finally
 			{
 				Cleanup();
-
-			}
-			
+			}	
 		}
 
 		public virtual Task Post()
@@ -181,6 +180,38 @@ namespace GeneXus.Application
 #else
 			return ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
+		}
+
+		private Dictionary<string, object> SetAlias(Dictionary<string, object> bodyParameters, Dictionary<string, string> varAlias)
+		{
+			Dictionary<string, object> parameters = new Dictionary<string, object>();
+			foreach (string k in bodyParameters.Keys)
+			{
+				if (k != null)
+				{
+					string keyLowercase = k.ToLower();
+					if (varAlias == null)
+						parameters[keyLowercase] = bodyParameters[k];
+					else
+					{
+						if (varAlias.ContainsKey(keyLowercase))
+						{
+							string alias = varAlias[keyLowercase].ToLower();
+							parameters[alias] = bodyParameters[k];
+						}
+						else if (!varAlias.ContainsValue(keyLowercase))
+						{
+							parameters[keyLowercase] = bodyParameters[k];
+						}
+					}
+				}
+			}
+			return parameters;
+		}
+		private Dictionary<string, object> PreProcessApiSdtParameter(GXProcedure procWorker, string innerMethod,
+				Dictionary<string,object> bodyParameters, Dictionary<string, string> varAlias)
+		{
+			return SetAlias(bodyParameters, varAlias);
 		}
 		private string PreProcessReplicatorParameteres(GXProcedure procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
 		{
