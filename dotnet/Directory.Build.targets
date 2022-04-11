@@ -58,18 +58,18 @@
 
 
 	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND ('$(TargetFramework)'=='net6.0')">
+		<MakeDir Directories="$(TargetFramework)"/>
+		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(TargetFramework)\$(ProjectName).deps.json" />
 		<ReplaceFileText
-       InputFilename="$(OutDir)$(ProjectName).deps.json"
-       OutputFilename="$(OutDir)$(ProjectName).deps.json"
+       InputFilename="$(TargetFramework)\$(ProjectName).deps.json"
+       OutputFilename="$(TargetFramework)\$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Core"
        ReplacementText="GxClasses" />
 		<ReplaceFileText
-       InputFilename="$(OutDir)$(ProjectName).deps.json"
-       OutputFilename="$(OutDir)$(ProjectName).deps.json"
+       InputFilename="$(TargetFramework)\$(ProjectName).deps.json"
+       OutputFilename="$(TargetFramework)\$(ProjectName).deps.json"
        MatchExpression="GeneXus\.Classes\.Web\.Core"
-       ReplacementText="GxClasses.Web" />
-	   <MakeDir Directories="$(TargetFramework)"/>
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(TargetFramework)\$(ProjectName).deps.json" />
+       ReplacementText="GxClasses.Web"/>
 	</Target>
 
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)$(TargetFileName)')">

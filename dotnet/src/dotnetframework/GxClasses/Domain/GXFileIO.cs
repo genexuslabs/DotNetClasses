@@ -426,7 +426,7 @@ public class GxExternalFileInfo : IGxFileInfo
 		objectPath = !String.IsNullOrEmpty(objectPath) ? objectPath.Replace('\\', '/') : objectPath;
         _provider = provider;
 		_fileTypeAtt = fileType;
-		_name = objectPath;
+		_name = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, objectPath);
 
 		Uri result;
 		if (Uri.TryCreate(objectPath, UriKind.Absolute, out result) && result.IsAbsoluteUri)
