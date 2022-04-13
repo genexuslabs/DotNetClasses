@@ -3139,7 +3139,8 @@ namespace com.genexus.reports
 		
 		public static void addPredefinedSearchPaths(String [] predefinedPaths)
 		{
-			predefinedSearchPath.InsertRange(0, predefinedPaths);
+			lock (predefinedSearchPath)
+				predefinedSearchPath.InsertRange(0, predefinedPaths);
 		}
 
 		public static String getPredefinedSearchPaths()
