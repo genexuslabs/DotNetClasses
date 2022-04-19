@@ -677,7 +677,7 @@ namespace GeneXus.Http
 
 				return null;
 			}
-			public void initializeOutParms() {
+			private void initializeOutParms() {
 				DynAjaxEventContext.Clear();
 				foreach (JObject parm in DynAjaxEventContext.outParmsMetadata) {
 					string parmName = (string)parm["av"];
