@@ -16,7 +16,7 @@ namespace GeneXus.Utils
 		bool IsAssigned { get; set; }
 	}
 
-	public class GXBaseList<T> : List<T>, IGXAssigned, ICollection<T>, IEnumerable<T>, IEnumerable, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList
+	public class GXBaseList<T> : List<T>, IGXAssigned
 	{
 		public GXBaseList()
 		{
