@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using com.genexus.reports;
 using GeneXus.Programs;
 using GeneXus.Utils;
 using Xunit;
@@ -10,6 +12,21 @@ namespace UnitTesting
 {
 	public class PDFTests
 	{
+		[Fact]
+		public void ConcurrencyPDFSearchPaths()
+		{
+			Parallel.For(0, 50, i =>
+			{
+				apdfbasictest test = new apdfbasictest();
+				test.execute();
+			});
+			Parallel.For(0, 300, i =>
+			{
+				//System.ArgumentException : Source array was not long enough. Check srcIndex and length, and the array's lower bounds.
+				Utilities.addPredefinedSearchPaths(new String[] { "A", "B", "C" });
+			});
+
+		}
 		[Fact]
 		public void ExtractTextFromPDF()
 		{
