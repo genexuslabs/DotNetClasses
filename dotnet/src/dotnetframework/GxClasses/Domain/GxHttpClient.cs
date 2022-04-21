@@ -140,7 +140,7 @@ namespace GeneXus.Http.Client
 		[SecuritySafeCritical]
 		private WinHttpHandler GetHandler()
 		{
-			WinHttpClientHandler handlerInstance = new WinHttpHandler();
+			WinHttpHandler handlerInstance = new WinHttpHandler();
 			return handlerInstance;
 		}
 #endif
