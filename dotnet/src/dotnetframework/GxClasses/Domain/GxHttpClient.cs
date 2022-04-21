@@ -64,7 +64,6 @@ namespace GeneXus.Http.Client
 		Stream _receiveStream;
 		int _timeout = 30000;
 		short _statusCode = 0;
-		static int _maxConnPerRoute = Preferences.GetHttpClientMaxConnectionPerRoute();
 		string _proxyHost;
 		int _proxyPort;
 		short _errCode = 0;
@@ -130,25 +129,26 @@ namespace GeneXus.Http.Client
 			}
 		}
 
+
 #if NETCORE
+		[SecurityCritical]
 		private HttpClientHandler GetHandler()
 		{
 			lock (syncRoot)
 			{
 				if (handlerInstance == null)
 					handlerInstance = new HttpClientHandler();
-				handlerInstance.MaxConnectionsPerServer = _maxConnPerRoute;
 			}
 			return handlerInstance;
 		}
 #else
+		[SecurityCritical]
 		private WinHttpHandler GetHandler()
 		{
 			lock (syncRoot)
 			{
 				if (handlerInstance == null)
 					handlerInstance = new WinHttpHandler();
-				handlerInstance.MaxConnectionsPerServer = _maxConnPerRoute;
 			}
 			return handlerInstance;
 		}
