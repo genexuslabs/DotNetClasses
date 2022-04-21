@@ -1,26 +1,26 @@
 namespace GeneXus.Http.Client
 {
 	using System;
-	using System.Text;
+	using System.Collections;
+	using System.Collections.Generic;
 	using System.Collections.Specialized;
+	using System.Globalization;
 	using System.IO;
-	using log4net;
-	using GeneXus.Application;
 	using System.Net;
+	using System.Net.Http;
+	using System.Net.Http.Headers;
+	using System.Security;
+	using System.Security.Cryptography.X509Certificates;
+	using System.Text;
+	using System.Text.RegularExpressions;
+	using System.Threading.Tasks;
+	using System.Web;
+	using System.Web.Services.Protocols;
+	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
-	using System.Text.RegularExpressions;
+	using log4net;
 	using Mime;
-	using System.Collections;
-	using System.Security.Cryptography.X509Certificates;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Threading.Tasks;
-	using System.Web.Services.Protocols;
-	using System.Web;
-	using System.Net.Http.Headers;
-	using System.Net.Http;
-	using System.Security;
 
 
 	public interface IGxHttpClient
@@ -82,8 +82,10 @@ namespace GeneXus.Http.Client
 		string _statusDescription = string.Empty;
 		IGxContext _context;
 #if NETCORE
+
 		IWebProxy _proxyObject;
 #else
+
 		WebProxy _proxyObject;
 #endif
 		ArrayList _authCollection;
@@ -128,25 +130,17 @@ namespace GeneXus.Http.Client
 
 
 #if NETCORE
-		[SecurityCritical]
+		[SecuritySafeCritical]
 		private HttpClientHandler GetHandler()
 		{
-			lock (syncRoot)
-			{
-				if (handlerInstance == null)
-					handlerInstance = new HttpClientHandler();
-			}
+			HttpClientHandler handlerInstance = new HttpClientHandler();
 			return handlerInstance;
 		}
 #else
-		[SecurityCritical]
+		[SecuritySafeCritical]
 		private WinHttpHandler GetHandler()
 		{
-			lock (syncRoot)
-			{
-				if (handlerInstance == null)
-					handlerInstance = new WinHttpHandler();
-			}
+			WinHttpClientHandler handlerInstance = new WinHttpHandler();
 			return handlerInstance;
 		}
 #endif
