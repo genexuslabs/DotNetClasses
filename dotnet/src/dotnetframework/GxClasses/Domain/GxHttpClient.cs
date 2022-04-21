@@ -81,20 +81,17 @@ namespace GeneXus.Http.Client
 		string _url;
 		string _statusDescription = string.Empty;
 		IGxContext _context;
-		static object syncRoot = new Object();
 #if NETCORE
 		IWebProxy _proxyObject;
-		private static HttpClientHandler handlerInstance;
 #else
 		WebProxy _proxyObject;
-		private static WinHttpHandler handlerInstance;
 #endif
 		ArrayList _authCollection;
 		ArrayList _authProxyCollection;
 		X509Certificate2Collection _certificateCollection;
 		Encoding _encoding;
 		Encoding _contentEncoding;
-		
+
 
 		public MultiPartTemplate MultiPart
 		{
@@ -176,7 +173,7 @@ namespace GeneXus.Http.Client
 			{
 #if NETCORE
 				_proxyObject = WebRequest.GetSystemWebProxy();
-				
+
 #else
 				_proxyObject = WebProxy.GetDefaultProxy();
 				if (_proxyObject != null && _proxyObject.Address != null)
@@ -640,29 +637,33 @@ namespace GeneXus.Http.Client
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
 				handler.Proxy = proxy;
-			client = new HttpClient(handler);
-			client.Timeout = TimeSpan.FromMilliseconds(_timeout);
-			client.BaseAddress = request.RequestUri;
-
-			using (MemoryStream reqStream = new MemoryStream())
+			HttpResponseMessage response;
+			using (client = new HttpClient(handler))
 			{
-				sendVariables(reqStream);
-				SendStream.Seek(0, SeekOrigin.Begin);
-				BytesRead = SendStream.Read(Buffer, 0, 1024);
-				GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
-				while (BytesRead > 0)
+				client.Timeout = TimeSpan.FromMilliseconds(_timeout);
+				client.BaseAddress = request.RequestUri;
+
+				using (MemoryStream reqStream = new MemoryStream())
 				{
-					GXLogging.Debug(log, "reqStream.Write: Buffer.length " + Buffer.Length + ",'" + Encoding.UTF8.GetString(Buffer, 0, Buffer.Length) + "'");
-					reqStream.Write(Buffer, 0, BytesRead);
+					sendVariables(reqStream);
+					SendStream.Seek(0, SeekOrigin.Begin);
 					BytesRead = SendStream.Read(Buffer, 0, 1024);
+					GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
+					while (BytesRead > 0)
+					{
+						GXLogging.Debug(log, "reqStream.Write: Buffer.length " + Buffer.Length + ",'" + Encoding.UTF8.GetString(Buffer, 0, Buffer.Length) + "'");
+						reqStream.Write(Buffer, 0, BytesRead);
+						BytesRead = SendStream.Read(Buffer, 0, 1024);
+					}
+					EndMultipartBoundary(reqStream);
+					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
+					reqStream.Seek(0, SeekOrigin.Begin);
+					request.Content = new ByteArrayContent(reqStream.ToArray());
+					setHeaders(request, handler.CookieContainer);
+					response = client.SendAsync(request).GetAwaiter().GetResult();
 				}
-				EndMultipartBoundary(reqStream);
-				GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
-				reqStream.Seek(0, SeekOrigin.Begin);
-				request.Content = new ByteArrayContent(reqStream.ToArray());
-				setHeaders(request, handler.CookieContainer);
-				return client.SendAsync(request).GetAwaiter().GetResult();
 			}
+			return response;
 		}
 		void ReadReponseContent(HttpResponseMessage response)
 		{
@@ -752,7 +753,7 @@ namespace GeneXus.Http.Client
 			{
 				GXLogging.Warn(log, "Error Execute", aex);
 				_errCode = 1;
-				if(aex.InnerException != null)
+				if (aex.InnerException != null)
 					_errDescription = aex.InnerException.Message;
 				else
 					_errDescription = aex.Message;
@@ -986,9 +987,9 @@ namespace GeneXus.Http.Client
 			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			int BytesRead;
 			Byte[] Buffer = new Byte[1024];
-#pragma warning disable SYSLIB0014 // WebRequest 
+#pragma warning disable SYSLIB0014 // WebRequest
 			HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requestUrl);
-#pragma warning disable SYSLIB0014 // WebRequest 
+#pragma warning disable SYSLIB0014 // WebRequest
 
 			if (GXUtil.CompressResponse())
 			{
@@ -1008,7 +1009,7 @@ namespace GeneXus.Http.Client
 
 			setHeaders(req);
 
-			if (method.ToUpper() != "GET")
+			if (!method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) && !method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase))
 			{
 #if !NETCORE
 				using (Stream reqStream = req.GetRequestStream())
@@ -1289,8 +1290,8 @@ namespace GeneXus.Http.Client
 #if !NETCORE
 			if (HttpContext.Current != null)
 #endif
-				if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)
-					pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
+			if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)
+				pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 			using (fs = new FileStream(pathName, FileMode.Create, FileAccess.Write))
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'

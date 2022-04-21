@@ -3060,7 +3060,11 @@ namespace GeneXus.Application
 															 new string[] {"tar"    , "application/x-tar"},
 															 new string[] {"rar"    , "application/x-rar-compressed"},
 															 new string[] {"ram"	, "audio/vnd.rn-realaudio" },
-															 new string[] {"gz"		, "application/x-gzip"}
+															 new string[] {"gz"		, "application/x-gzip"},
+															 new string[] {"xls"    , "application/vnd.ms-excel"},
+															 new string[] {"xlsx"	, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+															 new string[] { "doc"	, "application/msword"},
+															 new string[] { "docx"	, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
 														 };
 
 		public int GetSoapErr()
@@ -3588,7 +3592,8 @@ namespace GeneXus.Application
 						else
 							imageFiles = Directory.GetFiles(dir, "*.txt");
 
-						string KBPrefix = "";
+						string KBPrefix = String.Empty;
+						char[] densitySeparator = new char[] { '|' };
 						for (int i = 0; i < imageFiles.Length; i++)
 						{
 							if (imageFiles[i].EndsWith(IMAGES_TXT, StringComparison.OrdinalIgnoreCase))
@@ -3634,7 +3639,7 @@ namespace GeneXus.Application
 
 												if (parts.Length > 5 && !string.IsNullOrEmpty(parts[5]))
 												{
-													foreach (string density in parts[5].Split('|'))
+													foreach (string density in parts[5].Split(densitySeparator, StringSplitOptions.RemoveEmptyEntries))
 													{
 														if (!m_imagesDensity.ContainsKey(imagePath))
 															m_imagesDensity[imagePath] = new HashSet<string>();

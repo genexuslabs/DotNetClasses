@@ -428,7 +428,9 @@ namespace UnitTesting
 				return false;
 			}
 			bool exists = false;
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
 			HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri(url));
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
 			request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
 			try
