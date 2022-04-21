@@ -94,7 +94,7 @@ namespace GeneXus.Application
 		}
 
 		public static Dictionary<string, object> GetWrappedParameter(object instance, String methodName, Dictionary<string, object> bodyParameters)
-		{
+		{			
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
 			var methodParameters = methodInfo.GetParameters();
 			List<ParameterInfo> inputParameters = new List<ParameterInfo>();
