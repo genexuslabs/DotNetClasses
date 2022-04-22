@@ -71,7 +71,6 @@ namespace GeneXus.Http.Client
 		NameValueCollection _headers;
 		NameValueCollection _formVars;
 		MultiPartTemplate _multipartTemplate;
-		HttpClientHandler handlerInstance;
 
 
 		string _scheme = "http://";
