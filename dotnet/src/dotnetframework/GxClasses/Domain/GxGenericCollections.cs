@@ -10,8 +10,43 @@ using System.Xml.Serialization;
 
 namespace GeneXus.Utils
 {
+	internal interface IGXAssigned
+	{
+		bool IsAssigned { get; set; }
+	}
+
+	public class GXBaseList<T> : List<T>, IGXAssigned
+	{
+		public GXBaseList()
+		{
+			IsAssigned = true;
+		}
+		[XmlIgnore]
+		public bool IsAssigned { get; set; }
+
+		public new void Clear() {
+			base.Clear();
+			IsAssigned = true;
+		}
+		public new void RemoveAt(int idx)
+		{
+			base.RemoveAt(idx);
+			IsAssigned = true;
+		}
+		public new void Add(T TObject)
+		{
+			base.Add(TObject);
+			IsAssigned = true;
+		}
+		public new void Insert(int idx, T TObject)
+		{
+			base.Insert(idx, TObject);
+			IsAssigned = true;
+		}
+	}
+
 	[Serializable]
-	public class GXBaseCollection<T> : List<T>, IGxXMLSerializable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable where T : GxUserType, IGxXMLSerializable, IGxJSONAble, new()
+	public class GXBaseCollection<T> : GXBaseList<T>, IGxXMLSerializable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable where T : GxUserType, IGxXMLSerializable, IGxJSONAble, new()
 	{
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXBaseCollection<T>));
@@ -347,7 +382,7 @@ namespace GeneXus.Utils
 		{
 			get
 			{
-				return this;
+				return (IList) this;
 			}
 			set
 			{

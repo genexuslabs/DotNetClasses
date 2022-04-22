@@ -267,7 +267,7 @@ namespace GeneXus.Utils
 
 	[Serializable]
 	[CollectionDataContract(Name = "GxSimpleCollection")]
-	public class GxSimpleCollection<T> : List<T>, IGxXMLSerializable, ICloneable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable
+	public class GxSimpleCollection<T> : GXBaseList<T>, IGxXMLSerializable, ICloneable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable
 	{
 
 		protected CollectionBase _jsonArr;
@@ -986,13 +986,15 @@ namespace GeneXus.Utils
 
 	[Serializable]
 	[XmlType(IncludeInSchema = false)]
-	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable
+	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable, IGXAssigned
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GxUserType));
 		protected GXProperties dirties = new GXProperties();
 
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
+		[XmlIgnore]
+		public bool IsAssigned { get; set; }
 
 		static void loadConfigurator()
 		{
@@ -1040,6 +1042,7 @@ namespace GeneXus.Utils
 		}
 		public GxUserType()
 		{
+			IsAssigned = true;
 		}
 
 

@@ -207,7 +207,7 @@ namespace GeneXus.Http
 #if !NETCORE
 		protected IGxContext _Context;                  
 #endif
-		bool _isMain;                                   
+		bool _isMain;
 		bool _isStatic;
 		string staticContentBase;
 
@@ -288,23 +288,27 @@ namespace GeneXus.Http
 			}
 		}
 
-		public class DynAjaxEvent
+		internal class DynAjaxEvent
 		{
 			JArray inParmsValues;
 			JArray inHashValues;
 			JArray events;
 			GXHttpHandler targetObj;
 			string[] eventHandlers;
-            bool[] eventUseInternalParms;
-            string cmpContext = string.Empty;
-            int grid;
-            string row;
-            JArray inParmsMetadata;
-            private HashSet<string> inParmsMetadataHash;
-            bool anyError;
+			bool[] eventUseInternalParms;
+			string cmpContext = string.Empty;
+			int grid;
+			string row = string.Empty;
+			bool anyError;
+			internal IDynAjaxEventContext DynAjaxEventContext;
 
-            private void ParseInputJSonMessage(JObject objMessage, GXHttpHandler targetObj)
-            {
+			internal DynAjaxEvent(IDynAjaxEventContext DynAjaxEventContext)
+			{
+				this.DynAjaxEventContext = DynAjaxEventContext;
+			}
+
+			private void ParseInputJSonMessage(JObject objMessage, GXHttpHandler targetObj)
+			{
 				inParmsValues = (JArray)objMessage["parms"];
 				inHashValues = (JArray)objMessage["hsh"];
 				if (inHashValues == null)
@@ -342,19 +346,19 @@ namespace GeneXus.Http
 				if (objMessage.Contains("grids"))
 					ParseGridsDataParms((JObject)objMessage["grids"]);
 				if (objMessage.Contains("grid"))
-                    grid = (int)objMessage["grid"];
-                else
-                    grid = 0;
-                if (objMessage.Contains("row"))
-                    row = (string)objMessage["row"];
-                else
-                    row = "";
-                if (objMessage.Contains("gxstate"))
-                {
-                    ParseGXStateParms((JObject)objMessage["gxstate"]);
-                }
-                if (objMessage.Contains("fullPost"))
-                {
+					grid = Convert.ToInt32(objMessage["grid"]);
+				else
+					grid = 0;
+				if (objMessage.Contains("row"))
+					row = (string)objMessage["row"];
+				else
+					row = string.Empty;
+				if (objMessage.Contains("gxstate"))
+				{
+					ParseGXStateParms((JObject)objMessage["gxstate"]);
+				}
+				if (objMessage.Contains("fullPost"))
+				{
 					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
 				}
 			}
@@ -389,18 +393,12 @@ namespace GeneXus.Http
 				return ((GxContext)(targetObj._Context)).getJSONResponse(this.cmpContext);
 			}
 
-			private void ClearInputParmsMetadata()
-			{
-				inParmsMetadata = new JArray();
-				inParmsMetadataHash = new HashSet<string>();
-			}
-
 			private bool IsInternalParm(JObject parm)
 			{
 				return parm.Contains("sPrefix") || parm.Contains("sSFPrefix") || parm.Contains("sCompEvt");
 			}
 
-			private void AddInputParmsMetadata(JObject inputParm)
+			private void AddParmsMetadata(JObject inputParm, JArray ParmsList, HashSet<string> ParmsListHash)
 			{
 				string key = string.Empty;
 
@@ -421,12 +419,12 @@ namespace GeneXus.Http
 					key = (string)inputParm["ctrl"];
 				}
 
-				if (String.IsNullOrEmpty(key) || !inParmsMetadataHash.Contains(key))
+				if (String.IsNullOrEmpty(key) || !ParmsListHash.Contains(key))
 				{
-					inParmsMetadata.Add(inputParm);
+					ParmsList.Add(inputParm);
 					if (!String.IsNullOrEmpty(key))
 					{
-						inParmsMetadataHash.Add(key);
+						ParmsListHash.Add(key);
 					}
 				}
 			}
@@ -435,7 +433,7 @@ namespace GeneXus.Http
 			{
 				try
 				{
-					ClearInputParmsMetadata();
+					DynAjaxEventContext.ClearParmsMetadata();
 					eventHandlers = new string[events.Length];
 					eventUseInternalParms = new bool[events.Length];
 					int eventCount = 0;
@@ -446,8 +444,13 @@ namespace GeneXus.Http
 						JArray eventInputParms = (JArray)eventMetadata["iparms"];
 						foreach (JObject inputParm in eventInputParms)
 						{
-							AddInputParmsMetadata(inputParm);
+							AddParmsMetadata(inputParm, DynAjaxEventContext.inParmsMetadata, DynAjaxEventContext.inParmsMetadataHash);
 							eventUseInternalParms[eventCount] = eventUseInternalParms[eventCount] || IsInternalParm(inputParm);
+						}
+						JArray eventOutputParms = (JArray)eventMetadata["oparms"];
+						foreach (JObject outputParm in eventOutputParms)
+						{
+							AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
 						}
 						eventCount++;
 					}
@@ -505,7 +508,7 @@ namespace GeneXus.Http
 				FieldInfo fieldInfo = getfieldInfo(targetObj, fieldName);
 				if (fieldInfo != null)
 				{
-					if (typeof(IGxCollection).IsAssignableFrom(fieldInfo.FieldType))
+					if (typeof(IGxCollection).IsAssignableFrom(fieldInfo.FieldType)) 
 						SetCollectionFieldValue(fieldInfo, values);
 					else
 						SetFieldValue(fieldInfo, value);
@@ -651,7 +654,21 @@ namespace GeneXus.Http
 
 				return null;
 			}
-
+			private void initializeOutParms() {
+				DynAjaxEventContext.Clear();
+				foreach (JObject parm in DynAjaxEventContext.outParmsMetadata) {
+					string parmName = (string)parm["av"];
+					if (!String.IsNullOrEmpty(parmName))
+					{
+						object TypedValue = getFieldValue(targetObj, parmName);
+						DynAjaxEventContext.SetParmHash(parmName, TypedValue);
+						if (!DynAjaxEventContext.isInputParm(parmName) && TypedValue is IGXAssigned param)
+						{
+							param.IsAssigned = false;
+						}
+					}
+				}
+			}
 			private object[] BeforeInvoke()
 			{
 				List<object> MethodParms = new List<object>();
@@ -661,7 +678,7 @@ namespace GeneXus.Http
 					bool multipart = targetObj.context.IsMultipartRequest;
 					int hash_i = 0;
 					int parm_i = 0;
-					foreach (JObject parm in inParmsMetadata)
+					foreach (JObject parm in DynAjaxEventContext.inParmsMetadata)
 					{
 
 						if (parm["postForm"] != null)
@@ -733,7 +750,7 @@ namespace GeneXus.Http
 																{
 																	SetScalarOrCollectionValue((string)parm["av"], columnValues[rowIdx - 1], columnValues);
 																	object TypedValue = getFieldValue(targetObj, (string)parm["av"]);
-																	CheckParmIntegrity(TypedValue, (string)columnHash, sRow, inParmsMetadata[parm_i], hash_i, Picture);
+																	CheckParmIntegrity(TypedValue, (string)columnHash, sRow, DynAjaxEventContext.inParmsMetadata[parm_i], hash_i, Picture);
 																}
 																rowIdx++;
 															}
@@ -786,7 +803,7 @@ namespace GeneXus.Http
 												string hash = hashObj.Contains("hsh") ? (string)hashObj["hsh"] : "";
 												SetScalarOrCollectionValue((string)parm["av"], inParmsValues[parm_i], columnValues);
 												object TypedValue = getFieldValue(targetObj, (string)parm["av"]);
-												CheckParmIntegrity(TypedValue, hash, sRow, inParmsMetadata[parm_i], hash_i, Picture);
+												CheckParmIntegrity(TypedValue, hash, sRow, DynAjaxEventContext.inParmsMetadata[parm_i], hash_i, Picture);
 											}
 											catch (Exception ex)
 											{
@@ -828,6 +845,7 @@ namespace GeneXus.Http
 					}
 					SetFieldValue("wbLoad", true);
 				}
+				initializeOutParms();
 				return MethodParms.ToArray();
 			}
 
@@ -940,7 +958,7 @@ namespace GeneXus.Http
 			}
 			setAjaxCallMode();
 			context.setFullAjaxMode();
-			DynAjaxEvent dynAjaxEvent = new DynAjaxEvent();
+			DynAjaxEvent dynAjaxEvent = new DynAjaxEvent( context.httpAjaxContext.DynAjaxEventContext);
 			string jsonRequest;
 			if (context.IsMultipartRequest)
 				jsonRequest = cgiGet(GX_AJAX_MULTIPART_ID);
