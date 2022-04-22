@@ -128,6 +128,8 @@ namespace GeneXus.Data.Dynamo
 		public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
 			MemoryStream ms = GetAttValue(i).B;
+			if (ms == null)
+				return 0;
 			ms.Seek(fieldOffset, SeekOrigin.Begin);
 			return ms.Read(buffer, bufferoffset, length);
 		}
