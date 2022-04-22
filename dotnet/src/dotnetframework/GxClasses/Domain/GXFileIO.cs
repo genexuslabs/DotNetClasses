@@ -314,7 +314,6 @@ public class GxFileInfo : IGxFileInfo
 		{
 			FileInfo targetFile = new FileInfo(filename);
 			if (targetFile.Directory!=null && !targetFile.Directory.Exists)
-			if (!targetFile.Directory.Exists)
 				targetFile.Directory.Create();
 		}
 		catch (Exception ex)
