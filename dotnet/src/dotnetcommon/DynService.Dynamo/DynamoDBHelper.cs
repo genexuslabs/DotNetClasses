@@ -4,6 +4,7 @@ using GeneXus.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 #if NETCORE
@@ -50,7 +51,15 @@ namespace GeneXus.Data.Dynamo
 			switch (dbType)
 			{
 				case DbType.Binary:
-					throw new NotImplementedException("Binary column not implemented yet");
+					if (value is byte[] valueArr)
+					{
+						attValue = new AttributeValue
+						{
+							B = new MemoryStream(valueArr)
+						};
+						break;
+					}
+					else throw new ArgumentException("Required value not found");
 				case DbType.Boolean:
 				case DbType.Byte:
 					attValue = new AttributeValue

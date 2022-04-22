@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
 using GeneXus.Cache;
@@ -126,7 +127,9 @@ namespace GeneXus.Data.Dynamo
 
 		public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
-			throw new NotImplementedException();
+			MemoryStream ms = GetAttValue(i).B;
+			ms.Seek(fieldOffset, SeekOrigin.Begin);
+			return ms.Read(buffer, bufferoffset, length);
 		}
 
 		public char GetChar(int i)
