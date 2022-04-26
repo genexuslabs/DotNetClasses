@@ -14,18 +14,18 @@ namespace Genexus.DynamicCall
 		private Assembly _assembly;
 		private string _namespace;
 		private string _externalName;
-		private GxUserType _properties;
+		private GxDynCallProperties _properties;
 		private object _object;
 		public string ObjectName { get; set; }
-		public GxUserType Properties     
+		public GxDynCallProperties Properties     
 		{
 			get => _properties;
 			set
 			{
 				_properties = Properties;
-				_assemblyName = (string) _properties.GetType().GetProperty("gxTpr_Assemblyname").GetValue(_properties);
-				_namespace = (string) _properties.GetType().GetProperty("gxTpr_Namespace").GetValue(_properties);
-				_externalName = (string)_externalName.GetType().GetProperty("gxTpr_Externalname").GetValue(_properties);
+				_assemblyName = Properties.AssemblyName;
+				_namespace = Properties.NameSpace;
+				_externalName = Properties.ExternalName; 
 			}
 		}
 
@@ -67,15 +67,8 @@ namespace Genexus.DynamicCall
 			Create(null, out errors);
 			if (errors.Count == 0)
 			{
-				try
-				{
-					IList<object> outParms = ReflectionHelper.CallMethod(_object, defaultMethod, parameters);
-					parameters = outParms;
-				}
-				catch (Exception e)
-				{
-					GXUtil.ErrorToMessages("CallMethod Error", e.Message, (GXBaseCollection<SdtMessages_Message>)errors);
-				}
+				GxDynCallMethodConf methodConf = new GxDynCallMethodConf();
+				Execute(ref parameters, methodConf, out errors);
 			}
 		}
 
@@ -119,18 +112,15 @@ namespace Genexus.DynamicCall
 				GXUtil.ErrorToMessages("VerifyProperties Error", e.Message, (GXBaseCollection<SdtMessages_Message>)errors);
 			}
 		}
-		public object Execute(ref IList<object> parameters, GxUserType methodconfiguration , out IList<SdtMessages_Message> errors)
+		public object Execute(ref IList<object> parameters, GxDynCallMethodConf methodconfiguration , out IList<SdtMessages_Message> errors)
 		{
 			object result;
 			errors = new GXBaseCollection<SdtMessages_Message>();
 			IList<object> outParms= new List<object>();
-#if NET462_OR_GREATER
-			GxUserType methodPlatformSubLevel=(GxUserType)methodconfiguration.GetType().GetProperty("gxTpr_Netframework").GetValue(methodconfiguration);
-#elif NET5_0_OR_GREATER
-			GxUserType methodPlatformSubLevel=(GxUserType)methodconfiguration.GetType().GetProperty("gxTpr_Net").GetValue(methodconfiguration);
-#endif
-			string methodName = (string)methodPlatformSubLevel.GetType().GetProperty("gxTpr_Methodname").GetValue(methodconfiguration);
-			bool isStatic = (bool)methodconfiguration.GetType().GetProperty("gxTpr_Methodisstatic").GetValue(methodconfiguration);
+
+			string methodName = methodconfiguration.MethodName; 
+			bool isStatic = methodconfiguration.IsStatic;
+
 			if (!isStatic)
 			{
 				if (_object != null)
