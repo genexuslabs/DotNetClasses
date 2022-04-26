@@ -1,4 +1,4 @@
-﻿
+
 using GeneXusCryptography.Commons;
 using GeneXusCryptography.HashUtils;
 using SecurityAPICommons.Commons;
@@ -183,10 +183,10 @@ namespace GeneXusCryptography.Hash
                     return new Sha3Digest(384);
                 case HashAlgorithm.SHA3_512:
                     return new Sha3Digest(512);
-                case HashAlgorithm.SHAKE_128:
+                /*case HashAlgorithm.SHAKE_128:
                     return new ShakeDigest(128);
                 case HashAlgorithm.SHAKE_256:
-                    return new ShakeDigest(256);
+                    return new ShakeDigest(256);*/
                 case HashAlgorithm.SM3:
                     return new SM3Digest();
                 case HashAlgorithm.TIGER:

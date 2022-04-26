@@ -131,7 +131,7 @@ namespace GeneXus.Http.HttpModules
 						object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
 #pragma warning restore SCS0018
 						MapGroup m = p as MapGroup;
-						if (m != null)
+						if (m != null && m.Name != null && m.Mappings != null )
 						{
 
 							if (String.IsNullOrEmpty(m.BasePath))

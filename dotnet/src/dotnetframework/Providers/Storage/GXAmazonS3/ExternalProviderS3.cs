@@ -269,7 +269,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			{
 				BucketName = Bucket,
 				Key = objectName,
-				Expires = DateTime.Now.AddMinutes(urlMinutes)
+				Expires = DateTime.Now.AddMinutes(urlMinutes),				
 			};
 			if (customEndpoint && StorageUri.StartsWith("http://"))
 			{

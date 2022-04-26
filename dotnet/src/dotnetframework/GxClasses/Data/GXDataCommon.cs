@@ -784,8 +784,8 @@ namespace GeneXus.Data
 				cmd = con.InternalConnection.CreateCommand();
 				cmd.CommandText=stmt;
 				cmd.Connection=con.InternalConnection.InternalConnection;
-				
-                cmd.CommandTimeout = GetCommandTimeout();
+
+				cmd.CommandTimeout = GetCommandTimeout();
 				AddParameters(cmd, parameters);
 				cmd.Transaction=con.BeginTransaction();
 				
@@ -798,20 +798,20 @@ namespace GeneXus.Data
 				{
 					if (parameters.Count>0)
 					{
-						for (int j=0; j< parameters.Count; j++)
+						for (int j = 0; j< parameters.Count; j++)
 						{
 							IDbDataParameter idbparameter = (IDbDataParameter)cmd.Parameters[j];
 							object value = parameters[j].Value;
 							idbparameter.Value=value;
-							if( value!=null && IsBlobType(idbparameter))
+							if (value!=null && IsBlobType(idbparameter))
 							{
 								try
 								{
 									idbparameter.Size = ((byte[])idbparameter.Value).Length;
 								}
-								catch(Exception ex)
+								catch (Exception ex)
 								{
-									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex );
+									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex);
 								}
 							}
 						}
@@ -819,7 +819,7 @@ namespace GeneXus.Data
 				}
 				else
 				{
-					
+
 					cmd.Parameters.Clear();
 
 					AddParameters(cmd, parameters);
