@@ -2102,6 +2102,8 @@ namespace GeneXus.Application
 		{
 			try
 			{
+				if (HttpContext==null)
+					return 0;
 				if (_HttpContext.Request.GetIsSecureFrontEnd())
 				{
 					GXLogging.Debug(log, "Front-End-Https header activated");
