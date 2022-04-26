@@ -43,6 +43,7 @@ using GeneXus.Storage;
 using GeneXus.Services;
 using GeneXus.Http;
 using System.Security;
+using System.Threading.Tasks;
 
 namespace GeneXus.Utils
 {
@@ -5725,41 +5726,64 @@ namespace GeneXus.Utils
 	internal class ThreadUtil
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ThreadUtil));
-		private static List<ManualResetEvent> events = new List<ManualResetEvent>();
-
+		private static ConcurrentDictionary<Guid, ManualResetEvent> events = new ConcurrentDictionary<Guid, ManualResetEvent>();
+		const int MAX_WAIT_HANDLES = 64;
 		internal static void Submit(WaitCallback callbak, object state)
 		{
-			ManualResetEvent resetEvent = new ManualResetEvent(false);
-			ThreadPool.QueueUserWorkItem(
-				arg =>
-				{
-					callbak(state);
-					resetEvent.Set();
-				});
-			events.Add(resetEvent);
+			try
+			{
+				ManualResetEvent resetEvent = new ManualResetEvent(false);
+				Guid eventGuid = Guid.NewGuid();
+				ThreadPool.QueueUserWorkItem(
+					arg =>
+					{
+						callbak(state);
+						resetEvent.Set();
+						events.TryRemove(eventGuid, out ManualResetEvent _);
+
+					});
+				events[eventGuid]= resetEvent;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Submit error", ex);
+			}
 		}
 		internal static void WaitForEnd()
 		{
-			int remainingSubmits = 0;
-			if (events.Count > 0)
+			int remainingSubmits = events.Count;
+			if (remainingSubmits > 0)
 			{
-				foreach (ManualResetEvent e in events)
-				{
-					if (IsPending(e))
-						remainingSubmits++;
-				}
-				if (remainingSubmits>0)
-				{
-					GXLogging.Debug(log, "Waiting for " + remainingSubmits + " submitted procs to end...");
-					WaitHandle.WaitAll(events.ToArray());
-				}
+				GXLogging.Debug(log, "Waiting for " + remainingSubmits + " submitted procs to end...");
+				WaitForAll();
 				events.Clear();
 			}
 		}
-		static bool IsPending(ManualResetEvent eventState)
+		public static void WaitForAll()
 		{
-			return !eventState.WaitOne(0);
-
+			try
+			{
+				List<ManualResetEvent> evtList  =new List<ManualResetEvent> ();
+				foreach (ManualResetEvent evt in events.Values)
+				{
+					evtList.Add(evt);
+					//Avoid WaitHandle.WaitAll limitation. It can only handle 64 waithandles
+					if (evtList.Count == MAX_WAIT_HANDLES)
+					{
+						WaitHandle.WaitAll(evtList.ToArray());
+						evtList.Clear();
+					}
+				}
+				if (evtList.Count>0)
+				{
+					WaitHandle.WaitAll(evtList.ToArray());
+					evtList.Clear();
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"WaitForAll pending threads error", ex);
+			}
 		}
 	}
 
