@@ -43,6 +43,7 @@ using GeneXus.Storage;
 using GeneXus.Services;
 using GeneXus.Http;
 using System.Security;
+using System.Threading.Tasks;
 using System.Drawing.Imaging;
 
 namespace GeneXus.Utils
@@ -56,7 +57,6 @@ namespace GeneXus.Utils
 		public static string WORKSTATION = "GX_WRKST";
 
 	}
-
 	public class ThreadSafeRandom
 	{
 		private static RNGCryptoServiceProvider random = new RNGCryptoServiceProvider();
@@ -66,6 +66,8 @@ namespace GeneXus.Utils
 			{
 				byte[] bytes = new Byte[8];
 				random.GetBytes(bytes);
+
+				
 
 				ulong ul = BitConverter.ToUInt64(bytes, 0) / (1 << 11);
 				double d = ul / (double)(1UL << 53);
@@ -5738,6 +5740,69 @@ namespace GeneXus.Utils
 				}
 			}
 			return sb.ToString();
+		}
+	}
+	internal class ThreadUtil
+	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ThreadUtil));
+		private static ConcurrentDictionary<Guid, ManualResetEvent> events = new ConcurrentDictionary<Guid, ManualResetEvent>();
+		const int MAX_WAIT_HANDLES = 64;
+		internal static void Submit(WaitCallback callbak, object state)
+		{
+			try
+			{
+				ManualResetEvent resetEvent = new ManualResetEvent(false);
+				Guid eventGuid = Guid.NewGuid();
+				ThreadPool.QueueUserWorkItem(
+					arg =>
+					{
+						callbak(state);
+						resetEvent.Set();
+						events.TryRemove(eventGuid, out ManualResetEvent _);
+
+					});
+				events[eventGuid]= resetEvent;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"Submit error", ex);
+			}
+		}
+		internal static void WaitForEnd()
+		{
+			int remainingSubmits = events.Count;
+			if (remainingSubmits > 0)
+			{
+				GXLogging.Debug(log, "Waiting for " + remainingSubmits + " submitted procs to end...");
+				WaitForAll();
+				events.Clear();
+			}
+		}
+		public static void WaitForAll()
+		{
+			try
+			{
+				List<ManualResetEvent> evtList  =new List<ManualResetEvent> ();
+				foreach (ManualResetEvent evt in events.Values)
+				{
+					evtList.Add(evt);
+					//Avoid WaitHandle.WaitAll limitation. It can only handle 64 waithandles
+					if (evtList.Count == MAX_WAIT_HANDLES)
+					{
+						WaitHandle.WaitAll(evtList.ToArray());
+						evtList.Clear();
+					}
+				}
+				if (evtList.Count>0)
+				{
+					WaitHandle.WaitAll(evtList.ToArray());
+					evtList.Clear();
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"WaitForAll pending threads error", ex);
+			}
 		}
 	}
 
