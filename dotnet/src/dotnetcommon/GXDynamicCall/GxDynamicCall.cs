@@ -136,7 +136,7 @@ namespace Genexus.DynamicCall
 				}
 				else
 				{
-					GXUtil.ErrorToMessages("NullInstance Error", "You must invoke create method before execute a non static one", (GXBaseCollection<SdtMessages_Message>)errors);
+					GXUtil.ErrorToMessages("NullInstance Error", "You must invoke create method before executing a non-static one", (GXBaseCollection<SdtMessages_Message>)errors);
 				}
 			}
 			else
