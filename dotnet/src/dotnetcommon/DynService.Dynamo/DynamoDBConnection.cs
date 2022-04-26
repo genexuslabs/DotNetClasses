@@ -10,6 +10,7 @@ using System.Data;
 using System.Data.Common;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Net;
 using GeneXus.Cache;
 
 namespace GeneXus.Data.NTier
@@ -80,9 +81,16 @@ namespace GeneXus.Data.NTier
 		public override int ExecuteNonQuery(ServiceCursorDef cursorDef, IDataParameterCollection parms, CommandBehavior behavior)
 		{
 			Initialize();
-			Query query = cursorDef.Query as Query;
+			DynamoQuery query = cursorDef.Query as DynamoQuery;
 
 			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
+			Dictionary<string, string> expressionAttributeNames = null;
+			string keyItemForUpd = query.PartitionKey;
+			if (keyItemForUpd != null && keyItemForUpd.StartsWith("#"))
+			{
+				expressionAttributeNames = new Dictionary<string, string>();
+				expressionAttributeNames.Add(keyItemForUpd, keyItemForUpd.Substring(1));
+			}
 			foreach (KeyValuePair<string, string> asg in query.AssignAtts)
 			{
 				string name = asg.Key.TrimStart(SHARP_CHARS);
@@ -100,11 +108,18 @@ namespace GeneXus.Data.NTier
 				if (match.Groups.Count > 1)
 				{
 					string name = match.Groups[1].Value.TrimStart(SHARP_CHARS);
-					DynamoDBHelper.AddAttributeValue(name, values, parms[varName] as ServiceParameter);
-					keyCondition[name] = values[name];
+					VarValue varValue = query.Vars.FirstOrDefault(v => v.Name == $":{varName}");
+					if (varValue != null)
+						keyCondition[name] = DynamoDBHelper.ToAttributeValue(varValue);
+					else
+					{
+						DynamoDBHelper.AddAttributeValue(name, values, parms[varName] as ServiceParameter);
+						keyCondition[name] = values[name];
+					}
 				}
 			}
 			AmazonDynamoDBRequest request;
+			AmazonWebServiceResponse response = null;
 
 			switch (query.CursorType)
 			{
@@ -115,26 +130,43 @@ namespace GeneXus.Data.NTier
 					request = new DeleteItemRequest()
 					{
 						TableName = query.TableName,
-						Key = keyCondition
+						Key = keyCondition,
+						ConditionExpression = $"attribute_exists({ keyItemForUpd })",
+						ExpressionAttributeNames = expressionAttributeNames
 					};
+					try
+					{
 #if NETCORE
-					DynamoDBHelper.RunSync<DeleteItemResponse>(() => mDynamoDB.DeleteItemAsync((DeleteItemRequest)request));
+					response = DynamoDBHelper.RunSync<DeleteItemResponse>(() => mDynamoDB.DeleteItemAsync((DeleteItemRequest)request));
 #else
-					mDynamoDB.DeleteItem((DeleteItemRequest)request);
+						response = mDynamoDB.DeleteItem((DeleteItemRequest)request);
 #endif
-
+					}
+					catch (ConditionalCheckFailedException recordNotFound)
+					{
+						throw new ServiceException(ServiceError.RecordNotFound, recordNotFound);
+					}
 					break;
 				case ServiceCursorDef.CursorType.Insert:
 					request = new PutItemRequest
 					{
 						TableName = query.TableName,
-						Item = values
+						Item = values,
+						ConditionExpression = $"attribute_not_exists({ keyItemForUpd })",
+						ExpressionAttributeNames = expressionAttributeNames
 					};
+					try
+					{
 #if NETCORE
-					DynamoDBHelper.RunSync<PutItemResponse>(() => mDynamoDB.PutItemAsync((PutItemRequest)request));
+					response = DynamoDBHelper.RunSync<PutItemResponse>(() => mDynamoDB.PutItemAsync((PutItemRequest)request));
 #else
-					mDynamoDB.PutItem((PutItemRequest)request);
+						response = mDynamoDB.PutItem((PutItemRequest)request);
 #endif
+					}
+					catch (ConditionalCheckFailedException recordAlreadyExists)
+					{
+						throw new ServiceException(ServiceError.RecordAlreadyExists, recordAlreadyExists);
+					}
 					break;
 				case ServiceCursorDef.CursorType.Update:
 					request = new UpdateItemRequest
@@ -144,14 +176,14 @@ namespace GeneXus.Data.NTier
 						AttributeUpdates = ToAttributeUpdates(keyCondition, values)
 					};
 #if NETCORE
-					DynamoDBHelper.RunSync<UpdateItemResponse>(() => mDynamoDB.UpdateItemAsync((UpdateItemRequest)request));
+					response = DynamoDBHelper.RunSync<UpdateItemResponse>(() => mDynamoDB.UpdateItemAsync((UpdateItemRequest)request));
 #else
-					mDynamoDB.UpdateItem((UpdateItemRequest)request);
+					response = mDynamoDB.UpdateItem((UpdateItemRequest)request);
 #endif
 					break;
 			}
 
-			return 0;
+			return response?.HttpStatusCode == HttpStatusCode.OK ? 1 : 0;
 		}
 
 		private Dictionary<string, AttributeValueUpdate> ToAttributeUpdates(Dictionary<string, AttributeValue> keyConditions, Dictionary<string, AttributeValue> values)
@@ -172,24 +204,10 @@ namespace GeneXus.Data.NTier
 			
 			Initialize();
 			DynamoQuery query = cursorDef.Query as DynamoQuery;
-			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
-			if (parms.Count > 0)
-			{
-				for (int i = 0; i < parms.Count; i++)
-				{
-					ServiceParameter parm = parms[i] as ServiceParameter;
-					DynamoDBHelper.GXToDynamoQueryParameter(":", values, parm);
-				}
-			}
-					
-			foreach (VarValue item in query.Vars)
-			{
-				values.Add(item.Name, DynamoDBHelper.ToAttributeValue(item));
-			}
 
 			try
 			{
-				CreateDynamoQuery(query, values, out DynamoDBDataReader dataReader, out AmazonDynamoDBRequest req);
+				CreateDynamoQuery(query, GetQueryValues(query, parms), out DynamoDBDataReader dataReader, out AmazonDynamoDBRequest req);
 				RequestWrapper reqWrapper = new RequestWrapper(mDynamoDB, req);
 				dataReader = new DynamoDBDataReader(cursorDef, reqWrapper);
 				return dataReader;
@@ -203,6 +221,16 @@ namespace GeneXus.Data.NTier
 			}
 			catch (AmazonServiceException e) { throw e; }
 			catch (Exception e) { throw e; }
+		}
+
+		private Dictionary<string, AttributeValue> GetQueryValues(DynamoQuery query, IDataParameterCollection parms)
+		{
+			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
+			foreach (object parm in parms)
+				DynamoDBHelper.GXToDynamoQueryParameter(":", values, parm as ServiceParameter);
+			foreach (VarValue item in query.Vars)
+				values.Add(item.Name, DynamoDBHelper.ToAttributeValue(item));
+			return values;
 		}
 
 		private static void CreateDynamoQuery(DynamoQuery query, Dictionary<string, AttributeValue> values, out DynamoDBDataReader dataReader, out AmazonDynamoDBRequest req)

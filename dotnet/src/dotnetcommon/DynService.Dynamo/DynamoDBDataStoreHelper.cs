@@ -56,9 +56,13 @@ namespace GeneXus.Data.NTier
 	
 	public static class DynamoFluentExtensions
 	{
-		public static Query OrderBy(this Query dynamoQuery, string index) 
+		public static Query OrderBy(this Query dynamoQuery, string index)
 		{
 			return (dynamoQuery as DynamoQuery)?.OrderBy(index);
+		}
+		public static Query SetKey(this Query dynamoQuery, string partitionKey)
+		{
+			return (dynamoQuery as DynamoQuery)?.SetKey(partitionKey);
 		}
 	}
 
@@ -78,6 +82,13 @@ namespace GeneXus.Data.NTier
 			}
 			if (index != RANGE_KEY_INDEX)
 				Index = index;
+			return this;
+		}
+
+		public string PartitionKey { get; private set; }
+		public DynamoQuery SetKey(string partitionKey)
+		{
+			PartitionKey = partitionKey;
 			return this;
 		}
 
