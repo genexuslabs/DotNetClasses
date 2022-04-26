@@ -2102,6 +2102,8 @@ namespace GeneXus.Application
 		{
 			try
 			{
+				if (HttpContext==null)
+					return 0;
 				if (_HttpContext.Request.GetIsSecureFrontEnd())
 				{
 					GXLogging.Debug(log, "Front-End-Https header activated");
@@ -3414,7 +3416,7 @@ namespace GeneXus.Application
 		}
 
 		internal bool IsStandalone => this._session is GxSession || this._isSumbited || this.HttpContext == null;
-
+		internal bool IsSubmited => this._isSumbited;
 		internal void SetSession(IGxSession value)
 		{
 			if (value != null)
