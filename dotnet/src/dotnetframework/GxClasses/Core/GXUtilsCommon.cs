@@ -44,6 +44,7 @@ using GeneXus.Services;
 using GeneXus.Http;
 using System.Security;
 using System.Threading.Tasks;
+using System.Drawing.Imaging;
 
 namespace GeneXus.Utils
 {
@@ -5460,10 +5461,21 @@ namespace GeneXus.Utils
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxImageUtil));
 
-		private static string ImageAbsolutePath(string originalFileLocation)
+		private static Bitmap BitmapCreateFromStream(string filePathOrUrl)
 		{
-			return ImageFile(originalFileLocation).GetAbsoluteName();
+			using (Stream s = ImageFile(filePathOrUrl).GetStream())
+			{
+				return new Bitmap(s);
+			}
 		}
+		private static Image ImageCreateFromStream(string filePathOrUrl)
+		{
+			using (Stream s = ImageFile(filePathOrUrl).GetStream())
+			{
+				return Image.FromStream(s);
+			}
+		}
+
 		private static GxFile ImageFile(string originalFileLocation)
 		{
 			return new GxFile(GxContext.StaticPhysicalPath(), originalFileLocation);
@@ -5472,11 +5484,10 @@ namespace GeneXus.Utils
 		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
 		{
 			try
-			{
-				int newheight = height;
-				string originalFileLocation = ImageAbsolutePath(imageFile);
-				using (Image image = Image.FromFile(ImageAbsolutePath(originalFileLocation)))
+			{										
+				using (Image image = ImageCreateFromStream(imageFile))
 				{
+					int newheight = height;
 					// Prevent using images internal thumbnail
 					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
 					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
@@ -5486,8 +5497,9 @@ namespace GeneXus.Utils
 						double resize = (double)image.Width / (double)width;//get the resize vector
 						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
 					}//return the image resized to the given heigth and width
-					image.GetThumbnailImage(width, newheight, null, IntPtr.Zero).Save(originalFileLocation);
-				}
+					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);					
+					Save(output, imageFile, ImageFormat.Bmp);
+				}				
 			}
 			catch (Exception ex)
 			{
@@ -5499,13 +5511,13 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				string originalFileLocation = ImageAbsolutePath(imageFile);
 				int width, height;
-				using (Image image = Image.FromFile(originalFileLocation))
+				using (Image image = ImageCreateFromStream(imageFile))
 				{
 					width = image.Size.Width * percent / 100;
 					height = image.Size.Height * percent / 100;
 				}
+				
 				return Resize(imageFile, width, height, true);
 			}
 			catch (Exception ex)
@@ -5519,9 +5531,8 @@ namespace GeneXus.Utils
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
-				{
-					string originalFileLocation = ImageAbsolutePath(imageFile);
-					using (Image OriginalImage = Image.FromFile(originalFileLocation))
+				{					
+					using (Image OriginalImage = ImageCreateFromStream(imageFile))
 					{
 						using (Bitmap bmp = new Bitmap(Width, Height))
 						{
@@ -5531,14 +5542,10 @@ namespace GeneXus.Utils
 								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
 								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
 								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
-								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
-								bmp.Save(ms, OriginalImage.RawFormat);
+								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);								
+								Save(bmp, imageFile, OriginalImage.RawFormat);
 							}
 						}
-					}
-					using (FileStream file = new FileStream(originalFileLocation, FileMode.Open, FileAccess.Write))
-					{
-						ms.WriteTo(file);
 					}
 				}
 			}
@@ -5550,13 +5557,11 @@ namespace GeneXus.Utils
 		}
 		public static string Rotate(string imageFile, int angle)
 		{
-
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
-				{
-					string originalFileLocation = ImageAbsolutePath(imageFile);
-					using (Image OriginalImage = Image.FromFile(originalFileLocation))
+				{					
+					using (Image OriginalImage = ImageCreateFromStream(imageFile))
 					{
 						using (Bitmap rotatedImage = new Bitmap(OriginalImage.Width, OriginalImage.Height))
 						{
@@ -5570,12 +5575,9 @@ namespace GeneXus.Utils
 								g.DrawImage(OriginalImage, new Point(0, 0));
 							}
 							rotatedImage.Save(ms, OriginalImage.RawFormat);
+							Save(rotatedImage, imageFile, OriginalImage.RawFormat);
 						}
-					}
-					using (FileStream file = new FileStream(originalFileLocation, FileMode.Open, FileAccess.Write))
-					{
-						ms.WriteTo(file);
-					}
+					}					
 				}
 			}
 			catch (Exception ex)
@@ -5584,15 +5586,14 @@ namespace GeneXus.Utils
 			}
 			return imageFile;
 		}
-		public static string FlipHorizontally(string imageFile) {
-
+		public static string FlipHorizontally(string imageFile)
+		{
 			try
 			{
-				string originalFileLocation = ImageAbsolutePath(imageFile);
-				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
-					bmp.Save(originalFileLocation);
+					return Save(bmp, imageFile, bmp.RawFormat);
 				}
 			}
 			catch (Exception ex)
@@ -5605,11 +5606,10 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				string originalFileLocation = ImageAbsolutePath(imageFile);
-				using (Bitmap bmp = new Bitmap(originalFileLocation))
+				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-					bmp.Save(originalFileLocation);
+					return Save(bmp, imageFile, bmp.RawFormat);
 				}
 			}
 			catch (Exception ex)
@@ -5619,12 +5619,32 @@ namespace GeneXus.Utils
 			return imageFile;
 		}
 
+		public static string Save(Image bitmap, string imageFile, ImageFormat format)
+		{			
+			using (MemoryStream ms = new MemoryStream())
+			{
+				try
+				{
+					bitmap.Save(ms, format);
+				}
+				catch (Exception) {
+					//In some cases, copied memory image fails to save when ImageFormat MemoryBmp
+					//https://stackoverflow.com/questions/9073619/image-save-crashing-value-cannot-be-null-r-nparameter-name-encoder
+					bitmap.Save(ms, ImageFormat.Bmp);
+				}
+				ms.Position = 0;
+				GxFile file = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
+				file.Create(ms);
+				file.Close();
+			}
+			return imageFile;
+		}
+
 		public static int GetImageWidth(string imageFile)
 		{
 			try
-			{
-				string originalFileLocation = ImageAbsolutePath(imageFile);
-				using (Bitmap bmp = new Bitmap(originalFileLocation))
+			{				
+				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					return bmp.Width;
 				}
@@ -5635,12 +5655,11 @@ namespace GeneXus.Utils
 			}
 			return 0;
 		}
+		
 		public static int GetImageHeight(string imageFile)
 		{
-			try
-			{
-				string originalFileLocation = ImageAbsolutePath(imageFile);
-				using (Bitmap bmp = new Bitmap(originalFileLocation))
+			try { 	
+				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					return bmp.Height;
 				}

@@ -27,6 +27,10 @@
 		<Compile Include="..\DotNetUnitTest\PDF\apdfbasictest.cs" Link="PDF\apdfbasictest.cs" />		
 		<Compile Include="..\DotNetUnitTest\PDF\PDFTests.cs" Link="PDF\PDFTests.cs" />		
 	</ItemGroup>
+	<ItemGroup>		
+		<Compile Include="..\DotNetUnitTest\ImageUtils\ImageUtilTest.cs" Link="ImageUtils\ImageUtilTest.cs" />
+		
+	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -131,6 +135,9 @@
 		</None>
 		<None Update="private\mailmanagement_a.grp.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="resources\bird-thumbnail.jpg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="resources\text.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
