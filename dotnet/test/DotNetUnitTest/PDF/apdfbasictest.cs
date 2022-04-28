@@ -75,7 +75,7 @@ namespace GeneXus.Programs {
             getPrinter().GxDrawText("Name", 183, Gx_line+83, 283, Gx_line+101, 0, 0, 0, 0) ;
             getPrinter().GxDrawBitMap("lamp.png", 411, Gx_line+33, 619, Gx_line+241) ;
             getPrinter().GxAttris("Microsoft Sans Serif", 8, false, false, false, false, 0, 0, 0, 0, 0, 255, 255, 255) ;
-            getPrinter().GxDrawText(StringUtil.RTrim( context.localUtil.Format( AV8htmlvar, "")), 22, Gx_line+122, 400, Gx_line+178, 0, 1, 0, 0) ;
+            getPrinter().GxDrawText(StringUtil.RTrim( AV8htmlvar), 22, Gx_line+122, 400, Gx_line+178, 0, 1, 0, 0) ;
             Gx_OldLine = Gx_line;
             Gx_line = (int)(Gx_line+193);
             /* Print footer for last page */
