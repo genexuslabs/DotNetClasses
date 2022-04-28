@@ -20,7 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj"/>
     <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
-    <ProjectReference Include="..\GxPdfReportsCS\GxPdfReportsCS.csproj" />
   </ItemGroup>
 	<ItemGroup>
 		<Reference Include="Jayrock-JSON">
