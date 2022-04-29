@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Genexus.DynamicCall
+namespace GeneXus.DynamicCall
 {
     public class GxDynamicCall
     {
@@ -157,6 +157,44 @@ namespace Genexus.DynamicCall
 			}
 			parameters = outParms;
 			return result;
+		}
+
+	}
+	public class GxDynCallMethodConf
+	{
+		public bool IsStatic
+		{
+			get; set;
+		}
+		public string MethodName
+		{
+			get; set;
+		}
+
+		public GxDynCallMethodConf()
+		{
+			IsStatic = false;
+			MethodName = "execute";
+		}
+
+	}
+
+	public class GxDynCallProperties
+	{
+		public string ExternalName
+		{
+			get;
+			set;
+		}
+		public string AssemblyName
+		{
+			get;
+			set;
+		}
+		public string NameSpace
+		{
+			get;
+			set;
 		}
 
 	}
