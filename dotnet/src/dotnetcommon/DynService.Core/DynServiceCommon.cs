@@ -17,12 +17,12 @@ namespace GeneXus.Data.NTier
 	public class Query
 	{
 		public string TableName { get; set; } = String.Empty;
-		public string[] Projection { get; set; } = Array.Empty<string>();
-		public string[] OrderBys { get; set; } = Array.Empty<string>();
-		public string[] Filters { get; set; } = Array.Empty<string>();
+		public IEnumerable<string> Projection { get; set; } = Array.Empty<string>();
+		public IEnumerable<string> OrderBys { get; set; } = Array.Empty<string>();
+		public IEnumerable<string> Filters { get; set; } = Array.Empty<string>();
 		private List<KeyValuePair<string, string>> mAssignAtts;
 		public IEnumerable<KeyValuePair<string, string>> AssignAtts { get { return mAssignAtts ?? Array.Empty<KeyValuePair<string, string>>() as IEnumerable<KeyValuePair<string, string>>; } } 
-		public IODataMap2[] SelectList { get; set; } = Array.Empty<IODataMap2>();
+		public IEnumerable<IODataMap2> SelectList { get; set; } = Array.Empty<IODataMap2>();
 
 		private List<VarValue> mVarValues;
 		public IEnumerable<VarValue> Vars { get { return (mVarValues ?? Array.Empty<VarValue>() as IEnumerable<VarValue>); } }

@@ -1,6 +1,7 @@
 using GeneXus.Data.Dynamo;
 using GeneXus.Utils;
 using System;
+using System.Collections.Generic;
 
 namespace GeneXus.Data.NTier
 {
@@ -64,6 +65,10 @@ namespace GeneXus.Data.NTier
 		{
 			return (dynamoQuery as DynamoQuery)?.SetKey(partitionKey);
 		}
+		public static Query KeyFilter(this Query dynamoQuery, string[] filters)
+		{
+			return (dynamoQuery as DynamoQuery)?.KeyFilter(filters);
+		}
 	}
 
 	public class DynamoQuery : Query
@@ -89,6 +94,12 @@ namespace GeneXus.Data.NTier
 		public DynamoQuery SetKey(string partitionKey)
 		{
 			PartitionKey = partitionKey;
+			return this;
+		}
+		internal IEnumerable<string> KeyFilters { get; set; } = Array.Empty<string>();
+		public DynamoQuery KeyFilter(string[] filters)
+		{
+			KeyFilters = filters;
 			return this;
 		}
 
