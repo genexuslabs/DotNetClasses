@@ -78,6 +78,8 @@ namespace GeneXus.Data.NTier
 			mDynamoDB = new AmazonDynamoDBClient(mCredentials, mConfig);
 		}
 
+		private const string FILTER_PATTERN = @"\((.*) = :(.*)\)";
+
 		public override int ExecuteNonQuery(ServiceCursorDef cursorDef, IDataParameterCollection parms, CommandBehavior behavior)
 		{
 			Initialize();
@@ -98,15 +100,14 @@ namespace GeneXus.Data.NTier
 				DynamoDBHelper.AddAttributeValue(name, values, parms[parmName] as ServiceParameter);
 			}
 
-			string pattern = @"\((.*) = :(.*)\)";
 			Dictionary<string, AttributeValue> keyCondition = new Dictionary<string, AttributeValue>();
 
-			foreach (string keyFilter in query.Filters)
+			foreach (string keyFilter in query.KeyFilters.Concat(query.Filters))
 			{
-				Match match = Regex.Match(keyFilter, pattern);
-				string varName = match.Groups[2].Value;
+				Match match = Regex.Match(keyFilter, FILTER_PATTERN);
 				if (match.Groups.Count > 1)
 				{
+					string varName = match.Groups[2].Value;
 					string name = match.Groups[1].Value.TrimStart(SHARP_CHARS);
 					VarValue varValue = query.Vars.FirstOrDefault(v => v.Name == $":{varName}");
 					if (varValue != null)
@@ -245,19 +246,36 @@ namespace GeneXus.Data.NTier
 				string value = mappedName;
 				expressionAttributeNames.Add(key, value);
 			}
-			if (query is DynamoScan)
+
+			bool issueScan = query is DynamoScan;
+			if (!issueScan)
+			{ // Check whether a query has to be demoted to scan due to empty parameters
+				foreach (string keyFilter in query.KeyFilters)
+				{
+					Match match = Regex.Match(keyFilter, @".*(:.*)\).*");
+					if (match.Groups.Count > 0)
+					{
+						string varName = match.Groups[1].Value;
+						if(values.TryGetValue(varName, out AttributeValue value) && value.S?.Length == 0)
+						{
+							issueScan = true;
+							break;
+						}
+					}
+				}
+			}
+
+			if (issueScan)
 			{
 				ScanRequest scanReq;
+				IEnumerable<string> allFilters = query.KeyFilters.Concat(query.Filters);
 				req = scanReq = new ScanRequest
 				{
 					TableName = query.TableName,
-					ProjectionExpression = String.Join(",", query.Projection),					
+					ProjectionExpression = String.Join(",", query.Projection),
+					FilterExpression = allFilters.Any() ? String.Join(" AND ", allFilters) : null,
+					ExpressionAttributeValues = values,
 				};
-				if (query.Filters.Length > 0)
-				{
-					scanReq.FilterExpression = String.Join(" AND ", query.Filters);
-					scanReq.ExpressionAttributeValues = values;
-				}
 				if (expressionAttributeNames != null)
 					scanReq.ExpressionAttributeNames = expressionAttributeNames;
 			}
@@ -267,7 +285,8 @@ namespace GeneXus.Data.NTier
 				req = queryReq = new QueryRequest
 				{
 					TableName = query.TableName,
-					KeyConditionExpression = String.Join(" AND ", query.Filters),
+					KeyConditionExpression = String.Join(" AND ", query.KeyFilters),
+					FilterExpression = query.Filters.Any() ? String.Join(" AND ", query.Filters) : null,
 					ExpressionAttributeValues = values,
 					ProjectionExpression = String.Join(",", query.Projection),
 					IndexName = query.Index,
