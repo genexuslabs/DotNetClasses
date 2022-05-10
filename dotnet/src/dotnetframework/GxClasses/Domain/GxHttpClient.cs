@@ -611,11 +611,18 @@ namespace GeneXus.Http.Client
 #if NETCORE
 			HttpClientHandler handler = GetHandler();
 			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
+			if (System.Net.ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.ServerCertificateCustomValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
+			}
 #else
 			WinHttpHandler handler = GetHandler();
 			handler.ServerCredentials = getCredentialCache(request.RequestUri, _authCollection);
+			if (System.Net.ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
+			}
 #endif
-
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
