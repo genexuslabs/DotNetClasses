@@ -622,7 +622,6 @@ namespace GeneXus.Http.Client
 				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
 			}
 #endif
-			handler.MaxConnectionsPerServer = _maxConnPerRoute;
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
