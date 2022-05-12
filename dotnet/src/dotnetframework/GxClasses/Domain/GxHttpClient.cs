@@ -130,17 +130,13 @@ namespace GeneXus.Http.Client
 #if NETCORE
 		private HttpClientHandler GetHandler()
 		{
-			HttpClientHandler handlerInstance = new HttpClientHandler();
-			handlerInstance.MaxConnectionsPerServer = _maxConnPerRoute;
-			return handlerInstance;
+			return new HttpClientHandler();
 		}
 #else
 		[SecuritySafeCritical]
 		private WinHttpHandler GetHandler()
 		{
-			WinHttpHandler handlerInstance = new WinHttpHandler();
-			handlerInstance.MaxConnectionsPerServer = _maxConnPerRoute;
-			return handlerInstance;
+			return new WinHttpHandler();
 		}
 #endif
 		public GxHttpClient(IGxContext context) : this()
@@ -611,11 +607,19 @@ namespace GeneXus.Http.Client
 #if NETCORE
 			HttpClientHandler handler = GetHandler();
 			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.ServerCertificateCustomValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
+			}
 #else
 			WinHttpHandler handler = GetHandler();
 			handler.ServerCredentials = getCredentialCache(request.RequestUri, _authCollection);
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
+			}
 #endif
-
+			handler.MaxConnectionsPerServer = _maxConnPerRoute;
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
