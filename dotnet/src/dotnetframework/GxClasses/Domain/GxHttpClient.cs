@@ -132,23 +132,13 @@ namespace GeneXus.Http.Client
 		[SecuritySafeCritical]
 		private HttpClientHandler GetHandler()
 		{
-<<<<<<< HEAD
-			HttpClientHandler handlerInstance = new HttpClientHandler();
-			return handlerInstance;
-=======
 			return new HttpClientHandler();
->>>>>>> 9266b0b4 (Code Cleanup on Method GetHandler)
 		}
 #else
 		[SecuritySafeCritical]
 		private WinHttpHandler GetHandler()
 		{
-<<<<<<< HEAD
-			WinHttpHandler handlerInstance = new WinHttpHandler();
-			return handlerInstance;
-=======
 			return new WinHttpHandler();
->>>>>>> 9266b0b4 (Code Cleanup on Method GetHandler)
 		}
 #endif
 		public GxHttpClient(IGxContext context) : this()
