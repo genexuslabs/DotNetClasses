@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using OpenPop.Pop3;
 using OpenPop.Pop3.Exceptions;
 using log4net;
@@ -8,27 +7,22 @@ using OpenPop.Mime;
 using System.Net.Mail;
 using System.IO;
 using GeneXus.Utils;
-using System.Text.RegularExpressions;
 using System.Reflection;
 
 namespace GeneXus.Mail
 {
-    internal class POP3SessionOpenPop : IPOP3Session
+    internal class POP3SessionOpenPop : Pop3SessionBase
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(POP3SessionOpenPop));
+        private static readonly ILog log = LogManager.GetLogger(typeof(POP3SessionOpenPop));
 
         private Pop3Client client;
-        private GXPOP3Session _sessionInfo;
-        private int lastReadMessage;
-        private int count;
-        private List<string> uIds;
 
-        public int GetMessageCount()
+        public override int GetMessageCount()
         {
             return count;
         }
 
-        public void Login(GXPOP3Session sessionInfo)
+        public override void Login(GXPOP3Session sessionInfo)
         {
             GXLogging.Debug(log, "Using OpenPOP POP3 Implementation");
             _sessionInfo = sessionInfo;
@@ -38,30 +32,30 @@ namespace GeneXus.Mail
             {
                 client.Connect(Host, Port, sessionInfo.Secure == 1);
                 
-                client.Authenticate(UserName, Password, AuthenticationMethod.Auto);
+                client.Authenticate(UserName, Password, OpenPop.Pop3.AuthenticationMethod.Auto);
                 count = client.GetMessageCount();
                 uIds = client.GetMessageUids();
                 uIds.Insert(0, string.Empty);
             }
             catch (PopServerNotAvailableException e)
             {
-                LogError("Login Error", "PopServer Not Available", MailConstants.MAIL_CantLogin, e);
+                LogError("Login Error", "PopServer Not Available", MailConstants.MAIL_CantLogin, e, log);
             }
             catch (PopServerNotFoundException e)
             {
-                LogError("Login Error", "Can't connect to host", MailConstants.MAIL_CantLogin, e);
-            }
+                LogError("Login Error", "Can't connect to host", MailConstants.MAIL_CantLogin, e, log);
+			}
             catch (InvalidLoginException e)
             {
-                LogError("Login Error", "Authentication error", MailConstants.MAIL_AuthenticationError, e);
-            }
+                LogError("Login Error", "Authentication error", MailConstants.MAIL_AuthenticationError, e, log);
+			}
             catch (Exception e)
             {
-                LogError("Login Error", e.Message, MailConstants.MAIL_CantLogin, e);
-            }
+                LogError("Login Error", e.Message, MailConstants.MAIL_CantLogin, e, log);
+			}
         }
 
-        public void Logout(GXPOP3Session sessionInfo)
+        public override void Logout(GXPOP3Session sessionInfo)
         {
             if (client != null)
             {
@@ -71,24 +65,14 @@ namespace GeneXus.Mail
             }
         }
 
-        public void Skip(GXPOP3Session sessionInfo)
+        public override void Skip(GXPOP3Session sessionInfo)
         {
             if (lastReadMessage == count)
             {
-                LogError("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages);
-                return;
+                LogError("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
+				return;
             }
             ++lastReadMessage;            
-        }
-
-        public string GetNextUID(GXPOP3Session session)
-        {
-            if (lastReadMessage == count)
-            {
-                LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages);
-                return "";
-            }
-            return uIds[lastReadMessage + 1];
         }
 
 		internal static bool HasCROrLF(string data)
@@ -100,17 +84,17 @@ namespace GeneXus.Mail
 			}
 			return false;
 		}
-		public void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage)
+		public override void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage)
         {
             if (client == null)
             {
-                LogError("Login Error", "Must login", MailConstants.MAIL_CantLogin);
+                LogError("Login Error", "Must login", MailConstants.MAIL_CantLogin, log);
                 return;
             }
 
             if (lastReadMessage == count)
             {
-                LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages);
+                LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
                 return;
             }
 			try {
@@ -123,7 +107,7 @@ namespace GeneXus.Mail
 					}
 					catch (Exception e)
 					{
-						LogError("Receive message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e);
+						LogError("Receive message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e, log);
 					}
 
 					if (m != null)
@@ -174,7 +158,7 @@ namespace GeneXus.Mail
 							{
 								gxmessage.DateSent = DateTimeUtil.FromTimeZone(m.Headers.DateSent, "Etc/UTC", GeneXus.Application.GxContext.Current);
 							}
-							gxmessage.DateReceived = GeneXus.Mail.Internals.Pop3.MailMessage.GetMessageDate(m.Headers.Date);
+							gxmessage.DateReceived = Internals.Pop3.MailMessage.GetMessageDate(m.Headers.Date);
 							AddHeader(gxmessage, "DispositionNotificationTo", m.Headers.DispositionNotificationTo.ToString());
 							ProcessMailAttachments(gxmessage, m.FindAllAttachments());
 						}
@@ -182,7 +166,7 @@ namespace GeneXus.Mail
 				}
             }catch(Exception e)
 			{
-				LogError("Receive message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e);
+				LogError("Receive message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e, log);
 			}
 		}
 
@@ -211,41 +195,9 @@ namespace GeneXus.Mail
 					}
 					catch (Exception e)
 					{
-						LogError("Could not add Attachment", "Failed to save attachment", MailConstants.MAIL_InvalidAttachment, e);
+						LogError("Could not add Attachment", "Failed to save attachment", MailConstants.MAIL_InvalidAttachment, e, log);
 					}
                 }
-            }
-        }
-       
-        private static void AddHeader(GXMailMessage msg, string key, string value)
-        {
-            if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
-            {
-                msg.Headers[key] = value;
-            }
-        }
-
-        private string FixFileName(string attachDir, string name)
-        {
-			if (string.IsNullOrEmpty(name))
-			{
-				name = Path.GetRandomFileName();
-			}
-			if (Path.Combine(AttachDir, name).Length > 200)
-			{
-				name = Path.GetRandomFileName().Replace(".", "") + "." + Path.GetExtension(name);
-			}
-			Regex validChars = new Regex(@"[\\\/\*\?\|:<>]");
-            return validChars.Replace(name, "_");
-        }
-
-        private static void CopyStream(Stream input, Stream output)
-        {
-            byte[] buffer = new byte[8 * 1024];
-            int len;
-            while ((len = input.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                output.Write(buffer, 0, len);
             }
         }
 
@@ -257,7 +209,7 @@ namespace GeneXus.Mail
             }
         }
 
-        public void Delete(GXPOP3Session sessionInfo)
+        public override void Delete(GXPOP3Session sessionInfo)
         {
             try
             {
@@ -265,46 +217,14 @@ namespace GeneXus.Mail
             }
             catch (PopServerException e)
             {
-                LogError("Delete message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e);
-            }
+                LogError("Delete message error", e.Message, MailConstants.MAIL_ServerRepliedErr, e, log);
+			}
         }
 
-        private void LogError(string title, string message, int code)
-        {
-            LogError(title, message, code, null);
-        }
-
-        private void LogError(string title, string message, int code, Exception e)
-        {
-
-#if DEBUG
-            if (e != null && log.IsErrorEnabled) log.Error(message, e);
-#endif
-            if (_sessionInfo != null)
-            {
-                _sessionInfo.HandleMailException(new GXMailException(message, (short)code));
-            }
-        }
-
-        private void LogDebug(string title, string message, int code)
-        {
-            LogDebug(title, message, code, null);
-        }
-
-        private void LogDebug(string title, string message, int code, Exception e)
-        {
-#if DEBUG
-            if (e != null && log.IsDebugEnabled) log.Debug(message, e);
-#endif
-            if (_sessionInfo != null)
-            {
-                _sessionInfo.HandleMailException(new GXMailException(message, (short)code));
-            }
-        }
 
         private String attachDir = string.Empty;
 
-        public string AttachDir
+        public override string AttachDir
         {
             get
             {
@@ -319,18 +239,6 @@ namespace GeneXus.Mail
                 }
             }
         }
-
-        public bool DownloadAttachments { get; set; }
-
-        public string Host { get; set; }
-
-        public int Port { get; set; }
-
-        public string UserName { get; set; }
-
-        public string Password { get; set; }
-
-        public int Timeout { get; set; }
 
     }
 }

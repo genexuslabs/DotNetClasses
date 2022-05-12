@@ -1,16 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Net;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
+using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
 using GeneXus.Utils;
+using GxClasses.Helpers;
 using GxClasses.Web.Middleware;
 using log4net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -100,7 +105,10 @@ namespace GeneXus.Application
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
-		
+		const string SWAGGER_DEFAULT_YAML = "default.yaml";
+		const string DEVELOPER_MENU = "developermenu.html";
+		const string SWAGGER_SUFFIX = "swagger";
+
 		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
@@ -232,6 +240,7 @@ namespace GeneXus.Application
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
+			ConfigureSwaggerUI(app, baseVirtualPath);
 
 			if (Directory.Exists(Path.Combine(LocalPath, RESOURCES_FOLDER)))
 			{
@@ -297,6 +306,11 @@ namespace GeneXus.Application
 			{
 				 servicesBase.Add( string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
 			}
+			app.UseExceptionHandler(new ExceptionHandlerOptions
+			{
+				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
+				AllowStatusCode404Response = true
+			});
 
 			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
 			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
@@ -322,10 +336,43 @@ namespace GeneXus.Application
 
 			app.MapWhen(
 				context => IsAspx(context, basePath),
-						appBranch => {
+						appBranch =>
+						{
 							appBranch.UseGXHandlerFactory(basePath);
 						});
+			app.Run(async context => 
+			{
+				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
+			});
 			app.UseEnableRequestRewind();
+		}
+
+		private void ConfigureSwaggerUI(IApplicationBuilder app, string baseVirtualPath)
+		{
+			try
+			{
+				string baseVirtualPathWithSep = string.IsNullOrEmpty(baseVirtualPath) ? string.Empty: $"{baseVirtualPath.TrimStart('/')}/";
+				foreach (string yaml in Directory.GetFiles(LocalPath, "*.yaml")) {
+					FileInfo finfo = new FileInfo(yaml);
+
+					app.UseSwaggerUI(options =>
+					{
+						options.SwaggerEndpoint($"../../{finfo.Name}", finfo.Name);
+						options.RoutePrefix =$"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
+					});
+					if (finfo.Name.Equals(SWAGGER_DEFAULT_YAML, StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(LocalPath, DEVELOPER_MENU)))
+						app.UseSwaggerUI(options =>
+						{
+							options.SwaggerEndpoint($"../../{SWAGGER_DEFAULT_YAML}", SWAGGER_DEFAULT_YAML);
+							options.RoutePrefix =$"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
+						});
+
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("Errpr loading SwaggerUI " + ex.Message);
+			}
 		}
 
 		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)
@@ -344,6 +391,38 @@ namespace GeneXus.Application
 		{
 			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
 		}		
+	}
+	public class CustomExceptionHandlerMiddleware
+	{
+		public async Task Invoke(HttpContext httpContext)
+		{
+			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
+			HttpStatusCode httpStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
+			if (ex!=null)
+			{
+				if (ex is PageNotFoundException)
+				{
+					httpStatusCode = HttpStatusCode.NotFound;
+				}
+				else
+				{
+					httpStatusCode = HttpStatusCode.InternalServerError;
+				}
+			}
+			if (httpStatusCode!= HttpStatusCode.OK)
+			{
+				string redirectPage = Config.MapCustomError(httpStatusCode.ToString(HttpHelper.INT_FORMAT));
+				if (!string.IsNullOrEmpty(redirectPage))
+{
+					httpContext.Response.Redirect($"{httpContext.Request.GetApplicationPath()}/{redirectPage}");
+				}
+				else
+				{
+					httpContext.Response.StatusCode = (int)httpStatusCode;
+				}
+			}
+			await Task.CompletedTask;
+		}
 	}
 	public class EnableRequestRewindMiddleware
 	{

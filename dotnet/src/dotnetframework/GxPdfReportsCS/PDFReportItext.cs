@@ -2772,9 +2772,9 @@ namespace com.genexus.reports
 			new string[]{"Script", "Helvetica"},
 			new string[]{"System", "Helvetica"},
 			new string[]{"Times New Roman", "Times"},
-			new string[]{"\uff2d\uff33 \u660e\u671d", "Japanese"},
-			new string[]{"\uff2d\uff33 \u30b4\u30b7\u30c3\u30af", "Japanese2"}};
-		
+			new string[]{"\uff2d\uff33 \u660e\u671d", "Japanese"},  //(MS Mincho)
+			new string[]{"\uff2d\uff33 \u30b4\u30b7\u30c3\u30af", "Japanese2"}};//(MS Gothic)
+
 
 		public static String REGISTRY_FONT_SUBSTITUTES_ENTRY = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\FontSubstitutes"; 
 		public static String REGISTRY_FONT_SUBSTITUTES_ENTRY_NT = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes"; 
@@ -3139,7 +3139,8 @@ namespace com.genexus.reports
 		
 		public static void addPredefinedSearchPaths(String [] predefinedPaths)
 		{
-			predefinedSearchPath.InsertRange(0, predefinedPaths);
+			lock (predefinedSearchPath)
+				predefinedSearchPath.InsertRange(0, predefinedPaths);
 		}
 
 		public static String getPredefinedSearchPaths()

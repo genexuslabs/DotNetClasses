@@ -133,15 +133,13 @@ namespace GeneXus.Http.Client
 		[SecuritySafeCritical]
 		private HttpClientHandler GetHandler()
 		{
-			HttpClientHandler handlerInstance = new HttpClientHandler();
-			return handlerInstance;
+			return new HttpClientHandler();
 		}
 #else
 		[SecuritySafeCritical]
 		private WinHttpHandler GetHandler()
 		{
-			WinHttpHandler handlerInstance = new WinHttpHandler();
-			return handlerInstance;
+			return new WinHttpHandler();
 		}
 #endif
 		public GxHttpClient(IGxContext context) : this()
@@ -612,11 +610,19 @@ namespace GeneXus.Http.Client
 #if NETCORE
 			HttpClientHandler handler = GetHandler();
 			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.ServerCertificateCustomValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
+			}
 #else
 			WinHttpHandler handler = GetHandler();
 			handler.ServerCredentials = getCredentialCache(request.RequestUri, _authCollection);
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
+			}
 #endif
-
+			handler.MaxConnectionsPerServer = _maxConnPerRoute;
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -800,7 +806,7 @@ namespace GeneXus.Http.Client
 			ReadReponseContent(response);
 			_statusCode = ((short)response.StatusCode);
 			_statusDescription = response.ReasonPhrase;
-			if (_statusCode != 200 && _errCode != 1)
+			if ((_statusCode >= 400 && _statusCode < 600) && _errCode != 1)
 			{
 				_errCode = 1;
 				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + response.ReasonPhrase + ".";

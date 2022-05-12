@@ -104,7 +104,7 @@ namespace GeneXus.Application
 				if (IsCoreEventReplicator(_procWorker))
 				{
 					bodyParameters = ReadBodyParameters();
-					string synchronizer = PreProcessReplicatorParameteres(_procWorker, innerMethod, bodyParameters);
+					string synchronizer = PreProcessReplicatorParameteres( _procWorker, innerMethod, bodyParameters);
 					if (!IsAuthenticated(synchronizer))
 						return Task.CompletedTask;
 				}
@@ -133,6 +133,7 @@ namespace GeneXus.Application
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
+					bodyParameters = PreProcessApiSdtParameter(_procWorker, innerMethod, bodyParameters, this._variableAlias);
 				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
@@ -150,9 +151,7 @@ namespace GeneXus.Application
 			finally
 			{
 				Cleanup();
-
-			}
-			
+			}	
 		}
 
 		public virtual Task Post()
@@ -186,6 +185,42 @@ namespace GeneXus.Application
 			return ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
 		}
+
+
+		private Dictionary<string, object> SetAlias(Dictionary<string, object> bodyParameters, Dictionary<string, string> varAlias)
+		{
+			Dictionary<string, object> parameters = new Dictionary<string, object>();
+			foreach (string k in bodyParameters.Keys)
+			{
+				if (k != null)
+				{
+					string keyLowercase = k.ToLower();
+					if (varAlias == null)
+						parameters[keyLowercase] = bodyParameters[k];
+					else
+					{
+						if (varAlias.ContainsKey(keyLowercase))
+						{
+							string alias = varAlias[keyLowercase].ToLower();
+							parameters[alias] = bodyParameters[k];
+						}
+						else if (!varAlias.ContainsValue(keyLowercase))
+						{
+							parameters[keyLowercase] = bodyParameters[k];
+						}
+					}
+				}
+			}
+			return parameters;
+		}
+
+		private Dictionary<string, object> PreProcessApiSdtParameter(GXBaseObject procWorker, string innerMethod,
+				Dictionary<string,object> bodyParameters, Dictionary<string, string> varAlias)
+		{
+			Dictionary<string, object> bP = SetAlias(bodyParameters, varAlias);
+			return ReflectionHelper.GetWrappedParameter(procWorker, innerMethod, bP);
+		}
+
 		private string PreProcessReplicatorParameteres(GXBaseObject procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
 		{
 			var methodInfo = procWorker.GetType().GetMethod(innerMethod);
@@ -423,7 +458,8 @@ namespace GeneXus.Application
 			var route = _httpContext.Request.RouteValues;
 			foreach (KeyValuePair<string, object> kv in route)
 			{
-				parameters.Add(kv.Key, kv.Value);
+				if (!parameters.ContainsKey(kv.Key))
+					parameters.Add(kv.Key, kv.Value);
 			}
 #else
 			if(_routeParms != null)

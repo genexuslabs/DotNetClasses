@@ -6,25 +6,14 @@
 		<PackageId>GeneXus.DataInitialization.Core</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
 		<DefineConstants>NETCORE</DefineConstants>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
   </ItemGroup>
 
-
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.11" />
-	<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
-	<PackageReference Include="NetTopologySuite" Version="2.0.0" />
-	<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" />
-	<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
-	<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\GxClasses\GxClasses.csproj">
-        <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
   </ItemGroup>
 
    <ItemGroup>
@@ -33,4 +22,17 @@
 			<PackagePath>\content\net6.0\</PackagePath>
 		</Content>
 	</ItemGroup>
+	<Target Name="CustomContentTarget">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json">
+				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).runtimeconfig.json">
+				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
+
 </Project>

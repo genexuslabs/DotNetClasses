@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net6.0</TargetFrameworks>
 		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
@@ -12,7 +12,7 @@
 	</PropertyGroup>
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\ConfigMappings\ConfigTest.cs" Link="ConfigMappings\ConfigTest.cs" />		
-	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />		
 		<Compile Include="..\DotNetUnitTest\FileIO\Xslt.cs" Link="FileIO\Xslt.cs" />
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3PrivateTest.cs" Link="ExternalProvider\ExternalProviderS3PrivateTest.cs" />		
@@ -26,6 +26,10 @@
 		<Compile Include="..\DotNetUnitTest\FileIO\MimeTypesTest.cs" Link="FileIO\MimeTypesTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\PDF\apdfbasictest.cs" Link="PDF\apdfbasictest.cs" />		
 		<Compile Include="..\DotNetUnitTest\PDF\PDFTests.cs" Link="PDF\PDFTests.cs" />		
+	</ItemGroup>
+	<ItemGroup>		
+		<Compile Include="..\DotNetUnitTest\ImageUtils\ImageUtilTest.cs" Link="ImageUtils\ImageUtilTest.cs" />
+		
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="..\DotNetUnitTest\type_SdtItem.cs" Link="type_SdtItem.cs">
@@ -131,6 +135,9 @@
 		</None>
 		<None Update="private\mailmanagement_a.grp.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="resources\bird-thumbnail.jpg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="resources\text.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>

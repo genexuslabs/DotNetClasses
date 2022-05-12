@@ -13,6 +13,16 @@ namespace UnitTesting
 			Config.ConfigFileName = "client.exe.config";
 		}
 		[Fact]
+		public void FileSharedToCopy()
+		{
+			string target = @"\\192.168.86.3\printer";
+			GxFile f = new GxFile();
+			f.Source = "Document.txt";
+			f.Copy(target);
+			Assert.Equal(-1, f.ErrCode);
+			Assert.NotEqual(new NullReferenceException().Message, f.ErrDescription);
+		}
+		[Fact]
 		public void FileSourceTest()
 		{
 			GxFileInfo fi = new GxFileInfo(string.Empty);
