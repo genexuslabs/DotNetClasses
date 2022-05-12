@@ -1,26 +1,26 @@
 namespace GeneXus.Http.Client
 {
 	using System;
-	using System.Text;
+	using System.Collections;
+	using System.Collections.Generic;
 	using System.Collections.Specialized;
+	using System.Globalization;
 	using System.IO;
-	using log4net;
-	using GeneXus.Application;
 	using System.Net;
+	using System.Net.Http;
+	using System.Net.Http.Headers;
+	using System.Security;
+	using System.Security.Cryptography.X509Certificates;
+	using System.Text;
+	using System.Text.RegularExpressions;
+	using System.Threading.Tasks;
+	using System.Web;
+	using System.Web.Services.Protocols;
+	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
-	using System.Text.RegularExpressions;
+	using log4net;
 	using Mime;
-	using System.Collections;
-	using System.Security.Cryptography.X509Certificates;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Threading.Tasks;
-	using System.Web.Services.Protocols;
-	using System.Web;
-	using System.Net.Http.Headers;
-	using System.Net.Http;
-	using System.Security;
 
 
 	public interface IGxHttpClient
@@ -64,7 +64,6 @@ namespace GeneXus.Http.Client
 		Stream _receiveStream;
 		int _timeout = 30000;
 		short _statusCode = 0;
-		static int _maxConnPerRoute = Preferences.GetHttpClientMaxConnectionPerRoute();
 		string _proxyHost;
 		int _proxyPort;
 		short _errCode = 0;
@@ -83,8 +82,10 @@ namespace GeneXus.Http.Client
 		string _statusDescription = string.Empty;
 		IGxContext _context;
 #if NETCORE
-		IWebProxy _proxyObject;		
+
+		IWebProxy _proxyObject;
 #else
+
 		WebProxy _proxyObject;
 #endif
 		ArrayList _authCollection;
@@ -127,7 +128,9 @@ namespace GeneXus.Http.Client
 			}
 		}
 
+
 #if NETCORE
+		[SecuritySafeCritical]
 		private HttpClientHandler GetHandler()
 		{
 			return new HttpClientHandler();
@@ -619,7 +622,6 @@ namespace GeneXus.Http.Client
 				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
 			}
 #endif
-			handler.MaxConnectionsPerServer = _maxConnPerRoute;
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -657,8 +659,8 @@ namespace GeneXus.Http.Client
 					reqStream.Seek(0, SeekOrigin.Begin);
 					request.Content = new ByteArrayContent(reqStream.ToArray());
 					setHeaders(request, handler.CookieContainer);
-					response = client.SendAsync(request).GetAwaiter().GetResult();					
-				}				
+					response = client.SendAsync(request).GetAwaiter().GetResult();
+				}
 			}
 			return response;
 		}
@@ -717,7 +719,7 @@ namespace GeneXus.Http.Client
 		}
 		public void Execute(string method, string name)
 		{
-			if (!Config.GetValueOf("useoldhttpclient", out string useOld) || useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
 			{
 				WebExecute(method, name);
 			}
@@ -984,9 +986,9 @@ namespace GeneXus.Http.Client
 			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			int BytesRead;
 			Byte[] Buffer = new Byte[1024];
-#pragma warning disable SYSLIB0014 // WebRequest 
+#pragma warning disable SYSLIB0014 // WebRequest
 			HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requestUrl);
-#pragma warning disable SYSLIB0014 // WebRequest 
+#pragma warning disable SYSLIB0014 // WebRequest
 
 			if (GXUtil.CompressResponse())
 			{
