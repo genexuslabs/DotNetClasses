@@ -999,6 +999,7 @@ namespace GeneXus.Data
 					case GXType.Clob: return MSOracleProvider.OracleType.Clob;
 					case GXType.Date:
 					case GXType.DateTime: return MSOracleProvider.OracleType.DateTime;
+					case GXType.DateTime2: return MSOracleProvider.OracleType.Timestamp;
 					case GXType.Int16: return MSOracleProvider.OracleType.Int16;
 					case GXType.Int32: return MSOracleProvider.OracleType.Int32;
 					case GXType.LongVarChar: return MSOracleProvider.OracleType.LongVarChar;
