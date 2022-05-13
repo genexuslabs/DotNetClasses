@@ -267,7 +267,7 @@ namespace GeneXus.Data
         {
             return (base.GetInt(cmd, DR, i) == 1);
         }
-		protected override string ParseAdditionalData(string data,string extractWord)
+		public override string ParseAdditionalData(string data,string extractWord)
 		{
 			char[] sep = {';'};
 			StringBuilder res=new StringBuilder("");
@@ -396,7 +396,7 @@ namespace GeneXus.Data
 			}
 
 		}
-		protected override void SetBinary(IDbDataParameter parameter, byte[] binary)
+		public override void SetBinary(IDbDataParameter parameter, byte[] binary)
 		{
 			GXLogging.Debug(log, "SetParameter BLOB, binary.length:" + binary != null ? binary.Length.ToString() : "null");
 			parameter.Value = binary;
@@ -594,7 +594,7 @@ namespace GeneXus.Data
                     , p.Scale, p.SourceColumn, p.SourceVersion, p.Value});
 		}
 
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return 	con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 		}
@@ -900,7 +900,7 @@ namespace GeneXus.Data
 
 		}
 
-		protected override string ParseAdditionalData(string data, string extractWord)
+		public override string ParseAdditionalData(string data, string extractWord)
 		{
 			char[] sep = { ';' };
 			StringBuilder res = new StringBuilder("");
@@ -1116,7 +1116,7 @@ namespace GeneXus.Data
 			return ((ICloneable)p).Clone();
 		}
 
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 		}
