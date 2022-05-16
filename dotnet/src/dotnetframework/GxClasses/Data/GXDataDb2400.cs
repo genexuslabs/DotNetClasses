@@ -234,7 +234,7 @@ namespace GeneXus.Data
 		{
 			StringBuilder connectionString = new StringBuilder();
 
-			if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Data Source"))
+			if (!string.IsNullOrEmpty(datasourceName) && !HasKey(extra, "Data Source"))
 			{
 				connectionString.AppendFormat("Data Source={0};",datasourceName);
 			}
@@ -242,12 +242,12 @@ namespace GeneXus.Data
 			{
 				connectionString.AppendFormat("User ID={0};Password={1};",userId,userPassword);
 			}
-			if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Default Collection"))
+			if (databaseName != null && databaseName.Trim().Length > 0 && !HasKey(extra, "Default Collection"))
 			{
 				connectionString.AppendFormat("Default Collection={0};", databaseName);
 			}
 
-			if (!String.IsNullOrEmpty(m_InitialCatalog) && !hasKey(extra, "Database"))
+			if (!String.IsNullOrEmpty(m_InitialCatalog) && !HasKey(extra, "Database"))
 			{
 				connectionString.AppendFormat("Database={0}", m_InitialCatalog);
 			}
@@ -867,7 +867,7 @@ namespace GeneXus.Data
 			StringBuilder connectionString = new StringBuilder();
 			connectionString.Append("Provider=DB2OLEDB;Network Port=446;Network Transport Library=TCP;");
 
-			if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Network Address"))
+			if (!string.IsNullOrEmpty(datasourceName) && !HasKey(extra, "Network Address"))
 			{
 				connectionString.AppendFormat("Network Address={0};", datasourceName);
 			}
@@ -875,15 +875,15 @@ namespace GeneXus.Data
 			{
 				connectionString.AppendFormat("User ID={0};Password={1};", userId, userPassword);
 			}
-			if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Default Qualifier"))
+			if (databaseName != null && databaseName.Trim().Length > 0 && !HasKey(extra, "Default Qualifier"))
 			{
 				connectionString.AppendFormat("Default Qualifier={0};", databaseName);
 			}
-			if (!String.IsNullOrEmpty(m_InitialCatalog) && !hasKey(extra, "Initial Catalog"))
+			if (!String.IsNullOrEmpty(m_InitialCatalog) && !HasKey(extra, "Initial Catalog"))
 			{
 				connectionString.AppendFormat("Initial Catalog={0};", m_InitialCatalog);
 			}
-			if (!string.IsNullOrEmpty(m_SqlPackage) && !hasKey(extra, "Package Collection"))
+			if (!string.IsNullOrEmpty(m_SqlPackage) && !HasKey(extra, "Package Collection"))
 			{
 				connectionString.AppendFormat("Package Collection={0}", m_SqlPackage);
 			}
