@@ -395,9 +395,9 @@ namespace GeneXus.Data
 			realDataRecord.PrepareCommand(cmd);
 		}
 
-		public override bool hasKey(string data, string key)
+		public override bool HasKey(string data, string key)
 		{
-			return realDataRecord.hasKey(data, key);
+			return realDataRecord.HasKey(data, key);
 		}
 
 		public override string ParseAdditionalData(string data, string extractWord)

@@ -958,7 +958,7 @@ namespace GeneXus.Data
 			}
 			return result;
 		}
-		public virtual bool hasKey(string data, string key)
+		public virtual bool HasKey(string data, string key)
 		{
 			if (!string.IsNullOrEmpty(data) && data.IndexOf(key, StringComparison.OrdinalIgnoreCase) >= 0)
 			{
@@ -1961,11 +1961,11 @@ namespace GeneXus.Data
 		{
 			StringBuilder connectionString = new StringBuilder();
 			string port1 = port!=null ? port.Trim() : "";
-			if (!string.IsNullOrEmpty(datasourceName) && port1.Length > 0 && !hasKey(extra, "Data Source"))
+			if (!string.IsNullOrEmpty(datasourceName) && port1.Length > 0 && !HasKey(extra, "Data Source"))
 			{
 				connectionString.AppendFormat("Data Source={0},{1};",datasourceName, port1);
 			}
-			else if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Data Source"))
+			else if (!string.IsNullOrEmpty(datasourceName) && !HasKey(extra, "Data Source"))
 			{
 				connectionString.AppendFormat("Data Source={0};",datasourceName);
 			}
@@ -1973,7 +1973,7 @@ namespace GeneXus.Data
 			{
 				connectionString.AppendFormat(";User ID={0};Password={1}",userId,userPassword);
 			}
-			if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Database"))
+			if (databaseName != null && databaseName.Trim().Length > 0 && !HasKey(extra, "Database"))
 			{
 				connectionString.AppendFormat(";Database={0}",databaseName);
 			}
