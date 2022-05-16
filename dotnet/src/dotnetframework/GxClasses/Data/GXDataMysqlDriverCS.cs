@@ -171,7 +171,7 @@ namespace GeneXus.Data
 				idatareader = new GxMySQLDriverCSDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt, preparedStmts);
             return idatareader;
         }
-        protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 		}

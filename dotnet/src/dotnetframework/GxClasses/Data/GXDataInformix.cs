@@ -220,7 +220,7 @@ namespace GeneXus.Data
 			}
 		}
 
-		protected override void PrepareCommand(IDbCommand cmd)
+		public override void PrepareCommand(IDbCommand cmd)
 		{
 			
 		}
@@ -450,7 +450,7 @@ namespace GeneXus.Data
 			return ((ICloneable)p).Clone();
 		}
 
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 		}

@@ -178,26 +178,24 @@ namespace GeneXus.Utils
         
         public Geospatial(String value)
 		{
-			String s = value.ToString();
-			initInstanceVars();
-			this.FromString(s);
-			this.setGXGeoType(SQLGeographyWrapper.STGeometryType(_innerValue).ToString());
+			String s = value.ToString();			
+			InitGeo(s);
 		}
+
 		public Geospatial(Decimal latitude, Decimal longitude)
-		{			
-			initInstanceVars();
+		{						
 			String wktBuffer = "POINT";
 			wktBuffer += "(" + longitude.ToString("G17", CultureInfo.InvariantCulture) + " " + latitude.ToString("G17", CultureInfo.InvariantCulture) + ")";
-			this.FromString(wktBuffer);
+			InitGeo(wktBuffer);
+			
 		}
 
 		public Geospatial(Double latitude, Double longitude)
         {           
-            initInstanceVars();
             String wktBuffer = "POINT";
             wktBuffer += "(" + ((Double)longitude).ToString("G17", CultureInfo.InvariantCulture) + " " + ((Double)latitude).ToString("G17", CultureInfo.InvariantCulture) + ")";
-            this.FromString(wktBuffer);
-        }
+			InitGeo(wktBuffer);
+		}
 
         public Geospatial(String value, String format)
         {
@@ -224,7 +222,7 @@ namespace GeneXus.Utils
             else
             {
                 String s = value.ToString();
-                new Geospatial(s);
+				InitGeo(s);
             }
 		}
 
@@ -232,6 +230,13 @@ namespace GeneXus.Utils
 		{
             initInstanceVars();
         }
+
+		void InitGeo(string s)
+		{
+			initInstanceVars();
+			this.FromString(s);
+			this.setGXGeoType(SQLGeographyWrapper.STGeometryType(_innerValue).ToString());
+		}
 
         void initInstanceVars()
         {

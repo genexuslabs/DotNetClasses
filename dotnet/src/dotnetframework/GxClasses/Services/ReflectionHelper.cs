@@ -69,7 +69,7 @@ namespace GeneXus.Application
 		}
 
 		public static Dictionary<string, object> GetWrappedParameter(object instance, String methodName, Dictionary<string, object> bodyParameters)
-		{
+		{			
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
 			var methodParameters = methodInfo.GetParameters();
 			List<ParameterInfo> inputParameters = new List<ParameterInfo>();
@@ -88,8 +88,8 @@ namespace GeneXus.Application
 					var gxParameterName = GxParameterName(pInfo.Name).ToLower();
 					Dictionary<string, object> parameters = new Dictionary<string,object>();
 					JObject jparms  = new JObject(bodyParameters);
-					parameters.Add(gxParameterName,jparms);					
-					return parameters;						
+					parameters.Add(gxParameterName, jparms);
+					return parameters;			
 				}
 			}
 			return bodyParameters;

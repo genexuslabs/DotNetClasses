@@ -737,9 +737,9 @@ namespace GeneXus.Mail.Exchange
 	public enum AuthenticationType
 	{
 		Basic,
-		OAuthUsernamePassword,
 		OAuthDelegated,
 		OAuthDelegatedInteractive,
-		OAuthApplication
+		OAuthApplication,
+		OAuthUsernamePassword
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Net;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
@@ -8,6 +9,7 @@ using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
 using GeneXus.Utils;
+using GxClasses.Helpers;
 using GxClasses.Web.Middleware;
 using log4net;
 using Microsoft.AspNetCore;
@@ -103,7 +105,10 @@ namespace GeneXus.Application
 		const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
-		
+		const string SWAGGER_DEFAULT_YAML = "default.yaml";
+		const string DEVELOPER_MENU = "developermenu.html";
+		const string SWAGGER_SUFFIX = "swagger";
+
 		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
@@ -235,6 +240,7 @@ namespace GeneXus.Application
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
+			ConfigureSwaggerUI(app, baseVirtualPath);
 
 			if (Directory.Exists(Path.Combine(LocalPath, RESOURCES_FOLDER)))
 			{
@@ -339,6 +345,34 @@ namespace GeneXus.Application
 				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
 			});
 			app.UseEnableRequestRewind();
+		}
+
+		private void ConfigureSwaggerUI(IApplicationBuilder app, string baseVirtualPath)
+		{
+			try
+			{
+				string baseVirtualPathWithSep = string.IsNullOrEmpty(baseVirtualPath) ? string.Empty: $"{baseVirtualPath.TrimStart('/')}/";
+				foreach (string yaml in Directory.GetFiles(LocalPath, "*.yaml")) {
+					FileInfo finfo = new FileInfo(yaml);
+
+					app.UseSwaggerUI(options =>
+					{
+						options.SwaggerEndpoint($"../../{finfo.Name}", finfo.Name);
+						options.RoutePrefix =$"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
+					});
+					if (finfo.Name.Equals(SWAGGER_DEFAULT_YAML, StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(LocalPath, DEVELOPER_MENU)))
+						app.UseSwaggerUI(options =>
+						{
+							options.SwaggerEndpoint($"../../{SWAGGER_DEFAULT_YAML}", SWAGGER_DEFAULT_YAML);
+							options.RoutePrefix =$"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
+						});
+
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("Errpr loading SwaggerUI " + ex.Message);
+			}
 		}
 
 		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)

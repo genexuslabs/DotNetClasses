@@ -624,22 +624,30 @@ namespace SecurityAPICommons.Keys
         }
 
 
-        private class PasswordFinder : IPasswordFinder
-        {
-            private string password;
-
-            public PasswordFinder(string password)
-            {
-                this.password = password;
-            }
 
 
-            public char[] GetPassword()
-            {
-                return this.password.ToCharArray();
-            }
-        }
+	}
 
 
-    }
+	[SecurityCritical]
+	internal class PasswordFinder : IPasswordFinder
+	{
+		private string password;
+
+
+		[SecurityCritical]
+		public PasswordFinder(string password)
+		{
+			this.password = password;
+		}
+
+		[SecurityCritical]
+		public char[] GetPassword()
+		{
+			return this.password.ToCharArray();
+		}
+	}
+
+
+
 }

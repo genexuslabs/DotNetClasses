@@ -223,6 +223,7 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
 }
 public class GxFileInfo : IGxFileInfo
 {
+	private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFileInfo));
     FileInfo _file;
     string _baseDirectory;
 
@@ -309,10 +310,16 @@ public class GxFileInfo : IGxFileInfo
     public IGxFileInfo CopyTo(string filename, bool overwrite)
     {
         filename = FileUtil.NormalizeSource(filename, _baseDirectory);
-
-		FileInfo targetFile = new FileInfo(filename);
-		if (!targetFile.Directory.Exists)
-			targetFile.Directory.Create();
+		try
+		{
+			FileInfo targetFile = new FileInfo(filename);
+			if (targetFile.Directory!=null && !targetFile.Directory.Exists)
+				targetFile.Directory.Create();
+		}
+		catch (Exception ex)
+		{
+			GXLogging.Error(log, ex, "Error creating target directory for ", filename);
+		}
 
 		return new GxFileInfo(_file.CopyTo(filename, overwrite));
     }
@@ -426,7 +433,7 @@ public class GxExternalFileInfo : IGxFileInfo
 		objectPath = !String.IsNullOrEmpty(objectPath) ? objectPath.Replace('\\', '/') : objectPath;
         _provider = provider;
 		_fileTypeAtt = fileType;
-		_name = objectPath;
+		_name = StorageFactory.GetProviderObjectAbsoluteUriSafe(provider, objectPath);
 
 		Uri result;
 		if (Uri.TryCreate(objectPath, UriKind.Absolute, out result) && result.IsAbsoluteUri)

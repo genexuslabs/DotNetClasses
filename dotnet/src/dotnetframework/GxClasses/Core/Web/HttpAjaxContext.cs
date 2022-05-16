@@ -36,7 +36,10 @@ namespace GeneXus.Http
 		void ajax_rsp_assign_hidden_sdt(String SdtName, Object SdtObj);		
 		void ajax_rsp_assign_prop(String CmpPrefix, bool IsMasterPage, String Control, String Property, String Value, bool sendAjax);
 		void ajax_rsp_assign_uc_prop(String CmpPrefix, bool IsMasterPage, String Control, String Property, String Value);
-        void ajax_rsp_assign_grid(String ControlName, Object GridObj);		
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+        void ajax_rsp_assign_grid(String ControlName, Object GridObj, String Control);
+		void ajax_rsp_assign_grid(String ControlName, Object GridObj);
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 		void AddStylesheetToLoad(String url);
 		void AddStylesHidden();
 		void ajax_rsp_clear();
@@ -58,10 +61,67 @@ namespace GeneXus.Http
 		RO_SESSION,
 		NO_SESSION,
 	}
+	internal interface IDynAjaxEventContext
+	{
+		void Clear();
+		void ClearParmsMetadata();
+		bool isInputParm(string key);
+		void SetParmHash(string fieldName, object value);
+		bool isParmModified(string fieldName, object value);
+		JArray inParmsMetadata { get; }
+		HashSet<string> inParmsMetadataHash { get; }
+		JArray outParmsMetadata { get; }
+		HashSet<string> outParmsMetadataHash { get; }
+	}
+	internal class DynAjaxEventContext: IDynAjaxEventContext
+	{
+		public JArray inParmsMetadata { get; set; }
+		public HashSet<string> inParmsMetadataHash { get; set; }
+		public JArray outParmsMetadata { get; set; }
+		public HashSet<string> outParmsMetadataHash { get; set; }
+		private StringDictionary inParmsHashValue = new StringDictionary();
+
+		public void ClearParmsMetadata()
+		{
+			inParmsMetadata = new JArray();
+			inParmsMetadataHash = new HashSet<string>();
+			outParmsMetadata = new JArray();
+			outParmsMetadataHash = new HashSet<string>();
+		}
+
+		public bool isInputParm(string key)
+		{
+			return inParmsMetadataHash.Contains(key);
+		}
+
+		public void Clear()
+		{
+			inParmsHashValue.Clear();
+		}
+		public void SetParmHash(string fieldName, object value)
+		{
+			IGxJSONSerializable jsonValue = value as IGxJSONSerializable;
+			if (jsonValue != null)
+			{
+				inParmsHashValue.Add(fieldName, GXUtil.GetHash(jsonValue.ToJSonString()));
+			}
+		}
+		public bool isParmModified(string fieldName, object value)
+		{
+			IGxJSONSerializable jsonValue = value as IGxJSONSerializable;
+			if (value != null)
+			{
+				if (!inParmsHashValue.ContainsKey(fieldName))
+					return true;
+				return GXUtil.GetHash(jsonValue.ToJSonString()) != inParmsHashValue[fieldName];
+			}
+			return true;
+		}
+	}
 
 	public class HttpAjaxContext : IHttpAjaxContext
 	{
-        private IGxContext _context;
+		private IGxContext _context;
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(HttpAjaxContext));
 		private Stack cmpContents = new Stack();
 		private GXAjaxCommandCollection commands = new GXAjaxCommandCollection();
@@ -72,15 +132,20 @@ namespace GeneXus.Http
 		private Hashtable _LoadCommands = new Hashtable();
 		private JObject _Messages = new JObject();
 		private JArray _Grids = new JArray();
+		private Dictionary<String, int> DicGrids = new Dictionary<String, int>();
 		private JObject _ComponentObjects = new JObject();
-		private JArray _StylesheetsToLoad = new JArray();
-        private NameValueCollection _formVars;
+		private JArray _StylesheetsToLoad = new JArray(); 
+		private NameValueCollection _formVars;
+		private IDynAjaxEventContext _DynAjaxEventContext = new DynAjaxEventContext();
+
 #if !NETCORE
 		private GXWebRow _currentGridRow;
 #endif
-		private bool _isJsOutputEnabled = true;
+	private bool _isJsOutputEnabled = true;
 
 		internal SessionType SessionType { get; set; }
+
+		internal IDynAjaxEventContext DynAjaxEventContext { get { return _DynAjaxEventContext; } }
 
 		public string FormCaption { get; set; }
 
@@ -266,6 +331,18 @@ namespace GeneXus.Http
 				}
 			}
 		}
+
+		private bool isUndefinedOutParam(string key, Object SdtObj) {
+
+			if (!DynAjaxEventContext.isInputParm(key))
+			{
+				if (SdtObj is IGXAssigned parm)
+				{
+					return !parm.IsAssigned;
+				}
+			}
+			return false;
+		}
         public void ajax_rsp_assign_sdt_attri(String CmpContext, bool IsMasterPage, String AttName, Object SdtObj)
         {
 			if (isJsOutputEnabled)
@@ -275,7 +352,7 @@ namespace GeneXus.Http
 					try
 					{
 						JObject obj = GetGxObject(AttValues, CmpContext, IsMasterPage);
-						if (obj != null)
+						if (obj != null && (DynAjaxEventContext.isParmModified(AttName, SdtObj) || !isUndefinedOutParam( AttName, SdtObj)))
 						{
 							IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
 							if (SdtObjJson != null)
@@ -447,12 +524,31 @@ namespace GeneXus.Http
 			}
 		}
 
-		public void ajax_rsp_assign_grid(String GridName, Object GridObj)
+		public void ajax_rsp_assign_grid(String ControlName, Object GridObj) {
+			try
+			{
+				Grids.Add(((IGxJSONAble)GridObj).GetJSONObject());
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "ajax_rsp_assign_grid error", ex);
+			}
+		}
+
+		public void ajax_rsp_assign_grid(String GridName, Object GridObj, String Control)
         {
             try
             {
-                Grids.Add(((IGxJSONAble)GridObj).GetJSONObject());
-            }
+				if (DicGrids.ContainsKey(Control))
+				{
+					Grids[DicGrids[Control]] = ((IGxJSONAble)GridObj).GetJSONObject();
+				}
+				else
+				{
+					Grids.Add(((IGxJSONAble)GridObj).GetJSONObject());
+					DicGrids.Add(Control, Grids.Length - 1);
+				}
+			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "ajax_rsp_assign_grid error", ex);
