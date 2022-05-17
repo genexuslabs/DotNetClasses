@@ -10,10 +10,7 @@ namespace GeneXus.DynamicCall
     public class GxDynamicCall
     {
 		private const string defaultMethod = "execute";
-		private string _assemblyName;
 		private Assembly _assembly;
-		private string _namespace;
-		private string _externalName;
 		private GxDynCallProperties _properties;
 		private object _object;
 		public string ObjectName { get; set; }
@@ -23,28 +20,22 @@ namespace GeneXus.DynamicCall
 			set
 			{
 				_properties = Properties;
-				_assemblyName = Properties.AssemblyName;
-				_namespace = Properties.NameSpace;
-				_externalName = Properties.ExternalName; 
 			}
 		}
 
 		public GxDynamicCall()
 		{
-			_assemblyName= null;
 			_assembly= null;
-			_namespace= null;
-			_properties= null;
-			_externalName = null;
+			_properties = new GxDynCallProperties();
 			_object = null;
 		}
 
 		private void VerifyDefaultProperties() {
-			_namespace = string.IsNullOrEmpty(_namespace) ? "GeneXus.Programs" : _namespace;
+			_properties.NameSpace = string.IsNullOrEmpty(_properties.NameSpace) ? "GeneXus.Programs" : _properties.NameSpace;
 			
 			if (_assembly is null)
 			{
-				if (string.IsNullOrEmpty(_assemblyName))
+				if (string.IsNullOrEmpty(_properties.AssemblyName))
 				{
 					_assembly = Assembly.GetCallingAssembly();
 				}
@@ -52,7 +43,7 @@ namespace GeneXus.DynamicCall
 				{
 					try
 					{
-						_assembly = Assembly.LoadFrom(_assemblyName);
+						_assembly = Assembly.LoadFrom(_properties.AssemblyName);
 					}
 					catch
 					{
@@ -85,11 +76,11 @@ namespace GeneXus.DynamicCall
 				}
 				else
 				{
-					objectNameToInvoke = _externalName;
+					objectNameToInvoke = _properties.ExternalName;
 				}
 				try
 				{
-					Type objType = ClassLoader.FindType(objectNameToInvoke, _namespace, objectNameToInvoke.ToLower().Trim(), _assembly);
+					Type objType = ClassLoader.FindType(objectNameToInvoke, _properties.NameSpace, objectNameToInvoke.ToLower().Trim(), _assembly);
 					object[] constructorParameters;
 					if (constructParms != null && constructParms.Count > 0)
 					{
@@ -142,7 +133,7 @@ namespace GeneXus.DynamicCall
 			else
 			{
 				VerifyDefaultProperties();
-				Type objType = ClassLoader.FindType(_externalName, _namespace, _externalName.ToLower().Trim(), _assembly);
+				Type objType = ClassLoader.FindType(_properties.ExternalName, _properties.NameSpace, _properties.ExternalName.ToLower().Trim(), _assembly);
 				outParms = ReflectionHelper.CallMethod(objType, (string.IsNullOrEmpty(methodName) ? defaultMethod : methodName), parameters, isStatic);
 			}
 			if (outParms.Count > parameters.Count)
