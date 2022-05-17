@@ -332,7 +332,7 @@ namespace GeneXus.Data
 		{
 			return new GxCacheDataReader (item, computeSize, keyCache);
 		}
-		public IsolationLevel IsolationLevelTrn
+		public virtual IsolationLevel IsolationLevelTrn
 		{
 			get{ return isolationLevel;}
 			set { isolationLevel=value;}
@@ -345,6 +345,12 @@ namespace GeneXus.Data
 		public abstract IDbDataParameter CreateParameter();
 
 		public abstract IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec);
+
+		public string BuildConnectionStringImpl(string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra)
+		{
+			return BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
+		}
 
 		protected abstract string BuildConnectionString(string datasourceName, string userId, 
 			string userPassword,string databaseName, string port, string schema,  string extra); 
@@ -421,7 +427,7 @@ namespace GeneXus.Data
 			SetBinary(parameter, binary);
 		}
 
-		protected virtual void SetBinary(IDbDataParameter parameter, byte[] binary) {
+		public virtual void SetBinary(IDbDataParameter parameter, byte[] binary) {
 			parameter.Value = binary;
 			if (binary != null)
 				parameter.Size = binary.Length;
@@ -471,18 +477,18 @@ namespace GeneXus.Data
 		}
 		public virtual string SetTimeoutSentence(long milliseconds){ return null;}
 
-		public int LockTimeout
+		public virtual int LockTimeout
 		{
 			get{ return m_lockTimeout;}
 			set{ m_lockTimeout=value;}
 		}
 
-		public int LockRetryCount
+		public virtual int LockRetryCount
 		{
 			get{ return m_lockRetryCount;}
 			set{ m_lockRetryCount=value;}
 		}
-        public string DataBaseName
+        public virtual string DataBaseName
         {
             get { return m_dataBaseName; }
             set { m_dataBaseName = value; }
@@ -743,7 +749,7 @@ namespace GeneXus.Data
             }
             return adapter;
 		}
-        protected virtual DbDataAdapterElem GetCachedDataAdapter(IGxConnection con, string stmt)
+        public virtual DbDataAdapterElem GetCachedDataAdapter(IGxConnection con, string stmt)
         {
             return con.ConnectionCache.GetDataAdapter(stmt);
         }
@@ -768,7 +774,7 @@ namespace GeneXus.Data
 		{
 			return GetCommand(con, stmt, parameters);
 		}
-		protected virtual void PrepareCommand(IDbCommand cmd)
+		public virtual void PrepareCommand(IDbCommand cmd)
 		{
 		}
         public virtual int GetCommandTimeout()
@@ -784,8 +790,8 @@ namespace GeneXus.Data
 				cmd = con.InternalConnection.CreateCommand();
 				cmd.CommandText=stmt;
 				cmd.Connection=con.InternalConnection.InternalConnection;
-				
-                cmd.CommandTimeout = GetCommandTimeout();
+
+				cmd.CommandTimeout = GetCommandTimeout();
 				AddParameters(cmd, parameters);
 				cmd.Transaction=con.BeginTransaction();
 				
@@ -798,20 +804,20 @@ namespace GeneXus.Data
 				{
 					if (parameters.Count>0)
 					{
-						for (int j=0; j< parameters.Count; j++)
+						for (int j = 0; j< parameters.Count; j++)
 						{
 							IDbDataParameter idbparameter = (IDbDataParameter)cmd.Parameters[j];
 							object value = parameters[j].Value;
 							idbparameter.Value=value;
-							if( value!=null && IsBlobType(idbparameter))
+							if (value!=null && IsBlobType(idbparameter))
 							{
 								try
 								{
 									idbparameter.Size = ((byte[])idbparameter.Value).Length;
 								}
-								catch(Exception ex)
+								catch (Exception ex)
 								{
-									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex );
+									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex);
 								}
 							}
 						}
@@ -819,7 +825,7 @@ namespace GeneXus.Data
 				}
 				else
 				{
-					
+
 					cmd.Parameters.Clear();
 
 					AddParameters(cmd, parameters);
@@ -835,12 +841,12 @@ namespace GeneXus.Data
 			command.Dispose();
 		}
 
-		protected virtual  IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public virtual IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return 	con.ConnectionCache.GetPreparedCommand(stmt);
 		}
 
-		public string ConnectionString 
+		public virtual string ConnectionString 
 		{
 			get{ return m_connectionString;}
 			set{ m_connectionString=value;}
@@ -933,7 +939,7 @@ namespace GeneXus.Data
 			}
 		}			
 
-		public string DataSource
+		public virtual string DataSource
 		{
 			get {return m_datasource;}
 			set{m_datasource=value;}
@@ -952,7 +958,7 @@ namespace GeneXus.Data
 			}
 			return result;
 		}
-		protected virtual bool hasKey(string data, string key)
+		public virtual bool hasKey(string data, string key)
 		{
 			if (!string.IsNullOrEmpty(data) && data.IndexOf(key, StringComparison.OrdinalIgnoreCase) >= 0)
 			{
@@ -966,7 +972,7 @@ namespace GeneXus.Data
 			}
 			return false;
 		}
-		protected virtual string ParseAdditionalData(string data, string extractWord)
+		public virtual string ParseAdditionalData(string data, string extractWord)
 		{
 			char[] sep = {';'};
 			StringBuilder res=new StringBuilder("");
@@ -981,7 +987,7 @@ namespace GeneXus.Data
 			}
 			return res.ToString();
 		}
-		protected virtual string ReplaceKeyword(string data, string keyword, string newKeyword)
+		public virtual string ReplaceKeyword(string data, string keyword, string newKeyword)
 		{
 			char[] sep = { ';' };
 			StringBuilder res = new StringBuilder("");
@@ -1006,7 +1012,7 @@ namespace GeneXus.Data
 			}
 			return res.ToString();
 		}
-		protected virtual string RemoveDuplicates(string data, string extractWord)
+		public virtual string RemoveDuplicates(string data, string extractWord)
 		{
 			char[] sep = { ';' };
 			StringBuilder res = new StringBuilder("");
@@ -1659,7 +1665,7 @@ namespace GeneXus.Data
 		{
 			return ((ICloneable)p).Clone();
 		}
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			if (multipleDatareadersEnabled)
 			{
@@ -4242,7 +4248,7 @@ namespace GeneXus.Data
 		public virtual DateTime GetDateTime(int i)
 		{
 			if (computeSizeInBytes) readBytes += 8;
-			var value = block.Item(pos,i);
+			object value = block.Item(pos,i);
 
 			if (value is DateTime)
 				return (DateTime)value;

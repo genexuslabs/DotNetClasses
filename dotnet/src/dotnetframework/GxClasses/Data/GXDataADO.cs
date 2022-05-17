@@ -3,10 +3,13 @@ using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Data.NTier.ADO;
+using GeneXus.Diagnostics;
 using GeneXus.Management;
 using GeneXus.Reorg;
+using GeneXus.Services;
 using GeneXus.Utils;
 using GeneXus.XML;
+using GxClasses.Helpers;
 using log4net;
 using System;
 using System.Collections;
@@ -2394,7 +2397,8 @@ namespace GeneXus.Data.ADO
 	
 	public class GxDataStore : IGxDataStore
 	{
-        string id;
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDataStore));
+		string id;
 		IGxConnection connection;
 		int handle;		
 		GxDataRecord datarecord;
@@ -2482,6 +2486,29 @@ namespace GeneXus.Data.ADO
                 if (cfgBuf.IndexOf(',') > 0)
                     cfgBuf = cfgBuf.Split(',')[0];
 				datarecord = getDbmsDataRecord(id, cfgBuf);
+
+				if (GXServices.Instance != null)
+				{
+					GXService providerService = GXServices.Instance.Get(GXServices.DATA_ACCESS_SERVICE);
+					if (providerService != null)
+					{
+						GXLogging.Debug(log, "Loading DATA_ACCESS_SERVICE: ", providerService.ClassName);
+						try
+						{
+#if NETCORE
+							Type type = AssemblyLoader.GetType(providerService.ClassName);
+#else
+							Type type = Type.GetType(providerService.ClassName, true, true);
+#endif
+							datarecord = (GxDataRecord)Activator.CreateInstance(type, datarecord);
+
+						}
+						catch (Exception ex)
+						{
+							GXLogging.Error(log, "Error creating CustomDataRecord " + providerService.ClassName, ex);
+						}
+					}
+				}
 			}
 			else
 			{

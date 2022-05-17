@@ -76,7 +76,31 @@ namespace GeneXus.Data
 			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
 			return new PostgresqlConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 		}
+		string convertToSqlCall(string stmt, GxParameterCollection parameters)
+		{
+			if (parameters == null)
+				return stmt;
+			string pname;
+			StringBuilder sBld = new StringBuilder();
+			for (int i = 0; i < parameters.Count; i++)
+			{
+				if (parameters[i].Direction != ParameterDirection.Output && parameters[i].Direction!= ParameterDirection.ReturnValue)
+				{
+					if (sBld.Length>0)
+						sBld.Append(", ");
+					pname = ":" + parameters[i].ParameterName;
+					sBld.Append(pname);
+				}
+			}
+			return "SELECT " + stmt + "(" + sBld.ToString() + ")";
+		}
 
+		public override IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters, bool isCursor, bool forFirst, bool isRpc)
+		{
+			if (isRpc)
+				stmt = convertToSqlCall(stmt, parameters);
+			return base.GetCommand(con, stmt, parameters, isCursor, forFirst, isRpc);
+		}
 		protected override string BuildConnectionString(string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra)
 		{
@@ -139,18 +163,38 @@ namespace GeneXus.Data
 			IDataReader reader = cmd.ExecuteReader();
 			if (reader.Read())
 			{
-				int i = 0;
-				for (int j = 0; j < count; j++)
+				if (reader.FieldCount > 0 && returnParms.Count>0)
 				{
-					if (returnParms.Contains(j))
+					object[] readerValues;
+					if (reader.GetFieldType(0) == typeof(object[]))
+						readerValues = (object[])reader.GetValue(0);
+					else
 					{
-						values[j] = reader.GetValue(i);
-						i++;
+						readerValues = new object[returnParms.Count];
+						readerValues[0] = reader.GetValue(0);
+					}
+
+					int i = 0;
+					for (int j = 0; j < count; j++)
+					{
+						if (returnParms.Contains(j) && readerValues.Length>i)
+						{
+							values[j] = readerValues[i];
+							i++;
+						}
 					}
 				}
 			}
 			reader.Close();
 			return values;
+		}
+		public override void PrepareCommand(IDbCommand cmd)
+		{
+			if (NpgsqlAssembly.GetName().Version.Major>1)
+			{
+				GXLogging.Debug(log, "Preparing command:" + cmd.CommandText);
+				cmd.Prepare();
+			}
 		}
 		public override bool AllowsDuplicateParameters
 		{
@@ -270,7 +314,7 @@ namespace GeneXus.Data
 			}
 		}
 		//ByteArrayToByteaTextEscaped
-		protected override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
+		public override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
 		{
 			if (_byteaOutputEscape)
 			{

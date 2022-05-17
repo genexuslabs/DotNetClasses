@@ -505,7 +505,7 @@ namespace GeneXus.Data
 		/* db2400:the same command cannot be executed a second time without first
 		* close it (it is possible if they are different commands), then if it is cached,
 		* and it is not closed, it cannot be used, a new one is created*/
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return 	con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 		}
