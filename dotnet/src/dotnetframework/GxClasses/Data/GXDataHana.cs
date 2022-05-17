@@ -71,11 +71,11 @@ namespace GeneXus.Data
         {
             StringBuilder connectionString = new StringBuilder();
 
-            if (!string.IsNullOrEmpty(datasourceName) && port != null && port.Trim().Length > 0 && !hasKey(extra, "Server"))
+            if (!string.IsNullOrEmpty(datasourceName) && port != null && port.Trim().Length > 0 && !HasKey(extra, "Server"))
             {
                 connectionString.AppendFormat("Server={0}:{1};", datasourceName, port);
             }
-            else if (datasourceName != null && !hasKey(extra, "Server"))
+            else if (datasourceName != null && !HasKey(extra, "Server"))
             {
                 connectionString.AppendFormat("Server={0}:30015;", datasourceName);
             }
@@ -83,11 +83,11 @@ namespace GeneXus.Data
             {
                 connectionString.AppendFormat(";UserID={0};Password={1}", userId, userPassword);
             }
-            if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Database"))
+            if (databaseName != null && databaseName.Trim().Length > 0 && !HasKey(extra, "Database"))
             {
                 connectionString.AppendFormat(";Database={0}", databaseName);
             }
-            if (schema != null && schema.Trim().Length > 0 && !hasKey(extra, "Current Schema"))
+            if (schema != null && schema.Trim().Length > 0 && !HasKey(extra, "Current Schema"))
             {
                 connectionString.AppendFormat(";Current Schema={0}", schema);
             }
