@@ -20,6 +20,9 @@ namespace GeneXus.Http.Client
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
 	using log4net;
+#if NETCORE
+	using Microsoft.AspNetCore.WebUtilities;
+#endif
 	using Mime;
 
 
@@ -742,10 +745,11 @@ namespace GeneXus.Http.Client
 				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
 				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
 				response = ExecuteRequest(method, requestUrl, cookies);
-#if NETCORE
+
 				if (contextCookies)
 					_context.UpdateSessionCookieContainer();
-#endif
+
+
 			}
 #if NETCORE
 			catch (AggregateException aex)
@@ -804,11 +808,11 @@ namespace GeneXus.Http.Client
 			LoadResponseHeaders(response);
 			ReadReponseContent(response);
 			_statusCode = ((short)response.StatusCode);
-			_statusDescription = response.ReasonPhrase;
+			_statusDescription = GetStatusCodeDescrption(response);
 			if ((_statusCode >= 400 && _statusCode < 600) && _errCode != 1)
 			{
 				_errCode = 1;
-				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + response.ReasonPhrase + ".";
+				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + _statusDescription + ".";
 			}
 			ClearSendStream();
 			GXLogging.Debug(log, "_responseString " + ToString());
@@ -826,6 +830,26 @@ namespace GeneXus.Http.Client
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}
 		}
+
+		private string GetStatusCodeDescrption(HttpResponseMessage message)
+		{
+#if NETCORE
+			string statusCodeDescription = ReasonPhrases.GetReasonPhrase((int)message.StatusCode);
+#else
+			string statusCodeDescription = HttpWorkerRequest.GetStatusDescription((int)message.StatusCode);
+#endif
+			string reasonPhrase = message.ReasonPhrase;
+
+			if (string.IsNullOrEmpty(reasonPhrase))
+			{
+				return statusCodeDescription;
+			}
+			else
+			{
+				return reasonPhrase;
+			}
+		}
+
 		private void setHeaders(HttpWebRequest req)
 		{
 			string contentType = null;
@@ -1289,8 +1313,8 @@ namespace GeneXus.Http.Client
 #if !NETCORE
 			if (HttpContext.Current != null)
 #endif
-			if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)
-				pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
+				if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)
+					pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 			using (fs = new FileStream(pathName, FileMode.Create, FileAccess.Write))
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
