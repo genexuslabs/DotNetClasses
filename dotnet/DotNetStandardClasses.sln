@@ -198,8 +198,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C16BD5A9-4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestMockDBAccess", "src\extensions\mocking\test\TestMockDBAccess\TestMockDBAccess.csproj", "{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXDynamicCall", "src\dotnetcommon\GXDynamicCall\GXDynamicCall.csproj", "{621AE146-0AF9-4963-90B7-B58BA5D3EBEA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -478,10 +476,6 @@ Global
 		{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{621AE146-0AF9-4963-90B7-B58BA5D3EBEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{621AE146-0AF9-4963-90B7-B58BA5D3EBEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{621AE146-0AF9-4963-90B7-B58BA5D3EBEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{621AE146-0AF9-4963-90B7-B58BA5D3EBEA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
