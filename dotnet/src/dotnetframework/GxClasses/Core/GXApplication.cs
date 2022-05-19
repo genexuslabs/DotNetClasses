@@ -485,7 +485,7 @@ namespace GeneXus.Application
 			}
 			return serializableCookies;
 		}
-
+#endif
 		private Dictionary<string, CookieContainer> FromSerializableCookieContainer(Dictionary<string, IEnumerable<Cookie>> cookies)
 		{
 			if (cookies == null)
@@ -506,7 +506,6 @@ namespace GeneXus.Application
 			}
 			return serializableCookies;
 		}
-#endif
 		public void UpdateSessionCookieContainer()
 		{
 			IGxSession tempStorage = GetSession();
@@ -1026,7 +1025,7 @@ namespace GeneXus.Application
 		{
 			int browserType = GetBrowserType();
 
-			#region Align
+#region Align
 			if (string.Compare(propName, "align", true) == 0)
 			{
 				if (browserType == BROWSER_FIREFOX)
@@ -1038,7 +1037,7 @@ namespace GeneXus.Application
 					return "-khtml-" + propValue;
 				}
 			}
-			#endregion
+#endregion
 
 			return propValue;
 		}
@@ -3818,7 +3817,7 @@ namespace GeneXus.Application
 		{
 			return !String.IsNullOrEmpty(StringUtil.RTrim(wjLoc));
 		}
-		#region IGxContext Members
+#region IGxContext Members
 
 		private const string CLIENT_ID_HEADER = "GX_CLIENT_ID";
 		public string ClientID
@@ -3847,7 +3846,7 @@ namespace GeneXus.Application
 
 		public GXSOAPContext SoapContext { get; set; }
 
-		#endregion
+#endregion
 	}
 	public class GxXmlContext
 	{
