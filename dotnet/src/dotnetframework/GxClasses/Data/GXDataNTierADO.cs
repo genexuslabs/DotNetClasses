@@ -1198,18 +1198,33 @@ namespace GeneXus.Data.NTier.ADO
                 throw (new GxADODataException("Could not readNext in ForEachCursor:" + _name + "."));
             _status = 0;
 
-            if (!_DR.Read())
-            {
-                _status = Cursor.EOF;
-                _gxDbCommand.HasMoreRows = false;
-            }
-            else if (_gxDbCommand.Status == 1 || _gxDbCommand.Status == 103 || _gxDbCommand.Status == 500)
-            {
-                _status = _gxDbCommand.Status;
-            }
+			try
+			{
+				if (!_DR.Read())
+				{
+					_status = Cursor.EOF;
+					_gxDbCommand.HasMoreRows = false;
+				}
+				else if (_gxDbCommand.Status == 1 || _gxDbCommand.Status == 103 || _gxDbCommand.Status == 500)
+				{
+					_status = _gxDbCommand.Status;
+				}
+			}
+			catch (GxADODataException e)
+			{
+				bool retry = false;
+				int retryCount = 0;
+				bool pe = _gxDbCommand.ProcessException(e, ref retry, retryCount, "FETCH");
+				GXLogging.Error(log, "readNext Error", e);
+				if (!pe)
+				{
+					throw;
+				}
+			}
 
-        }
-    }
+
+		}
+	}
     public class UpdateCursor : Cursor
     {
         public UpdateCursor(CursorDef def) : base(def.Name, def.Stmt, def.Nmask, def.ParmBinds, 0)
