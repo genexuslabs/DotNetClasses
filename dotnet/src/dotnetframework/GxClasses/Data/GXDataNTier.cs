@@ -485,10 +485,25 @@ namespace GeneXus.Data.NTier
 
 		public void readNext(int cursor)
 		{
-			ICursor oCur = getCursor(cursor);
-			oCur.readNext();
-			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
-			dataStoreRequestCount++;
+			Cursor oCur = getCursor(cursor) as Cursor;
+			try
+			{
+				oCur.readNext();
+				_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+				dataStoreRequestCount++;
+			}
+			catch (GxADODataException e)
+			{
+				bool retry = false;
+				int retryCount = 0;
+				bool pe = oCur.Command.ProcessException(e, ref retry, retryCount, "FETCH");
+				GXLogging.Error(log, "readNext Error", e);
+				if (!pe)
+				{
+					throw;
+				}
+			}
+
 		}
 		public int getStatus(int cursorIdx)
 		{
