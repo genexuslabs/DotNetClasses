@@ -489,7 +489,6 @@ namespace GeneXus.Data.NTier
 			oCur.readNext();
 			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
 			dataStoreRequestCount++;
-
 		}
 		public int getStatus(int cursorIdx)
 		{
@@ -538,19 +537,15 @@ namespace GeneXus.Data.NTier
 			catch (Exception dbEx)
 			{
 				//If commit fails it should not retry, it makes no sense because it will no longer be possible. just close the existing connection.
-				int status = 0;
 				GxADODataException e = new GxADODataException(dbEx);
 				bool retry = false;
 				int retryCount = 0;
-				bool pe = ds.Connection.DataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, cmd.ErrorMask, ds.Connection, ref status, ref retry, retryCount);
 				GXLogging.Error(log, "Commit Transaction Error", e);
-				retryCount++;
-				cmd.processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, cmd.ErrorMask, "FETCH", ref pe, ref retry);
+				bool pe = cmd.ProcessException(e, ref retry, retryCount, "FETCH");
 				if (!pe)
 				{
 					try
 					{
-						ds.Connection.Close();
 						if (retry)
 							ds.Connection.Open();
 					}
@@ -574,19 +569,15 @@ namespace GeneXus.Data.NTier
 			}
 			catch (Exception dbEx)
 			{
-				int status = 0;
 				GxADODataException e = new GxADODataException(dbEx);
 				bool retry = false;
 				int retryCount = 0;
-				bool pe = ds.Connection.DataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, cmd.ErrorMask, ds.Connection, ref status, ref retry, retryCount);
+				bool pe = cmd.ProcessException(e, ref retry, retryCount, "FETCH");
 				GXLogging.Error(log, "Rollback Transaction Error", e);
-				retryCount++;
-				cmd.processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, cmd.ErrorMask, "FETCH", ref pe, ref retry);
 				if (!pe)
 				{
 					try
 					{
-						ds.Connection.Close();
 						if (retry)
 							ds.Connection.Open();
 					}

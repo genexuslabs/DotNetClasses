@@ -1655,17 +1655,35 @@ namespace GeneXus.Data.ADO
 				}
 				catch(GxADODataException e) 
 				{
-					bool pe = dataRecord.ProcessError( e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref  status, ref retry, retryCount);
+					bool pe = ProcessException(e, ref retry, retryCount, "EXECUTE");
 					retryCount++;
-					processErrorHandler( status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "EXECUTE", ref pe, ref retry);
 					if (! pe)
 					{
 						GXLogging.Error(log, e, "GxCommand.ExecuteDataSet Error ");
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
 					}
 				}
 			}
 			return "";
+		}
+
+		internal bool ProcessException(GxADODataException e, ref bool retry, int retryCount, string method)
+		{
+			bool pe = dataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref status, ref retry, retryCount);
+			processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, method, ref pe, ref retry);
+			if (!pe)
+			{
+				try
+				{
+					Close();
+					con.Close();
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Warn(log, ex, "GxCommand.Close Error on ProcessException");
+				}
+			}
+			return pe;
 		}
 
 		public IDataReader ExecuteReader()
@@ -1735,22 +1753,12 @@ namespace GeneXus.Data.ADO
 				catch (GxADODataException e)
 				{ 
 					status=0;
-					bool pe = dataRecord.ProcessError( e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref status, ref retry, retryCount);
+					bool pe = ProcessException(e, ref retry, retryCount, "FETCH");
 					retryCount++;
-					processErrorHandler( status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "FETCH", ref pe, ref retry);
 					if (! pe)
 					{
 						GXLogging.Error(log, e, "GxCommand.FetchData Error ");
-						try
-						{
-							Close();
-							con.Close();
-						}
-						catch(Exception ex)
-						{
-							GXLogging.Error(log, ex, "GxCommand.FetchData-Close Error ");
-						}
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
 					}
 				}
 			}
@@ -1772,13 +1780,12 @@ namespace GeneXus.Data.ADO
 				catch (GxADODataException e)
 				{ 
 					status=0;
-					bool pe = dataRecord.ProcessError( e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref status, ref retry, retryCount);
+					bool pe = ProcessException(e, ref retry, retryCount, "FETCH");
 					retryCount++;
-					processErrorHandler( status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "FETCH", ref pe, ref retry);
 					if (! pe)
 					{
 						GXLogging.Error(log, e, "GxCommand.FetchDataRPC Error ");
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
 					}
 				}
 			}
@@ -1895,13 +1902,12 @@ namespace GeneXus.Data.ADO
                 }
                 catch (GxADODataException e)
                 {
-                    bool pe = dataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref  status, ref retry, retryCount);
+					bool pe = ProcessException(e, ref retry, retryCount, "EXECUTE");
                     retryCount++;
-                    processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "EXECUTE", ref pe, ref retry);
                     if (!pe)
                     {
                         GXLogging.Error(log, "GxCommand.ExecuteStmt Error ", e);
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
                     }
                 }
             }
@@ -1924,14 +1930,13 @@ namespace GeneXus.Data.ADO
                     status = 0;
                 }
                 catch (GxADODataException e)
-                {
-                    bool pe = dataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref  status, ref retry, retryCount);
+				{
+					bool pe = ProcessException(e, ref retry, retryCount, "EXECUTE");
                     retryCount++;
-                    processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "EXECUTE", ref pe, ref retry);
                     if (!pe)
                     {
                         GXLogging.Error(log, "GxCommand.ExecuteStmt Error ", e);
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
                     }
                 }
             }
