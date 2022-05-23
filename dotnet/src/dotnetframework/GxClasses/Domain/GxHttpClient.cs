@@ -623,8 +623,7 @@ namespace GeneXus.Http.Client
 			{
 				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
 			}
-			if (IncludeCookies)
-				handler.CookieUsePolicy = CookieUsePolicy.UseSpecifiedCookieContainer;
+			handler.CookieUsePolicy = CookieUsePolicy.UseSpecifiedCookieContainer;
 #endif
 			if (GXUtil.CompressResponse())
 			{
@@ -748,7 +747,7 @@ namespace GeneXus.Http.Client
 				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
 				response = ExecuteRequest(method, requestUrl, cookies);
 
-				if (contextCookies && IncludeCookies)
+				if (contextCookies)
 					_context.UpdateSessionCookieContainer();
 
 
