@@ -623,13 +623,14 @@ namespace GeneXus.Http.Client
 			{
 				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
 			}
-			handler.CookieUsePolicy = CookieUsePolicy.UseSpecifiedCookieContainer;
+			if (IncludeCookies)
+				handler.CookieUsePolicy = CookieUsePolicy.UseSpecifiedCookieContainer;
 #endif
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 			}
-			
+
 			handler.CookieContainer = cookies;
 
 			foreach (X509Certificate2 cert in _certificateCollection)
@@ -747,7 +748,7 @@ namespace GeneXus.Http.Client
 				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
 				response = ExecuteRequest(method, requestUrl, cookies);
 
-				if (contextCookies)
+				if (contextCookies && IncludeCookies)
 					_context.UpdateSessionCookieContainer();
 
 
