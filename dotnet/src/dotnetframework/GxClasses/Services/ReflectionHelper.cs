@@ -263,8 +263,15 @@ namespace GeneXus.Application
 				}
 				if (parameters != null && parameters.TryGetValue(gxParameterName, out value))
 				{
-					var convertedValue = ConvertStringToNewType(value, parmType, context);
-					parametersForInvocation[idx] = convertedValue;
+					if (value == null || JSONHelper.IsJsonNull(value))
+					{
+						parametersForInvocation[idx] = null;
+					}
+					else
+					{
+						var convertedValue = ConvertStringToNewType(value, parmType, context);
+						parametersForInvocation[idx] = convertedValue;
+					}
 				}
 				else
 				{
