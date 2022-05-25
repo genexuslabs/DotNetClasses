@@ -19,6 +19,7 @@ using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GxClasses.Web.Middleware
 {
@@ -179,6 +180,12 @@ namespace GxClasses.Web.Middleware
 		{
 			try
 			{
+				if (context.GetType()==typeof(DefaultHttpContext))
+				{
+					IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
+					context = new GxHttpContextAccesor(contextAccessor);
+				}
+
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
 				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath) | (AzureRuntime && path.Contains(oauthRoute)))

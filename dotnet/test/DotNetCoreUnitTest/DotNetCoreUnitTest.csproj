@@ -48,6 +48,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="iTextSharp" Version="5.5.13.2" />
+		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
@@ -96,6 +97,9 @@
 		</None>
 		<None Update="Document.txt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="log.config">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="MS923.txt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
