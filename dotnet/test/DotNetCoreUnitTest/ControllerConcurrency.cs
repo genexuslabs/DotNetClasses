@@ -46,7 +46,7 @@ namespace xUnitTesting
 			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
 			TestServer server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>());
 			List<Task> tasks = new List<Task>();
-			int MAX = 3000;
+			int MAX = 200;
 			for (int i = 0; i < MAX; i++)
 			{
 				tasks.Add(Task.Run(() => RunController(server)));
