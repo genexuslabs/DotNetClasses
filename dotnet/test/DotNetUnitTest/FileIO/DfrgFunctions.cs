@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using Xunit;
@@ -34,6 +36,7 @@ namespace UnitTesting
 			string result = string.Empty;
 			GxContext context = new GxContext();
 			string line;
+			Console.WriteLine("Full file name:" + Path.Combine(GxContext.StaticPhysicalPath(), fileName));
 			int code = context.FileIOInstance.dfropen(fileName, 1024, "", "", "UTF-8");
 			Assert.Equal(0, code);
 			while (context.FileIOInstance.dfrnext() == 0)
