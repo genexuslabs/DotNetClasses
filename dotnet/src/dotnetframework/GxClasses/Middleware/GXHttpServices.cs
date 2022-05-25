@@ -62,11 +62,13 @@ namespace GeneXus.Http
 			return gxRouting;
 		}
 #endif
+#if NETCORE
 		public override async void webExecute()
 		{
-#if NETCORE
 			GxRestWrapper handler = null;
 #else
+		public override void webExecute()
+		{
 			Utils.GxRestService handler = null;
 #endif
 			try

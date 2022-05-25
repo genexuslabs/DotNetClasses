@@ -32,8 +32,8 @@ namespace xUnitTesting
 		{
 			HttpClient client = server.CreateClient();
 			List<Task> tasks = new List<Task>();
-			int MAX = 200;
-			for (int i = 0; i < MAX; i++)
+			int MAX_THREADS = 200;
+			for (int i = 0; i < MAX_THREADS; i++)
 			{
 				tasks.Add(RunController(client));
 			}
