@@ -62,7 +62,7 @@ namespace GeneXus.Http
 			return gxRouting;
 		}
 #endif
-		public override void webExecute()
+		public override async void webExecute()
 		{
 #if NETCORE
 			GxRestWrapper handler = null;
@@ -73,7 +73,11 @@ namespace GeneXus.Http
 			{
 				HttpRequest req = context.HttpContext.Request;
 				string gxobj = GetNextPar().ToLower();
+#if NETCORE
+				string jsonStr = await new StreamReader(req.GetInputStream()).ReadToEndAsync();
+#else
 				string jsonStr = (new StreamReader(req.GetInputStream())).ReadToEnd();
+#endif
 				GxSimpleCollection<JArray> parmsColl = new GxSimpleCollection<JArray>();
 				if (!string.IsNullOrEmpty(jsonStr))
 				{
