@@ -53,6 +53,15 @@ namespace GeneXus.Http
 		{
 			this.context = new GxContext();
 		}
+#if NETCORE
+		static GXRouting gxRouting;
+		GXRouting GetRouting()
+		{
+			if (gxRouting == null)
+				gxRouting = new GXRouting(string.Empty);
+			return gxRouting;
+		}
+#endif
 		public override void webExecute()
 		{
 #if NETCORE
@@ -72,7 +81,7 @@ namespace GeneXus.Http
 				}
 #if NETCORE
 
-				handler = new GXRouting(string.Empty).GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
+				handler = GetRouting().GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
 				if (handler ==null) {
 					throw new GxClassLoaderException($"{gxobj} not found");
 				}
