@@ -985,8 +985,15 @@ namespace com.genexus.reports
 					{
 						if (IsEmbeddedFont(fontName))
 						{
-							baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-							GXLogging.Debug(log,"EMBEED_SECTION Font");
+							try
+							{
+								baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+								GXLogging.Debug(log, "EMBEED_SECTION Font");
+							}catch (IOException ioEx)
+							{
+								Exception exDetailed = new Exception($"Error creating {fontPath}. Check font is installed for the current user", ioEx);
+								throw exDetailed;
+							}
 						}
 						else
 						{
@@ -2062,14 +2069,22 @@ namespace com.genexus.reports
 				string outputDir = props.getGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, "").Replace(alternateSeparator, Path.DirectorySeparatorChar).Trim();
 				if(!string.IsNullOrEmpty(outputDir) && outputDir!=".")
 				{
-					if(!outputDir.EndsWith(Path.DirectorySeparatorChar.ToString()))
+					try
 					{
-						outputDir += Path.DirectorySeparatorChar;
-					}
-					string []dirs = Directory.GetDirectories(outputDir);
-					foreach(string dir in dirs)
+						if (!outputDir.EndsWith(Path.DirectorySeparatorChar.ToString()))
+						{
+							outputDir += Path.DirectorySeparatorChar;
+						}
+						string[] dirs = Directory.GetDirectories(outputDir);
+						foreach (string dir in dirs)
+						{
+							Directory.CreateDirectory(dir);
+						}
+					}catch (Exception ex)
 					{
-						Directory.CreateDirectory(dir);
+						Exception exDetailed = new Exception($"Error creating {Const.OUTPUT_FILE_DIRECTORY} of {Const.INI_FILE} ({outputDir})", ex);
+						GXLogging.Error(log, "GxSetDocName error", exDetailed);
+						throw exDetailed;
 					}
 					this.docName = outputDir + this.docName;
 				}
