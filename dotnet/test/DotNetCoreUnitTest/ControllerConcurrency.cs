@@ -57,7 +57,6 @@ namespace xUnitTesting
 
 		private async Task RunController(TestServer server)
 		{
-			Console.WriteLine("Empieza");
 			HttpClient client = server.CreateClient();
 			var response = await client.GetAsync("rest/apps/append");
 			response.EnsureSuccessStatusCode();
