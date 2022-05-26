@@ -4,12 +4,11 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Cache;
-using GeneXus.Services;
 using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore.Http;
@@ -273,6 +272,13 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			{
 				return (PipeWriter.Create(Body));		
 			}
+		}
+	}
+	public static class GxHttpAzureResponseExtension
+	{
+		public static void Write(this GxHttpAzureResponse response, string value)
+		{
+			response.Body.Write(Encoding.UTF8.GetBytes(value));
 		}
 	}
 }
