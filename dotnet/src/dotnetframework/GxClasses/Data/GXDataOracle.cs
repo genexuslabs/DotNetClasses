@@ -297,7 +297,7 @@ namespace GeneXus.Data
 		{
 			StringBuilder connectionString = new StringBuilder();
 
-			if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Data Source"))
+			if (!string.IsNullOrEmpty(datasourceName) && !HasKey(extra, "Data Source"))
 			{
 				connectionString.AppendFormat("Data Source={0};", datasourceName);
 			}
@@ -618,7 +618,7 @@ namespace GeneXus.Data
 		{
 			StringBuilder connectionString = new StringBuilder();
 
-			if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Data Source"))
+			if (!string.IsNullOrEmpty(datasourceName) && !HasKey(extra, "Data Source"))
 			{
 				connectionString.AppendFormat("Data Source={0};", datasourceName);
 			}
@@ -888,7 +888,7 @@ namespace GeneXus.Data
 		{
 			StringBuilder connectionString = new StringBuilder();
 
-			if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Data Source"))
+			if (!string.IsNullOrEmpty(datasourceName) && !HasKey(extra, "Data Source"))
 			{
 				connectionString.AppendFormat("Data Source={0};", datasourceName);
 			}
@@ -1180,7 +1180,7 @@ namespace GeneXus.Data
 			}
 
 		}
-		protected override void SetBinary(IDbDataParameter parameter, byte[] binary)
+		public override void SetBinary(IDbDataParameter parameter, byte[] binary)
 		{
 			GXLogging.Debug(log, "SetParameter BLOB, binary.length:", () => binary != null ? binary.Length.ToString() : "null");
 			if (binary != null && binary.Length == 0)

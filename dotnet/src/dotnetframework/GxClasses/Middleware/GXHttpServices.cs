@@ -295,6 +295,7 @@ namespace GeneXus.Http
 						GxFile gxFile = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);
 
 						gxFile.Create(hpf.InputStream);
+
 						string uri = gxFile.GetURI();
 						string url = (PathUtil.IsAbsoluteUrl(uri)) ? uri : context.PathToUrl(uri);
 
