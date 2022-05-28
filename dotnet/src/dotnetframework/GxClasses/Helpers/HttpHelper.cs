@@ -480,7 +480,8 @@ namespace GeneXus.Http
 
 		public static void Write(this HttpResponse response, string value)
 		{
-			response.WriteAsync(value).Wait();
+			//response.WriteAsync(value).Wait();//Unsupported by GxHttpAzureResponse
+			response.Body.Write(Encoding.UTF8.GetBytes(value));
 		}
 		public static void WriteFile(this HttpResponse response, string fileName)
 		{
