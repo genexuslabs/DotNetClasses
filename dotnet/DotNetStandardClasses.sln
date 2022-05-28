@@ -198,6 +198,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C16BD5A9-4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestMockDBAccess", "src\extensions\mocking\test\TestMockDBAccess\TestMockDBAccess.csproj", "{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Programs.Common", "src\extensions\Azure\test\GeneXus.Programs.Common\GeneXus.Programs.Common.csproj", "{DCEC0B38-93B6-4003-81E6-9FBC2BB4F163}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -480,6 +482,10 @@ Global
 		{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCEC0B38-93B6-4003-81E6-9FBC2BB4F163}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCEC0B38-93B6-4003-81E6-9FBC2BB4F163}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCEC0B38-93B6-4003-81E6-9FBC2BB4F163}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCEC0B38-93B6-4003-81E6-9FBC2BB4F163}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -575,6 +581,7 @@ Global
 		{8D05D621-3DB3-459F-8665-BEA4574F4EFF} = {8E5A25F9-2D64-4742-8227-2A3C5816AFEC}
 		{C16BD5A9-4412-4B91-BB70-5C88B7AAE675} = {5045873B-E7CF-4317-94C1-0EF8623D23FA}
 		{B01A243D-C012-4BEB-BAA9-E1D9AC1468C8} = {C16BD5A9-4412-4B91-BB70-5C88B7AAE675}
+		{DCEC0B38-93B6-4003-81E6-9FBC2BB4F163} = {7BA5A2CE-7992-4F87-9D84-91AE4D046F5A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
