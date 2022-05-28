@@ -10,7 +10,11 @@ namespace GeneXus.Programs
 			context = new GxContext();
 			IsMain = true;
 		}
-
+		public amyprochandler(IGxContext context)
+		{
+			this.context = context;
+			IsMain = false;
+		}
 		public override void cleanup()
 		{
 			if (IsMain)
