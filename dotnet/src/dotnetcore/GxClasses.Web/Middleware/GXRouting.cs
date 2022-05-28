@@ -30,7 +30,7 @@ namespace GxClasses.Web.Middleware
 
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
-		public static string ContentRootPath;
+		public static string ContentRootPath = ".";
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
 		const string oauthRoute = "/oauth";
