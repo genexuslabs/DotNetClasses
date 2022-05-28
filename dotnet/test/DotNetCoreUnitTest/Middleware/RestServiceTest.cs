@@ -14,6 +14,7 @@ namespace xUnitTesting
 		public RestServiceTest():base()
 		{
 			ClassLoader.FindType("apps.append", "GeneXus.Programs.apps", "append", Assembly.GetExecutingAssembly(), true);//Force loading assembly for append procedure
+			server.AllowSynchronousIO=true;
 		}
 		[Fact]
 		public async Task TestMultiCall()
