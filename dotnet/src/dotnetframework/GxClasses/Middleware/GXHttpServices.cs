@@ -53,18 +53,33 @@ namespace GeneXus.Http
 		{
 			this.context = new GxContext();
 		}
-		public override void webExecute()
-		{
 #if NETCORE
+		static GXRouting gxRouting;
+		GXRouting GetRouting()
+		{
+			if (gxRouting == null)
+				gxRouting = new GXRouting(string.Empty);
+			return gxRouting;
+		}
+#endif
+#if NETCORE
+		public override async void webExecute()
+		{
 			GxRestWrapper handler = null;
 #else
+		public override void webExecute()
+		{
 			Utils.GxRestService handler = null;
 #endif
 			try
 			{
 				HttpRequest req = context.HttpContext.Request;
 				string gxobj = GetNextPar().ToLower();
+#if NETCORE
+				string jsonStr = await new StreamReader(req.GetInputStream()).ReadToEndAsync();
+#else
 				string jsonStr = (new StreamReader(req.GetInputStream())).ReadToEnd();
+#endif
 				GxSimpleCollection<JArray> parmsColl = new GxSimpleCollection<JArray>();
 				if (!string.IsNullOrEmpty(jsonStr))
 				{
@@ -72,7 +87,7 @@ namespace GeneXus.Http
 				}
 #if NETCORE
 
-				handler = new GXRouting(string.Empty).GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
+				handler = GetRouting().GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
 				if (handler ==null) {
 					throw new GxClassLoaderException($"{gxobj} not found");
 				}
