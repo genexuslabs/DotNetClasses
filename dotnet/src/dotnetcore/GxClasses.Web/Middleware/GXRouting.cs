@@ -29,7 +29,7 @@ namespace GxClasses.Web.Middleware
 
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
-		public static string ContentRootPath;
+		public static string ContentRootPath = ".";
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
 		const string oauthRoute = "/oauth";
@@ -181,7 +181,7 @@ namespace GxClasses.Web.Middleware
 			{
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
-				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath) | (AzureRuntime && path.Contains(oauthRoute)))
+				if (path.Contains($"/{restBaseURL}") || ServiceInPath(path, out actualPath) || (AzureRuntime && path.Contains(oauthRoute)))
 				{
 					string controllerWithParms = string.Empty;
 					if (!AzureRuntime)
