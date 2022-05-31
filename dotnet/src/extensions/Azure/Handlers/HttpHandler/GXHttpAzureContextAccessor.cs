@@ -277,11 +277,4 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			}
 		}
 	}
-	public static class GxHttpAzureResponseExtension
-	{
-		public static void Write(this GxHttpAzureResponse response, string value)
-		{
-			response.Body.Write(Encoding.UTF8.GetBytes(value));
-		}
-	}
 }
