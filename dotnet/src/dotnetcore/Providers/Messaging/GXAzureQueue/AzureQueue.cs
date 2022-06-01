@@ -319,13 +319,9 @@ namespace GeneXus.Messaging.Queue
 		}
 
 		/// <summary>
-		/// 
+		/// Send messages using Queue options 
 		/// </summary>
-		/// <param name="queueMessage"></param>
-		/// <param name="messages"></param>
-		/// <param name="success"></param>
-		/// <returns></returns>
-		/// <exception cref="NotImplementedException"></exception>
+		
 		public IList<MessageQueueResult> SendMessages(IList<SimpleQueueMessage> simpleQueueMessages, MessageQueueOptions messageQueueOptions, out bool success)
 		{
 			MessageQueueResult messageQueueResult = new MessageQueueResult();

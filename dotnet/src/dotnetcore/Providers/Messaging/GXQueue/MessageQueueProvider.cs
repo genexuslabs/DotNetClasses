@@ -28,7 +28,6 @@ namespace GeneXus.Messaging.Common
 
 		public SimpleMessageQueue Connect(string providerTypeName, GXProperties properties, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
-			
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			SimpleMessageQueue simpleMessageQueue = new SimpleMessageQueue();
 			if (string.IsNullOrEmpty(providerTypeName))
