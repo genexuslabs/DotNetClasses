@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using GeneXus;
-using GeneXus.Messaging.Common;
+using GeneXus.Application;
 using GeneXus.Services;
 using GeneXus.Utils;
 using GxClasses.Helpers;
@@ -16,8 +15,14 @@ namespace GeneXus.Messaging.Common
 	public class SimpleMessageQueue
 	{
 		internal IQueue queue = null;
-
-
+		public static Assembly assembly;
+		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(SimpleMessageQueue));
+		private const string SDT_MESSAGE_CLASS_NAME = @"SdtMessage";
+		private const string SDT_MESSAGEPROPERTY_CLASS_NAME = @"SdtMessageProperty";
+		private const string SDT_MESSAGERESULT_CLASS_NAME = @"SdtMessageResult";
+		private const string NAMESPACE = @"GeneXus.Programs.genexusmessagingqueue.simplequeue";
+		private const string GENEXUS_COMMON_DLL = @"GeneXus.Programs.Common.dll";
+		
 		public SimpleMessageQueue()
 		{
 			//queue = ServiceFactory.GetQueue();
@@ -29,8 +34,12 @@ namespace GeneXus.Messaging.Common
 		void ValidQueue()
 		{
 			if (queue == null)
+			{
+				GXLogging.Error(logger, "Queue not found");
 				throw new Exception("Queue not found");
+			}
 		}
+
 		public void Clear(out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
@@ -63,113 +72,339 @@ namespace GeneXus.Messaging.Common
 
 			return queueLength;
 		}
-		public MessageQueueResult DeleteMessage(out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public GxUserType DeleteMessage(out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
+			GxUserType messageResult = new GxUserType();
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			try
 			{
 				ValidQueue();
 				messageQueueResult = queue.DeleteMessage(out success);
 
+				try
+				{ 
+				LoadAssemblyIfRequired();
+				if (messageQueueResult != null && TransformMessageQueueResult(messageQueueResult) is GxUserType result)
+					return result;
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(logger, ex);
+					success = false;
+					throw ex;
+				}
 			}
 			catch (Exception ex)
 			{
 				QueueErrorMessagesSetup(ex, out errorMessages);
+				GXLogging.Error(logger, ex);
 				success = false;
 			}
-			return messageQueueResult;
+			return messageResult;
 		}
 
-		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, MessageQueueOptions messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public IList<GxUserType> DeleteMessages(List<string> messageHandleId, GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			IList<GxUserType> messageResults = new List<GxUserType>();
+			success = false;
 			try
 			{
-				ValidQueue();
-				messageQueueResults = queue.DeleteMessages(messageHandleId, messageQueueOptions, out success);
-
+				MessageQueueOptions options = TransformOptions(messageQueueOptions);
+				try
+				{
+					ValidQueue();
+					messageQueueResults = queue.DeleteMessages(messageHandleId, options, out success);
+					LoadAssemblyIfRequired();
+					foreach (MessageQueueResult messageResult in messageQueueResults)
+					{
+						if (TransformMessageQueueResult(messageResult) is GxUserType result)
+							messageResults.Add(result);
+					}
+					success = true;
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(logger, ex);
+					QueueErrorMessagesSetup(ex, out errorMessages);
+					success = false;
+				}
 			}
 			catch (Exception ex)
 			{
-				QueueErrorMessagesSetup(ex, out errorMessages);
+				GXLogging.Error(logger, ex);
 				success = false;
+				throw ex;
 			}
-			return messageQueueResults;
+			
+			return messageResults;
 		}
 
-		public IList<SimpleQueueMessage> GetMessages(out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public IList<GxUserType> GetMessages(out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
-			IList<SimpleQueueMessage> simpleQueueMessages = new List<SimpleQueueMessage>();
+			
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			IList<GxUserType> resultMessages = new List<GxUserType>();
+			success = false;
 			try
 			{
 				ValidQueue();
-				simpleQueueMessages = queue.GetMessages(out success);
+				IList<SimpleQueueMessage> simpleQueueMessages = queue.GetMessages(out success);
 
+				try
+				{
+					LoadAssemblyIfRequired();
+
+					foreach (SimpleQueueMessage simpleQueueMessage in simpleQueueMessages)
+					{
+						if (TransformSimpleQueueMessage(simpleQueueMessage) is GxUserType result)
+							resultMessages.Add(result);
+					}
+					success = true;
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(logger, ex);
+					success = false;
+				}
 			}
 			catch (Exception ex)
 			{
+				GXLogging.Error(logger, ex);
 				QueueErrorMessagesSetup(ex, out errorMessages);
 				success = false;
 			}
-			return simpleQueueMessages = queue.GetMessages(out success);
+			return resultMessages;
 		}
 
-		public IList<SimpleQueueMessage> GetMessages(MessageQueueOptions messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public IList<GxUserType> GetMessages(GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
-			IList<SimpleQueueMessage> simpleQueueMessages = new List<SimpleQueueMessage>();
+			
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			IList<GxUserType> resultMessages = new List<GxUserType>();
+			success = false;
 			try
 			{
-				ValidQueue();
-				simpleQueueMessages = queue.GetMessages(messageQueueOptions, out success);
+				MessageQueueOptions options = TransformOptions(messageQueueOptions);
 
+				try
+				{
+					ValidQueue();
+					IList<SimpleQueueMessage>  simpleQueueMessages = queue.GetMessages(options, out success);
+					LoadAssemblyIfRequired();
+					foreach (SimpleQueueMessage simpleQueueMessage in simpleQueueMessages)
+					{
+						if (TransformSimpleQueueMessage(simpleQueueMessage) is GxUserType result)
+							resultMessages.Add(result);
+					}
+					success = true;
+
+				}
+				catch (Exception ex)
+				{
+					QueueErrorMessagesSetup(ex, out errorMessages);
+					GXLogging.Error(logger, ex);
+					success = false;
+				}
 			}
 			catch (Exception ex)
 			{
-				QueueErrorMessagesSetup(ex, out errorMessages);
+				GXLogging.Error(logger, ex);
 				success = false;
+				throw ex;
 			}
-			return simpleQueueMessages = queue.GetMessages(out success);
+
+			return resultMessages;
 		}
 
-		public MessageQueueResult SendMessage(SimpleQueueMessage simpleQueueMessage, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		private static void LoadAssemblyIfRequired()
 		{
+			if (assembly == null)
+			{
+				assembly = LoadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), GENEXUS_COMMON_DLL));
+				if (assembly == null)
+					assembly = LoadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", GENEXUS_COMMON_DLL));
+			}
+		}
+
+		private MessageQueueOptions TransformOptions(GxUserType messageQueueOptions)
+		{
+			MessageQueueOptions options = new MessageQueueOptions();
+			options.MaxNumberOfMessages = messageQueueOptions.GetPropertyValue<short>("Maxnumberofmessages");
+			options.DeleteConsumedMessages = messageQueueOptions.GetPropertyValue<bool>("Deleteconsumedmessages");
+			options.WaitTimeout = messageQueueOptions.GetPropertyValue<int>("Waittimeout");
+			options.VisibilityTimeout = messageQueueOptions.GetPropertyValue<int>("Visibilitytimeout");
+			options.TimetoLive = messageQueueOptions.GetPropertyValue<int>("Timetolive");
+			return options;
+		}
+
+		private SimpleQueueMessage TransformGXUserTypeToSimpleQueueMessage(GxUserType simpleQueueMessage)
+		{
+			SimpleQueueMessage queueMessage = new SimpleQueueMessage();
+			queueMessage.MessageId = simpleQueueMessage.GetPropertyValue<string>("Messageid");
+			queueMessage.MessageBody = simpleQueueMessage.GetPropertyValue<string>("Messagebody");
+			queueMessage.MessageHandleId = simpleQueueMessage.GetPropertyValue<string>("Messagehandleid");
+			IList messageAttributes = simpleQueueMessage.GetPropertyValue<IList>("Messageattributes_GXBaseCollection");
+			queueMessage.MessageAttributes = new GXProperties();
+			foreach (GxUserType messageAttribute in messageAttributes)
+			{
+				string messagePropKey = messageAttribute.GetPropertyValue<string>("Propertykey");
+				string messagePropValue = messageAttribute.GetPropertyValue<string>("Propertyvalue");
+				queueMessage.MessageAttributes.Add(messagePropKey, messagePropValue);
+			}
+			return queueMessage;
+		}
+		private GxUserType TransformSimpleQueueMessage(SimpleQueueMessage simpleQueueMessage)
+		{
+			Type classType = assembly.GetType(NAMESPACE + "." + SDT_MESSAGE_CLASS_NAME, false, ignoreCase: true);
+			Type propertyClassType = assembly.GetType(NAMESPACE + "." + SDT_MESSAGEPROPERTY_CLASS_NAME, false, ignoreCase: true);
+
+			if (classType != null && Activator.CreateInstance(classType) is GxUserType simpleMessageSDT)
+			{
+				simpleMessageSDT.SetPropertyValue("Messageid", simpleQueueMessage.MessageId);
+				simpleMessageSDT.SetPropertyValue("Messagebody", simpleQueueMessage.MessageBody);
+				simpleMessageSDT.SetPropertyValue("Messagehandleid", simpleQueueMessage.MessageHandleId);
+				
+				IList messageResultSDTAttributes = (IList)Activator.CreateInstance(classType.GetProperty("gxTpr_Messageattributes").PropertyType, new object[] { simpleMessageSDT.context, "MessageProperty", string.Empty });	
+				GxKeyValuePair prop = simpleQueueMessage.MessageAttributes.GetFirst();
+				while (!simpleQueueMessage.MessageAttributes.Eof())
+				{
+					if (propertyClassType != null && Activator.CreateInstance(propertyClassType) is GxUserType propertyClassTypeSDT)
+					{
+						propertyClassTypeSDT.SetPropertyValue("Propertykey", prop.Key);
+						propertyClassTypeSDT.SetPropertyValue("Propertyvalue", prop.Value);
+						messageResultSDTAttributes.Add(propertyClassTypeSDT);
+						prop = simpleQueueMessage.MessageAttributes.GetNext();
+					}
+				}
+				simpleMessageSDT.SetPropertyValue("Messageattributes", messageResultSDTAttributes);
+				
+				return simpleMessageSDT;
+			}
+			return null;
+		}
+		private GxUserType TransformMessageQueueResult(MessageQueueResult messageQueueResult)
+		{
+			Type classType = assembly.GetType(NAMESPACE + "." + SDT_MESSAGERESULT_CLASS_NAME, false, ignoreCase: true);
+			Type propertyClassType = assembly.GetType(NAMESPACE + "." + SDT_MESSAGEPROPERTY_CLASS_NAME, false, ignoreCase: true);
+
+			if (classType != null && Activator.CreateInstance(classType) is GxUserType messageResultSDT)
+			{
+				messageResultSDT.SetPropertyValue("Messageid", messageQueueResult.MessageId);
+				messageResultSDT.SetPropertyValue("Servermessageid", messageQueueResult.ServerMessageId);
+				messageResultSDT.SetPropertyValue("Messagehandleid", messageQueueResult.MessageHandleId);
+				messageResultSDT.SetPropertyValue("Messagestatus", messageQueueResult.MessageStatus);
+
+				IList messageResultSDTAttributes = (IList)Activator.CreateInstance(classType.GetProperty("gxTpr_Messageattributes").PropertyType, new object[] { messageResultSDT.context, "MessageProperty", string.Empty });
+				GxKeyValuePair prop = messageQueueResult.MessageAttributes.GetFirst();
+				while (!messageQueueResult.MessageAttributes.Eof())
+				{
+					if (propertyClassType != null && Activator.CreateInstance(propertyClassType) is GxUserType propertyClassTypeSDT)
+					{
+						propertyClassTypeSDT.SetPropertyValue("Propertykey", prop.Key);
+						propertyClassTypeSDT.SetPropertyValue("Propertyvalue", prop.Value);
+
+						messageResultSDTAttributes.Add(propertyClassTypeSDT);
+						prop = messageQueueResult.MessageAttributes.GetNext();
+					}
+				}
+				messageResultSDT.SetPropertyValue("Messageattributes", messageResultSDTAttributes);
+				return messageResultSDT;
+			}
+			return null;
+		}
+			private static Assembly LoadAssembly(string fileName)
+		{
+			if (File.Exists(fileName))
+			{
+				Assembly assemblyLoaded = Assembly.LoadFrom(fileName);
+				return assemblyLoaded;
+			}
+			else
+				return null;
+		}
+		public GxUserType SendMessage(GxUserType simpleQueueMessage, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		{
+			success = false;
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			GxUserType result = new GxUserType();
 			try
 			{
-				ValidQueue();
-				messageQueueResult = queue.SendMessage(simpleQueueMessage, out success);
+				SimpleQueueMessage queueMessage = TransformGXUserTypeToSimpleQueueMessage(simpleQueueMessage);
+				
+				try
+				{
+					ValidQueue();
+					messageQueueResult = queue.SendMessage(queueMessage, out success);
 
+					LoadAssemblyIfRequired();
+
+					if (TransformMessageQueueResult(messageQueueResult) is GxUserType messageResult)
+						return messageResult;
+					success = true;
+				}
+				catch (Exception ex)
+				{
+					QueueErrorMessagesSetup(ex, out errorMessages);
+					success = false;
+					GXLogging.Error(logger, ex);
+				}
 			}
 			catch (Exception ex)
 			{
-				QueueErrorMessagesSetup(ex, out errorMessages);
 				success = false;
+				GXLogging.Error(logger,ex);
+				throw ex;
 			}
-			return messageQueueResult;
-
+			return result;
 		}
 
-		public IList<MessageQueueResult> SendMessages(IList<SimpleQueueMessage> simpleQueueMessages, MessageQueueOptions messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
-		{
-			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
+		public IList<GxUserType> SendMessages(GXBaseCollection<GxUserType> simpleQueueMessages, GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		{	
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			List<GxUserType> messageResults = new List<GxUserType>();
 			try
 			{
-				ValidQueue();
-				messageQueueResults = queue.SendMessages(simpleQueueMessages, messageQueueOptions, out success);
+				// Load Message Queue Options//
+				MessageQueueOptions options = TransformOptions(messageQueueOptions);
 
+				IList<SimpleQueueMessage> simpleQueueMessagesList = new List<SimpleQueueMessage>();	
+				foreach (GxUserType simpleQueueMessage in simpleQueueMessages)
+				{
+					if (TransformGXUserTypeToSimpleQueueMessage(simpleQueueMessage) is SimpleQueueMessage queueMessage)
+					
+						simpleQueueMessagesList.Add(queueMessage);
+				}
+				try
+				{
+					ValidQueue();
+					IList<MessageQueueResult> messageQueueResults = queue.SendMessages(simpleQueueMessagesList, options, out success);
+
+					LoadAssemblyIfRequired();
+					foreach (MessageQueueResult messageResult in messageQueueResults)
+					{
+						if (TransformMessageQueueResult(messageResult) is GxUserType result)
+							messageResults.Add(result);
+					}
+					success = true;
+					
+				}
+				catch (Exception ex)
+				{
+					QueueErrorMessagesSetup(ex, out errorMessages);
+					success = false;
+					GXLogging.Error(logger, ex);
+				}
 			}
 			catch (Exception ex)
 			{
-				QueueErrorMessagesSetup(ex, out errorMessages);
-				success = false;
+				GXLogging.Error(logger, ex);
+				throw ex;
 			}
-			return messageQueueResults;
+			return messageResults;
 		}
 
 		protected void QueueErrorMessagesSetup(Exception ex, out GXBaseCollection<SdtMessages_Message> errorMessages)
@@ -193,6 +428,7 @@ namespace GeneXus.Messaging.Common
 				}
 				else
 				{
+					GXLogging.Error(logger,"Queue Error", ex);
 					GXUtil.ErrorToMessages("Queue Error", ex, errorMessages);
 				}
 			}
