@@ -715,26 +715,25 @@ namespace GeneXus.Http
 			if (encoding == null)
 				encoding = Encoding.UTF8;
 
-			MediaType mediaType = new MediaType(request.ContentType);
-
-			if (mediaType.IsSubsetOf(URLEncoded))
+			if (!string.IsNullOrEmpty(request.ContentType))
 			{
+				MediaType mediaType = new MediaType(request.ContentType);
 
-				string content = string.Empty;
-				foreach (string key in request.Form.Keys)
+				if (mediaType.IsSubsetOf(URLEncoded))
 				{
-					if (request.Form.TryGetValue(key, out var value))
+					string content = string.Empty;
+					foreach (string key in request.Form.Keys)
 					{
-						content += $"{key}={value}&";
+						if (request.Form.TryGetValue(key, out var value))
+						{
+							content += $"{HttpUtility.UrlEncode(key)}={HttpUtility.UrlEncode(value)}&";
+						}
 					}
+					content = content.TrimEnd('&');
+					return content;
 				}
-				content = content.TrimEnd('&');
-				return content;
 			}
-			else
-			{
-				return (new StreamReader(request.Body, encoding)).ReadToEnd();
-			}
+			return (new StreamReader(request.Body, encoding)).ReadToEnd();
 		}
 #endif
 		public static string GetRawUrl(this HttpRequest request)
