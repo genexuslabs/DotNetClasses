@@ -18,33 +18,26 @@ namespace UnitTesting
 	{
 
 		private IQueue queue;
-	//	private String testFileName = "testresult.txt";
-	//	private String testFilePath;
 
 		public QueueTest(string queueName, Type queueType)
 		{
-			//bool testEnabled = Environment.GetEnvironmentVariable(providerName + "_TEST_ENABLED") == "true";
+			bool testEnabled = Environment.GetEnvironmentVariable("AZUREQUEUE_TEST_ENABLED") == "true";
+			Skip.IfNot(testEnabled, "Environment variables not set");
 
-
-			//Skip.IfNot(testEnabled, "Environment variables not set");
-
-			//bool testEnabled;
 			if (queueName == GeneXus.Messaging.Queue.AzureQueue.Name)
 			{
 				//testEnabled = true;
-				Environment.SetEnvironmentVariable("QUEUE_AZUREQUEUE_QUEUENAME", "gxqueue");
-				Environment.SetEnvironmentVariable("QUEUE_AZUREQUEUE_CONNECTIONSTRING", "DefaultEndpointsProtocol=https;AccountName=storagegx;AccountKey=Wm5glFw1YRqjRyjH5awmTEoEmp41y585QBQCvfDEXxwPdeDWKw7dXY/0b1xR8oWE/mTbQFSXNE89p1l808ZJHA==;EndpointSuffix=core.windows.net");
+				//Environment variables needed here
+				Environment.SetEnvironmentVariable("Queue_AZUREQUEUE_QUEUENAME", "");
+				Environment.SetEnvironmentVariable("Queue_AZUREQUEUE_CONNECTIONSTRING", "");
+
+				queue = (IQueue)Activator.CreateInstance(queueType);
+
+				Assert.NotNull(queue);
 			}
-
-			queue = (IQueue)Activator.CreateInstance(queueType);
-
-			Assert.NotNull(queue);
-
-			//testFilePath = Path.Combine("resources", testFileName).ToString(CultureInfo.InvariantCulture);
-			//File.WriteAllText(testFilePath, "Unit test sample for API Queue");
 		}
 
-		[Fact]
+		[SkippableFact]
 		//Clear the Queue
 		public void TestClearQueue()
 		{
@@ -54,7 +47,7 @@ namespace UnitTesting
 
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestSimpleSendOneMessageMethod()
 		{
 			SimpleQueueMessage simpleQueueMessage = new SimpleQueueMessage();
@@ -70,7 +63,7 @@ namespace UnitTesting
 			Assert.Equal(messageQueueResult.MessageStatus,MessageQueueResultStatus.Sent);
 
 		}
-		[Fact]
+		[SkippableFact]
 		public void TestSimpleGetMessagesMethod()
 		{
 			bool success = false;
@@ -82,7 +75,7 @@ namespace UnitTesting
 			
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestSendMessageOptionsMethod()
 		{
 			System.Diagnostics.Debugger.Launch();
@@ -102,7 +95,7 @@ namespace UnitTesting
 			Assert.Equal(MessageQueueResultStatus.Sent,messageQueueResult.MessageStatus);
 
 		}
-		[Fact]
+		[SkippableFact]
 		public void TestGetMessageOptionsMethod()
 		{
 	
@@ -121,7 +114,7 @@ namespace UnitTesting
 
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestSendMessagesOptionsMethod()
 		{
 
@@ -181,7 +174,7 @@ namespace UnitTesting
 			Assert.True(success);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestGetQueueLength()
 		{
 			bool success = false;
