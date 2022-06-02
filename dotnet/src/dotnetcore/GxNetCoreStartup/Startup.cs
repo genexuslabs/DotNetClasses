@@ -36,6 +36,7 @@ namespace GeneXus.Application
 		const string DEFAULT_PORT = "80";
 		public static void Main(string[] args)
 		{
+			System.Diagnostics.Debugger.Launch();
 			try
 			{
 				string port = DEFAULT_PORT;
