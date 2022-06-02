@@ -19,6 +19,7 @@ namespace GeneXus.Services
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
+		public static string DATA_ACCESS_SERVICE = "DataAccess";
 		public static string SESSION_SERVICE = "Session";
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
 		public static string QUEUE_SERVICE = "QueueService";

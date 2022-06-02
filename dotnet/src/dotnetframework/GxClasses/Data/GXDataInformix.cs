@@ -153,17 +153,17 @@ namespace GeneXus.Data
 		{
 			StringBuilder connectionString = new StringBuilder();
 
-			if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Host"))
+			if (!string.IsNullOrEmpty(datasourceName) && !HasKey(extra, "Host"))
 			{
 				connectionString.AppendFormat("Host={0};", datasourceName);
 				
 			}
-			if (m_serverInstance != null && m_serverInstance.Trim().Length > 0 && !hasKey(extra, "Server"))
+			if (m_serverInstance != null && m_serverInstance.Trim().Length > 0 && !HasKey(extra, "Server"))
 			{
 				connectionString.AppendFormat("Server={0};", m_serverInstance);
 				
 			}
-			if (port != null && port.Trim().Length > 0 && !hasKey(extra, "Service"))
+			if (port != null && port.Trim().Length > 0 && !HasKey(extra, "Service"))
 			{
 				connectionString.AppendFormat("Service={0};", port);
 				
@@ -172,7 +172,7 @@ namespace GeneXus.Data
 			{
 				connectionString.AppendFormat(";User ID={0};Password={1}", userId, userPassword);
 			}
-			if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Database"))
+			if (databaseName != null && databaseName.Trim().Length > 0 && !HasKey(extra, "Database"))
 			{
 				connectionString.AppendFormat(";Database={0}", databaseName);
 			}
@@ -220,7 +220,7 @@ namespace GeneXus.Data
 			}
 		}
 
-		protected override void PrepareCommand(IDbCommand cmd)
+		public override void PrepareCommand(IDbCommand cmd)
 		{
 			
 		}
@@ -450,7 +450,7 @@ namespace GeneXus.Data
 			return ((ICloneable)p).Clone();
 		}
 
-		protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 		}

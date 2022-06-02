@@ -450,7 +450,7 @@ namespace GxClasses.Web.Middleware
 						{
 							object p = JSONHelper.Deserialize<MapGroup>(content);
 							MapGroup m = p as MapGroup;
-							if (m != null)
+							if (m != null && m.Name != null && m.Mappings != null)
 							{
 
 								if (String.IsNullOrEmpty(m.BasePath))

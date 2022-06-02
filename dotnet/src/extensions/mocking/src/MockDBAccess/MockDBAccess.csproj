@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net462</TargetFrameworks>
+		<NoWarn>618;1607;1698</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup  Condition="!$(TargetFramework.StartsWith('net4'))">
+	  <ProjectReference Include="..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+
+	<ItemGroup  Condition="$(TargetFramework.StartsWith('net4'))">
+		<ProjectReference Include="..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+
+</Project>
