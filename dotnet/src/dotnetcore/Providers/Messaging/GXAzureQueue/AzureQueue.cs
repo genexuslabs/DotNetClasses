@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading.Tasks;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using GeneXus.Messaging.Common;
@@ -36,8 +35,12 @@ namespace GeneXus.Messaging.Queue
 			_queueName = serviceSettings.GetEncryptedPropertyValue(QUEUE_NAME);
 			_connectionString = serviceSettings.GetEncryptedPropertyValue(QUEUE_CONNECTION_STRING);
 
-			if (_queueClient == null)
-				_queueClient = new QueueClient(_connectionString, _queueName);
+			QueueClientOptions queueClientOptions = new QueueClientOptions()
+			{
+				MessageEncoding = QueueMessageEncoding.Base64
+			};
+
+			_queueClient = new QueueClient(_connectionString, _queueName, queueClientOptions);
 		}
 
 		QueueClient QueueClient
@@ -65,7 +68,9 @@ namespace GeneXus.Messaging.Queue
 		{
 			try
 			{
-				msg.gxTpr_Description = ex.Message;
+				Azure.RequestFailedException az_ex = (Azure.RequestFailedException)ex;
+				msg.gxTpr_Id = az_ex.ErrorCode;
+				msg.gxTpr_Description = az_ex.Message; 
 				return true;
 			}
 			catch (Exception)
@@ -107,18 +112,6 @@ namespace GeneXus.Messaging.Queue
 			}
 		}
 
-		public Task ClearAsync(out bool success)
-		{
-			success = false;
-			if (_queueClient is QueueClient && _queueClient.Exists())
-			{
-				Task<Azure.Response> result = _queueClient.ClearMessagesAsync();
-				success = !result.Result.IsError;
-				return (result);
-			}
-			return null;
-		}
-
 		/// <summary>
 		/// Permanently removes the first message dequeued.
 		/// </summary>
@@ -156,8 +149,6 @@ namespace GeneXus.Messaging.Queue
 			if (_queueClient is QueueClient && _queueClient.Exists())
 			{
 				QueueProperties properties = _queueClient.GetProperties();
-				int count = properties.ApproximateMessagesCount;
-				//If maxMessages is 0, receive using blocks until count = 0
 
 				QueueMessage[] receivedMessages = _queueClient.ReceiveMessages(messageQueueOptions.MaxNumberOfMessages);
 				Azure.Response deleteResult;
@@ -262,14 +253,11 @@ namespace GeneXus.Messaging.Queue
 						object value;
 						if (prop.GetIndexParameters().Length == 0 && sendReceipt != null)
 						{
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 							value = prop.GetValue(sendReceipt);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 							if (value != null)
 								result.MessageAttributes.Add(prop.Name, value.ToString());
 						}
 					}
-
 					success = true;
 					return result;
 				}
@@ -283,7 +271,7 @@ namespace GeneXus.Messaging.Queue
 			Azure.Response<SendReceipt> sendReceipt;
 			MessageQueueResult queueMessageResult = new MessageQueueResult();
 			if (_queueClient is QueueClient &&  _queueClient.Exists())
-			{ 
+			{
 				sendReceipt =  _queueClient.SendMessage(simpleQueueMessage.MessageBody);
 				if ((sendReceipt != null) && (sendReceipt.Value != null))
 				{
@@ -301,15 +289,12 @@ namespace GeneXus.Messaging.Queue
 					{
 						object value;
 						if (prop.GetIndexParameters().Length == 0 && sendReceipt.Value != null)
-							{
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+						{
 							value = prop.GetValue(sendReceipt.Value);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 							if (value != null)
 								result.MessageAttributes.Add(prop.Name, value.ToString());
-							}
+						}
 					}
-
 					success = true;
 					return result;
 				}	
@@ -338,7 +323,6 @@ namespace GeneXus.Messaging.Queue
 				{
 					sendError = true;
 				}
-
 			}
 			success = !sendError;
 			return messageQueueResults;
@@ -362,9 +346,7 @@ namespace GeneXus.Messaging.Queue
 					object value;
 					if (prop.GetIndexParameters().Length == 0 && queueMessage != null)
 					{
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 						value = prop.GetValue(queueMessage);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 						if (value != null)
 							messageQueueResult.MessageAttributes.Add(prop.Name, value.ToString());
 					}
@@ -389,9 +371,7 @@ namespace GeneXus.Messaging.Queue
 					object value;
 					if (prop.GetIndexParameters().Length == 0 && peekedMessage != null)
 					{
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 						value = prop.GetValue(peekedMessage);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 						if (value != null)
 							simpleQueueMessage.MessageAttributes.Add(prop.Name, value.ToString());
 					}
@@ -416,9 +396,7 @@ namespace GeneXus.Messaging.Queue
 					object value;
 					if (prop.GetIndexParameters().Length == 0 && queueMessage != null)
 					{
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 						value = prop.GetValue(queueMessage);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 						if (value != null)
 							simpleQueueMessage.MessageAttributes.Add(prop.Name, value.ToString());
 					}

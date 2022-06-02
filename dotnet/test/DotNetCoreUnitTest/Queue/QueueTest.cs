@@ -28,8 +28,8 @@ namespace UnitTesting
 			{
 				//testEnabled = true;
 				//Environment variables needed here
-				Environment.SetEnvironmentVariable("Queue_AZUREQUEUE_QUEUENAME", "");
-				Environment.SetEnvironmentVariable("Queue_AZUREQUEUE_CONNECTIONSTRING", "");
+				Environment.SetEnvironmentVariable("QUEUE_AZUREQUEUE_QUEUENAME", "");
+				Environment.SetEnvironmentVariable("QUEUE_AZUREQUEUE_CONNECTIONSTRING", "");
 
 				queue = (IQueue)Activator.CreateInstance(queueType);
 

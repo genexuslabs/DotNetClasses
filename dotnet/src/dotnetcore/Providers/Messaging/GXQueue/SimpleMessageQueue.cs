@@ -362,7 +362,7 @@ namespace GeneXus.Messaging.Common
 			return result;
 		}
 
-		public IList<GxUserType> SendMessages(GXBaseCollection<GxUserType> simpleQueueMessages, GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public IList<GxUserType> SendMessages(IList simpleQueueMessages, GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{	
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			List<GxUserType> messageResults = new List<GxUserType>();

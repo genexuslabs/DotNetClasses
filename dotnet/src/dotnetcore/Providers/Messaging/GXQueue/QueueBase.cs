@@ -26,7 +26,7 @@ namespace GeneXus.Messaging.Common
 				}
 				catch (Exception)
 				{
-					logger.Warn("QUEUE_SERVICE is not activated");
+					GXLogging.Warn(logger, "QUEUE_SERVICE is not activated");
 				}
 			}
 

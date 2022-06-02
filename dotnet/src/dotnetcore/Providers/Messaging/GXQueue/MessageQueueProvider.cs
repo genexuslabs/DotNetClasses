@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GeneXus.Attributes;
 using GeneXus.Encryption;
 using GeneXus.Services;
@@ -33,6 +29,7 @@ namespace GeneXus.Messaging.Common
 			if (string.IsNullOrEmpty(providerTypeName))
 			{
 				GXUtil.ErrorToMessages("Unsupported", "Queue provider cannot be empty", errorMessages);
+				GXLogging.Error(logger, "Queue provider cannot be empty");
 				success = false;
 				return simpleMessageQueue;
 			}
@@ -46,7 +43,7 @@ namespace GeneXus.Messaging.Common
 					providerService.AllowMultiple = false;
 					providerService.Properties = new GXProperties();
 				}
-				preprocess(providerTypeName, properties);
+				Preprocess(providerTypeName, properties);
 
 				GxKeyValuePair prop = properties.GetFirst();
 				while (!properties.Eof())
@@ -56,7 +53,7 @@ namespace GeneXus.Messaging.Common
 				}
 
 				string typeFullName = providerService.ClassName;
-				logger.Debug("Loading Queue provider: " + typeFullName);
+				GXLogging.Debug(logger, "Loading Queue provider: " + typeFullName);
 #if !NETCORE
 				Type type = Type.GetType(typeFullName, true, true);
 #else
@@ -67,8 +64,8 @@ namespace GeneXus.Messaging.Common
 			}
 			catch (Exception ex)
 			{
-				logger.Error("Couldn't connect to Queue provider. ", ex);
-				GXUtil.ErrorToMessages("Queue Error", ex, errorMessages);
+				GXLogging.Error(logger, "Couldn't connect to Queue provider. " + ex.Message);
+				GXUtil.ErrorToMessages("Queue Connection Error", ex, errorMessages);
 				success = false;
 				return simpleMessageQueue;
 			}
@@ -76,7 +73,7 @@ namespace GeneXus.Messaging.Common
 			return (simpleMessageQueue);
 		}
 
-		private static void preprocess(String name, GXProperties properties)
+		private static void Preprocess(String name, GXProperties properties)
 		{
 			string className;
 
@@ -101,7 +98,7 @@ namespace GeneXus.Messaging.Common
 		{
 			String value = properties.Get(prop);
 			if (string.IsNullOrEmpty(value))
-				value = "";
+				value = String.Empty;
 			value = CryptoImpl.Encrypt(value);
 			properties.Set(prop, value);
 		}
