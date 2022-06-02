@@ -78,7 +78,6 @@ namespace UnitTesting
 		[SkippableFact]
 		public void TestSendMessageOptionsMethod()
 		{
-			System.Diagnostics.Debugger.Launch();
 			SimpleQueueMessage simpleQueueMessage = new SimpleQueueMessage();
 			simpleQueueMessage.MessageId = "TestMsgId2";
 			simpleQueueMessage.MessageBody = "This is the message body with options";
