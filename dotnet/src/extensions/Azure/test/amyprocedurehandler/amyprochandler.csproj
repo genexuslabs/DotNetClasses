@@ -8,6 +8,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\GeneXus.Programs.Common\GeneXus.Programs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="amyprochandler.svc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

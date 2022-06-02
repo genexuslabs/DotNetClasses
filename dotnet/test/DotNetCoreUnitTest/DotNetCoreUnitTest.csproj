@@ -12,7 +12,8 @@
 	</PropertyGroup>
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\ConfigMappings\ConfigTest.cs" Link="ConfigMappings\ConfigTest.cs" />		
-	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />		
+	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+		<Compile Include="..\DotNetUnitTest\FileIO\FileSystemTest.cs" Link="FileIO\FileSystemTest.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\Xslt.cs" Link="FileIO\Xslt.cs" />
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3PrivateTest.cs" Link="ExternalProvider\ExternalProviderS3PrivateTest.cs" />		
@@ -48,6 +49,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="iTextSharp" Version="5.5.13.2" />
+		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
@@ -97,6 +99,9 @@
 		</None>
 		<None Update="Document.txt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="log.config">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="MS923.txt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
