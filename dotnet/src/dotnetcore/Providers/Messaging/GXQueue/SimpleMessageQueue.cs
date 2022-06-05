@@ -35,8 +35,8 @@ namespace GeneXus.Messaging.Common
 		{
 			if (queue == null)
 			{
-				GXLogging.Error(logger, "Queue not found");
-				throw new Exception("Queue not found");
+				GXLogging.Error(logger, "Queue was not instantiated.");
+				throw new Exception("Queue was not instantiated.");
 			}
 		}
 
@@ -81,10 +81,9 @@ namespace GeneXus.Messaging.Common
 			{
 				ValidQueue();
 				messageQueueResult = queue.DeleteMessage(out success);
-
+				LoadAssemblyIfRequired();
 				try
 				{ 
-				LoadAssemblyIfRequired();
 				if (messageQueueResult != null && TransformMessageQueueResult(messageQueueResult) is GxUserType result)
 					return result;
 				}
@@ -101,7 +100,7 @@ namespace GeneXus.Messaging.Common
 				GXLogging.Error(logger, ex);
 				success = false;
 			}
-			return messageResult;
+			return TransformMessageQueueResult(messageQueueResult);
 		}
 
 		public IList<GxUserType> DeleteMessages(List<string> messageHandleId, GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
@@ -267,20 +266,23 @@ namespace GeneXus.Messaging.Common
 				simpleMessageSDT.SetPropertyValue("Messagebody", simpleQueueMessage.MessageBody);
 				simpleMessageSDT.SetPropertyValue("Messagehandleid", simpleQueueMessage.MessageHandleId);
 				
-				IList messageResultSDTAttributes = (IList)Activator.CreateInstance(classType.GetProperty("gxTpr_Messageattributes").PropertyType, new object[] { simpleMessageSDT.context, "MessageProperty", string.Empty });	
-				GxKeyValuePair prop = simpleQueueMessage.MessageAttributes.GetFirst();
-				while (!simpleQueueMessage.MessageAttributes.Eof())
-				{
-					if (propertyClassType != null && Activator.CreateInstance(propertyClassType) is GxUserType propertyClassTypeSDT)
+				IList messageResultSDTAttributes = (IList)Activator.CreateInstance(classType.GetProperty("gxTpr_Messageattributes").PropertyType, new object[] { simpleMessageSDT.context, "MessageProperty", string.Empty });
+
+				if ((simpleQueueMessage != null) && (simpleQueueMessage.MessageAttributes != null))
+				{ 
+					GxKeyValuePair prop = simpleQueueMessage.MessageAttributes.GetFirst();
+					while (!simpleQueueMessage.MessageAttributes.Eof())
 					{
-						propertyClassTypeSDT.SetPropertyValue("Propertykey", prop.Key);
-						propertyClassTypeSDT.SetPropertyValue("Propertyvalue", prop.Value);
-						messageResultSDTAttributes.Add(propertyClassTypeSDT);
-						prop = simpleQueueMessage.MessageAttributes.GetNext();
+						if (propertyClassType != null && Activator.CreateInstance(propertyClassType) is GxUserType propertyClassTypeSDT)
+						{
+							propertyClassTypeSDT.SetPropertyValue("Propertykey", prop.Key);
+							propertyClassTypeSDT.SetPropertyValue("Propertyvalue", prop.Value);
+							messageResultSDTAttributes.Add(propertyClassTypeSDT);
+							prop = simpleQueueMessage.MessageAttributes.GetNext();
+						}
 					}
+					simpleMessageSDT.SetPropertyValue("Messageattributes", messageResultSDTAttributes);
 				}
-				simpleMessageSDT.SetPropertyValue("Messageattributes", messageResultSDTAttributes);
-				
 				return simpleMessageSDT;
 			}
 			return null;
@@ -298,19 +300,23 @@ namespace GeneXus.Messaging.Common
 				messageResultSDT.SetPropertyValue("Messagestatus", messageQueueResult.MessageStatus);
 
 				IList messageResultSDTAttributes = (IList)Activator.CreateInstance(classType.GetProperty("gxTpr_Messageattributes").PropertyType, new object[] { messageResultSDT.context, "MessageProperty", string.Empty });
-				GxKeyValuePair prop = messageQueueResult.MessageAttributes.GetFirst();
-				while (!messageQueueResult.MessageAttributes.Eof())
-				{
-					if (propertyClassType != null && Activator.CreateInstance(propertyClassType) is GxUserType propertyClassTypeSDT)
+				GxKeyValuePair prop;
+				if ((messageQueueResult != null) && (messageQueueResult.MessageAttributes != null))
+				{ 
+					prop = messageQueueResult.MessageAttributes.GetFirst();
+					while (!messageQueueResult.MessageAttributes.Eof())
 					{
-						propertyClassTypeSDT.SetPropertyValue("Propertykey", prop.Key);
-						propertyClassTypeSDT.SetPropertyValue("Propertyvalue", prop.Value);
+						if (propertyClassType != null && Activator.CreateInstance(propertyClassType) is GxUserType propertyClassTypeSDT)
+						{
+							propertyClassTypeSDT.SetPropertyValue("Propertykey", prop.Key);
+							propertyClassTypeSDT.SetPropertyValue("Propertyvalue", prop.Value);
 
-						messageResultSDTAttributes.Add(propertyClassTypeSDT);
-						prop = messageQueueResult.MessageAttributes.GetNext();
+							messageResultSDTAttributes.Add(propertyClassTypeSDT);
+							prop = messageQueueResult.MessageAttributes.GetNext();
+						}
 					}
+					messageResultSDT.SetPropertyValue("Messageattributes", messageResultSDTAttributes);
 				}
-				messageResultSDT.SetPropertyValue("Messageattributes", messageResultSDTAttributes);
 				return messageResultSDT;
 			}
 			return null;
@@ -334,13 +340,11 @@ namespace GeneXus.Messaging.Common
 			try
 			{
 				SimpleQueueMessage queueMessage = TransformGXUserTypeToSimpleQueueMessage(simpleQueueMessage);
-				
+				LoadAssemblyIfRequired();
 				try
 				{
 					ValidQueue();
 					messageQueueResult = queue.SendMessage(queueMessage, out success);
-
-					LoadAssemblyIfRequired();
 
 					if (TransformMessageQueueResult(messageQueueResult) is GxUserType messageResult)
 						return messageResult;
@@ -359,7 +363,8 @@ namespace GeneXus.Messaging.Common
 				GXLogging.Error(logger,ex);
 				throw ex;
 			}
-			return result;
+
+			return TransformMessageQueueResult(messageQueueResult);
 		}
 
 		public IList<GxUserType> SendMessages(IList simpleQueueMessages, GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
@@ -370,19 +375,17 @@ namespace GeneXus.Messaging.Common
 			{
 				// Load Message Queue Options//
 				MessageQueueOptions options = TransformOptions(messageQueueOptions);
-
+				
 				IList<SimpleQueueMessage> simpleQueueMessagesList = new List<SimpleQueueMessage>();	
 				foreach (GxUserType simpleQueueMessage in simpleQueueMessages)
 				{
-					if (TransformGXUserTypeToSimpleQueueMessage(simpleQueueMessage) is SimpleQueueMessage queueMessage)
-					
+					if (TransformGXUserTypeToSimpleQueueMessage(simpleQueueMessage) is SimpleQueueMessage queueMessage)		
 						simpleQueueMessagesList.Add(queueMessage);
 				}
 				try
 				{
 					ValidQueue();
 					IList<MessageQueueResult> messageQueueResults = queue.SendMessages(simpleQueueMessagesList, options, out success);
-
 					LoadAssemblyIfRequired();
 					foreach (MessageQueueResult messageResult in messageQueueResults)
 					{
@@ -428,8 +431,8 @@ namespace GeneXus.Messaging.Common
 				}
 				else
 				{
-					GXLogging.Error(logger,"Queue Error", ex);
-					GXUtil.ErrorToMessages("Queue Error", ex, errorMessages);
+					GXLogging.Error(logger, "(GXQueue1002)Queue Error", ex);
+					GXUtil.ErrorToMessages("GXQueue1002", ex, errorMessages);
 				}
 			}
 		}

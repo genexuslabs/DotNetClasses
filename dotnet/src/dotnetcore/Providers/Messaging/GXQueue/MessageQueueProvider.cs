@@ -28,8 +28,8 @@ namespace GeneXus.Messaging.Common
 			SimpleMessageQueue simpleMessageQueue = new SimpleMessageQueue();
 			if (string.IsNullOrEmpty(providerTypeName))
 			{
-				GXUtil.ErrorToMessages("Unsupported", "Queue provider cannot be empty", errorMessages);
-				GXLogging.Error(logger, "Queue provider cannot be empty");
+				GXUtil.ErrorToMessages("GXQueue1000", "Queue provider cannot be empty", errorMessages);
+				GXLogging.Error(logger, "(GXQueue1000)Failed to Connect to a queue : Queue provider cannot be empty.");
 				success = false;
 				return simpleMessageQueue;
 			}
@@ -64,8 +64,8 @@ namespace GeneXus.Messaging.Common
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(logger, "Couldn't connect to Queue provider. " + ex.Message);
-				GXUtil.ErrorToMessages("Queue Connection Error", ex, errorMessages);
+				GXLogging.Error(logger, "(GXQueue1001)Couldn't connect to Queue provider: " + ExceptionExtensions.GetInnermostException(ex));
+				GXUtil.ErrorToMessages("GXQueue1001", ex, errorMessages);
 				success = false;
 				return simpleMessageQueue;
 			}
@@ -90,7 +90,7 @@ namespace GeneXus.Messaging.Common
 					break;
 
 				default:
-					throw new SystemException(string.Format("Provider {0} is not supported", name));
+					throw new SystemException(string.Format("Provider {0} is not supported.", name));
 
 			}
 		}
@@ -103,5 +103,21 @@ namespace GeneXus.Messaging.Common
 			properties.Set(prop, value);
 		}
 
+	}
+	public static class ExceptionExtensions
+	{
+		public static string GetInnermostException(Exception e)
+		{
+			Exception ex = e;
+			if (ex != null)
+			{ 
+				while (ex.InnerException != null)
+				{
+					ex = ex.InnerException;
+				}
+				
+			}
+			return ex.Message;
+		}
 	}
 }
