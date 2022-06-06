@@ -88,10 +88,20 @@ namespace GeneXus.Messaging.Common
 						providerService.ClassName = "GeneXus.Messaging.Queue.AzureQueue, GXAzureQueue, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
 					}
 					break;
+				case "AWS_SQS":
+					className = "GeneXus.Messaging.Queue.AWSQueue";
+					SetEncryptedProperty(properties, "QUEUE_AWSSQS_QUEUE_URL");
+					SetEncryptedProperty(properties, "QUEUE_AWSSQS_ACCESS_KEY");
+					SetEncryptedProperty(properties, "QUEUE_AWSSQS_SECRET_KEY");
+					SetEncryptedProperty(properties, "QUEUE_AWSSQS_REGION");
+					if (string.IsNullOrEmpty(providerService.ClassName) || !providerService.ClassName.Contains(className))
+					{
+						providerService.ClassName = "GeneXus.Messaging.Queue.AWSQueue, GXAmazonSQS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
+					}
+					break;
 
 				default:
 					throw new SystemException(string.Format("Provider {0} is not supported.", name));
-
 			}
 		}
 		private static void SetEncryptedProperty(GXProperties properties, String prop)
