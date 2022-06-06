@@ -112,6 +112,9 @@ namespace GeneXus.Messaging.Common
 		public int WaitTimeout { get; set; }
 		public int VisibilityTimeout { get; set; }
 		public int TimetoLive { get; set; }
+		public int DelaySeconds { get; set; }
+		public string ReceiveRequestAttemptId { get; set; }
+		public bool ReceiveMessageAttributes { get; set; }
 
 	}
 
