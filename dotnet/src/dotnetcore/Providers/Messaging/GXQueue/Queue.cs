@@ -53,7 +53,6 @@ namespace GeneXus.Messaging.Common
 			AddObjectProperty("MessageId", MessageId, false);
 			AddObjectProperty("MessageBody", MessageBody, false);
 			AddObjectProperty("MessageHandleId", MessageHandleId, false);
-			//Properties?
 			return;
 		}
 
@@ -92,13 +91,7 @@ namespace GeneXus.Messaging.Common
 			AddObjectProperty("ServerMessageId", ServerMessageId, false);
 			AddObjectProperty("MessageHandleId", MessageHandleId, false);
 			AddObjectProperty("MessageStatus", MessageStatus, false);
-			//GxKeyValuePair prop = MessageAttributes.GetFirst();
-			//while (!MessageAttributes.Eof())
-			//{
-				//AddObjectProperty("MessageStatus", MessageStatus, false);
-				
-				//prop = MessageAttributes.GetNext();
-		//	}
+			
 			return;
 		}
 

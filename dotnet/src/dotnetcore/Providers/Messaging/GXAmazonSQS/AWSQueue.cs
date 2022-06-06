@@ -281,14 +281,7 @@ namespace GeneXus.Messaging.Queue
 			}
 			catch (AggregateException ae)
 			{
-
 				throw ae;
-				//foreach (var ex in ae.InnerExceptions)
-				//{
-					//Console.WriteLine("{0}: {1}", ex.GetType().Name, ex.Message);
-					//mlogger.LogCritical(ex.Message);
-
-				//}
 			}
 			return messageQueueResults;
 		}
@@ -416,7 +409,7 @@ namespace GeneXus.Messaging.Queue
 					string mesageGroupId = messageAttributes.Get(MESSSAGE_GROUP_ID);
 					string messageDeduplicationId = messageAttributes.Get(MESSSAGE_DEDUPLICATION_ID);
 
-					if ((mesageGroupId != null) && (mesageGroupId != null))
+					if ((mesageGroupId != null) && (messageDeduplicationId != null))
 					{
 						sendMessageRequest.MessageGroupId = mesageGroupId;
 						sendMessageRequest.MessageDeduplicationId = messageDeduplicationId;
