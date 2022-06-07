@@ -19,6 +19,42 @@ namespace Extensions.AzureFunctions.Test
 	public class HttpTriggerTest
 	{
 		[Fact]
+		public void HttpApiObjectTest()
+		{
+			try
+			{
+				ServiceCollection serviceCollection = new ServiceCollection();
+				serviceCollection.AddScoped<ILoggerFactory, LoggerFactory>();
+				ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+
+				Mock<FunctionContext> context = new Mock<FunctionContext>();
+				context.SetupProperty(c => c.InstanceServices, serviceProvider);
+
+				context.SetupGet(c => c.FunctionId).Returns("6202c88748614a51851a40fa6a4366e6");
+				context.SetupGet(c => c.FunctionDefinition.Name).Returns("timerTest");
+				context.SetupGet(c => c.InvocationId).Returns("6a871dbc3cb74a9fa95f05ae63505c2c");
+
+				MockHttpRequestData request = new MockHttpRequestData(
+								context.Object,
+								new Uri("http://localhost/apiattractions/listattractions"));
+
+				HttpTriggerHandler function = new HttpTriggerHandler(new GXRouting(String.Empty), null);
+				HttpResponseData response = function.Run(request, context.Object);
+				Assert.NotNull(response);
+				Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+				response.Body.Seek(0, SeekOrigin.Begin);
+				StreamReader reader = new StreamReader(response.Body);
+				string responseBody = reader.ReadToEnd();
+				Assert.NotEmpty(responseBody);
+
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Exception should not be thrown.", ex);
+			}
+
+		}
+		[Fact]
 		public void HttpTest()
 		{			
 			try
