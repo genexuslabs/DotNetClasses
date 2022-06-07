@@ -105,17 +105,27 @@ namespace GeneXus.Application
 					inputParameters.Add(methodParameter);
 				}
 			}
-			if (inputParameters.Count == 1 && bodyParameters.Count>1)
+			if (inputParameters.Count == 1)
 			{
 				ParameterInfo pInfo = inputParameters[0];
-				if (pInfo.ParameterType.IsSubclassOf(typeof(GxUserType)))
+				if (pInfo.ParameterType.IsSubclassOf(typeof(GxUserType)) && bodyParameters.Count > 1)
 				{
-					var gxParameterName = GxParameterName(pInfo.Name).ToLower();
-					Dictionary<string, object> parameters = new Dictionary<string,object>();
-					JObject jparms  = new JObject(bodyParameters);
+					string gxParameterName = GxParameterName(pInfo.Name).ToLower();
+					Dictionary<string, object> parameters = new Dictionary<string, object>();
+					JObject jparms = new JObject(bodyParameters);
 					parameters.Add(gxParameterName, jparms);
-					return parameters;			
+					return parameters;
+
 				}
+				if ( (pInfo.ParameterType.Name.StartsWith("GXBaseCollection") || pInfo.ParameterType.Name.StartsWith("GXSimpleCollection"))
+					  &&  bodyParameters.Count == 1 && bodyParameters.ContainsKey(string.Empty) && bodyParameters[string.Empty] is JArray)
+				{
+					string gxParameterName = GxParameterName(pInfo.Name).ToLower();
+					Dictionary<string, object> parameters = new Dictionary<string, object>();
+					parameters.Add(gxParameterName, bodyParameters[string.Empty]);
+					return parameters;
+				}
+				
 			}
 			return bodyParameters;
 		}
