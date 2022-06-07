@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\GeneXus.Programs.Common\GeneXus.Programs.Common.csproj" />
+  </ItemGroup>
+
+</Project>
