@@ -31,12 +31,12 @@ namespace Extensions.AzureFunctions.Test
 				context.SetupProperty(c => c.InstanceServices, serviceProvider);
 
 				context.SetupGet(c => c.FunctionId).Returns("6202c88748614a51851a40fa6a4366e6");
-				context.SetupGet(c => c.FunctionDefinition.Name).Returns("timerTest");
+				context.SetupGet(c => c.FunctionDefinition.Name).Returns("apiattractions");
 				context.SetupGet(c => c.InvocationId).Returns("6a871dbc3cb74a9fa95f05ae63505c2c");
 
 				MockHttpRequestData request = new MockHttpRequestData(
 								context.Object,
-								new Uri("http://localhost/apiattractions/listattractions"));
+								new Uri("http://localhost/APIAttractions/ListAttractions"));
 
 				HttpTriggerHandler function = new HttpTriggerHandler(new GXRouting(String.Empty), null);
 				HttpResponseData response = function.Run(request, context.Object);
