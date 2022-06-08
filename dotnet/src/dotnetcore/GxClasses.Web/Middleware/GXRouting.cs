@@ -188,7 +188,8 @@ namespace GxClasses.Web.Middleware
 
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
-				if (path.Contains($"/{restBaseURL}") || ServiceInPath(path, out actualPath) || (AzureRuntime && path.Contains(oauthRoute)))
+				bool isServiceInPath = ServiceInPath(path, out actualPath);
+				if (path.Contains($"/{restBaseURL}") || isServiceInPath || (AzureRuntime && path.Contains(oauthRoute)))
 				{
 					string controllerWithParms = string.Empty;
 					if (!AzureRuntime)
