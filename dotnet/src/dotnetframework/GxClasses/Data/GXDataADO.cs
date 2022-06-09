@@ -863,6 +863,11 @@ namespace GeneXus.Data.ADO
                 m_dataRecord.IsolationLevelTrn = IsolationLevel.Serializable;
                 GXLogging.Debug(log, "Setting IsolationLevel : Serializable  " + ((int)m_dataRecord.IsolationLevelTrn));
             }
+			else if (level == 4)
+			{
+				m_dataRecord.IsolationLevelTrn = IsolationLevel.RepeatableRead;
+				GXLogging.Debug(log, "Setting IsolationLevel : Repeatable Read  " + ((int)m_dataRecord.IsolationLevelTrn));
+			}
 			else
 			{
 				m_dataRecord.IsolationLevelTrn = IsolationLevel.ReadUncommitted;
@@ -2638,6 +2643,10 @@ namespace GeneXus.Data.ADO
 			{ 
                 isoLevelNum = 3;
             }
+			else if (Config.GetValueOf(ds, "Connection-" + id + "-IsolationLevel", out isolevel) && isolevel.ToUpper() == "RR")
+			{
+				isoLevelNum = 4;
+			}
 			else if (Config.GetValueOf("ISOLATION_LEVEL", out isolevel) && isolevel.ToUpper() == "CR") 
 			{
 				isoLevelNum = 2;
@@ -2645,6 +2654,10 @@ namespace GeneXus.Data.ADO
 			else if (Config.GetValueOf("ISOLATION_LEVEL", out isolevel) && isolevel.ToUpper() == "SE")
 			{
 				isoLevelNum = 3;
+			}
+			else if (Config.GetValueOf("ISOLATION_LEVEL", out isolevel) && isolevel.ToUpper() == "RR")
+			{
+				isoLevelNum = 4;
 			}
 
 			connection.SetIsolationLevel(isoLevelNum);
