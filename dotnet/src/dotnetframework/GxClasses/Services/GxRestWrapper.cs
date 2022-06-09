@@ -130,7 +130,8 @@ namespace GeneXus.Application
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-				}
+					bodyParameters = PreProcessApiSdtParameter(_procWorker, innerMethod, bodyParameters, this._variableAlias);
+				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);
 				wrapped = GetWrappedStatus(_procWorker ,wrapped, outputParameters, outputParameters.Count);				
@@ -181,6 +182,12 @@ namespace GeneXus.Application
 #else
 			return ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
+		}
+
+		private Dictionary<string, object> PreProcessApiSdtParameter(GXProcedure procWorker, string innerMethod,
+				Dictionary<string,object> bodyParameters, Dictionary<string, string> varAlias)
+		{
+			return ReflectionHelper.GetWrappedParameter(procWorker, innerMethod, bodyParameters);
 		}
 		private string PreProcessReplicatorParameteres(GXProcedure procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
 		{

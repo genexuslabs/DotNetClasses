@@ -7,14 +7,15 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using GeneXus.Utils;
 using System.Linq;
+using Jayrock.Json;
 
 using Type = System.Type;
 
 namespace GeneXus.Application
 {
 	public class ReflectionHelper
-    {
-		const string ISO_8601_TIME_SEPARATOR= "T";
+	{
+		const string ISO_8601_TIME_SEPARATOR = "T";
 		const string ISO_8601_TIME_SEPARATOR_1 = ":";
 		public static void CallBCMethod(object instance, String methodName, IList<string> inParametersValues)
 		{
@@ -42,7 +43,8 @@ namespace GeneXus.Application
 			MethodInfo methodInfo = instanceType.GetMethod(memberInfo.Name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 			return CallMethodImpl(instance, methodInfo, parameters, context);
 		}
-		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context=null)
+
+		public static Dictionary<string, object> CallMethod(object instance, String methodName, IDictionary<string, object> parameters, IGxContext context = null)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 			return CallMethodImpl(instance, methodInfo, parameters, context);
@@ -65,6 +67,43 @@ namespace GeneXus.Application
 				}
 			}
 			return false;
+		}
+
+		public static Dictionary<string, object> GetWrappedParameter(object instance, String methodName, Dictionary<string, object> bodyParameters)
+		{			
+			MethodInfo methodInfo = instance.GetType().GetMethod(methodName);
+			var methodParameters = methodInfo.GetParameters();
+			List<ParameterInfo> inputParameters = new List<ParameterInfo>();
+			foreach (var methodParameter in methodParameters)
+			{
+				if (!methodParameter.IsOut)
+				{
+					inputParameters.Add(methodParameter);
+				}
+			}
+			if (inputParameters.Count == 1)
+			{
+				ParameterInfo pInfo = inputParameters[0];
+				if (pInfo.ParameterType.IsSubclassOf(typeof(GxUserType)) && bodyParameters.Count > 1)
+				{
+					string gxParameterName = GxParameterName(pInfo.Name).ToLower();
+					Dictionary<string, object> parameters = new Dictionary<string, object>();
+					JObject jparms = new JObject(bodyParameters);
+					parameters.Add(gxParameterName, jparms);
+					return parameters;
+
+				}
+				if ( (pInfo.ParameterType.Name.StartsWith("GXBaseCollection") || pInfo.ParameterType.Name.StartsWith("GXSimpleCollection"))
+					  &&  bodyParameters.Count == 1 && bodyParameters.ContainsKey(string.Empty) && bodyParameters[string.Empty] is JArray)
+				{
+					string gxParameterName = GxParameterName(pInfo.Name).ToLower();
+					Dictionary<string, object> parameters = new Dictionary<string, object>();
+					parameters.Add(gxParameterName, bodyParameters[string.Empty]);
+					return parameters;
+				}
+				
+			}
+			return bodyParameters;
 		}
 
 		private static object ConvertSingleJsonItem(object value, Type newType, IGxContext context)
