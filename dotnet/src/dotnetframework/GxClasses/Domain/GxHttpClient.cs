@@ -579,11 +579,7 @@ namespace GeneXus.Http.Client
 		}
 		void AddHeader(HttpRequestHeaders headers, string headerName, string headerValue)
 		{
-#if NETCORE
-			headers.Add(headerName, headerValue);
-#else
 			headers.TryAddWithoutValidation(headerName, headerValue);
-#endif
 		}
 		void InferContentType(string contentType, HttpRequestMessage req)
 		{
