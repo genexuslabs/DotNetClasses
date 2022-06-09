@@ -522,7 +522,7 @@ namespace GeneXus.Http.Client
 						contentHeaders.ContentType = MediaTypeHeaderValue.Parse(_headers[i].ToString());
 						break;
 					case "ACCEPT":
-						headers.Add("Accept", _headers[i]);
+						AddHeader(headers, "Accept", _headers[i]);
 						break;
 					case "EXPECT":
 						if (string.IsNullOrEmpty(_headers[i]))
@@ -534,7 +534,7 @@ namespace GeneXus.Http.Client
 						headers.Referrer = new Uri(_headers[i]);
 						break;
 					case "USER-AGENT":
-						headers.Add("User-Agent", _headers[i]);
+						AddHeader(headers, "User-Agent", _headers[i]);
 						break;
 					case "DATE":
 						DateTime value;
@@ -544,7 +544,7 @@ namespace GeneXus.Http.Client
 						}
 						else
 						{
-							headers.Add(currHeader, _headers[i]);
+							AddHeader(headers, currHeader, _headers[i]);
 						}
 						break;
 					case "COOKIE":
@@ -563,7 +563,7 @@ namespace GeneXus.Http.Client
 							request.Headers.IfModifiedSince = dt;
 						break;
 					default:
-						headers.Add(currHeader, _headers[i]);
+						AddHeader(headers, currHeader, _headers[i]);
 						break;
 				}
 			}
@@ -576,6 +576,14 @@ namespace GeneXus.Http.Client
 					headers.ConnectionClose = false;
 			}
 			InferContentType(contentType, request);
+		}
+		void AddHeader(HttpRequestHeaders headers, string headerName, string headerValue)
+		{
+#if NETCORE
+			headers.Add(headerName, headerValue);
+#else
+			headers.TryAddWithoutValidation(headerName, headerValue);
+#endif
 		}
 		void InferContentType(string contentType, HttpRequestMessage req)
 		{
