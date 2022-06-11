@@ -85,7 +85,7 @@ namespace GeneXus.Messaging.Queue
 			if (!string.IsNullOrEmpty(propertyName))
 			{
 				value = Environment.GetEnvironmentVariable(propertyName);
-				if (service != null)
+				if (service != null && value == null)
 				{
 					value = service.Properties.Get(propertyName);
 				}
