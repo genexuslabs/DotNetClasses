@@ -1,6 +1,9 @@
+using GeneXus.Diagnostics;
+using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.Utils;
 using Jayrock.Json;
+using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;
 #endif
@@ -12,6 +15,7 @@ namespace GeneXus.Application
 
 	public class GXBaseObject
 	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXBaseObject));
 		private Dictionary<string, string> callTargetsByObject = new Dictionary<string, string>();
 		protected IGxContext _Context;
 		public virtual IGxContext context
@@ -102,7 +106,45 @@ namespace GeneXus.Application
 		{
 			return GXUtil.UrlEncode(s);
 		}
+		protected string GetEncryptedHash(string value, string key)
+		{
+			return Encrypt64(GXUtil.GetHash(GeneXus.Web.Security.WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
+		}
 
+		protected string Encrypt64(string value, string key)
+		{
+			string sRet = string.Empty;
+			try
+			{
+				sRet = Crypto.Encrypt64(value, key);
+			}
+			catch (InvalidKeyException)
+			{
+				GXLogging.Error(log, "440 Invalid encryption key");
+			}
+			return sRet;
+		}
+		protected string UriEncrypt64(string value, string key)
+		{
+			return Encrypt64(value, key);
+		}
+
+		protected string Decrypt64(string value, string key)
+		{
+			String sRet = string.Empty;
+			try
+			{
+				sRet = Crypto.Decrypt64(value, key);
+			}
+			catch (InvalidKeyException)
+			{
+				GXLogging.Error(log, "440 Invalid encryption key");
+			}
+			return sRet;
+		}
+		protected string UriDecrypt64(string value, string key)
+		{
+			return Decrypt64(value, key);
+		}
 	}
-
 }

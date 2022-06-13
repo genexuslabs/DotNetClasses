@@ -107,38 +107,6 @@ namespace GeneXus.Procedure
 		protected virtual void printHeaders(){}
 		protected virtual void printFooters(){}
 
-        protected string GetEncryptedHash(string value, string key)
-        {
-            return Encrypt64(GXUtil.GetHash(GeneXus.Web.Security.WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
-        }
-
-        protected String Encrypt64(String value, String key)
-        {
-            String sRet = "";
-            try
-            {
-                sRet = Crypto.Encrypt64(value, key);
-            }
-            catch (InvalidKeyException)
-            {
-                GXLogging.Error(log, "440 Invalid encryption key");
-            }
-            return sRet;
-        }
-
-        protected String Decrypt64(String value, String key)
-        {
-            String sRet = "";
-            try
-            {
-                sRet = Crypto.Decrypt64(value, key);
-            }
-            catch (InvalidKeyException)
-            {
-                GXLogging.Error(log, "440 Invalid encryption key");
-            }
-            return sRet;
-        }
 		public msglist GX_msglist 
 		{
 			get	{ return context.GX_msglist ; }
