@@ -1383,6 +1383,7 @@ namespace GeneXus.Http
 				sendSpaHeaders();
 			}
 		}
+#if !NETCORE
 
 		protected string GetEncryptedHash(string value, string key)
 		{
@@ -1435,7 +1436,7 @@ namespace GeneXus.Http
 		{
 			return Decrypt64(value, key, true);
 		}
-
+#endif
 		protected string DecryptAjaxCall(string encrypted)
 		{
 			this.validEncryptedParm = false;
