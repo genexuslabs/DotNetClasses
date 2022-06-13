@@ -1,6 +1,9 @@
+using GeneXus.Diagnostics;
+using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.Utils;
 using Jayrock.Json;
+using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;
 #endif
@@ -12,6 +15,7 @@ namespace GeneXus.Application
 
 	public class GXBaseObject
 	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXBaseObject));
 		private Dictionary<string, string> callTargetsByObject = new Dictionary<string, string>();
 		protected IGxContext _Context;
 		bool _isMain;
@@ -21,7 +25,7 @@ namespace GeneXus.Application
 		{
 			set { _Context = value; }
 			get { return _Context; }
-			
+
 		}
 		public bool IsMain
 		{
@@ -120,7 +124,53 @@ namespace GeneXus.Application
 		{
 			return GXUtil.UrlEncode(s);
 		}
+		protected string GetEncryptedHash(string value, string key)
+		{
+			return Encrypt64(GXUtil.GetHash(GeneXus.Web.Security.WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm), key);
+		}
 
+		protected string Encrypt64(string value, string key)
+		{
+			return Encrypt64(value, key, false);
+		}
+		private string Encrypt64(string value, string key, bool safeEncoding)
+		{
+			string sRet = string.Empty;
+			try
+			{
+				sRet = Crypto.Encrypt64(value, key, safeEncoding);
+			}
+			catch (InvalidKeyException)
+			{
+				GXLogging.Error(log, "440 Invalid encryption key");
+			}
+			return sRet;
+		}
+		protected string UriEncrypt64(string value, string key)
+		{
+			return Encrypt64(value, key, true);
+		}
+
+		protected string Decrypt64(string value, string key)
+		{
+			return Decrypt64(value, key, false);
+		}
+		private string Decrypt64(string value, string key, bool safeEncoding)
+		{
+			String sRet = string.Empty;
+			try
+			{
+				sRet = Crypto.Decrypt64(value, key, safeEncoding);
+			}
+			catch (InvalidKeyException)
+			{
+				GXLogging.Error(log, "440 Invalid encryption key");
+			}
+			return sRet;
+		}
+		protected string UriDecrypt64(string value, string key)
+		{
+			return Decrypt64(value, key, true);
+		}
 	}
-
 }
