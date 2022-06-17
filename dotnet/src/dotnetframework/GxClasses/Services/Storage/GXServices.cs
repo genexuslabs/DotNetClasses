@@ -47,10 +47,6 @@ namespace GeneXus.Services
 				}
 				return s_instance;
 			}
-			internal set
-			{
-				s_instance=value;
-			}
 		}
 
 		public static void LoadFromFile(string fileName, ref GXServices services)
