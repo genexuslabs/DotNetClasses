@@ -40,11 +40,18 @@ namespace GeneXus.Messaging.Queue
 		public AWSQueue(GXService providerService) : base(providerService)
 		{
 			Initialize(providerService);
-
-			BasicAWSCredentials basicCredentials = new BasicAWSCredentials(_accessKey, _secret);
+			BasicAWSCredentials basicCredentials;
 			RegionEndpoint region = RegionEndpoint.GetBySystemName(_awsregion);
 
-			_sqsClient = new AmazonSQSClient(basicCredentials, region);
+			if ((_accessKey != null) && (_secret != null))
+			{ 
+				basicCredentials = new BasicAWSCredentials(_accessKey, _secret);
+				_sqsClient = new AmazonSQSClient(basicCredentials, region);
+			}
+			else //Use IAM Role
+			{
+				_sqsClient = new AmazonSQSClient(region);
+			}
 		}
 
 		private void Initialize(GXService providerService)
@@ -74,35 +81,32 @@ namespace GeneXus.Messaging.Queue
 			}
 		}
 
-		public MessageQueueResult DeleteMessage(out bool success)
+		public MessageQueueResult DeleteMessage(string messageHandleId, out bool success)
 		{
 			success= false;
-			IList<SimpleQueueMessage> simpleQueueMessages = GetMessages(out bool isOK);
-			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
-			List<string> messageHandleId;
-			if ((simpleQueueMessages != null) && (isOK))
+			
+			List<string> messageHandleIdToDelete = new List<string>{ messageHandleId };
+			IList<MessageQueueResult> messageQueueResults = RemoveMessages(messageHandleIdToDelete, out bool operationOK);
+			if ((operationOK) && (messageQueueResults != null))
 			{ 
-				messageHandleId = new List<string>{ simpleQueueMessages[0].MessageHandleId };
-				messageQueueResults = RemoveMessages(messageHandleId, out bool operationOK);
-				if ((operationOK) && (messageQueueResults != null))
-					messageQueueResult = messageQueueResults[0];
+				messageQueueResult = messageQueueResults[0];
 				success= true;
 			}
 			return messageQueueResult;
 		}
 
-		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, MessageQueueOptions messageQueueOptions, out bool success)
+		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, out bool success)
 		{
-			return RemoveMessages(messageHandleId, out success, messageQueueOptions);
+			return RemoveMessages(messageHandleId, out success);
 		}
-		private IList<MessageQueueResult> RemoveMessages(List<string> messageHandleId, out bool success, MessageQueueOptions messageQueueOptions= null)
+		private IList<MessageQueueResult> RemoveMessages(List<string> messageHandleId, out bool success)
 		{
 			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
 			success = false;
 			try
 			{
-				Task<DeleteMessageBatchResponse> task = Task.Run<DeleteMessageBatchResponse>(async () => await DeleteQueueMessageBatchAsync(messageHandleId,messageQueueOptions));
+				Task<DeleteMessageBatchResponse> task = Task.Run<DeleteMessageBatchResponse>(async () => await DeleteQueueMessageBatchAsync(messageHandleId));
 
 				DeleteMessageBatchResponse deleteMessageBatchResponse = task.Result;
 				if (deleteMessageBatchResponse != null)
@@ -126,21 +130,6 @@ namespace GeneXus.Messaging.Queue
 				throw ae;
 			}
 			return messageQueueResults;
-		}
-
-		public bool GetMessageFromException(Exception ex, SdtMessages_Message msg)
-		{
-			try
-			{
-				AmazonSQSException sqs_ex = (AmazonSQSException)ex;
-				msg.gxTpr_Id = sqs_ex.ErrorCode;
-				msg.gxTpr_Description = sqs_ex.Message;
-				return true;
-			}
-			catch (Exception)
-			{
-				return false;
-			}
 		}
 
 		public IList<SimpleQueueMessage> GetMessages(out bool success)
@@ -180,11 +169,6 @@ namespace GeneXus.Messaging.Queue
 			return simpleQueueMessages;
 		}
 
-		public override string GetName()
-		{
-			return Name;
-		}
-
 		public int GetQueueLength(out bool success)
 		{
 			int approxNumberMessages = 0;
@@ -212,45 +196,58 @@ namespace GeneXus.Messaging.Queue
 		{
 			success = false;
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
+			List<SimpleQueueMessage> simpleQueueMessages = new List<SimpleQueueMessage>() { simpleQueueMessage };
 			try
 			{
-				Task<SendMessageResponse> task = Task.Run<SendMessageResponse>(async () => await SendMessageAsync(simpleQueueMessage).ConfigureAwait(false));
-				SendMessageResponse response = task.Result;
-				success = response != null;
+				Task<SendMessageBatchResponse> task = Task.Run<SendMessageBatchResponse>(async () => await SendMessageBatchAsync(simpleQueueMessages));
+				SendMessageBatchResponse sendMessageBatchResponse = task.Result;
+				if (sendMessageBatchResponse != null)
+					success = (sendMessageBatchResponse.Failed.Count == 0);
 
-				if (success)
+				foreach (BatchResultErrorEntry entry in sendMessageBatchResponse.Failed)
 				{
-					messageQueueResult = SetupMessageQueueResult(response);	
+					messageQueueResult = SetupMessageQueueResult(entry);
+				}
+
+				foreach (SendMessageBatchResultEntry entry in sendMessageBatchResponse.Successful)
+				{
+					messageQueueResult = SetupMessageQueueResult(entry);
 				}
 
 			}
-			catch (Exception ex)
+			catch (AggregateException ae)
 			{
-				throw ex;
+				throw ae;
 			}
 			return messageQueueResult;
 		}
 
-		
-		public MessageQueueResult SendMessage(SimpleQueueMessage simpleQueueMessage, MessageQueueOptions messageQueueOptions, out bool success)
+		protected MessageQueueResult SendMessage(SimpleQueueMessage simpleQueueMessage, MessageQueueOptions messageQueueOptions, out bool success)
 		{
 			success = false;
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
+			List<SimpleQueueMessage> simpleQueueMessages = new List<SimpleQueueMessage>() { simpleQueueMessage };
 			try
 			{
-				Task<SendMessageResponse> task = Task.Run<SendMessageResponse>(async () => await SendMessageAsync(simpleQueueMessage, messageQueueOptions).ConfigureAwait(false));
-				SendMessageResponse response = task.Result;
-				success = response != null;
+				Task<SendMessageBatchResponse> task = Task.Run<SendMessageBatchResponse>(async () => await SendMessageBatchAsync(simpleQueueMessages, messageQueueOptions));
+				SendMessageBatchResponse sendMessageBatchResponse = task.Result;
+				if (sendMessageBatchResponse != null)
+					success = (sendMessageBatchResponse.Failed.Count == 0);
 
-				if (success)
+				foreach (BatchResultErrorEntry entry in sendMessageBatchResponse.Failed)
 				{
-					messageQueueResult = SetupMessageQueueResult(response);
+					 messageQueueResult = SetupMessageQueueResult(entry);
+				}
+
+				foreach (SendMessageBatchResultEntry entry in sendMessageBatchResponse.Successful)
+				{
+					 messageQueueResult = SetupMessageQueueResult(entry);
 				}
 
 			}
-			catch (Exception ex)
+			catch (AggregateException ae)
 			{
-				throw ex;
+				throw ae;
 			}
 			return messageQueueResult;
 		}
@@ -285,6 +282,27 @@ namespace GeneXus.Messaging.Queue
 			}
 			return messageQueueResults;
 		}
+		
+		public override string GetName()
+		{
+			return Name;
+		}
+
+		public bool GetMessageFromException(Exception ex, SdtMessages_Message msg)
+		{
+			try
+			{
+				AmazonSQSException sqs_ex = (AmazonSQSException)ex;
+				msg.gxTpr_Id = sqs_ex.ErrorCode;
+				msg.gxTpr_Description = sqs_ex.Message;
+				return true;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
 		private MessageQueueResult SetupMessageQueueResult(SendMessageResponse response)
 		{
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
@@ -314,11 +332,10 @@ namespace GeneXus.Messaging.Queue
 			}
 			return messageQueueResult;
 		}
-
 		private MessageQueueResult SetupMessageQueueResult(SendMessageBatchResultEntry response)
 		{
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
-			messageQueueResult.MessageId = response.MessageId;
+			messageQueueResult.MessageId = response.Id;
 			messageQueueResult.MessageStatus = MessageQueueResultStatus.Sent;
 
 			messageQueueResult.MessageAttributes = new GXProperties();
@@ -421,9 +438,8 @@ namespace GeneXus.Messaging.Queue
 			return sendMessageResponse;
 		}
 
-		private async Task<SendMessageBatchResponse> SendMessageBatchAsync(IList<SimpleQueueMessage> simpleQueueMessages, MessageQueueOptions messageQueueOptions)
+		private async Task<SendMessageBatchResponse> SendMessageBatchAsync(IList<SimpleQueueMessage> simpleQueueMessages, MessageQueueOptions messageQueueOptions=null)
 		{
-
 			List<SendMessageBatchRequestEntry> messageBatchRequestEntries = new List<SendMessageBatchRequestEntry>();
 			SendMessageBatchResponse responseSendBatch = new SendMessageBatchResponse();
 
@@ -445,7 +461,7 @@ namespace GeneXus.Messaging.Queue
 				requestEntry.MessageBody = simpleQueueMessage.MessageBody;
 				requestEntry.Id = simpleQueueMessage.MessageId;
 				requestEntry.MessageAttributes = properties;
-				if (messageQueueOptions.DelaySeconds != 0)
+				if ((messageQueueOptions != null) && (messageQueueOptions.DelaySeconds != 0))
 					requestEntry.DelaySeconds = messageQueueOptions.DelaySeconds;
 
 				if ((messageAttributes != null) && (_isFIFO))
@@ -509,7 +525,7 @@ namespace GeneXus.Messaging.Queue
 			return receiveMessageResponse;
 		}
 
-		private async Task<DeleteMessageBatchResponse> DeleteQueueMessageBatchAsync(List<string> messageHandleId, MessageQueueOptions messageQueueOptions)
+		private async Task<DeleteMessageBatchResponse> DeleteQueueMessageBatchAsync(List<string> messageHandleId)
 		{
 			DeleteMessageBatchResponse deleteMessageBatchResponse = new DeleteMessageBatchResponse();
 			try

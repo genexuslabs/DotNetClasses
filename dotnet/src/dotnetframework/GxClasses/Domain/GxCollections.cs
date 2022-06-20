@@ -1982,12 +1982,10 @@ namespace GeneXus.Utils
 			else
 				return false;
 		}
-
 		public T GetPropertyValue<T>(string propertyName)
 		{
 			return (T)GetType().GetProperty($"gxTpr_{propertyName}").GetValue(this);
 		}
-
 		public void SetPropertyValue(string propertyName, object propertyValue)
 		{
 			GetType().GetProperty($"gxTpr_{propertyName}").SetValue(this, propertyValue);
