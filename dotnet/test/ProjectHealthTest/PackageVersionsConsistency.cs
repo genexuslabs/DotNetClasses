@@ -60,8 +60,8 @@ namespace ProjectHealthTest
 							}
 
 							XmlAttribute packageIdAtt = packageNode.Attributes[PACKAGE_NAME];
+							Assert.True(packageIdAtt!=null, $"{fileInfo.FullName} contains an invalid Package Id for a packageReference");
 							string packageId = packageIdAtt.Value;
-							Assert.True(packageId!=null, $"{fileInfo.FullName} contains an invalid Package Id for a packageReference");
 							XmlAttribute packageVersionAtt = packageNode.Attributes[PACKAGE_VERSION_ATTRIBUTE_NAME];
 							Assert.True(packageVersionAtt!=null, $"{fileInfo.FullName} contains an invalid Package Version for a packageReference");
 							string packageVersion = packageVersionAtt.Value;
