@@ -14,13 +14,11 @@ namespace GeneXus.Messaging.Common
 
 		int GetQueueLength(out bool success);
 		MessageQueueResult SendMessage(SimpleQueueMessage simpleQueueMessage, out bool success);
-		MessageQueueResult SendMessage(SimpleQueueMessage simpleQueueMessage, MessageQueueOptions messageQueueOptions, out bool success);
 		IList<MessageQueueResult> SendMessages(IList<SimpleQueueMessage> simpleQueueMessages, MessageQueueOptions messageQueueOptions, out bool success);
 		IList<SimpleQueueMessage> GetMessages(out bool success);
 		IList<SimpleQueueMessage> GetMessages(MessageQueueOptions messageQueueOptions, out bool success);
-		MessageQueueResult DeleteMessage(out bool success);
-
-		IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, MessageQueueOptions messageQueueOptions, out bool success);
+		MessageQueueResult DeleteMessage(string messageHandleId, out bool success);
+		IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, out bool success);
 		void Clear(out bool success);
 		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);
 	}
@@ -66,7 +64,7 @@ namespace GeneXus.Messaging.Common
 		public string ServerMessageId { get; set; }
 		public GXProperties MessageAttributes { get; set; }
 		public string MessageHandleId { get; set; }
-		public string MessageStatus { get; set; }
+		public string MessageStatus { get; set; } = "Unknown";
 
 		#region Json
 		private static Hashtable mapper;

@@ -15,10 +15,6 @@ namespace GeneXus.Messaging.Common
 		private static GXService providerService;
 		public MessageQueueProvider()
 		{
-			/*if (providerService == null)
-			{
-				providerService = ServiceFactory.GetGXServices().Get(GXServices.QUEUE_SERVICE);
-			}*/
 
 		}
 

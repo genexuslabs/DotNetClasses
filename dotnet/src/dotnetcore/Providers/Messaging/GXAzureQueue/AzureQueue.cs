@@ -116,15 +116,16 @@ namespace GeneXus.Messaging.Queue
 		/// Permanently removes the first message dequeued.
 		/// </summary>
 
-		public MessageQueueResult DeleteMessage(out bool success)
+		public MessageQueueResult DeleteMessage(string messageHandleId, out bool success)
 		{
+			//This method should receive messageHandleId + popReceipt
 			success=false;
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
 			if (_queueClient is QueueClient && _queueClient.Exists())
 			{
 				Azure.Response<QueueMessage> receivedMessage = _queueClient.ReceiveMessage();
 
-				if ((receivedMessage != null) && (!receivedMessage.GetRawResponse().IsError) && (receivedMessage.Value != null))
+				if ((receivedMessage != null) && (!receivedMessage.GetRawResponse().IsError) && (receivedMessage.Value != null) && (receivedMessage.Value.MessageId == messageHandleId))
 				{
 					Azure.Response deleteResult = _queueClient.DeleteMessage(receivedMessage.Value.MessageId, receivedMessage.Value.PopReceipt);
 
@@ -142,15 +143,13 @@ namespace GeneXus.Messaging.Queue
 		/// Deletes permanently the messages given on the list.
 		/// </summary>
 		
-		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, MessageQueueOptions messageQueueOptions,out bool success)
+		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId,out bool success)
 		{
 			success = false;
 			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
 			if (_queueClient is QueueClient && _queueClient.Exists())
 			{
-				QueueProperties properties = _queueClient.GetProperties();
-
-				QueueMessage[] receivedMessages = _queueClient.ReceiveMessages(messageQueueOptions.MaxNumberOfMessages);
+				QueueMessage[] receivedMessages = _queueClient.ReceiveMessages();
 				Azure.Response deleteResult;
 				foreach (QueueMessage message in receivedMessages)
 				{
@@ -226,8 +225,7 @@ namespace GeneXus.Messaging.Queue
 			}
 			return simpleQueueMessages;
 		}
-
-		public MessageQueueResult SendMessage(SimpleQueueMessage simpleQueueMessage, MessageQueueOptions messageQueueOptions, out bool success)
+		private MessageQueueResult SendMessage(SimpleQueueMessage simpleQueueMessage, MessageQueueOptions messageQueueOptions, out bool success)
 		{
 			success = false;
 			Azure.Response<SendReceipt> sendReceipt;
@@ -235,12 +233,17 @@ namespace GeneXus.Messaging.Queue
 			
 			if (_queueClient is QueueClient && _queueClient.Exists())
 			{
-				sendReceipt = _queueClient.SendMessage(simpleQueueMessage.MessageBody, TimeSpan.FromSeconds(messageQueueOptions.VisibilityTimeout), TimeSpan.FromSeconds(messageQueueOptions.TimetoLive));
+
+				if (messageQueueOptions.TimetoLive != 0)
+					sendReceipt = _queueClient.SendMessage(simpleQueueMessage.MessageBody, TimeSpan.FromSeconds(messageQueueOptions.VisibilityTimeout), TimeSpan.FromSeconds(messageQueueOptions.TimetoLive));
+				else
+					sendReceipt = _queueClient.SendMessage(simpleQueueMessage.MessageBody, TimeSpan.FromSeconds(messageQueueOptions.VisibilityTimeout));
+
 				if ((sendReceipt != null) && (sendReceipt.Value != null))
 				{
 					MessageQueueResult result = new MessageQueueResult()
 					{
-						MessageId = simpleQueueMessage.MessageId,
+						MessageId = sendReceipt.Value.MessageId,
 						ServerMessageId = sendReceipt.Value.MessageId,
 						MessageStatus = MessageQueueResultStatus.Sent,
 						MessageAttributes = new GXProperties()
@@ -386,6 +389,7 @@ namespace GeneXus.Messaging.Queue
 			if (queueMessage != null)
 			{
 				simpleQueueMessage.MessageId = queueMessage.MessageId;
+				simpleQueueMessage.MessageHandleId = queueMessage.PopReceipt;
 				simpleQueueMessage.MessageBody = queueMessage.Body.ToString();
 				simpleQueueMessage.MessageAttributes = new GXProperties();
 

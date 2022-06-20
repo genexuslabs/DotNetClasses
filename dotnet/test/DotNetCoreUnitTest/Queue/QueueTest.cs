@@ -87,7 +87,7 @@ namespace UnitTesting
 			options.TimetoLive = 3600;
 
 			bool success = false;
-			MessageQueueResult messageQueueResult = queue.SendMessage(simpleQueueMessage, options, out success);
+			MessageQueueResult messageQueueResult = queue.SendMessage(simpleQueueMessage, out success);
 
 			Assert.True(success);
 			Assert.Equal(simpleQueueMessage.MessageId, messageQueueResult.MessageId);
@@ -151,14 +151,13 @@ namespace UnitTesting
 		}
 
 		
-		public void TestDeleteMessagesOptionsMethod()
+		public void TestDeleteMessagesMethod()
 		{
 			bool success = false;
 			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
 			List<string> messageHandleId = new List<string>() { "TestMsgIdNotExists", "TestMsgId3" };
-			MessageQueueOptions options = new MessageQueueOptions();
-			options.MaxNumberOfMessages = 10;
-			messageQueueResults = queue.DeleteMessages(messageHandleId, options, out success);
+			
+			messageQueueResults = queue.DeleteMessages(messageHandleId, out success);
 
 			Assert.True(success);
 			Assert.True(messageQueueResults.Count == 1);
@@ -166,12 +165,13 @@ namespace UnitTesting
 		}
 
 		
-		public void TestDeleteMessageMethod()
+	/*	public void TestDeleteMessageMethod()
 		{
 			bool success = false;
 			MessageQueueResult messageQueueResult = queue.DeleteMessage(out success);
 			Assert.True(success);
 		}
+	*/
 
 		[SkippableFact]
 		public void TestGetQueueLength()
