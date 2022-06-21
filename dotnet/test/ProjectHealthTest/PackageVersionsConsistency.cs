@@ -1,10 +1,11 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Xml;
 using System;
-using Xunit;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Xml;
+using Xunit;
 
 namespace ProjectHealthTest
 {
@@ -20,6 +21,8 @@ namespace ProjectHealthTest
 		private const string TARGET_FRAMEWORKS = "Project/PropertyGroup/TargetFrameworks";
 		private const string NET6 = "net6";
 		private const string NET_FRAMEWORK = "net462";
+		private static HashSet<string> ExcludedFromTransitiveDependenciesControl = new HashSet<string> {"Microsoft", "System", "runtime", "NETStandard", "Newtonsoft" };
+		private Regex DependencyRegEx = new Regex(@"\>\s(.+)\s+((\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+))");
 
 		/// <summary>
 		/// Tests that all referenced packages have the same version by doing:
@@ -31,14 +34,39 @@ namespace ProjectHealthTest
 		[Fact]
 		public void TestPackageVersionConsistencyAcrossNETProjects()
 		{
-			TestPackageVersionConsistencyAcrossProjects(NET6);
+			TestPackageVersionConsistencyAcrossProjects(NET6, true);
 		}
 		[Fact]
 		public void TestPackageVersionConsistencyAcrossNETFrameworkProjects()
 		{
-			TestPackageVersionConsistencyAcrossProjects(NET_FRAMEWORK);
+			TestPackageVersionConsistencyAcrossProjects(NET_FRAMEWORK, false);
 		}
-		private void TestPackageVersionConsistencyAcrossProjects(string targetFramework)
+
+		private List<string> BuildDepsJson(string projectPath)
+		{
+			Process process = new Process();
+			List<string> outputLines = new List<string>();
+			process.StartInfo.FileName = "dotnet.exe";
+			process.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
+			process.StartInfo.Arguments = $"list {projectPath} package --include-transitive --framework net6.0";
+
+			process.StartInfo.UseShellExecute = false;
+			process.StartInfo.RedirectStandardOutput = true;
+			process.StartInfo.RedirectStandardError = true;
+			process.OutputDataReceived += (s, e) =>
+					{
+						string line = e.Data;
+						if (!string.IsNullOrEmpty(line))
+							outputLines.Add(line);
+					};
+			process.Start();
+			process.BeginOutputReadLine();
+			process.BeginErrorReadLine();
+			process.WaitForExit();
+			return outputLines;
+		}
+
+		private void TestPackageVersionConsistencyAcrossProjects(string targetFramework, bool checkTransitiveDeps)
 		{
 			IDictionary<string, ICollection<PackageVersionItem>> packageVersionsById = new Dictionary<string, ICollection<PackageVersionItem>>();
 			foreach (string packagesConfigFilePath in GetAllProjects())
@@ -50,7 +78,7 @@ namespace ProjectHealthTest
 				if (IsTargetFramework(doc, targetFramework))
 				{
 					XmlNodeList packagesNodes = doc.SelectNodes(PACKAGES_NODE_NAME);
-					if (packagesNodes != null)
+					if (packagesNodes != null && packagesNodes.Count>0)
 					{
 						foreach (XmlNode packageNode in packagesNodes)
 						{
@@ -60,27 +88,71 @@ namespace ProjectHealthTest
 							}
 
 							XmlAttribute packageIdAtt = packageNode.Attributes[PACKAGE_NAME];
-							Assert.True(packageIdAtt!=null, $"{fileInfo.FullName} contains an invalid Package Id for a packageReference");
-							string packageId = packageIdAtt.Value;
-							XmlAttribute packageVersionAtt = packageNode.Attributes[PACKAGE_VERSION_ATTRIBUTE_NAME];
-							Assert.True(packageVersionAtt!=null, $"{fileInfo.FullName} contains an invalid Package Version for a packageReference");
-							string packageVersion = packageVersionAtt.Value;
-
-							if (!packageVersionsById.TryGetValue(packageId, out ICollection<PackageVersionItem> packageVersions))
+							if (packageIdAtt != null)
 							{
-								packageVersions = new List<PackageVersionItem>();
-								packageVersionsById.Add(packageId, packageVersions);
-							}
+								Assert.True(packageIdAtt != null, $"{fileInfo.FullName} contains an invalid Package Id for a packageReference");
+								string packageId = packageIdAtt.Value;
+								XmlAttribute packageVersionAtt = packageNode.Attributes[PACKAGE_VERSION_ATTRIBUTE_NAME];
+								Assert.True(packageVersionAtt != null, $"{fileInfo.FullName} contains an invalid Package Version for a packageReference");
+								string packageVersion = packageVersionAtt.Value;
 
-							if (!packageVersions.Any(o => o.Version.Equals(packageVersion, StringComparison.OrdinalIgnoreCase)))
-							{
-								packageVersions.Add(new PackageVersionItem()
+								if (!packageVersionsById.TryGetValue(packageId, out ICollection<PackageVersionItem> packageVersions))
 								{
-									SourceFile = fileInfo.FullName,
-									Version = packageVersion
-								});
-							}
+									packageVersions = new List<PackageVersionItem>();
+									packageVersionsById.Add(packageId, packageVersions);
+								}
 
+								if (!packageVersions.Any(o => o.Version.Equals(packageVersion, StringComparison.OrdinalIgnoreCase)))
+								{
+									packageVersions.Add(new PackageVersionItem()
+									{
+										SourceFile = fileInfo.FullName,
+										Version = packageVersion
+									});
+								}
+							}
+						}
+
+
+						if (checkTransitiveDeps)
+						{
+							List<string> outputLines = BuildDepsJson(fileInfo.FullName);
+							bool readingTransitivePackages = false;
+							foreach (string line in outputLines)
+							{
+								if (readingTransitivePackages)
+								{
+									foreach (Match m in DependencyRegEx.Matches(line))
+									{
+										if (m.Groups != null && m.Groups.Count >= 2)
+										{
+											string packageId = m.Groups[1].Value.Trim();
+											string packageVersion = m.Groups[2].Value;
+											if (!ExcludedFromTransitiveDependenciesControl.Contains(packageId.Split('.').First()))
+											{
+												if (!packageVersionsById.TryGetValue(packageId, out ICollection<PackageVersionItem> packageVersions))
+												{
+													packageVersions = new List<PackageVersionItem>();
+													packageVersionsById.Add(packageId, packageVersions);
+												}
+
+												if (!packageVersions.Any(o => o.Version.Equals(packageVersion, StringComparison.OrdinalIgnoreCase)))
+												{
+													packageVersions.Add(new PackageVersionItem()
+													{
+														SourceFile = $"{fileInfo.FullName} (Transitive dependency)",
+														Version = packageVersion
+													});
+												}
+											}
+										}
+									}
+
+								}else if (line.TrimStart().StartsWith("Transitive Package"))
+								{
+									readingTransitivePackages = true;
+								}
+							}
 						}
 					}
 				}
