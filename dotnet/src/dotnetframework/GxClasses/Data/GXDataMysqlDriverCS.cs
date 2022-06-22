@@ -70,11 +70,11 @@ namespace GeneXus.Data
 			string userPassword, string databaseName, string port, string schema, string extra)
 		{
 			StringBuilder connectionString = new StringBuilder();
-            if (!string.IsNullOrEmpty(datasourceName) && !hasKey(extra, "Location"))
+            if (!string.IsNullOrEmpty(datasourceName) && !HasKey(extra, "Location"))
 			{
 				connectionString.AppendFormat("Location={0};", datasourceName);
 			}
-            if (port != null && port.Trim().Length > 0 && !hasKey(extra, "Port"))
+            if (port != null && port.Trim().Length > 0 && !HasKey(extra, "Port"))
 			{
 				connectionString.AppendFormat("Port={0};", port);
 			}
@@ -82,7 +82,7 @@ namespace GeneXus.Data
 			{
 				connectionString.AppendFormat(";User ID={0};Password={1}", userId, userPassword);
 			}
-            if (databaseName != null && databaseName.Trim().Length > 0 && !hasKey(extra, "Data Source"))
+            if (databaseName != null && databaseName.Trim().Length > 0 && !HasKey(extra, "Data Source"))
 			{
 				connectionString.AppendFormat(";Data Source={0}", databaseName);
 			}
@@ -171,7 +171,7 @@ namespace GeneXus.Data
 				idatareader = new GxMySQLDriverCSDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt, preparedStmts);
             return idatareader;
         }
-        protected override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
+		public override IDbCommand GetCachedCommand(IGxConnection con, string stmt)
 		{
 			return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 		}

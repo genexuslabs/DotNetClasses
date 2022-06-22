@@ -4,12 +4,11 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Cache;
-using GeneXus.Services;
 using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore.Http;
@@ -46,18 +45,20 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 					isSecure = GetSecureConnection(header.Key, defaultHttpContext.Request.Headers[header.Key]);
 
 			}
-
-			IReadOnlyDictionary<string, object> keyValuePairs = requestData.FunctionContext.BindingContext.BindingData;
-			object queryparamsJson = requestData.FunctionContext.BindingContext.BindingData.GetValueOrDefault("Query");
-			JsonNode queryparams = JsonNode.Parse((string)queryparamsJson);
-
-			foreach (var keyValuePair in keyValuePairs)
+			if (requestData.FunctionContext.BindingContext!=null)
 			{
-				if ((keyValuePair.Key != "Headers") && (keyValuePair.Key != "Query"))
-				{ 
-					JsonNode qKey = queryparams[keyValuePair.Key];
-					if (qKey == null)
-						defaultHttpContext.Request.RouteValues.Add(keyValuePair.Key.ToLower(),keyValuePair.Value);
+				IReadOnlyDictionary<string, object> keyValuePairs = requestData.FunctionContext.BindingContext.BindingData;
+				object queryparamsJson = requestData.FunctionContext.BindingContext.BindingData.GetValueOrDefault("Query");
+				JsonNode queryparams = JsonNode.Parse((string)queryparamsJson);
+
+				foreach (var keyValuePair in keyValuePairs)
+				{
+					if ((keyValuePair.Key != "Headers") && (keyValuePair.Key != "Query"))
+					{
+						JsonNode qKey = queryparams[keyValuePair.Key];
+						if (qKey == null)
+							defaultHttpContext.Request.RouteValues.Add(keyValuePair.Key.ToLower(), keyValuePair.Value);
+					}
 				}
 			}
 
@@ -117,7 +118,8 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			sessionCookie.HttpOnly = true;
 			sessionCookie.Secure = isSecure;
 
-			responseData.Cookies.Append(sessionCookie);
+			if (responseData.Cookies != null)
+				responseData.Cookies.Append(sessionCookie);
 			GXLogging.Debug(log, $"Create new Azure Session Id :{sessionId}");
 		}
 		private string CookieValue(string header, string name)

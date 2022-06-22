@@ -3,10 +3,13 @@ using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Data.NTier.ADO;
+using GeneXus.Diagnostics;
 using GeneXus.Management;
 using GeneXus.Reorg;
+using GeneXus.Services;
 using GeneXus.Utils;
 using GeneXus.XML;
+using GxClasses.Helpers;
 using log4net;
 using System;
 using System.Collections;
@@ -860,6 +863,11 @@ namespace GeneXus.Data.ADO
                 m_dataRecord.IsolationLevelTrn = IsolationLevel.Serializable;
                 GXLogging.Debug(log, "Setting IsolationLevel : Serializable  " + ((int)m_dataRecord.IsolationLevelTrn));
             }
+			else if (level == 4)
+			{
+				m_dataRecord.IsolationLevelTrn = IsolationLevel.RepeatableRead;
+				GXLogging.Debug(log, "Setting IsolationLevel : Repeatable Read  " + ((int)m_dataRecord.IsolationLevelTrn));
+			}
 			else
 			{
 				m_dataRecord.IsolationLevelTrn = IsolationLevel.ReadUncommitted;
@@ -1647,17 +1655,35 @@ namespace GeneXus.Data.ADO
 				}
 				catch(GxADODataException e) 
 				{
-					bool pe = dataRecord.ProcessError( e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref  status, ref retry, retryCount);
+					bool pe = ProcessException(e, ref retry, retryCount, "EXECUTE");
 					retryCount++;
-					processErrorHandler( status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "EXECUTE", ref pe, ref retry);
 					if (! pe)
 					{
 						GXLogging.Error(log, e, "GxCommand.ExecuteDataSet Error ");
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
 					}
 				}
 			}
 			return "";
+		}
+
+		internal bool ProcessException(GxADODataException e, ref bool retry, int retryCount, string method)
+		{
+			bool pe = dataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref status, ref retry, retryCount);
+			processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, method, ref pe, ref retry);
+			if (!pe)
+			{
+				try
+				{
+					Close();
+					con.Close();
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Warn(log, ex, "GxCommand.Close Error on ProcessException");
+				}
+			}
+			return pe;
 		}
 
 		public IDataReader ExecuteReader()
@@ -1727,22 +1753,12 @@ namespace GeneXus.Data.ADO
 				catch (GxADODataException e)
 				{ 
 					status=0;
-					bool pe = dataRecord.ProcessError( e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref status, ref retry, retryCount);
+					bool pe = ProcessException(e, ref retry, retryCount, "FETCH");
 					retryCount++;
-					processErrorHandler( status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "FETCH", ref pe, ref retry);
 					if (! pe)
 					{
 						GXLogging.Error(log, e, "GxCommand.FetchData Error ");
-						try
-						{
-							Close();
-							con.Close();
-						}
-						catch(Exception ex)
-						{
-							GXLogging.Error(log, ex, "GxCommand.FetchData-Close Error ");
-						}
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
 					}
 				}
 			}
@@ -1764,13 +1780,12 @@ namespace GeneXus.Data.ADO
 				catch (GxADODataException e)
 				{ 
 					status=0;
-					bool pe = dataRecord.ProcessError( e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref status, ref retry, retryCount);
+					bool pe = ProcessException(e, ref retry, retryCount, "FETCH");
 					retryCount++;
-					processErrorHandler( status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "FETCH", ref pe, ref retry);
 					if (! pe)
 					{
 						GXLogging.Error(log, e, "GxCommand.FetchDataRPC Error ");
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
 					}
 				}
 			}
@@ -1887,13 +1902,12 @@ namespace GeneXus.Data.ADO
                 }
                 catch (GxADODataException e)
                 {
-                    bool pe = dataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref  status, ref retry, retryCount);
+					bool pe = ProcessException(e, ref retry, retryCount, "EXECUTE");
                     retryCount++;
-                    processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "EXECUTE", ref pe, ref retry);
                     if (!pe)
                     {
                         GXLogging.Error(log, "GxCommand.ExecuteStmt Error ", e);
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
                     }
                 }
             }
@@ -1916,14 +1930,13 @@ namespace GeneXus.Data.ADO
                     status = 0;
                 }
                 catch (GxADODataException e)
-                {
-                    bool pe = dataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, errMask, con, ref  status, ref retry, retryCount);
+				{
+					bool pe = ProcessException(e, ref retry, retryCount, "EXECUTE");
                     retryCount++;
-                    processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, errMask, "EXECUTE", ref pe, ref retry);
                     if (!pe)
                     {
                         GXLogging.Error(log, "GxCommand.ExecuteStmt Error ", e);
-						throw (new GxADODataException(e.ToString(), e));
+						throw;
                     }
                 }
             }
@@ -2394,7 +2407,8 @@ namespace GeneXus.Data.ADO
 	
 	public class GxDataStore : IGxDataStore
 	{
-        string id;
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDataStore));
+		string id;
 		IGxConnection connection;
 		int handle;		
 		GxDataRecord datarecord;
@@ -2482,6 +2496,29 @@ namespace GeneXus.Data.ADO
                 if (cfgBuf.IndexOf(',') > 0)
                     cfgBuf = cfgBuf.Split(',')[0];
 				datarecord = getDbmsDataRecord(id, cfgBuf);
+
+				if (GXServices.Instance != null)
+				{
+					GXService providerService = GXServices.Instance.Get(GXServices.DATA_ACCESS_SERVICE);
+					if (providerService != null)
+					{
+						GXLogging.Debug(log, "Loading DATA_ACCESS_SERVICE: ", providerService.ClassName);
+						try
+						{
+#if NETCORE
+							Type type = AssemblyLoader.GetType(providerService.ClassName);
+#else
+							Type type = Type.GetType(providerService.ClassName, true, true);
+#endif
+							datarecord = (GxDataRecord)Activator.CreateInstance(type, datarecord);
+
+						}
+						catch (Exception ex)
+						{
+							GXLogging.Error(log, "Error creating CustomDataRecord " + providerService.ClassName, ex);
+						}
+					}
+				}
 			}
 			else
 			{
@@ -2606,6 +2643,10 @@ namespace GeneXus.Data.ADO
 			{ 
                 isoLevelNum = 3;
             }
+			else if (Config.GetValueOf(ds, "Connection-" + id + "-IsolationLevel", out isolevel) && isolevel.ToUpper() == "RR")
+			{
+				isoLevelNum = 4;
+			}
 			else if (Config.GetValueOf("ISOLATION_LEVEL", out isolevel) && isolevel.ToUpper() == "CR") 
 			{
 				isoLevelNum = 2;
@@ -2613,6 +2654,10 @@ namespace GeneXus.Data.ADO
 			else if (Config.GetValueOf("ISOLATION_LEVEL", out isolevel) && isolevel.ToUpper() == "SE")
 			{
 				isoLevelNum = 3;
+			}
+			else if (Config.GetValueOf("ISOLATION_LEVEL", out isolevel) && isolevel.ToUpper() == "RR")
+			{
+				isoLevelNum = 4;
 			}
 
 			connection.SetIsolationLevel(isoLevelNum);

@@ -834,8 +834,12 @@ namespace GeneXus.Data.NTier.ADO
         {
             _staticParameters = staticPars;
         }
+		internal GxCommand Command
+		{
+			get { return _gxDbCommand; }
+		}
 
-        public void createCursor(IGxDataStore ds, GxErrorHandler errorHandler)
+		public void createCursor(IGxDataStore ds, GxErrorHandler errorHandler)
         {
 
             if (_state >= 2)
@@ -1192,24 +1196,24 @@ namespace GeneXus.Data.NTier.ADO
                 _status = Cursor.EOF;
             _closed = false;
         }
-        public override void readNext()
-        {
-            if (_state < 2)
-                throw (new GxADODataException("Could not readNext in ForEachCursor:" + _name + "."));
-            _status = 0;
+		public override void readNext()
+		{
+			if (_state < 2)
+				throw (new GxADODataException("Could not readNext in ForEachCursor:" + _name + "."));
+			_status = 0;
 
-            if (!_DR.Read())
-            {
-                _status = Cursor.EOF;
-                _gxDbCommand.HasMoreRows = false;
-            }
-            else if (_gxDbCommand.Status == 1 || _gxDbCommand.Status == 103 || _gxDbCommand.Status == 500)
-            {
-                _status = _gxDbCommand.Status;
-            }
+			if (!_DR.Read())
+			{
+				_status = Cursor.EOF;
+				_gxDbCommand.HasMoreRows = false;
+			}
+			else if (_gxDbCommand.Status == 1 || _gxDbCommand.Status == 103 || _gxDbCommand.Status == 500)
+			{
+				_status = _gxDbCommand.Status;
+			}
 
-        }
-    }
+		}
+	}
     public class UpdateCursor : Cursor
     {
         public UpdateCursor(CursorDef def) : base(def.Name, def.Stmt, def.Nmask, def.ParmBinds, 0)
