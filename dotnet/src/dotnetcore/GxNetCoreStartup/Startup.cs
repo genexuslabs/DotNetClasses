@@ -9,7 +9,6 @@ using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
 using GeneXus.Utils;
-using GxClasses.Helpers;
 using GxClasses.Web.Middleware;
 using log4net;
 using Microsoft.AspNetCore;
@@ -18,6 +17,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
@@ -95,6 +95,7 @@ namespace GeneXus.Application
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
 		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
+		const int DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 500000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
 
@@ -144,6 +145,10 @@ namespace GeneXus.Application
 			AppSettings settings = new AppSettings();
 			Config.ConfigRoot.GetSection("AppSettings").Bind(settings);
 
+			services.Configure<FormOptions>(options =>
+			{
+				options.MultipartBodyLengthLimit = settings.MaxFileUploadSize==0 ? DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES : settings.MaxFileUploadSize;
+			});
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 
 			if (sessionService != null)
