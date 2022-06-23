@@ -20,6 +20,7 @@ namespace GeneXus.HttpHandlerFactory
 		public BaseUrls BaseUrls { get; set; }
 		public bool AnalyticsEnabled { get; set; }
 		public int SessionTimeout { get; set; }
+		public int MaxFileUploadSize { get; set; }
 	}
 
 	public class BaseUrls
