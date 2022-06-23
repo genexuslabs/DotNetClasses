@@ -418,6 +418,9 @@ namespace GeneXus.Configuration
 
 		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
+
+		const string ITextSharpFileName = "iTextSharp.dll";
+		const string ITextSharpAssemblyName = "itextsharp";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
 			var requestedAssembly = new AssemblyName(args.Name);
@@ -434,7 +437,16 @@ namespace GeneXus.Configuration
 					return Assembly.LoadFrom(fileName);
 				}
 			}
-			else {
+			else if (args.Name.StartsWith(ITextSharpAssemblyName))
+			{
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), ITextSharpFileName);
+				if (File.Exists(fileName))
+				{
+					return Assembly.LoadFrom(fileName);
+				}
+			}
+			else
+			{
 				AssemblyName assName = new AssemblyName(args.Name);
 				bool strongNamedAssembly = assName.GetPublicKeyToken().Length > 0;
 				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{assName.Name}.dll");

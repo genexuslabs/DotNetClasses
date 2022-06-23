@@ -1,0 +1,17 @@
+{
+"ObjectType":"ServiceGroup",
+"Name":"APIAttractions",
+"BasePath":"APIAttractions",
+"Mappings":
+[
+{
+"Name":"listattractions",
+"Bodystyle":"Wrapped",
+"VariableAlias": [],
+"ServiceMethod":"gxep_listattractions",
+"Implementation":"AttractionsDP",
+"Verb":"GET",
+"PathRegexp":"listattractions",
+"Path":"listattractions"
+
+}]}
