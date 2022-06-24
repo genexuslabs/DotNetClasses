@@ -94,7 +94,7 @@ namespace GeneXus.Application
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
 		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
-		const int DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 500000000;
+		const int DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
 
