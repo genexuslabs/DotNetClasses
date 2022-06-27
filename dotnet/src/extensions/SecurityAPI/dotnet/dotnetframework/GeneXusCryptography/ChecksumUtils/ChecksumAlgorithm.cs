@@ -20,13 +20,13 @@ namespace GeneXusCryptography.ChecksumUtils
 	[SecuritySafeCritical]
 	public static class ChecksumAlgorithmUtils
 	{
-		
+
 		public static ChecksumAlgorithm getChecksumAlgorithm(string checksumAlgorithm, Error error)
 		{
-			if(error == null) return ChecksumAlgorithm.NONE;
+			if (error == null) return ChecksumAlgorithm.NONE;
 			if (checksumAlgorithm == null)
 			{
-				error.setError("CA001", "Unrecognized checksum algorithm");
+				error.setError("CHA04", "Unrecognized checksum algorithm");
 				return ChecksumAlgorithm.NONE;
 			}
 			switch (checksumAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -124,7 +124,7 @@ namespace GeneXusCryptography.ChecksumUtils
 				case "SHA512":
 					return ChecksumAlgorithm.SHA512;
 				default:
-					error.setError("CA001", "Unrecognized checksum algorithm");
+					error.setError("CHA01", "Unrecognized checksum algorithm");
 					return ChecksumAlgorithm.NONE;
 			}
 		}
@@ -228,7 +228,7 @@ namespace GeneXusCryptography.ChecksumUtils
 				case ChecksumAlgorithm.SHA512:
 					return "SHA512";
 				default:
-					error.setError("CA002", "Unrecognized checksum algorithm");
+					error.setError("CHA02", "Unrecognized checksum algorithm");
 					return null;
 			}
 		}
@@ -337,7 +337,7 @@ namespace GeneXusCryptography.ChecksumUtils
 				case ChecksumAlgorithm.CRC32_XFER:
 					return new CRCParameters(32, 0x000000AF, 0x00000000, false, false, 0x0000000);
 				default:
-					error.setError("CA004", "Unrecognized checksum algorithm");
+					error.setError("CHA03", "Unrecognized checksum algorithm");
 					return new CRCParameters(0, 0x00, 0x00, false, false, 0x00);
 			}
 		}
