@@ -36,23 +36,12 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public String DoSign(PrivateKeyManager key, string hashAlgorithm, string plainText)
 		{
-			/******** INPUT VERIFICATION - BEGIN ********/
-			if (key == null)
-			{
-				error.setError("AE001", "Private key cannot be null");
-				return "";
-			}
-			if (hashAlgorithm == null || hashAlgorithm.Length == 0 || SecurityUtils.compareStrings("", hashAlgorithm))
-			{
-				error.setError("AE002", "HashAlgorithm cannot be empty value; use HashAlgorithm domain");
-				return "";
-			}
-			if (plainText == null || plainText.Length == 0 || SecurityUtils.compareStrings("", plainText))
-			{
-				error.setError("AE003", "The plainText value to sign cannot be empty");
-				return "";
-			}
-			/******** INPUT VERIFICATION - END ********/
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateObjectInput("key", key, this.error);
+			SecurityUtils.validateStringInput("hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			if (this.HasError()) { return ""; };
+			/*******INPUT VERIFICATION - END*******/
 
 
 			EncodingUtil eu = new EncodingUtil();
@@ -73,23 +62,15 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public String DoSignFile(PrivateKeyManager key, string hashAlgorithm, string path)
 		{
-			/******** INPUT VERIFICATION - BEGIN ********/
-			if (key == null)
-			{
-				error.setError("AE005", "Private key cannot be null");
-				return "";
-			}
-			if (hashAlgorithm == null || hashAlgorithm.Length == 0 || SecurityUtils.compareStrings("", hashAlgorithm))
-			{
-				error.setError("AE006", "HashAlgorithm cannot be empty value; use HashAlgorithm domain");
-				return "";
-			}
-			if (path == null || path.Length == 0 || SecurityUtils.compareStrings("", path))
-			{
-				error.setError("AE007", "The path value of the file to sign cannot be empty");
-				return "";
-			}
-			/******** INPUT VERIFICATION - END ********/
+			this.error.cleanError();
+
+
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateObjectInput("key", key, this.error);
+			SecurityUtils.validateStringInput("hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput("path", path, this.error);
+			if (this.HasError()) { return ""; }
+			/*******INPUT VERIFICATION - END*******/
 
 			string result = "";
 			using (Stream input = SecurityUtils.getFileStream(path, this.error))
@@ -107,23 +88,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public bool DoVerify(CertificateX509 cert, string plainText, string signature)
 		{
-			/******** INPUT VERIFICATION - BEGIN ********/
-			if (cert == null)
-			{
-				error.setError("AE009", "Certificate cannot be null");
-				return false;
-			}
-			if (plainText == null || plainText.Length == 0 || SecurityUtils.compareStrings("", plainText))
-			{
-				error.setError("AE010", "The plainText value to verify cannot be empty");
-				return false;
-			}
-			if (signature == null || signature.Length == 0 || SecurityUtils.compareStrings("", signature))
-			{
-				error.setError("AE011", "The signature value to verify cannot be empty");
-				return false;
-			}
-			/******** INPUT VERIFICATION - END ********/
+			this.error.cleanError();
+
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateObjectInput("cert", cert, this.error);
+			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateStringInput("signature", signature, this.error);
+			if (this.HasError()) { return false; }
+			/*******INPUT VERIFICATION - END*******/
 
 
 			EncodingUtil eu = new EncodingUtil();
@@ -144,23 +116,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public bool DoVerifyFile(CertificateX509 cert, string path, string signature)
 		{
-			/******** INPUT VERIFICATION - BEGIN ********/
-			if (cert == null)
-			{
-				error.setError("AE013", "Certificate cannot be null");
-				return false;
-			}
-			if (path == null || path.Length == 0 || SecurityUtils.compareStrings("", path))
-			{
-				error.setError("AE014", "The path value of the faile to verify cannot be empty");
-				return false;
-			}
-			if (signature == null || signature.Length == 0 || SecurityUtils.compareStrings("", signature))
-			{
-				error.setError("AE015", "The signature value to verify cannot be empty");
-				return false;
-			}
-			/******** INPUT VERIFICATION - END ********/
+			this.error.cleanError();
+
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateObjectInput("cert", cert, this.error);
+			SecurityUtils.validateStringInput("path", path, this.error);
+			SecurityUtils.validateStringInput("signature", signature, this.error);
+			if (this.HasError()) { return false; }
+			/*******INPUT VERIFICATION - END*******/
 
 			bool result = false;
 			using (Stream input = SecurityUtils.getFileStream(path, this.error))
