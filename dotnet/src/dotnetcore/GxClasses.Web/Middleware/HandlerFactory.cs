@@ -33,7 +33,6 @@ namespace GeneXus.HttpHandlerFactory
 	public class HandlerFactory
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.HttpHandlerFactory.HandlerFactory));
-		private readonly AppSettings _appSettings;
 		private string _basePath;
 		static Dictionary<string, Type> _aspxObjects = new Dictionary<string, Type>(){
 												{"gxoauthlogout",typeof(GXOAuthLogout)},
@@ -64,14 +63,13 @@ namespace GeneXus.HttpHandlerFactory
 		public HandlerFactory()
 		{
 		}
-		public HandlerFactory(RequestDelegate next, IOptions<AppSettings> appSettings)
+		public HandlerFactory(RequestDelegate next)
 		{
-			_appSettings = appSettings.Value; 
+		
 		}
-		public HandlerFactory(RequestDelegate next, IOptions<AppSettings> appSettings, String basePath)
+		public HandlerFactory(RequestDelegate next, String basePath)
 		{
 			_basePath = basePath;
-			_appSettings = appSettings.Value;
 		}
 
 
