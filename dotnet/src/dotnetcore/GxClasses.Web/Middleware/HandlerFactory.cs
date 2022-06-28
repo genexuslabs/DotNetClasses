@@ -20,6 +20,7 @@ namespace GeneXus.HttpHandlerFactory
 		public BaseUrls BaseUrls { get; set; }
 		public bool AnalyticsEnabled { get; set; }
 		public int SessionTimeout { get; set; }
+		public int MaxFileUploadSize { get; set; }
 	}
 
 	public class BaseUrls
@@ -32,7 +33,6 @@ namespace GeneXus.HttpHandlerFactory
 	public class HandlerFactory
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.HttpHandlerFactory.HandlerFactory));
-		private readonly AppSettings _appSettings;
 		private string _basePath;
 		static Dictionary<string, Type> _aspxObjects = new Dictionary<string, Type>(){
 												{"gxoauthlogout",typeof(GXOAuthLogout)},
@@ -59,14 +59,13 @@ namespace GeneXus.HttpHandlerFactory
 		private const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
 		private const string GXFLOW_NSPACE = "GXflow.Programs";
 		private static List<string> GxNamespaces;
-		public HandlerFactory(RequestDelegate next, IOptions<AppSettings> appSettings)
+		public HandlerFactory(RequestDelegate next)
 		{
-			_appSettings = appSettings.Value; 
+		
 		}
-		public HandlerFactory(RequestDelegate next, IOptions<AppSettings> appSettings, String basePath)
+		public HandlerFactory(RequestDelegate next, String basePath)
 		{
 			_basePath = basePath;
-			_appSettings = appSettings.Value;
 		}
 
 
