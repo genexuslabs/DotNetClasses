@@ -180,9 +180,9 @@ namespace GeneXus.Application
 		private Dictionary<string, object> ReadBodyParameters()
 		{
 #if NETCORE
-			return ReadRequestParameters(_httpContext.Request.Body);
+			return RestAPIHelpers.ReadRestBodyParameters(_httpContext.Request.Body);
 #else
-			return ReadRequestParameters(_httpContext.Request.GetInputStream());
+			return RestAPIHelpers.ReadRestBodyParameters(_httpContext.Request.GetInputStream());
 #endif
 		}
 
@@ -390,40 +390,6 @@ namespace GeneXus.Application
 			return MethodBodyExecute(key);
 		}
 
-		public Dictionary<string, object> ReadRequestParameters(Stream stream)
-		{
-			var bodyParameters = new Dictionary<string, object>();
-			using (StreamReader streamReader = new StreamReader(stream))
-			{
-				if (!streamReader.EndOfStream)
-				{
-					try
-					{
-						string json = streamReader.ReadToEnd();
-						var data = JSONHelper.ReadJSON<dynamic>(json);
-						JObject jobj = data as JObject;
-						JArray jArray = data as JArray;
-						if (jobj != null)
-						{
-							foreach (string name in jobj.Names)
-							{
-								bodyParameters.Add(name.ToLower(), jobj[name]);
-							}
-						}
-						else if (jArray != null)
-						{
-							bodyParameters.Add(string.Empty, jArray);
-						}
-					}
-					catch (Exception ex)
-					{
-						GXLogging.Error(log, ex, "Parsing error in Body ");
-
-					}
-				}
-			}
-			return bodyParameters;
-		}
 		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
 			NameValueCollection query = _httpContext.Request.GetQueryString();
