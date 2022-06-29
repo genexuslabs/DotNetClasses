@@ -53,6 +53,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\Encryption.cs" Link="Helpers\Encryption.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\EnvVarReader.cs" Link="Helpers\EnvVarReader.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXFileWatcher.cs" Link="Helpers\GXFileWatcher.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXRestAPIClient.cs" Link="Helpers\GXRestAPIClient.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\GXBaseObject.cs" Link="Model\GXBaseObject.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\URLRouter.cs" Link="Model\URLRouter.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\SdtGridState.cs" Link="Model\SdtGridState.cs" />
