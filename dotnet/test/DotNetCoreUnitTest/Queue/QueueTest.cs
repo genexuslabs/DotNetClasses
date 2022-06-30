@@ -1,12 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Net;
-using DotNetUnitTest;
 using GeneXus.Messaging.Common;
-using GeneXus.Services;
-using GeneXus.Storage;
 using Xunit;
 
 
@@ -32,7 +26,6 @@ namespace UnitTesting
 				Environment.SetEnvironmentVariable("QUEUE_AZUREQUEUE_CONNECTIONSTRING", "");
 
 				queue = (IQueue)Activator.CreateInstance(queueType);
-
 				Assert.NotNull(queue);
 			}
 		}
@@ -149,36 +142,28 @@ namespace UnitTesting
 			Assert.Equal("TestMsgId4", simpleQueueMessages[1].MessageId);
 
 		}
-
-		
 		public void TestDeleteMessagesMethod()
 		{
 			bool success = false;
+			IList<SimpleQueueMessage> simpleQueueMessages = new List<SimpleQueueMessage>();
+
+			SimpleQueueMessage simpleQueueMessage = new SimpleQueueMessage();
+			simpleQueueMessage.MessageId = "TestMsgId3";
+			simpleQueueMessage.MessageBody = "This is the message body 3";
+			simpleQueueMessages.Add(simpleQueueMessage);
 			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
-			List<string> messageHandleId = new List<string>() { "TestMsgIdNotExists", "TestMsgId3" };
-			
-			messageQueueResults = queue.DeleteMessages(messageHandleId, out success);
+			messageQueueResults = queue.DeleteMessages(simpleQueueMessages, out success);
 
 			Assert.True(success);
 			Assert.True(messageQueueResults.Count == 1);
-
 		}
 
-		
-	/*	public void TestDeleteMessageMethod()
-		{
-			bool success = false;
-			MessageQueueResult messageQueueResult = queue.DeleteMessage(out success);
-			Assert.True(success);
-		}
-	*/
 
 		[SkippableFact]
 		public void TestGetQueueLength()
 		{
 			bool success = false;
 			int length = queue.GetQueueLength(out success);
-
 			Assert.True(success);
 			Assert.Equal(0, length);
 
