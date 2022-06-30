@@ -152,7 +152,15 @@ namespace GeneXus.Data.NTier
 		void SetValue(IDictionary<string, object> currentEntry, object value);
 	}
 
-	public abstract class DynServiceDataStoreHelper : DataStoreHelperBase
+	public abstract class DynServiceDataStoreHelperBase : DataStoreHelperBase
+	{
+		public static object InvalidQuery(string msg)
+		{
+			throw new ServiceException(msg);
+		}
+	}
+
+	public abstract class DynServiceDataStoreHelper : DynServiceDataStoreHelperBase
 	{
 		public abstract Guid GetParmGuid(IDataParameterCollection parms, string parm);
 		public abstract string GetParmStr(IDataParameterCollection parms, string parm);

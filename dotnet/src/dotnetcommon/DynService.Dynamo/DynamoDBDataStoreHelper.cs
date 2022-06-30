@@ -5,8 +5,9 @@ using System.Collections.Generic;
 
 namespace GeneXus.Data.NTier
 {
-	public class DynamoDBDataStoreHelper: DataStoreHelperBase
+	public class DynamoDBDataStoreHelper: DynServiceDataStoreHelperBase
 	{
+
 		public DynamoQuery NewQuery() => new DynamoQuery(this);
 		public DynamoQuery NewScan() => new DynamoScan(this);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Amazon.DynamoDBv2.Model;
@@ -156,7 +157,7 @@ namespace GeneXus.Data.Dynamo
 
 		public DateTime GetDateTime(int i)
 		{
-			DateTime.TryParse(GetAttValue(i).S, out DateTime dt);
+			DateTime.TryParse(GetAttValue(i).S, null, DateTimeStyles.AdjustToUniversal, out DateTime dt);
 			return dt;
 		}
 
@@ -303,7 +304,7 @@ namespace GeneXus.Data.Dynamo
 
 		public override DateTime GetDateTime(int i)
 		{
-			DateTime.TryParse(GetAttValue(i).S, out DateTime dt);
+			DateTime.TryParse(GetAttValue(i).S, null, DateTimeStyles.AdjustToUniversal, out DateTime dt);
 			return dt;
 		}
 
@@ -346,7 +347,11 @@ namespace GeneXus.Data.Dynamo
 
 		public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
-			throw new NotImplementedException();
+			MemoryStream ms = GetAttValue(i).B;
+			if (ms == null)
+				return 0;
+			ms.Seek(fieldOffset, SeekOrigin.Begin);
+			return ms.Read(buffer, bufferoffset, length);
 		}
 	}
 }

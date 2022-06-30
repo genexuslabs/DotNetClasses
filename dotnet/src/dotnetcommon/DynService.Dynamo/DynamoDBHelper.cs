@@ -30,7 +30,19 @@ namespace GeneXus.Data.Dynamo
 			return ToAttributeValue(GxService.GXTypeToDbType(var.Type), var.Value);			
 		}
 
-		internal static void GXToDynamoQueryParameter(string prefix, Dictionary<string, AttributeValue> dynParm, ServiceParameter parm) => AddAttributeValue($"{prefix}{parm.ParameterName}", dynParm, parm);
+		internal static void GXToDynamoQueryParameter(Dictionary<string, AttributeValue> dynParm, ServiceParameter parm) => AddAttributeValue($":{ parm.ParameterName }", dynParm, parm);
+
+		internal static bool AddAttributeValue(string parmName, string fromName, Dictionary<string, AttributeValue> values, IDataParameterCollection parms, IEnumerable<VarValue> queryVars)
+		{
+			if(!AddAttributeValue(parmName, values, parms[fromName] as ServiceParameter))
+			{
+				VarValue varValue = queryVars.FirstOrDefault(v => v.Name == $":{fromName}");
+				if (varValue != null)
+					values[parmName] = DynamoDBHelper.ToAttributeValue(varValue);
+				return varValue != null;
+			}
+			return true;
+		}
 
 		internal static bool AddAttributeValue(string parmName, Dictionary<string, AttributeValue> dynParm, ServiceParameter parm)
 		{
@@ -45,7 +57,7 @@ namespace GeneXus.Data.Dynamo
 			return false;
 		}
 
-		private static AttributeValue ToAttributeValue(DbType dbType, Object value)
+		internal static AttributeValue ToAttributeValue(DbType dbType, Object value)
 		{
 			AttributeValue attValue;
 			switch (dbType)
@@ -69,11 +81,16 @@ namespace GeneXus.Data.Dynamo
 					break;
 				case DbType.Time:
 				case DbType.Date:
+					attValue = new AttributeValue
+					{
+						S = DateTime.SpecifyKind((DateTime)value, DateTimeKind.Utc).ToString("yyyy-MM-dd")
+					};
+					break;
 				case DbType.DateTime2:
 				case DbType.DateTime:
 					attValue = new AttributeValue
 					{
-						S = value.ToString()
+						S = DateTime.SpecifyKind((DateTime)value, DateTimeKind.Utc).ToString("yyyy-MM-ddTHH:mm:ssK")
 					};
 					break;
 
@@ -112,6 +129,8 @@ namespace GeneXus.Data.Dynamo
 				return SetToString(attValue.NS);
 			else if (attValue.SS.Count > 0)
 				return SetToString(attValue.SS);
+			else if (attValue.IsBOOLSet)
+			         return $"{ attValue.BOOL }";
 			else if (attValue.IsMSet)
 				return JSONHelper.Serialize(ConvertToDictionary(attValue.M), Encoding.UTF8);
 			else if (attValue.IsLSet)
