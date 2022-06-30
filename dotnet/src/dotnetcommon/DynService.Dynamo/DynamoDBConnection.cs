@@ -11,6 +11,7 @@ using System.Data.Common;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Net;
+using System.Text;
 using GeneXus.Cache;
 
 namespace GeneXus.Data.NTier
@@ -84,20 +85,37 @@ namespace GeneXus.Data.NTier
 		{
 			Initialize();
 			DynamoQuery query = cursorDef.Query as DynamoQuery;
+			bool isInsert = query.CursorType == ServiceCursorDef.CursorType.Insert;
 
 			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
 			Dictionary<string, string> expressionAttributeNames = null;
+			HashSet<string> mappedNames = null;
 			string keyItemForUpd = query.PartitionKey;
 			if (keyItemForUpd != null && keyItemForUpd.StartsWith("#"))
 			{
 				expressionAttributeNames = new Dictionary<string, string>();
-				expressionAttributeNames.Add(keyItemForUpd, keyItemForUpd.Substring(1));
+				mappedNames = mappedNames ?? new HashSet<string>();
+				string keyName = keyItemForUpd.Substring(1);
+				expressionAttributeNames.Add(keyItemForUpd, keyName);
+				mappedNames.Add(keyName);
 			}
 			foreach (KeyValuePair<string, string> asg in query.AssignAtts)
 			{
-				string name = asg.Key.TrimStart(SHARP_CHARS);
+				string name = asg.Key;
+				if (name.StartsWith("#"))
+				{
+					if (!isInsert)
+					{
+						expressionAttributeNames = new Dictionary<string, string>();
+						mappedNames = mappedNames ?? new HashSet<string>();
+						string keyName = name.Substring(1);
+						expressionAttributeNames.Add(name, keyName);
+						mappedNames.Add(keyName);
+					}
+					name = name.Substring(1);
+				}
 				string parmName = asg.Value.Substring(1);
-				DynamoDBHelper.AddAttributeValue(name, values, parms[parmName] as ServiceParameter);
+				DynamoDBHelper.AddAttributeValue(isInsert ? name : $":{ name }", parmName, values, parms, query.Vars);
 			}
 
 			Dictionary<string, AttributeValue> keyCondition = new Dictionary<string, AttributeValue>();
@@ -114,8 +132,8 @@ namespace GeneXus.Data.NTier
 						keyCondition[name] = DynamoDBHelper.ToAttributeValue(varValue);
 					else
 					{
-						DynamoDBHelper.AddAttributeValue(name, values, parms[varName] as ServiceParameter);
-						keyCondition[name] = values[name];
+						if (parms[varName] is ServiceParameter serviceParm)
+							keyCondition[name] = DynamoDBHelper.ToAttributeValue(serviceParm.DbType, serviceParm.Value);
 					}
 				}
 			}
@@ -138,7 +156,7 @@ namespace GeneXus.Data.NTier
 					try
 					{
 #if NETCORE
-					response = DynamoDBHelper.RunSync<DeleteItemResponse>(() => mDynamoDB.DeleteItemAsync((DeleteItemRequest)request));
+						response = DynamoDBHelper.RunSync<DeleteItemResponse>(() => mDynamoDB.DeleteItemAsync((DeleteItemRequest)request));
 #else
 						response = mDynamoDB.DeleteItem((DeleteItemRequest)request);
 #endif
@@ -159,7 +177,7 @@ namespace GeneXus.Data.NTier
 					try
 					{
 #if NETCORE
-					response = DynamoDBHelper.RunSync<PutItemResponse>(() => mDynamoDB.PutItemAsync((PutItemRequest)request));
+						response = DynamoDBHelper.RunSync<PutItemResponse>(() => mDynamoDB.PutItemAsync((PutItemRequest)request));
 #else
 						response = mDynamoDB.PutItem((PutItemRequest)request);
 #endif
@@ -174,30 +192,44 @@ namespace GeneXus.Data.NTier
 					{
 						TableName = query.TableName,
 						Key = keyCondition,
-						AttributeUpdates = ToAttributeUpdates(keyCondition, values)
+						UpdateExpression = ToAttributeUpdates(keyCondition, values, mappedNames),
+						ConditionExpression = $"attribute_exists({ keyItemForUpd })",
+						ExpressionAttributeValues = values,
+						ExpressionAttributeNames = expressionAttributeNames
 					};
+					try
+					{
 #if NETCORE
-					response = DynamoDBHelper.RunSync<UpdateItemResponse>(() => mDynamoDB.UpdateItemAsync((UpdateItemRequest)request));
+						response = DynamoDBHelper.RunSync<UpdateItemResponse>(() => mDynamoDB.UpdateItemAsync((UpdateItemRequest)request));
 #else
-					response = mDynamoDB.UpdateItem((UpdateItemRequest)request);
+						response = mDynamoDB.UpdateItem((UpdateItemRequest)request);
 #endif
+					}
+					catch (ConditionalCheckFailedException recordNotFound)
+					{
+						throw new ServiceException(ServiceError.RecordNotFound, recordNotFound);
+					}
 					break;
 			}
 
 			return response?.HttpStatusCode == HttpStatusCode.OK ? 1 : 0;
 		}
 
-		private Dictionary<string, AttributeValueUpdate> ToAttributeUpdates(Dictionary<string, AttributeValue> keyConditions, Dictionary<string, AttributeValue> values)
+		private string ToAttributeUpdates(Dictionary<string, AttributeValue> keyConditions, Dictionary<string, AttributeValue> values, HashSet<string> mappedNames)
 		{
-			Dictionary<string, AttributeValueUpdate> updates = new Dictionary<string, AttributeValueUpdate>();
+			StringBuilder updateExpression = new StringBuilder();
 			foreach (var item in values)
 			{
-				if (!keyConditions.ContainsKey(item.Key) && !item.Key.StartsWith("AV", StringComparison.InvariantCultureIgnoreCase)) 
+				string keyName = item.Key.Substring(1);
+				if (!keyConditions.ContainsKey(keyName) && !keyName.StartsWith("AV", StringComparison.InvariantCulture))
 				{
-					updates[item.Key] = new AttributeValueUpdate(item.Value, AttributeAction.PUT);
+					if (mappedNames?.Contains(keyName) == true)
+						keyName = $"#{keyName}";
+					updateExpression.Append(updateExpression.Length == 0 ? "SET " : ", ");
+					updateExpression.Append($"{ keyName } = { item.Key }");
 				}
 			}
-			return updates;
+			return updateExpression.ToString();
 		}
 		
 		public override IDataReader ExecuteReader(ServiceCursorDef cursorDef, IDataParameterCollection parms, CommandBehavior behavior)
@@ -228,7 +260,7 @@ namespace GeneXus.Data.NTier
 		{
 			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();
 			foreach (object parm in parms)
-				DynamoDBHelper.GXToDynamoQueryParameter(":", values, parm as ServiceParameter);
+				DynamoDBHelper.GXToDynamoQueryParameter(values, parm as ServiceParameter);
 			foreach (VarValue item in query.Vars)
 				values.Add(item.Name, DynamoDBHelper.ToAttributeValue(item));
 			return values;
