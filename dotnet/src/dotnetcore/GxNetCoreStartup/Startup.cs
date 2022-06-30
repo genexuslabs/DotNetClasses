@@ -136,9 +136,15 @@ namespace GeneXus.Application
 			services.Configure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && int.TryParse(MaxFileUploadSizeStr, out int MaxFileUploadSize))
+				{
+					GXLogging.Info(log, $"MaxFileUploadSize:{MaxFileUploadSize}");
 					options.MultipartBodyLengthLimit = MaxFileUploadSize;
+				}
 				else
+				{
+					GXLogging.Info(log, $"MaxFileUploadSize DefaultValue:{DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES}");
 					options.MultipartBodyLengthLimit = DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES;
+				}
 			});
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 
