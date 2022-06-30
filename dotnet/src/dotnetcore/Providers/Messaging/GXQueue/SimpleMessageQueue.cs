@@ -71,49 +71,25 @@ namespace GeneXus.Messaging.Common
 
 			return queueLength;
 		}
-		public GxUserType DeleteMessage(string messageHandleId, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
-		{
-			MessageQueueResult messageQueueResult = new MessageQueueResult();
-			GxUserType messageResult = new GxUserType();
-			errorMessages = new GXBaseCollection<SdtMessages_Message>();
-			try
-			{
-				ValidQueue();
-				messageQueueResult = queue.DeleteMessage(messageHandleId, out success);
-				LoadAssemblyIfRequired();
-				try
-				{ 
-				if (messageQueueResult != null && TransformMessageQueueResult(messageQueueResult) is GxUserType result)
-					return result;
-				}
-				catch (Exception ex)
-				{
-					GXLogging.Error(logger, ex);
-					success = false;
-					throw ex;
-				}
-			}
-			catch (Exception ex)
-			{
-				QueueErrorMessagesSetup(ex, out errorMessages);
-				GXLogging.Error(logger, ex);
-				success = false;
-			}
-			return TransformMessageQueueResult(messageQueueResult);
-		}
-
-		public IList<GxUserType> DeleteMessages(List<string> messageHandleId, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public IList<GxUserType> DeleteMessages(IList simpleQueueMessages, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			IList<GxUserType> messageResults = new List<GxUserType>();
 			success = false;
+
+			IList<SimpleQueueMessage> simpleQueueMessagesList = new List<SimpleQueueMessage>();
+			foreach (GxUserType simpleQueueMessage in simpleQueueMessages)
+			{
+				if (TransformGXUserTypeToSimpleQueueMessage(simpleQueueMessage) is SimpleQueueMessage queueMessage)
+					simpleQueueMessagesList.Add(queueMessage);
+			}
 			try
 			{
 				try
 				{
 					ValidQueue();
-					messageQueueResults = queue.DeleteMessages(messageHandleId, out success);
+					messageQueueResults = queue.DeleteMessages(simpleQueueMessagesList, out success);
 					LoadAssemblyIfRequired();
 					foreach (MessageQueueResult messageResult in messageQueueResults)
 					{

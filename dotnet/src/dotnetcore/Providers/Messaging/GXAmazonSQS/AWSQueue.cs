@@ -81,32 +81,22 @@ namespace GeneXus.Messaging.Queue
 			}
 		}
 
-		public MessageQueueResult DeleteMessage(string messageHandleId, out bool success)
+		public IList<MessageQueueResult> DeleteMessages(IList<SimpleQueueMessage> simpleQueueMessages, out bool success)
 		{
-			success= false;
-			MessageQueueResult messageQueueResult = new MessageQueueResult();
-			
-			List<string> messageHandleIdToDelete = new List<string>{ messageHandleId };
-			IList<MessageQueueResult> messageQueueResults = RemoveMessages(messageHandleIdToDelete, out bool operationOK);
-			if ((operationOK) && (messageQueueResults != null))
-			{ 
-				messageQueueResult = messageQueueResults[0];
-				success= true;
-			}
-			return messageQueueResult;
+			return RemoveMessages(simpleQueueMessages, out success);
 		}
-
-		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, out bool success)
-		{
-			return RemoveMessages(messageHandleId, out success);
-		}
-		private IList<MessageQueueResult> RemoveMessages(List<string> messageHandleId, out bool success)
+		private IList<MessageQueueResult> RemoveMessages(IList<SimpleQueueMessage> simpleQueueMessages, out bool success)
 		{
 			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
+			List<string> messageHandleIds = new List<string>();
 			success = false;
 			try
 			{
-				Task<DeleteMessageBatchResponse> task = Task.Run<DeleteMessageBatchResponse>(async () => await DeleteQueueMessageBatchAsync(messageHandleId));
+				foreach (SimpleQueueMessage simpleQueueMessage in simpleQueueMessages)
+				{
+					messageHandleIds.Add(simpleQueueMessage.MessageHandleId);
+				}
+				Task<DeleteMessageBatchResponse> task = Task.Run<DeleteMessageBatchResponse>(async () => await DeleteQueueMessageBatchAsync(messageHandleIds));
 
 				DeleteMessageBatchResponse deleteMessageBatchResponse = task.Result;
 				if (deleteMessageBatchResponse != null)
@@ -123,7 +113,7 @@ namespace GeneXus.Messaging.Queue
 					MessageQueueResult messageQueueResult = SetupMessageQueueResult(entry);
 					messageQueueResults.Add(messageQueueResult);
 				}
-
+				
 			}
 			catch (AggregateException ae)
 			{
