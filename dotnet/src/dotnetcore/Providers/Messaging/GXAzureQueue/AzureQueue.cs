@@ -112,10 +112,59 @@ namespace GeneXus.Messaging.Queue
 			}
 		}
 
+		public MessageQueueResult DeleteMessage(string messageHandleId, out bool success)
+		{
+			//This method should receive messageHandleId + popReceipt
+			success = false;
+			MessageQueueResult messageQueueResult = new MessageQueueResult();
+			if (_queueClient is QueueClient && _queueClient.Exists())
+			{
+				Azure.Response<QueueMessage> receivedMessage = _queueClient.ReceiveMessage();
+
+				if ((receivedMessage != null) && (!receivedMessage.GetRawResponse().IsError) && (receivedMessage.Value != null) && (receivedMessage.Value.MessageId == messageHandleId))
+				{
+					Azure.Response deleteResult = _queueClient.DeleteMessage(receivedMessage.Value.MessageId, receivedMessage.Value.PopReceipt);
+
+					success = !deleteResult.IsError;
+					if (success)
+					{
+						return (AzQueueMessageToMessageQueueResult(receivedMessage.Value, MessageQueueResultStatus.Deleted));
+					}
+				}
+			}
+			return messageQueueResult;
+		}
+
 		/// <summary>
 		/// Deletes permanently the messages given on the list.
 		/// </summary>
-		
+
+		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, out bool success)
+		{
+			success = false;
+			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
+			if (_queueClient is QueueClient && _queueClient.Exists())
+			{
+				QueueMessage[] receivedMessages = _queueClient.ReceiveMessages();
+				Azure.Response deleteResult;
+				foreach (QueueMessage message in receivedMessages)
+				{
+					if (messageHandleId.Contains(message.MessageId))
+					{
+						deleteResult = _queueClient.DeleteMessage(message?.MessageId, message?.PopReceipt);
+						if ((deleteResult != null) && (!deleteResult.IsError) && message is QueueMessage)
+							messageQueueResults.Add(AzQueueMessageToMessageQueueResult(queueMessage: message, status: MessageQueueResultStatus.Deleted));
+					}
+				}
+				success = true;
+			}
+			return messageQueueResults;
+		}
+
+		/// <summary>
+		/// Deletes permanently the messages given on the list.
+		/// </summary>
+
 		public IList<MessageQueueResult> DeleteMessages(IList<SimpleQueueMessage> simpleQueueMessages, out bool success)
 		{
 			success = false;

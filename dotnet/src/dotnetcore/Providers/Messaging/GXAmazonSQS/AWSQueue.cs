@@ -81,6 +81,56 @@ namespace GeneXus.Messaging.Queue
 			}
 		}
 
+		public MessageQueueResult DeleteMessage(string messageHandleId, out bool success)
+		{
+			success = false;
+			MessageQueueResult messageQueueResult = new MessageQueueResult();
+
+			List<string> messageHandleIdToDelete = new List<string> { messageHandleId };
+			IList<MessageQueueResult> messageQueueResults = RemoveMessages(messageHandleIdToDelete, out bool operationOK);
+			if ((operationOK) && (messageQueueResults != null))
+			{
+				messageQueueResult = messageQueueResults[0];
+				success = true;
+			}
+			return messageQueueResult;
+		}
+
+		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, out bool success)
+		{
+			return RemoveMessages(messageHandleId, out success);
+		}
+		private IList<MessageQueueResult> RemoveMessages(List<string> messageHandleId, out bool success)
+		{
+			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
+			success = false;
+			try
+			{
+				Task<DeleteMessageBatchResponse> task = Task.Run<DeleteMessageBatchResponse>(async () => await DeleteQueueMessageBatchAsync(messageHandleId));
+
+				DeleteMessageBatchResponse deleteMessageBatchResponse = task.Result;
+				if (deleteMessageBatchResponse != null)
+					success = (deleteMessageBatchResponse.Failed.Count == 0);
+
+				foreach (BatchResultErrorEntry entry in deleteMessageBatchResponse.Failed)
+				{
+					MessageQueueResult messageQueueResult = SetupMessageQueueResult(entry);
+					messageQueueResults.Add(messageQueueResult);
+				}
+
+				foreach (DeleteMessageBatchResultEntry entry in deleteMessageBatchResponse.Successful)
+				{
+					MessageQueueResult messageQueueResult = SetupMessageQueueResult(entry);
+					messageQueueResults.Add(messageQueueResult);
+				}
+
+			}
+			catch (AggregateException ae)
+			{
+				throw ae;
+			}
+			return messageQueueResults;
+		}
 		public IList<MessageQueueResult> DeleteMessages(IList<SimpleQueueMessage> simpleQueueMessages, out bool success)
 		{
 			return RemoveMessages(simpleQueueMessages, out success);
