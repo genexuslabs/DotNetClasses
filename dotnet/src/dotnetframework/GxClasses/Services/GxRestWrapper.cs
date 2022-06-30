@@ -710,13 +710,7 @@ namespace GeneXus.Application
 				object strVal = null;
 				if (parameters[key].GetType() == typeof(DateTime))
 				{
-					DateTime udt = ((DateTime)parameters[key]).ToUniversalTime();
-					if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
-					{
-						strVal = udt.ToString(fmtParameters[key], CultureInfo.InvariantCulture);
-					}
-					else
-						strVal = udt;
+					strVal = SerializeDateTime((DateTime)parameters[key], key, fmtParameters);
 				}				
 				else
 					strVal = parameters[key];
@@ -740,14 +734,8 @@ namespace GeneXus.Application
 					}
 					if (kv.Value.GetType() == typeof(DateTime))
 					{
-						DateTime udt = ((DateTime)kv.Value).ToUniversalTime();
-						if (fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
-						{
-							object strVal = udt.ToString(fmtParameters[kv.Key], CultureInfo.InvariantCulture);
-							serializablePars.Add(strKey, strVal);
-						}
-						else
-							serializablePars.Add(strKey, udt);
+						object strVal = SerializeDateTime((DateTime)kv.Value, kv.Key, fmtParameters);
+						serializablePars.Add(strKey, strVal);
 					}
 					else
 						serializablePars.Add(strKey, kv.Value);
@@ -757,6 +745,18 @@ namespace GeneXus.Application
 			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
 		}
+
+		private object SerializeDateTime(DateTime dt, string key, Dictionary<string, string> fmtParameters)
+		{
+			DateTime udt = (dt==DateTimeUtil.NullDate()) ? dt: dt.ToUniversalTime();
+			
+			if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+			{
+				return DateTimeUtil.DToC2(udt, fmtParameters[key]);
+			}
+			return udt;
+		}
+
 		private bool PrimitiveType(Type type)
 		{
 			return type.IsPrimitive || type == typeof(string) || type.IsValueType;
