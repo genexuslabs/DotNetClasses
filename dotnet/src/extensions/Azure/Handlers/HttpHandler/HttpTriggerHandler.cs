@@ -29,7 +29,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		private IGXRouting _gxRouting;
 		private ICacheService2 _redis;
 
-		public HttpTriggerHandler(IGXRouting gxRouting, ICacheService2 redis)
+		internal HttpTriggerHandler(IGXRouting gxRouting, ICacheService2 redis)
 		{
 			_gxRouting = gxRouting;
 			if (redis != null && redis.GetType() == typeof(Redis))
