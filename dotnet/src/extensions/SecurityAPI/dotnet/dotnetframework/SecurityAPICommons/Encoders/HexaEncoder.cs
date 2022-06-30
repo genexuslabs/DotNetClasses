@@ -51,7 +51,7 @@ namespace SecurityAPICommons.Encoders
 				this.error.setError("HE001", e.Message);
 				return "";
 			}
-			return hexa;
+			return hexa.ToUpper();
 
 		}
 		/// <summary>
