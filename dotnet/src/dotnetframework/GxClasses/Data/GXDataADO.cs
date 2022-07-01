@@ -1301,7 +1301,7 @@ namespace GeneXus.Data.ADO
 		public int ImgIdx { get; set; }
 		public bool Nullable { get; set; }
 		public bool ChkEmpty { get; set; }
-		public bool Return { get; set; }
+		public bool Return { get; set; }//Runtime parameters
 		public bool InDB { get; set; }
 		public bool AddAtt { get; set; }
 		public bool Preload { get; set; }
