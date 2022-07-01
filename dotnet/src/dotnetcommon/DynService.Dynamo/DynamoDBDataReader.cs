@@ -112,7 +112,7 @@ namespace GeneXus.Data.Dynamo
 
 		public long getLong(int i)
 		{
-			return Convert.ToInt64(GetAttValue(i).N);			
+			return Convert.ToInt64(GetAttValueN(i));			
 		}
 
 		public bool GetBoolean(int i)
@@ -163,12 +163,12 @@ namespace GeneXus.Data.Dynamo
 
 		public decimal GetDecimal(int i)
 		{
-			return decimal.Parse(GetAttValue(i).N);
+			return decimal.Parse(GetAttValueN(i));
 		}
 
 		public double GetDouble(int i)
 		{
-			return double.Parse(GetAttValue(i).N);
+			return double.Parse(GetAttValueN(i));
 		}
 
 		public Type GetFieldType(int i)
@@ -178,7 +178,7 @@ namespace GeneXus.Data.Dynamo
 
 		public float GetFloat(int i)
 		{
-			return float.Parse(GetAttValue(i).N);
+			return float.Parse(GetAttValueN(i));
 		}
 
 		public Guid GetGuid(int i)
@@ -188,18 +188,18 @@ namespace GeneXus.Data.Dynamo
 
 		public short GetInt16(int i)
 		{
-			return short.Parse(GetAttValue(i).N);
+			return short.Parse(GetAttValueN(i));
 		}
 
 		public int GetInt32(int i)
 		{
-			return int.Parse(GetAttValue(i).N);
+			return int.Parse(GetAttValueN(i));
 
 		}
 
 		public long GetInt64(int i)
 		{
-			return long.Parse(GetAttValue(i).N);
+			return long.Parse(GetAttValueN(i));
 		}
 
 		public string GetName(int i)
@@ -251,6 +251,8 @@ namespace GeneXus.Data.Dynamo
 		{
 			return (AttributeValue)selectList[i].GetValue(DynamoDBConnection.NewServiceContext(), currentEntry);
 		}
+
+		private string GetAttValueN(int i) => GetAttValue(i)?.N ?? "0";
 
 		public int GetValues(object[] values)
 		{			
@@ -312,26 +314,26 @@ namespace GeneXus.Data.Dynamo
 		{
 			return (AttributeValue)block.Item(pos, i);
 		}
-
+		private string GetAttValueN(int i) => GetAttValue(i)?.N ?? "0";
 
 		public override decimal GetDecimal(int i)
 		{
-			return decimal.Parse(GetAttValue(i).N);
+			return decimal.Parse(GetAttValueN(i));
 		}
 
 		public override short GetInt16(int i)
 		{
-			return short.Parse(GetAttValue(i).N);
+			return short.Parse(GetAttValueN(i));
 		}
 
 		public override int GetInt32(int i)
 		{
-			return int.Parse(GetAttValue(i).N);
+			return int.Parse(GetAttValueN(i));
 		}
 
 		public override long GetInt64(int i)
 		{
-			return long.Parse(GetAttValue(i).N);
+			return long.Parse(GetAttValueN(i));
 		}
 
 		public override string GetString(int i)
