@@ -203,6 +203,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiattractions", "src\extensions\Azure\test\apiattractions\apiattractions.csproj", "{E85FDB0F-FA81-4CDD-8BF3-865269CE2DB3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectHealthTest", "test\ProjectHealthTest\ProjectHealthTest.csproj", "{65048104-212A-4819-AECF-89CA9C08C83F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetRedisTest", "test\DotNetRedisTest\DotNetRedisTest.csproj", "{48430E50-043A-47A2-8278-B86A4420758A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -498,6 +499,10 @@ Global
 		{65048104-212A-4819-AECF-89CA9C08C83F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65048104-212A-4819-AECF-89CA9C08C83F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65048104-212A-4819-AECF-89CA9C08C83F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48430E50-043A-47A2-8278-B86A4420758A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48430E50-043A-47A2-8278-B86A4420758A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48430E50-043A-47A2-8278-B86A4420758A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48430E50-043A-47A2-8278-B86A4420758A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -596,6 +601,7 @@ Global
 		{DCEC0B38-93B6-4003-81E6-9FBC2BB4F163} = {7BA5A2CE-7992-4F87-9D84-91AE4D046F5A}
 		{E85FDB0F-FA81-4CDD-8BF3-865269CE2DB3} = {7BA5A2CE-7992-4F87-9D84-91AE4D046F5A}
 		{65048104-212A-4819-AECF-89CA9C08C83F} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
+		{48430E50-043A-47A2-8278-B86A4420758A} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}

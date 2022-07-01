@@ -883,10 +883,10 @@ namespace GeneXus.Data.NTier.ADO
 					{
 						foreach (ParDef p in ptb)
 						{
+							_gxDbCommand.ParmDefinition.Add(p);
 							if (p.Return)
 								continue;
 							_gxDbCommand.AddParameter(p.Name, p.GxType, p.Size, p.Scale);
-							_gxDbCommand.ParmDefinition.Add(p);
 							pos++;
 						}
 					}
@@ -907,8 +907,6 @@ namespace GeneXus.Data.NTier.ADO
 					{
 						foreach (ParDef p in ptb)
 						{
-							if (p.Return)
-								continue;
 							_dynamicParameters.Add(p);
 							pos++;
 						}
