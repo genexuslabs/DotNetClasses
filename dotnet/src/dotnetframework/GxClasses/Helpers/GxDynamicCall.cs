@@ -89,7 +89,7 @@ namespace GeneXus.DynamicCall
 					}
 					else
 					{
-						constructorParameters = Array.Empty<object>();
+						constructorParameters = new object[] { new GxContext() };
 					}
 					_object = Activator.CreateInstance(objType, constructorParameters);
 				}
