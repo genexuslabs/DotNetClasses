@@ -96,6 +96,13 @@ namespace GeneXus.Storage.GXAmazonS3
 				config.ServiceURL = Endpoint;
 				customEndpoint = true;
 			}
+			else
+			{
+				if (region == Amazon.RegionEndpoint.USEast1)
+				{
+					Amazon.AWSConfigsS3.UseSignatureVersion4 = true;
+				}
+			}
 
 #if NETCORE
 			if (credentials != null)
