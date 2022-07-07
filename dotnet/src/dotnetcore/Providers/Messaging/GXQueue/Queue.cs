@@ -19,6 +19,7 @@ namespace GeneXus.Messaging.Common
 		IList<SimpleQueueMessage> GetMessages(MessageQueueOptions messageQueueOptions, out bool success);
 		MessageQueueResult DeleteMessage(string messageHandleId, out bool success);
 		IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, out bool success);
+		IList<MessageQueueResult> DeleteMessages(IList<SimpleQueueMessage> simpleQueueMessages, out bool success);
 		void Clear(out bool success);
 		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);
 	}

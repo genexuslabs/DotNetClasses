@@ -43,7 +43,7 @@ namespace GeneXus.Messaging.Queue
 			{
 				try
 				{
-					string ret = "";
+					string ret = String.Empty;
 					if (CryptoImpl.Decrypt(ref ret, value))
 					{
 						value = ret;

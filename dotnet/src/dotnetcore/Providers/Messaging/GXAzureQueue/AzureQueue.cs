@@ -112,14 +112,10 @@ namespace GeneXus.Messaging.Queue
 			}
 		}
 
-		/// <summary>
-		/// Permanently removes the first message dequeued.
-		/// </summary>
-
 		public MessageQueueResult DeleteMessage(string messageHandleId, out bool success)
 		{
 			//This method should receive messageHandleId + popReceipt
-			success=false;
+			success = false;
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
 			if (_queueClient is QueueClient && _queueClient.Exists())
 			{
@@ -142,8 +138,8 @@ namespace GeneXus.Messaging.Queue
 		/// <summary>
 		/// Deletes permanently the messages given on the list.
 		/// </summary>
-		
-		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId,out bool success)
+
+		public IList<MessageQueueResult> DeleteMessages(List<string> messageHandleId, out bool success)
 		{
 			success = false;
 			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
@@ -153,14 +149,47 @@ namespace GeneXus.Messaging.Queue
 				Azure.Response deleteResult;
 				foreach (QueueMessage message in receivedMessages)
 				{
-					if (messageHandleId.Contains(message.MessageId) )
-					{ 
+					if (messageHandleId.Contains(message.MessageId))
+					{
 						deleteResult = _queueClient.DeleteMessage(message?.MessageId, message?.PopReceipt);
 						if ((deleteResult != null) && (!deleteResult.IsError) && message is QueueMessage)
 							messageQueueResults.Add(AzQueueMessageToMessageQueueResult(queueMessage: message, status: MessageQueueResultStatus.Deleted));
 					}
 				}
 				success = true;
+			}
+			return messageQueueResults;
+		}
+
+		/// <summary>
+		/// Deletes permanently the messages given on the list.
+		/// </summary>
+
+		public IList<MessageQueueResult> DeleteMessages(IList<SimpleQueueMessage> simpleQueueMessages, out bool success)
+		{
+			success = false;
+			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
+			if (_queueClient is QueueClient && _queueClient.Exists())
+			{
+				Azure.Response deleteResult;
+				foreach (SimpleQueueMessage simpleQueueMessage in simpleQueueMessages)
+				{
+					deleteResult = _queueClient.DeleteMessage(simpleQueueMessage?.MessageId, simpleQueueMessage?.MessageHandleId);
+					
+					if (deleteResult != null)
+					{
+						if (!deleteResult.IsError)
+						{
+							messageQueueResults.Add(SimpleQueueMessageToMessageQueueResult(simpleQueueMessage, MessageQueueResultStatus.Deleted));
+							success = true;
+						}
+						else
+						{ 
+							messageQueueResults.Add(SimpleQueueMessageToMessageQueueResult(simpleQueueMessage, MessageQueueResultStatus.Failed));
+							success = false;
+						}
+					}
+				}			
 			}
 			return messageQueueResults;
 		}
@@ -330,7 +359,23 @@ namespace GeneXus.Messaging.Queue
 			success = !sendError;
 			return messageQueueResults;
 		}
+		public override string GetName()
+		{
+			return Name;
+		}
 
+		#region Transform Methods
+
+		private MessageQueueResult SimpleQueueMessageToMessageQueueResult(SimpleQueueMessage simpleQueueMessage, string messageStatus)
+		{
+			MessageQueueResult messageQueueResult = new MessageQueueResult();
+			messageQueueResult.MessageId = simpleQueueMessage.MessageId;
+			messageQueueResult.MessageStatus = messageStatus;
+			messageQueueResult.ServerMessageId = simpleQueueMessage.MessageId;
+			messageQueueResult.MessageHandleId = simpleQueueMessage.MessageHandleId;
+			return messageQueueResult;
+
+		}
 		private MessageQueueResult AzQueueMessageToMessageQueueResult(QueueMessage queueMessage, string status)
 		{
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
@@ -408,10 +453,7 @@ namespace GeneXus.Messaging.Queue
 			}
 			return simpleQueueMessage;
 		}
-		public override string GetName()
-		{
-			return Name;
-		}
+		#endregion
 	}
 
 }

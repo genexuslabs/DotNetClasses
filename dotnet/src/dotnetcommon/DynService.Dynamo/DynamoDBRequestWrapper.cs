@@ -26,23 +26,23 @@ namespace GeneXus.Data.NTier.DynamoDB
 
 		public ResponseWrapper Read(Dictionary<string, AttributeValue> lastEvaluatedKey)
 		{
-			if (mReq is ScanRequest)
+			if (mReq is ScanRequest scanReq)
 			{
-				((ScanRequest)mReq).ExclusiveStartKey = lastEvaluatedKey;
+				scanReq.ExclusiveStartKey = lastEvaluatedKey;
 #if NETCORE
-				ScanResponse scanResponse = DynamoDBHelper.RunSync<ScanResponse>(() => mDynamoDB.ScanAsync((ScanRequest)mReq));
+				ScanResponse scanResponse = DynamoDBHelper.RunSync<ScanResponse>(() => mDynamoDB.ScanAsync(scanReq));
 #else
-				ScanResponse scanResponse = mDynamoDB.Scan((ScanRequest)mReq);
+				ScanResponse scanResponse = mDynamoDB.Scan(scanReq);
 #endif
 				return new ResponseWrapper(scanResponse);
 			}
-			if (mReq is QueryRequest)
+			if (mReq is QueryRequest queryReq)
 			{
-				((QueryRequest)mReq).ExclusiveStartKey = lastEvaluatedKey;
+				queryReq.ExclusiveStartKey = lastEvaluatedKey;
 #if NETCORE
-				QueryResponse queryResponse = DynamoDBHelper.RunSync<QueryResponse>(() => mDynamoDB.QueryAsync((QueryRequest)mReq));
+				QueryResponse queryResponse = DynamoDBHelper.RunSync<QueryResponse>(() => mDynamoDB.QueryAsync(queryReq));
 #else
-				QueryResponse queryResponse = mDynamoDB.Query((QueryRequest)mReq);
+				QueryResponse queryResponse = mDynamoDB.Query(queryReq);
 #endif
 				return new ResponseWrapper(queryResponse);
 			}

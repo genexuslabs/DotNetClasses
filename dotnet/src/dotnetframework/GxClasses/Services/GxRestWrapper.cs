@@ -44,9 +44,9 @@ namespace GeneXus.Application
 	}
 
 #if NETCORE
-	public class GxRestWrapper
+	internal class GxRestWrapper
 #else
-	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
+	internal class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
@@ -180,9 +180,9 @@ namespace GeneXus.Application
 		private Dictionary<string, object> ReadBodyParameters()
 		{
 #if NETCORE
-			return ReadRequestParameters(_httpContext.Request.Body);
+			return RestAPIHelpers.ReadRestBodyParameters(_httpContext.Request.Body);
 #else
-			return ReadRequestParameters(_httpContext.Request.GetInputStream());
+			return RestAPIHelpers.ReadRestBodyParameters(_httpContext.Request.GetInputStream());
 #endif
 		}
 
@@ -389,40 +389,6 @@ namespace GeneXus.Application
 			return MethodBodyExecute(key);
 		}
 
-		public Dictionary<string, object> ReadRequestParameters(Stream stream)
-		{
-			var bodyParameters = new Dictionary<string, object>();
-			using (StreamReader streamReader = new StreamReader(stream))
-			{
-				if (!streamReader.EndOfStream)
-				{
-					try
-					{
-						string json = streamReader.ReadToEnd();
-						var data = JSONHelper.ReadJSON<dynamic>(json);
-						JObject jobj = data as JObject;
-						JArray jArray = data as JArray;
-						if (jobj != null)
-						{
-							foreach (string name in jobj.Names)
-							{
-								bodyParameters.Add(name.ToLower(), jobj[name]);
-							}
-						}
-						else if (jArray != null)
-						{
-							bodyParameters.Add(string.Empty, jArray);
-						}
-					}
-					catch (Exception ex)
-					{
-						GXLogging.Error(log, ex, "Parsing error in Body ");
-
-					}
-				}
-			}
-			return bodyParameters;
-		}
 		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
 			NameValueCollection query = _httpContext.Request.GetQueryString();
@@ -744,13 +710,7 @@ namespace GeneXus.Application
 				object strVal = null;
 				if (parameters[key].GetType() == typeof(DateTime))
 				{
-					DateTime udt = ((DateTime)parameters[key]).ToUniversalTime();
-					if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
-					{
-						strVal = udt.ToString(fmtParameters[key], CultureInfo.InvariantCulture);
-					}
-					else
-						strVal = udt;
+					strVal = SerializeDateTime((DateTime)parameters[key], key, fmtParameters);
 				}				
 				else
 					strVal = parameters[key];
@@ -774,14 +734,8 @@ namespace GeneXus.Application
 					}
 					if (kv.Value.GetType() == typeof(DateTime))
 					{
-						DateTime udt = ((DateTime)kv.Value).ToUniversalTime();
-						if (fmtParameters.ContainsKey(kv.Key) && !String.IsNullOrEmpty(fmtParameters[kv.Key]))
-						{
-							object strVal = udt.ToString(fmtParameters[kv.Key], CultureInfo.InvariantCulture);
-							serializablePars.Add(strKey, strVal);
-						}
-						else
-							serializablePars.Add(strKey, udt);
+						object strVal = SerializeDateTime((DateTime)kv.Value, kv.Key, fmtParameters);
+						serializablePars.Add(strKey, strVal);
 					}
 					else
 						serializablePars.Add(strKey, kv.Value);
@@ -791,6 +745,18 @@ namespace GeneXus.Application
 			_httpContext.Response.Write(json); //Use intermediate StringWriter in order to avoid chunked response
 			return Task.CompletedTask;
 		}
+
+		private object SerializeDateTime(DateTime dt, string key, Dictionary<string, string> fmtParameters)
+		{
+			DateTime udt = (dt==DateTimeUtil.NullDate()) ? dt: dt.ToUniversalTime();
+			
+			if (fmtParameters.ContainsKey(key) && !String.IsNullOrEmpty(fmtParameters[key]))
+			{
+				return DateTimeUtil.DToC2(udt, fmtParameters[key]);
+			}
+			return udt;
+		}
+
 		private bool PrimitiveType(Type type)
 		{
 			return type.IsPrimitive || type == typeof(string) || type.IsValueType;

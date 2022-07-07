@@ -9,7 +9,6 @@ using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
 using GeneXus.Utils;
-using GxClasses.Helpers;
 using GxClasses.Web.Middleware;
 using log4net;
 using Microsoft.AspNetCore;
@@ -18,12 +17,12 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
@@ -95,6 +94,7 @@ namespace GeneXus.Application
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
 		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
+		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
 
@@ -115,22 +115,14 @@ namespace GeneXus.Application
 
 		public Startup(Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
 		{
-
-			var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-			  	.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddEnvironmentVariables();
 			GXRouting.ContentRootPath = env.ContentRootPath;
 			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
-			Config.ConfigRoot = builder.Build();
 			GxContext.IsHttpContext = true;
 			gxRouting = new GXRouting(REST_BASE_URL);
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddMvc(option => option.EnableEndpointRouting = false);
-			services.Configure<AppSettings>(Config.ConfigRoot.GetSection("AppSettings"));
 			services.Configure<KestrelServerOptions>(options =>
 			{
 				options.AllowSynchronousIO = true;
@@ -141,9 +133,20 @@ namespace GeneXus.Application
 				options.AllowSynchronousIO = true;
 			});
 			services.AddDistributedMemoryCache();
-			AppSettings settings = new AppSettings();
-			Config.ConfigRoot.GetSection("AppSettings").Bind(settings);
 
+			services.Configure<FormOptions>(options =>
+			{
+				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
+				{
+					GXLogging.Info(log, $"MaxFileUploadSize:{MaxFileUploadSize}");
+					options.MultipartBodyLengthLimit = MaxFileUploadSize;
+				}
+				else
+				{
+					GXLogging.Info(log, $"MaxFileUploadSize DefaultValue:{DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES}");
+					options.MultipartBodyLengthLimit = DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES;
+				}
+			});
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 
 			if (sessionService != null)
@@ -151,7 +154,10 @@ namespace GeneXus.Application
 			services.AddHttpContextAccessor();
 			services.AddSession(options =>
 			{
-				options.IdleTimeout = TimeSpan.FromMinutes(settings.SessionTimeout==0 ? DEFAULT_SESSION_TIMEOUT_MINUTES : settings.SessionTimeout); 
+				if (Config.GetValueOf("SessionTimeout", out string SessionTimeoutStr) && int.TryParse(SessionTimeoutStr, out int SessionTimeout))
+					options.IdleTimeout = TimeSpan.FromMinutes(SessionTimeout);
+				else
+					options.IdleTimeout = TimeSpan.FromMinutes(DEFAULT_SESSION_TIMEOUT_MINUTES); 
 				options.Cookie.HttpOnly = true;
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;

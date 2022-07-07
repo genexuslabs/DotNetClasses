@@ -82,9 +82,9 @@ namespace GeneXus.Messaging.Common
 				messageQueueResult = queue.DeleteMessage(messageHandleId, out success);
 				LoadAssemblyIfRequired();
 				try
-				{ 
-				if (messageQueueResult != null && TransformMessageQueueResult(messageQueueResult) is GxUserType result)
-					return result;
+				{
+					if (messageQueueResult != null && TransformMessageQueueResult(messageQueueResult) is GxUserType result)
+						return result;
 				}
 				catch (Exception ex)
 				{
@@ -114,6 +114,50 @@ namespace GeneXus.Messaging.Common
 				{
 					ValidQueue();
 					messageQueueResults = queue.DeleteMessages(messageHandleId, out success);
+					LoadAssemblyIfRequired();
+					foreach (MessageQueueResult messageResult in messageQueueResults)
+					{
+						if (TransformMessageQueueResult(messageResult) is GxUserType result)
+							messageResults.Add(result);
+					}
+					success = true;
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(logger, ex);
+					QueueErrorMessagesSetup(ex, out errorMessages);
+					success = false;
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(logger, ex);
+				success = false;
+				throw ex;
+			}
+
+			return messageResults;
+		}
+
+		public IList<GxUserType> DeleteMessages(IList simpleQueueMessages, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		{
+			IList<MessageQueueResult> messageQueueResults = new List<MessageQueueResult>();
+			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			IList<GxUserType> messageResults = new List<GxUserType>();
+			success = false;
+
+			IList<SimpleQueueMessage> simpleQueueMessagesList = new List<SimpleQueueMessage>();
+			foreach (GxUserType simpleQueueMessage in simpleQueueMessages)
+			{
+				if (TransformGXUserTypeToSimpleQueueMessage(simpleQueueMessage) is SimpleQueueMessage queueMessage)
+					simpleQueueMessagesList.Add(queueMessage);
+			}
+			try
+			{
+				try
+				{
+					ValidQueue();
+					messageQueueResults = queue.DeleteMessages(simpleQueueMessagesList, out success);
 					LoadAssemblyIfRequired();
 					foreach (MessageQueueResult messageResult in messageQueueResults)
 					{
