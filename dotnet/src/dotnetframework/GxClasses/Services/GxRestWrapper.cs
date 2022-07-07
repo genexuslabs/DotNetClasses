@@ -46,7 +46,7 @@ namespace GeneXus.Application
 #if NETCORE
 	internal class GxRestWrapper
 #else
-	internal class GxRestWrapper : IHttpHandler, IRequiresSessionState
+	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
