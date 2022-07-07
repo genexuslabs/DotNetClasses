@@ -44,7 +44,7 @@ namespace GeneXus.Application
 	}
 
 #if NETCORE
-	internal class GxRestWrapper
+	public class GxRestWrapper
 #else
 	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
