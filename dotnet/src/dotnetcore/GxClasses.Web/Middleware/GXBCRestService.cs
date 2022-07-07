@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace GeneXus.Application
 {
-	internal class GXBCRestService :GxRestWrapper 
+	public class GXBCRestService :GxRestWrapper 
 	{
 		GxSilentTrnSdt _worker;
 		private const string INSERT_OR_UPDATE_PARAMETER = "insertorupdate";
