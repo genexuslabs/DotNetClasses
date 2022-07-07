@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace GxClasses.Web
 {
-	internal interface IGXRouting
+	public interface IGXRouting
 	{
 		public Task ProcessRestRequest(HttpContext context);
 		public bool ServiceInPath(String path, out String actualPath);
