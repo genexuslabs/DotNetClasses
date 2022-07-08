@@ -1586,7 +1586,7 @@ namespace GeneXus.Utils
 			{
 				char ch = s[index];
 
-				if ((ch == '\\') || (ch == '"') || (ch == '>'))
+				if ((ch == '\\') || (ch == '"'))
 				{
 					sb.Append('\\');
 					sb.Append(ch);
