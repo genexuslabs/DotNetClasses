@@ -360,7 +360,22 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 		}
 
+		const long MIN_MULTIPART_POST = 5L * 1024 * 1024;
+
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
+		{
+			bool doSimpleUpload = stream.CanSeek && stream.Length <= MIN_MULTIPART_POST;
+			if (doSimpleUpload)
+			{
+				return UploadSimple(fileName, stream, destFileType);
+			}
+			else
+			{
+				return UploadMultipart(fileName, stream, destFileType);
+			}			
+		}
+
+		private string UploadMultipart(string fileName, Stream stream, GxFileType destFileType)
 		{
 			string contentType = null;
 			TryGetContentType(fileName, out contentType);
@@ -369,6 +384,23 @@ namespace GeneXus.Storage.GXAmazonS3
 			{
 				stream.CopyTo(s);
 			}
+			return Get(fileName, destFileType);
+		}
+
+		private string UploadSimple(string fileName, Stream stream, GxFileType destFileType)
+		{			
+			PutObjectRequest objectRequest = new PutObjectRequest()
+			{
+				BucketName = Bucket,
+				Key = fileName,
+				InputStream = stream,
+				CannedACL = GetCannedACL(destFileType)
+			};
+			if (TryGetContentType(fileName, out string mimeType))
+			{
+				objectRequest.ContentType = mimeType;
+			}
+			PutObjectResponse result = PutObject(objectRequest);
 			return Get(fileName, destFileType);
 		}
 
