@@ -2,10 +2,8 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.IO;
 using Amazon.S3.Model;
-using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -364,19 +362,13 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
 		{
-			MemoryStream ms = new MemoryStream();
-			stream.CopyTo(ms);//can determine PutObjectRequest.Headers.ContentLength. Avoid error Could not determine content length
-			PutObjectRequest objectRequest = new PutObjectRequest()
+			string contentType = null;
+			TryGetContentType(fileName, out contentType);
+			
+			using (S3UploadStream s = new S3UploadStream(Client, Bucket, fileName, GetCannedACL(destFileType), contentType))
 			{
-				BucketName = Bucket,
-				Key = fileName,
-				InputStream = ms,
-				CannedACL = GetCannedACL(destFileType)
-			};
-			if (TryGetContentType(fileName, out string mimeType)) {
-				objectRequest.ContentType = mimeType;
+				stream.CopyTo(s);
 			}
-			PutObjectResponse result = PutObject(objectRequest);
 			return Get(fileName, destFileType);
 		}
 
