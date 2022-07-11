@@ -5,3 +5,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("GxSearch")]
 [assembly: InternalsVisibleTo("GxNetCoreStartup")]
 [assembly: InternalsVisibleTo("GXQueue")]
+[assembly: InternalsVisibleTo("GXMessageBroker")]
