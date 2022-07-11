@@ -76,6 +76,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Messaging\GXAzureQueue\GXAzureQueue.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Messaging\GXAzureServiceBus\GXAzureServiceBus.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXGoogleCloudNetCore\GXGoogleCloudNetCore.csproj" />

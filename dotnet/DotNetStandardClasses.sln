@@ -208,6 +208,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestMockDBAccess", "src\ext
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Programs.Common", "src\extensions\Azure\test\GeneXus.Programs.Common\GeneXus.Programs.Common.csproj", "{DCEC0B38-93B6-4003-81E6-9FBC2BB4F163}"
 EndProject
+<<<<<<< HEAD
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiattractions", "src\extensions\Azure\test\apiattractions\apiattractions.csproj", "{E85FDB0F-FA81-4CDD-8BF3-865269CE2DB3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectHealthTest", "test\ProjectHealthTest\ProjectHealthTest.csproj", "{65048104-212A-4819-AECF-89CA9C08C83F}"
@@ -219,6 +220,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{655CC196-ED49-47F7-858D-BE4599E8F659}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXAmazonSQS", "src\dotnetcore\Providers\Messaging\GXAmazonSQS\GXAmazonSQS.csproj", "{F8BA0D65-267D-491F-BFAB-33F5E5B61AD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXMessageBroker", "src\dotnetcore\Providers\Messaging\GXMessageBroker\GXMessageBroker.csproj", "{3B1B5706-E896-4CEB-A551-E30226303BDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXAzureServiceBus", "src\dotnetcore\Providers\Messaging\GXAzureServiceBus\GXAzureServiceBus.csproj", "{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -526,6 +531,14 @@ Global
 		{F8BA0D65-267D-491F-BFAB-33F5E5B61AD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8BA0D65-267D-491F-BFAB-33F5E5B61AD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8BA0D65-267D-491F-BFAB-33F5E5B61AD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B1B5706-E896-4CEB-A551-E30226303BDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B1B5706-E896-4CEB-A551-E30226303BDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B1B5706-E896-4CEB-A551-E30226303BDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B1B5706-E896-4CEB-A551-E30226303BDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -630,6 +643,8 @@ Global
 		{48430E50-043A-47A2-8278-B86A4420758A} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 		{F8BA0D65-267D-491F-BFAB-33F5E5B61AD7} = {30159B0F-BE61-4DB7-AC02-02851426BE4B}
 		{65048104-212A-4819-AECF-89CA9C08C83F} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
+		{3B1B5706-E896-4CEB-A551-E30226303BDB} = {4C43F2DA-59E5-46F5-B691-195449498555}
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0} = {30159B0F-BE61-4DB7-AC02-02851426BE4B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
