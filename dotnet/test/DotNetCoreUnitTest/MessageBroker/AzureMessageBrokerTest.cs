@@ -16,7 +16,7 @@ namespace UnitTesting
 		public AzureMessageBrokerTest(string queueName, Type queueType)
 		{
 			bool testEnabled = Environment.GetEnvironmentVariable("AZURESB_TEST_ENABLED") == "true";
-			//Skip.IfNot(testEnabled, "Environment variables not set");
+			Skip.IfNot(testEnabled, "Environment variables not set");
 
 			if (queueName == GeneXus.Messaging.GXAzureServiceBus.AzureServiceBus.Name)
 			{
