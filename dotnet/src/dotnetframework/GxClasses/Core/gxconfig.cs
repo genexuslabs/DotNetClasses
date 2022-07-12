@@ -26,6 +26,7 @@ namespace GeneXus.Configuration
 	using System.Collections.Generic;
 	using GxClasses.Helpers;
 	using System.Text;
+	using GxClasses;
 
 	public class Config
 	{
@@ -144,6 +145,9 @@ namespace GeneXus.Configuration
 		{
 			try
 			{
+				sString = string.Empty;
+				if (config == null)
+					return false;
 				sString = config.Get(sId);
 				if (String.IsNullOrEmpty(sString))
 					return false;
@@ -480,6 +484,7 @@ namespace GeneXus.Configuration
 			{
 				if (!configLoaded || _config == null)
 				{
+					DataStoreFactoryService.LoadProvidersFromDirectory("Dbms");
 					try
 					{
 						AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
@@ -831,7 +836,7 @@ namespace GeneXus.Configuration
 				if (rewriteEnabled == -1)
 				{
 #if NETCORE
-					var basePath = FileUtil.GetBasePath();
+					string basePath = FileUtil.GetBasePath();
 #else
 					var basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #endif

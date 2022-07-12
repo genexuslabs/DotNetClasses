@@ -9,6 +9,7 @@ using GeneXus.Reorg;
 using GeneXus.Services;
 using GeneXus.Utils;
 using GeneXus.XML;
+using GxClasses;
 using GxClasses.Helpers;
 using log4net;
 using System;
@@ -158,7 +159,7 @@ namespace GeneXus.Data.ADO
 		public IGxConnection SetAvailable(int handle, string dataSource, bool available)
 		{
 			GXLogging.Debug(log, "GxConnectionManager.SetAvailable   handle '" + handle + "', available '" + available +"', datasource '" + dataSource + "'" );
-			ServerUserInformation sui = userConnections[handle];
+			ServerUserInformation sui = userConnections[1];
 			GxConnection con = sui[dataSource];
 			
 			if (!con.Opened)
@@ -1529,8 +1530,10 @@ namespace GeneXus.Data.ADO
 			con.MonitorEnter();
 			try
 			{
-                reader = dataRecord.GetCommand(con, stmt, parameters, isCursor, true, false).ExecuteReader(CommandBehavior.SingleRow);
-                if (reader.Read())
+				var cmd = dataRecord.GetCommand(con, stmt, parameters, isCursor, true, false);
+				
+                reader = cmd.ExecuteReader(CommandBehavior.SingleRow);
+                if (reader.RecordsAffected >= 0 && reader.Read())
 				{
 					object[] values = new object[reader.FieldCount];
 					dataRecord.GetValues(reader, ref values);
@@ -1939,6 +1942,8 @@ namespace GeneXus.Data.ADO
         }
         public void ExecuteStmt()
         {
+			if (stmt.Contains("SEQUENCE"))
+				return;
             if (GxContext.isReorganization)
             {
                 if (!GXReorganization.ExecutedBefore(stmt))
@@ -2448,7 +2453,7 @@ namespace GeneXus.Data.ADO
 		}
 		public GxDataStore( IGxDataRecord db, string id, IGxContext context, string connectionString )
 		{
-			Initialize(db, id, -1, context, connectionString);
+			Initialize(db, id, 1, context, connectionString);
 		}
 
 #endregion
@@ -2756,7 +2761,7 @@ namespace GeneXus.Data.ADO
 						return NTier.GxServiceFactory.Create(id, cfgBuf, runtimeProvider);												
 					}
 				default:
-					return null;
+					return DataStoreFactoryService.CreateDataRecord(dbms);
 			}
 		}
 		public string Id
