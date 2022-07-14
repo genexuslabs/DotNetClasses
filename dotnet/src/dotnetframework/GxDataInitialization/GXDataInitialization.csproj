@@ -9,8 +9,7 @@
 		<PackageId>GeneXus.DataInitialization</PackageId>
 	</PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="log4net">
-      <Version>2.0.11</Version>
+    <PackageReference Include="log4net" Version="2.0.11">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>

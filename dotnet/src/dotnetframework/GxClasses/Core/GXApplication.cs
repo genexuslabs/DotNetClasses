@@ -1950,6 +1950,10 @@ namespace GeneXus.Application
 			}
 			if (userAgent != null)
 			{
+				if ((userAgent.IndexOf("Edg")) != -1)
+				{
+					return BROWSER_EDGE;
+				}
 				if (userAgent.ToUpper().IndexOf("CHROME") != -1)
 				{
 					return BROWSER_CHROME;
@@ -1959,11 +1963,7 @@ namespace GeneXus.Application
 				{
 					return BROWSER_FIREFOX;
 				}
-				else if ((userAgent.IndexOf("Edge")) != -1)
-				{
-					return BROWSER_EDGE;
-				}
-				if ((userAgent.IndexOf("MSIE")) != -1)
+				else if ((userAgent.IndexOf("MSIE")) != -1)
 				{
 					if ((userAgent.IndexOf("Windows CE")) != -1)
 						return BROWSER_POCKET_IE;
@@ -2016,7 +2016,7 @@ namespace GeneXus.Application
 
 				if (type == BROWSER_EDGE)
 				{
-					MatchCollection matches = Regex.Matches(userAgent, " Edge\\/([0-9]+)\\.");
+					MatchCollection matches = Regex.Matches(userAgent, " Edg[\\w]{0,3}\\/([0-9]+)\\.");
 					if (matches.Count > 0)
 						return matches[0].Groups[1].Value;
 				}
