@@ -367,7 +367,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 		}
 
-		const long MIN_MULTIPART_POST = 5L * 1024 * 1024;
+		const long MIN_MULTIPART_POST = 10L * 1024 * 1024;
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
 		{
