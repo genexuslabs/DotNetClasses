@@ -44,6 +44,7 @@ namespace GeneXus.Application
 #endif
 	using System.Threading;
 	using System.Security.Claims;
+	using System.Security;
 
 	public interface IGxContext
 	{
@@ -1551,7 +1552,9 @@ namespace GeneXus.Application
 
 		public MessageQueueTransaction MQTransaction
 		{
+			[SecuritySafeCritical]
 			get { return _mqTransaction; }
+			[SecuritySafeCritical]
 			set
 			{
 				_mqTransaction = value;
