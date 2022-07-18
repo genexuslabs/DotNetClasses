@@ -142,7 +142,15 @@ namespace GeneXus.Application
 
 		public DateTime GetBodyDate(string varName)
 		{	
-		 	return DateTime.Parse(GetJsonStr(varName), System.Globalization.CultureInfo.InvariantCulture);
+		 	return DateTime.ParseExact(GetJsonStr(varName), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+		public DateTime GetBodyDateTime(string varName, bool hasMilliseconds)
+		{
+			string fmt = "yyyy-MM-ddTHH:mm:ss";
+			if (hasMilliseconds)
+				fmt += ".fff";
+			return DateTime.ParseExact(GetJsonStr(varName), fmt,System.Globalization.CultureInfo.InvariantCulture);
 		}
 
 		public bool GetBodyBool(string varName)
