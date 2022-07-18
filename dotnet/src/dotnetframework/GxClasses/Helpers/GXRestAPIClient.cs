@@ -72,7 +72,10 @@ namespace GeneXus.Application
 		}
 		public void AddQueryVar(String varName, DateTime varValue, bool hasMilliseconds)
 		{
-			_queryVars[varName] = varValue.ToString("yyyy-MM-ddTHH:mm:ss");
+			string fmt = "yyyy-MM-ddTHH:mm:ss";
+			if (hasMilliseconds)
+				fmt = "yyyy-MM-ddTYHH:mm:ss.fff";
+			_queryVars[varName] = varValue.ToString(fmt);
 		}
 		public void AddQueryVar(String varName, Guid varValue)
 		{
@@ -101,7 +104,7 @@ namespace GeneXus.Application
 
 		public void AddBodyVar(String varName, DateTime varValue)
 		{
-			AddBodyVar(varName, varValue, false);
+			_bodyVars[varName] = varValue.ToString("yyyy-MM-dd");
 		}
 
 		public void AddBodyVar(String varName, DateTime varValue, bool hasMilliseconds)
