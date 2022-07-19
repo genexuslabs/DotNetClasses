@@ -315,6 +315,7 @@ namespace GeneXus.Application
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
 		internal const string GXLanguage = "GXLanguage";
 		internal const string GXTheme = "GXTheme";
+		internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
 		[NonSerialized]
 		HttpContext _HttpContext;
 		[NonSerialized]
@@ -2759,7 +2760,9 @@ namespace GeneXus.Application
 				if (Config.GetValueOf("SERVER_NAME", out serverName))
 					return serverName;
 #if !NETCORE
-				serverName = _HttpContext.Request.ServerVariables["http_host"];
+				serverName = _HttpContext.Request.ServerVariables[SERVER_VAR_HTTP_HOST];
+#else
+				serverName = _HttpContext.GetServerVariable(SERVER_VAR_HTTP_HOST);
 #endif
 				if (String.IsNullOrEmpty(serverName))
 				{
@@ -2771,9 +2774,8 @@ namespace GeneXus.Application
 				return serverName;
 			}
 			catch
-
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 		private static bool DynamicPortRequest(HttpRequest request)
