@@ -51,29 +51,5 @@ namespace xUnitTesting
 			return response;
 		}
 	}
-	public class MultiCallMiddleware
-	{
-		private readonly RequestDelegate _next;
-
-		public MultiCallMiddleware(RequestDelegate next)
-		{
-			_next = next;
-		}
-
-		public async Task Invoke(HttpContext context)
-		{
-			try
-			{
-				GXMultiCall multicall = new GXMultiCall();
-				multicall.ProcessRequest(context);
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(ex.Message);
-				throw;
-			}
-			await _next(context);
-		}
-	}
 
 }

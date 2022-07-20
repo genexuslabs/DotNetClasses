@@ -92,6 +92,9 @@
 		<None Update="apps\append.svc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Update="apps\httpcors.svc">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="confmapping.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -153,7 +156,6 @@
 
 
 	<ItemGroup>
-	  <Folder Include="apps\" />
 	  <Folder Include="ConfigMappings\" />
 	  <Folder Include="Domain\" />
 	  <Folder Include="PDF\" />
