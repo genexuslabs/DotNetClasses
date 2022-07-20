@@ -1312,6 +1312,19 @@ namespace GeneXus.Configuration
 			set { _applicationPath = value; }
 		}
 
+		internal static bool CorsEnabled {
+			get {
+				return !string.IsNullOrEmpty(CorsAllowedOrigins());
+			}
+		}
+
+		internal static string CorsAllowedOrigins()
+		{
+			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
+				return corsOrigin;
+			else
+				return string.Empty;
+		}
 		public static int GetMaximumOpenCursors()
 		{
 			if (maximumOpenCursors == 0)
@@ -1372,5 +1385,6 @@ namespace GeneXus.Configuration
 			return httpclient_max_per_route;
 
 		}
+
 	}
 }
