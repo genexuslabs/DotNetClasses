@@ -1135,7 +1135,7 @@ namespace GeneXus.Http
 			{
 				context.AddStyleSheetFile(styleSheet);
 				string sUncachedURL = context.GetCompleteURL(styleSheet) + urlBuildNumber;
-				string sLayerName = styleSheet.Replace("/", "_");
+				string sLayerName = styleSheet.Replace("/", "_").Replace(".","_");
 				if (!context.HtmlHeaderClosed && context.isEnabled)
 				{
 					string sRelAtt = (isDeferred ? "rel=\"preload\" as=\"style\" " : "rel=\"stylesheet\"");
