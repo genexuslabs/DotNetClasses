@@ -12,18 +12,11 @@
 		<ApplicationIcon >$(MSBuildThisFileDirectory)\src\resources\Default_App.ico</ApplicationIcon>
 	</PropertyGroup>
 	
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectory>$(MSBuildThisFileDirectory)build</DeployDirectory>
+	<PropertyGroup>
+		<DeployDirectory>$(MSBuildThisFileDirectory)bin\$(TargetFramework)</DeployDirectory>
 		<!--Set a default deploy dir-->
 	</PropertyGroup>
 	
-	<PropertyGroup Condition="'$(DeployDirectory)'!=''">
-		<DeployDirectoryWithSep>$(DeployDirectory)\</DeployDirectoryWithSep>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(DeployDirectory)'==''">
-		<DeployDirectoryWithSep/>
-	</PropertyGroup>
-
 	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
 		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
 			<PrivateAssets>all</PrivateAssets>
@@ -73,8 +66,8 @@
 	</Target>
 
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)$(TargetFileName)')">
-		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectoryWithSep)$(DeployDirectoryPlatformBin)"></Message>
-		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectoryWithSep)$(DeployDirectoryPlatformBin)" />
+		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectory)"></Message>
+		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectory)" />
 	</Target>
 
 </Project>
