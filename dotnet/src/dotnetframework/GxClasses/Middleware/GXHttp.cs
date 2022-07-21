@@ -13,7 +13,6 @@ namespace GeneXus.Http
 
 	using GeneXus.Application;
 	using GeneXus.Configuration;
-	using GeneXus.Data.NTier;
 	using GeneXus.Encryption;
 	using GeneXus.Metadata;
 	using GeneXus.Mime;
@@ -24,15 +23,16 @@ namespace GeneXus.Http
 
 	using log4net;
 	using Jayrock.Json;
-	using System.Web.SessionState;
 	using Helpers;
 	using System.Collections.Concurrent;
+	using Microsoft.Net.Http.Headers;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.AspNetCore.Http.Extensions;
 	using System.Net;
 	using GeneXus.Web.Security;
 	using System.Linq;
+	using System.Reflection.PortableExecutable;
 #else
 	using System.Web;
 	using System.Web.UI;
@@ -41,8 +41,8 @@ namespace GeneXus.Http
 	using System.Net;
 	using GeneXus.Notifications;
 	using Web.Security;
+	using System.Web.SessionState;
 #endif
-
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -1835,9 +1835,7 @@ namespace GeneXus.Http
 			try
 			{
 #if NETCORE
-				sendCacheHeaders();
-				GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(httpContext));
-				sendAdditionalHeaders();
+				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
 #endif
 				bool validSession = ValidWebSession();
@@ -1875,10 +1873,7 @@ namespace GeneXus.Http
 				}
 				SetCompression(httpContext);
 #if !NETCORE
-				sendCacheHeaders();
-
-				GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(httpContext));
-				sendAdditionalHeaders();
+				SendHeaders();
 #endif
 				context.ResponseCommited = true;
 			}
@@ -2071,6 +2066,13 @@ namespace GeneXus.Http
 				return formatLink($"{context.GetScriptPath()}{loginObject}");
 			else
 				return formatLink(loginObject);
+		}
+		private void SendHeaders()
+		{
+			sendCacheHeaders();
+			GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(localHttpContext));
+			sendAdditionalHeaders();
+			HttpHelper.CorsHeaders(localHttpContext);
 		}
 
 		protected virtual void sendCacheHeaders()

@@ -199,7 +199,7 @@ namespace GeneXus.Utils
         }
         public void Cleanup()
         {
-			SendCacheHeaders();
+			ServiceHeaders();
 			if (runAsMain)
                 context.CloseConnections();
         }
@@ -544,7 +544,11 @@ namespace GeneXus.Utils
 			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.CACHE_CONTROL)))
 				AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE);
 		}
-
+		private void ServiceHeaders()
+		{
+			SendCacheHeaders();
+			HttpHelper.CorsHeaders(httpContext, wcfContext);
+		}
 		DateTime HTMLDateToDatetime(string s)
         {
             // Date Format: RFC 1123
