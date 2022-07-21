@@ -32,13 +32,6 @@
 		<IsPackable>true</IsPackable>
 		<DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
 	</PropertyGroup>
-	
-	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectoryPlatformBin>gxnetcore\bin</DeployDirectoryPlatformBin>
-	</PropertyGroup>
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectoryPlatformBin>gxnet\bin</DeployDirectoryPlatformBin>
-	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">
 		<Message Importance="high" Text="FileVersion:$(FileVersionWithoutRevision)"></Message>
