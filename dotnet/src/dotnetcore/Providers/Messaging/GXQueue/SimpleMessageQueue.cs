@@ -71,26 +71,27 @@ namespace GeneXus.Messaging.Common
 
 			return queueLength;
 		}
-		public GxUserType DeleteMessage(GxUserType msg, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public GxUserType DeleteMessage(GxUserType simpleQueueMessage, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
-			throw new NotImplementedException();/*
+			success = false;
 			MessageQueueResult messageQueueResult = new MessageQueueResult();
-			GxUserType messageResult = new GxUserType();
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			try
 			{
-				ValidQueue();
-				messageQueueResult = queue.DeleteMessage(messageHandleId, out success);
+				ValidQueue();	
+				messageQueueResult = queue.DeleteMessage(TransformGXUserTypeToSimpleQueueMessage(simpleQueueMessage), out success);
 				LoadAssemblyIfRequired();
 				try
 				{
 					if (messageQueueResult != null && TransformMessageQueueResult(messageQueueResult) is GxUserType result)
+					{
+						success = true; 
 						return result;
+					}
 				}
 				catch (Exception ex)
 				{
 					GXLogging.Error(logger, ex);
-					success = false;
 					throw ex;
 				}
 			}
@@ -98,9 +99,8 @@ namespace GeneXus.Messaging.Common
 			{
 				QueueErrorMessagesSetup(ex, out errorMessages);
 				GXLogging.Error(logger, ex);
-				success = false;
 			}
-			return TransformMessageQueueResult(messageQueueResult);*/
+			return TransformMessageQueueResult(messageQueueResult);
 		}
 
 		public IList<GxUserType> DeleteMessages(IList simpleQueueMessages, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
