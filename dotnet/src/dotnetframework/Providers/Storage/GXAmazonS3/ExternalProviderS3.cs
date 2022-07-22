@@ -2,10 +2,8 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.IO;
 using Amazon.S3.Model;
-using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -362,18 +360,44 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 		}
 
+		const long MIN_MULTIPART_POST = 10L * 1024 * 1024;
+
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
 		{
-			MemoryStream ms = new MemoryStream();
-			stream.CopyTo(ms);//can determine PutObjectRequest.Headers.ContentLength. Avoid error Could not determine content length
+			bool doSimpleUpload = stream.CanSeek && stream.Length <= MIN_MULTIPART_POST;
+			if (doSimpleUpload)
+			{
+				return UploadSimple(fileName, stream, destFileType);
+			}
+			else
+			{
+				return UploadMultipart(fileName, stream, destFileType);
+			}			
+		}
+
+		private string UploadMultipart(string fileName, Stream stream, GxFileType destFileType)
+		{
+			string contentType = null;
+			TryGetContentType(fileName, out contentType);
+			
+			using (S3UploadStream s = new S3UploadStream(Client, Bucket, fileName, GetCannedACL(destFileType), contentType))
+			{
+				stream.CopyTo(s);
+			}
+			return Get(fileName, destFileType);
+		}
+
+		private string UploadSimple(string fileName, Stream stream, GxFileType destFileType)
+		{			
 			PutObjectRequest objectRequest = new PutObjectRequest()
 			{
 				BucketName = Bucket,
 				Key = fileName,
-				InputStream = ms,
+				InputStream = stream,
 				CannedACL = GetCannedACL(destFileType)
 			};
-			if (TryGetContentType(fileName, out string mimeType)) {
+			if (TryGetContentType(fileName, out string mimeType))
+			{
 				objectRequest.ContentType = mimeType;
 			}
 			PutObjectResponse result = PutObject(objectRequest);
