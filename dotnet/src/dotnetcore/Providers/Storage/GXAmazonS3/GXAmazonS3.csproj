@@ -9,7 +9,6 @@
 	</PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\..\..\dotnetframework\Providers\Storage\GXAmazonS3\ExternalProviderS3.cs" Link="ExternalProviderS3.cs" />
-	<Compile Include="..\..\..\..\dotnetframework\Providers\Storage\GXAmazonS3\S3UploadStream.cs" Link="S3UploadStream.cs" />
   </ItemGroup>
 
   <ItemGroup>
