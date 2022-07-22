@@ -90,7 +90,7 @@ namespace GeneXus.Application
 		{
 			if (varValue != null)
 			{
-				AddBodyVar(varName, varValue.ToJSonString());
+				_bodyVars[varName] = varValue.ToJSonString();
 			}			
 		}
 
@@ -98,13 +98,13 @@ namespace GeneXus.Application
 		{
 			if (varValue != null)
 			{
-				AddBodyVar(varName, varValue.ToJSonString());
+				_bodyVars[varName] = varValue.ToJSonString();
 			}
 		}
 
 		public void AddBodyVar(String varName, DateTime varValue)
 		{
-			_bodyVars[varName] = varValue.ToString("yyyy-MM-dd");
+			_bodyVars[varName] = "\"" +  varValue.ToString("yyyy-MM-dd") + "\"";
 		}
 
 		public void AddBodyVar(String varName, DateTime varValue, bool hasMilliseconds)
@@ -112,7 +112,7 @@ namespace GeneXus.Application
 			string fmt = "yyyy-MM-ddTHH:mm:ss";
 			if (hasMilliseconds)
 				fmt = "yyyy-MM-ddTYHH:mm:ss.fff";
-			_bodyVars[varName] = varValue.ToString(fmt);
+			_bodyVars[varName] = "\"" + varValue.ToString(fmt) + "\"";
 		}
 
 		public void AddBodyVar(String varName, Decimal varValue)
@@ -122,9 +122,13 @@ namespace GeneXus.Application
 
 		public void AddBodyVar(String varName, string varValue)
 		{
-			_bodyVars[varName] = varValue;
+			_bodyVars[varName] = "\"" + varValue + "\"" ;
 		}
 		public void AddBodyVar(String varName, int varValue)
+		{
+			_bodyVars[varName] = varValue.ToString();
+		}
+		public void AddBodyVar(String varName, short varValue)
 		{
 			_bodyVars[varName] = varValue.ToString();
 		}
@@ -135,7 +139,7 @@ namespace GeneXus.Application
 		}
 		public void AddBodyVar(String varName, Guid varValue)
 		{
-			_bodyVars[varName] = varValue.ToString();
+			_bodyVars[varName] = "\"" + varValue.ToString() + "\"";
 		}
 
 		public string GetBodyString(string varName)
@@ -173,6 +177,11 @@ namespace GeneXus.Application
 		public int GetBodyInt(string varName)
 		{
 			return Int32.Parse(GetJsonStr(varName));
+		}
+
+		public short GetBodyShort(string varName)
+		{			
+			return (short)Int16.Parse(GetJsonStr(varName));
 		}
 
 		public string GetJsonStr(string varName)
@@ -237,8 +246,6 @@ namespace GeneXus.Application
 
 		public void RestExecute()
 		{
-			//  System.Net.ServicePointManager.SecurityProtocol = System.Net.ServicePointManager.SecurityProtocol | System.Net.SecurityProtocolType.Tls12;
-			//  timeout RequestSecondsTimeout			
 			_queryString = "";
 			if (_queryVars.Count > 0)
 			{
@@ -255,7 +262,7 @@ namespace GeneXus.Application
 				string separator = "";
 				foreach (string key in _bodyVars.Keys)
 				{
-					_bodyString +=  separator + "\"" + key + "\":\"" + _bodyVars[key] + "\"";
+					_bodyString +=  separator + "\"" + key + "\":" + _bodyVars[key];
 					separator = ",";
 				}
 			}
@@ -274,7 +281,6 @@ namespace GeneXus.Application
 					httpClient.AddHeader("Content-Type", _contentType);
 				}
 			}
-
 			string serviceuri = ((this.Location.Secure > 0) ? "https" : "http") + "://" + this.Location.Host;
 			serviceuri += (this.Location.Port != 80) ? ":" + this.Location.Port.ToString() : "";
 			serviceuri += "/" + this.Location.BaseUrl.TrimEnd('/').TrimStart('/') + "/" + this.Location.ResourceName;
@@ -287,10 +293,9 @@ namespace GeneXus.Application
 				_responseData = new Dictionary<string, object>();
 			}
 			else
-			{
+			{				
 				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestBodyParameters(httpClient.ReceiveStream);
 			}
-			
 		}
 	}
 }
