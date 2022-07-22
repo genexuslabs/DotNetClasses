@@ -2,6 +2,7 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.IO;
 using Amazon.S3.Model;
+
 using Amazon.S3.Transfer;
 using GeneXus.Services;
 using GeneXus.Utils;
@@ -363,7 +364,6 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		const long MIN_MULTIPART_POST = 1024 * 1024 * 5; //5MB
 		const long MULITIPART_POST_PART_SIZE = 1024 * 1024 * 6; // 6 MB.
-
 
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
 		{
