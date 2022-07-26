@@ -605,7 +605,7 @@ namespace GeneXus.Http.Client
 		[SecuritySafeCritical]
 		HttpResponseMessage ExecuteRequest(string method, string requestUrl, CookieContainer cookies)
 		{
-			GXLogging.Debug(log, String.Format("Start NetCore HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
+			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			HttpRequestMessage request;
 			HttpClient client;
 			int BytesRead;
