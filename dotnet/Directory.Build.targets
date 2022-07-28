@@ -13,6 +13,11 @@
 	</PropertyGroup>
 	
 	<PropertyGroup>
+		<DumpSolutionName>TempSolution.sln</DumpSolutionName>
+		<DumpSolutionTargetFramework>net4</DumpSolutionTargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup>
 		<DeployDirectory>$(MSBuildThisFileDirectory)bin\$(TargetFramework)</DeployDirectory>
 		<!--Set a default deploy dir-->
 	</PropertyGroup>
@@ -68,6 +73,11 @@
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)$(TargetFileName)')">
 		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectory)"></Message>
 		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectory)" />
+	</Target>
+
+	<Target Name="DumpProjects" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFramework))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFramework))) ) AND !$(MSBuildProjectFullPath.Contains('\test\'))">
+		<Message Importance="high" Text="Adding $(MSBuildProjectFullPath) to $(MSBuildThisFileDirectory)$(DumpSolutionName).sln"></Message>
+		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName).sln add $(MSBuildProjectFullPath)"></Exec>
 	</Target>
 
 </Project>
