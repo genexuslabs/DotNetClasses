@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.Identity.Client" Version="4.35.0" />
 		<PackageReference Include="OpenPop.NET" Version="2.0.6.1120" />
 		<PackageReference Include="Org.Mentalis.Security" Version="1.0.0" />
-		<PackageReference Include="StrongNamer" Version="0.2.5" />
+		<PackageReference Condition="'$(SignAssembly)'=='true'" Include="StrongNamer" Version="0.2.5" />
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="Interop.MAPI">

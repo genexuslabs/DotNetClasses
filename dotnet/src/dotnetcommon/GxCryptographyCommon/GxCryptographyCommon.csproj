@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net462;net6.0</TargetFrameworks>
+		<TargetFramework Condition="'$(Publishing)' == 'true'">net462</TargetFramework>
 		<RootNamespace>GxCryptographyCommon</RootNamespace>
 		<NoWarn>618;1607;1698</NoWarn>
 		<AssemblyName>GxCryptographyCommon</AssemblyName>
