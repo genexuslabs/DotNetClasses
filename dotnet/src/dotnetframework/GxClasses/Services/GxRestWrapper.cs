@@ -180,9 +180,9 @@ namespace GeneXus.Application
 		private Dictionary<string, object> ReadBodyParameters()
 		{
 #if NETCORE
-			return RestAPIHelpers.ReadRestBodyParameters(_httpContext.Request.Body);
+			return ReadRequestParameters(_httpContext.Request.Body);
 #else
-			return RestAPIHelpers.ReadRestBodyParameters(_httpContext.Request.GetInputStream());
+			return ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
 		}
 
@@ -387,6 +387,10 @@ namespace GeneXus.Application
 		public virtual Task Patch(object key)
 		{
 			return MethodBodyExecute(key);
+		}
+		public Dictionary<string, object> ReadRequestParameters(Stream stream)
+		{
+			return RestAPIHelpers.ReadRestBodyParameters(stream);
 		}
 
 		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)

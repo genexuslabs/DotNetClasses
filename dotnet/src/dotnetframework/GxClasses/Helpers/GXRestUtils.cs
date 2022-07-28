@@ -95,7 +95,7 @@ namespace GeneXus.Utils
 		public string fileExtension { get; set; }
 	}
 
-	public class RestAPIHelpers
+	internal class RestAPIHelpers
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.RestAPIHelpers));
 
