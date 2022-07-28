@@ -76,8 +76,8 @@
 	</Target>
 
 	<Target Name="DumpProjects" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFramework))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFramework))) ) AND !$(MSBuildProjectFullPath.Contains('\test\'))">
-		<Message Importance="high" Text="Adding $(MSBuildProjectFullPath) to $(MSBuildThisFileDirectory)$(DumpSolutionName).sln"></Message>
-		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName).sln add $(MSBuildProjectFullPath)"></Exec>
+		<Message Importance="high" Text="Adding $(MSBuildProjectFullPath) to $(MSBuildThisFileDirectory)$(DumpSolutionName)"></Message>
+		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName) add $(MSBuildProjectFullPath)"></Exec>
 	</Target>
 
 </Project>
