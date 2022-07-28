@@ -57,7 +57,7 @@ jobs:
       run: |
         $configuration = "Release"
         $veracodesolution = "VeracodeSolution"
-        $veracodetargetframework = net4
+        $veracodetargetframework = "net4"
         dotnet new sln --name $veracodesolution --force
         dotnet msbuild DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$veracodesolution -p:DumpSolutionTargetFramework=$veracodetargetframework /m:1
         dotnet publish $veracodesolution --configuration $Env:BuildConfiguration -o .out -p:Publishing=true -p:SignAssembly=false
