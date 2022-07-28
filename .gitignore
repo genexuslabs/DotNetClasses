@@ -363,4 +363,3 @@ build
 /dotnet/src/dotnetcore/Reor/net6.0/Reor.deps.json
 .out
 /dotnet/Veracode.sln
-/dotnet/.editorconfig
