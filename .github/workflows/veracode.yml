@@ -9,13 +9,7 @@ name: Veracode Static Analysis Pipeline Scan
 
 on:
   workflow_dispatch:
-    inputs:
-      configuration:
-        description: 'Build project configuration (options:Release|Debug)'
-        default: 'Release'
-        options:
-        - Release
-        - Debug
+
   push:
     branches: [ master ]
   
@@ -31,6 +25,7 @@ jobs:
   # This workflow contains a job to build and submit pipeline scan, you will need to customize the build process accordingly and make sure the artifact you build is used as the file input to the pipeline scan file parameter
   build-and-pipeline-scan:
     env:
+      Configuration: Release
       ZipFilename: netClassesForScan.zip
 
     # The type of runner that the job will run on
@@ -47,15 +42,6 @@ jobs:
       with:
         repository: ''
     
-    - name: Set build configuration from dispatch
-      if: ${{ github.event.inputs.configuration != '' }}
-      run: |
-        $configuration = '${{github.event.inputs.configuration}}'
-        echo "BuildConfiguration=$configuration" >> $env:GITHUB_ENV
-    - name: Set default build configuration
-      if: ${{ github.event.inputs.configuration == '' }}
-      run: echo "BuildConfiguration=Release" >> $env:GITHUB_ENV
-
     - uses: actions/setup-dotnet@v1
       with:
         source-url: https://nuget.pkg.github.com/genexuslabs/index.json
@@ -64,13 +50,12 @@ jobs:
 
     - name: Build
       run: |
-        $configuration = "Release"
         $veracodesolution = "VeracodeSolution"
         $veracodesolutionFileName = "VeracodeSolution.sln"
         $veracodetargetframework = "net4"
         dotnet new sln --name $veracodesolution --output dotnet --force
         dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$veracodesolutionFileName -p:DumpSolutionTargetFramework=$veracodetargetframework /m:1
-        dotnet publish dotnet\$veracodesolutionFileName --configuration $Env:BuildConfiguration -o .out -p:Publishing=true -p:SignAssembly=false
+        dotnet publish dotnet\$veracodesolutionFileName --configuration $Env:Configuration -o .out -p:Publishing=true -p:SignAssembly=false
 
     - name: Create package for Veracode scan
       shell: powershell
