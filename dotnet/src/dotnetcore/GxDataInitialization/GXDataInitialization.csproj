@@ -16,12 +16,6 @@
     <ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
   </ItemGroup>
 
-   <ItemGroup>
-		<Content Include="net6.0\$(MSBuildProjectName).deps.json">
-			<Pack>true</Pack>
-			<PackagePath>\content\net6.0\</PackagePath>
-		</Content>
-	</ItemGroup>
 	<Target Name="CustomContentTarget">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json">
