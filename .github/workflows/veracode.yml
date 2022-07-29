@@ -100,9 +100,7 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: veracode_json_and_sarif_results
+        name: netclasses_artifact
         path: |
          $env:ZipFilename
-         results.json
-         veracode-results.sarif
         retention-days: 15
