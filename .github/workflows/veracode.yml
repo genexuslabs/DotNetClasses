@@ -57,10 +57,15 @@ jobs:
     - name: Create package for Veracode scan
       shell: powershell
       run: |
-        Get-Childitem -Path .out -Exclude *.dll,*.pdb,*.exe,runtimes
-        Foreach { Remove-Item -Path $_.FullName -Recurse }
         Compress-Archive -Path .out\* $env:ZipFilename
 
+    - name: Archive zip to analyze
+      uses: actions/upload-artifact@v3
+      with:
+        name: netclasses_zip_to_artifacts
+        path: netClassesForScan.zip
+        retention-days: 15
+        
     - name: Download Veracode Static Analysis Pipeline scan jar
       shell: powershell
       run: |
@@ -88,7 +93,8 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: netclasses_artifact
+        name: veracode_json_and_sarif_results
         path: |
-         $env:ZipFilename
+         results.json
+         veracode-results.sarif
         retention-days: 15
