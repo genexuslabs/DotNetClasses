@@ -51,11 +51,9 @@ jobs:
     - name: Build
       run: |
         $veracodesolution = "VeracodeSolution"
-        $veracodesolutionFileName = "VeracodeSolution.sln"
-        $veracodetargetframework = "net4"
         dotnet new sln --name $veracodesolution --output dotnet --force
-        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$veracodesolutionFileName -p:DumpSolutionTargetFramework=$veracodetargetframework /m:1
-        dotnet publish dotnet\$veracodesolutionFileName --configuration $Env:Configuration -o .out -p:Publishing=true -p:SignAssembly=false
+        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$veracodesolution /m:1
+        dotnet msbuild dotnet\Directory.Build.targets /t:PublishForAnalyzer -p:DumpSolutionName=$veracodesolution
 
     - name: Create package for Veracode scan
       shell: powershell
