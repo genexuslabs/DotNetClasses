@@ -74,7 +74,10 @@ jobs:
 
     - name: Create package for Veracode scan
       shell: powershell
-      run: Compress-Archive .out\*.* $env:ZipFilename
+      run: |
+        Get-Childitem -Path .out -Exclude *.dll,*.pdb,*.exe,runtimes
+        Foreach { Remove-Item -Path $_.FullName -Recurse }
+        Compress-Archive .out\*.* $env:ZipFilename
 
     - name: Download Veracode Static Analysis Pipeline scan jar
       shell: powershell
