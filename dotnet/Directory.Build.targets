@@ -14,7 +14,7 @@
 	
 	<PropertyGroup>
 		<DumpSolutionName>TempSolution.sln</DumpSolutionName>
-		<DumpSolutionTargetFramework>net4</DumpSolutionTargetFramework>
+		<DumpSolutionTargetFrameworkDefault>net6</DumpSolutionTargetFrameworkDefault>
 	</PropertyGroup>
 	
 	<PropertyGroup>
@@ -29,55 +29,14 @@
 		</PackageReference>
 	</ItemGroup>
 
-	<UsingTask
-    TaskName="ReplaceFileText"
-    TaskFactory="RoslynCodeTaskFactory"
-    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-		<ParameterGroup>
-			<InputFilename ParameterType="System.String" Required="true" />
-			<OutputFilename ParameterType="System.String" Required="true" />
-			<MatchExpression ParameterType="System.String" Required="true" />
-			<ReplacementText ParameterType="System.String" Required="true" />
-		</ParameterGroup>
-		<Task>
-			<Using Namespace="System"/>
-			<Using Namespace="System.IO"/>
-			<Using Namespace="System.Text.RegularExpressions" />
-			<Code Type="Fragment" Language="cs">
-				<![CDATA[  
-          File.WriteAllText(
-            OutputFilename,
-            Regex.Replace(File.ReadAllText(InputFilename), MatchExpression, ReplacementText)
-            );
-        ]]>
-			</Code>
-		</Task>
-	</UsingTask>
-
-
-	<Target Name="PostBuild" AfterTargets="Build" Condition="'$(GxGenerateDepsFile)'=='true' AND ('$(TargetFramework)'=='net6.0')">
-		<MakeDir Directories="$(TargetFramework)"/>
-		<Exec Command="copy $(OutDir)$(ProjectName).deps.json   $(TargetFramework)\$(ProjectName).deps.json" />
-		<ReplaceFileText
-       InputFilename="$(TargetFramework)\$(ProjectName).deps.json"
-       OutputFilename="$(TargetFramework)\$(ProjectName).deps.json"
-       MatchExpression="GeneXus\.Classes\.Core"
-       ReplacementText="GxClasses" />
-		<ReplaceFileText
-       InputFilename="$(TargetFramework)\$(ProjectName).deps.json"
-       OutputFilename="$(TargetFramework)\$(ProjectName).deps.json"
-       MatchExpression="GeneXus\.Classes\.Web\.Core"
-       ReplacementText="GxClasses.Web"/>
-	</Target>
-
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND Exists('$(ProjectDir)$(OutDir)$(TargetFileName)')">
 		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectory)"></Message>
 		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetFileName)" DestinationFolder="$(DeployDirectory)" />
 	</Target>
 
-	<Target Name="DumpProjects" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFramework))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFramework))) ) AND !$(MSBuildProjectFullPath.Contains('\test\'))">
-		<Message Importance="high" Text="Adding $(MSBuildProjectFullPath) to $(MSBuildThisFileDirectory)$(DumpSolutionName).sln"></Message>
-		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName).sln add $(MSBuildProjectFullPath)"></Exec>
+	<Target Name="DumpProjects" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFrameworkDefault))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFrameworkDefault))) ) AND !$(MSBuildProjectFullPath.Contains('\test\')) AND ('$(IsPublishable)'=='true' OR '$(IsPublishable)'=='')">
+		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName) add $(MSBuildProjectFullPath)"></Exec>
+		
 	</Target>
 
 </Project>
