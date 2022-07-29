@@ -60,7 +60,7 @@ jobs:
       run: |
         Get-Childitem -Path .out -Exclude *.dll,*.pdb,*.exe,runtimes
         Foreach { Remove-Item -Path $_.FullName -Recurse }
-        Compress-Archive .out\*.* $env:ZipFilename
+        Compress-Archive -Path .out\* $env:ZipFilename
 
     - name: Download Veracode Static Analysis Pipeline scan jar
       shell: powershell
