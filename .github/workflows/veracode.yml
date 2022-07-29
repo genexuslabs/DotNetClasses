@@ -53,6 +53,13 @@ jobs:
     - name: Set default build configuration
       if: ${{ github.event.inputs.configuration == '' }}
       run: echo "BuildConfiguration=Release" >> $env:GITHUB_ENV
+
+    - uses: actions/setup-dotnet@v1
+      with:
+        source-url: https://nuget.pkg.github.com/genexuslabs/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
     - name: Build
       run: |
         $configuration = "Release"
