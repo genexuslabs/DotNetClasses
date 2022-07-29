@@ -17,9 +17,11 @@ on:
         - Release
         - Debug
   push:
-    branches: [ main ]
-  #schedule:
-  #  - cron: '44 4 * * 5'
+    branches: [ master ]
+  
+  #Run at the end of every day
+  schedule:
+    - cron: '0 0 * * *'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 permissions:
@@ -93,7 +95,6 @@ jobs:
       with:
         pipeline-results-json: results.json
         source-base-path-1: "^.*/${{ github.event.repository.name }}/dotnet/:dotnet/"
-        #source-base-path-1: "^.*/${{ github.event.repository.name }}/dotnet/:blob/main/dotnet/"
         
     - uses: github/codeql-action/upload-sarif@v1
       with:
@@ -104,6 +105,7 @@ jobs:
       with:
         name: veracode_json_and_sarif_results
         path: |
+         $env:ZipFilename
          results.json
          veracode-results.sarif
         retention-days: 15
