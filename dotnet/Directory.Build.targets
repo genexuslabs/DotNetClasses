@@ -13,7 +13,7 @@
 	</PropertyGroup>
 	
 	<PropertyGroup>
-		<DumpSolutionName>TempSolution.sln</DumpSolutionName>
+		<DumpSolutionName>TempSolution</DumpSolutionName>
 		<DumpSolutionTargetFrameworkDefault>net6</DumpSolutionTargetFrameworkDefault>
 	</PropertyGroup>
 	
@@ -35,8 +35,11 @@
 	</Target>
 
 	<Target Name="DumpProjects" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFrameworkDefault))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFrameworkDefault))) ) AND !$(MSBuildProjectFullPath.Contains('\test\')) AND ('$(IsPublishable)'=='true' OR '$(IsPublishable)'=='')">
-		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName) add $(MSBuildProjectFullPath)"></Exec>
-		
+		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName).sln add $(MSBuildProjectFullPath)"></Exec>
+	</Target>
+	
+	<Target Name="PublishForAnalyzer">
+		<Exec Command="dotnet publish $(MSBuildThisFileDirectory)$(DumpSolutionName).sln --configuration Debug -o $(MSBuildThisFileDirectory)..\.out -p:Publishing=true -p:SignAssembly=false --framework net6.0"></Exec>
 	</Target>
 
 </Project>
