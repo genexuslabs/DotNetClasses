@@ -9,17 +9,13 @@ name: Veracode Static Analysis Pipeline Scan
 
 on:
   workflow_dispatch:
-    inputs:
-      configuration:
-        description: 'Build project configuration (options:Release|Debug)'
-        default: 'Release'
-        options:
-        - Release
-        - Debug
+
   push:
-    branches: [ main ]
-  #schedule:
-  #  - cron: '44 4 * * 5'
+    branches: [ master ]
+  
+  #Run at the end of every day
+  schedule:
+    - cron: '0 0 * * *'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 permissions:
@@ -45,15 +41,6 @@ jobs:
       with:
         repository: ''
     
-    - name: Set build configuration from dispatch
-      if: ${{ github.event.inputs.configuration != '' }}
-      run: |
-        $configuration = '${{github.event.inputs.configuration}}'
-        echo "BuildConfiguration=$configuration" >> $env:GITHUB_ENV
-    - name: Set default build configuration
-      if: ${{ github.event.inputs.configuration == '' }}
-      run: echo "BuildConfiguration=Release" >> $env:GITHUB_ENV
-
     - uses: actions/setup-dotnet@v1
       with:
         source-url: https://nuget.pkg.github.com/genexuslabs/index.json
@@ -69,8 +56,16 @@ jobs:
 
     - name: Create package for Veracode scan
       shell: powershell
-      run: Compress-Archive .out\*.* $env:ZipFilename
+      run: |
+        Compress-Archive -Path .out\* $env:ZipFilename
 
+    - name: Archive zip to analyze
+      uses: actions/upload-artifact@v3
+      with:
+        name: netclasses_zip_to_artifacts
+        path: netClassesForScan.zip
+        retention-days: 15
+        
     - name: Download Veracode Static Analysis Pipeline scan jar
       shell: powershell
       run: |
@@ -90,7 +85,6 @@ jobs:
       with:
         pipeline-results-json: results.json
         source-base-path-1: "^.*/${{ github.event.repository.name }}/dotnet/:dotnet/"
-        #source-base-path-1: "^.*/${{ github.event.repository.name }}/dotnet/:blob/main/dotnet/"
         
     - uses: github/codeql-action/upload-sarif@v1
       with:
