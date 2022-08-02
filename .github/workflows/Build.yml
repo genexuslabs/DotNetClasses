@@ -127,27 +127,29 @@ jobs:
         [IO.File]::WriteAllBytes($codesign_pfx, $bytes)
 
         Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
-          dotnet nuget sign $_.FullName --certificate-path $codesign_pfx--certificate-password $Env:PFX_PASS --timestamper $Env:TIMESTAMPER_URL
+          dotnet nuget sign $_.FullName --certificate-path $codesign_pfx --certificate-password $Env:PFX_PASS --timestamper $Env:TIMESTAMPER_URL
         }
 
     - name: Configure Azure Artifacts feed
       if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
-      uses: actions/setup-dotnet@v2
-      with:
-        source-url: https://nuget.pkg.github.com/genexuslabs/index.json
       env:
-        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        AzureArtifactsPrereleaseFeedURL: https://pkgs.dev.azure.com/genexuslabs/13fb82d9-57a8-49ef-95bb-0ec8324e470c/_packaging/dotnet-prereleases/nuget/v3/index.json
+        AzureArtifactsReleaseFeedURL: https://pkgs.dev.azure.com/genexuslabs/13fb82d9-57a8-49ef-95bb-0ec8324e470c/_packaging/dotnet-releases/nuget/v3/index.json
+      run: |
+        $IsPrerelease = [System.Convert]::ToBoolean($Env:IsPrerelease)
+        $AZURE_ARTIFACTS_URL = @("$Env:AzureArtifactsReleaseFeedURL", "$Env:AzureArtifactsPrereleaseFeedURL")[$IsPrerelease]
+
+        dotnet nuget add source $AZURE_ARTIFACTS_URL --name AzureArtifacts --username genexuslabs --password ${{ secrets.AZURE_ARTIFACTS_TOKEN }}
+
+        echo "AZURE_ARTIFACTS_URL=$AZURE_ARTIFACTS_URL" >> $env:GITHUB_ENV
     
     - name: Push packages
       if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
         GPRFeedURL: https://nuget.pkg.github.com/genexuslabs/index.json
         NuGetFeedURL: https://api.nuget.org/v3/index.json
-        AzureArtifactsPrereleaseFeedURL: https://pkgs.dev.azure.com/genexuslabs/13fb82d9-57a8-49ef-95bb-0ec8324e470c/_packaging/dotnet-prereleases/nuget/v3/index.json
-        AzureArtifactsReleaseFeedURL: https://pkgs.dev.azure.com/genexuslabs/13fb82d9-57a8-49ef-95bb-0ec8324e470c/_packaging/dotnet-releases/nuget/v3/index.json
-      run: |
+       run: |
         $IsPrerelease = [System.Convert]::ToBoolean($Env:IsPrerelease)
-        $AzureArtifactsUrl = @("$Env:AzureArtifactsReleaseFeedURL", "$Env:AzureArtifactsPrereleaseFeedURL")[$IsPrerelease]
 
         $totalPackages  = 0
         $pushedToAzure  = 0
@@ -157,7 +159,7 @@ jobs:
         Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
           $PushToGitHubArgs = @("nuget", "push", $_.FullName, "--source", $Env:GPRFeedURL, "--api-key", "${{ secrets.SECURE_TOKEN }}")
           $PushToNugetArgs  = @("nuget", "push", $_.FullName, "--source", $Env:NuGetFeedURL, "--api-key", "${{ secrets.NUGET_ORG_TOKEN }}")
-          $PushToAzureArgs  = @("nuget", "push", $_.FullName, "--source", $Env:AzureArtifactsUrl, "--api-key", "DUMMY-KEY")
+          $PushToAzureArgs  = @("nuget", "push", $_.FullName, "--source", $Env:AZURE_ARTIFACTS_URL, "--api-key", "DUMMY-KEY")
 
           if ([System.Convert]::ToBoolean("${{ github.event.inputs.skip-duplicates }}")) {
             $PushToNugetArgs  += "--skip-duplicate"
