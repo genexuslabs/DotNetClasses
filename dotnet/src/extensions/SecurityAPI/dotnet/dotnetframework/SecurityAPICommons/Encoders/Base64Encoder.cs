@@ -101,7 +101,7 @@ namespace SecurityAPICommons.Encoders
 			string result = "";
 			try
 			{
-				result = Hex.ToHexString(bytes);
+				result = Hex.ToHexString(bytes).ToUpper();
 			}
 			catch (Exception e)
 			{
