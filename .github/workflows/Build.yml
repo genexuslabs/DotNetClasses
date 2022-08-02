@@ -176,7 +176,7 @@ jobs:
           dotnet $PushToAzureArgs
           $pushedToAzure += 1
 
-          if (!IsPrerelease) {
+          if (!$IsPrerelease) {
             dotnet $PushToGitHubArgs
             $pushedToGitHub += 1
 
