@@ -218,7 +218,7 @@ jobs:
         with:
           component-name: ${{ github.event.inputs.repository }}
           branch-ref: ${{ env.GIT_REF }}
-          new-version: ${{ needs.build.outputs.MAVEN_VERSION }}
+          new-version: ${{ needs.build.outputs.NUGET_VERSION }}
           committer: ${{ needs.build.outputs.LAST_COMMITTER }}
           commit-message: ${{ needs.build.outputs.COMMIT_MESSAGE }}
           token: ${{ secrets.SECURE_TOKEN }}
