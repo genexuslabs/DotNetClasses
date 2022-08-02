@@ -161,7 +161,13 @@ jobs:
           $PushToNugetArgs  = @("nuget", "push", $_.FullName, "--source", $Env:NuGetFeedURL, "--api-key", "${{ secrets.NUGET_ORG_TOKEN }}")
           $PushToAzureArgs  = @("nuget", "push", $_.FullName, "--source", $Env:AZURE_ARTIFACTS_URL, "--api-key", "DUMMY-KEY")
 
-          if ([System.Convert]::ToBoolean("${{ github.event.inputs.skip-duplicates }}")) {
+          if ([string]::IsNullOrEmpty("${{ github.event.inputs.skip-duplicates }}") ) {
+            $skipDuplicates = $true
+          } else {
+            $skipDuplicates = [System.Convert]::ToBoolean("${{ github.event.inputs.skip-duplicates }}")
+          }
+          
+          if ($skipDuplicates) {
             $PushToNugetArgs  += "--skip-duplicate"
             $PushToGitHubArgs += "--skip-duplicate"
             $PushToAzureArgs  += "--skip-duplicate"
