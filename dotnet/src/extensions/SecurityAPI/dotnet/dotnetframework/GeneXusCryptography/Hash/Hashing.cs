@@ -60,7 +60,7 @@ namespace GeneXusCryptography.Hash
 
 			byte[] resBytes = CalculateHash(hashAlgorithmObj, input);
 
-			return this.HasError() ? "" : Hex.ToHexString(resBytes);
+			return this.HasError() ? "" : Hex.ToHexString(resBytes).ToUpper();
 		}
 
 
