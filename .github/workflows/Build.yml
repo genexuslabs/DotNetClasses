@@ -142,7 +142,7 @@ jobs:
         dotnet nuget add source $AZURE_ARTIFACTS_URL --name AzureArtifacts --username genexuslabs --password ${{ secrets.AZURE_ARTIFACTS_TOKEN }}
 
         echo "AZURE_ARTIFACTS_URL=$AZURE_ARTIFACTS_URL" >> $env:GITHUB_ENV
-    
+        
     - name: Push packages
       if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
