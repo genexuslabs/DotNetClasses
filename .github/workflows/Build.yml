@@ -103,6 +103,17 @@ jobs:
         echo "::set-output name=LAST_COMMITTER::$LAST_COMMITTER"
         echo "::set-output name=COMMIT_MESSAGE::$COMMIT_MESSAGE"
 
+    - name: Write SNK
+      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      env:
+        SNK_BASE64:  ${{ secrets.ARTECH_SNK_BASE64 }}
+      run: |
+        $artech_snk_path = Join-Path (Get-Item .).FullName "Artech.snk"
+        $bytes = [Convert]::FromBase64String($Env:SNK_BASE64)
+        [IO.File]::WriteAllBytes($artech_snk_path, $bytes)
+
+        echo "ARTECH_SNK_FILE=$artech_snk_path" >> $env:GITHUB_ENV
+
     - name: Restore packages
       run: dotnet restore $Env:SolutionFile
 
