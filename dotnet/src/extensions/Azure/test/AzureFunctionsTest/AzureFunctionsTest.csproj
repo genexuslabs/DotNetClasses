@@ -19,10 +19,20 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Handlers\GeneXus.Deploy.AzureFunctions.Handlers.csproj" />
     <ProjectReference Include="..\amyprocedurehandler\amyprochandler.csproj" />
+    <ProjectReference Include="..\apiattractions\apiattractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="functions.metadata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="gxazmappings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="private\apiattractions.grp.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="testhost.runtimeconfig.json">

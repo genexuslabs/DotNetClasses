@@ -28,9 +28,7 @@
 
   <ItemGroup>
 	<PackageReference Include="Google.Apis" Version="1.42.0" />
-    <PackageReference Include="Google.Apis.AndroidPublisher.v3">
-      <Version>1.42.0.1766</Version>
-    </PackageReference>
+    <PackageReference Include="Google.Apis.AndroidPublisher.v3" Version="1.42.0.1766"/>
     <PackageReference Include="Google.Apis.Auth" Version="1.42.0" />
     <PackageReference Include="Google.Apis.Core" Version="1.42.0" />    
   </ItemGroup>

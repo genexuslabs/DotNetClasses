@@ -1,5 +1,5 @@
-# GeneXus Standard Classes for .NET and .NET Core
-GeneXus Standard Classes for .NET and .NET Core generators.
+# GeneXus Standard Classes for .NET and .NET Framework
+GeneXus Standard Classes for .NET and .NET Framework generators.
 
 ## Build status
 | Branch | Status
@@ -11,7 +11,7 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 
 | Name  | Description | Package Id
 |---|---|---
-| GxEncrypt | Classes common to .NET and .NET Core related to encryption based on Twofish algorithm | GeneXus.Encrypt
+| GxEncrypt | Classes common to .NET and .NET Framework related to encryption based on Twofish algorithm | GeneXus.Encrypt
 | GxEncryptCMD | Command line tool that allows encryption and decryption of data. [Help](https://wiki.genexus.com/commwiki/servlet/wiki?45615) | GeneXus.EncryptCMD
 | GxCryptography | Provide classes that support CryptoAsymmetricEncrypt and GXSymmetricEncryption data type | GeneXus.Cryptography
 | GxCryptographyCommon | Contants and Exceptions classes common to GxCryptography and GxClasses | GeneXus.Cryptography.Common
@@ -41,12 +41,12 @@ GeneXus Standard Classes for .NET and .NET Core generators.
 | GxConfig | Executable utility to update web.config | GeneXus.Config
 | GxDataInitialization | Executable utility to support dynamic transactions initialization at impact process | GeneXus.DataInitialization(\*)
 
-(\*) For .NET Core add suffix ".Core" to Package Id
+(\*) For .NET add suffix ".Core" to Package Id
 
-(\*\*) Package not available for .NET Core
+(\*\*) Package not available for .NET
 
 ## Repository Layout
-This repository contains projects for .NET and .NET Core. It is organized as follows:
+This repository contains projects for .NET and .NET Framework. It is organized as follows:
 
 ```
 .
@@ -55,8 +55,8 @@ This repository contains projects for .NET and .NET Core. It is organized as fol
 ├── dotnet/ 
     ├── src/
         ├── dotnetcommon/ (Shared projects that build for both TargetFrameworks: dotnet and dotnetcore)
-        ├── dotnetcore/ (.NET Core projects, several of these projects link sources from dotnetframework)
-        └── dotnetframework/ (.NET projects)
+        ├── dotnetcore/ (.NET projects, several of these projects link sources from dotnetframework)
+        └── dotnetframework/ (.NET Framework projects)
     ├── Directory.Build.props (default configuration for projects, imported early in the import order)
     ├── Directory.Build.targets (configuration for particular projects, imported late in the build order)
     ├── DotNetStandardClasses.sln (solution to build all the projects)
@@ -83,20 +83,26 @@ For the following steps must be executed from inside ```dotnet``` directory:
 ## How to test your changes with a GeneXus installation?
 - ```dotnet msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
 
-It compiles the solution and copies all the .NET assemblies to the folder build/gxnet*/bin**. Then, you can copy those files to a GeneXus installation or to your web application directory.
+It compiles the solution and copies all the .NET Framework assemblies to the folder dotnet/build. Then, you can copy those files to a GeneXus installation or to your web application directory.
 
 You can use the following parameters to customize the deploy:
-- TargetFramework: only the assemblies that are generated for this framework will be deployed. Valid values are: `net462` (for GeneXus C# generator) and `net6` (for GeneXus NetCore generator).
-- DeployDirectory: specifies a GeneXus installation directory.
+- TargetFramework: only the assemblies that are generated for this framework will be deployed. Valid values are: `net462` (for GeneXus NET Framework generator) and `net6` (for GeneXus NET generator).
+- DeployDirectory: specifies the target directory to copy assemblies, by default it is dotnet\bin
 
 Samples:
-- ```dotnet msbuild /t:build;CopyAssemblies /p:DeployDirectory=C:\Genexus /p:TargetFramework=net462 DotNetStandardClasses.sln```
 
-It copies .NET framework assemblies to the folder C:\Genexus\gxnet\bin
+- ```dotnet msbuild /t:CopyAssemblies /p:TargetFramework=net6.0 DotNetStandardClasses.sln ```
 
-- ```dotnet msbuild /t:CopyAssemblies /p:DeployDirectory=C:\Genexus /p:TargetFramework=net6.0 DotNetStandardClasses.sln ```
+It copies .NET 6 assemblies to the folder dotnet\bin
 
-It copies .NET 6 assemblies to the folder C:\Genexus\gxnetcore\bin
+- ```dotnet msbuild /t:CopyAssemblies /p:DeployDirectory=C:\KB\NetModel\web\bin /p:TargetFramework=net6.0 DotNetStandardClasses.sln ```
+
+It copies .NET 6 assemblies to the folder C:\KB\NetModel\web\bin
+
+- ```dotnet msbuild /t:build;CopyAssemblies /p:DeployDirectory=C:\KB\CSharpModel\web\bin /p:TargetFramework=net462 DotNetStandardClasses.sln```
+
+It builds the solution and copies .NET framework assemblies to the folder C:\KB\CSharpModel\web\bin
+
 
 ## Advanced information
 

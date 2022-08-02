@@ -53,6 +53,15 @@ namespace GeneXus.Http
 		{
 			this.context = new GxContext();
 		}
+#if NETCORE
+		static GXRouting gxRouting;
+		GXRouting GetRouting()
+		{
+			if (gxRouting == null)
+				gxRouting = new GXRouting(string.Empty);
+			return gxRouting;
+		}
+#endif
 		public override void webExecute()
 		{
 #if NETCORE
@@ -72,7 +81,7 @@ namespace GeneXus.Http
 				}
 #if NETCORE
 
-				handler = new GXRouting(string.Empty).GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
+				handler = GetRouting().GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
 				if (handler ==null) {
 					throw new GxClassLoaderException($"{gxobj} not found");
 				}
@@ -316,10 +325,8 @@ namespace GeneXus.Http
 					localHttpContext.Response.Write(jsonObj);
 				}
 				else
-				{
-					Stream istream = localHttpContext.Request.GetInputStream();
-					string contentType = localHttpContext.Request.ContentType;
-					WcfExecute(istream, contentType);
+				{					
+					WcfExecute(localHttpContext.Request.GetInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
 				}
 			}
 			catch (Exception e)
@@ -340,13 +347,13 @@ namespace GeneXus.Http
 
 		}
 
-		internal void WcfExecute(Stream istream, string contentType)
+		internal void WcfExecute(Stream istream, string contentType, long streamLength)
 		{
 			string ext, fName;
 			ext = context.ExtensionForContentType(contentType);
 			string tempDir = Preferences.getTMP_MEDIA_PATH();			
-			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);
-			file.Create(istream);
+			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);			
+			file.Create(new NetworkInputStream(istream, streamLength));
 
 			JObject obj = new JObject();
 			fName = file.GetURI();
@@ -379,6 +386,58 @@ namespace GeneXus.Http
 			}
 		}
 	}
+
+	/// <summary>
+	///	Custom Network Stream for direct not multiparts uploads that do not support length operations
+	/// </summary>
+	public class NetworkInputStream : Stream
+	{
+		private Stream innerStream;
+		private long streamLength;
+
+		public NetworkInputStream(Stream s, long length): base()
+		{
+			innerStream = s;
+			streamLength = length;			
+		}
+
+		public override bool CanRead => innerStream.CanRead;
+
+		public override bool CanSeek => innerStream.CanSeek;
+
+		public override bool CanWrite => innerStream.CanWrite;
+
+		public override long Length => streamLength;
+
+		public override long Position { get => innerStream.Position; set => innerStream.Position = value; }
+
+		public override void Flush()
+		{
+			innerStream.Flush();
+		}
+
+		public override int Read(byte[] buffer, int offset, int count)
+		{
+			return innerStream.Read(buffer, offset, count);
+		}
+
+		public override long Seek(long offset, SeekOrigin origin)
+		{
+			return innerStream.Seek(offset, origin);
+		}
+
+		public override void SetLength(long value)
+		{
+			innerStream.SetLength(value);
+			streamLength = value;
+		}
+
+		public override void Write(byte[] buffer, int offset, int count)
+		{
+			innerStream.Write(buffer, offset, count);
+		}
+	}
+
 	public class UploadFilesResult
 	{
 		public List<UploadFile> files;

@@ -105,17 +105,26 @@ namespace GeneXus.Application
 					inputParameters.Add(methodParameter);
 				}
 			}
-			if (inputParameters.Count == 1 && bodyParameters.Count>1)
+			if (inputParameters.Count == 1)
 			{
-				ParameterInfo pInfo = inputParameters[0];
-				if (pInfo.ParameterType.IsSubclassOf(typeof(GxUserType)))
+				ParameterInfo pInfo = inputParameters[0];				
+				if (pInfo.ParameterType.IsSubclassOf(typeof(GxUserType)) && bodyParameters.Count > 1)
 				{
-					var gxParameterName = GxParameterName(pInfo.Name).ToLower();
-					Dictionary<string, object> parameters = new Dictionary<string,object>();
-					JObject jparms  = new JObject(bodyParameters);
+					string gxParameterName = GxParameterName(pInfo.Name).ToLower();
+					Dictionary<string, object> parameters = new Dictionary<string, object>();
+					JObject jparms = new JObject(bodyParameters);
 					parameters.Add(gxParameterName, jparms);
-					return parameters;			
+					return parameters;
+
 				}
+				if (typeof(IGxCollection).IsAssignableFrom(pInfo.ParameterType) &&  bodyParameters.Count == 1 && bodyParameters.ContainsKey(string.Empty) && bodyParameters[string.Empty] is JArray)
+				{
+					string gxParameterName = GxParameterName(pInfo.Name).ToLower();
+					Dictionary<string, object> parameters = new Dictionary<string, object>();
+					parameters.Add(gxParameterName, bodyParameters[string.Empty]);
+					return parameters;
+				}
+				
 			}
 			return bodyParameters;
 		}
@@ -263,8 +272,15 @@ namespace GeneXus.Application
 				}
 				if (parameters != null && parameters.TryGetValue(gxParameterName, out value))
 				{
-					var convertedValue = ConvertStringToNewType(value, parmType, context);
-					parametersForInvocation[idx] = convertedValue;
+					if (value == null || JSONHelper.IsJsonNull(value))
+					{
+						parametersForInvocation[idx] = null;
+					}
+					else
+					{
+						var convertedValue = ConvertStringToNewType(value, parmType, context);
+						parametersForInvocation[idx] = convertedValue;
+					}
 				}
 				else
 				{

@@ -184,80 +184,91 @@ namespace GeneXus.Data.NTier
 					parmsValues[idxParmCollection - 1] = parms[idx];
 					if (!valueIsNull)
 					{
-						switch (pdef.GxType)
+						if (pdef.Return)
 						{
-							case GXType.Char:
-							case GXType.NChar:
-							case GXType.VarChar:
-								if (pdef.AddAtt && !pdef.Preload)
-								{
-									if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
-										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx], pdef.Tbl, pdef.Fld);
-									else
-										stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx]);
-								}
-								else
-								{
-									if (pdef.GxType == GXType.VarChar)
+							stmt.SetParameterRT(pdef.Name, (string)parms[idx]);
+						}
+						else
+						{
+							switch (pdef.GxType)
+							{
+								case GXType.Char:
+								case GXType.NChar:
+								case GXType.VarChar:
+									if (pdef.AddAtt && !pdef.Preload)
 									{
-										if (pdef.ChkEmpty)
-											stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+										if (!string.IsNullOrEmpty(pdef.Tbl) && !string.IsNullOrEmpty(pdef.Fld))
+											stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx], pdef.Tbl, pdef.Fld);
 										else
-											stmt.SetParameterObj(idxParmCollection, parms[idx]); 
+											stmt.SetParameterMultimedia(idxParmCollection, (string)parms[idx], (string)parmsValues[pdef.ImgIdx]);
 									}
 									else
 									{
-										if (pdef.ChkEmpty)
-											stmt.SetParameterChar(idxParmCollection, (string)parms[idx]);
+										if (pdef.GxType == GXType.VarChar)
+										{
+											if (pdef.ChkEmpty)
+												stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+											else
+												stmt.SetParameterObj(idxParmCollection, parms[idx]);
+										}
 										else
-											stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+										{
+											if (pdef.ChkEmpty)
+												stmt.SetParameterChar(idxParmCollection, (string)parms[idx]);
+											else
+												stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+										}
 									}
-								}
-								break;
-							case GXType.NVarChar:
-								if (pdef.ChkEmpty)
-									stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
-								else
-									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
-								break;
-							case GXType.NClob:
-							case GXType.Clob:
-							case GXType.LongVarChar:
-								if (pdef.ChkEmpty)
-									stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
-								else
-									stmt.SetParameter(idxParmCollection, (string)parms[idx]);
-								break;
-							case GXType.DateAsChar:
-							case GXType.Date:
-								stmt.SetParameter(idxParmCollection, (DateTime)parms[idx]);
-								break;
-							case GXType.DateTime:
-								stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx]);
-								break;
-							case GXType.DateTime2:
-								stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx], true);
-								break;
-							case GXType.Blob:
-								stmt.SetParameterBlob(idxParmCollection, (string)parms[idx], pdef.InDB);
-								break;
-							case GXType.UniqueIdentifier:
-								stmt.SetParameter(idxParmCollection, (Guid)parms[idx]);
-								break;
-							case GXType.Geography:
-							case GXType.Geopoint:
-							case GXType.Geoline:
-							case GXType.Geopolygon:
-								stmt.SetParameter(idxParmCollection, (Geospatial)parms[idx], pdef.GxType);
-								break;
-							default:
-								stmt.SetParameterObj(idxParmCollection, parms[idx]);
-								break;
+									break;
+								case GXType.NVarChar:
+									if (pdef.ChkEmpty)
+										stmt.SetParameterVChar(idxParmCollection, (string)parms[idx]);
+									else
+										stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+									break;
+								case GXType.NClob:
+								case GXType.Clob:
+								case GXType.LongVarChar:
+									if (pdef.ChkEmpty)
+										stmt.SetParameterLVChar(idxParmCollection, (string)parms[idx]);
+									else
+										stmt.SetParameter(idxParmCollection, (string)parms[idx]);
+									break;
+								case GXType.DateAsChar:
+								case GXType.Date:
+									stmt.SetParameter(idxParmCollection, (DateTime)parms[idx]);
+									break;
+								case GXType.DateTime:
+									stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx]);
+									break;
+								case GXType.DateTime2:
+									stmt.SetParameterDatetime(idxParmCollection, (DateTime)parms[idx], true);
+									break;
+								case GXType.Blob:
+									stmt.SetParameterBlob(idxParmCollection, (string)parms[idx], pdef.InDB);
+									break;
+								case GXType.UniqueIdentifier:
+									stmt.SetParameter(idxParmCollection, (Guid)parms[idx]);
+									break;
+								case GXType.Geography:
+								case GXType.Geopoint:
+								case GXType.Geoline:
+								case GXType.Geopolygon:
+									stmt.SetParameter(idxParmCollection, (Geospatial)parms[idx], pdef.GxType);
+									break;
+								default:
+									stmt.SetParameterObj(idxParmCollection, parms[idx]);
+									break;
+							}
 						}
 					}
 				Increment:
 					idx += 1;
-					idxParmCollection += 1;
+					if (!pdef.Return)
+					{
+						idxParmCollection += 1;
+					}
+
 				}
 				catch (InvalidCastException ex)
 				{
@@ -485,10 +496,24 @@ namespace GeneXus.Data.NTier
 
 		public void readNext(int cursor)
 		{
-			ICursor oCur = getCursor(cursor);
-			oCur.readNext();
-			_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
-			dataStoreRequestCount++;
+			Cursor oCur = getCursor(cursor) as Cursor;
+			try
+			{
+				oCur.readNext();
+				_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+				dataStoreRequestCount++;
+			}
+			catch (GxADODataException e)
+			{
+				bool retry = false;
+				int retryCount = 0;
+				bool pe = oCur.Command.ProcessException(e, ref retry, retryCount, "FETCH");
+				GXLogging.Error(log, "readNext Error", e);
+				if (!pe)
+				{
+					throw;
+				}
+			}
 
 		}
 		public int getStatus(int cursorIdx)
@@ -538,19 +563,15 @@ namespace GeneXus.Data.NTier
 			catch (Exception dbEx)
 			{
 				//If commit fails it should not retry, it makes no sense because it will no longer be possible. just close the existing connection.
-				int status = 0;
 				GxADODataException e = new GxADODataException(dbEx);
 				bool retry = false;
 				int retryCount = 0;
-				bool pe = ds.Connection.DataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, cmd.ErrorMask, ds.Connection, ref status, ref retry, retryCount);
 				GXLogging.Error(log, "Commit Transaction Error", e);
-				retryCount++;
-				cmd.processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, cmd.ErrorMask, "FETCH", ref pe, ref retry);
+				bool pe = cmd.ProcessException(e, ref retry, retryCount, "FETCH");
 				if (!pe)
 				{
 					try
 					{
-						ds.Connection.Close();
 						if (retry)
 							ds.Connection.Open();
 					}
@@ -574,19 +595,15 @@ namespace GeneXus.Data.NTier
 			}
 			catch (Exception dbEx)
 			{
-				int status = 0;
 				GxADODataException e = new GxADODataException(dbEx);
 				bool retry = false;
 				int retryCount = 0;
-				bool pe = ds.Connection.DataRecord.ProcessError(e.DBMSErrorCode, e.ErrorInfo, cmd.ErrorMask, ds.Connection, ref status, ref retry, retryCount);
+				bool pe = cmd.ProcessException(e, ref retry, retryCount, "FETCH");
 				GXLogging.Error(log, "Rollback Transaction Error", e);
-				retryCount++;
-				cmd.processErrorHandler(status, e.DBMSErrorCode, e.SqlState, e.ErrorInfo, cmd.ErrorMask, "FETCH", ref pe, ref retry);
 				if (!pe)
 				{
 					try
 					{
-						ds.Connection.Close();
 						if (retry)
 							ds.Connection.Open();
 					}

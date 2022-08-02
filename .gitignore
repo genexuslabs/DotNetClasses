@@ -361,4 +361,6 @@ build
 /dotnet/src/dotnetcore/GxDataInitialization/net6.0/GXDataInitialization.deps.json
 /dotnet/src/dotnetcore/GxNetCoreStartup/net6.0/GxNetCoreStartup.deps.json
 /dotnet/src/dotnetcore/Reor/net6.0/Reor.deps.json
-/dotnet/.editorconfig
+.out
+/dotnet/Veracode.sln
+/dotnet/VeracodeSolution.sln

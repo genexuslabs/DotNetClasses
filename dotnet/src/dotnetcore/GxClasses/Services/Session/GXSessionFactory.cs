@@ -18,17 +18,32 @@ namespace GeneXus.Services
 		static string SESSION_TIMEOUT = "SESSION_PROVIDER_SESSION_TIMEOUT";
 		public static ISessionService GetProvider()
 		{
-			var instance = GXServices.Instance?.Get(GXServices.SESSION_SERVICE);
+			GXService instance = GXServices.Instance?.Get(GXServices.SESSION_SERVICE);
 			if (instance != null)
 			{
+				string password = instance.Properties.Get(SESSION_PASSWORD);
+				if (!string.IsNullOrEmpty(password))
+				{
+					password = CryptoImpl.Decrypt(password);
+				}
 				if (instance.Name.Equals(REDIS, StringComparison.OrdinalIgnoreCase))
 				{
-					return new GxRedisSession(instance.Properties.Get(SESSION_ADDRESS), CryptoImpl.Decrypt(instance.Properties.Get(SESSION_PASSWORD)), instance.Properties.Get(SESSION_INSTANCE), int.Parse(instance.Properties.Get(SESSION_TIMEOUT)));
+					string sessionTimeout = instance.Properties.Get(SESSION_TIMEOUT);
+					int timeout=0;
+					if (!string.IsNullOrEmpty(sessionTimeout))
+						int.TryParse(sessionTimeout, out timeout);
+						
+					return new GxRedisSession(instance.Properties.Get(SESSION_ADDRESS),
+						password,
+						instance.Properties.Get(SESSION_INSTANCE),
+						timeout);
 				}
 				else if (instance.Name.Equals(DATABASE, StringComparison.OrdinalIgnoreCase))
 				{
-					return new GxDatabaseSession(instance.Properties.Get(SESSION_ADDRESS), CryptoImpl.Decrypt(instance.Properties.Get(SESSION_PASSWORD))
-						,instance.Properties.Get(SESSION_SCHEMA), instance.Properties.Get(SESSION_TABLE_NAME));
+					return new GxDatabaseSession(instance.Properties.Get(SESSION_ADDRESS),
+						password,
+						instance.Properties.Get(SESSION_SCHEMA),
+						instance.Properties.Get(SESSION_TABLE_NAME));
 				}
 			}
 			return null;

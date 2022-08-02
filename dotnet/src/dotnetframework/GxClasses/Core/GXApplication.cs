@@ -44,6 +44,7 @@ namespace GeneXus.Application
 #endif
 	using System.Threading;
 	using System.Security.Claims;
+	using System.Security;
 
 	public interface IGxContext
 	{
@@ -204,7 +205,7 @@ namespace GeneXus.Application
 		void DoAjaxRefreshForm();
 		void DoAjaxRefreshCmp(String sPrefix);
 #if !NETCORE
-        void DoAjaxLoad(int SId, GXWebRow row);
+		void DoAjaxLoad(int SId, GXWebRow row);
 #endif
 		void DoAjaxAddLines(int SId, int lines);
 		void DoAjaxSetFocus(string ControlName);
@@ -269,9 +270,7 @@ namespace GeneXus.Application
 		CookieContainer GetCookieContainer(string url, bool includeCookies = true);
 		bool WillRedirect();
 		GXSOAPContext SoapContext { get; set; }
-#if NETCORE
 		void UpdateSessionCookieContainer();
-#endif
 		string GetCacheInvalidationToken();
 		string GetURLBuildNumber(string resourcePath, string urlBuildNumber);
 	}
@@ -316,6 +315,7 @@ namespace GeneXus.Application
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
 		internal const string GXLanguage = "GXLanguage";
 		internal const string GXTheme = "GXTheme";
+		internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
 		[NonSerialized]
 		HttpContext _HttpContext;
 		[NonSerialized]
@@ -479,23 +479,26 @@ namespace GeneXus.Application
 			if (cookies == null)
 				return null;
 			Dictionary<string, IEnumerable<Cookie>> serializableCookies = new Dictionary<string, IEnumerable<Cookie>>();
-			foreach(string key in cookies.Keys)
+			foreach (string key in cookies.Keys)
 			{
+
 				serializableCookies[key] = cookies[key].GetCookies();
+
 			}
 			return serializableCookies;
 		}
+#endif
 		private Dictionary<string, CookieContainer> FromSerializableCookieContainer(Dictionary<string, IEnumerable<Cookie>> cookies)
 		{
 			if (cookies == null)
 				return null;
 			Dictionary<string, CookieContainer> serializableCookies = new Dictionary<string, CookieContainer>();
-			
+
 			foreach (string key in cookies.Keys)
 			{
 				CookieCollection cookieco = new CookieCollection();
 				IEnumerable<Cookie> cookiesEnum = cookies[key];
-				foreach(Cookie c in cookiesEnum)
+				foreach (Cookie c in cookiesEnum)
 				{
 					cookieco.Add(c);
 				}
@@ -505,19 +508,14 @@ namespace GeneXus.Application
 			}
 			return serializableCookies;
 		}
-#else
-		private Dictionary<string, CookieContainer> ToSerializableCookieContainer(Dictionary<string, CookieContainer> cookies){
-			return cookies;
-		}
-		private Dictionary<string, CookieContainer> FromSerializableCookieContainer(Dictionary<string, CookieContainer> cookies)
-		{
-			return cookies;
-		}
-#endif
 		public void UpdateSessionCookieContainer()
 		{
 			IGxSession tempStorage = GetSession();
+#if NETCORE
 			tempStorage.Set(COOKIE_CONTAINER, ToSerializableCookieContainer(cookieContainers));
+#else
+			tempStorage.Set(COOKIE_CONTAINER, cookieContainers);
+#endif
 		}
 		public CookieContainer GetCookieContainer(string url, bool includeCookies = true)
 		{
@@ -528,12 +526,16 @@ namespace GeneXus.Application
 #if NETCORE
 				cookieContainers = FromSerializableCookieContainer(tempStorage.Get<Dictionary<string, IEnumerable<Cookie>>>(COOKIE_CONTAINER));
 #else
-				cookieContainers =tempStorage.Get<Dictionary<string, CookieContainer>>(COOKIE_CONTAINER);
+				cookieContainers = tempStorage.Get<Dictionary<string, CookieContainer>>(COOKIE_CONTAINER);
 #endif
 				if (cookieContainers == null)
 				{
 					cookieContainers = new Dictionary<string, CookieContainer>();
+#if NETCORE
 					tempStorage.Set(COOKIE_CONTAINER, ToSerializableCookieContainer(cookieContainers));
+#else
+					tempStorage.Set(COOKIE_CONTAINER, cookieContainers);
+#endif
 				}
 				string domain = (new Uri(url)).GetLeftPart(UriPartial.Authority);
 				if (cookieContainers.TryGetValue(domain, out container) && includeCookies)
@@ -562,19 +564,19 @@ namespace GeneXus.Application
 			get
 			{
 #if !NETCORE
-                if (HttpContext.Current != null)
-                {
+				if (HttpContext.Current != null)
+				{
 
-                    GxContext currCtx = (GxContext)HttpContext.Current.Items["CURRENT_GX_CONTEXT"];
-                    if (currCtx != null)
-                        return currCtx;
-                }
-                else
-                {
+					GxContext currCtx = (GxContext)HttpContext.Current.Items["CURRENT_GX_CONTEXT"];
+					if (currCtx != null)
+						return currCtx;
+				}
+				else
+				{
 
-                    return _currentGxContext;
-                }
-                return null;
+					return _currentGxContext;
+				}
+				return null;
 #else
 				return _currentGxContext;
 #endif
@@ -583,11 +585,11 @@ namespace GeneXus.Application
 		static void setContext(GxContext ctx)
 		{
 #if !NETCORE
-            if (HttpContext.Current != null)
-                HttpContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
-            else
+			if (HttpContext.Current != null)
+				HttpContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
+			else
 #endif
-			_currentGxContext = ctx;
+				_currentGxContext = ctx;
 		}
 
 		public LocalUtil localUtil
@@ -694,7 +696,7 @@ namespace GeneXus.Application
 
 					GxUploadHelper.CacheUploadFile(fileGuid, Path.GetFileName(pf.FileName), ext, file, gxContext);
 
-				return true;
+					return true;
 				}
 			}
 			return false;
@@ -973,7 +975,7 @@ namespace GeneXus.Application
 #if NETCORE
 			ILog statusLog = log4net.LogManager.GetLogger(frame.GetMethod().DeclaringType);
 #else
-            ILog statusLog = log4net.LogManager.GetLogger(frame.GetMethod().DeclaringType.FullName);
+			ILog statusLog = log4net.LogManager.GetLogger(frame.GetMethod().DeclaringType.FullName);
 #endif
 			GXLogging.Info(statusLog, message);
 			Console.WriteLine(message);
@@ -1025,7 +1027,7 @@ namespace GeneXus.Application
 		{
 			int browserType = GetBrowserType();
 
-			#region Align
+#region Align
 			if (string.Compare(propName, "align", true) == 0)
 			{
 				if (browserType == BROWSER_FIREFOX)
@@ -1037,7 +1039,7 @@ namespace GeneXus.Application
 					return "-khtml-" + propValue;
 				}
 			}
-			#endregion
+#endregion
 
 			return propValue;
 		}
@@ -1083,12 +1085,12 @@ namespace GeneXus.Application
 				_handle = GxUserInfo.NewHandle();
 			}
 #if !NETCORE
-            if (Preferences.Instrumented)
-            {
-                GxUserInfo.setProperty(_handle, GxDefaultProps.USER_NAME, Environment.UserName);
-                GxUserInfo.setProperty(_handle, GxDefaultProps.PGM_NAME, AppDomain.CurrentDomain.FriendlyName);
-                GxUserInfo.setProperty(_handle, GxDefaultProps.START_TIME, DateTime.Now.ToString());
-            }
+			if (Preferences.Instrumented)
+			{
+				GxUserInfo.setProperty(_handle, GxDefaultProps.USER_NAME, Environment.UserName);
+				GxUserInfo.setProperty(_handle, GxDefaultProps.PGM_NAME, AppDomain.CurrentDomain.FriendlyName);
+				GxUserInfo.setProperty(_handle, GxDefaultProps.START_TIME, DateTime.Now.ToString());
+			}
 #endif
 			GX_msglist = new msglist();
 			Config.LoadConfiguration();
@@ -1106,7 +1108,7 @@ namespace GeneXus.Application
 #if NETCORE
 					return MultipartRequestHelper.IsMultipartContentType(this.HttpContext.Request.ContentType);
 #else
-                    return this.HttpContext.Request.Files.Count > 0;
+					return this.HttpContext.Request.Files.Count > 0;
 #endif
 				else
 
@@ -1133,10 +1135,10 @@ namespace GeneXus.Application
 			get
 			{
 #if !NETCORE
-                if (_HttpContext == null && HttpContext.Current != null)
-                {
-                    HttpContext = HttpContext.Current;
-                }
+				if (_HttpContext == null && HttpContext.Current != null)
+				{
+					HttpContext = HttpContext.Current;
+				}
 #endif
 				return _HttpContext;
 			}
@@ -1550,7 +1552,9 @@ namespace GeneXus.Application
 
 		public MessageQueueTransaction MQTransaction
 		{
+			[SecuritySafeCritical]
 			get { return _mqTransaction; }
+			[SecuritySafeCritical]
 			set
 			{
 				_mqTransaction = value;
@@ -1682,7 +1686,7 @@ namespace GeneXus.Application
 				else if (_HttpContext != null && _HttpContext.Session != null)
 				{
 #if !NETCORE
-                    return (T)_HttpContext.Session[key];
+					return (T)_HttpContext.Session[key];
 #else
 					string value = _HttpContext.Session.GetString(key);
 					if (value != null)
@@ -1706,12 +1710,9 @@ namespace GeneXus.Application
 				{
 
 #if !NETCORE
-                    HttpContext.Session[key] = value;
+					HttpContext.Session[key] = value;
 #else
-					if (!_HttpContext.Response.HasStarted)
-					{
-						HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
-					}
+					HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
 #endif
 					return true;
 				}
@@ -1939,7 +1940,7 @@ namespace GeneXus.Application
 			String userAgent;
 			try
 			{
-				if (_HttpContext != null && _HttpContext.Request!=null)
+				if (_HttpContext != null && _HttpContext.Request != null)
 					userAgent = _HttpContext.Request.GetUserAgent();
 				else
 					return 0;
@@ -1950,6 +1951,10 @@ namespace GeneXus.Application
 			}
 			if (userAgent != null)
 			{
+				if ((userAgent.IndexOf("Edg")) != -1)
+				{
+					return BROWSER_EDGE;
+				}
 				if (userAgent.ToUpper().IndexOf("CHROME") != -1)
 				{
 					return BROWSER_CHROME;
@@ -1959,11 +1964,7 @@ namespace GeneXus.Application
 				{
 					return BROWSER_FIREFOX;
 				}
-				else if ((userAgent.IndexOf("Edge")) != -1)
-				{
-					return BROWSER_EDGE;
-				}
-				if ((userAgent.IndexOf("MSIE")) != -1)
+				else if ((userAgent.IndexOf("MSIE")) != -1)
 				{
 					if ((userAgent.IndexOf("Windows CE")) != -1)
 						return BROWSER_POCKET_IE;
@@ -2016,7 +2017,7 @@ namespace GeneXus.Application
 
 				if (type == BROWSER_EDGE)
 				{
-					MatchCollection matches = Regex.Matches(userAgent, " Edge\\/([0-9]+)\\.");
+					MatchCollection matches = Regex.Matches(userAgent, " Edg[\\w]{0,3}\\/([0-9]+)\\.");
 					if (matches.Count > 0)
 						return matches[0].Groups[1].Value;
 				}
@@ -2102,7 +2103,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (HttpContext==null)
+				if (HttpContext == null)
 					return 0;
 				if (_HttpContext.Request.GetIsSecureFrontEnd())
 				{
@@ -2280,7 +2281,7 @@ namespace GeneXus.Application
 				else
 					cookieVal = HttpUtility.UrlDecode(cookie.Value);
 #else
-                cookieVal = HttpUtility.UrlDecode(cookie.Value);
+				cookieVal = HttpUtility.UrlDecode(cookie.Value);
 #endif
 			}
 			return cookieVal;
@@ -2338,26 +2339,26 @@ namespace GeneXus.Application
 			_HttpContext.Response.Cookies.Append(name, cookie.Value, cookieOptions);
 			localCookies[name] = cookie;
 #else
-            if (_HttpContext.Response.Cookies.Get(name) != null)
-            {
+			if (_HttpContext.Response.Cookies.Get(name) != null)
+			{
 
-                try
-                {
-                    _HttpContext.Response.Cookies.Set(cookie);
-                }
-                catch (HttpException) { }
-                localCookies.Set(cookie);
-            }
-            else
-            {
+				try
+				{
+					_HttpContext.Response.Cookies.Set(cookie);
+				}
+				catch (HttpException) { }
+				localCookies.Set(cookie);
+			}
+			else
+			{
 
-                try
-                {
-                    _HttpContext.Response.Cookies.Add(cookie);
-                }
-                catch (HttpException) { }
-                localCookies.Add(cookie);
-            }
+				try
+				{
+					_HttpContext.Response.Cookies.Add(cookie);
+				}
+				catch (HttpException) { }
+				localCookies.Add(cookie);
+			}
 #endif
 			return 0;
 		}
@@ -2370,7 +2371,7 @@ namespace GeneXus.Application
 #if NETCORE
 			if (!_HttpContext.Response.HasStarted)
 #endif
-				_HttpContext.Response.ContentType = sContentType;
+			_HttpContext.Response.ContentType = sContentType;
 			return 0;
 		}
 		public byte RespondFile(string name)
@@ -2400,33 +2401,33 @@ namespace GeneXus.Application
 			_HttpContext.Response.AppendHeader(name, value);
 
 #if !NETCORE
-            switch (name.ToUpper())
-            {
-                case "CACHE-CONTROL":
-                    var Cache = _HttpContext.Response.Cache;
-                    string[] values = value.Split(',');
-                    foreach (string v in values)
-                    {
-                        switch (v.Trim().ToUpper())
-                        {
-                            case "PUBLIC":
-                                Cache.SetCacheability(HttpCacheability.Public);
-                                break;
-                            case "PRIVATE":
-                                Cache.SetCacheability(HttpCacheability.Private);
-                                break;
-                            case "NO-CACHE":
-                                Cache.SetCacheability(HttpCacheability.NoCache);
-                                break;
-                            case "NO-STORE":
-                                Cache.AppendCacheExtension("no-store, must-revalidate");
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    break;
-            }
+			switch (name.ToUpper())
+			{
+				case "CACHE-CONTROL":
+					var Cache = _HttpContext.Response.Cache;
+					string[] values = value.Split(',');
+					foreach (string v in values)
+					{
+						switch (v.Trim().ToUpper())
+						{
+							case "PUBLIC":
+								Cache.SetCacheability(HttpCacheability.Public);
+								break;
+							case "PRIVATE":
+								Cache.SetCacheability(HttpCacheability.Private);
+								break;
+							case "NO-CACHE":
+								Cache.SetCacheability(HttpCacheability.NoCache);
+								break;
+							case "NO-STORE":
+								Cache.AppendCacheExtension("no-store, must-revalidate");
+								break;
+							default:
+								break;
+						}
+					}
+					break;
+			}
 #else
 			switch (name.ToUpper())
 			{
@@ -2479,10 +2480,10 @@ namespace GeneXus.Application
 		private void DoForward(string jumpUrl)
 		{
 #if !NETCORE
-            _HttpContext.Items["gx_webcall_method"] = "forward";
-            _HttpContext.RewritePath(jumpUrl);
-            IHttpHandler handler = new GeneXus.HttpHandlerFactory.HandlerFactory().GetHandler(_HttpContext, "GET", jumpUrl, jumpUrl);
-            handler.ProcessRequest(_HttpContext);
+			_HttpContext.Items["gx_webcall_method"] = "forward";
+			_HttpContext.RewritePath(jumpUrl);
+			IHttpHandler handler = new GeneXus.HttpHandlerFactory.HandlerFactory().GetHandler(_HttpContext, "GET", jumpUrl, jumpUrl);
+			handler.ProcessRequest(_HttpContext);
 #endif
 		}
 		protected void httpRedirect(String jumpUrl)
@@ -2655,14 +2656,14 @@ namespace GeneXus.Application
 			httpAjaxContext.appendAjaxCommand("cmp_refresh", sPrefix);
 		}
 #if !NETCORE
-        public void DoAjaxLoad(int SId, GXWebRow row)
-        {
-            JObject JSONRow = new JObject();
-            JSONRow.Put("grid", SId);
-            JSONRow.Put("props", row.parentGrid.GetJSONObject());
-            JSONRow.Put("values", row.parentGrid.GetValues());
-            httpAjaxContext.appendLoadData(SId, JSONRow);
-        }
+		public void DoAjaxLoad(int SId, GXWebRow row)
+		{
+			JObject JSONRow = new JObject();
+			JSONRow.Put("grid", SId);
+			JSONRow.Put("props", row.parentGrid.GetJSONObject());
+			JSONRow.Put("values", row.parentGrid.GetValues());
+			httpAjaxContext.appendLoadData(SId, JSONRow);
+		}
 #endif
 		public void DoAjaxAddLines(int SId, int lines)
 		{
@@ -2715,10 +2716,10 @@ namespace GeneXus.Application
 		float getHTMLVersion()
 		{
 #if !NETCORE
-            if (_HttpContext.Request.Browser.MajorVersion >= 4 &&
-                (_HttpContext.Request.Browser.Type.ToUpper().IndexOf("IE") > -1 ||
-                _HttpContext.Request.Browser.Type.ToUpper().IndexOf("NS") > -1))
-                return 4.0f;
+			if (_HttpContext.Request.Browser.MajorVersion >= 4 &&
+				(_HttpContext.Request.Browser.Type.ToUpper().IndexOf("IE") > -1 ||
+				_HttpContext.Request.Browser.Type.ToUpper().IndexOf("NS") > -1))
+				return 4.0f;
 #endif
 			return 1.0f;
 		}
@@ -2756,7 +2757,9 @@ namespace GeneXus.Application
 				if (Config.GetValueOf("SERVER_NAME", out serverName))
 					return serverName;
 #if !NETCORE
-                serverName = _HttpContext.Request.ServerVariables["http_host"];
+				serverName = _HttpContext.Request.ServerVariables[SERVER_VAR_HTTP_HOST];
+#else
+				serverName = _HttpContext.GetServerVariable(SERVER_VAR_HTTP_HOST);
 #endif
 				if (String.IsNullOrEmpty(serverName))
 				{
@@ -2768,9 +2771,8 @@ namespace GeneXus.Application
 				return serverName;
 			}
 			catch
-
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 		private static bool DynamicPortRequest(HttpRequest request)
@@ -2809,11 +2811,11 @@ namespace GeneXus.Application
 		{
 			get
 			{
-                try
-                {
-                    return _HttpContext.Request.IsDefaultPort();
-                }
-                catch
+				try
+				{
+					return _HttpContext.Request.IsDefaultPort();
+				}
+				catch
 				{
 					return false;
 				}
@@ -2908,7 +2910,7 @@ namespace GeneXus.Application
 			get
 			{
 #if !NETCORE
-                return WebOperationContext.Current != null;
+				return WebOperationContext.Current != null;
 #else
 				return false;
 #endif
@@ -2922,7 +2924,7 @@ namespace GeneXus.Application
 			get
 			{
 #if !NETCORE
-                return HttpContext.Current != null;
+				return HttpContext.Current != null;
 #else
 				return _isHttpContext;
 #endif
@@ -3013,16 +3015,16 @@ namespace GeneXus.Application
 			return String.Empty;
 		}
 		static String[][] contentTypes = new string[][] {
-															 new string[] {"txt"	, "text/plain"},
-															 new string[] {"rtx"	, "text/richtext"},
-															 new string[] {"htm"	, MediaTypesNames.TextHtml},
-															 new string[] {"html"	, MediaTypesNames.TextHtml},
-															 new string[] {"xml"	, "text/xml"},
-															 new string[] {"rtf"	, "text/rtf"},
+															 new string[] {"txt"    , "text/plain"},
+															 new string[] {"rtx"    , "text/richtext"},
+															 new string[] {"htm"    , MediaTypesNames.TextHtml},
+															 new string[] {"html"   , MediaTypesNames.TextHtml},
+															 new string[] {"xml"    , "text/xml"},
+															 new string[] {"rtf"    , "text/rtf"},
 															 new string[] {"a3gpp"  , "audio/3gpp"},
 															 new string[] {"aif"    , "audio/x-aiff"},
 															 new string[] {"aif"    , "audio/aiff"},
-															 new string[] {"au"		, "audio/basic"},
+															 new string[] {"au"     , "audio/basic"},
 															 new string[] {"m4a"    , "audio/mp4"},
 															 new string[] {"m4a"    , "audio/x-m4a"},
 															 new string[] {"mp4"    , "video/mp4"},
@@ -3034,26 +3036,26 @@ namespace GeneXus.Application
 															 new string[] {"bmp"    , "image/bmp"},
 															 new string[] {"gif"    , "image/gif"},
 															 new string[] {"jpg"    , "image/jpeg"},
-															 new string[] {"jpeg"	, "image/jpeg"},
+															 new string[] {"jpeg"   , "image/jpeg"},
 															 new string[] {"jpe"    , "image/jpeg"},
 															 new string[] {"jpg"    , "application/jpg"},
 															 new string[] {"jpeg"   , "application/jpeg"},
-															 new string[] {"jfif"	, "image/pjpeg"},
+															 new string[] {"jfif"   , "image/pjpeg"},
 															 new string[] {"tif"    , "image/tiff"},
-															 new string[] {"tiff"	, "image/tiff"},
+															 new string[] {"tiff"   , "image/tiff"},
 															 new string[] {"png"    , "image/png"},
 															 new string[] {"png"    , "image/x-png"},
 															 new string[] {"mpg"    , "video/mpeg"},
-															 new string[] {"mpeg"	, "video/mpeg"},
+															 new string[] {"mpeg"   , "video/mpeg"},
 															 new string[] {"mov"    , "video/quicktime"},
-															 new string[] {"qt"		, "video/quicktime"},
+															 new string[] {"qt"     , "video/quicktime"},
 															 new string[] {"avi"    , "video/x-msvideo"},
 															 new string[] {"divx"   , "video/x-divx"},
 															 new string[] {"3gp"    , "video/3gpp"},
 															 new string[] {"3g2"    , "video/3gpp2"},
 															 new string[] {"exe"    , "application/octet-stream"},
 															 new string[] {"dll"    , "application/x-msdownload"},
-															 new string[] {"ps"		, "application/postscript"},
+															 new string[] {"ps"     , "application/postscript"},
 															 new string[] {"pdf"    , "application/pdf"},
 															 new string[] {"svg"    , "image/svg+xml"},
 															 new string[] {"tgz"    , "application/x-compressed"},
@@ -3061,12 +3063,12 @@ namespace GeneXus.Application
 															 new string[] {"zip"    , "application/x-zip-compressed"},
 															 new string[] {"tar"    , "application/x-tar"},
 															 new string[] {"rar"    , "application/x-rar-compressed"},
-															 new string[] {"ram"	, "audio/vnd.rn-realaudio" },
-															 new string[] {"gz"		, "application/x-gzip"},
+															 new string[] {"ram"    , "audio/vnd.rn-realaudio" },
+															 new string[] {"gz"     , "application/x-gzip"},
 															 new string[] {"xls"    , "application/vnd.ms-excel"},
-															 new string[] {"xlsx"	, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
-															 new string[] { "doc"	, "application/msword"},
-															 new string[] { "docx"	, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+															 new string[] {"xlsx"   , "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+															 new string[] { "doc"   , "application/msword"},
+															 new string[] { "docx"  , "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
 														 };
 
 		public int GetSoapErr()
