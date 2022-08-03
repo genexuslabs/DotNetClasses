@@ -73,10 +73,11 @@ namespace GeneXus.Http
 			{
 				HttpRequest req = context.HttpContext.Request;
 				string gxobj = GetNextPar().ToLower();
-				using StreamReader stream = new(req.GetInputStream());
+				GxSimpleCollection<JArray> parmsColl = new GxSimpleCollection<JArray>();
+
+				using (StreamReader stream = new StreamReader(req.GetInputStream()))
 				{
 					string jsonStr = stream.ReadToEnd();
-					GxSimpleCollection<JArray> parmsColl = new GxSimpleCollection<JArray>();
 					if (!string.IsNullOrEmpty(jsonStr))
 					{
 						parmsColl.FromJSonString(jsonStr);
@@ -289,8 +290,8 @@ namespace GeneXus.Http
 				{
 					localHttpContext.Response.ContentType = MediaTypesNames.TextPlain;
 					var r = new List<UploadFile>();
-					var fileCount = localHttpContext.Request.GetFileCount();
-					for (var i = 0; i < fileCount; i++)
+					int fileCount = localHttpContext.Request.GetFileCount();
+					for (int i = 0; i < fileCount; i++)
 					{
 						string fileGuid = GxUploadHelper.GetUploadFileGuid();
 						string fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
@@ -324,7 +325,7 @@ namespace GeneXus.Http
 						GxUploadHelper.CacheUploadFile(fileGuid, Path.GetFileName(fName), ext, gxFile, context);
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
-					var jsonObj = JSONHelper.Serialize(result);
+					string jsonObj = JSONHelper.Serialize(result);
 					localHttpContext.Response.Write(jsonObj);
 				}
 				else
