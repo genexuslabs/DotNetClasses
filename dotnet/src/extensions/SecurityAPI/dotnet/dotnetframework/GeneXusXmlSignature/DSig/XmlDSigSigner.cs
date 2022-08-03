@@ -12,703 +12,480 @@ using SecurityAPICommons.Keys;
 
 namespace GeneXusXmlSignature.GeneXusDSig
 {
-    [SecuritySafeCritical]
-    public class XmlDSigSigner : SecurityAPIObject, IXmlDSigSignerObject
-    {
+	[SecuritySafeCritical]
+	public class XmlDSigSigner : SecurityAPIObject, IXmlDSigSignerObject
+	{
 
-        private AsymmetricAlgorithm privateKey;
-        private AsymmetricAlgorithm publicKey;
-        private string digest;
-        private string asymAlgorithm;
+		private AsymmetricAlgorithm privateKey;
+		private AsymmetricAlgorithm publicKey;
+		private string digest;
+		private string asymAlgorithm;
 
-        public XmlDSigSigner() : base()
-        {
+		public XmlDSigSigner() : base()
+		{
 
-        }
+		}
 
-        /******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
+		/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 
-        public bool DoSignFile(string xmlFilePath, PrivateKeyManager key, CertificateX509 certificate, string outputPath, DSigOptions options)
-        {
-            this.error.cleanError();
-			if(certificate == null)
+		[SecuritySafeCritical]
+		public bool DoSignFile(String xmlFilePath, PrivateKeyManager key,
+				CertificateX509 certificate, String outputPath, DSigOptions options)
+		{
+			return Convert.ToBoolean(AxuiliarSign(xmlFilePath, key, certificate, outputPath, options, true, ""));
+		}
+
+		[SecuritySafeCritical]
+		public String DoSign(String xmlInput, PrivateKeyManager key,
+				CertificateX509 certificate, DSigOptions options)
+		{
+			return AxuiliarSign(xmlInput, key, certificate, "", options, false, "");
+		}
+
+		[SecuritySafeCritical]
+		public bool DoSignFileElement(String xmlFilePath, String xPath,
+				PrivateKeyManager key, CertificateX509 certificate, String outputPath,
+				DSigOptions options)
+		{
+			return Convert.ToBoolean(AxuiliarSign(xmlFilePath, key, certificate, outputPath, options, true, xPath));
+		}
+
+		[SecuritySafeCritical]
+		public String DoSignElement(String xmlInput, String xPath, PrivateKeyManager key,
+				CertificateX509 certificate, DSigOptions options)
+		{
+			return AxuiliarSign(xmlInput, key, certificate, "", options, false, xPath);
+		}
+
+		[SecuritySafeCritical]
+		public bool DoVerify(string xmlSigned, DSigOptions options)
+		{
+			return AuxiliarVerify(xmlSigned, options, null, false, false);
+		}
+
+		[SecuritySafeCritical]
+		public bool DoVerifyFile(string xmlFilePath, DSigOptions options)
+		{
+			return AuxiliarVerify(xmlFilePath, options, null, true, false);
+		}
+
+		[SecuritySafeCritical]
+		public bool DoVerifyWithCert(string xmlSigned, CertificateX509 certificate, DSigOptions options)
+		{
+			return AuxiliarVerify(xmlSigned, options, certificate, false, true);
+		}
+
+		[SecuritySafeCritical]
+		public bool DoVerifyFileWithCert(string xmlFilePath, CertificateX509 certificate, DSigOptions options)
+		{
+			return AuxiliarVerify(xmlFilePath, options, certificate, true, true);
+		}
+
+
+		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
+
+		private string AxuiliarSign(string xmlInput, PrivateKey key,
+		Certificate certificate, string outputPath, DSigOptions options, bool isFile, string xPath)
+		{
+			if (TransformsWrapperUtils.getTransformsWrapper(options.DSigSignatureType,
+					this.error) != TransformsWrapper.ENVELOPED)
 			{
-				this.error.setError("DS000", "Certificate parameter is null");
-				return false;
+				error.setError("XD001", "Not implemented DSigType");
 			}
-			if(options == null)
+			CertificateX509 cert = (CertificateX509)certificate;
+			if (!cert.Inicialized)
 			{
-				this.error.setError("DS000", "Options parameter is null");
-				return false;
+				this.error.setError("XD002", "Certificate not loaded");
 			}
-            return doSignFilePKCS12(xmlFilePath, key, certificate, options.DSigSignatureType, options.Canonicalization, outputPath, options.KeyInfoType, options.XmlSchemaPath);
-        }
-
-        public bool DoSignFileElement(string xmlFilePath, string xPath, PrivateKeyManager key, CertificateX509 certificate, string outputPath, DSigOptions options)
-        {
-            this.error.cleanError();
-			if (certificate == null)
+			else if (SecurityUtils.compareStrings(cert.getPublicKeyAlgorithm(), "ECDSA"))
 			{
-				this.error.setError("DS000", "Certificate parameter is null");
-				return false;
-			}
-			if (options == null)
-			{
-				this.error.setError("DS000", "Options parameter is null");
-				return false;
-			}
-			return doSignFileElementPKCS12(xmlFilePath, xPath, key, certificate, options.DSigSignatureType, options.Canonicalization, outputPath, options.KeyInfoType, options.XmlSchemaPath, options.IdentifierAttribute);
-        }
-
-        public string DoSign(string xmlInput, PrivateKeyManager key, CertificateX509 certificate, DSigOptions options)
-        {
-            this.error.cleanError();
-			if (certificate == null)
-			{
-				this.error.setError("DS000", "Certificate parameter is null");
+				this.error.setError("XD014", "XML signature with ECDSA keys is not implemented on Net Framework");
 				return "";
 			}
-			if (options == null)
+
+			XmlDocument xmlDoc = LoadDocument(isFile, xmlInput, options);
+			if (this.HasError())
 			{
-				this.error.setError("DS000", "Options parameter is null");
 				return "";
 			}
-			return doSignPKCS12(xmlInput, key, certificate, options.DSigSignatureType, options.Canonicalization, options.KeyInfoType, options.XmlSchemaPath);
-        }
-
-        public string DoSignElement(string xmlInput, string xPath, PrivateKeyManager key, CertificateX509 certificate, DSigOptions options)
-        {
-            this.error.cleanError();
-			if (certificate == null)
+			string result = Sign(xmlDoc, (PrivateKeyManager)key, cert, options.DSigSignatureType,
+					options.Canonicalization, options.KeyInfoType, xPath, options.IdentifierAttribute);
+			if (isFile)
 			{
-				this.error.setError("DS000", "Certificate parameter is null");
+				// string prefix = "<?xml version=”1.0″ encoding=”UTF-8″ ?>".Trim();
+				string prefix = "";
+				return SignatureUtils.writeToFile(result, outputPath, prefix, this.error).ToString();
+			}
+
+			return result;
+		}
+
+		private bool AuxiliarVerify(string xmlInput, DSigOptions options, CertificateX509 certificate, bool isFile, bool withCert)
+		{
+			if (TransformsWrapperUtils.getTransformsWrapper(options.DSigSignatureType,
+		this.error) != TransformsWrapper.ENVELOPED)
+			{
+				error.setError("XD001", "Not implemented DSigType");
+			}
+			XmlDocument xmlDoc = LoadDocument(isFile, xmlInput, options);
+			if (this.HasError())
+			{
+				return false;
+			}
+			if (withCert)
+			{
+				CertificateX509 cert = (CertificateX509)certificate;
+				if (!cert.Inicialized)
+				{
+					this.error.setError("XD002", "Certificate not loaded");
+				}
+				else if (SecurityUtils.compareStrings(cert.getPublicKeyAlgorithm(), "ECDSA"))
+				{
+					this.error.setError("XD014", "XML signature with ECDSA keys is not implemented on Net Framework");
+					return false;
+				}
+				return Verify(xmlDoc, withCert, certificate, options);
+			}
+			else
+			{
+				return Verify(xmlDoc, withCert, null, options);
+			}
+		}
+
+		private string Sign(XmlDocument xmlInput, PrivateKeyManager key, CertificateX509 certificate,
+				string dSigType, string canonicalizationType, string keyInfoType, string xpath, string id)
+		{
+			bool flag = inicializeInstanceVariables(key, certificate);
+			if (!flag)
+			{
 				return "";
 			}
-			if (options == null)
+
+			SignatureElementType signatureElementType;
+			if (!SecurityUtils.compareStrings(xpath, ""))
 			{
-				this.error.setError("DS000", "Options parameter is null");
+				if (xpath[0] == '#')
+				{
+					signatureElementType = SignatureElementType.id;
+					if (id == null || SecurityUtils.compareStrings(id, ""))
+					{
+						this.error.setError("XD003", "Identifier attribute name missing");
+						return "";
+					}
+				}
+				else
+				{
+					signatureElementType = SignatureElementType.path;
+				}
+			}
+			else
+			{
+				signatureElementType = SignatureElementType.document;
+			}
+
+			/***WHITESPACES***/
+			xmlInput.PreserveWhitespace = true;
+			CanonicalizerWrapper canon = CanonicalizerWrapperUtils.getCanonicalizerWrapper(canonicalizationType, this.error);
+
+
+			CanonicalizerWrapper canonW = CanonicalizerWrapperUtils.getCanonicalizerWrapper(canonicalizationType, this.error);
+			if (this.HasError())
+			{
 				return "";
 			}
-			return doSignElementPKCS12(xmlInput, xPath, key, certificate, options.DSigSignatureType, options.Canonicalization, options.KeyInfoType, options.XmlSchemaPath, options.IdentifierAttribute);
-        }
 
-        public bool DoVerify(string xmlSigned, DSigOptions options)
-        {
-            this.error.cleanError();
-			if (options == null)
+			Reference reference = new Reference();
+
+			XmlNode parentNode;
+			SignedXml signedXml;
+			switch (signatureElementType)
 			{
-				this.error.setError("DS000", "Options parameter is null");
-				return false;
+				case SignatureElementType.path:
+					XmlNode pathNode = SignatureUtils.getNodeFromPath(xmlInput, xpath, this.error);
+					XmlElement pathElement = pathNode as XmlElement;
+					if (this.HasError() || pathElement == null)
+					{
+						return "";
+					}
+					parentNode = pathNode.ParentNode;
+
+
+
+					signedXml = new SignedXml(pathElement);
+					XmlDsigXPathTransform XPathTransform = CreateXPathTransform(xpath);
+					reference.Uri = pathNode.NamespaceURI;
+					reference.AddTransform(XPathTransform);
+					break;
+				case SignatureElementType.id:
+					XmlNode idNode = SignatureUtils.getNodeFromID(xmlInput, id, xpath, this.error);
+					XmlElement idElement = idNode as XmlElement;
+
+					if (this.HasError() || idElement == null)
+					{
+						return "";
+					}
+
+					reference.Uri = xpath;
+					signedXml = new SignedXml(idElement);
+					parentNode = idNode.ParentNode;
+					break;
+				default:
+					signedXml = new SignedXml(xmlInput);
+					parentNode = xmlInput.DocumentElement;
+					reference.Uri = "";
+					break;
 			}
-			XmlDocument xmlDoc = SignatureUtils.documentFromString(xmlSigned, options.XmlSchemaPath, this.error);
-            if (this.HasError())
-            {
-                return false;
-            }
-            return verify(xmlDoc, options.IdentifierAttribute);
 
-        }
-
-
-        public bool DoVerifyFile(string xmlFilePath, DSigOptions options)
-        {
-            this.error.cleanError();
-			if(options == null)
+			signedXml.SigningKey = this.privateKey;
+			signedXml.SignedInfo.CanonicalizationMethod = CanonicalizerWrapperUtils.getCanonicalizationMethodAlorithm(canonW, this.error);
+			if (this.HasError())
 			{
-				this.error.setError("DS000", "Options parameter is null");
-				return false;
-			}
-            if (!SignatureUtils.validateExtensionXML(xmlFilePath))
-            {
-                this.error.setError("DS001", "The file is not an xml file");
-                return false;
-            }
-            XmlDocument xmlDoc = SignatureUtils.documentFromFile(xmlFilePath, options.XmlSchemaPath, this.error);
-            if (this.HasError())
-            {
-                return false;
-            }
-            return verify(xmlDoc, options.IdentifierAttribute);
-        }
-
-        public bool DoVerifyWithCert(string xmlSigned, CertificateX509 certificate, DSigOptions options)
-        {
-            this.error.cleanError();
-			if(certificate == null)
-			{
-				this.error.setError("DS003", "Certificate not loaded");
-				return false;
-			}
-			if(options == null)
-			{
-				this.error.setError("DS003", "Options is null");
-				return false;
-			}
-			if (!certificate.Inicialized)
-            {
-                this.error.setError("DS003", "Certificate not loaded");
-                return false;
-            }
-            if (SecurityUtils.compareStrings(certificate.getPublicKeyAlgorithm(), "ECDSA"))
-            {
-                this.error.setError("DS004", "XML signature with ECDSA keys is not implemented on Net Framework");
-                return false;
-            }
-            XmlDocument xmlDoc = SignatureUtils.documentFromString(xmlSigned, options.XmlSchemaPath, this.error);
-            if (this.HasError())
-            {
-                return false;
-            }
-            return verify(xmlDoc, certificate);
-        }
-
-        public bool DoVerifyFileWithCert(string xmlFilePath, CertificateX509 certificate, DSigOptions options)
-        {
-            this.error.cleanError();
-			if(certificate == null)
-			{
-				this.error.setError("DS005", "Certificate not loaded");
-				return false;
-			}
-			if(options == null)
-			{
-				this.error.setError("DS005", "Options is null");
-				return false;
-			}
-            if (!certificate.Inicialized)
-            {
-                this.error.setError("DS005", "Certificate not loaded");
-            }
-            if (SecurityUtils.compareStrings(certificate.getPublicKeyAlgorithm(), "ECDSA"))
-            {
-                this.error.setError("DS006", "XML signature with ECDSA keys is not implemented on Net Framework");
-                return false;
-            }
-            if (!SignatureUtils.validateExtensionXML(xmlFilePath))
-            {
-                this.error.setError("DS007", "The file is not an xml file");
-                return false;
-            }
-            XmlDocument xmlDoc = SignatureUtils.documentFromFile(xmlFilePath, options.XmlSchemaPath, this.error);
-            return verify(xmlDoc, certificate);
-
-        }
-
-
-        /******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
-
-        private bool doSignFilePKCS12(string xmlFilePath, PrivateKeyManager key, CertificateX509 certificate, string dSigType, string canonicalizationType, string outputPath, string keyInfoType, string xmlSchemaPath)
-        {
-            if (TransformsWrapperUtils.getTransformsWrapper(dSigType, this.error) != TransformsWrapper.ENVELOPED)
-            {
-                error.setError("DS009", "Not implemented DSigType");
-                return false;
-            }
-            if (!SignatureUtils.validateExtensionXML(xmlFilePath))
-            {
-                this.error.setError("DS010", "Not XML file");
-                return false;
-            }
-            if (!certificate.Inicialized)
-            {
-                this.error.setError("DS011", "Certificate not loaded");
-                return false;
-            }
-            if (SecurityUtils.compareStrings(certificate.getPublicKeyAlgorithm(), "ECDSA"))
-            {
-                this.error.setError("DS004", "XML signature with ECDSA keys is not implemented on Net Framework");
-                return false;
-            }
-
-            XmlDocument xmlDoc = SignatureUtils.documentFromFile(xmlFilePath, xmlSchemaPath, this.error);
-            if (this.HasError())
-            {
-                return false;
-            }
-            string result = Sign(xmlDoc, key, certificate, dSigType, canonicalizationType, keyInfoType, "", "");
-            if (result == null || SecurityUtils.compareStrings("", result))
-            {
-                this.error.setError("DS012", "Error generating signature");
-                return false;
-            }
-            else
-            {
-                // string prefix = "<?xml version=”1.0″ encoding=”UTF-8″ ?>".Trim();
-                string prefix = "";
-                return SignatureUtils.writeToFile(result, outputPath, prefix, this.error);
-            }
-        }
-
-        private bool doSignFileElementPKCS12(string xmlFilePath, string xPath, PrivateKeyManager key, CertificateX509 certificate, string dSigType, string canonicalizationType, string outputPath, string keyInfoType, string xmlSchemaPath, string id)
-        {
-            if (TransformsWrapperUtils.getTransformsWrapper(dSigType, this.error) != TransformsWrapper.ENVELOPED)
-            {
-                error.setError("DS013", "Not implemented DSigType");
-                return false;
-            }
-            if (!SignatureUtils.validateExtensionXML(xmlFilePath))
-            {
-                this.error.setError("DS014", "Not XML file");
-                return false;
-            }
-            if (!certificate.Inicialized)
-            {
-                this.error.setError("DS015", "Certificate not loaded");
-            }
-            if (SecurityUtils.compareStrings(certificate.getPublicKeyAlgorithm(), "ECDSA"))
-            {
-                this.error.setError("DS004", "XML signature with ECDSA keys is not implemented on Net Framework");
-                return false;
-            }
-            XmlDocument xmlDoc = SignatureUtils.documentFromFile(xmlFilePath, xmlSchemaPath, this.error);
-            if (this.HasError())
-            {
-                return false;
-            }
-            string result = Sign(xmlDoc, key, certificate, dSigType, canonicalizationType, keyInfoType, xPath, id);
-            if (result == null || SecurityUtils.compareStrings("", result))
-            {
-                this.error.setError("DS016", "Error generating signature");
-                return false;
-            }
-            else
-            {
-                // string prefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-                string prefix = "";
-                return SignatureUtils.writeToFile(result, outputPath, prefix, this.error);
-            }
-        }
-
-        private string doSignElementPKCS12(string xmlInput, string xPath, PrivateKeyManager key, CertificateX509 certificate, string dSigType, string canonicalizationType, string keyInfoType, string xmlSchemaPath, string id)
-        {
-            if (TransformsWrapperUtils.getTransformsWrapper(dSigType, this.error) != TransformsWrapper.ENVELOPED)
-            {
-                error.setError("DS017", "Not implemented DSigType");
-                return "";
-            }
-            if (!certificate.Inicialized)
-            {
-                this.error.setError("DS018", "Certificate not loaded");
-                return "";
-            }
-            if (SecurityUtils.compareStrings(certificate.getPublicKeyAlgorithm(), "ECDSA"))
-            {
-                this.error.setError("DS004", "XML signature with ECDSA keys is not implemented on Net Framework");
-                return "";
-            }
-            XmlDocument xmlDoc = SignatureUtils.documentFromString(xmlInput, xmlSchemaPath, this.error);
-            if (this.HasError())
-            {
-                return "";
-            }
-            return Sign(xmlDoc, key, certificate, dSigType, canonicalizationType, keyInfoType, xPath, id);
-        }
-
-        private string doSignPKCS12(string xmlInput, PrivateKeyManager key, CertificateX509 certificate, string dSigType, string canonicalizationType, string keyInfoType, string xmlSchemaPath)
-        {
-            if (TransformsWrapperUtils.getTransformsWrapper(dSigType, this.error) != TransformsWrapper.ENVELOPED)
-            {
-                error.setError("DS019", "Not implemented DSigType");
-                return "";
-            }
-            if (!certificate.Inicialized)
-            {
-                this.error.setError("DS0220", "Certificate not loaded");
-                return "";
-            }
-            if (SecurityUtils.compareStrings(certificate.getPublicKeyAlgorithm(), "ECDSA"))
-            {
-                this.error.setError("DS004", "XML signature with ECDSA keys is not implemented on Net Framework");
-                return "";
-            }
-            XmlDocument xmlDoc = SignatureUtils.documentFromString(xmlInput, xmlSchemaPath, this.error);
-            if (this.HasError())
-            {
-                return "";
-            }
-            return Sign(xmlDoc, key, certificate, dSigType, canonicalizationType, keyInfoType, "", "");
-        }
-
-        private string Sign(XmlDocument xmlInput, PrivateKeyManager key, CertificateX509 certificate,
-                string dSigType, string canonicalizationType, string keyInfoType, string xpath, string id)
-        {
-			if(!SecurityUtils.compareStrings(dSigType, "ENVELOPED"))
-			{
-				this.error.setError("DS040", "Not implemented DSigType");
 				return "";
 			}
-            bool flag = inicializeInstanceVariables(key, certificate);
-            if (!flag)
-            {
-                return "";
-            }
 
-            SignatureElementType signatureElementType;
-            if (!SecurityUtils.compareStrings(xpath, ""))
-            {
-                if (xpath[0] == '#')
-                {
-                    signatureElementType = SignatureElementType.id;
-                    if (id == null || SecurityUtils.compareStrings(id, ""))
-                    {
-                        this.error.setError("DS021", "identifier attribute name missing");
-                        return "";
-                    }
-                }
-                else
-                {
-                    signatureElementType = SignatureElementType.path;
-                }
-            }
-            else
-            {
-                signatureElementType = SignatureElementType.document;
-            }
+			XmlDsigEnvelopedSignatureTransform env = new XmlDsigEnvelopedSignatureTransform();
+			reference.AddTransform(env);
 
-            /***WHITESPACES***/
-            xmlInput.PreserveWhitespace = true;
-            CanonicalizerWrapper canon = CanonicalizerWrapperUtils.getCanonicalizerWrapper(canonicalizationType, this.error);
+			addCanonTransform(reference, canonW);
 
+			signedXml.AddReference(reference);
 
-            CanonicalizerWrapper canonW = CanonicalizerWrapperUtils.getCanonicalizerWrapper(canonicalizationType, this.error);
-            if (this.HasError())
-            {
-                return "";
-            }
+			KeyInfo keyInfo = createKeyInfo(certificate, keyInfoType);
 
-            Reference reference = new Reference();
-
-            XmlNode parentNode;
-            SignedXml signedXml;
-            switch (signatureElementType)
-            {
-                case SignatureElementType.path:
-                    XmlNode pathNode = SignatureUtils.getNodeFromPath(xmlInput, xpath, this.error);
-                    XmlElement pathElement = pathNode as XmlElement;
-                    if (this.HasError() || pathElement == null)
-                    {
-                        return "";
-                    }
-                    parentNode = pathNode.ParentNode;
-
-
-
-                    signedXml = new SignedXml(pathElement);
-                    XmlDsigXPathTransform XPathTransform = CreateXPathTransform(xpath);
-                    reference.Uri = pathNode.NamespaceURI;
-                    reference.AddTransform(XPathTransform);
-                    break;
-                case SignatureElementType.id:
-                    XmlNode idNode = SignatureUtils.getNodeFromID(xmlInput, id, xpath, this.error);
-                    XmlElement idElement = idNode as XmlElement;
-
-                    if (this.HasError() || idElement == null)
-                    {
-                        return "";
-                    }
-
-                    reference.Uri = xpath;
-                    signedXml = new SignedXml(idElement);
-                    parentNode = idNode.ParentNode;
-                    break;
-                default:
-                    signedXml = new SignedXml(xmlInput);
-                    parentNode = xmlInput.DocumentElement;
-                    reference.Uri = "";
-                    break;
-            }
-
-            signedXml.SigningKey = this.privateKey;
-            signedXml.SignedInfo.CanonicalizationMethod = CanonicalizerWrapperUtils.getCanonicalizationMethodAlorithm(canonW, this.error);
-            if (this.HasError())
-            {
-                return "";
-            }
-
-            XmlDsigEnvelopedSignatureTransform env = new XmlDsigEnvelopedSignatureTransform();
-            reference.AddTransform(env);
-
-            addCanonTransform(reference, canonW);
-
-            signedXml.AddReference(reference);
-
-            KeyInfo keyInfo = createKeyInfo(certificate, keyInfoType);
-
-            if (keyInfo != null)
-            {
-                signedXml.KeyInfo = keyInfo;
-            }
-            try
-            {
-                signedXml.ComputeSignature();
-            }
-            catch (Exception)
-            {
-                this.error.setError("DS023", "Error on signing");
-                return "";
-            }
-            XmlElement xmlDigitalSignature = null;
-            try
-            {
-                xmlDigitalSignature = signedXml.GetXml();
-            }
-            catch (Exception)
-            {
-                this.error.setError("DS028", "Error at signing");
-                return "";
-            }
+			if (keyInfo != null)
+			{
+				signedXml.KeyInfo = keyInfo;
+			}
+			try
+			{
+				signedXml.ComputeSignature();
+			}
+			catch (Exception e)
+			{
+				this.error.setError("XD004", e.Message);
+				return "";
+			}
+			XmlElement xmlDigitalSignature = null;
+			try
+			{
+				xmlDigitalSignature = signedXml.GetXml();
+			}
+			catch (Exception ex)
+			{
+				this.error.setError("XD005", ex.Message);
+				return "";
+			}
 
 
 
 
-            parentNode.AppendChild(xmlDigitalSignature);
-            // xmlInput.DocumentElement.AppendChild(xmlInput.ImportNode(xmlDigitalSignature, true));
+			parentNode.AppendChild(xmlDigitalSignature);
+			// xmlInput.DocumentElement.AppendChild(xmlInput.ImportNode(xmlDigitalSignature, true));
 
 
-            return SignatureUtils.XMLDocumentToString(xmlInput);
+			return SignatureUtils.XMLDocumentToString(xmlInput);
 
-        }
+		}
 
-        private bool verify(XmlDocument doc, string id)
-        {
-            doc.PreserveWhitespace = true;
-            XmlNodeList nodeList = null;
-            try
-            {
-                nodeList = doc.GetElementsByTagName("XPath");
-            }
-            catch (Exception)
-            {
-                //NOOP
-            }
-            if (nodeList == null || nodeList.Count == 0)
-            {
+		private bool Verify(XmlDocument doc, bool withCert, CertificateX509 certificate, DSigOptions options)
+		{
+			doc.PreserveWhitespace = true;
+			XmlNodeList nodeList = null;
+			SignedXml signedXML = null;
+			XmlNode node = null;
+			//searching for an element
+			try
+			{
+				nodeList = doc.GetElementsByTagName("XPath");
+			}
+			catch (Exception)
+			{
+				//NOOP
+			}
+			if (nodeList == null || nodeList.Count == 0)
+			{
+				//search for id
 
-                return verifyDocument(doc, id);
+				string idValue = SignatureUtils.getIDNodeValue(doc);
+				if (idValue != null)
+				{
+					node = SignatureUtils.getNodeFromID(doc, options.IdentifierAttribute, idValue, this.error);
+				}
+				else
+				{
+					//all document
+					node = doc.DocumentElement;
 
-            }
-            else
-            {
-                return verifyPath(doc);
-            }
-        }
+				}
 
-        private bool verifyPath(XmlDocument doc)
-        {
+			}
+			else
+			{
+				//search for xpath
+				//java xmlsec hack
+				if (nodeList == null || nodeList.Count == 0)
+				{
+					nodeList = doc.GetElementsByTagName("ds:XPath");
+				}
 
-            doc.PreserveWhitespace = true;
-
-            XmlNodeList nodeList = doc.GetElementsByTagName("XPath");
-            //java xmlsec hack
-            if (nodeList == null || nodeList.Count == 0)
-            {
-                nodeList = doc.GetElementsByTagName("ds:XPath");
-            }
-
-            XmlNode node = nodeList[0];
-            string path = node.InnerText;
-            XmlNode signedNode = SignatureUtils.getNodeFromPath(doc, path, this.error);
-            if (this.HasError())
-            {
-                return false;
-            }
-            XmlElement pathElement = signedNode as XmlElement;
-            SignedXml signedXML = new SignedXml(pathElement);
-            XmlNodeList signatureNodes = doc.GetElementsByTagName("Signature", SignedXml.XmlDsigNamespaceUrl);
-            //java xmlsec hack
-            if (signatureNodes == null || signatureNodes.Count == 0)
-            {
-                signatureNodes = doc.GetElementsByTagName("ds:Signature");
-            }
-            bool res = false;
-            try
-            {
-                signedXML.LoadXml((XmlElement)signatureNodes[0]);
-                res = signedXML.CheckSignature();
-            }
-            catch (Exception)
-            {
-                this.error.setError("DS036", "Error on signature verification");
-                return false;
-            }
-
-            return res;
+				XmlNode nodee = nodeList[0];
+				string path = nodee.InnerText;
+				node = SignatureUtils.getNodeFromPath(doc, path, this.error);
+				if (this.HasError())
+				{
+					return false;
+				}
+			}
 
 
-
-        }
-
-        private bool verifyID(XmlDocument doc, string identifier, string idValue)
-        {
-            XmlNode node = SignatureUtils.getNodeFromID(doc, identifier, idValue, this.error);
-            XmlElement element = node as XmlElement;
-            SignedXml signedXML = new SignedXml(element);
-            XmlNodeList signatureNodes = doc.GetElementsByTagName("Signature", SignedXml.XmlDsigNamespaceUrl);
-            //java xmlsec hack
-            if (signatureNodes == null || signatureNodes.Count == 0)
-            {
-                signatureNodes = doc.GetElementsByTagName("ds:Signature");
-            }
-            bool res = false;
-            try
-            {
-                signedXML.LoadXml((XmlElement)signatureNodes[0]);
-                res = signedXML.CheckSignature();
-            }
-            catch (Exception)
-            {
-                this.error.setError("DS037", "Error on signature verification");
-                return false;
-            }
-
-            return res;
-
-        }
-
-
-        private bool verifyDocument(XmlDocument doc, string id)
-        {
-            /***WHITESPACES***/
-            doc.PreserveWhitespace = true;
-            string idValue = SignatureUtils.getIDNodeValue(doc);
-            if (!SecurityUtils.compareStrings("", idValue) && idValue[0] == '#')
-            {
-                if (id == null || SecurityUtils.compareStrings("", id))
-                {
-                    this.error.setError("DS038", "The signature has a Reference URI by ID and ID attribute name is not defined");
-                    return false;
-                }
-                return verifyID(doc, id, idValue);
-            }
-            SignedXml signedXML = new SignedXml(doc);
-            XmlNodeList nodeList = doc.GetElementsByTagName("Signature", SignedXml.XmlDsigNamespaceUrl);
-            //java xmlsec hack
-            if (nodeList == null || nodeList.Count == 0)
-            {
-                nodeList = doc.GetElementsByTagName("ds:Signature");
-            }
-            bool res = false;
-            try
-            {
-                signedXML.LoadXml((XmlElement)nodeList[0]);
-                res = signedXML.CheckSignature();
-            }
-            catch (Exception)
-            {
-                this.error.setError("DS039", "Error on signature verification");
-
-                return false;
-            }
-            return res;
+			XmlElement element = node as XmlElement;
+			signedXML = new SignedXml(element);
 
 
 
 
-        }
+			XmlNodeList signatureNodes = doc.GetElementsByTagName("Signature", SignedXml.XmlDsigNamespaceUrl);
+			//java xmlsec hack
+			if (signatureNodes == null || signatureNodes.Count == 0)
+			{
+				signatureNodes = doc.GetElementsByTagName("ds:Signature");
+			}
+			bool res = false;
+			try
+			{
+				signedXML.LoadXml((XmlElement)signatureNodes[0]);
+				if (withCert)
+				{
+					res = signedXML.CheckSignature(certificate.Cert, true);
+				}
+				else
+				{
+					res = signedXML.CheckSignature();
+				}
+			}
+			catch (Exception e)
+			{
+				this.error.setError("XD006", e.Message);
+				return false;
+			}
 
-        private bool verify(XmlDocument doc, CertificateX509 certificate)
-        {
-            /***WHITESPACES***/
-            doc.PreserveWhitespace = true;
+			return res;
+		}
 
-            SignedXml signedXml = new SignedXml(doc);
-            XmlNodeList nodeList = doc.GetElementsByTagName("Signature");
-            signedXml.LoadXml((XmlElement)nodeList[0]);
-            return signedXml.CheckSignature(certificate.Cert, true);
-        }
+		private KeyInfo createKeyInfo(CertificateX509 certificate, string keyInfoType)
+		{
+			KeyInfo keyInfo = new KeyInfo();
+			KeyInfoType kinfo = KeyInfoTypeUtils.getKeyInfoType(keyInfoType, this.error);
+			switch (kinfo)
+			{
+				case KeyInfoType.KeyValue:
 
-        private KeyInfo createKeyInfo(CertificateX509 certificate, string keyInfoType)
-        {
-            KeyInfo keyInfo = new KeyInfo();
-            KeyInfoType kinfo = KeyInfoTypeUtils.getKeyInfoType(keyInfoType, this.error);
-            switch (kinfo)
-            {
-                case KeyInfoType.KeyValue:
+					if (SecurityUtils.compareStrings(certificate.getPublicKeyAlgorithm(), "RSA"))
+					{
+						keyInfo.AddClause(new RSAKeyValue((RSA)certificate.getPublicKeyXML()));
+					}
+					else
+					{
+						keyInfo.AddClause(new DSAKeyValue((DSA)certificate.getPublicKeyXML()));
+					}
+					break;
+				case KeyInfoType.X509Certificate:
 
-                    if (SecurityUtils.compareStrings(certificate.getPublicKeyAlgorithm(), "RSA"))
-                    {
-                        keyInfo.AddClause(new RSAKeyValue((RSA)certificate.getPublicKeyXML()));
-                    }
-                    else
-                    {
-                        keyInfo.AddClause(new DSAKeyValue((DSA)certificate.getPublicKeyXML()));
-                    }
-                    break;
-                case KeyInfoType.X509Certificate:
+					KeyInfoX509Data keyInfoX509Data = new KeyInfoX509Data();
+					keyInfoX509Data.AddCertificate((X509Certificate)certificate.Cert);
+					keyInfoX509Data.AddSubjectName(certificate.Cert.SubjectName.Name);
+					keyInfoX509Data.AddIssuerSerial(certificate.Cert.IssuerName.Name, certificate.Cert.SerialNumber);
+					keyInfo.AddClause((KeyInfoClause)keyInfoX509Data);
 
-                    KeyInfoX509Data keyInfoX509Data = new KeyInfoX509Data();
-                    keyInfoX509Data.AddCertificate((X509Certificate)certificate.Cert);
-                    keyInfoX509Data.AddSubjectName(certificate.Cert.SubjectName.Name);
-                    keyInfoX509Data.AddIssuerSerial(certificate.Cert.IssuerName.Name, certificate.Cert.SerialNumber);
-                    keyInfo.AddClause((KeyInfoClause)keyInfoX509Data);
-
-                    break;
-                case KeyInfoType.NONE:
-                    keyInfo = null;
-                    break;
-            }
-            return keyInfo;
-        }
-
-
-        private static void addCanonTransform(Reference reference, CanonicalizerWrapper canonW)
-        {
-
-            switch (canonW)
-            {
-                case CanonicalizerWrapper.ALGO_ID_C14N_OMIT_COMMENTS:
-                    reference.AddTransform(new XmlDsigC14NTransform());
-                    break;
-                case CanonicalizerWrapper.ALGO_ID_C14N_WITH_COMMENTS:
-                    reference.AddTransform(new XmlDsigC14NWithCommentsTransform());
-                    break;
-                case CanonicalizerWrapper.ALGO_ID_C14N_EXCL_OMIT_COMMENTS:
-                    reference.AddTransform(new XmlDsigExcC14NTransform());
-                    break;
-                case CanonicalizerWrapper.ALGO_ID_C14N_EXCL_WITH_COMMENTS:
-                    reference.AddTransform(new XmlDsigExcC14NWithCommentsTransform());
-                    break;
-            }
-        }
+					break;
+				case KeyInfoType.NONE:
+					keyInfo = null;
+					break;
+			}
+			return keyInfo;
+		}
 
 
-        private bool inicializeInstanceVariables(PrivateKeyManager key, CertificateX509 certificate)
-        {
+		private static void addCanonTransform(Reference reference, CanonicalizerWrapper canonW)
+		{
 
-            this.privateKey = key.getPrivateKeyForXML();
-            if (this.privateKey == null)
-            {
-                this.error = key.GetError();
-                return false;
+			switch (canonW)
+			{
+				case CanonicalizerWrapper.ALGO_ID_C14N_OMIT_COMMENTS:
+					reference.AddTransform(new XmlDsigC14NTransform());
+					break;
+				case CanonicalizerWrapper.ALGO_ID_C14N_WITH_COMMENTS:
+					reference.AddTransform(new XmlDsigC14NWithCommentsTransform());
+					break;
+				case CanonicalizerWrapper.ALGO_ID_C14N_EXCL_OMIT_COMMENTS:
+					reference.AddTransform(new XmlDsigExcC14NTransform());
+					break;
+				case CanonicalizerWrapper.ALGO_ID_C14N_EXCL_WITH_COMMENTS:
+					reference.AddTransform(new XmlDsigExcC14NWithCommentsTransform());
+					break;
+			}
+		}
 
-            }
-            this.publicKey = certificate.getPublicKeyXML();
-            this.digest = certificate.getPublicKeyHash();
-            this.asymAlgorithm = certificate.getPublicKeyAlgorithm();
-            return true;
-        }
 
-        // Create the XML that represents the transform.
-        private static XmlDsigXPathTransform CreateXPathTransform(string XPathString)
-        {
-            // Create a new XMLDocument object.
-            XmlDocument doc = new XmlDocument() { XmlResolver = null };
+		private bool inicializeInstanceVariables(PrivateKeyManager key, CertificateX509 certificate)
+		{
+
+			this.privateKey = key.getPrivateKeyForXML();
+			if (this.privateKey == null)
+			{
+				this.error = key.GetError();
+				return false;
+
+			}
+			this.publicKey = certificate.getPublicKeyXML();
+			this.digest = certificate.getPublicKeyHash();
+			this.asymAlgorithm = certificate.getPublicKeyAlgorithm();
+			return true;
+		}
+
+		// Create the XML that represents the transform.
+		private static XmlDsigXPathTransform CreateXPathTransform(string XPathString)
+		{
+			// Create a new XMLDocument object.
+			XmlDocument doc = new XmlDocument() { XmlResolver = null };
 
 			// Create a new XmlElement.
 			XmlElement xPathElem = doc.CreateElement("XPath");
 
-            // Set the element text to the value
-            // of the XPath string.
-            xPathElem.InnerText = XPathString;
+			// Set the element text to the value
+			// of the XPath string.
+			xPathElem.InnerText = XPathString;
 
-            // Create a new XmlDsigXPathTransform object.
-            XmlDsigXPathTransform xForm = new XmlDsigXPathTransform();
+			// Create a new XmlDsigXPathTransform object.
+			XmlDsigXPathTransform xForm = new XmlDsigXPathTransform();
 
-            // Load the XPath XML from the element. 
-            xForm.LoadInnerXml(xPathElem.SelectNodes("."));
+			// Load the XPath XML from the element. 
+			xForm.LoadInnerXml(xPathElem.SelectNodes("."));
 
-            // Return the XML that represents the transform.
-            return xForm;
-        }
+			// Return the XML that represents the transform.
+			return xForm;
+		}
+
+
+
+		private XmlDocument LoadDocument(bool isFile, String path, DSigOptions options)
+		{
+			XmlDocument xmlDoc = null;
+			if (isFile)
+			{
+				if (!SignatureUtils.validateExtensionXML(path))
+				{
+					this.error.setError("XD013", "Not XML file");
+					return null;
+				}
+				xmlDoc = SignatureUtils.documentFromFile(path, options.XmlSchemaPath, this.error);
+
+			}
+			else
+			{
+				xmlDoc = SignatureUtils.documentFromString(path, options.XmlSchemaPath, this.error);
+			}
+			return xmlDoc;
+		}
 	}
 }
