@@ -337,7 +337,8 @@ namespace GeneXus.Application
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = basePath;
-			app.MapWebSocketManager($"{basePath}/gxwebsocket.svc");
+			app.MapWebSocketManager($"{basePath}/gxwebsocket.svc"); //Compatibility reasons.
+			app.MapWebSocketManager($"{basePath}/gxwebsocket");
 
 			app.MapWhen(
 				context => IsAspx(context, basePath),
