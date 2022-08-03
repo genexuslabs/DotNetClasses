@@ -393,9 +393,11 @@ namespace GeneXus.Http.Server
 			if (_httpReq == null)
 				return "";
 #if NETCORE
-			return (new StreamReader(_httpReq.Body)).ReadToEnd();
+			using StreamReader reader = new(_httpReq.Body);
+			return reader.ReadToEnd();
 #else
-			return (new StreamReader(_httpReq.InputStream)).ReadToEnd();
+			using StreamReader reader = new(_httpReq.InputStream);
+			return reader.ReadToEnd();
 #endif
 		}
 		public void ToFile(string FileName)

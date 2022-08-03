@@ -64,11 +64,14 @@ namespace GeneXus.Http
 			{
 				HttpRequest req = context.HttpContext.Request;
 				string gxobj = GetNextPar().ToLower();
-				string jsonStr = (new StreamReader(req.GetInputStream())).ReadToEnd();
-				GxSimpleCollection<JArray> parmsColl = new GxSimpleCollection<JArray>();
-				if (!string.IsNullOrEmpty(jsonStr))
+				using StreamReader stream = new(req.GetInputStream());
 				{
-					parmsColl.FromJSonString(jsonStr);
+					string jsonStr = stream.ReadToEnd();
+					GxSimpleCollection<JArray> parmsColl = new GxSimpleCollection<JArray>();
+					if (!string.IsNullOrEmpty(jsonStr))
+					{
+						parmsColl.FromJSonString(jsonStr);
+					}
 				}
 #if NETCORE
 
