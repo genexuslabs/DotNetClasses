@@ -21,10 +21,10 @@ namespace GeneXusCryptography.ChecksumUtils
 	{
 		public static ChecksumInputType getChecksumInputType(string checksumInputType, Error error)
 		{
-			if(error == null) return ChecksumInputType.NONE;
+			if (error == null) return ChecksumInputType.NONE;
 			if (checksumInputType == null)
 			{
-				error.setError("CI001", "Unrecognized checksum input type");
+				error.setError("CHI06", "Unrecognized checksum input type");
 				return ChecksumInputType.NONE;
 			}
 			switch (checksumInputType.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -40,7 +40,7 @@ namespace GeneXusCryptography.ChecksumUtils
 				case "LOCAL_FILE":
 					return ChecksumInputType.LOCAL_FILE;
 				default:
-					error.setError("CI001", "Unrecognized checksum input type");
+					error.setError("CHI01", "Unrecognized checksum input type");
 					return ChecksumInputType.NONE;
 			}
 		}
@@ -61,7 +61,7 @@ namespace GeneXusCryptography.ChecksumUtils
 				case ChecksumInputType.LOCAL_FILE:
 					return "LOCAL_FILE";
 				default:
-					error.setError("CI002", "Unrecognized checksum input type");
+					error.setError("CHI02", "Unrecognized checksum input type");
 					return "";
 			}
 		}
@@ -80,11 +80,11 @@ namespace GeneXusCryptography.ChecksumUtils
 					}
 					catch (Exception e)
 					{
-						error.setError("CI003", e.Message);
+						error.setError("CHI03", e.Message);
 					}
 					break;
 				case ChecksumInputType.HEX:
-					aux = SecurityUtils.GetHexa(input, "CI004", error);
+					aux = SecurityUtils.HexaToByte(input, error);
 					break;
 				case ChecksumInputType.TXT:
 					aux = eu.getBytes(input);
@@ -100,14 +100,14 @@ namespace GeneXusCryptography.ChecksumUtils
 					}
 					catch (Exception e)
 					{
-						error.setError("CI004", e.Message);
+						error.setError("CHI04", e.Message);
 					}
 					break;
 				case ChecksumInputType.LOCAL_FILE:
 					aux = SecurityUtils.getFileBytes(input, error);
 					break;
 				default:
-					error.setError("CI006", "Unrecognized checksum input type");
+					error.setError("CHI05", "Unrecognized checksum input type");
 					break;
 			}
 			return aux;

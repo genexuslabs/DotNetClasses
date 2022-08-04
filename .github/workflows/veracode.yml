@@ -1,0 +1,103 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# This workflow will initiate a Veracode Static Analysis Pipeline scan, return a results.json and convert to SARIF for upload as a code scanning alert
+
+name: Veracode Static Analysis Pipeline Scan
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - 'master'
+      - 'beta'
+      - 'release-*'
+  
+  #Run at the end of every day
+  schedule:
+    - cron: '0 0 * * *'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  contents: read
+
+jobs:
+  # This workflow contains a job to build and submit pipeline scan, you will need to customize the build process accordingly and make sure the artifact you build is used as the file input to the pipeline scan file parameter
+  build-and-pipeline-scan:
+    env:
+      ZipFilename: netClassesForScan.zip
+
+    # The type of runner that the job will run on
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+
+    runs-on: windows-latest
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        repository: ''
+    
+    - uses: actions/setup-dotnet@v1
+      with:
+        source-url: https://nuget.pkg.github.com/genexuslabs/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Build
+      run: |
+        $veracodesolution = "VeracodeSolution"
+        dotnet new sln --name $veracodesolution --output dotnet --force
+        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$veracodesolution /m:1
+        dotnet msbuild dotnet\Directory.Build.targets /t:PublishForAnalyzer -p:DumpSolutionName=$veracodesolution
+
+    - name: Create package for Veracode scan
+      shell: powershell
+      run: |
+        Compress-Archive -Path .out\* $env:ZipFilename
+
+    - name: Archive zip to analyze
+      uses: actions/upload-artifact@v3
+      with:
+        name: netclasses_zip_to_artifacts
+        path: netClassesForScan.zip
+        retention-days: 15
+        
+    - name: Download Veracode Static Analysis Pipeline scan jar
+      shell: powershell
+      run: |
+        Invoke-WebRequest -Uri "https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip" -OutFile "pipeline-scan.zip"
+        Expand-Archive "pipeline-scan.zip" -DestinationPath ".veracode" -Force
+
+    - name: Upload package for scan
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Execute scan
+      run: java -jar ".veracode\pipeline-scan.jar" --veracode_api_id "${{secrets.VERACODE_API_ID}}" --veracode_api_key "${{secrets.VERACODE_API_KEY}}" --fail_on_severity="Very High, High, Medium" --file $env:ZipFilename
+      continue-on-error: false
+    - name: Convert pipeline scan output to SARIF format
+      id: convert
+      uses: veracode/veracode-pipeline-scan-results-to-sarif@ff08ae5b45d5384cb4679932f184c013d34da9be
+      with:
+        pipeline-results-json: results.json
+        source-base-path-1: "^.*/${{ github.event.repository.name }}/dotnet/:dotnet/"
+        
+    - uses: github/codeql-action/upload-sarif@v1
+      with:
+        # Path to SARIF file relative to the root of the repository
+        sarif_file: veracode-results.sarif
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: veracode_json_and_sarif_results
+        path: |
+         results.json
+         veracode-results.sarif
+        retention-days: 15

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net6.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
@@ -28,10 +28,4 @@
 			</TfmSpecificPackageFile>
 		</ItemGroup>
 	</Target>
-	<ItemGroup>
-		<Content Include="net6.0\$(MSBuildProjectName).deps.json">
-			<Pack>true</Pack>
-			<PackagePath>\content\net6.0\</PackagePath>
-		</Content>
-	</ItemGroup>
 </Project>

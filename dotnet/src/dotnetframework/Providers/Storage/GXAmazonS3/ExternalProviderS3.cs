@@ -2,10 +2,10 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.IO;
 using Amazon.S3.Model;
-using GeneXus.Encryption;
+
+using Amazon.S3.Transfer;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -95,6 +95,13 @@ namespace GeneXus.Storage.GXAmazonS3
 				config.ForcePathStyle = forcePathStyle;
 				config.ServiceURL = Endpoint;
 				customEndpoint = true;
+			}
+			else
+			{
+				if (region == Amazon.RegionEndpoint.USEast1)
+				{
+					Amazon.AWSConfigsS3.UseSignatureVersion4 = true;
+				}
 			}
 
 #if NETCORE
@@ -362,21 +369,59 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 		}
 
+		const long MIN_MULTIPART_POST = 1024 * 1024 * 5; //5MB
+		const long MULITIPART_POST_PART_SIZE = 1024 * 1024 * 6; // 6 MB.
+
 		public string Upload(string fileName, Stream stream, GxFileType destFileType)
 		{
-			MemoryStream ms = new MemoryStream();
-			stream.CopyTo(ms);//can determine PutObjectRequest.Headers.ContentLength. Avoid error Could not determine content length
+			bool doSimpleUpload = stream.Length <= MIN_MULTIPART_POST;
+			if (doSimpleUpload)
+			{
+				return UploadSimple(fileName, stream, destFileType);
+			}
+			else
+			{
+				return UploadMultipart(fileName, stream, destFileType);
+			}			
+		}
+
+		private string UploadMultipart(string fileName, Stream stream, GxFileType destFileType)
+		{			
+			TransferUtility transfer = new TransferUtility(Client);
+			var uploadRequest = new TransferUtilityUploadRequest
+			{
+				BucketName = Bucket,
+				Key = fileName,				
+				PartSize = MULITIPART_POST_PART_SIZE,
+				InputStream = stream,
+				CannedACL = GetCannedACL(destFileType)
+			};
+
+			if (TryGetContentType(fileName, out string mimeType))
+			{
+				uploadRequest.ContentType = mimeType;
+			}
+
+			transfer.Upload(uploadRequest);
+
+			return Get(fileName, destFileType);
+		}
+
+		private string UploadSimple(string fileName, Stream stream, GxFileType destFileType)
+		{			
 			PutObjectRequest objectRequest = new PutObjectRequest()
 			{
 				BucketName = Bucket,
 				Key = fileName,
-				InputStream = ms,
+				InputStream = stream,
 				CannedACL = GetCannedACL(destFileType)
 			};
-			if (TryGetContentType(fileName, out string mimeType)) {
+			if (TryGetContentType(fileName, out string mimeType))
+			{
 				objectRequest.ContentType = mimeType;
 			}
-			PutObjectResponse result = PutObject(objectRequest);
+			PutObject(objectRequest);
+
 			return Get(fileName, destFileType);
 		}
 

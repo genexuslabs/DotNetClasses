@@ -6,18 +6,18 @@ using Xunit;
 
 namespace UnitTesting
 {
-	public class FileIOTests
+	public class FileIOTests : FileSystemTest
 	{
 		public FileIOTests()
 		{
-			Config.ConfigFileName = "client.exe.config";
+			Config.ConfigFileName = Path.Combine(BaseDir, "client.exe.config");
 		}
 		[Fact]
 		public void FileSharedToCopy()
 		{
 			string target = @"\\192.168.86.3\printer";
 			GxFile f = new GxFile();
-			f.Source = "Document.txt";
+			f.Source = Path.Combine(BaseDir, "Document.txt");
 			f.Copy(target);
 			Assert.Equal(-1, f.ErrCode);
 			Assert.NotEqual(new NullReferenceException().Message, f.ErrDescription);
