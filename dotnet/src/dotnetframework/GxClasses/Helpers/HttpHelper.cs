@@ -733,7 +733,10 @@ namespace GeneXus.Http
 					return content;
 				}
 			}
-			return (new StreamReader(request.Body, encoding)).ReadToEnd();
+			using (StreamReader sr = new StreamReader(request.Body, encoding))
+			{
+				return sr.ReadToEnd();
+			}
 		}
 #endif
 		public static string GetRawUrl(this HttpRequest request)
