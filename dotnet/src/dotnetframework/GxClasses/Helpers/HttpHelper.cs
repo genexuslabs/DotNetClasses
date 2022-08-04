@@ -726,7 +726,7 @@ namespace GeneXus.Http
 					{
 						if (request.Form.TryGetValue(key, out var value))
 						{
-							content += $"{HttpUtility.UrlEncode(key)}={HttpUtility.UrlEncode(value)}&";
+							content += $"{GXUtil.UrlEncode(key)}={GXUtil.UrlEncode(value)}&"; 
 						}
 					}
 					content = content.TrimEnd('&');
