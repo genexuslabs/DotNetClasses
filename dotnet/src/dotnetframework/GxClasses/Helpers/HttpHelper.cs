@@ -24,6 +24,8 @@ using System.Runtime.Serialization;
 using GeneXus.Mime;
 using System.Text.RegularExpressions;
 using Microsoft.Net.Http.Headers;
+using System.Collections.Generic;
+using System.Text;
 
 namespace GeneXus.Http
 {
