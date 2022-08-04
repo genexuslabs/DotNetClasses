@@ -371,12 +371,9 @@ namespace GeneXus.Http.Server
 		public override string ToString()
 		{
 			if (_httpReq == null)
-				return "";
+				return string.Empty;
 #if NETCORE
-			using (StreamReader reader = new StreamReader(_httpReq.Body))
-			{
-				return reader.ReadToEnd();
-			}
+			return _httpReq.GetRawBodyString();
 #else
 			using (StreamReader reader = new StreamReader(_httpReq.InputStream))
 			{
