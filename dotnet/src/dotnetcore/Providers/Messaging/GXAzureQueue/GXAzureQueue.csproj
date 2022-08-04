@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <PackageId>GeneXus.Azure.Queue</PackageId>
-    <PackageTags>Message Azure</PackageTags>
+    <PackageTags>Azure Queue Messaging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
