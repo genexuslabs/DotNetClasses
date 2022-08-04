@@ -94,7 +94,7 @@ namespace GeneXus.Http
 		const string CORS_ALLOWED_HEADERS = "*";
 		const string CORS_ALLOWED_METHODS = "GET, POST, PUT, DELETE, HEAD";
 		const string CORS_MAX_AGE_SECONDS = "86400";
-		internal static void CorsHeaders(HttpContext httpContext, WebOperationContext wcfContext=null)
+		internal static void CorsHeaders(HttpContext httpContext, WebOperationContext wcfContext=null, string methods = CORS_ALLOWED_METHODS)
 		{
 			if (Preferences.CorsEnabled)
 			{
@@ -102,17 +102,17 @@ namespace GeneXus.Http
 				if (httpContext != null)
 				{
 					string requestHeaders = httpContext.Request.Headers[HeaderNames.AccessControlRequestHeaders];
-					CorsHeaders(httpContext.Response, origins, requestHeaders);
+					CorsHeaders(httpContext.Response, origins, requestHeaders, methods);
 
 				} else if (wcfContext != null)
 				{
 					string requestHeaders = wcfContext.IncomingRequest.Headers[HeaderNames.AccessControlRequestHeaders];
-					CorsHeaders(wcfContext.OutgoingResponse, origins, requestHeaders);
+					CorsHeaders(wcfContext.OutgoingResponse, origins, requestHeaders, methods);
 				}
 
 			}
 		}
-		static void CorsHeaders(HttpResponse httpResponse, string[] origins, string requestHeaders)
+		static void CorsHeaders(HttpResponse httpResponse, string[] origins, string requestHeaders, string methods)
 		{
 				foreach (string origin in origins)
 				{
@@ -128,10 +128,11 @@ namespace GeneXus.Http
 				{
 					httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
 				}
-				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = CORS_ALLOWED_METHODS;
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = methods;
 				httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 		}
-		static void CorsHeaders(OutgoingWebResponseContext httpResponse, string[] origins, string requestHeaders)
+
+		static void CorsHeaders(OutgoingWebResponseContext httpResponse, string[] origins, string requestHeaders, string methods)
 		{
 			foreach (string origin in origins)
 			{
@@ -147,7 +148,7 @@ namespace GeneXus.Http
 			{
 				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
 			}
-			httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = CORS_ALLOWED_METHODS;
+			httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = methods;
 			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 		}
 #endif

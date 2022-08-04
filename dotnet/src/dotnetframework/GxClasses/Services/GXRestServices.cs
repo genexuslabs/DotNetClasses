@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.ServiceModel.Configuration;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Web;
@@ -24,7 +25,7 @@ using log4net;
 
 namespace GeneXus.Utils
 {
-	public class CustomHttpBehaviorExtensionElement : System.ServiceModel.Configuration.BehaviorExtensionElement
+	public class CustomHttpBehaviorExtensionElement : BehaviorExtensionElement
     {
 		protected override object CreateBehavior()
 		{
@@ -53,9 +54,80 @@ namespace GeneXus.Utils
         {
             endpointDispatcher.ChannelDispatcher.ErrorHandlers.Clear();
             endpointDispatcher.ChannelDispatcher.ErrorHandlers.Add(new JsonErrorHandler());
+			
         }
-    }
-	class CustomOperationSelector : WebHttpDispatchOperationSelector
+		public override void ApplyDispatchBehavior(ServiceEndpoint endpoint, EndpointDispatcher endpointDispatcher)
+		{
+			var requiredHeaders = new Dictionary<string, string>();
+
+			requiredHeaders.Add("Access-Control-Allow-Origin", "*");
+			requiredHeaders.Add("Access-Control-Request-Method", "POST,GET,PUT,DELETE,OPTIONS");
+			requiredHeaders.Add("Access-Control-Allow-Headers", "X-Requested-With,Content-Type");
+			System.Diagnostics.Debugger.Launch();
+			endpointDispatcher.DispatchRuntime.MessageInspectors.Add(new CustomHeaderMessageInspector(requiredHeaders));
+		}
+	}
+	public class EnableCrossOriginResourceSharingBehavior : BehaviorExtensionElement, IEndpointBehavior
+	{
+		public void AddBindingParameters(ServiceEndpoint endpoint, System.ServiceModel.Channels.BindingParameterCollection bindingParameters)
+		{
+
+		}
+
+		public void ApplyClientBehavior(ServiceEndpoint endpoint, System.ServiceModel.Dispatcher.ClientRuntime clientRuntime)
+		{
+
+		}
+
+		public void ApplyDispatchBehavior(ServiceEndpoint endpoint, System.ServiceModel.Dispatcher.EndpointDispatcher endpointDispatcher)
+		{
+			var requiredHeaders = new Dictionary<string, string>();
+
+			requiredHeaders.Add("Access-Control-Allow-Origin", "*");
+			requiredHeaders.Add("Access-Control-Request-Method", "POST,GET,PUT,DELETE,OPTIONS");
+			requiredHeaders.Add("Access-Control-Allow-Headers", "X-Requested-With,Content-Type");
+
+			endpointDispatcher.DispatchRuntime.MessageInspectors.Add(new CustomHeaderMessageInspector(requiredHeaders));
+		}
+
+		public void Validate(ServiceEndpoint endpoint)
+		{
+
+		}
+
+		public override Type BehaviorType
+		{
+			get { return typeof(EnableCrossOriginResourceSharingBehavior); }
+		}
+
+		protected override object CreateBehavior()
+		{
+			return new EnableCrossOriginResourceSharingBehavior();
+		}
+	}
+	public class CustomHeaderMessageInspector : IDispatchMessageInspector
+	{
+		Dictionary<string, string> requiredHeaders;
+		public CustomHeaderMessageInspector(Dictionary<string, string> headers)
+		{
+			requiredHeaders = headers ?? new Dictionary<string, string>();
+		}
+
+		public object AfterReceiveRequest(ref System.ServiceModel.Channels.Message request, System.ServiceModel.IClientChannel channel, System.ServiceModel.InstanceContext instanceContext)
+		{
+			return null;
+		}
+
+		public void BeforeSendReply(ref System.ServiceModel.Channels.Message reply, object correlationState)
+		{
+			var httpHeader = reply.Properties["httpResponse"] as HttpResponseMessageProperty;
+			foreach (var item in requiredHeaders)
+			{
+				httpHeader.Headers.Add(item.Key, item.Value);
+			}
+		}
+	}
+	public class CustomOperationSelector : WebHttpDispatchOperationSelector
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomOperationSelector));
 		public CustomOperationSelector(ServiceEndpoint endpoint) : base(endpoint) { }
