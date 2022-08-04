@@ -401,7 +401,10 @@ namespace GeneXus.Http.Server
 #if NETCORE
 			return _httpReq.GetRawBodyString();
 #else
-			return (new StreamReader(_httpReq.InputStream)).ReadToEnd();
+			using (StreamReader reader = new StreamReader(_httpReq.InputStream))
+			{
+				return reader.ReadToEnd();
+			}
 #endif
 		}
 		public void ToFile(string FileName)
