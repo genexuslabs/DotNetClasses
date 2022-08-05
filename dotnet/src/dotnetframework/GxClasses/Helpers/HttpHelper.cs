@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 #else
 using System.ServiceModel.Web;
 using System.ServiceModel;
-
+using System.ServiceModel.Channels;
 #endif
 using System;
 using System.Collections.Specialized;
@@ -91,6 +91,14 @@ namespace GeneXus.Http
 		const string CORS_ALLOWED_HEADERS = "*";
 		const string CORS_ALLOWED_METHODS = "GET, POST, PUT, DELETE, HEAD";
 		const string CORS_MAX_AGE_SECONDS = "86400";
+		internal static void CorsHeaders(HttpResponseMessageProperty response, string requestHeaders)
+		{
+			if (Preferences.CorsEnabled)
+			{
+				string[] origins = Preferences.CorsAllowedOrigins().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+				CorsHeaders(response, origins, requestHeaders, CORS_ALLOWED_METHODS);
+			}
+		}
 		internal static void CorsHeaders(HttpContext httpContext, WebOperationContext wcfContext=null, string methods = CORS_ALLOWED_METHODS)
 		{
 			if (Preferences.CorsEnabled)
@@ -108,6 +116,25 @@ namespace GeneXus.Http
 				}
 
 			}
+		}
+		static void CorsHeaders(HttpResponseMessageProperty httpResponse, string[] origins, string requestHeaders, string methods)
+		{
+			foreach (string origin in origins)
+			{
+				httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
+			}
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+
+			if (!string.IsNullOrEmpty(requestHeaders))
+			{
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+			}
+			else
+			{
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
+			}
+			httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = methods;
+			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 		}
 		static void CorsHeaders(HttpResponse httpResponse, string[] origins, string requestHeaders, string methods)
 		{
