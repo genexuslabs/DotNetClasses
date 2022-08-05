@@ -4197,7 +4197,7 @@ namespace GeneXus.Utils
 			return HttpUtility.HtmlAttributeEncode(sText);
 		}
 
-		public static string EncodeContentDispositionHeader(string value, int browserType)
+		internal static string EncodeContentDispositionHeader(string value, int browserType)
 		{
 			int filenameIdx = value.IndexOf("filename", StringComparison.OrdinalIgnoreCase);
 			int eqIdx = value.IndexOf("=", filenameIdx);
