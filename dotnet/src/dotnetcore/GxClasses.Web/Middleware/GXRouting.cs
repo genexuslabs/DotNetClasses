@@ -253,26 +253,24 @@ namespace GxClasses.Web.Middleware
 						}
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
-							string mthheaders = $"{HttpMethod.Options.Method},{HttpMethod.Head.Method}";
+							List<string> mthheaders = new List<string>() { $"{HttpMethod.Options.Method},{HttpMethod.Head.Method}" };
 							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath))
 							{
 								foreach (Tuple<string, string> t in servicesMapData[actualPath].Keys)
 								{
 									if (t.Item1.Equals(controllerWithParms.ToLower()))
 									{
-										mthheaders += "," + t.Item2;
+										mthheaders.Add(t.Item2);
 									}
 								}
 							}
 							else
 							{
-								mthheaders += $", {HttpMethod.Get.Method}, {HttpMethod.Post.Method}";
+								mthheaders.Add(HttpMethod.Get.Method);
+								mthheaders.Add(HttpMethod.Post.Method);
 							}
-							context.Response.Headers.Add(HeaderNames.AccessControlAllowOrigin, new[] { (string)context.Request.Headers[HeaderNames.Origin] });
-							context.Response.Headers.Add(HeaderNames.AccessControlAllowHeaders, new[] { "Origin, X-Requested-With, Content-Type, Accept" });
-							context.Response.Headers.Add(HeaderNames.AccessControlAllowMethods, new[] { mthheaders });
-							context.Response.Headers.Add(HeaderNames.AccessControlAllowCredentials, new[] { "true" });
-							context.Response.Headers.Add(HeaderNames.Allow, mthheaders);
+							string methods = string.Join(",", mthheaders);
+							context.Response.Headers.Add(HeaderNames.Allow, methods);
 							context.Response.StatusCode = (int)HttpStatusCode.OK;
 						}
 						else
