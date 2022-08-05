@@ -149,7 +149,7 @@ namespace GeneXus.Http.Server
 		{
 			if(string.Compare(name, "Content-Disposition", true) == 0)
 			{
-				value = HttpHelper.GetEncodedContentDisposition(value, _context.GetBrowserType());
+				value = GXUtil.EncodeContentDispositionHeader(value, _context.GetBrowserType());
 			}
             if (_context!=null) 
                 _context.SetHeader(name, value);

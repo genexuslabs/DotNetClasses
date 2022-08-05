@@ -1,6 +1,6 @@
 using System;
 using GeneXus.Application;
-using GeneXus.Http;
+using GeneXus.Utils;
 using Xunit;
 
 namespace DotNetUnitTest.HttpUtils
@@ -58,7 +58,7 @@ namespace DotNetUnitTest.HttpUtils
 
 		private static void DoTest(string contentDisposition, string expectedContentDisposition, int browserType = GxContext.BROWSER_CHROME)
 		{
-			string encodedValue = HttpHelper.GetEncodedContentDisposition(contentDisposition, browserType);
+			string encodedValue = GXUtil.EncodeContentDispositionHeader(contentDisposition, browserType);
 
 			Assert.Equal(expectedContentDisposition, encodedValue);
 		}

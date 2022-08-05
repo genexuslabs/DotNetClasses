@@ -45,6 +45,7 @@ using GeneXus.Http;
 using System.Security;
 using System.Threading.Tasks;
 using System.Drawing.Imaging;
+using System.Net.Http.Headers;
 
 namespace GeneXus.Utils
 {
@@ -4194,6 +4195,40 @@ namespace GeneXus.Utils
 		internal static string AttributeEncode(string sText)
 		{
 			return HttpUtility.HtmlAttributeEncode(sText);
+		}
+
+		public static string EncodeContentDispositionHeader(string value, int browserType)
+		{
+			int filenameIdx = value.IndexOf("filename", StringComparison.OrdinalIgnoreCase);
+			int eqIdx = value.IndexOf("=", filenameIdx);
+			if (filenameIdx == -1 || eqIdx == -1 || browserType == GxContext.BROWSER_SAFARI) //Safari does not supports yet ContentDispositon file name encoding value.
+			{
+				return value;
+			}
+
+			string rawFilename = value.Substring(eqIdx + 1).Trim();
+			try
+			{
+				string dispositionType = value.Substring(0, value.IndexOf(";")).Trim();
+				value = new ContentDispositionHeaderValue(dispositionType) { FileName = rawFilename }.ToString();
+			}
+			catch (Exception)
+			{
+				value = value.Substring(0, eqIdx + 1) + EncodeContentDispositionFileName(rawFilename);
+			}
+			return value;
+		}
+
+		private static string EncodeContentDispositionFileName(string filename)
+		{
+			try
+			{
+				return Uri.EscapeDataString(filename);
+			}
+			catch (UriFormatException) //Contains High Surrogate Chars
+			{
+				return GXUtil.UrlEncode(filename);
+			}
 		}
 
 		public static string HtmlEndTag(HTMLElement element)
