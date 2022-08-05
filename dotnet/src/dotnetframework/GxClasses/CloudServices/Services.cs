@@ -1,16 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace GeneXus.CloudServices
 {
-	public class Services
+	public static class Services
 	{
 		static Services()
 		{
-			string serviceFile = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase, "CloudServices.config");
+			string _ = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase, "CloudServices.config");
 		}
 
 	}

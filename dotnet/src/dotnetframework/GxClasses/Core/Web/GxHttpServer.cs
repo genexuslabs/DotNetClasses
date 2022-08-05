@@ -15,17 +15,10 @@ namespace GeneXus.Http.Server
 
 	public class GxHttpCookie
 	{
-		String _Name = "";
-		String _Value = "";
-		String _Path = "";
-		DateTime _ExpirationDate = DateTimeUtil.NullDate();
-		String _Domain = "";
-		bool _Secure;
-		bool _HttpOnly;
 		internal static string GX_SESSION_ID = "GX_SESSION_ID";
 		public GxHttpCookie()
 		{
-			_HttpOnly = HttpOnlyDefault();
+			HttpOnly = HttpOnlyDefault();
 		}
 
 		public static Boolean HttpOnlyDefault()
@@ -40,47 +33,14 @@ namespace GeneXus.Http.Server
 			return HttpOnly;		
 		}
 
-		public String Name
-		{
-			set { _Name = value; }
-			get { return _Name; }
-		}
-
-		public String CurrentValue
-		{
-			set { _Value = value; }
-			get { return _Value; }
-		}
-
-		public String Path
-		{
-			set { _Path = value; }
-			get { return _Path; }
-		}
-
-		public DateTime ExpirationDate
-		{
-			set { _ExpirationDate = value; }
-			get { return _ExpirationDate; }
-		}
-
-		public String Domain
-		{
-			set { _Domain = value; }
-			get { return _Domain; }
-		}
-
-		public bool Secure
-		{
-			set { _Secure = value; }
-			get { return _Secure; }
-		}
-
-		public bool HttpOnly
-		{
-			set { _HttpOnly = value; }
-			get { return _HttpOnly; }
-		}
+		public string Name { set; get; } = "";
+		public string CurrentValue { get; set; }
+		public string Path { get; set; }
+		public DateTime ExpirationDate { get; set; } = DateTimeUtil.NullDate();
+		public string Domain { get; set; } = string.Empty;
+		public bool Secure { get; set; }
+		public bool HttpOnly { get; set; }
+	
 	}
 
 	public class GxHttpResponse

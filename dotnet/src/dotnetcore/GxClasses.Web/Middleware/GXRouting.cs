@@ -33,7 +33,7 @@ namespace GxClasses.Web.Middleware
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
 		const string oauthRoute = "/oauth";
-		public static string UrlTemplateControllerWithParms;
+		public static string UrlTemplateControllerWithParms = "controllerWithParms";
 
 		//Azure Functions
 		public bool AzureRuntime;

@@ -157,10 +157,6 @@ namespace SecurityAPICommons.Config
                     Encoding cpUTF32_2 = Encoding.GetEncoding(12001, new EncoderReplacementFallback(strUniRepChr), new DecoderReplacementFallback(strUniRepChr));
                     string cpUTF32_2String = cpUTF32_2.GetString(input);
                     return cpUTF32_2String.Replace(strUniRepChr, String.Empty);
-                //return cpUTF32_2String.Remove(cpUTF32_2String.Length - 1);
-
-
-
                 case AvailableEncoding.UTF_32LE:
 
                     Encoding cpUTF32_3 = Encoding.GetEncoding(12000, new EncoderReplacementFallback(strUniRepChr), new DecoderReplacementFallback(strUniRepChr));
@@ -171,8 +167,6 @@ namespace SecurityAPICommons.Config
                 case AvailableEncoding.SJIS:
 #if NETCORE
                     Encoding sjis = CodePagesEncodingProvider.Instance.GetEncoding(932);
-                   // Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                   // Encoding sjis = Encoding.GetEncoding("Shift_JIS");
                     return sjis.GetString(input);
 
 #else
@@ -184,8 +178,6 @@ namespace SecurityAPICommons.Config
                 case AvailableEncoding.GB2312:
 #if NETCORE
                     Encoding gb2312 = CodePagesEncodingProvider.Instance.GetEncoding(936, new EncoderReplacementFallback(strUniRepChr), new DecoderReplacementFallback(strUniRepChr));
-                    //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                    //Encoding gb2312 = Encoding.GetEncoding("GB2312", new EncoderReplacementFallback(strUniRepChr), new DecoderReplacementFallback(strUniRepChr));
                     return gb2312.GetString(input);
 #else
                     Encoding gb2312 = Encoding.GetEncoding(936, new EncoderReplacementFallback(strUniRepChr), new DecoderReplacementFallback(strUniRepChr));
@@ -247,8 +239,6 @@ namespace SecurityAPICommons.Config
                 case AvailableEncoding.SJIS:
 #if NETCORE
                     Encoding sjis = CodePagesEncodingProvider.Instance.GetEncoding(932);
-                    //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                   // Encoding sjis = Encoding.GetEncoding("Shift_JIS");
                     return sjis.GetBytes(input);
 #else
                     Encoding sjis = Encoding.GetEncoding(932);
@@ -258,8 +248,6 @@ namespace SecurityAPICommons.Config
                 case AvailableEncoding.GB2312:
 #if NETCORE
                     Encoding gb2312 = CodePagesEncodingProvider.Instance.GetEncoding(936, new EncoderReplacementFallback(strUniRepChr), new DecoderReplacementFallback(strUniRepChr));
-                    //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                    //Encoding gb2312 = Encoding.GetEncoding("GB2312", new EncoderReplacementFallback(strUniRepChr), new DecoderReplacementFallback(strUniRepChr));
                     return gb2312.GetBytes(input);
 #else
                     Encoding gb2312 = Encoding.GetEncoding(936, new EncoderReplacementFallback(strUniRepChr), new DecoderReplacementFallback(strUniRepChr));

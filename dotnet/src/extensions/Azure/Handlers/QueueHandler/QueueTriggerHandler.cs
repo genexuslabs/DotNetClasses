@@ -47,7 +47,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 			message.MessageProperties = new List<QueueMessage.MessageProperty>();
 			message.Body = item;
 
-			if (context.BindingContext.BindingData.TryGetValue("Id", out var messageIdObj) && messageIdObj != null)
+			if (context.BindingContext.BindingData.TryGetValue("Id", out object messageIdObj) && messageIdObj != null)
 			{
 				message.Id = messageIdObj.ToString();
 		
@@ -108,7 +108,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 							//Thrown to the Azure monitor
 
 							exMessage = string.Format("{0} Error for Message Id {1}: the number of parameters in GeneXus procedure is not correct.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
-							throw new Exception(exMessage); //Send to retry if possible.
+							throw new ArgumentException(exMessage); //Send to retry if possible.
 						}
 						else
 						{
@@ -117,9 +117,8 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 							//parm(in:&rawData, out:&ExternalEventMessageResponse );
 
 							GxContext gxcontext = new GxContext();
-							Object[] parametersdata;
-							parametersdata = new object[] { null }; 
-
+							object[] parametersdata;
+			
 							if (parameters[0].ParameterType == typeof(string))
 							{
 								string queueMessageSerialized = JSONHelper.Serialize(queueMessage);
@@ -186,7 +185,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 								if (result == false) //Must retry if possible.
 								{
 									exMessage = string.Format("{0} {1}", FunctionExceptionType.AppError, ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Errormessage"));
-									throw new Exception(exMessage);
+									throw new ArgumentException(exMessage);
 								}
 								else
 								{
@@ -203,7 +202,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 					else
 					{
 						exMessage = string.Format("{0} GeneXus procedure could not be executed for Message Id {1}.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
-						throw new Exception(exMessage);
+						throw new ApplicationException(exMessage);
 					}
 				}
 				catch (Exception)
@@ -215,7 +214,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 			else
 			{
 				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Message Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
-				throw new Exception(exMessage);
+				throw new ApplicationException(exMessage);
 			}
 		}
 		private GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)

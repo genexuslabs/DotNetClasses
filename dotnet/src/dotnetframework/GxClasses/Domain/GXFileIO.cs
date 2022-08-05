@@ -225,7 +225,7 @@ public class GxFileInfo : IGxFileInfo
 {
 	private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFileInfo));
     FileInfo _file;
-    string _baseDirectory;
+    private readonly string _baseDirectory;
 
     public GxFileInfo(FileInfo file)
     {
@@ -416,10 +416,10 @@ public class GxFileInfo : IGxFileInfo
 }
 public class GxExternalFileInfo : IGxFileInfo
 {
-    private string _name;
-	private ExternalProvider _provider;
+    private readonly string _name;
+	private readonly ExternalProvider _provider;
     private string _url;	
-	private GxFileType _fileTypeAtt = GxFileType.Private;
+	private readonly GxFileType _fileTypeAtt = GxFileType.Private;
 
 	public GxExternalFileInfo(ExternalProvider provider)
     {
@@ -519,19 +519,8 @@ public class GxExternalFileInfo : IGxFileInfo
         }
     }
 
-    public string Source
-    {
-        get
-        {
-            return _name;
-        }
-        set
-        {
-            _name = value;
-        }
-    }
-
-
+    public string Source { get; set; }
+  
     public IGxDirectoryInfo Directory
     {
         get

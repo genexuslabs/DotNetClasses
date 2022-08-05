@@ -117,22 +117,11 @@ namespace GeneXus.Configuration
 					SetEncryptedProperty(properties, "ACCESS_KEY");
 					break;
 			
-				//case "BOX":
-				//	className = "{class}";
-				//	break;
-
 				case "GOOGLE":
 					className = "GeneXus.Storage.GXGoogleCloud.ExternalProviderGoogle";
 					SetEncryptedProperty(properties, "KEY");
 					SetEncryptedProperty(properties, "BUCKET_NAME");
 					break;
-
-				//case "IBMCOS":
-				//	className = "{class}";
-				//	SetEncryptProperty(properties, "STORAGE_PROVIDER_ACCESS_KEY");
-				//	SetEncryptProperty(properties, "STORAGE_PROVIDER_SECRET_KEY");
-				//	SetEncryptProperty(properties, "BUCKET_NAME");
-				//	break;
 
 				case "OPENSTACKSTORAGE":
 					className = "GeneXus.Storage.GXOpenStack.ExternalProviderOpenStack";

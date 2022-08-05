@@ -27,20 +27,10 @@ namespace GeneXus.Data.ADO
 
 	public class ServerUserInformation : ConcurrentDictionary<string, GxConnection>
 	{
-#region WMI Methods
-		string lastSQLStatementTime;
-		string lastSQLStatement;
-		public string  LastSQLStatementTime
-		{
-			get{ return lastSQLStatementTime;}
-			set{ lastSQLStatementTime = value;}
-		}
-		public string  LastSQLStatement
-		{
-			get{ return lastSQLStatement;}
-			set{ lastSQLStatement = value;}
-		}
-#endregion
+		#region WMI Methods
+		public string  LastSQLStatementTime { get; set; }
+		public string  LastSQLStatement { get; set; }
+		#endregion
 	}
 	public sealed class GxConnectionManagerWin : GxConnectionManager
 	{

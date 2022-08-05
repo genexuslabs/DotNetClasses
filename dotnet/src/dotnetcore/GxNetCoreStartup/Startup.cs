@@ -122,7 +122,6 @@ namespace GeneXus.Application
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
 			GXRouting.ContentRootPath = env.ContentRootPath;
-			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
 			Config.ConfigRoot = builder.Build();
 			GxContext.IsHttpContext = true;
 			gxRouting = new GXRouting(REST_BASE_URL);
@@ -156,7 +155,7 @@ namespace GeneXus.Application
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
 				string sameSite;
-				SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
+				SameSiteMode sameSiteMode;
 				if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
 				{
 					options.Cookie.SameSite = sameSiteMode;

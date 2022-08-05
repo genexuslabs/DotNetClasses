@@ -831,7 +831,7 @@ namespace GeneXus.Configuration
 				if (rewriteEnabled == -1)
 				{
 #if NETCORE
-					var basePath = FileUtil.GetBasePath();
+					string basePath = FileUtil.GetBasePath();
 #else
 					var basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #endif
