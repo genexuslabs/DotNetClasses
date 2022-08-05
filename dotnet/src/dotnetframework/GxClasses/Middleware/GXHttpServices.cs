@@ -394,7 +394,7 @@ namespace GeneXus.Http
 	/// <summary>
 	///	Custom Network Stream for direct not multiparts uploads that do not support length operations
 	/// </summary>
-	public class NetworkInputStream : Stream
+	internal class NetworkInputStream : Stream
 	{
 		private Stream innerStream;
 		private long streamLength;
