@@ -3,7 +3,7 @@ using GeneXus.Application;
 using GeneXus.Utils;
 using Xunit;
 
-namespace DotNetCoreUnitTest.HttpUtils
+namespace DotNetUnitTest.HttpUtils
 {
 	public class TestHttpUtils
 	{
