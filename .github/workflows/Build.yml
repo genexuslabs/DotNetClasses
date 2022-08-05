@@ -77,6 +77,9 @@ jobs:
           }
         }
 
+        $COMMIT_NUMBER = @($(git rev-list --count origin/master..), $(git rev-list --count HEAD))[$IsPrerelease]
+        echo "COMMIT_NUMBER=$COMMIT_NUMBER" >> $env:COMMIT_NUMBER
+
         $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)" > $null
         $GetFileVersionOutput = $Matches[0]
@@ -91,7 +94,6 @@ jobs:
         
         Write-Output "Packge version to be used: $NUGET_PACKAGE_VERSION"
 
-        $COMMIT_NUMBER = @($(git rev-list --count origin/master..), $(git rev-list --count HEAD))[$IsPrerelease]
         $COMMIT_MESSAGE = $(git log -1 --pretty=%B)
         $LAST_COMMITTER = $(git log -1 --pretty=format:%an)
 
