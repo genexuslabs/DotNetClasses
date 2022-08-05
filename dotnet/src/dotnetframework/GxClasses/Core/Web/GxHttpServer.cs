@@ -11,6 +11,12 @@ namespace GeneXus.Http.Server
 	using Microsoft.AspNetCore.Http.Extensions;
 	using System.Linq;
 	using Microsoft.AspNetCore.Http.Features;
+	using System.Text;
+	using System.Threading.Tasks;
+	using Microsoft.AspNetCore.Mvc.Formatters;
+	using System.Net.Http;
+	using Stubble.Core.Contexts;
+	using System.Net.Mime;
 #endif
 
 	public class GxHttpCookie
@@ -371,11 +377,14 @@ namespace GeneXus.Http.Server
 		public override string ToString()
 		{
 			if (_httpReq == null)
-				return "";
+				return String.Empty;
 #if NETCORE
-			return (new StreamReader(_httpReq.Body)).ReadToEnd();
+			return _httpReq.GetRawBodyString();
 #else
-			return (new StreamReader(_httpReq.InputStream)).ReadToEnd();
+			using (StreamReader reader = new StreamReader(_httpReq.InputStream))
+			{
+				return reader.ReadToEnd();
+			}
 #endif
 		}
 		public void ToFile(string FileName)

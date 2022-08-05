@@ -73,11 +73,15 @@ namespace GeneXus.Http
 			{
 				HttpRequest req = context.HttpContext.Request;
 				string gxobj = GetNextPar().ToLower();
-				string jsonStr = (new StreamReader(req.GetInputStream())).ReadToEnd();
 				GxSimpleCollection<JArray> parmsColl = new GxSimpleCollection<JArray>();
-				if (!string.IsNullOrEmpty(jsonStr))
+
+				using (StreamReader stream = new StreamReader(req.GetInputStream()))
 				{
-					parmsColl.FromJSonString(jsonStr);
+					string jsonStr = stream.ReadToEnd();
+					if (!string.IsNullOrEmpty(jsonStr))
+					{
+						parmsColl.FromJSonString(jsonStr);
+					}
 				}
 #if NETCORE
 
@@ -286,8 +290,8 @@ namespace GeneXus.Http
 				{
 					localHttpContext.Response.ContentType = MediaTypesNames.TextPlain;
 					var r = new List<UploadFile>();
-					var fileCount = localHttpContext.Request.GetFileCount();
-					for (var i = 0; i < fileCount; i++)
+					int fileCount = localHttpContext.Request.GetFileCount();
+					for (int i = 0; i < fileCount; i++)
 					{
 						string fileGuid = GxUploadHelper.GetUploadFileGuid();
 						string fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
@@ -321,7 +325,7 @@ namespace GeneXus.Http
 						GxUploadHelper.CacheUploadFile(fileGuid, Path.GetFileName(fName), ext, gxFile, context);
 					}
 					UploadFilesResult result = new UploadFilesResult() { files = r };
-					var jsonObj = JSONHelper.Serialize(result);
+					string jsonObj = JSONHelper.Serialize(result);
 					localHttpContext.Response.Write(jsonObj);
 				}
 				else
@@ -390,7 +394,7 @@ namespace GeneXus.Http
 	/// <summary>
 	///	Custom Network Stream for direct not multiparts uploads that do not support length operations
 	/// </summary>
-	public class NetworkInputStream : Stream
+	internal class NetworkInputStream : Stream
 	{
 		private Stream innerStream;
 		private long streamLength;

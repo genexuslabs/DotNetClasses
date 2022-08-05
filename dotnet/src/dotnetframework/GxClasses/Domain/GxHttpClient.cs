@@ -767,7 +767,7 @@ namespace GeneXus.Http.Client
 				else
 					_errDescription = aex.Message;
 				response = new HttpResponseMessage();
-				response.Content = new StringContent(_errDescription);
+				response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 				response.StatusCode = HttpStatusCode.InternalServerError;
 			}
 #endif
@@ -780,7 +780,7 @@ namespace GeneXus.Http.Client
 				else
 					_errDescription = e.Message;
 				response = new HttpResponseMessage();
-				response.Content = new StringContent(_errDescription);
+				response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 #if NETCORE
 				response.StatusCode = (HttpStatusCode)(e.StatusCode != null ? e.StatusCode : HttpStatusCode.InternalServerError);
 #else
@@ -794,7 +794,7 @@ namespace GeneXus.Http.Client
 				_errDescription = "The request has timed out. " + e.Message;
 				response = new HttpResponseMessage();
 				response.StatusCode = 0;
-				response.Content = new StringContent("");
+				response.Content = new StringContent(String.Empty);
 			}
 			catch (Exception e)
 			{
@@ -805,7 +805,7 @@ namespace GeneXus.Http.Client
 				else
 					_errDescription = e.Message;
 				response = new HttpResponseMessage();
-				response.Content = new StringContent(_errDescription);
+				response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 				response.StatusCode = HttpStatusCode.InternalServerError;
 			}
 			GXLogging.Debug(log, "Reading response...");

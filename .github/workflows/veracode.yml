@@ -11,7 +11,10 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [ master ]
+    branches:
+      - 'master'
+      - 'beta'
+      - 'release-*'
   
   #Run at the end of every day
   schedule:
@@ -78,7 +81,7 @@ jobs:
         java-version: 1.8
     - name: Execute scan
       run: java -jar ".veracode\pipeline-scan.jar" --veracode_api_id "${{secrets.VERACODE_API_ID}}" --veracode_api_key "${{secrets.VERACODE_API_KEY}}" --fail_on_severity="Very High, High" --file $env:ZipFilename
-      continue-on-error: true
+      continue-on-error: false
     - name: Convert pipeline scan output to SARIF format
       id: convert
       uses: veracode/veracode-pipeline-scan-results-to-sarif@ff08ae5b45d5384cb4679932f184c013d34da9be
