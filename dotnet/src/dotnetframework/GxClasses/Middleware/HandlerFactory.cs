@@ -100,7 +100,9 @@ namespace GeneXus.HttpHandlerFactory
 						{
 							string methods = string.Join(",", mthheaders);
 							context.Response.Headers.Add(HeaderNames.Allow, methods);
-							HttpHelper.CorsHeaders(context, null, methods);
+							context.Response.Headers.Add(HeaderNames.AccessControlAllowHeaders, "Content-Type");
+							context.Response.Headers.Add(HeaderNames.AccessControlAllowOrigin, "*");
+							context.Response.Headers.Add(HeaderNames.AccessControlAllowMethods, methods);
 						}
 						else
 						{
