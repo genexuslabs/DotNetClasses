@@ -270,6 +270,11 @@ namespace GxClasses.Web.Middleware
 								mthheaders.Add(HttpMethod.Post.Method);
 							}
 							string methods = string.Join(",", mthheaders);
+
+							context.Response.Headers.Add(HeaderNames.AccessControlAllowOrigin, (string)context.Request.Headers[HeaderNames.Origin]);
+							context.Response.Headers.Add(HeaderNames.AccessControlAllowHeaders, $"{HeaderNames.Origin}, {HeaderNames.XRequestedWith}, {HeaderNames.ContentType}, {HeaderNames.Accept}");
+							context.Response.Headers.Add(HeaderNames.AccessControlAllowMethods, methods);
+							context.Response.Headers.Add(HeaderNames.AccessControlAllowCredentials, "true");
 							context.Response.Headers.Add(HeaderNames.Allow, methods);
 							context.Response.StatusCode = (int)HttpStatusCode.OK;
 						}
