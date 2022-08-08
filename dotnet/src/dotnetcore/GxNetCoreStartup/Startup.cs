@@ -110,6 +110,7 @@ namespace GeneXus.Application
 		const string DEVELOPER_MENU = "developermenu.html";
 		const string SWAGGER_SUFFIX = "swagger";
 		const string CORS_POLICY_NAME = "AllowSpecificOriginsPolicy";
+		const string CORS_ANY_ORIGIN = "*";
 		const double CORS_MAX_AGE_SECONDS = 86400;
 
 		public List<string> servicesBase = new List<string>();		
@@ -213,7 +214,10 @@ namespace GeneXus.Application
 										  policy =>
 										  {
 											  policy.WithOrigins(corsAllowedOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries));
-											  policy.AllowCredentials();
+											  if (!corsAllowedOrigins.Contains(CORS_ANY_ORIGIN))
+											  {
+												  policy.AllowCredentials();
+											  }
 											  policy.AllowAnyHeader();
 											  policy.AllowAnyMethod();
 											  policy.SetPreflightMaxAge(TimeSpan.FromSeconds(CORS_MAX_AGE_SECONDS));
