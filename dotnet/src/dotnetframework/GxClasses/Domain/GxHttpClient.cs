@@ -1421,7 +1421,6 @@ namespace GeneXus.Http.Client
 		}
 		~GxHttpClient()
 		{
-		
 		     Dispose(false);
 		}
 
