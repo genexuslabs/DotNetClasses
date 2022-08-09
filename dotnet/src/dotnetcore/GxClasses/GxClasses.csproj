@@ -120,7 +120,6 @@
     <Folder Include="Domain\SD\" />
     <Folder Include="Attributes\" />
     <Folder Include="Configuration\" />
-    <Folder Include="Helpers\Cryptography\Encryption\" />
     <Folder Include="Helpers\Cryptography\Signing\Standards\" />
     <Folder Include="Helpers\Process\" />
     <Folder Include="Services\CoreWebAPI\Helpers\" />
