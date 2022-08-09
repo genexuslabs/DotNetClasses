@@ -1,7 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+	<PackageId>GeneXus.Message.MessageBroker</PackageId>
+	<PackageTags>Broker Messaging</PackageTags>
 	<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
   </PropertyGroup>
 
