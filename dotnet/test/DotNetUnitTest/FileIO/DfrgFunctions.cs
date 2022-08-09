@@ -1,10 +1,11 @@
+using System;
+using System.IO;
 using GeneXus.Application;
-using GeneXus.Configuration;
 using Xunit;
 
 namespace UnitTesting
 {
-	public class DfrgFunctions
+	public class DfrgFunctions : FileSystemTest
 	{
 		const string APPLICATIONS_CONTENT = "[  {    \"Id\": \"4caaaed5-1160-4132-b54f-0191e527a84a\",    \"Type\": 1,    \"EnvironmentGUID\": \"b3730606-0f2a-4e8a-b395-d8fdf226def8\",    \"IsNew\": false  }]";
 		const string DOCUMENT_CONTENT = "Line 1Line 2Line 3";
@@ -12,7 +13,7 @@ namespace UnitTesting
 		[Fact]
 		public void dfrgtxtANSITest()
 		{
-			string fileName = "Document.txt";
+			string fileName = Path.Combine(BaseDir, "Document.txt");
 			string result = string.Empty;
 			GxContext context = new GxContext();
 			string line;
@@ -30,7 +31,7 @@ namespace UnitTesting
 		[Fact]
 		public void dfrgtxtTest()
 		{
-			string fileName = "applications.json";
+			string fileName = Path.Combine(BaseDir, "applications.json");
 			string result = string.Empty;
 			GxContext context = new GxContext();
 			string line;
@@ -48,7 +49,7 @@ namespace UnitTesting
 		[Fact]
 		public void dfrgtxtOverflowTest()
 		{
-			string fileName = "MS923.txt";
+			string fileName = Path.Combine(BaseDir, "MS923.txt");
 			GxContext context = new GxContext();
 			string line;
 			//overflow

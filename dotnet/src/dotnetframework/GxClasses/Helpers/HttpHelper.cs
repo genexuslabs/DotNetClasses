@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Primitives;
 using System.Net.Http;
+using Microsoft.AspNetCore.Mvc.Formatters;
 #else
 using System.ServiceModel.Web;
 using System.ServiceModel;
@@ -21,10 +22,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Linq;
-using GeneXus.Data;
 using System.Runtime.Serialization;
 using GeneXus.Mime;
 using System.Text.RegularExpressions;
@@ -480,7 +477,7 @@ namespace GeneXus.Http
 
 		public static void Write(this HttpResponse response, string value)
 		{
-			//response.WriteAsync(value).Wait();
+			//response.WriteAsync(value).Wait();//Unsupported by GxHttpAzureResponse
 			response.Body.Write(Encoding.UTF8.GetBytes(value));
 		}
 		public static void WriteFile(this HttpResponse response, string fileName)
@@ -711,8 +708,37 @@ namespace GeneXus.Http
 			return request.Params;
 #endif
 		}
+#if NETCORE
+		static readonly MediaType URLEncoded = new MediaType("application/x-www-form-urlencoded");
+		public static string GetRawBodyString(this HttpRequest request, Encoding encoding = null)
+		{
+			if (encoding == null)
+				encoding = Encoding.UTF8;
 
+			if (!string.IsNullOrEmpty(request.ContentType))
+			{
+				MediaType mediaType = new MediaType(request.ContentType);
 
+				if (mediaType.IsSubsetOf(URLEncoded))
+				{
+					string content = string.Empty;
+					foreach (string key in request.Form.Keys)
+					{
+						if (request.Form.TryGetValue(key, out var value))
+						{
+							content += $"{GXUtil.UrlEncode(key)}={GXUtil.UrlEncode(value)}&"; 
+						}
+					}
+					content = content.TrimEnd('&');
+					return content;
+				}
+			}
+			using (StreamReader sr = new StreamReader(request.Body, encoding))
+			{
+				return sr.ReadToEnd();
+			}
+		}
+#endif
 		public static string GetRawUrl(this HttpRequest request)
 		{
 #if NETCORE

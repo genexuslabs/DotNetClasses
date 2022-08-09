@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Collections;
 using System.ComponentModel;
 using System.Windows.Forms;
-using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Genexus.RegistryUtilities;
@@ -434,7 +434,8 @@ namespace ConnectionBuilder
 		{
 			try
 			{
-				connectionTest = new System.Data.OleDb.OleDbConnection(ConnectionString);
+				SqlConnectionStringBuilder sqlConnectionStringBuilder = new SqlConnectionStringBuilder(ConnectionString);
+				connectionTest = new System.Data.OleDb.OleDbConnection(sqlConnectionStringBuilder.ConnectionString);
 				connectionTest.Open();
 				sMessage = "";
 				return true;
@@ -609,10 +610,12 @@ namespace ConnectionBuilder
 			
 		}
 
+		
 		public string ConnectionString
 		{
 			get 
 			{
+				
 				string sConn = String.Format("Provider={0};Persist Security Info={1};{2};Initial Catalog={3};Data Source={4};",
 					"SQLOLEDB.1", PersistSecurityInfo.ToString(), UserAndPassword, Database, Server);
 				return sConn;

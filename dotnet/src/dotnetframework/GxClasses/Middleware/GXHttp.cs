@@ -986,7 +986,12 @@ namespace GeneXus.Http
 			if (context.IsMultipartRequest)
 				jsonRequest = cgiGet(GX_AJAX_MULTIPART_ID);
 			else
-				jsonRequest = (new StreamReader(localHttpContext.Request.GetInputStream())).ReadToEnd();
+			{
+				using (StreamReader reader = new StreamReader(localHttpContext.Request.GetInputStream()))
+				{
+					jsonRequest = reader.ReadToEnd();
+				}
+			}
 			string jsonResponse = dynAjaxEvent.Invoke(jsonRequest, this);
 
 
@@ -1405,6 +1410,7 @@ namespace GeneXus.Http
 				sendSpaHeaders();
 			}
 		}
+#if !NETCORE
 
 		protected string GetEncryptedHash(string value, string key)
 		{
@@ -1457,7 +1463,7 @@ namespace GeneXus.Http
 		{
 			return Decrypt64(value, key, true);
 		}
-
+#endif
 		protected string DecryptAjaxCall(string encrypted)
 		{
 			this.validEncryptedParm = false;

@@ -521,7 +521,7 @@ namespace GeneXus.Http.Client
 						contentHeaders.ContentType = MediaTypeHeaderValue.Parse(_headers[i].ToString());
 						break;
 					case "ACCEPT":
-						headers.Add("Accept", _headers[i]);
+						AddHeader(headers, "Accept", _headers[i]);
 						break;
 					case "EXPECT":
 						if (string.IsNullOrEmpty(_headers[i]))
@@ -533,7 +533,7 @@ namespace GeneXus.Http.Client
 						headers.Referrer = new Uri(_headers[i]);
 						break;
 					case "USER-AGENT":
-						headers.Add("User-Agent", _headers[i]);
+						AddHeader(headers, "User-Agent", _headers[i]);
 						break;
 					case "DATE":
 						DateTime value;
@@ -543,7 +543,7 @@ namespace GeneXus.Http.Client
 						}
 						else
 						{
-							headers.Add(currHeader, _headers[i]);
+							AddHeader(headers, currHeader, _headers[i]);
 						}
 						break;
 					case "COOKIE":
@@ -562,7 +562,7 @@ namespace GeneXus.Http.Client
 							request.Headers.IfModifiedSince = dt;
 						break;
 					default:
-						headers.Add(currHeader, _headers[i]);
+						AddHeader(headers, currHeader, _headers[i]);
 						break;
 				}
 			}
@@ -575,6 +575,10 @@ namespace GeneXus.Http.Client
 					headers.ConnectionClose = false;
 			}
 			InferContentType(contentType, request);
+		}
+		void AddHeader(HttpRequestHeaders headers, string headerName, string headerValue)
+		{
+			headers.TryAddWithoutValidation(headerName, headerValue);
 		}
 		void InferContentType(string contentType, HttpRequestMessage req)
 		{
@@ -600,7 +604,7 @@ namespace GeneXus.Http.Client
 		[SecuritySafeCritical]
 		HttpResponseMessage ExecuteRequest(string method, string requestUrl, CookieContainer cookies)
 		{
-			GXLogging.Debug(log, String.Format("Start NetCore HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
+			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			HttpRequestMessage request;
 			HttpClient client;
 			int BytesRead;
@@ -762,7 +766,7 @@ namespace GeneXus.Http.Client
 				else
 					_errDescription = aex.Message;
 				response = new HttpResponseMessage();
-				response.Content = new StringContent(_errDescription);
+				response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 				response.StatusCode = HttpStatusCode.InternalServerError;
 			}
 #endif
@@ -775,7 +779,7 @@ namespace GeneXus.Http.Client
 				else
 					_errDescription = e.Message;
 				response = new HttpResponseMessage();
-				response.Content = new StringContent(_errDescription);
+				response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 #if NETCORE
 				response.StatusCode = (HttpStatusCode)(e.StatusCode != null ? e.StatusCode : HttpStatusCode.InternalServerError);
 #else
@@ -789,7 +793,7 @@ namespace GeneXus.Http.Client
 				_errDescription = "The request has timed out. " + e.Message;
 				response = new HttpResponseMessage();
 				response.StatusCode = 0;
-				response.Content = new StringContent("");
+				response.Content = new StringContent(String.Empty);
 			}
 			catch (Exception e)
 			{
@@ -800,7 +804,7 @@ namespace GeneXus.Http.Client
 				else
 					_errDescription = e.Message;
 				response = new HttpResponseMessage();
-				response.Content = new StringContent(_errDescription);
+				response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 				response.StatusCode = HttpStatusCode.InternalServerError;
 			}
 			GXLogging.Debug(log, "Reading response...");

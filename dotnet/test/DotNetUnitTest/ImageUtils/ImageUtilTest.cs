@@ -6,14 +6,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GeneXus.Utils;
+using UnitTesting;
 using Xunit;
 
 namespace DotNetCoreUnitTest.ImageUtils
 {
-	public class ImageUtilTest
+	public class ImageUtilTest : FileSystemTest
 	{
-		private readonly string IMAGE_FILE_PATH = System.IO.Path.Combine("resources", "bird-thumbnail.jpg");
-		private readonly string IMAGE_FILE_PATH_OUTPUT = System.IO.Path.Combine("resources", "bird-thumbnail-{0}-{1}.jpg");
+		private readonly string IMAGE_FILE_PATH = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail.jpg");
+		private readonly string IMAGE_FILE_PATH_OUTPUT = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail-{0}-{1}.jpg");
 		private readonly int IMAGE_HEIGHT = 900;
 		private readonly int IMAGE_WIDTH = 720;
 

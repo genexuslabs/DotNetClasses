@@ -44,6 +44,7 @@ namespace GeneXus.Application
 #endif
 	using System.Threading;
 	using System.Security.Claims;
+	using System.Security;
 
 	public interface IGxContext
 	{
@@ -314,6 +315,7 @@ namespace GeneXus.Application
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
 		internal const string GXLanguage = "GXLanguage";
 		internal const string GXTheme = "GXTheme";
+		internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
 		[NonSerialized]
 		HttpContext _HttpContext;
 		[NonSerialized]
@@ -1550,7 +1552,9 @@ namespace GeneXus.Application
 
 		public MessageQueueTransaction MQTransaction
 		{
+			[SecuritySafeCritical]
 			get { return _mqTransaction; }
+			[SecuritySafeCritical]
 			set
 			{
 				_mqTransaction = value;
@@ -1708,10 +1712,7 @@ namespace GeneXus.Application
 #if !NETCORE
 					HttpContext.Session[key] = value;
 #else
-					if (!_HttpContext.Response.HasStarted)
-					{
-						HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
-					}
+					HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
 #endif
 					return true;
 				}
@@ -1950,6 +1951,10 @@ namespace GeneXus.Application
 			}
 			if (userAgent != null)
 			{
+				if ((userAgent.IndexOf("Edg")) != -1)
+				{
+					return BROWSER_EDGE;
+				}
 				if (userAgent.ToUpper().IndexOf("CHROME") != -1)
 				{
 					return BROWSER_CHROME;
@@ -1959,11 +1964,7 @@ namespace GeneXus.Application
 				{
 					return BROWSER_FIREFOX;
 				}
-				else if ((userAgent.IndexOf("Edge")) != -1)
-				{
-					return BROWSER_EDGE;
-				}
-				if ((userAgent.IndexOf("MSIE")) != -1)
+				else if ((userAgent.IndexOf("MSIE")) != -1)
 				{
 					if ((userAgent.IndexOf("Windows CE")) != -1)
 						return BROWSER_POCKET_IE;
@@ -2016,7 +2017,7 @@ namespace GeneXus.Application
 
 				if (type == BROWSER_EDGE)
 				{
-					MatchCollection matches = Regex.Matches(userAgent, " Edge\\/([0-9]+)\\.");
+					MatchCollection matches = Regex.Matches(userAgent, " Edg[\\w]{0,3}\\/([0-9]+)\\.");
 					if (matches.Count > 0)
 						return matches[0].Groups[1].Value;
 				}
@@ -2756,7 +2757,9 @@ namespace GeneXus.Application
 				if (Config.GetValueOf("SERVER_NAME", out serverName))
 					return serverName;
 #if !NETCORE
-				serverName = _HttpContext.Request.ServerVariables["http_host"];
+				serverName = _HttpContext.Request.ServerVariables[SERVER_VAR_HTTP_HOST];
+#else
+				serverName = _HttpContext.GetServerVariable(SERVER_VAR_HTTP_HOST);
 #endif
 				if (String.IsNullOrEmpty(serverName))
 				{
@@ -2768,9 +2771,8 @@ namespace GeneXus.Application
 				return serverName;
 			}
 			catch
-
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 		private static bool DynamicPortRequest(HttpRequest request)

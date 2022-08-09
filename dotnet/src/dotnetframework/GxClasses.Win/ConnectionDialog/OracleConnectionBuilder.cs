@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
 using System.Diagnostics;
+using System.Data.SqlClient;
 
 namespace ConnectionBuilder
 {
@@ -304,7 +305,8 @@ namespace ConnectionBuilder
 		{
 			try
 			{
-				connectionTest = new System.Data.OleDb.OleDbConnection(ConnectionString);
+				SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(ConnectionString);
+				connectionTest = new System.Data.OleDb.OleDbConnection(builder.ConnectionString);
 				connectionTest.Open();
 				connectionTest.Close();
 			}

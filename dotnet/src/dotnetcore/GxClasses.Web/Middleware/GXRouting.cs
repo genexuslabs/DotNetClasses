@@ -19,17 +19,18 @@ using GeneXus.Utils;
 using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GxClasses.Web.Middleware
 {
-	public class GXRouting : IGXRouting
+	internal class GXRouting : IGXRouting
 	{
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(IGXRouting));
 
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
-		public static string ContentRootPath;
+		public static string ContentRootPath = ".";
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
 		const string oauthRoute = "/oauth";
@@ -179,9 +180,16 @@ namespace GxClasses.Web.Middleware
 		{
 			try
 			{
+				if (context.GetType()==typeof(DefaultHttpContext))
+				{
+					IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
+					context = new GxHttpContextAccesor(contextAccessor);
+				}
+
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
-				if (path.Contains($"/{restBaseURL}") | ServiceInPath(path, out actualPath) | (AzureRuntime && path.Contains(oauthRoute)))
+				bool isServiceInPath = ServiceInPath(path, out actualPath);
+				if (path.Contains($"/{restBaseURL}") || isServiceInPath || (AzureRuntime && path.Contains(oauthRoute)))
 				{
 					string controllerWithParms = string.Empty;
 					if (!AzureRuntime)
