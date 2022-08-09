@@ -229,7 +229,10 @@ namespace GeneXus.XML
 		{
 			if (treader != null) Close();
 			EntitiesContainer.Reset();
-			treader = new XmlTextReader(httpClient.ReceiveStream);
+			if (httpClient.ReceiveStream != null)
+				treader = new XmlTextReader(httpClient.ReceiveStream);
+			else
+				treader = new XmlTextReader(string.Empty);
 			if (treader != null)
 			{
 				SetDtdProcessing(treader, Resolver, validationType);

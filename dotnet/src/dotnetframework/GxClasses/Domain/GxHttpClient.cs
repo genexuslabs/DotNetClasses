@@ -56,7 +56,7 @@ namespace GeneXus.Http.Client
 			HeaderTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n" + "Content-Type: {2}\r\n\r\n";
 		}
 	}
-	public class GxHttpClient : IGxHttpClient
+	public class GxHttpClient : IGxHttpClient, IDisposable
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.Client.GxHttpClient));
 		public const int _Basic = 0;
@@ -64,7 +64,7 @@ namespace GeneXus.Http.Client
 		public const int _NTLM = 2;
 		public const int _Kerberos = 3;
 		Stream _sendStream;
-		Stream _receiveStream;
+		MemoryStream _receiveStream;
 		int _timeout = 30000;
 		short _statusCode = 0;
 		string _proxyHost;
@@ -120,13 +120,11 @@ namespace GeneXus.Http.Client
 				_sendStream = value;
 			}
 		}
+
 		public Stream ReceiveStream
 		{
 			get
 			{
-				if (_receiveStream == null)
-					_receiveStream = new MemoryStream();
-
 				return _receiveStream;
 			}
 		}
@@ -671,6 +669,7 @@ namespace GeneXus.Http.Client
 		}
 		void ReadReponseContent(HttpResponseMessage response)
 		{
+			_receiveStream?.Dispose();
 			_receiveStream = new MemoryStream();
 			int BytesRead;
 			Byte[] Buffer = new Byte[1024];
@@ -820,6 +819,8 @@ namespace GeneXus.Http.Client
 			GXLogging.Debug(log, "_responseString " + ToString());
 		}
 		NameValueCollection _respHeaders;
+		private bool disposedValue;
+
 		void LoadResponseHeaders(HttpResponseMessage resp)
 		{
 			_respHeaders = new NameValueCollection();
@@ -1165,6 +1166,8 @@ namespace GeneXus.Http.Client
 
 			GXLogging.Debug(log, "Reading response...");
 			loadResponseHeaders(resp);
+
+			_receiveStream?.Dispose();	
 			_receiveStream = new MemoryStream();
 			using (Stream rStream = resp.GetResponseStream())
 			{
@@ -1302,9 +1305,10 @@ namespace GeneXus.Http.Client
 		{
 			if (_encoding == null)
 				_encoding = Encoding.UTF8;
-			MemoryStream ms = (MemoryStream)ReceiveStream;
-			ms.Seek(0, SeekOrigin.Begin);
-			Byte[] Buffer = ms.ToArray();
+			if (_receiveStream == null)
+				return string.Empty;
+			_receiveStream.Seek(0, SeekOrigin.Begin);
+			byte[] Buffer = _receiveStream.ToArray();
 			return _encoding.GetString(Buffer, 0, Buffer.Length);
 		}
 		public void ToFile(string fileName)
@@ -1321,15 +1325,18 @@ namespace GeneXus.Http.Client
 			using (fs = new FileStream(pathName, FileMode.Create, FileAccess.Write))
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 			{
-				ReceiveStream.Seek(0, SeekOrigin.Begin);
-				Byte[] Buffer = new Byte[1024];
-				int BytesRead = ReceiveStream.Read(Buffer, 0, 1024);
-				while (BytesRead > 0)
+				if (_receiveStream != null)
 				{
-					fs.Write(Buffer, 0, BytesRead);
-					BytesRead = ReceiveStream.Read(Buffer, 0, 1024);
+					_receiveStream.Seek(0, SeekOrigin.Begin);
+					Byte[] Buffer = new Byte[1024];
+					int BytesRead = _receiveStream.Read(Buffer, 0, 1024);
+					while (BytesRead > 0)
+					{
+						fs.Write(Buffer, 0, BytesRead);
+						BytesRead = _receiveStream.Read(Buffer, 0, 1024);
+					}
+					_receiveStream.Seek(0, SeekOrigin.Begin);
 				}
-				ReceiveStream.Seek(0, SeekOrigin.Begin);
 			}
 		}
 
@@ -1395,6 +1402,30 @@ namespace GeneXus.Http.Client
 				c = new X509Certificate2(file, pass);
 			}
 			_certificateCollection.Add(c);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					_receiveStream?.Dispose();
+					_sendStream?.Dispose();
+				}
+				disposedValue = true;
+			}
+		}
+		~GxHttpClient()
+		{
+		
+		     Dispose(false);
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 	}
 

@@ -476,9 +476,11 @@ namespace GeneXus.Office.ExcelLite
 					{
 						GXLogging.Debug(log,"Opening Template " + template);
                         var stream = templateFile.GetStream();
-                        stream.Position = 0;
-
-                        GxExcelUtils.Invoke(ef, "LoadXls", new object[] { stream });
+						if (stream != null)
+						{
+							stream.Position = 0;
+							GxExcelUtils.Invoke(ef, "LoadXls", new object[] { stream });
+						}
                     }
 					else
 					{
@@ -490,9 +492,11 @@ namespace GeneXus.Office.ExcelLite
 				else if (file.Exists())
 				{
                     var stream = file.GetStream();
-                    stream.Position = 0;
-
-                    GxExcelUtils.Invoke(ef, "LoadXls", new object[]{stream});
+					if (stream != null)
+					{
+						stream.Position = 0;
+						GxExcelUtils.Invoke(ef, "LoadXls", new object[] { stream });
+					}
 				}
 				else
 				{
