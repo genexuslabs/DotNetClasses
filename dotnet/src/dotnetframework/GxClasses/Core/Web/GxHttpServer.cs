@@ -412,7 +412,7 @@ namespace GeneXus.Http.Server
 			if (_httpReq == null)
 				return String.Empty;
 #if NETCORE
-			return GetStringFromStream(_httpReq.Body);
+			return _httpReq.GetRawBodyString();
 #else
 			return GetStringFromStream(_httpReq.InputStream);
 #endif
