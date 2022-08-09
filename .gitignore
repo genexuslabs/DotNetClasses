@@ -364,3 +364,5 @@ build
 .out
 /dotnet/Veracode.sln
 /dotnet/VeracodeSolution.sln
+/dotnet/outsonar.txt
+/dotnet/output.txt

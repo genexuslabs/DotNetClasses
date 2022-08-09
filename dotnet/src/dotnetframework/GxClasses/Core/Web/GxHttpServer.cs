@@ -11,6 +11,7 @@ namespace GeneXus.Http.Server
 	using Microsoft.AspNetCore.Http.Extensions;
 	using System.Linq;
 	using Microsoft.AspNetCore.Http.Features;
+	using System.Text;
 #endif
 
 	public class GxHttpCookie
@@ -368,6 +369,18 @@ namespace GeneXus.Http.Server
 				return string.Empty;
 			}
 		}
+		// create function to convert stream to string
+		
+
+		private string GetStringFromStream(Stream stream)
+		{
+			if (stream == null)
+				return string.Empty;
+			using (StreamReader reader = new StreamReader(stream, System.Text.Encoding.UTF8, true, -1, true))
+			{
+				return reader.ReadToEnd();
+			}
+		}
 		public override string ToString()
 		{
 			if (_httpReq == null)
@@ -375,10 +388,7 @@ namespace GeneXus.Http.Server
 #if NETCORE
 			return _httpReq.GetRawBodyString();
 #else
-			using (StreamReader reader = new StreamReader(_httpReq.InputStream))
-			{
-				return reader.ReadToEnd();
-			}
+			return GetStringFromStream(_httpReq.InputStream);
 #endif
 		}
 		public void ToFile(string FileName)
