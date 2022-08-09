@@ -7,7 +7,7 @@ using GeneXus.Http.Client;
 using GeneXus.XML;
 using Xunit;
 
-namespace DotNetCoreUnitTest.HttpClient
+namespace DotNetCoreUnitTest.HttpClientTest
 {
 	public class StreamHandling
 	{
