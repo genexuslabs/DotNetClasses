@@ -235,9 +235,10 @@ namespace GeneXus.XML
 			Close();
 			EntitiesContainer.Reset();
 			CreateXMLSettings();
-			if (httpClient.ReceiveStream != null)
+			GxHttpClient gxHttpClient = httpClient as GxHttpClient;
+			if (gxHttpClient!=null && gxHttpClient.ReceiveData != null)
 			{
-				XMLInput = httpClient.ReceiveStream;
+				XMLInput = new MemoryStream(gxHttpClient.ReceiveData);
 			}
 			else
 			{
