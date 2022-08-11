@@ -81,10 +81,11 @@ namespace GeneXus.Application
 		{
 			return builder.UseMiddleware<HandlerFactory>(basePath);
 		}
-		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app,
-															  PathString path)
+		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app, string basePath)
 		{
-			return app.Map(path, (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>());
+			return app
+					.Map($"{basePath}/gxwebsocket"    , (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>())
+					.Map($"{basePath}/gxwebsocket.svc", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>()); //Compatibility reasons. Remove in the future.
 		}
 	}
   
@@ -337,7 +338,7 @@ namespace GeneXus.Application
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = basePath;
-			app.MapWebSocketManager($"{basePath}/gxwebsocket.svc");
+			app.MapWebSocketManager(basePath);
 
 			app.MapWhen(
 				context => IsAspx(context, basePath),
