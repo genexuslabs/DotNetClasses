@@ -21,7 +21,7 @@ namespace GeneXus.Messaging.Common
 		private const string SDT_MESSAGEPROPERTY_CLASS_NAME = @"SdtMessageProperty";
 		private const string SDT_MESSAGERESULT_CLASS_NAME = @"SdtMessageResult";
 		private const string NAMESPACE = @"GeneXus.Programs.genexusmessagingqueue.simplequeue";
-		private const string GENEXUS_COMMON_DLL = @"GeneXus.Programs.Common.dll";
+		private const string MODULE_DLL = @"GeneXusMessagingQueue";
 		
 		public SimpleMessageQueue()
 		{
@@ -228,9 +228,7 @@ namespace GeneXus.Messaging.Common
 		{
 			if (assembly == null)
 			{
-				assembly = LoadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), GENEXUS_COMMON_DLL));
-				if (assembly == null)
-					assembly = LoadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", GENEXUS_COMMON_DLL));
+				assembly = AssemblyLoader.LoadAssembly(new AssemblyName(MODULE_DLL));
 			}
 		}
 
@@ -326,16 +324,6 @@ namespace GeneXus.Messaging.Common
 				return messageResultSDT;
 			}
 			return null;
-		}
-			private static Assembly LoadAssembly(string fileName)
-		{
-			if (File.Exists(fileName))
-			{
-				Assembly assemblyLoaded = Assembly.LoadFrom(fileName);
-				return assemblyLoaded;
-			}
-			else
-				return null;
 		}
 		public GxUserType SendMessage(GxUserType simpleQueueMessage, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
