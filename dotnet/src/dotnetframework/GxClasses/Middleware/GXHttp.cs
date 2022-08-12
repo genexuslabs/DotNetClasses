@@ -2103,7 +2103,8 @@ namespace GeneXus.Http
 				localHttpContext.Response.AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE);
 			}
 		}
-
+		const string IE_COMP_EmulateIE7 = "EmulateIE7";
+		const string IE_COMP_Edge = "edge";
 		public virtual void sendAdditionalHeaders()
 		{
 			if (IsSpaRequest())
@@ -2114,12 +2115,14 @@ namespace GeneXus.Http
 				Config.GetValueOf("IE_COMPATIBILITY_VIEW", out IECompMode);
 				if (!string.IsNullOrEmpty(IECompMode))
 				{
-					if (IECompMode.Equals("EmulateIE7") && !context.GetBrowserVersion().StartsWith("8")) //compatibility
+					if (IECompMode.Equals(IE_COMP_EmulateIE7) && !context.GetBrowserVersion().StartsWith("8")) //compatibility
 						return;
+
+					string safeIECompMode = IE_COMP_Edge.Equals(IE_COMP_EmulateIE7) ? IE_COMP_Edge : IE_COMP_Edge;
 #if NETCORE
-					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + IECompMode;
+					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + safeIECompMode;
 #else
-					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + IECompMode);
+					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + safeIECompMode);
 #endif
 				}
 			}
