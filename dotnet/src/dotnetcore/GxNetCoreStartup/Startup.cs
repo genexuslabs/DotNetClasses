@@ -81,10 +81,11 @@ namespace GeneXus.Application
 		{
 			return builder.UseMiddleware<HandlerFactory>(basePath);
 		}
-		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app,
-															  PathString path)
+		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app, string basePath)
 		{
-			return app.Map(path, (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>());
+			return app
+					.Map($"{basePath}/gxwebsocket"    , (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>())
+					.Map($"{basePath}/gxwebsocket.svc", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>()); //Compatibility reasons. Remove in the future.
 		}
 	}
   
@@ -93,7 +94,7 @@ namespace GeneXus.Application
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
 		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
-		const int DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
+		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
 
@@ -135,10 +136,16 @@ namespace GeneXus.Application
 
 			services.Configure<FormOptions>(options =>
 			{
-				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && int.TryParse(MaxFileUploadSizeStr, out int MaxFileUploadSize))
+				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
+				{
+					GXLogging.Info(log, $"MaxFileUploadSize:{MaxFileUploadSize}");
 					options.MultipartBodyLengthLimit = MaxFileUploadSize;
+				}
 				else
+				{
+					GXLogging.Info(log, $"MaxFileUploadSize DefaultValue:{DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES}");
 					options.MultipartBodyLengthLimit = DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES;
+				}
 			});
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 
@@ -331,7 +338,7 @@ namespace GeneXus.Application
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = basePath;
-			app.MapWebSocketManager($"{basePath}/gxwebsocket.svc");
+			app.MapWebSocketManager(basePath);
 
 			app.MapWhen(
 				context => IsAspx(context, basePath),
