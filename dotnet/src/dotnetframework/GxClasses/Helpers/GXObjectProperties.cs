@@ -5,24 +5,22 @@ using System.Text;
 using System.Threading.Tasks;
 using GeneXus.Utils;
 
-
 namespace GeneXus.Application
 {
-	public class GXObjectProperties
+	public class GxObjectProperties
 	{
-
 		private GxLocation location = null;
 
 		public GxLocation Location { get => location; set => location = value; }
 	}
 
-	public class GXObjectsConfiguration {
+	public class GxObjectsConfiguration {
 		
-		private  Dictionary<string, GXObjectProperties> _properties = new Dictionary<string, GXObjectProperties>();	
-		public GXObjectProperties PropertiesFor(string objName)
+		private  Dictionary<string, GXObjectProperties> _properties = new Dictionary<string, GxObjectProperties>();	
+		public GxObjectProperties PropertiesFor(string objName)
 		{
 			if (!_properties.ContainsKey(objName))
-				_properties[objName] = new GXObjectProperties();
+				_properties[objName] = new GxObjectProperties();
 			return _properties[objName];
 		}
 
