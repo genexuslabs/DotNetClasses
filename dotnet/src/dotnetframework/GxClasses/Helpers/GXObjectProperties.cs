@@ -16,14 +16,12 @@ namespace GeneXus.Application
 
 	public class GxObjectsConfiguration {
 		
-		private  Dictionary<string, GXObjectProperties> _properties = new Dictionary<string, GxObjectProperties>();	
+		private  Dictionary<string, GxObjectProperties> _properties = new Dictionary<string, GxObjectProperties>();	
 		public GxObjectProperties PropertiesFor(string objName)
 		{
 			if (!_properties.ContainsKey(objName))
 				_properties[objName] = new GxObjectProperties();
 			return _properties[objName];
 		}
-
 	}
-
 }
