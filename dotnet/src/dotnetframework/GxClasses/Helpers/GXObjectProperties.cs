@@ -10,7 +10,6 @@ namespace GeneXus.Application
 	public class GxObjectProperties
 	{
 		private GxLocation location = null;
-
 		public GxLocation Location { get => location; set => location = value; }
 	}
 
