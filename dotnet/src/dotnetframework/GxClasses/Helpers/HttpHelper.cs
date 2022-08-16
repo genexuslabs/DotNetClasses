@@ -562,12 +562,12 @@ namespace GeneXus.Http
 	{
 		public static void AppendHeader(this HttpResponse response, string name, string value) {
 			if (!response.HasStarted)
-				response.Headers[name] = GXUtil.UrlEncode(value);
+				response.Headers[name] = value;
 		}
 		public static void AddHeader(this HttpResponse response, string name, string value)
 		{
 			if (!response.HasStarted)
-				response.Headers[name] = GXUtil.UrlEncode(value);
+				response.Headers[name] = value;
 		}
 
 		public static void Write(this HttpResponse response, string value)

@@ -2336,7 +2336,7 @@ namespace GeneXus.Application
 			if (!expires.Equals(DateTimeUtil.NullDate()))
 				cookieOptions.Expires = DateTime.SpecifyKind(cookie.Expires, DateTimeKind.Utc);
 
-			_HttpContext.Response.Cookies.Append(GXUtil.UrlEncode(cookie.Name), GXUtil.UrlEncode(cookie.Value), cookieOptions);
+			_HttpContext.Response.Cookies.Append(cookie.Name, cookie.Value, cookieOptions);
 			localCookies[name] = cookie;
 #else
 			if (_HttpContext.Response.Cookies.Get(name) != null)
