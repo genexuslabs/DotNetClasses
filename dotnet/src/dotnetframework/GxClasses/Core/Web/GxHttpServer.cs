@@ -151,32 +151,12 @@ namespace GeneXus.Http.Server
 		{
 			if(string.Compare(name, "Content-Disposition", true) == 0)
 			{
-				value = GetEncodedContentDisposition(value);
+				value = GXUtil.EncodeContentDispositionHeader(value, _context.GetBrowserType());
 			}
             if (_context!=null) 
                 _context.SetHeader(name, value);
 		}
-		private string GetEncodedContentDisposition(string value)
-		{
-			int filenameIdx = value.ToLower().IndexOf("filename");
-			if(filenameIdx != -1)
-			{
-				int eqIdx = value.ToLower().IndexOf("=", filenameIdx);
-				if (eqIdx != -1)
-				{
-					string filename = value.Substring(eqIdx + 1).Trim();
-					try
-					{
-						value = value.Substring(0, eqIdx + 1) + Uri.EscapeDataString(filename);
-					}
-					catch(UriFormatException) //Contains High Surrogate Chars
-					{
-						value = value.Substring(0, eqIdx + 1) + GXUtil.UrlEncode(filename);
-					}
-				}
-			}
-			return value;
-		}
+	
 	}
 
 	public class GxSoapRequest : GxHttpRequest
