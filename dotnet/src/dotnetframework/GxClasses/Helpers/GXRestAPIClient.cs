@@ -7,6 +7,7 @@ using GeneXus.Utils;
 using GeneXus.Http.Client;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.IO;
 
 namespace GeneXus.Application
 {
@@ -294,7 +295,7 @@ namespace GeneXus.Application
 			}
 			else
 			{				
-				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestBodyParameters(httpClient.ReceiveStream);
+				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestParameters(httpClient.ToString());
 			}
 		}
 	}
