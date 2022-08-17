@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security;
 using SecurityAPICommons.Utils;
 using SecurityAPICommons.Commons;
+using System;
 
 namespace GeneXusJWT.GenexusJWTUtils
 {
@@ -30,7 +31,7 @@ namespace GeneXusJWT.GenexusJWTUtils
                     return true;
                 }
             }
-            this.error.setError("OP001", "The " + id + " id is not in the revocation list");
+            this.error.setError("REL01", String.Format("The id {0} is not in the revocation list", id));
             return false;
         }
 

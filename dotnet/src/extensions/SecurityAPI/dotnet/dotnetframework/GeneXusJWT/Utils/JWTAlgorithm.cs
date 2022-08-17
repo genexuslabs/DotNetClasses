@@ -37,7 +37,7 @@ namespace GeneXusJWT.GenexusJWTUtils
                     return "ES512";
 
                 default:
-                    error.setError("JA001", "Unrecognized algorithm");
+                    error.setError("JWA01", "Unrecognized algorithm");
                     return "Unrecognized algorithm";
             }
         }
@@ -47,7 +47,7 @@ namespace GeneXusJWT.GenexusJWTUtils
 			if(error == null) return JWTAlgorithm.NONE;
 			if (jWTAlgorithm == null)
 			{
-				error.setError("JA002", "Unrecognized algorithm");
+				error.setError("JWA02", "Unrecognized algorithm");
 				return JWTAlgorithm.NONE;
 			}
             switch (jWTAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -68,7 +68,7 @@ namespace GeneXusJWT.GenexusJWTUtils
                     return JWTAlgorithm.ES512;
 
                 default:
-                    error.setError("JA002", "Unrecognized algorithm");
+                    error.setError("JWA02", "Unrecognized algorithm");
                     return JWTAlgorithm.NONE;
             }
         }
@@ -95,7 +95,7 @@ namespace GeneXusJWT.GenexusJWTUtils
                 case SecurityAlgorithms.EcdsaSha512:
                     return JWTAlgorithm.ES512;
                 default:
-                    error.setError("JA004", "Unrecognized algorithm");
+                    error.setError("JWA05", "Unrecognized algorithm");
                     return JWTAlgorithm.NONE;
             }
         }
@@ -137,7 +137,7 @@ namespace GeneXusJWT.GenexusJWTUtils
                     return new SigningCredentials(key, SecurityAlgorithms.EcdsaSha512);
 
                 default:
-                    error.setError("JA003", "Unknown algorithm");
+                    error.setError("JWA06", "Unrecognized algorithm");
                     return null;
             }
         }
