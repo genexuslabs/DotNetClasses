@@ -30,6 +30,8 @@ namespace GeneXus.Application
 		public int ErrorCode { get; set; }
 		public string ErrorMessage { get; set; }
 
+		public int StatusCode { get; set; }
+
 		public int ResponseCode { get => responseCode; set => responseCode = value; }
 		public string ResponseMessage { get => responseMessage; set => responseMessage = value; }
 		public string HttpMethod { get => httpMethod; set => httpMethod = value; }
@@ -247,6 +249,7 @@ namespace GeneXus.Application
 
 		public void RestExecute()
 		{
+			this.ErrorCode = 0;
 			_queryString = "";
 			if (_queryVars.Count > 0)
 			{
@@ -289,12 +292,14 @@ namespace GeneXus.Application
 			httpClient.HttpClientExecute( this.HttpMethod, serviceuri);
 			if (httpClient.StatusCode >= 300 || httpClient.ErrCode > 0)
 			{
-				this.ErrorCode = httpClient.ErrCode;
+				this.ErrorCode = (httpClient.ErrCode == 0)? 1: httpClient.ErrCode;
 				this.ErrorMessage = httpClient.ErrDescription;
+				this.StatusCode = httpClient.StatusCode;
 				_responseData = new Dictionary<string, object>();
 			}
 			else
-			{				
+			{
+				this.StatusCode = httpClient.StatusCode;
 				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestParameters(httpClient.ToString());
 			}
 		}
