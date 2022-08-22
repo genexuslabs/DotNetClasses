@@ -54,6 +54,9 @@ namespace GeneXus.Http
 		internal const string GX_SPA_GXOBJECT_RESPONSE_HEADER = "X-GXOBJECT";
 		internal const string GX_SPA_MASTERPAGE_HEADER = "X-SPA-MP";
 		internal const string GX_AJAX_MULTIPART_ID = "GXAjaxMultipart";
+		private string ThemekbPrefix;
+		private string ThemestyleSheet;
+		private string ThemeurlBuildNumber;
 		private const string GX_FULL_AJAX_REQUEST_HEADER = "X-FULL-AJAX-REQUEST";
 		private const string GXEVENT_PARM = "gxevent";
 		private const string URI_SEPARATOR = "/";
@@ -1122,7 +1125,13 @@ namespace GeneXus.Http
 			AddStyleSheetFile(styleSheet, string.Empty);
 		}
 
-		public void AddStyleSheetFile(string styleSheet, string urlBuildNumber, bool isDeferred = false)
+		public void AddStyleSheetFile(string styleSheet, string urlBuildNumber)
+		{
+			List<string[]> userStyleSheetFiles = context.userStyleSheetFiles;
+			urlBuildNumber = context.GetURLBuildNumber(styleSheet, urlBuildNumber);
+			userStyleSheetFiles.Add(new string[] { styleSheet, urlBuildNumber });
+		}
+		public void AddStyleSheetFile(string styleSheet, string urlBuildNumber, bool isDeferred)
 		{
 			urlBuildNumber = context.GetURLBuildNumber(styleSheet, urlBuildNumber);
 			AddStyleSheetFile(styleSheet, urlBuildNumber, false, isDeferred);
@@ -1183,9 +1192,7 @@ namespace GeneXus.Http
 			return bSuccess && !String.IsNullOrEmpty(cssContent);
 		}
 
-
-		public void AddThemeStyleSheetFile(String kbPrefix, String styleSheet, string urlBuildNumber)
-		{
+		public void CloseStyles() {
 			string cssContent = string.Empty;
 			Boolean bHasCustomContent = FetchCustomCSS(ref cssContent);
 
@@ -1195,18 +1202,29 @@ namespace GeneXus.Http
 				context.AddStyleSheetFile(GetPgmname());
 			}
 
-			string[] referencedFiles = ThemeHelper.GetThemeCssReferencedFiles(Path.GetFileNameWithoutExtension(styleSheet));
+			string[] referencedFiles = ThemeHelper.GetThemeCssReferencedFiles(Path.GetFileNameWithoutExtension(this.ThemestyleSheet));
 			foreach (string file in referencedFiles)
 			{
 				string extension = Path.GetExtension(file);
 				if (extension == ".css")
 				{
-					AddStyleSheetFile(file, urlBuildNumber, bHasCustomContent);
+					AddStyleSheetFile(file, this.ThemeurlBuildNumber, bHasCustomContent);
 				}
 				else if (extension == ".js")
-					AddDeferredJavascriptSource(file, urlBuildNumber);
+					AddDeferredJavascriptSource(file, this.ThemeurlBuildNumber);
 			}
-			AddStyleSheetFile(kbPrefix + "Resources/" + context.GetLanguage() + "/" + styleSheet, urlBuildNumber, true, bHasCustomContent);
+			List<string[]> userStyleSheetFiles = context.userStyleSheetFiles;
+			foreach (string[] data in userStyleSheetFiles)
+			{
+				AddStyleSheetFile(data[0], data[1], false, false);
+			}
+			AddStyleSheetFile(this.ThemekbPrefix + "Resources/" + context.GetLanguage() + "/" + this.ThemestyleSheet, this.ThemeurlBuildNumber, true, bHasCustomContent);
+		}
+		public void AddThemeStyleSheetFile(String kbPrefix, String styleSheet, string urlBuildNumber)
+		{
+			this.ThemekbPrefix = kbPrefix;
+			this.ThemestyleSheet = styleSheet;
+			this.ThemeurlBuildNumber = urlBuildNumber;
 		}
 
 		public string GetCacheInvalidationToken()
