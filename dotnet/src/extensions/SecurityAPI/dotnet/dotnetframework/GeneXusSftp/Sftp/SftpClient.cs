@@ -51,27 +51,19 @@ namespace Sftp.GeneXusSftp
                 return false;
             }
             bool useKey = false;
-            if (SecurityUtils.compareStrings("", options.KeyPath) || SecurityUtils.compareStrings("", options.User) || SecurityUtils.compareStrings("", options.KeyPassword))
-            {
-                useKey = false;
-                if (SecurityUtils.compareStrings("", options.User)
-                        || SecurityUtils.compareStrings("", options.Password))
-                {
+            if (!SecurityUtils.compareStrings("", options.KeyPath) )
+				{
+					useKey = true;
+				}else
+				{
+					if (SecurityUtils.compareStrings("", options.User)
+							|| SecurityUtils.compareStrings("", options.Password))
+					{
 
-                    this.error.setError("SF001", "Authentication misconfiguration");
-                    return false;
-                }
-                else
-                {
-                    useKey = false;
-                }
-            }
-            else
-            {
-                useKey = true;
-            }
-
-
+						this.error.setError("SF001", "Authentication misconfiguration. Missing user or password");
+						return false;
+					}
+				}
 
             if (SecurityUtils.compareStrings("", options.Host))
             {
@@ -318,9 +310,6 @@ namespace Sftp.GeneXusSftp
 
                 PrivateKeyFile keyFile = new PrivateKeyFile(options.KeyPath, options.KeyPassword);
                 method.Add(new PrivateKeyAuthenticationMethod(options.User, keyFile));
-
-
-
             }
             else
             {
