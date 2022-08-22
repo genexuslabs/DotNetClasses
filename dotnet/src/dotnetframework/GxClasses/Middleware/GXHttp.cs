@@ -13,7 +13,6 @@ namespace GeneXus.Http
 
 	using GeneXus.Application;
 	using GeneXus.Configuration;
-	using GeneXus.Data.NTier;
 	using GeneXus.Encryption;
 	using GeneXus.Metadata;
 	using GeneXus.Mime;
@@ -24,15 +23,16 @@ namespace GeneXus.Http
 
 	using log4net;
 	using Jayrock.Json;
-	using System.Web.SessionState;
 	using Helpers;
 	using System.Collections.Concurrent;
+	using Microsoft.Net.Http.Headers;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.AspNetCore.Http.Extensions;
 	using System.Net;
 	using GeneXus.Web.Security;
 	using System.Linq;
+	using System.Reflection.PortableExecutable;
 #else
 	using System.Web;
 	using System.Web.UI;
@@ -41,8 +41,8 @@ namespace GeneXus.Http
 	using System.Net;
 	using GeneXus.Notifications;
 	using Web.Security;
+	using System.Web.SessionState;
 #endif
-
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -989,7 +989,12 @@ namespace GeneXus.Http
 			if (context.IsMultipartRequest)
 				jsonRequest = cgiGet(GX_AJAX_MULTIPART_ID);
 			else
-				jsonRequest = (new StreamReader(localHttpContext.Request.GetInputStream())).ReadToEnd();
+			{
+				using (StreamReader reader = new StreamReader(localHttpContext.Request.GetInputStream()))
+				{
+					jsonRequest = reader.ReadToEnd();
+				}
+			}
 			string jsonResponse = dynAjaxEvent.Invoke(jsonRequest, this);
 
 
@@ -1855,9 +1860,7 @@ namespace GeneXus.Http
 			try
 			{
 #if NETCORE
-				sendCacheHeaders();
-				GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(httpContext));
-				sendAdditionalHeaders();
+				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
 #endif
 				bool validSession = ValidWebSession();
@@ -1895,10 +1898,7 @@ namespace GeneXus.Http
 				}
 				SetCompression(httpContext);
 #if !NETCORE
-				sendCacheHeaders();
-
-				GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(httpContext));
-				sendAdditionalHeaders();
+				SendHeaders();
 #endif
 				context.ResponseCommited = true;
 			}
@@ -2092,6 +2092,13 @@ namespace GeneXus.Http
 			else
 				return formatLink(loginObject);
 		}
+		private void SendHeaders()
+		{
+			sendCacheHeaders();
+			GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(localHttpContext));
+			sendAdditionalHeaders();
+			HttpHelper.CorsHeaders(localHttpContext);
+		}
 
 		protected virtual void sendCacheHeaders()
 		{
@@ -2114,7 +2121,8 @@ namespace GeneXus.Http
 				localHttpContext.Response.AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE);
 			}
 		}
-
+		const string IE_COMP_EmulateIE7 = "EmulateIE7";
+		const string IE_COMP_Edge = "edge";
 		public virtual void sendAdditionalHeaders()
 		{
 			if (IsSpaRequest())
@@ -2125,12 +2133,14 @@ namespace GeneXus.Http
 				Config.GetValueOf("IE_COMPATIBILITY_VIEW", out IECompMode);
 				if (!string.IsNullOrEmpty(IECompMode))
 				{
-					if (IECompMode.Equals("EmulateIE7") && !context.GetBrowserVersion().StartsWith("8")) //compatibility
+					if (IECompMode.Equals(IE_COMP_EmulateIE7) && !context.GetBrowserVersion().StartsWith("8")) //compatibility
 						return;
+
+					string safeIECompMode = IE_COMP_Edge.Equals(IE_COMP_EmulateIE7) ? IE_COMP_Edge : IE_COMP_Edge;
 #if NETCORE
-					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + IECompMode;
+					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + safeIECompMode;
 #else
-					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + IECompMode);
+					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + safeIECompMode);
 #endif
 				}
 			}

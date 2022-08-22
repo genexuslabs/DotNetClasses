@@ -25,10 +25,7 @@ namespace GeneXus
 		}
         public static void Error(ILog log, string msg1, string msg2, Exception ex)
 		{
-			if (log.IsErrorEnabled)
-			{
-				log.Error(msg1 + msg2, ex);
-			}
+			Error(log, msg1 + msg2, ex);
 		}
         public static void Error(ILog log, Exception ex, params string[] list)
 		{
@@ -98,10 +95,7 @@ namespace GeneXus
 		}
         public static void Debug(ILog log, string msg1, string msg2, Exception ex)
 		{
-			if (log.IsDebugEnabled)
-			{
-				log.Debug(msg1 + msg2, ex);
-			}
+			Debug(log, msg1 + msg2, ex);
 		}
         public static void Debug(ILog log, string msg, Exception ex)
 		{

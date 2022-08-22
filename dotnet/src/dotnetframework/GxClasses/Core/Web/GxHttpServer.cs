@@ -12,11 +12,6 @@ namespace GeneXus.Http.Server
 	using System.Linq;
 	using Microsoft.AspNetCore.Http.Features;
 	using System.Text;
-	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Mvc.Formatters;
-	using System.Net.Http;
-	using Stubble.Core.Contexts;
-	using System.Net.Mime;
 #endif
 
 	public class GxHttpCookie
@@ -69,8 +64,6 @@ namespace GeneXus.Http.Server
 			set { _ExpirationDate = value; }
 			get { return _ExpirationDate; }
 		}
-
-		public string SameSite { get; set; }
 
 		public String Domain
 		{
@@ -151,32 +144,12 @@ namespace GeneXus.Http.Server
 		{
 			if(string.Compare(name, "Content-Disposition", true) == 0)
 			{
-				value = GetEncodedContentDisposition(value);
+				value = GXUtil.EncodeContentDispositionHeader(value, _context.GetBrowserType());
 			}
             if (_context!=null) 
                 _context.SetHeader(name, value);
 		}
-		private string GetEncodedContentDisposition(string value)
-		{
-			int filenameIdx = value.ToLower().IndexOf("filename");
-			if(filenameIdx != -1)
-			{
-				int eqIdx = value.ToLower().IndexOf("=", filenameIdx);
-				if (eqIdx != -1)
-				{
-					string filename = value.Substring(eqIdx + 1).Trim();
-					try
-					{
-						value = value.Substring(0, eqIdx + 1) + Uri.EscapeDataString(filename);
-					}
-					catch(UriFormatException) //Contains High Surrogate Chars
-					{
-						value = value.Substring(0, eqIdx + 1) + GXUtil.UrlEncode(filename);
-					}
-				}
-			}
-			return value;
-		}
+	
 	}
 
 	public class GxSoapRequest : GxHttpRequest
@@ -396,14 +369,26 @@ namespace GeneXus.Http.Server
 				return string.Empty;
 			}
 		}
+		// create function to convert stream to string
+		
+
+		private string GetStringFromStream(Stream stream)
+		{
+			if (stream == null)
+				return string.Empty;
+			using (StreamReader reader = new StreamReader(stream, System.Text.Encoding.UTF8, true, -1, true))
+			{
+				return reader.ReadToEnd();
+			}
+		}
 		public override string ToString()
 		{
 			if (_httpReq == null)
-				return String.Empty;
+				return string.Empty;
 #if NETCORE
 			return _httpReq.GetRawBodyString();
 #else
-			return (new StreamReader(_httpReq.InputStream)).ReadToEnd();
+			return GetStringFromStream(_httpReq.InputStream);
 #endif
 		}
 		public void ToFile(string FileName)

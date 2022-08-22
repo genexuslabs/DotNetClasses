@@ -45,6 +45,7 @@ using GeneXus.Http;
 using System.Security;
 using System.Threading.Tasks;
 using System.Drawing.Imaging;
+using System.Net.Http.Headers;
 
 namespace GeneXus.Utils
 {
@@ -4196,6 +4197,40 @@ namespace GeneXus.Utils
 			return HttpUtility.HtmlAttributeEncode(sText);
 		}
 
+		internal static string EncodeContentDispositionHeader(string value, int browserType)
+		{
+			int filenameIdx = value.IndexOf("filename", StringComparison.OrdinalIgnoreCase);
+			int eqIdx = value.IndexOf("=", filenameIdx);
+			if (filenameIdx == -1 || eqIdx == -1 || browserType == GxContext.BROWSER_SAFARI) //Safari does not supports yet ContentDispositon file name encoding value.
+			{
+				return value;
+			}
+
+			string rawFilename = value.Substring(eqIdx + 1).Trim();
+			try
+			{
+				string dispositionType = value.Substring(0, value.IndexOf(";")).Trim();
+				value = new ContentDispositionHeaderValue(dispositionType) { FileName = rawFilename }.ToString();
+			}
+			catch (Exception)
+			{
+				value = value.Substring(0, eqIdx + 1) + EncodeContentDispositionFileName(rawFilename);
+			}
+			return value;
+		}
+
+		private static string EncodeContentDispositionFileName(string filename)
+		{
+			try
+			{
+				return Uri.EscapeDataString(filename);
+			}
+			catch (UriFormatException) //Contains High Surrogate Chars
+			{
+				return GXUtil.UrlEncode(filename);
+			}
+		}
+
 		public static string HtmlEndTag(HTMLElement element)
 		{
 			if ((Preferences.DocType == HTMLDocType.HTML4 || Preferences.DocType == HTMLDocType.NONE || Preferences.DocType == HTMLDocType.HTML4S) &&
@@ -5486,14 +5521,18 @@ namespace GeneXus.Utils
 		{
 			using (Stream s = ImageFile(filePathOrUrl).GetStream())
 			{
-				return new Bitmap(s);
+				if (s != null)
+					return new Bitmap(s);
+				return null;
 			}
 		}
 		private static Image ImageCreateFromStream(string filePathOrUrl)
 		{
 			using (Stream s = ImageFile(filePathOrUrl).GetStream())
 			{
-				return Image.FromStream(s);
+				if (s != null)
+					return Image.FromStream(s);
+				return null;
 			}
 		}
 
@@ -5508,6 +5547,8 @@ namespace GeneXus.Utils
 			{										
 				using (Image image = ImageCreateFromStream(imageFile))
 				{
+					if (image == null)
+						return string.Empty;
 					int newheight = height;
 					// Prevent using images internal thumbnail
 					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
@@ -5667,7 +5708,10 @@ namespace GeneXus.Utils
 			{				
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
-					return bmp.Width;
+					if (bmp != null)
+					{
+						return bmp.Width;
+					}
 				}
 			}
 			catch (Exception ex)

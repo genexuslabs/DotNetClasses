@@ -65,7 +65,7 @@ namespace GeneXus.Notifications.WebSocket
 			{
 				while (socket.State == WebSocketState.Open)
 				{
-					using (MemoryStream ms = new MemoryStream())
+					using (MemoryStream ms = new())
 					{
 						var result = await ReadDataFromSocket(socket, chunkBuffer, ms);
 						while (!result.EndOfMessage)

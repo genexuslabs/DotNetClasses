@@ -2684,10 +2684,12 @@ namespace GeneXus.Utils
 
 		static Type GetEnumerableType(Type type)
 		{
-#if !NETCORE
-			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-				return type.GetGenericArguments()[0];
-#endif
+			if (type.IsGenericType)
+			{
+				return type.GetInterfaces()
+					.FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+					?.GetGenericArguments()[0];
+			}
 			return null;
 		}
 

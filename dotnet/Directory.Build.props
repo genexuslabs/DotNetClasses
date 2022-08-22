@@ -3,7 +3,7 @@
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
 		<MajorFileVersion Condition="$(GIT_REF.EndsWith('beta'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
-		<MinorFileVersion>14</MinorFileVersion>
+		<MinorFileVersion>20</MinorFileVersion>
 		<RevisionFileVersion Condition="'$(COMMIT_NUMBER)'!=''">$(COMMIT_NUMBER)</RevisionFileVersion>
 		<RevisionFileVersion Condition="'$(COMMIT_NUMBER)'==''">0</RevisionFileVersion>
 		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).$(RevisionFileVersion)</FileVersionWithoutRevision>
@@ -31,13 +31,6 @@
 		<NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023</NoWarn>
 		<IsPackable>true</IsPackable>
 		<DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
-	</PropertyGroup>
-	
-	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectoryPlatformBin>gxnetcore\bin</DeployDirectoryPlatformBin>
-	</PropertyGroup>
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-		<DeployDirectoryPlatformBin>gxnet\bin</DeployDirectoryPlatformBin>
 	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">

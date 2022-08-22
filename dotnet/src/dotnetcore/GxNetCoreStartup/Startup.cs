@@ -82,10 +82,11 @@ namespace GeneXus.Application
 		{
 			return builder.UseMiddleware<HandlerFactory>(basePath);
 		}
-		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app,
-															  PathString path)
+		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app, string basePath)
 		{
-			return app.Map(path, (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>());
+			return app
+					.Map($"{basePath}/gxwebsocket"    , (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>())
+					.Map($"{basePath}/gxwebsocket.svc", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>()); //Compatibility reasons. Remove in the future.
 		}
 	}
   
@@ -108,6 +109,9 @@ namespace GeneXus.Application
 		const string SWAGGER_DEFAULT_YAML = "default.yaml";
 		const string DEVELOPER_MENU = "developermenu.html";
 		const string SWAGGER_SUFFIX = "swagger";
+		const string CORS_POLICY_NAME = "AllowSpecificOriginsPolicy";
+		const string CORS_ANY_ORIGIN = "*";
+		const double CORS_MAX_AGE_SECONDS = 86400;
 
 		public List<string> servicesBase = new List<string>();		
 
@@ -193,7 +197,34 @@ namespace GeneXus.Application
 					options.EnableForHttps = true;
 				});
 			}
+			DefineCorsPolicy(services);
 			services.AddMvc();
+		}
+
+		private void DefineCorsPolicy(IServiceCollection services)
+		{
+			if (Preferences.CorsEnabled)
+			{
+				string corsAllowedOrigins = Preferences.CorsAllowedOrigins();
+				if (!string.IsNullOrEmpty(corsAllowedOrigins))
+				{
+					services.AddCors(options =>
+					{
+						options.AddPolicy(name: CORS_POLICY_NAME,
+										  policy =>
+										  {
+											  policy.WithOrigins(corsAllowedOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries));
+											  if (!corsAllowedOrigins.Contains(CORS_ANY_ORIGIN))
+											  {
+												  policy.AllowCredentials();
+											  }
+											  policy.AllowAnyHeader();
+											  policy.AllowAnyMethod();
+											  policy.SetPreflightMaxAge(TimeSpan.FromSeconds(CORS_MAX_AGE_SECONDS));
+										  });
+					});
+				}
+			}
 		}
 
 		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
@@ -246,6 +277,7 @@ namespace GeneXus.Application
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
+			ConfigureCors(app);
 			ConfigureSwaggerUI(app, baseVirtualPath);
 
 			if (Directory.Exists(Path.Combine(LocalPath, RESOURCES_FOLDER)))
@@ -338,7 +370,7 @@ namespace GeneXus.Application
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = basePath;
-			app.MapWebSocketManager($"{basePath}/gxwebsocket.svc");
+			app.MapWebSocketManager(basePath);
 
 			app.MapWhen(
 				context => IsAspx(context, basePath),
@@ -351,6 +383,14 @@ namespace GeneXus.Application
 				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
 			});
 			app.UseEnableRequestRewind();
+		}
+
+		private void ConfigureCors(IApplicationBuilder app)
+		{
+			if (Preferences.CorsEnabled)
+			{
+				app.UseCors(CORS_POLICY_NAME);
+			}
 		}
 
 		private void ConfigureSwaggerUI(IApplicationBuilder app, string baseVirtualPath)

@@ -24,46 +24,15 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
-    - name: Install .NET Core 5.0
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '5.0.x'
 
     - name: Install .NET 6
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v2
       with:
         dotnet-version: '6.0.x'
-        include-prerelease: True
-        
-    - uses: actions/setup-dotnet@v1
-      with:
-        source-url: https://nuget.pkg.github.com/genexuslabs/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-    - name: Calculate environment variables
-      run: |     
-        $IsPrerelease = !($Env:GIT_REF -match 'release-[0-9]+(?:\.[0-9]+)?$')
-        echo "IsPrerelease=$IsPrerelease" >> $env:GITHUB_ENV
-
-        $COMMIT_NUMBER = @($(git rev-list --count origin/master..), $(git rev-list --count HEAD))[$IsPrerelease]
-
-        echo "COMMIT_NUMBER=$COMMIT_NUMBER" >> $env:GITHUB_ENV
-
-    - name: Calculate package version
-      env:
-        PackageVersionString: ./.github/generatePackageVersion.ps1
-      run: |
-        $NuGetPackageVersion = & "$Env:PackageVersionString"
-        
-        Write-Output "Packge version to be used: $NuGetPackageVersion"
-
-        echo "NuGetPackageVersion=$NuGetPackageVersion" >> $env:GITHUB_ENV
-
+   
     - name: Restore packages
       run: dotnet restore $Env:SolutionFile
 

@@ -224,10 +224,10 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
 public class GxFileInfo : IGxFileInfo
 {
 	private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFileInfo));
-    FileInfo _file;
-    string _baseDirectory;
+    private FileInfo _file;
+    private string _baseDirectory;
 
-    public GxFileInfo(FileInfo file)
+	public GxFileInfo(FileInfo file)
     {
         _file = file;
     }
@@ -657,7 +657,7 @@ public class GxFile
     private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFile));
 
     internal IGxFileInfo _file;
-    string _baseDirectory;
+	string _baseDirectory;
     int _lastError;
     string _lastErrorDescription;
 	string _source;
@@ -1040,11 +1040,11 @@ public class GxFile
         _lastError = 0;
         _lastErrorDescription = "";
         if (!validSource())
-            return new MemoryStream();
+            return null;
         if (!Exists())
         {
             _lastError = 2;
-            return new MemoryStream();
+            return null;
         }
         try
         {
@@ -1054,7 +1054,7 @@ public class GxFile
         {
             setError(e);
         }
-        return new MemoryStream();
+        return null;
     }
     public bool PathIsRooted()
     {
@@ -1437,7 +1437,7 @@ public class GxFile
 	private FileStream _fileStreamReader;
 	private StreamReader _fileReader;
 
-    public void OpenWrite(String encoding)
+	public void OpenWrite(String encoding)
     {
         _lastError = 0;
         _lastErrorDescription = "";
@@ -1568,6 +1568,8 @@ public class GxFile
             }
         }
     }
+
+	
 }
 
 public class GxDirectory

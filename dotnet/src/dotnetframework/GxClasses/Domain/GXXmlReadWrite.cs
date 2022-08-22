@@ -48,6 +48,7 @@ namespace GeneXus.XML
 		public const int ValidationXDR				= 4;
 
 		private XmlTextReader treader;
+		private MemoryStream mreader;
 		private XmlValidatingReader vreader;
 
 	
@@ -229,7 +230,14 @@ namespace GeneXus.XML
 		{
 			if (treader != null) Close();
 			EntitiesContainer.Reset();
-			treader = new XmlTextReader(httpClient.ReceiveStream);
+			GxHttpClient gxHttpClient = httpClient as GxHttpClient;
+			if (gxHttpClient != null && gxHttpClient.ReceiveData != null)
+			{
+				mreader = new MemoryStream(gxHttpClient.ReceiveData);
+				treader = new XmlTextReader(mreader);
+			}
+			else
+				treader = new XmlTextReader(string.Empty);
 			if (treader != null)
 			{
 				SetDtdProcessing(treader, Resolver, validationType);
@@ -290,6 +298,7 @@ namespace GeneXus.XML
 			Uri baseUri = new Uri( sBaseDirectory );
 			Resolver.Myself = baseUri;
 			treader = null;
+			mreader = null;
 			try
 			{
 				if (File.Exists(s))
@@ -628,6 +637,11 @@ namespace GeneXus.XML
 			{
 				treader.Close();
 				treader = null;
+			}
+			if (mreader != null)
+			{
+				mreader.Close();
+				mreader = null;
 			}
 			if ( vreader != null )
 			{

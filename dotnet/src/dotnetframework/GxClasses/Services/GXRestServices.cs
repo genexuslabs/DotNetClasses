@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.ServiceModel.Configuration;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Web;
@@ -21,10 +22,11 @@ using GeneXus.Http;
 using GeneXus.Metadata;
 using GeneXus.Security;
 using log4net;
+using Microsoft.Net.Http.Headers;
 
 namespace GeneXus.Utils
 {
-	public class CustomHttpBehaviorExtensionElement : System.ServiceModel.Configuration.BehaviorExtensionElement
+	public class CustomHttpBehaviorExtensionElement : BehaviorExtensionElement
     {
 		protected override object CreateBehavior()
 		{
@@ -54,7 +56,49 @@ namespace GeneXus.Utils
             endpointDispatcher.ChannelDispatcher.ErrorHandlers.Clear();
             endpointDispatcher.ChannelDispatcher.ErrorHandlers.Add(new JsonErrorHandler());
         }
-    }
+		public override void ApplyDispatchBehavior(ServiceEndpoint endpoint, EndpointDispatcher endpointDispatcher)
+		{
+			endpointDispatcher.DispatchRuntime.MessageInspectors.Add(new CustomHeaderMessageInspector());
+			base.ApplyDispatchBehavior(endpoint, endpointDispatcher);
+		}
+	}
+	internal class CustomHeaderMessageInspector : IDispatchMessageInspector
+	{
+		const string HttpResponseProperty = "httpResponse";
+		const string PreflightReturn = "PreflightReturn";
+		public object AfterReceiveRequest(ref Message request, IClientChannel channel, InstanceContext instanceContext)
+		{
+			HttpRequestMessageProperty httpRequest = (HttpRequestMessageProperty)request.Properties[HttpRequestMessageProperty.Name];
+			return new CorrelationState()
+			{
+				RequestHeaders = httpRequest.Headers[HeaderNames.AccessControlRequestHeaders],
+				HandlePreflight = httpRequest.Method.Equals(HttpMethod.Options.Method, StringComparison.InvariantCultureIgnoreCase)
+			};
+		}
+
+		public void BeforeSendReply(ref Message reply, object correlationState)
+		{
+			CorrelationState state = correlationState as CorrelationState;
+			if (state != null && state.HandlePreflight)
+			{
+				HttpResponseMessageProperty httpResponse = reply.Properties[HttpResponseProperty] as HttpResponseMessageProperty;
+				if (httpResponse == null)
+				{
+					reply = Message.CreateMessage(MessageVersion.None, PreflightReturn);
+					httpResponse = new HttpResponseMessageProperty();
+					reply.Properties.Add(HttpResponseMessageProperty.Name, httpResponse);
+				}
+				HttpHelper.CorsHeaders(httpResponse, state.RequestHeaders);
+				httpResponse.SuppressEntityBody = true;
+				httpResponse.StatusCode = HttpStatusCode.OK;
+			}
+		}
+	}
+	internal class CorrelationState
+	{
+		internal string RequestHeaders;
+		internal bool HandlePreflight;
+	}
 	class CustomOperationSelector : WebHttpDispatchOperationSelector
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomOperationSelector));
@@ -199,7 +243,7 @@ namespace GeneXus.Utils
         }
         public void Cleanup()
         {
-			SendCacheHeaders();
+			ServiceHeaders();
 			if (runAsMain)
                 context.CloseConnections();
         }
@@ -275,7 +319,8 @@ namespace GeneXus.Utils
 		public void UploadImpl(Stream stream)
 		{
 			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
-			gxobject.WcfExecute(stream, WebOperationContext.Current.IncomingRequest.ContentType);
+			IncomingWebRequestContext request = WebOperationContext.Current.IncomingRequest;
+			gxobject.WcfExecute(stream, request.ContentType, request.ContentLength);
 		}
 		public void ErrorCheck(IGxSilentTrn trn)
 		{
@@ -544,7 +589,11 @@ namespace GeneXus.Utils
 			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.CACHE_CONTROL)))
 				AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE);
 		}
-
+		private void ServiceHeaders()
+		{
+			SendCacheHeaders();
+			HttpHelper.CorsHeaders(httpContext, wcfContext);
+		}
 		DateTime HTMLDateToDatetime(string s)
         {
             // Date Format: RFC 1123

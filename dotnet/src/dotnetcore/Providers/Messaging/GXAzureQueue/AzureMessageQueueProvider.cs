@@ -7,8 +7,7 @@ namespace GeneXus.Messaging.Queue
 	{
 		private const string AZUREQUEUE = "AZUREQUEUE";
 		public SimpleMessageQueue Connect(string queueName, string queueURL, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
-
-		{
+		{			
 			MessageQueueProvider messageQueueProvider = new MessageQueueProvider();
 			GXProperties properties = new GXProperties();
 			properties.Add("QUEUE_AZUREQUEUE_QUEUENAME", queueName);

@@ -1717,10 +1717,7 @@ namespace GeneXus.Application
 #if !NETCORE
 					HttpContext.Session[key] = value;
 #else
-					if (!_HttpContext.Response.HasStarted)
-					{
-						HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
-					}
+					HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
 #endif
 					return true;
 				}
@@ -2312,7 +2309,7 @@ namespace GeneXus.Application
 		{
 			if (_HttpContext == null || localCookies == null)
 				return 0;
-			HttpCookie cookie = new HttpCookie(name, GXUtil.UrlEncode(cookieValue));
+			HttpCookie cookie = new HttpCookie(name, cookieValue);
 			cookie.Path = path.TrimEnd();
 			//HttpCookie.Path default is /, which is the server root. 
 			//In Genexus: If path isn’t specified, the cookie is valid for the web panels that are in the same directory as the one it is stored in, or in subordinated directories
@@ -2344,7 +2341,7 @@ namespace GeneXus.Application
 			if (!expires.Equals(DateTimeUtil.NullDate()))
 				cookieOptions.Expires = DateTime.SpecifyKind(cookie.Expires, DateTimeKind.Utc);
 
-			_HttpContext.Response.Cookies.Append(name, cookie.Value, cookieOptions);
+			_HttpContext.Response.Cookies.Append(cookie.Name, cookie.Value, cookieOptions);
 			localCookies[name] = cookie;
 #else
 			if (_HttpContext.Response.Cookies.Get(name) != null)

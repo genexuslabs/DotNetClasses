@@ -141,7 +141,7 @@ namespace GeneXus.Application
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
-				SendCacheHeaders();
+				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -180,9 +180,9 @@ namespace GeneXus.Application
 		private Dictionary<string, object> ReadBodyParameters()
 		{
 #if NETCORE
-			return RestAPIHelpers.ReadRestBodyParameters(_httpContext.Request.Body);
+			return ReadRequestParameters(_httpContext.Request.Body);
 #else
-			return RestAPIHelpers.ReadRestBodyParameters(_httpContext.Request.GetInputStream());
+			return ReadRequestParameters(_httpContext.Request.GetInputStream());
 #endif
 		}
 
@@ -330,7 +330,7 @@ namespace GeneXus.Application
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
-				SendCacheHeaders();
+				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -387,6 +387,10 @@ namespace GeneXus.Application
 		public virtual Task Patch(object key)
 		{
 			return MethodBodyExecute(key);
+		}
+		public Dictionary<string, object> ReadRequestParameters(Stream stream)
+		{
+			return RestAPIHelpers.ReadRestBodyParameters(stream);
 		}
 
 		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
@@ -665,6 +669,12 @@ namespace GeneXus.Application
 			}
 			return true;
 		}
+		private void ServiceHeaders()
+		{
+			SendCacheHeaders();
+			HttpHelper.CorsHeaders(_httpContext);
+		}
+
 		private void SendCacheHeaders()
 		{
 			if (string.IsNullOrEmpty(_gxContext.GetHeader(HttpHeader.CACHE_CONTROL)))

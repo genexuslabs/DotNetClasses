@@ -18,7 +18,7 @@ namespace xUnitTesting
 			parms.Add("SmsMessageSid", "SM40d2cbda93b2de0a15df7a1598c7db83");
 			parms.Add("NumMedia", "99");
 			parms.Add("WaId", "5215532327636");
-			parms.Add("From", "whatsapp%3A%2B5215532327636");
+			parms.Add("From", "whatsapp:+5215532327636");
 			parms.Add("ProfileName", "Jhon Thomas");
 			formUrlEncodedContent = new FormUrlEncodedContent(parms);
 		}

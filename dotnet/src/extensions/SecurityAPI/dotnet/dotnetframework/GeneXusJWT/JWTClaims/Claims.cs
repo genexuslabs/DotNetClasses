@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -51,8 +52,8 @@ namespace GeneXusJWT.GenexusJWTClaims
                     return _claims.ElementAt(i).getValue();
                 }
             }
-            _error.setError("CL001", "Could not find a claim with" + key + " key value");
-            return "";
+			_error.setError("CLA01", String.Format("Could not find a claim with {0} key value", key));
+			return "";
         }
 
         public bool isEmpty()

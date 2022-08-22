@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <PackageId>GeneXus.AWS.Queue</PackageId>
+    <PackageTags>AWS SQS Queue Messaging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
