@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using GeneXus.Utils;
 using GeneXus.Http.Client;
+#if NETCORE
 using System.Text.Json;
 using System.Text.Json.Serialization;
+#else
 using System.IO;
 
 namespace GeneXus.Application
@@ -214,7 +216,11 @@ namespace GeneXus.Application
 			}
 			else if (_responseData.Count >= 1 && !_responseData.ContainsKey(varName.ToLower()))
 			{
+#if NETCORE
 				sdt.FromJSonString(JsonSerializer.Serialize(_responseData), null);
+#else
+				sdt.FromJSonString(JSONHelper.Serialize(_responseData), null);
+#endif
 			}
 			return sdt;
 		}
