@@ -8,7 +8,7 @@ using GeneXus.Http.Client;
 #if NETCORE
 using System.Text.Json;
 using System.Text.Json.Serialization;
-#else
+#endif
 using System.IO;
 
 namespace GeneXus.Application
