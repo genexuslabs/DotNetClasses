@@ -49,6 +49,19 @@ namespace GeneXus.Storage.GXGoogleCloud
 
 		public ExternalProviderGoogle(GXService providerService) : base(providerService)
 		{
+#if NETFRAMEWORK
+			AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+			{
+				if (args.Name.StartsWith(nameof(Google)))
+				{
+					int sep = args.Name.IndexOf(',');
+					if (sep != -1)
+						return System.Reflection.Assembly.Load(args.Name.Remove(sep));
+				}
+
+				return null;
+			};
+#endif
 			Initialize();
 		}
 
