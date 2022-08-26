@@ -8,11 +8,7 @@
 	</PropertyGroup>
 	
   <ItemGroup>
-    <PackageReference Include="Google.Api.Gax" Version="4.0.0" />
-    <PackageReference Include="Google.Api.Gax.Rest" Version="4.0.0" />
-    <PackageReference Include="Google.Apis" Version="1.57.0" />
-    <PackageReference Include="Google.Apis.Storage.v1" Version="1.57.0.2685" />
-    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.0.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="3.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   <ItemGroup>
