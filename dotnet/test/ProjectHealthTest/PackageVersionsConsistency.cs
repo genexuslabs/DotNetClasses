@@ -19,9 +19,10 @@ namespace ProjectHealthTest
 		private const string PACKAGE_VERSION_ATTRIBUTE_NAME = "Version";
 		private const string TARGET_FRAMEWORK = "Project/PropertyGroup/TargetFramework";
 		private const string TARGET_FRAMEWORKS = "Project/PropertyGroup/TargetFrameworks";
-		private const string NET6 = "net6";
+		private const string NET6 = "net6.0";
 		private const string NET_FRAMEWORK = "net462";
-		private static HashSet<string> ExcludedFromTransitiveDependenciesControl = new HashSet<string> {"Microsoft", "System", "runtime", "NETStandard", "Newtonsoft" };
+		private static HashSet<string> ExcludedFromTransitiveDependenciesControl = new HashSet<string> {"runtime"};
+		private static HashSet<string> ProjectTemporaryExcludedFromDependenciesControl = new HashSet<string> { "AzureFunctionsTest.csproj"};
 		private Regex DependencyRegEx = new Regex(@"\>\s(.+)\s+((\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+))");
 
 		/// <summary>
@@ -31,24 +32,29 @@ namespace ProjectHealthTest
 		/// - Fail this test if any referenced package has referenced to more than one version accross projects
 		/// - Output a message mentioning the different versions for each package 
 		/// </summary>
-		[Fact]
+		[Fact(Skip = "Transitive dependencies are resolved by nuget algorithm, controlling each project separately is not so useful")]
 		public void TestPackageVersionConsistencyAcrossNETProjectsAndTransitives()
 		{
 			TestPackageVersionConsistencyAcrossProjects(NET6, true);
 		}
 		[Fact]
-		public void TestPackageVersionConsistencyAcrossNETFrameworkProjectsAndTransitives()
+		public void TestPackageVersionConsistencyAcrossNETProjects()
 		{
-			TestPackageVersionConsistencyAcrossProjects(NET_FRAMEWORK, true);
+			TestPackageVersionConsistencyAcrossProjects(NET6, false);
+		}
+		[Fact]
+		public void TestPackageVersionConsistencyAcrossNETFrameworkProjects()
+		{
+			TestPackageVersionConsistencyAcrossProjects(NET_FRAMEWORK, false);
 		}
 
-		private List<string> BuildDepsJson(string projectPath)
+		private List<string> BuildDepsJson(string projectPath, string targetFramework)
 		{
 			Process process = new Process();
 			List<string> outputLines = new List<string>();
 			process.StartInfo.FileName = "dotnet.exe";
 			process.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
-			process.StartInfo.Arguments = $"list {projectPath} package --include-transitive --framework net6.0";
+			process.StartInfo.Arguments = $"list {projectPath} package --include-transitive --framework {targetFramework}";
 
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
@@ -69,7 +75,10 @@ namespace ProjectHealthTest
 		private void TestPackageVersionConsistencyAcrossProjects(string targetFramework, bool checkTransitiveDeps)
 		{
 			IDictionary<string, ICollection<PackageVersionItem>> packageVersionsById = new Dictionary<string, ICollection<PackageVersionItem>>();
-			foreach (string packagesConfigFilePath in GetAllProjects())
+			string[] allProjects = GetAllProjects();
+			Assert.True(allProjects.Length > 0, $"No projects found for {targetFramework} to analyze. Check that {targetFramework} is correct");
+			Console.WriteLine($"Analyzing {allProjects.Length} projects for {targetFramework}");
+			foreach (string packagesConfigFilePath in allProjects)
 			{
 				FileInfo fileInfo = new FileInfo(packagesConfigFilePath);
 				XmlDocument doc = new XmlDocument();
@@ -114,9 +123,9 @@ namespace ProjectHealthTest
 						}
 
 
-						if (checkTransitiveDeps)
+						if (checkTransitiveDeps && !ProjectTemporaryExcludedFromDependenciesControl.Contains(fileInfo.Name))
 						{
-							List<string> outputLines = BuildDepsJson(fileInfo.FullName);
+							List<string> outputLines = BuildDepsJson(fileInfo.FullName, targetFramework);
 							bool readingTransitivePackages = false;
 							foreach (string line in outputLines)
 							{
@@ -192,7 +201,7 @@ namespace ProjectHealthTest
 			}
 		}
 
-		private static IEnumerable<string> GetAllProjects()
+		private static string[] GetAllProjects()
 		{
 			return Directory.GetFiles(SRC_DIR, PROJECTS, SearchOption.AllDirectories);
 		}
