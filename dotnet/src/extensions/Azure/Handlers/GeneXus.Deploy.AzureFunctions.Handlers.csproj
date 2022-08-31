@@ -15,7 +15,6 @@
 	<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.2" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.593" />
-    <PackageReference Include="Azure.Core" Version="1.25.0" />
 
   </ItemGroup>
   <ItemGroup>

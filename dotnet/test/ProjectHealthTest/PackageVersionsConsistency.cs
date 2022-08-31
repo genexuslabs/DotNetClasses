@@ -22,9 +22,21 @@ namespace ProjectHealthTest
 		private const string NET6 = "net6.0";
 		private const string NET_FRAMEWORK = "net462";
 		private static HashSet<string> ExcludedFromTransitiveDependenciesControl = new HashSet<string> {"runtime"};
-		private static HashSet<string> ProjectTemporaryExcludedFromDependenciesControl = new HashSet<string> { "AzureFunctionsTest.csproj"};
+		private static HashSet<string> ProjectTemporaryExcludedFromDependenciesControl = new HashSet<string> { "GeneXus.Deploy.AzureFunctions.Handlers.csproj", "AzureFunctionsTest.csproj" };
 		private Regex DependencyRegEx = new Regex(@"\>\s(.+)\s+((\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+))");
 
+		/// <summary>
+		/// Tests that all referenced packages have the same version by doing:
+		/// - Get all projects files contained in the backend with a given targetFramework
+		/// - Retrieve the id and version of all packages and transitive dependencies
+		/// - Fail this test if any referenced package as direct reference has a lower version than a transitive reference to the same package
+		/// - Output a message mentioning the different versions for each package 
+		/// </summary>
+		[Fact]
+		public void TestPackageVersionConsistencyAcrossNETProjectsAndTransitives()
+		{
+			TestPackageVersionConsistencyAcrossProjects(NET6, true);
+		}
 		/// <summary>
 		/// Tests that all referenced packages have the same version by doing:
 		/// - Get all projects files contained in the backend with a given targetFramework
@@ -32,11 +44,6 @@ namespace ProjectHealthTest
 		/// - Fail this test if any referenced package has referenced to more than one version accross projects
 		/// - Output a message mentioning the different versions for each package 
 		/// </summary>
-		[Fact(Skip = "Transitive dependencies are resolved by nuget algorithm, controlling each project separately is not so useful")]
-		public void TestPackageVersionConsistencyAcrossNETProjectsAndTransitives()
-		{
-			TestPackageVersionConsistencyAcrossProjects(NET6, true);
-		}
 		[Fact]
 		public void TestPackageVersionConsistencyAcrossNETProjects()
 		{
@@ -150,7 +157,8 @@ namespace ProjectHealthTest
 													packageVersions.Add(new PackageVersionItem()
 													{
 														SourceFile = $"{fileInfo.FullName} (Transitive dependency)",
-														Version = packageVersion
+														Version = packageVersion,
+														Transitive = true
 													});
 												}
 											}
@@ -167,7 +175,7 @@ namespace ProjectHealthTest
 				}
 			}
 
-			List<KeyValuePair<string, ICollection<PackageVersionItem>>> packagesWithIncoherentVersions = packageVersionsById.Where(kv => kv.Value.Count > 1).ToList();
+			List<KeyValuePair<string, ICollection<PackageVersionItem>>> packagesWithIncoherentVersions = packageVersionsById.Where(kv => kv.Value.Count > 1 && AnyDirectReferenceLessThanTransitiveVersion(kv.Value)).ToList();
 
 			string errorMessage = string.Empty;
 			if (packagesWithIncoherentVersions.Any())
@@ -182,6 +190,20 @@ namespace ProjectHealthTest
 			}
 
 			Assert.True(packagesWithIncoherentVersions.Count == 0, errorMessage);
+		}
+
+		private bool AnyDirectReferenceLessThanTransitiveVersion(ICollection<PackageVersionItem> value)
+		{
+			if (!value.Any(k => !k.Transitive))
+				return false;
+			PackageVersionItem directReference = value.First(k => !k.Transitive);
+			if (directReference == null)
+				return false;
+			else
+			{
+				Version directVersion = new Version(directReference.Version);
+				return value.Any(k => new Version(k.Version) > directVersion);
+			}
 		}
 
 		private bool IsTargetFramework(XmlDocument doc, string targetFramework)
@@ -211,6 +233,8 @@ namespace ProjectHealthTest
 	{
 		public string SourceFile { get; set; }
 		public string Version { get; set; }
+
+		public bool Transitive { get; set; }
 
 		public override string ToString()
 		{
