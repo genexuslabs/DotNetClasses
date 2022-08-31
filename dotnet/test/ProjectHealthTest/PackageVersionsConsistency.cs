@@ -31,20 +31,15 @@ namespace ProjectHealthTest
 		/// - Fail this test if any referenced package has referenced to more than one version accross projects
 		/// - Output a message mentioning the different versions for each package 
 		/// </summary>
-		[Fact(Skip = "Transitive dependencies disabled while it does not success")]
+		[Fact]
 		public void TestPackageVersionConsistencyAcrossNETProjectsAndTransitives()
 		{
 			TestPackageVersionConsistencyAcrossProjects(NET6, true);
 		}
 		[Fact]
-		public void TestPackageVersionConsistencyAcrossNETProjects()
+		public void TestPackageVersionConsistencyAcrossNETFrameworkProjectsAndTransitives()
 		{
-			TestPackageVersionConsistencyAcrossProjects(NET6, false);
-		}
-		[Fact]
-		public void TestPackageVersionConsistencyAcrossNETFrameworkProjects()
-		{
-			TestPackageVersionConsistencyAcrossProjects(NET_FRAMEWORK, false);
+			TestPackageVersionConsistencyAcrossProjects(NET_FRAMEWORK, true);
 		}
 
 		private List<string> BuildDepsJson(string projectPath)
