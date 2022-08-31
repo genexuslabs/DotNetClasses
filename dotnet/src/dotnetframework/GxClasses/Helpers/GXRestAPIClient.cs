@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using GeneXus.Utils;
 using GeneXus.Http.Client;
+using System.Web;
+using GeneXus.Mime;
 #if NETCORE
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -251,6 +253,13 @@ namespace GeneXus.Application
 				collection.FromJSonString(_responseData[""].ToString(), null);
 			}
 			return collection;
+		}
+
+		public void AddUploadFile(string FilePath, string name)
+		{
+			httpClient.AddFile(FilePath, name);
+			string mimeType = MimeMapping.GetMimeMapping(FilePath);
+			_contentType = mimeType;
 		}
 
 		public void RestExecute()
