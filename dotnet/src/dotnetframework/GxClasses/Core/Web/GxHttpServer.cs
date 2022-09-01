@@ -396,13 +396,17 @@ namespace GeneXus.Http.Server
 			}
 		}
 		// create function to convert stream to string
-		
 
+#if NETCORE
+		const int StreamReaderDefaultBufferSize = -1;
+#else
+		const int StreamReaderDefaultBufferSize = 1024;
+#endif
 		private string GetStringFromStream(Stream stream)
 		{
 			if (stream == null)
 				return string.Empty;
-			using (StreamReader reader = new StreamReader(stream, System.Text.Encoding.UTF8, true, -1, true))
+			using (StreamReader reader = new StreamReader(stream, System.Text.Encoding.UTF8, true, StreamReaderDefaultBufferSize, true))
 			{
 				return reader.ReadToEnd();
 			}
