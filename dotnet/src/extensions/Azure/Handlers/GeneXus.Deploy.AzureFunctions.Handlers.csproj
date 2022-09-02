@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.3.0" OutputItemType="Analyzer" />
 	<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.2" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
-    <PackageReference Include="StackExchange.Redis" Version="2.0.593" />  
+    <PackageReference Include="StackExchange.Redis" Version="2.0.593" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />

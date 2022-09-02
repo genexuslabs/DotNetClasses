@@ -19,11 +19,24 @@ namespace ProjectHealthTest
 		private const string PACKAGE_VERSION_ATTRIBUTE_NAME = "Version";
 		private const string TARGET_FRAMEWORK = "Project/PropertyGroup/TargetFramework";
 		private const string TARGET_FRAMEWORKS = "Project/PropertyGroup/TargetFrameworks";
-		private const string NET6 = "net6";
+		private const string NET6 = "net6.0";
 		private const string NET_FRAMEWORK = "net462";
-		private static HashSet<string> ExcludedFromTransitiveDependenciesControl = new HashSet<string> {"Microsoft", "System", "runtime", "NETStandard", "Newtonsoft" };
+		private static HashSet<string> ExcludedFromTransitiveDependenciesControl = new HashSet<string> {"runtime"};
+		private static HashSet<string> ProjectTemporaryExcludedFromDependenciesControl = new HashSet<string> { "GeneXus.Deploy.AzureFunctions.Handlers.csproj", "AzureFunctionsTest.csproj" };
 		private Regex DependencyRegEx = new Regex(@"\>\s(.+)\s+((\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+))");
 
+		/// <summary>
+		/// Tests that all referenced packages have the same version by doing:
+		/// - Get all projects files contained in the backend with a given targetFramework
+		/// - Retrieve the id and version of all packages and transitive dependencies
+		/// - Fail this test if any referenced package as direct reference has a lower version than a transitive reference to the same package
+		/// - Output a message mentioning the different versions for each package 
+		/// </summary>
+		[Fact]
+		public void TestPackageVersionConsistencyAcrossNETProjectsAndTransitives()
+		{
+			TestPackageVersionConsistencyAcrossProjects(NET6, true);
+		}
 		/// <summary>
 		/// Tests that all referenced packages have the same version by doing:
 		/// - Get all projects files contained in the backend with a given targetFramework
@@ -31,11 +44,6 @@ namespace ProjectHealthTest
 		/// - Fail this test if any referenced package has referenced to more than one version accross projects
 		/// - Output a message mentioning the different versions for each package 
 		/// </summary>
-		[Fact(Skip = "Transitive dependencies disabled while it does not success")]
-		public void TestPackageVersionConsistencyAcrossNETProjectsAndTransitives()
-		{
-			TestPackageVersionConsistencyAcrossProjects(NET6, true);
-		}
 		[Fact]
 		public void TestPackageVersionConsistencyAcrossNETProjects()
 		{
@@ -47,13 +55,13 @@ namespace ProjectHealthTest
 			TestPackageVersionConsistencyAcrossProjects(NET_FRAMEWORK, false);
 		}
 
-		private List<string> BuildDepsJson(string projectPath)
+		private List<string> BuildDepsJson(string projectPath, string targetFramework)
 		{
 			Process process = new Process();
 			List<string> outputLines = new List<string>();
 			process.StartInfo.FileName = "dotnet.exe";
 			process.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
-			process.StartInfo.Arguments = $"list {projectPath} package --include-transitive --framework net6.0";
+			process.StartInfo.Arguments = $"list {projectPath} package --include-transitive --framework {targetFramework}";
 
 			process.StartInfo.UseShellExecute = false;
 			process.StartInfo.RedirectStandardOutput = true;
@@ -74,7 +82,10 @@ namespace ProjectHealthTest
 		private void TestPackageVersionConsistencyAcrossProjects(string targetFramework, bool checkTransitiveDeps)
 		{
 			IDictionary<string, ICollection<PackageVersionItem>> packageVersionsById = new Dictionary<string, ICollection<PackageVersionItem>>();
-			foreach (string packagesConfigFilePath in GetAllProjects())
+			string[] allProjects = GetAllProjects();
+			Assert.True(allProjects.Length > 0, $"No projects found for {targetFramework} to analyze. Check that {targetFramework} is correct");
+			Console.WriteLine($"Analyzing {allProjects.Length} projects for {targetFramework}");
+			foreach (string packagesConfigFilePath in allProjects)
 			{
 				FileInfo fileInfo = new FileInfo(packagesConfigFilePath);
 				XmlDocument doc = new XmlDocument();
@@ -119,9 +130,9 @@ namespace ProjectHealthTest
 						}
 
 
-						if (checkTransitiveDeps)
+						if (checkTransitiveDeps && !ProjectTemporaryExcludedFromDependenciesControl.Contains(fileInfo.Name))
 						{
-							List<string> outputLines = BuildDepsJson(fileInfo.FullName);
+							List<string> outputLines = BuildDepsJson(fileInfo.FullName, targetFramework);
 							bool readingTransitivePackages = false;
 							foreach (string line in outputLines)
 							{
@@ -146,7 +157,8 @@ namespace ProjectHealthTest
 													packageVersions.Add(new PackageVersionItem()
 													{
 														SourceFile = $"{fileInfo.FullName} (Transitive dependency)",
-														Version = packageVersion
+														Version = packageVersion,
+														Transitive = true
 													});
 												}
 											}
@@ -163,7 +175,7 @@ namespace ProjectHealthTest
 				}
 			}
 
-			List<KeyValuePair<string, ICollection<PackageVersionItem>>> packagesWithIncoherentVersions = packageVersionsById.Where(kv => kv.Value.Count > 1).ToList();
+			List<KeyValuePair<string, ICollection<PackageVersionItem>>> packagesWithIncoherentVersions = packageVersionsById.Where(kv => kv.Value.Count > 1 && AnyDirectReferenceLessThanTransitiveVersion(kv.Value)).ToList();
 
 			string errorMessage = string.Empty;
 			if (packagesWithIncoherentVersions.Any())
@@ -178,6 +190,20 @@ namespace ProjectHealthTest
 			}
 
 			Assert.True(packagesWithIncoherentVersions.Count == 0, errorMessage);
+		}
+
+		private bool AnyDirectReferenceLessThanTransitiveVersion(ICollection<PackageVersionItem> value)
+		{
+			if (!value.Any(k => !k.Transitive))
+				return false;
+			PackageVersionItem directReference = value.First(k => !k.Transitive);
+			if (directReference == null)
+				return false;
+			else
+			{
+				Version directVersion = new Version(directReference.Version);
+				return value.Any(k => new Version(k.Version) > directVersion);
+			}
 		}
 
 		private bool IsTargetFramework(XmlDocument doc, string targetFramework)
@@ -197,7 +223,7 @@ namespace ProjectHealthTest
 			}
 		}
 
-		private static IEnumerable<string> GetAllProjects()
+		private static string[] GetAllProjects()
 		{
 			return Directory.GetFiles(SRC_DIR, PROJECTS, SearchOption.AllDirectories);
 		}
@@ -207,6 +233,8 @@ namespace ProjectHealthTest
 	{
 		public string SourceFile { get; set; }
 		public string Version { get; set; }
+
+		public bool Transitive { get; set; }
 
 		public override string ToString()
 		{
