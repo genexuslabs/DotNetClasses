@@ -16,7 +16,7 @@
 		<PackageReference Include="log4net" Version="2.0.11" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Core\DynService.Core.csproj" />
 		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcommon\DynService.Core\DynService.Core.csproj" />
 	</ItemGroup>
 </Project>
