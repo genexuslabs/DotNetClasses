@@ -34,6 +34,8 @@ namespace GxClasses.Web.Middleware
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
 		const string oauthRoute = "/oauth";
+		const string SvcExtension = ".svc";
+		const string SvcExtensionPattern = "*.svc";
 		public static string UrlTemplateControllerWithParms;
 
 		//Azure Functions
@@ -48,6 +50,7 @@ namespace GxClasses.Web.Middleware
 		public Dictionary<String, Dictionary<string, SingleMap>> servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
 		public Dictionary<string, List<string>> servicesValidPath = new Dictionary<string, List<string>>();
+		public HashSet<string> svcFiles;
 		public string restBaseURL;
 
 		public GXRouting(string baseURL)
@@ -410,9 +413,9 @@ namespace GxClasses.Web.Middleware
 			else
 			{
 				string controllerLower = controller.ToLower();
-				string svcFile = Path.Combine(ContentRootPath, $"{controller}.svc");
-				if (!File.Exists(svcFile))
-					svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
+				string svcFile = SvcFile($"{controller}{SvcExtension}");
+				if (svcFile==null)
+					svcFile = SvcFile($"{controllerLower}{SvcExtension}");
 				if (File.Exists(svcFile))
 				{
 					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
@@ -443,6 +446,24 @@ namespace GxClasses.Web.Middleware
 			}
 			GXLogging.Warn(log, $"Controller was not found");
 			return null;
+		}
+		string SvcFile(string controller)
+		{
+			if (svcFiles == null)
+			{
+				svcFiles = new HashSet<string>();
+				foreach (string file in Directory.GetFiles(ContentRootPath, SvcExtensionPattern, SearchOption.AllDirectories))
+				{
+					svcFiles.Add(file);
+				}
+			}
+			string fileName;
+			string controllerFullName = Path.Combine(ContentRootPath, controller);
+			if (svcFiles.TryGetValue(new FileInfo(controllerFullName).FullName, out fileName))
+				return fileName;
+			else
+				return null;
+			
 		}
 		public void ServicesGroupSetting()
 		{
