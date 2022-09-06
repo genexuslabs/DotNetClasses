@@ -171,6 +171,7 @@ namespace GeneXus.Data
         string UserId {get;}
 		short ErrCode {get;}
 		string ErrDescription {get;}      
+		[Obsolete("IGxDataStore.SmartCacheProvider is deprecated, use IDataStoreProvider.SmartCacheProvider instead", false)]
         GxSmartCacheProvider SmartCacheProvider {get;}
 		OlsonTimeZone ClientTimeZone { get; }
         void CloseConnections();

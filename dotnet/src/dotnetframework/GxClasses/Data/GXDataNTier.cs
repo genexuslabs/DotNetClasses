@@ -37,6 +37,7 @@ namespace GeneXus.Data.NTier
         DateTime serverNow();
 		DateTime serverNowMs();
 		string userId();
+		GxSmartCacheProvider SmartCacheProvider { get; }
     }
 
 	public interface IRemoteDataStoreProvider
@@ -380,7 +381,13 @@ namespace GeneXus.Data.NTier
 			dataStoreRequestCount++;
 
 		}
-
+		public GxSmartCacheProvider SmartCacheProvider
+		{
+			get
+			{
+				return _ds.SmartCacheProvider;
+			}
+		}
 		ICursor getCursor( int cursor)
 		{
 			return _cursor[cursor];
