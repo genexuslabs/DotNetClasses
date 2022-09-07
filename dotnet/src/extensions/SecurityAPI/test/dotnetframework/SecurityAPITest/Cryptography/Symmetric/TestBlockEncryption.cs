@@ -93,7 +93,7 @@ namespace SecurityAPITest.Cryptography.Symmetric
 			arrayTagsCCM = new int[] { 64, 128 };
 			arrayMacsEAX = new int[] { 8, 16, 64, 128 };
 			arrayNonces = new string[] { IV64, IV128, IV192, IV256 };
-			arrayModes_160_224 = new string[] { "ECB"/*, "CBC", "CTR", "CTS", "OPENPGPCFB" */}; //CFB mode does not work on 160 and 224 block sizes
+			arrayModes_160_224 = new string[] { "ECB", "CBC", "CTR", "CTS", "OPENPGPCFB" }; //CFB mode does not work on 160 and 224 block sizes
 
 			encodings = new string[] { "UTF_8", "UTF_16", "UTF_16BE", "UTF_16LE", "UTF_32", "UTF_32BE", "UTF_32LE", "SJIS",
 				"GB2312" };

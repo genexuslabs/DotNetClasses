@@ -22,6 +22,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Mac\TestHmac.cs" Link="Cryptography\Mac\TestHmac.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\PasswordDerivation\TestPasswordDerivation.cs" Link="Cryptography\PasswordDerivation\TestPasswordDerivation.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestBlockEncryption.cs" Link="Cryptography\Symmetric\TestBlockEncryption.cs" />
+	<Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestBlockEncryptionFiles.cs" Link="Cryptography\Symmetric\TestBlockEncryptionFiles.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestStreamEncryption.cs" Link="Cryptography\Symmetric\TestStreamEncryption.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestSymmetricDomainSpaces.cs" Link="Cryptography\Symmetric\TestSymmetricDomainSpaces.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Ftps\TestFtps.cs" Link="Ftps\TestFtps.cs" />
