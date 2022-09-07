@@ -12,6 +12,7 @@ using SecurityAPICommons.Commons;
 using GeneXusCryptography.SymmetricUtils;
 using SecurityAPICommons.Config;
 using SecurityAPICommons.Utils;
+using System.IO;
 
 namespace GeneXusCryptography.Symmetric
 {
@@ -67,7 +68,7 @@ namespace GeneXusCryptography.Symmetric
 			if (eu.HasError()) { this.error = eu.GetError(); }
 			if (this.HasError()) { return ""; }
 
-			byte[] encryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, txtBytes, macSize, true, true);
+			byte[] encryptedBytes = SetUp(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, txtBytes, macSize, true, true, false, null, null);
 			if (this.HasError()) { return ""; }
 
 			return Base64.ToBase64String(encryptedBytes);
@@ -108,7 +109,7 @@ namespace GeneXusCryptography.Symmetric
 				return "";
 			}
 
-			byte[] decryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, input, macSize, false, true);
+			byte[] decryptedBytes = SetUp(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, input, macSize, false, true, false, null, null);
 			if (this.HasError()) { return ""; }
 
 			EncodingUtil eu = new EncodingUtil();
@@ -155,7 +156,7 @@ namespace GeneXusCryptography.Symmetric
 				return "";
 			}
 
-			byte[] encryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, inputBytes, 0, true, false);
+			byte[] encryptedBytes = SetUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, inputBytes, 0, true, false, false, null, null);
 			if (this.HasError()) { return ""; }
 
 			return Base64.ToBase64String(encryptedBytes);
@@ -197,7 +198,7 @@ namespace GeneXusCryptography.Symmetric
 				return "";
 			}
 
-			byte[] decryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, input, 0, false, false);
+			byte[] decryptedBytes = SetUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, input, 0, false, false, false, null, null);
 			if (this.HasError()) { return ""; }
 
 			EncodingUtil eu = new EncodingUtil();
@@ -208,6 +209,75 @@ namespace GeneXusCryptography.Symmetric
 				return "";
 			}
 			return result.Trim();
+		}
+
+		[SecuritySafeCritical]
+		public bool DoAEADEncryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
+			String nonce, String pathInputFile, String pathOutputFile)
+		{
+			this.error.cleanError();
+
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput("key", key, this.error);
+			SecurityUtils.validateStringInput("nonce", nonce, this.error);
+			if (this.HasError()) { return false; };
+			/*******INPUT VERIFICATION - END*******/
+
+			return SetUpFile(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, pathInputFile, pathOutputFile, macSize, true, true);
+		}
+
+		[SecuritySafeCritical]
+		public bool DoAEADDecryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
+			String nonce, String pathInputFile, String pathOutputFile)
+		{
+			this.error.cleanError();
+
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput("key", key, this.error);
+			SecurityUtils.validateStringInput("nonce", nonce, this.error);
+			if (this.HasError()) { return false; };
+			/*******INPUT VERIFICATION - END*******/
+
+			return SetUpFile(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, pathInputFile, pathOutputFile, macSize, false, true);
+		}
+
+		[SecuritySafeCritical]
+		public bool DoEncryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
+			String key, String IV, String pathInputFile, String pathOutputFile)
+		{
+			this.error.cleanError();
+
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
+			SecurityUtils.validateStringInput("key", key, this.error);
+			SecurityUtils.validateStringInput("IV", IV, this.error);
+			if (this.HasError()) { return false; };
+			/*******INPUT VERIFICATION - END*******/
+
+			return SetUpFile(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, pathInputFile, pathOutputFile, 0, true, false);
+		}
+
+		[SecuritySafeCritical]
+		public bool DoDecryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
+				String key, String IV, String pathInputFile, String pathOutputFile)
+		{
+			this.error.cleanError();
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
+			SecurityUtils.validateStringInput("key", key, this.error);
+			SecurityUtils.validateStringInput("IV", IV, this.error);
+			if (this.HasError()) { return false; };
+			/*******INPUT VERIFICATION - END*******/
+
+			return SetUpFile(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, pathInputFile, pathOutputFile, 0, false, false);
 		}
 
 
@@ -491,7 +561,7 @@ namespace GeneXusCryptography.Symmetric
 			return bc;
 		}
 
-		private byte[] setUp(string symmetricBlockAlgorithm, string symmetricBlockMode, string symmetricBlockPadding, string nonce, string key, byte[] input, int macSize, bool toEncrypt, bool isAEAD)
+		private byte[] SetUp(string symmetricBlockAlgorithm, string symmetricBlockMode, string symmetricBlockPadding, string nonce, string key, byte[] input, int macSize, bool toEncrypt, bool isAEAD, bool isFile, string pathInput, string pathOutput)
 		{
 			SymmetricBlockAlgorithm algorithm = SymmetricBlockAlgorithmUtils.getSymmetricBlockAlgorithm(symmetricBlockAlgorithm,
 					this.error);
@@ -508,12 +578,12 @@ namespace GeneXusCryptography.Symmetric
 
 			if (this.HasError()) { return null; }
 
-			return isAEAD ? encryptAEAD(algorithm, mode, keyBytes, nonceBytes, input, macSize, toEncrypt) : encrypt(algorithm, mode, padding, keyBytes, nonceBytes, input, toEncrypt);
+			return isAEAD ? encryptAEAD(algorithm, mode, keyBytes, nonceBytes, input, macSize, toEncrypt, isFile, pathInput, pathOutput) : encrypt(algorithm, mode, padding, keyBytes, nonceBytes, input, toEncrypt, isFile, pathInput, pathOutput);
 
 		}
 
 
-		private byte[] encryptAEAD(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, byte[] key, byte[] nonce, byte[] txt, int macSize, bool toEncrypt)
+		private byte[] encryptAEAD(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, byte[] key, byte[] nonce, byte[] txt, int macSize, bool toEncrypt, bool isFile, string pathInput, string pathOutput)
 		{
 			IBlockCipher engine = getCipherEngine(algorithm);
 			IAeadBlockCipher bbc = getAEADCipherMode(engine, mode);
@@ -531,25 +601,61 @@ namespace GeneXusCryptography.Symmetric
 				this.error.setError("SB007", e.Message);
 				return null;
 			}
-
-			byte[] outputBytes = new byte[bbc.GetOutputSize(txt.Length)];
-			try
+			byte[] outputBytes = null;
+			if (isFile)
 			{
+				try
+				{
+					byte[] inBuffer = new byte[1024];
+					byte[] outBuffer = new byte[bbc.GetOutputSize(1024)];
+					outBuffer = new byte[bbc.GetBlockSize() + bbc.GetOutputSize(inBuffer.Length)];
+					int inCount = 0;
+					int outCount = 0;
+					using (FileStream inputStream = new FileStream(pathInput, FileMode.Open, FileAccess.Read))
+					{
+						using (FileStream outputStream = new FileStream(pathOutput, FileMode.Create, FileAccess.Write))
+						{
+							while ((inCount = inputStream.Read(inBuffer, 0, inBuffer.Length)) > 0)
+							{
+								outCount = bbc.ProcessBytes(inBuffer, 0, inCount, outBuffer, 0);
+								outputStream.Write(outBuffer, 0, outCount);
+							}
+							outCount = bbc.DoFinal(outBuffer, 0);
 
-				int length = bbc.ProcessBytes(txt, 0, txt.Length, outputBytes, 0);
-				bbc.DoFinal(outputBytes, length);
+							outputStream.Write(outBuffer, 0, outCount);
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					this.error.setError("SB011", e.Message);
+					return null;
+				}
+				outputBytes = new byte[1];
 			}
-			catch (Exception e)
+			else
 			{
-				this.error.setError("SB008", e.Message);
-				return null;
+				outputBytes = new byte[bbc.GetOutputSize(txt.Length)];
+				try
+				{
+
+					int length = bbc.ProcessBytes(txt, 0, txt.Length, outputBytes, 0);
+					bbc.DoFinal(outputBytes, length);
+				}
+				catch (Exception e)
+				{
+					this.error.setError("SB008", e.Message);
+					return null;
+				}
+
 			}
 			return outputBytes;
+
 		}
 
 
 
-		private byte[] encrypt(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, SymmetricBlockPadding padding, byte[] key, byte[] iv, byte[] input, bool toEncrypt)
+		private byte[] encrypt(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, SymmetricBlockPadding padding, byte[] key, byte[] iv, byte[] input, bool toEncrypt, bool isFile, string pathInput, string pathOutput)
 		{
 
 			BufferedBlockCipher bbc = getCipher(algorithm, mode, padding);
@@ -573,19 +679,69 @@ namespace GeneXusCryptography.Symmetric
 				this.error.setError("SB009", e.Message);
 				return null;
 			}
-			byte[] outputBytes = new byte[bbc.GetOutputSize(input.Length)];
-			try
+			byte[] outputBytes = null;
+			if (isFile)
 			{
-				int length = bbc.ProcessBytes(input, 0, input.Length, outputBytes, 0);
-				bbc.DoFinal(outputBytes, length);
+				try
+				{
+					byte[] inBuffer = new byte[1024];
+					byte[] outBuffer = new byte[bbc.GetOutputSize(1024)];
+					outBuffer = new byte[bbc.GetBlockSize() + bbc.GetOutputSize(inBuffer.Length)];
+					int inCount = 0;
+					int outCount = 0;
+					using (FileStream inputStream = new FileStream(pathInput, FileMode.Open, FileAccess.Read))
+					{
+						using (FileStream outputStream = new FileStream(pathOutput, FileMode.Create, FileAccess.Write))
+						{
+							while ((inCount = inputStream.Read(inBuffer, 0, inBuffer.Length)) > 0)
+							{
+								outCount = bbc.ProcessBytes(inBuffer, 0, inCount, outBuffer, 0);
+								outputStream.Write(outBuffer, 0, outCount);
+							}
+							outCount = bbc.DoFinal(outBuffer, 0);
+
+							outputStream.Write(outBuffer, 0, outCount);
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					this.error.setError("SB012", e.Message);
+					return null;
+				}
+				outputBytes = new byte[1];
+
 			}
-			catch (Exception e)
+			else
 			{
-				this.error.setError("SB010", e.Message);
-				return null;
+				outputBytes = new byte[bbc.GetOutputSize(input.Length)];
+				try
+				{
+
+					int length = bbc.ProcessBytes(input, 0, input.Length, outputBytes, 0);
+					int length2 = bbc.DoFinal(outputBytes, length);
+
+				}
+				catch (Exception e)
+				{
+					this.error.setError("SB010", e.Message);
+					return null;
+				}
 			}
 			return outputBytes;
 		}
 
+
+
+		private bool SetUpFile(string symmetricBlockAlgorithm, string symmetricBlockMode, string symmetricBlockPadding, string nonce, string key, string pathInput, string pathOutput, int macSize, bool toEncrypt, bool isAEAD)
+		{
+			/*******INPUT VERIFICATION - BEGIN*******/
+			SecurityUtils.validateStringInput("pathInputFile", pathInput, this.error);
+			SecurityUtils.validateStringInput("pathOutputFile", pathOutput, this.error);
+			if (this.HasError()) { return false; };
+			/*******INPUT VERIFICATION - END*******/
+			byte[] output = SetUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, nonce, key, null, macSize, toEncrypt, isAEAD, true, pathInput, pathOutput);
+			return output == null ? false : true;
+		}
 	}
 }
