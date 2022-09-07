@@ -49,6 +49,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PrivateKey.cs" Link="SecurityAPICommons\keys\TestBase64PrivateKey.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PublicKey.cs" Link="SecurityAPICommons\keys\TestBase64PublicKey.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestSftp.cs" Link="Sftp\TestSftp.cs" />
+	<Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestLoginWithKeyWithoutPassword.cs" Link="Sftp\TestLoginWithKeyWithoutPassword.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestBase64Certificate.cs" Link="XmlSignature\DSig\TestBase64Certificate.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestFindID.cs" Link="XmlSignature\DSig\TestFindID.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestRSASigning.cs" Link="XmlSignature\DSig\TestRSASigning.cs" />
