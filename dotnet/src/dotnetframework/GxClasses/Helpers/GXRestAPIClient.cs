@@ -81,7 +81,7 @@ namespace GeneXus.Application
 		{
 			string fmt = "yyyy-MM-ddTHH:mm:ss";
 			if (hasMilliseconds)
-				fmt = "yyyy-MM-ddTYHH:mm:ss.fff";
+				fmt = "yyyy-MM-ddTHH:mm:ss.fff";
 			_queryVars[varName] = varValue.ToString(fmt);
 		}
 		public void AddQueryVar(String varName, Guid varValue)
@@ -118,7 +118,7 @@ namespace GeneXus.Application
 		{
 			string fmt = "yyyy-MM-ddTHH:mm:ss";
 			if (hasMilliseconds)
-				fmt = "yyyy-MM-ddTYHH:mm:ss.fff";
+				fmt = "yyyy-MM-ddTHH:mm:ss.fff";
 			_bodyVars[varName] = "\"" + varValue.ToString(fmt) + "\"";
 		}
 
