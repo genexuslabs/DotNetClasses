@@ -31,6 +31,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesPrimeJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesPrimeJwt.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesSecpJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesSecpJwt.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesSectJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesSectJwt.cs" />
+	<Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestCreateFromJSON.cs" Link="Jwt\Features\TestCreateFromJSON.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtDiverseDataTypes.cs" Link="Jwt\Features\TestJwtDiverseDataTypes.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtHeaderParameters.cs" Link="Jwt\Features\TestJwtHeaderParameters.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtNestedClaims.cs" Link="Jwt\Features\TestJwtNestedClaims.cs" />
