@@ -26,6 +26,7 @@ namespace GeneXus.Http
 	using Helpers;
 	using System.Collections.Concurrent;
 	using Microsoft.Net.Http.Headers;
+	using System.Net.Http;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.AspNetCore.Http.Extensions;
@@ -2098,6 +2099,7 @@ namespace GeneXus.Http
 			GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(localHttpContext));
 			sendAdditionalHeaders();
 			HttpHelper.CorsHeaders(localHttpContext);
+			HttpHelper.AllowHeader(localHttpContext, new List<string>() { $"{HttpMethod.Get.Method},{HttpMethod.Post.Method}" });
 		}
 
 		protected virtual void sendCacheHeaders()

@@ -82,7 +82,8 @@ namespace GeneXus.HttpHandlerFactory
 					}
 				}
 				else
-				{					
+				{
+					System.Diagnostics.Debugger.Launch();
 					if ( requestType.Equals(HttpMethod.Options.Method) && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
 					{
 						// OPTIONS VERB
@@ -98,11 +99,8 @@ namespace GeneXus.HttpHandlerFactory
 						}
 						if (found)
 						{
-							string methods = string.Join(",", mthheaders);
-							context.Response.Headers.Add(HeaderNames.Allow, methods);
-							context.Response.Headers.Add(HeaderNames.AccessControlAllowHeaders, "Content-Type");
-							context.Response.Headers.Add(HeaderNames.AccessControlAllowOrigin, "*");
-							context.Response.Headers.Add(HeaderNames.AccessControlAllowMethods, methods);
+							HttpHelper.CorsHeaders(context);
+							HttpHelper.AllowHeader(context, mthheaders);
 						}
 						else
 						{

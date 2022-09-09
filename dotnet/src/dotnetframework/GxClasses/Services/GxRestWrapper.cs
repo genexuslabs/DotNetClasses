@@ -26,8 +26,8 @@ using System.Collections.Specialized;
 using GeneXus.Security;
 using System.Collections;
 using Jayrock.Json;
-
-
+using Microsoft.Net.Http.Headers;
+using System.Net.Http;
 
 namespace GeneXus.Application
 
@@ -673,6 +673,8 @@ namespace GeneXus.Application
 		{
 			SendCacheHeaders();
 			HttpHelper.CorsHeaders(_httpContext);
+			HttpHelper.AllowHeader(_httpContext, new List<string>() { $"{HttpMethod.Get.Method},{HttpMethod.Post.Method}" });
+
 		}
 
 		private void SendCacheHeaders()
