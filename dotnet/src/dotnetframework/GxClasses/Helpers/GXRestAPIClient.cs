@@ -58,7 +58,7 @@ namespace GeneXus.Application
 
 		public void AddQueryVar(String varName, String varValue)
 		{
-			_queryVars[varName] = varValue;
+			_queryVars[varName] = GXUtil.UrlEncode(varValue);
 		}
 
 		public void AddQueryVar(String varName, int varValue)
@@ -69,14 +69,17 @@ namespace GeneXus.Application
 		{
 			_queryVars[varName] = varValue.ToString();
 		}
+
 		public void AddQueryVar(String varName, Decimal varValue)
 		{
 			_queryVars[varName] = varValue.ToString();
 		}
+
 		public void AddQueryVar(String varName, DateTime varValue)
 		{
 			_queryVars[varName] = varValue.ToString("yyyy-MM-dd");
 		}
+
 		public void AddQueryVar(String varName, DateTime varValue, bool hasMilliseconds)
 		{
 			string fmt = "yyyy-MM-ddTHH:mm:ss";
@@ -88,12 +91,18 @@ namespace GeneXus.Application
 		{
 			_queryVars[varName] = varValue.ToString();
 		}
+
+		public void AddQueryVar(String varName, Geospatial varValue)
+		{
+			_queryVars[varName] = GXUtil.UrlEncode(varValue.ToString());
+		}
+
 		public void AddQueryVar(String varName, bool varValue)
 		{
 			_queryVars[varName] = varValue.ToString();
 		}
 
-		public void AddBodyVar(String varName, GxUserType varValue)
+		public void AddQueryVar(String varName, GxUserType varValue)
 		{
 			if (varValue != null)
 			{
@@ -101,7 +110,7 @@ namespace GeneXus.Application
 			}			
 		}
 
-		public void AddBodyVar(String varName, IGxCollection varValue)
+		public void AddQueryVar(String varName, IGxCollection varValue)
 		{
 			if (varValue != null)
 			{
@@ -149,6 +158,27 @@ namespace GeneXus.Application
 			_bodyVars[varName] = "\"" + varValue.ToString() + "\"";
 		}
 
+		public void AddBodyVar(String varName, Geospatial varValue)
+		{
+			_bodyVars[varName] = "\"" + varValue.ToString() + "\"";
+		}
+
+		public void AddBodyVar(String varName, GxUserType varValue)
+		{
+			if (varValue != null)
+			{
+				_bodyVars[varName] = varValue.ToJSonString();
+			}
+		}
+
+		public void AddBodyVar(String varName, IGxCollection varValue)
+		{
+			if (varValue != null)
+			{
+				_bodyVars[varName] = varValue.ToJSonString();
+			}
+		}
+
 		public string GetBodyString(string varName)
 		{
 			return  GetJsonStr(varName);			
@@ -189,6 +219,15 @@ namespace GeneXus.Application
 		public short GetBodyShort(string varName)
 		{			
 			return (short)Int16.Parse(GetJsonStr(varName));
+		}
+		public Geospatial GetBodyGeospatial(string varName)
+		{
+			Geospatial g = new Geospatial(GetJsonStr(varName));
+			if (Geospatial.IsNullOrEmpty(g))
+			{
+				g.FromGeoJSON(GetJsonStr(varName));
+			}
+			return g;
 		}
 
 		public string GetJsonStr(string varName)
