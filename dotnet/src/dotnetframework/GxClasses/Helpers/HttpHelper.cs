@@ -82,7 +82,6 @@ namespace GeneXus.Http
 		const string GAM_CODE_OTP_USER_ACCESS_CODE_SENT = "400";
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
-		const string AZUREFLAGFILE = "azureflag.json";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
 
 #if NETCORE
@@ -368,7 +367,7 @@ namespace GeneXus.Http
 		{
 #if NETCORE
 			string contentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			string azureDeployFlagFile = Path.Combine(contentRootPath, AZUREFLAGFILE);
+			string azureDeployFlagFile = Path.Combine(contentRootPath, "azureflag.json");
 
 			if (File.Exists(azureDeployFlagFile))
 			{
