@@ -1148,13 +1148,15 @@ namespace GeneXus.Http
 			if (!context.StyleSheetAdded(styleSheet))
 			{
 				context.AddStyleSheetFile(styleSheet);
+				string sUncachedURL = context.GetCompleteURL(styleSheet) + urlBuildNumber;
+				string sLayerName = styleSheet.Replace("/", "_").Replace(".","_");
 				if (!context.HtmlHeaderClosed && context.isEnabled)
 				{
 					string sRelAtt = (isDeferred ? "rel=\"preload\" as=\"style\" " : "rel=\"stylesheet\"");
 					if (isGxThemeHidden)
-						context.WriteHtmlTextNl("<link id=\"gxtheme_css_reference\" " + sRelAtt + " type=\"text/css\" href=\"" + context.GetCompleteURL(styleSheet) + urlBuildNumber + "\" " + GXUtil.HtmlEndTag(HTMLElement.LINK));
+						context.WriteHtmlTextNl("<link id=\"gxtheme_css_reference\" " + sRelAtt + " type=\"text/css\" href=\"" + sUncachedURL + "\" " + GXUtil.HtmlEndTag(HTMLElement.LINK));
 					else
-						context.WriteHtmlTextNl("<link " + sRelAtt + " type=\"text/css\" href=\"" + context.GetCompleteURL(styleSheet) + urlBuildNumber + "\"" + GXUtil.HtmlEndTag(HTMLElement.LINK));
+						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ") </style>");
 				}
 				else
 				{
