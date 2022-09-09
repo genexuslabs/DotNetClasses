@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Primitives;
 using System.Net.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Reflection;
 #else
 using System.ServiceModel.Web;
 using System.ServiceModel;
@@ -81,6 +82,7 @@ namespace GeneXus.Http
 		const string GAM_CODE_OTP_USER_ACCESS_CODE_SENT = "400";
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
+		const string AZUREFLAGFILE = "azureflag.json";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
 
 #if NETCORE
@@ -365,6 +367,13 @@ namespace GeneXus.Http
 		public static string RequestPhysicalApplicationPath(HttpContext context = null)
 		{
 #if NETCORE
+			string contentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			string azureDeployFlagFile = Path.Combine(contentRootPath, AZUREFLAGFILE);
+
+			if (File.Exists(azureDeployFlagFile))
+			{
+				return (contentRootPath);
+			}
 			return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #else
 			if (context==null)
