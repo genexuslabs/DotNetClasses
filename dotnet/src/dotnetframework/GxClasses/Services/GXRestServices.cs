@@ -72,6 +72,7 @@ namespace GeneXus.Utils
 			return new CorrelationState()
 			{
 				RequestHeaders = httpRequest.Headers[HeaderNames.AccessControlRequestHeaders],
+				RequestMethods = httpRequest.Headers[HeaderNames.AccessControlRequestMethod],
 				HandlePreflight = httpRequest.Method.Equals(HttpMethod.Options.Method, StringComparison.InvariantCultureIgnoreCase)
 			};
 		}
@@ -88,7 +89,7 @@ namespace GeneXus.Utils
 					httpResponse = new HttpResponseMessageProperty();
 					reply.Properties.Add(HttpResponseMessageProperty.Name, httpResponse);
 				}
-				HttpHelper.CorsHeaders(httpResponse, state.RequestHeaders);
+				HttpHelper.CorsHeaders(httpResponse, state.RequestHeaders, state.RequestMethods);
 				httpResponse.SuppressEntityBody = true;
 				httpResponse.StatusCode = HttpStatusCode.OK;
 			}
@@ -97,6 +98,7 @@ namespace GeneXus.Utils
 	internal class CorrelationState
 	{
 		internal string RequestHeaders;
+		internal string RequestMethods;
 		internal bool HandlePreflight;
 	}
 	class CustomOperationSelector : WebHttpDispatchOperationSelector
@@ -591,7 +593,14 @@ namespace GeneXus.Utils
 		private void ServiceHeaders()
 		{
 			SendCacheHeaders();
-			HttpHelper.CorsHeaders(httpContext, wcfContext);
+			if (httpContext != null)
+			{
+				HttpHelper.CorsHeaders(httpContext);
+			}else if (wcfContext != null)
+			{
+				HttpHelper.CorsHeaders(wcfContext);
+			}
+			
 		}
 		DateTime HTMLDateToDatetime(string s)
         {
