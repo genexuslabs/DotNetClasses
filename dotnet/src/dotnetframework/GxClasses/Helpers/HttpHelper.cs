@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Primitives;
 using System.Net.Http;
+using System.Reflection;
 #else
 using System.ServiceModel.Web;
 using System.ServiceModel;
@@ -273,6 +274,13 @@ namespace GeneXus.Http
 		public static string RequestPhysicalApplicationPath(HttpContext context = null)
 		{
 #if NETCORE
+			string contentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			string azureDeployFlagFile = Path.Combine(contentRootPath, "azureflag.json");
+
+			if (File.Exists(azureDeployFlagFile))
+			{
+				return (contentRootPath);
+			}
 			return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #else
 			if (context==null)
