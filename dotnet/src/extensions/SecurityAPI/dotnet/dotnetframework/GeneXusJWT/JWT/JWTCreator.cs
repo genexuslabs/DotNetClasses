@@ -42,7 +42,14 @@ namespace GeneXusJWT.GenexusJWT
 		public string DoCreate(string algorithm, PrivateClaims privateClaims, JWTOptions options)
 		{
 			this.error.cleanError();
-			return Create_Aux(algorithm, privateClaims, options);
+			return Create_Aux(algorithm, privateClaims, options, null, true);
+		}
+
+		[SecuritySafeCritical]
+		public string DoCreateFromJSON(string algorithm, string json, JWTOptions options)
+		{
+			this.error.cleanError();
+			return Create_Aux(algorithm, null, options, json, false);
 		}
 
 		[SecuritySafeCritical]
@@ -123,11 +130,11 @@ namespace GeneXusJWT.GenexusJWT
 		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 		[SecuritySafeCritical]
-		private string Create_Aux(string algorithm, PrivateClaims privateClaims, JWTOptions options)
-		{ 
+		private string Create_Aux(string algorithm, PrivateClaims privateClaims, JWTOptions options, string payloadString, bool hasClaims)
+		{
 			if (options == null)
 			{
-				this.error.setError("JW004", "Options parameter is null");
+				this.error.setError("JW000", "Options parameter is null");
 				return "";
 			}
 			JWTAlgorithm alg = JWTAlgorithmUtils.getJWTAlgorithm(algorithm, this.error);
@@ -147,12 +154,27 @@ namespace GeneXusJWT.GenexusJWT
 			AsymmetricSignatureProvider.DefaultMinimumAsymmetricKeySizeInBitsForSigningMap["ES384"] = 112;
 			/***Hack to support 192 ECDSA key lengths - END***/
 			JwtPayload payload = null;
-			if (privateClaims == null)
+			if (hasClaims)
 			{
-				this.error.setError("JW005", "PrivateClaims parameter is null");
-				return "";
+				if (privateClaims == null)
+				{
+					this.error.setError("JW000", "PrivateClaims parameter is null");
+					return "";
+				}
+				payload = doBuildPayload(privateClaims, options);
 			}
-			payload = doBuildPayload(privateClaims, options);
+			else
+			{
+				try
+				{
+					payload = JwtPayload.Deserialize(payloadString);
+				}
+				catch (Exception ex)
+				{
+					this.error.setError("", ex.Message);
+					return "";
+				}
+			}
 
 
 			SecurityKey genericKey = null;
@@ -192,7 +214,7 @@ namespace GeneXusJWT.GenexusJWT
 				}
 				else
 				{
-					this.error.setError("JW015", "Not recognized key algorithm");
+					this.error.setError("JW012", "Not recognized key algorithm");
 					return "";
 				}
 				if (genericKey == null)
@@ -231,7 +253,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 
-				this.error.setError("JW006", e.Message);
+				this.error.setError("JW003", "key size: " +  /*genericKey.KeySize.ToString()*/e.Message + e.StackTrace);
 
 				return "";
 			}
