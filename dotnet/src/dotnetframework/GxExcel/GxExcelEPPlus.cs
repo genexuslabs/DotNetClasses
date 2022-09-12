@@ -853,7 +853,11 @@ namespace GeneXus.Office.ExcelGXEPPlus
 
                     System.Drawing.Color color = System.Drawing.Color.FromArgb(red, green, blue);
 
-                    pCells[i].Style.Fill.BackgroundColor.SetColor(color);
+					if (pCells[i].Style.Fill.PatternType == ExcelFillStyle.None)
+					{
+						pCells[i].Style.Fill.PatternType = ExcelFillStyle.Solid;
+					}
+					pCells[i].Style.Fill.BackgroundColor.SetColor(color);
                 }
                 
             }
