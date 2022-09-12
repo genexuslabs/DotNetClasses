@@ -17,13 +17,12 @@ namespace DotNetCoreUnitTest.Middleware
 	{
 		const string HttpCorsProgramName = "httpcors";
 		const string HttpCorsProgramModule = "apps";
-		string Origin = "https://second-website.com";
+		string Origin = Preferences.CorsAllowedOrigins();
 		string[] Headers = { "authorization","cache-control", "deviceid", "devicetype", "genexus-agent", "gxtzoffset" };
 		public CorsTest()
 		{
 			ClassLoader.FindType($"{HttpCorsProgramModule}.{HttpCorsProgramName}", $"GeneXus.Programs.{HttpCorsProgramModule}", HttpCorsProgramName, Assembly.GetExecutingAssembly(), true);//Force loading assembly
-			string origins = Preferences.CorsAllowedOrigins();
-			Assert.Contains(Origin, origins, StringComparison.OrdinalIgnoreCase);
+			Assert.NotEmpty(Origin);
 		}
 		[Fact]
 		public async Task TestCorsOnPost()
