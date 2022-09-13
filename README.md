@@ -97,7 +97,7 @@ It copies .NET 6 assemblies to the folder dotnet\bin
 
 - ```dotnet msbuild /t:CopyAssemblies /p:DeployDirectory=C:\KB\NetModel\web\bin /p:TargetFramework=net6.0 DotNetStandardClasses.sln ```
 
-It copies .NET 6 assemblies to the folder C:\KB\NetModel\web\bin
+It copies .NET Framework assemblies to the folder C:\KB\NetModel\web\bin
 
 - ```dotnet msbuild /t:build;CopyAssemblies /p:DeployDirectory=C:\KB\CSharpModel\web\bin /p:TargetFramework=net462 DotNetStandardClasses.sln```
 
