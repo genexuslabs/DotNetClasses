@@ -83,7 +83,6 @@ namespace GeneXus.HttpHandlerFactory
 				}
 				else
 				{
-					System.Diagnostics.Debugger.Launch();
 					if ( requestType.Equals(HttpMethod.Options.Method) && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
 					{
 						// OPTIONS VERB
