@@ -97,37 +97,17 @@ namespace GeneXus.Http
 				{
 					string requestHeaders = httpContext.Request.Headers[HeaderNames.AccessControlRequestHeaders];
 					string requestMethod = httpContext.Request.Headers[HeaderNames.AccessControlRequestMethod];
-					CorsValuesToHeaders(httpContext.Response.Headers, origins, requestHeaders, requestMethod);
+					CorsValuesToHeaders(httpContext.Response, origins, requestHeaders, requestMethod);
 				} 
 			}
 		}
-#if NETCORE
-		static void CorsValuesToHeaders(IHeaderDictionary httpResponseHeaders, string[] origins, string requestHeaders, string requestMethods)
-		{
-			foreach (string origin in origins)
-			{
-				httpResponseHeaders[HeaderNames.AccessControlAllowOrigin] = origin;
-			}
-			httpResponseHeaders[HeaderNames.AccessControlAllowCredentials] = true.ToString();
-
-			if (!string.IsNullOrEmpty(requestHeaders))
-			{
-				httpResponseHeaders[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
-			}
-			else
-			{
-				httpResponseHeaders[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
-			}
-			httpResponseHeaders[HeaderNames.AccessControlAllowMethods] = requestMethods;
-			httpResponseHeaders[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
-		}
-#else
+#if !NETCORE
 		internal static void CorsHeaders(HttpResponseMessageProperty response, string requestHeaders, string requestMethods)
 		{
 			if (Preferences.CorsEnabled)
 			{
 				string[] origins = Preferences.CorsAllowedOrigins().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-				CorsValuesToHeaders(response.Headers, origins, requestHeaders, requestMethods);
+				CorsValuesToHeaders(response, origins, requestHeaders, requestMethods);
 			}
 		}
 		internal static void CorsHeaders(WebOperationContext wcfContext)
@@ -139,32 +119,73 @@ namespace GeneXus.Http
 				{
 					string requestHeaders = wcfContext.IncomingRequest.Headers[HeaderNames.AccessControlRequestHeaders];
 					string requestMethods = wcfContext.IncomingRequest.Headers[HeaderNames.AccessControlRequestMethod];
-					CorsValuesToHeaders(wcfContext.OutgoingResponse.Headers, origins, requestHeaders, requestMethods);
+					CorsValuesToHeaders(wcfContext.OutgoingResponse, origins, requestHeaders, requestMethods);
 				}
 
 			}
 		}
-		static void CorsValuesToHeaders(NameValueCollection httpResponseHeaders, string[] origins, string requestHeaders, string requestMethods)
+		static void CorsValuesToHeaders(OutgoingWebResponseContext httpResponse, string[] origins, string requestHeaders, string requestMethods)
 		{
 			foreach (string origin in origins)
 			{
-				httpResponseHeaders[HeaderNames.AccessControlAllowOrigin] = origin;
+				httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
 			}
-			httpResponseHeaders[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
 			{
-				httpResponseHeaders[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
 			}
 			else
 			{
-				httpResponseHeaders[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
 			}
-			httpResponseHeaders[HeaderNames.AccessControlAllowMethods] = requestMethods;
-			httpResponseHeaders[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
+			httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
+
+		}
+		static void CorsValuesToHeaders(HttpResponseMessageProperty httpResponse, string[] origins, string requestHeaders, string requestMethods)
+		{
+			foreach (string origin in origins)
+			{
+				httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
+			}
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+
+			if (!string.IsNullOrEmpty(requestHeaders))
+			{
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+			}
+			else
+			{
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
+			}
+			httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
+
 		}
 
 #endif
+		static void CorsValuesToHeaders(HttpResponse httpResponse, string[] origins, string requestHeaders, string requestMethods)
+		{
+			//AppendHeader must be used on httpResponse (instead of httpResponse.Headers[]) to support WebDev.WevServer2
+			foreach (string origin in origins)
+			{
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowOrigin, origin);
+			}
+			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, true.ToString());
+
+			if (!string.IsNullOrEmpty(requestHeaders))
+			{
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, requestHeaders);
+			}
+			else
+			{
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, CORS_ALLOWED_HEADERS);
+			}
+			httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, requestMethods);
+			httpResponse.AppendHeader(HeaderNames.AccessControlMaxAge, CORS_MAX_AGE_SECONDS);
+		}
 
 		public static void SetResponseStatus(HttpContext httpContext, string statusCode, string statusDescription)
 		{
@@ -436,7 +457,7 @@ namespace GeneXus.Http
 
 		internal static void AllowHeader(HttpContext httpContext, List<string> methods)
 		{
-			httpContext.Response.Headers.Add(HeaderNames.Allow, GXUtil.UrlEncode(string.Join(",", methods)));
+			httpContext.Response.AppendHeader(HeaderNames.Allow, GXUtil.UrlEncode(string.Join(",", methods)));
 		}
 	}
 #if NETCORE
