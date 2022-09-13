@@ -86,7 +86,6 @@ namespace GeneXus.Http
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
 
-		const string CORS_ALLOWED_HEADERS = "*";
 		const string CORS_MAX_AGE_SECONDS = "86400";
 		internal static void CorsHeaders(HttpContext httpContext)
 		{
@@ -128,19 +127,17 @@ namespace GeneXus.Http
 		{
 			foreach (string origin in origins)
 			{
-				httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
+				if (!string.IsNullOrEmpty(origin))
+					httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
 			}
 			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-			{
 				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
-			}
-			else
-			{
-				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
-			}
-			httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+
+			if (!string.IsNullOrEmpty(requestMethods))
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+
 			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 
 		}
@@ -148,21 +145,18 @@ namespace GeneXus.Http
 		{
 			foreach (string origin in origins)
 			{
-				httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
+				if (!string.IsNullOrEmpty(origin))
+					httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
 			}
 			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-			{
 				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
-			}
-			else
-			{
-				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = CORS_ALLOWED_HEADERS;
-			}
-			httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
-			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 
+			if (!string.IsNullOrEmpty(requestMethods))
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+
+			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 		}
 
 #endif
@@ -171,19 +165,17 @@ namespace GeneXus.Http
 			//AppendHeader must be used on httpResponse (instead of httpResponse.Headers[]) to support WebDev.WevServer2
 			foreach (string origin in origins)
 			{
-				httpResponse.AppendHeader(HeaderNames.AccessControlAllowOrigin, origin);
+				if (!string.IsNullOrEmpty(origin))
+					httpResponse.AppendHeader(HeaderNames.AccessControlAllowOrigin, origin);
 			}
 			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, true.ToString());
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-			{
 				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, requestHeaders);
-			}
-			else
-			{
-				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, CORS_ALLOWED_HEADERS);
-			}
-			httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, requestMethods);
+
+			if (!string.IsNullOrEmpty(requestMethods))
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, requestMethods);
+
 			httpResponse.AppendHeader(HeaderNames.AccessControlMaxAge, CORS_MAX_AGE_SECONDS);
 		}
 
