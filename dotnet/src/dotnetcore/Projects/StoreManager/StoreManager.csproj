@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
 		<TargetFrameworks>net6.0</TargetFrameworks>
@@ -26,14 +26,12 @@
     <Folder Include="Store\Platforms\" />
   </ItemGroup>
 
-  <ItemGroup>
-	<PackageReference Include="Google.Apis" Version="1.42.0" />
-    <PackageReference Include="Google.Apis.AndroidPublisher.v3">
-      <Version>1.42.0.1766</Version>
-    </PackageReference>
-    <PackageReference Include="Google.Apis.Auth" Version="1.42.0" />
-    <PackageReference Include="Google.Apis.Core" Version="1.42.0" />    
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Google.Apis" Version="1.57.0" />
+		<PackageReference Include="Google.Apis.AndroidPublisher.v3" Version="1.57.0.2741" />
+		<PackageReference Include="Google.Apis.Auth" Version="1.57.0" />
+		<PackageReference Include="Google.Apis.Core" Version="1.57.0" />
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />

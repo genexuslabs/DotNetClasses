@@ -1,13 +1,8 @@
-using GeneXus.Application;
 using GeneXus.Utils;
 using Jayrock.Json;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace GeneXus.SD.Store
 {
@@ -31,7 +26,7 @@ namespace GeneXus.SD.Store
 
 		private static byte[] GetHash(string inputString)
 		{
-			HashAlgorithm algorithm = MD5.Create();  
+			HashAlgorithm algorithm = SHA256.Create();  
 			return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
 		}
 

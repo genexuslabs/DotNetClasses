@@ -1,24 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2.Model;
 using GeneXus.Cache;
-using GeneXus.Data.Dynamo;
 using GeneXus.Data.NTier;
 using GeneXus.Data.NTier.DynamoDB;
-using log4net;
 
 namespace GeneXus.Data.Dynamo
 {
 	public class DynamoDBDataReader : IDataReader
 	{
-		private RequestWrapper mRequest;
+		private readonly RequestWrapper mRequest;
 		private ResponseWrapper mResponse;
-		private int mCurrentPosition = -1;
-		private IODataMap2[] selectList;
+		private int mCurrentPosition;
+		private readonly IODataMap2[] selectList;
+		private DynamoDBRecordEntry currentEntry;
 
 		private int ItemCount
 		{
@@ -36,24 +35,26 @@ namespace GeneXus.Data.Dynamo
 			}
 		}
 
-		public DynamoDBDataReader(ServiceCursorDef cursorDef, RequestWrapper request, IDataParameterCollection parameters)
+		private void CheckCurrentPosition()
+		{
+			if (currentEntry == null)
+				throw new ServiceException(ServiceError.RecordNotFound);
+		}
+
+		public DynamoDBDataReader(ServiceCursorDef cursorDef, RequestWrapper request)
 		{
 			Query query = cursorDef.Query as Query;
-			selectList = query.SelectList;
+			selectList = query.SelectList.ToArray();
 			mRequest = request;
 			mResponse = mRequest.Read();
+			mCurrentPosition = -1;
 		}
 
 		public object this[string name]
 		{
 			get
 			{
-				if (mCurrentPosition >= 0 && mCurrentPosition < ItemCount)
-				{
-					return Items[mCurrentPosition][name].S;
-				}
-				throw new ArgumentOutOfRangeException(nameof(name));
-
+				throw new NotImplementedException();
 			}
 		}
 
@@ -61,16 +62,7 @@ namespace GeneXus.Data.Dynamo
 		{
 			get
 			{
-				if (mCurrentPosition >= 0 && mCurrentPosition < ItemCount)
-				{
-					int j = 0;
-					foreach (var col in Items[mCurrentPosition])
-					{
-						if (j == i)
-							return col.Value.S;
-					}
-				}
-				throw new ArgumentOutOfRangeException(nameof(i));
+				throw new NotImplementedException();
 			}
 		}
 
@@ -120,12 +112,13 @@ namespace GeneXus.Data.Dynamo
 
 		public long getLong(int i)
 		{
-			return Convert.ToInt64(GetAttValue(i).N);			
+			return Convert.ToInt64(GetAttValueN(i));			
 		}
 
 		public bool GetBoolean(int i)
 		{
-			return GetAttValue(i).BOOL;
+			AttributeValue value = GetAttValue(i);
+			return value.IsBOOLSet && value.BOOL;
 		}
 
 		public byte GetByte(int i)
@@ -135,7 +128,11 @@ namespace GeneXus.Data.Dynamo
 
 		public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
-			throw new NotImplementedException();
+			MemoryStream ms = GetAttValue(i).B;
+			if (ms == null)
+				return 0;
+			ms.Seek(fieldOffset, SeekOrigin.Begin);
+			return ms.Read(buffer, bufferoffset, length);
 		}
 
 		public char GetChar(int i)
@@ -145,8 +142,7 @@ namespace GeneXus.Data.Dynamo
 
 		public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
 		{
-			buffer = GetAttValue(i).S.ToCharArray();
-			return buffer.Length;
+			throw new NotImplementedException();
 		}
 
 		public IDataReader GetData(int i)
@@ -161,29 +157,28 @@ namespace GeneXus.Data.Dynamo
 
 		public DateTime GetDateTime(int i)
 		{
-			DateTime dt = new DateTime();
-			DateTime.TryParse(GetAttValue(i).S, out dt);
+			DateTime.TryParse(GetAttValue(i).S, null, DateTimeStyles.AdjustToUniversal, out DateTime dt);
 			return dt;
 		}
 
 		public decimal GetDecimal(int i)
 		{
-			return decimal.Parse(GetAttValue(i).N);
+			return decimal.Parse(GetAttValueN(i));
 		}
 
 		public double GetDouble(int i)
 		{
-			return double.Parse(GetAttValue(i).N);
+			return double.Parse(GetAttValueN(i));
 		}
 
 		public Type GetFieldType(int i)
 		{
-			throw new NotImplementedException();
+			return selectList[i].GetValue(DynamoDBConnection.NewServiceContext(), currentEntry).GetType();
 		}
 
 		public float GetFloat(int i)
 		{
-			return float.Parse(GetAttValue(i).N);
+			return float.Parse(GetAttValueN(i));
 		}
 
 		public Guid GetGuid(int i)
@@ -193,18 +188,18 @@ namespace GeneXus.Data.Dynamo
 
 		public short GetInt16(int i)
 		{
-			return short.Parse(GetAttValue(i).N);
+			return short.Parse(GetAttValueN(i));
 		}
 
 		public int GetInt32(int i)
 		{
-			return int.Parse(GetAttValue(i).N);
+			return int.Parse(GetAttValueN(i));
 
 		}
 
 		public long GetInt64(int i)
 		{
-			return long.Parse(GetAttValue(i).N);
+			return long.Parse(GetAttValueN(i));
 		}
 
 		public string GetName(int i)
@@ -214,14 +209,11 @@ namespace GeneXus.Data.Dynamo
 
 		public int GetOrdinal(string name)
 		{
-			int j = 0;
-			foreach (var col in Items[mCurrentPosition])
-			{
-				if (col.Key.ToLower() == name.ToLower())
-					return j;
-				j++;
-			}
-			throw new ArgumentOutOfRangeException(nameof(name));
+			CheckCurrentPosition();
+			int ordinal = currentEntry.CurrentRow.ToList().FindIndex(col => col.Key.ToLower() == name.ToLower());
+			if (ordinal == -1)
+				throw new ArgumentOutOfRangeException(nameof(name));
+			else return ordinal;
 		}
 
 		public DataTable GetSchemaTable()
@@ -231,7 +223,7 @@ namespace GeneXus.Data.Dynamo
 
 		public string GetString(int i)
 		{
-			return GetAttValue(i).S;
+			return DynamoDBHelper.GetString(GetAttValue(i));
 		}
 
 		public object GetValue(int i)
@@ -242,16 +234,13 @@ namespace GeneXus.Data.Dynamo
 			if (attValue.IsBOOLSet)
 			{
 				value = attValue.BOOL;
-			}
-			if (attValue.S != null)
+			}else if (attValue.S != null || attValue.IsLSet || attValue.IsMSet)
 			{
-				value = attValue.S;
-			}
-			if (attValue.N != null)
+				value = DynamoDBHelper.GetString(attValue);
+			}else if (attValue.N != null)
 			{
 				value = attValue.N;
-			}
-			if (attValue.B != null)
+			}else if (attValue.B != null)
 			{
 				value = attValue.B;
 			}
@@ -260,8 +249,10 @@ namespace GeneXus.Data.Dynamo
 
 		private AttributeValue GetAttValue(int i)
 		{
-			return (AttributeValue)selectList[i].GetValue(NewServiceContext(), new DynamoDBRecordEntry(Items[mCurrentPosition]));
+			return (AttributeValue)selectList[i].GetValue(DynamoDBConnection.NewServiceContext(), currentEntry);
 		}
+
+		private string GetAttValueN(int i) => GetAttValue(i)?.N ?? "0";
 
 		public int GetValues(object[] values)
 		{			
@@ -281,12 +272,15 @@ namespace GeneXus.Data.Dynamo
 		public bool NextResult()
 		{
 			mCurrentPosition++;
-			return (mCurrentPosition < ItemCount);
+			currentEntry = (mCurrentPosition < ItemCount) ? new DynamoDBRecordEntry(Items[mCurrentPosition]) : null;
+			return currentEntry != null;
 		}
 
 		public bool Read()
-		{			
-			if (mCurrentPosition == ItemCount && mCurrentPosition > 0)
+		{
+			if (NextResult())
+				return true;
+			else if (mCurrentPosition > 0 && mResponse.LastEvaluatedKey?.Count > 0)
 			{
 				mResponse = mRequest.Read(mResponse.LastEvaluatedKey);
 				/*
@@ -295,15 +289,11 @@ namespace GeneXus.Data.Dynamo
 				 * The result set contains the last_evaluated_key field. If more data is available for the operation,
 				 * this key contains information about the last evaluated key. Otherwise, the key remains empty.
 				 * */
+				mCurrentPosition = -1;
+				return NextResult();
 			}
-			mCurrentPosition++;
-			return (mCurrentPosition < ItemCount);
+			return false;
 		}
-		internal IOServiceContext NewServiceContext()
-		{
-			return null;
-		}
-
 	}
 
 	public class GxDynamoDBCacheDataReader : GxCacheDataReader
@@ -316,8 +306,7 @@ namespace GeneXus.Data.Dynamo
 
 		public override DateTime GetDateTime(int i)
 		{
-			DateTime dt = new DateTime();
-			DateTime.TryParse(GetAttValue(i).S, out dt);
+			DateTime.TryParse(GetAttValue(i).S, null, DateTimeStyles.AdjustToUniversal, out DateTime dt);
 			return dt;
 		}
 
@@ -325,42 +314,46 @@ namespace GeneXus.Data.Dynamo
 		{
 			return (AttributeValue)block.Item(pos, i);
 		}
-
+		private string GetAttValueN(int i) => GetAttValue(i)?.N ?? "0";
 
 		public override decimal GetDecimal(int i)
 		{
-			return decimal.Parse(GetAttValue(i).N);
+			return decimal.Parse(GetAttValueN(i));
 		}
-
 
 		public override short GetInt16(int i)
 		{
-			return short.Parse(GetAttValue(i).N);
+			return short.Parse(GetAttValueN(i));
 		}
 
 		public override int GetInt32(int i)
 		{
-			return int.Parse(GetAttValue(i).N);
+			return int.Parse(GetAttValueN(i));
 		}
 
 		public override long GetInt64(int i)
 		{
-			return long.Parse(GetAttValue(i).N);
+			return long.Parse(GetAttValueN(i));
 		}
 
 		public override string GetString(int i)
 		{
-			return GetAttValue(i).S;
+			return DynamoDBHelper.GetString(GetAttValue(i));
 		}
 
 		public override bool GetBoolean(int i)
 		{
-			return GetAttValue(i).IsBOOLSet;
+			AttributeValue value = GetAttValue(i);
+			return value.IsBOOLSet && value.BOOL;
 		}
 
 		public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
-			throw new NotImplementedException();
+			MemoryStream ms = GetAttValue(i).B;
+			if (ms == null)
+				return 0;
+			ms.Seek(fieldOffset, SeekOrigin.Begin);
+			return ms.Read(buffer, bufferoffset, length);
 		}
 	}
 }

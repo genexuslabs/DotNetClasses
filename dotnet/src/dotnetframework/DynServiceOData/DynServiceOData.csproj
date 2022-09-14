@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GXOdata.Client" Version="5.2.3.5" />
+		<PackageReference Include="GeneXus.Odata.Client" Version="5.2.3.8" />
 		<PackageReference Include="log4net" Version="2.0.11" />
 		<PackageReference Include="Microsoft.Data.Edm" Version="5.8.4" />
 		<PackageReference Include="Microsoft.Data.OData" Version="5.8.4" />
@@ -26,7 +26,7 @@
 	<ItemGroup>
 		<Reference Include="System.Data.DataSetExtensions" />
 		<Reference Include="Microsoft.CSharp" />
-		<ProjectReference Include="..\DynService.Core\DynService.Core.csproj" />
+		<ProjectReference Include="..\..\dotnetcommon\DynService.Core\DynService.Core.csproj" />
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 	<ItemGroup>

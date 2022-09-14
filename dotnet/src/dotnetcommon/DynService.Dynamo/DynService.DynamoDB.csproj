@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;net6.0</TargetFrameworks>
+		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
+		<AssemblyName>GeneXus.Data.DynService.DynamoDB</AssemblyName>
+		<SignAssembly>false</SignAssembly>
+		<PackageTags>DynamoDB</PackageTags>
+		<PackageId>GeneXus.DynService.DynamoDB</PackageId>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(TargetFramework)'!='net462'">
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.0.103" />
+		<ProjectReference Include="..\DynService.Core\DynService.Core.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'!='net462'">
+		<ProjectReference Include="..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
+		<ProjectReference Include="..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Update="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.2">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+</Project>

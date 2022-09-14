@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <PackageId>GeneXus.AWS.Queue</PackageId>
+    <PackageTags>AWS SQS Queue Messaging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Core" Version="3.7.11.11" />
+    <PackageReference Include="AWSSDK.Core" Version="3.7.12.8" />
     <PackageReference Include="AWSSDK.SQS" Version="3.7.2.64" />
   </ItemGroup>
 

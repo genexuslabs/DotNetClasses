@@ -232,7 +232,7 @@ namespace GeneXus.Data.DynService.Fabric
 		{
 			System.Diagnostics.Debug.Assert(mResponse[mCurrentPosition].Values.Count == values.Length, "Values mismatch");
 			int i = 0;			
-			foreach (var attName in mProjection)
+			foreach (string attName in mProjection)
 			{
 				values[i] = mResponse[mCurrentPosition][attName];
 				i++;

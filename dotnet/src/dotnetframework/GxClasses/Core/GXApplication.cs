@@ -44,6 +44,7 @@ namespace GeneXus.Application
 #endif
 	using System.Threading;
 	using System.Security.Claims;
+	using System.Security;
 
 	public interface IGxContext
 	{
@@ -74,7 +75,7 @@ namespace GeneXus.Application
 		GxHttpContextVars httpContextVars { get; set; }
 		T ReadSessionKey<T>(string key) where T : class;
 		bool WriteSessionKey<T>(string key, T value) where T : class;
-
+		List<string[]> userStyleSheetFiles { get; }
 		void DoAfterInit();
 		void PushCurrentUrl();
 		bool isSmartDevice();
@@ -314,6 +315,7 @@ namespace GeneXus.Application
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
 		internal const string GXLanguage = "GXLanguage";
 		internal const string GXTheme = "GXTheme";
+		internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
 		[NonSerialized]
 		HttpContext _HttpContext;
 		[NonSerialized]
@@ -325,6 +327,11 @@ namespace GeneXus.Application
 		GxXmlContext _XMLContext;
 		[NonSerialized]
 		GxErrorHandlerInfo _errorHandlerInfo;
+		[NonSerialized]
+		private List<string[]> _userStyleSheetFiles = new List<string[]>();
+		public List<string[]> userStyleSheetFiles {
+			get { return _userStyleSheetFiles; }
+		}
 		string _gxUserId;
 		string _clientId = string.Empty;
 		string _gxPasswrd;
@@ -1550,7 +1557,9 @@ namespace GeneXus.Application
 
 		public MessageQueueTransaction MQTransaction
 		{
+			[SecuritySafeCritical]
 			get { return _mqTransaction; }
+			[SecuritySafeCritical]
 			set
 			{
 				_mqTransaction = value;
@@ -1708,10 +1717,7 @@ namespace GeneXus.Application
 #if !NETCORE
 					HttpContext.Session[key] = value;
 #else
-					if (!_HttpContext.Response.HasStarted)
-					{
-						HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
-					}
+					HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
 #endif
 					return true;
 				}
@@ -2756,7 +2762,9 @@ namespace GeneXus.Application
 				if (Config.GetValueOf("SERVER_NAME", out serverName))
 					return serverName;
 #if !NETCORE
-				serverName = _HttpContext.Request.ServerVariables["http_host"];
+				serverName = _HttpContext.Request.ServerVariables[SERVER_VAR_HTTP_HOST];
+#else
+				serverName = _HttpContext.GetServerVariable(SERVER_VAR_HTTP_HOST);
 #endif
 				if (String.IsNullOrEmpty(serverName))
 				{
@@ -2768,9 +2776,8 @@ namespace GeneXus.Application
 				return serverName;
 			}
 			catch
-
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 		private static bool DynamicPortRequest(HttpRequest request)

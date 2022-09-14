@@ -48,7 +48,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 			if(error == null) return RegisteredClaim.NONE;
 			if (registeredClaim == null)
 			{
-				error.setError("RC002", "Unknown registered Claim");
+				error.setError("RCL01", "Unknown registered Claim");
 				return RegisteredClaim.NONE;
 			}
             switch (registeredClaim.Trim())
@@ -68,7 +68,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                 case "jti":
                     return RegisteredClaim.jti;
                 default:
-                    error.setError("RC002", "Unknown registered Claim");
+                    error.setError("RCL02", "Unknown registered Claim");
                     return RegisteredClaim.NONE;
             }
         }
@@ -117,7 +117,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
 			if(token == null)
 			{
-				error.setError("RC000", "Token parameter is null");
+				error.setError("RCL13", "Token parameter is null");
 				return false;
 			}
             Int32 newTime = 0;
@@ -172,7 +172,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                 case RegisteredClaim.jti:
                     return SecurityUtils.compareStrings(token.Payload.Jti, registeredClaimValue);
                 default:
-                    error.setError("RC003", "Unknown registered Claim");
+                    error.setError("RCL03", "Unknown registered Claim");
                     return false;
             }
         }

@@ -12,11 +12,11 @@
     <Compile Include="..\..\..\dotnetframework\DynServiceOData\DynServiceOData.cs" Link="DynServiceOData.cs" />
   </ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="GXOdata.Client" Version="5.2.3.5" />
+		<PackageReference Include="GeneXus.Odata.Client" Version="5.2.3.8" />
 		<PackageReference Include="log4net" Version="2.0.11" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Core\DynService.Core.csproj" />
 		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcommon\DynService.Core\DynService.Core.csproj" />
 	</ItemGroup>
 </Project>

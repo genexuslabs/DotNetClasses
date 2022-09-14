@@ -45,6 +45,7 @@ using GeneXus.Http;
 using System.Security;
 using System.Threading.Tasks;
 using System.Drawing.Imaging;
+using System.Net.Http.Headers;
 
 namespace GeneXus.Utils
 {
@@ -1586,7 +1587,7 @@ namespace GeneXus.Utils
 			{
 				char ch = s[index];
 
-				if ((ch == '\\') || (ch == '"') || (ch == '>'))
+				if ((ch == '\\') || (ch == '"'))
 				{
 					sb.Append('\\');
 					sb.Append(ch);
@@ -2297,6 +2298,20 @@ namespace GeneXus.Utils
 			}
 			return emptyDT.ToString();
 		}
+		static string FormatEmptyJsonDate(string pic)
+		{
+			StringBuilder emptyDT = new StringBuilder(pic);
+			emptyDT.Replace('d', '0');
+			emptyDT.Replace('M', '0');
+			emptyDT.Replace('y', '0');
+
+			emptyDT.Replace('m', '0');
+			emptyDT.Replace('s', '0');
+			emptyDT.Replace('f', '0');
+			emptyDT.Replace('h', '0');
+			emptyDT.Replace('H', '0');
+			return emptyDT.ToString();
+		}
 		string TimeFormatFromSDT(String S, String TSep, bool allowsOneDigitTime)
 		{
 			int pos1, pos2, pos3, tSize, ampmFmt;
@@ -2550,6 +2565,13 @@ namespace GeneXus.Utils
 				return ("0000-00-00");
 			else
 				return dt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+		}
+		internal static string DToC2(DateTime dt, string format)
+		{
+			if (dt == nullDate)
+				return FormatEmptyJsonDate(format);
+			else
+				return dt.ToString(format, CultureInfo.InvariantCulture);
 		}
 		public static DateTime CToD2(string value)
 		{
@@ -4173,6 +4195,40 @@ namespace GeneXus.Utils
 		internal static string AttributeEncode(string sText)
 		{
 			return HttpUtility.HtmlAttributeEncode(sText);
+		}
+
+		internal static string EncodeContentDispositionHeader(string value, int browserType)
+		{
+			int filenameIdx = value.IndexOf("filename", StringComparison.OrdinalIgnoreCase);
+			int eqIdx = value.IndexOf("=", filenameIdx);
+			if (filenameIdx == -1 || eqIdx == -1 || browserType == GxContext.BROWSER_SAFARI) //Safari does not supports yet ContentDispositon file name encoding value.
+			{
+				return value;
+			}
+
+			string rawFilename = value.Substring(eqIdx + 1).Trim();
+			try
+			{
+				string dispositionType = value.Substring(0, value.IndexOf(";")).Trim();
+				value = new ContentDispositionHeaderValue(dispositionType) { FileName = rawFilename }.ToString();
+			}
+			catch (Exception)
+			{
+				value = value.Substring(0, eqIdx + 1) + EncodeContentDispositionFileName(rawFilename);
+			}
+			return value;
+		}
+
+		private static string EncodeContentDispositionFileName(string filename)
+		{
+			try
+			{
+				return Uri.EscapeDataString(filename);
+			}
+			catch (UriFormatException) //Contains High Surrogate Chars
+			{
+				return GXUtil.UrlEncode(filename);
+			}
 		}
 
 		public static string HtmlEndTag(HTMLElement element)

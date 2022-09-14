@@ -186,6 +186,8 @@ namespace GeneXus.Data.NTier
 					return DbType.Object;
 				case GXType.Blob:
 					return DbType.Binary;
+				case GXType.Boolean:
+					return DbType.Boolean;
 				case GXType.Undefined:
 				default:
 					return DbType.Object;
