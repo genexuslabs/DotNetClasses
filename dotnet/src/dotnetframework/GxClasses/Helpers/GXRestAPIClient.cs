@@ -50,11 +50,11 @@ namespace GeneXus.Application
 		private Dictionary<string,object> _responseData = new Dictionary<string, object>();
 
 		private string _contentType = "application/json; charset=utf-8";
-		private string _queryString = "";
-		private string _bodyString = "";
+		private string _queryString = String.Empty;
+		private string _bodyString = String.Empty;
 
 		private int responseCode = 0;
-		private string responseMessage = "";
+		private string responseMessage = String.Empty;
 
 		public void AddQueryVar(String varName, String varValue)
 		{
@@ -72,7 +72,7 @@ namespace GeneXus.Application
 
 		public void AddQueryVar(String varName, Decimal varValue)
 		{
-			_queryVars[varName] = varValue.ToString();
+			_queryVars[varName] = varValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
 		}
 
 		public void AddQueryVar(String varName, DateTime varValue)
@@ -133,7 +133,7 @@ namespace GeneXus.Application
 
 		public void AddBodyVar(String varName, Decimal varValue)
 		{
-			_bodyVars[varName] = varValue.ToString();
+			_bodyVars[varName] = varValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
 		}
 
 		public void AddBodyVar(String varName, string varValue)
@@ -232,14 +232,14 @@ namespace GeneXus.Application
 
 		public string GetJsonStr(string varName)
 		{
-			string s = "";
+			string s = String.Empty;
 			if (_responseData.ContainsKey(varName.ToLower()))
 			{
 				s = _responseData[varName.ToLower()].ToString();
 			}
-			else if (_responseData.Count == 1 && _responseData.ContainsKey(""))
+			else if (_responseData.Count == 1 && _responseData.ContainsKey(String.Empty))
 			{
-				s = _responseData[""].ToString();
+				s = _responseData[String.Empty].ToString();
 			}
 			return s;	
 		}
@@ -251,9 +251,9 @@ namespace GeneXus.Application
 			{
 				sdt.FromJSonString(_responseData[varName.ToLower()].ToString(), null);
 			}
-			else if (_responseData.Count == 1 && _responseData.ContainsKey(""))
+			else if (_responseData.Count == 1 && _responseData.ContainsKey(String.Empty))
 			{
-				sdt.FromJSonString(_responseData[""].ToString(), null);
+				sdt.FromJSonString(_responseData[String.Empty].ToString(), null);
 			}
 			else if (_responseData.Count >= 1 && !_responseData.ContainsKey(varName.ToLower()))
 			{
@@ -273,9 +273,9 @@ namespace GeneXus.Application
 			{				
 				collection.FromJSonString(_responseData[varName.ToLower()].ToString(), null);
 			}
-			else if (_responseData.Count == 1 && _responseData.ContainsKey(""))
+			else if (_responseData.Count == 1 && _responseData.ContainsKey(String.Empty))
 			{
-				collection.FromJSonString(_responseData[""].ToString(), null);
+				collection.FromJSonString(_responseData[String.Empty].ToString(), null);
 			}
 			return collection;
 		}
@@ -287,9 +287,9 @@ namespace GeneXus.Application
 			{
 				collection.FromJSonString(_responseData[varName.ToLower()].ToString(), null);
 			}
-			else if (_responseData.Count == 1 && _responseData.ContainsKey(""))
+			else if (_responseData.Count == 1 && _responseData.ContainsKey(String.Empty))
 			{
-				collection.FromJSonString(_responseData[""].ToString(), null);
+				collection.FromJSonString(_responseData[String.Empty].ToString(), null);
 			}
 			return collection;
 		}
@@ -304,7 +304,7 @@ namespace GeneXus.Application
 		public void RestExecute()
 		{
 			this.ErrorCode = 0;
-			_queryString = "";
+			_queryString = String.Empty;
 			if (_queryVars.Count > 0)
 			{
 				string separator = "?";
@@ -314,10 +314,10 @@ namespace GeneXus.Application
 					separator = "&";
 				}
 			}
-			_bodyString = "";
+			_bodyString = String.Empty;
 			if (_bodyVars.Count > 0)
 			{
-				string separator = "";
+				string separator = String.Empty;
 				foreach (string key in _bodyVars.Keys)
 				{
 					_bodyString +=  separator + "\"" + key + "\":" + _bodyVars[key];
@@ -340,7 +340,7 @@ namespace GeneXus.Application
 				}
 			}
 			string serviceuri = ((this.Location.Secure > 0) ? "https" : "http") + "://" + this.Location.Host;
-			serviceuri += (this.Location.Port != 80) ? ":" + this.Location.Port.ToString() : "";
+			serviceuri += (this.Location.Port != 80) ? ":" + this.Location.Port.ToString() : String.Empty;
 			serviceuri += "/" + this.Location.BaseUrl.TrimEnd('/').TrimStart('/') + "/" + this.Location.ResourceName;
 			serviceuri += _queryString;			
 			httpClient.HttpClientExecute( this.HttpMethod, serviceuri);

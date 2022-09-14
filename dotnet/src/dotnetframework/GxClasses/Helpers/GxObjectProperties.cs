@@ -10,7 +10,7 @@ namespace GeneXus.Application
 	public class GxObjectProperties
 	{
 		private GxLocation location = null;
-		private string errorMessage = "";
+		private string errorMessage = String.Empty;
 		private int errorCode = 0;
 		private int statusCode = 0;
 
