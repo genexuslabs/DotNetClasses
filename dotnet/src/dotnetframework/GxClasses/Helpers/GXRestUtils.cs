@@ -2,9 +2,17 @@ using System;
 using System.Web;
 using GeneXus.Application;
 using GeneXus.Http;
+using System.Collections.Generic;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 #endif
+using log4net;
+using System.IO;
+using Jayrock.Json;
+
+
 
 namespace GeneXus.Utils
 {
@@ -87,4 +95,50 @@ namespace GeneXus.Utils
 		public string fileExtension { get; set; }
 	}
 
+	internal class RestAPIHelpers
+	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.RestAPIHelpers));
+
+		public static Dictionary<string, object> ReadRestParameters(string restData)
+		{
+			var bodyParameters = new Dictionary<string, object>();
+			if (!String.IsNullOrEmpty(restData))
+			{
+				try
+				{
+					var data = JSONHelper.ReadJSON<dynamic>(restData);
+					if (data is JObject jobj)
+					{
+						foreach (string name in jobj.Names)
+						{
+							bodyParameters.Add(name.ToLower(), jobj[name]);
+						}
+					}
+					else if (data is JArray jArray)
+					{
+						bodyParameters.Add(string.Empty, jArray);
+					}
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, ex, "Parsing error in Body ");
+				}
+			}
+			return bodyParameters;
+		}
+
+		public static Dictionary<string, object> ReadRestBodyParameters(Stream stream)
+		{
+			var bodyParameters = new Dictionary<string, object>();
+			using (StreamReader streamReader = new StreamReader(stream))
+			{
+				if (!streamReader.EndOfStream)
+				{
+					string json = streamReader.ReadToEnd();
+					return ReadRestParameters(json);
+				}
+			}
+			return bodyParameters;
+		}
+	}
 }
