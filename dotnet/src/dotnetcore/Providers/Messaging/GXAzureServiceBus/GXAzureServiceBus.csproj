@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+	<PackageId>GeneXus.Azure.ServiceBus</PackageId>
+	<PackageTags>Azure ServiceBus Messaging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
