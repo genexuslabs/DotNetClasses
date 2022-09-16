@@ -93,7 +93,8 @@
 		<None Update="apps\append.svc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="apps\httpcors.svc">
+		<None Update="apps\httpcors.svc"/>
+		<None Update="apps\saveimage.svc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="confmapping.json">
@@ -152,6 +153,9 @@
 		</None>
 		<None Update="resources\text.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="uruguay.flag.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 

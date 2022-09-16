@@ -689,7 +689,7 @@ public class GxFile
 			fileName = GxUploadHelper.UploadPath(fileName);
 		}
 		fileName = fileName.Trim();
-		if ((GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null) && !Path.IsPathRooted(fileName))
+		if ((ServiceFactory.GetExternalProvider() != null) && !Path.IsPathRooted(fileName))
             _file = new GxExternalFileInfo(fileName, ServiceFactory.GetExternalProvider(), fileType);
         else
             _file = new GxFileInfo(fileName, baseDirectory);
@@ -1579,7 +1579,7 @@ public class GxDirectory
     string _baseDirectory;
     int _lastError;
     string _lastErrorDescription;
-	bool _externalStorage = GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null;
+	bool _externalStorage = ServiceFactory.GetExternalProvider() != null;
 
 	public GxDirectory(string baseDirectory)
     {
