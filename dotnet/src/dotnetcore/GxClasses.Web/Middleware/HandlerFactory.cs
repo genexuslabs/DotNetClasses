@@ -78,8 +78,7 @@ namespace GeneXus.HttpHandlerFactory
 			IHttpHandler handler=null;
 			string url = string.Empty;
 			try
-			{
-				//context.Request.EnableBuffering(); does not work in 3.1
+			{				
 				context.NewSessionCheck();
 				url = context.Request.Path.Value;
 

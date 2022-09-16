@@ -279,6 +279,9 @@ namespace GeneXus.Http
 		public GXObjectUploadServices(IGxContext ctx)
 		{
 			this.context = ctx;
+#if NETCORE
+			localHttpContext.Request.EnableBuffering();
+#endif
 		}
 
 		public override void webExecute()
@@ -329,8 +332,12 @@ namespace GeneXus.Http
 					localHttpContext.Response.Write(jsonObj);
 				}
 				else
-				{					
-					WcfExecute(localHttpContext.Request.GetInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+				{
+#if NETCORE
+					WcfExecute(localHttpContext.Request.Body, localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+#else
+					WcfExecute(localHttpContext.Request.GetBufferedInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+#endif
 				}
 			}
 			catch (Exception e)
