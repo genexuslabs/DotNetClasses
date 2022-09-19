@@ -163,6 +163,7 @@
 
 
 	<ItemGroup>
+	  <Folder Include="apps\" />
 	  <Folder Include="ConfigMappings\" />
 	  <Folder Include="Domain\" />
 	  <Folder Include="PDF\" />
