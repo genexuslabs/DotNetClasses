@@ -93,7 +93,9 @@
 		<None Update="apps\append.svc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="apps\httpcors.svc"/>
+		<None Update="apps\httpcors.svc">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="apps\saveimage.svc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
