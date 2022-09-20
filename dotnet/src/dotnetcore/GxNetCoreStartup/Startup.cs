@@ -206,12 +206,17 @@ namespace GeneXus.Application
 				string corsAllowedOrigins = Preferences.CorsAllowedOrigins();
 				if (!string.IsNullOrEmpty(corsAllowedOrigins))
 				{
+					string[] origins = corsAllowedOrigins.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+					foreach (string origin in origins)
+					{
+						GXLogging.Info(log, $"Adding origin to CORS policy:", origin);
+					}
 					services.AddCors(options =>
 					{
 						options.AddPolicy(name: CORS_POLICY_NAME,
 										  policy =>
 										  {
-											  policy.WithOrigins(corsAllowedOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries));
+											  policy.WithOrigins(origins);
 											  if (!corsAllowedOrigins.Contains(CORS_ANY_ORIGIN))
 											  {
 												  policy.AllowCredentials();
