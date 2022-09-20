@@ -2431,6 +2431,7 @@ namespace GeneXus.Data.ADO
 				return context.GetOlsonTimeZone();
 			}		
 		}
+		[Obsolete("GxDataStore.SmartCacheProvider is deprecated, use DataStoreProvider.SmartCacheProvider instead", false)]
         public GxSmartCacheProvider SmartCacheProvider
         {
             get

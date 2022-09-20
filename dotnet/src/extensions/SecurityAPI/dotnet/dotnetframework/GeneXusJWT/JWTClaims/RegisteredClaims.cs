@@ -29,7 +29,7 @@ namespace GeneXusJWT.GenexusJWTClaims
             }
             else
             {
-                error.setError("RC001", "Wrong registered key value");
+                error.setError("RCS02", "Wrong registered key value");
                 return false;
             }
         }
@@ -47,14 +47,14 @@ namespace GeneXusJWT.GenexusJWTClaims
                 }
                 catch (Exception)
                 {
-                    error.setError("RC004", "Incorrect date format. Expected yyyy/MM/dd HH:mm:ss");
+                    error.setError("RCS04", "Date format error; expected yyyy/MM/dd HH:mm:ss");
                     return false;
                 }
                 return setClaim(key, date.ToString(CultureInfo.InvariantCulture), error);
             }
             else
             {
-                error.setError("RC001", "Wrong registered key value");
+                error.setError("RCS02", "Wrong registered key value");
                 return false;
             }
         }
@@ -101,7 +101,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                         return _claims[i].getValue();
                     }
                 }
-                error.setError("RC001", "Could not find a claim with" + key + " key value");
+                error.setError("RCS03", String.Format("Could not find a claim with {0} key value", key));
                 return "";
             }
             else

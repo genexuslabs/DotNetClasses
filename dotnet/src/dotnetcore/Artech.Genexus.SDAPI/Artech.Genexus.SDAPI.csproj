@@ -33,13 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Collections" Version="4.3.0" />
-    <PackageReference Include="System.Runtime" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Serialization.Json" Version="4.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
 		<Reference Include="Jayrock-JSON">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\Jayrock.dll</HintPath>

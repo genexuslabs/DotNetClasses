@@ -22,6 +22,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Mac\TestHmac.cs" Link="Cryptography\Mac\TestHmac.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\PasswordDerivation\TestPasswordDerivation.cs" Link="Cryptography\PasswordDerivation\TestPasswordDerivation.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestBlockEncryption.cs" Link="Cryptography\Symmetric\TestBlockEncryption.cs" />
+	<Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestBlockEncryptionFiles.cs" Link="Cryptography\Symmetric\TestBlockEncryptionFiles.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestStreamEncryption.cs" Link="Cryptography\Symmetric\TestStreamEncryption.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Symmetric\TestSymmetricDomainSpaces.cs" Link="Cryptography\Symmetric\TestSymmetricDomainSpaces.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Ftps\TestFtps.cs" Link="Ftps\TestFtps.cs" />
@@ -30,6 +31,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesPrimeJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesPrimeJwt.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesSecpJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesSecpJwt.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Asymmetric\TestECDSACurvesSectJwt.cs" Link="Jwt\Asymmetric\TestECDSACurvesSectJwt.cs" />
+	<Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestCreateFromJSON.cs" Link="Jwt\Features\TestCreateFromJSON.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtDiverseDataTypes.cs" Link="Jwt\Features\TestJwtDiverseDataTypes.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtHeaderParameters.cs" Link="Jwt\Features\TestJwtHeaderParameters.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtNestedClaims.cs" Link="Jwt\Features\TestJwtNestedClaims.cs" />
@@ -49,6 +51,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PrivateKey.cs" Link="SecurityAPICommons\keys\TestBase64PrivateKey.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PublicKey.cs" Link="SecurityAPICommons\keys\TestBase64PublicKey.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestSftp.cs" Link="Sftp\TestSftp.cs" />
+	<Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestLoginWithKeyWithoutPassword.cs" Link="Sftp\TestLoginWithKeyWithoutPassword.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestBase64Certificate.cs" Link="XmlSignature\DSig\TestBase64Certificate.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestFindID.cs" Link="XmlSignature\DSig\TestFindID.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestRSASigning.cs" Link="XmlSignature\DSig\TestRSASigning.cs" />

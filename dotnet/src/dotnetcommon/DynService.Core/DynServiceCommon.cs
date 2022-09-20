@@ -16,21 +16,20 @@ namespace GeneXus.Data.NTier
 {
 	public class Query
 	{
-		private object mDataStoreHelper;
-
 		public string TableName { get; set; } = String.Empty;
-		public string[] Projection { get; set; } = Array.Empty<string>();
-		public string[] OrderBys { get; set; } = Array.Empty<string>();
-		public string[] Filters { get; set; } = Array.Empty<string>();
-		public string[] AssignAtts { get; set; } = Array.Empty<string>();
-		public IODataMap2[] SelectList { get; set; } = Array.Empty<IODataMap2>();
-		public VarValue[] Vars { get; set; } = Array.Empty<VarValue>();
+		public IEnumerable<string> Projection { get; set; } = Array.Empty<string>();
+		public IEnumerable<string> OrderBys { get; set; } = Array.Empty<string>();
+		public IEnumerable<string> Filters { get; set; } = Array.Empty<string>();
+		private List<KeyValuePair<string, string>> mAssignAtts;
+		public IEnumerable<KeyValuePair<string, string>> AssignAtts { get { return mAssignAtts ?? Array.Empty<KeyValuePair<string, string>>() as IEnumerable<KeyValuePair<string, string>>; } } 
+		public IEnumerable<IODataMap2> SelectList { get; set; } = Array.Empty<IODataMap2>();
+
+		private List<VarValue> mVarValues;
+		public IEnumerable<VarValue> Vars { get { return (mVarValues ?? Array.Empty<VarValue>() as IEnumerable<VarValue>); } }
 		public CursorType CursorType { get; set; } = CursorType.Select;
 
-		public Query(object dataStoreHelper)
-		{
-			mDataStoreHelper = dataStoreHelper;
-		}
+		public Query(object dataStoreHelper) { }
+
 		public Query For(string v)
 		{
 			TableName = v;
@@ -54,9 +53,10 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
-		public Query Set(string[] assignAtts)
+		public Query Set(string name, string value)
 		{
-			AssignAtts = assignAtts;			
+			mAssignAtts = mAssignAtts ?? new List<KeyValuePair<string, string>>();
+			mAssignAtts.Add(new KeyValuePair<string, string>(name, value));
 			return this;
 		}
 
@@ -66,11 +66,6 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
-		public Query SetVars(VarValue[] vars)
-		{
-			Vars = vars;
-			return this;
-		}
 
 		public Query SetType(CursorType cType)
 		{
@@ -78,6 +73,12 @@ namespace GeneXus.Data.NTier
 			return this;
 		}
 
+		public Query AddConst(GXType gxType, object parm)
+		{
+			mVarValues = mVarValues ?? new List<VarValue>();
+			mVarValues.Add(new VarValue($":const{ mVarValues.Count + 1 }", gxType, parm));
+			return this;
+		}
 	}
 
 	public class VarValue
@@ -89,24 +90,18 @@ namespace GeneXus.Data.NTier
 		public VarValue(string name, GXType type, object value)
 		{
 			Name = name;
+			Type = type;
 			Value = value;
 		}
 
 	}
 
-	public class QueryExpression
-	{
-		public string For { get; set; }
-		internal string[] Select { get; set; }
-	}
-				
-	
 
 	public interface IODataMap2
 	{
 		object GetValue(IOServiceContext serviceContext, RecordEntryRow currentEntry);
 		string GetName(IOServiceContext serviceContext);
-		void SetValue(IOServiceContext serviceContext, RecordEntryRow currentEntry, object value);
+		void SetValue(RecordEntryRow currentEntry, object value);
 	}
 
 
@@ -129,7 +124,7 @@ namespace GeneXus.Data.NTier
 			throw new NotImplementedException();
 		}
 
-		public virtual void SetValue(IOServiceContext context, RecordEntryRow currentEntry, object value)
+		public virtual void SetValue(RecordEntryRow currentEntry, object value)
 		{
 			throw new NotImplementedException();
 		}
@@ -157,7 +152,15 @@ namespace GeneXus.Data.NTier
 		void SetValue(IDictionary<string, object> currentEntry, object value);
 	}
 
-	public abstract class DynServiceDataStoreHelper : DataStoreHelperBase
+	public abstract class DynServiceDataStoreHelperBase : DataStoreHelperBase
+	{
+		public static object InvalidQuery(string msg)
+		{
+			throw new ServiceException(msg);
+		}
+	}
+
+	public abstract class DynServiceDataStoreHelper : DynServiceDataStoreHelperBase
 	{
 		public abstract Guid GetParmGuid(IDataParameterCollection parms, string parm);
 		public abstract string GetParmStr(IDataParameterCollection parms, string parm);

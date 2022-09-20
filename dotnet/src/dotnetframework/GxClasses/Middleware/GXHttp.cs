@@ -55,6 +55,9 @@ namespace GeneXus.Http
 		internal const string GX_SPA_GXOBJECT_RESPONSE_HEADER = "X-GXOBJECT";
 		internal const string GX_SPA_MASTERPAGE_HEADER = "X-SPA-MP";
 		internal const string GX_AJAX_MULTIPART_ID = "GXAjaxMultipart";
+		private string ThemekbPrefix;
+		private string ThemestyleSheet;
+		private string ThemeurlBuildNumber;
 		private const string GX_FULL_AJAX_REQUEST_HEADER = "X-FULL-AJAX-REQUEST";
 		private const string GXEVENT_PARM = "gxevent";
 		private const string URI_SEPARATOR = "/";
@@ -987,7 +990,12 @@ namespace GeneXus.Http
 			if (context.IsMultipartRequest)
 				jsonRequest = cgiGet(GX_AJAX_MULTIPART_ID);
 			else
-				jsonRequest = (new StreamReader(localHttpContext.Request.GetInputStream())).ReadToEnd();
+			{
+				using (StreamReader reader = new StreamReader(localHttpContext.Request.GetInputStream()))
+				{
+					jsonRequest = reader.ReadToEnd();
+				}
+			}
 			string jsonResponse = dynAjaxEvent.Invoke(jsonRequest, this);
 
 
@@ -1123,7 +1131,13 @@ namespace GeneXus.Http
 			AddStyleSheetFile(styleSheet, string.Empty);
 		}
 
-		public void AddStyleSheetFile(string styleSheet, string urlBuildNumber, bool isDeferred = false)
+		public void AddStyleSheetFile(string styleSheet, string urlBuildNumber)
+		{
+			List<string[]> userStyleSheetFiles = context.userStyleSheetFiles;
+			urlBuildNumber = context.GetURLBuildNumber(styleSheet, urlBuildNumber);
+			userStyleSheetFiles.Add(new string[] { styleSheet, urlBuildNumber });
+		}
+		public void AddStyleSheetFile(string styleSheet, string urlBuildNumber, bool isDeferred)
 		{
 			urlBuildNumber = context.GetURLBuildNumber(styleSheet, urlBuildNumber);
 			AddStyleSheetFile(styleSheet, urlBuildNumber, false, isDeferred);
@@ -1135,13 +1149,15 @@ namespace GeneXus.Http
 			if (!context.StyleSheetAdded(styleSheet))
 			{
 				context.AddStyleSheetFile(styleSheet);
+				string sUncachedURL = context.GetCompleteURL(styleSheet) + urlBuildNumber;
+				string sLayerName = styleSheet.Replace("/", "_").Replace(".","_");
 				if (!context.HtmlHeaderClosed && context.isEnabled)
 				{
 					string sRelAtt = (isDeferred ? "rel=\"preload\" as=\"style\" " : "rel=\"stylesheet\"");
 					if (isGxThemeHidden)
-						context.WriteHtmlTextNl("<link id=\"gxtheme_css_reference\" " + sRelAtt + " type=\"text/css\" href=\"" + context.GetCompleteURL(styleSheet) + urlBuildNumber + "\" " + GXUtil.HtmlEndTag(HTMLElement.LINK));
+						context.WriteHtmlTextNl("<link id=\"gxtheme_css_reference\" " + sRelAtt + " type=\"text/css\" href=\"" + sUncachedURL + "\" " + GXUtil.HtmlEndTag(HTMLElement.LINK));
 					else
-						context.WriteHtmlTextNl("<link " + sRelAtt + " type=\"text/css\" href=\"" + context.GetCompleteURL(styleSheet) + urlBuildNumber + "\"" + GXUtil.HtmlEndTag(HTMLElement.LINK));
+						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ") </style>");
 				}
 				else
 				{
@@ -1182,9 +1198,7 @@ namespace GeneXus.Http
 			return bSuccess && !String.IsNullOrEmpty(cssContent);
 		}
 
-
-		public void AddThemeStyleSheetFile(String kbPrefix, String styleSheet, string urlBuildNumber)
-		{
+		public void CloseStyles() {
 			string cssContent = string.Empty;
 			Boolean bHasCustomContent = FetchCustomCSS(ref cssContent);
 
@@ -1194,18 +1208,29 @@ namespace GeneXus.Http
 				context.AddStyleSheetFile(GetPgmname());
 			}
 
-			string[] referencedFiles = ThemeHelper.GetThemeCssReferencedFiles(Path.GetFileNameWithoutExtension(styleSheet));
+			string[] referencedFiles = ThemeHelper.GetThemeCssReferencedFiles(Path.GetFileNameWithoutExtension(this.ThemestyleSheet));
 			foreach (string file in referencedFiles)
 			{
 				string extension = Path.GetExtension(file);
 				if (extension == ".css")
 				{
-					AddStyleSheetFile(file, urlBuildNumber, bHasCustomContent);
+					AddStyleSheetFile(file, this.ThemeurlBuildNumber, bHasCustomContent);
 				}
 				else if (extension == ".js")
-					AddDeferredJavascriptSource(file, urlBuildNumber);
+					AddDeferredJavascriptSource(file, this.ThemeurlBuildNumber);
 			}
-			AddStyleSheetFile(kbPrefix + "Resources/" + context.GetLanguage() + "/" + styleSheet, urlBuildNumber, true, bHasCustomContent);
+			List<string[]> userStyleSheetFiles = context.userStyleSheetFiles;
+			foreach (string[] data in userStyleSheetFiles)
+			{
+				AddStyleSheetFile(data[0], data[1], false, false);
+			}
+			AddStyleSheetFile(this.ThemekbPrefix + "Resources/" + context.GetLanguage() + "/" + this.ThemestyleSheet, this.ThemeurlBuildNumber, true, bHasCustomContent);
+		}
+		public void AddThemeStyleSheetFile(String kbPrefix, String styleSheet, string urlBuildNumber)
+		{
+			this.ThemekbPrefix = kbPrefix;
+			this.ThemestyleSheet = styleSheet;
+			this.ThemeurlBuildNumber = urlBuildNumber;
 		}
 
 		public string GetCacheInvalidationToken()
@@ -2098,7 +2123,8 @@ namespace GeneXus.Http
 				localHttpContext.Response.AddHeader("Cache-Control", HttpHelper.CACHE_CONTROL_HEADER_NO_CACHE_REVALIDATE);
 			}
 		}
-
+		const string IE_COMP_EmulateIE7 = "EmulateIE7";
+		const string IE_COMP_Edge = "edge";
 		public virtual void sendAdditionalHeaders()
 		{
 			if (IsSpaRequest())
@@ -2109,12 +2135,14 @@ namespace GeneXus.Http
 				Config.GetValueOf("IE_COMPATIBILITY_VIEW", out IECompMode);
 				if (!string.IsNullOrEmpty(IECompMode))
 				{
-					if (IECompMode.Equals("EmulateIE7") && !context.GetBrowserVersion().StartsWith("8")) //compatibility
+					if (IECompMode.Equals(IE_COMP_EmulateIE7) && !context.GetBrowserVersion().StartsWith("8")) //compatibility
 						return;
+
+					string safeIECompMode = IE_COMP_Edge.Equals(IE_COMP_EmulateIE7) ? IE_COMP_Edge : IE_COMP_Edge;
 #if NETCORE
-					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + IECompMode;
+					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + safeIECompMode;
 #else
-					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + IECompMode);
+					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + safeIECompMode);
 #endif
 				}
 			}

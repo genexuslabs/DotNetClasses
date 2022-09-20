@@ -2,6 +2,11 @@ name: Build
 
 on:
   workflow_dispatch:
+    inputs:
+      skip-duplicates:
+          description: 'Whether to fail or skip duplicates when uploading to a package repository'
+          required: false
+          default: 'true'
   pull_request:
     branches:
       - 'master'
@@ -22,47 +27,92 @@ jobs:
     
     runs-on: windows-latest
 
+    outputs:
+      NUGET_VERSION: ${{ steps.buildVariables.outputs.NUGET_PACKAGE_VERSION }}
+      LAST_COMMITTER: ${{ steps.buildVariables.outputs.LAST_COMMITTER }}
+      COMMIT_MESSAGE: ${{ steps.buildVariables.outputs.COMMIT_MESSAGE }}
+      SHOULD_DEPLOY: ${{ steps.buildVariables.outputs.SHOULD_DEPLOY }}
+
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
-    - name: Install .NET Core 5.0
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '5.0.x'
 
     - name: Install .NET 6
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v2
       with:
         dotnet-version: '6.0.x'
-        include-prerelease: True
-        
-    - uses: actions/setup-dotnet@v1
-      with:
-        source-url: https://nuget.pkg.github.com/genexuslabs/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        include-prerelease: false
 
     - name: Calculate environment variables
-      run: |     
-        $IsPrerelease = !($Env:GIT_REF -match 'release-[0-9]+(?:\.[0-9]+)?$')
-        echo "IsPrerelease=$IsPrerelease" >> $env:GITHUB_ENV
+      id: buildVariables
+      run: |
+        $IsMaster = $false
+
+        switch -regex ($Env:GIT_REF) {
+          'master' { 
+            $IsPrerelease   = $true
+            $IsMaster       = $true
+
+            $SHOULD_DEPLOY  = 'true'
+           }
+
+          'beta' { 
+            $IsPrerelease   = $true
+
+            $SHOULD_DEPLOY  = 'true'
+           }
+
+          'release-*' {
+            $IsPrerelease   = $false
+
+            $SHOULD_DEPLOY  = 'true'
+          }
+
+          default {
+            $IsPrerelease   = $false
+
+            $SHOULD_DEPLOY  = 'false'
+          }
+        }
 
         $COMMIT_NUMBER = @($(git rev-list --count origin/master..), $(git rev-list --count HEAD))[$IsPrerelease]
+        $COMMIT_MESSAGE = $(git log -1 --pretty=%B)
+        $LAST_COMMITTER = $(git log -1 --pretty=format:%an)
 
-        echo "COMMIT_NUMBER=$COMMIT_NUMBER" >> $env:GITHUB_ENV
-
-    - name: Calculate package version
-      env:
-        PackageVersionString: ./.github/generatePackageVersion.ps1
-      run: |
-        $NuGetPackageVersion = & "$Env:PackageVersionString"
+        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:COMMIT_NUMBER=$COMMIT_NUMBER
+        "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)" > $null
+        $GetFileVersionOutput = $Matches[0]
         
-        Write-Output "Packge version to be used: $NuGetPackageVersion"
+        $NUGET_PACKAGE_VERSION = $GetFileVersionOutput
+        
+        if ($IsPrerelease -eq $true) {
+          $VersionTag =  @("trunk", "stable")[$IsMaster]
+          $Timestamp = (Get-Date -AsUTC).ToString("yyyyMMddHHmmss")
+          $NUGET_PACKAGE_VERSION = $NUGET_PACKAGE_VERSION + "-" + $VersionTag + "." + $Timestamp
+        }
+        
+        Write-Output "Packge version to be used: $NUGET_PACKAGE_VERSION"
 
-        echo "NuGetPackageVersion=$NuGetPackageVersion" >> $env:GITHUB_ENV
+        echo "NUGET_PACKAGE_VERSION=$NUGET_PACKAGE_VERSION" >> $env:GITHUB_ENV
+        echo "IsPrerelease=$IsPrerelease" >> $env:GITHUB_ENV
+
+        echo "::set-output name=NUGET_PACKAGE_VERSION::$NUGET_PACKAGE_VERSION"
+        echo "::set-output name=SHOULD_DEPLOY::$SHOULD_DEPLOY"
+        echo "::set-output name=LAST_COMMITTER::$LAST_COMMITTER"
+        echo "::set-output name=COMMIT_MESSAGE::$COMMIT_MESSAGE"
+
+    - name: Write SNK
+      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      env:
+        SNK_BASE64:  ${{ secrets.ARTECH_SNK_BASE64 }}
+      run: |
+        $artech_snk_path = Join-Path (Get-Item .).FullName "Artech.snk"
+        $bytes = [Convert]::FromBase64String($Env:SNK_BASE64)
+        [IO.File]::WriteAllBytes($artech_snk_path, $bytes)
+
+        echo "ARTECH_SNK_FILE=$artech_snk_path" >> $env:GITHUB_ENV
 
     - name: Restore packages
       run: dotnet restore $Env:SolutionFile
@@ -74,4 +124,113 @@ jobs:
       run: dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
 
     - name: Pack
-      run: dotnet pack $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration /p:Version=$Env:NuGetPackageVersion
+      run: dotnet pack $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration /p:Version=$Env:NUGET_PACKAGE_VERSION
+
+    - name: Sign packages
+      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      env:
+        TIMESTAMPER_URL: ${{ secrets.CODE_SIGN_CERTIFICATE_TIMESTAMPER_URL }}
+        PFX_BASE64: ${{ secrets.CODE_SIGN_CERTIFICATE_BASE64 }}
+        PFX_PASS: ${{ secrets.CODE_SIGN_CERTIFICATE_PASSWORD }}
+      run: |
+        $codesign_pfx = "code_sign_cert.pfx"
+        $bytes = [Convert]::FromBase64String($Env:PFX_BASE64)
+        [IO.File]::WriteAllBytes($codesign_pfx, $bytes)
+
+        Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
+          dotnet nuget sign $_.FullName --certificate-path $codesign_pfx --certificate-password $Env:PFX_PASS --timestamper $Env:TIMESTAMPER_URL
+        }
+
+    - name: Configure Azure Artifacts feed
+      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      env:
+        AzureArtifactsPrereleaseFeedURL: https://pkgs.dev.azure.com/genexuslabs/13fb82d9-57a8-49ef-95bb-0ec8324e470c/_packaging/dotnet-prereleases/nuget/v3/index.json
+        AzureArtifactsReleaseFeedURL: https://pkgs.dev.azure.com/genexuslabs/13fb82d9-57a8-49ef-95bb-0ec8324e470c/_packaging/dotnet-releases/nuget/v3/index.json
+      run: |
+        $IsPrerelease = [System.Convert]::ToBoolean($Env:IsPrerelease)
+        $AZURE_ARTIFACTS_URL = @("$Env:AzureArtifactsReleaseFeedURL", "$Env:AzureArtifactsPrereleaseFeedURL")[$IsPrerelease]
+
+        dotnet nuget add source $AZURE_ARTIFACTS_URL --name AzureArtifacts --username genexuslabs --password ${{ secrets.AZURE_ARTIFACTS_TOKEN }}
+
+        echo "AZURE_ARTIFACTS_URL=$AZURE_ARTIFACTS_URL" >> $env:GITHUB_ENV
+
+    - name: Push packages
+      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      env:
+        GPRFeedURL: https://nuget.pkg.github.com/genexuslabs/index.json
+        NuGetFeedURL: https://api.nuget.org/v3/index.json
+      run: |
+        $IsPrerelease = [System.Convert]::ToBoolean($Env:IsPrerelease)
+
+        $totalPackages  = 0
+        $pushedToAzure  = 0
+        $pushedToGitHub = 0
+        $pushedToNuget  = 0
+
+        Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
+          $PushToGitHubArgs = @("nuget", "push", $_.FullName, "--source", $Env:GPRFeedURL, "--api-key", "${{ secrets.SECURE_TOKEN }}")
+          $PushToNugetArgs  = @("nuget", "push", $_.FullName, "--source", $Env:NuGetFeedURL, "--api-key", "${{ secrets.NUGET_ORG_TOKEN }}")
+          $PushToAzureArgs  = @("nuget", "push", $_.FullName, "--source", $Env:AZURE_ARTIFACTS_URL, "--api-key", "DUMMY-KEY")
+
+          if ([string]::IsNullOrEmpty("${{ github.event.inputs.skip-duplicates }}") ) {
+            $skipDuplicates = $true
+          } else {
+            $skipDuplicates = [System.Convert]::ToBoolean("${{ github.event.inputs.skip-duplicates }}")
+          }
+          
+          if ($skipDuplicates) {
+            $PushToNugetArgs  += "--skip-duplicate"
+            $PushToGitHubArgs += "--skip-duplicate"
+            $PushToAzureArgs  += "--skip-duplicate"
+          }
+          
+          dotnet $PushToAzureArgs
+          $pushedToAzure += 1
+
+          if (!$IsPrerelease) {
+            dotnet $PushToGitHubArgs
+            $pushedToGitHub += 1
+
+            dotnet $PushToNugetArgs
+            $pushedToNuget += 1
+          }
+
+          $totalPackages += 1
+        }
+
+        Write-Output "Number of packages found: $totalPackages"
+
+        Write-Output "Number of packages pushed to Azure Artifacts: $pushedToAzure"
+        Write-Output "Number of packages pushed to GitHub: $pushedToGitHub"
+        Write-Output "Number of packages pushed to Nuget.org: $pushedToNuget"
+
+  dispatch-build:
+    name: Dispatch build result
+    needs: build
+    if: github.repository_owner == 'GeneXusLabs' && needs.build.outputs.SHOULD_DEPLOY == 'true'
+    
+    runs-on: ubuntu-latest
+
+    concurrency: 
+      group: build-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout action
+        uses: actions/checkout@v3
+        with:
+            repository: genexuslabs/dispatch-build-result
+            ref: releases/v2
+            token: ${{ secrets.SECURE_TOKEN }}
+            path: ./tmp/.github/actions/dispatch-build-result
+
+      - name: Dispatch build result
+        uses: ./tmp/.github/actions/dispatch-build-result
+        with:
+          component-name: ${{ github.event.inputs.repository }}
+          branch-ref: ${{ env.GIT_REF }}
+          new-version: ${{ needs.build.outputs.NUGET_VERSION }}
+          committer: ${{ needs.build.outputs.LAST_COMMITTER }}
+          commit-message: ${{ needs.build.outputs.COMMIT_MESSAGE }}
+          token: ${{ secrets.SECURE_TOKEN }}
+

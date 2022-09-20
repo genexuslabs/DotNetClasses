@@ -186,7 +186,6 @@ namespace GeneXus.Application
 #endif
 		}
 
-
 		private Dictionary<string, object> SetAlias(Dictionary<string, object> bodyParameters, Dictionary<string, string> varAlias)
 		{
 			Dictionary<string, object> parameters = new Dictionary<string, object>();
@@ -389,41 +388,11 @@ namespace GeneXus.Application
 		{
 			return MethodBodyExecute(key);
 		}
-
 		public Dictionary<string, object> ReadRequestParameters(Stream stream)
 		{
-			var bodyParameters = new Dictionary<string, object>();
-			using (StreamReader streamReader = new StreamReader(stream))
-			{
-				if (!streamReader.EndOfStream)
-				{
-					try
-					{
-						string json = streamReader.ReadToEnd();
-						var data = JSONHelper.ReadJSON<dynamic>(json);
-						JObject jobj = data as JObject;
-						JArray jArray = data as JArray;
-						if (jobj != null)
-						{
-							foreach (string name in jobj.Names)
-							{
-								bodyParameters.Add(name.ToLower(), jobj[name]);
-							}
-						}
-						else if (jArray != null)
-						{
-							bodyParameters.Add(string.Empty, jArray);
-						}
-					}
-					catch (Exception ex)
-					{
-						GXLogging.Error(log, ex, "Parsing error in Body ");
-
-					}
-				}
-			}
-			return bodyParameters;
+			return RestAPIHelpers.ReadRestBodyParameters(stream);
 		}
+
 		protected IDictionary<string, object> ReadQueryParameters(Dictionary<string,string>  varAlias)
 		{
 			NameValueCollection query = _httpContext.Request.GetQueryString();

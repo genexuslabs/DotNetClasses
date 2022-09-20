@@ -28,7 +28,7 @@ namespace xUnitTesting
 			string responseBody = await response.Content.ReadAsStringAsync();
 			Assert.Empty(responseBody);
 		}
-		[Fact(Skip = "Non deterministic")]
+		[Fact(Skip="Non deterministic")]
 		public async Task MultithreadRestServiceAccess_ContextDisposed()
 		{
 			HttpClient client = server.CreateClient();

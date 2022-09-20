@@ -321,7 +321,8 @@ namespace GeneXus.Utils
 		public void UploadImpl(Stream stream)
 		{
 			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
-			gxobject.WcfExecute(stream, WebOperationContext.Current.IncomingRequest.ContentType);
+			IncomingWebRequestContext request = WebOperationContext.Current.IncomingRequest;
+			gxobject.WcfExecute(stream, request.ContentType, request.ContentLength);
 		}
 		public void ErrorCheck(IGxSilentTrn trn)
 		{

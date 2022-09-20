@@ -75,7 +75,7 @@ namespace GeneXus.Application
 		GxHttpContextVars httpContextVars { get; set; }
 		T ReadSessionKey<T>(string key) where T : class;
 		bool WriteSessionKey<T>(string key, T value) where T : class;
-
+		List<string[]> userStyleSheetFiles { get; }
 		void DoAfterInit();
 		void PushCurrentUrl();
 		bool isSmartDevice();
@@ -327,6 +327,11 @@ namespace GeneXus.Application
 		GxXmlContext _XMLContext;
 		[NonSerialized]
 		GxErrorHandlerInfo _errorHandlerInfo;
+		[NonSerialized]
+		private List<string[]> _userStyleSheetFiles = new List<string[]>();
+		public List<string[]> userStyleSheetFiles {
+			get { return _userStyleSheetFiles; }
+		}
 		string _gxUserId;
 		string _clientId = string.Empty;
 		string _gxPasswrd;
@@ -1712,10 +1717,7 @@ namespace GeneXus.Application
 #if !NETCORE
 					HttpContext.Session[key] = value;
 #else
-					if (!_HttpContext.Response.HasStarted)
-					{
-						HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
-					}
+					HttpContext.Session.SetString(key, (value != null ? JSONHelper.Serialize(value) : string.Empty));
 #endif
 					return true;
 				}
