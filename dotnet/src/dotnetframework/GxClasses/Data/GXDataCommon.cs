@@ -861,7 +861,7 @@ namespace GeneXus.Data
 		{			
 			Uri uri;
 			string fileName = fileNameParm;
-			bool inLocalStorage = dbBlob || GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null;
+			bool inLocalStorage = dbBlob || ServiceFactory.GetExternalProvider() == null;
 			bool validFileName = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(fileName.Trim()) && String.Compare(fileName, "about:blank", false) != 0;
 			byte[] binary = Array.Empty<byte>();
 

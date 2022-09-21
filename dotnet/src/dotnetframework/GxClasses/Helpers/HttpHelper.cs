@@ -839,10 +839,10 @@ namespace GeneXus.Http
 #endif
 		public static string GetRawUrl(this HttpRequest request)
 		{
-#if NETCORE
+#if NETCORE			
 			var httpContext = request.HttpContext;
 			var requestFeature = httpContext.Features.Get<IHttpRequestFeature>();
-			return requestFeature.RawTarget;
+			return !string.IsNullOrEmpty(requestFeature.RawTarget) ? requestFeature.RawTarget: request.GetEncodedPathAndQuery();
 #else
 			return request.RawUrl;
 #endif
