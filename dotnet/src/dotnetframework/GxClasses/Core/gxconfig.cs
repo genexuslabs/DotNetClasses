@@ -1114,7 +1114,7 @@ namespace GeneXus.Configuration
 						}
 						if (!String.IsNullOrEmpty(mediaPath))
 							defaultPath = false;
-						if (GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null)
+						if (ServiceFactory.GetExternalProvider() == null)
 						{
 							if (defaultPath || !Path.IsPathRooted(mediaPath))
 								mediaPath = Path.Combine(GxContext.StaticPhysicalPath(), mediaPath) + Path.DirectorySeparatorChar;
@@ -1228,7 +1228,7 @@ namespace GeneXus.Configuration
 						if (String.IsNullOrEmpty(blobPath) || !Path.IsPathRooted(blobPath))
 						{
 							blobPathFolderName = String.IsNullOrEmpty(blobPath) ? blobPath : blobPath.TrimEnd('/', '\\').TrimStart('/', '\\');
-							if (GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null)
+							if (ServiceFactory.GetExternalProvider() == null)
 							{
 								blobPath = Path.Combine(GxContext.StaticPhysicalPath(), blobPath);
 								if (blobPath[blobPath.Length - 1] != Path.DirectorySeparatorChar)

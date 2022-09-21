@@ -49,6 +49,12 @@ namespace GeneXus.Services
 				}
 				return s_instance;
 			}
+			set { }			
+		}
+
+		public void AddService(string name, GXService service)
+		{
+			services[name] = service;
 		}
 
 		public static void LoadFromFile(string fileName, ref GXServices services)
@@ -122,9 +128,9 @@ namespace GeneXus.Services
 			service.Properties = properties;
 			service.AllowMultiple = string.IsNullOrEmpty(allowMultiple) ? false : bool.Parse(allowMultiple);
 			if (service.AllowMultiple)
-				services[$"{service.Type}:{service.Name}"] = service;
+				AddService($"{service.Type}:{service.Name}", service);
 			else
-				services[type] = service;
+				AddService(type, service);
 
 		}
 
@@ -195,6 +201,11 @@ namespace GeneXus.Services
 				externalProvider = GetExternalProviderImpl(GXServices.STORAGE_SERVICE);
 			}
 			return externalProvider;
+		}
+
+		public static void SetExternalProvider(ExternalProvider provider)
+		{
+			externalProvider = provider;
 		}
 
 		public static ExternalProvider GetExternalProviderImpl(string service)

@@ -588,7 +588,7 @@ namespace GeneXus.Data.NTier.ADO
 		public void SetParameterMultimedia(int id, string image_gxi, string image, string tableName, string fieldName)
 {
 			GXLogging.Debug(log, "SetParameterMultimedia image_gxi:", image_gxi + " image:" + image);
-			bool storageServiceEnabled = !string.IsNullOrEmpty(tableName) && !string.IsNullOrEmpty(fieldName) && (GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null);
+			bool storageServiceEnabled = !string.IsNullOrEmpty(tableName) && !string.IsNullOrEmpty(fieldName) && (ServiceFactory.GetExternalProvider() != null);
 			string imageUploadName=image;
 			if (GxUploadHelper.IsUpload(image))
 			{
