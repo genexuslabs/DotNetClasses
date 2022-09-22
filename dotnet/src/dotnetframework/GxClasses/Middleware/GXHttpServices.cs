@@ -275,6 +275,9 @@ namespace GeneXus.Http
 		public GXObjectUploadServices(IGxContext ctx)
 		{
 			this.context = ctx;
+#if NETCORE
+			localHttpContext.Request.EnableBuffering();
+#endif
 		}
 
 		public override void webExecute()
@@ -326,9 +329,14 @@ namespace GeneXus.Http
 				}
 				else
 				{
-					Stream istream = localHttpContext.Request.GetInputStream();
 					string contentType = localHttpContext.Request.ContentType;
-					WcfExecute(istream, contentType);
+#if NETCORE
+					WcfExecute(localHttpContext.Request.Body, contentType);
+#else
+					Stream istream = localHttpContext.Request.GetBufferedInputStream();					
+					WcfExecute(istream, contentType);					
+#endif
+
 				}
 			}
 			catch (Exception e)
