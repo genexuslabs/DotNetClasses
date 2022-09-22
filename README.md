@@ -81,27 +81,16 @@ For the following steps must be executed from inside ```dotnet``` directory:
 - ```dotnet build project.csproj```
 
 ## How to test your changes with a GeneXus installation?
-- ```dotnet msbuild /t:build;CopyAssemblies DotNetStandardClasses.sln```
+- ```dotnet msbuild /p:TF=net462 /p:DeployDirectory=C:\KB\CSharpModel\web\bin DotNetStandardClasses.sln```
 
-It compiles the solution and copies all the .NET Framework assemblies to the folder dotnet/build. Then, you can copy those files to a GeneXus installation or to your web application directory.
+It compiles the solution and copies all the .NET Framework assemblies to the folder C:\KB\CSharpModel\web\bin.
 
-You can use the following parameters to customize the deploy:
-- TargetFramework: only the assemblies that are generated for this framework will be deployed. Valid values are: `net462` (for GeneXus NET Framework generator) and `net6` (for GeneXus NET generator).
-- DeployDirectory: specifies the target directory to copy assemblies, by default it is dotnet\bin
+- ```dotnet msbuild /p:TF=net6.0 /p:DeployDirectory=C:\KB\NetModel\web\bin DotNetStandardClasses.sln```
 
-Samples:
+It compiles the solution and copies all the .NET 6 assemblies to the folder C:\KB\NetModel\web\bin.
 
-- ```dotnet msbuild /t:CopyAssemblies /p:TargetFramework=net6.0 DotNetStandardClasses.sln ```
-
-It copies .NET 6 assemblies to the folder dotnet\bin
-
-- ```dotnet msbuild /t:CopyAssemblies /p:DeployDirectory=C:\KB\NetModel\web\bin /p:TargetFramework=net6.0 DotNetStandardClasses.sln ```
-
-It copies .NET Framework assemblies to the folder C:\KB\NetModel\web\bin
-
-- ```dotnet msbuild /t:build;CopyAssemblies /p:DeployDirectory=C:\KB\CSharpModel\web\bin /p:TargetFramework=net462 DotNetStandardClasses.sln```
-
-It builds the solution and copies .NET framework assemblies to the folder C:\KB\CSharpModel\web\bin
+- TF: target framework that will be deployed. Valid values are: `net462` (for GeneXus NET Framework generator) and `net6.0` (for GeneXus NET generator).
+- DeployDirectory: specifies the target directory to copy assemblies.
 
 
 ## Advanced information
