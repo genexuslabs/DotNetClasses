@@ -26,9 +26,19 @@ namespace GeneXus.Office.ExcelGXEPPlus
                     GxFile temp = new GxFile(Path.GetDirectoryName(template), template);
                     if (temp.Exists())
                     {
-                        GXLogging.Debug(log, "Opening Template " + template);
-                        p = new ExcelPackage(temp.GetStream());
-						OpenFromTemplate = true;
+						Stream stream = temp.GetStream();
+						if (stream != null)
+						{
+							GXLogging.Debug(log, "Opening Template " + template);
+							p = new ExcelPackage(stream);
+							OpenFromTemplate = true;
+						}
+						else
+						{
+							errCod = 4;
+							errDescription = "Invalid template.";
+							return errCod;
+						}
 
 					}
                     else
@@ -47,7 +57,19 @@ namespace GeneXus.Office.ExcelGXEPPlus
                         fileName += Constants.EXCEL2007Extension;
                     }
 					if (file.IsExternalFile)
-						p = new ExcelPackage(file.GetStream());
+					{
+						Stream stream = file.GetStream();
+						if (stream != null)
+						{
+							p = new ExcelPackage(file.GetStream());
+						}
+						else
+						{
+							errCod = 4;
+							errDescription = "Invalid file.";
+							return errCod;
+						}
+					}
 					else
 						p = new ExcelPackage(new FileInfo(fileName));
 				}

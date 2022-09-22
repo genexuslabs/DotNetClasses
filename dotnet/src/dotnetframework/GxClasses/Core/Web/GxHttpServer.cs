@@ -17,6 +17,7 @@ namespace GeneXus.Http.Server
 	using System.Net.Http;
 	using Stubble.Core.Contexts;
 	using System.Net.Mime;
+
 #endif
 
 	public class GxHttpCookie
@@ -376,6 +377,22 @@ namespace GeneXus.Http.Server
 				return string.Empty;
 			}
 		}
+		// create function to convert stream to string
+
+#if NETCORE
+		const int StreamReaderDefaultBufferSize = -1;
+#else
+		const int StreamReaderDefaultBufferSize = 1024;
+#endif
+		private string GetStringFromStream(Stream stream)
+		{
+			if (stream == null)
+				return string.Empty;
+			using (StreamReader reader = new StreamReader(stream, System.Text.Encoding.UTF8, true, StreamReaderDefaultBufferSize, true))
+			{
+				return reader.ReadToEnd();
+			}
+		}
 		public override string ToString()
 		{
 			if (_httpReq == null)
@@ -383,10 +400,7 @@ namespace GeneXus.Http.Server
 #if NETCORE
 			return _httpReq.GetRawBodyString();
 #else
-			using (StreamReader reader = new StreamReader(_httpReq.InputStream))
-			{
-				return reader.ReadToEnd();
-			}
+			return GetStringFromStream(_httpReq.InputStream);
 #endif
 		}
 		public void ToFile(string FileName)
