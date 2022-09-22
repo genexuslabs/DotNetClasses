@@ -446,7 +446,7 @@ namespace GeneXus.Http
 
 		internal static void AllowHeader(HttpContext httpContext, List<string> methods)
 		{
-			httpContext.Response.AppendHeader(HeaderNames.Allow, GXUtil.UrlEncode(string.Join(",", methods)));
+			httpContext.Response.AppendHeader(HeaderNames.Allow, string.Join(",", methods));
 		}
 	}
 #if NETCORE
