@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
@@ -20,6 +21,7 @@ using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Net.Http.Headers;
 
 namespace GxClasses.Web.Middleware
 {
@@ -254,26 +256,24 @@ namespace GxClasses.Web.Middleware
 						}
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
-							string mthheaders = "OPTIONS,HEAD";
+							List<string> mthheaders = new List<string>() { $"{HttpMethod.Options.Method},{HttpMethod.Head.Method}" };
 							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath))
 							{
 								foreach (Tuple<string, string> t in servicesMapData[actualPath].Keys)
 								{
 									if (t.Item1.Equals(controllerWithParms.ToLower()))
 									{
-										mthheaders += "," + t.Item2;
+										mthheaders.Add(t.Item2);
 									}
 								}
 							}
 							else
 							{
-								mthheaders += ", GET, POST";
+								mthheaders.Add(HttpMethod.Get.Method);
+								mthheaders.Add(HttpMethod.Post.Method);
 							}
-							context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { (string)context.Request.Headers["Origin"] });
-							context.Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Origin, X-Requested-With, Content-Type, Accept" });
-							context.Response.Headers.Add("Access-Control-Allow-Methods", new[] { mthheaders });
-							context.Response.Headers.Add("Access-Control-Allow-Credentials", new[] { "true" });
-							context.Response.Headers.Add("Allow", mthheaders);
+							HttpHelper.CorsHeaders(context);
+							HttpHelper.AllowHeader(context, mthheaders);
 							context.Response.StatusCode = (int)HttpStatusCode.OK;
 						}
 						else

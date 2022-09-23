@@ -6,10 +6,12 @@ namespace GeneXus.Configuration
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.Extensions.Configuration;
+	using System.Text;
 #else
 	using System.Web;
-#endif
 	using System.Configuration;
+	using System.Collections.Generic;
+#endif
 	using System.Collections;
 	using System.Collections.Specialized;
 	using System.Xml;
@@ -23,9 +25,7 @@ namespace GeneXus.Configuration
 	using System.Collections.Concurrent;
 	using System.Reflection;
 	using System.Runtime.Serialization.Json;
-	using System.Collections.Generic;
 	using GxClasses.Helpers;
-	using System.Text;
 
 	public class Config
 	{
@@ -1312,6 +1312,19 @@ namespace GeneXus.Configuration
 			set { _applicationPath = value; }
 		}
 
+		internal static bool CorsEnabled {
+			get {
+				return !string.IsNullOrEmpty(CorsAllowedOrigins());
+			}
+		}
+
+		internal static string CorsAllowedOrigins()
+		{
+			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
+				return corsOrigin;
+			else
+				return string.Empty;
+		}
 		public static int GetMaximumOpenCursors()
 		{
 			if (maximumOpenCursors == 0)
@@ -1372,5 +1385,6 @@ namespace GeneXus.Configuration
 			return httpclient_max_per_route;
 
 		}
+
 	}
 }

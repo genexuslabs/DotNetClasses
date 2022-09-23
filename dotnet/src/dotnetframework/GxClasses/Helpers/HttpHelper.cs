@@ -8,12 +8,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Primitives;
-using System.Net.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
 #else
 using System.ServiceModel.Web;
 using System.ServiceModel;
-
+using System.ServiceModel.Channels;
 #endif
 using System;
 using System.Collections.Generic;
@@ -25,6 +24,8 @@ using System.Web;
 using System.Runtime.Serialization;
 using GeneXus.Mime;
 using System.Text.RegularExpressions;
+using Microsoft.Net.Http.Headers;
+using System.Net.Http;
 
 namespace GeneXus.Http
 {
@@ -81,6 +82,99 @@ namespace GeneXus.Http
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
+
+		const string CORS_MAX_AGE_SECONDS = "86400";
+		internal static void CorsHeaders(HttpContext httpContext)
+		{
+			if (Preferences.CorsEnabled)
+			{
+				string[] origins = Preferences.CorsAllowedOrigins().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+				if (httpContext != null)
+				{
+					string requestHeaders = httpContext.Request.Headers[HeaderNames.AccessControlRequestHeaders];
+					string requestMethod = httpContext.Request.Headers[HeaderNames.AccessControlRequestMethod];
+					CorsValuesToHeaders(httpContext.Response, origins, requestHeaders, requestMethod);
+				} 
+			}
+		}
+#if !NETCORE
+		internal static void CorsHeaders(HttpResponseMessageProperty response, string requestHeaders, string requestMethods)
+		{
+			if (Preferences.CorsEnabled)
+			{
+				string[] origins = Preferences.CorsAllowedOrigins().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+				CorsValuesToHeaders(response, origins, requestHeaders, requestMethods);
+			}
+		}
+		internal static void CorsHeaders(WebOperationContext wcfContext)
+		{
+			if (Preferences.CorsEnabled)
+			{
+				string[] origins = Preferences.CorsAllowedOrigins().Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+				if (wcfContext != null)
+				{
+					string requestHeaders = wcfContext.IncomingRequest.Headers[HeaderNames.AccessControlRequestHeaders];
+					string requestMethods = wcfContext.IncomingRequest.Headers[HeaderNames.AccessControlRequestMethod];
+					CorsValuesToHeaders(wcfContext.OutgoingResponse, origins, requestHeaders, requestMethods);
+				}
+
+			}
+		}
+		static void CorsValuesToHeaders(OutgoingWebResponseContext httpResponse, string[] origins, string requestHeaders, string requestMethods)
+		{
+			foreach (string origin in origins)
+			{
+				if (!string.IsNullOrEmpty(origin))
+					httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
+			}
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+
+			if (!string.IsNullOrEmpty(requestHeaders))
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+
+			if (!string.IsNullOrEmpty(requestMethods))
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+
+			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
+
+		}
+		static void CorsValuesToHeaders(HttpResponseMessageProperty httpResponse, string[] origins, string requestHeaders, string requestMethods)
+		{
+			foreach (string origin in origins)
+			{
+				if (!string.IsNullOrEmpty(origin))
+					httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
+			}
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+
+			if (!string.IsNullOrEmpty(requestHeaders))
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+
+			if (!string.IsNullOrEmpty(requestMethods))
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+
+			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
+		}
+
+#endif
+		static void CorsValuesToHeaders(HttpResponse httpResponse, string[] origins, string requestHeaders, string requestMethods)
+		{
+			//AppendHeader must be used on httpResponse (instead of httpResponse.Headers[]) to support WebDev.WevServer2
+			foreach (string origin in origins)
+			{
+				if (!string.IsNullOrEmpty(origin))
+					httpResponse.AppendHeader(HeaderNames.AccessControlAllowOrigin, origin);
+			}
+			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, true.ToString());
+
+			if (!string.IsNullOrEmpty(requestHeaders))
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, requestHeaders);
+
+			if (!string.IsNullOrEmpty(requestMethods))
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, requestMethods);
+
+			httpResponse.AppendHeader(HeaderNames.AccessControlMaxAge, CORS_MAX_AGE_SECONDS);
+		}
 
 		public static void SetResponseStatus(HttpContext httpContext, string statusCode, string statusDescription)
 		{
@@ -282,7 +376,7 @@ namespace GeneXus.Http
 #if NETCORE
 		public static byte[] DownloadFile(string url, out HttpStatusCode statusCode)
 		{
-			var buffer = Array.Empty<byte>();
+			byte[] buffer = Array.Empty<byte>();
 			using (var client = new HttpClient())
 			{
 				using (HttpResponseMessage response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result)
@@ -350,6 +444,10 @@ namespace GeneXus.Http
 			}
 		}
 
+		internal static void AllowHeader(HttpContext httpContext, List<string> methods)
+		{
+			httpContext.Response.AppendHeader(HeaderNames.Allow, string.Join(",", methods));
+		}
 	}
 #if NETCORE
 	public class HttpCookieCollection : Dictionary<string, HttpCookie>
@@ -671,7 +769,7 @@ namespace GeneXus.Http
 #if NETCORE
 			NameValueCollection paramValues = new NameValueCollection();
 
-			foreach (var key in request.Query.Keys)
+			foreach (string key in request.Query.Keys)
 			{
 				paramValues.Add(key, request.Query[key].ToString());
 			}
@@ -691,7 +789,7 @@ namespace GeneXus.Http
 			NameValueCollection paramValues = request.GetQueryString();
 			try
 			{
-				foreach (var key in request.Form.Keys)
+				foreach (string key in request.Form.Keys)
 				{
 					paramValues.Add(key, request.Form[key].ToString());
 				}
@@ -699,7 +797,7 @@ namespace GeneXus.Http
 			catch (InvalidOperationException) {
 				//The Form property is populated when the HTTP request Content-Type value is either "application/x-www-form-urlencoded" or "multipart/form-data".
 			}
-			foreach (var key in request.Cookies.Keys)
+			foreach (string key in request.Cookies.Keys)
 			{
 				paramValues.Add(key, request.Cookies[key]);
 			}
@@ -878,7 +976,7 @@ namespace GeneXus.Http
 		public static string GetFilePath(this HttpRequest request)
 		{
 #if NETCORE
-			var basePath = string.Empty;
+			string basePath = string.Empty;
 			if (request.PathBase.HasValue)
 				basePath = request.PathBase.Value;
 			if (request.Path.HasValue)

@@ -9,12 +9,51 @@ using GeneXus.Application;
 using GeneXus.Utils;
 using GeneXus.Http.HttpModules;
 using GeneXus.Metadata;
-using GeneXus.Procedure;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Net.Http;
+using GeneXus.Http;
 
 namespace GeneXus.HttpHandlerFactory
 {
+	internal class OptionsApiObjectRequestHandler : IHttpHandler
+	{
+		string actualPath;
+		string objectName;
+		internal OptionsApiObjectRequestHandler(string path, string name)
+		{
+			actualPath = path;
+			objectName = name;
+		}
+		public void ProcessRequest(HttpContext context)
+		{
+			// OPTIONS VERB
+			List<string> mthheaders = new List<string>() { $"{HttpMethod.Options.Method},{HttpMethod.Head.Method}" };
+			bool found = false;
+			foreach (Tuple<string, string> t in GXAPIModule.servicesMapData[actualPath].Keys)
+			{
+				if (t.Item1.Equals(objectName.ToLower()))
+				{
+					mthheaders.Add(t.Item2);
+					found = true;
+				}
+			}
+			if (found)
+			{
+				HttpHelper.CorsHeaders(context);
+				HttpHelper.AllowHeader(context, mthheaders);
+			}
+			else
+			{
+				context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+			}
+		}		
+
+		public bool IsReusable
+		{
+			get { return false; }
+		}
+	}
 	class HandlerFactory : IHttpHandlerFactory
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -70,43 +109,19 @@ namespace GeneXus.HttpHandlerFactory
 							asssemblycontroller = addNspace + "." + tmpController;
 							nspace += "." + addNspace;
 						}
-						var gxContext = GxContext.CreateDefaultInstance();
-						var handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
+						GxContext gxContext = GxContext.CreateDefaultInstance();
+						object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
 
 						gxContext.HttpContext = context;						
 						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias, routeParms);
 						return restWrapper;
 					}
-				}
+				} 
 				else
-				{					
-					if ( requestType.Equals("OPTIONS") && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
+				{
+					if ( requestType.Equals(HttpMethod.Options.Method) && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
 					{
-						// OPTIONS VERB
-						string mthheaders = "OPTIONS,HEAD";
-						bool found = false;
-						foreach (Tuple<string, string> t in GXAPIModule.servicesMapData[actualPath].Keys)
-						{
-							if (t.Item1.Equals(objectName.ToLower()))
-							{
-								mthheaders += "," + t.Item2;
-								found = true;
-							}
-						}
-						if (found)
-						{
-							context.Response.Headers.Add("Allow", mthheaders);
-							context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
-							context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-							context.Response.Headers.Add("Access-Control-Allow-Methods", mthheaders);
-							context.Response.End();
-						}
-						else
-						{
-							context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-							context.Response.End();
-						}
-						return null;
+						return new OptionsApiObjectRequestHandler(actualPath, objectName);
 					}
 				}
 				return null;
