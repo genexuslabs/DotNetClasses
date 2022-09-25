@@ -25,6 +25,11 @@ namespace GeneXus.Messaging.Common
 			this.service = gXService;
 		}
 
+		public string GetEncryptedOptPropertyValue(string propertyName, string alternativePropertyName = null)
+		{
+			String value = GetEncryptedPropertyValue(propertyName, alternativePropertyName, null);		
+			return value;
+		}
 		public string GetEncryptedPropertyValue(string propertyName, string alternativePropertyName = null)
 		{
 			String value = GetEncryptedPropertyValue(propertyName, alternativePropertyName, null);

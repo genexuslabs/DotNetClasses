@@ -73,7 +73,9 @@ namespace GeneXus.Messaging.Common
 				case Providers.AzureServiceBus:
 					className = PropertyConstants.AZURE_SB_CLASSNAME;
 					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME);
-					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_QUEUECONNECTION);
+					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_TOPICNAME);
+					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME);
+					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING);
 					if (string.IsNullOrEmpty(providerService.ClassName) || !providerService.ClassName.Contains(className))
 					{
 						providerService.ClassName = PropertyConstants.AZURE_SB_PROVIDER_CLASSNAME;

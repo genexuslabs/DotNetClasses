@@ -20,7 +20,7 @@ namespace GeneXus.Messaging.Common
 		private const string SDT_MESSAGE_CLASS_NAME = @"SdtMessage";
 		private const string SDT_MESSAGEPROPERTY_CLASS_NAME = @"SdtMessageProperty";
 		//private const string SDT_MESSAGERESULT_CLASS_NAME = @"SdtMessageResult";
-		private const string NAMESPACE = @"GeneXus.Programs.genexusmessagingqueue.MessageBroker";
+		private const string NAMESPACE = @"GeneXus.Programs.genexusmessagingmessagebroker";
 		private const string GENEXUS_COMMON_DLL = @"GeneXus.Programs.Common.dll";
 
 		public MessageQueue()
@@ -73,15 +73,76 @@ namespace GeneXus.Messaging.Common
 			}
 		}
 
-		public IList<GxUserType> GetMessages(GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public bool ConsumeMessage(GxUserType messageQueue, string options, out GXBaseCollection<SdtMessages_Message> errorMessages)
+		{
+			bool success = false;
+			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			GxUserType result = new GxUserType();
+			try
+			{
+				BrokerMessage brokerQueueMessage = TransformGXUserTypeToBrokerMessage(messageQueue);
+				LoadAssemblyIfRequired();
+				try
+				{
+					ValidQueue();
+					return (messageBroker.ConsumeMessage(brokerQueueMessage, options));
+				}
+				catch (Exception ex)
+				{
+					QueueErrorMessagesSetup(ex, out errorMessages);
+					success = false;
+					GXLogging.Error(logger, ex);
+				}
+			}
+			catch (Exception ex)
+			{
+				success = false;
+				GXLogging.Error(logger, ex);
+				throw ex;
+			}
+			return success;
+		}
+		public GxUserType GetMessage(string options, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		{
+			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			GxUserType receivedMessage = new GxUserType();
+			success = false;
+			try
+			{
+				try
+				{
+					ValidQueue();
+					BrokerMessage brokerMessage = messageBroker.GetMessage(options, out success);
+					LoadAssemblyIfRequired();
+					
+					if (TransformBrokerMessage(brokerMessage) is GxUserType result)
+					{
+						success = true;
+						return result;
+					}
+				}
+				catch (Exception ex)
+				{
+					QueueErrorMessagesSetup(ex, out errorMessages);
+					GXLogging.Error(logger, ex);
+					success = false;
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(logger, ex);
+				success = false;
+				throw ex;
+			}
+			return receivedMessage;
+		}
+		public IList<GxUserType> GetMessages(string options, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			IList<GxUserType> resultMessages = new List<GxUserType>();
 			success = false;
 			try
 			{
-				BrokerMessageOptions options = TransformOptions(messageQueueOptions);
-
 				try
 				{
 					ValidQueue();
@@ -111,7 +172,7 @@ namespace GeneXus.Messaging.Common
 
 			return resultMessages;
 		}
-		public bool SendMessage(GxUserType messageQueue, out GXBaseCollection<SdtMessages_Message> errorMessages)
+		public bool SendMessage(GxUserType messageQueue, string options, out GXBaseCollection<SdtMessages_Message> errorMessages)
 		{
 			bool success = false;
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
@@ -123,7 +184,7 @@ namespace GeneXus.Messaging.Common
 				try
 				{
 					ValidQueue();
-					return(messageBroker.SendMessage(brokerQueueMessage));
+					return(messageBroker.SendMessage(brokerQueueMessage, options));
 				}
 				catch (Exception ex)
 				{
@@ -141,13 +202,12 @@ namespace GeneXus.Messaging.Common
 			return success;
 		}
 
-		public bool SendMessages(IList queueMessages, GxUserType messageQueueOptions, out GXBaseCollection<SdtMessages_Message> errorMessages)
+		public bool SendMessages(IList queueMessages, string options, out GXBaseCollection<SdtMessages_Message> errorMessages)
 		{	
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			bool success = false;
 			try
 			{
-				BrokerMessageOptions options = TransformOptions(messageQueueOptions);
 				IList<BrokerMessage> brokerMessagesList = new List<BrokerMessage>();	
 				foreach (GxUserType queueMessage in queueMessages)
 				{
@@ -239,15 +299,19 @@ namespace GeneXus.Messaging.Common
 		private BrokerMessageOptions TransformOptions(GxUserType messageQueueOptions)
 		{
 			BrokerMessageOptions options = new BrokerMessageOptions();
-			//TO DO Check the valid options, ex
-			//https://docs.microsoft.com/en-us/dotnet/api/azure.messaging.servicebus.createmessagebatchoptions.maxsizeinbytes?view=azure-dotnet#azure-messaging-servicebus-createmessagebatchoptions-maxsizeinbytes
-
+			
 			options.MaxNumberOfMessages = messageQueueOptions.GetPropertyValue<short>("Maxnumberofmessages");
 			options.DeleteConsumedMessages = messageQueueOptions.GetPropertyValue<bool>("Deleteconsumedmessages");
 			options.WaitTimeout = messageQueueOptions.GetPropertyValue<int>("Waittimeout");
 			options.VisibilityTimeout = messageQueueOptions.GetPropertyValue<int>("Visibilitytimeout");
 			options.TimetoLive = messageQueueOptions.GetPropertyValue<int>("Timetolive");
-			return options;
+			options.DelaySeconds = messageQueueOptions.GetPropertyValue<int>("Delayseconds");
+			options.ReceiveMode = messageQueueOptions.GetPropertyValue<short>("Receivemode");
+			options.ReceiveRequestAttemptId = messageQueueOptions.GetPropertyValue<string>("Receiverequestattemptid");
+			options.ReceiveMessageAttributes = messageQueueOptions.GetPropertyValue<bool>("Receivemessageattributes");
+			options.PrefetchCount = messageQueueOptions.GetPropertyValue<short>("Prefetchcount");
+			options.SubscriptionName = messageQueueOptions.GetPropertyValue<string>("Subscriptionname");
+;			return options;
 		}
 
 		private BrokerMessage TransformGXUserTypeToBrokerMessage(GxUserType queueMessage)
