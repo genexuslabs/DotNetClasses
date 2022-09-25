@@ -36,7 +36,7 @@ namespace UnitTesting
 			brokerMessage.MessageId = "TestMsgId";
 			brokerMessage.MessageBody = "This is the message body";
 
-			bool success = messageBroker.SendMessage(brokerMessage);
+			bool success = messageBroker.SendMessage(brokerMessage,String.Empty);
 
 			Assert.True(success);
 
@@ -59,7 +59,7 @@ namespace UnitTesting
 
 			BrokerMessageOptions options = new BrokerMessageOptions();
 
-			bool success = messageBroker.SendMessages(messages, options);
+			bool success = messageBroker.SendMessages(messages, String.Empty);
 
 			Assert.True(success);
 		}
@@ -67,7 +67,7 @@ namespace UnitTesting
 		public void TestGetBatchMessagesMethod()
 		{	
 			BrokerMessageOptions options = new BrokerMessageOptions();
-			IList<BrokerMessage> messages = messageBroker.GetMessages(options, out bool success);
+			IList<BrokerMessage> messages = messageBroker.GetMessages(String.Empty, out bool success);
 			Assert.True(success);
 		}
 	}
