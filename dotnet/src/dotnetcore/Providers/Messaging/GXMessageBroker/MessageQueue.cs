@@ -20,7 +20,7 @@ namespace GeneXus.Messaging.Common
 		private const string SDT_MESSAGE_CLASS_NAME = @"SdtMessage";
 		private const string SDT_MESSAGEPROPERTY_CLASS_NAME = @"SdtMessageProperty";
 		private const string NAMESPACE = @"GeneXus.Programs.genexusmessagingmessagebroker";
-		private const string GENEXUS_COMMON_DLL = @"GeneXus.Programs.Common.dll";
+		private const string MODULE_DLL = @"GeneXusMessagingMessageBroker";
 
 		public MessageQueue()
 		{
@@ -52,9 +52,7 @@ namespace GeneXus.Messaging.Common
 		{
 			if (assembly == null)
 			{
-				assembly = LoadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), GENEXUS_COMMON_DLL));
-				if (assembly == null)
-					assembly = LoadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", GENEXUS_COMMON_DLL));
+				assembly = AssemblyLoader.LoadAssembly(new AssemblyName(MODULE_DLL));
 			}
 		}
 
