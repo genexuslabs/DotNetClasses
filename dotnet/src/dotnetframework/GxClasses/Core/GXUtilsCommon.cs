@@ -5777,9 +5777,20 @@ namespace GeneXus.Utils
 				ThreadPool.QueueUserWorkItem(
 					arg =>
 					{
-						callbak(state);
-						resetEvent.Set();
-						events.TryRemove(eventGuid, out ManualResetEvent _);
+						try
+						{
+							callbak(state);
+						}
+						catch (Exception ex)
+						{
+							GXLogging.Error(log, "Error on submit of " + state.GetType(), ex);
+							throw;
+						}
+						finally
+						{
+							resetEvent.Set();
+							events.TryRemove(eventGuid, out ManualResetEvent _);
+						}
 
 					});
 				events[eventGuid]= resetEvent;
