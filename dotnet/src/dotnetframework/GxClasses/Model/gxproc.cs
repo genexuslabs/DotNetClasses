@@ -91,7 +91,7 @@ namespace GeneXus.Procedure
 		}
 		private void exitApplication(bool flushBatchCursor)
 		{
-			if (IsMain && !(context as GxContext).IsSubmited)
+			if (!(GxContext.IsHttpContext || GxContext.IsRestService) && IsMain && !(context as GxContext).IsSubmited)
 				ThreadUtil.WaitForEnd();
 
 			if (flushBatchCursor)
