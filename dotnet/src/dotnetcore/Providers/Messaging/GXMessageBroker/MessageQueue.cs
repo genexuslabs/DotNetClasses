@@ -19,7 +19,6 @@ namespace GeneXus.Messaging.Common
 		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(MessageQueue));
 		private const string SDT_MESSAGE_CLASS_NAME = @"SdtMessage";
 		private const string SDT_MESSAGEPROPERTY_CLASS_NAME = @"SdtMessageProperty";
-		//private const string SDT_MESSAGERESULT_CLASS_NAME = @"SdtMessageResult";
 		private const string NAMESPACE = @"GeneXus.Programs.genexusmessagingmessagebroker";
 		private const string GENEXUS_COMMON_DLL = @"GeneXus.Programs.Common.dll";
 
@@ -70,6 +69,48 @@ namespace GeneXus.Messaging.Common
 			{
 				GXLogging.Error(logger, ex);
 				
+			}
+		}
+
+		public long ScheduleMessage(GxUserType messageQueue, string options, out GXBaseCollection<SdtMessages_Message> errorMessages)
+		{
+			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			GxUserType result = new GxUserType();
+			try
+			{
+				BrokerMessage brokerQueueMessage = TransformGXUserTypeToBrokerMessage(messageQueue);
+				LoadAssemblyIfRequired();
+				try
+				{
+					ValidQueue();
+					return messageBroker.ScheduleMessage(brokerQueueMessage, options);
+				}
+				catch (Exception ex)
+				{
+					QueueErrorMessagesSetup(ex, out errorMessages);
+					GXLogging.Error(logger, ex);
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(logger, ex);
+				throw ex;
+			}
+			return 0;
+		}
+		public bool CancelSchedule(long handleId, out GXBaseCollection<SdtMessages_Message> errorMessages)
+		{
+			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			try
+			{
+				ValidQueue();
+				return messageBroker.CancelSchedule(handleId);
+			}
+			catch (Exception ex)
+			{
+				QueueErrorMessagesSetup(ex, out errorMessages);
+				GXLogging.Error(logger, ex);
+				return false;
 			}
 		}
 
@@ -296,39 +337,25 @@ namespace GeneXus.Messaging.Common
 			}
 			return null;
 		}
-		private BrokerMessageOptions TransformOptions(GxUserType messageQueueOptions)
-		{
-			BrokerMessageOptions options = new BrokerMessageOptions();
-			
-			options.MaxNumberOfMessages = messageQueueOptions.GetPropertyValue<short>("Maxnumberofmessages");
-			options.DeleteConsumedMessages = messageQueueOptions.GetPropertyValue<bool>("Deleteconsumedmessages");
-			options.WaitTimeout = messageQueueOptions.GetPropertyValue<int>("Waittimeout");
-			options.VisibilityTimeout = messageQueueOptions.GetPropertyValue<int>("Visibilitytimeout");
-			options.TimetoLive = messageQueueOptions.GetPropertyValue<int>("Timetolive");
-			options.DelaySeconds = messageQueueOptions.GetPropertyValue<int>("Delayseconds");
-			options.ReceiveMode = messageQueueOptions.GetPropertyValue<short>("Receivemode");
-			options.ReceiveRequestAttemptId = messageQueueOptions.GetPropertyValue<string>("Receiverequestattemptid");
-			options.ReceiveMessageAttributes = messageQueueOptions.GetPropertyValue<bool>("Receivemessageattributes");
-			options.PrefetchCount = messageQueueOptions.GetPropertyValue<short>("Prefetchcount");
-			options.SubscriptionName = messageQueueOptions.GetPropertyValue<string>("Subscriptionname");
-;			return options;
-		}
-
 		private BrokerMessage TransformGXUserTypeToBrokerMessage(GxUserType queueMessage)
 		{
-			BrokerMessage brokerQueueMessage = new BrokerMessage();
-			brokerQueueMessage.MessageId = queueMessage.GetPropertyValue<string>("Messageid");
-			brokerQueueMessage.MessageBody = queueMessage.GetPropertyValue<string>("Messagebody");
-			brokerQueueMessage.MessageHandleId = queueMessage.GetPropertyValue<string>("Messagehandleid");
-			IList messageAttributes = queueMessage.GetPropertyValue<IList>("Messageattributes_GXBaseCollection");
-			brokerQueueMessage.MessageAttributes = new GXProperties();
-			foreach (GxUserType messageAttribute in messageAttributes)
-			{
-				string messagePropKey = messageAttribute.GetPropertyValue<string>("Propertykey");
-				string messagePropValue = messageAttribute.GetPropertyValue<string>("Propertyvalue");
-				brokerQueueMessage.MessageAttributes.Add(messagePropKey, messagePropValue);
+			if (queueMessage != null)
+			{ 
+				BrokerMessage brokerQueueMessage = new BrokerMessage();
+				brokerQueueMessage.MessageId = queueMessage.GetPropertyValue<string>("Messageid");
+				brokerQueueMessage.MessageBody = queueMessage.GetPropertyValue<string>("Messagebody");
+				brokerQueueMessage.MessageHandleId = queueMessage.GetPropertyValue<string>("Messagehandleid");
+				IList messageAttributes = queueMessage.GetPropertyValue<IList>("Messageattributes_GXBaseCollection");
+				brokerQueueMessage.MessageAttributes = new GXProperties();
+				foreach (GxUserType messageAttribute in messageAttributes)
+				{
+					string messagePropKey = messageAttribute.GetPropertyValue<string>("Propertykey");
+					string messagePropValue = messageAttribute.GetPropertyValue<string>("Propertyvalue");
+					brokerQueueMessage.MessageAttributes.Add(messagePropKey, messagePropValue);
+				}
+				return brokerQueueMessage;
 			}
-			return brokerQueueMessage;
+			return null;
 		}
 		#endregion
 

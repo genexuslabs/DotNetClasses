@@ -9,7 +9,6 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 	{
 		public MessageQueue Connect(string queueName, string connectionString, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
-			System.Diagnostics.Debugger.Launch();
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			GXProperties properties = new GXProperties();
 			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName);
@@ -23,10 +22,9 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 
 		public MessageQueue Connect(string topicName, string subcriptionName, string connectionString, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
-			System.Diagnostics.Debugger.Launch();
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			GXProperties properties = new GXProperties();
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_TOPICNAME, topicName);
+			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, topicName);
 			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME, subcriptionName);
 			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString);
 
@@ -37,10 +35,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		}
 		public MessageQueue Connect(string queueName, string connectionString, bool sessionEnabled, GxUserType receiverOptions, string senderIdentifier, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
-			System.Diagnostics.Debugger.Launch();
 
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
-
 			ReceiverOptions options = TransformGXUserTypeToReceiverOptions(receiverOptions);
 
 			GXProperties properties = new GXProperties();
@@ -61,12 +57,11 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 
 		public MessageQueue Connect(string topicName, string subcriptionName, string connectionString, bool sessionEnabled, GxUserType receiverOptions, string senderIdentifier, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
-			System.Diagnostics.Debugger.Launch();
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			GXProperties properties = new GXProperties();
 			ReceiverOptions options = TransformGXUserTypeToReceiverOptions(receiverOptions);
 
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_TOPICNAME, topicName);
+			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, topicName);
 			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME, subcriptionName);
 			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString);
 			properties.Add(PropertyConstants.SESSION_ENABLED, sessionEnabled.ToString());

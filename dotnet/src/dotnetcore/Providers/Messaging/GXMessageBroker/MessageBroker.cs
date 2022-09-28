@@ -11,9 +11,11 @@ namespace GeneXus.Messaging.Common
 		bool SendMessages(IList<BrokerMessage> brokerMessages, string options);
 		IList<BrokerMessage> GetMessages(string options, out bool success);
 		BrokerMessage GetMessage(string options, out bool success);
+		bool ConsumeMessage(BrokerMessage brokerMessage, string options);
+		long ScheduleMessage(BrokerMessage brokerMessage, string options);
+		bool CancelSchedule(long handleId);
 		void Dispose();
 		bool GetMessageFromException(Exception ex, SdtMessages_Message msg);
-		bool ConsumeMessage(BrokerMessage brokerMessage, string options);
 	}
 	public class BrokerMessage : GxUserType
 	{
@@ -49,28 +51,5 @@ namespace GeneXus.Messaging.Common
 
 		#endregion
 
-	}
-	public class BrokerMessageOptions : GxUserType
-	{
-		public short MaxNumberOfMessages { get; set; }
-		public bool DeleteConsumedMessages { get; set; }
-		public int WaitTimeout { get; set; }
-		public int VisibilityTimeout { get; set; }
-		public int TimetoLive { get; set; }
-		public int DelaySeconds { get; set; }
-		public string ReceiveRequestAttemptId { get; set; }
-		public bool ReceiveMessageAttributes { get; set; }
-		public short ReceiveMode { get; set; }
-		public short PrefetchCount { get; set; }
-		public string SubscriptionName { get; set; }
-
-	}
-
-	public static class BrokerMessageResultStatus
-	{
-		public const string Unknown = "Unknown";
-		public const string Sent = "Sent";
-		public const string Deleted = "Deleted";
-		public const string Failed = "Failed";
 	}
 }
