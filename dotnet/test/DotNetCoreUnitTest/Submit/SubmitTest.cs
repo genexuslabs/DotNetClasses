@@ -11,7 +11,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace UnitTesting
 {
-	[CollectionDefinition("Submit in non-web context", DisableParallelization = true)]
+	[CollectionDefinition("Non-Parallel Collection", DisableParallelization = true)]
+	public class NonParallelCollectionDefinitionClass
+	{
+	}
+	[Collection("Non-Parallel Collection")]
 	public class SubmitTest
 	{
 		internal static ConcurrentDictionary<Guid, int> numbers = new ConcurrentDictionary<Guid, int>();
