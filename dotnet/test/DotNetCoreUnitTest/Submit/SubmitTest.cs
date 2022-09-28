@@ -7,10 +7,11 @@ using GeneXus.Utils;
 using Lucene.Net.Support;
 using Xunit;
 using System.Collections.Concurrent;
-
+using Microsoft.AspNetCore.Http;
 
 namespace UnitTesting
 {
+	[CollectionDefinition("Submit in non-web context", DisableParallelization = true)]
 	public class SubmitTest
 	{
 		internal static ConcurrentDictionary<Guid, int> numbers = new ConcurrentDictionary<Guid, int>();
@@ -43,7 +44,7 @@ namespace UnitTesting
 				proc.executeSubmit();
 			}
 			cleanup();
-			Assert.False(GxContext.IsHttpContext);
+			Assert.False(GxContext.IsHttpContext, "Running on HttpContext but it is expected to run in command line");
 			Assert.Equal(THREAD_NUMBER, SubmitTest.numbers.Count);
 		}
 		public override void cleanup()
