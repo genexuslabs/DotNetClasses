@@ -43,6 +43,7 @@ namespace UnitTesting
 				proc.executeSubmit();
 			}
 			cleanup();
+			Assert.False(GxContext.IsHttpContext);
 			Assert.Equal(THREAD_NUMBER, SubmitTest.numbers.Count);
 		}
 		public override void cleanup()
