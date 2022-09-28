@@ -4,7 +4,6 @@ using GxClasses.Web.Middleware;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
-using Xunit;
 
 namespace xUnitTesting
 {
