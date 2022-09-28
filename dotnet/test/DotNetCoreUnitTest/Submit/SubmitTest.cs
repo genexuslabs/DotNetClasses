@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using GeneXus.Application;
 using GeneXus.Procedure;
 using GeneXus.Utils;
-using Lucene.Net.Support;
 using Xunit;
-using System.Collections.Concurrent;
-
 
 namespace UnitTesting
 {
@@ -43,6 +40,7 @@ namespace UnitTesting
 				proc.executeSubmit();
 			}
 			cleanup();
+			ThreadUtil.WaitForEnd();//Force WaitForEnd since tests run in web context when running in parallel with Middleware tests
 			Assert.Equal(THREAD_NUMBER, SubmitTest.numbers.Count);
 		}
 		public override void cleanup()
