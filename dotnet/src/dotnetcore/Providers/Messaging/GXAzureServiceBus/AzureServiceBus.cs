@@ -15,10 +15,10 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 	public class AzureServiceBus : MessageBrokerBase, IMessageBroker
 	{
 		private const int MAX_MESSAGES_DEFAULT = 10;
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(AzureServiceBus));
+		private const short LOCK_DURATION = 5;
 		public static String Name = "AZURESB";
 
-		private ConcurrentDictionary<string, ServiceBusReceivedMessage> m_messages = new ConcurrentDictionary<string, ServiceBusReceivedMessage>();
+		private ConcurrentDictionary<string, Tuple<DateTime, ServiceBusReceivedMessage>> m_messages = new ConcurrentDictionary<string, Tuple<DateTime,ServiceBusReceivedMessage>>();
 		ServiceBusClient _serviceBusClient { get; set; }
 		private string _queueOrTopicName { get; set; }
 		private string _connectionString { get; set; }
@@ -29,7 +29,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		private ServiceBusSessionReceiverOptions _sessionReceiverOptions { get; set; }
 		private bool _sessionEnabled { get; set; }
 		private string _sessionId { get; set; }
-
+		private string receiveMode { get; set; }
 		public AzureServiceBus() : this(null)
 		{
 		}
@@ -49,7 +49,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			ServiceBusReceiverOptions serviceBusReceiverOptions = new ServiceBusReceiverOptions();
 			_sessionReceiverOptions = new ServiceBusSessionReceiverOptions();
 
-			string receiveMode = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVE_MODE);
+			receiveMode = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVE_MODE);
 			string prefetchCount = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.PREFETCH_COUNT);
 			string receiverIdentifier = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVER_IDENTIFIER); ;
 			_sessionId = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVER_SESSIONID);
@@ -89,57 +89,55 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			//TO DO Consider connection options here
 			//https://docs.microsoft.com/en-us/javascript/api/@azure/service-bus/servicebusclientoptions?view=azure-node-latest#@azure-service-bus-servicebusclientoptions-websocketoptions
 
-			try
+			_serviceBusClient = new ServiceBusClient(_connectionString);
+			if (_serviceBusClient != null)
 			{
-				_serviceBusClient = new ServiceBusClient(_connectionString);
-				if (_serviceBusClient != null)
-				{
-					_sender = _serviceBusClient.CreateSender(_queueOrTopicName, serviceBusSenderOptions);
+				_sender = _serviceBusClient.CreateSender(_queueOrTopicName, serviceBusSenderOptions);
 
-					if (_sessionEnabled && _sender != null)
+				if (_sessionEnabled && _sender != null)
+				{
+					if (!string.IsNullOrEmpty(_sessionId))
 					{
-						if (!string.IsNullOrEmpty(_sessionId))
+						if (string.IsNullOrEmpty(_subscriptionName))
 						{
-							if (string.IsNullOrEmpty(_subscriptionName))
-							{
-								Task<ServiceBusSessionReceiver> task;
-								task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _sessionId, _sessionReceiverOptions).ConfigureAwait(false));
-								_sessionReceiver = task.Result;
-							}
-							else
-							{
-								Task<ServiceBusSessionReceiver> task;
-								task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _subscriptionName, _sessionId, _sessionReceiverOptions).ConfigureAwait(false));
-								_sessionReceiver = task.Result;
-							}
+							Task<ServiceBusSessionReceiver> task;
+							task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _sessionId, _sessionReceiverOptions).ConfigureAwait(false));
+							_sessionReceiver = task.Result;
 						}
 						else
 						{
-							if (string.IsNullOrEmpty(_subscriptionName))
-							{
-								Task<ServiceBusSessionReceiver> task;
-								task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptNextSessionAsync(_queueOrTopicName, _sessionReceiverOptions).ConfigureAwait(false));
-								_sessionReceiver = task.Result;
-							}
-							else
-							{
-								Task<ServiceBusSessionReceiver> task;
-								task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptNextSessionAsync(_queueOrTopicName, _subscriptionName, _sessionReceiverOptions).ConfigureAwait(false));
-								_sessionReceiver = task.Result;
-							}
+							Task<ServiceBusSessionReceiver> task;
+							task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _subscriptionName, _sessionId, _sessionReceiverOptions).ConfigureAwait(false));
+							_sessionReceiver = task.Result;
 						}
 					}
 					else
+					{
+						//These methods throw an exception when the service bus is empty:
+						//ServiceBusException: The operation did not complete within the allocated time (ServiceTimeout) 
+						//so I remove them for now
+						/*
 						if (string.IsNullOrEmpty(_subscriptionName))
-						_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, serviceBusReceiverOptions);
-
-					else
-						_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, _subscriptionName, serviceBusReceiverOptions);
+						{
+							Task<ServiceBusSessionReceiver> task;
+							task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptNextSessionAsync(_queueOrTopicName, _sessionReceiverOptions).ConfigureAwait(false));
+							_sessionReceiver = task.Result;
+						}
+						else
+						{
+							Task<ServiceBusSessionReceiver> task;
+							task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptNextSessionAsync(_queueOrTopicName, _subscriptionName, _sessionReceiverOptions).ConfigureAwait(false));
+							_sessionReceiver = task.Result;
+						}*/
+						throw new Exception("ServiceBus: Specify a session to establish a service bus receiver for the session-enabled queue or topic.");
+					}
 				}
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(logger, ex.Message);
+				else
+					if (string.IsNullOrEmpty(_subscriptionName))
+					_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, serviceBusReceiverOptions);
+
+				else
+					_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, _subscriptionName, serviceBusReceiverOptions);
 			}
 		}
 		public override string GetName()
@@ -153,32 +151,46 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			await _serviceBusClient.DisposeAsync().ConfigureAwait(false);
 		}
 		private async Task<bool> sendAsync(ServiceBusMessage serviceBusMessage, string options)
+		{	
+			try
+			{ 
+				await _sender.SendMessageAsync(serviceBusMessage).ConfigureAwait(false);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				throw ex;
+			}
+		}
+
+		private async Task<bool> CancelScheduleAsync(long sequenceNumber)
 		{
-			SendMessageOptions sendOptions = JSONHelper.Deserialize<SendMessageOptions>(options);
-			if ((sendOptions != null) && (!string.IsNullOrEmpty(sendOptions.ScheduledEnqueueTime)))
+			try
+			{
+				await _sender.CancelScheduledMessageAsync(sequenceNumber).ConfigureAwait(false);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				throw ex;
+			}
+		}
+		private async Task<long> ScheduleMessageAsync(ServiceBusMessage serviceBusMessage, string options)
+		{
+			ScheduleMessageOptions scheduleOptions = JSONHelper.Deserialize<ScheduleMessageOptions>(options);
+			if ((serviceBusMessage != null) && (scheduleOptions != null) && (!string.IsNullOrEmpty(scheduleOptions.ScheduledEnqueueTime)))
 			{
 				try
 				{
-					await _sender.ScheduleMessageAsync(serviceBusMessage, DateTimeOffset.Parse(sendOptions.ScheduledEnqueueTime)).ConfigureAwait(false);
-					return true;
+					return (await _sender.ScheduleMessageAsync(serviceBusMessage, DateTime.Parse(scheduleOptions.ScheduledEnqueueTime)).ConfigureAwait(false));
+	
 				}
 				catch (Exception ex)
 				{
 					throw ex;
 				}
 			}
-			else
-			{
-				try
-				{
-					await _sender.SendMessageAsync(serviceBusMessage).ConfigureAwait(false);
-					return true;
-				}
-				catch (Exception ex)
-				{
-					throw ex;
-				}
-			}
+			return 0;
 		}
 		private async Task<bool> SendMessagesBatchAsync(IList<BrokerMessage> brokerMessages, string options)
 		{
@@ -196,32 +208,15 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 					serviceBusMessage = BrokerMessageToServiceBusMessage(brokerMessage);
 					serviceBusMessages.Add(serviceBusMessage);
 				}
-
-				SendMessageOptions sendOptions = JSONHelper.Deserialize<SendMessageOptions>(options);
-				if ((sendOptions != null) && (!string.IsNullOrEmpty(sendOptions.ScheduledEnqueueTime)))
-				{
-					try
-					{
-						await _sender.ScheduleMessagesAsync(serviceBusMessages, DateTimeOffset.Parse(sendOptions.ScheduledEnqueueTime)).ConfigureAwait(false);
-						success = true;
-					}
-					catch (Exception ex)
-					{
-						GXLogging.Error(logger, ex.Message.ToString());
-					}
+				try
+				{ 
+					await _sender.SendMessagesAsync(serviceBusMessages).ConfigureAwait(false);
+					success = true;
 				}
-				else
+				catch (Exception ex)
 				{
-					try
-					{
-						await _sender.SendMessagesAsync(serviceBusMessages).ConfigureAwait(false);
-						success = true;
-					}
-					catch (Exception ex)
-					{
-						GXLogging.Error(logger, ex.Message.ToString());
-					}
-				}
+					throw ex;
+				}		
 			}
 			return success;
 		}
@@ -284,11 +279,9 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(logger, ex.Message.ToString());
+				throw ex;
 			}
-			return null;
 		}
-
 		private async Task<ServiceBusReceivedMessage> ReceiveMessageAsync(string options)
 		{
 			ReceiveMessageOptions receiveOptions = JSONHelper.Deserialize<ReceiveMessageOptions>(options);
@@ -343,9 +336,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(logger, ex.Message.ToString());
+				throw ex;
 			}
-			return null;
 		}
 		#endregion
 
@@ -361,6 +353,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				{
 					task = Task.Run<bool>(async () => await sendAsync(serviceBusMessage, options));
 					success = task.Result;
+					ClearServiceBusAuxiliaryStorage();
 				}
 				else
 				{
@@ -380,6 +373,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			{
 				Task<bool> task = Task<bool>.Run(async () => await SendMessagesBatchAsync(brokerMessages, options));
 				success = task.Result;
+				ClearServiceBusAuxiliaryStorage();
 			}
 			catch (AggregateException ae)
 			{
@@ -396,11 +390,20 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				Task<IReadOnlyList<ServiceBusReceivedMessage>> receivedMessages = Task<IReadOnlyList<ServiceBusReceivedMessage>>.Run(async () => await ReceiveMessagesAsync(options));
 				if (receivedMessages != null && receivedMessages.Result != null)
 				{
+					ClearServiceBusAuxiliaryStorage();
 					foreach (ServiceBusReceivedMessage serviceBusReceivedMessage in receivedMessages.Result)
 					{
 						if (serviceBusReceivedMessage != null)
-							if (AddOrUpdateStoredServiceReceivedMessage(serviceBusReceivedMessage))
-								brokerMessages.Add(SBReceivedMessageToBrokerMessage(serviceBusReceivedMessage));
+							brokerMessages.Add(SBReceivedMessageToBrokerMessage(serviceBusReceivedMessage));
+
+							//If receive Mode = Peek Lock, save the messages to be retrieved later
+							if (!string.IsNullOrEmpty(receiveMode) && (Convert.ToInt16(receiveMode) == 0))
+							{ 
+								if (!AddOrUpdateStoredServiceReceivedMessage(serviceBusReceivedMessage))
+								{
+								throw new Exception("Invalid operation.");
+								}
+							}
 					}
 					success = true;
 				}
@@ -421,6 +424,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				if ((_sessionReceiver != null) && (_sessionEnabled))
 					receiver = _sessionReceiver;
 
+				ClearServiceBusAuxiliaryStorage();
 				ServiceBusReceivedMessage serviceBusReceviedMessage = GetStoredServiceBusReceivedMessage(brokerMessage);
 				if (serviceBusReceviedMessage != null)
 				{
@@ -438,6 +442,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 							case ConsumeMessageOptions.ConsumeModeOpts.Abandon:
 								{
 									task = Task.Run(async () => await receiver.AbandonMessageAsync(serviceBusReceviedMessage).ConfigureAwait(false));
+									RemoveStoredServiceBusReceivedMessage(brokerMessage);
 									break;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.DeadLetter:
@@ -449,11 +454,13 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 							case ConsumeMessageOptions.ConsumeModeOpts.Defer:
 								{
 									task = Task.Run(async () => await receiver.DeferMessageAsync(serviceBusReceviedMessage).ConfigureAwait(false));
+									RemoveStoredServiceBusReceivedMessage(brokerMessage);
 									break;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.RenewMessageLock:
 								{
 									task = Task.Run(async () => await receiver.RenewMessageLockAsync(serviceBusReceviedMessage).ConfigureAwait(false));
+									RemoveStoredServiceBusReceivedMessage(brokerMessage);
 									break;
 								}
 						}
@@ -463,6 +470,10 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 					{
 						throw ae;
 					}
+				}
+				else
+				{
+					throw new Exception("Invalid operation.");
 				}
 			}
 			return false;
@@ -474,6 +485,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			success = false;
 			try
 			{
+				ClearServiceBusAuxiliaryStorage();
 				Task<ServiceBusReceivedMessage> receivedMessage = Task<ServiceBusReceivedMessage>.Run(async () => await ReceiveMessageAsync(options));
 				if (receivedMessage != null && receivedMessage.Result != null)
 				{
@@ -494,6 +506,54 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		public void Dispose()
 		{
 			Task task = Task.Run(async () => await ServiceClientDisposeAsync().ConfigureAwait(false));
+			m_messages.Clear();
+		}
+		public long ScheduleMessage(BrokerMessage brokerMessage, string options)
+		{
+			long sequenceNumber = 0;
+			ServiceBusMessage serviceBusMessage = BrokerMessageToServiceBusMessage(brokerMessage);
+			try
+			{
+				Task<long> task;
+				if (_sender != null)
+				{
+					task = Task.Run<long>(async () => await ScheduleMessageAsync(serviceBusMessage, options));
+					sequenceNumber = task.Result;
+					ClearServiceBusAuxiliaryStorage();
+				}
+				else
+				{
+					throw new Exception("There was an error at the Message Broker initialization.");
+				}
+			}
+			catch (AggregateException ae)
+			{
+				throw ae;
+			}
+			return sequenceNumber;
+		}
+		public bool CancelSchedule(long sequenceNumber)
+		{
+			bool success = false;
+			try
+			{
+				Task<bool> task;
+				if (_sender != null)
+				{
+					task = Task.Run<bool>(async () => await CancelScheduleAsync(sequenceNumber));
+					success = task.Result;
+					ClearServiceBusAuxiliaryStorage();
+				}
+				else
+				{
+					throw new Exception("There was an error at the Message Broker initialization.");
+				}
+			}
+			catch (AggregateException ae)
+			{
+				throw ae;
+			}
+			return false;
 		}
 		public bool GetMessageFromException(Exception ex, SdtMessages_Message msg)
 		{
@@ -514,14 +574,18 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		#region Transformation Methods
 		private ServiceBusMessage BrokerMessageToServiceBusMessage(BrokerMessage brokerMessage)
 		{
-			ServiceBusMessage serviceBusMessage = new ServiceBusMessage(brokerMessage.MessageBody);
-			serviceBusMessage.MessageId = brokerMessage.MessageId;
+			if (brokerMessage != null)
+			{ 
+				ServiceBusMessage serviceBusMessage = new ServiceBusMessage(brokerMessage.MessageBody);
+				serviceBusMessage.MessageId = brokerMessage.MessageId;
 
-			GXProperties messageAttributes = brokerMessage.MessageAttributes;
-			if (messageAttributes != null)
-				LoadMessageProperties(messageAttributes, ref serviceBusMessage);
+				GXProperties messageAttributes = brokerMessage.MessageAttributes;
+				if (messageAttributes != null)
+					LoadMessageProperties(messageAttributes, ref serviceBusMessage);
 
-			return serviceBusMessage;
+				return serviceBusMessage;
+			}
+			return null;
 		}
 		private BrokerMessage SBReceivedMessageToBrokerMessage(ServiceBusReceivedMessage serviceBusReceivedMessage)
 		{
@@ -536,11 +600,17 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		#endregion
 
 		#region Data
-		[DataContract]
-		internal class SendMessageOptions
+		[DataContract()]
+		internal class ScheduleMessageOptions
 		{
-			[DataMember] 
-			internal string ScheduledEnqueueTime { get; set; }
+			long _cancelSequenceNumber;
+			string _scheduledEnqueueTime;
+
+			[DataMember()] 
+			internal string ScheduledEnqueueTime { get => _scheduledEnqueueTime; set => _scheduledEnqueueTime = value; }
+
+			[DataMember()]
+			internal long CancelSequenceNumber { get => _cancelSequenceNumber; set => _cancelSequenceNumber = value; }
 		}
 
 		[DataContract()]
@@ -598,42 +668,48 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 
 		#endregion
 
-		#region helper methods
+		#region Helper methods
 
 		private ServiceBusReceivedMessage GetStoredServiceBusReceivedMessage(BrokerMessage message)
 		{
 			string messageIdentifier = GetMessageIdentifier(message);
-			if (m_messages.TryGetValue(messageIdentifier, out ServiceBusReceivedMessage serviceBusReceivedMessage))
-				return serviceBusReceivedMessage;
+			if (m_messages.TryGetValue(messageIdentifier, out Tuple<DateTime, ServiceBusReceivedMessage> messageStored))
+			{ 
+				return messageStored.Item2;
+			}
 			else
 				return null;
 		}
 		private void RemoveStoredServiceBusReceivedMessage(BrokerMessage message)
 		{
 			string messageIdentifier = GetMessageIdentifier(message);
-			lock (m_messages)
-			{ 
-				if (m_messages.TryGetValue(messageIdentifier, out ServiceBusReceivedMessage serviceBusReceivedMessage))
-				{
-					KeyValuePair<string, ServiceBusReceivedMessage> keyValuePair = new KeyValuePair<string, ServiceBusReceivedMessage>(messageIdentifier, serviceBusReceivedMessage);
-					m_messages.TryRemove(keyValuePair);
-				}
-			}
+			m_messages.TryRemove(messageIdentifier, out _);
 		}
 		private bool AddOrUpdateStoredServiceReceivedMessage(ServiceBusReceivedMessage serviceBusReceivedMessage)
 		{
 			string messageIdentifier = GetMessageIdentifierFromServiceBus(serviceBusReceivedMessage);
 			if (!string.IsNullOrEmpty(messageIdentifier))
-				lock (m_messages)
-				{ 
-					if (m_messages.TryGetValue(messageIdentifier, out ServiceBusReceivedMessage originalMessage))
-					{
-						return (m_messages.TryUpdate(messageIdentifier, serviceBusReceivedMessage, originalMessage));			
-					}
-					else
-						return m_messages.TryAdd(messageIdentifier, serviceBusReceivedMessage);
-				}
+			{
+				Tuple<DateTime, ServiceBusReceivedMessage> messageStored = new Tuple<DateTime, ServiceBusReceivedMessage>(DateTime.UtcNow, serviceBusReceivedMessage);
+				m_messages[messageIdentifier] = messageStored;
+				return true;
+			}
 			return false;
+		}
+
+		private void ClearServiceBusAuxiliaryStorage()
+		{
+			//Clear all messages older than 5 minutes
+			//When a consumer locks a message, the broker temporarily hides it from other consumers (LockDuration).
+			//However, the lock on the message has a timeout, which is 5 mins maximum
+
+			foreach (KeyValuePair<string, Tuple<DateTime, ServiceBusReceivedMessage>> entry in m_messages)
+			{
+				if (entry.Value.Item1.AddMinutes(LOCK_DURATION) < DateTime.UtcNow)
+				{
+					m_messages.TryRemove(entry.Key, out _);
+				}
+			}
 		}
 
 		private string GetMessageIdentifier(BrokerMessage message)
@@ -651,17 +727,17 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			//Get SessionId of the message
 			string messageSessionId = GetMessageSessionId(message);
 			if (!string.IsNullOrEmpty(messageSessionId))
-				messageIdentifier = $"{messageSequenceNumber}{messageSessionId}";		
+				messageIdentifier = $"{messageSequenceNumber}_{messageSessionId}";		
 			else
 			{
 				//Get PartitionKey of the message
 				string messagePartitionKey = GetMessagePartitionKey(message);
 				if (!string.IsNullOrEmpty(messagePartitionKey))
-					messageIdentifier = $"{messageSequenceNumber}{messagePartitionKey}";
+					messageIdentifier = $"{messageSequenceNumber}_{messagePartitionKey}";
 				else
-					messageIdentifier = $"{messageSequenceNumber}{message.MessageId}";
+					messageIdentifier = $"{messageSequenceNumber}_{message.MessageId}";
 			}
-			return messageIdentifier.GetHashCode().ToString();
+			return messageIdentifier;
 		}
 
 		private string GetMessageIdentifierFromServiceBus(ServiceBusReceivedMessage message)
@@ -671,17 +747,17 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			//Get SessionId of the message
 			string messageSessionId = message.SessionId;
 			if (!string.IsNullOrEmpty(messageSessionId))
-				messageIdentifier = $"{messageSequenceNumber}{messageSessionId}";
+				messageIdentifier = $"{messageSequenceNumber}_{messageSessionId}";
 			else
 			{
 				//Get PartitionKey of the message
 				string messagePartitionKey = message.PartitionKey;
 				if (!string.IsNullOrEmpty(messagePartitionKey))
-					messageIdentifier = $"{messageSequenceNumber}{messagePartitionKey}";
+					messageIdentifier = $"{messageSequenceNumber}_{messagePartitionKey}";
 				else
-					messageIdentifier = $"{messageSequenceNumber}{message.MessageId}";
+					messageIdentifier = $"{messageSequenceNumber}_{message.MessageId}";
 			}
-			return messageIdentifier.GetHashCode().ToString();
+			return messageIdentifier;
 		}
 		private string GetMessageSequenceNumber(BrokerMessage message)
 		{

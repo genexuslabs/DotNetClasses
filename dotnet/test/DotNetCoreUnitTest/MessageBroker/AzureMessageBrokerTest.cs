@@ -57,8 +57,6 @@ namespace UnitTesting
 			messages.Add(brokerMessage1);
 			messages.Add(brokerMessage2);
 
-			BrokerMessageOptions options = new BrokerMessageOptions();
-
 			bool success = messageBroker.SendMessages(messages, String.Empty);
 
 			Assert.True(success);
@@ -66,7 +64,6 @@ namespace UnitTesting
 		[SkippableFact]
 		public void TestGetBatchMessagesMethod()
 		{	
-			BrokerMessageOptions options = new BrokerMessageOptions();
 			IList<BrokerMessage> messages = messageBroker.GetMessages(String.Empty, out bool success);
 			Assert.True(success);
 		}
