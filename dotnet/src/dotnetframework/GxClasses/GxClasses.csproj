@@ -19,6 +19,7 @@
 		<PackageReference Include="Nustache" Version="1.16.0.10" />
 		<PackageReference Include="SecurityCodeScan" PrivateAssets="all" Version="3.3.0" />
 		<PackageReference Include="log4net" Version="2.0.11" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Net.Http.WinHttpHandler" Version="5.0.0" />
 		<PackageReference Include="System.Text.Json" Version="5.0.2" />
 		<PackageReference Include="NUglify" Version="1.16.4" PrivateAssets="All" />
@@ -33,8 +34,6 @@
 		<Reference Include="MySQLDriverCS">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\MySQLDriverCS.dll</HintPath>
-		</Reference>
-		<Reference Include="System.Net.Http">
 		</Reference>
 		<Reference Include="TZ4Net">
 			<SpecificVersion>False</SpecificVersion>
