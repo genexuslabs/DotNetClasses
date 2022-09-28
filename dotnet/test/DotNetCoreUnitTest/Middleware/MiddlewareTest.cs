@@ -8,8 +8,6 @@ using Xunit;
 
 namespace xUnitTesting
 {
-	[Collection("Non-Parallel Collection")]
-
 	public class MiddlewareTest
 	{
 		protected TestServer server;

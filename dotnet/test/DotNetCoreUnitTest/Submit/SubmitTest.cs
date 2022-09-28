@@ -11,11 +11,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace UnitTesting
 {
-	[CollectionDefinition("Non-Parallel Collection", DisableParallelization = true)]
-	public class NonParallelCollectionDefinitionClass
-	{
-	}
-	[Collection("Non-Parallel Collection")]
 	public class SubmitTest
 	{
 		internal static ConcurrentDictionary<Guid, int> numbers = new ConcurrentDictionary<Guid, int>();
@@ -48,7 +43,7 @@ namespace UnitTesting
 				proc.executeSubmit();
 			}
 			cleanup();
-			Assert.False(GxContext.IsHttpContext, "Running on HttpContext but it is expected to run in command line");
+			ThreadUtil.WaitForEnd();//Force Wait since tests run in web context when running in parallel with Middleware tests
 			Assert.Equal(THREAD_NUMBER, SubmitTest.numbers.Count);
 		}
 		public override void cleanup()
