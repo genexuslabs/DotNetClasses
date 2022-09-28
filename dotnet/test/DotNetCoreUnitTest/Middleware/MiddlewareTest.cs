@@ -4,9 +4,12 @@ using GxClasses.Web.Middleware;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Xunit;
 
 namespace xUnitTesting
 {
+	[Collection("Non-Parallel Collection")]
+
 	public class MiddlewareTest
 	{
 		protected TestServer server;
