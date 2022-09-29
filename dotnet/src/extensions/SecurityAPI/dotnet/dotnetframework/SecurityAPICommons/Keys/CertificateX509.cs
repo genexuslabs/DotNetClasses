@@ -71,7 +71,6 @@ namespace SecurityAPICommons.Keys
             get { return _version; }
             set { _version = value; }
         }
-        private SubjectPublicKeyInfo subjectPublicKeyInfo;
         private bool inicialized;
         public bool Inicialized => inicialized;
 
@@ -85,12 +84,14 @@ namespace SecurityAPICommons.Keys
         /******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 
         [SecuritySafeCritical]
+		override
         public bool Load(string certificatePath)
         {
             return LoadPKCS12(certificatePath, "", "");
         }
 
         [SecuritySafeCritical]
+		override
         public bool LoadPKCS12(string certificatePath, string alias, string password)
         {
             bool result = false;
@@ -114,7 +115,8 @@ namespace SecurityAPICommons.Keys
 
 
         [SecuritySafeCritical]
-        public bool FromBase64(string base64Data)
+		override
+		public bool FromBase64(string base64Data)
         {
             bool flag;
             try
@@ -135,6 +137,7 @@ namespace SecurityAPICommons.Keys
         }
 
         [SecuritySafeCritical]
+		override
         public string ToBase64()
         {
             if (!this.inicialized)
@@ -186,90 +189,6 @@ namespace SecurityAPICommons.Keys
             return aux1.ToUpper(System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        [SecuritySafeCritical]
-        public string getPublicKeyAlgorithm()
-        {
-
-            if (SecurityUtils.compareStrings(this.publicKeyAlgorithm, "1.2.840.10045.2.1") || SecurityUtils.compareStrings(this.publicKeyAlgorithm, "EC"))
-            {
-                return "ECDSA";
-            }
-            string[] aux = this.publicKeyAlgorithm.Split(new string[] { "with" }, StringSplitOptions.None);
-            return aux[1].ToUpper(System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Return AsymmetricKeyParameter with public key for the indicated algorithm
-        /// </summary>
-        /// <returns>AsymmetricKeyParameter type for signing, algorithm dependant</returns>
-        [SecuritySafeCritical]
-        public AsymmetricKeyParameter getPublicKeyParameterForSigning()
-        {
-
-            switch (this.getPublicKeyAlgorithm())
-            {
-                case "RSA":
-                    return getRSAKeyParameter();
-                case "ECDSA":
-                    AsymmetricKeyParameter parmsECDSA;
-                    try
-                    {
-                        parmsECDSA = PublicKeyFactory.CreateKey(this.subjectPublicKeyInfo);
-                    }
-                    catch (IOException)
-                    {
-                        this.error.setError("AE010", "Not ECDSA key");
-                        return null;
-                        throw;
-                    }
-                    return parmsECDSA;
-                default:
-                    this.error.setError("AE011", "Unrecognized signing algorithm");
-                    return null;
-            }
-        }
-        /// <summary>
-        /// Return AsymmetricKeyParameter with public key for the indicated algorithm
-        /// </summary>
-        /// <returns>AsymmetricKeyParameter type for signing, algorithm dependant</returns>
-        [SecuritySafeCritical]
-        public AsymmetricKeyParameter getPublicKeyParameterForEncryption()
-        {
-
-            if (SecurityUtils.compareStrings(this.getPublicKeyAlgorithm(), "RSA"))
-            {
-                return getRSAKeyParameter();
-            }
-            else
-            {
-                this.error.setError("AE012", "Unrecognized encryption algorithm");
-                return null;
-            }
-
-        }
-        /// <summary>
-        /// Returns AsymmetricKeyParameter for RSA key types
-        /// </summary>
-        /// <param name="isPrivate"> boolean true if its a private key, false if its a public key</param>
-        /// <returns>AsymmetricKeyParameter for RSA with loaded key</returns>
-        private AsymmetricKeyParameter getRSAKeyParameter()
-        {
-
-            RsaKeyParameters parms;
-            try
-            {
-                parms = (RsaKeyParameters)PublicKeyFactory.CreateKey(this.subjectPublicKeyInfo);
-            }
-            catch (IOException)
-            {
-                this.error.setError("AE014", "Not RSA key");
-                return null;
-                throw;
-            }
-
-            return parms;
-        }
-
         /// <summary>
         /// stores SubjectPublicKeyInfo Data Type of public key from certificate, algorithm and digest
         /// </summary>
@@ -309,50 +228,48 @@ namespace SecurityAPICommons.Keys
         private bool loadPublicKeyFromPEMFile(string path)
         {
             bool flag = false;
-            StreamReader streamReader = new StreamReader(path);
-            PemReader pemReader = new PemReader(streamReader);
-            Object obj = pemReader.ReadObject();
-            if (obj.GetType() == typeof(AsymmetricKeyParameter))
-            {
-                this.error.setError("CE007", "The file contains a private key");
-                flag = false;
-            }
+			using (StreamReader streamReader = new StreamReader(path))
+			{
+				PemReader pemReader = new PemReader(streamReader);
+				Object obj = pemReader.ReadObject();
+				if (obj.GetType() == typeof(AsymmetricKeyParameter))
+				{
+					this.error.setError("CE007", "The file contains a private key");
+					flag = false;
+				}
 
-            if (obj.GetType() == typeof(ECPublicKeyParameters))
-            {
-                /*ECPublicKeyParameters ecParms = (ECPublicKeyParameters)obj;
-                 this.subjectPublicKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(ecParms);
-                 this.publicKeyAlgorithm = ecParms.AlgorithmName;
-                 this.hasPublicKey = true;
-                 return true;*/
-                this.error.setError("CE008", "Invalid X509 Certificate format");
-                return false;
-            }
+				if (obj.GetType() == typeof(ECPublicKeyParameters))
+				{
+					/*ECPublicKeyParameters ecParms = (ECPublicKeyParameters)obj;
+					 this.subjectPublicKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(ecParms);
+					 this.publicKeyAlgorithm = ecParms.AlgorithmName;
+					 this.hasPublicKey = true;
+					 return true;*/
+					this.error.setError("CE008", "Invalid X509 Certificate format");
+					flag = false;
+				}
 
-            if (obj.GetType() == typeof(System.Security.Cryptography.X509Certificates.X509Certificate))
-            {
-                Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
-                castCertificate(cert);
-                closeReaders(streamReader, pemReader);
-                return true;
+				if (obj.GetType() == typeof(System.Security.Cryptography.X509Certificates.X509Certificate))
+				{
+					Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
+					castCertificate(cert);
+					flag = true;
 
-            }
-            if (obj.GetType() == typeof(Org.BouncyCastle.X509.X509Certificate))
-            {
-                Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
-                castCertificate(cert);
-                closeReaders(streamReader, pemReader);
-                return true;
-            }
-            if (obj.GetType() == typeof(X509CertificateStructure))
-            {
-                Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
-                castCertificate(cert);
-                closeReaders(streamReader, pemReader);
-                return true;
-            }
-
-            closeReaders(streamReader, pemReader);
+				}
+				if (obj.GetType() == typeof(Org.BouncyCastle.X509.X509Certificate))
+				{
+					Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
+					castCertificate(cert);
+					flag = true;
+				}
+				if (obj.GetType() == typeof(X509CertificateStructure))
+				{
+					Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
+					castCertificate(cert);
+					flag = true;
+				}
+				pemReader.Reader.Close();
+			}
             return flag;
 
         }
@@ -395,64 +312,35 @@ namespace SecurityAPICommons.Keys
             return flag;
 
         }
-        [SecuritySafeCritical]
-        public AsymmetricAlgorithm getPublicKeyXML()
-        {
-            try
-            {
-                return cert.PublicKey.Key;
-            }
-			catch (Exception)
-			{
-                this.error.setError("CE010", "Error casting public key data");
-                return null;
-            }
-        }
 
         [SecuritySafeCritical]
-        public AsymmetricAlgorithm getPublicKeyJWT()
+		override
+        public AsymmetricAlgorithm getAsymmetricAlgorithm()
         {
-            string algorithm = this.getPublicKeyAlgorithm();
-            AsymmetricAlgorithm alg;
-            if (SecurityUtils.compareStrings(algorithm, "RSA"))
-            {
-                
-                try
-                {
-                     alg = cert.PublicKey.Key;
-                }
-#pragma warning disable CA1031 // Do not catch general exception types
-				catch (Exception e)
-#pragma warning restore CA1031 // Do not catch general exception types
+			
+			AsymmetricAlgorithm alg = null;
+			try
+			{
+				switch (this.getAlgorithm())
 				{
-                    this.error.setError("CE016", e.Message);
-                    return null;
-                }
-            } else if (SecurityUtils.compareStrings(algorithm, "ECDSA"))
-			{
-                try
-                {
-                    alg =  cert.GetECDsaPublicKey();
-#pragma warning disable CA1031 // Do not catch general exception types
+					case "RSA":
+						alg = cert.PublicKey.Key;
+						break;
+					case "ECDSA":
+						alg = cert.GetECDsaPublicKey();
+						break;
+					default:
+						this.error.setError("CE014", "Unrecrognized key type");
+						alg = null;
+						break;
 				}
-				catch(Exception e)
-#pragma warning restore CA1031 // Do not catch general exception types
-				{
-                    this.error.setError("CE15", e.Message);
-                    return null;
-				}
-			}
-			else
+			}catch(Exception e)
 			{
-                this.error.setError("CE014", "Unrecrognized key type");
-                return null;
+				this.error.setError("XXX", e.Message);
+				alg = null;
 			}
-            if(alg != null)
-			{
-                this.error.cleanError();
-			}
-            return alg;
-        }
+			return alg;
+		}
 
         /// <summary>
         /// stores SubjectPublicKeyInfo Data Type from certificate's public key, asymmetric algorithm and digest
@@ -509,32 +397,13 @@ namespace SecurityAPICommons.Keys
             return flag;
         }
 
-        /// <summary>
-        /// Excecute close methods of PemReader and StreamReader data types
-        /// </summary>
-        /// <param name="streamReader">StreamReader type</param>
-        /// <param name="pemReader">PemReader type</param>
-        private void closeReaders(StreamReader streamReader, PemReader pemReader)
-        {
-            try
-            {
-                streamReader.Close();
-                pemReader.Reader.Close();
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-			catch
-#pragma warning restore CA1031 // Do not catch general exception types
-			{
-                this.error.setError("CE015", "Error closing StreamReader/ PemReader for certificates");
-            }
-        }
-
         private void castCertificate(Org.BouncyCastle.X509.X509Certificate cert)
         {
             this.subjectPublicKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(cert.GetPublicKey());
             this.publicKeyAlgorithm = cert.SigAlgName;
             System.Security.Cryptography.X509Certificates.X509Certificate x509certificate = DotNetUtilities.ToX509Certificate(cert);
             this.cert = new X509Certificate2(x509certificate);
+			setAlgorithm();
         }
 
 #pragma warning disable CA1063 // Implement IDisposable Correctly

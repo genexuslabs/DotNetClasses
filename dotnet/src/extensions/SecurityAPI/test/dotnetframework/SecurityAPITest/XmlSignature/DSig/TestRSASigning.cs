@@ -1,4 +1,4 @@
-﻿using SecurityAPITest.SecurityAPICommons.commons;
+using SecurityAPITest.SecurityAPICommons.commons;
 using NUnit.Framework;
 using GeneXusXmlSignature.GeneXusCommons;
 using SecurityAPICommons.Commons;
@@ -121,7 +121,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha1_1024, "sha1d_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha1_1024, "sha1_cert.crt");
 			string pathSigned = "Test_sha1_1024_DER";
-			bulkTest(pathCert, pathKey, pathSigned, false, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.Load(pathKey);
+			bulkTest(cert, privateKey, pathSigned, false, false, false, null);
 
 		}
 
@@ -131,7 +135,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha1_1024, "sha1d_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha1_1024, "sha1_cert.pem");
 			string pathSigned = "Test_sha1_1024_PEM";
-			bulkTest(pathCert, pathKey, pathSigned, false, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.Load(pathKey);
+			bulkTest(cert, privateKey, pathSigned, false, false, false, null);
 		}
 
 
@@ -142,7 +150,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha1_1024, "sha1_cert.p12");
 			string pathCert = Path.Combine(path_RSA_sha1_1024, "sha1_cert.p12");
 			string pathSigned = "Test_sha1_1024_PKCS12";
-			bulkTest(pathCert, pathKey, pathSigned, true, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.LoadPKCS12(pathCert, alias, password);
+			privateKey.LoadPKCS12(pathKey, alias, password);
+			bulkTest(cert, privateKey, pathSigned, true, false, false, null);
 		}
 
 		[Test]
@@ -151,7 +163,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha256_1024, "sha256d_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha256_1024, "sha256_cert.crt");
 			string pathSigned = "Test_sha256_1024_DER";
-			bulkTest(pathCert, pathKey, pathSigned, false, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.Load(pathKey);
+			bulkTest(cert, privateKey, pathSigned, false, false, false, null);
 		}
 
 		[Test]
@@ -160,7 +176,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha256_1024, "sha256d_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha256_1024, "sha256_cert.pem");
 			string pathSigned = "Test_sha256_1024_PEM";
-			bulkTest(pathCert, pathKey, pathSigned, false, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.Load(pathKey);
+			bulkTest(cert, privateKey, pathSigned, false, false, false, null);
 		}
 
 		
@@ -171,7 +191,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha256_1024, "sha256_cert.p12");
 			string pathCert = Path.Combine(path_RSA_sha256_1024, "sha256_cert.p12");
 			string pathSigned = "Test_sha256_1024_PKCS12";
-			bulkTest(pathCert, pathKey, pathSigned, true, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.LoadPKCS12(pathCert, alias, password);
+			privateKey.LoadPKCS12(pathKey, alias, password);
+			bulkTest(cert, privateKey, pathSigned, true, false, false, null);
 		}
 
 		[Test]
@@ -180,7 +204,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha256_2048, "sha256d_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha256_2048, "sha256_cert.crt");
 			string pathSigned = "Test_sha256_2048_DER";
-			bulkTest(pathCert, pathKey, pathSigned, false, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.Load(pathKey);
+			bulkTest(cert, privateKey, pathSigned, false, false, false, null);
 		}
 
 		[Test]
@@ -189,7 +217,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha256_2048, "sha256d_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha256_2048, "sha256_cert.pem");
 			string pathSigned = "Test_sha256_2048_PEM";
-			bulkTest(pathCert, pathKey, pathSigned, false, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.Load(pathKey);
+			bulkTest(cert, privateKey, pathSigned, false, false, false, null);
 		}
 
 
@@ -200,7 +232,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha256_2048, "sha256_cert.p12");
 			string pathCert = Path.Combine(path_RSA_sha256_2048, "sha256_cert.p12");
 			string pathSigned = "Test_sha256_2048_PKCS12";
-			bulkTest(pathCert, pathKey, pathSigned, true, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.LoadPKCS12(pathCert, alias, password);
+			privateKey.LoadPKCS12(pathKey, alias, password);
+			bulkTest(cert, privateKey, pathSigned, true, false, false, null);
 		}
 
 		[Test]
@@ -209,7 +245,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha512_2048, "sha512d_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha512_2048, "sha512_cert.crt");
 			string pathSigned = "Test_sha512_2048_DER";
-			bulkTest(pathCert, pathKey, pathSigned, false, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.Load(pathKey);
+			bulkTest(cert, privateKey, pathSigned, false, false, false, null);
 		}
 
 		[Test]
@@ -218,7 +258,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha512_2048, "sha512d_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha512_2048, "sha512_cert.pem");
 			string pathSigned = "Test_sha512_2048_PEM";
-			bulkTest(pathCert, pathKey, pathSigned, false, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.Load(pathKey);
+			bulkTest(cert, privateKey, pathSigned, false, false, false, null);
 		}
 
 		
@@ -229,213 +273,208 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha512_2048, "sha512_cert.p12");
 			string pathCert = Path.Combine(path_RSA_sha512_2048, "sha512_cert.p12");
 			string pathSigned = "Test_sha512_2048_PKCS12";
-			bulkTest(pathCert, pathKey, pathSigned, true, false);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.LoadPKCS12(pathCert, alias, password);
+			privateKey.LoadPKCS12(pathKey, alias, password);
+			bulkTest(cert, privateKey, pathSigned, true, false, false, null);
 		}
 
 
 
 
-		private void bulkTest(string pathCert, string pathKey, string pathSigned, bool ispkcs12, bool encrypted)
+		private void bulkTest(Key key, PrivateKeyManager privateKey, string pathSigned, bool ispkcs12, bool encrypted, bool isPublicKey, string hash)
 		{
 			for (int k = 0; k < arrayKeyInfoType.Length; k++)
 			{
 				options.KeyInfoType = arrayKeyInfoType[k];
 				optionsXPath.KeyInfoType = arrayKeyInfoType[k];
 				optionsID.KeyInfoType = arrayKeyInfoType[k];
-				CertificateX509 cert = new CertificateX509();
-				if (ispkcs12)
-				{
-					cert.LoadPKCS12(pathCert, alias, password);
-				}
-				else { 
-					cert.Load(pathCert);
-				}
-				PrivateKeyManager key = new PrivateKeyManager();
+				
 
-				if (ispkcs12)
-				{
-					key.LoadPKCS12(pathKey, alias, password);
-				}
-				else
-				{
-					key.Load(pathKey);
-				}
-				/*if (ispkcs12)
-				{
-					key.LoadPKCS12(pathKey, alias, password);
-				}
-				else if(encrypted)
-				{
-					key.LoadEncrypted(pathKey, password);
-				}else
-				{
-					key.Load(pathKey);
-				}*/
-
-				bulkTestWithKeyInfo(cert, key, pathSigned);
-				bulkTestWithKeyInfoXPath(cert, key, pathSigned);
-				bulkTestWithKeyInfoID(cert, key, pathSigned);
+				bulkTestWithKeyInfo(key, privateKey, pathSigned, isPublicKey, hash);
+				bulkTestWithKeyInfoXPath(key, privateKey, pathSigned, isPublicKey, hash);
+				bulkTestWithKeyInfoID(key, privateKey, pathSigned, isPublicKey, hash);
 			}
 
 		}
 
-		private void bulkTestWithKeyInfoXPath(CertificateX509 certificate, PrivateKeyManager key, string pathSigned)
+		private void bulkTestWithKeyInfoXPath(Key certificate, PrivateKeyManager key, string pathSigned, bool isPublickey, string hash)
 		{
 #if NETCORE
 			//******Net Core no tiene habilitado usar la transform xpath******//
 			Assert.IsTrue(true);
 #else
 			XmlDSigSigner signer = new XmlDSigSigner();
-
-			string pathSignedXPath = pathSigned + "_xPAth";
-			for (int c = 0; c < arrayCanonicalization.Length; c++)
+			if (!(KeyInfoTypeUtils.getKeyInfoType(options.KeyInfoType, new Error()) == KeyInfoType.X509Certificate && isPublickey))
 			{
 
-				/**** TEST FILES ****/
-				optionsXPath.DSigSignatureType = dSigType;
-				optionsXPath.Canonicalization = arrayCanonicalization[c];
-				bool signedFile = signer.DoSignFileElement(xmlUnsignedXPathFile, xPath, key, certificate,
-						Path.Combine(xmlSignedPathRoot ,pathSignedXPath + ".xml"), optionsXPath);
-				Assert.IsTrue(signedFile);
-				True(signedFile, signer);
-
-				bool verifyFile = false;
-				KeyInfoType keyInfo = KeyInfoTypeUtils.getKeyInfoType(optionsXPath.KeyInfoType, error);
-				if (keyInfo != KeyInfoType.NONE)
+				string pathSignedXPath = pathSigned + "_xPAth";
+				for (int c = 0; c < arrayCanonicalization.Length; c++)
 				{
-					verifyFile = signer.DoVerifyFile(Path.Combine(xmlSignedPathRoot,pathSignedXPath + ".xml"), optionsXPath);
-				}
-				else
-				{
-					verifyFile = signer.DoVerifyFileWithCert(Path.Combine(xmlSignedPathRoot,pathSignedXPath + ".xml"), certificate,
-							optionsXPath);
-				}
-				//True(verifyFile, signer);
 
-				/**** TEST STRINGS ****/
+					/**** TEST FILES ****/
+					optionsXPath.DSigSignatureType = dSigType;
+					optionsXPath.Canonicalization = arrayCanonicalization[c];
+					bool signedFile = isPublickey ? signer.DoSignFileElementWithPublicKey(xmlUnsignedXPathFile, xPath, key, (PublicKey)certificate,
+							Path.Combine(xmlSignedPathRoot, pathSignedXPath + ".xml"), optionsXPath, hash) : signer.DoSignFileElement(xmlUnsignedXPathFile, xPath, key, (CertificateX509)certificate,
+							Path.Combine(xmlSignedPathRoot, pathSignedXPath + ".xml"), optionsXPath);
+					Assert.IsTrue(signedFile);
+					True(signedFile, signer);
 
-				string signedString = signer.DoSignElement(xmlUnsignedXPath, xPath, key, certificate, optionsXPath);
-				bool resultSignString = false;
-				if (keyInfo != KeyInfoType.NONE)
-				{
-					resultSignString = signer.DoVerify(signedString, optionsXPath);
+					bool verifyFile = false;
+					KeyInfoType keyInfo = KeyInfoTypeUtils.getKeyInfoType(optionsXPath.KeyInfoType, error);
+					if (keyInfo != KeyInfoType.NONE)
+					{
+						verifyFile = signer.DoVerifyFile(Path.Combine(xmlSignedPathRoot, pathSignedXPath + ".xml"), optionsXPath);
+					}
+					else
+					{
+						verifyFile = isPublickey ? signer.DoVerifyFileWithPublicKey(Path.Combine(xmlSignedPathRoot, pathSignedXPath + ".xml"), (PublicKey)certificate,
+								optionsXPath) : signer.DoVerifyFileWithCert(Path.Combine(xmlSignedPathRoot, pathSignedXPath + ".xml"), (CertificateX509)certificate,
+								optionsXPath);
+					}
+					//True(verifyFile, signer);
+
+					/**** TEST STRINGS ****/
+
+					string signedString = isPublickey ? signer.DoSignElementWithPublicKey(xmlUnsignedXPath, xPath, key, (PublicKey)certificate, optionsXPath, hash) : signer.DoSignElement(xmlUnsignedXPath, xPath, key, (CertificateX509)certificate, optionsXPath);
+					bool resultSignString = false;
+					if (keyInfo != KeyInfoType.NONE)
+					{
+						resultSignString = signer.DoVerify(signedString, optionsXPath);
+					}
+					else
+					{
+						resultSignString = isPublickey ? signer.DoVerifyWithPublicKey(signedString, (PublicKey)certificate, optionsXPath) : signer.DoVerifyWithCert(signedString, (CertificateX509)certificate, optionsXPath);
+
+					}
+					//True(resultSignString, signer);
+
 				}
-				else
-				{
-					resultSignString = signer.DoVerifyWithCert(signedString, certificate, optionsXPath);
-
-				}
-				//True(resultSignString, signer);
-
 			}
 #endif
 		}
 
-		private void bulkTestWithKeyInfo(CertificateX509 certificate, PrivateKeyManager key, string pathSigned)
+		private void bulkTestWithKeyInfo(Key certificate, PrivateKeyManager key, string pathSigned, bool isPublickey, string hash)
 		{
 			XmlDSigSigner signer = new XmlDSigSigner();
-
-			for (int c = 0; c < arrayCanonicalization.Length; c++)
+			if (!(KeyInfoTypeUtils.getKeyInfoType(options.KeyInfoType, new Error()) == KeyInfoType.X509Certificate && isPublickey))
 			{
-
-				/**** TEST FILES ****/
-				options.DSigSignatureType = dSigType;
-				options.Canonicalization = arrayCanonicalization[c];
-				bool signedFile = signer.DoSignFile(xmlUnsignedPath, key, certificate,
-						Path.Combine(xmlSignedPathRoot,pathSigned + ".xml"), options);
-				Assert.IsTrue(signedFile);
-				True(signedFile, signer);
-
-				bool verifyFile = false;
-				KeyInfoType keyInfo = KeyInfoTypeUtils.getKeyInfoType(options.KeyInfoType, error);
-				if (keyInfo != KeyInfoType.NONE)
+				for (int c = 0; c < arrayCanonicalization.Length; c++)
 				{
-					verifyFile = signer.DoVerifyFile(Path.Combine(xmlSignedPathRoot,pathSigned + ".xml"), options);
-				}
-				else
-				{
-					verifyFile = signer.DoVerifyFileWithCert(Path.Combine(xmlSignedPathRoot,pathSigned + ".xml"), certificate, options);
-				}
-				True(verifyFile, signer);
 
-				/**** TEST STRINGS ****/
+					/**** TEST FILES ****/
+					options.DSigSignatureType = dSigType;
+					options.Canonicalization = arrayCanonicalization[c];
 
-				string signedString = signer.DoSign(xmlUnsigned, key, certificate, options);
-				bool resultSignString = false;
-				if (keyInfo != KeyInfoType.NONE)
-				{
-					resultSignString = signer.DoVerify(signedString, options);
+					bool signedFile = isPublickey ? signer.DoSignFileWithPublicKey(xmlUnsignedPath, key, (PublicKey)certificate,
+							Path.Combine(xmlSignedPathRoot, pathSigned + ".xml"), options, hash) : signer.DoSignFile(xmlUnsignedPath, key, (CertificateX509)certificate,
+							Path.Combine(xmlSignedPathRoot, pathSigned + ".xml"), options);
+
+					Assert.IsTrue(signedFile);
+					True(signedFile, signer);
+
+					bool verifyFile = false;
+					KeyInfoType keyInfo = KeyInfoTypeUtils.getKeyInfoType(options.KeyInfoType, error);
+					if (keyInfo != KeyInfoType.NONE)
+					{
+						verifyFile = signer.DoVerifyFile(Path.Combine(xmlSignedPathRoot, pathSigned + ".xml"), options);
+					}
+					else
+					{
+						verifyFile = isPublickey ? signer.DoVerifyFileWithPublicKey(Path.Combine(xmlSignedPathRoot, pathSigned + ".xml"), (PublicKey)certificate, options) : signer.DoVerifyFileWithCert(Path.Combine(xmlSignedPathRoot, pathSigned + ".xml"), (CertificateX509)certificate, options);
+					}
+					True(verifyFile, signer);
+
+					/**** TEST STRINGS ****/
+
+					string signedString = isPublickey ? signer.DoSignWithPublicKey(xmlUnsigned, key, (PublicKey)certificate, options, hash) : signer.DoSign(xmlUnsigned, key, (CertificateX509)certificate, options);
+					bool resultSignString = false;
+					if (keyInfo != KeyInfoType.NONE)
+					{
+						resultSignString = signer.DoVerify(signedString, options);
+					}
+					else
+					{
+						resultSignString = isPublickey ? signer.DoVerifyWithPublicKey(signedString, (PublicKey)certificate, options) : signer.DoVerifyWithCert(signedString, (CertificateX509)certificate, options);
+
+					}
+					True(resultSignString, signer);
+
 				}
-				else
-				{
-					resultSignString = signer.DoVerifyWithCert(signedString, certificate, options);
-
-				}
-				True(resultSignString, signer);
-
 			}
 		}
 
-		private void bulkTestWithKeyInfoID(CertificateX509 certificate, PrivateKeyManager key, string pathSigned)
+		private void bulkTestWithKeyInfoID(Key certificate, PrivateKeyManager key, string pathSigned, bool isPublickey, string hash)
 		{
 			XmlDSigSigner signer = new XmlDSigSigner();
-			string pathSignedID = pathSigned + "_id";
-			for (int c = 0; c < arrayCanonicalization.Length; c++)
+			if (!(KeyInfoTypeUtils.getKeyInfoType(options.KeyInfoType, new Error()) == KeyInfoType.X509Certificate && isPublickey))
 			{
-
-				/**** TEST FILES ****/
-				optionsID.DSigSignatureType = dSigType;
-				optionsID.Canonicalization = arrayCanonicalization[c];
-
-				optionsID.XmlSchemaPath = xmlIDSchemaPath;
-				bool signedFile = signer.DoSignFileElement(xmlUnsignedIDPathFile, id, key, certificate,
-						Path.Combine(xmlSignedPathRoot, pathSignedID + ".xml"), optionsID);
-				Assert.IsTrue(signedFile);
-				True(signedFile, signer);
-
-				bool verifyFile = false;
-				optionsID.XmlSchemaPath = "";
-				KeyInfoType keyInfo = KeyInfoTypeUtils.getKeyInfoType(optionsID.KeyInfoType, error);
-				if (keyInfo != KeyInfoType.NONE)
+				string pathSignedID = pathSigned + "_id";
+				for (int c = 0; c < arrayCanonicalization.Length; c++)
 				{
 
-					verifyFile = signer.DoVerifyFile(Path.Combine(xmlSignedPathRoot, pathSignedID + ".xml"), optionsID);
-				}
-				else
-				{
-					verifyFile = signer.DoVerifyFileWithCert(Path.Combine(xmlSignedPathRoot,pathSignedID + ".xml"), certificate,
-							optionsID);
-				}
-				True(verifyFile, signer);
+					/**** TEST FILES ****/
+					optionsID.DSigSignatureType = dSigType;
+					optionsID.Canonicalization = arrayCanonicalization[c];
 
-				/**** TEST STRINGS ****/
-				optionsID.XmlSchemaPath = xmlIDSchemaPath;
-				string signedString = signer.DoSignElement(xmlUnsignedID, id, key, certificate, optionsID);
-				bool resultSignString = false;
+					optionsID.XmlSchemaPath = xmlIDSchemaPath;
+					bool signedFile = isPublickey ? signer.DoSignFileElementWithPublicKey(xmlUnsignedIDPathFile, id, key, (PublicKey)certificate,
+							Path.Combine(xmlSignedPathRoot, pathSignedID + ".xml"), optionsID, hash) : signer.DoSignFileElement(xmlUnsignedIDPathFile, id, key, (CertificateX509)certificate,
+							Path.Combine(xmlSignedPathRoot, pathSignedID + ".xml"), optionsID);
+					Assert.IsTrue(signedFile);
+					True(signedFile, signer);
 
-				optionsID.XmlSchemaPath = "";
-				if (keyInfo != KeyInfoType.NONE)
-				{
-					resultSignString = signer.DoVerify(signedString, optionsID);
+					bool verifyFile = false;
+					optionsID.XmlSchemaPath = "";
+					KeyInfoType keyInfo = KeyInfoTypeUtils.getKeyInfoType(optionsID.KeyInfoType, error);
+					if (keyInfo != KeyInfoType.NONE)
+					{
+
+						verifyFile = signer.DoVerifyFile(Path.Combine(xmlSignedPathRoot, pathSignedID + ".xml"), optionsID);
+					}
+					else
+					{
+						verifyFile = isPublickey ? signer.DoVerifyFileWithPublicKey(Path.Combine(xmlSignedPathRoot, pathSignedID + ".xml"), (PublicKey)certificate,
+								optionsID) : signer.DoVerifyFileWithCert(Path.Combine(xmlSignedPathRoot, pathSignedID + ".xml"), (CertificateX509)certificate,
+								optionsID);
+					}
+					True(verifyFile, signer);
+
+					/**** TEST STRINGS ****/
+					optionsID.XmlSchemaPath = xmlIDSchemaPath;
+					string signedString = isPublickey ? signer.DoSignElementWithPublicKey(xmlUnsignedID, id, key, (PublicKey)certificate, optionsID, hash) : signer.DoSignElement(xmlUnsignedID, id, key, (CertificateX509)certificate, optionsID);
+					bool resultSignString = false;
+
+					optionsID.XmlSchemaPath = "";
+					if (keyInfo != KeyInfoType.NONE)
+					{
+						resultSignString = signer.DoVerify(signedString, optionsID);
+					}
+					else
+					{
+						resultSignString = isPublickey ? signer.DoVerifyWithPublicKey(signedString, (PublicKey)certificate, optionsID) : signer.DoVerifyWithCert(signedString, (CertificateX509)certificate, optionsID);
+
+					}
+					Assert.IsTrue(resultSignString);
+					True(resultSignString, signer);
+
 				}
-				else
-				{
-					resultSignString = signer.DoVerifyWithCert(signedString, certificate, optionsID);
-
-				}
-				Assert.IsTrue(resultSignString);
-				True(resultSignString, signer);
-
 			}
 		}
 
-		/*[Test]
+		[Test]
 		public void Test_sha256_1024_PEM_Encrypted()
 		{
 			string pathKey = Path.Combine(path_RSA_sha256_1024, "sha256_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha256_1024, "sha256_cert.pem");
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.LoadEncrypted(pathKey, password);
 			string pathSigned = "Test_sha256_1024_PEM";
-			bulkTest(pathCert, pathKey, pathSigned, false, true);
+			bulkTest(cert, privateKey, pathSigned, false, true, false, null);
 		}
 
 		[Test]
@@ -444,7 +483,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha1_1024, "sha1_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha1_1024, "sha1_cert.pem");
 			string pathSigned = "Test_sha1_1024_PEM";
-			bulkTest(pathCert, pathKey, pathSigned, false, true);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.LoadEncrypted(pathKey, password);
+			bulkTest(cert, privateKey, pathSigned, false, true, false, null);
 		}
 
 		[Test]
@@ -453,7 +496,11 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha256_2048, "sha256_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha256_2048, "sha256_cert.pem");
 			string pathSigned = "Test_sha256_2048_PEM";
-			bulkTest(pathCert, pathKey, pathSigned, false, true);
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.LoadEncrypted(pathKey, password);
+			bulkTest(cert, privateKey, pathSigned, false, true, false, null);
 		}
 
 		[Test]
@@ -462,7 +509,52 @@ namespace SecurityAPITest.XmlSignature.DSig
 			string pathKey = Path.Combine(path_RSA_sha512_2048, "sha512_key.pem");
 			string pathCert = Path.Combine(path_RSA_sha512_2048, "sha512_cert.pem");
 			string pathSigned = "Test_sha512_2048_PEM";
-			bulkTest(pathCert, pathKey, pathSigned, false, true);
-		}*/
+			CertificateX509 cert = new CertificateX509();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.LoadEncrypted(pathKey, password);
+			bulkTest(cert, privateKey, pathSigned, false, true, false, null);
+		}
+
+		[Test]
+		public void Test_sha1_1024_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha1_1024, "sha1_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha1_1024, "sha1_pubkey.pem");
+			string pathSigned = "Test_sha1_1024_PublicKey";
+			PublicKey publicKey = new PublicKey();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			publicKey.Load(pathCert);
+			privateKey.LoadEncrypted(pathKey, password);
+			bulkTest(publicKey, privateKey, pathSigned, false, true, true, "SHA1");
+		}
+
+		[Test]
+		public void Test_sha256_2048_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha256_2048, "sha256_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha256_2048, "sha256_pubkey.pem");
+			string pathSigned = "Test_sha256_2048_PublicKey";
+			PublicKey cert = new PublicKey();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.LoadEncrypted(pathKey, password);
+			bulkTest(cert, privateKey, pathSigned, false, true, true, "SHA256");
+		}
+
+		[Test]
+		public void Test_sha512_2048_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha512_2048, "sha512_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha512_2048, "sha512_pubkey.pem");
+			string pathSigned = "Test_sha512_2048_PublicKey";
+			PublicKey cert = new PublicKey();
+			PrivateKeyManager privateKey = new PrivateKeyManager();
+			cert.Load(pathCert);
+			privateKey.LoadEncrypted(pathKey, password);
+			bulkTest(cert, privateKey, pathSigned, false, true, true, "SHA512");
+		}
+
+
 	}
 }

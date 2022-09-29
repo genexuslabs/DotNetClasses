@@ -40,7 +40,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			//System.out.println("Error. Code: " + asymCipher.getErrorCode() + " Desc: " + asymCipher.getErrorDescription());
 			Assert.IsFalse(asymCipher.HasError());
 
-			string decrypted = asymCipher.DoDecrypt_WithPublicKey(" SHA1", " PCKS1PADDING", cert, encrypted1);
+			string decrypted = asymCipher.DoDecrypt_WithCertificate(" SHA1", " PCKS1PADDING", cert, encrypted1);
 			Assert.IsFalse(asymCipher.HasError());
 			Assert.IsTrue(SecurityUtils.compareStrings(plainText, decrypted));
 		}

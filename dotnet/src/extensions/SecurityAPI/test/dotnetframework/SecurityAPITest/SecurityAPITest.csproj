@@ -36,6 +36,9 @@
     <None Update="dummycerts\ECDSA_sha1\sha1_key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\ECDSA_sha1\sha1_pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\ECDSA_sha256\sha256_cert.crt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -48,6 +51,9 @@
     <None Update="dummycerts\ECDSA_sha256\sha256_key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\ECDSA_sha256\sha256_pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\JWT_ECDSA\prime192v1\cert.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -60,36 +66,54 @@
     <None Update="dummycerts\JWT_ECDSA\prime192v2\key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\JWT_ECDSA\prime192v2\pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\JWT_ECDSA\prime192v3\cert.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="dummycerts\JWT_ECDSA\prime192v3\key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\JWT_ECDSA\prime192v3\pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\JWT_ECDSA\prime239v1\cert.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="dummycerts\JWT_ECDSA\prime239v1\key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\JWT_ECDSA\prime239v1\pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\JWT_ECDSA\prime239v2\cert.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="dummycerts\JWT_ECDSA\prime239v2\key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\JWT_ECDSA\prime239v2\pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\JWT_ECDSA\prime239v3\cert.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="dummycerts\JWT_ECDSA\prime239v3\key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\JWT_ECDSA\prime239v3\pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\JWT_ECDSA\prime256v1\cert.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="dummycerts\JWT_ECDSA\prime256v1\key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\JWT_ECDSA\prime256v1\pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\JWT_ECDSA\prime_test\cert.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -306,9 +330,12 @@
     <None Update="dummycerts\RSA_sha1_1024\sha1_cert.p12">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="dummycerts\RSA_sha1_1024\sha1_cert.pem">
+    <None Update="dummycerts\RSA_sha1_1024\sha1_pubkey.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\RSA_sha1_1024\sha1_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\RSA_sha1_1024\sha1_cert.pkcs12">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -324,6 +351,9 @@
     <None Update="dummycerts\RSA_sha256_1024\sha256_cert.crt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\RSA_sha256_1024\sha256_pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\RSA_sha256_1024\sha256_cert.p12">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -339,6 +369,9 @@
     <None Update="dummycerts\RSA_sha256_2048\sha256e_cert.p12">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\RSA_sha256_2048\sha256_pubckey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\RSA_sha256_2048\sha256_cert.crt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -369,6 +402,9 @@
     <None Update="dummycerts\RSA_sha512_2048\sha512_key.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+		<None Update="dummycerts\RSA_sha512_2048\sha512_pubkey.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
     <None Update="dummycerts\Test_sha1_1024_DER\dummy.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -36,6 +36,7 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public String DoSign(PrivateKeyManager key, string hashAlgorithm, string plainText)
 		{
+			this.error.cleanError();
 			/*******INPUT VERIFICATION - BEGIN*******/
 			SecurityUtils.validateObjectInput("key", key, this.error);
 			SecurityUtils.validateStringInput("hashAlgorithm", hashAlgorithm, this.error);
@@ -108,7 +109,38 @@ namespace GeneXusCryptography.Asymmetric
 			bool result = false;
 			using (Stream inputStream = new MemoryStream(inputText))
 			{
-				result = Verify(cert, inputStream, signature);
+				result = Verify(cert, inputStream, signature, null);
+			}
+			return result;
+		}
+
+		[SecuritySafeCritical]
+		public bool DoVerifyWithPublicKey(PublicKey key, string plainText, string signature, string hash)
+		{
+			this.error.cleanError();
+
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateObjectInput("key", key, this.error);
+			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateStringInput("signature", signature, this.error);
+			SecurityUtils.validateStringInput("hashAlgorithm", hash, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+			/******* INPUT VERIFICATION - END *******/
+
+			EncodingUtil eu = new EncodingUtil();
+			byte[] inputText = eu.getBytes(plainText);
+			if (eu.HasError())
+			{
+				this.error = eu.GetError();
+				return false;
+			}
+			bool result = false;
+			using (Stream inputStream = new MemoryStream(inputText))
+			{
+				result = Verify(key, inputStream, signature, hash);
 			}
 			return result;
 		}
@@ -132,11 +164,38 @@ namespace GeneXusCryptography.Asymmetric
 				{
 					return false;
 				}
-				result = Verify(cert, input, signature);
+				result = Verify(cert, input, signature, null);
 			}
 			return result;
 		}
 
+		[SecuritySafeCritical]
+		public bool DoVerifyFileWithPublicKey(PublicKey key, string path, string signature, string hash)
+		{
+			this.error.cleanError();
+
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateObjectInput("key", key, this.error);
+			SecurityUtils.validateStringInput("path", path, this.error);
+			SecurityUtils.validateStringInput("signature", signature, this.error);
+			SecurityUtils.validateStringInput("hashAlgorithm", hash, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+			/******* INPUT VERIFICATION - END *******/
+
+			bool result = false;
+			using (Stream input = SecurityUtils.getFileStream(path, this.error))
+			{
+				if (this.HasError())
+				{
+					return false;
+				}
+				result = Verify(key, input, signature, hash);
+			}
+			return result;
+		}
 
 		/********EXTERNAL OBJECT PUBLIC METHODS  - END ********/
 
@@ -149,12 +208,12 @@ namespace GeneXusCryptography.Asymmetric
 				return "";
 			}
 			AsymmetricSigningAlgorithm asymmetricSigningAlgorithm = AsymmetricSigningAlgorithmUtils
-					.GetAsymmetricSigningAlgorithm(keyMan.getPrivateKeyAlgorithm(), this.error);
+					.GetAsymmetricSigningAlgorithm(keyMan.getAlgorithm(), this.error);
 			if (this.HasError()) return "";
 			ISigner signer = AsymmetricSigningAlgorithmUtils.GetSigner(asymmetricSigningAlgorithm, GetHash(hashAlgorithm),
 					this.error);
 			if (this.HasError()) return "";
-			SetUpSigner(signer, input, keyMan.getPrivateKeyParameterForSigning(), true);
+			SetUpSigner(signer, input, keyMan.getAsymmetricKeyParameter(), true);
 			if (this.HasError()) return "";
 			byte[] outputBytes = null;
 			try
@@ -179,30 +238,47 @@ namespace GeneXusCryptography.Asymmetric
 			return result;
 		}
 
-		private bool Verify(Certificate certificate, Stream input, string signature)
+		private bool Verify(Key key, Stream input, string signature, string hash)
 		{
-			CertificateX509 cert = (CertificateX509)certificate;
+			PublicKey cert = null;
+			bool isKey = false;
+			if (hash == null)
+			{
+				cert = (CertificateX509)key;
+			}
+			else
+			{
+				cert = (PublicKey)key;
+				isKey = true;
+			}
 			if (cert.HasError())
 			{
 				this.error = cert.GetError();
 				return false;
 			}
 			string hashAlgorithm = "";
-			if (SecurityUtils.compareStrings(cert.getPublicKeyHash(), "ECDSA"))
+			if (isKey)
 			{
-				hashAlgorithm = "SHA1";
+				hashAlgorithm = hash;
 			}
 			else
 			{
-				hashAlgorithm = cert.getPublicKeyHash();
+				if (SecurityUtils.compareStrings(((CertificateX509)cert).getPublicKeyHash(), "ECDSA"))
+				{
+					hashAlgorithm = "SHA1";
+				}
+				else
+				{
+					hashAlgorithm = ((CertificateX509)cert).getPublicKeyHash();
+				}
 			}
 			AsymmetricSigningAlgorithm asymmetricSigningAlgorithm = AsymmetricSigningAlgorithmUtils
-					.GetAsymmetricSigningAlgorithm(cert.getPublicKeyAlgorithm(), this.error);
+					.GetAsymmetricSigningAlgorithm(cert.getAlgorithm(), this.error);
 			if (this.HasError()) return false;
 			ISigner signer = AsymmetricSigningAlgorithmUtils.GetSigner(asymmetricSigningAlgorithm, GetHash(hashAlgorithm),
 					this.error);
 			if (this.HasError()) return false;
-			SetUpSigner(signer, input, cert.getPublicKeyParameterForSigning(), false);
+			SetUpSigner(signer, input, cert.getAsymmetricKeyParameter(), false);
 			if (this.HasError()) return false;
 			byte[] signatureBytes = null;
 			try

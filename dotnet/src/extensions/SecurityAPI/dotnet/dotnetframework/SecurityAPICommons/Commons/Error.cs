@@ -33,6 +33,13 @@ namespace SecurityAPICommons.Commons
             this.description = "";
         }
 
+		public Error (string code, string description)
+		{
+			this.code = code;
+			this.description = description;
+			this.exists = true;
+		}
+
         /// <summary>
         /// Gets error code
         /// </summary>

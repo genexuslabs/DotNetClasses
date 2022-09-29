@@ -5,6 +5,7 @@ using System.Xml;
 using System.IO;
 using System.Xml.Schema;
 using SecurityAPICommons.Utils;
+using System.Collections.Generic;
 
 namespace GeneXusXmlSignature.GeneXusUtils
 {
@@ -15,6 +16,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 		internal static XmlDocument documentFromFile(string path, string schemapath, Error error)
 		{
 			XmlDocument xmlDoc = new XmlDocument() { XmlResolver = null };
+			
 			xmlDoc.PreserveWhitespace = true;
 			using (FileStream fs = File.OpenRead(path))
 			{
@@ -298,17 +300,38 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
 		internal static XmlNode getNodeFromPath(XmlDocument doc, string expression, Error error)
 		{
+			XmlNamespaceManager nsManager = GetAllNamespaces(doc);
 			doc.PreserveWhitespace = true;
 			try
 			{
-				return doc.SelectSingleNode(expression);
+				return doc.SelectSingleNode(expression, nsManager);
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
-				error.setError("SU008", "Could not found any node that matches de xPath predicate");
+				error.setError("SU008", e.Message);
+				//error.setError("SU008", "Could not found any node that matches de xPath predicate");
 				return null;
 			}
 		}
+
+		private static XmlNamespaceManager GetAllNamespaces(XmlDocument xDoc)
+		{
+			XmlNamespaceManager nsMgr = new XmlNamespaceManager(xDoc.NameTable);
+			XmlNodeList _xmlNameSpaceList = xDoc.SelectNodes(@"//namespace::*[not(. = ../../namespace::*)]");
+
+			//nsMgr = new XmlNamespaceManager(xDoc.NameTable);
+
+			foreach (XmlNode nsNode in _xmlNameSpaceList)
+			{
+				nsMgr.AddNamespace(nsNode.LocalName, nsNode.Value);
+			}
+
+			return nsMgr;
+		 
+
+		}
+
+
 
 
 

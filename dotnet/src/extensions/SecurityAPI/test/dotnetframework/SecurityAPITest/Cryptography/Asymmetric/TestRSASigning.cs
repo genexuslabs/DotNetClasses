@@ -5,6 +5,7 @@ using SecurityAPICommons.Config;
 using GeneXusCryptography.Asymmetric;
 using SecurityAPICommons.Keys;
 using System.IO;
+using SecurityAPICommons.Commons;
 
 namespace SecurityAPITest.Cryptography.Asymmetric
 {
@@ -59,7 +60,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.Load(pathKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA1");
+			runTestWithEncoding(key, cert, "SHA1", false);
 		}
 
 		[Test]
@@ -71,7 +72,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.Load(pathKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA1");
+			runTestWithEncoding(key, cert, "SHA1", false);
 
 		}
 
@@ -86,7 +87,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.LoadPKCS12(pathKey, alias, password);
 			CertificateX509 cert = new CertificateX509();
 			cert.LoadPKCS12(pathCert, alias, password);
-			runTestWithEncoding(key, cert, "SHA1");
+			runTestWithEncoding(key, cert, "SHA1", false);
 
 		}
 
@@ -99,7 +100,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.Load(pathKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 
 		}
 
@@ -112,7 +113,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.Load(pathKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 
 		}
 
@@ -127,7 +128,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.LoadPKCS12(pathKey, alias, password);
 			CertificateX509 cert = new CertificateX509();
 			cert.LoadPKCS12(pathCert, alias, password);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 
 		}
 
@@ -140,7 +141,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.Load(pathKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 
 		}
 
@@ -153,7 +154,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.Load(pathKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 
 		}
 
@@ -168,7 +169,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.LoadPKCS12(pathKey, alias, password);
 			CertificateX509 cert = new CertificateX509();
 			cert.LoadPKCS12(pathCert, alias, password);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 
 		}
 
@@ -181,7 +182,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.Load(pathKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA512");
+			runTestWithEncoding(key, cert, "SHA512", false);
 
 		}
 
@@ -194,7 +195,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.Load(pathKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA512");
+			runTestWithEncoding(key, cert, "SHA512", false);
 
 		}
 
@@ -209,7 +210,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.LoadPKCS12(pathKey, alias, password);
 			CertificateX509 cert = new CertificateX509();
 			cert.LoadPKCS12(pathCert, alias, password);
-			runTestWithEncoding(key, cert, "SHA512");
+			runTestWithEncoding(key, cert, "SHA512", false);
 		}
 
 		[Test]
@@ -221,39 +222,52 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.FromBase64(base64stringKey);
 			CertificateX509 cert = new CertificateX509();
 			cert.FromBase64(base64stringCert);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 		}
 
-		private void bulkTest(PrivateKeyManager key, CertificateX509 cert, string hashAlgorithm)
+		[Test]
+		public void Test_base64_PublicKey()
 		{
-			bulkTestText(key, cert, hashAlgorithm);
-			bulkTestFile(key, cert, hashAlgorithm);
+			string base64stringCert = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDGfJuH7SIX63boIuZBLM0Wa+SEbqhgy03sfgn1Z4ZwWF8kICV3giNHskWFAGzc8P/TD3RTf/6VdugF3h/2ozkVbtSVaDgAmXTTiDxZ8F14fKAcTcSwGJaqCtqwC/v7Z7PKyqqkuKfB0mrfbY9O01F57GCZpm1yTP3gfeBMeug9WQIDAQAB";
+			string base64stringKey = "MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAMZ8m4ftIhfrdugi5kEszRZr5IRuqGDLTex+CfVnhnBYXyQgJXeCI0eyRYUAbNzw/9MPdFN//pV26AXeH/ajORVu1JVoOACZdNOIPFnwXXh8oBxNxLAYlqoK2rAL+/tns8rKqqS4p8HSat9tj07TUXnsYJmmbXJM/eB94Ex66D1ZAgMBAAECgYA1xrTs0taV3HnO0wXHSrgWBw1WxBRihTKLjGpuTqoh7g943izIgD3GwwoKyt6zzafCK0G9DcSQAjNCw7etPvPL3FxwhDl+AHSv9JcChk/auICtMWwjurG4npto+s3byj/N00Idpz1xuOgKd8k9sdoPBGKa8l+LL+adSXzoivLG8QJBAPDvbOLSs9petB2iM6w5/DiC8EoxqDaBc7I1JFCvPOfB7i1GFFxkQ7hlgxpvaPX3NHXjAZpgdOW68P/SjU0izKsCQQDS5bjrNo3xn/MbYKojzwprR/Bo8Kvbi4/2M9NE3GwHegVmx5I+df+J0aObrbBNPLs/rhrFtt12OtgxJaac+FYLAkEA8DUUbvO4wj7m/iBnug65irHo1V+6oFThv0tCIHsFkt4DEvoqdI62AZKbafCnSYqjr+CaCYqfIScG/Vay77OBLwJBAI8EYAmKPmn7+SW4wMh1z+/+ogbYJwNEOoVQkdXh0JSlZ+JSNleLN5ajhtq8x5EpPSYrEFbB8p8JurBhgwJx2g8CQQDrp9scoK8eKBJ2p/63xqLGYSN6OZQo/4Lkq3983rmHoDCAp3Bz1zUyxQB3UVyrOj4U44C7RtDNiMSZuCwvjYAI";
+			PrivateKeyManager key = new PrivateKeyManager();
+			key.FromBase64(base64stringKey);
+			PublicKey cert = new PublicKey();
+			cert.FromBase64(base64stringCert);
+			runTestWithEncoding(key, cert, "SHA256", true);
 		}
 
-		private void bulkTestText(PrivateKeyManager key, CertificateX509 cert, string hashAlgorithm)
+		private void bulkTest(PrivateKeyManager key, PublicKey cert, string hashAlgorithm, bool isPublicKey)
+		{
+			bulkTestText(key, cert, hashAlgorithm, isPublicKey);
+			bulkTestFile(key, cert, hashAlgorithm, isPublicKey);
+		}
+
+		private void bulkTestText(PrivateKeyManager key, PublicKey cert, string hashAlgorithm, bool isPublicKey)
 		{
 			AsymmetricSigner asymSig = new AsymmetricSigner();
 			string signature = asymSig.DoSign(key, hashAlgorithm, plainText);
-			bool result = asymSig.DoVerify(cert, plainText, signature);
+			bool result = isPublicKey ? asymSig.DoVerifyWithPublicKey(cert, plainText, signature, hashAlgorithm) : asymSig.DoVerify((CertificateX509)cert, plainText, signature);
+			
 			Assert.IsTrue(result);
 			True(result, asymSig);
 		}
 
-		private void bulkTestFile(PrivateKeyManager key, CertificateX509 cert, string hashAlgorithm)
+		private void bulkTestFile(PrivateKeyManager key, PublicKey cert, string hashAlgorithm, bool isPublicKey)
 		{
 			AsymmetricSigner asymSig = new AsymmetricSigner();
 			string signature = asymSig.DoSignFile(key, hashAlgorithm, filePath);
-			bool result = asymSig.DoVerifyFile(cert, filePath, signature);
+			bool result = isPublicKey ? asymSig.DoVerifyFileWithPublicKey(cert, filePath, signature, hashAlgorithm): asymSig.DoVerifyFile((CertificateX509)cert, filePath, signature); 
 			Assert.IsTrue(result);
 			True(result, asymSig);
 		}
 
-		private void runTestWithEncoding(PrivateKeyManager key, CertificateX509 cert, string hash)
+		private void runTestWithEncoding(PrivateKeyManager key, PublicKey cert, string hash, bool isPublicKey)
 		{
 			for (int i = 0; i < encodings.Length; i++)
 			{
 				eu.setEncoding(encodings[i]);
-				bulkTest(key, cert, hash);
+				bulkTest(key, cert, hash, isPublicKey);
 			}
 		}
 
@@ -266,7 +280,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.LoadEncrypted(pathKey, password);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 
 		}
 
@@ -279,7 +293,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.LoadEncrypted(pathKey, password);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA512");
+			runTestWithEncoding(key, cert, "SHA512", false);
 
 		}
 
@@ -292,7 +306,7 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.LoadEncrypted(pathKey, password);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA256");
+			runTestWithEncoding(key, cert, "SHA256", false);
 
 		}
 
@@ -305,7 +319,59 @@ namespace SecurityAPITest.Cryptography.Asymmetric
 			key.LoadEncrypted(pathKey, password);
 			CertificateX509 cert = new CertificateX509();
 			cert.Load(pathCert);
-			runTestWithEncoding(key, cert, "SHA1");
+			runTestWithEncoding(key, cert, "SHA1", false);
+
+		}
+
+		[Test]
+		public void Test_sha256_2048_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha256_2048, "sha256_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha256_2048, "sha256_pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			key.LoadEncrypted(pathKey, password);
+			PublicKey cert = new PublicKey();
+			cert.Load(pathCert);
+			runTestWithEncoding(key, cert, "SHA256", true);
+
+		}
+
+		[Test]
+		public void Test_sha512_2048_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha512_2048, "sha512_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha512_2048, "sha512_pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			key.LoadEncrypted(pathKey, password);
+			PublicKey cert = new PublicKey();
+			cert.Load(pathCert);
+			runTestWithEncoding(key, cert, "SHA512", true);
+
+		}
+
+		[Test]
+		public void Test_sha256_1024_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha256_1024, "sha256_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha256_1024, "sha256_pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			key.LoadEncrypted(pathKey, password);
+			PublicKey cert = new PublicKey();
+			cert.Load(pathCert);
+			runTestWithEncoding(key, cert, "SHA256", true);
+
+		}
+
+		[Test]
+		public void Test_sha1_1024_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha1_1024, "sha1_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha1_1024, "sha1_pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			key.LoadEncrypted(pathKey, password);
+			PublicKey cert = new PublicKey();
+			cert.Load(pathCert);
+			runTestWithEncoding(key, cert, "SHA1", true);
 
 		}
 	}
