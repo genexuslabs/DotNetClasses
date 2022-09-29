@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0</TargetFrameworks>
@@ -16,7 +16,8 @@
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Certificate.cs" Link="Commons\Certificate.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Error.cs" Link="Commons\Error.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Key.cs" Link="Commons\Key.cs" />
-    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\PrivateKey.cs" Link="Commons\PrivateKey.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\PublicKey.cs" Link="Commons\PublicKey.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\PrivateKey.cs" Link="Commons\PrivateKey.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\SecurityAPIObject.cs" Link="Commons\SecurityAPIObject.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\AvailableEncoding.cs" Link="Config\AvailableEncoding.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\EncodingUtil.cs" Link="Config\EncodingUtil.cs" />

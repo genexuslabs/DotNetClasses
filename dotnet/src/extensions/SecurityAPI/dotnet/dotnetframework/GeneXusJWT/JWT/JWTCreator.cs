@@ -187,39 +187,23 @@ namespace GeneXusJWT.GenexusJWT
 					this.error = key.GetError();
 					return "";
 				}
-				if (SecurityUtils.compareStrings(key.getPrivateKeyAlgorithm(), "RSA"))
+				try
 				{
-					try
+					switch (key.getAlgorithm())
 					{
-						genericKey = new RsaSecurityKey((RSA)key.getPrivateKeyForJWT());
+						case "RSA":
+							genericKey = new RsaSecurityKey((RSA)key.getAsymmetricAlgorithm());
+							break;
+						case "ECDSA":
+							genericKey = new ECDsaSecurityKey((ECDsa)key.getAsymmetricAlgorithm());
+							break;
+						default:
+							this.error.setError("JW012", "Not recognized key algorithm");
+							return "";
 					}
-					catch (Exception)
-					{
-						this.error = key.GetError();
-						return "";
-					}
-
-				}
-				else if (SecurityUtils.compareStrings(key.getPrivateKeyAlgorithm(), "ECDSA"))
+				}catch(Exception e)
 				{
-					try
-					{
-						genericKey = new ECDsaSecurityKey((ECDsa)key.getPrivateKeyForJWT());
-					}
-					catch (Exception)
-					{
-						this.error = key.GetError();
-						return "";
-					}
-				}
-				else
-				{
-					this.error.setError("JW012", "Not recognized key algorithm");
-					return "";
-				}
-				if (genericKey == null)
-				{
-					this.error = key.GetError();
+					this.error = key.HasError() ? key.GetError() : new Error("XXX", e.Message);
 					return "";
 				}
 			}
@@ -333,46 +317,31 @@ namespace GeneXusJWT.GenexusJWT
 			SecurityKey genericKey = null;
 			if (JWTAlgorithmUtils.isPrivate(alg))
 			{
-
-
-				CertificateX509 cert = options.GetCertificate();
+				PublicKey cert = options.GetPublicKey();
 				if (cert.HasError())
 				{
 					this.error = cert.GetError();
 					return false;
 				}
-				if (SecurityUtils.compareStrings(cert.getPublicKeyAlgorithm(), "RSA"))
+				try
 				{
-					try
+					switch (cert.getAlgorithm())
 					{
-						genericKey = new RsaSecurityKey((RSA)cert.getPublicKeyJWT());
+						case "RSA":
+							genericKey = new RsaSecurityKey((RSA)cert.getAsymmetricAlgorithm());
+							break;
+						case "ECDSA":
+							genericKey = new ECDsaSecurityKey((ECDsa)cert.getAsymmetricAlgorithm());
+							break;
+						default:
+							this.error.setError("JW015", "Not recognized key algorithm");
+							return false;
 					}
-					catch (Exception)
-					{
-						this.error = cert.GetError();
-						return false;
-					}
-
-				}
-				else if (SecurityUtils.compareStrings(cert.getPublicKeyAlgorithm(), "ECDSA"))
+				}catch(Exception e)
 				{
-					try
-					{
-						genericKey = new ECDsaSecurityKey((ECDsa)cert.getPublicKeyJWT());
-					}
-					catch (Exception)
-					{
-						this.error = cert.GetError();
-						return false;
-					}
-
-				}
-				else
-				{
-					this.error.setError("JW015", "Not recognized key algorithm");
+					this.error = cert.HasError() ? cert.GetError(): new Error("XXX", e.Message);
 					return false;
 				}
-
 			}
 			else
 			{
