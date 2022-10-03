@@ -1917,8 +1917,19 @@ namespace GeneXus.Http
 		}
 		internal string DumpHeaders(HttpContext httpContext)
 		{
-#if !NETCORE
 			StringBuilder str = new StringBuilder();
+#if NETCORE
+			foreach (string key in httpContext.Request.Headers.Keys)
+			{
+				str.Append(key + ":" + httpContext.Request.Headers[key]);
+			}
+			str.Append(StringUtil.NewLine() + "HttpCookies: ");
+			foreach (string key in httpContext.Request.Cookies.Keys)
+			{
+				str.Append(StringUtil.NewLine() + key + ":" + httpContext.Request.Cookies[key]);
+			}
+			return str.ToString();
+#else
 			foreach (string key in httpContext.Request.Headers)
 			{
 				str.Append(key + ":" + httpContext.Request.Headers[key]);
@@ -1929,8 +1940,6 @@ namespace GeneXus.Http
 				str.Append(StringUtil.NewLine() + key + ":" + httpContext.Request.Cookies[key].Value);
 			}
 			return str.ToString();
-#else
-			return string.Empty;
 #endif
 		}
 
