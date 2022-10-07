@@ -6,6 +6,7 @@
 		<IsPublishable>false</IsPublishable>
 		<StdVersion>$(VER)</StdVersion>
 		<AssemblyName>GeneXus.Deploy.AzureFunctions.Handlers</AssemblyName>
+		<MSBuildProjectSourceName>$(MSBuildProjectName).Sources.csproj</MSBuildProjectSourceName>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="log4net" Version="2.0.11" />
@@ -45,24 +46,20 @@
 			<Pack>true</Pack>
 			<PackagePath>./lib/net6.0/</PackagePath>
 		</Content>
-		<Content Include="$(MSBuildProjectName).Ext.csproj;.\**\*.cs;host.json;local.settings.json;">
+		<Content Include="$(MSBuildProjectSourceName);.\**\*.cs;host.json;local.settings.json;">
 			<Pack>true</Pack>
 			<PackagePath>./src/</PackagePath>
 		</Content>
 	</ItemGroup>
 	
 	<Target Name="CreatePackableProject" AfterTargets="Build" Condition="$(StdVersion)==''">
-		<Message Importance="high" Text="Creating project $(GenStdVersion)"></Message>
-		<PropertyGroup>
-			<OutputFile>$(MSBuildProjectName).Ext.csproj</OutputFile>
-		</PropertyGroup>
+		<Message Importance="high" Text="Creating project $(MSBuildProjectSourceName)"></Message>
 
-
-		<Copy SourceFiles="$(MSBuildProjectName).csproj" DestinationFiles="$(OutputFile)"></Copy>
+		<Copy SourceFiles="$(MSBuildProjectName).csproj" DestinationFiles="$(MSBuildProjectSourceName)"></Copy>
 		
 		<WriteLinesToFile
-				  File="$(MSBuildProjectName).Ext.csproj"
-				  Lines="$([System.IO.File]::ReadAllText('$(MSBuildProjectName).Ext.csproj').Replace('%24%28VER%29',$(FileVersionWithoutRevision)))"
+				  File="$(MSBuildProjectSourceName)"
+				  Lines="$([System.IO.File]::ReadAllText('$(MSBuildProjectSourceName)').Replace('%24%28VER%29',$(FileVersionWithoutRevision)))"
 				  Overwrite="true"
 				  Encoding="Unicode"/>
 	</Target>
