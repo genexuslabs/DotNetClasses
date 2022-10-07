@@ -4,6 +4,8 @@
 		<OutputType>Exe</OutputType>
 		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
 		<IsPublishable>false</IsPublishable>
+		<StdVersion>$(VER)</StdVersion>
+		<AssemblyName>GeneXus.Deploy.AzureFunctions.Handlers</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="log4net" Version="2.0.11" />
@@ -16,12 +18,18 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
 		<PackageReference Include="StackExchange.Redis" Version="2.0.593" />
 	</ItemGroup>
-	<ItemGroup>
+	<ItemGroup Condition="$(StdVersion)==''">
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\Providers\Cache\GxRedis\GxRedis.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="$(StdVersion)!=''">
+		<PackageReference Include="GeneXus.Classes.Web.Core" Version="$(StdVersion)" />
+		<PackageReference Include="GeneXus.Mail.Core" Version="$(StdVersion)" />
+		<PackageReference Include="GeneXus.Excel.Core" Version="$(StdVersion)" />
+		<PackageReference Include="GeneXus.Redis.Core" Version="$(StdVersion)" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="host.json">
@@ -37,10 +45,25 @@
 			<Pack>true</Pack>
 			<PackagePath>./lib/net6.0/</PackagePath>
 		</Content>
-		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;local.settings.json;">
+		<Content Include="$(MSBuildProjectName).Ext.csproj;.\**\*.cs;host.json;local.settings.json;">
 			<Pack>true</Pack>
 			<PackagePath>./src/</PackagePath>
 		</Content>
 	</ItemGroup>
+	
+	<Target Name="CreatePackableProject" AfterTargets="Build" Condition="$(StdVersion)==''">
+		<Message Importance="high" Text="Creating project $(GenStdVersion)"></Message>
+		<PropertyGroup>
+			<OutputFile>$(MSBuildProjectName).Ext.csproj</OutputFile>
+		</PropertyGroup>
 
+
+		<Copy SourceFiles="$(MSBuildProjectName).csproj" DestinationFiles="$(OutputFile)"></Copy>
+		
+		<WriteLinesToFile
+				  File="$(MSBuildProjectName).Ext.csproj"
+				  Lines="$([System.IO.File]::ReadAllText('$(MSBuildProjectName).Ext.csproj').Replace('%24%28VER%29',$(FileVersionWithoutRevision)))"
+				  Overwrite="true"
+				  Encoding="Unicode"/>
+	</Target>
 </Project>

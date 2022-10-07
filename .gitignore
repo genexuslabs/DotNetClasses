@@ -366,3 +366,4 @@ build
 /dotnet/VeracodeSolution.sln
 /dotnet/outsonar.txt
 /dotnet/output.txt
+/dotnet/src/extensions/Azure/Handlers/GeneXus.Deploy.AzureFunctions.Handlers.Ext.csproj
