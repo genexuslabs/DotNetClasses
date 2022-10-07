@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net.Http;
 using GeneXus.Application;
 using GxClasses.Web.Middleware;
 using Microsoft.AspNetCore;
@@ -14,6 +17,19 @@ namespace xUnitTesting
 		{
 			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
 			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>());
+		}
+		public MiddlewareTest(string environment)
+		{
+			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
+			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(environment));
+		}
+		protected string GetHeader(HttpResponseMessage response, string headerName)
+		{
+			if (response.Headers.TryGetValues(headerName, out IEnumerable<string> value))
+				return value.First();
+			else
+				return string.Empty;
+
 		}
 
 	}

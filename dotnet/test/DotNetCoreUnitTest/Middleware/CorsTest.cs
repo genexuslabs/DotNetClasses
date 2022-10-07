@@ -76,14 +76,6 @@ namespace DotNetCoreUnitTest.Middleware
 				Assert.Contains(header, headersHeader, StringComparison.OrdinalIgnoreCase);
 			}
 		}
-		private string GetHeader(HttpResponseMessage response, string headerName)
-		{
-			if (response.Headers.TryGetValues(headerName, out IEnumerable<string> value))
-				return value.First();
-			else
-				return string.Empty;
-
-		}
 
 	}
 }
