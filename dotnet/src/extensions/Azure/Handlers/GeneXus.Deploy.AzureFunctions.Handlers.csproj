@@ -37,15 +37,7 @@
 			<Pack>true</Pack>
 			<PackagePath>./lib/net6.0/</PackagePath>
 		</Content>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Remove="Dummies\DummyProgram.cs" />
-		<Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json">
-			<Pack>true</Pack>
-			<PackagePath>./lib/net6.0/</PackagePath>
-		</Content>
-		<Content Include="$(MSBuildProjectName).csproj;Dummies\*.cs;Properties\launchSettings.json;host.json;local.settings.json;">
+		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;local.settings.json;">
 			<Pack>true</Pack>
 			<PackagePath>./src/</PackagePath>
 		</Content>
