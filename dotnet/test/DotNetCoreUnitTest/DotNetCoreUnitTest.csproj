@@ -71,7 +71,6 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
@@ -90,21 +89,6 @@
 
 
 	<ItemGroup>
-		<None Update="appsettings.Development.json">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="apps\append.svc">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="apps\configsettings.svc">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="apps\httpcors.svc">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="apps\saveimage.svc">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Update="confmapping.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -161,9 +145,6 @@
 		</None>
 		<None Update="resources\text.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
-		<None Update="uruguay.flag.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 

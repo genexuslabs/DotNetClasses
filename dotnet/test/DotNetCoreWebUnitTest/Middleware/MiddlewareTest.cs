@@ -12,16 +12,14 @@ namespace xUnitTesting
 {
 	public class MiddlewareTest
 	{
+		const string DOTNET_ENVIRONMENT = "Development";
+
 		protected TestServer server;
 		public MiddlewareTest()
 		{
 			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
-			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>());
-		}
-		public MiddlewareTest(string environment)
-		{
-			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
-			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(environment));
+			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(DOTNET_ENVIRONMENT));
+			server.CreateClient();
 		}
 		protected string GetHeader(HttpResponseMessage response, string headerName)
 		{

@@ -20,8 +20,7 @@ namespace DotNetCoreUnitTest.Middleware
 		const string ConfigSettingsProgramModule = "apps";
 		const string DEVELOPMENT_VALUE = "DEVELOPMENT_VALUE";
 		const string MY_CUSTOM_PTY = "MY_CUSTOM_PTY";
-		const string DOTNET_ENVIRONMENT = "Development";
-		public AspNetCoreTestConfigurationOverride():base(DOTNET_ENVIRONMENT)
+		public AspNetCoreTestConfigurationOverride()
 		{
 			ClassLoader.FindType($"{ConfigSettingsProgramModule}.{ConfigSettingsProgramName}", $"GeneXus.Programs.{ConfigSettingsProgramModule}", ConfigSettingsProgramName, Assembly.GetExecutingAssembly(), true);//Force loading assembly
 		}
