@@ -85,25 +85,42 @@ namespace SecurityAPICommons.Keys
 
         [SecuritySafeCritical]
 		override
-        public bool Load(string certificatePath)
+        public bool Load(string path)
         {
-            return LoadPKCS12(certificatePath, "", "");
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput("path", path, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			/******* INPUT VERIFICATION - END *******/
+			return LoadPKCS12(path, "", "");
         }
 
         [SecuritySafeCritical]
 		override
-        public bool LoadPKCS12(string certificatePath, string alias, string password)
+        public bool LoadPKCS12(string path, string alias, string password)
         {
-            bool result = false;
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput("path", path, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			bool result = false;
             try
             {
-                result = loadPublicKeyFromFile(certificatePath, alias, password);
+                result = loadPublicKeyFromFile(path, alias, password);
             }
 #pragma warning disable CA1031 // Do not catch general exception types
-			catch (Exception)
+			catch (Exception e)
 #pragma warning restore CA1031 // Do not catch general exception types
 			{
-                this.error.setError("CE001", "Invalid certificate or could not found bouncy castle assembly");
+                this.error.setError("CE001", e.Message);
                 return false;
             }
             if (result)
@@ -117,8 +134,17 @@ namespace SecurityAPICommons.Keys
         [SecuritySafeCritical]
 		override
 		public bool FromBase64(string base64Data)
-        {
-            bool flag;
+		{
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput("base64Data", base64Data, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			/******* INPUT VERIFICATION - END *******/
+			bool flag;
             try
             {
                 //this.cert = new X509Certificate2(Convert.FromBase64String(base64Data));
@@ -214,7 +240,7 @@ namespace SecurityAPICommons.Keys
             }
             if (SecurityUtils.extensionIs(path, ".jks"))
             {
-                this.error.setError("CE006", "Java Key Stores not allowed on .Net applications");
+                this.error.setError("CE010", "Java Key Stores not allowed on .Net applications");
                // throw new Exception("Java Key Stores not allowed on .Net applications");
             }
             return flag;
@@ -234,7 +260,7 @@ namespace SecurityAPICommons.Keys
 				Object obj = pemReader.ReadObject();
 				if (obj.GetType() == typeof(AsymmetricKeyParameter))
 				{
-					this.error.setError("CE007", "The file contains a private key");
+					this.error.setError("CE008", "The file contains a private key");
 					flag = false;
 				}
 
@@ -245,7 +271,7 @@ namespace SecurityAPICommons.Keys
 					 this.publicKeyAlgorithm = ecParms.AlgorithmName;
 					 this.hasPublicKey = true;
 					 return true;*/
-					this.error.setError("CE008", "Invalid X509 Certificate format");
+					this.error.setError("CE009", "It is a public key not a certificate, use PublicKey Object instead");
 					flag = false;
 				}
 
@@ -294,9 +320,9 @@ namespace SecurityAPICommons.Keys
 				}
 					
             }
-			catch
+			catch(Exception e)
 			{
-                this.error.setError("CE009", "Certificate coud not be loaded");
+                this.error.setError("CE011",e.Message);
                 return false;
                 // throw new FileLoadException(path + " certificate coud not be loaded");
             }
@@ -330,13 +356,13 @@ namespace SecurityAPICommons.Keys
 						alg = cert.GetECDsaPublicKey();
 						break;
 					default:
-						this.error.setError("CE014", "Unrecrognized key type");
+						this.error.setError("CE012", "Unrecrognized key type");
 						alg = null;
 						break;
 				}
 			}catch(Exception e)
 			{
-				this.error.setError("XXX", e.Message);
+				this.error.setError("CE013", e.Message);
 				alg = null;
 			}
 			return alg;
@@ -353,7 +379,7 @@ namespace SecurityAPICommons.Keys
             bool flag = false;
             if (password == null)
             {
-                this.error.setError("CE012", "Alias and password are required for PKCS12 certificates");
+                this.error.setError("CE014", "Password is required for PKCS12 certificates");
                 return false;
             }
 
@@ -372,7 +398,7 @@ namespace SecurityAPICommons.Keys
 
 			catch (Exception e)
 			{
-                this.error.setError("CE013", e.Message);
+                this.error.setError("CE015", e.Message);
                 // throw new FileLoadException(path + "not found.");
             }
 
@@ -393,7 +419,7 @@ namespace SecurityAPICommons.Keys
                 }
 
             }
-            this.error.setError("CE014", path + "not found.");
+            this.error.setError("CE007", "path not found.");
             return flag;
         }
 

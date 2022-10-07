@@ -46,7 +46,7 @@ namespace SecurityAPICommons.Commons
 			}
 			catch (Exception e)
 			{
-				this.error.setError("PU004", e.Message);
+				this.error.setError("PU002", e.Message);
 				return false;
 			}
 			return loaded;
@@ -77,7 +77,7 @@ namespace SecurityAPICommons.Commons
 			}
 			catch (Exception e)
 			{
-				this.error.setError("CE002", e.Message);
+				this.error.setError("PU003", e.Message);
 				flag = false;
 			}
 			setAlgorithm();
@@ -91,7 +91,7 @@ namespace SecurityAPICommons.Commons
 		{
 			if (this.subjectPublicKeyInfo == null)
 			{
-				this.error.setError("CE003", "Not loaded key");
+				this.error.setError("PU004", "Not loaded key");
 				return "";
 			}
 			string base64Encoded = "";
@@ -103,7 +103,7 @@ namespace SecurityAPICommons.Commons
 			}
 			catch (Exception e)
 			{
-				this.error.setError("CE004", e.Message);
+				this.error.setError("PU005", e.Message);
 			}
 
 			return base64Encoded;
@@ -113,14 +113,6 @@ namespace SecurityAPICommons.Commons
 
 		private bool loadPublicKeyFromFile(string path, string alias, string password)
 		{
-			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput("path", path, this.error);
-			if (!(SecurityUtils.extensionIs(path, ".pem") || SecurityUtils.extensionIs(path, "key")))
-			{
-				this.error.setError("PU001", "Public key should be loaded from a .pem or .key file");
-				return false;
-			}
-			/******* INPUT VERIFICATION - END *******/
 			bool loaded = false;
 			try
 			{
@@ -128,7 +120,7 @@ namespace SecurityAPICommons.Commons
 			}
 			catch (Exception e)
 			{
-				this.error.setError("PU004", e.Message);
+				this.error.setError("PU006", e.Message);
 				return false;
 			}
 			return loaded;
@@ -144,7 +136,7 @@ namespace SecurityAPICommons.Commons
 				Object obj = pemReader.ReadObject();
 				if (obj.GetType() == typeof(AsymmetricKeyParameter))
 				{
-					this.error.setError("CE007", "The file contains a private key");
+					this.error.setError("PU008", "The file contains a private key");
 					flag = false;
 				}
 				if (obj.GetType() == typeof(SubjectPublicKeyInfo))
@@ -167,18 +159,18 @@ namespace SecurityAPICommons.Commons
 
 				if (obj.GetType() == typeof(System.Security.Cryptography.X509Certificates.X509Certificate))
 				{
-					this.error.setError("XXX", "This file contains a certificate, use the Certificate object instead");
+					this.error.setError("PU009", "This file contains a certificate, use the Certificate object instead");
 					flag = false;
 
 				}
 				if (obj.GetType() == typeof(Org.BouncyCastle.X509.X509Certificate))
 				{
-					this.error.setError("XXX", "This file contains a certificate, use the Certificate object instead");
+					this.error.setError("PU011", "This file contains a certificate, use the Certificate object instead");
 					flag = false;
 				}
 				if (obj.GetType() == typeof(X509CertificateStructure))
 				{
-					this.error.setError("XXX", "This file contains a certificate, use the Certificate object instead");
+					this.error.setError("PU012", "This file contains a certificate, use the Certificate object instead");
 					flag = false;
 				}
 
@@ -221,7 +213,7 @@ namespace SecurityAPICommons.Commons
 			}
 			catch (Exception e)
 			{
-				this.error.setError("XXX", e.Message);
+				this.error.setError("PU006", e.Message);
 				return null;
 			}
 			return akp;
@@ -267,12 +259,12 @@ namespace SecurityAPICommons.Commons
 					}
 					catch(PlatformNotSupportedException)
 					{
-						this.error.setError("XXX", "Not implemented for not Windows platforms, use a x509 certificate instead");
+						this.error.setError("PU013", "Not implemented for not Windows platforms, use a x509 certificate instead");
 					}		
 #endif
 					break;
 				default:
-					this.error.setError("XXX", "Unrecognized algorithm");
+					this.error.setError("PU014", "Unrecognized algorithm");
 					break;
 			}
 			return alg;
