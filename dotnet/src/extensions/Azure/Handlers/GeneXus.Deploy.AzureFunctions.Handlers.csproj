@@ -5,6 +5,7 @@
 		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
 		<IsPublishable>false</IsPublishable>
 		<AssemblyName>GeneXus.Deploy.AzureFunctions.Handlers</AssemblyName>
+		<NoWarn>1701;1702;NU1701</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="log4net" Version="2.0.11" />
