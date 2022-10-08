@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net6.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
@@ -17,18 +17,18 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
 		<PackageReference Include="StackExchange.Redis" Version="2.0.593" />
 	</ItemGroup>
-	<ItemGroup Condition="$(GenNetStd)==''">
+	<ItemGroup Condition="$(GenStdVersion)==''">
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\Providers\Cache\GxRedis\GxRedis.csproj" />
 	</ItemGroup>
-	<ItemGroup Condition="$(GenNetStd)!=''">
-		<PackageReference Include="GeneXus.Classes.Web.Core" Version="$(GenNetStd)" />
-		<PackageReference Include="GeneXus.Mail.Core" Version="$(GenNetStd)" />
-		<PackageReference Include="GeneXus.Excel.Core" Version="$(GenNetStd)" />
-		<PackageReference Include="GeneXus.Redis.Core" Version="$(GenNetStd)" />
+	<ItemGroup Condition="$(GenStdVersion)!=''">
+		<PackageReference Include="GeneXus.Classes.Web.Core" Version="$(GenStdVersion)" />
+		<PackageReference Include="GeneXus.Mail.Core" Version="$(GenStdVersion)" />
+		<PackageReference Include="GeneXus.Excel.Core" Version="$(GenStdVersion)" />
+		<PackageReference Include="GeneXus.Redis.Core" Version="$(GenStdVersion)" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="host.json">
@@ -44,7 +44,7 @@
 			<Pack>true</Pack>
 			<PackagePath>./lib/net6.0/</PackagePath>
 		</Content>
-		<Content  Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;local.settings.json;" Exclude=".\obj\**\*.cs;.\bin\**\*" >
+		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;local.settings.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
 			<Pack>true</Pack>
 			<PackagePath>./src/</PackagePath>
 		</Content>
