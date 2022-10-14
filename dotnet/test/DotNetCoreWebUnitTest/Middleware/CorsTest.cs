@@ -17,11 +17,12 @@ namespace DotNetCoreUnitTest.Middleware
 	{
 		const string HttpCorsProgramName = "httpcors";
 		const string HttpCorsProgramModule = "apps";
-		string Origin = Preferences.CorsAllowedOrigins();
+		string Origin;
 		string[] Headers = { "authorization","cache-control", "deviceid", "devicetype", "genexus-agent", "gxtzoffset" };
 		public CorsTest()
 		{
 			ClassLoader.FindType($"{HttpCorsProgramModule}.{HttpCorsProgramName}", $"GeneXus.Programs.{HttpCorsProgramModule}", HttpCorsProgramName, Assembly.GetExecutingAssembly(), true);//Force loading assembly
+			Origin = Preferences.CorsAllowedOrigins();
 			Assert.NotEmpty(Origin);
 		}
 		[Fact]
@@ -75,14 +76,6 @@ namespace DotNetCoreUnitTest.Middleware
 			{
 				Assert.Contains(header, headersHeader, StringComparison.OrdinalIgnoreCase);
 			}
-		}
-		private string GetHeader(HttpResponseMessage response, string headerName)
-		{
-			if (response.Headers.TryGetValues(headerName, out IEnumerable<string> value))
-				return value.First();
-			else
-				return string.Empty;
-
 		}
 
 	}

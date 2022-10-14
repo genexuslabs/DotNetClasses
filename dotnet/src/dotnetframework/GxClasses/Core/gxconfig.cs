@@ -412,7 +412,7 @@ namespace GeneXus.Configuration
 		}
 
 #if NETCORE
-		public static IConfigurationRoot ConfigRoot { get; set; }
+		public static IConfiguration ConfigRoot { get; set; }
 		const string Log4NetShortName = "log4net";
 		static Version Log4NetVersion = new Version(2, 0, 11);
 

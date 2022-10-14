@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
@@ -32,16 +33,20 @@ namespace GeneXus.Application
 	public class Program
 	{
 		const string DEFAULT_PORT = "80";
+		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
 		public static void Main(string[] args)
 		{
 			try
 			{
 				string port = DEFAULT_PORT;
+				string schema = DEFAULT_SCHEMA;
 				if (args.Length > 2)
 				{
 					Startup.VirtualPath = args[0];
 					Startup.LocalPath = args[1];
 					port = args[2];
+					if (args.Length > 3 && Uri.UriSchemeHttps.Equals(args[3], StringComparison.OrdinalIgnoreCase))
+						schema = Uri.UriSchemeHttps;
 				}
 				if (port == DEFAULT_PORT)
 				{
@@ -49,7 +54,7 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					BuildWebHostPort(null, port).Run();
+					BuildWebHostPort(null, port, schema).Run();
 				}
 			}
 			catch (Exception e)
@@ -67,9 +72,13 @@ namespace GeneXus.Application
 
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
+			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
+		}
+		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
+		{
 			return WebHost.CreateDefaultBuilder(args)
 				 .ConfigureLogging(logging => logging.AddConsole())
-				 .UseUrls(Preferences.HttpProtocolSecure() ? $"{Uri.UriSchemeHttps}://*:{port}" : $"{Uri.UriSchemeHttp}://*:{port}")
+				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
 				.Build();
 		}
@@ -116,8 +125,9 @@ namespace GeneXus.Application
 
 		private GXRouting gxRouting;
 
-		public Startup(Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
+		public Startup(IConfiguration configuration, IHostingEnvironment env)
 		{
+			Config.ConfigRoot = configuration;
 			GXRouting.ContentRootPath = env.ContentRootPath;
 			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
 			GxContext.IsHttpContext = true;
