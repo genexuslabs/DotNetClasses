@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using GeneXus.Application;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
@@ -226,17 +227,27 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 			return CustomPayloadItem;
 
 		}
+		[DataContract]
 		internal class QueueMessage
 		{
 			public QueueMessage()
 			{ }
+			[DataMember]
+			public List<MessageProperty> MessageProperties;
 
-			public List<MessageProperty> MessageProperties;		
+			[DataMember]
 			public string Id { get; set; }
+
+			[DataMember]
 			public string Body { get; set; }
+
+			[DataContract]
 			internal class MessageProperty
 			{
+				[DataMember]
 				public string key { get; set; }
+
+				[DataMember]
 				public string value { get; set; }
 				public MessageProperty()
 				{ }
