@@ -1,16 +1,17 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Logging;
 using GeneXus.Application;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
-using GeneXus.Utils;
 using GeneXus.Metadata;
-using System.Collections;
-using System.Linq;
+using GeneXus.Utils;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
 
 //https://github.com/Azure/azure-functions-dotnet-worker/issues/384
 
@@ -223,31 +224,30 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 								//List of Events
 								EventMessage.Add(EventMessageItem);
 								parametersdata = new object[] { EventMessages, null };
-								
-								try
+							}
+							try
+							{
+								method.Invoke(objgxproc, parametersdata);
+								GxUserType EventMessageResponse = parametersdata[1] as GxUserType;//SdtEventMessageResponse
+
+								//Error handling
+
+								if ((bool)ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Handled") == false) //Must retry
 								{
-									method.Invoke(objgxproc, parametersdata);
-									GxUserType EventMessageResponse = parametersdata[1] as GxUserType;//SdtEventMessageResponse
-
-									//Error handling
-
-									if ((bool)ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Handled") == false) //Must retry
-									{
-										exMessage = string.Format("{0} {1}", FunctionExceptionType.AppError, ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Errormessage"));
-										throw new Exception(exMessage);
-									}
-									else
-									{
-										log.LogInformation("(GX function handler) Function finished execution.");
-									}
+									exMessage = string.Format("{0} {1}", FunctionExceptionType.AppError, ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Errormessage"));
+									throw new Exception(exMessage);
 								}
-								catch (Exception)
+								else
 								{
-									exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
-									log.LogError(exMessage);
-									throw; //Throw the exception so the runtime can Retry the operation.
+									log.LogInformation("(GX function handler) Function finished execution.");
 								}
 							}
+							catch (Exception)
+							{
+								exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
+								log.LogError(exMessage);
+								throw; //Throw the exception so the runtime can Retry the operation.
+							}	
 						}
 					}
 					else
@@ -268,32 +268,65 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				throw new Exception(exMessage);
 			}
 		}
+		[DataContract]
 		internal class Message
 		{
 			public Message()
 			{ }
 
+			[DataMember]
 			public string MessageId;
+
+			[DataMember]
 			public IDictionary<string, object> UserProperties { get; set; }
+
+			[DataMember]
 			public SystemPropertiesCollection SystemProperties { get; set; }
+
+			[DataMember]
 			public string Body { get; set; }
 
+			[DataMember]
 			public List<MessageProperty> MessageProperties;
+
+			[DataContract]
 			internal class SystemPropertiesCollection
 			{
+				[DataMember]
 				public bool IsLockTokenSet { get; }
+
+				[DataMember]
 				public string LockToken { get; }
+
+				[DataMember]
 				public bool IsReceived { get; }
+
+				[DataMember]
 				public int DeliveryCount { get; }
+
+				[DataMember]
 				public DateTime LockedUntilUtc { get; }
+
+				[DataMember]
 				public long SequenceNumber { get; }
+
+				[DataMember]
 				public string DeadLetterSource { get; }
+
+				[DataMember]
 				public long EnqueuedSequenceNumber { get; }
+
+				[DataMember]
 				public DateTime EnqueuedTimeUtc { get; }
 			}
+
+			[DataContract]
 			internal class MessageProperty
 			{
+				[DataMember]
 				public string key { get; set; }
+
+				[DataMember]
 				public string value { get; set; }
 				public MessageProperty()
 				{ }
