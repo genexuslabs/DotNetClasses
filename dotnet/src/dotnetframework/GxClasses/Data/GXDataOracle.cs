@@ -961,7 +961,7 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
-
+		public override int MaxNumberOfValuesInList => 1000;
 		public override bool AllowsDuplicateParameters
 		{
 			get
