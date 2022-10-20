@@ -2663,8 +2663,6 @@ namespace GeneXus.Utils
 			{
 				o = convertFuncts[to].ConvertToList(i);
 			}
-			else if (to.IsInstanceOfType(i))
-				o = i;
 			else if (ienumerableType != null)
 			{
 				IList lst = (IList)Activator.CreateInstance((typeof(List<>).MakeGenericType(ienumerableType)));
@@ -2672,6 +2670,8 @@ namespace GeneXus.Utils
 					lst.Add(item);
 				o = lst;
 			}
+			else if (to.IsInstanceOfType(i))
+				o = i;
 			else
 			{
 				IList l = (IList)Activator.CreateInstance(to);
