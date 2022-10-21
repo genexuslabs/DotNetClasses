@@ -57,17 +57,16 @@ namespace GeneXus.Office.ExcelGXEPPlus
                         fileName += Constants.EXCEL2007Extension;
                     }
 					if (file.IsExternalFile)
-					{
+					{						
 						Stream stream = file.GetStream();
+
 						if (stream != null)
 						{
-							p = new ExcelPackage(file.GetStream());
+							p = new ExcelPackage(stream);
 						}
 						else
 						{
-							errCod = 4;
-							errDescription = "Invalid file.";
-							return errCod;
+							p = new ExcelPackage();
 						}
 					}
 					else
