@@ -652,6 +652,11 @@ namespace GeneXus.Http.Client
 			if (proxy != null)
 				handler.Proxy = proxy;
 			HttpResponseMessage response;
+
+#if !NETCORE
+			handler.ReceiveDataTimeout = TimeSpan.FromMilliseconds(_timeout);
+			handler.ReceiveHeadersTimeout = TimeSpan.FromMilliseconds(_timeout);
+#endif
 			using (client = new HttpClient(handler))
 			{
 				client.Timeout = TimeSpan.FromMilliseconds(_timeout);
