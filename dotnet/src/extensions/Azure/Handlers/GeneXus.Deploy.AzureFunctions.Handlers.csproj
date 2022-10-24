@@ -1,41 +1,53 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
-    <OutputType>Exe</OutputType>
-    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
-    <IsPublishable>false</IsPublishable>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.11" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="4.2.1" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.0.1" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.3.0" OutputItemType="Analyzer" />
-	<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.2" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
-    <PackageReference Include="StackExchange.Redis" Version="2.0.593" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
-    <ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
-    <ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
-    <ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
-    <ProjectReference Include="..\..\..\dotnetcore\Providers\Cache\GxRedis\GxRedis.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="host.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="local.settings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
-     <Pack>true</Pack>
-     <PackagePath>./lib/net6.0/</PackagePath>
-    </Content>
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
+		<IsPublishable>false</IsPublishable>
+		<AssemblyName>GeneXus.Deploy.AzureFunctions.Handlers</AssemblyName>
+		<NoWarn>1701;1702;NU1701</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="log4net" Version="2.0.11" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="4.2.1" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.0.1" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.3.0" OutputItemType="Analyzer" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
+		<PackageReference Include="StackExchange.Redis" Version="2.0.593" />
+	</ItemGroup>
+	<ItemGroup Condition="$(GenStdVersion)==''">
+		<ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\GxExcel\GxExcel.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\GxMail\GxMail.csproj" />
+		<ProjectReference Include="..\..\..\dotnetcore\Providers\Cache\GxRedis\GxRedis.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="$(GenStdVersion)!=''">
+		<PackageReference Include="GeneXus.Classes.Web.Core" Version="$(GenStdVersion)" />
+		<PackageReference Include="GeneXus.Mail.Core" Version="$(GenStdVersion)" />
+		<PackageReference Include="GeneXus.Excel.Core" Version="$(GenStdVersion)" />
+		<PackageReference Include="GeneXus.Redis.Core" Version="$(GenStdVersion)" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="host.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="local.settings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
+			<Pack>true</Pack>
+			<PackagePath>./lib/net6.0/</PackagePath>
+		</Content>
+		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;local.settings.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
+			<Pack>true</Pack>
+			<PackagePath>./src/</PackagePath>
+		</Content>
+	</ItemGroup>
 </Project>
