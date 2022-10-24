@@ -652,14 +652,14 @@ namespace GeneXus.Http.Client
 			if (proxy != null)
 				handler.Proxy = proxy;
 			HttpResponseMessage response;
-
+			TimeSpan milliseconds = TimeSpan.FromMilliseconds(_timeout);
 #if !NETCORE
-			handler.ReceiveDataTimeout = TimeSpan.FromMilliseconds(_timeout);
-			handler.ReceiveHeadersTimeout = TimeSpan.FromMilliseconds(_timeout);
+			handler.ReceiveDataTimeout = milliseconds;
+			handler.ReceiveHeadersTimeout = milliseconds;
 #endif
 			using (client = new HttpClient(handler))
 			{
-				client.Timeout = TimeSpan.FromMilliseconds(_timeout);
+				client.Timeout = milliseconds;
 				client.BaseAddress = request.RequestUri;
 
 				using (MemoryStream reqStream = new MemoryStream())
