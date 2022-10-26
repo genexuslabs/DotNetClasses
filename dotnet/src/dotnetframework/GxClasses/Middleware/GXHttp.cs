@@ -1157,7 +1157,7 @@ namespace GeneXus.Http
 					if (isGxThemeHidden)
 						context.WriteHtmlTextNl("<link id=\"gxtheme_css_reference\" " + sRelAtt + " type=\"text/css\" href=\"" + sUncachedURL + "\" " + GXUtil.HtmlEndTag(HTMLElement.LINK));
 					else
-						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ") </style>");
+						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ");</style>");
 				}
 				else
 				{
