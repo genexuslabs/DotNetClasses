@@ -40,7 +40,7 @@
 			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</None>
 	</ItemGroup>
-	<ItemGroup>
+	<ItemGroup Condition="$(GenStdVersion)==''">
 		<Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
 			<Pack>true</Pack>
 			<PackagePath>./lib/net6.0/</PackagePath>
@@ -50,4 +50,7 @@
 			<PackagePath>./src/</PackagePath>
 		</Content>
 	</ItemGroup>
+	<Target Name="CopyFunctionsMetadata" AfterTargets="Build" Condition="Exists('functions.metadata')">
+		<Copy SourceFiles="functions.metadata" DestinationFolder="$(OutputPath)"></Copy>
+	</Target>
 </Project>
