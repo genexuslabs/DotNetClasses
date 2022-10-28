@@ -45,7 +45,7 @@
 			<Pack>true</Pack>
 			<PackagePath>./lib/net6.0/</PackagePath>
 		</Content>
-		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;local.settings.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
+		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
 			<Pack>true</Pack>
 			<PackagePath>./src/</PackagePath>
 		</Content>
