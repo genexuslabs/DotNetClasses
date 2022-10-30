@@ -44,7 +44,6 @@ namespace GeneXus.Data.NTier
 
 		private void InitializeDBConnection()
 		{
-			System.Diagnostics.Debugger.Launch();
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = this.ConnectionString;
 			mConfig = new AmazonDynamoDBConfig();
