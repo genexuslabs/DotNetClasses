@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;net6.0</TargetFrameworks>
+		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
+		<AssemblyName>GeneXus.Data.DynService.CosmosDB</AssemblyName>
+		<SignAssembly>false</SignAssembly>
+		<PackageTags>CosmosDB</PackageTags>
+		<PackageId>GeneXus.DynService.CosmosDB</PackageId>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(TargetFramework)'!='net462'">
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'!='net462'">
+		<ProjectReference Include="..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
+		<ProjectReference Include="..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Remove="C:\Users\sjuarez\.nuget\packages\microsoft.azure.cosmos\3.31.0\contentFiles\any\netstandard2.0\ThirdPartyNotice.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Azure.Cosmos" Version="3.31.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\DynService.Core\DynService.Core.csproj" />
+	</ItemGroup>
+</Project>
