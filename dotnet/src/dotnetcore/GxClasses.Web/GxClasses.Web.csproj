@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXGeolocation.cs" Link="Domain\GXGeolocation.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxWebWrapper.cs" Link="Domain\GxWebWrapper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GxDynamicCall.cs" Link="Helpers\GxDynamicCall.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttp.cs" Link="Middleware\GXHttp.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttpServices.cs" Link="Middleware\GXHttpServices.cs" />
