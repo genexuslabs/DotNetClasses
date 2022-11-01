@@ -1630,7 +1630,14 @@ public class GxDirectory
                 return string.Empty;
         }
     }
-    public static string ExternalFilesPath
+	public static string ApplicationStartupPath
+	{
+		get
+		{
+			return FileUtil.GetStartupDirectory();
+		}
+	}
+	public static string ExternalFilesPath
     {
         get { return ApplicationDataPath; }
     }
