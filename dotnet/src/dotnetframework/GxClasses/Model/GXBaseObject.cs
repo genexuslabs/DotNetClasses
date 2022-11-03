@@ -1,4 +1,3 @@
-using GeneXus.Diagnostics;
 using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.Utils;
