@@ -1510,17 +1510,24 @@ namespace GeneXus.Http
 			SendResponseStatus((int)statusCode, string.Empty);
 		}
 
+
+#if !NETCORE
 		protected void SendResponseStatus(int statusCode, string statusDescription)
 		{
 			context.HttpContext.Response.StatusCode = statusCode;
-#if !NETCORE
 			if (!string.IsNullOrEmpty(statusDescription))
 				context.HttpContext.Response.StatusDescription = statusDescription;
-#endif
 			this.setAjaxCallMode();
 			this.disableOutput();
 		}
-
+#else
+		protected override void SendResponseStatus(int statusCode, string statusDescription)
+		{
+			context.HttpContext.Response.StatusCode = statusCode;
+			this.setAjaxCallMode();
+			this.disableOutput();
+		}
+#endif
 		private void SendReferer()
 		{
 			context.httpAjaxContext.ajax_rsp_assign_hidden("sCallerURL", context.GetReferer());
