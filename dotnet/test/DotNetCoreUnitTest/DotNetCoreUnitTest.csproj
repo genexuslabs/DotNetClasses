@@ -165,4 +165,10 @@
 	  </None>
 	</ItemGroup>
 
+
+	<ItemGroup>
+	  <Reference Include="Jayrock">
+	    <HintPath>..\..\src\dotnetcore\libs\Jayrock.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 </Project>
