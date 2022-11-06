@@ -2891,21 +2891,18 @@ namespace GeneXus.Application
 				{
 					if (HttpContext != null)
 					{
-						string phPath = HttpHelper.RequestPhysicalApplicationPath(_HttpContext);
-						if (phPath.EndsWith("\\") || phPath.EndsWith("/"))
-							_physicalPath = phPath;
-						else
-							_physicalPath = phPath + "/";
+						string phPath = HttpHelper.RequestPhysicalApplicationPath();
+						_physicalPath = Path.GetFullPath(phPath) + Path.DirectorySeparatorChar;
 					}
 					else
 					{
-						_physicalPath = "";
+						_physicalPath = String.Empty;
 					}
 				}
 				catch (Exception ex)
 				{
 					GXLogging.Debug(log, "GetPhysicalPath error", ex);
-					_physicalPath = "";
+					_physicalPath = String.Empty;
 				}
 			}
 			return _physicalPath;
@@ -2949,10 +2946,7 @@ namespace GeneXus.Application
 				if (IsHttpContext)
 				{
 					string phPath = HttpHelper.RequestPhysicalApplicationPath();
-					if (phPath.EndsWith("\\") || phPath.EndsWith("/"))
-						return phPath;
-					else
-						return phPath + "/";
+					return Path.GetFullPath(phPath) + Path.DirectorySeparatorChar;
 				}
 				else if (IsRestService)
 				{
