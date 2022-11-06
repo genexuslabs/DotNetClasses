@@ -2723,11 +2723,12 @@ namespace GeneXus.Http
 		{
 			((GxContext)this.context).ClearJavascriptSources();
 		}
-
+#if !NETCORE
 		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack)
 		{
 
 		}
+#endif
 
 		private Diagnostics.GXDebugInfo dbgInfo;
 		protected void initialize(int objClass, int objId, int dbgLines, long hash)
