@@ -2942,7 +2942,7 @@ namespace GeneXus.Application
 			string phPath = HttpHelper.RequestPhysicalApplicationPath();
 			string dirSeparator = Path.DirectorySeparatorChar.ToString();
 			if (!phPath.EndsWith(dirSeparator))
-				return Path.Combine(phPath, dirSeparator);
+				return $"{phPath}{dirSeparator}";
 			else
 				return phPath;
 		}
