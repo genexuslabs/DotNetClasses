@@ -2891,8 +2891,7 @@ namespace GeneXus.Application
 				{
 					if (HttpContext != null)
 					{
-						string phPath = HttpHelper.RequestPhysicalApplicationPath();
-						_physicalPath = Path.GetFullPath(phPath) + Path.DirectorySeparatorChar;
+						_physicalPath = RequestPhysicalPath();
 					}
 					else
 					{
@@ -2938,15 +2937,22 @@ namespace GeneXus.Application
 			}
 #endif
 		}
-
+		private static string RequestPhysicalPath()
+		{
+			string phPath = HttpHelper.RequestPhysicalApplicationPath();
+			string dirSeparator = Path.DirectorySeparatorChar.ToString();
+			if (!phPath.EndsWith(dirSeparator))
+				return Path.Combine(phPath, dirSeparator);
+			else
+				return phPath;
+		}
 		public static string StaticPhysicalPath()
 		{
 			try
 			{
 				if (IsHttpContext)
 				{
-					string phPath = HttpHelper.RequestPhysicalApplicationPath();
-					return Path.GetFullPath(phPath) + Path.DirectorySeparatorChar;
+					return RequestPhysicalPath();
 				}
 				else if (IsRestService)
 				{
@@ -2956,7 +2962,6 @@ namespace GeneXus.Application
 				{
 					return _physicalPath;
 				}
-
 				else
 				{
 					return Directory.GetCurrentDirectory();
@@ -2965,7 +2970,7 @@ namespace GeneXus.Application
 			}
 			catch
 			{
-				return "";
+				return string.Empty;
 			}
 
 		}

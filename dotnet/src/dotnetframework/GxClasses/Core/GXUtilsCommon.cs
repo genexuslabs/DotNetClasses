@@ -3837,7 +3837,7 @@ namespace GeneXus.Utils
 			if (domains == null)
 			{
 				domains = new Hashtable();
-				DOMAINS_FILE = GxContext.StaticPhysicalPath() + Path.DirectorySeparatorChar + "domains.ini";
+				DOMAINS_FILE = Path.Combine(GxContext.StaticPhysicalPath(), "domains.ini");
 			}
 			if (domains[domainId] == null)
 			{
