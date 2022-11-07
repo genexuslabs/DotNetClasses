@@ -317,10 +317,6 @@ namespace GeneXus.Procedure
 			context.wjLoc = url;
 		}
 
-		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack)
-		{
-		}
-
 		private Diagnostics.GXDebugInfo dbgInfo;
 		protected void initialize(int objClass, int objId, int dbgLines, long hash)
 		{
