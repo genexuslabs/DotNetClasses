@@ -384,7 +384,7 @@ namespace GeneXus.Office.ExcelLite
 						ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "GemBox.Spreadsheet.dll"));
 						if (ass==null)
 						{
-							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), @"bin\GemBox.Spreadsheet.dll"));
+							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "GemBox.Spreadsheet.dll"));
 						}
 						if (ass!=null)
 						{
@@ -398,7 +398,7 @@ namespace GeneXus.Office.ExcelLite
 							}
 							if (ass==null)
 							{
-								ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), @"bin\GemBox.ExcelLite.dll"));
+								ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "GemBox.ExcelLite.dll"));
 							}
 							if (ass!=null)
 							{
@@ -412,7 +412,7 @@ namespace GeneXus.Office.ExcelLite
 						ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), nmspace + ".dll"));
 						if (ass==null)
 						{
-							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), @"bin\" + nmspace + ".dll"));
+							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", nmspace + ".dll"));
 						}
 					}
 					GXLogging.Debug(log, "nmspace:"  + nmspace);
