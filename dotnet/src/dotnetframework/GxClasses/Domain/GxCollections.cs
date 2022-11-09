@@ -1828,7 +1828,7 @@ namespace GeneXus.Utils
 				else if (ptyType.Equals(typeof(DateTime)))
 				{
 					string jsonDate = Value as string;
-					convertedValue = DateTimeUtil.CToDT2(jsonDate);
+					convertedValue = DateTimeUtil.CToD2(jsonDate);
 				}
 				else if (ptyType.Equals(typeof(bool)))
 				{
