@@ -34,6 +34,7 @@
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\dotnetframework\GxClasses.Win\GxClasses.Win.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxPdfReportsCS\GxPdfReportsCS.csproj" />
