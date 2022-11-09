@@ -1421,7 +1421,6 @@ namespace GeneXus.Http
 			}
 			return sRet;
 		}
-
 		protected string DecryptAjaxCall(string encrypted)
 		{
 			this.validEncryptedParm = false;
