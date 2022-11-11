@@ -148,7 +148,7 @@
 	<ItemGroup>
 		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" />
 		<PackageReference Include="log4net" Version="2.0.11" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 		  <PrivateAssets>all</PrivateAssets>
