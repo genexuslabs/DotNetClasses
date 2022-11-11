@@ -139,7 +139,7 @@ namespace GeneXus.Data
         
         static void loadQueryTables()
         {
-            string basePath = Path.Combine(GxContext.StaticPhysicalPath(), "Metadata\\TableAccess");
+            string basePath = Path.Combine(GxContext.StaticPhysicalPath(), "Metadata", "TableAccess");
 			queryTables = new ConcurrentDictionary<string, List<string>>();
 			if (Directory.Exists(basePath))
 			{
