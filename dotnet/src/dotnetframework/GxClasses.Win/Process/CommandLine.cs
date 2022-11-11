@@ -131,7 +131,7 @@ namespace GeneXus.Utils
 					{
 						if (Path.IsPathRooted(file))
 						{
-							p.StartInfo.WorkingDirectory = "\"" + Path.GetDirectoryName(file) + "\"";
+							p.StartInfo.WorkingDirectory = Path.GetDirectoryName(file);
 						}
 						else
 						{
@@ -145,7 +145,7 @@ namespace GeneXus.Utils
 				}
 				try
 				{
-					p.StartInfo.FileName = "\"" + file + "\"";
+					p.StartInfo.FileName = file;
 				}
 				catch (Exception e)
 				{

@@ -514,10 +514,10 @@ namespace GeneXus.Configuration
 					}
 #if !NETCORE
 					if (GxContext.IsHttpContext &&
-						File.Exists(GxContext.StaticPhysicalPath() + "web.config"))
+						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
 					{
 						logConfig(null);
-						if (log.IsDebugEnabled) loadedConfigFile = GxContext.StaticPhysicalPath() + "web.config";
+						if (log.IsDebugEnabled) loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
 						_config = ConfigurationSettings.AppSettings;
 						foreach (string key in _config.Keys)
 						{
@@ -529,13 +529,13 @@ namespace GeneXus.Configuration
 						return _config;
 					}
 					if (GxContext.IsHttpContext &&
-						File.Exists(GxContext.StaticPhysicalPath() + "bin/client.exe.config"))
+						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config")))
 					
 					{
 
 						logConfig("bin/log.config");
 						if (log.IsDebugEnabled)
-							loadedConfigFile = GxContext.StaticPhysicalPath() + "bin/client.exe.config";
+							loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
 						_config = loadConfig("bin/client.exe.config");
 						return _config;
 					}
