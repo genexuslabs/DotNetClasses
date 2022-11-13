@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using GeneXus.Application;
 using GeneXus.Services;
 using GeneXus.Utils;
 using GxClasses.Helpers;
@@ -144,36 +143,26 @@ namespace GeneXus.Messaging.Common
 		public GxUserType GetMessage(string options, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
-			GxUserType receivedMessage = new GxUserType();
 			success = false;
 			try
 			{
-				try
-				{
-					ValidQueue();
-					BrokerMessage brokerMessage = messageBroker.GetMessage(options, out success);
-					LoadAssemblyIfRequired();
+				ValidQueue();
+				BrokerMessage brokerMessage = messageBroker.GetMessage(options, out success);
+				LoadAssemblyIfRequired();
 					
-					if (TransformBrokerMessage(brokerMessage) is GxUserType result)
-					{
-						success = true;
-						return result;
-					}
-				}
-				catch (Exception ex)
+				if (TransformBrokerMessage(brokerMessage) is GxUserType result)
 				{
-					QueueErrorMessagesSetup(ex, out errorMessages);
-					GXLogging.Error(logger, ex);
-					success = false;
+					success = true;
+					return result;
 				}
 			}
 			catch (Exception ex)
 			{
+				QueueErrorMessagesSetup(ex, out errorMessages);
 				GXLogging.Error(logger, ex);
 				success = false;
-				throw ex;
 			}
-			return receivedMessage;
+			return TransformBrokerMessage(new BrokerMessage());
 		}
 		public IList<GxUserType> GetMessages(string options, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
@@ -182,40 +171,28 @@ namespace GeneXus.Messaging.Common
 			success = false;
 			try
 			{
-				try
+				ValidQueue();
+				IList<BrokerMessage> brokerMessages = messageBroker.GetMessages(options, out success);
+				LoadAssemblyIfRequired();
+				foreach (BrokerMessage brokerMessage in brokerMessages)
 				{
-					ValidQueue();
-					IList<BrokerMessage> brokerMessages = messageBroker.GetMessages(options, out success);
-					LoadAssemblyIfRequired();
-					foreach (BrokerMessage brokerMessage in brokerMessages)
-					{
-						if (TransformBrokerMessage(brokerMessage) is GxUserType result)
-							resultMessages.Add(result);
-					}
-					success = true;
-
+					if (TransformBrokerMessage(brokerMessage) is GxUserType result)
+						resultMessages.Add(result);
 				}
-				catch (Exception ex)
-				{
-					QueueErrorMessagesSetup(ex, out errorMessages);
-					GXLogging.Error(logger, ex);
-					success = false;
-				}
+				success = true;
 			}
 			catch (Exception ex)
 			{
+				QueueErrorMessagesSetup(ex, out errorMessages);
 				GXLogging.Error(logger, ex);
 				success = false;
-				throw ex;
 			}
-
 			return resultMessages;
 		}
 		public bool SendMessage(GxUserType messageQueue, string options, out GXBaseCollection<SdtMessages_Message> errorMessages)
 		{
 			bool success = false;
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
-			GxUserType result = new GxUserType();
 			try
 			{
 				BrokerMessage brokerQueueMessage = TransformGXUserTypeToBrokerMessage(messageQueue);
@@ -223,7 +200,8 @@ namespace GeneXus.Messaging.Common
 				try
 				{
 					ValidQueue();
-					return(messageBroker.SendMessage(brokerQueueMessage, options));
+					if (messageBroker != null)
+						return(messageBroker.SendMessage(brokerQueueMessage, options));
 				}
 				catch (Exception ex)
 				{
@@ -278,25 +256,31 @@ namespace GeneXus.Messaging.Common
 		protected void QueueErrorMessagesSetup(Exception ex, out GXBaseCollection<SdtMessages_Message> errorMessages)
 		{
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
+			bool foundGeneralException = false;
 			if (errorMessages != null && ex != null)
 			{
 				SdtMessages_Message msg = new SdtMessages_Message();
-				if (messageBroker != null && messageBroker.GetMessageFromException(ex, msg))
-				{
-					msg.gxTpr_Type = 1;
-					StringBuilder str = new StringBuilder();
-					str.Append(ex.Message);
+				if (messageBroker != null)
+				{		
 					while (ex.InnerException != null)
 					{
-						str.Append(ex.InnerException.Message);
+						if (messageBroker.GetMessageFromException(ex.InnerException, msg))
+						{
+							msg.gxTpr_Type = 1;
+							errorMessages.Add(msg);
+						}
+						else
+						{
+							foundGeneralException = true;
+							break;
+						}
 						ex = ex.InnerException;
 					}
-					msg.gxTpr_Description = str.ToString();
-					errorMessages.Add(msg);
+					if (foundGeneralException)
+						GXUtil.ErrorToMessages("GXServiceBus1002", ex, errorMessages);
 				}
 				else
 				{
-					GXLogging.Error(logger, "(GXServiceBus1002)Queue Error", ex);
 					GXUtil.ErrorToMessages("GXServiceBus1002", ex, errorMessages);
 				}
 			}

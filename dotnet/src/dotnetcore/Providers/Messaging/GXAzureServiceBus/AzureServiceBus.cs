@@ -8,7 +8,6 @@ using Azure.Messaging.ServiceBus;
 using GeneXus.Messaging.Common;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
 
 namespace GeneXus.Messaging.GXAzureServiceBus
 {
@@ -18,7 +17,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		private const short LOCK_DURATION = 5;
 		public static String Name = "AZURESB";
 
-		private ConcurrentDictionary<string, Tuple<DateTime, ServiceBusReceivedMessage>> m_messages = new ConcurrentDictionary<string, Tuple<DateTime,ServiceBusReceivedMessage>>();
+		private ConcurrentDictionary<string, Tuple<DateTime, ServiceBusReceivedMessage>> m_messages = new ConcurrentDictionary<string, Tuple<DateTime, ServiceBusReceivedMessage>>();
 		ServiceBusClient _serviceBusClient { get; set; }
 		private string _queueOrTopicName { get; set; }
 		private string _connectionString { get; set; }
@@ -26,10 +25,9 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		private ServiceBusSender _sender { get; set; }
 		private ServiceBusReceiver _receiver { get; set; }
 		private ServiceBusSessionReceiver _sessionReceiver { get; set; }
-		private ServiceBusSessionReceiverOptions _sessionReceiverOptions { get; set; }
+		private ServiceBusReceiverOptions _serviceBusReceiverOptions { get; set; }
 		private bool _sessionEnabled { get; set; }
-		private string _sessionId { get; set; }
-		private string receiveMode { get; set; }
+		ServiceBusReceiveMode _sessionEnabledQueueReceiveMode { get; set; }
 		public AzureServiceBus() : this(null)
 		{
 		}
@@ -45,43 +43,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			_subscriptionName = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.TOPIC_SUBSCRIPTION);
 
 			_sessionEnabled = Convert.ToBoolean(serviceSettings.GetEncryptedPropertyValue(PropertyConstants.SESSION_ENABLED));
-
-			ServiceBusReceiverOptions serviceBusReceiverOptions = new ServiceBusReceiverOptions();
-			_sessionReceiverOptions = new ServiceBusSessionReceiverOptions();
-
-			receiveMode = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVE_MODE);
-			string prefetchCount = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.PREFETCH_COUNT);
-			string receiverIdentifier = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVER_IDENTIFIER); ;
-			_sessionId = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVER_SESSIONID);
-			
-			if (!string.IsNullOrEmpty(receiveMode))
-			{
-				if (_sessionEnabled)
-					_sessionReceiverOptions.ReceiveMode = (ServiceBusReceiveMode)Convert.ToInt16(receiveMode);
-				else
-					serviceBusReceiverOptions.ReceiveMode = (ServiceBusReceiveMode)Convert.ToInt16(receiveMode);
-			}
-			if (!string.IsNullOrEmpty(prefetchCount))
-			{
-				int prefetchcnt = Convert.ToInt32(prefetchCount);
-				if (prefetchcnt != 0)
-				{
-					if (_sessionEnabled)
-						_sessionReceiverOptions.PrefetchCount = prefetchcnt;
-					else
-						serviceBusReceiverOptions.PrefetchCount = prefetchcnt;
-				}
-			}
-			if (!string.IsNullOrEmpty(receiverIdentifier))
-			{
-				if (_sessionEnabled)
-					_sessionReceiverOptions.Identifier = receiverIdentifier;
-				else
-					serviceBusReceiverOptions.Identifier = receiverIdentifier;
-			}
-
 			string senderIdentifier = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.SENDER_IDENTIFIER);
-		
+
 			ServiceBusSenderOptions serviceBusSenderOptions = new ServiceBusSenderOptions();
 			if (!string.IsNullOrEmpty(senderIdentifier))
 				serviceBusSenderOptions.Identifier = senderIdentifier;
@@ -93,51 +56,34 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			if (_serviceBusClient != null)
 			{
 				_sender = _serviceBusClient.CreateSender(_queueOrTopicName, serviceBusSenderOptions);
-
-				if (_sessionEnabled && _sender != null)
+				if (!_sessionEnabled && _sender != null)
 				{
-					if (!string.IsNullOrEmpty(_sessionId))
-					{
-						if (string.IsNullOrEmpty(_subscriptionName))
-						{
-							Task<ServiceBusSessionReceiver> task;
-							task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _sessionId, _sessionReceiverOptions).ConfigureAwait(false));
-							_sessionReceiver = task.Result;
-						}
-						else
-						{
-							Task<ServiceBusSessionReceiver> task;
-							task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _subscriptionName, _sessionId, _sessionReceiverOptions).ConfigureAwait(false));
-							_sessionReceiver = task.Result;
-						}
-					}
-					else
-					{
-						//These methods throw an exception when the service bus is empty:
-						//ServiceBusException: The operation did not complete within the allocated time (ServiceTimeout) 
-						//so I remove them for now
-						/*
-						if (string.IsNullOrEmpty(_subscriptionName))
-						{
-							Task<ServiceBusSessionReceiver> task;
-							task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptNextSessionAsync(_queueOrTopicName, _sessionReceiverOptions).ConfigureAwait(false));
-							_sessionReceiver = task.Result;
-						}
-						else
-						{
-							Task<ServiceBusSessionReceiver> task;
-							task = Task.Run<ServiceBusSessionReceiver>(async () => await _serviceBusClient.AcceptNextSessionAsync(_queueOrTopicName, _subscriptionName, _sessionReceiverOptions).ConfigureAwait(false));
-							_sessionReceiver = task.Result;
-						}*/
-						throw new Exception("ServiceBus: Specify a session to establish a service bus receiver for the session-enabled queue or topic.");
-					}
-				}
-				else
-					if (string.IsNullOrEmpty(_subscriptionName))
-					_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, serviceBusReceiverOptions);
+					_serviceBusReceiverOptions = new ServiceBusReceiverOptions();
 
-				else
-					_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, _subscriptionName, serviceBusReceiverOptions);
+					string receiveMode = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVE_MODE);
+					string prefetchCount = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.PREFETCH_COUNT);
+					string receiverIdentifier = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVER_IDENTIFIER);
+
+					if (!string.IsNullOrEmpty(receiveMode))
+						_serviceBusReceiverOptions.ReceiveMode = (ServiceBusReceiveMode)Convert.ToInt16(receiveMode);
+
+					if (!string.IsNullOrEmpty(prefetchCount))
+					{
+						int prefetchcnt = Convert.ToInt32(prefetchCount);
+						if (prefetchcnt != 0)
+							_serviceBusReceiverOptions.PrefetchCount = prefetchcnt;
+
+					}
+					if (!string.IsNullOrEmpty(receiverIdentifier))
+						_serviceBusReceiverOptions.Identifier = receiverIdentifier;
+					else
+						_serviceBusReceiverOptions.Identifier = String.Empty;
+
+					if (string.IsNullOrEmpty(_subscriptionName))
+						_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, _serviceBusReceiverOptions);
+					else
+						_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, _subscriptionName, _serviceBusReceiverOptions);
+				}
 			}
 		}
 		public override string GetName()
@@ -146,14 +92,43 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		}
 
 		#region Async methods
+
+		private async Task CreateReceiverAsync()
+		{
+			//Release resources of previous receiver
+			if (_receiver != null)
+				await _receiver.CloseAsync().ConfigureAwait(false);
+
+			if (string.IsNullOrEmpty(_subscriptionName))
+				_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, _serviceBusReceiverOptions);
+			else
+				_receiver = _serviceBusClient.CreateReceiver(_queueOrTopicName, _subscriptionName, _serviceBusReceiverOptions);
+		}
+		private async Task<ServiceBusSessionReceiver> AcceptSessionAsync(string sessionId, ServiceBusSessionReceiverOptions sessionReceiverOptions)
+		{
+			if (_sessionEnabled && (!string.IsNullOrEmpty(sessionId)))
+			{
+				//Create new session receiver
+				ServiceBusSessionReceiver sessionReceiver;
+				if (string.IsNullOrEmpty(_subscriptionName))
+					sessionReceiver = await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, sessionId, sessionReceiverOptions).ConfigureAwait(false);
+				else
+					sessionReceiver = await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _subscriptionName, sessionId, sessionReceiverOptions).ConfigureAwait(false);
+				return sessionReceiver;
+			}
+			return null;
+		}
 		private async Task ServiceClientDisposeAsync()
 		{
 			await _serviceBusClient.DisposeAsync().ConfigureAwait(false);
+			if (_receiver != null)
+				await _receiver.DisposeAsync().ConfigureAwait(false);
+			await _sender.DisposeAsync().ConfigureAwait(false);
 		}
 		private async Task<bool> sendAsync(ServiceBusMessage serviceBusMessage, string options)
-		{	
+		{
 			try
-			{ 
+			{
 				await _sender.SendMessageAsync(serviceBusMessage).ConfigureAwait(false);
 				return true;
 			}
@@ -162,7 +137,6 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				throw ex;
 			}
 		}
-
 		private async Task<bool> CancelScheduleAsync(long sequenceNumber)
 		{
 			try
@@ -183,7 +157,6 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				try
 				{
 					return (await _sender.ScheduleMessageAsync(serviceBusMessage, DateTime.Parse(scheduleOptions.ScheduledEnqueueTime)).ConfigureAwait(false));
-	
 				}
 				catch (Exception ex)
 				{
@@ -209,16 +182,136 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 					serviceBusMessages.Add(serviceBusMessage);
 				}
 				try
-				{ 
+				{
 					await _sender.SendMessagesAsync(serviceBusMessages).ConfigureAwait(false);
 					success = true;
 				}
 				catch (Exception ex)
 				{
 					throw ex;
-				}		
+				}
 			}
 			return success;
+		}
+		private async Task InitializeReceiversForReceiveMthAsync(BrokerReceiverOpts brokerReceiverOptions)
+		{
+
+			if (_sessionEnabled && (brokerReceiverOptions == null))
+			{
+				throw new Exception("SessionId cannot be null for session-enabled queue or topic.");
+			}
+			else if (_sessionEnabled && (brokerReceiverOptions != null))
+			{
+				ServiceBusSessionReceiverOptions serviceBusSessionReceiverOptions = BrokerRecOptsToServiceBusSessionRecOpts(brokerReceiverOptions);
+
+				if ((serviceBusSessionReceiverOptions != null) && (!string.IsNullOrEmpty(brokerReceiverOptions.SessionId)))
+				{
+					_sessionEnabledQueueReceiveMode = serviceBusSessionReceiverOptions.ReceiveMode;
+					//Store receiver in case that the message has to be settled
+					if (_sessionEnabledQueueReceiveMode == ServiceBusReceiveMode.PeekLock)
+					{
+						if (_sessionReceiver != null)
+							await _sessionReceiver.CloseAsync().ConfigureAwait(false);
+						_sessionReceiver = await AcceptSessionAsync(brokerReceiverOptions.SessionId, serviceBusSessionReceiverOptions).ConfigureAwait(false);
+					}
+					else
+						_sessionReceiver = await AcceptSessionAsync(brokerReceiverOptions.SessionId, serviceBusSessionReceiverOptions).ConfigureAwait(false);
+				}
+				else
+				{
+					throw new Exception("SessionId cannot be null for session-enabled queue or topic.");
+				}
+			}
+			else if (!_sessionEnabled && (brokerReceiverOptions != null))
+			{
+				//Check if a new receiver must be defined using new settings
+				if ((_serviceBusReceiverOptions.ReceiveMode != brokerReceiverOptions.ReceiveMode) || (_serviceBusReceiverOptions.Identifier != brokerReceiverOptions.Identifier) || (_serviceBusReceiverOptions.PrefetchCount != brokerReceiverOptions.PrefetchCount))
+				{
+					_serviceBusReceiverOptions.ReceiveMode = brokerReceiverOptions.ReceiveMode;
+					_serviceBusReceiverOptions.Identifier = brokerReceiverOptions.Identifier;
+					_serviceBusReceiverOptions.PrefetchCount = brokerReceiverOptions.PrefetchCount;
+
+					await CreateReceiverAsync().ConfigureAwait(false);
+				}
+			}
+		}
+		private async Task<IReadOnlyList<ServiceBusReceivedMessage>> ReceiveMessagesNotSessionAsync(ReceiveMessageOptions receiveOptions)
+		{
+			IReadOnlyList<ServiceBusReceivedMessage> receivedMessages;
+			int maxMessagesReceive = MAX_MESSAGES_DEFAULT;
+			if ((receiveOptions != null) && (receiveOptions.MaxMessages != 0))
+				maxMessagesReceive = receiveOptions.MaxMessages;
+
+			TimeSpan maxWait = TimeSpan.Zero;
+			if ((receiveOptions != null) && receiveOptions.MaxWaitTime != 0)
+				maxWait = TimeSpan.FromSeconds(receiveOptions.MaxWaitTime);
+
+			if (_receiver != null)
+			{
+				if ((receiveOptions != null) && (receiveOptions.ReceiveDeferredSequenceNumbers != null) && (receiveOptions.ReceiveDeferredSequenceNumbers.Count > 0))
+				{
+					receivedMessages = await _receiver.ReceiveDeferredMessagesAsync(receiveOptions.ReceiveDeferredSequenceNumbers).ConfigureAwait(false);
+				}
+				else
+				{
+					if (maxWait == TimeSpan.Zero)
+						if ((receiveOptions != null) && (receiveOptions.PeekReceive != null) && (receiveOptions.PeekReceive.Peek))
+							if (receiveOptions.PeekReceive.PeekFromSequenceNumber != 0)
+								receivedMessages = await _receiver.PeekMessagesAsync(maxMessages: maxMessagesReceive, receiveOptions.PeekReceive.PeekFromSequenceNumber).ConfigureAwait(false);
+							else
+								receivedMessages = await _receiver.PeekMessagesAsync(maxMessages: maxMessagesReceive).ConfigureAwait(false);
+						else
+							receivedMessages = await _receiver.ReceiveMessagesAsync(maxMessages: maxMessagesReceive).ConfigureAwait(false);
+					else
+						receivedMessages = await _receiver.ReceiveMessagesAsync(maxMessages: maxMessagesReceive, maxWaitTime: maxWait).ConfigureAwait(false);
+				}
+			}
+			else
+			{
+				throw new Exception("Invalid Operation. No valid receiver defined.");
+			}
+			return receivedMessages;
+		}
+		private async Task<IReadOnlyList<ServiceBusReceivedMessage>> ReceiveMessagesSessionAsync(ReceiveMessageOptions receiveOptions)
+		{
+			IReadOnlyList<ServiceBusReceivedMessage> receivedMessages;
+			int maxMessagesReceive = MAX_MESSAGES_DEFAULT;
+			if ((receiveOptions != null) && (receiveOptions.MaxMessages != 0))
+				maxMessagesReceive = receiveOptions.MaxMessages;
+
+			TimeSpan maxWait = TimeSpan.Zero;
+			if ((receiveOptions != null) && receiveOptions.MaxWaitTime != 0)
+				maxWait = TimeSpan.FromSeconds(receiveOptions.MaxWaitTime);
+
+			if (_sessionReceiver != null)
+			{
+				if ((receiveOptions != null) && (receiveOptions.ReceiveDeferredSequenceNumbers != null) && (receiveOptions.ReceiveDeferredSequenceNumbers.Count > 0))
+				{
+					receivedMessages = await _sessionReceiver.ReceiveDeferredMessagesAsync(receiveOptions.ReceiveDeferredSequenceNumbers).ConfigureAwait(false);
+				}
+				else
+				{
+					if (maxWait == TimeSpan.Zero)
+						if ((receiveOptions != null) && (receiveOptions.PeekReceive != null) && (receiveOptions.PeekReceive.Peek))
+							if (receiveOptions.PeekReceive.PeekFromSequenceNumber != 0)
+								receivedMessages = await _sessionReceiver.PeekMessagesAsync(maxMessages: maxMessagesReceive, receiveOptions.PeekReceive.PeekFromSequenceNumber).ConfigureAwait(false);
+							else
+								receivedMessages = await _sessionReceiver.PeekMessagesAsync(maxMessages: maxMessagesReceive).ConfigureAwait(false);
+						else
+							receivedMessages = await _sessionReceiver.ReceiveMessagesAsync(maxMessages: maxMessagesReceive).ConfigureAwait(false);
+					else
+						receivedMessages = await _sessionReceiver.ReceiveMessagesAsync(maxMessages: maxMessagesReceive, maxWaitTime: maxWait).ConfigureAwait(false);
+
+					//Release session lock
+					if (_sessionEnabledQueueReceiveMode != ServiceBusReceiveMode.PeekLock)
+						await _sessionReceiver.CloseAsync().ConfigureAwait(false);
+				}
+			}
+			else
+			{
+				throw new Exception("Invalid Operation. No valid Session receiver defined.");
+			}
+			return receivedMessages;
 		}
 		private async Task<IReadOnlyList<ServiceBusReceivedMessage>> ReceiveMessagesAsync(string options)
 		{
@@ -227,54 +320,12 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			IReadOnlyList<ServiceBusReceivedMessage> receivedMessages;
 			try
 			{
-				ServiceBusReceiverOptions serviceBusReceiverOptions = new ServiceBusReceiverOptions();
-
-				if ((receiveOptions != null) && (!string.IsNullOrEmpty(receiveOptions.SessionId)) && _sessionEnabled && (receiveOptions.SessionId != _sessionId))
-				{
-					//Create new session receiver
-
-					if (string.IsNullOrEmpty(_subscriptionName))
-					{
-						_sessionReceiver = await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, receiveOptions.SessionId, _sessionReceiverOptions).ConfigureAwait(false);
-						_sessionId = receiveOptions.SessionId;
-					}
-					else
-					{
-						_sessionReceiver = await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _subscriptionName, receiveOptions.SessionId, _sessionReceiverOptions).ConfigureAwait(false);
-						_sessionId = receiveOptions.SessionId;
-					}
-				}
-
-				int maxMessagesReceive = MAX_MESSAGES_DEFAULT;
-				if ((receiveOptions != null) && (receiveOptions.MaxMessages != 0))
-					maxMessagesReceive = receiveOptions.MaxMessages;
-
-				TimeSpan maxWait = TimeSpan.Zero;
-				if ((receiveOptions != null) && receiveOptions.MaxWaitTime != 0)
-					maxWait = TimeSpan.FromSeconds(receiveOptions.MaxWaitTime);
-
-				ServiceBusReceiver receiver = _receiver;
-				if ((_sessionReceiver != null) && (_sessionEnabled))
-					receiver = _sessionReceiver;
-
-				if ((receiveOptions != null) && (receiveOptions.ReceiveDeferredSequenceNumbers != null) && (receiveOptions.ReceiveDeferredSequenceNumbers.Count > 0))
-				{
-					receivedMessages = await receiver.ReceiveDeferredMessagesAsync(receiveOptions.ReceiveDeferredSequenceNumbers).ConfigureAwait(false);
-				}
+				await InitializeReceiversForReceiveMthAsync(receiveOptions.BrokerReceiverOptions).ConfigureAwait(false);
+				if (_sessionEnabled)
+					receivedMessages = await ReceiveMessagesSessionAsync(receiveOptions).ConfigureAwait(false);
 				else
-				{
-					
-				if (maxWait == TimeSpan.Zero)
-					if ((receiveOptions != null) && (receiveOptions.PeekReceive != null) && (receiveOptions.PeekReceive.Peek))
-						if (receiveOptions.PeekReceive.PeekFromSequenceNumber != 0)
-							receivedMessages = await receiver.PeekMessagesAsync(maxMessages: maxMessagesReceive, receiveOptions.PeekReceive.PeekFromSequenceNumber).ConfigureAwait(false);
-						else
-							receivedMessages = await receiver.PeekMessagesAsync(maxMessages: maxMessagesReceive).ConfigureAwait(false);
-					else
-						receivedMessages = await receiver.ReceiveMessagesAsync(maxMessages: maxMessagesReceive).ConfigureAwait(false);
-				else
-					receivedMessages = await receiver.ReceiveMessagesAsync(maxMessages: maxMessagesReceive, maxWaitTime: maxWait).ConfigureAwait(false);
-				}
+					receivedMessages = await ReceiveMessagesNotSessionAsync(receiveOptions).ConfigureAwait(false);
+
 				return receivedMessages;
 			}
 			catch (Exception ex)
@@ -282,57 +333,90 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				throw ex;
 			}
 		}
-		private async Task<ServiceBusReceivedMessage> ReceiveMessageAsync(string options)
+
+		private async Task<ServiceBusReceivedMessage> ReceiveMessageSessionAsync(ReceiveMessageOptions receiveOptions)
 		{
-			ReceiveMessageOptions receiveOptions = JSONHelper.Deserialize<ReceiveMessageOptions>(options);
+			TimeSpan maxWait = TimeSpan.Zero;
 			ServiceBusReceivedMessage receivedMessage;
-
-			try
+			if (_sessionReceiver != null)
 			{
-				ServiceBusReceiverOptions serviceBusReceiverOptions = new ServiceBusReceiverOptions();
-
-				if ((receiveOptions != null) && (!string.IsNullOrEmpty(receiveOptions.SessionId)) && _sessionEnabled && (receiveOptions.SessionId != _sessionId))
-				{
-					//Create new session receiver
-
-					if (string.IsNullOrEmpty(_subscriptionName))
-					{
-						_sessionReceiver = await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, receiveOptions.SessionId, _sessionReceiverOptions).ConfigureAwait(false);
-						_sessionId = receiveOptions.SessionId;
-					}
-					else
-					{
-						_sessionReceiver = await _serviceBusClient.AcceptSessionAsync(_queueOrTopicName, _subscriptionName, receiveOptions.SessionId, _sessionReceiverOptions).ConfigureAwait(false);
-						_sessionId = receiveOptions.SessionId;
-					}
-				}
-
-				TimeSpan maxWait = TimeSpan.Zero;
 				if ((receiveOptions != null) && receiveOptions.MaxWaitTime != 0)
 					maxWait = TimeSpan.FromSeconds(receiveOptions.MaxWaitTime);
 
-				ServiceBusReceiver receiver = _receiver;
-				if ((_sessionReceiver != null) && (_sessionEnabled))
-					receiver = _sessionReceiver;
+				if ((receiveOptions != null) && (receiveOptions.ReceiveDeferredSequenceNumbers != null) && (receiveOptions.ReceiveDeferredSequenceNumbers.Count > 0))
+					receivedMessage = await _sessionReceiver.ReceiveDeferredMessageAsync(receiveOptions.ReceiveDeferredSequenceNumbers[0]).ConfigureAwait(false);
+				
+				else
+				{
+					if (maxWait != TimeSpan.Zero)
+						receivedMessage = await _sessionReceiver.ReceiveMessageAsync(maxWaitTime: maxWait).ConfigureAwait(false);
+					else
+						if ((receiveOptions != null) && (receiveOptions.PeekReceive != null) && (receiveOptions.PeekReceive.Peek))
+						if (receiveOptions.PeekReceive.PeekFromSequenceNumber != 0)
+							receivedMessage = await _sessionReceiver.PeekMessageAsync(receiveOptions.PeekReceive.PeekFromSequenceNumber).ConfigureAwait(false);
+						else
+							receivedMessage = await _sessionReceiver.PeekMessageAsync().ConfigureAwait(false);
+					else
+						receivedMessage = await _sessionReceiver.ReceiveMessageAsync().ConfigureAwait(false);
+
+					//Release session lock
+					if (_sessionEnabledQueueReceiveMode != ServiceBusReceiveMode.PeekLock)
+						await _sessionReceiver.CloseAsync().ConfigureAwait(false);
+				}
+				return receivedMessage;
+			}
+			else
+			{
+				throw new Exception("Invalid Operation. No valid Session receiver defined.");
+			}
+		}
+
+		private async Task<ServiceBusReceivedMessage> ReceiveMessageNotSessionAsync(ReceiveMessageOptions receiveOptions)
+		{
+			TimeSpan maxWait = TimeSpan.Zero;
+			ServiceBusReceivedMessage receivedMessage;
+			if (_receiver != null)
+			{
+				if ((receiveOptions != null) && receiveOptions.MaxWaitTime != 0)
+					maxWait = TimeSpan.FromSeconds(receiveOptions.MaxWaitTime);
 
 				if ((receiveOptions != null) && (receiveOptions.ReceiveDeferredSequenceNumbers != null) && (receiveOptions.ReceiveDeferredSequenceNumbers.Count > 0))
 				{
-					receivedMessage = await receiver.ReceiveDeferredMessageAsync(receiveOptions.ReceiveDeferredSequenceNumbers[0]).ConfigureAwait(false);
+					receivedMessage = await _receiver.ReceiveDeferredMessageAsync(receiveOptions.ReceiveDeferredSequenceNumbers[0]).ConfigureAwait(false);
 				}
 				else
-				{ 
+				{
 					if (maxWait != TimeSpan.Zero)
-						receivedMessage = await receiver.ReceiveMessageAsync(maxWaitTime: maxWait).ConfigureAwait(false);
+						receivedMessage = await _receiver.ReceiveMessageAsync(maxWaitTime: maxWait).ConfigureAwait(false);
 					else
 						if ((receiveOptions != null) && (receiveOptions.PeekReceive != null) && (receiveOptions.PeekReceive.Peek))
-							if (receiveOptions.PeekReceive.PeekFromSequenceNumber != 0)
-								receivedMessage = await receiver.PeekMessageAsync(receiveOptions.PeekReceive.PeekFromSequenceNumber).ConfigureAwait(false);
-							else
-							receivedMessage = await receiver.PeekMessageAsync().ConfigureAwait(false);
+						if (receiveOptions.PeekReceive.PeekFromSequenceNumber != 0)
+							receivedMessage = await _receiver.PeekMessageAsync(receiveOptions.PeekReceive.PeekFromSequenceNumber).ConfigureAwait(false);
 						else
-							receivedMessage = await receiver.ReceiveMessageAsync().ConfigureAwait(false);
+							receivedMessage = await _receiver.PeekMessageAsync().ConfigureAwait(false);
+					else
+						receivedMessage = await _receiver.ReceiveMessageAsync().ConfigureAwait(false);
+
 				}
 				return receivedMessage;
+			}
+			else
+			{
+				throw new Exception("Invalid Operation. No valid receiver defined.");
+			}
+		}
+		private async Task<ServiceBusReceivedMessage> ReceiveMessageAsync(string options)
+		{
+			ReceiveMessageOptions receiveOptions = JSONHelper.Deserialize<ReceiveMessageOptions>(options);
+			try
+			{
+				 
+				await InitializeReceiversForReceiveMthAsync(receiveOptions.BrokerReceiverOptions).ConfigureAwait(false);
+
+				if (_sessionEnabled)
+					return await ReceiveMessageSessionAsync(receiveOptions).ConfigureAwait(false);
+				else
+					return await ReceiveMessageNotSessionAsync(receiveOptions).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
@@ -351,7 +435,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				Task<bool> task;
 				if (_sender != null)
 				{
-					task = Task.Run<bool>(async () => await sendAsync(serviceBusMessage, options));
+					task = Task.Run<bool>(async () => await sendAsync(serviceBusMessage, options).ConfigureAwait(false));
 					success = task.Result;
 					ClearServiceBusAuxiliaryStorage();
 				}
@@ -371,7 +455,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			bool success = false;
 			try
 			{
-				Task<bool> task = Task<bool>.Run(async () => await SendMessagesBatchAsync(brokerMessages, options));
+				Task<bool> task = Task<bool>.Run(async () => await SendMessagesBatchAsync(brokerMessages, options).ConfigureAwait(false));
 				success = task.Result;
 				ClearServiceBusAuxiliaryStorage();
 			}
@@ -387,7 +471,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			success = false;
 			try
 			{
-				Task<IReadOnlyList<ServiceBusReceivedMessage>> receivedMessages = Task<IReadOnlyList<ServiceBusReceivedMessage>>.Run(async () => await ReceiveMessagesAsync(options));
+				Task<IReadOnlyList<ServiceBusReceivedMessage>> receivedMessages = Task<IReadOnlyList<ServiceBusReceivedMessage>>.Run(async () => await ReceiveMessagesAsync(options).ConfigureAwait(false));
 				if (receivedMessages != null && receivedMessages.Result != null)
 				{
 					ClearServiceBusAuxiliaryStorage();
@@ -397,11 +481,11 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 							brokerMessages.Add(SBReceivedMessageToBrokerMessage(serviceBusReceivedMessage));
 
 							//If receive Mode = Peek Lock, save the messages to be retrieved later
-							if (!string.IsNullOrEmpty(receiveMode) && (Convert.ToInt16(receiveMode) == 0))
+							if (GetReceiveMode() != null && (GetReceiveMode() == ServiceBusReceiveMode.PeekLock))
 							{ 
 								if (!AddOrUpdateStoredServiceReceivedMessage(serviceBusReceivedMessage))
 								{
-								throw new Exception("Invalid operation.");
+								throw new Exception("Invalid operation. Try retrieving the message again.");
 								}
 							}
 					}
@@ -415,18 +499,28 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			return brokerMessages;
 		}
 
+		/// <summary>
+		/// Settling a message
+		/// </summary>
 		public bool ConsumeMessage(BrokerMessage brokerMessage, string options)
 		{
 			ConsumeMessageOptions consumeOptions = JSONHelper.Deserialize<ConsumeMessageOptions>(options);
 			if (consumeOptions != null)
-			{
-				ServiceBusReceiver receiver = _receiver;
-				if ((_sessionReceiver != null) && (_sessionEnabled))
+			{			
+				ServiceBusReceiver receiver;
+				if (_sessionEnabled && _sessionReceiver != null)
+				{
 					receiver = _sessionReceiver;
-
+				}
+				else
+					if (!_sessionEnabled)
+						receiver = _receiver;
+					else
+						throw new Exception("Invalid operation. Try retrieving the message again.");
+				
 				ClearServiceBusAuxiliaryStorage();
-				ServiceBusReceivedMessage serviceBusReceviedMessage = GetStoredServiceBusReceivedMessage(brokerMessage);
-				if (serviceBusReceviedMessage != null)
+				ServiceBusReceivedMessage serviceBusReceivedMessage = GetStoredServiceBusReceivedMessage(brokerMessage);
+				if (serviceBusReceivedMessage != null)
 				{
 					try
 					{
@@ -435,31 +529,31 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 						{
 							case ConsumeMessageOptions.ConsumeModeOpts.Complete:
 								{
-									task = Task.Run(async () => await receiver.CompleteMessageAsync(serviceBusReceviedMessage).ConfigureAwait(false));
+									task = Task.Run(async () => await receiver.CompleteMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
 									break;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.Abandon:
 								{
-									task = Task.Run(async () => await receiver.AbandonMessageAsync(serviceBusReceviedMessage).ConfigureAwait(false));
+									task = Task.Run(async () => await receiver.AbandonMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
 									break;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.DeadLetter:
 								{
-									task = Task.Run(async () => await receiver.DeadLetterMessageAsync(serviceBusReceviedMessage).ConfigureAwait(false));
+									task = Task.Run(async () => await receiver.DeadLetterMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
 									break;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.Defer:
 								{
-									task = Task.Run(async () => await receiver.DeferMessageAsync(serviceBusReceviedMessage).ConfigureAwait(false));
+									task = Task.Run(async () => await receiver.DeferMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
 									break;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.RenewMessageLock:
 								{
-									task = Task.Run(async () => await receiver.RenewMessageLockAsync(serviceBusReceviedMessage).ConfigureAwait(false));
+									task = Task.Run(async () => await receiver.RenewMessageLockAsync(serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
 									break;
 								}
@@ -473,7 +567,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				}
 				else
 				{
-					throw new Exception("Invalid operation.");
+					throw new Exception("Invalid operation. Try retrieving the message again.");
 				}
 			}
 			return false;
@@ -486,15 +580,19 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			try
 			{
 				ClearServiceBusAuxiliaryStorage();
-				Task<ServiceBusReceivedMessage> receivedMessage = Task<ServiceBusReceivedMessage>.Run(async () => await ReceiveMessageAsync(options));
+				Task<ServiceBusReceivedMessage> receivedMessage = Task<ServiceBusReceivedMessage>.Run(async () => await ReceiveMessageAsync(options).ConfigureAwait(false));
 				if (receivedMessage != null && receivedMessage.Result != null)
 				{
 					ServiceBusReceivedMessage serviceBusReceivedMessage = receivedMessage.Result;
-					if (AddOrUpdateStoredServiceReceivedMessage(serviceBusReceivedMessage))
-					{ 
-						success = true;
-						return (SBReceivedMessageToBrokerMessage(serviceBusReceivedMessage));
+					
+					//If receive Mode = Peek Lock, save the message to be settled later
+					if (GetReceiveMode() != null && (GetReceiveMode() == ServiceBusReceiveMode.PeekLock))
+					{
+						if (!AddOrUpdateStoredServiceReceivedMessage(serviceBusReceivedMessage))
+							throw new Exception("Invalid operation. Try retrieving the message again.");
 					}
+					success = true;
+					return (SBReceivedMessageToBrokerMessage(serviceBusReceivedMessage));
 				}
 			}
 			catch (AggregateException ae)
@@ -517,7 +615,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				Task<long> task;
 				if (_sender != null)
 				{
-					task = Task.Run<long>(async () => await ScheduleMessageAsync(serviceBusMessage, options));
+					task = Task.Run<long>(async () => await ScheduleMessageAsync(serviceBusMessage, options).ConfigureAwait(false));
 					sequenceNumber = task.Result;
 					ClearServiceBusAuxiliaryStorage();
 				}
@@ -540,7 +638,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				Task<bool> task;
 				if (_sender != null)
 				{
-					task = Task.Run<bool>(async () => await CancelScheduleAsync(sequenceNumber));
+					task = Task.Run<bool>(async () => await CancelScheduleAsync(sequenceNumber).ConfigureAwait(false));
 					success = task.Result;
 					ClearServiceBusAuxiliaryStorage();
 				}
@@ -559,8 +657,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		{
 			try
 			{
-				Azure.RequestFailedException az_ex = (Azure.RequestFailedException)ex;
-				msg.gxTpr_Id = az_ex.ErrorCode;
+				ServiceBusException az_ex = (ServiceBusException)ex;
+				msg.gxTpr_Id = az_ex.Reason.ToString();
 				msg.gxTpr_Description = az_ex.Message;
 				return true;
 			}
@@ -569,9 +667,23 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				return false;
 			}
 		}
+
 		#endregion
 
 		#region Transformation Methods
+		private ServiceBusSessionReceiverOptions BrokerRecOptsToServiceBusSessionRecOpts(BrokerReceiverOpts brokerReceiverOptions)
+		{
+			ServiceBusSessionReceiverOptions serviceBusSessionReceiverOptions = new ServiceBusSessionReceiverOptions();
+			if (brokerReceiverOptions != null)
+			{
+				serviceBusSessionReceiverOptions.PrefetchCount = brokerReceiverOptions.PrefetchCount;
+				serviceBusSessionReceiverOptions.Identifier	= brokerReceiverOptions.Identifier;
+				serviceBusSessionReceiverOptions.ReceiveMode = brokerReceiverOptions.ReceiveMode;
+				return serviceBusSessionReceiverOptions;
+			}
+			return null;
+			
+		}
 		private ServiceBusMessage BrokerMessageToServiceBusMessage(BrokerMessage brokerMessage)
 		{
 			if (brokerMessage != null)
@@ -618,9 +730,10 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		{
 			int _maxmessages;
 			int _maxwaittime;
-			string _sessionid;
+
 			PeekReceiveOpts _peekreceiveopts;
 			IList<long> _receivedeferredsequencenumbers;
+			BrokerReceiverOpts _brokerreceiveroptions;
 
 			[DataMember()]
 			internal int MaxMessages { get => _maxmessages; set => _maxmessages = value; }
@@ -629,13 +742,35 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			internal int MaxWaitTime { get => _maxwaittime; set => _maxwaittime = value; }
 
 			[DataMember()]
-			internal string SessionId { get => _sessionid; set => _sessionid = value ; }
-
-			[DataMember()]
 			internal PeekReceiveOpts PeekReceive { get => _peekreceiveopts; set => _peekreceiveopts = value; }
 
 			[DataMember()]
 			internal IList<long> ReceiveDeferredSequenceNumbers { get => _receivedeferredsequencenumbers; set => _receivedeferredsequencenumbers = value; }
+
+			[DataMember()]
+			internal BrokerReceiverOpts BrokerReceiverOptions { get => _brokerreceiveroptions; set => _brokerreceiveroptions = value; }
+		}
+
+		[DataContract()]
+		public class BrokerReceiverOpts
+		{
+			ServiceBusReceiveMode _receiveMode;
+			int _prefetchCount;
+			string _identifier;
+			string _sessionId;
+
+			[DataMember()]
+			internal int PrefetchCount { get => _prefetchCount; set => _prefetchCount = value; }
+
+			[DataMember()]
+			internal string Identifier { get => _identifier; set => _identifier = value; }
+
+			[DataMember()]
+			internal string SessionId { get => _sessionId; set => _sessionId = value; }
+
+			[DataMember()]
+			internal ServiceBusReceiveMode ReceiveMode { get => _receiveMode; set => _receiveMode = value; }
+
 		}
 
 		[DataContract()]
@@ -654,8 +789,15 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		[DataContract]
 		internal class ConsumeMessageOptions
 		{
+
+			BrokerReceiverOpts _brokerreceiveroptions;
+
 			[DataMember]
 			internal ConsumeModeOpts ConsumeMode { get; set; }
+
+			[DataMember()]
+			internal BrokerReceiverOpts BrokerReceiverOptions { get => _brokerreceiveroptions; set => _brokerreceiveroptions = value; }
+
 			internal enum ConsumeModeOpts
 			{
 				Complete,
@@ -670,6 +812,15 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 
 		#region Helper methods
 
+		private ServiceBusReceiveMode? GetReceiveMode()
+		{
+			if (_sessionEnabled)
+				return _sessionEnabledQueueReceiveMode;
+			else
+				if (_serviceBusReceiverOptions != null)
+					return _serviceBusReceiverOptions.ReceiveMode;
+			return null;
+		}
 		private ServiceBusReceivedMessage GetStoredServiceBusReceivedMessage(BrokerMessage message)
 		{
 			string messageIdentifier = GetMessageIdentifier(message);
@@ -818,7 +969,6 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 					brokerMessage.MessageAttributes.Add(o.Key, o.Value.ToString());
 				}
 			}
-
 		}
 		private void LoadMessageProperties(GXProperties properties, ref ServiceBusMessage serviceBusMessage)
 		{
