@@ -224,10 +224,10 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
 public class GxFileInfo : IGxFileInfo
 {
 	private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFileInfo));
-    FileInfo _file;
-    string _baseDirectory;
+    private FileInfo _file;
+    private string _baseDirectory;
 
-    public GxFileInfo(FileInfo file)
+	public GxFileInfo(FileInfo file)
     {
         _file = file;
     }
@@ -583,8 +583,8 @@ public class GxExternalFileInfo : IGxFileInfo
 
 	private string URL
 	{
-		get {			
-			return _provider.GetUrl(_name, _fileTypeAtt, 0);
+		get {
+			return _provider == null ? String.Empty : _provider.GetUrl(_name, _fileTypeAtt, 0);
 		}
 	}
 
@@ -657,7 +657,7 @@ public class GxFile
     private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFile));
 
     internal IGxFileInfo _file;
-    string _baseDirectory;
+	string _baseDirectory;
     int _lastError;
     string _lastErrorDescription;
 	string _source;
@@ -689,7 +689,7 @@ public class GxFile
 			fileName = GxUploadHelper.UploadPath(fileName);
 		}
 		fileName = fileName.Trim();
-		if ((GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null) && !Path.IsPathRooted(fileName))
+		if ((ServiceFactory.GetExternalProvider() != null) && !Path.IsPathRooted(fileName))
             _file = new GxExternalFileInfo(fileName, ServiceFactory.GetExternalProvider(), fileType);
         else
             _file = new GxFileInfo(fileName, baseDirectory);
@@ -1040,11 +1040,11 @@ public class GxFile
         _lastError = 0;
         _lastErrorDescription = "";
         if (!validSource())
-            return new MemoryStream();
+            return null;
         if (!Exists())
         {
             _lastError = 2;
-            return new MemoryStream();
+            return null;
         }
         try
         {
@@ -1054,7 +1054,7 @@ public class GxFile
         {
             setError(e);
         }
-        return new MemoryStream();
+        return null;
     }
     public bool PathIsRooted()
     {
@@ -1437,7 +1437,7 @@ public class GxFile
 	private FileStream _fileStreamReader;
 	private StreamReader _fileReader;
 
-    public void OpenWrite(String encoding)
+	public void OpenWrite(String encoding)
     {
         _lastError = 0;
         _lastErrorDescription = "";
@@ -1568,6 +1568,8 @@ public class GxFile
             }
         }
     }
+
+	
 }
 
 public class GxDirectory
@@ -1577,7 +1579,7 @@ public class GxDirectory
     string _baseDirectory;
     int _lastError;
     string _lastErrorDescription;
-	bool _externalStorage = GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null;
+	bool _externalStorage = ServiceFactory.GetExternalProvider() != null;
 
 	public GxDirectory(string baseDirectory)
     {

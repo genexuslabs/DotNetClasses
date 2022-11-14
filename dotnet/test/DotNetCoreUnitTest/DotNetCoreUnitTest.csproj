@@ -13,6 +13,7 @@
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\ConfigMappings\ConfigTest.cs" Link="ConfigMappings\ConfigTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\GxHttpClientTest.cs" Link="Domain\GxHttpClientTest.cs" />		
+	    <Compile Include="..\DotNetUnitTest\Domain\ShellTest.cs" Link="Domain\ShellTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\FileSystemTest.cs" Link="FileIO\FileSystemTest.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\Xslt.cs" Link="FileIO\Xslt.cs" />
@@ -71,15 +72,14 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Messaging\GXAzureQueue\GXAzureQueue.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Messaging\GXAzureServiceBus\GXAzureServiceBus.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXGoogleCloudNetCore\GXGoogleCloudNetCore.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAzureStorage\GXAzureStorage.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXGoogleCloud\GXGoogleCloud.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -90,9 +90,6 @@
 
 
 	<ItemGroup>
-		<None Update="apps\append.svc">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Update="confmapping.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -154,7 +151,6 @@
 
 
 	<ItemGroup>
-	  <Folder Include="apps\" />
 	  <Folder Include="ConfigMappings\" />
 	  <Folder Include="Domain\" />
 	  <Folder Include="PDF\" />

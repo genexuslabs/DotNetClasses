@@ -13,7 +13,6 @@ namespace GeneXus.Http
 
 	using GeneXus.Application;
 	using GeneXus.Configuration;
-	using GeneXus.Data.NTier;
 	using GeneXus.Encryption;
 	using GeneXus.Metadata;
 	using GeneXus.Mime;
@@ -24,15 +23,18 @@ namespace GeneXus.Http
 
 	using log4net;
 	using Jayrock.Json;
-	using System.Web.SessionState;
 	using Helpers;
 	using System.Collections.Concurrent;
+	using Microsoft.Net.Http.Headers;
+	using System.Net.Http;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.AspNetCore.Http.Extensions;
 	using System.Net;
 	using GeneXus.Web.Security;
 	using System.Linq;
+	using System.Reflection.PortableExecutable;
+	using System.Web;
 #else
 	using System.Web;
 	using System.Web.UI;
@@ -41,8 +43,8 @@ namespace GeneXus.Http
 	using System.Net;
 	using GeneXus.Notifications;
 	using Web.Security;
+	using System.Web.SessionState;
 #endif
-
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -1156,7 +1158,7 @@ namespace GeneXus.Http
 					if (isGxThemeHidden)
 						context.WriteHtmlTextNl("<link id=\"gxtheme_css_reference\" " + sRelAtt + " type=\"text/css\" href=\"" + sUncachedURL + "\" " + GXUtil.HtmlEndTag(HTMLElement.LINK));
 					else
-						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ") </style>");
+						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ");</style>");
 				}
 				else
 				{
@@ -1535,17 +1537,24 @@ namespace GeneXus.Http
 			SendResponseStatus((int)statusCode, string.Empty);
 		}
 
+
+#if !NETCORE
 		protected void SendResponseStatus(int statusCode, string statusDescription)
 		{
 			context.HttpContext.Response.StatusCode = statusCode;
-#if !NETCORE
 			if (!string.IsNullOrEmpty(statusDescription))
 				context.HttpContext.Response.StatusDescription = statusDescription;
-#endif
 			this.setAjaxCallMode();
 			this.disableOutput();
 		}
-
+#else
+		protected override void SendResponseStatus(int statusCode, string statusDescription)
+		{
+			context.HttpContext.Response.StatusCode = statusCode;
+			this.setAjaxCallMode();
+			this.disableOutput();
+		}
+#endif
 		private void SendReferer()
 		{
 			context.httpAjaxContext.ajax_rsp_assign_hidden("sCallerURL", context.GetReferer());
@@ -1567,7 +1576,7 @@ namespace GeneXus.Http
 				context.httpAjaxContext.AddStylesHidden();
 				if (IsSpaRequest())
 				{
-					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse(" + context.getJSONResponse() + ");</script>");
+					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse('" + GXUtil.HtmlEncodeInputValue(HttpUtility.JavaScriptStringEncode(context.getJSONResponse())) + "');</script>");
 				}
 				else
 				{
@@ -1860,9 +1869,7 @@ namespace GeneXus.Http
 			try
 			{
 #if NETCORE
-				sendCacheHeaders();
-				GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(httpContext));
-				sendAdditionalHeaders();
+				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
 #endif
 				bool validSession = ValidWebSession();
@@ -1900,10 +1907,7 @@ namespace GeneXus.Http
 				}
 				SetCompression(httpContext);
 #if !NETCORE
-				sendCacheHeaders();
-
-				GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(httpContext));
-				sendAdditionalHeaders();
+				SendHeaders();
 #endif
 				context.ResponseCommited = true;
 			}
@@ -1921,8 +1925,19 @@ namespace GeneXus.Http
 		}
 		internal string DumpHeaders(HttpContext httpContext)
 		{
-#if !NETCORE
 			StringBuilder str = new StringBuilder();
+#if NETCORE
+			foreach (string key in httpContext.Request.Headers.Keys)
+			{
+				str.Append(key + ":" + httpContext.Request.Headers[key]);
+			}
+			str.Append(StringUtil.NewLine() + "HttpCookies: ");
+			foreach (string key in httpContext.Request.Cookies.Keys)
+			{
+				str.Append(StringUtil.NewLine() + key + ":" + httpContext.Request.Cookies[key]);
+			}
+			return str.ToString();
+#else
 			foreach (string key in httpContext.Request.Headers)
 			{
 				str.Append(key + ":" + httpContext.Request.Headers[key]);
@@ -1933,8 +1948,6 @@ namespace GeneXus.Http
 				str.Append(StringUtil.NewLine() + key + ":" + httpContext.Request.Cookies[key].Value);
 			}
 			return str.ToString();
-#else
-			return string.Empty;
 #endif
 		}
 
@@ -2096,6 +2109,14 @@ namespace GeneXus.Http
 				return formatLink($"{context.GetScriptPath()}{loginObject}");
 			else
 				return formatLink(loginObject);
+		}
+		private void SendHeaders()
+		{
+			sendCacheHeaders();
+			GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(localHttpContext));
+			sendAdditionalHeaders();
+			HttpHelper.CorsHeaders(localHttpContext);
+			HttpHelper.AllowHeader(localHttpContext, new List<string>() { $"{HttpMethod.Get.Method},{HttpMethod.Post.Method}" });
 		}
 
 		protected virtual void sendCacheHeaders()
@@ -2702,11 +2723,12 @@ namespace GeneXus.Http
 		{
 			((GxContext)this.context).ClearJavascriptSources();
 		}
-
+#if !NETCORE
 		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack)
 		{
 
 		}
+#endif
 
 		private Diagnostics.GXDebugInfo dbgInfo;
 		protected void initialize(int objClass, int objId, int dbgLines, long hash)

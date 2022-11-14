@@ -6,10 +6,12 @@ namespace GeneXus.Configuration
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 	using Microsoft.Extensions.Configuration;
+	using System.Text;
 #else
 	using System.Web;
-#endif
 	using System.Configuration;
+	using System.Collections.Generic;
+#endif
 	using System.Collections;
 	using System.Collections.Specialized;
 	using System.Xml;
@@ -23,9 +25,7 @@ namespace GeneXus.Configuration
 	using System.Collections.Concurrent;
 	using System.Reflection;
 	using System.Runtime.Serialization.Json;
-	using System.Collections.Generic;
 	using GxClasses.Helpers;
-	using System.Text;
 
 	public class Config
 	{
@@ -412,7 +412,7 @@ namespace GeneXus.Configuration
 		}
 
 #if NETCORE
-		public static IConfigurationRoot ConfigRoot { get; set; }
+		public static IConfiguration ConfigRoot { get; set; }
 		const string Log4NetShortName = "log4net";
 		static Version Log4NetVersion = new Version(2, 0, 11);
 
@@ -514,10 +514,10 @@ namespace GeneXus.Configuration
 					}
 #if !NETCORE
 					if (GxContext.IsHttpContext &&
-						File.Exists(GxContext.StaticPhysicalPath() + "web.config"))
+						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
 					{
 						logConfig(null);
-						if (log.IsDebugEnabled) loadedConfigFile = GxContext.StaticPhysicalPath() + "web.config";
+						if (log.IsDebugEnabled) loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
 						_config = ConfigurationSettings.AppSettings;
 						foreach (string key in _config.Keys)
 						{
@@ -529,13 +529,13 @@ namespace GeneXus.Configuration
 						return _config;
 					}
 					if (GxContext.IsHttpContext &&
-						File.Exists(GxContext.StaticPhysicalPath() + "bin/client.exe.config"))
+						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config")))
 					
 					{
 
 						logConfig("bin/log.config");
 						if (log.IsDebugEnabled)
-							loadedConfigFile = GxContext.StaticPhysicalPath() + "bin/client.exe.config";
+							loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
 						_config = loadConfig("bin/client.exe.config");
 						return _config;
 					}
@@ -1114,7 +1114,7 @@ namespace GeneXus.Configuration
 						}
 						if (!String.IsNullOrEmpty(mediaPath))
 							defaultPath = false;
-						if (GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null)
+						if (ServiceFactory.GetExternalProvider() == null)
 						{
 							if (defaultPath || !Path.IsPathRooted(mediaPath))
 								mediaPath = Path.Combine(GxContext.StaticPhysicalPath(), mediaPath) + Path.DirectorySeparatorChar;
@@ -1228,7 +1228,7 @@ namespace GeneXus.Configuration
 						if (String.IsNullOrEmpty(blobPath) || !Path.IsPathRooted(blobPath))
 						{
 							blobPathFolderName = String.IsNullOrEmpty(blobPath) ? blobPath : blobPath.TrimEnd('/', '\\').TrimStart('/', '\\');
-							if (GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null)
+							if (ServiceFactory.GetExternalProvider() == null)
 							{
 								blobPath = Path.Combine(GxContext.StaticPhysicalPath(), blobPath);
 								if (blobPath[blobPath.Length - 1] != Path.DirectorySeparatorChar)
@@ -1312,6 +1312,19 @@ namespace GeneXus.Configuration
 			set { _applicationPath = value; }
 		}
 
+		internal static bool CorsEnabled {
+			get {
+				return !string.IsNullOrEmpty(CorsAllowedOrigins());
+			}
+		}
+
+		internal static string CorsAllowedOrigins()
+		{
+			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
+				return corsOrigin;
+			else
+				return string.Empty;
+		}
 		public static int GetMaximumOpenCursors()
 		{
 			if (maximumOpenCursors == 0)
@@ -1372,5 +1385,6 @@ namespace GeneXus.Configuration
 			return httpclient_max_per_route;
 
 		}
+
 	}
 }

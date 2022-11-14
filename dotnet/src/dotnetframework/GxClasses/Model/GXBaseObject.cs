@@ -1,4 +1,3 @@
-using GeneXus.Diagnostics;
 using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.Utils;
@@ -54,6 +53,7 @@ namespace GeneXus.Application
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
 		protected virtual bool IsSynchronizer { get { return false; } }
 		protected virtual string ExecutePermissionPrefix { get { return String.Empty; } }
+		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack) { }
 
 		public virtual void CallWebObject(string url)
 		{
@@ -142,10 +142,17 @@ namespace GeneXus.Application
 			}
 			catch (InvalidKeyException)
 			{
+				context.SetCookie("GX_SESSION_ID", string.Empty, string.Empty, DateTime.MinValue, string.Empty, context.GetHttpSecure());
 				GXLogging.Error(log, "440 Invalid encryption key");
+				SendResponseStatus(440, "Session timeout");
 			}
 			return sRet;
 		}
+		protected virtual void SendResponseStatus(int statusCode, string statusDescription)
+		{
+			context.HttpContext.Response.StatusCode = statusCode;
+		}
+
 		protected string UriEncrypt64(string value, string key)
 		{
 			return Encrypt64(value, key, true);
@@ -164,7 +171,9 @@ namespace GeneXus.Application
 			}
 			catch (InvalidKeyException)
 			{
+				context.SetCookie("GX_SESSION_ID", string.Empty, string.Empty, DateTime.MinValue, string.Empty, context.GetHttpSecure());
 				GXLogging.Error(log, "440 Invalid encryption key");
+				SendResponseStatus(440, "Session timeout");
 			}
 			return sRet;
 		}

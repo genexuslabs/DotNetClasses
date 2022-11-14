@@ -3837,7 +3837,7 @@ namespace GeneXus.Utils
 			if (domains == null)
 			{
 				domains = new Hashtable();
-				DOMAINS_FILE = GxContext.StaticPhysicalPath() + Path.DirectorySeparatorChar + "domains.ini";
+				DOMAINS_FILE = Path.Combine(GxContext.StaticPhysicalPath(), "domains.ini");
 			}
 			if (domains[domainId] == null)
 			{
@@ -5521,14 +5521,18 @@ namespace GeneXus.Utils
 		{
 			using (Stream s = ImageFile(filePathOrUrl).GetStream())
 			{
-				return new Bitmap(s);
+				if (s != null)
+					return new Bitmap(s);
+				return null;
 			}
 		}
 		private static Image ImageCreateFromStream(string filePathOrUrl)
 		{
 			using (Stream s = ImageFile(filePathOrUrl).GetStream())
 			{
-				return Image.FromStream(s);
+				if (s != null)
+					return Image.FromStream(s);
+				return null;
 			}
 		}
 
@@ -5543,6 +5547,8 @@ namespace GeneXus.Utils
 			{										
 				using (Image image = ImageCreateFromStream(imageFile))
 				{
+					if (image == null)
+						return string.Empty;
 					int newheight = height;
 					// Prevent using images internal thumbnail
 					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
@@ -5702,7 +5708,10 @@ namespace GeneXus.Utils
 			{				
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
-					return bmp.Width;
+					if (bmp != null)
+					{
+						return bmp.Width;
+					}
 				}
 			}
 			catch (Exception ex)
@@ -5812,9 +5821,20 @@ namespace GeneXus.Utils
 				ThreadPool.QueueUserWorkItem(
 					arg =>
 					{
-						callbak(state);
-						resetEvent.Set();
-						events.TryRemove(eventGuid, out ManualResetEvent _);
+						try
+						{
+							callbak(state);
+						}
+						catch (Exception ex)
+						{
+							GXLogging.Error(log, "Error on submit of " + state.GetType(), ex);
+							throw;
+						}
+						finally
+						{
+							resetEvent.Set();
+							events.TryRemove(eventGuid, out ManualResetEvent _);
+						}
 
 					});
 				events[eventGuid]= resetEvent;

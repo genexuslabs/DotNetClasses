@@ -361,6 +361,11 @@ build
 /dotnet/src/dotnetcore/GxDataInitialization/net6.0/GXDataInitialization.deps.json
 /dotnet/src/dotnetcore/GxNetCoreStartup/net6.0/GxNetCoreStartup.deps.json
 /dotnet/src/dotnetcore/Reor/net6.0/Reor.deps.json
-.out
+
+/dotnet/outsonar.txt
+/dotnet/output.txt
 /dotnet/Veracode.sln
 /dotnet/VeracodeSolution.sln
+
+/dotnet/src/extensions/Azure/Handlers/GeneXus.Deploy.AzureFunctions.Handlers.Ext.csproj
+/dotnet/src/extensions/Azure/Handlers/GeneXus.Deploy.AzureFunctions.Handlers.Sources.csproj

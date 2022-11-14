@@ -25,6 +25,7 @@ using GeneXus.Http;
 using System.Globalization;
 using GeneXus.Metadata;
 using System.Data.Common;
+using System.Linq;
 
 namespace GeneXus.Data
 {
@@ -140,6 +141,7 @@ namespace GeneXus.Data
 		void SetCursorDef(CursorDef cursorDef);
 		string ConcatOp(int pos);
 		string AfterCreateCommand(string stmt, GxParameterCollection parmBinds);
+		int MaxNumberOfValuesInList { get; }
 	}
 
 
@@ -171,6 +173,7 @@ namespace GeneXus.Data
         string UserId {get;}
 		short ErrCode {get;}
 		string ErrDescription {get;}      
+		[Obsolete("IGxDataStore.SmartCacheProvider is deprecated, use IDataStoreProvider.SmartCacheProvider instead", false)]
         GxSmartCacheProvider SmartCacheProvider {get;}
 		OlsonTimeZone ClientTimeZone { get; }
         void CloseConnections();
@@ -860,7 +863,7 @@ namespace GeneXus.Data
 		{			
 			Uri uri;
 			string fileName = fileNameParm;
-			bool inLocalStorage = dbBlob || GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null;
+			bool inLocalStorage = dbBlob || ServiceFactory.GetExternalProvider() == null;
 			bool validFileName = !String.IsNullOrEmpty(fileName) && !String.IsNullOrEmpty(fileName.Trim()) && String.Compare(fileName, "about:blank", false) != 0;
 			byte[] binary = Array.Empty<byte>();
 
@@ -944,6 +947,9 @@ namespace GeneXus.Data
 			get {return m_datasource;}
 			set{m_datasource=value;}
 		}
+
+		public virtual int MaxNumberOfValuesInList => int.MaxValue;
+
 		public string ConnectionStringForLog()
 		{
 			string result="";
@@ -3704,6 +3710,76 @@ namespace GeneXus.Data
 		{
 			dbmsHandler = db;
 		}
+		IEnumerable<IEnumerable<T>> Split<T>(T[] arr, int size)
+		{
+			for (int i = 0; i < arr.Length / size + 1; i++)
+			{
+				yield return arr.Skip(i * size).Take(size);
+			}
+		}
+		IEnumerable<IList> Split(IList values, int size)
+		{
+			IList list = new List<object>(size);
+
+			foreach (object item in values)
+			{
+				list.Add(item);
+				if (list.Count == size)
+				{
+					yield return list;
+					list = new List<object>(size);
+				}
+			}
+			if (list.Count != 0)
+			{
+				yield return list;
+			}
+		}
+		string ChunkValueList<T>(T[] values, string prefix, string postfix)
+		{
+			StringBuilder stringBuilder = new StringBuilder();
+			if (values.Length > dbmsHandler.MaxNumberOfValuesInList)
+			{
+				foreach (T[] svalues in Split(values, dbmsHandler.MaxNumberOfValuesInList))
+				{
+					if (stringBuilder.Length > 0)
+						stringBuilder.Append(" OR ");
+					stringBuilder.Append(prefix);
+					stringBuilder.Append(ValueList(svalues));
+					stringBuilder.Append(postfix);
+				}
+			}
+			else
+			{
+				stringBuilder.Append(prefix);
+				stringBuilder.Append(ValueList(values));
+				stringBuilder.Append(postfix);
+			}
+			return stringBuilder.ToString();
+		}
+		string ChunkValueList(IList values, string prefix, string postfix)
+		{
+			StringBuilder stringBuilder = new StringBuilder();
+			if (values.Count > dbmsHandler.MaxNumberOfValuesInList)
+			{
+				foreach (IList svalues in Split(values, dbmsHandler.MaxNumberOfValuesInList))
+				{
+					if (stringBuilder.Length > 0)
+						stringBuilder.Append(" OR ");
+					stringBuilder.Append(prefix);
+					stringBuilder.Append(ValueList(svalues));
+					stringBuilder.Append(postfix);
+				}
+			}
+			else
+			{
+				stringBuilder.Append(prefix);
+				stringBuilder.Append(ValueList(values));
+				stringBuilder.Append(postfix);
+
+			}
+			return stringBuilder.ToString();
+		}
 		public string ValueList(short[] Values, string Prefix, string Postfix)
 		{
 			if (Values == null || Values.Length == 0)
@@ -3712,7 +3788,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(int[] Values, string Prefix, string Postfix)
@@ -3723,7 +3799,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(long[] Values, string Prefix, string Postfix)
@@ -3734,7 +3810,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(decimal[] Values, string Prefix, string Postfix)
@@ -3745,7 +3821,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(float[] Values, string Prefix, string Postfix)
@@ -3756,7 +3832,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(double[] Values, string Prefix, string Postfix)
@@ -3767,7 +3843,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(DateTime[] Values, string Prefix, string Postfix)
@@ -3778,7 +3854,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(string[] Values, string Prefix, string Postfix)
@@ -3789,7 +3865,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(bool[] Values, string Prefix, string Postfix)
@@ -3800,7 +3876,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(IList Values, string Prefix, string Postfix)
@@ -3811,7 +3887,7 @@ namespace GeneXus.Data
 			}
 			else
 			{
-				return Prefix + ValueList(Values) + Postfix;
+				return ChunkValueList(Values, Prefix, Postfix);
 			}
 		}
 		public string ValueList(short[] Values)

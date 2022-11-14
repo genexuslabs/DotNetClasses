@@ -26,9 +26,19 @@ namespace GeneXus.Office.ExcelGXEPPlus
                     GxFile temp = new GxFile(Path.GetDirectoryName(template), template);
                     if (temp.Exists())
                     {
-                        GXLogging.Debug(log, "Opening Template " + template);
-                        p = new ExcelPackage(temp.GetStream());
-						OpenFromTemplate = true;
+						Stream stream = temp.GetStream();
+						if (stream != null)
+						{
+							GXLogging.Debug(log, "Opening Template " + template);
+							p = new ExcelPackage(stream);
+							OpenFromTemplate = true;
+						}
+						else
+						{
+							errCod = 4;
+							errDescription = "Invalid template.";
+							return errCod;
+						}
 
 					}
                     else
@@ -47,7 +57,18 @@ namespace GeneXus.Office.ExcelGXEPPlus
                         fileName += Constants.EXCEL2007Extension;
                     }
 					if (file.IsExternalFile)
-						p = new ExcelPackage(file.GetStream());
+					{						
+						Stream stream = file.GetStream();
+
+						if (stream != null)
+						{
+							p = new ExcelPackage(stream);
+						}
+						else
+						{
+							p = new ExcelPackage();
+						}
+					}
 					else
 						p = new ExcelPackage(new FileInfo(fileName));
 				}
@@ -824,16 +845,12 @@ namespace GeneXus.Office.ExcelGXEPPlus
 
                 for (int i = 1; i <= cntCells; i++)
                 {
-                    int val = (int)value;
-                    int red = val >> 16 & 0xff;
-                    int green = val >> 8 & 0xff;
-                    int blue = val & 0xff;
-
-                    System.Drawing.Color color = System.Drawing.Color.FromArgb(red, green, blue);
-
-                    pCells[i].Style.Fill.BackgroundColor.SetColor(color);
-                }
-                
+					if (pCells[i].Style.Fill.PatternType == ExcelFillStyle.None)
+					{
+						pCells[i].Style.Fill.PatternType = ExcelFillStyle.Solid;
+					}
+					pCells[i].Style.Fill.BackgroundColor.SetColor(GXExcelHelper.ResolveColor(value));
+                }                
             }
         }
 

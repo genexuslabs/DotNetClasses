@@ -32,7 +32,7 @@ namespace GeneXus.UserControls
 
 		private static string GetTemplateFile(string type)
 		{
-			return Path.Combine(GxContext.StaticPhysicalPath(), $"gxusercontrols\\{type}.view");
+			return Path.Combine(GxContext.StaticPhysicalPath(), "gxusercontrols", $"{type}.view");
 		}
 
 		internal string Render(string internalName, GxDictionary propbag)

@@ -107,7 +107,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptographyCommon", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxCryptography", "src\dotnetcommon\GxCryptography\GxCryptography.csproj", "{721C71DA-0E1C-49C1-88AE-17A97AA255D3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXAzureStorageNETCore", "src\dotnetcore\Providers\Storage\GXAzureStorageNETCore\GXAzureStorageNETCore.csproj", "{BF72FAF5-3A7C-41B6-A27F-9BE049290356}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXAzureStorage", "src\dotnetcore\Providers\Storage\GXAzureStorage\GXAzureStorage.csproj", "{BF72FAF5-3A7C-41B6-A27F-9BE049290356}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}"
 EndProject
@@ -135,7 +135,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7BA5A2CE-7
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "amyprochandler", "src\extensions\Azure\test\amyprocedurehandler\amyprochandler.csproj", "{B4B9E45E-052F-417D-87BF-0FB2E3C05CE1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXGoogleCloudNetCore", "src\dotnetcore\Providers\Storage\GXGoogleCloudNetCore\GXGoogleCloudNetCore.csproj", "{7F160509-6538-46CD-9ED1-EF78AC92DA9A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXGoogleCloud", "src\dotnetcore\Providers\Storage\GXGoogleCloud\GXGoogleCloud.csproj", "{7F160509-6538-46CD-9ED1-EF78AC92DA9A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "security", "security", "{8B609155-781D-4227-A080-632D70C219AB}"
 EndProject
@@ -212,13 +212,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXAmazonSQS", "src\dotnetco
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiattractions", "src\extensions\Azure\test\apiattractions\apiattractions.csproj", "{E85FDB0F-FA81-4CDD-8BF3-865269CE2DB3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetRedisTest", "test\DotNetRedisTest\DotNetRedisTest.csproj", "{48430E50-043A-47A2-8278-B86A4420758A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXMessageBroker", "src\dotnetcore\Providers\Messaging\GXMessageBroker\GXMessageBroker.csproj", "{3B1B5706-E896-4CEB-A551-E30226303BDB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXAzureServiceBus", "src\dotnetcore\Providers\Messaging\GXAzureServiceBus\GXAzureServiceBus.csproj", "{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectHealthTest", "test\ProjectHealthTest\ProjectHealthTest.csproj", "{65048104-212A-4819-AECF-89CA9C08C83F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectHealthTest", "test\ProjectHealthTest\ProjectHealthTest.csproj", "{65048104-212A-4819-AECF-89CA9C08C83F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetRedisTest", "test\DotNetRedisTest\DotNetRedisTest.csproj", "{48430E50-043A-47A2-8278-B86A4420758A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCoreWebUnitTest", "test\DotNetCoreWebUnitTest\DotNetCoreWebUnitTest.csproj", "{531863CA-93A0-42AA-AB5C-FA0E672C03B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -534,6 +536,10 @@ Global
 		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -640,6 +646,7 @@ Global
 		{48430E50-043A-47A2-8278-B86A4420758A} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 		{3B1B5706-E896-4CEB-A551-E30226303BDB} = {4C43F2DA-59E5-46F5-B691-195449498555}
 		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0} = {30159B0F-BE61-4DB7-AC02-02851426BE4B}
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}

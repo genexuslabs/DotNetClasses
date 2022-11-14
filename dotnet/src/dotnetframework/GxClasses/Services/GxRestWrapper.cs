@@ -26,8 +26,8 @@ using System.Collections.Specialized;
 using GeneXus.Security;
 using System.Collections;
 using Jayrock.Json;
-
-
+using Microsoft.Net.Http.Headers;
+using System.Net.Http;
 
 namespace GeneXus.Application
 
@@ -141,7 +141,7 @@ namespace GeneXus.Application
 				_procWorker.cleanup();
 				RestProcess(outputParameters);
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
-				SendCacheHeaders();
+				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -330,7 +330,7 @@ namespace GeneXus.Application
 				RestProcess(outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
-				SendCacheHeaders();
+				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -669,6 +669,14 @@ namespace GeneXus.Application
 			}
 			return true;
 		}
+		private void ServiceHeaders()
+		{
+			SendCacheHeaders();
+			HttpHelper.CorsHeaders(_httpContext);
+			HttpHelper.AllowHeader(_httpContext, new List<string>() { $"{HttpMethod.Get.Method},{HttpMethod.Post.Method}" });
+
+		}
+
 		private void SendCacheHeaders()
 		{
 			if (string.IsNullOrEmpty(_gxContext.GetHeader(HttpHeader.CACHE_CONTROL)))

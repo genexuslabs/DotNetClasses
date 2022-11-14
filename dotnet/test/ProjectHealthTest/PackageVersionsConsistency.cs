@@ -110,21 +110,24 @@ namespace ProjectHealthTest
 								string packageId = packageIdAtt.Value;
 								XmlAttribute packageVersionAtt = packageNode.Attributes[PACKAGE_VERSION_ATTRIBUTE_NAME];
 								Assert.True(packageVersionAtt != null, $"{fileInfo.FullName} contains an invalid Package Version for a packageReference");
-								string packageVersion = packageVersionAtt.Value;
-
-								if (!packageVersionsById.TryGetValue(packageId, out ICollection<PackageVersionItem> packageVersions))
+								if (packageVersionAtt != null && !packageVersionAtt.Value.StartsWith('$'))
 								{
-									packageVersions = new List<PackageVersionItem>();
-									packageVersionsById.Add(packageId, packageVersions);
-								}
+									string packageVersion = packageVersionAtt.Value;
 
-								if (!packageVersions.Any(o => o.Version.Equals(packageVersion, StringComparison.OrdinalIgnoreCase)))
-								{
-									packageVersions.Add(new PackageVersionItem()
+									if (!packageVersionsById.TryGetValue(packageId, out ICollection<PackageVersionItem> packageVersions))
 									{
-										SourceFile = fileInfo.FullName,
-										Version = packageVersion
-									});
+										packageVersions = new List<PackageVersionItem>();
+										packageVersionsById.Add(packageId, packageVersions);
+									}
+
+									if (!packageVersions.Any(o => o.Version.Equals(packageVersion, StringComparison.OrdinalIgnoreCase)))
+									{
+										packageVersions.Add(new PackageVersionItem()
+										{
+											SourceFile = fileInfo.FullName,
+											Version = packageVersion
+										});
+									}
 								}
 							}
 						}
