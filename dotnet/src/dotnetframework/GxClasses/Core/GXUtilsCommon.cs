@@ -1966,6 +1966,8 @@ namespace GeneXus.Utils
 		const long timeConversionFactor = 10000000L;
 		readonly static DateTime datetTime1970 = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 		internal static DateTime nullDate = ResetTime(DateTime.MinValue);
+		const string ISO_8601_TIME_SEPARATOR = "T";
+		const string ISO_8601_TIME_SEPARATOR_1 = ":";
 
 		enum DatePictureFmt
 		{
@@ -2529,6 +2531,17 @@ namespace GeneXus.Utils
 				}
 			}
 			return nullDate;
+		}
+		internal static DateTime CToDT2(string jsonDate) {
+
+			if (!string.IsNullOrEmpty(jsonDate) && (jsonDate.Contains(ISO_8601_TIME_SEPARATOR) || jsonDate.Contains(ISO_8601_TIME_SEPARATOR_1)))
+			{
+				return CToT2(jsonDate);
+			}
+			else
+			{
+				return CToD2(jsonDate);
+			}
 		}
 		public static DateTime CToT2(string value)
 		{

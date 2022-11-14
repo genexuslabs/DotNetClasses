@@ -1783,9 +1783,8 @@ namespace GeneXus.Utils
 				}
 				else if (ptyType.Equals(typeof(DateTime)))
 				{
-					DateTime dtValue = DateTimeUtil.nullDate;
-					DateTime.TryParse(Value.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.None, out dtValue);
-					convertedValue = dtValue;
+					string jsonDate = Value as string;
+					convertedValue = DateTimeUtil.CToD2(jsonDate);
 				}
 				else if (ptyType.Equals(typeof(bool)))
 				{
