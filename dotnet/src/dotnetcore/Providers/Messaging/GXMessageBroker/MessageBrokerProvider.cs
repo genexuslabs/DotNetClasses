@@ -24,8 +24,8 @@ namespace GeneXus.Messaging.Common
 			MessageQueue messageQueue = new MessageQueue();
 			if (string.IsNullOrEmpty(providerTypeName))
 			{
-				GXUtil.ErrorToMessages("GXMessageBroker1000", "Message Broker provider cannot be empty", errorMessages);
-				GXLogging.Error(logger, "(GXMessageBroker1000)Failed to Connect to a Message Broker : Provider cannot be empty.");
+				GXUtil.ErrorToMessages("GXMessageBroker", "Message Broker provider cannot be empty", errorMessages);
+				GXLogging.Error(logger, "(GXMessageBroker)Failed to Connect to a Message Broker : Provider cannot be empty.");
 				success = false;
 				return messageQueue;
 			}
@@ -56,8 +56,8 @@ namespace GeneXus.Messaging.Common
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(logger, "(GXMessageBroker1001)Couldn't connect to Message Broker provider: " + ExceptionExtensions.GetInnermostException(ex));
-				GXUtil.ErrorToMessages("GXMessageBroker1001", ex, errorMessages);
+				GXLogging.Error(logger, "(GXMessageBroker)Couldn't connect to Message Broker provider: " + ExceptionExtensions.GetInnermostException(ex));
+				GXUtil.ErrorToMessages("GXMessageBroker", ex, errorMessages);
 				success = false;
 				return messageQueue;
 			}
