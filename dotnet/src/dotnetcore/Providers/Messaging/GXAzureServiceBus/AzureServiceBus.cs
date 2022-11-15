@@ -423,6 +423,66 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				throw ex;
 			}
 		}
+		private async Task<bool> CompleteMessageAsync(ServiceBusReceiver receiver, ServiceBusReceivedMessage serviceBusReceivedMessage)
+		{
+			try
+			{ 
+				await receiver.CompleteMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false);
+				return true;
+			}
+			catch (ServiceBusException sbex)
+			{
+				throw sbex;
+			}
+		}
+		private async Task<bool> AbandonMessageAsync(ServiceBusReceiver receiver, ServiceBusReceivedMessage serviceBusReceivedMessage)
+		{
+			try
+			{
+				await receiver.AbandonMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false);
+				return true;
+			}
+			catch (ServiceBusException sbex)
+			{
+				throw sbex;
+			}
+		}
+		private async Task<bool> DeadLetterMessageAsync(ServiceBusReceiver receiver, ServiceBusReceivedMessage serviceBusReceivedMessage)
+		{
+			try
+			{
+				await receiver.DeadLetterMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false);
+				return true;
+			}
+			catch (ServiceBusException sbex)
+			{
+				throw sbex;
+			}
+		}
+		private async Task<bool> DeferMessageAsync(ServiceBusReceiver receiver, ServiceBusReceivedMessage serviceBusReceivedMessage)
+		{
+			try
+			{
+				await receiver.DeferMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false);
+				return true;
+			}
+			catch (ServiceBusException sbex)
+			{
+				throw sbex;
+			}
+		}
+		private async Task<bool> RenewMessageLockAsync(ServiceBusReceiver receiver, ServiceBusReceivedMessage serviceBusReceivedMessage)
+		{
+			try
+			{
+				await receiver.RenewMessageLockAsync(serviceBusReceivedMessage).ConfigureAwait(false);
+				return true;
+			}
+			catch (ServiceBusException sbex)
+			{
+				throw sbex;
+			}
+		}
 		#endregion
 
 		#region API Methods
@@ -524,38 +584,38 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				{
 					try
 					{
-						Task task;
+						Task<bool> taskB;
 						switch (consumeOptions.ConsumeMode)
 						{
 							case ConsumeMessageOptions.ConsumeModeOpts.Complete:
 								{
-									task = Task.Run(async () => await receiver.CompleteMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false));
+									taskB = Task.Run(async () => await CompleteMessageAsync(receiver,serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
-									break;
+									return taskB.Result;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.Abandon:
 								{
-									task = Task.Run(async () => await receiver.AbandonMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false));
+									taskB = Task.Run(async () => await AbandonMessageAsync(receiver,serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
-									break;
+									return taskB.Result;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.DeadLetter:
 								{
-									task = Task.Run(async () => await receiver.DeadLetterMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false));
+									taskB = Task.Run(async () => await DeadLetterMessageAsync(receiver,serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
-									break;
+									return taskB.Result; 
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.Defer:
 								{
-									task = Task.Run(async () => await receiver.DeferMessageAsync(serviceBusReceivedMessage).ConfigureAwait(false));
+									taskB = Task.Run(async () => await DeferMessageAsync(receiver,serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
-									break;
+									return taskB.Result;
 								}
 							case ConsumeMessageOptions.ConsumeModeOpts.RenewMessageLock:
 								{
-									task = Task.Run(async () => await receiver.RenewMessageLockAsync(serviceBusReceivedMessage).ConfigureAwait(false));
+									taskB = Task.Run(async () => await RenewMessageLockAsync(receiver,serviceBusReceivedMessage).ConfigureAwait(false));
 									RemoveStoredServiceBusReceivedMessage(brokerMessage);
-									break;
+									return taskB.Result;
 								}
 						}
 						return true;
