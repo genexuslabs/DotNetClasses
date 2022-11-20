@@ -367,3 +367,5 @@ build
 /dotnet/Veracode.sln
 /dotnet/VeracodeSolution.sln
 
+/dotnet/src/extensions/Azure/Handlers/GeneXus.Deploy.AzureFunctions.Handlers.Ext.csproj
+/dotnet/src/extensions/Azure/Handlers/GeneXus.Deploy.AzureFunctions.Handlers.Sources.csproj

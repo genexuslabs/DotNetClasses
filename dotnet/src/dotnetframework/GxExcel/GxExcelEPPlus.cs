@@ -57,17 +57,16 @@ namespace GeneXus.Office.ExcelGXEPPlus
                         fileName += Constants.EXCEL2007Extension;
                     }
 					if (file.IsExternalFile)
-					{
+					{						
 						Stream stream = file.GetStream();
+
 						if (stream != null)
 						{
-							p = new ExcelPackage(file.GetStream());
+							p = new ExcelPackage(stream);
 						}
 						else
 						{
-							errCod = 4;
-							errDescription = "Invalid file.";
-							return errCod;
+							p = new ExcelPackage();
 						}
 					}
 					else
@@ -846,16 +845,12 @@ namespace GeneXus.Office.ExcelGXEPPlus
 
                 for (int i = 1; i <= cntCells; i++)
                 {
-                    int val = (int)value;
-                    int red = val >> 16 & 0xff;
-                    int green = val >> 8 & 0xff;
-                    int blue = val & 0xff;
-
-                    System.Drawing.Color color = System.Drawing.Color.FromArgb(red, green, blue);
-
-                    pCells[i].Style.Fill.BackgroundColor.SetColor(color);
-                }
-                
+					if (pCells[i].Style.Fill.PatternType == ExcelFillStyle.None)
+					{
+						pCells[i].Style.Fill.PatternType = ExcelFillStyle.Solid;
+					}
+					pCells[i].Style.Fill.BackgroundColor.SetColor(GXExcelHelper.ResolveColor(value));
+                }                
             }
         }
 

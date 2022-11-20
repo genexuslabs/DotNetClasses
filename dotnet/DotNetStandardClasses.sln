@@ -212,11 +212,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXAmazonSQS", "src\dotnetco
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apiattractions", "src\extensions\Azure\test\apiattractions\apiattractions.csproj", "{E85FDB0F-FA81-4CDD-8BF3-865269CE2DB3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXMessageBroker", "src\dotnetcore\Providers\Messaging\GXMessageBroker\GXMessageBroker.csproj", "{3B1B5706-E896-4CEB-A551-E30226303BDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXAzureServiceBus", "src\dotnetcore\Providers\Messaging\GXAzureServiceBus\GXAzureServiceBus.csproj", "{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectHealthTest", "test\ProjectHealthTest\ProjectHealthTest.csproj", "{65048104-212A-4819-AECF-89CA9C08C83F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetRedisTest", "test\DotNetRedisTest\DotNetRedisTest.csproj", "{48430E50-043A-47A2-8278-B86A4420758A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynService.CosmosDB", "src\dotnetcommon\DynService.Cosmos\DynService.CosmosDB.csproj", "{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCoreWebUnitTest", "test\DotNetCoreWebUnitTest\DotNetCoreWebUnitTest.csproj", "{531863CA-93A0-42AA-AB5C-FA0E672C03B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -528,6 +533,18 @@ Global
 		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B1B5706-E896-4CEB-A551-E30226303BDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B1B5706-E896-4CEB-A551-E30226303BDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B1B5706-E896-4CEB-A551-E30226303BDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B1B5706-E896-4CEB-A551-E30226303BDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -633,6 +650,9 @@ Global
 		{65048104-212A-4819-AECF-89CA9C08C83F} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 		{48430E50-043A-47A2-8278-B86A4420758A} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439} = {C264F34E-2CE0-4DCA-B22D-4155821BE611}
+		{3B1B5706-E896-4CEB-A551-E30226303BDB} = {4C43F2DA-59E5-46F5-B691-195449498555}
+		{F8ABEA82-F823-4E9C-96FA-26AF24C932E0} = {30159B0F-BE61-4DB7-AC02-02851426BE4B}
+		{531863CA-93A0-42AA-AB5C-FA0E672C03B8} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}

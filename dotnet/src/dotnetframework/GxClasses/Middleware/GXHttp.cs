@@ -34,6 +34,7 @@ namespace GeneXus.Http
 	using GeneXus.Web.Security;
 	using System.Linq;
 	using System.Reflection.PortableExecutable;
+	using System.Web;
 #else
 	using System.Web;
 	using System.Web.UI;
@@ -1157,7 +1158,7 @@ namespace GeneXus.Http
 					if (isGxThemeHidden)
 						context.WriteHtmlTextNl("<link id=\"gxtheme_css_reference\" " + sRelAtt + " type=\"text/css\" href=\"" + sUncachedURL + "\" " + GXUtil.HtmlEndTag(HTMLElement.LINK));
 					else
-						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ") </style>");
+						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ");</style>");
 				}
 				else
 				{
@@ -1536,17 +1537,24 @@ namespace GeneXus.Http
 			SendResponseStatus((int)statusCode, string.Empty);
 		}
 
+
+#if !NETCORE
 		protected void SendResponseStatus(int statusCode, string statusDescription)
 		{
 			context.HttpContext.Response.StatusCode = statusCode;
-#if !NETCORE
 			if (!string.IsNullOrEmpty(statusDescription))
 				context.HttpContext.Response.StatusDescription = statusDescription;
-#endif
 			this.setAjaxCallMode();
 			this.disableOutput();
 		}
-
+#else
+		protected override void SendResponseStatus(int statusCode, string statusDescription)
+		{
+			context.HttpContext.Response.StatusCode = statusCode;
+			this.setAjaxCallMode();
+			this.disableOutput();
+		}
+#endif
 		private void SendReferer()
 		{
 			context.httpAjaxContext.ajax_rsp_assign_hidden("sCallerURL", context.GetReferer());
@@ -1568,7 +1576,7 @@ namespace GeneXus.Http
 				context.httpAjaxContext.AddStylesHidden();
 				if (IsSpaRequest())
 				{
-					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse(" + context.getJSONResponse() + ");</script>");
+					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse('" + GXUtil.HtmlEncodeInputValue(HttpUtility.JavaScriptStringEncode(context.getJSONResponse())) + "');</script>");
 				}
 				else
 				{
@@ -2715,11 +2723,12 @@ namespace GeneXus.Http
 		{
 			((GxContext)this.context).ClearJavascriptSources();
 		}
-
+#if !NETCORE
 		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack)
 		{
 
 		}
+#endif
 
 		private Diagnostics.GXDebugInfo dbgInfo;
 		protected void initialize(int objClass, int objId, int dbgLines, long hash)

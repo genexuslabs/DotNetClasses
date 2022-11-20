@@ -15,8 +15,6 @@ namespace GeneXus.Application
 {
 	public class ReflectionHelper
 	{
-		const string ISO_8601_TIME_SEPARATOR = "T";
-		const string ISO_8601_TIME_SEPARATOR_1 = ":";
 		public static void CallBCMethod(object instance, String methodName, IList<string> inParametersValues)
 		{
 			MethodInfo methodInfo = instance.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -152,14 +150,7 @@ namespace GeneXus.Application
 			else if (newType == typeof(DateTime))
 			{
 				string jsonDate = value as string;
-				if (!string.IsNullOrEmpty(jsonDate) && (jsonDate.Contains(ISO_8601_TIME_SEPARATOR) || jsonDate.Contains(ISO_8601_TIME_SEPARATOR_1)))
-				{
-					return DateTimeUtil.CToT2(jsonDate);
-				}
-				else
-				{
-					return DateTimeUtil.CToD2(jsonDate);
-				}
+				return DateTimeUtil.CToDT2(jsonDate);
 			}
 			else if (newType == typeof(Geospatial))
 			{

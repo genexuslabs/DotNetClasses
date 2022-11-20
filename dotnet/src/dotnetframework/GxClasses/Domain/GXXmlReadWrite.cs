@@ -154,7 +154,7 @@ namespace GeneXus.XML
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 					string sBaseDirectory = GxContext.StaticPhysicalPath();
 
-					if (!sBaseDirectory.EndsWith("\\")) sBaseDirectory += '\\';
+					if (!sBaseDirectory.EndsWith(Path.DirectorySeparatorChar.ToString())) sBaseDirectory += Path.DirectorySeparatorChar;
 					Uri baseUri = new Uri( sBaseDirectory );
 					Resolver.Myself = new Uri(baseUri, URL);
 					return new XmlTextReader (sr);
@@ -294,7 +294,7 @@ namespace GeneXus.XML
 
 			string sBaseDirectory = GxContext.StaticPhysicalPath();
 
-			if (!sBaseDirectory.EndsWith("\\")) sBaseDirectory += '\\';
+			if (!sBaseDirectory.EndsWith(Path.DirectorySeparatorChar.ToString())) sBaseDirectory += Path.DirectorySeparatorChar;
 			Uri baseUri = new Uri( sBaseDirectory );
 			Resolver.Myself = baseUri;
 			treader = null;

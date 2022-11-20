@@ -73,6 +73,7 @@ namespace GeneXus.Data.NTier
 
 		private void Initialize()
 		{
+			System.Diagnostics.Debugger.Launch();
 			InitializeDBConnection();
 			State = ConnectionState.Executing;
 
