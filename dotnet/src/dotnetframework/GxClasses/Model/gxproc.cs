@@ -341,14 +341,13 @@ namespace GeneXus.Procedure
 		static public IReportHandler GetPrinter( int outputType, string path, Stream reportOutputStream)
 		{
 			IReportHandler reportHandler;
-#if !NETCORE
 			if	(outputType == OUTPUT_RVIEWER_NATIVE)
 				reportHandler = new GxReportBuilderNative(path, reportOutputStream);
+#if !NETCORE
 			else if	(outputType == OUTPUT_RVIEWER_DLL)
 				reportHandler = new GxReportBuilderDll(path);
-			else
 #endif
-			if  (outputType == OUTPUT_PDF)
+			else if (outputType == OUTPUT_PDF)
 			{
 				try
 				{
