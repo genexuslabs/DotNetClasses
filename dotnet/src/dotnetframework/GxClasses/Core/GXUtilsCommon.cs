@@ -5189,8 +5189,7 @@ namespace GeneXus.Utils
 			return GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm) == Crypto.Decrypt64(hash, key);
 		}
 
-		[Obsolete("GetMD5Hash is deprecated for security reasons, please use GetHash instead.", false)]
-		public static string GetMD5Hash(string s)  //MD5 is NOT FIPS-compilant
+		public static string GetMD5Hash(string s)
 		{
 			return GetHash(s, "MD5");
 		}
