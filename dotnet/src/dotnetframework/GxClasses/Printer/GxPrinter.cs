@@ -90,7 +90,6 @@ namespace GeneXus.Printer
         void setOutputStream(object stream);
 	}
 	
-#if !NETCORE
 	public class GxReportBuilderNative : IReportHandler
 	{
 		public const string END_PAGE = "EPG";
@@ -2114,7 +2113,7 @@ namespace GeneXus.Printer
 
 	#endregion
 	}
-#endif
+
 	[Serializable()]
 	public class ProcessInterruptedException: Exception
 	{
