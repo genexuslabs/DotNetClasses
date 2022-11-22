@@ -1158,7 +1158,16 @@ namespace GeneXus.Http
 					if (isGxThemeHidden)
 						context.WriteHtmlTextNl("<link id=\"gxtheme_css_reference\" " + sRelAtt + " type=\"text/css\" href=\"" + sUncachedURL + "\" " + GXUtil.HtmlEndTag(HTMLElement.LINK));
 					else
-						context.WriteHtmlTextNl("<style data-gx-href=\""+ sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ");</style>");
+					{
+						if (context.GetThemeisDSO())
+						{
+							context.WriteHtmlTextNl("<style data-gx-href=\"" + sUncachedURL + "\"> @import url(\"" + sUncachedURL + "\") layer(" + sLayerName + ");</style>");
+						}
+						else
+						{
+							context.WriteHtmlTextNl("<link " + sRelAtt + " type=\"text/css\" href=\"" + context.GetCompleteURL(styleSheet) + "\"" + GXUtil.HtmlEndTag(HTMLElement.LINK));
+						}
+					}
 				}
 				else
 				{

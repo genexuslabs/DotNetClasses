@@ -240,7 +240,8 @@ namespace GeneXus.Application
 		string GetImagePath(string id, string KBId, string theme);
 		string GetImageSrcSet(string baseImage);
 		string GetTheme();
-		void SetDefaultTheme(string theme);
+		void SetDefaultTheme(string theme, bool isDSO = false);
+		bool GetThemeisDSO();
 		int SetTheme(string theme);
 		bool CheckContentType(string contentKey, string contentType, string fullPath);
 		string ExtensionForContentType(string contentType);
@@ -366,6 +367,7 @@ namespace GeneXus.Application
 		[NonSerialized]
 		IReportHandler _reportHandler;
 		string _theme = "";
+		bool _theme_isDSO = false;
 		[NonSerialized]
 		ArrayList _reportHandlerToClose;
 		private bool configuredEventHandling;
@@ -3733,9 +3735,13 @@ namespace GeneXus.Application
 				return WriteSessionKey(GXTheme, cThemeMap) ? 1 : 0;
 			}
 		}
-		public void SetDefaultTheme(string t)
+		public bool GetThemeisDSO() {
+			return _theme_isDSO;
+		}
+		public void SetDefaultTheme(string t, bool isDSO = false)
 		{
 			_theme = t;
+			_theme_isDSO = isDSO;
 		}
 
 		public string FileToBase64(string filePath)
@@ -3798,7 +3804,7 @@ namespace GeneXus.Application
 		{
 			GXLogging.Debug(log, "SetSubmitInitialConfig:", () => _handle.ToString() + " clientid:" + context.ClientID);
 			this._isSumbited = true;
-			this.SetDefaultTheme(context.GetTheme());
+			this.SetDefaultTheme(context.GetTheme(), context.GetThemeisDSO());
 			this.SetPhysicalPath(context.GetPhysicalPath());
 			this.SetLanguageWithoutSession(context.GetLanguage());
 			this.ClientID = context.ClientID;
