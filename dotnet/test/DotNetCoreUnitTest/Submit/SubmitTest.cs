@@ -40,7 +40,7 @@ namespace UnitTesting
 				proc.executeSubmit();
 			}
 			cleanup();
-			ThreadUtil.WaitForEnd(context);//Force WaitForEnd since tests run in web context when running in parallel with Middleware tests
+			ThreadUtil.WaitForEnd();//Force WaitForEnd since tests run in web context when running in parallel with Middleware tests
 			Assert.Equal(THREAD_NUMBER, SubmitTest.numbers.Count);
 		}
 		public override void cleanup()

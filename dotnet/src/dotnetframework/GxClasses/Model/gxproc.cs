@@ -67,8 +67,7 @@ namespace GeneXus.Procedure
 		}
 		protected void Submit(Action<object> executeMethod, object state)
 		{
-
-			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state, context);
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
 		}
 		public static WaitCallback PropagateCulture(WaitCallback action)
 		{
@@ -93,7 +92,7 @@ namespace GeneXus.Procedure
 		private void exitApplication(bool flushBatchCursor)
 		{
 			if (!(GxContext.IsHttpContext || GxContext.IsRestService) && IsMain && !(context as GxContext).IsSubmited)
-				ThreadUtil.WaitForEnd(context);
+				ThreadUtil.WaitForEnd();
 
 			if (flushBatchCursor)
 			{
