@@ -194,7 +194,7 @@ namespace GeneXus.Procedure
 		}
 		protected void Submit(Action<object> executeMethod, object state)
 		{
-			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state, context);
 		}
 
 	}

@@ -447,6 +447,7 @@ namespace GeneXus.Application
 			_errorHandlerInfo = new GxErrorHandlerInfo();
 			setContext(this);
 			httpContextVars = new GxHttpContextVars();
+			_threadEvents = new ConcurrentDictionary<Guid, ManualResetEvent>();
 			GXLogging.Debug(log, "GxContext.Ctr Default handle:", () => _handle.ToString());
 		}
 		public GxContext(int handle, string location)
@@ -561,6 +562,10 @@ namespace GeneXus.Application
 			}
 			return new CookieContainer();
 		}
+		[NonSerialized]
+		ConcurrentDictionary<Guid, ManualResetEvent> _threadEvents;
+		internal ConcurrentDictionary<Guid, ManualResetEvent> Events { get { return _threadEvents; } set { _threadEvents = value; } }
+
 
 		[NonSerialized]
 		static GxContext _currentGxContext;
@@ -3852,7 +3857,7 @@ namespace GeneXus.Application
 
 		public GXSOAPContext SoapContext { get; set; }
 
-#endregion
+		#endregion
 	}
 	public class GxXmlContext
 	{

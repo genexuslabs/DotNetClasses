@@ -5823,12 +5823,13 @@ namespace GeneXus.Utils
 	internal class ThreadUtil
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ThreadUtil));
-		private static ConcurrentDictionary<Guid, ManualResetEvent> events = new ConcurrentDictionary<Guid, ManualResetEvent>();
 		const int MAX_WAIT_HANDLES = 64;
-		internal static void Submit(WaitCallback callbak, object state)
+
+		internal static void Submit(WaitCallback callbak, object state, IGxContext context)
 		{
 			try
 			{
+				GxContext ctx = context as GxContext;
 				ManualResetEvent resetEvent = new ManualResetEvent(false);
 				Guid eventGuid = Guid.NewGuid();
 				ThreadPool.QueueUserWorkItem(
@@ -5846,33 +5847,34 @@ namespace GeneXus.Utils
 						finally
 						{
 							resetEvent.Set();
-							events.TryRemove(eventGuid, out ManualResetEvent _);
+							ctx.Events.TryRemove(eventGuid, out ManualResetEvent _);
 						}
 
 					});
-				events[eventGuid]= resetEvent;
+				ctx.Events[eventGuid] = resetEvent;
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Submit error", ex);
 			}
 		}
-		internal static void WaitForEnd()
+		internal static void WaitForEnd(IGxContext context)
 		{
-			int remainingSubmits = events.Count;
+			GxContext ctx = context as GxContext;
+			int remainingSubmits = ctx.Events.Count;
 			if (remainingSubmits > 0)
 			{
 				GXLogging.Debug(log, "Waiting for " + remainingSubmits + " submitted procs to end...");
-				WaitForAll();
-				events.Clear();
+				WaitForAll(ctx);
+				ctx.Events.Clear();
 			}
 		}
-		public static void WaitForAll()
+		static void WaitForAll(GxContext ctx)
 		{
 			try
 			{
 				List<ManualResetEvent> evtList  =new List<ManualResetEvent> ();
-				foreach (ManualResetEvent evt in events.Values)
+				foreach (ManualResetEvent evt in ctx.Events.Values)
 				{
 					evtList.Add(evt);
 					//Avoid WaitHandle.WaitAll limitation. It can only handle 64 waithandles
@@ -5893,6 +5895,8 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, $"WaitForAll pending threads error", ex);
 			}
 		}
+
+		
 	}
 
 }
