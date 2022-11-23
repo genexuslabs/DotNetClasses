@@ -149,7 +149,6 @@ namespace GeneXus.Application
 		}
 		protected virtual void SendResponseStatus(int statusCode, string statusDescription)
 		{
-			context.HttpContext.Response.StatusCode = statusCode;
 		}
 
 		protected string UriEncrypt64(string value, string key)
