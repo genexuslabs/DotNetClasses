@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GeneXus.Data.Cosmos;
 using GeneXus.Data.NTier.CosmosDB;
@@ -42,8 +44,9 @@ namespace GeneXus.Data.NTier
 		private const string SELECT_CMD = "SELECT";
 		private const string FROM = "FROM";
 		private const string TABLE_ALIAS = "t";
-		//private const string WHERE = "WHERE";
+		private const string WHERE = "WHERE";
 		//private const string DISTINCT = "DISTINCT";
+		//private const string ORDER_BY = "ORDER BY";
 
 		//LOG?
 
@@ -66,7 +69,6 @@ namespace GeneXus.Data.NTier
 		}
 		private static void InitializeDBConnection()
 		{
-			
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = mConnectionString;
 
@@ -208,7 +210,6 @@ namespace GeneXus.Data.NTier
 		private void CreateCosmosQuery(CosmosDBQuery query,ServiceCursorDef cursorDef,Dictionary<string,object> queryValues, Container container, out CosmosDBDataReader cosmosDBDataReader,out RequestWrapper requestWrapper)
 		{
 			//Create the query
-			
 			string tableName = query.TableName;
 			IEnumerable<string> projection = query.Projection;
 			
@@ -221,10 +222,75 @@ namespace GeneXus.Data.NTier
 					projectionList = $"{element},{projectionList}";
 				else
 					projectionList = $"{element}";
-
 			}
-		
-			string sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS}";
+
+			IEnumerable<string> allFilters = query.KeyFilters.Concat(query.Filters);
+			IEnumerable<string> allFiltersQuery = Array.Empty<string>();
+
+			string regex1 = @"\(([^)]+)\)";
+			string regex2 = @"(.*)\s*([=|!=|<|>|<=|>=|<>])\s*(:.*)";
+
+			string keyFilterS;
+			string condition = string.Empty;
+			IEnumerable<string> keyFilterQ = Array.Empty<string>();
+
+			foreach (string keyFilter in allFilters) 
+			{
+				keyFilterS = keyFilter;
+				condition = keyFilter;
+				if (keyFilter.StartsWith("(("))
+				{ 
+					keyFilterS = keyFilter.Remove(0, 1);
+					keyFilterS = keyFilterS.Remove(keyFilterS.Length - 1, 1);			
+				}
+				MatchCollection matchCollection = Regex.Matches(keyFilterS, regex1);
+			
+				foreach (Match match in matchCollection)
+				{
+					if (match.Groups.Count > 0)
+					{
+						string cond = match.Groups[1].Value;
+						Match match2 = Regex.Match(cond, regex2);
+
+						//Get the value for this item
+						string varValuestr = string.Empty;
+						if (match2.Groups.Count > 0)
+						{
+							string column = match2.Groups[1].Value.Trim();
+							column = $"{TABLE_ALIAS}.{column}";
+
+							string op = match2.Groups[2].Value.Trim();
+
+							foreach (VarValue item in query.Vars)
+							{
+								if (item.Name == match2.Groups[3].Value)
+								{
+									if (item.Type == GXType.Char || item.Type == GXType.LongVarChar || item.Type == GXType.VarChar || item.Type == GXType.Text)
+									//Nvarchar, etc?
+									//Date?
+									{
+										varValuestr = '"' +  $"{item.Value.ToString()}" + '"';
+									}
+									else
+										varValuestr = item.Value.ToString();
+									break;
+								}
+							}
+							condition = condition.Replace(cond, $"{column}{op}{varValuestr}");
+						}
+					}
+				}
+				keyFilterQ = new string[] { condition };
+				allFiltersQuery = allFiltersQuery.Concat(keyFilterQ);
+				
+			}
+			string FilterExpression = allFiltersQuery.Any() ? String.Join(" AND ", allFiltersQuery) : null;
+
+			string sqlQuery = string.Empty;
+			if (FilterExpression != null)
+				sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS} {WHERE} {FilterExpression}";
+			else
+				sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS}";
 
 			QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
 			requestWrapper = new RequestWrapper(cosmosClient, container, queryDefinition);
@@ -235,7 +301,11 @@ namespace GeneXus.Data.NTier
 			Dictionary<string, object> values = new Dictionary<string, object>();
 			//TODO: Handle IDataParameterCollection params
 			
+		//	foreach (VarValue item in query.Vars)
+		//		values.Add(item.Name, DynamoDBHelper.ToAttributeValue(item));
+
 			return values;
+			
 		}
 		internal static IOServiceContext NewServiceContext() => null;
 	}
