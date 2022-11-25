@@ -484,34 +484,38 @@ namespace GeneXus.Configuration
 			else return null;
 		}
 #endif
-		
+		static object syncRoot = new Object();
 		static NameValueCollection config
 		{
-			[SecuritySafeCritical] 
+			[SecuritySafeCritical]
 			get
 			{
 				if (!configLoaded || _config == null)
 				{
-					try
+					lock (syncRoot)
 					{
-						AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-					}
-					catch (Exception ex)
-					{
-						GXLogging.Info(log, ".NET trust level is lower than full", ex.Message);
-					}
-					string logConfigSource;
-					configLoaded = true;
-					if (configFileName != null)
-					{
-						if (log.IsDebugEnabled) loadedConfigFile = configFileName;
-						_config = loadConfig(configFileName, out logConfigSource);
-						if (!string.IsNullOrEmpty(logConfigSource))
-							logConfig(logConfigSource);
-						else
-							logConfig(configFileName);
-						return _config;
-					}
+						if (_config == null)
+						{
+							try
+							{
+								AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+							}
+							catch (Exception ex)
+							{
+								GXLogging.Info(log, ".NET trust level is lower than full", ex.Message);
+							}
+							string logConfigSource;
+							configLoaded = true;
+							if (configFileName != null)
+							{
+								if (log.IsDebugEnabled) loadedConfigFile = configFileName;
+								_config = loadConfig(configFileName, out logConfigSource);
+								if (!string.IsNullOrEmpty(logConfigSource))
+									logConfig(logConfigSource);
+								else
+									logConfig(configFileName);
+								return _config;
+							}
 #if !NETCORE
 					if (GxContext.IsHttpContext &&
 						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
@@ -556,45 +560,47 @@ namespace GeneXus.Configuration
 					}
 
 #else
-					string basePath = FileUtil.GetBasePath();
-					string currentDir = Directory.GetCurrentDirectory();
-					string startupDir = FileUtil.GetStartupDirectory();
-					string appSettings = "appsettings.json";
-					string clientConfig = "client.exe.config";
-					string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
+							string basePath = FileUtil.GetBasePath();
+							string currentDir = Directory.GetCurrentDirectory();
+							string startupDir = FileUtil.GetStartupDirectory();
+							string appSettings = "appsettings.json";
+							string clientConfig = "client.exe.config";
+							string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
 
-					if (File.Exists(Path.Combine(basePath, appSettings)))
-					{
-						_config = loadConfigJson(basePath, appSettings);
-						logConfig(Path.Combine(basePath, logConfigFile));
-					}
-					else if (File.Exists(appSettings))
-					{
-						_config = loadConfigJson(currentDir, appSettings);
-						logConfig(logConfigFile);
-					}
-					else if (File.Exists(Path.Combine(startupDir, appSettings)))
-					{
-						_config = loadConfigJson(startupDir, appSettings);
-						logConfig(Path.Combine(startupDir, logConfigFile));
-					}
-					else if (File.Exists(clientConfig))
-					{
-						_config = loadConfig(clientConfig, out logConfigSource);
-						if (!string.IsNullOrEmpty(logConfigSource))
-							logConfig(logConfigSource);
-						else
-							logConfig(logConfigFile);
-					}
-					try
-					{
-						Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-					}
-					catch (Exception ex)
-					{
-						GXLogging.Info(log, "Could not register encoding provider", ex.Message);
-					}
+							if (File.Exists(Path.Combine(basePath, appSettings)))
+							{
+								_config = loadConfigJson(basePath, appSettings);
+								logConfig(Path.Combine(basePath, logConfigFile));
+							}
+							else if (File.Exists(appSettings))
+							{
+								_config = loadConfigJson(currentDir, appSettings);
+								logConfig(logConfigFile);
+							}
+							else if (File.Exists(Path.Combine(startupDir, appSettings)))
+							{
+								_config = loadConfigJson(startupDir, appSettings);
+								logConfig(Path.Combine(startupDir, logConfigFile));
+							}
+							else if (File.Exists(clientConfig))
+							{
+								_config = loadConfig(clientConfig, out logConfigSource);
+								if (!string.IsNullOrEmpty(logConfigSource))
+									logConfig(logConfigSource);
+								else
+									logConfig(logConfigFile);
+							}
+							try
+							{
+								Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+							}
+							catch (Exception ex)
+							{
+								GXLogging.Info(log, "Could not register encoding provider", ex.Message);
+							}
 #endif
+						}
+					}
 				}
 				return _config;
 			}
