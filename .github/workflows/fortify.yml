@@ -67,9 +67,7 @@ jobs:
       - name: Build
         run: dotnet build dotnet\DotNetStandardClasses.sln --configuration Release
       - name: Package Code + Dependencies
-        env:
-          PACKAGE_OPTS: "-bt none"
-        run: scancentral package $PACKAGE_OPTS -o package.zip 
+        run: scancentral package -bt none -o package.zip 
 
       - name: Archive zip to analyze
         uses: actions/upload-artifact@v3
