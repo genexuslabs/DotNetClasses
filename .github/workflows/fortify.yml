@@ -64,8 +64,19 @@ jobs:
       #   ScanCentral Client documentation is located at https://www.microfocus.com/documentation/fortify-software-security-center/
       - name: Download Fortify ScanCentral Client
         uses: fortify/gha-setup-scancentral-client@5b7382f8234fb9840958c49d5f32ae854115f9f3
+      - name: Build
+        run: dotnet build dotnet\DotNetStandardClasses.sln --configuration Release
       - name: Package Code + Dependencies
-        run: scancentral package $PACKAGE_OPTS -o package.zip --build-tool msbuild --build-file dotnet\DotNetStandardClasses.sln
+        env:
+          PACKAGE_OPTS: "-bt none"
+        run: scancentral package $PACKAGE_OPTS -o package.zip 
+
+      - name: Archive zip to analyze
+        uses: actions/upload-artifact@v3
+        with:
+          name: fortify_zip_package
+          path: netClassesFortifyScan.zip
+          retention-days: 15
 
       # Start Fortify on Demand SAST scan and wait until results complete. For more information on FoDUploader commands, see https://github.com/fod-dev/fod-uploader-java
       # TODO: Update ENV variables for your application and create the necessary GitHub Secrets.  Helpful hints:
