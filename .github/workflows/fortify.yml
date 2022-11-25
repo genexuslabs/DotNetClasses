@@ -42,11 +42,6 @@ jobs:
       - name: Check Out Source Code
         uses: actions/checkout@v3
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
-        with:
-          vs-version: 10.0
-      
       # Java is required to run the various Fortify utilities.
       # When scanning a Java application, please use the appropriate Java version for building your application.
       - name: Setup Java
@@ -55,25 +50,16 @@ jobs:
           java-version: 8
           distribution: 'temurin'
 
-      # Prepare source+dependencies for upload. The default example is for a Maven project that uses pom.xml.
-      # TODO: Update PACKAGE_OPTS based on the ScanCentral Client documentation for your project's included tech stack(s). Helpful hints:
-      #   ScanCentral Client will download dependencies for maven (-bt mvn) and gradle (-bt gradle).
-      #   ScanCentral Client can download dependencies for msbuild projects (-bt msbuild); however, you must convert the workflow to use a Windows runner.
-      #   ScanCentral has additional options that should be set for PHP and Python projects
-      #   For other build tools, add your build commands to download necessary dependencies and prepare according to Fortify on Demand Packaging documentation.
-      #   ScanCentral Client documentation is located at https://www.microfocus.com/documentation/fortify-software-security-center/
-      - name: Download Fortify ScanCentral Client
-        uses: fortify/gha-setup-scancentral-client@5b7382f8234fb9840958c49d5f32ae854115f9f3
-      - name: Build
-        run: dotnet build dotnet\DotNetStandardClasses.sln --configuration Release
       - name: Package Code + Dependencies
-        run: scancentral package -bt none -o package.zip 
+        shell: powershell
+        run: |
+          Compress-Archive -Path dotnet\src\* package.zip
 
       - name: Archive zip to analyze
         uses: actions/upload-artifact@v3
         with:
           name: fortify_zip_package
-          path: netClassesFortifyScan.zip
+          path: package.zip
           retention-days: 15
 
       # Start Fortify on Demand SAST scan and wait until results complete. For more information on FoDUploader commands, see https://github.com/fod-dev/fod-uploader-java
