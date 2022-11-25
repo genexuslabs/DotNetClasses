@@ -62,7 +62,7 @@ jobs:
       - name: Download Fortify on Demand Universal CI Tool
         uses: fortify/gha-setup-fod-uploader@6e6bb8a33cb476e240929fa8ebc739ff110e7433
       - name: Perform SAST Scan
-        run: java -jar $env:FOD_UPLOAD_JAR -z package.zip -aurl $env:FOD_API_URL -purl $env:FOD_URL -bsi "$env:BSI" -tc $env:FOD_TENANT -uc "$env:FOD_USER" "env:$FOD_PAT" -ep 2 -pp 0 -I 1 -apf -n $env:FOD_UPLOADER_NOTES
+        run: java -jar $env:FOD_UPLOAD_JAR -z package.zip -aurl $env:FOD_API_URL -purl $env:FOD_URL -bsi "$env:BSI" -tc "$env:FOD_TENANT" -uc "$env:FOD_USER" "env:$FOD_PAT" -ep 2 -pp 0 -I 1 -apf -n "$env:FOD_UPLOADER_NOTES"
         env:
           FOD_URL: "https://ams.fortify.com"
           FOD_API_URL: "https://api.ams.fortify.com"
