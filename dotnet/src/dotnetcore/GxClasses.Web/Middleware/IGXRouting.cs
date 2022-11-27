@@ -13,7 +13,6 @@ namespace GxClasses.Web
 		public GxRestWrapper GetController(HttpContext context, ControllerInfo controllerInfo);
 		public GxRestWrapper GetController(HttpContext context, string controller, string methodName, Dictionary<string, string> variableAlias);
 		public void ServicesGroupSetting();
-		public void ServicesFunctionsMetadata();
 
 	}
 }
