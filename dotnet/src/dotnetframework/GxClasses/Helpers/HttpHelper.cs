@@ -366,13 +366,9 @@ namespace GeneXus.Http
 		public static string RequestPhysicalApplicationPath(HttpContext context = null)
 		{
 #if NETCORE
-			string contentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			string azureDeployFlagFile = Path.Combine(contentRootPath, "azureflag.json");
+			if (GxContext.IsAzureContext)
+				return FileUtil.GetStartupDirectory();
 
-			if (File.Exists(azureDeployFlagFile))
-			{
-				return (contentRootPath);
-			}
 			return Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #else
 			if (context==null)

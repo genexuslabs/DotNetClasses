@@ -2928,6 +2928,8 @@ namespace GeneXus.Application
 		}
 #if NETCORE
 		static bool _isHttpContext;
+		internal static bool IsAzureContext
+		{ get; set; }
 #endif
 		public static bool IsHttpContext
 		{
@@ -3589,7 +3591,7 @@ namespace GeneXus.Application
 						string imgDir = "";
 						if (String.IsNullOrEmpty(dir) && _HttpContext == null)
 						{
-
+							GXLogging.Debug(log, "Searching for txt files ..");
 							int srchIx = 0;
 							string[] paths = new string[] { ".\\", "..\\" };
 							bool found = false;
@@ -3605,9 +3607,13 @@ namespace GeneXus.Application
 									}
 							}
 							imgDir = dir;
+							GXLogging.Debug(log, $"{imgDir} txt file found");
 						}
 						else
+						{ 
 							imageFiles = Directory.GetFiles(dir, "*.txt");
+							GXLogging.Debug(log, $"{imageFiles} imageFiles found");
+						}
 
 						string KBPrefix = String.Empty;
 						char[] densitySeparator = new char[] { '|' };

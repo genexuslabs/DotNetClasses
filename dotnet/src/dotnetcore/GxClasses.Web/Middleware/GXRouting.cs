@@ -59,7 +59,7 @@ namespace GxClasses.Web.Middleware
 		{
 			restBaseURL = baseURL;
 			ServicesGroupSetting();
-			ServicesFunctionsMetadata();
+			AzureRuntime = GxContext.IsAzureContext;
 			GetAzureDeploy();
 		}
 
@@ -541,19 +541,6 @@ namespace GxClasses.Web.Middleware
 			{
 				GXLogging.Error(log, $"Error Loading Services Group Settings", ex);
 				throw;
-			}
-		}
-
-		public void ServicesFunctionsMetadata()
-		{
-			//Used for Azure functions
-			
-			string functionMetadataFile = "functions.metadata";
-			string metadataFilePath = Path.Combine(ContentRootPath, functionMetadataFile);
-			
-			if (File.Exists(metadataFilePath))
-			{
-				AzureRuntime = true;
 			}
 		}
 		public void GetAzureDeploy()
