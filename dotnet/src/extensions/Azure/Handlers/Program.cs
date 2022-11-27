@@ -19,8 +19,6 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 		static async Task Main()
         {
 
-			GxContext.IsAzureContext = true;
-
 			string roothPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			string routePrefix = GetRoutePrefix(roothPath);
 			GXRouting.ContentRootPath = roothPath;
@@ -46,7 +44,7 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 						services.AddSingleton<ICacheService2>(x => new InProcessCache());
 				})
 				.Build();
-			
+			GxContext.IsAzureContext = true;
 			await host.RunAsync();
         }
 		private static string GetRoutePrefix(string ContentRootPath)
