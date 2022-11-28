@@ -3604,7 +3604,7 @@ namespace GeneXus.Application
 						else
 						{ 
 							imageFiles = Directory.GetFiles(dir, "*.txt");
-							GXLogging.Debug(log, $"{imageFiles} imageFiles found");
+							GXLogging.Debug(log, "imageFiles found");
 						}
 
 						string KBPrefix = String.Empty;
