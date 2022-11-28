@@ -46,7 +46,6 @@ namespace GeneXus.Procedure
 		private DateTime beginExecute;
 		private ProcedureInfo pInfo;
 #endif
-		
 		public GXProcedure()
 		{
 #if !NETCORE
@@ -56,10 +55,10 @@ namespace GeneXus.Procedure
 				beginExecute = DateTime.Now;
 				pInfo = ProceduresInfo.addProcedureInfo(name);
 				pInfo.incCount();
-				
 			}
 #endif
 		}
+
 		public bool DisconnectAtCleanup
 		{
 			get{ return disconnectUserAtCleanup;}
@@ -91,7 +90,7 @@ namespace GeneXus.Procedure
 		}
 		private void exitApplication(bool flushBatchCursor)
 		{
-			if (!(GxContext.IsHttpContext || GxContext.IsRestService) && IsMain && !(context as GxContext).IsSubmited)
+			if (!(GxContext.IsHttpContext || GxContext.IsRestService) && IsMain && GxApplication.MainContext==context)
 				ThreadUtil.WaitForEnd();
 
 			if (flushBatchCursor)

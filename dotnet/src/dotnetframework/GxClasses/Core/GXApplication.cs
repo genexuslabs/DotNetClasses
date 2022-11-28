@@ -307,6 +307,10 @@ namespace GeneXus.Application
 		}
 	}
 #endif
+	internal class GxApplication
+	{
+		internal static GxContext MainContext { get; set; }
+	}
 	[Serializable]
 	public class GxContext : IGxContext
 	{
@@ -448,6 +452,8 @@ namespace GeneXus.Application
 			setContext(this);
 			httpContextVars = new GxHttpContextVars();
 			GXLogging.Debug(log, "GxContext.Ctr Default handle:", () => _handle.ToString());
+			if (GxApplication.MainContext == null && !(IsHttpContext || GxContext.IsRestService))
+				GxApplication.MainContext = this;
 		}
 		public GxContext(int handle, string location)
 		{
