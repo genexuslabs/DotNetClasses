@@ -543,14 +543,13 @@ namespace GxClasses.Web.Middleware
 				throw;
 			}
 		}
-
 		public void ServicesFunctionsMetadata()
 		{
 			//Used for Azure functions
-			
+
 			string functionMetadataFile = "functions.metadata";
 			string metadataFilePath = Path.Combine(ContentRootPath, functionMetadataFile);
-			
+
 			if (File.Exists(metadataFilePath))
 			{
 				AzureRuntime = true;

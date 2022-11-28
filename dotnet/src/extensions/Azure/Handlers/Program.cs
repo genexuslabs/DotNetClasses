@@ -2,6 +2,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
 using GeneXus.Services;
@@ -19,8 +20,8 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
         {
 
 			string roothPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			string routePrefix = GetRoutePrefix();
-			GXRouting.ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			string routePrefix = GetRoutePrefix(roothPath);
+			GXRouting.ContentRootPath = roothPath;
 
 			var host = new HostBuilder()
                 .ConfigureFunctionsWorkerDefaults()
@@ -43,13 +44,12 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 						services.AddSingleton<ICacheService2>(x => new InProcessCache());
 				})
 				.Build();
-
-            await host.RunAsync();
+			GxContext.IsAzureContext = true;
+			await host.RunAsync();
         }
-		private static string GetRoutePrefix()
+		private static string GetRoutePrefix(string ContentRootPath)
 		{
 			//Read host.json file to get Route prefix
-			string ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			string hostFile = "host.json";
 			string hostFilePath = Path.Combine(ContentRootPath, hostFile);
 
