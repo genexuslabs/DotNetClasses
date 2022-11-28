@@ -239,8 +239,9 @@ namespace GeneXus.Application
 		string GetCompleteURL(string file);
 		string GetImagePath(string id, string KBId, string theme);
 		string GetImageSrcSet(string baseImage);
+		void SetDefaultTheme(string theme);
 		string GetTheme();
-		void SetDefaultTheme(string theme, bool isDSO = false);
+		void SetDefaultTheme(string theme, bool isDSO);
 		bool GetThemeisDSO();
 		int SetTheme(string theme);
 		bool CheckContentType(string contentKey, string contentType, string fullPath);
@@ -3738,7 +3739,11 @@ namespace GeneXus.Application
 		public bool GetThemeisDSO() {
 			return _theme_isDSO;
 		}
-		public void SetDefaultTheme(string t, bool isDSO = false)
+		public void SetDefaultTheme(string t)
+		{
+			SetDefaultTheme(t, false);
+		}
+		public void SetDefaultTheme(string t, bool isDSO)
 		{
 			_theme = t;
 			_theme_isDSO = isDSO;
