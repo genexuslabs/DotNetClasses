@@ -2139,11 +2139,11 @@ namespace GeneXus.Printer
 	{
 		static public string AddPath(string name, string path)
 		{
-			if( name.IndexOf(":") != -1 ||
+			if (Path.IsPathRooted(name) || name.IndexOf(":") != -1 ||
 				(name.Length >=2 && (name.Substring( 0,2) == "//" || name.Substring( 0,2) == @"\\")) ||
 				(name.StartsWith("http:" ) || name.StartsWith("https:" )))
 				return name;
-			return path + name;
+			return Path.Combine(path, name);
 		}
 	}
 

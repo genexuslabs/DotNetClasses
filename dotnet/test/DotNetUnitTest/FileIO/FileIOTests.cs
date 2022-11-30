@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using GeneXus.Configuration;
+using GeneXus.Printer;
 using GeneXus.Utils;
 using Xunit;
 
@@ -88,6 +89,33 @@ namespace UnitTesting
 			path = "http://localhost/Upload/PublicTempStorage/multimedia/Screen%20Shot%202016-02-15%20at%2011.41.55%20AM_2c0f533f07d2401a8d1c5f8023b59f6c.png";
 			fileName = PathUtil.GetValidFileName(path, "_");
 			Assert.StartsWith("Screen Shot 2016-02-15 at 11.41.55 AM", fileName, StringComparison.OrdinalIgnoreCase);
+		}
+
+		[Fact]
+		public void ReportUtilAddPathLinux()
+		{
+			string name = "/mnt/c/Models/DockerReport/NETModel/Web/PublicTempStorage/clientreportebee6af4-7554-4283-b246-e1600e49b103.pdf";
+			string path = "/mnt/c/Models/DockerReport/NETModel/Web/";
+			string fullPath = ReportUtils.AddPath(name, path);
+			Assert.Equal(name, fullPath);
+		}
+
+		[Fact]
+		public void ReportUtilAddPathWindows()
+		{
+			string name = "PublicTempStorage/clientreportebee6af4-7554-4283-b246-e1600e49b103.pdf";
+			string path = "C:/Models/Report/NETModel/Web/";
+			string fullPath = ReportUtils.AddPath(name, path);
+
+			Assert.Equal(Path.Combine(path, name), fullPath);
+		}
+		[Fact]
+		public void ReportUtilAddPathHttp()
+		{
+			string name = "http://localhost:5000/WebApp/PublicTempStorage/clientreportebee6af4-7554-4283-b246-e1600e49b103.pdf";
+			string path = "C:/Models/Report/NETModel/Web/";
+			string fullPath = ReportUtils.AddPath(name, path);
+			Assert.Equal(name, fullPath);
 		}
 	}
 }
