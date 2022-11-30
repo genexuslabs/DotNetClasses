@@ -2143,7 +2143,7 @@ namespace GeneXus.Printer
 				(name.Length >=2 && (name.Substring( 0,2) == "//" || name.Substring( 0,2) == @"\\")) ||
 				(name.StartsWith("http:" ) || name.StartsWith("https:" )))
 				return name;
-			return path + name;
+			return Path.Combine(path, name);
 		}
 	}
 

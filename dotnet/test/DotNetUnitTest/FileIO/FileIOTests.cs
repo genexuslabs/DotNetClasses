@@ -92,10 +92,28 @@ namespace UnitTesting
 		}
 
 		[Fact]
-		public void ReportUtilAddPath()
+		public void ReportUtilAddPathLinux()
 		{
 			string name = "/mnt/c/Models/DockerReport/NETModel/Web/PublicTempStorage/clientreportebee6af4-7554-4283-b246-e1600e49b103.pdf";
 			string path = "/mnt/c/Models/DockerReport/NETModel/Web/";
+			string fullPath = ReportUtils.AddPath(name, path);
+			Assert.Equal(name, fullPath);
+		}
+
+		[Fact]
+		public void ReportUtilAddPathWindows()
+		{
+			string name = "PublicTempStorage/clientreportebee6af4-7554-4283-b246-e1600e49b103.pdf";
+			string path = "C:/Models/Report/NETModel/Web/";
+			string fullPath = ReportUtils.AddPath(name, path);
+
+			Assert.Equal(Path.Combine(path, name), fullPath);
+		}
+		[Fact]
+		public void ReportUtilAddPathHttp()
+		{
+			string name = "http://localhost:5000/WebApp/PublicTempStorage/clientreportebee6af4-7554-4283-b246-e1600e49b103.pdf";
+			string path = "C:/Models/Report/NETModel/Web/";
 			string fullPath = ReportUtils.AddPath(name, path);
 			Assert.Equal(name, fullPath);
 		}
