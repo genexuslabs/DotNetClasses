@@ -733,11 +733,23 @@ namespace GeneXus.Http.Client
 					throw ioEx;
 			}
 		}
+		bool UseOldHttpClient(string name)
+		{
+			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+				return true;
 
+#if !NETCORE
+			string requestUrl = GetRequestURL(name);
+			Uri uri = new Uri(requestUrl);
+			if (!uri.IsDefaultPort)
+				return true;
+#endif
+			return false;
+		}
 
 		public void Execute(string method, string name)
 		{
-			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+			if (UseOldHttpClient(name))
 			{
 				WebExecute(method, name);
 			}
