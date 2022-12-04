@@ -16,8 +16,13 @@ namespace GeneXus.Data.Cosmos
 			
 			if (!AddItemValue(parmName, values, parms[fromName] as ServiceParameter, out string data))
 			{
-				//TODO
-				return false;
+				VarValue varValue = queryVars.FirstOrDefault(v => v.Name == $":{fromName}");
+				if (varValue != null)
+				{
+					values[parmName] = varValue;
+					jsonData = AddToJsonStream(varValue.Type, parmName, varValue);
+				}
+				return varValue != null;
 			}
 			StringBuilder stringBuilder = new StringBuilder(jsonData);
 			string concatData;
@@ -32,6 +37,47 @@ namespace GeneXus.Data.Cosmos
 
 			return true;
 		}
+
+		public static bool FormattedAsStringGXType(GXType gXType)
+		{
+			return (gXType == GXType.Date || gXType == GXType.DateTime || gXType == GXType.DateTime2 || gXType == GXType.VarChar || gXType == GXType.DateAsChar || gXType == GXType.NVarChar || gXType == GXType.LongVarChar || gXType == GXType.NChar ||  gXType == GXType.Char || gXType == GXType.Text || gXType == GXType.NText);
+		}
+		internal static bool FormattedAsStringDbType(DbType dbType)
+		{
+			return (dbType == DbType.String || dbType == DbType.Date || dbType == DbType.DateTime || dbType == DbType.DateTime2 || dbType == DbType.DateTimeOffset || dbType == DbType.StringFixedLength || dbType == DbType.AnsiString || dbType == DbType.AnsiStringFixedLength || dbType == DbType.Guid || dbType == DbType.Time);
+		}
+		internal static string AddToJsonStream(GXType gXType, string parmName, object value)
+		{
+			string valueItem;
+			if (FormattedAsStringGXType(gXType))
+			{
+				valueItem = string.Format("\"{0}\"", value);
+				return string.Format("\"{0}\": {1}", parmName, string.Join(",", valueItem));
+			}
+			else
+				return string.Format("\"{0}\": {1}", parmName, string.Join(",", value));
+		}
+		internal static string AddToJsonStream(DbType dbType, string parmName, object value)
+		{
+			string valueItem;
+			string data;
+			if (FormattedAsStringDbType(dbType))
+			{
+				valueItem = string.Format("\"{0}\"", value);
+				return string.Format("\"{0}\": {1}", parmName, valueItem);	
+			}
+			else
+			{
+				data = string.Format("\"{0}\": {1}", parmName, value);
+				if (dbType == DbType.Boolean || dbType == DbType.Byte)
+				{ 
+					data = data.Replace("True", "true");
+					data = data.Replace("False", "false");
+				}
+				return data;
+
+			}
+		}
 		internal static bool AddItemValue(string parmName, Dictionary<string, object> dynParm, ServiceParameter parm, out string jsonData)
 		{
 			jsonData = string.Empty;
@@ -41,17 +87,7 @@ namespace GeneXus.Data.Cosmos
 			if (value != null)
 			{
 				dynParm[parmName] = value;
-				string valueItem;
-				if (parm.DbType == DbType.String)
-				{
-					//if (!string.IsNullOrEmpty(jsonData))
-				//	{ 
-						valueItem = string.Format("\"{0}\"", value);
-						jsonData = string.Format("\"{0}\": {1}", parmName, string.Join(",", valueItem));
-					//}
-				}
-				else
-					jsonData = string.Format("\"{0}\": {1}", parmName, string.Join(",", value));
+				jsonData = AddToJsonStream(parm.DbType, parmName, value);
 				return true;
 			}
 			return false;
@@ -71,7 +107,7 @@ namespace GeneXus.Data.Cosmos
 					else throw new ArgumentException("Required value not found");
 				case DbType.Boolean:
 				case DbType.Byte:
-					attValue = Convert.ToByte(value);
+					attValue = Convert.ToByte(value) == 1 ? true : false;
 					break;
 				case DbType.Time:
 				case DbType.Date:
