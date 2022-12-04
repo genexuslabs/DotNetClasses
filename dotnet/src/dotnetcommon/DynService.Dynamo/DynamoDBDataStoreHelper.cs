@@ -56,21 +56,21 @@ namespace GeneXus.Data.NTier
 		}
 	}
 	
-	public static class DynamoFluentExtensions
-	{
-		public static Query OrderBy(this Query dynamoQuery, string index)
+	//public static class DynamoFluentExtensions
+	//{
+		//public static Query OrderBy(this Query dynamoQuery, string index)
+		//{
+		//	return (dynamoQuery as DynamoQuery)?.OrderBy(index);
+		//}
+		/*public static Query SetKey(this Query dynamoQuery, string partitionKey)
 		{
-			return (dynamoQuery as DynamoQuery)?.OrderBy(index);
-		}
-		public static Query SetKey(this Query dynamoQuery, string partitionKey)
-		{
-			return (dynamoQuery as DynamoQuery)?.SetKey(partitionKey);
-		}
-		public static Query KeyFilter(this Query dynamoQuery, string[] filters)
-		{
-			return (dynamoQuery as DynamoQuery)?.KeyFilter(filters);
-		}
-	}
+			return (dynamoQuery.SetKey(partitionKey));
+		}*/
+		//public static Query KeyFilter(this Query dynamoQuery, string[] filters)
+		//{
+			//return (dynamoQuery as DynamoQuery)?.KeyFilter(filters);
+		//}
+	//}
 
 	public class DynamoQuery : Query
 	{
@@ -79,7 +79,7 @@ namespace GeneXus.Data.NTier
 		private const string RANGE_KEY_INDEX = "RangeKey";
 		private static readonly char[] indexTrimChars = new char[] { '(', ')' };
 
-		public DynamoQuery OrderBy(string index)
+		public override Query OrderBy(string index)
 		{
 			if(index.StartsWith("(", StringComparison.InvariantCulture))
 			{
@@ -92,18 +92,17 @@ namespace GeneXus.Data.NTier
 		}
 
 		public string PartitionKey { get; private set; }
-		public DynamoQuery SetKey(string partitionKey)
+		public override Query SetKey(string partitionKey)
 		{
 			PartitionKey = partitionKey;
 			return this;
 		}
 		internal IEnumerable<string> KeyFilters { get; set; } = Array.Empty<string>();
-		public DynamoQuery KeyFilter(string[] filters)
+		public override Query KeyFilter(string[] filters)
 		{
 			KeyFilters = filters;
 			return this;
 		}
-
 		public DynamoQuery(DynamoDBDataStoreHelper dataStoreHelper) : base(dataStoreHelper) { }
 	}
 }

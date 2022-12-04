@@ -21,40 +21,24 @@ namespace GeneXus.Data.NTier
 		}
 
 	}
-	public static class CosmosFluentExtensions
-	{
-		public static Query SetPartitionKey(this Query cosmosQuery, string partitionKey)
-		{
-			return (cosmosQuery as CosmosDBQuery)?.SetKey(partitionKey);
-		}
-		public static Query KeyFilter(this Query cosmosQuery, string[] filters)
-		{
-			return (cosmosQuery as CosmosDBQuery)?.KeyFilter(filters);
-		}
-		public static Query SetKey(this Query cosmosQuery, string partitionKey)
-		{
-			return (cosmosQuery as CosmosDBQuery)?.SetKey(partitionKey);
-		}
-
-	}
 	public class CosmosDBQuery : Query
 	{
 		public string Index { get; set; }
 		
-		public CosmosDBQuery OrderBy(string index)
+		public override Query OrderBy(string index)
 		{
 			////TO DO///
 			return this;
 		}
 
 		public string PartitionKey { get; private set; }
-		public CosmosDBQuery SetKey(string partitionKey)
+		public override Query SetKey(string partitionKey)
 		{
 			PartitionKey = partitionKey;
 			return this;
 		}
 		internal IEnumerable<string> KeyFilters { get; set; } = Array.Empty<string>();
-		public CosmosDBQuery KeyFilter(string[] filters)
+		public override Query KeyFilter(string[] filters)
 		{
 			KeyFilters = filters;
 			return this;

@@ -45,6 +45,9 @@ namespace GeneXus.Data.NTier
 		private const string FROM = "FROM";
 		private const string TABLE_ALIAS = "t";
 		private const string WHERE = "WHERE";
+
+		private const string FILTER_PATTERN = @"\((.*) = :(.*)\)";
+
 		//private const string DISTINCT = "DISTINCT";
 		//private const string ORDER_BY = "ORDER BY";
 
@@ -52,7 +55,6 @@ namespace GeneXus.Data.NTier
 
 		//TODO: Usar un Hashset para guardar los containers
 
-		private static readonly object _lock = new object();
 		public override string ConnectionString
 		{
 			get
@@ -95,20 +97,11 @@ namespace GeneXus.Data.NTier
 
 		private static void Initialize()
 		{
-			if (cosmosClient == null)
-			{
-				lock (_lock)
-				{
-					if (cosmosClient == null)
-					{	
-						if (!string.IsNullOrEmpty(mserviceURI) && !string.IsNullOrEmpty(mapplicationRegion))
-							cosmosClient = new CosmosClient(mserviceURI, new CosmosClientOptions() { ApplicationRegion = mapplicationRegion });
+			if (!string.IsNullOrEmpty(mserviceURI) && !string.IsNullOrEmpty(mapplicationRegion))
+				cosmosClient = new CosmosClient(mserviceURI, new CosmosClientOptions() { ApplicationRegion = mapplicationRegion });
 
-						if (!string.IsNullOrEmpty(mdatabase))
-							cosmosDatabase = cosmosClient.GetDatabase(mdatabase);
-					}
-				}				
-			}
+			if (!string.IsNullOrEmpty(mdatabase))
+								cosmosDatabase = cosmosClient.GetDatabase(mdatabase);
 		}
 
 		private Container GetContainer(string containerName)
@@ -123,6 +116,7 @@ namespace GeneXus.Data.NTier
 			Initialize();
 			CosmosDBQuery query = cursorDef.Query as CosmosDBQuery;
 			bool isInsert = query.CursorType == ServiceCursorDef.CursorType.Insert;
+			bool isUpdate = query.CursorType == ServiceCursorDef.CursorType.Update;
 
 			Dictionary<string, object> values = new Dictionary<string, object>();
 			string jsonData = string.Empty;
@@ -133,25 +127,100 @@ namespace GeneXus.Data.NTier
 			{
 				string name = asg.Key;
 				string parmName = asg.Value.Substring(1);
-				CosmosDBHelper.AddItemValue(isInsert ? name : $":{name}", parmName, values, parms, query.Vars, ref jsonData);
+				CosmosDBHelper.AddItemValue(name, parmName, values, parms, query.Vars, ref jsonData);
 				if (name == partitionKey)
 					partitionKeyValue = values[name].ToString();
 			}
-			jsonData = "{" + jsonData + "}";
 			
+			Dictionary<string, Object> keyCondition = new Dictionary<string, Object>();
+
+			foreach (string keyFilter in query.KeyFilters.Concat(query.Filters))
+			{
+				Match match = Regex.Match(keyFilter, FILTER_PATTERN);
+				if (match.Groups.Count > 1)
+				{
+					string varName = match.Groups[2].Value;
+					string name = match.Groups[1].Value;
+					VarValue varValue = query.Vars.FirstOrDefault(v => v.Name == $":{varName}");
+
+					string jsonDataKey = String.Empty;
+					if (varValue != null)
+					{ 
+						keyCondition[name] = varValue.Value;
+						//keyCondition[name] = GeneXus.Data.Cosmos.CosmosDBHelper.ToItemValue(varValue.Type, varValue.Value);
+						
+						if (isUpdate && name == "id")
+							jsonDataKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(varValue.Type, name, varValue.Value);
+					}
+					else
+					{
+						if (parms[varName] is ServiceParameter serviceParm)
+						{
+							keyCondition[name] = serviceParm.Value;
+							//keyCondition[name] = GeneXus.Data.Cosmos.CosmosDBHelper.ToItemValue(serviceParm.DbType, serviceParm.Value);
+							
+							if (isUpdate && name == "id")
+								jsonDataKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(serviceParm.DbType, name, serviceParm.Value);
+						}
+					}
+					if (!string.IsNullOrEmpty(jsonData))
+					{
+						jsonData = $"{jsonData},{jsonDataKey}";
+					}
+					else
+						jsonData = jsonDataKey;
+
+				}
+			}
+
+			jsonData = "{" + jsonData + "}";
+
+			//TODO: Get container from HashSet for performance
+			Container container = GetContainer(query.TableName);
 			switch (query.CursorType)
 			{
+				
 				case ServiceCursorDef.CursorType.Select:
 					throw new NotImplementedException();
 
 				case ServiceCursorDef.CursorType.Delete:
 
-					//TODO
-					throw new NotImplementedException();
-				
+					if (container != null)
+					{
+						try
+						{
+							if (keyCondition != null && keyCondition["id"] != null)
+							{
+								if (string.IsNullOrEmpty(partitionKeyValue))
+									partitionKeyValue = keyCondition["id"].ToString(); // partitionKeyValue = id
+								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.DeleteItemStreamAsync(keyCondition["id"].ToString(), new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
+								if (task.Result.IsSuccessStatusCode)
+								{
+									//ResponseMessage wrapps the delete record
+									return 1;
+								}
+								else
+								{
+									if (task.Result.ErrorMessage.Contains("404"))
+										throw new ServiceException(ServiceError.RecordNotFound, null);
+									else
+										throw new Exception($"Delete item from stream failed. Status code: {task.Result.StatusCode} Message: {task.Result.ErrorMessage}");
+								}
+							}
+							else
+								throw new Exception($"Delete item failed: error parsing the query.");
+
+						}
+						catch (Exception ex)
+						{ throw ex; }
+					}
+
+					else
+					{
+						throw new Exception("Execution failed. Container not found.");
+					}
+
 				case ServiceCursorDef.CursorType.Insert:
-					//TODO: Get container from HashSet for performance
-					Container container = GetContainer(query.TableName);
 					if (container != null)
 					{
 						try
@@ -166,6 +235,10 @@ namespace GeneXus.Data.NTier
 								}
 								else
 								{
+									if (task.Result.ErrorMessage.Contains("Conflict (409)"))
+										throw new ServiceException(ServiceError.RecordAlreadyExists, null);
+									else
+
 									throw new Exception($"Create item from stream failed. Status code: {task.Result.StatusCode} Message: {task.Result.ErrorMessage}");
 
 								}
@@ -182,7 +255,38 @@ namespace GeneXus.Data.NTier
 						throw new Exception("Execution failed. Container not found.");
 					}
 				case ServiceCursorDef.CursorType.Update:
-					throw new NotImplementedException();
+					if (container != null)
+					{
+						try
+						{
+							if (string.IsNullOrEmpty(partitionKeyValue))
+								partitionKeyValue = keyCondition["id"].ToString(); // partitionKeyValue = id
+							using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonData)))
+							{
+
+								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.UpsertItemStreamAsync(stream, new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
+								if (task.Result.IsSuccessStatusCode)
+								{
+									return 1;
+								}
+								else
+								{
+									
+									throw new Exception($"Update item from stream failed. Status code: {task.Result.StatusCode} Message: {task.Result.ErrorMessage}");
+
+								}
+
+							}
+						}
+						catch (Exception ex) // TODO check CosmosDB Exception https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.cosmos.cosmosexception?view=azure-dotnet
+						{
+							throw ex;
+						}
+					}
+					else
+					{
+						throw new Exception("Execution failed. Container not found.");
+					}
 			}
 
 			return 0;
@@ -196,7 +300,7 @@ namespace GeneXus.Data.NTier
 			Container container = GetContainer(query.TableName);
 			try
 			{
-				CreateCosmosQuery(query,cursorDef, GetQueryValues(query, parms), container, out CosmosDBDataReader dataReader, out RequestWrapper requestWrapper);
+				CreateCosmosQuery(query,cursorDef, parms, container, out CosmosDBDataReader dataReader, out RequestWrapper requestWrapper);
 				return dataReader;
 			}
 			catch (CosmosException cosmosException)
@@ -207,7 +311,7 @@ namespace GeneXus.Data.NTier
 
 			catch (Exception e) { throw e; }
 		}
-		private void CreateCosmosQuery(CosmosDBQuery query,ServiceCursorDef cursorDef,Dictionary<string,object> queryValues, Container container, out CosmosDBDataReader cosmosDBDataReader,out RequestWrapper requestWrapper)
+		private void CreateCosmosQuery(CosmosDBQuery query,ServiceCursorDef cursorDef, IDataParameterCollection parms, Container container, out CosmosDBDataReader cosmosDBDataReader,out RequestWrapper requestWrapper)
 		{
 			//Create the query
 			string tableName = query.TableName;
@@ -259,13 +363,31 @@ namespace GeneXus.Data.NTier
 							string column = match2.Groups[1].Value.Trim();
 							column = $"{TABLE_ALIAS}.{column}";
 
+							string attName = match2.Groups[3].Value.Trim();
+							if (attName.StartsWith(":"))
+								attName = attName.Substring(1);
+
 							string op = match2.Groups[2].Value.Trim();
 
+							//look at IDataParameterCollection parms
+							if (parms[attName] is ServiceParameter serviceParm)
+								if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringDbType(serviceParm.DbType))
+								//Nvarchar, etc?
+								//Date?
+								{
+									varValuestr = '"' + $"{serviceParm.Value.ToString()}" + '"';
+								}
+								else
+									varValuestr = serviceParm.Value.ToString();
+						
+
+							//look at query.vars
 							foreach (VarValue item in query.Vars)
 							{
 								if (item.Name == match2.Groups[3].Value)
 								{
-									if (item.Type == GXType.Char || item.Type == GXType.LongVarChar || item.Type == GXType.VarChar || item.Type == GXType.Text)
+									//if (item.Type == GXType.Char || item.Type == GXType.LongVarChar || item.Type == GXType.VarChar || item.Type == GXType.Text)
+									if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringGXType(item.Type))
 									//Nvarchar, etc?
 									//Date?
 									{
@@ -295,17 +417,6 @@ namespace GeneXus.Data.NTier
 			QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
 			requestWrapper = new RequestWrapper(cosmosClient, container, queryDefinition);
 			cosmosDBDataReader = new CosmosDBDataReader(cursorDef, requestWrapper);
-		}
-		private Dictionary<string, object> GetQueryValues(CosmosDBQuery query, IDataParameterCollection parms)
-		{
-			Dictionary<string, object> values = new Dictionary<string, object>();
-			//TODO: Handle IDataParameterCollection params
-			
-		//	foreach (VarValue item in query.Vars)
-		//		values.Add(item.Name, DynamoDBHelper.ToAttributeValue(item));
-
-			return values;
-			
 		}
 		internal static IOServiceContext NewServiceContext() => null;
 	}
