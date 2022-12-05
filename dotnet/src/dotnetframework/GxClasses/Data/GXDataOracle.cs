@@ -289,7 +289,7 @@ namespace GeneXus.Data
 				if (m_connectionString == null)
 					m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 			}
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+			GXLogging.Debug(log, "Setting connectionString property ", () => BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
 			return new OracleConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 		}
 		protected override string BuildConnectionString(string datasourceName, string userId,
@@ -609,7 +609,7 @@ namespace GeneXus.Data
 				if (m_connectionString == null)
 					m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 			}
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+			GXLogging.Debug(log, "Setting connectionString property ", () => BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
 			return new OracleManagedConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 		}
 
@@ -873,7 +873,7 @@ namespace GeneXus.Data
 				if (m_connectionString == null)
 					m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 			}
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+			GXLogging.Debug(log, "Setting connectionString property ", ()=> BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
 			return new MSOracleConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 		}
 #else

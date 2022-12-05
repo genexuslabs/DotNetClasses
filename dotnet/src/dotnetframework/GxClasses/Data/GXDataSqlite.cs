@@ -32,7 +32,7 @@ namespace GeneXus.Data
 		{
 			if (m_connectionString == null)
 				m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+			GXLogging.Debug(log, "Setting connectionString property ", () => BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
 			SQLiteConnectionWrapper connection = new SQLiteConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 			m_FailedConnections = 0;
 			return connection;

@@ -949,7 +949,7 @@ namespace GeneXus.Data
 		}
 
 		public virtual int MaxNumberOfValuesInList => int.MaxValue;
-
+		protected const string NaV = "xxxxx";
 		public string ConnectionStringForLog()
 		{
 			string result="";
@@ -1584,7 +1584,7 @@ namespace GeneXus.Data
 					m_connectionString=BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 			}
 
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+			GXLogging.Debug(log, "Setting connectionString property ", ()=> BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
 			MssqlConnectionWrapper connection=new MssqlConnectionWrapper(m_connectionString,connectionCache, isolationLevel);
 
 			m_FailedConnections = 0;
