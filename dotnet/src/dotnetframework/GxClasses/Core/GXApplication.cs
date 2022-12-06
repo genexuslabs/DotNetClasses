@@ -2900,7 +2900,7 @@ namespace GeneXus.Application
 				{
 					if (HttpContext != null)
 					{
-						_physicalPath = RequestPhysicalPath(_HttpContext);
+						_physicalPath = RequestPhysicalPath(HttpContext);
 					}
 					else
 					{
