@@ -2900,7 +2900,7 @@ namespace GeneXus.Application
 				{
 					if (HttpContext != null)
 					{
-						_physicalPath = RequestPhysicalPath();
+						_physicalPath = RequestPhysicalPath(_HttpContext);
 					}
 					else
 					{
@@ -2948,9 +2948,9 @@ namespace GeneXus.Application
 			}
 #endif
 		}
-		private static string RequestPhysicalPath()
+		private static string RequestPhysicalPath(HttpContext httpContext=null)
 		{
-			string phPath = HttpHelper.RequestPhysicalApplicationPath();
+			string phPath = HttpHelper.RequestPhysicalApplicationPath(httpContext);
 			string dirSeparator = Path.DirectorySeparatorChar.ToString();
 			if (!phPath.EndsWith(dirSeparator))
 				return $"{phPath}{dirSeparator}";
