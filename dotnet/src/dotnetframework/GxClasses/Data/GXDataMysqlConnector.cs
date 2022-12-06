@@ -136,7 +136,6 @@ namespace GeneXus.Data
 			string maxpoolSize = GetParameterValue(connstr, "Max Pool Size");
 			if (String.IsNullOrEmpty(maxpoolSize)) MAX_TRIES = 100; 
 			else MAX_TRIES = Convert.ToInt32(maxpoolSize);
-			GXLogging.Debug(log, "MAX_TRIES=" + MAX_TRIES);
 			return connstr;
 		}
 		public override bool AllowsDuplicateParameters
