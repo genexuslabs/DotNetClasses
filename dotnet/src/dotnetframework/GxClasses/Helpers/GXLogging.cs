@@ -85,7 +85,16 @@ namespace GeneXus
 
 		public static string LogSanitization(string input)
 		{
-			return Regex.Replace(input, "[^0-9a-zA-Z:_-]", " ");
+			string regex = @"[^0-9a-zA-Z:_-]";
+			if ( input != null)
+			{
+				string tmp = input.Replace(Environment.NewLine, "").Replace('\r', '_');
+				return Regex.Replace(tmp, regex, " ");
+			}
+			else
+			{
+				return input;
+			}
 		}
 
         public static void Debug(ILog log, params string[] list)
