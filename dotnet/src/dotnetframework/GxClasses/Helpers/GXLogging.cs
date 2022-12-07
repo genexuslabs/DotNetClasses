@@ -1,6 +1,7 @@
 using log4net;
 using log4net.Core;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -85,11 +86,23 @@ namespace GeneXus
 
 		public static string LogSanitization(string input)
 		{
-			string regex = @"[^0-9a-zA-Z:_-]";
+			char[] charactersAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_".ToCharArray();
+			Dictionary<char, int> whiteList = new Dictionary<char, int>();
+			int idx = 0;
+			foreach (char c in charactersAllowed)
+			{
+				whiteList[c] = idx;
+				idx++;
+			}
+			StringBuilder sanitizedInput = new StringBuilder();
 			if (!string.IsNullOrEmpty(input))
 			{
-				string tmp = input.Replace(Environment.NewLine, "").Replace('\r', '_');
-				return Regex.Replace(tmp, regex, " ");
+				foreach (char c in input)
+				{
+					if (whiteList.ContainsKey(c))
+						sanitizedInput.Append(charactersAllowed[whiteList[c]]);
+				}
+				return sanitizedInput.ToString();
 			}
 			else
 			{
@@ -97,7 +110,7 @@ namespace GeneXus
 			}
 		}
 
-        public static void Debug(ILog log, params string[] list)
+		public static void Debug(ILog log, params string[] list)
 		{
 			Debug(log, null, list);
 		}
