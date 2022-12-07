@@ -3,6 +3,7 @@ using log4net.Core;
 using System;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace GeneXus
 {
@@ -81,6 +82,12 @@ namespace GeneXus
 					log.Debug(msg);
 			}
 		}
+
+		public static string LogSanitization(string input)
+		{
+			return Regex.Replace(input, "[^0-9a-zA-Z:_-]", " ");
+		}
+
         public static void Debug(ILog log, params string[] list)
 		{
 			Debug(log, null, list);
