@@ -1782,7 +1782,7 @@ namespace GeneXus.Application
 					{
 						absoluteUri = String.Format("{0}://{1}{2}", GetServerSchema(), _HttpContext.Request.Headers["Host"], _HttpContext.Request.GetRawUrl());
 					}
-					GXLogging.Debug(log, "AbsoluteUri dynamicport:", absoluteUri);
+					GXLogging.Debug(log, "AbsoluteUri dynamicport:", GXLogging.LogSanitization(absoluteUri));
 					return absoluteUri;
 				}
 				else
