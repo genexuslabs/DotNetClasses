@@ -86,14 +86,14 @@ namespace GeneXus
 		public static string LogSanitization(string input)
 		{
 			string regex = @"[^0-9a-zA-Z:_-]";
-			if ( input != null)
+			if (!string.IsNullOrEmpty(input))
 			{
 				string tmp = input.Replace(Environment.NewLine, "").Replace('\r', '_');
 				return Regex.Replace(tmp, regex, " ");
 			}
 			else
 			{
-				return input;
+				return String.Empty;
 			}
 		}
 
