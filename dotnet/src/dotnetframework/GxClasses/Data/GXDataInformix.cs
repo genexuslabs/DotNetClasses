@@ -271,7 +271,7 @@ namespace GeneXus.Data
 				cmd.Parameters.Remove(p);
 			}
 			IDataReader reader = cmd.ExecuteReader();
-			if (reader.Read())
+			if (reader.Read() && values!=null)
 			{
 				int i = 0;
 				for (int j = 0; j < count; j++)

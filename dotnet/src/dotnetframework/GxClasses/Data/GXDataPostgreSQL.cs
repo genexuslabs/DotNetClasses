@@ -161,7 +161,7 @@ namespace GeneXus.Data
 				}
 			}
 			IDataReader reader = cmd.ExecuteReader();
-			if (reader.Read())
+			if (reader.Read() && values!=null)
 			{
 				if (reader.FieldCount > 0 && returnParms.Count>0)
 				{

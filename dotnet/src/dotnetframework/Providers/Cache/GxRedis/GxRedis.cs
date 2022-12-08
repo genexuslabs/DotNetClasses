@@ -37,28 +37,31 @@ namespace GeneXus.Cache
 		}
 		public Redis()
 		{
-			GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
-			string address, password;
-			address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
-			password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
-
-			if (string.IsNullOrEmpty(address))
-				address = String.Format("localhost:{0}", REDIS_DEFAULT_PORT);
-
-			if (!string.IsNullOrEmpty(password))
+			GXService providerService = ServiceFactory.GetGXServices()?.Get(GXServices.CACHE_SERVICE);
+			if (providerService != null)
 			{
-				if (!address.Contains(':'))
+				string address, password;
+				address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+				password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
+
+				if (string.IsNullOrEmpty(address))
+					address = String.Format("localhost:{0}", REDIS_DEFAULT_PORT);
+
+				if (!string.IsNullOrEmpty(password))
 				{
-					address = $"{address}:{REDIS_DEFAULT_PORT}";
+					if (!address.Contains(':'))
+					{
+						address = $"{address}:{REDIS_DEFAULT_PORT}";
+					}
+					address = string.Format("{0},password={1}", address.Trim(), password.Trim());
+					_redisConnectionOptions = ConfigurationOptions.Parse(address);
 				}
-				address = string.Format("{0},password={1}", address.Trim(), password.Trim());
-				_redisConnectionOptions = ConfigurationOptions.Parse(address);
+				else
+				{
+					_redisConnectionOptions = ConfigurationOptions.Parse(address);
+				}
+				_redisConnectionOptions.AllowAdmin = true;
 			}
-			else
-			{
-				_redisConnectionOptions = ConfigurationOptions.Parse(address);
-			}
-			_redisConnectionOptions.AllowAdmin = true;
 		}
 		IDatabase RedisDatabase
 		{

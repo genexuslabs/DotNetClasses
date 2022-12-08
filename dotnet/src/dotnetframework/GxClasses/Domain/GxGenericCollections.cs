@@ -503,21 +503,24 @@ namespace GeneXus.Utils
 		{
 			IGxJSONAble ijsonprop;
 			JArray jarray = jsonArr as JArray;
-			if ((ijsonprop = prop as IGxJSONAble) != null)
+			if (jarray != null)
 			{
-				GxUserType bc = ijsonprop as GxUserType;
-				if (bc != null)
-					jarray.Add(bc.GetJSONObject(includeState));
+				if ((ijsonprop = prop as IGxJSONAble) != null)
+				{
+					GxUserType bc = ijsonprop as GxUserType;
+					if (bc != null)
+						jarray.Add(bc.GetJSONObject(includeState));
+					else
+						jarray.Add(ijsonprop.GetJSONObject());
+				}
+				else if (prop is DateTime)
+				{
+					jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
+				}
 				else
-					jarray.Add(ijsonprop.GetJSONObject());
-			}
-			else if (prop is DateTime)
-			{
-				jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
-			}
-			else
-			{
-				jarray.Add(prop);
+				{
+					jarray.Add(prop);
+				}
 			}
 		}
 		public Object GetJSONObject(bool includeState)

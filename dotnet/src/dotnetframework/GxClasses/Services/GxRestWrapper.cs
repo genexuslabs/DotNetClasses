@@ -353,7 +353,9 @@ namespace GeneXus.Application
 
 					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 					{
-						wrapped = (v as IGxGenericCollectionWrapped).GetIsWrapped();
+						IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
+						if (icollwrapped != null) 
+							wrapped = icollwrapped.GetIsWrapped();
 					}
 					if (v is IGxGenericCollectionItem item)
 					{

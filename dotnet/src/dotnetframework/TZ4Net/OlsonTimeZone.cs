@@ -1049,16 +1049,19 @@ namespace TZ4Net
 			{
 				UnicodeWin32MapValue mapValue = e.Value as UnicodeWin32MapValue;
 				Debug.Assert(mapValue != null);
-				if (res.ContainsKey(mapValue.OlsonName)) 
+				if (mapValue != null)
 				{
-					if (!mapValue.IsObsoleted) 
+					if (res.ContainsKey(mapValue.OlsonName))
 					{
-						res[mapValue.OlsonName] = mapValue.Win32Name;
+						if (!mapValue.IsObsoleted)
+						{
+							res[mapValue.OlsonName] = mapValue.Win32Name;
+						}
 					}
-				} 
-				else 
-				{
-					res.Add(mapValue.OlsonName, mapValue.Win32Name);
+					else
+					{
+						res.Add(mapValue.OlsonName, mapValue.Win32Name);
+					}
 				}
 			}
 			return res;

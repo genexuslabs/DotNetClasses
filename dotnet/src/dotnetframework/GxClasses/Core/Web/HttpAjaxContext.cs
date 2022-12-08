@@ -109,7 +109,7 @@ namespace GeneXus.Http
 		public bool isParmModified(string fieldName, object value)
 		{
 			IGxJSONSerializable jsonValue = value as IGxJSONSerializable;
-			if (value != null)
+			if (jsonValue!=null)
 			{
 				if (!inParmsHashValue.ContainsKey(fieldName))
 					return true;

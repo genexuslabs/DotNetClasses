@@ -38,20 +38,23 @@ namespace GeneXus.Data.NTier
 			Connection = null;
 			Parameters = null;
 		}
-
 		public int ExecuteNonQuery()
 		{
-			return (Connection as ServiceConnection).ExecuteNonQuery((CursorDef as ServiceCursorDef), Parameters, CommandBehavior.Default);
+			ServiceConnection srvConnection = Connection as ServiceConnection;
+			if (srvConnection!=null)
+				return (srvConnection).ExecuteNonQuery((CursorDef as ServiceCursorDef), Parameters, CommandBehavior.Default);
+			return 0;
 		}
 
 		public IDataReader ExecuteReader()
 		{
-			return (Connection as ServiceConnection).ExecuteReader((CursorDef as ServiceCursorDef), Parameters, CommandBehavior.Default);
+			return (Connection as ServiceConnection)?.ExecuteReader((CursorDef as ServiceCursorDef), Parameters, CommandBehavior.Default);
+
 		}
 
 		public IDataReader ExecuteReader(CommandBehavior behavior)
 		{
-			return (Connection as ServiceConnection).ExecuteReader((CursorDef as ServiceCursorDef), Parameters, behavior);
+			return (Connection as ServiceConnection)?.ExecuteReader((CursorDef as ServiceCursorDef), Parameters, behavior);
 		}
 
 		public object ExecuteScalar()

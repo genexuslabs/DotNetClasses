@@ -249,7 +249,10 @@ namespace GeneXus.Office
             }
             else
             {
-                return document.ErrCode;
+				if (document != null)
+					return document.ErrCode;
+				else
+					return 0;
             }
         }
 
