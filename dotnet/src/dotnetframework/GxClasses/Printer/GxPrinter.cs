@@ -1526,8 +1526,10 @@ namespace GeneXus.Printer
 						"\\pichgoal"+(height * LOGICAL2TWIP).ToString()+
 						"\n";
 			streamToWrite.Write( sBuffer);
-			Bitmap bm = new Bitmap(bitmap);
-			bm.Save( streamToWrite.BaseStream, ImageFormat.Emf);
+			using (Bitmap bm = new Bitmap(bitmap))
+			{
+				bm.Save(streamToWrite.BaseStream, ImageFormat.Emf);
+			}
 			streamToWrite.Write( "}}\n");
 		}
 		void DrawText(string text, Point p1, Point p2, Font fnt, int align, Color foreColor, Color backColor)
