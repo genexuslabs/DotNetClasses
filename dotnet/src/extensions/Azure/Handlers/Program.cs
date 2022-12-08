@@ -45,6 +45,7 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 				})
 				.Build();
 			GxContext.IsAzureContext = true;
+			GxContext.IsHttpContext = true;
 			await host.RunAsync();
         }
 		private static string GetRoutePrefix(string ContentRootPath)
