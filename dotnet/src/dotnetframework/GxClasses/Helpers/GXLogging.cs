@@ -84,7 +84,23 @@ namespace GeneXus
 			}
 		}
 
-		public static string LogSanitization(string input)
+		public static void DebugSanitized(ILog log, Exception ex, params string[] list)
+		{
+			if (log.IsDebugEnabled)
+			{
+				StringBuilder msg = new StringBuilder();
+				foreach (string parm in list)
+				{
+					msg.Append(LogSanitization(parm));
+				}
+				if (ex != null)
+					log.Debug(msg, ex);
+				else
+					log.Debug(msg);
+			}
+		}
+
+		private static string LogSanitization(string input)
 		{
 			char[] charactersAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_".ToCharArray();
 			Dictionary<char, int> whiteList = new Dictionary<char, int>();
@@ -114,7 +130,13 @@ namespace GeneXus
 		{
 			Debug(log, null, list);
 		}
-        public static void Debug(ILog log, string startMsg, Func<string> buildMsg)
+
+		public static void DebugSanitized(ILog log, params string[] list)
+		{
+			DebugSanitized(log, null, list);
+		}
+
+		public static void Debug(ILog log, string startMsg, Func<string> buildMsg)
 		{
 			if (log.IsDebugEnabled)
 			{
