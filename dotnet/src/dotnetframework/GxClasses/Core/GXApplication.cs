@@ -3230,7 +3230,7 @@ namespace GeneXus.Application
 		{
 			if (HttpContext != null && HttpContext.Session != null)
 			{
-				GXLogging.Debug(log, "HttpContext.Session.setProperty(", key, ")=", value);
+				GXLogging.DebugSanitized(log, "HttpContext.Session.setProperty(", key, ")=", value);
 				WriteSessionKey(key, value);
 			}
 			else
@@ -3499,7 +3499,7 @@ namespace GeneXus.Application
 				if (_currentTimeZone != null)
 					return _currentTimeZone;
 				string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
-				GXLogging.Debug(log, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
+				GXLogging.DebugSanitized(log, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
 				if (String.IsNullOrEmpty(sTZ))
 				{
 					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
