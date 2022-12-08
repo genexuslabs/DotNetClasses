@@ -2122,7 +2122,7 @@ namespace GeneXus.Http
 		private void SendHeaders()
 		{
 			sendCacheHeaders();
-			GXLogging.Debug(log, "HttpHeaders: ", DumpHeaders(localHttpContext));
+			GXLogging.DebugSanitized(log, "HttpHeaders: ", DumpHeaders(localHttpContext));
 			sendAdditionalHeaders();
 			HttpHelper.CorsHeaders(localHttpContext);
 			HttpHelper.AllowHeader(localHttpContext, new List<string>() { $"{HttpMethod.Get.Method},{HttpMethod.Post.Method}" });
