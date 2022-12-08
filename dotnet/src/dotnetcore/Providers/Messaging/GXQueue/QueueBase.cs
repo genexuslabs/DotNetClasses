@@ -22,7 +22,7 @@ namespace GeneXus.Messaging.Common
 			{
 				try
 				{
-					s = ServiceFactory.GetGXServices().Get(GXServices.QUEUE_SERVICE);
+					s = ServiceFactory.GetGXServices()?.Get(GXServices.QUEUE_SERVICE);
 				}
 				catch (Exception)
 				{

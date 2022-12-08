@@ -1873,26 +1873,28 @@ namespace GeneXus.Data
 			try
 			{
 				SqlDataReader sqlReader = reader as SqlDataReader;
-				for (int i = 0; i < sqlReader.FieldCount; i++)
+				if (sqlReader != null)
 				{
-					try
+					for (int i = 0; i < sqlReader.FieldCount; i++)
 					{
-						values[i] = reader.GetValue(i);
-					}
-					catch (OverflowException oex)
-					{
-						GXLogging.Warn(log, "GetValues OverflowException:" + oex);
-						if (sqlReader.GetFieldType(i) == typeof(decimal))
+						try
 						{
-							GXLogging.Debug(log, "GetValues fieldtype decimal value:" + sqlReader.GetSqlDecimal(i).ToString());
-							values[i] = ReadSQLDecimal(sqlReader, i);
-
+							values[i] = reader.GetValue(i);
 						}
-						else
-							throw oex;
-					}
-					catch (Exception ex)
-					{
+						catch (OverflowException oex)
+						{
+							GXLogging.Warn(log, "GetValues OverflowException:" + oex);
+							if (sqlReader.GetFieldType(i) == typeof(decimal))
+							{
+								GXLogging.Debug(log, "GetValues fieldtype decimal value:" + sqlReader.GetSqlDecimal(i).ToString());
+								values[i] = ReadSQLDecimal(sqlReader, i);
+
+							}
+							else
+								throw oex;
+						}
+						catch (Exception ex)
+						{
 #if !NETCORE
 						FileNotFoundException fex = ex as FileNotFoundException;
 						FileLoadException flex = ex as FileLoadException;
@@ -1910,9 +1912,10 @@ namespace GeneXus.Data
 							throw ex;
 						}
 #else
-						throw ex;
+							throw ex;
 #endif
 
+						}
 					}
 				}
 			}

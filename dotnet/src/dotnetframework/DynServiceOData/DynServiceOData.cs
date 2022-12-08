@@ -752,28 +752,32 @@ namespace GeneXus.Data.NTier
 			this.cursorDef = cursorDef;
 			conn.State = ConnectionState.Executing;
 			ODataQuery query = cursorDef.Query as ODataQuery;
-			action = query.query;
+			action = query?.query;
 			selectList = query.selectList;
 			allSelectedKeys = null;
 			annotations = new ODataFeedAnnotations();
-			try
+			if (action != null)
 			{
-				switch (behavior)
+				try
 				{
-					case CommandBehavior.SingleRow:
-						taskAwaiter = Task.Run(() => task = client.FindEntriesAsync(SingleRow(action(client, parms).GetCommandTextAsync().Result), annotations)).ConfigureAwait(false).GetAwaiter();
-						break;
-					default:
-						taskAwaiter = Task.Run(() => task = client.FindEntriesAsync(action(client, parms).GetCommandTextAsync().Result, annotations)).ConfigureAwait(false).GetAwaiter();
-						break;
+					switch (behavior)
+					{
+						case CommandBehavior.SingleRow:
+							taskAwaiter = Task.Run(() => task = client.FindEntriesAsync(SingleRow(action(client, parms).GetCommandTextAsync().Result), annotations)).ConfigureAwait(false).GetAwaiter();
+							break;
+						default:
+							taskAwaiter = Task.Run(() => task = client.FindEntriesAsync(action(client, parms).GetCommandTextAsync().Result, annotations)).ConfigureAwait(false).GetAwaiter();
+							break;
+					}
+				}
+				catch (AggregateException e)
+				{
+					throw ODataConnection.GetAggregateException(e);
 				}
 			}
-			catch (AggregateException e)
-			{
-				throw ODataConnection.GetAggregateException(e);
-			}
-
-			(cursorDef.Parent as DataStoreHelperOData).CurrentOfManager.AddQuery(cursorDef.Name, this);
+			DataStoreHelperOData dsHelper = cursorDef.Parent as DataStoreHelperOData;
+			if (dsHelper != null)
+				dsHelper.CurrentOfManager.AddQuery(cursorDef.Name, this);
 			IsClosed = false;
 			data = null;
 			currentEntry = null;
@@ -953,15 +957,23 @@ namespace GeneXus.Data.NTier
 
 		private bool NeedFlattenRecord(string entityKey)
 		{
-			return !selectList.Any(selItem => selItem is DataStoreHelperOData.ODataMapExt && (selItem as DataStoreHelperOData.ODataMapExt).GetName(NewServiceContext()) == entityKey);
+			return !selectList.Any(selItem => selItem != null && selItem is DataStoreHelperOData.ODataMapExt && (selItem as DataStoreHelperOData.ODataMapExt).GetName(NewServiceContext()) == entityKey);
 		}
-
+		private bool NeedFlattenMemberColFuc(IODataMap selItem, string entityKey, IDictionary<string, object> record)
+		{
+			DataStoreHelperOData.ODataMapCol mapColItem = selItem as DataStoreHelperOData.ODataMapCol;
+			if (mapColItem != null)
+			{
+				return mapColItem.GetName(NewServiceContext()) == entityKey &&
+											(record[entityKey] as IDictionary<string, object> != null) &&
+											(record[entityKey] as IDictionary<string, object>).ContainsKey(mapColItem.GetKey(NewServiceContext())) &&
+											(record[entityKey] as IDictionary<string, object>)[mapColItem.GetKey(NewServiceContext())] is IEnumerable<object>;
+			}else
+				return false;
+		}
 		private DataStoreHelperOData.ODataMapCol NeedFlattenMemberCol(string entityKey, IDictionary<string, object> record)
 		{
-			return selectList.FirstOrDefault(selItem => selItem is DataStoreHelperOData.ODataMapCol &&
-											(selItem as DataStoreHelperOData.ODataMapCol).GetName(NewServiceContext()) == entityKey &&
-											(record[entityKey] as IDictionary<string, object>).ContainsKey((selItem as DataStoreHelperOData.ODataMapCol).GetKey(NewServiceContext())) &&
-											(record[entityKey] as IDictionary<string, object>)[((selItem as DataStoreHelperOData.ODataMapCol).GetKey(NewServiceContext()))] is IEnumerable<object>) as DataStoreHelperOData.ODataMapCol;
+			return selectList.FirstOrDefault(selItem => NeedFlattenMemberColFuc(selItem, entityKey, record)) as  DataStoreHelperOData.ODataMapCol;
 		}
 
 		private IDictionary<string, object> FlattenRecord(IDictionary<string, object> record)
@@ -1101,7 +1113,9 @@ namespace GeneXus.Data.NTier
 		{
 			if (IsClosed)
 				return;
-			(cursorDef.Parent as DataStoreHelperOData).CurrentOfManager.RemoveQuery(cursorDef.Name);
+			DataStoreHelperOData dsHelper = cursorDef.Parent as DataStoreHelperOData;
+			if (dsHelper != null)
+				dsHelper.CurrentOfManager.RemoveQuery(cursorDef.Name);
 			IsClosed = true;
 			annotations = null;
 			Debug.Assert(task != null && (task.Status == TaskStatus.RanToCompletion || task.Status == TaskStatus.Faulted));
@@ -1133,10 +1147,14 @@ namespace GeneXus.Data.NTier
 		{
 			byte[] bytes = selectList[i].GetValue(NewServiceContext(), currentEntry) as byte[];
 			Debug.Assert(bytes != null && fieldOffset <= bytes.Length);
-			long len = bytes.Length - fieldOffset;
-			if (len > length)
-				len = length;
-			Array.Copy(bytes, fieldOffset, buffer, bufferoffset, len);
+			long len = 0;
+			if (bytes != null)
+			{
+				len = bytes.Length - fieldOffset;
+				if (len > length)
+					len = length;
+				Array.Copy(bytes, fieldOffset, buffer, bufferoffset, len);
+			}
 			return len;
 		}
 
@@ -1862,23 +1880,26 @@ namespace GeneXus.Data.NTier
 				case AdapterVersion.V4:
 					{
 						Microsoft.OData.Edm.IEdmModel model = Adapter.Model as Microsoft.OData.Edm.IEdmModel;
-						Microsoft.OData.Edm.IEdmEntityContainer EntityContainer = model.EntityContainer;
+						if (model != null)
+						{
+							Microsoft.OData.Edm.IEdmEntityContainer EntityContainer = model.EntityContainer;
 
-						IDictionary<object, IList<string>> entitySetTypes = new Dictionary<object, IList<string>>();
-						foreach (Microsoft.OData.Edm.IEdmEntitySet entitySet in model.EntityContainer.EntitySets())
-						{
-							if (!entitySetTypes.TryGetValue(entitySet.EntityType(), out IList<string> entitySets))
+							IDictionary<object, IList<string>> entitySetTypes = new Dictionary<object, IList<string>>();
+							foreach (Microsoft.OData.Edm.IEdmEntitySet entitySet in model.EntityContainer.EntitySets())
 							{
-								entitySets = new List<string>();
-								entitySetTypes.Add(entitySet.EntityType(), entitySets);
+								if (!entitySetTypes.TryGetValue(entitySet.EntityType(), out IList<string> entitySets))
+								{
+									entitySets = new List<string>();
+									entitySetTypes.Add(entitySet.EntityType(), entitySets);
+								}
+								entitySets.Add(entitySet.Name);
 							}
-							entitySets.Add(entitySet.Name);
-						}
-						foreach (Microsoft.OData.Edm.IEdmEntitySet entitySet in model.EntityContainer.EntitySets())
-						{
-							Microsoft.OData.Edm.IEdmEntityType type = entitySet.EntityType();
-							InitializeEntityMapperV4(entityMapper, type, entitySetTypes);
-							rootMapper.Add(entitySet.Name, type.Name);
+							foreach (Microsoft.OData.Edm.IEdmEntitySet entitySet in model.EntityContainer.EntitySets())
+							{
+								Microsoft.OData.Edm.IEdmEntityType type = entitySet.EntityType();
+								InitializeEntityMapperV4(entityMapper, type, entitySetTypes);
+								rootMapper.Add(entitySet.Name, type.Name);
+							}
 						}
 					}
 					break;

@@ -29,8 +29,11 @@ namespace GeneXus.Cache
 			String address = string.Empty;
 			if (services != null)
 			{
-				GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
-				address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+				GXService providerService = ServiceFactory.GetGXServices()?.Get(GXServices.CACHE_SERVICE);
+				if (providerService != null)
+				{
+					address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+				}
 			}
 
 #if NETCORE
@@ -202,7 +205,7 @@ namespace GeneXus.Cache
 		}
 		private IEnumerable<string> Key(string cacheid, IEnumerable<string> key)
 		{
-			var prefix = KeyPrefix(cacheid);
+			long? prefix = KeyPrefix(cacheid);
 			return key.Select(k => FormatKey(cacheid, k, prefix));
 		}
 		private string FormatKey(string cacheid, string key, Nullable<long> prefix)

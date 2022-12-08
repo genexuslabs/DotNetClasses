@@ -506,9 +506,12 @@ namespace GeneXus.Data.NTier
 			Cursor oCur = getCursor(cursor) as Cursor;
 			try
 			{
-				oCur.readNext();
-				_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
-				dataStoreRequestCount++;
+				if (oCur != null)
+				{
+					oCur.readNext();
+					_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+					dataStoreRequestCount++;
+				}
 			}
 			catch (GxADODataException e)
 			{
