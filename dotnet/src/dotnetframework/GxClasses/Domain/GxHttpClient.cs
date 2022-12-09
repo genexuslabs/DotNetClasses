@@ -842,7 +842,7 @@ namespace GeneXus.Http.Client
 				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + _statusDescription + ".";
 			}
 			ClearSendStream();
-			GXLogging.Debug(log, "_responseString " + ToString());
+			GXLogging.DebugSanitized(log, "_responseString " + ToString());
 		}
 		NameValueCollection _respHeaders;
 		private bool disposedValue;

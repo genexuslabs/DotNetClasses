@@ -170,6 +170,7 @@ namespace GeneXus.Web.Security
 		internal static bool Verify(string jwtToken, WebSecureToken outToken, string secretKey)
 		{
 			bool ok = false;
+			string payload = "";
 			byte[] bSecretKey = Encoding.ASCII.GetBytes(secretKey);
             if (!string.IsNullOrEmpty(jwtToken))
 			{				
@@ -190,7 +191,7 @@ namespace GeneXus.Web.Security
 							System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.InvokeMethod, null, handler,
 							new object[] { jwtToken, validationParameters });
 						Validators.ValidateIssuerSecurityKey(jwtSecurityToken.SigningKey, jwtSecurityToken, validationParameters);
-
+						payload = jwtSecurityToken.EncodedPayload;
 						outToken.Expiration = new DateTime(1970, 1, 1).AddSeconds(Double.Parse(jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXEXPIRATION).Value));
 						outToken.ProgramName = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXPROGRAM).Value;
 						outToken.Issuer = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXISSUER).Value;
@@ -200,7 +201,8 @@ namespace GeneXus.Web.Security
                 }
                 catch (Exception e)
 				{
-					GXLogging.Error(_log, string.Format("Web Token verify failed for Token '{0}'", jwtToken), e);
+					string json = System.Text.Json.JsonSerializer.Serialize(new { Property = payload });
+					GXLogging.Error(_log, string.Format("Web Token verify failed for Token '{0}'",json), e);
 				}
 			}
 			return ok;
