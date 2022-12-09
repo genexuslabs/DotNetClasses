@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using GeneXus.Data.NTier;
 using GeneXus.Data.NTier.CosmosDB;
+using log4net;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
@@ -24,6 +25,7 @@ namespace GeneXus.Data.Cosmos
 		private int ItemCount;
 		private List<Dictionary<string, object>> Items = null;
 
+		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(CosmosDBDataReader));
 		private void CheckCurrentPosition()
 		{
 			if (currentEntry == null)
@@ -235,36 +237,47 @@ namespace GeneXus.Data.Cosmos
 		{		
 			while (feedIterator.HasMoreResults)
 			{
-				using (ResponseMessage response = await feedIterator.ReadNextAsync().ConfigureAwait(false))
+				try
 				{
-					if (response.Diagnostics != null)
+					using (ResponseMessage response = await feedIterator.ReadNextAsync().ConfigureAwait(false))
 					{
-						//LOG
-						//Console.WriteLine($"ItemStreamFeed Diagnostics: {response.Diagnostics.ToString()}");
-					}
-
-					response.EnsureSuccessStatusCode();
-					using (StreamReader sr = new StreamReader(response.Content))
-					using (JsonTextReader jtr = new JsonTextReader(sr))
-					{
-						Newtonsoft.Json.JsonSerializer jsonSerializer = new Newtonsoft.Json.JsonSerializer();
-						object array = jsonSerializer.Deserialize<object>(jtr);
-
-						string json = ((Newtonsoft.Json.Linq.JToken)array).Root.ToString();
-						var jsonDocument = JsonDocument.Parse(json);
-						var jsonDoc = jsonDocument.RootElement;
-						foreach (var jsonProperty in jsonDoc.EnumerateObject())
+						
+						if (!response.IsSuccessStatusCode)
 						{
-							if (jsonProperty.Name == "Documents")
-							{ 
-								Items = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(jsonProperty.Value.ToString());
-								break;
+							if (response.Diagnostics != null)
+								GXLogging.Debug(logger, $"Read ItemStreamFeed Diagnostics: {response.Diagnostics.ToString()}");
+							throw new Exception(GeneXus.Data.Cosmos.CosmosDBHelper.FormatExceptionMessage(response.StatusCode.ToString(),response.ErrorMessage));
+						}
+						else
+						{ 
+							using (StreamReader sr = new StreamReader(response.Content))
+							using (JsonTextReader jtr = new JsonTextReader(sr))
+							{
+								Newtonsoft.Json.JsonSerializer jsonSerializer = new Newtonsoft.Json.JsonSerializer();
+								object array = jsonSerializer.Deserialize<object>(jtr);
+
+								string json = ((Newtonsoft.Json.Linq.JToken)array).Root.ToString();
+								var jsonDocument = JsonDocument.Parse(json);
+								var jsonDoc = jsonDocument.RootElement;
+								foreach (var jsonProperty in jsonDoc.EnumerateObject())
+								{
+									if (jsonProperty.Name == "Documents")
+									{
+										Items = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(jsonProperty.Value.ToString());
+										break;
+									}
+								}
+								ItemCount = Items.Count;
 							}
-						}	
-						ItemCount = Items.Count;
+						}
 					}
+					return true;
 				}
-				return true;
+				catch (CosmosException ex)
+				{
+					GXLogging.Error(logger, ex);
+					throw ex;
+				}
 			}
 			return false;
 		}

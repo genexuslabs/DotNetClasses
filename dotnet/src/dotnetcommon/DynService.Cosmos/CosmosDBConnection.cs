@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GeneXus.Data.Cosmos;
 using GeneXus.Data.NTier.CosmosDB;
+using log4net;
 using Microsoft.Azure.Cosmos;
 
 namespace GeneXus.Data.NTier
@@ -51,7 +52,7 @@ namespace GeneXus.Data.NTier
 		//private const string DISTINCT = "DISTINCT";
 		//private const string ORDER_BY = "ORDER BY";
 
-		//LOG?
+		//static readonly ILog logger = log4net.LogManager.GetLogger(typeof(CosmosDBConnection));
 
 		//TODO: Usar un Hashset para guardar los containers
 
@@ -193,7 +194,7 @@ namespace GeneXus.Data.NTier
 							{
 								if (string.IsNullOrEmpty(partitionKeyValue))
 									partitionKeyValue = keyCondition["id"].ToString(); // partitionKeyValue = id
-								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.DeleteItemStreamAsync(keyCondition["id"].ToString(), new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
+									Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.DeleteItemStreamAsync(keyCondition["id"].ToString(), new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
 								if (task.Result.IsSuccessStatusCode)
 								{
 									//ResponseMessage wrapps the delete record
@@ -204,7 +205,7 @@ namespace GeneXus.Data.NTier
 									if (task.Result.ErrorMessage.Contains("404"))
 										throw new ServiceException(ServiceError.RecordNotFound, null);
 									else
-										throw new Exception($"Delete item from stream failed. Status code: {task.Result.StatusCode} Message: {task.Result.ErrorMessage}");
+										throw new Exception($"Delete item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 								}
 							}
 							else
@@ -217,7 +218,7 @@ namespace GeneXus.Data.NTier
 
 					else
 					{
-						throw new Exception("Execution failed. Container not found.");
+						throw new Exception("CosmosDB Execution failed. Container not found.");
 					}
 
 				case ServiceCursorDef.CursorType.Insert:
@@ -238,21 +239,19 @@ namespace GeneXus.Data.NTier
 									if (task.Result.ErrorMessage.Contains("Conflict (409)"))
 										throw new ServiceException(ServiceError.RecordAlreadyExists, null);
 									else
-
-									throw new Exception($"Create item from stream failed. Status code: {task.Result.StatusCode} Message: {task.Result.ErrorMessage}");
+										throw new Exception($"Create item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 
 								}
-
 							}
 						}
-						catch (Exception ex) // TODO check CosmosDB Exception https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.cosmos.cosmosexception?view=azure-dotnet
+						catch (Exception ex) 
 						{
 							throw ex;
 						}
 					}
 					else
 					{
-						throw new Exception("Execution failed. Container not found.");
+						throw new Exception("CosmosDB Execution failed. Container not found.");
 					}
 				case ServiceCursorDef.CursorType.Update:
 					if (container != null)
@@ -261,31 +260,29 @@ namespace GeneXus.Data.NTier
 						{
 							if (string.IsNullOrEmpty(partitionKeyValue))
 								partitionKeyValue = keyCondition["id"].ToString(); // partitionKeyValue = id
-							using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonData)))
-							{
-
-								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.UpsertItemStreamAsync(stream, new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
-								if (task.Result.IsSuccessStatusCode)
+								using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonData)))
 								{
-									return 1;
-								}
-								else
-								{
+									Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.UpsertItemStreamAsync(stream, new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
+									if (task.Result.IsSuccessStatusCode)
+									{
+										return 1;
+									}
+									else
+									{
 									
-									throw new Exception($"Update item from stream failed. Status code: {task.Result.StatusCode} Message: {task.Result.ErrorMessage}");
+										throw new Exception($"Update item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 
+									}
 								}
-
-							}
 						}
-						catch (Exception ex) // TODO check CosmosDB Exception https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.cosmos.cosmosexception?view=azure-dotnet
+						catch (Exception ex) 
 						{
 							throw ex;
 						}
 					}
 					else
 					{
-						throw new Exception("Execution failed. Container not found.");
+						throw new Exception("CosmosDB Execution failed. Container not found.");
 					}
 			}
 
@@ -331,9 +328,9 @@ namespace GeneXus.Data.NTier
 			IEnumerable<string> allFilters = query.KeyFilters.Concat(query.Filters);
 			IEnumerable<string> allFiltersQuery = Array.Empty<string>();
 
-			string regex1 = @"\(([^)]+)\)";
-			string regex2 = @"(.*)\s*([=|!=|<|>|<=|>=|<>])\s*(:.*)";
-
+			string regex1 = @"\(([^\)\(]+)\)";
+			string regex2 = @"(.*)[^<>!=]\s*(=|!=|<|>|<=|>=|<>)\s*(:.*)";
+			
 			string keyFilterS;
 			string condition = string.Empty;
 			IEnumerable<string> keyFilterQ = Array.Empty<string>();
@@ -342,11 +339,7 @@ namespace GeneXus.Data.NTier
 			{
 				keyFilterS = keyFilter;
 				condition = keyFilter;
-				if (keyFilter.StartsWith("(("))
-				{ 
-					keyFilterS = keyFilter.Remove(0, 1);
-					keyFilterS = keyFilterS.Remove(keyFilterS.Length - 1, 1);			
-				}
+				
 				MatchCollection matchCollection = Regex.Matches(keyFilterS, regex1);
 			
 				foreach (Match match in matchCollection)
@@ -398,7 +391,15 @@ namespace GeneXus.Data.NTier
 									break;
 								}
 							}
+
+							//Controlar antes de mandar la sentencia a ejecutar
+
 							condition = condition.Replace(cond, $"{column}{op}{varValuestr}");
+						}
+						else
+						{
+							//Check that cond is a valid attribute - boolean
+
 						}
 					}
 				}

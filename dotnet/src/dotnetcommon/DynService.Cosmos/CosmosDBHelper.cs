@@ -78,6 +78,10 @@ namespace GeneXus.Data.Cosmos
 
 			}
 		}
+		internal static string FormatExceptionMessage(string statusCode, string message)
+		{
+			return ($"CosmosDB Execution failed. Status code: {statusCode}. Message: {message}");
+		}
 		internal static bool AddItemValue(string parmName, Dictionary<string, object> dynParm, ServiceParameter parm, out string jsonData)
 		{
 			jsonData = string.Empty;
