@@ -13,8 +13,6 @@ namespace GeneXus
 	public static class GXLogging
 	{
 
-		static HashSet<char> WhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_=".ToHashSet();
-
 		public static void Trace(this ILog log, params string[] list)
 		{
 			if (log.Logger.IsEnabledFor(Level.Trace))
@@ -115,14 +113,21 @@ namespace GeneXus
 
 		private static string LogSanitization(string input)
 		{
-
+			char[] charactersAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_=".ToCharArray();
+			Dictionary<char, int> whiteList = new Dictionary<char, int>();
+			int idx = 0;
+			foreach (char c in charactersAllowed)
+			{
+				whiteList[c] = idx;
+				idx++;
+			}
 			StringBuilder sanitizedInput = new StringBuilder();
 			if (!string.IsNullOrEmpty(input))
 			{
 				foreach (char c in input)
 				{
-					if (WhiteList.TryGetValue(c, out char wchar))
-						sanitizedInput.Append(wchar);
+					if (whiteList.ContainsKey(c))
+						sanitizedInput.Append(charactersAllowed[whiteList[c]]);
 				}
 				return sanitizedInput.ToString();
 			}
