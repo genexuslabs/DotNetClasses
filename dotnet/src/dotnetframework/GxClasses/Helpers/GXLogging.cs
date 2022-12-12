@@ -102,7 +102,7 @@ namespace GeneXus
 
 		private static string LogSanitization(string input)
 		{
-			char[] charactersAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_".ToCharArray();
+			char[] charactersAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_=".ToCharArray();
 			Dictionary<char, int> whiteList = new Dictionary<char, int>();
 			int idx = 0;
 			foreach (char c in charactersAllowed)

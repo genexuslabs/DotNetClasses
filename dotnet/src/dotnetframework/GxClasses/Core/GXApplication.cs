@@ -3239,7 +3239,7 @@ namespace GeneXus.Application
 				{
 					_properties = new Hashtable();
 				}
-				GXLogging.Debug(log, "GxContext.Properties.getProperty(", key, ")=", value);
+				GXLogging.DebugSanitized(log, "GxContext.Properties.getProperty(", key, ")=", value);
 				_properties[key] = value;
 			}
 		}
