@@ -25,7 +25,16 @@ namespace GeneXus
 				log.Error(msg, ex);
 			}
 		}
-        public static void Error(ILog log, string msg1, string msg2, Exception ex)
+
+		public static void ErrorSanitized(ILog log, string msg, Exception ex)
+		{
+			if (log.IsErrorEnabled)
+			{
+				log.Error(LogSanitization(msg), ex);
+			}
+		}
+
+		public static void Error(ILog log, string msg1, string msg2, Exception ex)
 		{
 			Error(log, msg1 + msg2, ex);
 		}

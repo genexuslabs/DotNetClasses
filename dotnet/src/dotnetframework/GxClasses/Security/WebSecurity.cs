@@ -199,7 +199,7 @@ namespace GeneXus.Web.Security
                 }
                 catch (Exception e)
 				{
-					GXLogging.Error(_log, string.Format("Web Token verify failed for Token '{0}'", jwtToken), e);
+					GXLogging.ErrorSanitized(_log, string.Format("Web Token verify failed for Token '{0}'", jwtToken), e);
 				}
 			}
 			return ok;
