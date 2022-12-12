@@ -27,6 +27,7 @@ using GeneXus.Mime;
 using System.Text.RegularExpressions;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http;
+using System.Linq;
 
 namespace GeneXus.Http
 {
@@ -83,6 +84,7 @@ namespace GeneXus.Http
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
+		static HashSet<char> WhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789./".ToHashSet();
 
 		const string CORS_MAX_AGE_SECONDS = "86400";
 		internal static void CorsHeaders(HttpContext httpContext)
@@ -182,6 +184,27 @@ namespace GeneXus.Http
 			HttpStatusCode httpStatusCode = MapStatusCode(statusCode);
 			SetResponseStatus(httpContext, httpStatusCode, statusDescription);
 		}
+
+		private static string HostSanitization(string input)
+		{
+
+			StringBuilder sanitizedInput = new StringBuilder();
+			if (!string.IsNullOrEmpty(input))
+			{
+				foreach (char c in input)
+				{
+					if (WhiteList.TryGetValue(c, out char wchar))
+						sanitizedInput.Append(wchar);
+				}
+				return sanitizedInput.ToString();
+			}
+			else
+			{
+				return String.Empty;
+			}
+		}
+		
+
 		public static void SetResponseStatus(HttpContext httpContext, HttpStatusCode httpStatusCode, string statusDescription)
 		{
 #if !NETCORE
@@ -190,7 +213,7 @@ namespace GeneXus.Http
 			{
 				wcfcontext.OutgoingResponse.StatusCode = httpStatusCode;
 				if (httpStatusCode==HttpStatusCode.Unauthorized){
-					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty));
+					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(HostSanitization(wcfcontext.IncomingRequest.Headers["Host"]), httpStatusCode.ToString(INT_FORMAT), string.Empty));
 				}
 				if (!string.IsNullOrEmpty(statusDescription))
 					wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
@@ -208,7 +231,7 @@ namespace GeneXus.Http
 #endif
 				if (httpStatusCode == HttpStatusCode.Unauthorized)
 				{
-					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty);
+					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(HostSanitization(httpContext.Request.Headers["Host"]), httpStatusCode.ToString(INT_FORMAT), string.Empty);
 				}
 
 #if !NETCORE
