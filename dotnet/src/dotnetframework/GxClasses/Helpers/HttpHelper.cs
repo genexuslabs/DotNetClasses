@@ -84,7 +84,6 @@ namespace GeneXus.Http
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
-		static HashSet<char> WhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789./".ToHashSet();
 
 		const string CORS_MAX_AGE_SECONDS = "86400";
 		internal static void CorsHeaders(HttpContext httpContext)
@@ -187,14 +186,21 @@ namespace GeneXus.Http
 
 		private static string HostSanitization(string input)
 		{
-
+			char[] charactersAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789./".ToCharArray();
+			Dictionary<char, int> whiteList = new Dictionary<char, int>();
+			int idx = 0;
+			foreach (char c in charactersAllowed)
+			{
+				whiteList[c] = idx;
+				idx++;
+			}
 			StringBuilder sanitizedInput = new StringBuilder();
 			if (!string.IsNullOrEmpty(input))
 			{
 				foreach (char c in input)
 				{
-					if (WhiteList.TryGetValue(c, out char wchar))
-						sanitizedInput.Append(wchar);
+					if (whiteList.ContainsKey(c))
+						sanitizedInput.Append(charactersAllowed[whiteList[c]]);
 				}
 				return sanitizedInput.ToString();
 			}
@@ -203,7 +209,7 @@ namespace GeneXus.Http
 				return String.Empty;
 			}
 		}
-		
+
 
 		public static void SetResponseStatus(HttpContext httpContext, HttpStatusCode httpStatusCode, string statusDescription)
 		{
