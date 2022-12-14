@@ -1200,7 +1200,7 @@ namespace GeneXus.XML
 		{
 
 			private Uri myself;
-			private bool readExternalEntities = true;
+			private bool readExternalEntities = false;
 			private GXXMLReader xmlreader;
 			private UnparsedEntitiesContainer entities;
 
