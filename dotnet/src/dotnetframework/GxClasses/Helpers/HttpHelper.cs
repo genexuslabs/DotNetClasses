@@ -185,32 +185,6 @@ namespace GeneXus.Http
 			SetResponseStatus(httpContext, httpStatusCode, statusDescription);
 		}
 
-		private static string HostSanitization(string input)
-		{
-			char[] charactersAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789./".ToCharArray();
-			Dictionary<char, int> whiteList = new Dictionary<char, int>();
-			int idx = 0;
-			foreach (char c in charactersAllowed)
-			{
-				whiteList[c] = idx;
-				idx++;
-			}
-			StringBuilder sanitizedInput = new StringBuilder();
-			if (!string.IsNullOrEmpty(input))
-			{
-				foreach (char c in input)
-				{
-					if (whiteList.ContainsKey(c))
-						sanitizedInput.Append(charactersAllowed[whiteList[c]]);
-				}
-				return sanitizedInput.ToString();
-			}
-			else
-			{
-				return String.Empty;
-			}
-		}
-
 
 		public static void SetResponseStatus(HttpContext httpContext, HttpStatusCode httpStatusCode, string statusDescription)
 		{
@@ -220,7 +194,7 @@ namespace GeneXus.Http
 			{
 				wcfcontext.OutgoingResponse.StatusCode = httpStatusCode;
 				if (httpStatusCode==HttpStatusCode.Unauthorized){
-					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(HostSanitization(wcfcontext.IncomingRequest.Headers["Host"]), httpStatusCode.ToString(INT_FORMAT), string.Empty));
+					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(StringUtil.Sanitize(wcfcontext.IncomingRequest.Headers["Host"],StringUtil.HostWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty));
 				}
 				if (!string.IsNullOrEmpty(statusDescription))
 					wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
@@ -238,7 +212,7 @@ namespace GeneXus.Http
 #endif
 				if (httpStatusCode == HttpStatusCode.Unauthorized)
 				{
-					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(HostSanitization(httpContext.Request.Headers["Host"]), httpStatusCode.ToString(INT_FORMAT), string.Empty);
+					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HostWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
 				}
 
 #if !NETCORE
