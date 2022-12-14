@@ -32,7 +32,7 @@ namespace GeneXus
 		{
 			if (log.IsErrorEnabled)
 			{
-				log.Error(LogSanitization(msg), ex);
+				log.Error(Utils.StringUtil.Sanitize(msg, Utils.StringUtil.LogUserEntryWhiteList), ex);
 			}
 		}
 
@@ -102,7 +102,7 @@ namespace GeneXus
 				StringBuilder msg = new StringBuilder();
 				foreach (string parm in list)
 				{
-					msg.Append(LogSanitization(parm));
+					msg.Append(Utils.StringUtil.Sanitize(parm, Utils.StringUtil.LogUserEntryWhiteList));
 				}
 				if (ex != null)
 					log.Debug(msg, ex);
@@ -111,31 +111,7 @@ namespace GeneXus
 			}
 		}
 
-		private static string LogSanitization(string input)
-		{
-			char[] charactersAllowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_=".ToCharArray();
-			Dictionary<char, int> whiteList = new Dictionary<char, int>();
-			int idx = 0;
-			foreach (char c in charactersAllowed)
-			{
-				whiteList[c] = idx;
-				idx++;
-			}
-			StringBuilder sanitizedInput = new StringBuilder();
-			if (!string.IsNullOrEmpty(input))
-			{
-				foreach (char c in input)
-				{
-					if (whiteList.ContainsKey(c))
-						sanitizedInput.Append(charactersAllowed[whiteList[c]]);
-				}
-				return sanitizedInput.ToString();
-			}
-			else
-			{
-				return String.Empty;
-			}
-		}
+
 
 		public static void Debug(ILog log, params string[] list)
 		{
