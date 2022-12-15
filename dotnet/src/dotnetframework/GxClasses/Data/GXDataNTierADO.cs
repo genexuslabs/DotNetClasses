@@ -1148,22 +1148,22 @@ namespace GeneXus.Data.NTier.ADO
 				if (dynStmt != null)
 				{
 					_stmt = (string)dynStmt[0];
+					bindDynamicParms(_parmBinds);
+					List<object> newParmBinds = new List<object>();
+					parmHasValue = (short[])dynStmt[1];
+					for (int i = 0; i < _parmBinds.Length; i++)
+					{
+						if (parmHasValue[i] == 0)
+							newParmBinds.Add(_parmBinds[i]);
+					}
+					base.bindParms(newParmBinds.ToArray());
+					GXLogging.Debug(log, "ForEachCursor.preExecute, DynamicStatement: " + _stmt);
+					_gxDbCommand.CommandText = _stmt;
+					_gxDbCommand.AfterCreateCommand();
 				}
 
-				bindDynamicParms(_parmBinds);
-                List<object> newParmBinds = new List<object>();
-                parmHasValue = (short[])dynStmt[1];
-                for (int i = 0; i < _parmBinds.Length; i++)
-                {
-                    if (parmHasValue[i] == 0)
-                        newParmBinds.Add(_parmBinds[i]);
-                }
-                base.bindParms(newParmBinds.ToArray());
-                GXLogging.Debug(log, "ForEachCursor.preExecute, DynamicStatement: " + _stmt);
-                _gxDbCommand.CommandText = _stmt;
-				_gxDbCommand.AfterCreateCommand();
-            }
-            _gxDbCommand.DynamicStmt = dynamicStmt;
+			}
+			_gxDbCommand.DynamicStmt = dynamicStmt;
             _gxDbCommand.CursorDef = _cursorDef;
             return parmHasValue;
         }

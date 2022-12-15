@@ -1425,7 +1425,8 @@ namespace GeneXus.Application
 			ExecuteBeforeCommit(callerName);
 			if (ds != null && (ds is DataStoreProvider dataStoreProvider))
 			{
-				dataStoreProvider.commitDataStores(callerName);
+				if (dataStoreProvider!=null)
+					dataStoreProvider.commitDataStores(callerName);
 			}
 			else
 			{
@@ -1518,7 +1519,7 @@ namespace GeneXus.Application
 		}
 		public bool isRemoteGXDB()
 		{
-			return Preferences.Remote ? !Preferences.RemoteLocation.Equals(_currentLocation) : false;
+			return Preferences.Remote ? !(Preferences.RemoteLocation!=null && Preferences.RemoteLocation.Equals(_currentLocation)) : false;
 		}
 
 		public string getCurrentLocation()

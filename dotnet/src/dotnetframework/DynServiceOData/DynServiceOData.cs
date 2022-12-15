@@ -493,7 +493,9 @@ namespace GeneXus.Data.NTier
 			try
 			{
 				ODataQuery queryObj = (cursorDef.Query as ODataQuery);
-				Func<GXODataClient, IDataParameterCollection, GXODataClient> action = queryObj?.query;
+				if (queryObj == null)
+					return 0;
+				Func<GXODataClient, IDataParameterCollection, GXODataClient> action = queryObj.query;
 				Task task = null;
 				ConfiguredTaskAwaitable.ConfiguredTaskAwaiter taskAwaiter;
 
@@ -927,29 +929,32 @@ namespace GeneXus.Data.NTier
 			}
 			else if (record.Any(item => item.Value is IDictionary<string, object> && (mapColItem = NeedFlattenMemberCol(item.Key, record)) != null))
 			{
-				IDictionary<string, object> entity = record[mapColItem.GetName(NewServiceContext())] as IDictionary<string, object>;
-				string entityKey = mapColItem.GetKey(NewServiceContext());
-				IEnumerable<object> memberCol = entity[entityKey] as IEnumerable<object>;
-				if (memberCol.Any())
+				if (mapColItem != null)
 				{
-					foreach (object memberItem in memberCol)
+					IDictionary<string, object> entity = record[mapColItem.GetName(NewServiceContext())] as IDictionary<string, object>;
+					string entityKey = mapColItem.GetKey(NewServiceContext());
+					IEnumerable<object> memberCol = entity[entityKey] as IEnumerable<object>;
+					if (memberCol.Any())
 					{
-						IDictionary<string, object> oneEntity = new Dictionary<string, object>(entity);
-						oneEntity.Remove(entityKey);
-						oneEntity.Add(entityKey, memberItem);
+						foreach (object memberItem in memberCol)
+						{
+							IDictionary<string, object> oneEntity = new Dictionary<string, object>(entity);
+							oneEntity.Remove(entityKey);
+							oneEntity.Add(entityKey, memberItem);
 
-						IDictionary<string, object> oneRecord = new Dictionary<string, object>(record);
-						string name = mapColItem.GetName(NewServiceContext());
-						oneRecord.Remove(name);
-						oneRecord.Add(name, oneEntity);
-						foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
-							yield return r;
+							IDictionary<string, object> oneRecord = new Dictionary<string, object>(record);
+							string name = mapColItem.GetName(NewServiceContext());
+							oneRecord.Remove(name);
+							oneRecord.Add(name, oneEntity);
+							foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
+								yield return r;
+						}
 					}
-				}
-				else
-				{
-					entity.Remove(entityKey);
-					yield return record;
+					else
+					{
+						entity.Remove(entityKey);
+						yield return record;
+					}
 				}
 			}
 			else yield return record;
@@ -965,10 +970,11 @@ namespace GeneXus.Data.NTier
 			DataStoreHelperOData.ODataMapCol mapColItem = selItem as DataStoreHelperOData.ODataMapCol;
 			if (mapColItem != null)
 			{
+				IDictionary<string, object> recordDic = record[entityKey] as IDictionary<string, object>;
 				return mapColItem.GetName(NewServiceContext()) == entityKey &&
-											(record[entityKey] as IDictionary<string, object> != null) &&
-											(record[entityKey] as IDictionary<string, object>).ContainsKey(mapColItem.GetKey(NewServiceContext())) &&
-											(record[entityKey] as IDictionary<string, object>)[mapColItem.GetKey(NewServiceContext())] is IEnumerable<object>;
+											recordDic != null &&
+											recordDic.ContainsKey(mapColItem.GetKey(NewServiceContext())) &&
+											recordDic[mapColItem.GetKey(NewServiceContext())] is IEnumerable<object>;
 			}else
 				return false;
 		}
@@ -1571,10 +1577,13 @@ namespace GeneXus.Data.NTier
 
 		private bool IsSameEntity(object entry, object setEntity, bool fullCheck)
 		{
-			if (entry is DynamicODataEntry && setEntity is IDictionary<string, object>)
+			DynamicODataEntry entryOdata = entry as DynamicODataEntry;
+			IDictionary<string, object> setEntityDict = setEntity as IDictionary<string, object>;
+			IList<object> entryList = entry as IList<object>;
+			IList<object> setEntityList = setEntity as IList<object>;
+			if (entryOdata != null && setEntity != null)
 			{
-				IDictionary<string, object> entryDict = (entry as DynamicODataEntry).AsDictionary();
-				IDictionary<string, object> setEntityDict = setEntity as IDictionary<string, object>;
+				IDictionary<string, object> entryDict = entryOdata.AsDictionary();
 				if (fullCheck)
 					return (entryDict.Count == setEntityDict.Count) &&
 						entryDict.All(kvPair => setEntityDict.ContainsKey(kvPair.Key) && IsSameEntity(kvPair.Value, setEntityDict[kvPair.Key], fullCheck));
@@ -1583,10 +1592,8 @@ namespace GeneXus.Data.NTier
 						entryDict.All(kvPair => !setEntityDict.ContainsKey(kvPair.Key) || IsSameEntity(kvPair.Value, setEntityDict[kvPair.Key], fullCheck));
 
 			}
-			else if (entry is IList<object> && setEntity is IList<object>)
+			else if (entryList!=null && setEntityList!=null)
 			{
-				IList<object> entryList = entry as IList<object>;
-				IList<object> setEntityList = setEntity as IList<object>;
 				return (entryList.Count == setEntityList.Count) &&
 					entryList.Zip(setEntityList, (left, right) => IsSameEntity(left, right, fullCheck)).All(item => item);
 			}

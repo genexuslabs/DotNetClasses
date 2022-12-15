@@ -699,6 +699,8 @@ namespace GeneXus.Utils
 			try
 			{
 				Object[][] itemKey = item.GetBCKey();
+				if (itemKey == null)
+					return false;
 				Object[] returnedKey = new Object[itemKey.Length];
 				Object[] parsedKey = new Object[key.Length];
 				for (int i = 0; i < itemKey.Length; i++)

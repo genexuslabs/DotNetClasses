@@ -2464,7 +2464,6 @@ namespace TZ4Net
 					}
 				}
 				Debug.Assert(maxAbbreviation != null && maxRankValue != null);
-				Debug.Assert(maxRankValue.OlsonName == olsonName);
 				res.Add(olsonName, maxAbbreviation);
 			}
 			return res;
