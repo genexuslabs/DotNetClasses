@@ -63,10 +63,10 @@ namespace GeneXus.Utils
 		public static T Deserialize<T>(Type TargetType, string serialized, string sName, string sNameSpace, out List<string> serializationErrors)
 		{
 			T deserialized;
+			GxSerializationErrorManager serErr = null;
 			if (!string.IsNullOrEmpty(serialized))
 			{
 				XmlSerializer xmls;
-				GxSerializationErrorManager serErr = new GxSerializationErrorManager();
 				if (string.IsNullOrEmpty(sNameSpace) && string.IsNullOrEmpty(sName))
 				{
 #pragma warning disable SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
@@ -75,17 +75,13 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					xmls = GetSerializer(TargetType, null, sName, sNameSpace);
-					xmls.UnknownNode += serErr.unknownNode;
+					xmls = GetSerializer(TargetType, null, sName, sNameSpace, out serErr);
 				}
 				try
 				{
 					using (StringReader sr = new StringReader(serialized))
 					{
-						using (XmlReader xmlReader = XmlReader.Create(sr, new XmlReaderSettings {CheckCharacters=false }))
-						{
-							deserialized = (T)(xmls.Deserialize(xmlReader));
-						}
+						deserialized = (T)(xmls.Deserialize(sr));
 					}
 				}
 				catch (InvalidOperationException ex)
@@ -103,40 +99,53 @@ namespace GeneXus.Utils
 						throw ex;
 					}
 				}
-				finally
+				if (serErr != null)
 				{
-					xmls.UnknownNode -= serErr.unknownNode;
+					serializationErrors = serErr.GetErrors();
+					serErr.ClearErrors();
 				}
-
-				serializationErrors = serErr.GetErrors();
+				else
+				{
+					serializationErrors = null;
+				}
 				return deserialized;
 			}
 			serializationErrors = new List<string>();
 			return default(T);
 		}
 		private static ConcurrentDictionary<string, XmlSerializer> serializers = new ConcurrentDictionary<string, XmlSerializer>();
+		private static ConcurrentDictionary<string, GxSerializationErrorManager> serializersErr = new ConcurrentDictionary<string, GxSerializationErrorManager>();
 
-		private static XmlSerializer GetSerializer(Type type, XmlAttributeOverrides ovAttrs, string rootName, string sNameSpace)
+		private static XmlSerializer GetSerializer(Type type, XmlAttributeOverrides ovAttrs, string rootName, string sNameSpace, out GxSerializationErrorManager serErr)
 		{
 			string key = string.Format("{0},{1},{2},{3}", type.FullName, rootName, sNameSpace, ovAttrs == null);
 			XmlRootAttribute root = new XmlRootAttribute(rootName);
 			XmlSerializer serializer;
 			if (serializers.TryGetValue(key, out serializer))
 			{
+				serializersErr.TryGetValue(key, out serErr);
 				return serializer;
 			}
 			else
 			{
-				return CreateSerializer(key, type, ovAttrs, root, sNameSpace);
+				return CreateSerializer(key, type, ovAttrs, root, sNameSpace, out serErr);
 			}
 		}
 
-		private static XmlSerializer CreateSerializer(string key, Type type, XmlAttributeOverrides ovAttrs, XmlRootAttribute root, string sNameSpace)
+		private static void XmlSerializer_UnknownNode(object sender, XmlNodeEventArgs e)
 		{
+			throw new NotImplementedException();
+		}
+
+		private static XmlSerializer CreateSerializer(string key, Type type, XmlAttributeOverrides ovAttrs, XmlRootAttribute root, string sNameSpace, out GxSerializationErrorManager serErr)
+		{
+			serErr = new GxSerializationErrorManager();
 #pragma warning disable SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
-			var s = new XmlSerializer(type, ovAttrs, Array.Empty<Type>(), root, sNameSpace);
+			XmlSerializer s = new XmlSerializer(type, ovAttrs, Array.Empty<Type>(), root, sNameSpace);
 #pragma warning restore SCS0028 // Unsafe deserialization possible from {1} argument passed to '{0}'
+			s.UnknownNode += serErr.unknownNode;
 			serializers.TryAdd(key, s);
+			serializersErr.TryAdd(key, serErr);
 			return s;
 		}
 
@@ -162,7 +171,7 @@ namespace GeneXus.Utils
 			{
 				indentElements = xmlIndent.Trim().ToLower() == "true";
 			}
-			XmlSerializer xmls = GetSerializer(instance.GetType(), ovAttrs, rootName, sNameSpace);
+			XmlSerializer xmls = GetSerializer(instance.GetType(), ovAttrs, rootName, sNameSpace, out _);
 			string s;
 			using (MemoryStream stream = new MemoryStream())
 			{
@@ -229,5 +238,6 @@ namespace GeneXus.Utils
 		{
 			return this.errors;
 		}
+		internal void ClearErrors() { this.errors = new List<string>();}
 	}
 }
