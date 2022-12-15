@@ -271,97 +271,99 @@ namespace GeneXus.Diagnostics
 			GXDebugItem[] Data = state[0] as GXDebugItem[];
 			int saveTop = (int)state[1];
 			int saveCount = (int)state[2];
-
-			lock (mSaveLock)
+			if (Data != null)
 			{
-				
-				int idx = 0;
-				try
+				lock (mSaveLock)
 				{
-					string FQFileName = Path.IsPathRooted(FileName) ? FileName : Path.Combine(GxContext.Current.GetPhysicalPath(), FileName);
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					using (GXDebugStream stream = new GXDebugStream(FQFileName, FileMode.Append))
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+
+					int idx = 0;
+					try
 					{
-						stream.WriteHeader(SessionGuid, (short)(GXDEBUG_VERSION << 4 | GENERATOR_ID.ToByte()), saveCount);
+						string FQFileName = Path.IsPathRooted(FileName) ? FileName : Path.Combine(GxContext.Current.GetPhysicalPath(), FileName);
+#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+						using (GXDebugStream stream = new GXDebugStream(FQFileName, FileMode.Append))
+#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+						{
+							stream.WriteHeader(SessionGuid, (short)(GXDEBUG_VERSION << 4 | GENERATOR_ID.ToByte()), saveCount);
 #if _DEBUG_DEBUGGER
 						Console.WriteLine("mSave-" + saveTop);
 #endif
-						for (; idx < saveTop; idx++)
-						{
-							GXDebugItem dbgItem = Data[idx];
+							for (; idx < saveTop; idx++)
+							{
+								GXDebugItem dbgItem = Data[idx];
 #if _DEBUG_DEBUGGER
 							Console.WriteLine($"item({idx}): { dbgItem }");
 #endif
-							switch (dbgItem.MsgType)
-							{
-								case GXDebugMsgType.SYSTEM:
-									{
-										stream.WriteByte((byte)(dbgItem.MsgType.ToByte() | ((GXDebugMsgCode)dbgItem.Arg1).ToByte()));
-										switch ((GXDebugMsgCode)dbgItem.Arg1)
+								switch (dbgItem.MsgType)
+								{
+									case GXDebugMsgType.SYSTEM:
 										{
-											case GXDebugMsgCode.INITIALIZE:
-												stream.WriteLong(((DateTime)dbgItem.ArgObj).ToUniversalTime().Ticks);
-												break;
-											case GXDebugMsgCode.OBJ_CLEANUP:
-												stream.WriteVLUInt((int)dbgItem.ArgObj);
-												break;
-											case GXDebugMsgCode.EXIT:
-												break;
-											case GXDebugMsgCode.PGM_INFO:
-												KeyValuePair<object, object> info = (KeyValuePair<object, object>)dbgItem.ArgObj;
-												stream.WriteVLUInt(((KeyValuePair<int, int>)info.Key).Key);
-												stream.WriteVLUInt(((KeyValuePair<int, int>)info.Key).Value);
-												stream.WriteVLUInt(((KeyValuePair<int, long>)info.Value).Key);
-												stream.WriteInt(((KeyValuePair<int, long>)info.Value).Value);
-												break;
-											default:
-												throw new ArgumentException($"Invalid DbgItem: { dbgItem }");
+											stream.WriteByte((byte)(dbgItem.MsgType.ToByte() | ((GXDebugMsgCode)dbgItem.Arg1).ToByte()));
+											switch ((GXDebugMsgCode)dbgItem.Arg1)
+											{
+												case GXDebugMsgCode.INITIALIZE:
+													stream.WriteLong(((DateTime)dbgItem.ArgObj).ToUniversalTime().Ticks);
+													break;
+												case GXDebugMsgCode.OBJ_CLEANUP:
+													stream.WriteVLUInt((int)dbgItem.ArgObj);
+													break;
+												case GXDebugMsgCode.EXIT:
+													break;
+												case GXDebugMsgCode.PGM_INFO:
+													KeyValuePair<object, object> info = (KeyValuePair<object, object>)dbgItem.ArgObj;
+													stream.WriteVLUInt(((KeyValuePair<int, int>)info.Key).Key);
+													stream.WriteVLUInt(((KeyValuePair<int, int>)info.Key).Value);
+													stream.WriteVLUInt(((KeyValuePair<int, long>)info.Value).Key);
+													stream.WriteInt(((KeyValuePair<int, long>)info.Value).Value);
+													break;
+												default:
+													throw new ArgumentException($"Invalid DbgItem: {dbgItem}");
+											}
 										}
-									}
-									break;
-								case GXDebugMsgType.PGM_TRACE:
-									{
-										stream.WritePgmTrace(dbgItem.DbgInfo.SId, dbgItem.Arg1, dbgItem.Arg2, dbgItem.Ticks);
-									}
-									break;
-								case GXDebugMsgType.PGM_TRACE_RANGE:
-								case GXDebugMsgType.PGM_TRACE_RANGE_WITH_COLS:
-									{
-										stream.WriteByte(dbgItem.MsgType.ToByte());
-										stream.WriteVLUInt(dbgItem.DbgInfo.SId);
-										stream.WriteVLUInt(dbgItem.Arg1);
-										stream.WriteVLUInt(dbgItem.Arg2);
-										if (dbgItem.MsgType == GXDebugMsgType.PGM_TRACE_RANGE_WITH_COLS)
+										break;
+									case GXDebugMsgType.PGM_TRACE:
 										{
+											stream.WritePgmTrace(dbgItem.DbgInfo.SId, dbgItem.Arg1, dbgItem.Arg2, dbgItem.Ticks);
+										}
+										break;
+									case GXDebugMsgType.PGM_TRACE_RANGE:
+									case GXDebugMsgType.PGM_TRACE_RANGE_WITH_COLS:
+										{
+											stream.WriteByte(dbgItem.MsgType.ToByte());
+											stream.WriteVLUInt(dbgItem.DbgInfo.SId);
+											stream.WriteVLUInt(dbgItem.Arg1);
+											stream.WriteVLUInt(dbgItem.Arg2);
+											if (dbgItem.MsgType == GXDebugMsgType.PGM_TRACE_RANGE_WITH_COLS)
+											{
+												stream.WriteVLUInt(((KeyValuePair<int, int>)dbgItem.ArgObj).Key);
+												stream.WriteVLUInt(((KeyValuePair<int, int>)dbgItem.ArgObj).Value);
+											}
+										}
+										break;
+									case GXDebugMsgType.REGISTER_PGM:
+										{
+											stream.WriteByte(dbgItem.MsgType.ToByte());
+											stream.WriteVLUInt(dbgItem.DbgInfo.SId);
+											stream.WriteVLUInt(dbgItem.Arg1);
 											stream.WriteVLUInt(((KeyValuePair<int, int>)dbgItem.ArgObj).Key);
 											stream.WriteVLUInt(((KeyValuePair<int, int>)dbgItem.ArgObj).Value);
 										}
-									}
-									break;
-								case GXDebugMsgType.REGISTER_PGM:
-									{
-										stream.WriteByte(dbgItem.MsgType.ToByte());
-										stream.WriteVLUInt(dbgItem.DbgInfo.SId);
-										stream.WriteVLUInt(dbgItem.Arg1);
-										stream.WriteVLUInt(((KeyValuePair<int, int>)dbgItem.ArgObj).Key);
-										stream.WriteVLUInt(((KeyValuePair<int, int>)dbgItem.ArgObj).Value);
-									}
-									break;
-								case GXDebugMsgType.SKIP:
-									continue;
+										break;
+									case GXDebugMsgType.SKIP:
+										continue;
+								}
+								ClearDebugItem(dbgItem);
 							}
-							ClearDebugItem(dbgItem);
 						}
 					}
-				}
-				catch (Exception ex)
-				{
-					GXLogging.Warn(log, $"GXDebugManager: Cannot write debug file", ex);
-				}
+					catch (Exception ex)
+					{
+						GXLogging.Warn(log, $"GXDebugManager: Cannot write debug file", ex);
+					}
 
-				saving = false;
-				waitSaveEvent.Set();
+					saving = false;
+					waitSaveEvent.Set();
+				}
 			}
 		}
 

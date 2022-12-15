@@ -493,7 +493,7 @@ namespace GeneXus.Data.NTier
 			try
 			{
 				ODataQuery queryObj = (cursorDef.Query as ODataQuery);
-				Func<GXODataClient, IDataParameterCollection, GXODataClient> action = queryObj.query;
+				Func<GXODataClient, IDataParameterCollection, GXODataClient> action = queryObj?.query;
 				Task task = null;
 				ConfiguredTaskAwaitable.ConfiguredTaskAwaiter taskAwaiter;
 
@@ -753,7 +753,7 @@ namespace GeneXus.Data.NTier
 			conn.State = ConnectionState.Executing;
 			ODataQuery query = cursorDef.Query as ODataQuery;
 			action = query?.query;
-			selectList = query.selectList;
+			selectList = query?.selectList;
 			allSelectedKeys = null;
 			annotations = new ODataFeedAnnotations();
 			if (action != null)
@@ -957,7 +957,8 @@ namespace GeneXus.Data.NTier
 
 		private bool NeedFlattenRecord(string entityKey)
 		{
-			return !selectList.Any(selItem => selItem != null && selItem is DataStoreHelperOData.ODataMapExt && (selItem as DataStoreHelperOData.ODataMapExt).GetName(NewServiceContext()) == entityKey);
+			DataStoreHelperOData.ODataMapExt aux;
+			return !selectList.Any(selItem => selItem != null && ((aux=selItem as DataStoreHelperOData.ODataMapExt) !=null) && aux.GetName(NewServiceContext()) == entityKey);
 		}
 		private bool NeedFlattenMemberColFuc(IODataMap selItem, string entityKey, IDictionary<string, object> record)
 		{
@@ -1292,7 +1293,9 @@ namespace GeneXus.Data.NTier
 			bool isNull = !currentEntry.ContainsKey(selectList[i].GetName(NewServiceContext())) || selectList[i].GetValue(NewServiceContext(), currentEntry) == null;
 			if (!isNull && selectList[i] is DataStoreHelperOData.ODataMapCol)
 			{
-				isNull = !(currentEntry[selectList[i].GetName(NewServiceContext())] as IDictionary<string, object>).ContainsKey((selectList[i] as DataStoreHelperOData.ODataMapCol).GetKey(NewServiceContext()));
+				IDictionary<string, object> currEntryDic = currentEntry[selectList[i].GetName(NewServiceContext())] as IDictionary<string, object>;
+				if (currEntryDic != null)
+					isNull = !currEntryDic.ContainsKey((selectList[i] as DataStoreHelperOData.ODataMapCol).GetKey(NewServiceContext()));
 			}
 			return isNull;
 		}

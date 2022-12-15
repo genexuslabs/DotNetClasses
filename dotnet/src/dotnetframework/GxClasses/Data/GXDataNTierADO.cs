@@ -1145,7 +1145,10 @@ namespace GeneXus.Data.NTier.ADO
                 Object[] dynStmt = parent.getDynamicStatement(cursorNum, connectionProvider.context, connectionProvider.getDynConstraints());
                 if (dynStmt == null && parent is DataStoreHelperBase)
                     dynStmt = ((DataStoreHelperBase)parent).getDynamicStatement(cursorNum, connectionProvider.getDynConstraints());
-                _stmt = (string)dynStmt[0];
+				if (dynStmt != null)
+				{
+					_stmt = (string)dynStmt[0];
+				}
 
 				bindDynamicParms(_parmBinds);
                 List<object> newParmBinds = new List<object>();

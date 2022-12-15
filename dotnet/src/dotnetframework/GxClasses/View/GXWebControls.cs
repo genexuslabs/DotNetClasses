@@ -539,7 +539,7 @@ namespace GeneXus.WebControls
                     equal = equal && it.MoveNext();
                     if (equal)
                         current = it.Current;
-                    if (!(equal && (current.Equals(prop))))
+                    if (!(equal && (current != null && current.Equals(prop))))
                     {
                         equal = false;
                         colProps.Add(0, prop);

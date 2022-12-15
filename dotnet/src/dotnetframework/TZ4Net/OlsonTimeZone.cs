@@ -774,27 +774,30 @@ namespace TZ4Net
 				doc.XmlResolver = null;
 				doc.Load(stream);
 				XmlElement mapTimezonesElement = doc.DocumentElement.SelectSingleNode("//supplementalData/windowsZones/mapTimezones") as XmlElement;
-				XmlNodeList children = mapTimezonesElement.ChildNodes;
-				int i = -1, iMax = children.Count - 1;
-				while (++i < iMax) 
+				if (mapTimezonesElement != null)
 				{
-                    XmlComment comment = children[i] as XmlComment;
-                    if (comment != null)
-                    {
-                        XmlElement element = children[++i] as XmlElement;
-                        if (element != null)
-                        {
-                            Debug.Assert(element.GetAttribute("territory") == "001");
-                            UnicodeWin32MapValue mapValue = new UnicodeWin32MapValue(element.GetAttribute("other"), element.GetAttribute("type"));
-                            mapValue.Win32Name = comment.Value.Trim();
+					XmlNodeList children = mapTimezonesElement.ChildNodes;
+					int i = -1, iMax = children.Count - 1;
+					while (++i < iMax)
+					{
+						XmlComment comment = children[i] as XmlComment;
+						if (comment != null)
+						{
+							XmlElement element = children[++i] as XmlElement;
+							if (element != null)
+							{
+								Debug.Assert(element.GetAttribute("territory") == "001");
+								UnicodeWin32MapValue mapValue = new UnicodeWin32MapValue(element.GetAttribute("other"), element.GetAttribute("type"));
+								mapValue.Win32Name = comment.Value.Trim();
 
-                            // end of 'mapZone' element, ready to add to the map
-                            if (Array.IndexOf(AllNames, mapValue.OlsonName) >= 0)
-                            {	// add only if value exists in the list of all Olson names
-                                res.Add(mapValue.Win32Id, mapValue);
-                            }
-                        }
-                    }
+								// end of 'mapZone' element, ready to add to the map
+								if (Array.IndexOf(AllNames, mapValue.OlsonName) >= 0)
+								{   // add only if value exists in the list of all Olson names
+									res.Add(mapValue.Win32Id, mapValue);
+								}
+							}
+						}
+					}
 				}
 			} 
 			finally 
@@ -997,16 +1000,19 @@ namespace TZ4Net
 			{
 				UnicodeWin32MapValue mapValue = e.Value as UnicodeWin32MapValue;
 				Debug.Assert(mapValue != null);
-				if (res.ContainsKey(mapValue.OlsonName)) 
+				if (mapValue != null)
 				{
-					if (!mapValue.IsObsoleted) 
+					if (res.ContainsKey(mapValue.OlsonName))
 					{
-						res[mapValue.OlsonName] = e.Key;
+						if (!mapValue.IsObsoleted)
+						{
+							res[mapValue.OlsonName] = e.Key;
+						}
 					}
-				} 
-				else 
-				{
-					res.Add(mapValue.OlsonName, e.Key);
+					else
+					{
+						res.Add(mapValue.OlsonName, e.Key);
+					}
 				}
 			}
 			return res;
@@ -1081,16 +1087,19 @@ namespace TZ4Net
 			{
 				UnicodeWin32MapValue mapValue = e.Value as UnicodeWin32MapValue;
 				Debug.Assert(mapValue != null);
-				if (res.ContainsKey(mapValue.Win32Name)) 
+				if (mapValue != null)
 				{
-					if (!mapValue.IsObsoleted) 
+					if (res.ContainsKey(mapValue.Win32Name))
 					{
-						res[mapValue.Win32Name] = mapValue.OlsonName;
+						if (!mapValue.IsObsoleted)
+						{
+							res[mapValue.Win32Name] = mapValue.OlsonName;
+						}
 					}
-				} 
-				else 
-				{
-					res.Add(mapValue.Win32Name, mapValue.OlsonName);
+					else
+					{
+						res.Add(mapValue.Win32Name, mapValue.OlsonName);
+					}
 				}
 			}
 			return res;
@@ -1708,25 +1717,27 @@ namespace TZ4Net
 			}
 
 			Debug.Assert(currentChange != null);
-
-			if (time >= currentChange.Start && time < currentChange.Start.Add(currentChange.Delta)) 
+			if (currentChange != null)
 			{
-				return TimeCheckResult.InSpringForwardGap;
-			}
-
-			if (nextChange != null) 
-			{
-				if (time >= currentChange.End.Add(nextChange.Delta) && time <= currentChange.End) 
-				{
-					return TimeCheckResult.InFallBackRange;
-				}
-			} 
-			else 
-			{
-				Debug.Assert(currentChange.End == MaxTime);
-				if (time > currentChange.End.Add(new TimeSpan(0, 0, zoneInfo.GetRule(ZoneInfo.MaxClock).Offset)) && time <= currentChange.End) 
+				if (time >= currentChange.Start && time < currentChange.Start.Add(currentChange.Delta))
 				{
 					return TimeCheckResult.InSpringForwardGap;
+				}
+
+				if (nextChange != null)
+				{
+					if (time >= currentChange.End.Add(nextChange.Delta) && time <= currentChange.End)
+					{
+						return TimeCheckResult.InFallBackRange;
+					}
+				}
+				else
+				{
+					Debug.Assert(currentChange.End == MaxTime);
+					if (time > currentChange.End.Add(new TimeSpan(0, 0, zoneInfo.GetRule(ZoneInfo.MaxClock).Offset)) && time <= currentChange.End)
+					{
+						return TimeCheckResult.InSpringForwardGap;
+					}
 				}
 			}
 			return TimeCheckResult.Valid;
