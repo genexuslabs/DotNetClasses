@@ -1519,7 +1519,15 @@ namespace GeneXus.Application
 		}
 		public bool isRemoteGXDB()
 		{
-			return Preferences.Remote ? !(Preferences.RemoteLocation!=null && Preferences.RemoteLocation.Equals(_currentLocation)) : false;
+			if (Preferences.Remote)
+			{
+				string remoteLocation = Preferences.RemoteLocation;
+				if (remoteLocation != null)
+				{
+					return !remoteLocation.Equals(_currentLocation);
+				}
+			}
+			return false;
 		}
 
 		public string getCurrentLocation()
