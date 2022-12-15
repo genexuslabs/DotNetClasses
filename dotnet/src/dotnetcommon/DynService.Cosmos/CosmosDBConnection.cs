@@ -72,6 +72,7 @@ namespace GeneXus.Data.NTier
 		}
 		private static void InitializeDBConnection()
 		{
+	
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = mConnectionString;
 
@@ -145,6 +146,7 @@ namespace GeneXus.Data.NTier
 					VarValue varValue = query.Vars.FirstOrDefault(v => v.Name == $":{varName}");
 
 					string jsonDataKey = String.Empty;
+					string jsonDataPartitionKey = string.Empty;
 					if (varValue != null)
 					{ 
 						keyCondition[name] = varValue.Value;
@@ -152,6 +154,12 @@ namespace GeneXus.Data.NTier
 						
 						if (isUpdate && name == "id")
 							jsonDataKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(varValue.Type, name, varValue.Value);
+						if (isUpdate && name == partitionKey)
+							jsonDataPartitionKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(varValue.Type, name, varValue.Value);
+
+						if (name == partitionKey)
+							//TODO Partition Key can be numeric 
+							partitionKeyValue = varValue.Value.ToString();
 					}
 					else
 					{
@@ -162,14 +170,31 @@ namespace GeneXus.Data.NTier
 							
 							if (isUpdate && name == "id")
 								jsonDataKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(serviceParm.DbType, name, serviceParm.Value);
+							if (isUpdate && name == partitionKey)
+								jsonDataPartitionKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(serviceParm.DbType, name, serviceParm.Value);
+
+							if (name == partitionKey)
+								//TODO Partition Key can be numeric 
+								partitionKeyValue = serviceParm.Value.ToString();
 						}
 					}
-					if (!string.IsNullOrEmpty(jsonData))
+					if (!string.IsNullOrEmpty(jsonDataKey))
 					{
-						jsonData = $"{jsonData},{jsonDataKey}";
+						if (!string.IsNullOrEmpty(jsonData))
+						{
+							jsonData = $"{jsonData},{jsonDataKey}";
+						}
+						else
+							jsonData = jsonDataKey;
 					}
-					else
-						jsonData = jsonDataKey;
+
+					if (!string.IsNullOrEmpty(jsonDataPartitionKey))
+					{
+						if (!string.IsNullOrEmpty(jsonData))
+							jsonData = $"{jsonData},{jsonDataPartitionKey}";
+						else
+							jsonData = jsonDataPartitionKey;
+					}
 
 				}
 			}
@@ -348,60 +373,69 @@ namespace GeneXus.Data.NTier
 					{
 						string cond = match.Groups[1].Value;
 						Match match2 = Regex.Match(cond, regex2);
-
-						//Get the value for this item
-						string varValuestr = string.Empty;
-						if (match2.Groups.Count > 0)
+						if (match2.Success)
 						{
-							string column = match2.Groups[1].Value.Trim();
-							column = $"{TABLE_ALIAS}.{column}";
-
-							string attName = match2.Groups[3].Value.Trim();
-							if (attName.StartsWith(":"))
-								attName = attName.Substring(1);
-
-							string op = match2.Groups[2].Value.Trim();
-
-							//look at IDataParameterCollection parms
-							if (parms[attName] is ServiceParameter serviceParm)
-								if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringDbType(serviceParm.DbType))
-								//Nvarchar, etc?
-								//Date?
-								{
-									varValuestr = '"' + $"{serviceParm.Value.ToString()}" + '"';
-								}
-								else
-									varValuestr = serviceParm.Value.ToString();
-						
-
-							//look at query.vars
-							foreach (VarValue item in query.Vars)
+							//Get the value for this item
+							string varValuestr = string.Empty;
+							if (match2.Groups.Count > 0)
 							{
-								if (item.Name == match2.Groups[3].Value)
-								{
-									//if (item.Type == GXType.Char || item.Type == GXType.LongVarChar || item.Type == GXType.VarChar || item.Type == GXType.Text)
-									if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringGXType(item.Type))
+								string column = match2.Groups[1].Value.Trim();
+								string attName = match2.Groups[3].Value.Trim();
+								if (attName.StartsWith(":"))
+									attName = attName.Substring(1);
+
+								string op = match2.Groups[2].Value.Trim();
+
+								//look at IDataParameterCollection parms
+								if (parms[attName] is ServiceParameter serviceParm)
+									if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringDbType(serviceParm.DbType))
 									//Nvarchar, etc?
 									//Date?
 									{
-										varValuestr = '"' +  $"{item.Value.ToString()}" + '"';
+										varValuestr = '"' + $"{serviceParm.Value.ToString()}" + '"';
 									}
 									else
-										varValuestr = item.Value.ToString();
-									break;
+										varValuestr = serviceParm.Value.ToString();
+
+
+								//look at query.vars
+								foreach (VarValue item in query.Vars)
+								{
+									if (item.Name == match2.Groups[3].Value)
+									{
+										//if (item.Type == GXType.Char || item.Type == GXType.LongVarChar || item.Type == GXType.VarChar || item.Type == GXType.Text)
+										if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringGXType(item.Type))
+										//Nvarchar, etc?
+										//Date?
+										{
+											varValuestr = '"' + $"{item.Value.ToString()}" + '"';
+										}
+										else
+										{ 
+											varValuestr = item.Value.ToString();
+											varValuestr = varValuestr.Equals("True") ? "true" : varValuestr;
+											varValuestr = varValuestr.Equals("False") ? "false" : varValuestr;
+										}
+										break;
+									}
 								}
+
+								//Controlar antes de mandar la sentencia a ejecutar
+
+								condition = condition.Replace(cond, $"{column}{op}{varValuestr}");
 							}
+							else
+							{
+								//Check that cond is a valid attribute - boolean
 
-							//Controlar antes de mandar la sentencia a ejecutar
-
-							condition = condition.Replace(cond, $"{column}{op}{varValuestr}");
-						}
-						else
-						{
-							//Check that cond is a valid attribute - boolean
-
+							}
 						}
 					}
+				}
+
+				foreach (string d in projection)
+				{
+					condition = condition.Replace(d, $"{TABLE_ALIAS}.{d}");
 				}
 				keyFilterQ = new string[] { condition };
 				allFiltersQuery = allFiltersQuery.Concat(keyFilterQ);
