@@ -1738,9 +1738,12 @@ namespace GeneXus.Utils
 							else if ((currSimpleColl = currProp as GxSimpleCollection<object>) != null)
 							{
 								currSimpleColl.ClearCollection();
-								foreach (object item in currObjColl)
+								if (currObjColl != null)
 								{
-									currSimpleColl.Add(item);
+									foreach (object item in currObjColl)
+									{
+										currSimpleColl.Add(item);
+									}
 								}
 							}
 							else if ((currJsonProp = currProp as IGxJSONAble) != null)

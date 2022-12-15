@@ -1479,7 +1479,10 @@ namespace GeneXus.Application
 
 			if (ds != null && (ds is DataStoreProvider dataStoreProvider))
 			{
-				dataStoreProvider.rollbackDataStores(callerName);
+				if (dataStoreProvider != null)
+				{
+					dataStoreProvider.rollbackDataStores(callerName);
+				}
 			}
 			else
 			{

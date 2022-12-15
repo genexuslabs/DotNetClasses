@@ -537,11 +537,14 @@ namespace GeneXus.Utils
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
-			for (int i = 0; i < jobj.Length; i++)
+			if (jobj != null)
 			{
-				T obj1 = (T)Activator.CreateInstance(typeof(T), new object[] { context });
-				obj1.FromJSONObject(jobj[i]);
-				Add(obj1);
+				for (int i = 0; i < jobj.Length; i++)
+				{
+					T obj1 = (T)Activator.CreateInstance(typeof(T), new object[] { context });
+					obj1.FromJSONObject(jobj[i]);
+					Add(obj1);
+				}
 			}
 		}
 	}

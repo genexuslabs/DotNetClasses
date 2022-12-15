@@ -245,7 +245,10 @@ namespace GeneXus.Office
                 {
                     GXLogging.Warn(log, "Setting Rooted Path on " + this.fileName, e);
                 }
-                return document.Open(this.fileName);
+				if (document != null)
+					return document.Open(this.fileName);
+				else
+					return -1;
             }
             else
             {
