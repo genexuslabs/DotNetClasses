@@ -2676,8 +2676,12 @@ namespace GeneXus.Utils
 			else if (ienumerableType != null)
 			{
 				IList lst = (IList)Activator.CreateInstance((typeof(List<>).MakeGenericType(ienumerableType)));
-				foreach (object item in i as IEnumerable)
-					lst.Add(item);
+				IEnumerable iEnum = i as IEnumerable;
+				if (iEnum != null)
+				{
+					foreach (object item in iEnum)
+						lst.Add(item);
+				}
 				o = lst;
 			}
 			else

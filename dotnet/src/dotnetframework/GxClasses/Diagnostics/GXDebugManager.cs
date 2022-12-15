@@ -268,9 +268,14 @@ namespace GeneXus.Diagnostics
 		private void mSave(object state1)
 		{
 			object[] state = state1 as object[];
-			GXDebugItem[] Data = state[0] as GXDebugItem[];
-			int saveTop = (int)state[1];
-			int saveCount = (int)state[2];
+			GXDebugItem[] Data = null;
+			int saveTop=0, saveCount=0;
+			if (state != null)
+			{
+				Data = state[0] as GXDebugItem[];
+				saveTop = (int)state[1];
+				saveCount = (int)state[2];
+			}
 			if (Data != null)
 			{
 				lock (mSaveLock)

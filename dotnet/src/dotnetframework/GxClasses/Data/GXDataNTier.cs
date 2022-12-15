@@ -517,11 +517,14 @@ namespace GeneXus.Data.NTier
 			{
 				bool retry = false;
 				int retryCount = 0;
-				bool pe = oCur.Command.ProcessException(e, ref retry, retryCount, "FETCH");
-				GXLogging.Error(log, "readNext Error", e);
-				if (!pe)
+				if (oCur != null)
 				{
-					throw;
+					bool pe = oCur.Command.ProcessException(e, ref retry, retryCount, "FETCH");
+					GXLogging.Error(log, "readNext Error", e);
+					if (!pe)
+					{
+						throw;
+					}
 				}
 			}
 
