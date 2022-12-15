@@ -876,7 +876,7 @@ namespace GeneXus.Data.NTier
 				{
 					IEnumerable<IDictionary<string, object>> entityList = record[entityKey] as IEnumerable<IDictionary<string, object>>;
 					record.Remove(entityKey);
-					if (entityList.Any())
+					if (entityList!=null && entityList.Any())
 					{
 						if (NeedFlattenRecord(entityKey))
 						{
@@ -895,8 +895,10 @@ namespace GeneXus.Data.NTier
 						{
 							foreach (IDictionary<string, object> subRecord in entityList)
 							{
-								IDictionary<string, object> oneRecord = new Dictionary<string, object>(record);
-								oneRecord.Add(entityKey, subRecord);
+								IDictionary<string, object> oneRecord = new Dictionary<string, object>(record)
+								{
+									{ entityKey, subRecord }
+								};
 								foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
 									yield return r;
 							}
@@ -912,7 +914,7 @@ namespace GeneXus.Data.NTier
 					{
 						IEnumerable<object> memberCol = record[entityKey] as IEnumerable<object>;
 						record.Remove(entityKey);
-						if (memberCol.Any())
+						if (memberCol!=null && memberCol.Any())
 						{
 							foreach (object memberItem in memberCol)
 							{
@@ -991,15 +993,18 @@ namespace GeneXus.Data.NTier
 				string entityKey = record.Keys.First(key => record[key] is IDictionary<string, object> && NeedFlattenRecord(key));
 				IDictionary<string, object> entity = record[entityKey] as IDictionary<string, object>;
 				record.Remove(entityKey);
-				foreach (string subKey in entity.Keys)
+				if (entity != null)
 				{
-					try
+					foreach (string subKey in entity.Keys)
 					{
-						record.Add(subKey, entity[subKey]);
-					}
-					catch (ArgumentException)
-					{
+						try
+						{
+							record.Add(subKey, entity[subKey]);
+						}
+						catch (ArgumentException)
+						{
 
+						}
 					}
 				}
 			}
@@ -1581,7 +1586,7 @@ namespace GeneXus.Data.NTier
 			IDictionary<string, object> setEntityDict = setEntity as IDictionary<string, object>;
 			IList<object> entryList = entry as IList<object>;
 			IList<object> setEntityList = setEntity as IList<object>;
-			if (entryOdata != null && setEntity != null)
+			if (entryOdata != null && setEntityDict != null)
 			{
 				IDictionary<string, object> entryDict = entryOdata.AsDictionary();
 				if (fullCheck)
