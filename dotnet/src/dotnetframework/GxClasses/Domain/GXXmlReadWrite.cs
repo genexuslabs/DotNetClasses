@@ -1232,6 +1232,7 @@ namespace GeneXus.XML
 			{
 				xmlreader = reader;
 				entities = EntitiesContainer;
+				readExternalEntities = false;
 			}
 			
 			public override object GetEntity(Uri absoluteUri, string role, Type ofObjectToReturn)	
