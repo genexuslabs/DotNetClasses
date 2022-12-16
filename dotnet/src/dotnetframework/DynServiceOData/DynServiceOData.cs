@@ -493,6 +493,8 @@ namespace GeneXus.Data.NTier
 			try
 			{
 				ODataQuery queryObj = (cursorDef.Query as ODataQuery);
+				if (queryObj == null)
+					return 0;
 				Func<GXODataClient, IDataParameterCollection, GXODataClient> action = queryObj.query;
 				Task task = null;
 				ConfiguredTaskAwaitable.ConfiguredTaskAwaiter taskAwaiter;
@@ -752,28 +754,32 @@ namespace GeneXus.Data.NTier
 			this.cursorDef = cursorDef;
 			conn.State = ConnectionState.Executing;
 			ODataQuery query = cursorDef.Query as ODataQuery;
-			action = query.query;
-			selectList = query.selectList;
+			action = query?.query;
+			selectList = query?.selectList;
 			allSelectedKeys = null;
 			annotations = new ODataFeedAnnotations();
-			try
+			if (action != null)
 			{
-				switch (behavior)
+				try
 				{
-					case CommandBehavior.SingleRow:
-						taskAwaiter = Task.Run(() => task = client.FindEntriesAsync(SingleRow(action(client, parms).GetCommandTextAsync().Result), annotations)).ConfigureAwait(false).GetAwaiter();
-						break;
-					default:
-						taskAwaiter = Task.Run(() => task = client.FindEntriesAsync(action(client, parms).GetCommandTextAsync().Result, annotations)).ConfigureAwait(false).GetAwaiter();
-						break;
+					switch (behavior)
+					{
+						case CommandBehavior.SingleRow:
+							taskAwaiter = Task.Run(() => task = client.FindEntriesAsync(SingleRow(action(client, parms).GetCommandTextAsync().Result), annotations)).ConfigureAwait(false).GetAwaiter();
+							break;
+						default:
+							taskAwaiter = Task.Run(() => task = client.FindEntriesAsync(action(client, parms).GetCommandTextAsync().Result, annotations)).ConfigureAwait(false).GetAwaiter();
+							break;
+					}
+				}
+				catch (AggregateException e)
+				{
+					throw ODataConnection.GetAggregateException(e);
 				}
 			}
-			catch (AggregateException e)
-			{
-				throw ODataConnection.GetAggregateException(e);
-			}
-
-			(cursorDef.Parent as DataStoreHelperOData).CurrentOfManager.AddQuery(cursorDef.Name, this);
+			DataStoreHelperOData dsHelper = cursorDef.Parent as DataStoreHelperOData;
+			if (dsHelper != null)
+				dsHelper.CurrentOfManager.AddQuery(cursorDef.Name, this);
 			IsClosed = false;
 			data = null;
 			currentEntry = null;
@@ -870,7 +876,7 @@ namespace GeneXus.Data.NTier
 				{
 					IEnumerable<IDictionary<string, object>> entityList = record[entityKey] as IEnumerable<IDictionary<string, object>>;
 					record.Remove(entityKey);
-					if (entityList.Any())
+					if (entityList!=null && entityList.Any())
 					{
 						if (NeedFlattenRecord(entityKey))
 						{
@@ -889,8 +895,10 @@ namespace GeneXus.Data.NTier
 						{
 							foreach (IDictionary<string, object> subRecord in entityList)
 							{
-								IDictionary<string, object> oneRecord = new Dictionary<string, object>(record);
-								oneRecord.Add(entityKey, subRecord);
+								IDictionary<string, object> oneRecord = new Dictionary<string, object>(record)
+								{
+									{ entityKey, subRecord }
+								};
 								foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
 									yield return r;
 							}
@@ -906,7 +914,7 @@ namespace GeneXus.Data.NTier
 					{
 						IEnumerable<object> memberCol = record[entityKey] as IEnumerable<object>;
 						record.Remove(entityKey);
-						if (memberCol.Any())
+						if (memberCol!=null && memberCol.Any())
 						{
 							foreach (object memberItem in memberCol)
 							{
@@ -923,29 +931,32 @@ namespace GeneXus.Data.NTier
 			}
 			else if (record.Any(item => item.Value is IDictionary<string, object> && (mapColItem = NeedFlattenMemberCol(item.Key, record)) != null))
 			{
-				IDictionary<string, object> entity = record[mapColItem.GetName(NewServiceContext())] as IDictionary<string, object>;
-				string entityKey = mapColItem.GetKey(NewServiceContext());
-				IEnumerable<object> memberCol = entity[entityKey] as IEnumerable<object>;
-				if (memberCol.Any())
+				if (mapColItem != null)
 				{
-					foreach (object memberItem in memberCol)
+					IDictionary<string, object> entity = record[mapColItem.GetName(NewServiceContext())] as IDictionary<string, object>;
+					string entityKey = mapColItem.GetKey(NewServiceContext());
+					IEnumerable<object> memberCol = entity[entityKey] as IEnumerable<object>;
+					if (memberCol.Any())
 					{
-						IDictionary<string, object> oneEntity = new Dictionary<string, object>(entity);
-						oneEntity.Remove(entityKey);
-						oneEntity.Add(entityKey, memberItem);
+						foreach (object memberItem in memberCol)
+						{
+							IDictionary<string, object> oneEntity = new Dictionary<string, object>(entity);
+							oneEntity.Remove(entityKey);
+							oneEntity.Add(entityKey, memberItem);
 
-						IDictionary<string, object> oneRecord = new Dictionary<string, object>(record);
-						string name = mapColItem.GetName(NewServiceContext());
-						oneRecord.Remove(name);
-						oneRecord.Add(name, oneEntity);
-						foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
-							yield return r;
+							IDictionary<string, object> oneRecord = new Dictionary<string, object>(record);
+							string name = mapColItem.GetName(NewServiceContext());
+							oneRecord.Remove(name);
+							oneRecord.Add(name, oneEntity);
+							foreach (IDictionary<string, object> r in FlattenRecords(oneRecord))
+								yield return r;
+						}
 					}
-				}
-				else
-				{
-					entity.Remove(entityKey);
-					yield return record;
+					else
+					{
+						entity.Remove(entityKey);
+						yield return record;
+					}
 				}
 			}
 			else yield return record;
@@ -953,15 +964,25 @@ namespace GeneXus.Data.NTier
 
 		private bool NeedFlattenRecord(string entityKey)
 		{
-			return !selectList.Any(selItem => selItem is DataStoreHelperOData.ODataMapExt && (selItem as DataStoreHelperOData.ODataMapExt).GetName(NewServiceContext()) == entityKey);
+			DataStoreHelperOData.ODataMapExt aux;
+			return !selectList.Any(selItem => selItem != null && ((aux=selItem as DataStoreHelperOData.ODataMapExt) !=null) && aux.GetName(NewServiceContext()) == entityKey);
 		}
-
+		private bool NeedFlattenMemberColFuc(IODataMap selItem, string entityKey, IDictionary<string, object> record)
+		{
+			DataStoreHelperOData.ODataMapCol mapColItem = selItem as DataStoreHelperOData.ODataMapCol;
+			if (mapColItem != null)
+			{
+				IDictionary<string, object> recordDic = record[entityKey] as IDictionary<string, object>;
+				return mapColItem.GetName(NewServiceContext()) == entityKey &&
+											recordDic != null &&
+											recordDic.ContainsKey(mapColItem.GetKey(NewServiceContext())) &&
+											recordDic[mapColItem.GetKey(NewServiceContext())] is IEnumerable<object>;
+			}else
+				return false;
+		}
 		private DataStoreHelperOData.ODataMapCol NeedFlattenMemberCol(string entityKey, IDictionary<string, object> record)
 		{
-			return selectList.FirstOrDefault(selItem => selItem is DataStoreHelperOData.ODataMapCol &&
-											(selItem as DataStoreHelperOData.ODataMapCol).GetName(NewServiceContext()) == entityKey &&
-											(record[entityKey] as IDictionary<string, object>).ContainsKey((selItem as DataStoreHelperOData.ODataMapCol).GetKey(NewServiceContext())) &&
-											(record[entityKey] as IDictionary<string, object>)[((selItem as DataStoreHelperOData.ODataMapCol).GetKey(NewServiceContext()))] is IEnumerable<object>) as DataStoreHelperOData.ODataMapCol;
+			return selectList.FirstOrDefault(selItem => NeedFlattenMemberColFuc(selItem, entityKey, record)) as  DataStoreHelperOData.ODataMapCol;
 		}
 
 		private IDictionary<string, object> FlattenRecord(IDictionary<string, object> record)
@@ -972,15 +993,18 @@ namespace GeneXus.Data.NTier
 				string entityKey = record.Keys.First(key => record[key] is IDictionary<string, object> && NeedFlattenRecord(key));
 				IDictionary<string, object> entity = record[entityKey] as IDictionary<string, object>;
 				record.Remove(entityKey);
-				foreach (string subKey in entity.Keys)
+				if (entity != null)
 				{
-					try
+					foreach (string subKey in entity.Keys)
 					{
-						record.Add(subKey, entity[subKey]);
-					}
-					catch (ArgumentException)
-					{
+						try
+						{
+							record.Add(subKey, entity[subKey]);
+						}
+						catch (ArgumentException)
+						{
 
+						}
 					}
 				}
 			}
@@ -1101,7 +1125,9 @@ namespace GeneXus.Data.NTier
 		{
 			if (IsClosed)
 				return;
-			(cursorDef.Parent as DataStoreHelperOData).CurrentOfManager.RemoveQuery(cursorDef.Name);
+			DataStoreHelperOData dsHelper = cursorDef.Parent as DataStoreHelperOData;
+			if (dsHelper != null)
+				dsHelper.CurrentOfManager.RemoveQuery(cursorDef.Name);
 			IsClosed = true;
 			annotations = null;
 			Debug.Assert(task != null && (task.Status == TaskStatus.RanToCompletion || task.Status == TaskStatus.Faulted));
@@ -1133,10 +1159,14 @@ namespace GeneXus.Data.NTier
 		{
 			byte[] bytes = selectList[i].GetValue(NewServiceContext(), currentEntry) as byte[];
 			Debug.Assert(bytes != null && fieldOffset <= bytes.Length);
-			long len = bytes.Length - fieldOffset;
-			if (len > length)
-				len = length;
-			Array.Copy(bytes, fieldOffset, buffer, bufferoffset, len);
+			long len = 0;
+			if (bytes != null)
+			{
+				len = bytes.Length - fieldOffset;
+				if (len > length)
+					len = length;
+				Array.Copy(bytes, fieldOffset, buffer, bufferoffset, len);
+			}
 			return len;
 		}
 
@@ -1274,7 +1304,9 @@ namespace GeneXus.Data.NTier
 			bool isNull = !currentEntry.ContainsKey(selectList[i].GetName(NewServiceContext())) || selectList[i].GetValue(NewServiceContext(), currentEntry) == null;
 			if (!isNull && selectList[i] is DataStoreHelperOData.ODataMapCol)
 			{
-				isNull = !(currentEntry[selectList[i].GetName(NewServiceContext())] as IDictionary<string, object>).ContainsKey((selectList[i] as DataStoreHelperOData.ODataMapCol).GetKey(NewServiceContext()));
+				IDictionary<string, object> currEntryDic = currentEntry[selectList[i].GetName(NewServiceContext())] as IDictionary<string, object>;
+				if (currEntryDic != null)
+					isNull = !currEntryDic.ContainsKey((selectList[i] as DataStoreHelperOData.ODataMapCol).GetKey(NewServiceContext()));
 			}
 			return isNull;
 		}
@@ -1550,10 +1582,13 @@ namespace GeneXus.Data.NTier
 
 		private bool IsSameEntity(object entry, object setEntity, bool fullCheck)
 		{
-			if (entry is DynamicODataEntry && setEntity is IDictionary<string, object>)
+			DynamicODataEntry entryOdata = entry as DynamicODataEntry;
+			IDictionary<string, object> setEntityDict = setEntity as IDictionary<string, object>;
+			IList<object> entryList = entry as IList<object>;
+			IList<object> setEntityList = setEntity as IList<object>;
+			if (entryOdata != null && setEntityDict != null)
 			{
-				IDictionary<string, object> entryDict = (entry as DynamicODataEntry).AsDictionary();
-				IDictionary<string, object> setEntityDict = setEntity as IDictionary<string, object>;
+				IDictionary<string, object> entryDict = entryOdata.AsDictionary();
 				if (fullCheck)
 					return (entryDict.Count == setEntityDict.Count) &&
 						entryDict.All(kvPair => setEntityDict.ContainsKey(kvPair.Key) && IsSameEntity(kvPair.Value, setEntityDict[kvPair.Key], fullCheck));
@@ -1562,10 +1597,8 @@ namespace GeneXus.Data.NTier
 						entryDict.All(kvPair => !setEntityDict.ContainsKey(kvPair.Key) || IsSameEntity(kvPair.Value, setEntityDict[kvPair.Key], fullCheck));
 
 			}
-			else if (entry is IList<object> && setEntity is IList<object>)
+			else if (entryList!=null && setEntityList!=null)
 			{
-				IList<object> entryList = entry as IList<object>;
-				IList<object> setEntityList = setEntity as IList<object>;
 				return (entryList.Count == setEntityList.Count) &&
 					entryList.Zip(setEntityList, (left, right) => IsSameEntity(left, right, fullCheck)).All(item => item);
 			}
@@ -1862,23 +1895,26 @@ namespace GeneXus.Data.NTier
 				case AdapterVersion.V4:
 					{
 						Microsoft.OData.Edm.IEdmModel model = Adapter.Model as Microsoft.OData.Edm.IEdmModel;
-						Microsoft.OData.Edm.IEdmEntityContainer EntityContainer = model.EntityContainer;
+						if (model != null)
+						{
+							Microsoft.OData.Edm.IEdmEntityContainer EntityContainer = model.EntityContainer;
 
-						IDictionary<object, IList<string>> entitySetTypes = new Dictionary<object, IList<string>>();
-						foreach (Microsoft.OData.Edm.IEdmEntitySet entitySet in model.EntityContainer.EntitySets())
-						{
-							if (!entitySetTypes.TryGetValue(entitySet.EntityType(), out IList<string> entitySets))
+							IDictionary<object, IList<string>> entitySetTypes = new Dictionary<object, IList<string>>();
+							foreach (Microsoft.OData.Edm.IEdmEntitySet entitySet in model.EntityContainer.EntitySets())
 							{
-								entitySets = new List<string>();
-								entitySetTypes.Add(entitySet.EntityType(), entitySets);
+								if (!entitySetTypes.TryGetValue(entitySet.EntityType(), out IList<string> entitySets))
+								{
+									entitySets = new List<string>();
+									entitySetTypes.Add(entitySet.EntityType(), entitySets);
+								}
+								entitySets.Add(entitySet.Name);
 							}
-							entitySets.Add(entitySet.Name);
-						}
-						foreach (Microsoft.OData.Edm.IEdmEntitySet entitySet in model.EntityContainer.EntitySets())
-						{
-							Microsoft.OData.Edm.IEdmEntityType type = entitySet.EntityType();
-							InitializeEntityMapperV4(entityMapper, type, entitySetTypes);
-							rootMapper.Add(entitySet.Name, type.Name);
+							foreach (Microsoft.OData.Edm.IEdmEntitySet entitySet in model.EntityContainer.EntitySets())
+							{
+								Microsoft.OData.Edm.IEdmEntityType type = entitySet.EntityType();
+								InitializeEntityMapperV4(entityMapper, type, entitySetTypes);
+								rootMapper.Add(entitySet.Name, type.Name);
+							}
 						}
 					}
 					break;

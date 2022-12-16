@@ -583,8 +583,11 @@ namespace GeneXus.Mail.Exchange
 				}
 				else
 				{
-					actualFolder = GetFolder(parentFolderId.Id, folders[i]);
-					parentFolderId = actualFolder;
+					if (parentFolderId != null)
+					{
+						actualFolder = GetFolder(parentFolderId.Id, folders[i]);
+						parentFolderId = actualFolder;
+					}
 				}
 			}
 			return actualFolder;

@@ -287,7 +287,7 @@ namespace GeneXus.Mail.Internals.Pop3
 					outStr = null;
 					lastLine = null;
 				}
-				else if((dotIdx == 0) && (outStr.Length > 1) && (outStr[1] != '.')) //Si no vienen dos '.' seguidos (uno escapeado)
+				else if((dotIdx == 0) && outStr!=null && (outStr.Length > 1) && (outStr[1] != '.')) //Si no vienen dos '.' seguidos (uno escapeado)
 				{
 					// El exchange no manda un LF antes del ".", asi que puede estar
 					// enseguida..

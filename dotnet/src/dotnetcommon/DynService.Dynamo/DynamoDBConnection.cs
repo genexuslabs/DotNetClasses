@@ -85,6 +85,8 @@ namespace GeneXus.Data.NTier
 		{
 			Initialize();
 			DynamoQuery query = cursorDef.Query as DynamoQuery;
+			if (query == null)
+				return 0;
 			bool isInsert = query.CursorType == ServiceCursorDef.CursorType.Insert;
 
 			Dictionary<string, AttributeValue> values = new Dictionary<string, AttributeValue>();

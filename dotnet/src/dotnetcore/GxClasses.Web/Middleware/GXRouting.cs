@@ -257,7 +257,7 @@ namespace GxClasses.Web.Middleware
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
 							List<string> mthheaders = new List<string>() { $"{HttpMethod.Options.Method},{HttpMethod.Head.Method}" };
-							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath))
+							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath) && !string.IsNullOrEmpty(controllerWithParms))
 							{
 								foreach (Tuple<string, string> t in servicesMapData[actualPath].Keys)
 								{

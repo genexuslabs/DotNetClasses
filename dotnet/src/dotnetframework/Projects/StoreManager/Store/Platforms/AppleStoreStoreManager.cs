@@ -168,7 +168,7 @@ namespace GeneXus.SD.Store.Platforms
 			{
 				throw new StoreResponsePurchaseException("Aplle Store validation servers seems to be unavailable.");
 			}
-			if (p.ProductType == (int)ProductType.Subscription)
+			if (p!=null && p.ProductType == (int)ProductType.Subscription)
 			{
 				p.Custom.OriginalPurchase = purchaseResult;
 			}

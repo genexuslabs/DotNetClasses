@@ -38,7 +38,7 @@ namespace GeneXus.Services
 			if (s == null) {
 				try
 				{
-					s = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+					s = ServiceFactory.GetGXServices()?.Get(GXServices.STORAGE_SERVICE);
 				}
 				catch (Exception) {
 					logger.Warn("STORAGE_SERVICE is not activated in CloudServices.config");
