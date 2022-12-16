@@ -7,6 +7,7 @@ using log4net;
 using System.Threading;
 using GeneXus.Utils;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace GeneXus.Mail.Internals.Pop3
 {
@@ -17,7 +18,7 @@ namespace GeneXus.Mail.Internals.Pop3
 		private const string CRLF = "\r\n";
 
 		private static Hashtable monthList = new Hashtable();        
-		private static Hashtable contentTypes = null;
+		private static ConcurrentDictionary<string, string> contentTypes = null;
 		private static QuotedPrintableDecoder qpDecoder = new QuotedPrintableDecoder();
 
         private MailProperties keys = new MailProperties();
@@ -42,16 +43,16 @@ namespace GeneXus.Mail.Internals.Pop3
 
 		static void FillContentTypes()
 		{
-			contentTypes = new Hashtable();
-			contentTypes.Add("text/plain", "txt");
-			contentTypes.Add("text/richtext", "rtx");
-			contentTypes.Add("text/html", "html");
-			contentTypes.Add("text/xml", "xml");
-			contentTypes.Add("message/rfc822", "eml");
-			contentTypes.Add("image/jpg", "jpg");
-			contentTypes.Add("image/jpeg", "jpg");
-			contentTypes.Add("image/gif", "gif");
-			contentTypes.Add("image/png", "png");
+			contentTypes = new ConcurrentDictionary<string,string>();
+			contentTypes["text/plain"]="txt";
+			contentTypes["text/richtext"] = "rtx";
+			contentTypes["text/html"] = "html";
+			contentTypes["text/xml"] = "xml";
+			contentTypes["message/rfc822"] = "eml";
+			contentTypes["image/jpg"] = "jpg";
+			contentTypes["image/jpeg"] = "jpg";
+			contentTypes["image/gif"] = "gif";
+			contentTypes["image/png"] = "png";
             
 		}
 
@@ -332,7 +333,7 @@ namespace GeneXus.Mail.Internals.Pop3
 
 		private static string ExtensionFromContentType(string contentType)
 		{
-			object extension = contentTypes[contentType];
+			string extension = contentTypes[contentType];
 			if (extension != null)
 			{
 				return extension.ToString();

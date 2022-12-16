@@ -175,8 +175,12 @@ namespace GeneXus.Data.NTier
 			}
 			if (builder.TryGetValue("MetadataLocation", out object metadatavalue))
 			{
-				metadataLocation = $"{metadatavalue.ToString()}{Path.DirectorySeparatorChar}";
-				hasUserMetadataLocation = true;
+				string metadatavalueStr = metadatavalue as string;
+				if (!string.IsNullOrEmpty(metadatavalueStr))
+				{
+					metadataLocation = $"{metadatavalueStr}{Path.DirectorySeparatorChar}";
+					hasUserMetadataLocation = true;
+				}
 			}
 			if (builder.TryGetValue("AllowUnsecure", out object auvalue))
 			{
