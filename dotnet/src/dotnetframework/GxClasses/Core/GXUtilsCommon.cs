@@ -509,7 +509,26 @@ namespace GeneXus.Utils
 		const char QMARK = '_';
 		static char[] numbersAndSep = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9', '-' };
 		static char[] numbers = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+		internal static Dictionary<char, char> LogUserEntryWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_=/".ToDictionary(item => item, item => item);
+		internal static Dictionary<char, char> HostWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789./".ToDictionary(item => item, item => item);
 
+		internal static string Sanitize(string input, Dictionary<char, char> WhiteList)
+		{
+			StringBuilder sanitizedInput = new StringBuilder();
+			if (!string.IsNullOrEmpty(input))
+			{
+				foreach (char c in input)
+				{
+					if (WhiteList.TryGetValue(c, out char wchar))
+						sanitizedInput.Append(wchar);
+				}
+				return sanitizedInput.ToString();
+			}
+			else
+			{
+				return String.Empty;
+			}
+		}
 		public StringUtil(NumberFormatInfo numFmt)
 		{
 			numFmtInfo = numFmt;
