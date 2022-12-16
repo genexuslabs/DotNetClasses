@@ -425,7 +425,7 @@ namespace GeneXus.Mail.Internals
                         }                        
                         SendAndWaitResponse("AUTH LOGIN", "334", MAIL_AuthenticationError);
                         SendAndWaitResponse(ToBase64(userName), "334", MAIL_AuthenticationError);
-                        SendAndWaitResponse(ToBase64(password), "235", MAIL_PasswordRefused);
+                        SendPrivateDataAndWaitResponse(ToBase64(password), "235", MAIL_PasswordRefused, "xxx");
                     }
                     else
                     {
@@ -510,29 +510,34 @@ namespace GeneXus.Mail.Internals
             SendAndWaitResponse(cmdMsg, "2", 0);
         }
 
-        private void SendAndWaitResponse(string cmdMsg, string okResponse)
-        {
-            SendAndWaitResponse(cmdMsg, okResponse, 0);
-        }
-
-        private void SendAndWaitResponse(string cmdMsg, string okResponse, short errorCode)
+		private void SendPrivateDataAndWaitResponse(string cmdMsg, string okResponse, short errorCode, string traceCmd)
+		{
+			SendPrivateDataTCP(cmdMsg + CRLF, traceCmd);
+			WaitResponse(okResponse, errorCode);
+		}
+		
+		private void SendAndWaitResponse(string cmdMsg, string okResponse, short errorCode)
         {
             SendTCP(cmdMsg + CRLF);
+			WaitResponse(okResponse, errorCode);
 
-            string response = GetResponse();
-            GXLogging.Debug(log,"Server response: " + response);
-            if (!response.Equals(okResponse))
-            {
-                if (!response.StartsWith(okResponse))
-                {
-                    SendNL("RSET");
-                    GXLogging.Error(log,"Command error, server response: " + response);
-                    throw new GXMailException(response, errorCode);
-                }
-            }
-        }
+		}
+		private void WaitResponse(string okResponse, short errorCode)
+		{
 
-        private void SendText(string text)
+			string response = GetResponse();
+			GXLogging.Debug(log, "Server response: " + response);
+			if (!response.Equals(okResponse))
+			{
+				if (!response.StartsWith(okResponse))
+				{
+					SendNL("RSET");
+					GXLogging.Error(log, "Command error, server response: " + response);
+					throw new GXMailException(response, errorCode);
+				}
+			}
+		}
+		private void SendText(string text)
         {
             
             StringBuilder strBuilder = new StringBuilder("");
@@ -624,24 +629,27 @@ namespace GeneXus.Mail.Internals
 
         private void SendTCP(string cmd)
         {
-            GXLogging.Debug(log,"Command: " + cmd);
-            try
-            {
-                byte[] toSend = Encoding.Default.GetBytes(cmd);
-                int sent = connection.Send(toSend);
-                while (sent != toSend.Length)
-                {
-                    sent += connection.Send(toSend, sent, toSend.Length - sent, SocketFlags.None);
-                }
-            }
-            catch (Exception exc)
-            {
-                GXLogging.Error(log,"Error sending command", exc);
-                throw new GXMailException(exc.Message, MAIL_ConnectionLost);
-            }
-        }
-
-        private void SendRecipientList(GXMailRecipientCollection recipients)
+			SendPrivateDataTCP(cmd, cmd);
+		}
+		private void SendPrivateDataTCP(string cmd, string traceCmd)
+		{
+			GXLogging.Debug(log, "Command: " + traceCmd);
+			try
+			{
+				byte[] toSend = Encoding.Default.GetBytes(cmd);
+				int sent = connection.Send(toSend);
+				while (sent != toSend.Length)
+				{
+					sent += connection.Send(toSend, sent, toSend.Length - sent, SocketFlags.None);
+				}
+			}
+			catch (Exception exc)
+			{
+				GXLogging.Error(log, "Error sending command", exc);
+				throw new GXMailException(exc.Message, MAIL_ConnectionLost);
+			}
+		}
+		private void SendRecipientList(GXMailRecipientCollection recipients)
         {
             try
             {

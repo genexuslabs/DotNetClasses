@@ -2004,10 +2004,7 @@ namespace GeneXus.Data
 				MAX_TRIES = 100; //Max Pool Size default de ado.net
 			else 
 				MAX_TRIES = Convert.ToInt32(maxpoolSize);
-			GXLogging.Debug(log, "MAX_TRIES=" + MAX_TRIES);
-
 			return connstr;
-
 		}
 
 #if !NETCORE
