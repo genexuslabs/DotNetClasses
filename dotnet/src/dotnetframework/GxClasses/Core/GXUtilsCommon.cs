@@ -529,8 +529,6 @@ namespace GeneXus.Utils
 				return String.Empty;
 			}
 		}
-
-
 		public StringUtil(NumberFormatInfo numFmt)
 		{
 			numFmtInfo = numFmt;
