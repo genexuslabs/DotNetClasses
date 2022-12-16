@@ -117,6 +117,9 @@ namespace GeneXus.Data.NTier
 		{
 			Initialize();
 			CosmosDBQuery query = cursorDef.Query as CosmosDBQuery;
+			if (query == null)
+				return 0;
+
 			bool isInsert = query.CursorType == ServiceCursorDef.CursorType.Insert;
 			bool isUpdate = query.CursorType == ServiceCursorDef.CursorType.Update;
 
@@ -319,7 +322,7 @@ namespace GeneXus.Data.NTier
 			Initialize();
 			CosmosDBQuery query = cursorDef.Query as CosmosDBQuery;
 			//Get container from hashset for performance
-			Container container = GetContainer(query.TableName);
+			Container container = GetContainer(query?.TableName);
 			try
 			{
 				CreateCosmosQuery(query,cursorDef, parms, container, out CosmosDBDataReader dataReader, out RequestWrapper requestWrapper);
