@@ -55,22 +55,6 @@ namespace GeneXus.Data.NTier
 			}
 		}
 	}
-	
-	//public static class DynamoFluentExtensions
-	//{
-		//public static Query OrderBy(this Query dynamoQuery, string index)
-		//{
-		//	return (dynamoQuery as DynamoQuery)?.OrderBy(index);
-		//}
-		/*public static Query SetKey(this Query dynamoQuery, string partitionKey)
-		{
-			return (dynamoQuery.SetKey(partitionKey));
-		}*/
-		//public static Query KeyFilter(this Query dynamoQuery, string[] filters)
-		//{
-			//return (dynamoQuery as DynamoQuery)?.KeyFilter(filters);
-		//}
-	//}
 
 	public class DynamoQuery : Query
 	{
