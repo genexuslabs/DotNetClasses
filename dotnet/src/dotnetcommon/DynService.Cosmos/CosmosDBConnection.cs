@@ -42,10 +42,11 @@ namespace GeneXus.Data.NTier
 		private static string mConnectionString;
 
 		//https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/query/select
-		private const string SELECT_CMD = "SELECT";
-		private const string FROM = "FROM";
+		//private const string SELECT_CMD = "SELECT";
+		//private const string FROM = "FROM";
 		private const string TABLE_ALIAS = "t";
-		private const string WHERE = "WHERE";
+		//private const string WHERE = "WHERE";
+
 
 		private const string FILTER_PATTERN = @"\((.*) = :(.*)\)";
 
@@ -99,6 +100,7 @@ namespace GeneXus.Data.NTier
 
 		private static void Initialize()
 		{
+			System.Diagnostics.Debugger.Launch();
 			if (!string.IsNullOrEmpty(mserviceURI) && !string.IsNullOrEmpty(mapplicationRegion))
 				cosmosClient = new CosmosClient(mserviceURI, new CosmosClientOptions() { ApplicationRegion = mapplicationRegion });
 
@@ -112,7 +114,38 @@ namespace GeneXus.Data.NTier
 				return cosmosClient.GetContainer(cosmosDatabase.Id, containerName);
 			return null;
 		}
+		private string SetupQuery(string projectionList, string filterExpression, string tableName, string orderbys)
+		{
+			string sqlSelect = string.Empty;
+			string sqlFrom = string.Empty;
+			string sqlWhere = string.Empty;
+			string sqlOrder = string.Empty;
 
+			string SELECT_TEMPLATE = "select {0}";
+			string FROM_TEMPLATE = "from {0} t";
+			string WHERE_TEMPLATE = "where {0}";
+			string ORDER_TEMPLATE = "order by {0}";
+
+			if (!string.IsNullOrEmpty(projectionList))
+				sqlSelect = string.Format(SELECT_TEMPLATE, projectionList);
+			else
+			{ //ERROR
+
+			}
+			if (!string.IsNullOrEmpty(tableName))
+				sqlFrom = string.Format(FROM_TEMPLATE, tableName);
+			else
+			{
+				//ERROR
+			}
+			if (!string.IsNullOrEmpty(filterExpression))
+				sqlWhere = string.Format(WHERE_TEMPLATE, filterExpression);
+			if (!string.IsNullOrEmpty(orderbys))
+				sqlOrder = string.Format(ORDER_TEMPLATE, orderbys);
+
+
+			return $"{sqlSelect} {sqlFrom} {sqlWhere} {sqlOrder}";
+		}
 		public override int ExecuteNonQuery(ServiceCursorDef cursorDef, IDataParameterCollection parms, CommandBehavior behavior)
 		{
 			Initialize();
@@ -441,13 +474,26 @@ namespace GeneXus.Data.NTier
 				allFiltersQuery = allFiltersQuery.Concat(keyFilterQ);
 				
 			}
-			string FilterExpression = allFiltersQuery.Any() ? String.Join(" AND ", allFiltersQuery) : null;
+			string filterExpression = allFiltersQuery.Any() ? String.Join(" AND ", allFiltersQuery) : null;
 
-			string sqlQuery = string.Empty;
-			if (FilterExpression != null)
-				sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS} {WHERE} {FilterExpression}";
-			else
-				sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS}";
+			IEnumerable<string> orderExpressionList = Array.Empty<string>();
+			string expression = string.Empty;
+			
+			foreach (string orderAtt in query.OrderBys)
+			{
+
+				expression = orderAtt.StartsWith("(") ? $"{TABLE_ALIAS}.{orderAtt} DESC" : $"{TABLE_ALIAS}.{orderAtt} ASC";
+				orderExpressionList = orderExpressionList.Concat(new string[] { expression});
+			}
+
+			string orderExpression = String.Join(",", orderExpressionList);
+
+			string sqlQuery = SetupQuery(projectionList, filterExpression, tableName, orderExpression);
+
+			//if (FilterExpression != null)
+				//sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS} {WHERE} {FilterExpression}";
+			//else
+				//sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS}";
 
 			QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
 			requestWrapper = new RequestWrapper(cosmosClient, container, queryDefinition);
