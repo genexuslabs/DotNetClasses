@@ -100,7 +100,6 @@ namespace GeneXus.Data.NTier
 
 		private static void Initialize()
 		{
-			System.Diagnostics.Debugger.Launch();
 			if (!string.IsNullOrEmpty(mserviceURI) && !string.IsNullOrEmpty(mapplicationRegion))
 				cosmosClient = new CosmosClient(mserviceURI, new CosmosClientOptions() { ApplicationRegion = mapplicationRegion });
 
