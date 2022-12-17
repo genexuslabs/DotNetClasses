@@ -75,7 +75,6 @@ namespace GeneXus.Data.NTier
 		{
 			InitializeDBConnection();
 			State = ConnectionState.Executing;
-
 			mDynamoDB = new AmazonDynamoDBClient(mCredentials, mConfig);
 		}
 
