@@ -467,10 +467,11 @@ namespace GeneXus.Data.NTier
 						}
 					}
 				}
-
+				
 				foreach (string d in projection)
 				{
-					condition = condition.Replace(d, $"{TABLE_ALIAS}.{d}");
+					string wholeWordPattern = String.Format(@"\b{0}\b", d);
+					condition = Regex.Replace(condition, wholeWordPattern, $"{TABLE_ALIAS}.{d}");
 				}
 				keyFilterQ = new string[] { condition };
 				allFiltersQuery = allFiltersQuery.Concat(keyFilterQ);
