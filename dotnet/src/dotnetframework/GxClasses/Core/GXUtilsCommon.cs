@@ -4621,35 +4621,35 @@ namespace GeneXus.Utils
 			GxStringCollection usernames = new GxStringCollection();
 			try
 			{
-				DirectoryEntry Entry = GetAppPoolEntry();
-				if (Entry != null)
-				{
-					PropertyCollection Properties = Entry.Properties;
-					string AppPoolIdentityType = Properties["AppPoolIdentityType"][0].ToString().Trim();
-					switch (AppPoolIdentityType)
+				using (DirectoryEntry Entry = GetAppPoolEntry()) { 
+					if (Entry != null)
 					{
-						case APPPOOL_IDENTITY_TYPE_APPPOOL:
+						PropertyCollection Properties = Entry.Properties;
+						string AppPoolIdentityType = Properties["AppPoolIdentityType"][0].ToString().Trim();
+						switch (AppPoolIdentityType)
+						{
+							case APPPOOL_IDENTITY_TYPE_APPPOOL:
 #if NETCORE
-							usernames.Add(IDENTITY_NETCORE_APPPOOL);
+								usernames.Add(IDENTITY_NETCORE_APPPOOL);
 #else
 							usernames.Add(IDENTITY_CLASSIC_APPPOOL);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
 #endif
-							break;
-						case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
-						case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
-							usernames.Add(IDENTITY_NETWORK_SERVICE);
-							break;
-						case APPPOOL_IDENTITY_TYPE_LOCALSERVICE:
-							usernames.Add(IDENTITY_LOCAL_SERVICE);
-							break;
-						case APPPOOL_IDENTITY_TYPE_SPECIFICUSER:
-							usernames.Add(Properties["WAMUserName"][0].ToString());
-							break;
+								break;
+							case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
+							case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
+								usernames.Add(IDENTITY_NETWORK_SERVICE);
+								break;
+							case APPPOOL_IDENTITY_TYPE_LOCALSERVICE:
+								usernames.Add(IDENTITY_LOCAL_SERVICE);
+								break;
+							case APPPOOL_IDENTITY_TYPE_SPECIFICUSER:
+								usernames.Add(Properties["WAMUserName"][0].ToString());
+								break;
+						}
 					}
 				}
-
 			}
 			catch (Exception ex)
 			{
