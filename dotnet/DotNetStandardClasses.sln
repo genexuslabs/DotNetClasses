@@ -222,6 +222,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetRedisTest", "test\Dot
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCoreWebUnitTest", "test\DotNetCoreWebUnitTest\DotNetCoreWebUnitTest.csproj", "{531863CA-93A0-42AA-AB5C-FA0E672C03B8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opentelemetry", "opentelemetry", "{BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWSOtelAspNet", "src\dotnetcore\Providers\OpenTelemetry\AWSOtel\AWSOtelAspNet.csproj", "{6BAEDA8C-EFB6-43FF-85A5-FCD323C59323}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
