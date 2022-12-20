@@ -1236,7 +1236,7 @@ namespace GeneXus.Http.Client
 				_statusCode = (short)resp.StatusCode;
 				_statusDescription = resp.StatusDescription;
 				resp.Close();
-				GXLogging.Debug(log, "_responseString " + ToString());
+				GXLogging.DebugSanitized(log, "_responseString " + ToString());
 			}
 			ClearSendStream();
 		}
