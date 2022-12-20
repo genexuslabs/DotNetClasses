@@ -32,6 +32,7 @@ namespace GeneXus.Http
 	using System.Net;
 	using GeneXus.Web.Security;
 	using System.Linq;
+	using System.Web;
 #else
 	using System.Web;
 	using System.Web.UI;
@@ -1492,7 +1493,7 @@ namespace GeneXus.Http
 				context.httpAjaxContext.AddResourceProvider(GXResourceProvider.PROVIDER_NAME);
 				if (IsSpaRequest())
 				{
-					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse(" + context.getJSONResponse() + ");</script>");
+					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse('" + GXUtil.HtmlEncodeInputValue(HttpUtility.JavaScriptStringEncode(context.getJSONResponse())) + "');</script>");
 				}
 				else
 				{
