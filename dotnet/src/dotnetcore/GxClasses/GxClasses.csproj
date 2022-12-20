@@ -17,7 +17,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Dialog\IProcess.cs" Link="Helpers\Process\IProcess.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Attributes\GXApi.cs" Link="Attributes\GXApi.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ConfigurationManager.cs" Link="Configuration\ConfigurationManager.cs" />
-	<Compile Include="..\..\dotnetframework\GxClasses\Configuration\LogConfiguration.cs" Link="Configuration\LogConfiguration.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Configuration\LogConfiguration.cs" Link="Configuration\LogConfiguration.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ExternalStorage.cs" Link="Configuration\ExternalStorage.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXAsymmetricEncryption.cs" Link="Helpers\Cryptography\GXAsymmetricEncryption.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXCertificate.cs" Link="Helpers\Cryptography\GXCertificate.cs" />
@@ -161,6 +161,8 @@
 		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" />
 		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" />
 		<PackageReference Include="Npgsql" Version="3.2.7" />
+		<PackageReference Include="OpenTelemetry.Api" Version="1.4.0-rc.1" />
+		<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.4.0-rc.1" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.110" PrivateAssets="All" />
 		<!--OracleManagedDataAccess has PrivateAssets to avoid deploying the assembly for any datastore-->
 		

@@ -29,6 +29,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+
 
 namespace GeneXus.Application
 {
@@ -64,7 +68,7 @@ namespace GeneXus.Application
 				Console.Error.WriteLine("ERROR:");
 				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
 				Console.Read();
-			}
+			}			
 		}
 		public static IWebHost BuildWebHost(string[] args) =>
 		   WebHost.CreateDefaultBuilder(args)
@@ -79,7 +83,7 @@ namespace GeneXus.Application
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				 .ConfigureLogging(logging => logging.AddConsole())
+				 .ConfigureLogging(logging => logging.AddConsole())				 
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
 				.Build();
@@ -89,7 +93,7 @@ namespace GeneXus.Application
 	public static class GXHandlerExtensions
 	{
 		public static IApplicationBuilder UseGXHandlerFactory(this IApplicationBuilder builder, string basePath)
-		{
+		{			
 			return builder.UseMiddleware<HandlerFactory>(basePath);
 		}
 		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app, string basePath)
@@ -137,6 +141,8 @@ namespace GeneXus.Application
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
+			OpenTelemetryService.Setup(services);
+
 			services.AddMvc(option => option.EnableEndpointRouting = false);
 			services.Configure<KestrelServerOptions>(options =>
 			{
@@ -148,7 +154,7 @@ namespace GeneXus.Application
 				options.AllowSynchronousIO = true;
 			});
 			services.AddDistributedMemoryCache();
-
+					
 			services.Configure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
@@ -265,10 +271,9 @@ namespace GeneXus.Application
 			}
 		}
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
-		{
+		{			
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
-			LogConfiguration.SetupLog4Net();
-			ConfigureOpenTelemetry();
+			LogConfiguration.SetupLog4Net();			
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";
@@ -436,12 +441,7 @@ namespace GeneXus.Application
 			{
 				Console.Error.WriteLine("Errpr loading SwaggerUI " + ex.Message);
 			}
-		}
-		
-		private void ConfigureOpenTelemetry()
-		{
-			OpenTelemetryService.Setup();
-		}
+		}				
 		
 		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)
 		{
