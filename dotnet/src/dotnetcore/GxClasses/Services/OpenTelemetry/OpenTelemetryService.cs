@@ -8,17 +8,16 @@ using log4net;
 
 namespace GeneXus.Services.OpenTelemetry
 {
-	internal class OpenTelemetryService
+	public interface IOpenTelemetryProvider
+	{
+		bool InstrumentAspNetCoreApplication(Microsoft.Extensions.DependencyInjection.IServiceCollection services);
+	}
+
+	internal static class OpenTelemetryService
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(OpenTelemetryService));
-
-		public static string OPENTELEMETRY_SERVICE = "OpenTelemetry";
-
-		public interface IOpenTelemetryProvider
-		{
-			bool InstrumentApplication();
-		}
-
+		private static string OPENTELEMETRY_SERVICE = "OpenTelemetry";
+		
 		private static IOpenTelemetryProvider GetOpenTelemetryProvider()
 		{
 			IOpenTelemetryProvider otelProvider = null;
@@ -45,12 +44,16 @@ namespace GeneXus.Services.OpenTelemetry
 			return otelProvider;
 		}
 
-		internal static void Setup()
+		internal static void Setup(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
 		{
-			IOpenTelemetryProvider provider = OpenTelemetryService.GetOpenTelemetryProvider();
-			if (provider == null)
+			IOpenTelemetryProvider provider = GetOpenTelemetryProvider();
+			if (provider != null)
 			{
-				provider.InstrumentApplication();
+				bool started = provider.InstrumentAspNetCoreApplication(services);
+				if (started)
+				{
+					log.Debug("OpenTelemetry instrumentation started");
+				}
 			}
 		}
 	}
