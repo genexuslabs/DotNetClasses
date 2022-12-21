@@ -7,7 +7,7 @@ using OpenTelemetry.Contrib.Extensions.AWSXRay.Trace;
 using GeneXus.Services;
 using GeneXus.Services.Common;
 
-namespace GeneXus.Otel.AWS
+namespace GeneXus.OpenTelemetry.AWS
 {
 	public class AWSOtelProvider : IOpenTelemetryProvider
 	{
