@@ -18,8 +18,7 @@ namespace GeneXus.Configuration
 		}
 
 		private static void SetupLog4NetFromEnvironmentVariables()
-		{
-			System.Diagnostics.Debugger.Launch();
+		{			
 			string logLevel = Environment.GetEnvironmentVariable(LOGLEVEL_ENVVAR);
 
 			if (!string.IsNullOrEmpty(logLevel))
