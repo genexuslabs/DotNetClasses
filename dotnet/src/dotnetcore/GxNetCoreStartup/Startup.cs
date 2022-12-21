@@ -8,6 +8,7 @@ using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
+using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
 using log4net;
@@ -266,7 +267,8 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
-			
+			LogConfiguration.SetupLog4Net();
+			ConfigureOpenTelemetry();
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";
@@ -435,7 +437,12 @@ namespace GeneXus.Application
 				Console.Error.WriteLine("Errpr loading SwaggerUI " + ex.Message);
 			}
 		}
-
+		
+		private void ConfigureOpenTelemetry()
+		{
+			OpenTelemetryService.Setup();
+		}
+		
 		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)
 		{
 			string rules = File.ReadAllText(rewriteFile);

@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using GeneXus.Attributes;
+using GeneXus.Configuration;
 using log4net;
 
 namespace GeneXus.Diagnostics
@@ -25,7 +23,7 @@ namespace GeneXus.Diagnostics
 #else
 		static readonly string defaultRepository = LogManager.GetRepository().Name;
 #endif
-		public static string defaultUserLogNamespace = Configuration.Config.GetValueOf("USER_LOG_NAMESPACE", "GeneXusUserLog");
+		public static string defaultUserLogNamespace = Configuration.Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
 
 		static readonly ILog globalLog = LogManager.GetLogger(defaultRepository, defaultUserLogNamespace);
 
