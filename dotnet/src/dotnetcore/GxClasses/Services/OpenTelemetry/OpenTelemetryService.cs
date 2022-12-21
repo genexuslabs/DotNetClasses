@@ -12,7 +12,7 @@ namespace GeneXus.Services.OpenTelemetry
 	internal static class OpenTelemetryService
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(OpenTelemetryService));
-		private static string OPENTELEMETRY_SERVICE = "OpenTelemetry";
+		private static string OPENTELEMETRY_SERVICE = "Observability";
 		
 		private static IOpenTelemetryProvider GetOpenTelemetryProvider()
 		{
@@ -20,7 +20,7 @@ namespace GeneXus.Services.OpenTelemetry
 			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
 
 			if (providerService != null)
-			{
+			{				
 				try
 				{
 					GXLogging.Debug(log, "Loading OpenTelemetry provider:", providerService.ClassName);
@@ -29,7 +29,7 @@ namespace GeneXus.Services.OpenTelemetry
 #else
 					Type type = AssemblyLoader.GetType(providerService.ClassName);
 #endif
-					otelProvider = (IOpenTelemetryProvider)Activator.CreateInstance(type);
+					otelProvider = (IOpenTelemetryProvider)Activator.CreateInstance(type, new object[] { providerService });
 				}
 				catch (Exception e)
 				{
@@ -41,14 +41,14 @@ namespace GeneXus.Services.OpenTelemetry
 		}
 
 		internal static void Setup(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
-		{
+		{			
 			IOpenTelemetryProvider provider = GetOpenTelemetryProvider();
 			if (provider != null)
 			{
 				bool started = provider.InstrumentAspNetCoreApplication(services);
 				if (started)
 				{
-					log.Debug("OpenTelemetry instrumentation started");
+					log.Info("OpenTelemetry instrumentation started");
 				}
 			}
 		}

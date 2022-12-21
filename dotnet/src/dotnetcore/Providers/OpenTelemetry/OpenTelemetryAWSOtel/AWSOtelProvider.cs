@@ -4,21 +4,38 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Contrib.Extensions.AWSXRay.Trace;
+using GeneXus.Services;
+using GeneXus.Services.Common;
 
 namespace GeneXus.Otel.AWS
 {
-	public class AWSOtelAspNetProvider : IOpenTelemetryProvider
-	{	
+	public class AWSOtelProvider : IOpenTelemetryProvider
+	{
+		//private ServiceSettingsReader settingsReader;
+
+		public AWSOtelProvider(GXService s)
+		{
+
+
+		}
+
+
 		public bool InstrumentAspNetCoreApplication(IServiceCollection _)
 		{
+			string oltpEndpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
+
 			Sdk.CreateTracerProviderBuilder()
 				.AddXRayTraceId()    // for generating AWS X-Ray compliant trace IDs
 				.AddOtlpExporter(options =>
 				{
-					options.Endpoint = new Uri(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT"));
+					if (!string.IsNullOrEmpty(oltpEndpoint))
+					{
+						options.Endpoint = new Uri(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT"));
+					}
 				})
-				.AddAspNetCoreInstrumentation()
 				.AddHttpClientInstrumentation()
+				.AddAspNetCoreInstrumentation()
+				.AddSqlClientInstrumentation()
 				.AddAWSInstrumentation()
 				.Build();
 
