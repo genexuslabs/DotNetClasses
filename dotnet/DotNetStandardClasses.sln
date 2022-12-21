@@ -232,11 +232,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynService.CosmosDB", "src\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opentelemetry", "opentelemetry", "{BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWSOtelAspNet", "src\dotnetcore\Providers\OpenTelemetry\AWSOtel\AWSOtelAspNet.csproj", "{6BAEDA8C-EFB6-43FF-85A5-FCD323C59323}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.Lightstep.AspNet", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetryLightStep\GeneXus.OpenTelemetry.Lightstep.AspNet.csproj", "{27D54041-BDD5-428E-8CA6-C96D519F5451}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opentelemetry", "opentelemetry", "{BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.AWS.AspNet", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetryAWSOtel\GeneXus.OpenTelemetry.AWS.AspNet.csproj", "{B5A9DEA7-67EC-49E4-924E-4729C34286EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AWSOtelAspNet", "src\dotnetcore\Providers\OpenTelemetry\AWSOtel\AWSOtelAspNet.csproj", "{6BAEDA8C-EFB6-43FF-85A5-FCD323C59323}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opentelemetry", "opentelemetry", "{33249CE1-EAB3-4F28-8176-C16AA4215999}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -564,6 +564,14 @@ Global
 		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27D54041-BDD5-428E-8CA6-C96D519F5451}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27D54041-BDD5-428E-8CA6-C96D519F5451}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27D54041-BDD5-428E-8CA6-C96D519F5451}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27D54041-BDD5-428E-8CA6-C96D519F5451}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5A9DEA7-67EC-49E4-924E-4729C34286EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5A9DEA7-67EC-49E4-924E-4729C34286EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5A9DEA7-67EC-49E4-924E-4729C34286EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5A9DEA7-67EC-49E4-924E-4729C34286EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -673,6 +681,9 @@ Global
 		{BE6E7CF9-68CF-480B-A09B-CD4A684F348F} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 		{41E782A4-6CDD-4340-92AB-C4C79C799A0F} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439} = {C264F34E-2CE0-4DCA-B22D-4155821BE611}
+		{27D54041-BDD5-428E-8CA6-C96D519F5451} = {33249CE1-EAB3-4F28-8176-C16AA4215999}
+		{B5A9DEA7-67EC-49E4-924E-4729C34286EC} = {33249CE1-EAB3-4F28-8176-C16AA4215999}
+		{33249CE1-EAB3-4F28-8176-C16AA4215999} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
