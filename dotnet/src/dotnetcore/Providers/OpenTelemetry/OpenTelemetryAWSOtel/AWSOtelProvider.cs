@@ -25,7 +25,7 @@ namespace GeneXus.OpenTelemetry.AWS
 				{
 					if (!string.IsNullOrEmpty(oltpEndpoint))
 					{
-						options.Endpoint = new Uri(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT"));
+						options.Endpoint = new Uri(oltpEndpoint);
 					}
 				})
 				.AddHttpClientInstrumentation()
