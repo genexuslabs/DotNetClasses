@@ -8,19 +8,20 @@
 	  <AssemblyName>GeneXus.OpenTelemetry.AWS.AspNet</AssemblyName>
 	  <PackageTags>AWS Distro for OpenTelemetry for .NET </PackageTags>
 	  <PackageId>GeneXus.OpenTelemetry.AWS.AspNet</PackageId>
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
 	  <PackageReference Include="OpenTelemetry.Contrib.Extensions.AWSXRay" Version="1.2.0" />
 	  <PackageReference Include="OpenTelemetry.Contrib.Instrumentation.AWS" Version="1.0.2" />
-	  <PackageReference Include="OpenTelemetry.Api" Version="1.4.0-alpha.1" />
-	  <PackageReference Include="OpenTelemetry" Version="1.4.0-alpha.1" />
-	  <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.4.0-alpha.1" />
-	  <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-alpha.1" />
-	  <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc9.5" />
-	  <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.5" />
-	  <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.5" />
-	  <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.0.0-rc9.5" />
+	  <PackageReference Include="OpenTelemetry.Api" Version="1.4.0-alpha.1" NoWarn="NU1605"/>
+	  <PackageReference Include="OpenTelemetry" Version="1.4.0-alpha.1" NoWarn="NU1605"/>
+	  <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.4.0-alpha.1" NoWarn="NU1605"/>
+	  <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.4.0-alpha.1" NoWarn="NU1605"/>
+	  <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc9.5" NoWarn="NU1605"/>
+	  <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.5" NoWarn="NU1605"/>
+	  <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.5" NoWarn="NU1605"/>
+	  <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.0.0-rc9.5" NoWarn="NU1605"/>
 	  <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
   </ItemGroup>
 
