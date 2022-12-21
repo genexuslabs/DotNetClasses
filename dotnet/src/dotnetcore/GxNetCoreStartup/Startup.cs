@@ -80,7 +80,7 @@ namespace GeneXus.Application
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				 .ConfigureLogging(logging => logging.AddConsole())				 
+				 .ConfigureLogging(logging => logging.AddConsole())
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
 				.Build();
@@ -90,7 +90,7 @@ namespace GeneXus.Application
 	public static class GXHandlerExtensions
 	{
 		public static IApplicationBuilder UseGXHandlerFactory(this IApplicationBuilder builder, string basePath)
-		{			
+		{
 			return builder.UseMiddleware<HandlerFactory>(basePath);
 		}
 		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app, string basePath)
@@ -151,7 +151,7 @@ namespace GeneXus.Application
 				options.AllowSynchronousIO = true;
 			});
 			services.AddDistributedMemoryCache();
-					
+
 			services.Configure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
@@ -268,7 +268,7 @@ namespace GeneXus.Application
 			}
 		}
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
-		{			
+		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
 			LogConfiguration.SetupLog4Net();			
 			var provider = new FileExtensionContentTypeProvider();
@@ -438,8 +438,8 @@ namespace GeneXus.Application
 			{
 				Console.Error.WriteLine("Errpr loading SwaggerUI " + ex.Message);
 			}
-		}				
-		
+		}
+
 		private void AddRewrite(IApplicationBuilder app, string rewriteFile, string baseURL)
 		{
 			string rules = File.ReadAllText(rewriteFile);

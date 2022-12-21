@@ -11,14 +11,9 @@ namespace GeneXus.Otel.AWS
 {
 	public class AWSOtelProvider : IOpenTelemetryProvider
 	{
-		//private ServiceSettingsReader settingsReader;
-
 		public AWSOtelProvider(GXService s)
 		{
-
-
 		}
-
 
 		public bool InstrumentAspNetCoreApplication(IServiceCollection _)
 		{
