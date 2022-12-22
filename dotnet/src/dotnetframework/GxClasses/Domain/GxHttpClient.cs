@@ -650,7 +650,12 @@ namespace GeneXus.Http.Client
 			setHttpVersion(request);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
+			{
 				handler.Proxy = proxy;
+#if !NETCORE
+				handler.WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy;
+#endif
+			}
 			HttpResponseMessage response;
 			TimeSpan milliseconds = TimeSpan.FromMilliseconds(_timeout);
 #if !NETCORE
