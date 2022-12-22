@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GeneXus.Data.Cosmos;
 using GeneXus.Utils;
 
@@ -11,10 +8,7 @@ namespace GeneXus.Data.NTier
 	public class CosmosDBDatastoreHelper : DynServiceDataStoreHelperBase
 	{
 
-		//TODO Esto no aplica a CosmosDB
 		public CosmosDBQuery NewQuery() => new CosmosDBQuery(this);
-
-		public CosmosDBQuery NewScan() => new CosmosDBQuery(this);
 
 		public CosmosDBMap Map(string name)
 		{
