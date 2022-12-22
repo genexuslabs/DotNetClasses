@@ -28,8 +28,12 @@ namespace GeneXus.OpenTelemetry.AWS
 						options.Endpoint = new Uri(oltpEndpoint);
 					}
 				})
+				.SetErrorStatusOnException(true)
 				.AddHttpClientInstrumentation()
-				.AddAspNetCoreInstrumentation()
+				.AddAspNetCoreInstrumentation(opt =>
+				{
+					opt.RecordException = true;
+				})
 				.AddSqlClientInstrumentation()
 				.AddAWSInstrumentation()
 				.Build();
