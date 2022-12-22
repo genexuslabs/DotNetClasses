@@ -2,13 +2,12 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0</TargetFrameworks>
-		<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
+		<DefineConstants>NETCORE;</DefineConstants>
 		<AppDesignerFolder>Properties</AppDesignerFolder>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyName>GeneXus.OpenTelemetry.Lightstep.AspNet</AssemblyName>
-		<PackageTags>Lightstep OpenTelemetry for .NET </PackageTags>
-		<PackageId>GeneXus.OpenTelemetry.Lightstep.AspNet</PackageId>
-		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<PackageTags>Lightstep OpenTelemetry GeneXus DotNet </PackageTags>
+		<PackageId>GeneXus.OpenTelemetry.Lightstep.AspNet</PackageId>		
 	</PropertyGroup>
 
 	<ItemGroup>

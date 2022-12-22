@@ -2,13 +2,12 @@
 
   <PropertyGroup>
 	  <TargetFrameworks>net6.0</TargetFrameworks>
-	  <DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
+	  <DefineConstants>NETCORE;</DefineConstants>
 	  <AppDesignerFolder>Properties</AppDesignerFolder>
 	  <SignAssembly>false</SignAssembly>	 
 	  <AssemblyName>GeneXus.OpenTelemetry.AWS.AspNet</AssemblyName>
-	  <PackageTags>AWS Distro for OpenTelemetry for .NET </PackageTags>
-	  <PackageId>GeneXus.OpenTelemetry.AWS.AspNet</PackageId>
-	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	  <PackageTags>AWSOtel OpenDistro OpenTelemetry GeneXus</PackageTags>
+	  <PackageId>GeneXus.OpenTelemetry.AWS.AspNet</PackageId>	  
   </PropertyGroup>
 
   <ItemGroup>
