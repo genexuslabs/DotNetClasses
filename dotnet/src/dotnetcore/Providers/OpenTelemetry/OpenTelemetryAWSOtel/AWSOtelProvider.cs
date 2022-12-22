@@ -29,6 +29,7 @@ namespace GeneXus.OpenTelemetry.AWS
 					}
 				})
 				.SetErrorStatusOnException(true)
+				.AddSource("MySqlConnector")
 				.AddHttpClientInstrumentation()
 				.AddAspNetCoreInstrumentation(opt =>
 				{
