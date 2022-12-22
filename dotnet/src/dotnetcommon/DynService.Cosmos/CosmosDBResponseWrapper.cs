@@ -8,23 +8,21 @@ namespace GeneXus.Data.NTier.CosmosDB
 	{
 
 		public FeedIterator feedIterator;
-		Stream stream;
+		public Stream stream;
 
 		public ResponseWrapper(ResponseMessage responseMessage, FeedIterator feedIter)
 		{
 			feedIterator = feedIter;
 			stream = responseMessage.Content;
-			//Items = queryResponse.Items;
-			//ItemCount = queryResponse.Items.Count;
 		}
 		public ResponseWrapper(FeedIterator feedIter)
 		{
 			feedIterator = feedIter;
-			//stream = responseMessage.Content; 
-			//Items = queryResponse.Items;
-			//ItemCount = queryResponse.Items.Count;
 		}
-
+		public ResponseWrapper(ResponseMessage responseMessage)
+		{
+			stream = responseMessage.Content; 
+		}
 		public List<Dictionary<string, object>> Items { get; set; }
 		public int ItemCount { get; set; }
 		

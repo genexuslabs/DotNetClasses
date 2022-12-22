@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using GeneXus.Data.NTier;
 
 namespace GeneXus.Data.Cosmos
@@ -96,7 +95,6 @@ namespace GeneXus.Data.Cosmos
 			}
 			return false;
 		}
-
 		internal static object ToItemValue(DbType dbType, Object value)
 		{
 			object attValue;

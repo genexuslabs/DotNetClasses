@@ -42,17 +42,11 @@ namespace GeneXus.Data.NTier
 		private static string mConnectionString;
 
 		//https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/query/select
-		//private const string SELECT_CMD = "SELECT";
-		//private const string FROM = "FROM";
 		private const string TABLE_ALIAS = "t";
-		//private const string WHERE = "WHERE";
-
-
 		private const string FILTER_PATTERN = @"\((.*) = :(.*)\)";
 
 		//private const string DISTINCT = "DISTINCT";
-		//private const string ORDER_BY = "ORDER BY";
-
+		
 		//static readonly ILog logger = log4net.LogManager.GetLogger(typeof(CosmosDBConnection));
 
 		//TODO: Usar un Hashset para guardar los containers
@@ -73,7 +67,6 @@ namespace GeneXus.Data.NTier
 		}
 		private static void InitializeDBConnection()
 		{
-	
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = mConnectionString;
 
@@ -368,12 +361,66 @@ namespace GeneXus.Data.NTier
 
 			catch (Exception e) { throw e; }
 		}
+
+		private VarValue GetDataParameterfromQueryVars(string filter, IEnumerable<VarValue> values)
+		{
+			VarValue varValue = null;
+			Match match = Regex.Match(filter, FILTER_PATTERN);
+			if (match.Groups.Count > 1)
+			{
+				string varName = match.Groups[2].Value;
+				string name = match.Groups[1].Value;
+				varValue = values.FirstOrDefault(v => v.Name == $":{varName}");
+			}
+			return varValue;
+		}
+
+		private string GetDataParameterDataParameterCollection(string filter, IDataParameterCollection parms)
+		{
+			Match match = Regex.Match(filter, FILTER_PATTERN);
+			if (match.Groups.Count > 1)
+			{
+				string varName = match.Groups[2].Value;
+
+				if (parms[varName] is ServiceParameter serviceParm)
+				{
+					return serviceParm.Value.ToString();
+				}
+			}
+			return string.Empty;
+		}
 		private void CreateCosmosQuery(CosmosDBQuery query,ServiceCursorDef cursorDef, IDataParameterCollection parms, Container container, out CosmosDBDataReader cosmosDBDataReader,out RequestWrapper requestWrapper)
 		{
+
+			if (query.KeyFilters.Any() && (!query.Filters.Any()))
+			{
+				//Key is just the id or <id,partitionKey>
+				requestWrapper = new RequestWrapper(cosmosClient, container, null);
+				requestWrapper.queryByPK = true;
+				requestWrapper.idValue = GetDataParameterfromQueryVars(query.KeyFilters.First(), query.Vars)?.Value.ToString();
+				requestWrapper.idValue = requestWrapper.idValue ?? GetDataParameterDataParameterCollection(query.KeyFilters.First(),parms);
+
+				if (requestWrapper.idValue != null)
+				{
+					if (query.KeyFilters.Count() > 1)
+					{
+						requestWrapper.partitionKeyValue = GetDataParameterfromQueryVars(query.KeyFilters.Skip(1).Take(1).First(), query.Vars)?.Value.ToString();
+						requestWrapper.partitionKeyValue = requestWrapper.partitionKeyValue ?? GetDataParameterDataParameterCollection(query.KeyFilters.Skip(1).Take(1).First(), parms);
+					}
+					else
+						requestWrapper.partitionKeyValue = requestWrapper.idValue;
+
+					if (requestWrapper.partitionKeyValue != null)
+					{ 
+						cosmosDBDataReader = new CosmosDBDataReader(cursorDef, requestWrapper);
+						return;
+					}
+				}
+			}
+			
 			//Create the query
 			string tableName = query.TableName;
 			IEnumerable<string> projection = query.Projection;
-			
 			string element;
 			string projectionList = string.Empty;
 			foreach (string key in projection)
@@ -390,18 +437,18 @@ namespace GeneXus.Data.NTier
 
 			string regex1 = @"\(([^\)\(]+)\)";
 			string regex2 = @"(.*)[^<>!=]\s*(=|!=|<|>|<=|>=|<>)\s*(:.*)";
-			
+
 			string keyFilterS;
 			string condition = string.Empty;
 			IEnumerable<string> keyFilterQ = Array.Empty<string>();
 
-			foreach (string keyFilter in allFilters) 
+			foreach (string keyFilter in allFilters)
 			{
 				keyFilterS = keyFilter;
 				condition = keyFilter;
-				
+
 				MatchCollection matchCollection = Regex.Matches(keyFilterS, regex1);
-			
+
 				foreach (Match match in matchCollection)
 				{
 					if (match.Groups.Count > 0)
@@ -424,8 +471,6 @@ namespace GeneXus.Data.NTier
 								//look at IDataParameterCollection parms
 								if (parms[attName] is ServiceParameter serviceParm)
 									if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringDbType(serviceParm.DbType))
-									//Nvarchar, etc?
-									//Date?
 									{
 										varValuestr = '"' + $"{serviceParm.Value.ToString()}" + '"';
 									}
@@ -438,15 +483,13 @@ namespace GeneXus.Data.NTier
 								{
 									if (item.Name == match2.Groups[3].Value)
 									{
-										//if (item.Type == GXType.Char || item.Type == GXType.LongVarChar || item.Type == GXType.VarChar || item.Type == GXType.Text)
+
 										if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringGXType(item.Type))
-										//Nvarchar, etc?
-										//Date?
 										{
 											varValuestr = '"' + $"{item.Value.ToString()}" + '"';
 										}
 										else
-										{ 
+										{
 											varValuestr = item.Value.ToString();
 											varValuestr = varValuestr.Equals("True") ? "true" : varValuestr;
 											varValuestr = varValuestr.Equals("False") ? "false" : varValuestr;
@@ -462,12 +505,11 @@ namespace GeneXus.Data.NTier
 							else
 							{
 								//Check that cond is a valid attribute - boolean
-
 							}
 						}
 					}
 				}
-				
+
 				foreach (string d in projection)
 				{
 					string wholeWordPattern = String.Format(@"\b{0}\b", d);
@@ -475,31 +517,25 @@ namespace GeneXus.Data.NTier
 				}
 				keyFilterQ = new string[] { condition };
 				allFiltersQuery = allFiltersQuery.Concat(keyFilterQ);
-				
+
 			}
 			string filterExpression = allFiltersQuery.Any() ? String.Join(" AND ", allFiltersQuery) : null;
 
 			IEnumerable<string> orderExpressionList = Array.Empty<string>();
 			string expression = string.Empty;
-			
+
 			foreach (string orderAtt in query.OrderBys)
 			{
-
-				expression = orderAtt.StartsWith("(") ? $"{TABLE_ALIAS}.{orderAtt} DESC" : $"{TABLE_ALIAS}.{orderAtt} ASC";
-				orderExpressionList = orderExpressionList.Concat(new string[] { expression});
+				expression = orderAtt.StartsWith("(") ? $"{TABLE_ALIAS}.{orderAtt.Remove(orderAtt.Length-1,1).Remove(0,1)} DESC" : $"{TABLE_ALIAS}.{orderAtt} ASC";
+				orderExpressionList = orderExpressionList.Concat(new string[] { expression });
 			}
 
 			string orderExpression = String.Join(",", orderExpressionList);
-
 			string sqlQuery = SetupQuery(projectionList, filterExpression, tableName, orderExpression);
-
-			//if (FilterExpression != null)
-				//sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS} {WHERE} {FilterExpression}";
-			//else
-				//sqlQuery = $"{SELECT_CMD} {projectionList} {FROM} {tableName} {TABLE_ALIAS}";
-
 			QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
 			requestWrapper = new RequestWrapper(cosmosClient, container, queryDefinition);
+			requestWrapper.queryByPK = false;
+			
 			cosmosDBDataReader = new CosmosDBDataReader(cursorDef, requestWrapper);
 		}
 		internal static IOServiceContext NewServiceContext() => null;
