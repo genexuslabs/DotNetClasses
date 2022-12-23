@@ -13,6 +13,7 @@ namespace GeneXusFtps.GeneXusCommons
 #pragma warning disable CA1716 // Identifiers should not match keywords
 		public abstract bool Get(string remoteFilePath, string localDir);
 #pragma warning restore CA1716 // Identifiers should not match keywords
+		public abstract bool Rm(string remoteFilePath);
 		public abstract void Disconnect();
 
         public abstract string GetWorkingDirectory();

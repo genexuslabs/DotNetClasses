@@ -1,4 +1,4 @@
-﻿using GeneXusFtps.GeneXusFtps;
+using GeneXusFtps.GeneXusFtps;
 using NUnit.Framework;
 using SecurityAPICommons.Utils;
 using SecurityAPITest.SecurityAPICommons.commons;
@@ -75,6 +75,19 @@ namespace SecurityAPITest.Ftps
 			True(get, client);
 		}
 
+		private void TestRm(FtpsClient client)
+		{
+			bool rm = client.Rm(remoteFilePath);
+			True(rm, client);
+		}
+
+
+		private void TestGetFalse(FtpsClient client)
+		{
+			bool get = client.Get(remoteFilePath, localDir);
+			False(get, client);
+		}
+
 		[Test]
 		public void TestWithoutCert()
 		{
@@ -91,6 +104,26 @@ namespace SecurityAPITest.Ftps
 			FtpsClient client = TestConnection(options);
 			TestPut(client);
 			TestGet(client);
+			client.Disconnect();
+		}
+
+		[Test]
+		public void TestRemove()
+		{
+			FtpsOptions options = new FtpsOptions();
+			options.Host = host;
+			options.User = user;
+			options.Password = password;
+			options.Port = port;
+			options.ForceEncryption = forceEncryption;
+			options.ConnectionMode = connectionMode;
+			options.EncryptionMode = encryptionMode;
+			options.Protocol = protocol;
+			options.WhiteList = whiteList;
+			FtpsClient client = TestConnection(options);
+			TestPut(client);
+			TestRm(client);
+			TestGetFalse(client);
 			client.Disconnect();
 		}
 
