@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using GeneXus.Metadata;
 using Microsoft.Net.Http.Headers;
 using Xunit;
 namespace xUnitTesting
