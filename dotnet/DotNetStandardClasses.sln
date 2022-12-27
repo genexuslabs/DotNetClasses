@@ -224,9 +224,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCoreWebUnitTest", "te
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opentelemetry", "opentelemetry", "{BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneXus.OpenTelemetry.Lightstep.AspNet", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetryLightStep\GeneXus.OpenTelemetry.Lightstep.AspNet.csproj", "{27D54041-BDD5-428E-8CA6-C96D519F5451}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.Lightstep.AspNet", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetryLightStep\GeneXus.OpenTelemetry.Lightstep.AspNet.csproj", "{27D54041-BDD5-428E-8CA6-C96D519F5451}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.AWS.AspNet", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetryAWSOtel\GeneXus.OpenTelemetry.AWS.AspNet.csproj", "{B5A9DEA7-67EC-49E4-924E-4729C34286EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneXus.OpenTelemetry", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetry\GeneXus.OpenTelemetry.csproj", "{00B1FA38-7D0B-47E4-860C-23490249A4D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -554,6 +556,10 @@ Global
 		{B5A9DEA7-67EC-49E4-924E-4729C34286EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5A9DEA7-67EC-49E4-924E-4729C34286EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5A9DEA7-67EC-49E4-924E-4729C34286EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -664,6 +670,7 @@ Global
 		{BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 		{27D54041-BDD5-428E-8CA6-C96D519F5451} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
 		{B5A9DEA7-67EC-49E4-924E-4729C34286EC} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
+		{00B1FA38-7D0B-47E4-860C-23490249A4D6} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
