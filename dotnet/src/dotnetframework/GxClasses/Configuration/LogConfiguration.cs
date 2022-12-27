@@ -1,16 +1,22 @@
 using System;
 using log4net;
+using log4net.Appender;
 using log4net.Core;
 using log4net.Repository;
 using log4net.Repository.Hierarchy;
+using System.Linq;
+using log4net.Layout;
 
 namespace GeneXus.Configuration
 {
-	internal static class LogConfiguration
+	internal class LogConfiguration
 	{
-		public const string USER_LOG_TOPIC = "GeneXusUserLog";
-		private const string LOGLEVEL_ENVVAR = "GX_LOG_LEVEL";
-		private const string USERLOGLEVEL_ENVVAR = "GX_LOG_LEVEL_USER";
+		private static readonly ILog logger = log4net.LogManager.GetLogger(typeof(LogConfiguration));
+
+		public  const string USER_LOG_TOPIC = "GeneXusUserLog";
+		private const string LOG_LEVEL_ENVVAR = "GX_LOG_LEVEL";
+		private const string LOG_LEVEL_USER_ENVVAR = "GX_LOG_LEVEL_USER";
+		private const string LOG_OUTPUT_ENVVAR = "GX_LOG_OUTPUT";
 
 		public static void SetupLog4Net()
 		{
@@ -18,8 +24,8 @@ namespace GeneXus.Configuration
 		}
 
 		private static void SetupLog4NetFromEnvironmentVariables()
-		{			
-			string logLevel = Environment.GetEnvironmentVariable(LOGLEVEL_ENVVAR);
+		{
+			string logLevel = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
 
 			if (!string.IsNullOrEmpty(logLevel))
 			{
@@ -27,7 +33,7 @@ namespace GeneXus.Configuration
 				h.Root.Level = h.LevelMap[logLevel.ToUpper()];
 			}
 
-			string userLogLevel = Environment.GetEnvironmentVariable(USERLOGLEVEL_ENVVAR);
+			string userLogLevel = Environment.GetEnvironmentVariable(LOG_LEVEL_USER_ENVVAR);
 
 			if (!string.IsNullOrEmpty(userLogLevel))
 			{
@@ -36,9 +42,33 @@ namespace GeneXus.Configuration
 				{
 					Hierarchy hier = (Hierarchy)repository;
 					ILogger logger = hier.GetLogger(USER_LOG_TOPIC);
-					((Logger)logger).Level = hier.LevelMap[userLogLevel];
+					if (logger != null)
+					{
+						((Logger)logger).Level = hier.LevelMap[userLogLevel];
+					}
 				}
 			}
+
+			string appenderName = Environment.GetEnvironmentVariable(LOG_OUTPUT_ENVVAR);			
+			if (!String.IsNullOrEmpty(appenderName))
+			{
+				Hierarchy h = (Hierarchy) LogManager.GetRepository();
+				IAppender appenderToAdd = h.GetAppenders().First(a => a.Name == appenderName);
+				if (appenderToAdd == null)
+				{
+					LogConfiguration.logger.Error($"Appender '{appenderName}' was not found on Log4Net Config file");
+					return;
+				}
+				
+				h.Root.AddAppender(appenderToAdd);
+				ILogger logger = h.GetLogger(USER_LOG_TOPIC);
+				if (logger != null)
+				{
+					((Logger)logger).AddAppender(appenderToAdd);
+				}
+				
+			}
 		}
+
 	}
 }

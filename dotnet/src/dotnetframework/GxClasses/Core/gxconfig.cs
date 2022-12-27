@@ -80,6 +80,7 @@ namespace GeneXus.Configuration
 				}
 
 			}
+			LogConfiguration.SetupLog4Net();
 		}
 
 		private static void RemoveArg(ref string[] args, ref int i)
