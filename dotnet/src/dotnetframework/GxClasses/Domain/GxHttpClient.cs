@@ -650,7 +650,12 @@ namespace GeneXus.Http.Client
 			setHttpVersion(request);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
+			{
 				handler.Proxy = proxy;
+#if !NETCORE
+				handler.WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy;
+#endif
+			}
 			HttpResponseMessage response;
 			TimeSpan milliseconds = TimeSpan.FromMilliseconds(_timeout);
 #if !NETCORE
@@ -1236,7 +1241,7 @@ namespace GeneXus.Http.Client
 				_statusCode = (short)resp.StatusCode;
 				_statusDescription = resp.StatusDescription;
 				resp.Close();
-				GXLogging.Debug(log, "_responseString " + ToString());
+				GXLogging.DebugSanitized(log, "_responseString " + ToString());
 			}
 			ClearSendStream();
 		}

@@ -344,11 +344,8 @@ namespace GeneXus.Http
 				var pf = GetFormFile(httpContext, varName);
 				if (pf != null)
 				{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					FileInfo fi = new FileInfo(pf.FileName);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 					string tempDir = Preferences.getTMP_MEDIA_PATH();
-					string ext = fi.Extension;
+					string ext = Path.GetExtension(pf.FileName);
 					if (ext != null)
 						ext = ext.TrimStart('.');
 					filePath = FileUtil.getTempFileName(tempDir);

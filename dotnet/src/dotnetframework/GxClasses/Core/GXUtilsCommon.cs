@@ -3528,8 +3528,7 @@ namespace GeneXus.Utils
 			}
 			catch
 			{
-				FileInfo fi = new FileInfo(FileName); //Local file that do not exist
-				extension = fi.Extension;
+				extension = Path.GetExtension(FileName); //Local file that do not exist
 			}
 			int extStart = extension.LastIndexOf('.');
 			if (extStart == -1)
