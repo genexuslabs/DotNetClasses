@@ -17,7 +17,38 @@ namespace GeneXus.Procedure
 	using GeneXus.XML;
 	using GeneXus.Metadata;
 	using GeneXus.Data;
+	using GeneXus.Data.NTier;
 
+	public class GXMainProcedure : GXProcedure
+	{
+		protected static int MainImpl(string[] args, GXMainProcedure instance)
+		{
+			try
+			{
+				Config.ParseArgs(ref args);
+				return instance.ExecuteCmdLine(args);
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+				return 1;
+			}
+		}
+		public override void initialize()
+		{
+			
+		}
+		public virtual int ExecuteCmdLine(string[] args)
+		{
+			return GX.GXRuntime.ExitCode;
+		}
+		public override void cleanup()
+		{
+			base.cleanup();
+			ExitApp();
+		}
+	}
 	public abstract class GXProcedure: GXBaseObject
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Procedure.GXProcedure));
@@ -57,6 +88,55 @@ namespace GeneXus.Procedure
 				pInfo.incCount();
 			}
 #endif
+			context = new GxContext();
+			DataStoreUtil.LoadDataStores(context);
+			IsMain = true;
+
+		}
+		public GXProcedure(IGxContext context)
+		{
+			this.context = context;
+			IsMain = false;
+		}
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected void ExecuteImpl()
+		{
+			initialize();
+			ExecutePrivate();
+			cleanup();
+		}
+		public override void cleanup()
+		{
+			CloseCursors();
+			if (IsMain)
+			{
+				context.CloseConnections();
+			}
+
+		}
+		protected virtual void CloseCursors()
+		{
+		}
+		protected virtual void ExecutePrivateCatch(object stateInfo)
+		{
+			try
+			{
+				((GXProcedure)stateInfo).ExecutePrivate();
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+			}
+		}
+		protected void SubmitImpl(GXProcedure instance, Action<object> executePrivateCatch)
+		{
+			instance.context.SetSubmitInitialConfig(context);
+			instance.initialize();
+			Submit(executePrivateCatch, instance);
 		}
 
 		public bool DisconnectAtCleanup
