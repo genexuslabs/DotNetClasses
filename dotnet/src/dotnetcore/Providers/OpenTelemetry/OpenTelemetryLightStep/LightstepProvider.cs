@@ -14,7 +14,7 @@ namespace GeneXus.OpenTelemetry.Lightstep
 	public class LightStepOpenTelemetry : IOpenTelemetryProvider
 	{
 		private static readonly ILog log = LogManager.GetLogger(typeof(LightStepOpenTelemetry));
-		private const string LIGHTSTEP_INGREST_URL = "https://ingest.lightstep.com:443";
+		private const string LIGHTSTEP_INGREST_URL = "ingest.lightstep.com:443";
 		private const string LIGHTSTEP_ACCESS_TOKEN = "LS_ACCESS_TOKEN";
 
 		public LightStepOpenTelemetry(GXService s)
@@ -37,16 +37,15 @@ namespace GeneXus.OpenTelemetry.Lightstep
 				 .AddOtlpExporter(opt =>
 				 {
 					 opt.Endpoint = new Uri(LIGHTSTEP_INGREST_URL);
-					 opt.Headers = $"lightstep-access-token=${lightstepToken}";					 					 
-				 })				 				 				 
+					 opt.Headers = $"lightstep-access-token=${lightstepToken}";
+				 })
 				.SetErrorStatusOnException(true)
 				.AddHttpClientInstrumentation()
 				.AddAspNetCoreInstrumentation(opt =>
 				{
 					opt.RecordException = true;
 				})
-				.AddSqlClientInstrumentation()				
-				.Build();
+				.AddSqlClientInstrumentation();
 			 });
 
 			return true;
