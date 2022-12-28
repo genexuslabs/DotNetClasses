@@ -116,7 +116,7 @@ namespace GeneXus.XML
 			SimpleElements = 1;
 			RemoveWhiteNodes = 1;
 			RemoveWhiteSpaces = 1;
-			ReadExternalEntities = 1;
+			ReadExternalEntities = 0;
 			_basePath = "";
 
 		}
@@ -228,6 +228,8 @@ namespace GeneXus.XML
 		{
 			if (treaderSettings != null && !resolver.ReadExternalEntities && validationType == ValidationNone)
 				treaderSettings.DtdProcessing = DtdProcessing.Ignore;
+			else
+				treaderSettings.DtdProcessing = DtdProcessing.Parse;
 		}
 
 		public short OpenResponse(IGxHttpClient httpClient)

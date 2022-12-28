@@ -105,7 +105,7 @@ namespace GeneXus.XML
 			SimpleElements = 1;
 			RemoveWhiteNodes = 1;
 			RemoveWhiteSpaces = 1;
-			ReadExternalEntities = 1;
+			ReadExternalEntities = 0;
 			_basePath = "";
 
 		}
