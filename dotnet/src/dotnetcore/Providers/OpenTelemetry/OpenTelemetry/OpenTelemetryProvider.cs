@@ -23,8 +23,7 @@ namespace GeneXus.OpenTelemetry.OpenTelemetry
 			   {
 				   opt.RecordException = true;
 			   })
-			   .AddSqlClientInstrumentation()
-			   .Build();
+			   .AddSqlClientInstrumentation();			   
 			});
 
 			return true;
