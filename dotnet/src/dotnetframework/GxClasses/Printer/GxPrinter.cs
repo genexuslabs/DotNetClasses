@@ -822,7 +822,7 @@ namespace GeneXus.Printer
 		{
 			PrintingPermission pp = new PrintingPermission(PrintingPermissionLevel.AllPrinting);
 			pp.Demand();
-			PrintDocument pd = new PrintDocument(); 
+			PrintDocument pd = new PrintDocument();
 			pd.PrintController = new StandardPrintController(); 
 			pd.PrintPage += new PrintPageEventHandler(evt_PrintPage);
 			if (configString.Length > 0)
@@ -834,9 +834,17 @@ namespace GeneXus.Printer
 				streamToRead.Close();
 				throw new Exception("Printer settins not valid");
 			}
+			pd.Dispose();
 		}
 		public void Close()
 		{
+			try
+			{
+				streamToRead.Close();
+			}catch(Exception)
+			{
+				//NOOP
+			}
 		}
 		void initPrnReport( string configString, PrinterSettings printerSettings, PageSettings pageSettings)
 		{
@@ -1168,6 +1176,13 @@ namespace GeneXus.Printer
 		public void Close()
 		{
 			streamToWrite.Close();
+			try
+			{
+				streamToRead.Close();
+			}catch(Exception)
+			{
+				//NOOP
+			}
 		}
 		void processPrinterCommand( string line)
 		{
@@ -1330,6 +1345,19 @@ namespace GeneXus.Printer
 		public void Close()
 		{
 			streamToWrite.Close();
+			try
+			{
+				streamToRead.Close();
+				foreach (Font font in reportFonts.Values)
+				{
+					font.Dispose();
+				}
+			}
+			catch(Exception)
+			{
+				//NOOP
+			}
+
 		}
 		void processPrinterCommand(string line )
 		{
