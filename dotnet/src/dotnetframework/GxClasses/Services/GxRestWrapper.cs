@@ -28,6 +28,8 @@ using System.Collections;
 using Jayrock.Json;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http;
+using System.Diagnostics;
+using GeneXus.Diagnostics;
 
 namespace GeneXus.Application
 
@@ -698,6 +700,9 @@ namespace GeneXus.Application
 		}
 		public Task WebException(Exception ex)
 		{
+#if NETCORE			
+			GxHttpActivitySourceHelper.SetException(Activity.Current, ex);
+#endif
 			GXLogging.Error(log, "WebException", ex);
 			if (ex is FormatException)
 			{

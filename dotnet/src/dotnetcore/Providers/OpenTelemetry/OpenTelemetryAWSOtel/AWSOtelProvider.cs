@@ -6,6 +6,7 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Contrib.Extensions.AWSXRay.Trace;
 using GeneXus.Services;
 using GeneXus.Services.Common;
+using GeneXus.Diagnostics;
 
 namespace GeneXus.OpenTelemetry.AWS
 {
@@ -28,15 +29,7 @@ namespace GeneXus.OpenTelemetry.AWS
 						options.Endpoint = new Uri(oltpEndpoint);
 					}
 				})
-				.SetErrorStatusOnException(true)
-				.AddSource("MySqlConnector")
-				.AddHttpClientInstrumentation()
-				.AddAspNetCoreInstrumentation(opt =>
-				{
-					opt.RecordException = true;
-				})
-				.AddSqlClientInstrumentation()
-				.AddAWSInstrumentation()
+				.AddGxAspNetInstrumentation()
 				.Build();
 
 			Sdk.SetDefaultTextMapPropagator(new AWSXRayPropagator());
