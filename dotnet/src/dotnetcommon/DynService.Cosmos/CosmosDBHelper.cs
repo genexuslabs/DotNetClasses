@@ -11,8 +11,7 @@ namespace GeneXus.Data.Cosmos
 	internal class CosmosDBHelper
 	{
 		internal static bool AddItemValue(string parmName, string fromName, Dictionary<string, object> values, IDataParameterCollection parms, IEnumerable<VarValue> queryVars, ref string jsonData)
-		{
-			
+		{		
 			if (!AddItemValue(parmName, values, parms[fromName] as ServiceParameter, out string data))
 			{
 				VarValue varValue = queryVars.FirstOrDefault(v => v.Name == $":{fromName}");
@@ -33,7 +32,6 @@ namespace GeneXus.Data.Cosmos
 			}
 			else
 				jsonData = data;
-
 			return true;
 		}
 
@@ -74,7 +72,6 @@ namespace GeneXus.Data.Cosmos
 					data = data.Replace("False", "false");
 				}
 				return data;
-
 			}
 		}
 		internal static string FormatExceptionMessage(string statusCode, string message)

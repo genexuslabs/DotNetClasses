@@ -32,8 +32,10 @@ namespace GeneXus.Data.Cosmos
 			if (m_currentEntry == null)
 				throw new ServiceException(ServiceError.RecordNotFound);
 		}
-		private void ProcessStream(Stream stream)
+		private void ProcessPKStream(Stream stream)
 		{
+			//Query by PK -> only one record
+
 			if (stream != null)
 			{ 
 				using (StreamReader sr = new StreamReader(stream))
@@ -42,18 +44,22 @@ namespace GeneXus.Data.Cosmos
 					Newtonsoft.Json.JsonSerializer jsonSerializer = new Newtonsoft.Json.JsonSerializer();
 					object array = jsonSerializer.Deserialize<object>(jtr);
 
-					string json = ((Newtonsoft.Json.Linq.JToken)array).Root.ToString();
-					var jsonDocument = JsonDocument.Parse(json);
-					var jsonDoc = jsonDocument.RootElement;
-					foreach (var jsonProperty in jsonDoc.EnumerateObject())
-					{
-						if (jsonProperty.Name == "Documents")
-						{
-							Items = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(jsonProperty.Value.ToString());
-							break;
-						}
-					}
-					ItemCount = Items.Count;
+					Dictionary<string, object> result = JsonConvert.DeserializeObject<Dictionary<string, object>>(array.ToString());
+
+					//remove metadata
+					result.Remove("_rid");
+					result.Remove("_self");
+					result.Remove("_etag");
+					result.Remove("_attachments");
+					result.Remove("_ts");
+
+					Items = new List<Dictionary<string, object>>();
+					Items.Add(result);
+
+					if (Items != null)
+						ItemCount = Items.Count;
+					else
+						ItemCount = 0;
 				}
 			}
 		}
@@ -66,7 +72,14 @@ namespace GeneXus.Data.Cosmos
 			m_response = m_request.Read();
 			m_feedIterator = m_response.feedIterator;
 			if (m_feedIterator == null)
-				ProcessStream(m_response.stream);
+			{
+				if (m_response != null)
+				{ 
+					Items = m_response.Items;
+					ItemCount = Items.Count;
+					m_currentPosition = -1;
+				}
+			}
 		}
 		public object this[string name]
 		{
@@ -295,7 +308,10 @@ namespace GeneXus.Data.Cosmos
 										break;
 									}
 								}
-								ItemCount = Items.Count;
+								if (Items != null)
+									ItemCount = Items.Count;
+								else
+									ItemCount = 0;
 							}
 						}
 					}

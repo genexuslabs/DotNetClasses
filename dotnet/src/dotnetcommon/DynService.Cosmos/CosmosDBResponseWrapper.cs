@@ -19,9 +19,15 @@ namespace GeneXus.Data.NTier.CosmosDB
 		{
 			feedIterator = feedIter;
 		}
-		public ResponseWrapper(ResponseMessage responseMessage)
+		public ResponseWrapper(Stream streamResponse)
 		{
-			stream = responseMessage.Content; 
+			stream = streamResponse; 
+		}
+
+		public ResponseWrapper(List<Dictionary<string, object>> responseItems)
+		{
+			Items = responseItems;
+			ItemCount = responseItems.Count;
 		}
 		public List<Dictionary<string, object>> Items { get; set; }
 		public int ItemCount { get; set; }
