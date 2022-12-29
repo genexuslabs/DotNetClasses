@@ -67,7 +67,6 @@ namespace GeneXus.Data.NTier
 		}
 		private static void InitializeDBConnection()
 		{
-			//System.Diagnostics.Debugger.Launch();
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = mConnectionString;
 
