@@ -17,7 +17,7 @@ namespace xUnitTesting
 			ClassLoader.FindType("apps.returnsession", "GeneXus.Programs.apps", "returnsession", Assembly.GetExecutingAssembly(), true);//Force loading assembly for saveimage returnsession
 			server.AllowSynchronousIO = true;
 		}
-		//[Fact]
+		[Fact]
 		public void TestConcurrentRequest()
 		{
 			HttpClient client = server.CreateClient();
@@ -64,8 +64,12 @@ namespace xUnitTesting
 		{
 			var r = await client.GetAsync(url);
 			string result = await r.Content.ReadAsStringAsync();
-			Assert.Contains(" - type ", result, StringComparison.OrdinalIgnoreCase);
-			Console.WriteLine(url + ":" + result);
+			int idx = url.IndexOf("gxid=");
+
+			string gxidAndTyep = url.Substring(idx);
+			gxidAndTyep = gxidAndTyep.Substring(0, gxidAndTyep.IndexOf("&Title"));
+
+			Assert.Contains(gxidAndTyep, result, StringComparison.OrdinalIgnoreCase);
 		}
 		async Task TestSessionGrids(HttpClient client)
 		{
