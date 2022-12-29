@@ -36,7 +36,7 @@ namespace GeneXus.Programs.apps
 			if (string.IsNullOrEmpty(Gxwebsession.Get(Gxids)))
 			{
 				
-				Gxwebsession.Set(Gxids + "gxvar_Datasdt", $"Reccord 1 - type {Type}");
+				Gxwebsession.Set(Gxids + "gxvar_Datasdt", $"Reccord 1 - gxid={gxid}&Type={Type}");
 				Gxwebsession.Set(Gxids + "gxvar_Data1", "");
 				Gxwebsession.Set(Gxids + "gxvar_Data2", "");
 				Gxwebsession.Set(Gxids, "true");

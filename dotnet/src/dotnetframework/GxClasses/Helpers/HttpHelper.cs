@@ -707,6 +707,41 @@ namespace GeneXus.Http
 			context.Response.StatusDescription = statusDescription;
 #endif
 		}
+#if NETCORE
+		internal static void CommitSession(this HttpContext context)
+		{
+			Dictionary<string, string> _contextSession;
+			if (context.Items.TryGetValue(HttpSyncSessionState.CTX_SESSION, out object ctxSession))
+			{
+				_contextSession = ctxSession as Dictionary<string, string>;
+				if (_contextSession != null && _contextSession.Count > 0)
+				{
+					ISession _httpSession = context.Session;
+					var locker = LockTracker.Get(_httpSession.Id);
+					using (locker)
+					{
+						lock (locker)
+						{
+							_httpSession.GetType().GetField("_loaded", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(_httpSession, false);
+							_httpSession.LoadAsync().Wait();
+							foreach (string s in _contextSession.Keys)
+							{
+								if (_contextSession[s] == null)
+									_httpSession.Remove(s);
+								else
+								{
+									_httpSession.SetString(s, _contextSession[s]);
+								}
+							}
+							context.Items.Remove(HttpSyncSessionState.CTX_SESSION);
+							_httpSession.CommitAsync().Wait();
+						}
+					}
+				}
+			}
+		}
+#endif
+
 	}
 
 	public static class HttpRequestExtensions
