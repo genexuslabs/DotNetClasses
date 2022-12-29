@@ -723,8 +723,12 @@ namespace GeneXus.Http
 					{
 						lock (locker)
 						{
-							_httpSession.GetType().GetField("_loaded", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(_httpSession, false);
-							_httpSession.LoadAsync().Wait();
+							FieldInfo loaded = _httpSession.GetType().GetField("_loaded", BindingFlags.Instance | BindingFlags.NonPublic);
+							if (loaded != null)
+							{
+								loaded.SetValue(_httpSession, false);
+								_httpSession.LoadAsync().Wait();
+							}
 							foreach (string s in _contextSession.Keys)
 							{
 								if (_contextSession[s] == null)
