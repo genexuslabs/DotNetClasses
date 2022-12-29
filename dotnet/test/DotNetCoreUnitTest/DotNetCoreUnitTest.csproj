@@ -18,6 +18,7 @@
 	    <Compile Include="..\DotNetUnitTest\Domain\GxGenericDictionaryTest.cs" Link="Domain\GxGenericDictionaryTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\GxHttpClientTest.cs" Link="Domain\GxHttpClientTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\ShellTest.cs" Link="Domain\ShellTest.cs" />		
+	    <Compile Include="..\DotNetUnitTest\Domain\XmlReaderTest.cs" Link="Domain\XmlReaderTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\TimeZoneTest.cs" Link="Domain\TimeZoneTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\FileSystemTest.cs" Link="FileIO\FileSystemTest.cs" />
