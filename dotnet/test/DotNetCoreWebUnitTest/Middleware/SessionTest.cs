@@ -28,7 +28,9 @@ namespace xUnitTesting
 		CookieHeaderValue SessionCookie;
 		async Task CreateSession(HttpClient client)
 		{
-			string[] url1 = new string[]{ "rest/apps/createsession?gxid=48796585&Type=C1&Title=Component",
+			string url0 = "rest/apps/createsession?gxid=123456&Type=C0";
+
+			string[] url1 = new string[]{ "rest/apps/createsession?gxid=48796585&Type=C1&Title=Component%201",
 										"rest/apps/createsession?gxid=20200694&Type=C3&Title=Component%203",
 										"rest/apps/createsession?gxid=30382714&Type=C2&Title=Component%202",
 										"rest/apps/createsession?gxid=9559029&Type=C4&Title=Component%204",
@@ -42,7 +44,7 @@ namespace xUnitTesting
 										"rest/apps/createsession?gxid=51975671&Type=C12&Title=Component%212"};
 
 			//Fix sessionID
-			var c = await client.GetAsync(url1[0]);
+			var c = await client.GetAsync(url0);
 			string result = await c.Content.ReadAsStringAsync();
 			Console.WriteLine(result);
 			foreach (var header in c.Headers)
