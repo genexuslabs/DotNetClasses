@@ -32,7 +32,14 @@ namespace xUnitTesting
 										"rest/apps/createsession?gxid=20200694&Type=C3&Title=Component%203",
 										"rest/apps/createsession?gxid=30382714&Type=C2&Title=Component%202",
 										"rest/apps/createsession?gxid=9559029&Type=C4&Title=Component%204",
-										"rest/apps/createsession?gxid=51975664&Type=C5&Title=Component%205"};
+										"rest/apps/createsession?gxid=51975664&Type=C5&Title=Component%205",
+										"rest/apps/createsession?gxid=51975665&Type=C6&Title=Component%206",
+										"rest/apps/createsession?gxid=51975666&Type=C7&Title=Component%207",
+										"rest/apps/createsession?gxid=51975667&Type=C8&Title=Component%208",
+										"rest/apps/createsession?gxid=51975668&Type=C9&Title=Component%209",
+										"rest/apps/createsession?gxid=51975669&Type=C10&Title=Component%210",
+										"rest/apps/createsession?gxid=51975670&Type=C11&Title=Component%211",
+										"rest/apps/createsession?gxid=51975671&Type=C12&Title=Component%212"};
 
 			//Fix sessionID
 			var c = await client.GetAsync(url1[0]);
@@ -77,7 +84,14 @@ namespace xUnitTesting
 										"rest/apps/returnsession?gxid=30382714&Type=C2&Title=Component%202&start=0&count=30",
 										"rest/apps/returnsession?gxid=51975664&Type=C5&Title=Component%205&start=0&count=30",
 										"rest/apps/returnsession?gxid=9559029&Type=C4&Title=Component%204&start=0&count=30",
-										"rest/apps/returnsession?gxid=20200694&Type=C3&Title=Component%203&start=0&count=30" };
+										"rest/apps/returnsession?gxid=20200694&Type=C3&Title=Component%203&start=0&count=30",
+										"rest/apps/returnsession?gxid=51975665&Type=C6&Title=Component%206&start=0&count=30",
+										"rest/apps/returnsession?gxid=51975666&Type=C7&Title=Component%207&start=0&count=30",
+										"rest/apps/returnsession?gxid=51975667&Type=C8&Title=Component%208&start=0&count=30",
+										"rest/apps/returnsession?gxid=51975668&Type=C9&Title=Component%209&start=0&count=30",
+										"rest/apps/returnsession?gxid=51975669&Type=C10&Title=Component%210&start=0&count=30",
+										"rest/apps/returnsession?gxid=51975670&Type=C11&Title=Component%211&start=0&count=30",
+										"rest/apps/returnsession?gxid=51975671&Type=C12&Title=Component%212&start=0&count=30",};
 			List<Task> tasksGrid = new List<Task>();
 			foreach (string s1 in url2)
 			{
