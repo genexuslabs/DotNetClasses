@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using log4net;
 using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
 
 namespace GeneXus.Data.NTier.CosmosDB
 {
@@ -21,11 +24,41 @@ namespace GeneXus.Data.NTier.CosmosDB
 			m_queryDefinition = queryDefinition;
 		}
 
+		private List<Dictionary<string,object>> ProcessPKStream(Stream stream)
+		{
+			//Query by PK -> only one record
+
+			List <Dictionary<string, object>> Items = new List<Dictionary<string, object>>();
+			if (stream != null)
+			{
+				using (StreamReader sr = new StreamReader(stream))
+				using (JsonTextReader jtr = new JsonTextReader(sr))
+				{
+					Newtonsoft.Json.JsonSerializer jsonSerializer = new Newtonsoft.Json.JsonSerializer();
+					object array = jsonSerializer.Deserialize<object>(jtr);
+
+					Dictionary<string, object> result = JsonConvert.DeserializeObject<Dictionary<string, object>>(array.ToString());
+
+					//remove metadata
+					result.Remove("_rid");
+					result.Remove("_self");
+					result.Remove("_etag");
+					result.Remove("_attachments");
+					result.Remove("_ts");
+					Items.Add(result);
+				}
+			}
+			return Items;
+		}
 		private async Task<ResponseWrapper> ReadItemAsyncByPK(string idValue, string partitionKeyValue)
 		{
+			List<Dictionary<string, object>> Items = new List<Dictionary<string, object>>();
 			using (ResponseMessage responseMessage = await m_container.ReadItemStreamAsync(
 				partitionKey: new PartitionKey(partitionKeyValue),
 				id: idValue).ConfigureAwait(false))
+			//ResponseMessage responseMessage = await m_container.ReadItemStreamAsync(
+			//partitionKey: new PartitionKey(partitionKeyValue),
+			//id: idValue).ConfigureAwait(false);
 			{
 
 				if (!responseMessage.IsSuccessStatusCode)
@@ -37,10 +70,14 @@ namespace GeneXus.Data.NTier.CosmosDB
 						throw new Exception(GeneXus.Data.Cosmos.CosmosDBHelper.FormatExceptionMessage(responseMessage.StatusCode.ToString(), responseMessage.ErrorMessage));
 					}
 				}
-				return new ResponseWrapper(responseMessage);
+				else
+				{
+					Items = ProcessPKStream(responseMessage.Content);
+				}
 			}
+			return new ResponseWrapper(Items);
 		}
-			public ResponseWrapper Read()
+		public ResponseWrapper Read()
 		{
 			if (queryByPK)
 			{
