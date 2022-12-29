@@ -13,17 +13,12 @@ namespace GeneXus.OpenTelemetry.OpenTelemetry
 
 		public bool InstrumentAspNetCoreApplication(IServiceCollection services)
 		{
+			
 			services.AddOpenTelemetryTracing(tracerProviderBuilder =>
 			{
 				tracerProviderBuilder
-				.AddOtlpExporter()
-			   .SetErrorStatusOnException(true)
-			   .AddHttpClientInstrumentation()
-			   .AddAspNetCoreInstrumentation(opt =>
-			   {
-				   opt.RecordException = true;
-			   })
-			   .AddSqlClientInstrumentation();			   
+				.AddOtlpExporter()			   
+				.AddGxAspNetInstrumentation();		   
 			});
 
 			return true;

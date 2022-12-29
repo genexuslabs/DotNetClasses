@@ -9,10 +9,11 @@ namespace GeneXus.Services.OpenTelemetry
 		bool InstrumentAspNetCoreApplication(Microsoft.Extensions.DependencyInjection.IServiceCollection services);
 	}
 
-	internal static class OpenTelemetryService
+	public static class OpenTelemetryService
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(OpenTelemetryService));
 		private static string OPENTELEMETRY_SERVICE = "Observability";
+		public static string GX_ACTIVITY_SOURCE_NAME = "GeneXus.Tracing";
 		
 		private static IOpenTelemetryProvider GetOpenTelemetryProvider()
 		{

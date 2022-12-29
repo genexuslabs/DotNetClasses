@@ -39,13 +39,7 @@ namespace GeneXus.OpenTelemetry.Lightstep
 					 opt.Endpoint = new Uri(LIGHTSTEP_INGREST_URL);
 					 opt.Headers = $"lightstep-access-token=${lightstepToken}";
 				 })
-				.SetErrorStatusOnException(true)
-				.AddHttpClientInstrumentation()
-				.AddAspNetCoreInstrumentation(opt =>
-				{
-					opt.RecordException = true;
-				})
-				.AddSqlClientInstrumentation();
+				.AddGxAspNetInstrumentation();	
 			 });
 
 			return true;
