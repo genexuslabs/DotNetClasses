@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -197,7 +198,7 @@ namespace GeneXus.Data.Cosmos
 		}
 		public decimal GetDecimal(int i)
 		{
-			return Convert.ToDecimal(GetAttValue(i));
+			return Convert.ToDecimal(GetAttValue(i), CultureInfo.InvariantCulture);
 		}
 		public double GetDouble(int i)
 		{

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -121,13 +122,18 @@ namespace GeneXus.Data.Cosmos
 				case DbType.UInt32:
 				case DbType.UInt64:
 				case DbType.VarNumeric:
-				case DbType.Decimal:
 				case DbType.Double:
 				case DbType.Int16:
 				case DbType.Int32:
 				case DbType.Int64:
 					attValue = value.ToString();
 					break;
+				case DbType.Decimal:
+					{
+						decimal itemvalue = (decimal)value;
+						attValue = itemvalue.ToString(CultureInfo.InvariantCulture);
+						break;
+					}
 				default:
 					string valueDefault = value.ToString().Replace("%", string.Empty);
 					attValue = valueDefault;
