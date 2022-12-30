@@ -973,7 +973,7 @@ namespace GeneXus.Application
 			{
 				string path = Path.Combine(this.GetPhysicalPath(), fileName);
 				fileExists = File.Exists(path);
-				GXLogging.Info(log, $"Searching if file exists ({fileName}). Found: {fileExists}");
+				GXLogging.Debug(log, $"Searching if file exists ({fileName}). Found: {fileExists}");
 			}
 			catch (Exception e)
 			{
