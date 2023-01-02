@@ -1,14 +1,18 @@
 using log4net;
 using log4net.Core;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace GeneXus
 {
 
 	public static class GXLogging
 	{
+
 		public static void Trace(this ILog log, params string[] list)
 		{
 			if (log.Logger.IsEnabledFor(Level.Trace))
@@ -23,7 +27,16 @@ namespace GeneXus
 				log.Error(msg, ex);
 			}
 		}
-        public static void Error(ILog log, string msg1, string msg2, Exception ex)
+
+		public static void ErrorSanitized(ILog log, string msg, Exception ex)
+		{
+			if (log.IsErrorEnabled)
+			{
+				log.Error(Utils.StringUtil.Sanitize(msg, Utils.StringUtil.LogUserEntryWhiteList), ex);
+			}
+		}
+
+		public static void Error(ILog log, string msg1, string msg2, Exception ex)
 		{
 			Error(log, msg1 + msg2, ex);
 		}
@@ -81,11 +94,36 @@ namespace GeneXus
 					log.Debug(msg);
 			}
 		}
-        public static void Debug(ILog log, params string[] list)
+
+		public static void DebugSanitized(ILog log, Exception ex, params string[] list)
+		{
+			if (log.IsDebugEnabled)
+			{
+				StringBuilder msg = new StringBuilder();
+				foreach (string parm in list)
+				{
+					msg.Append(Utils.StringUtil.Sanitize(parm, Utils.StringUtil.LogUserEntryWhiteList));
+				}
+				if (ex != null)
+					log.Debug(msg, ex);
+				else
+					log.Debug(msg);
+			}
+		}
+
+
+
+		public static void Debug(ILog log, params string[] list)
 		{
 			Debug(log, null, list);
 		}
-        public static void Debug(ILog log, string startMsg, Func<string> buildMsg)
+
+		public static void DebugSanitized(ILog log, params string[] list)
+		{
+			DebugSanitized(log, null, list);
+		}
+
+		public static void Debug(ILog log, string startMsg, Func<string> buildMsg)
 		{
 			if (log.IsDebugEnabled)
 			{

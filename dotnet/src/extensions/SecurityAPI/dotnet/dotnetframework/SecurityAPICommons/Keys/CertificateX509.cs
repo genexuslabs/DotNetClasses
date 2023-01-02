@@ -309,51 +309,55 @@ namespace SecurityAPICommons.Keys
         private bool loadPublicKeyFromPEMFile(string path)
         {
             bool flag = false;
-            StreamReader streamReader = new StreamReader(path);
-            PemReader pemReader = new PemReader(streamReader);
-            Object obj = pemReader.ReadObject();
-            if (obj.GetType() == typeof(AsymmetricKeyParameter))
-            {
-                this.error.setError("CE007", "The file contains a private key");
-                flag = false;
-            }
+				using (StreamReader streamReader = new StreamReader(path))
+				{
+					PemReader pemReader = new PemReader(streamReader);
+					Object obj = pemReader.ReadObject();
+				try
+				{
+					if (obj.GetType() == typeof(AsymmetricKeyParameter))
+					{
+						this.error.setError("CE007", "The file contains a private key");
+						flag = false;
+					}
 
-            if (obj.GetType() == typeof(ECPublicKeyParameters))
-            {
-                /*ECPublicKeyParameters ecParms = (ECPublicKeyParameters)obj;
-                 this.subjectPublicKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(ecParms);
-                 this.publicKeyAlgorithm = ecParms.AlgorithmName;
-                 this.hasPublicKey = true;
-                 return true;*/
-                this.error.setError("CE008", "Invalid X509 Certificate format");
-                return false;
-            }
+					if (obj.GetType() == typeof(ECPublicKeyParameters))
+					{
+						/*ECPublicKeyParameters ecParms = (ECPublicKeyParameters)obj;
+						 this.subjectPublicKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(ecParms);
+						 this.publicKeyAlgorithm = ecParms.AlgorithmName;
+						 this.hasPublicKey = true;
+						 return true;*/
+						this.error.setError("CE008", "Invalid X509 Certificate format");
+						return false;
+					}
 
-            if (obj.GetType() == typeof(System.Security.Cryptography.X509Certificates.X509Certificate))
-            {
-                Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
-                castCertificate(cert);
-                closeReaders(streamReader, pemReader);
-                return true;
+					if (obj.GetType() == typeof(System.Security.Cryptography.X509Certificates.X509Certificate))
+					{
+						Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
+						castCertificate(cert);
+						return true;
 
-            }
-            if (obj.GetType() == typeof(Org.BouncyCastle.X509.X509Certificate))
-            {
-                Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
-                castCertificate(cert);
-                closeReaders(streamReader, pemReader);
-                return true;
-            }
-            if (obj.GetType() == typeof(X509CertificateStructure))
-            {
-                Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
-                castCertificate(cert);
-                closeReaders(streamReader, pemReader);
-                return true;
-            }
-
-            closeReaders(streamReader, pemReader);
-            return flag;
+					}
+					if (obj.GetType() == typeof(Org.BouncyCastle.X509.X509Certificate))
+					{
+						Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
+						castCertificate(cert);
+						return true;
+					}
+					if (obj.GetType() == typeof(X509CertificateStructure))
+					{
+						Org.BouncyCastle.X509.X509Certificate cert = (Org.BouncyCastle.X509.X509Certificate)obj;
+						castCertificate(cert);
+						return true;
+					}
+				}finally
+				{
+					pemReader.Reader.Close();
+				}
+				}           
+				return flag;
+			
 
         }
 
@@ -507,26 +511,6 @@ namespace SecurityAPICommons.Keys
             }
             this.error.setError("CE014", path + "not found.");
             return flag;
-        }
-
-        /// <summary>
-        /// Excecute close methods of PemReader and StreamReader data types
-        /// </summary>
-        /// <param name="streamReader">StreamReader type</param>
-        /// <param name="pemReader">PemReader type</param>
-        private void closeReaders(StreamReader streamReader, PemReader pemReader)
-        {
-            try
-            {
-                streamReader.Close();
-                pemReader.Reader.Close();
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-			catch
-#pragma warning restore CA1031 // Do not catch general exception types
-			{
-                this.error.setError("CE015", "Error closing StreamReader/ PemReader for certificates");
-            }
         }
 
         private void castCertificate(Org.BouncyCastle.X509.X509Certificate cert)

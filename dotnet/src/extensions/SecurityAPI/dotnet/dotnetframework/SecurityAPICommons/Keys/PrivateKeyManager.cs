@@ -387,82 +387,72 @@ namespace SecurityAPICommons.Keys
         private bool loadPrivateKeyFromPEMFile(string path)
         {
             bool flag = false;
-            StreamReader streamReader = new StreamReader(path);
-            PemReader pemReader = new PemReader(streamReader);
-            Object obj = null;
-            try
-            {
-                obj = pemReader.ReadObject();
-            }catch(Exception)
+			using (StreamReader streamReader = new StreamReader(path))
 			{
-                if(this.encryptionPassword == null)
+				PemReader pemReader = new PemReader(streamReader);
+				Object obj = null;
+				try
 				{
-                    this.error.setError("PK024", "Password for key decryption is empty");
-                    return false;
-				}
-                try
-                {
-                    StreamReader sReader = new StreamReader(path);
-                    PemReader pReader = new PemReader(sReader, new PasswordFinder(this.encryptionPassword));
-                    obj = pReader.ReadObject();
-                    closeReaders(sReader, pReader);
-                }catch(Exception ex)
+					try
+					{
+						obj = pemReader.ReadObject();
+					}
+					catch (Exception)
+					{
+						if (this.encryptionPassword == null)
+						{
+							this.error.setError("PK024", "Password for key decryption is empty");
+							return false;
+						}
+						try
+						{
+							using (StreamReader sReader = new StreamReader(path))
+							{
+								PemReader pReader = new PemReader(sReader, new PasswordFinder(this.encryptionPassword));
+								obj = pReader.ReadObject();
+								pReader.Reader.Close();
+							}
+						}
+						catch (Exception ex)
+						{
+							this.error.setError("PK023", ex.Message);
+							return false;
+						}
+					}
+					if (obj.GetType() == typeof(RsaPrivateCrtKeyParameters))
+					{
+						AsymmetricKeyParameter asymKeyParm = (AsymmetricKeyParameter)obj;
+						this.privateKeyInfo = createPrivateKeyInfo(asymKeyParm);
+						this.privateKeyAlgorithm = this.privateKeyInfo.PrivateKeyAlgorithm.Algorithm.Id;
+						this.hasPrivateKey = true;
+						return true;
+					}
+					if (obj.GetType() == typeof(Pkcs8EncryptedPrivateKeyInfo))
+					{
+						this.error.setError("PK007", "Encrypted key, remove the key password");
+						flag = false;
+					}
+					if (obj.GetType() == typeof(AsymmetricCipherKeyPair))
+					{
+						AsymmetricCipherKeyPair asymKeyPair = (AsymmetricCipherKeyPair)obj;
+						this.privateKeyInfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(asymKeyPair.Private);
+						this.privateKeyAlgorithm = this.privateKeyInfo.PrivateKeyAlgorithm.Algorithm.Id;
+						this.hasPrivateKey = true;
+						return true;
+					}
+					if (obj.GetType() == typeof(X509Certificate))
+					{
+						this.error.setError("PK008", "The file contains a public key");
+						flag = false;
+
+					}
+				}finally
 				{
-                    this.error.setError("PK023", ex.Message);
-                    return false;
+					pemReader.Reader.Close();
 				}
 			}
-            if (obj.GetType() == typeof(RsaPrivateCrtKeyParameters))
-            {
-                AsymmetricKeyParameter asymKeyParm = (AsymmetricKeyParameter)obj;
-                this.privateKeyInfo = createPrivateKeyInfo(asymKeyParm);
-                this.privateKeyAlgorithm = this.privateKeyInfo.PrivateKeyAlgorithm.Algorithm.Id;
-                this.hasPrivateKey = true;
-                closeReaders(streamReader, pemReader);
-                return true;
-            }
-            if (obj.GetType() == typeof(Pkcs8EncryptedPrivateKeyInfo))
-            {
-                this.error.setError("PK007", "Encrypted key, remove the key password");
-                flag = false;
-            }
-            if (obj.GetType() == typeof(AsymmetricCipherKeyPair))
-            {
-                AsymmetricCipherKeyPair asymKeyPair = (AsymmetricCipherKeyPair)obj;
-                this.privateKeyInfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(asymKeyPair.Private);
-                this.privateKeyAlgorithm = this.privateKeyInfo.PrivateKeyAlgorithm.Algorithm.Id;
-                this.hasPrivateKey = true;
-                return true;
-            }
-            if (obj.GetType() == typeof(X509Certificate))
-            {
-                this.error.setError("PK008", "The file contains a public key");
-                flag = false;
-
-            }
-            closeReaders(streamReader, pemReader);
             return flag;
 
-        }
-
-        /// <summary>
-        /// Excecute close methods of PemReader and StreamReader data types
-        /// </summary>
-        /// <param name="streamReader">StreamReader type</param>
-        /// <param name="pemReader">PemReader type</param>
-        private void closeReaders(StreamReader streamReader, PemReader pemReader)
-        {
-            try
-            {
-                streamReader.Close();
-                pemReader.Reader.Close();
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-			catch
-#pragma warning restore CA1031 // Do not catch general exception types
-			{
-                this.error.setError("PK012", "Error closing StreamReader/ PemReader for certificates");
-            }
         }
 
         /// <summary>

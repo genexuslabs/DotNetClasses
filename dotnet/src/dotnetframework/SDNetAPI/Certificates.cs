@@ -111,11 +111,14 @@ namespace Artech.Genexus.SDAPI
 				using (FileStream fs = File.OpenRead(fileName))
 				{
 					CertificatesData data = serializer.ReadObject(fs) as CertificatesData;
-					foreach (Notification main in data.Notifications)
+					if (data != null)
 					{
-						main.Properties.ResolvePaths();
-						m_data[main.Name.ToLower()] = main.Properties;
-						m_types[main.Name.ToLower()] = main.Type;
+						foreach (Notification main in data.Notifications)
+						{
+							main.Properties.ResolvePaths();
+							m_data[main.Name.ToLower()] = main.Properties;
+							m_types[main.Name.ToLower()] = main.Type;
+						}
 					}
 				}
 			}

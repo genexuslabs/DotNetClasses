@@ -668,7 +668,10 @@ namespace GeneXus.Utils
 			for (int i = 0; i < this.Count; i++)
 			{
 				GxStringCollection strColl = this[i] as GxStringCollection;
-				dic[((string)strColl[0]).TrimEnd()] = strColl[1];
+				if (strColl != null)
+				{
+					dic[((string)strColl[0]).TrimEnd()] = strColl[1];
+				}
 			}
 			return dic;
 		}
@@ -730,21 +733,24 @@ namespace GeneXus.Utils
 		{
 			IGxJSONAble ijsonprop;
 			JArray jarray = jsonArr as JArray;
-			if ((ijsonprop = prop as IGxJSONAble) != null)
+			if (jarray != null)
 			{
-				GxUserType bc = ijsonprop as GxUserType;
-				if (bc != null)
-					jarray.Add(bc.GetJSONObject(includeState));
+				if ((ijsonprop = prop as IGxJSONAble) != null)
+				{
+					GxUserType bc = ijsonprop as GxUserType;
+					if (bc != null)
+						jarray.Add(bc.GetJSONObject(includeState));
+					else
+						jarray.Add(ijsonprop.GetJSONObject());
+				}
+				else if (prop is DateTime)
+				{
+					jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
+				}
 				else
-					jarray.Add(ijsonprop.GetJSONObject());
-			}
-			else if (prop is DateTime)
-			{
-				jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
-			}
-			else
-			{
-				jarray.Add(prop);
+				{
+					jarray.Add(prop);
+				}
 			}
 		}
 		public Object GetJSONObject(bool includeState)
@@ -1732,9 +1738,12 @@ namespace GeneXus.Utils
 							else if ((currSimpleColl = currProp as GxSimpleCollection<object>) != null)
 							{
 								currSimpleColl.ClearCollection();
-								foreach (object item in currObjColl)
+								if (currObjColl != null)
 								{
-									currSimpleColl.Add(item);
+									foreach (object item in currObjColl)
+									{
+										currSimpleColl.Add(item);
+									}
 								}
 							}
 							else if ((currJsonProp = currProp as IGxJSONAble) != null)
@@ -2665,8 +2674,12 @@ namespace GeneXus.Utils
 			else if (ienumerableType != null)
 			{
 				IList lst = (IList)Activator.CreateInstance((typeof(List<>).MakeGenericType(ienumerableType)));
-				foreach (object item in i as IEnumerable)
-					lst.Add(item);
+				IEnumerable iEnum = i as IEnumerable;
+				if (iEnum != null)
+				{
+					foreach (object item in iEnum)
+						lst.Add(item);
+				}
 				o = lst;
 			}
 			else if (to.IsInstanceOfType(i))

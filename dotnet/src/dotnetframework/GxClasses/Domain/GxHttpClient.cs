@@ -650,7 +650,12 @@ namespace GeneXus.Http.Client
 			setHttpVersion(request);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
+			{
 				handler.Proxy = proxy;
+#if !NETCORE
+				handler.WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy;
+#endif
+			}
 			HttpResponseMessage response;
 			TimeSpan milliseconds = TimeSpan.FromMilliseconds(_timeout);
 #if !NETCORE
@@ -733,11 +738,23 @@ namespace GeneXus.Http.Client
 					throw ioEx;
 			}
 		}
+		bool UseOldHttpClient(string name)
+		{
+			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+				return true;
 
+#if !NETCORE
+			string requestUrl = GetRequestURL(name);
+			Uri uri = new Uri(requestUrl);
+			if (!uri.IsDefaultPort)
+				return true;
+#endif
+			return false;
+		}
 
 		public void Execute(string method, string name)
 		{
-			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+			if (UseOldHttpClient(name))
 			{
 				WebExecute(method, name);
 			}
@@ -830,7 +847,7 @@ namespace GeneXus.Http.Client
 				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + _statusDescription + ".";
 			}
 			ClearSendStream();
-			GXLogging.Debug(log, "_responseString " + ToString());
+			GXLogging.DebugSanitized(log, "_responseString " + ToString());
 		}
 		NameValueCollection _respHeaders;
 		private bool disposedValue;
@@ -1155,8 +1172,6 @@ namespace GeneXus.Http.Client
 				_errCode = 1;
 				_errDescription = e.Message;
 				resp = (HttpWebResponse)(e.Response);
-				if (resp == null)
-					return;
 			}
 #if NETCORE
 			catch (AggregateException aex)
@@ -1171,64 +1186,64 @@ namespace GeneXus.Http.Client
 					resp = baseEx.Response as HttpWebResponse;
 					_errDescription = baseEx.Message;
 				}
-				if (resp == null)
-					return;
 			}
 #endif
 
-			GXLogging.Debug(log, "Reading response...");
-			loadResponseHeaders(resp);
-
 			_receiveData = Array.Empty<byte>();
-			String charset = resp.ContentType;
-			using (Stream rStream = resp.GetResponseStream())
+			if (resp != null)
 			{
-				try
+				GXLogging.Debug(log, "Reading response...");
+				loadResponseHeaders(resp);
+
+				String charset = resp.ContentType;
+				using (Stream rStream = resp.GetResponseStream())
 				{
-					bool encodingFound = false;
-					if (!string.IsNullOrEmpty(charset))
+					try
 					{
-						int idx = charset.IndexOf("charset=");
-						if (idx > 0)
+						bool encodingFound = false;
+						if (!string.IsNullOrEmpty(charset))
 						{
-							idx += 8;
-							charset = charset.Substring(idx, charset.Length - idx);
-							_encoding = GetEncoding(charset);
-							if (_encoding != null)
-								encodingFound = true;
+							int idx = charset.IndexOf("charset=");
+							if (idx > 0)
+							{
+								idx += 8;
+								charset = charset.Substring(idx, charset.Length - idx);
+								_encoding = GetEncoding(charset);
+								if (_encoding != null)
+									encodingFound = true;
+							}
+							else
+							{
+								charset = String.Empty;
+							}
 						}
+						using (MemoryStream ms = new MemoryStream())
+						{
+							rStream.CopyTo(ms);
+							_receiveData = ms.ToArray();
+						}
+						int bytesRead = _receiveData.Length;
+						GXLogging.Debug(log, "BytesRead " + bytesRead);
+
+						if (bytesRead > 0 && !encodingFound)
+						{
+							_encoding = DetectEncoding(charset, out encodingFound, _receiveData, bytesRead);
+						}
+					}
+					catch (IOException ioEx)
+					{
+						if (_errCode == 1)
+							GXLogging.Warn(log, "Could not read response", ioEx);
 						else
-						{
-							charset = String.Empty;
-						}
-					}
-					using (MemoryStream ms = new MemoryStream())
-					{
-						rStream.CopyTo(ms);
-						_receiveData = ms.ToArray();
-					}
-					int bytesRead = _receiveData.Length;
-					GXLogging.Debug(log, "BytesRead " + bytesRead);
-
-					if (bytesRead > 0 && !encodingFound)
-					{
-						_encoding = DetectEncoding(charset, out encodingFound, _receiveData, bytesRead);
+							throw ioEx;
 					}
 				}
-				catch (IOException ioEx)
-				{
-					if (_errCode == 1)
-						GXLogging.Warn(log, "Could not read response", ioEx);
-					else
-						throw ioEx;
-				}
+				_statusCode = (short)resp.StatusCode;
+				_statusDescription = resp.StatusDescription;
+				resp.Close();
+				GXLogging.DebugSanitized(log, "_responseString " + ToString());
 			}
-			_statusCode = (short)resp.StatusCode;
-			_statusDescription = resp.StatusDescription;
-			resp.Close();
 			ClearSendStream();
-			GXLogging.Debug(log, "_responseString " + ToString());
-
 		}
 		private Encoding GetEncoding(string charset)
 		{

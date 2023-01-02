@@ -7,6 +7,7 @@ using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
+using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
 using log4net;
@@ -27,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+
 
 namespace GeneXus.Application
 {
@@ -62,7 +64,7 @@ namespace GeneXus.Application
 				Console.Error.WriteLine("ERROR:");
 				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
 				Console.Read();
-			}
+			}			
 		}
 		public static IWebHost BuildWebHost(string[] args) =>
 		   WebHost.CreateDefaultBuilder(args)
@@ -135,6 +137,8 @@ namespace GeneXus.Application
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
+			OpenTelemetryService.Setup(services);
+
 			services.AddMvc(option => option.EnableEndpointRouting = false);
 			services.Configure<KestrelServerOptions>(options =>
 			{
@@ -265,7 +269,7 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
-			
+			LogConfiguration.SetupLog4Net();			
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";

@@ -509,7 +509,26 @@ namespace GeneXus.Utils
 		const char QMARK = '_';
 		static char[] numbersAndSep = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9', '-' };
 		static char[] numbers = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+		internal static Dictionary<char, char> LogUserEntryWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_=/[]{}\":, ".ToDictionary(item => item, item => item);
+		internal static Dictionary<char, char> HostWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789./".ToDictionary(item => item, item => item);
 
+		internal static string Sanitize(string input, Dictionary<char, char> WhiteList)
+		{
+			StringBuilder sanitizedInput = new StringBuilder();
+			if (!string.IsNullOrEmpty(input))
+			{
+				foreach (char c in input)
+				{
+					if (WhiteList.TryGetValue(c, out char wchar))
+						sanitizedInput.Append(wchar);
+				}
+				return sanitizedInput.ToString();
+			}
+			else
+			{
+				return String.Empty;
+			}
+		}
 		public StringUtil(NumberFormatInfo numFmt)
 		{
 			numFmtInfo = numFmt;
@@ -3509,8 +3528,7 @@ namespace GeneXus.Utils
 			}
 			catch
 			{
-				FileInfo fi = new FileInfo(FileName); //Local file that do not exist
-				extension = fi.Extension;
+				extension = Path.GetExtension(FileName); //Local file that do not exist
 			}
 			int extStart = extension.LastIndexOf('.');
 			if (extStart == -1)
@@ -4602,35 +4620,35 @@ namespace GeneXus.Utils
 			GxStringCollection usernames = new GxStringCollection();
 			try
 			{
-				DirectoryEntry Entry = GetAppPoolEntry();
-				if (Entry != null)
-				{
-					PropertyCollection Properties = Entry.Properties;
-					string AppPoolIdentityType = Properties["AppPoolIdentityType"][0].ToString().Trim();
-					switch (AppPoolIdentityType)
+				using (DirectoryEntry Entry = GetAppPoolEntry()) { 
+					if (Entry != null)
 					{
-						case APPPOOL_IDENTITY_TYPE_APPPOOL:
+						PropertyCollection Properties = Entry.Properties;
+						string AppPoolIdentityType = Properties["AppPoolIdentityType"][0].ToString().Trim();
+						switch (AppPoolIdentityType)
+						{
+							case APPPOOL_IDENTITY_TYPE_APPPOOL:
 #if NETCORE
-							usernames.Add(IDENTITY_NETCORE_APPPOOL);
+								usernames.Add(IDENTITY_NETCORE_APPPOOL);
 #else
 							usernames.Add(IDENTITY_CLASSIC_APPPOOL);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
 #endif
-							break;
-						case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
-						case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
-							usernames.Add(IDENTITY_NETWORK_SERVICE);
-							break;
-						case APPPOOL_IDENTITY_TYPE_LOCALSERVICE:
-							usernames.Add(IDENTITY_LOCAL_SERVICE);
-							break;
-						case APPPOOL_IDENTITY_TYPE_SPECIFICUSER:
-							usernames.Add(Properties["WAMUserName"][0].ToString());
-							break;
+								break;
+							case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
+							case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
+								usernames.Add(IDENTITY_NETWORK_SERVICE);
+								break;
+							case APPPOOL_IDENTITY_TYPE_LOCALSERVICE:
+								usernames.Add(IDENTITY_LOCAL_SERVICE);
+								break;
+							case APPPOOL_IDENTITY_TYPE_SPECIFICUSER:
+								usernames.Add(Properties["WAMUserName"][0].ToString());
+								break;
+						}
 					}
 				}
-
 			}
 			catch (Exception ex)
 			{
@@ -5189,8 +5207,7 @@ namespace GeneXus.Utils
 			return GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm) == Crypto.Decrypt64(hash, key);
 		}
 
-		[Obsolete("GetMD5Hash is deprecated for security reasons, please use GetHash instead.", false)]
-		public static string GetMD5Hash(string s)  //MD5 is NOT FIPS-compilant
+		public static string GetMD5Hash(string s)
 		{
 			return GetHash(s, "MD5");
 		}

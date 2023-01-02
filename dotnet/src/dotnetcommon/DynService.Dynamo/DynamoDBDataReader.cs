@@ -44,7 +44,8 @@ namespace GeneXus.Data.Dynamo
 		public DynamoDBDataReader(ServiceCursorDef cursorDef, RequestWrapper request)
 		{
 			Query query = cursorDef.Query as Query;
-			selectList = query.SelectList.ToArray();
+			if (query != null)
+				selectList = query.SelectList.ToArray();
 			mRequest = request;
 			mResponse = mRequest.Read();
 			mCurrentPosition = -1;

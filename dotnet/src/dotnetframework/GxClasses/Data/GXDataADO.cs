@@ -2500,7 +2500,7 @@ namespace GeneXus.Data.ADO
 
 				if (GXServices.Instance != null)
 				{
-					GXService providerService = GXServices.Instance.Get(GXServices.DATA_ACCESS_SERVICE);
+					GXService providerService = GXServices.Instance?.Get(GXServices.DATA_ACCESS_SERVICE);
 					if (providerService != null)
 					{
 						GXLogging.Debug(log, "Loading DATA_ACCESS_SERVICE: ", providerService.ClassName);

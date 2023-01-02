@@ -18,7 +18,7 @@ namespace GeneXus.Messaging.Common
 			{
 				try
 				{
-					s = ServiceFactory.GetGXServices().Get(GXServices.MESSAGEBROKER_SERVICE);
+					s = ServiceFactory.GetGXServices()?.Get(GXServices.MESSAGEBROKER_SERVICE);
 				}
 				catch (Exception)
 				{

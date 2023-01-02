@@ -21,10 +21,10 @@ namespace GeneXus.Configuration
 
 		public ExternalStorage()
 		{
-			providerService = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_APISERVICE);
+			providerService = ServiceFactory.GetGXServices()?.Get(GXServices.STORAGE_APISERVICE);
 			if (providerService == null)
 			{
-				providerService = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+				providerService = ServiceFactory.GetGXServices()?.Get(GXServices.STORAGE_SERVICE);
 			}
 		}
 
