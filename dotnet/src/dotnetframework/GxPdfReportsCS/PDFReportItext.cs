@@ -48,9 +48,10 @@ namespace com.genexus.reports
 
 		//Color for, BaseColor for => Itext5
 		private object backColor, foreColor, templateColorFill;
-		private Stream outputStream = null; 
-											
-		private ParseINI props = new ParseINI();
+		private Stream outputStream = null;
+
+		private static object syncRoot = new Object();
+		private static ParseINI props;
 		private ParseINI printerSettings;
 		private String form;
 		private ArrayList stringTotalPages; 
@@ -314,70 +315,84 @@ namespace com.genexus.reports
 
 		private void loadProps()
 		{
-			try
+			if (props == null)
 			{
-				props = new ParseINI(configurationFile, configurationTemplateFile);
-			}
-			catch (IOException e)
-			{
-				GXLogging.Warn(log,"Error loadingProps from " + configurationFile, e);
-				props = new ParseINI();
-			}
-			props.setupGeneralProperty(Const.PDF_REPORT_INI_VERSION_ENTRY, Const.PDF_REPORT_INI_VERSION);
-
-			string fontsDir = nativeCode.getRegistryValue("HKEY_USERS", @".DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders", "Fonts");
-			props.setupGeneralProperty(Const.FONTS_LOCATION, fontsDir);
-			props.setupGeneralProperty(Const.MS_FONT_LOCATION, fontsDir);
-			props.setupGeneralProperty(Const.EMBEED_SECTION, Const.EMBEED_DEFAULT);
-			props.setupGeneralProperty(Const.EMBEED_NOT_SPECIFIED_SECTION, Const.EMBEED_DEFAULT);
-			props.setupGeneralProperty(Const.SEARCH_FONTS_ALWAYS, "false");
-			props.setupGeneralProperty(Const.SEARCH_FONTS_ONCE, "true");
-			props.setupGeneralProperty(Const.SERVER_PRINTING, "false");
-			props.setupGeneralProperty(Const.ADJUST_TO_PAPER, "true");
-			props.setupGeneralProperty(Const.LINE_CAP_PROJECTING_SQUARE, Const.DEFAULT_LINE_CAP_PROJECTING_SQUARE);
-			props.setupGeneralProperty(Const.BARCODE128_AS_IMAGE, Const.DEFAULT_BARCODE128_AS_IMAGE);
-			props.setupGeneralProperty("DEBUG", "false");
-			props.setupGeneralProperty(Const.LEFT_MARGIN, Const.DEFAULT_LEFT_MARGIN);
-			props.setupGeneralProperty(Const.TOP_MARGIN, Const.DEFAULT_TOP_MARGIN);
-			props.setupGeneralProperty(Const.BOTTOM_MARGIN, Const.DEFAULT_BOTTOM_MARGIN);
-			props.setupGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER.ToString().ToLower());
-			props.setupGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, ".");
-			props.setupGeneralProperty(Const.LEADING, "2");
-			props.setupGeneralProperty(Const.RUN_DIRECTION, Const.RUN_DIRECTION_LTR);
-			props.setupGeneralProperty(Const.JUSTIFIED_TYPE_ALL, "false");
-
-			props.setupGeneralProperty(Const.STYLE_DOTTED, Const.DEFAULT_STYLE_DOTTED);
-			props.setupGeneralProperty(Const.STYLE_DASHED, Const.DEFAULT_STYLE_DASHED);
-			props.setupGeneralProperty(Const.STYLE_LONG_DASHED, Const.DEFAULT_STYLE_LONG_DASHED);
-			props.setupGeneralProperty(Const.STYLE_LONG_DOT_DASHED, Const.DEFAULT_STYLE_LONG_DOT_DASHED);
-
-			loadSubstituteTable(); 
-
-			if (props.getBooleanGeneralProperty("DEBUG", false))
-			{
-				DEBUG = true;
-			}
-			else
-			{
-				DEBUG = false;
-			}
-			try {
-				string systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
-				if (!string.IsNullOrEmpty(systemFolder))
+				lock (syncRoot)
 				{
-					Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, "."),
+					if (props == null)
+					{
+						try
+						{
+							props = new ParseINI(configurationFile, configurationTemplateFile);
+						}
+						catch (IOException e)
+						{
+							GXLogging.Warn(log, "Error loadingProps from " + configurationFile, e);
+							props = new ParseINI();
+						}
+						props.setupGeneralProperty(Const.PDF_REPORT_INI_VERSION_ENTRY, Const.PDF_REPORT_INI_VERSION);
+
+						string fontsDir = nativeCode.getRegistryValue("HKEY_USERS", @".DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders", "Fonts");
+						props.setupGeneralProperty(Const.FONTS_LOCATION, fontsDir);
+						props.setupGeneralProperty(Const.MS_FONT_LOCATION, fontsDir);
+						props.setupGeneralProperty(Const.EMBEED_SECTION, Const.EMBEED_DEFAULT);
+						props.setupGeneralProperty(Const.EMBEED_NOT_SPECIFIED_SECTION, Const.EMBEED_DEFAULT);
+						props.setupGeneralProperty(Const.SEARCH_FONTS_ALWAYS, "false");
+						props.setupGeneralProperty(Const.SEARCH_FONTS_ONCE, "true");
+						props.setupGeneralProperty(Const.SERVER_PRINTING, "false");
+						props.setupGeneralProperty(Const.ADJUST_TO_PAPER, "true");
+						props.setupGeneralProperty(Const.LINE_CAP_PROJECTING_SQUARE, Const.DEFAULT_LINE_CAP_PROJECTING_SQUARE);
+						props.setupGeneralProperty(Const.BARCODE128_AS_IMAGE, Const.DEFAULT_BARCODE128_AS_IMAGE);
+						props.setupGeneralProperty("DEBUG", "false");
+						props.setupGeneralProperty(Const.LEFT_MARGIN, Const.DEFAULT_LEFT_MARGIN);
+						props.setupGeneralProperty(Const.TOP_MARGIN, Const.DEFAULT_TOP_MARGIN);
+						props.setupGeneralProperty(Const.BOTTOM_MARGIN, Const.DEFAULT_BOTTOM_MARGIN);
+						props.setupGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER.ToString().ToLower());
+						props.setupGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, ".");
+						props.setupGeneralProperty(Const.LEADING, "2");
+						props.setupGeneralProperty(Const.RUN_DIRECTION, Const.RUN_DIRECTION_LTR);
+						props.setupGeneralProperty(Const.JUSTIFIED_TYPE_ALL, "false");
+
+						props.setupGeneralProperty(Const.STYLE_DOTTED, Const.DEFAULT_STYLE_DOTTED);
+						props.setupGeneralProperty(Const.STYLE_DASHED, Const.DEFAULT_STYLE_DASHED);
+						props.setupGeneralProperty(Const.STYLE_LONG_DASHED, Const.DEFAULT_STYLE_LONG_DASHED);
+						props.setupGeneralProperty(Const.STYLE_LONG_DOT_DASHED, Const.DEFAULT_STYLE_LONG_DOT_DASHED);
+
+						props.setupGeneralProperty(Const.LEFT_MARGIN, Const.DEFAULT_LEFT_MARGIN);
+						props.setupGeneralProperty(Const.TOP_MARGIN, Const.DEFAULT_TOP_MARGIN);
+						props.setupGeneralProperty(Const.BOTTOM_MARGIN, Const.DEFAULT_BOTTOM_MARGIN);
+
+						loadSubstituteTable();
+
+						if (props.getBooleanGeneralProperty("DEBUG", false))
+						{
+							DEBUG = true;
+						}
+						else
+						{
+							DEBUG = false;
+						}
+						try
+						{
+							string systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+							if (!string.IsNullOrEmpty(systemFolder))
+							{
+								Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, "."),
 															   Path.Combine(
 															   Directory.GetParent(systemFolder).FullName, "fonts")});
+							}
+							else
+							{
+								Utilities.addPredefinedSearchPaths(new String[] { props.getGeneralProperty(Const.FONTS_LOCATION, ".") });
+							}
+						}
+						catch (SecurityException ex)
+						{
+							GXLogging.Warn(log, "loadProps error", ex);
+							Utilities.addPredefinedSearchPaths(new String[] { props.getGeneralProperty(Const.FONTS_LOCATION, ".") });
+						}
+					}
 				}
-				else
-				{
-					Utilities.addPredefinedSearchPaths(new String[]{props.getGeneralProperty(Const.FONTS_LOCATION, ".")});
-				}
-			}
-			catch (SecurityException ex)
-			{
-				GXLogging.Warn(log,"loadProps error", ex);
-				Utilities.addPredefinedSearchPaths(new String[] { props.getGeneralProperty(Const.FONTS_LOCATION, ".") });
 			}
 		}
 
@@ -1745,9 +1760,6 @@ namespace com.genexus.reports
 			}
 			printerOutputMode = mode;
 
-			props.setupGeneralProperty(Const.LEFT_MARGIN, Const.DEFAULT_LEFT_MARGIN);
-			props.setupGeneralProperty(Const.TOP_MARGIN, Const.DEFAULT_TOP_MARGIN);
-			props.setupGeneralProperty(Const.BOTTOM_MARGIN, Const.DEFAULT_BOTTOM_MARGIN);
 			leftMargin = (float) (TO_CM_SCALE * Convert.ToDouble(props.getGeneralProperty(Const.LEFT_MARGIN), CultureInfo.InvariantCulture.NumberFormat));
 			topMargin = (float) (TO_CM_SCALE * Convert.ToDouble(props.getGeneralProperty(Const.TOP_MARGIN), CultureInfo.InvariantCulture.NumberFormat));
 			bottomMargin = (float) (Convert.ToDouble(props.getGeneralProperty(Const.BOTTOM_MARGIN), CultureInfo.InvariantCulture.NumberFormat));
@@ -2287,7 +2299,7 @@ namespace com.genexus.reports
         private StreamReader inputStream;
 		private Hashtable sections=new Hashtable();
 		private Hashtable sectionEntries;
-		private Hashtable general;
+		private Hashtable general=new Hashtable();
 		private Hashtable aliased=new Hashtable(); // (original -> alias)
 		private Hashtable alias=new Hashtable();   // (alias -> original)
 		private bool _need2Save = false, autoSave = true;
@@ -2297,7 +2309,6 @@ namespace com.genexus.reports
 
 		public ParseINI()
 		{
-			general=new Hashtable();
 			filename = null;
 		}
 
@@ -2311,15 +2322,17 @@ namespace com.genexus.reports
 				{
 					inputFileNameOrTemplate = Path.GetFullPath(template);
 				}
-				using (StreamReader sr = new StreamReader(inputFileNameOrTemplate, Encoding.UTF8))
+				if (File.Exists(inputFileNameOrTemplate))
 				{
-					load(sr);
+					using (StreamReader sr = new StreamReader(inputFileNameOrTemplate, Encoding.UTF8))
+					{
+						load(sr);
+					}
 				}
 			}
 			catch (FileNotFoundException)
 			{ 
 				File.Create(filename).Close();
-				general = new Hashtable();
 			}
 		}
 		public ParseINI(String filename) 
@@ -2327,15 +2340,17 @@ namespace com.genexus.reports
 			this.filename = Path.GetFullPath(filename);
 			try
 			{
-                using (StreamReader sr = new StreamReader(filename, Encoding.UTF8))
-                {
-                    load(sr);
-                }
+				if (File.Exists(filename))
+				{
+					using (StreamReader sr = new StreamReader(filename, Encoding.UTF8))
+					{
+						load(sr);
+					}
+				}
 			}
 			catch(FileNotFoundException)
 			{ 
                 File.Create(filename).Close();
-				general=new Hashtable();
 			}
 		}
 

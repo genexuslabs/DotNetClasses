@@ -44,7 +44,7 @@ namespace GeneXus.Data
 		{
 			if (m_connectionString == null)
 				m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+			GXLogging.Debug(log, "Setting connectionString property ", () => BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
 			m_FailedConnections = 0;
 			return new MySqlConnectorConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 		}
@@ -136,7 +136,6 @@ namespace GeneXus.Data
 			string maxpoolSize = GetParameterValue(connstr, "Max Pool Size");
 			if (String.IsNullOrEmpty(maxpoolSize)) MAX_TRIES = 100; 
 			else MAX_TRIES = Convert.ToInt32(maxpoolSize);
-			GXLogging.Debug(log, "MAX_TRIES=" + MAX_TRIES);
 			return connstr;
 		}
 		public override bool AllowsDuplicateParameters

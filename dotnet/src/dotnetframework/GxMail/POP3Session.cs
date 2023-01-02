@@ -391,7 +391,7 @@ namespace GeneXus.Mail.Internals
 		private void CheckLogin()
 		{
             SendAndWaitResponse("USER " + userName, MailConstants.MAIL_ServerReplyInvalid);
-			SendAndWaitResponse("PASS " + password, MailConstants.MAIL_ServerReplyInvalid);
+			SendPrivateDataAndWaitResponse("PASS " + password, MailConstants.MAIL_ServerReplyInvalid, "PASS xxx");
 
 			count = GetIntValue("STAT");
 			
@@ -534,50 +534,63 @@ namespace GeneXus.Mail.Internals
 		#endregion
 
 		#region Send Methods
+		private void SendPrivateDataAndWaitResponse(string cmdMsg, short errorCode, string traceMsg)
+		{
+			SendPrivateDataTCP(cmdMsg + CRLF, traceMsg);
+			WaitResponse(errorCode);
+		}
+
+
 		private void SendAndWaitResponse(string cmdMsg, short errorCode)
 		{
 			SendTCP(cmdMsg + CRLF);
-
+			WaitResponse(errorCode);
+		}
+		private void WaitResponse(short errorCode)
+		{
 			string response = GetResponse();
-			GXLogging.Debug(log,"SendAndWait Server response: " + response);
+			GXLogging.Debug(log, "SendAndWait Server response: " + response);
 			string serverResponse = response;
 
 			int firstBlank = serverResponse.IndexOf(" ");
-			if(firstBlank != -1)
+			if (firstBlank != -1)
 			{
 				serverResponse = serverResponse.Substring(firstBlank).Trim();
 			}
-			if(response.StartsWith("-ERR")) 
+			if (response.StartsWith("-ERR"))
 			{
-				GXLogging.Error(log,"Command error, server response: " + serverResponse);
-                throw new GXMailException("Server replied with an error: " + serverResponse, MailConstants.MAIL_ServerRepliedErr);
+				GXLogging.Error(log, "Command error, server response: " + serverResponse);
+				throw new GXMailException("Server replied with an error: " + serverResponse, MailConstants.MAIL_ServerRepliedErr);
 			}
-			if(!response.StartsWith("+OK"))
+			if (!response.StartsWith("+OK"))
 			{
-				GXLogging.Error(log,"Command error, server response: " + serverResponse);
+				GXLogging.Error(log, "Command error, server response: " + serverResponse);
 				throw new GXMailException(response, errorCode);
 			}
 		}
-
+		
 		private void SendTCP(string cmd)
 		{
-			GXLogging.Debug(log,"Command: " + cmd);
+			SendPrivateDataTCP(cmd, cmd);
+		}
+		private void SendPrivateDataTCP(string cmd, string traceCmd)
+		{
+			GXLogging.Debug(log, "Command: " + traceCmd);
 			try
 			{
 				byte[] toSend = Encoding.ASCII.GetBytes(cmd);
 				int sent = connection.Send(toSend);
-				while(sent != toSend.Length) 
+				while (sent != toSend.Length)
 				{
 					sent += connection.Send(toSend, sent, toSend.Length - sent, SocketFlags.None);
 				}
 			}
-			catch(Exception exc)
+			catch (Exception exc)
 			{
-				GXLogging.Error(log,"Error sending command", exc);
-                throw new GXMailException(exc.Message, MailConstants.MAIL_ConnectionLost);
+				GXLogging.Error(log, "Error sending command", exc);
+				throw new GXMailException(exc.Message, MailConstants.MAIL_ConnectionLost);
 			}
 		}
-
 		private void SendNL(string str)
 		{
 			SendTCP(str + CRLF);

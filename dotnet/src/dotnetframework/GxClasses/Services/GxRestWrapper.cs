@@ -28,6 +28,8 @@ using System.Collections;
 using Jayrock.Json;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http;
+using System.Diagnostics;
+using GeneXus.Diagnostics;
 
 namespace GeneXus.Application
 
@@ -353,7 +355,9 @@ namespace GeneXus.Application
 
 					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 					{
-						wrapped = (v as IGxGenericCollectionWrapped).GetIsWrapped();
+						IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
+						if (icollwrapped != null) 
+							wrapped = icollwrapped.GetIsWrapped();
 					}
 					if (v is IGxGenericCollectionItem item)
 					{
@@ -696,6 +700,9 @@ namespace GeneXus.Application
 		}
 		public Task WebException(Exception ex)
 		{
+#if NETCORE			
+			GxHttpActivitySourceHelper.SetException(Activity.Current, ex);
+#endif
 			GXLogging.Error(log, "WebException", ex);
 			if (ex is FormatException)
 			{

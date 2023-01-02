@@ -116,7 +116,7 @@ namespace GeneXus.Data.NTier
 		{
 			if (string.IsNullOrEmpty(m_connectionString))
 				m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+			GXLogging.Debug(log, "Setting connectionString property ", () => BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
 
 			return new ServiceConnectionWrapper(m_ServiceType, m_connectionString, connectionCache, isolationLevel, DataSource);
 		}

@@ -239,8 +239,10 @@ namespace GeneXus.Application
 		string GetCompleteURL(string file);
 		string GetImagePath(string id, string KBId, string theme);
 		string GetImageSrcSet(string baseImage);
-		string GetTheme();
 		void SetDefaultTheme(string theme);
+		string GetTheme();
+		void SetDefaultTheme(string theme, bool isDSO);
+		bool GetThemeisDSO();
 		int SetTheme(string theme);
 		bool CheckContentType(string contentKey, string contentType, string fullPath);
 		string ExtensionForContentType(string contentType);
@@ -307,6 +309,10 @@ namespace GeneXus.Application
 		}
 	}
 #endif
+	internal class GxApplication
+	{
+		internal static GxContext MainContext { get; set; }
+	}
 	[Serializable]
 	public class GxContext : IGxContext
 	{
@@ -366,6 +372,7 @@ namespace GeneXus.Application
 		[NonSerialized]
 		IReportHandler _reportHandler;
 		string _theme = "";
+		bool _theme_isDSO = false;
 		[NonSerialized]
 		ArrayList _reportHandlerToClose;
 		private bool configuredEventHandling;
@@ -448,6 +455,8 @@ namespace GeneXus.Application
 			setContext(this);
 			httpContextVars = new GxHttpContextVars();
 			GXLogging.Debug(log, "GxContext.Ctr Default handle:", () => _handle.ToString());
+			if (GxApplication.MainContext == null && !(IsHttpContext || GxContext.IsRestService))
+				GxApplication.MainContext = this;
 		}
 		public GxContext(int handle, string location)
 		{
@@ -964,7 +973,7 @@ namespace GeneXus.Application
 			{
 				string path = Path.Combine(this.GetPhysicalPath(), fileName);
 				fileExists = File.Exists(path);
-				GXLogging.Info(log, $"Searching if file exists ({fileName}). Found: {fileExists}");
+				GXLogging.Debug(log, $"Searching if file exists ({fileName}). Found: {fileExists}");
 			}
 			catch (Exception e)
 			{
@@ -1416,7 +1425,8 @@ namespace GeneXus.Application
 			ExecuteBeforeCommit(callerName);
 			if (ds != null && (ds is DataStoreProvider dataStoreProvider))
 			{
-				dataStoreProvider.commitDataStores(callerName);
+				if (dataStoreProvider!=null)
+					dataStoreProvider.commitDataStores(callerName);
 			}
 			else
 			{
@@ -1470,7 +1480,10 @@ namespace GeneXus.Application
 
 			if (ds != null && (ds is DataStoreProvider dataStoreProvider))
 			{
-				dataStoreProvider.rollbackDataStores(callerName);
+				if (dataStoreProvider != null)
+				{
+					dataStoreProvider.rollbackDataStores(callerName);
+				}
 			}
 			else
 			{
@@ -1506,7 +1519,15 @@ namespace GeneXus.Application
 		}
 		public bool isRemoteGXDB()
 		{
-			return Preferences.Remote ? !Preferences.RemoteLocation.Equals(_currentLocation) : false;
+			if (Preferences.Remote)
+			{
+				string remoteLocation = Preferences.RemoteLocation;
+				if (remoteLocation != null)
+				{
+					return !remoteLocation.Equals(_currentLocation);
+				}
+			}
+			return false;
 		}
 
 		public string getCurrentLocation()
@@ -1773,7 +1794,7 @@ namespace GeneXus.Application
 					{
 						absoluteUri = String.Format("{0}://{1}{2}", GetServerSchema(), _HttpContext.Request.Headers["Host"], _HttpContext.Request.GetRawUrl());
 					}
-					GXLogging.Debug(log, "AbsoluteUri dynamicport:", absoluteUri);
+					GXLogging.DebugSanitized(log, "AbsoluteUri dynamicport:", absoluteUri);
 					return absoluteUri;
 				}
 				else
@@ -2891,7 +2912,7 @@ namespace GeneXus.Application
 				{
 					if (HttpContext != null)
 					{
-						_physicalPath = RequestPhysicalPath();
+						_physicalPath = RequestPhysicalPath(HttpContext);
 					}
 					else
 					{
@@ -2919,6 +2940,8 @@ namespace GeneXus.Application
 		}
 #if NETCORE
 		static bool _isHttpContext;
+		internal static bool IsAzureContext
+		{ get; set; }
 #endif
 		public static bool IsHttpContext
 		{
@@ -2937,9 +2960,9 @@ namespace GeneXus.Application
 			}
 #endif
 		}
-		private static string RequestPhysicalPath()
+		private static string RequestPhysicalPath(HttpContext httpContext=null)
 		{
-			string phPath = HttpHelper.RequestPhysicalApplicationPath();
+			string phPath = HttpHelper.RequestPhysicalApplicationPath(httpContext);
 			string dirSeparator = Path.DirectorySeparatorChar.ToString();
 			if (!phPath.EndsWith(dirSeparator))
 				return $"{phPath}{dirSeparator}";
@@ -3219,7 +3242,7 @@ namespace GeneXus.Application
 		{
 			if (HttpContext != null && HttpContext.Session != null)
 			{
-				GXLogging.Debug(log, "HttpContext.Session.setProperty(", key, ")=", value);
+				GXLogging.DebugSanitized(log, "HttpContext.Session.setProperty(", key, ")=", value);
 				WriteSessionKey(key, value);
 			}
 			else
@@ -3228,7 +3251,7 @@ namespace GeneXus.Application
 				{
 					_properties = new Hashtable();
 				}
-				GXLogging.Debug(log, "GxContext.Properties.getProperty(", key, ")=", value);
+				GXLogging.DebugSanitized(log, "GxContext.Properties.getProperty(", key, ")=", value);
 				_properties[key] = value;
 			}
 		}
@@ -3488,7 +3511,7 @@ namespace GeneXus.Application
 				if (_currentTimeZone != null)
 					return _currentTimeZone;
 				string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
-				GXLogging.Debug(log, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
+				GXLogging.DebugSanitized(log, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
 				if (String.IsNullOrEmpty(sTZ))
 				{
 					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
@@ -3580,7 +3603,7 @@ namespace GeneXus.Application
 						string imgDir = "";
 						if (String.IsNullOrEmpty(dir) && _HttpContext == null)
 						{
-
+							GXLogging.Debug(log, "Searching for txt files ..");
 							int srchIx = 0;
 							string[] paths = new string[] { ".\\", "..\\" };
 							bool found = false;
@@ -3596,9 +3619,13 @@ namespace GeneXus.Application
 									}
 							}
 							imgDir = dir;
+							GXLogging.Debug(log, $"{imgDir} txt file found");
 						}
 						else
+						{ 
 							imageFiles = Directory.GetFiles(dir, "*.txt");
+							GXLogging.Debug(log, "imageFiles found");
+						}
 
 						string KBPrefix = String.Empty;
 						char[] densitySeparator = new char[] { '|' };
@@ -3733,9 +3760,17 @@ namespace GeneXus.Application
 				return WriteSessionKey(GXTheme, cThemeMap) ? 1 : 0;
 			}
 		}
+		public bool GetThemeisDSO() {
+			return _theme_isDSO;
+		}
 		public void SetDefaultTheme(string t)
 		{
+			SetDefaultTheme(t, false);
+		}
+		public void SetDefaultTheme(string t, bool isDSO)
+		{
 			_theme = t;
+			_theme_isDSO = isDSO;
 		}
 
 		public string FileToBase64(string filePath)
@@ -3798,7 +3833,7 @@ namespace GeneXus.Application
 		{
 			GXLogging.Debug(log, "SetSubmitInitialConfig:", () => _handle.ToString() + " clientid:" + context.ClientID);
 			this._isSumbited = true;
-			this.SetDefaultTheme(context.GetTheme());
+			this.SetDefaultTheme(context.GetTheme(), context.GetThemeisDSO());
 			this.SetPhysicalPath(context.GetPhysicalPath());
 			this.SetLanguageWithoutSession(context.GetLanguage());
 			this.ClientID = context.ClientID;

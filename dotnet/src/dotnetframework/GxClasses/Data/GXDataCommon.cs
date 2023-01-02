@@ -949,7 +949,7 @@ namespace GeneXus.Data
 		}
 
 		public virtual int MaxNumberOfValuesInList => int.MaxValue;
-
+		protected const string NaV = "xxxxx";
 		public string ConnectionStringForLog()
 		{
 			string result="";
@@ -1584,7 +1584,7 @@ namespace GeneXus.Data
 					m_connectionString=BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 			}
 
-			GXLogging.Debug(log, "Setting connectionString property ", ConnectionStringForLog);
+			GXLogging.Debug(log, "Setting connectionString property ", ()=> BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
 			MssqlConnectionWrapper connection=new MssqlConnectionWrapper(m_connectionString,connectionCache, isolationLevel);
 
 			m_FailedConnections = 0;
@@ -1873,26 +1873,28 @@ namespace GeneXus.Data
 			try
 			{
 				SqlDataReader sqlReader = reader as SqlDataReader;
-				for (int i = 0; i < sqlReader.FieldCount; i++)
+				if (sqlReader != null)
 				{
-					try
+					for (int i = 0; i < sqlReader.FieldCount; i++)
 					{
-						values[i] = reader.GetValue(i);
-					}
-					catch (OverflowException oex)
-					{
-						GXLogging.Warn(log, "GetValues OverflowException:" + oex);
-						if (sqlReader.GetFieldType(i) == typeof(decimal))
+						try
 						{
-							GXLogging.Debug(log, "GetValues fieldtype decimal value:" + sqlReader.GetSqlDecimal(i).ToString());
-							values[i] = ReadSQLDecimal(sqlReader, i);
-
+							values[i] = reader.GetValue(i);
 						}
-						else
-							throw oex;
-					}
-					catch (Exception ex)
-					{
+						catch (OverflowException oex)
+						{
+							GXLogging.Warn(log, "GetValues OverflowException:" + oex);
+							if (sqlReader.GetFieldType(i) == typeof(decimal))
+							{
+								GXLogging.Debug(log, "GetValues fieldtype decimal value:" + sqlReader.GetSqlDecimal(i).ToString());
+								values[i] = ReadSQLDecimal(sqlReader, i);
+
+							}
+							else
+								throw oex;
+						}
+						catch (Exception ex)
+						{
 #if !NETCORE
 						FileNotFoundException fex = ex as FileNotFoundException;
 						FileLoadException flex = ex as FileLoadException;
@@ -1910,9 +1912,10 @@ namespace GeneXus.Data
 							throw ex;
 						}
 #else
-						throw ex;
+							throw ex;
 #endif
 
+						}
 					}
 				}
 			}
@@ -2001,10 +2004,7 @@ namespace GeneXus.Data
 				MAX_TRIES = 100; //Max Pool Size default de ado.net
 			else 
 				MAX_TRIES = Convert.ToInt32(maxpoolSize);
-			GXLogging.Debug(log, "MAX_TRIES=" + MAX_TRIES);
-
 			return connstr;
-
 		}
 
 #if !NETCORE

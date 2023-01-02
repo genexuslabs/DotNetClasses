@@ -90,7 +90,6 @@ namespace GeneXus.Printer
         void setOutputStream(object stream);
 	}
 	
-#if !NETCORE
 	public class GxReportBuilderNative : IReportHandler
 	{
 		public const string END_PAGE = "EPG";
@@ -1527,8 +1526,10 @@ namespace GeneXus.Printer
 						"\\pichgoal"+(height * LOGICAL2TWIP).ToString()+
 						"\n";
 			streamToWrite.Write( sBuffer);
-			Bitmap bm = new Bitmap(bitmap);
-			bm.Save( streamToWrite.BaseStream, ImageFormat.Emf);
+			using (Bitmap bm = new Bitmap(bitmap))
+			{
+				bm.Save(streamToWrite.BaseStream, ImageFormat.Emf);
+			}
 			streamToWrite.Write( "}}\n");
 		}
 		void DrawText(string text, Point p1, Point p2, Font fnt, int align, Color foreColor, Color backColor)
@@ -2114,7 +2115,7 @@ namespace GeneXus.Printer
 
 	#endregion
 	}
-#endif
+
 	[Serializable()]
 	public class ProcessInterruptedException: Exception
 	{
@@ -2140,11 +2141,11 @@ namespace GeneXus.Printer
 	{
 		static public string AddPath(string name, string path)
 		{
-			if( name.IndexOf(":") != -1 ||
+			if (Path.IsPathRooted(name) || name.IndexOf(":") != -1 ||
 				(name.Length >=2 && (name.Substring( 0,2) == "//" || name.Substring( 0,2) == @"\\")) ||
 				(name.StartsWith("http:" ) || name.StartsWith("https:" )))
 				return name;
-			return path + name;
+			return Path.Combine(path, name);
 		}
 	}
 

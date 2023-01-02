@@ -366,7 +366,7 @@ namespace GeneXus.Messaging.Common
 			IMessageBroker messageBrokerImpl = null;
 			if (GetGXServices() != null)
 			{
-				GXService providerService = GetGXServices().Get(service);
+				GXService providerService = GetGXServices()?.Get(service);
 				if (providerService != null)
 				{
 					try

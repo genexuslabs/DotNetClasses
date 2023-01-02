@@ -222,11 +222,12 @@ namespace GeneXus.HttpHandlerFactory
 				try
 				{
                     string binPath = GxContext.StaticPhysicalPath();
-                    if (context != null && !binPath.EndsWith("bin")){
+					GXLogging.Debug(log, $"binPath at GetGXNamespaces {binPath}");
+					if (context != null && !binPath.EndsWith("bin") && !GxContext.IsAzureContext){
                         binPath = Path.Combine(binPath, "bin"); 
                     }
 					string[] files = Directory.GetFiles(binPath, "*.Common.dll", SearchOption.TopDirectoryOnly);
-                    if (files == null || files.Length == 0)
+                    if ((files == null || files.Length == 0) && (!GxContext.IsAzureContext))
                     {
                         binPath = Path.Combine(binPath, "bin"); 
                         files = Directory.GetFiles(binPath, "*.Common.dll", SearchOption.TopDirectoryOnly);

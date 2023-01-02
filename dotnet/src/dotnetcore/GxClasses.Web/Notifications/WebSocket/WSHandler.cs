@@ -155,7 +155,7 @@ namespace GeneXus.Http.WebSocket
 			if (!handlerCache.TryGetValue(hType, out handlerClassName))
 			{
 				String type = GetPtyTypeName(hType);
-				GXService service = GXServices.Instance.Get(GXServices.WEBNOTIFICATIONS_SERVICE);
+				GXService service = GXServices.Instance?.Get(GXServices.WEBNOTIFICATIONS_SERVICE);
 				if (service != null && service.Properties != null)
 				{
 					String className = service.Properties.Get(type);

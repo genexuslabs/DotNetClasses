@@ -255,19 +255,26 @@ namespace GeneXus.Metadata
 					{
 						mi = (MethodInfo)mth[0];
 					}
-					
-					ParameterModifier[] pms = new ParameterModifier[args.Length];
-					ParameterInfo[] pis = mi.GetParameters();
-					for (int i = 0; i < pis.Length; i++)
+
+					if (mi != null)
 					{
-						ParameterInfo pi = pis[i];
-						ParameterModifier pm = new ParameterModifier(3);
-						pm[0] = ((pi.Attributes & ParameterAttributes.In) != ParameterAttributes.None);
-						pm[1] = ((pi.Attributes & ParameterAttributes.Out) != ParameterAttributes.None);
-						pm[2] = pi.ParameterType.IsByRef;
-						pms[i] = pm;
+						ParameterModifier[] pms = new ParameterModifier[args.Length];
+						ParameterInfo[] pis = mi.GetParameters();
+						for (int i = 0; i < pis.Length; i++)
+						{
+							ParameterInfo pi = pis[i];
+							ParameterModifier pm = new ParameterModifier(3);
+							pm[0] = ((pi.Attributes & ParameterAttributes.In) != ParameterAttributes.None);
+							pm[1] = ((pi.Attributes & ParameterAttributes.Out) != ParameterAttributes.None);
+							pm[2] = pi.ParameterType.IsByRef;
+							pms[i] = pm;
+						}
+						o.GetType().InvokeMember(mthd, BindingFlags.InvokeMethod, null, o, args, pms, null, null);
 					}
-					o.GetType().InvokeMember(mthd, BindingFlags.InvokeMethod, null, o, args, pms, null, null);
+					else
+					{
+						throw new GxClassLoaderException("Method " + mthd + " with " + args.Length + " parameters not found");
+					}
 				}
 				else
 					throw new GxClassLoaderException("Method " + mthd + " not found");

@@ -79,7 +79,7 @@ namespace GeneXus.Http
         public void Set(string key, string val)
         {
 			key = GXUtil.NormalizeKey(key);
-			GXLogging.Debug(log, "Set Key" + key + "=" + val);
+			GXLogging.DebugSanitized(log, "Set Key" + key + "=" + val);
 			if (_httpSession != null)
 			{
 				GXLogging.Debug(log, "SetObject SessionId : " + _httpSession.SessionID);

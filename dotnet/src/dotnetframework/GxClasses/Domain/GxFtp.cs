@@ -915,18 +915,23 @@ namespace GeneXus.Utils
 				throw new ArgumentNullException(nameof(Accept));			
 			}
             FtpStream ftpStream = requestStream as FtpStream;
-			ftpStream.InternalPosition=0;
+			if (ftpStream != null)
+			{
+				ftpStream.InternalPosition = 0;
 
-            int Length = (int)ftpStream.InternalLength;
+				int Length = (int)ftpStream.InternalLength;
 
-			Byte [] sendbuffer = new Byte[Length];
+				Byte[] sendbuffer = new Byte[Length];
 
-            ftpStream.InternalRead(sendbuffer, 0, Length);		
-			int cbReturn = Accept.Send( sendbuffer, Length, 0);
+				ftpStream.InternalRead(sendbuffer, 0, Length);
+				int cbReturn = Accept.Send(sendbuffer, Length, 0);
 
-            ftpStream.InternalClose();
-		
-			return cbReturn;
+				ftpStream.InternalClose();
+
+				return cbReturn;
+			}
+			else
+				return 0;
 		}
 		private String FormatAddress(byte[] Address, int Port )
 		{

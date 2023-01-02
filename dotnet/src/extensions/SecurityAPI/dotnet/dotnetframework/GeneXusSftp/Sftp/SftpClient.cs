@@ -267,7 +267,45 @@ namespace Sftp.GeneXusSftp
             return true;
         }
 
-        [SecuritySafeCritical]
+		[SecuritySafeCritical]
+		public override bool Rm(String remoteFilePath)
+		{
+			if (SecurityUtils.compareStrings("", remoteFilePath) || remoteFilePath == null || remoteFilePath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+			{
+				this.error.setError("SF018", "remoteFilePath cannot be empty");
+				return false;
+			}
+
+			if (this.channel == null || !this.channel.IsConnected)
+			{
+				this.error.setError("SF019", "The channel is invalid, reconect");
+				return false;
+			}
+			string rDir = "";
+			if (this.channel.WorkingDirectory.Contains("/"))
+			{
+				remoteFilePath = $"/{remoteFilePath.Replace(@"\", "/")}";
+
+				rDir += this.channel.WorkingDirectory + remoteFilePath;
+			}
+			else
+			{
+
+				rDir = this.channel.WorkingDirectory + remoteFilePath;
+			}
+			try
+			{
+				this.channel.DeleteFile(rDir);
+			}
+			catch (Exception e)
+			{
+				this.error.setError("SF008", e.Message);
+				return false;
+			}
+			return true;
+		}
+
+		[SecuritySafeCritical]
         public override void Disconnect()
         {
             if (this.channel != null && this.channel.IsConnected)

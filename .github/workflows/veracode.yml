@@ -44,11 +44,12 @@ jobs:
       with:
         repository: ''
     
-    - uses: actions/setup-dotnet@v1
+    - name: Install .NET 6
+      uses: actions/setup-dotnet@v2
       with:
-        source-url: https://nuget.pkg.github.com/genexuslabs/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        dotnet-version: '6.0.x'
+        include-prerelease: false
+
 
     - name: Build
       run: |
