@@ -202,7 +202,7 @@ namespace GeneXus.Data.Cosmos
 		}
 		public double GetDouble(int i)
 		{
-			return Convert.ToDouble(GetAttValue(i));
+			return Convert.ToDouble(GetAttValue(i),CultureInfo.InvariantCulture);
 		}
 		public Type GetFieldType(int i)
 		{
@@ -211,7 +211,7 @@ namespace GeneXus.Data.Cosmos
 
 		public float GetFloat(int i)
 		{
-			return Convert.ToSingle(GetAttValue(i));
+			return Convert.ToSingle(GetAttValue(i),CultureInfo.InvariantCulture);
 		}
 		public Guid GetGuid(int i)
 		{
