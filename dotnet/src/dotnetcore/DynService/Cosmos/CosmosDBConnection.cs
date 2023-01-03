@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GeneXus.Data.Cosmos;
@@ -67,6 +68,7 @@ namespace GeneXus.Data.NTier
 		}
 		private static void InitializeDBConnection()
 		{
+			//System.Diagnostics.Debugger.Launch();
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = mConnectionString;
 
@@ -163,27 +165,27 @@ namespace GeneXus.Data.NTier
 
 			string partitionKey = query.PartitionKey;
 			string partitionKeyValue = string.Empty;
+			JsonObject jsonObject = new JsonObject();
 
 			//Setup the json payload to execute the insert or update query.
 			foreach (KeyValuePair<string, string> asg in query.AssignAtts)
 			{
 				string name = asg.Key;
 				string parmName = asg.Value.Substring(1).Remove(asg.Value.Length - 2);
-				CosmosDBHelper.AddItemValue(name, parmName, values, parms, query.Vars, ref jsonData);
+				CosmosDBHelper.AddItemValue(name, parmName, values, parms, query.Vars, ref jsonObject);
 				if (name == partitionKey)
 					partitionKeyValue = values[name].ToString();
 			}
 
 			Dictionary<string, Object> keyCondition = new Dictionary<string, Object>();
-			//Get the values for id and partitionKey
 
+			//Get the values for id and partitionKey
 			string regex1 = @"\(([^\)\(]+)\)";
 			string regex2 = @"(.*)[^<>!=]\s*(=|!=|<|>|<=|>=|<>)\s*(:.*:)";
 
 			string keyFilterS;
 			string condition = string.Empty;
 			IEnumerable<string> keyFilterQ = Array.Empty<string>();
-
 			IEnumerable<string> allFilters = query.KeyFilters.Concat(query.Filters);
 
 			foreach (string keyFilter in allFilters)
@@ -192,7 +194,6 @@ namespace GeneXus.Data.NTier
 				condition = keyFilter;
 
 				MatchCollection matchCollection = Regex.Matches(keyFilterS, regex1);
-
 				foreach (Match match in matchCollection)
 				{
 					if (match.Groups.Count > 0)
@@ -206,18 +207,17 @@ namespace GeneXus.Data.NTier
 							string name = match2.Groups[1].Value;
 							VarValue varValue = query.Vars.FirstOrDefault(v => v.Name == $":{varName}");
 
-							string jsonDataKey = String.Empty;
-							string jsonDataPartitionKey = string.Empty;
 							if (varValue != null)
 							{
 								keyCondition[name] = varValue.Value;
 								//keyCondition[name] = GeneXus.Data.Cosmos.CosmosDBHelper.ToItemValue(varValue.Type, varValue.Value);
 
 								if (isUpdate && name == "id")
-									jsonDataKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(varValue.Type, name, varValue.Value);
-								if (isUpdate && name == partitionKey)
-									jsonDataPartitionKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(varValue.Type, name, varValue.Value);
-
+									jsonObject.Add(name, JsonValue.Create(varValue.Value));
+								
+								if (isUpdate && name == partitionKey && partitionKey != "id")
+									jsonObject.Add(name, JsonValue.Create(varValue.Value));
+									
 								if (name == partitionKey)
 									//TODO Partition Key can be double, bool 
 									partitionKeyValue = varValue.Value.ToString();
@@ -230,37 +230,22 @@ namespace GeneXus.Data.NTier
 									//keyCondition[name] = GeneXus.Data.Cosmos.CosmosDBHelper.ToItemValue(serviceParm.DbType, serviceParm.Value);
 
 									if (isUpdate && name == "id")
-										jsonDataKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(serviceParm.DbType, name, serviceParm.Value);
-									if (isUpdate && name == partitionKey)
-										jsonDataPartitionKey = GeneXus.Data.Cosmos.CosmosDBHelper.AddToJsonStream(serviceParm.DbType, name, serviceParm.Value);
-
+										jsonObject.Add(name, JsonValue.Create(serviceParm.Value));
+									
+									if (isUpdate && name == partitionKey && partitionKey != "id")
+										jsonObject.Add(name, JsonValue.Create(serviceParm.Value));
+									
 									if (name == partitionKey)
 										//TODO Partition Key can be numeric 
 										partitionKeyValue = serviceParm.Value.ToString();
 								}
-							}
-							if (!string.IsNullOrEmpty(jsonDataKey))
-							{
-								if (!string.IsNullOrEmpty(jsonData))
-									jsonData = $"{jsonData},{jsonDataKey}";
-
-								else
-									jsonData = jsonDataKey;
-							}
-
-							if (!string.IsNullOrEmpty(jsonDataPartitionKey))
-							{
-								if (!string.IsNullOrEmpty(jsonData))
-									jsonData = $"{jsonData},{jsonDataPartitionKey}";
-								else
-									jsonData = jsonDataPartitionKey;
 							}
 						}
 					}
 				}
 			}
 
-			jsonData = "{" + jsonData + "}";
+			jsonData = jsonObject.ToJsonString();
 
 			//TODO: Get container from HashSet for performance
 			Container container = GetContainer(query.TableName);
@@ -528,8 +513,7 @@ namespace GeneXus.Data.NTier
 			}
 
 			IEnumerable<string> allFilters = query.KeyFilters.Concat(query.Filters);
-			IEnumerable<string> allFiltersQuery = Array.Empty<string>();
-			
+			IEnumerable<string> allFiltersQuery = Array.Empty<string>();	
 			IEnumerable<string> keyFilterQ = Array.Empty<string>();
 
 			foreach (string keyFilter in allFilters)
