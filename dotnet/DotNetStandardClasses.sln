@@ -228,8 +228,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VersionConsistencyTest", "t
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCoreWebUnitTest", "test\DotNetCoreWebUnitTest\DotNetCoreWebUnitTest.csproj", "{41E782A4-6CDD-4340-92AB-C4C79C799A0F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynService.CosmosDB", "src\dotnetcommon\DynService.Cosmos\DynService.CosmosDB.csproj", "{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opentelemetry", "opentelemetry", "{BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.Lightstep.AspNet", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetryLightStep\GeneXus.OpenTelemetry.Lightstep.AspNet.csproj", "{27D54041-BDD5-428E-8CA6-C96D519F5451}"
@@ -562,10 +560,6 @@ Global
 		{41E782A4-6CDD-4340-92AB-C4C79C799A0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41E782A4-6CDD-4340-92AB-C4C79C799A0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41E782A4-6CDD-4340-92AB-C4C79C799A0F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{19625C3D-CEE1-44B7-A11E-1AA27E6A5439}.Release|Any CPU.Build.0 = Release|Any CPU
 		{27D54041-BDD5-428E-8CA6-C96D519F5451}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{27D54041-BDD5-428E-8CA6-C96D519F5451}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27D54041-BDD5-428E-8CA6-C96D519F5451}.Release|Any CPU.ActiveCfg = Release|Any CPU
