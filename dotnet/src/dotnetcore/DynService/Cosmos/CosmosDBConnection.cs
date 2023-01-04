@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -102,6 +103,19 @@ namespace GeneXus.Data.NTier
 								cosmosDatabase = cosmosClient.GetDatabase(mdatabase);
 		}
 
+		private PartitionKey ToPartitionKey(object value)
+		{
+			
+			if (value is double)
+				return new PartitionKey((double)value);
+			if (value is bool)
+				return new PartitionKey((bool)value);
+			if (value is string)
+				return new PartitionKey((string)value);
+			else
+				throw new Exception("Partitionkey can be double, bool or string.");
+			
+		}
 		private Container GetContainer(string containerName)
 		{
 			if (cosmosDatabase != null && !string.IsNullOrEmpty(containerName))
@@ -123,20 +137,19 @@ namespace GeneXus.Data.NTier
 			if (!string.IsNullOrEmpty(projectionList))
 				sqlSelect = string.Format(SELECT_TEMPLATE, projectionList);
 			else
-			{ //ERROR
-
+			{ 
+				throw new Exception("Error setting up the query. Projection list is empty.");
 			}
 			if (!string.IsNullOrEmpty(tableName))
 				sqlFrom = string.Format(FROM_TEMPLATE, tableName);
 			else
 			{
-				//ERROR
+				throw new Exception("Error setting up the query. Table name is empty.");
 			}
 			if (!string.IsNullOrEmpty(filterExpression))
 				sqlWhere = string.Format(WHERE_TEMPLATE, filterExpression);
 			if (!string.IsNullOrEmpty(orderbys))
 				sqlOrder = string.Format(ORDER_TEMPLATE, orderbys);
-
 
 			return $"{sqlSelect} {sqlFrom} {sqlWhere} {sqlOrder}";
 		}
@@ -164,8 +177,10 @@ namespace GeneXus.Data.NTier
 			string jsonData = string.Empty;
 
 			string partitionKey = query.PartitionKey;
-			string partitionKeyValue = string.Empty;
+			//object partitionKeyValue;
 			JsonObject jsonObject = new JsonObject();
+
+			Dictionary<string, Object> keyCondition = new Dictionary<string, Object>();
 
 			//Setup the json payload to execute the insert or update query.
 			foreach (KeyValuePair<string, string> asg in query.AssignAtts)
@@ -174,10 +189,8 @@ namespace GeneXus.Data.NTier
 				string parmName = asg.Value.Substring(1).Remove(asg.Value.Length - 2);
 				CosmosDBHelper.AddItemValue(name, parmName, values, parms, query.Vars, ref jsonObject);
 				if (name == partitionKey)
-					partitionKeyValue = values[name].ToString();
+					keyCondition[partitionKey] = values[name];
 			}
-
-			Dictionary<string, Object> keyCondition = new Dictionary<string, Object>();
 
 			//Get the values for id and partitionKey
 			string regex1 = @"\(([^\)\(]+)\)";
@@ -210,34 +223,24 @@ namespace GeneXus.Data.NTier
 							if (varValue != null)
 							{
 								keyCondition[name] = varValue.Value;
-								//keyCondition[name] = GeneXus.Data.Cosmos.CosmosDBHelper.ToItemValue(varValue.Type, varValue.Value);
-
 								if (isUpdate && name == "id")
 									jsonObject.Add(name, JsonValue.Create(varValue.Value));
 								
 								if (isUpdate && name == partitionKey && partitionKey != "id")
 									jsonObject.Add(name, JsonValue.Create(varValue.Value));
-									
-								if (name == partitionKey)
-									//TODO Partition Key can be double, bool 
-									partitionKeyValue = varValue.Value.ToString();
 							}
 							else
 							{
 								if (parms[varName] is ServiceParameter serviceParm)
 								{
 									keyCondition[name] = serviceParm.Value;
-									//keyCondition[name] = GeneXus.Data.Cosmos.CosmosDBHelper.ToItemValue(serviceParm.DbType, serviceParm.Value);
-
+								
 									if (isUpdate && name == "id")
 										jsonObject.Add(name, JsonValue.Create(serviceParm.Value));
 									
 									if (isUpdate && name == partitionKey && partitionKey != "id")
 										jsonObject.Add(name, JsonValue.Create(serviceParm.Value));
 									
-									if (name == partitionKey)
-										//TODO Partition Key can be numeric 
-										partitionKeyValue = serviceParm.Value.ToString();
 								}
 							}
 						}
@@ -262,15 +265,15 @@ namespace GeneXus.Data.NTier
 						{
 							if (!keyCondition.Any() || !keyCondition.ContainsKey("id") || !keyCondition.ContainsKey(partitionKey))
 							{
-								logger.Error($"Delete item failed: error parsing the query.");
-								throw new Exception($"Delete item failed: error parsing the query.");
+								GXLogging.Debug(logger,"Delete item failed: error parsing the query.");
+								throw new Exception($"Delete item failed: error parsing the query.");	
 							}
 							else
 							{
 								object idField = keyCondition["id"];
 
-								logger.Debug($"Delete : id= {idField.ToString()}, partitionKey= {partitionKeyValue}");
-								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.DeleteItemStreamAsync(idField.ToString(), new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
+								GXLogging.Debug(logger,$"Delete : id= {idField.ToString()}, partitionKey= {keyCondition[partitionKey].ToString()}");
+								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.DeleteItemStreamAsync(idField.ToString(), ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
 								if (task.Result.IsSuccessStatusCode)
 								{
 									//ResponseMessage wrapps the delete record
@@ -280,12 +283,12 @@ namespace GeneXus.Data.NTier
 								{
 									if (task.Result.ErrorMessage.Contains("404"))
 									{
-										logger.Debug(ServiceError.RecordNotFound);
+										GXLogging.Debug(logger, ServiceError.RecordNotFound);
 										throw new ServiceException(ServiceError.RecordNotFound, null);
 									}
 									else
 									{
-										logger.Error($"Delete item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
+										GXLogging.Error(logger,$"Delete item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 										throw new Exception($"Delete item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 									}
 								}
@@ -296,7 +299,7 @@ namespace GeneXus.Data.NTier
 					}	
 					else
 					{
-						logger.Error("CosmosDB Delete Execution failed. Container not found.");
+						GXLogging.Error(logger,"CosmosDB Delete Execution failed. Container not found.");
 						throw new Exception("CosmosDB Delete Execution failed. Container not found.");
 					}
 
@@ -305,27 +308,36 @@ namespace GeneXus.Data.NTier
 						{
 							try
 							{
-								logger.Debug($"Insert : {jsonData}");
-								using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonData)))
+								if (!keyCondition.Any() || !keyCondition.ContainsKey(partitionKey))
 								{
-
-									Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.CreateItemStreamAsync(stream, new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
-									if (task.Result.IsSuccessStatusCode)
-										return 1;
-									else
+									GXLogging.Error(logger,$"Insert item failed: error parsing the query.");
+									throw new Exception($"Insert item failed: error parsing the query.");
+								}
+								else
+								{
+									GXLogging.Debug(logger,$"Insert : {jsonData}");
+									using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonData)))
 									{
-										if (task.Result.ErrorMessage.Contains("Conflict (409)"))
-										{
-											logger.Debug(ServiceError.RecordAlreadyExists);
-											throw new ServiceException(ServiceError.RecordAlreadyExists, null);
-										}
+									PartitionKey p = ToPartitionKey(keyCondition[partitionKey]);
+										Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.CreateItemStreamAsync(stream, ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
+										if (task.Result.IsSuccessStatusCode)
+											return 1;
 										else
 										{
-											logger.Error($"Create item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
-											throw new Exception($"Create item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
+											if (task.Result.ErrorMessage.Contains("Conflict (409)"))
+											{
+												GXLogging.Debug(logger,ServiceError.RecordAlreadyExists);
+												throw new ServiceException(ServiceError.RecordAlreadyExists, null);
+											}
+											else
+											{
+												GXLogging.Error(logger,$"Create item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
+												throw new Exception($"Create item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
+											}
 										}
 									}
 								}
+
 							}
 							catch (Exception ex)
 							{
@@ -334,7 +346,7 @@ namespace GeneXus.Data.NTier
 						}
 						else
 						{
-							logger.Error("CosmosDB Insert Execution failed. Container not found.");
+							GXLogging.Error(logger,"CosmosDB Insert Execution failed. Container not found.");
 							throw new Exception("CosmosDB Insert Execution failed. Container not found.");
 						}
 					case ServiceCursorDef.CursorType.Update:
@@ -342,23 +354,23 @@ namespace GeneXus.Data.NTier
 					{
 						if (!keyCondition.Any() || !keyCondition.ContainsKey("id") || !keyCondition.ContainsKey(partitionKey))
 						{
-							logger.Error($"Update item failed: error parsing the query.");
+							GXLogging.Error(logger, $"Update item failed: error parsing the query.");
 							throw new Exception($"Update item failed: error parsing the query.");
 						}
 						else
 						{
 							try
 							{
-								logger.Debug($"Update : {jsonData}");
+								GXLogging.Debug(logger,$"Update : {jsonData}");
 
 								using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonData)))
 								{
-									Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.UpsertItemStreamAsync(stream, new PartitionKey(partitionKeyValue)).ConfigureAwait(false));
+									Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.UpsertItemStreamAsync(stream, ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
 									if (task.Result.IsSuccessStatusCode)
 										return 1;
 									else
 									{
-										logger.Error($"Update item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
+										GXLogging.Error(logger, $"Update item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 										throw new Exception($"Update item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 									}
 								}
@@ -371,7 +383,7 @@ namespace GeneXus.Data.NTier
 					}
 					else
 					{
-						logger.Error("CosmosDB Update Execution failed. Container not found.");
+						GXLogging.Error(logger,"CosmosDB Update Execution failed. Container not found.");
 						throw new Exception("CosmosDB Update Execution failed. Container not found.");
 					}
 			}
@@ -433,26 +445,13 @@ namespace GeneXus.Data.NTier
 			return string.Empty;
 		}
 
-		private string GetDataParameterfromCollectionFormatted(string attName, IDataParameterCollection parms)
-		{
-			string varValuestr = string.Empty;
-			if (parms[attName] is ServiceParameter serviceParm)
-				if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringDbType(serviceParm.DbType))
-				{
-					varValuestr = '"' + $"{serviceParm.Value.ToString()}" + '"';
-				}
-				else
-					varValuestr = serviceParm.Value.ToString();
-			return varValuestr;
-		}
-
 		private CosmosDBDataReader GetDataReaderQueryByPK(ServiceCursorDef cursorDef, Container container, string idValue, string partitionKeyValue,out RequestWrapper requestWrapper)
 		{
 			requestWrapper = new RequestWrapper(cosmosClient, container, null);
 			requestWrapper.idValue = idValue;
 			requestWrapper.partitionKeyValue = partitionKeyValue;
 
-			logger.Debug($"Execute PK query id = {requestWrapper.idValue}, partitionKey = {requestWrapper.partitionKeyValue}");
+			GXLogging.Debug(logger,$"Execute PK query id = {requestWrapper.idValue}, partitionKey = {requestWrapper.partitionKeyValue}");
 			requestWrapper.queryByPK = true;
 			return new CosmosDBDataReader(cursorDef, requestWrapper);
 			
@@ -579,7 +578,7 @@ namespace GeneXus.Data.NTier
 			string orderExpression = String.Join(",", orderExpressionList);
 			string sqlQuery = SetupQuery(projectionList, filterExpression, tableName, orderExpression);
 
-			logger.Debug(sqlQuery);
+			GXLogging.Debug(logger,sqlQuery);
 
 			QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
 			requestWrapper = new RequestWrapper(cosmosClient, container, queryDefinition);

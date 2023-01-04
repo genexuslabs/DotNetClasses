@@ -193,8 +193,6 @@ namespace GeneXus.Data.Cosmos
 		   if (GetAttValue(i) is DateTime value)
 				return value;
 			return default(DateTime);
-		//	DateTime.TryParse(GetAttValue(i).ToString(), null, DateTimeStyles.AdjustToUniversal, out DateTime dt);
-		//	return dt;
 		}
 		public decimal GetDecimal(int i)
 		{

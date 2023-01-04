@@ -57,11 +57,11 @@ namespace GeneXus.Data.NTier
 	{
 		public string Index { get; set; }
 		
-		public override Query OrderBy(string index)
-		{
+		//public override Query OrderBy(string index)
+		//{
 			////TO DO///
-			return this;
-		}
+			//return this;
+		//}
 
 		public string PartitionKey { get; private set; }
 		public override Query SetKey(string partitionKey)
