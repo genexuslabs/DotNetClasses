@@ -15,8 +15,8 @@ namespace GeneXus.Data.Cosmos
 				VarValue varValue = queryVars.FirstOrDefault(v => v.Name == $":{fromName}");
 				if (varValue != null)
 				{
-					values[parmName] = varValue;
-					jsonObject.Add(parmName, JsonValue.Create(varValue));
+					values[parmName] = varValue.Value;
+					jsonObject.Add(parmName, JsonValue.Create(varValue.Value));
 				}
 				return varValue != null;
 			}
