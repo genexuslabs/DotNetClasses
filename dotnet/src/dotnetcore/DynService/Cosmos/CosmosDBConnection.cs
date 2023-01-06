@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -69,7 +68,6 @@ namespace GeneXus.Data.NTier
 		}
 		private static void InitializeDBConnection()
 		{
-			//System.Diagnostics.Debugger.Launch();
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = mConnectionString;
 
@@ -426,7 +424,6 @@ namespace GeneXus.Data.NTier
 			}
 			return varValue;
 		}
-
 		private string GetDataEqualParameterfromCollection(string filter, IDataParameterCollection parms, out string name)
 		{
 			string Equal_Filter_pattern = @"\((.*) = :(.*)\)";
@@ -444,7 +441,6 @@ namespace GeneXus.Data.NTier
 			}
 			return string.Empty;
 		}
-
 		private CosmosDBDataReader GetDataReaderQueryByPK(ServiceCursorDef cursorDef, Container container, string idValue, string partitionKeyValue,out RequestWrapper requestWrapper)
 		{
 			requestWrapper = new RequestWrapper(cosmosClient, container, null);

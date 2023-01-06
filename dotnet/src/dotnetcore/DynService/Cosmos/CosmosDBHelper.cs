@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using GeneXus.Data.NTier;
 
@@ -15,8 +17,14 @@ namespace GeneXus.Data.Cosmos
 				VarValue varValue = queryVars.FirstOrDefault(v => v.Name == $":{fromName}");
 				if (varValue != null)
 				{
+					if (varValue.Value == DBNull.Value)
+					{
+						KeyValuePair<string, JsonNode> keyvalue = new KeyValuePair<string, JsonNode>(parmName, null);
+						jsonObject.Add(keyvalue);
+					}
+					else
+						jsonObject.Add(parmName, JsonValue.Create(varValue.Value));
 					values[parmName] = varValue.Value;
-					jsonObject.Add(parmName, JsonValue.Create(varValue.Value));
 				}
 				return varValue != null;
 			}
@@ -40,8 +48,14 @@ namespace GeneXus.Data.Cosmos
 				return false;
 			if (parm.Value != null)
 			{
+				if (parm.Value == DBNull.Value)
+				{
+					KeyValuePair<string, JsonNode> keyvalue = new KeyValuePair<string, JsonNode>(parmName, null);
+					jsonObject.Add(keyvalue);
+				}
+				else
+					jsonObject.Add(parmName, JsonValue.Create(parm.Value));
 				dynParm[parmName] = parm.Value;
-				jsonObject.Add(parmName, JsonValue.Create(parm.Value));
 				return true;
 			}
 			return false;
