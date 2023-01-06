@@ -8,7 +8,6 @@ namespace GeneXus.Data.Cosmos
 	{
 		internal bool NeedsAttributeMap { get; }
 
-		//TODO
 		public CosmosDBMap(string name): base(name)
 		{
 			
