@@ -175,7 +175,6 @@ namespace GeneXus.Data.NTier
 			string jsonData = string.Empty;
 
 			string partitionKey = query.PartitionKey;
-			//object partitionKeyValue;
 			JsonObject jsonObject = new JsonObject();
 
 			Dictionary<string, Object> keyCondition = new Dictionary<string, Object>();
@@ -274,7 +273,6 @@ namespace GeneXus.Data.NTier
 								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.DeleteItemStreamAsync(idField.ToString(), ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
 								if (task.Result.IsSuccessStatusCode)
 								{
-									//ResponseMessage wrapps the delete record
 									return 1;
 								}
 								else

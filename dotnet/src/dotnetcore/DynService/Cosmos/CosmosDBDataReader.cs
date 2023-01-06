@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using GeneXus.Configuration;
 using GeneXus.Data.NTier;
 using GeneXus.Data.NTier.CosmosDB;
 using log4net;

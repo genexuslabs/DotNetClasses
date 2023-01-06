@@ -56,9 +56,6 @@ namespace GeneXus.Data.NTier.CosmosDB
 			using (ResponseMessage responseMessage = await m_container.ReadItemStreamAsync(
 				partitionKey: new PartitionKey(partitionKeyValue),
 				id: idValue).ConfigureAwait(false))
-			//ResponseMessage responseMessage = await m_container.ReadItemStreamAsync(
-			//partitionKey: new PartitionKey(partitionKeyValue),
-			//id: idValue).ConfigureAwait(false);
 			{
 
 				if (!responseMessage.IsSuccessStatusCode)
