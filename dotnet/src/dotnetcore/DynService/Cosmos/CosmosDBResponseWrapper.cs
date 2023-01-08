@@ -6,7 +6,6 @@ namespace GeneXus.Data.NTier.CosmosDB
 {
 	public class ResponseWrapper
 	{
-
 		public FeedIterator feedIterator;
 		public Stream stream;
 
@@ -30,7 +29,6 @@ namespace GeneXus.Data.NTier.CosmosDB
 			ItemCount = responseItems.Count;
 		}
 		public List<Dictionary<string, object>> Items { get; set; }
-		public int ItemCount { get; set; }
-		
+		public int ItemCount { get; set; }		
 	}
 }

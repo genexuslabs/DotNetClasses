@@ -8,10 +8,7 @@ namespace GeneXus.Data.Cosmos
 	{
 		internal bool NeedsAttributeMap { get; }
 
-		public CosmosDBMap(string name): base(name)
-		{
-			
-		}
+		public CosmosDBMap(string name): base(name){}
 		public override object GetValue(IOServiceContext context, RecordEntryRow currentEntry)
 		{
 			Dictionary<string, object> values = ((CosmosDBRecordEntry)currentEntry).CurrentRow;

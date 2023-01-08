@@ -279,8 +279,7 @@ namespace GeneXus.Data.Cosmos
 				try
 				{
 					using (ResponseMessage response = await m_feedIterator.ReadNextAsync().ConfigureAwait(false))
-					{
-						
+					{					
 						if (!response.IsSuccessStatusCode)
 						{
 							if (response.Diagnostics != null)
