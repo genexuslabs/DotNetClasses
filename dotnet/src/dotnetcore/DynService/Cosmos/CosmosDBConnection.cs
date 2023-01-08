@@ -18,14 +18,7 @@ namespace GeneXus.Data.NTier
 
 	public class CosmosDBService : GxService
 	{
-		public CosmosDBService(string id, string providerId) : base(id, providerId, typeof(CosmosDBConnection))
-		{
-
-		}
-		/*public override IDataReader GetCacheDataReader(CacheItem item, bool computeSize, string keyCache)
-		{
-			return new GxDynamoDBCacheDataReader(item, computeSize, keyCache);
-		}*/
+		public CosmosDBService(string id, string providerId) : base(id, providerId, typeof(CosmosDBConnection)){}
 	}
 
 	public class CosmosDBConnection : ServiceConnection
@@ -49,9 +42,6 @@ namespace GeneXus.Data.NTier
 		//private const string DISTINCT = "DISTINCT";
 		
 		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(CosmosDBConnection));
-
-		//TODO: Usar un Hashset para guardar los containers
-
 		public override string ConnectionString
 		{
 			get
@@ -103,7 +93,6 @@ namespace GeneXus.Data.NTier
 
 		private PartitionKey ToPartitionKey(object value)
 		{
-			
 			if (value is double)
 				return new PartitionKey((double)value);
 			if (value is bool)
@@ -111,8 +100,7 @@ namespace GeneXus.Data.NTier
 			if (value is string)
 				return new PartitionKey((string)value);
 			else
-				throw new Exception("Partitionkey can be double, bool or string.");
-			
+				throw new Exception("Partitionkey can be double, bool or string.");	
 		}
 		private Container GetContainer(string containerName)
 		{
@@ -202,7 +190,6 @@ namespace GeneXus.Data.NTier
 			{
 				keyFilterS = keyFilter;
 				condition = keyFilter;
-
 				MatchCollection matchCollection = Regex.Matches(keyFilterS, regex1);
 				foreach (Match match in matchCollection)
 				{
@@ -236,18 +223,14 @@ namespace GeneXus.Data.NTier
 										jsonObject.Add(name, JsonValue.Create(serviceParm.Value));
 									
 									if (isUpdate && name == partitionKey && partitionKey != "id")
-										jsonObject.Add(name, JsonValue.Create(serviceParm.Value));
-									
+										jsonObject.Add(name, JsonValue.Create(serviceParm.Value));									
 								}
 							}
 						}
 					}
 				}
 			}
-
 			jsonData = jsonObject.ToJsonString();
-
-			//TODO: Get container from HashSet for performance
 			Container container = GetContainer(query.TableName);
 			switch (query.CursorType)
 			{
@@ -391,7 +374,6 @@ namespace GeneXus.Data.NTier
 
 			Initialize();
 			CosmosDBQuery query = cursorDef.Query as CosmosDBQuery;
-			//Get container from hashset for performance
 			Container container = GetContainer(query?.TableName);
 			try
 			{
@@ -400,7 +382,6 @@ namespace GeneXus.Data.NTier
 			}
 			catch (CosmosException cosmosException)
 			{
-				//TODO: Handle cases
 				throw cosmosException;
 			}
 
