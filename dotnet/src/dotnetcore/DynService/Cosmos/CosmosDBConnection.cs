@@ -27,15 +27,15 @@ namespace GeneXus.Data.NTier
 		private const string DATABASE = "database";
 		private const string SERVICE_URI = "serviceURI";
 		private const string ACCOUNT_KEY = "AccountKey";
+		private const string ACCOUNT_DATASOURCE = "data source";
 		private static CosmosClient cosmosClient;
 		private static Database cosmosDatabase;
 		private static string mapplicationRegion;
 		private static string mdatabase;
 		private static string mAccountKey;
+		private static string mAccountEndpoint;
 		private static string mserviceURI;
 		private static string mConnectionString;
-
-		//https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/query/select
 		private const string TABLE_ALIAS = "t";
 		
 		//Options not supported by the spec yet
@@ -69,6 +69,11 @@ namespace GeneXus.Data.NTier
 			{
 				mapplicationRegion = region.ToString();
 			}
+			if (string.IsNullOrEmpty(mserviceURI) && (builder.TryGetValue(ACCOUNT_DATASOURCE, out object accountEndpoint)))
+			{
+				mAccountEndpoint = accountEndpoint.ToString();
+				mserviceURI = mAccountEndpoint;
+			}
 			if (builder.TryGetValue(ACCOUNT_KEY, out object accountKey))
 			{
 				mAccountKey = accountKey.ToString();
@@ -78,17 +83,23 @@ namespace GeneXus.Data.NTier
 			{
 				mdatabase = database.ToString();
 			}
-			//TODO: check Mandatory parameters
-			//TODO: Connect using connection string + connection key
 		}
 
 		private static void Initialize()
 		{
-			if (!string.IsNullOrEmpty(mserviceURI) && !string.IsNullOrEmpty(mapplicationRegion))
+			if (!string.IsNullOrEmpty(mserviceURI) && !string.IsNullOrEmpty(mapplicationRegion) && (!string.IsNullOrEmpty(mdatabase)))
 				cosmosClient = new CosmosClient(mserviceURI, new CosmosClientOptions() { ApplicationRegion = mapplicationRegion });
-
-			if (!string.IsNullOrEmpty(mdatabase))
-								cosmosDatabase = cosmosClient.GetDatabase(mdatabase);
+			else
+			{
+				if (string.IsNullOrEmpty(mapplicationRegion))
+					throw new Exception("Application Region is a mandatory additional connection string attribute.");
+				else
+					if (string.IsNullOrEmpty(mdatabase))
+						throw new Exception("Database is a mandatory additional connection string attribute.");
+					else
+						throw new Exception("Connection string is not set or is not valid. Unable to connect.");
+			}
+			cosmosDatabase = cosmosClient.GetDatabase(mdatabase);
 		}
 
 		private PartitionKey ToPartitionKey(object value)
@@ -375,17 +386,24 @@ namespace GeneXus.Data.NTier
 			Initialize();
 			CosmosDBQuery query = cursorDef.Query as CosmosDBQuery;
 			Container container = GetContainer(query?.TableName);
-			try
+			if (container == null)
 			{
-				CreateCosmosQuery(query,cursorDef, parms, container, out CosmosDBDataReader dataReader, out RequestWrapper requestWrapper);
-				return dataReader;
+				GXLogging.Error(logger, "Container not found.");
+				throw new Exception("Container not found.");
 			}
-			catch (CosmosException cosmosException)
-			{
-				throw cosmosException;
+			else
+			{ 
+				try
+				{
+					CreateCosmosQuery(query,cursorDef, parms, container, out CosmosDBDataReader dataReader, out RequestWrapper requestWrapper);
+					return dataReader;
+				}
+				catch (CosmosException cosmosException)
+				{
+					throw cosmosException;
+				}
+				catch (Exception e) { throw e; }
 			}
-
-			catch (Exception e) { throw e; }
 		}
 
 		private VarValue GetDataEqualParameterfromQueryVars(string filter, IEnumerable<VarValue> values, out string name)
@@ -428,8 +446,7 @@ namespace GeneXus.Data.NTier
 
 			GXLogging.Debug(logger,$"Execute PK query id = {requestWrapper.idValue}, partitionKey = {requestWrapper.partitionKeyValue}");
 			requestWrapper.queryByPK = true;
-			return new CosmosDBDataReader(cursorDef, requestWrapper);
-			
+			return new CosmosDBDataReader(cursorDef, requestWrapper);			
 		}
 
 		/// <summary>
@@ -562,10 +579,5 @@ namespace GeneXus.Data.NTier
 			cosmosDBDataReader = new CosmosDBDataReader(cursorDef, requestWrapper);
 		}
 		internal static IOServiceContext NewServiceContext() => null;
-	}
-	public class CosmosDBErrors
-	{
-		public const string ValidationException = "ValidationException";
-		public const string ValidationExceptionMessageKey = "The AttributeValue for a key attribute cannot contain an empty string value.";
 	}
 }
