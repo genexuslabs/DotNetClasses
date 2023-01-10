@@ -316,7 +316,6 @@ namespace GeneXus.Data.Cosmos
 				}
 				catch (CosmosException ex)
 				{
-					GXLogging.Error(logger, ex);
 					throw ex;
 				}
 			}

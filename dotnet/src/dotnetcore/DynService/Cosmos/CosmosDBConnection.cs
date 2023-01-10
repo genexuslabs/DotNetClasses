@@ -256,7 +256,6 @@ namespace GeneXus.Data.NTier
 						{
 							if (!keyCondition.Any() || !keyCondition.ContainsKey("id") || !keyCondition.ContainsKey(partitionKey))
 							{
-								GXLogging.Debug(logger,"Delete item failed: error parsing the query.");
 								throw new Exception($"Delete item failed: error parsing the query.");	
 							}
 							else
@@ -273,12 +272,10 @@ namespace GeneXus.Data.NTier
 								{
 									if (task.Result.ErrorMessage.Contains("404"))
 									{
-										GXLogging.Debug(logger, ServiceError.RecordNotFound);
 										throw new ServiceException(ServiceError.RecordNotFound, null);
 									}
 									else
 									{
-										GXLogging.Error(logger,$"Delete item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 										throw new Exception($"Delete item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 									}
 								}
@@ -289,7 +286,6 @@ namespace GeneXus.Data.NTier
 					}	
 					else
 					{
-						GXLogging.Error(logger,"CosmosDB Delete Execution failed. Container not found.");
 						throw new Exception("CosmosDB Delete Execution failed. Container not found.");
 					}
 
@@ -300,7 +296,6 @@ namespace GeneXus.Data.NTier
 							{
 								if (!keyCondition.Any() || !keyCondition.ContainsKey(partitionKey))
 								{
-									GXLogging.Error(logger,$"Insert item failed: error parsing the query.");
 									throw new Exception($"Insert item failed: error parsing the query.");
 								}
 								else
@@ -316,12 +311,10 @@ namespace GeneXus.Data.NTier
 										{
 											if (task.Result.ErrorMessage.Contains("Conflict (409)"))
 											{
-												GXLogging.Debug(logger,ServiceError.RecordAlreadyExists);
 												throw new ServiceException(ServiceError.RecordAlreadyExists, null);
 											}
 											else
 											{
-												GXLogging.Error(logger,$"Create item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 												throw new Exception($"Create item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 											}
 										}
@@ -336,7 +329,6 @@ namespace GeneXus.Data.NTier
 						}
 						else
 						{
-							GXLogging.Error(logger,"CosmosDB Insert Execution failed. Container not found.");
 							throw new Exception("CosmosDB Insert Execution failed. Container not found.");
 						}
 					case ServiceCursorDef.CursorType.Update:
@@ -344,7 +336,6 @@ namespace GeneXus.Data.NTier
 					{
 						if (!keyCondition.Any() || !keyCondition.ContainsKey("id") || !keyCondition.ContainsKey(partitionKey))
 						{
-							GXLogging.Error(logger, $"Update item failed: error parsing the query.");
 							throw new Exception($"Update item failed: error parsing the query.");
 						}
 						else
@@ -360,7 +351,6 @@ namespace GeneXus.Data.NTier
 										return 1;
 									else
 									{
-										GXLogging.Error(logger, $"Update item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 										throw new Exception($"Update item from stream failed. Status code: {task.Result.StatusCode}. Message: {task.Result.ErrorMessage}");
 									}
 								}
@@ -373,7 +363,6 @@ namespace GeneXus.Data.NTier
 					}
 					else
 					{
-						GXLogging.Error(logger,"CosmosDB Update Execution failed. Container not found.");
 						throw new Exception("CosmosDB Update Execution failed. Container not found.");
 					}
 			}
@@ -388,7 +377,6 @@ namespace GeneXus.Data.NTier
 			Container container = GetContainer(query?.TableName);
 			if (container == null)
 			{
-				GXLogging.Error(logger, "Container not found.");
 				throw new Exception("Container not found.");
 			}
 			else
@@ -510,6 +498,9 @@ namespace GeneXus.Data.NTier
 			foreach (string keyFilter in allFilters)
 			{		
 				string filterProcess = keyFilter.ToString();
+				filterProcess = filterProcess.Replace("[", "(");
+				filterProcess = filterProcess.Replace("]", ")");
+
 				foreach (VarValue item in query.Vars)
 				{
 					string varValuestr = string.Empty;
@@ -545,8 +536,6 @@ namespace GeneXus.Data.NTier
 				}
 
 				filterProcess = filterProcess.Replace("Func.", "");
-				filterProcess = filterProcess.Replace("[", "(");
-				filterProcess = filterProcess.Replace("]", ")");
 				foreach (string d in projection)
 				{
 					string wholeWordPattern = String.Format(@"\b{0}\b", d);
