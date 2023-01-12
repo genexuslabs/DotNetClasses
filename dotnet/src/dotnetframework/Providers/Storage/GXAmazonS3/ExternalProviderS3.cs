@@ -5,6 +5,7 @@ using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using GeneXus.Services;
 using GeneXus.Utils;
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +16,8 @@ namespace GeneXus.Storage.GXAmazonS3
 {
 	public class ExternalProviderS3 : ExternalProviderBase, ExternalProvider
 	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(ExternalProviderS3));
+
 		public const string Name = "AWSS3";
 		
 		const string ACCESS_KEY = "ACCESS_KEY";
@@ -127,8 +130,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			Region = region.SystemName;
 
 			SetURI();
-			CreateBucket();
-			CreateFolder(Folder);
+			BucketExists();			
 		}
 
 		private void SetURI()
@@ -213,19 +215,11 @@ namespace GeneXus.Storage.GXAmazonS3
 			response.WriteResponseStreamToFileAsync(filePath, false, CancellationToken.None).GetAwaiter().GetResult();
 		}
 
-		private void CreateBucket()
+		private void BucketExists()
 		{
 			if (!DoesS3BucketExist())
 			{
-				PutBucketRequest request = new PutBucketRequest
-				{
-					BucketName = Bucket,
-					UseClientRegion = true
-				};
-				if (defaultAcl == GxFileType.PublicRead) {
-					request.CannedACL = S3CannedACL.PublicRead;
-				}
-				PutBucket(request);
+				log.Warn(String.Format("Bucket {0} doesn't exist, please create the bucket", Bucket));
 			}
 		}
 
