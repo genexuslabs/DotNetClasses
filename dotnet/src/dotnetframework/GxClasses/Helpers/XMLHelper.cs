@@ -81,7 +81,10 @@ namespace GeneXus.Utils
 				{
 					using (StringReader sr = new StringReader(serialized))
 					{
-						deserialized = (T)(xmls.Deserialize(sr));
+						using (XmlReader xmlReader = XmlReader.Create(sr, new XmlReaderSettings { CheckCharacters = false }))
+						{
+							deserialized = (T)xmls.Deserialize(xmlReader);
+						}
 					}
 				}
 				catch (InvalidOperationException ex)
