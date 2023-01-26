@@ -30,7 +30,7 @@ namespace GeneXus.Security
 		GxResult oauthauthentication(IGxContext context, String grantType, String userName, String userPassword, String clientId, String clientSecret, String scope, out OutData outData, out String URL, out bool flag);
 		GxResult oauthauthentication(IGxContext context, String grantType, String userName, String userPassword, String clientId, String clientSecret, String scope, String additionalParameters, out OutData outData, out String URL, out bool flag);
 		void oauthgetuser(IGxContext context, out String userJson, out bool isOK);
-		void oauthlogout(IGxContext context);
+		void oauthlogout(IGxContext context, out String URL, out short statusCode);
 
 	}
 	public class GxSecurityProvider 
@@ -158,8 +158,10 @@ namespace GeneXus.Security
 			isOK = false;
 		}
 
-		public void oauthlogout(IGxContext context)
+		public void oauthlogout(IGxContext context, out string URL, out short statusCode)
 		{
+			URL = string.Empty;
+			statusCode = 0;		
 		}
 	}
 
