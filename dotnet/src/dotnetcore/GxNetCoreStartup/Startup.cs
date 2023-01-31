@@ -51,6 +51,11 @@ namespace GeneXus.Application
 					if (args.Length > 3 && Uri.UriSchemeHttps.Equals(args[3], StringComparison.OrdinalIgnoreCase))
 						schema = Uri.UriSchemeHttps;
 				}
+				else
+				{
+					LocatePhysicalLocalPath();
+
+				}
 				if (port == DEFAULT_PORT)
 				{
 					BuildWebHost(null).Run();
@@ -67,6 +72,7 @@ namespace GeneXus.Application
 				Console.Read();
 			}			
 		}
+
 		public static IWebHost BuildWebHost(string[] args) =>
 		   WebHost.CreateDefaultBuilder(args)
 			.ConfigureLogging(logging => logging.AddConsole())
@@ -85,6 +91,14 @@ namespace GeneXus.Application
 				.UseStartup<Startup>()
 				.Build();
 		}
+		private static void LocatePhysicalLocalPath()
+		{
+			string startup = FileUtil.GetStartupDirectory();
+			string startupParent = Directory.GetParent(startup).FullName;
+			if (startup == Startup.LocalPath && !File.Exists(Path.Combine(startup, Startup.APP_SETTINGS)) && File.Exists(Path.Combine(startupParent, Startup.APP_SETTINGS)))
+				Startup.LocalPath = startupParent;
+		}
+
 	}
 
 	public static class GXHandlerExtensions
@@ -109,6 +123,7 @@ namespace GeneXus.Application
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
+		internal static string APP_SETTINGS = "appsettings.json";
 
 		const string UrlTemplateControllerWithParms = "controllerWithParms";
 		const string RESOURCES_FOLDER = "Resources";
@@ -349,7 +364,7 @@ namespace GeneXus.Application
 				OnPrepareResponse = s =>
 				{
 					var path = s.Context.Request.Path;
-					if (path.HasValue &&  path.Value.IndexOf("/appsettings.json", StringComparison.OrdinalIgnoreCase)>=0)
+					if (path.HasValue &&  path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase)>=0)
 					{
 						s.Context.Response.StatusCode = 401;
 						s.Context.Response.Body = Stream.Null;
