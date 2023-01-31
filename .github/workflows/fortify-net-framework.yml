@@ -1,5 +1,5 @@
 
-name: Fortify on Demand Scan
+name: Fortify on Demand Scan (.NET Framework)
 
 # TODO: Customize trigger events based on your DevSecOps processes and typical FoD SAST scan time
 on:
