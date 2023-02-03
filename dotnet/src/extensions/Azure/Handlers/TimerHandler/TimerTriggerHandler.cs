@@ -43,7 +43,7 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 			CallMappings callmap = (CallMappings)_callmappings;
 
 			GxAzMappings map = callmap.mappings is object ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
-			string gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
+			string gxProcedure = (map != null && map is object) ? map.GXEntrypoint : string.Empty;
 			string exMessage;
 
 			if (!string.IsNullOrEmpty(gxProcedure))
