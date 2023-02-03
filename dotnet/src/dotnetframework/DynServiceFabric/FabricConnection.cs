@@ -36,30 +36,31 @@ namespace GeneXus.Data.DynService.Fabric
 		{
 			DbConnectionStringBuilder builder = new DbConnectionStringBuilder(false);
 			builder.ConnectionString = connStr;
-			object serviceUri = "";
-			object userID = "";
-			object password = "";
+			object userID;
 			if (builder.TryGetValue("User Id", out userID))
 			{
+				object password;
 				if (builder.TryGetValue("Password", out password))
 				{
 					restClient.AddAuthentication(0, "", userID.ToString(), password.ToString());
 				}
 			}
-			object ds_data = "";
-			object uri_data = "";
+
+			object ds_data;
+			object uri_data;
+			object serviceUri;
 			if (builder.TryGetValue("Data Source", out ds_data))
 				serviceUri = ds_data;
 			else
 				if (builder.TryGetValue("uri", out uri_data))
-					serviceUri = uri_data;
-				else
-					serviceUri = null;
+				serviceUri = uri_data;
+			else
+				serviceUri = null;
 
 			if (serviceUri != null)
 			{
-				String urlstring = "";
 				String[] parts = serviceUri.ToString().Split(new String[] { "://" }, StringSplitOptions.None);
+				string urlstring;
 				if (parts.Length > 1)
 				{
 					if (parts[0].Equals("https"))
@@ -126,13 +127,13 @@ namespace GeneXus.Data.DynService.Fabric
 						}
 						else
 						{
-							throw new GxADODataException("Error executing: " + restClient.ToString());
+							throw new GxADODataException("Error executing: " + restClient.ErrCode +":" + restClient.ErrDescription);
 						}
 					}
 				}
 				else
 				{
-					throw new GxADODataException("Error connecting : " + this.ConnectionString );
+					throw new GxADODataException("Error connecting : " + restClient.Url);
 				}
 			}
 			else
@@ -154,10 +155,10 @@ namespace GeneXus.Data.DynService.Fabric
 				try
 				{
 					dynamic dynresponse = jss.Deserialize(msg, queryresponse.GetType());
-					var resultdata = (dynresponse as Dictionary<string, object>)["error"];
-					if (resultdata != null)
+					object resultdata = (dynresponse as Dictionary<string, object>)["error"];
+					String resultmessage = resultdata as String;
+					if (resultmessage != null)
 					{
-						String resultmessage = resultdata as String;
 						if (resultmessage.Contains("101"))
 						{
 							statusCode = 101;
@@ -206,7 +207,7 @@ namespace GeneXus.Data.DynService.Fabric
 			FabricDataReader reader = null;
 			DataStoreHelperFabric.Query query = cursorDef.Query as DataStoreHelperFabric.Query;
 			payLoad.Clear();
-			if (query.Filters.Length == 0)
+			if (query!=null && query.Filters.Length == 0)
 			{
 				Dictionary<String, String> tempParms = new Dictionary<string, string>();
 				foreach (KeyValuePair<String, String> kvp in query.Parms)
@@ -349,7 +350,7 @@ namespace GeneXus.Data.DynService.Fabric
 				}
 				else
 				{
-					throw new GxADODataException("Error executing: " + restClient.ToString());
+					throw new GxADODataException("Error executing: " + restClient.ErrCode + ":" + restClient.ErrDescription);
 				}
 			}
 			else
