@@ -354,7 +354,7 @@ namespace com.genexus.reports
 						props.setupGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER.ToString().ToLower());
 						props.setupGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, ".");
 						props.setupGeneralProperty(Const.LEADING, "2");
-						props.setupGeneralProperty(Const.COMPLIANCE_LEVEL, "0"); 
+						props.setupGeneralProperty(Const.COMPLIANCE_LEVEL, PdfConformanceLevel.None.ToString()); 
 						props.setupGeneralProperty(Const.RUN_DIRECTION, Const.RUN_DIRECTION_LTR);
 						props.setupGeneralProperty(Const.JUSTIFIED_TYPE_ALL, "false");
 
