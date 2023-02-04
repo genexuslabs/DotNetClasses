@@ -77,6 +77,7 @@ namespace GeneXus.Application
 		   WebHost.CreateDefaultBuilder(args)
 			.ConfigureLogging(logging => logging.AddConsole())
 			.UseStartup<Startup>()
+			.UseContentRoot(Startup.LocalPath)
 			.Build();
 
 		public static IWebHost BuildWebHostPort(string[] args, string port)
@@ -89,6 +90,7 @@ namespace GeneXus.Application
 				 .ConfigureLogging(logging => logging.AddConsole())
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
+				.UseContentRoot(Startup.LocalPath)
 				.Build();
 		}
 		private static void LocatePhysicalLocalPath()
