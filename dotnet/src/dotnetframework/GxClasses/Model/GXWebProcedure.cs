@@ -17,6 +17,7 @@ namespace GeneXus.Procedure
 		protected IReportHandler reportHandler;
 		protected IReportHandler oldReportHandler;
 		string outputFileName;
+		string outputType;
 
 		protected int lineHeight;
 		protected int Gx_line;
@@ -76,6 +77,10 @@ namespace GeneXus.Procedure
 		{
 			outputFileName = fileName.Trim();
 		}
+		protected void setOutputType(string fileType)
+		{
+			outputType = fileType.Trim();
+		}
 
 		protected override void sendCacheHeaders()
 		{
@@ -110,14 +115,18 @@ namespace GeneXus.Procedure
 
 		private void setOuputFileName()
 		{
+			string fileName = GetType().Name;
+			string fileType = "pdf";
 			if (!string.IsNullOrEmpty(outputFileName))
 			{
-				context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, "inline; filename=" + outputFileName + ".pdf");
+				fileName = outputFileName;
 			}
-			else
+			if (!string.IsNullOrEmpty(outputType))
 			{
-				context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, "inline; filename=" + GetType().Name + ".pdf");
+				fileType = outputType.ToLower();
 			}
+
+			context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, $"inline; filename={fileName}.{fileType}");
 		}
 
 		public virtual int getOutputType()
