@@ -228,6 +228,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.AWS.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetry\GeneXus.OpenTelemetry.csproj", "{00B1FA38-7D0B-47E4-860C-23490249A4D6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GxSapConnector", "src\dotnetframework\GxSapConnector\GxSapConnector.csproj", "{BC5BF1D7-3AC0-42ED-8384-3AB037E1116D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GxEnterpriseConnect", "src\dotnetframework\GxEnterpriseConnect\GxEnterpriseConnect.csproj", "{7609B46C-F461-49F0-8442-9DFA85B8F5CC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxEnterpriseConnect", "src\dotnetcore\GxEnterpriseConnect\GxEnterpriseConnect.csproj", "{4D166BA9-C6CA-4FAF-A697-0E9C06521D66}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -554,6 +560,18 @@ Global
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC5BF1D7-3AC0-42ED-8384-3AB037E1116D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC5BF1D7-3AC0-42ED-8384-3AB037E1116D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC5BF1D7-3AC0-42ED-8384-3AB037E1116D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC5BF1D7-3AC0-42ED-8384-3AB037E1116D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7609B46C-F461-49F0-8442-9DFA85B8F5CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7609B46C-F461-49F0-8442-9DFA85B8F5CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7609B46C-F461-49F0-8442-9DFA85B8F5CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7609B46C-F461-49F0-8442-9DFA85B8F5CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D166BA9-C6CA-4FAF-A697-0E9C06521D66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D166BA9-C6CA-4FAF-A697-0E9C06521D66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D166BA9-C6CA-4FAF-A697-0E9C06521D66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D166BA9-C6CA-4FAF-A697-0E9C06521D66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -664,6 +682,9 @@ Global
 		{27D54041-BDD5-428E-8CA6-C96D519F5451} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
 		{B5A9DEA7-67EC-49E4-924E-4729C34286EC} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
+		{BC5BF1D7-3AC0-42ED-8384-3AB037E1116D} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
+		{7609B46C-F461-49F0-8442-9DFA85B8F5CC} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
+		{4D166BA9-C6CA-4FAF-A697-0E9C06521D66} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}

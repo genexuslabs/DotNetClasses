@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="SapEnterpriseBuild">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023;</NoWarn>
+    <WarningsNotAsErrors>CS8600;CS8603;CS8601;CS8602;CS8604;CS8600;CS8603;CS8602;CS8618;CS8600;CS8603;CS8602;CS8625</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023;</NoWarn>
+    <WarningsNotAsErrors>CS8600;CS8603;CS8601;CS8602;CS8604;CS8600;CS8603;CS8602;CS8618;CS8600;CS8603;CS8602;CS8625</WarningsNotAsErrors>
+  </PropertyGroup>
+  <Target Name="SapEnterpriseBuild">
+    <PropertyGroup>
+      <FileToCheck>$(BaseOutputPath)..\..\..\dotnetframework\libs\sapnco.dll</FileToCheck>
+      <DllFlag Condition="Exists('$(FileToCheck)')">true</DllFlag>
+      <DllFlag Condition="!Exists('$(FileToCheck)')">false</DllFlag>
+      <SapDllPresent>$(DllFlag)</SapDllPresent>
+    </PropertyGroup>
+    <ItemGroup>
+      <Reference Include="sapnco" Condition="'$(SapDllPresent)' == 'true'">
+        <SpecificVersion>False</SpecificVersion>
+        <HintPath>..\..\dotnetframework\libs\sapnco.dll</HintPath>
+      </Reference>
+      <Reference Include="sapnco_utils" Condition="'$(SapDllPresent)' == 'true'">
+        <SpecificVersion>False</SpecificVersion>
+        <HintPath>..\..\dotnetframework\libs\sapnco_utils.dll</HintPath>
+      </Reference>
+      <Reference Include="JayRock">
+        <SpecificVersion>False</SpecificVersion>
+        <HintPath>..\libs\JayRock.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+       <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+    </ItemGroup>
+   <ItemGroup>
+      <Compile Include="..\..\dotnetframework\GxSapConnector\GxSapConnectionManager.cs" Condition="'$(SapDllPresent)' == 'true'">
+        <Link>GxSapConnectionManager.cs</Link>
+      </Compile>
+      <Compile Include="..\..\dotnetframework\GxEnterpriseConnect\GxDocumentServer.cs" Condition="'$(SapDllPresent)' == 'true'">
+              <Link>GxDocumentServer.cs</Link>
+      </Compile>
+      <Compile Include="..\..\dotnetframework\GxEnterpriseConnect\GxEnterpriseConnect.cs" Condition="'$(SapDllPresent)' == 'true'">
+              <Link>GxEnterpriseConnect.cs</Link>
+      </Compile>
+      <Compile Include="..\..\dotnetframework\GxEnterpriseConnect\GxECSessionManager.cs" Condition="'$(SapDllPresent)' == 'true'">
+              <Link>GxECSessionManager.cs</Link>
+      </Compile>
+      <Compile Include="..\..\dotnetframework\GxEnterpriseConnect\GxSAPNativeRPC.cs" Condition="'$(SapDllPresent)' == 'true'">
+              <Link>GxSAPNativeRPC.cs</Link>
+      </Compile> 
+    </ItemGroup>
+  </Target>
+</Project>
