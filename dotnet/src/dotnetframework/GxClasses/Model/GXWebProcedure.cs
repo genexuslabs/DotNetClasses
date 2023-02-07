@@ -16,6 +16,8 @@ namespace GeneXus.Procedure
 		protected GXReportMetadata reportMetadata;
 		protected IReportHandler reportHandler;
 		protected IReportHandler oldReportHandler;
+		string outputFileName;
+		string outputType;
 
 		protected int lineHeight;
 		protected int Gx_line;
@@ -71,12 +73,22 @@ namespace GeneXus.Procedure
 			else
 				context.HttpContext.Response.ContentType = "text/richtext";
 		}
+		protected void setOutputFileName(string fileName)
+		{
+			outputFileName = fileName.Trim();
+		}
+		protected void setOutputType(string fileType)
+		{
+			outputType = fileType.Trim();
+		}
+
 		protected override void sendCacheHeaders()
 		{
+			
 			string utcNow = DateTime.UtcNow.ToString("ddd, dd MMM yyyy HH':'mm':'ss 'GMT'", CultureInfo.GetCultureInfo("en-US"));
 			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.CONTENT_DISPOSITION)))
 			{
-				context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, "inline; filename=" + GetType().Name + ".pdf");
+				setOuputFileName();
 			}
 			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.EXPIRES)))
 			{
@@ -100,6 +112,23 @@ namespace GeneXus.Procedure
 				}
 			}
 		}
+
+		private void setOuputFileName()
+		{
+			string fileName = GetType().Name;
+			string fileType = "pdf";
+			if (!string.IsNullOrEmpty(outputFileName))
+			{
+				fileName = outputFileName;
+			}
+			if (!string.IsNullOrEmpty(outputType))
+			{
+				fileType = outputType.ToLower();
+			}
+
+			context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, $"inline; filename={fileName}.{fileType}");
+		}
+
 		public virtual int getOutputType()
 		{
 			return GxReportUtils.GetOutputType();
@@ -109,6 +138,9 @@ namespace GeneXus.Procedure
 			string idiom;
 			if (!Config.GetValueOf("LANGUAGE", out idiom))
 				idiom = "eng";
+#if NETCORE
+			setOuputFileName();
+#endif
 			getPrinter().GxRVSetLanguage(idiom);
 			int xPage = gxXPage;
 			int yPage = gxYPage;
