@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,7 +44,7 @@ namespace PushSharp.Apple
 				(sender, cert, chain, sslErrs) => { return true; },
 				(sender, targetHost, localCerts, remoteCert, acceptableIssuers) => { return certificate; });
 
-			stream.AuthenticateAsClient(settings.FeedbackHost, certificates, System.Security.Authentication.SslProtocols.Tls, false);
+			stream.AuthenticateAsClient(settings.FeedbackHost, certificates, System.Security.Authentication.SslProtocols.Tls12, false);
 
 
 			//Set up

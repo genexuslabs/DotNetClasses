@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -177,7 +177,7 @@ namespace Artech.Genexus.SDAPI
 
                         try
                         {
-                            sslStream.AuthenticateAsClient(server, clientCertificateCollection, SslProtocols.Tls, true);
+                            sslStream.AuthenticateAsClient(server, clientCertificateCollection, SslProtocols.Tls12, true);
                         }
                         catch (Exception e)
                         {
