@@ -1,4 +1,7 @@
 using System;
+using System.ServiceModel;
+using System.Xml;
+using System.Runtime.Serialization;
 using GeneXus.Application;
 using GeneXus.Http;
 

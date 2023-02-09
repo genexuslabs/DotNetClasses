@@ -38,6 +38,10 @@
       <Name>GxClasses</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
+  </ItemGroup>
   <Target Name="SapEnterpriseBuild">
     <PropertyGroup>
       <FileToCheck>$(BaseOutputPath)..\..\libs\sapnco.dll</FileToCheck>
