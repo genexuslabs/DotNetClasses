@@ -258,9 +258,9 @@ namespace GeneXus.Application
 			else if (_responseData.Count >= 1 && !_responseData.ContainsKey(varName.ToLower()))
 			{
 #if NETCORE
-				sdt.FromJSonString(JsonSerializer.Serialize(_responseData), null);
+				sdt.FromJSonString("{" + varName + ":" + JsonSerializer.Serialize(_responseData) + "}", null);
 #else
-				sdt.FromJSonString(JSONHelper.Serialize(_responseData), null);
+				sdt.FromJSonString("{" + varName + ":" + JSONHelper.Serialize(_responseData) + "}", null);
 #endif
 			}
 			return sdt;
