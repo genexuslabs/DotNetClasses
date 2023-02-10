@@ -47,7 +47,6 @@ namespace com.genexus.reports
 		private bool fontStrikethru;
 		private int fontSize;
 		private string language;
-		private bool hasImage;
 
 		//Color for, BaseColor for => Itext5
 		private object backColor, foreColor, templateColorFill;
@@ -316,7 +315,11 @@ namespace com.genexus.reports
 			printerSettings.setupProperty(form, Const.COLOR, color + "");
 			printerSettings.setupProperty(form, Const.DUPLEX, duplex + "");
 		}
-
+		internal static void SetDefaultComplianceLevel(PdfConformanceLevel level)
+		{
+			if (props!=null)
+				props.setGeneralProperty(Const.COMPLIANCE_LEVEL, level.ToString());
+		}
 		private void loadProps()
 		{
 			if (props == null)
@@ -806,7 +809,6 @@ namespace com.genexus.reports
 		{
 			try
 			{
-				hasImage = true;
 				iTextSharp.text.Image image;
 				iTextSharp.text.Image imageRef;
 				
@@ -2002,13 +2004,10 @@ namespace com.genexus.reports
 			}
 			if (IsPdfA())
 			{
-				if (hasImage)
+				using (Stream iccProfile = ReadResource("sRGB Color Space Profile.icm"))
 				{
-					using (Stream iccProfile = ReadResource("sRGB Color Space Profile.icm"))
-					{
-						ICC_Profile icc = ICC_Profile.GetInstance(iccProfile);
-						writer.SetOutputIntents("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", icc);
-					}
+					ICC_Profile icc = ICC_Profile.GetInstance(iccProfile);
+					writer.SetOutputIntents("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", icc);
 				}
 
 				writer.ExtraCatalog.Put(PdfName.LANG, new PdfString(Config.GetCultureForLang(language).Name));

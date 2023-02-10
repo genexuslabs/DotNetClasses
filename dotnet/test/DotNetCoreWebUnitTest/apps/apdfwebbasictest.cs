@@ -79,6 +79,7 @@ namespace GeneXus.Programs
             H1N0( false, 193) ;
             getPrinter().GxAttris("Microsoft Sans Serif", 14, false, false, false, false, 0, 0, 0, 0, 0, 255, 255, 255) ;
             getPrinter().GxDrawText("Item List", 17, Gx_line+33, 400, Gx_line+66, 0, 0, 0, 0) ;
+			getPrinter().GxDrawRect(33, Gx_line+33, 133, Gx_line+63, 1, 0, 0, 0, 0, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0) ;
             getPrinter().GxAttris("Microsoft Sans Serif", 10, true, false, false, false, 0, 0, 0, 0, 0, 255, 255, 255) ;
             getPrinter().GxDrawText("Code", 100, Gx_line+83, 140, Gx_line+101, 0+256, 0, 0, 0) ;
             getPrinter().GxDrawText("Name", 183, Gx_line+83, 283, Gx_line+101, 0, 0, 0, 0) ;

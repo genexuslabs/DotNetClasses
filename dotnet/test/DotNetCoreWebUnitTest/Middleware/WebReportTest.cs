@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Codeuctivity;
+using com.genexus.reports;
 using GeneXus.Metadata;
 using Spire.Pdf;
 using Xunit;
@@ -11,17 +12,22 @@ namespace xUnitTesting
 {
 	public class WebReportTest : MiddlewareTest
 	{
-		public WebReportTest():base()
+		public WebReportTest() : base()
 		{
 			ClassLoader.FindType("apdfwebbasictest", "GeneXus.Programs", "apdfwebbasictest", Assembly.GetExecutingAssembly(), true);//Force loading assembly for webhook procedure
-			server.AllowSynchronousIO=true;
+			server.AllowSynchronousIO = true;
 		}
 		[Fact]
-		public async Task TestPDFA()
+		public void TestPDFA()
 		{
 			HttpClient client = server.CreateClient();
-
-			HttpResponseMessage response = await client.GetAsync("apdfwebbasictest.aspx");
+			TestPDFA_1AB(client, "apdfwebbasictest.aspx", Spire.Pdf.PdfConformanceLevel.Pdf_A1A).GetAwaiter().GetResult();
+			PDFReportItextSharp.SetDefaultComplianceLevel(com.genexus.reports.PdfConformanceLevel.Pdf_A1B);
+			TestPDFA_1AB(client, "apdfwebbasictest.aspx", Spire.Pdf.PdfConformanceLevel.Pdf_A1B).GetAwaiter().GetResult();
+		}
+		async Task TestPDFA_1AB(HttpClient client, string serviceName, Spire.Pdf.PdfConformanceLevel expectedLevel)
+		{
+			HttpResponseMessage response = await client.GetAsync(serviceName);
 			response.EnsureSuccessStatusCode();
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 			String fileName = response.Content.Headers.ContentDisposition.FileName;
@@ -32,9 +38,9 @@ namespace xUnitTesting
 			}
 			PdfDocument pdf = new PdfDocument();
 			pdf.LoadFromFile(fileName);
-			PdfConformanceLevel conformance = pdf.Conformance;
+			Spire.Pdf.PdfConformanceLevel conformance = pdf.Conformance;
 
-			Assert.Equal(PdfConformanceLevel.Pdf_A1A, conformance);
+			Assert.True(expectedLevel == conformance, $"Conformance level is {conformance} but {expectedLevel} was expected");
 
 			PdfAValidator pdfAValidator = new PdfAValidator();
 			Report result = await pdfAValidator.ValidateWithDetailedReportAsync(fileName);
