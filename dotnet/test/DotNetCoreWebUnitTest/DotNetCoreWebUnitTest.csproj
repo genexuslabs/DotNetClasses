@@ -68,7 +68,7 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="PDFReport.ini">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="uruguay.flag.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
