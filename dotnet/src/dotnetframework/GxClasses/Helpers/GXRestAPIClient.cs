@@ -332,7 +332,7 @@ namespace GeneXus.Application
 			}
 			else
 			{
-				if (this.httpMethod == "POST" || this.httpMethod == "PUT")
+				if (this.httpMethod == "POST" || this.httpMethod == "PUT" || this.httpMethod == "PATCH")
 				{
 					_bodyString = "{}";
 					httpClient.AddString(_bodyString);
