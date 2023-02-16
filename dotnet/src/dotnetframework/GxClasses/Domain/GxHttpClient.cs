@@ -756,6 +756,7 @@ namespace GeneXus.Http.Client
 		{
 			if (UseOldHttpClient(name))
 			{
+				GXLogging.Debug(log, "Using legacy GxHttpClient");
 				WebExecute(method, name);
 			}
 			else
@@ -1188,6 +1189,13 @@ namespace GeneXus.Http.Client
 				}
 			}
 #endif
+			catch (Exception e)
+			{
+				GXLogging.Warn(log, "Error Execute", e);
+				_errCode = 1;
+				_errDescription = e.Message;
+			}
+
 
 			_receiveData = Array.Empty<byte>();
 			if (resp != null)
