@@ -43,10 +43,10 @@ namespace GeneXus.Application
 				bool gxinsertorupdate = IsRestParameter(INSERT_OR_UPDATE_PARAMETER);
 
 				GxSilentTrnSdt entity = (GxSilentTrnSdt)Activator.CreateInstance(_worker.GetType(), new Object[] { _gxContext });
-				var entity_interface = MakeRestType(entity);
+				var entity_interface = MakeRestType(entity, false);
 				entity_interface = ReadRequestBodySDTObj(entity_interface.GetType());
 
-				var worker_interface = MakeRestType(_worker);
+				var worker_interface = MakeRestType(_worker, false);
 				
 				worker_interface.GetType().GetMethod("CopyFrom").Invoke(worker_interface, new object[] { entity_interface });
 				if (gxcheck)
@@ -72,7 +72,7 @@ namespace GeneXus.Application
 						SetStatusCode(HttpStatusCode.Created);
 					}
 					SetMessages(_worker.trn.GetMessages());
-					return Serialize(MakeRestType(_worker));
+					return Serialize(MakeRestType(_worker, false));
 				}
 				else
 				{
@@ -119,7 +119,7 @@ namespace GeneXus.Application
 					if (_worker.Success())
 					{
 						SetMessages(_worker.trn.GetMessages());
-						return Serialize(MakeRestType(_worker));
+						return Serialize(MakeRestType(_worker, false));
 					}
 					else
 					{
@@ -157,7 +157,7 @@ namespace GeneXus.Application
 					{
 						_worker.trn.context.CommitDataStores();
 						SetMessages(_worker.trn.GetMessages());
-						return Serialize(MakeRestType(_worker));
+						return Serialize(MakeRestType(_worker, false));
 					}
 					else
 					{
@@ -191,12 +191,12 @@ namespace GeneXus.Application
 				{
 					bool gxcheck = IsRestParameter(CHECK_PARAMETER);
 					GxSilentTrnSdt entity = (GxSilentTrnSdt)Activator.CreateInstance(_worker.GetType(), new Object[] { _gxContext });
-					var entity_interface = MakeRestType(entity);
+					var entity_interface = MakeRestType(entity, false);
 					entity_interface = ReadRequestBodySDTObj(entity_interface.GetType());
 					string entityHash = entity_interface.GetType().GetProperty("Hash").GetValue(entity_interface) as string;
 
 					ReflectionHelper.CallBCMethod(_worker, LOAD_METHOD, key);
-					var worker_interface = MakeRestType(_worker);
+					var worker_interface = MakeRestType(_worker, false);
 					string currentHash = worker_interface.GetType().GetProperty("Hash").GetValue(worker_interface) as string;
 					if (entityHash == currentHash)
 					{

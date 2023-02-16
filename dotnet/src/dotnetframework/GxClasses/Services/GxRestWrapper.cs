@@ -141,7 +141,7 @@ namespace GeneXus.Application
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
-				RestProcess(outputParameters);
+				RestProcess(_procWorker, outputParameters);
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
 				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
@@ -329,7 +329,7 @@ namespace GeneXus.Application
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
-				RestProcess(outputParameters);			  
+				RestProcess(_procWorker, outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
 				ServiceHeaders();
@@ -799,7 +799,7 @@ namespace GeneXus.Application
 			sdt.FromJSonString(value);
 		}
 
-		private static void RestProcess(Dictionary<string, object> outputParameters)
+		private static void RestProcess(GXBaseObject worker, Dictionary<string, object> outputParameters)
 		{
 			foreach (string k in outputParameters.Keys.ToList())
 			{
@@ -810,7 +810,7 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					object o = MakeRestType(outputParameters[k]);
+					object o = MakeRestType(outputParameters[k], worker.IsApiObject);
 					if (p !=null && p.SdtSerializeAsNull())
 					{						
 						outputParameters[k] = JNull.Value;
@@ -826,7 +826,7 @@ namespace GeneXus.Application
 			}			
 		}
 		
-		protected static object MakeRestType(object v)
+		protected static object MakeRestType( object v, bool isApiObject)
 		{
 			Type vType = v.GetType();
 			Type itemType;
@@ -834,7 +834,7 @@ namespace GeneXus.Application
 			{
 				Type restItemType=null;
 				itemType = v.GetType().GetGenericArguments()[0];
-				if (typeof(IGXBCCollection).IsAssignableFrom(vType))//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				if ((typeof(IGXBCCollection).IsAssignableFrom(vType)) && !isApiObject)//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
 				{
 					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
 				}
