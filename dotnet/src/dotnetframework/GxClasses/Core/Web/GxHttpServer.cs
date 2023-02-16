@@ -396,7 +396,7 @@ namespace GeneXus.Http.Server
 		public override string ToString()
 		{
 			if (_httpReq == null)
-				return String.Empty;
+				return string.Empty;
 #if NETCORE
 			return _httpReq.GetRawBodyString();
 #else
