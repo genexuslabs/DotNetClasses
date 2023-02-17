@@ -271,7 +271,12 @@ namespace GeneXus.SAP
 			return  connection.IsConnected(this.sessionName);
 		}
 
-        public void Connect()
+		public void ConnectSession(string SessionName, string Scope)
+		{
+			Connect();
+		}
+
+		public void Connect()
         {
             _context.SetContextProperty("SessionName", this.SessionName);
             connection =  new GxEnterpriseConnect(this);                

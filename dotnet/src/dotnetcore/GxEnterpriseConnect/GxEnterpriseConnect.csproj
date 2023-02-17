@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -17,7 +17,7 @@
   </PropertyGroup>
   <Target Name="SapEnterpriseBuild">
     <PropertyGroup>
-      <FileToCheck>$(BaseOutputPath)..\..\..\dotnetframework\libs\sapnco.dll</FileToCheck>
+      <FileToCheck>$(BaseOutputPath)..\..\libs\sapnco.dll</FileToCheck>
       <DllFlag Condition="Exists('$(FileToCheck)')">true</DllFlag>
       <DllFlag Condition="!Exists('$(FileToCheck)')">false</DllFlag>
       <SapDllPresent>$(DllFlag)</SapDllPresent>
@@ -25,23 +25,20 @@
     <ItemGroup>
       <Reference Include="sapnco" Condition="'$(SapDllPresent)' == 'true'">
         <SpecificVersion>False</SpecificVersion>
-        <HintPath>..\..\dotnetframework\libs\sapnco.dll</HintPath>
+        <HintPath>..\libs\sapnco.dll</HintPath>
       </Reference>
       <Reference Include="sapnco_utils" Condition="'$(SapDllPresent)' == 'true'">
         <SpecificVersion>False</SpecificVersion>
-        <HintPath>..\..\dotnetframework\libs\sapnco_utils.dll</HintPath>
+        <HintPath>..\libs\sapnco_utils.dll</HintPath>
       </Reference>
       <Reference Include="JayRock">
         <SpecificVersion>False</SpecificVersion>
         <HintPath>..\libs\JayRock.dll</HintPath>
       </Reference>
-    </ItemGroup>
-    <ItemGroup>
-       <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
-    </ItemGroup>
+   </ItemGroup>
    <ItemGroup>
       <Compile Include="..\..\dotnetframework\GxSapConnector\GxSapConnectionManager.cs" Condition="'$(SapDllPresent)' == 'true'">
-        <Link>GxSapConnectionManager.cs</Link>
+              <Link>GxSapConnectionManager.cs</Link>
       </Compile>
       <Compile Include="..\..\dotnetframework\GxEnterpriseConnect\GxDocumentServer.cs" Condition="'$(SapDllPresent)' == 'true'">
               <Link>GxDocumentServer.cs</Link>
