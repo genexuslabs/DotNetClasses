@@ -108,16 +108,16 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 
 								//Payload
 
-								GxUserType eventMessageProperty = CreateEventMessageProperty(eventMessageItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToUniversalTime().ToString(), gxcontext);
+								GxUserType eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToUniversalTime().ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
-								eventMessageProperty = CreateEventMessageProperty(eventMessageItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToUniversalTime().ToString(), gxcontext);
+								eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToUniversalTime().ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
-								eventMessageProperty = CreateEventMessageProperty(eventMessageItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToUniversalTime().ToString(), gxcontext);
+								eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToUniversalTime().ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
-								eventMessageProperty = CreateEventMessageProperty(eventMessageItemType, "IsPastDue", TimerInfo.IsPastDue.ToString(), gxcontext);
+								eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "IsPastDue", TimerInfo.IsPastDue.ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
 								//Event
