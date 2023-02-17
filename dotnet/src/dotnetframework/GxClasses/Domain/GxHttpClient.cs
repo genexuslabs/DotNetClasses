@@ -744,10 +744,17 @@ namespace GeneXus.Http.Client
 				return true;
 
 #if !NETCORE
-			string requestUrl = GetRequestURL(name);
-			Uri uri = new Uri(requestUrl);
-			if (!uri.IsDefaultPort)
-				return true;
+			try
+			{
+				string requestUrl = GetRequestURL(name);
+				Uri uri = new Uri(requestUrl);
+				if (!uri.IsDefaultPort)
+					return true;
+			}
+			catch (Exception e)
+			{
+				GXLogging.Warn(log, "UseOldHttpClient", e);
+			}
 #endif
 			return false;
 		}
