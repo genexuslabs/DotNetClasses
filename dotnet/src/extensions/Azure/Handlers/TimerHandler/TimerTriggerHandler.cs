@@ -94,53 +94,53 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 							{
 								//Initialization
 
-								Type EventMessagesType = parameters[0].ParameterType; //SdtEventMessages
-								GxUserType EventMessages = (GxUserType)Activator.CreateInstance(EventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
+								Type eventMessagesType = parameters[0].ParameterType; //SdtEventMessages
+								GxUserType eventMessages = (GxUserType)Activator.CreateInstance(eventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
 
-								IList EventMessage = (IList)ClassLoader.GetPropValue(EventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
-								Type EventMessageItemType = EventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
+								IList eventMessage = (IList)ClassLoader.GetPropValue(eventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
+								Type eventMessageItemType = eventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
 
-								GxUserType EventMessageItem = (GxUserType)Activator.CreateInstance(EventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
-								IList CustomPayload = (IList)ClassLoader.GetPropValue(EventMessageItem, "gxTpr_Eventmessagecustompayload");//instance of GXBaseCollection<SdtEventCustomPayload_CustomPayloadItem>
+								GxUserType eventMessageItem = (GxUserType)Activator.CreateInstance(eventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
 
-								Type CustomPayloadItemType = CustomPayload.GetType().GetGenericArguments()[0];//SdtEventCustomPayload_CustomPayloadItem
+								IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
+								Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
 
 
 								//Payload
 
-								GxUserType CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToUniversalTime().ToString(), gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
+								GxUserType eventMessageProperty = CreateEventMessageProperty(eventMessageItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToUniversalTime().ToString(), gxcontext);
+								eventMessageProperties.Add(eventMessageProperty);
 
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToUniversalTime().ToString(), gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
+								eventMessageProperty = CreateEventMessageProperty(eventMessageItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToUniversalTime().ToString(), gxcontext);
+								eventMessageProperties.Add(eventMessageProperty);
 
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToUniversalTime().ToString(), gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
+								eventMessageProperty = CreateEventMessageProperty(eventMessageItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToUniversalTime().ToString(), gxcontext);
+								eventMessageProperties.Add(eventMessageProperty);
 
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "IsPastDue", TimerInfo.IsPastDue.ToString(), gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
+								eventMessageProperty = CreateEventMessageProperty(eventMessageItemType, "IsPastDue", TimerInfo.IsPastDue.ToString(), gxcontext);
+								eventMessageProperties.Add(eventMessageProperty);
 
 								//Event
 
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageid", messageId.ToString());
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.Timer);
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedate", DateTime.UtcNow);
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagecustompayload", CustomPayload);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", messageId.ToString());
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.Timer);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", DateTime.UtcNow);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
 
 								//List of Events
-								EventMessage.Add(EventMessageItem);
-								parametersdata = new object[] { EventMessages, null };
+								eventMessage.Add(eventMessageItem);
+								parametersdata = new object[] { eventMessages, null };
 							}
 							try
 							{
 								method.Invoke(objgxproc, parametersdata);
 								GxUserType EventMessageResponse = parametersdata[1] as GxUserType;//SdtEventMessageResponse
-								bool result = (bool)ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Handled");
+								bool result = (bool)ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Handlefailure");
 
 								//Error handling
 
-								if (result == false) //Must retry
+								if (result == true) //Must retry
 								{
 									exMessage = string.Format("{0} {1}", FunctionExceptionType.AppError, ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Errormessage"));
 									throw new Exception(exMessage);
@@ -175,13 +175,12 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				throw new Exception(exMessage);
 			}
 		}
-		private GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
+		private GxUserType CreateEventMessageProperty(Type eventMessPropsItemType, string propertyId, object propertyValue, GxContext gxContext)
 		{
-			GxUserType CustomPayloadItem = (GxUserType)Activator.CreateInstance(customPayloadItemType, new object[] { gxContext });
-			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyid", propertyId);
-			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyvalue", propertyValue);
-			return CustomPayloadItem;
-
+			GxUserType eventMessageProperty = (GxUserType)Activator.CreateInstance(eventMessPropsItemType, new object[] { gxContext }); // instance of SdtEventMessageProperty
+			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyid", propertyId);
+			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyvalue", propertyValue);
+			return eventMessageProperty;
 		}
 	}	
 	public class MyInfo
