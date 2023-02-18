@@ -10,6 +10,7 @@ namespace GeneXus.Application
 	public class GxObjectProperties
 	{
 		private GxLocation location = null;
+		private string protocol = "rest";
 		private string errorMessage = String.Empty;
 		private int errorCode = 0;
 		private int statusCode = 0;
@@ -18,6 +19,7 @@ namespace GeneXus.Application
 		public string ErrorMessage { get => errorMessage; set => errorMessage = value; }
 		public int ErrorCode { get => errorCode; set => errorCode = value; }
 		public int StatusCode { get => statusCode; set => statusCode = value; }
+		public string Protocol { get => protocol; set => protocol = value; }
 	}
 
 	public class GxObjectsConfiguration {
