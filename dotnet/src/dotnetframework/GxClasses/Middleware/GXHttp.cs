@@ -2232,15 +2232,6 @@ namespace GeneXus.Http
 		{
 			return GXUtil.CompressResponse();
 		}
-
-		protected virtual void Render(HtmlTextWriter output)
-		{
-			ControlOutputWriter = output;
-			LoadParameters(Parms);
-			InitPrivates();
-			webExecuteEx(localHttpContext);
-		}
-
 		public void InitPrivates()
 		{
 			context.GX_msglist = new msglist();
