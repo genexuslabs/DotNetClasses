@@ -356,12 +356,25 @@ namespace GeneXus.Http.Client
 					sHost = sHost.Substring(0, sHost.Length - 1);
 			}
 			sBaseUrl = _baseUrl;
-			if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
-				sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
-			_url = _scheme + sHost + sPort + "/" + sBaseUrl;
+			if (IsAbsolute(sBaseUrl))
+			{
+				_url = sBaseUrl;
+			}
+			else
+			{
+				if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
+					sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
+
+				_url = _scheme + sHost + sPort + "/" + sBaseUrl;
+			}
 			if (_url.EndsWith("/"))
 				_url = _url.Substring(0, _url.Length - 1);
 		}
+		bool IsAbsolute(string url)
+		{
+			return Uri.IsWellFormedUriString(url, UriKind.Absolute);
+		}
+
 		public void ClearHeaders()
 		{
 			_headers.Clear();
@@ -1027,10 +1040,17 @@ namespace GeneXus.Http.Client
 				return name;
 			else
 			{
-				if (!string.IsNullOrEmpty(name) && name.IndexOf('/') == 0)
-					return _url + name;
+				if (IsAbsolute(name))
+				{
+					return name;
+				}
 				else
-					return _url + "/" + name;
+				{
+					if (!string.IsNullOrEmpty(name) && name.IndexOf('/') == 0)
+						return _url + name;
+					else
+						return _url + "/" + name;
+				}
 			}
 		}
 #if !NETCORE
