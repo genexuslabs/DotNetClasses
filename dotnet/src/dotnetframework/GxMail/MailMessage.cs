@@ -624,68 +624,71 @@ namespace GeneXus.Mail.Internals.Pop3
         */
         internal static DateTime GetMessageDate(string stringDate)
 		{
-            DateTime messageTime;
+            DateTime messageTime = DateTime.Now;
 			try
 			{
-				bool oldDateSpec = (stringDate.IndexOf("/") != -1);
-				bool hasStrDay = (stringDate.IndexOf(",") > 0); //StrDay is not empty
-				string dateStr = RemoveQuotes(stringDate.Replace("/", " ").Replace(",", "").Trim());
-				string[] dateParts = dateStr.Split(" ".ToCharArray());
-
-				int i = hasStrDay?0:-1;
-				if (!IsNumber(dateParts[i+1]))
-					i = i + 1;
-
-				if (oldDateSpec)
+				if (!string.IsNullOrEmpty(stringDate))
 				{
-					string[] tmpDateParts = new string[dateParts.Length];
-					for(int j=0; j<dateParts.Length; j++)
+					bool oldDateSpec = (stringDate.IndexOf("/") != -1);
+					bool hasStrDay = (stringDate.IndexOf(",") > 0); //StrDay is not empty
+					string dateStr = RemoveQuotes(stringDate.Replace("/", " ").Replace(",", "").Trim());
+					string[] dateParts = dateStr.Split(" ".ToCharArray());
+
+					int i = hasStrDay ? 0 : -1;
+					if (!IsNumber(dateParts[i + 1]))
+						i = i + 1;
+
+					if (oldDateSpec)
 					{
-						if (j == (i+1))
-							tmpDateParts[j] = dateParts[i+2];
-						else if (j == (i+2))
-							tmpDateParts[j] = dateParts[i+1];
-						else
-							tmpDateParts[j] = dateParts[j];
+						string[] tmpDateParts = new string[dateParts.Length];
+						for (int j = 0; j < dateParts.Length; j++)
+						{
+							if (j == (i + 1))
+								tmpDateParts[j] = dateParts[i + 2];
+							else if (j == (i + 2))
+								tmpDateParts[j] = dateParts[i + 1];
+							else
+								tmpDateParts[j] = dateParts[j];
+						}
+						dateParts = tmpDateParts;
 					}
-					dateParts = tmpDateParts;
+
+					//parse date
+					int day = int.Parse(dateParts[i + 1]);
+					int month = oldDateSpec ? int.Parse(dateParts[i + 2]) : GetMonthIndex(dateParts[i + 2]);
+					int year = int.Parse(dateParts[i + 3]);
+
+					//parse time
+					string[] tmpTime = dateParts[i + 4].Split(":".ToCharArray());
+					int hr = int.Parse(tmpTime[0]);
+					int mm = 0, ss = 0;
+
+					if (tmpTime.Length > 1)
+						mm = int.Parse(tmpTime[1]);
+
+					if (tmpTime.Length > 2)
+						ss = int.Parse(tmpTime[2]);
+
+					string timeZoneOffset = string.Empty;
+					if (dateParts.Length > i + 5)
+					{
+						timeZoneOffset = dateParts[i + 5];
+					}
+
+					messageTime = DateTimeUtil.DateTimeWithTimeZoneToUTC(year, month, day, hr, mm, ss, timeZoneOffset);
+					if (GeneXus.Application.GxContext.Current != null)
+					{
+						messageTime = DateTimeUtil.FromTimeZone(messageTime, "Etc/UTC", GeneXus.Application.GxContext.Current);
+					}
+					else
+					{
+						messageTime = messageTime.ToLocalTime();
+					}
 				}
-
-				//parse date
-				int day = int.Parse(dateParts[i+1]);
-				int month = oldDateSpec?int.Parse(dateParts[i+2]):GetMonthIndex(dateParts[i+2]);
-				int year = int.Parse(dateParts[i+3]);
-
-				//parse time
-				string[] tmpTime = dateParts[i+4].Split(":".ToCharArray());
-				int hr = int.Parse(tmpTime[0]);
-				int mm = 0, ss = 0;
-
-				if (tmpTime.Length > 1) 
-					mm = int.Parse(tmpTime[1]);
-
-				if (tmpTime.Length > 2) 
-					ss = int.Parse(tmpTime[2]);
-
-                string timeZoneOffset = string.Empty;
-                if (dateParts.Length > i + 5)
-                {
-                    timeZoneOffset = dateParts[i + 5];
-                }
-
-                messageTime = DateTimeUtil.DateTimeWithTimeZoneToUTC(year, month, day, hr, mm, ss, timeZoneOffset);              
-                if (GeneXus.Application.GxContext.Current != null)
-                {                    
-                    messageTime = DateTimeUtil.FromTimeZone(messageTime, "Etc/UTC", GeneXus.Application.GxContext.Current);
-                }
-                else
-                {
-                    messageTime = messageTime.ToLocalTime();
-                }
 			}
-			catch
+			catch(Exception ex) 
 			{
-				messageTime = DateTime.Now;
+				GXLogging.Warn(log, $"Date {stringDate} can't be parsed", ex);
 			}
 			return messageTime;
 		}
