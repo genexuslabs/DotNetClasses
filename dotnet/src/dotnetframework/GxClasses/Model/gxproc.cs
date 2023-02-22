@@ -59,6 +59,42 @@ namespace GeneXus.Procedure
 #endif
 		}
 
+		/*protected static int MainImpl(string[] args, GXProcedure instance)
+		{
+			try
+			{
+				Config.ParseArgs(ref args);
+				return instance.ExecuteCmdLine(args);
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+				return 1;
+			}
+		}
+		protected virtual int ExecuteCmdLine(string[] args)
+		{
+			return GX.GXRuntime.ExitCode;
+		}*/
+		protected void SubmitImpl()
+		{
+			context.SetSubmitInitialConfig(context);
+			initialize();
+			Submit(ExecutePrivateCatch, this);
+		}
+		protected virtual void ExecutePrivateCatch(object stateInfo)
+		{
+			try
+			{
+				((GXProcedure)stateInfo).ExecutePrivate();
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+			}
+		}
 		public bool DisconnectAtCleanup
 		{
 			get{ return disconnectUserAtCleanup;}

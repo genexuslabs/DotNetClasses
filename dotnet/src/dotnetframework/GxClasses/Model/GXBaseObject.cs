@@ -19,6 +19,14 @@ namespace GeneXus.Application
 		protected IGxContext _Context;
 		bool _isMain;
 		protected bool _isApi;
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected virtual void ExecuteImpl()
+		{
+			ExecutePrivate();
+		}
 
 		public virtual IGxContext context
 		{

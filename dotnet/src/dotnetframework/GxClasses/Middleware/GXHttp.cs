@@ -48,7 +48,7 @@ namespace GeneXus.Http
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
-	public abstract class GXHttpHandler : WebControl, IHttpHandler
+	public abstract class GXHttpHandler : IHttpHandler
 #endif
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GXHttpHandler));
@@ -77,6 +77,17 @@ namespace GeneXus.Http
 			initpars();
 		}
 
+#if !NETCORE
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected virtual void ExecuteImpl()
+		{
+			ExecutePrivate();
+		}
+
+#endif
 		public virtual void SetPrefix(string s)
 		{
 		}
@@ -2222,15 +2233,8 @@ namespace GeneXus.Http
 			return GXUtil.CompressResponse();
 		}
 
-#if NETCORE
 		protected virtual void Render(HtmlTextWriter output)
-#else
-		protected override void Render(HtmlTextWriter output)
-#endif
 		{
-#if !NETCORE
-			localHttpContext = Context;         
-#endif
 			ControlOutputWriter = output;
 			LoadParameters(Parms);
 			InitPrivates();
@@ -2833,20 +2837,6 @@ namespace GeneXus.Http
 			initialize();
 		}
 
-		protected override void Render(HtmlTextWriter output)
-		{
-			ControlOutputWriter = output;
-#if NETCORE
-			localHttpContext = localHttpContext;
-#else
-			localHttpContext = Context;
-#endif
-			LoadParameters(Parms);
-			InitPrivates();
-			SetPrefix(_prefixId + "_");         // Load Prefix from Name property
-			initpars();                         // Initialize Iterator Parameters
-			webExecuteEx(localHttpContext);
-		}
 		public virtual void componentdrawstyles()
 		{
 		}
