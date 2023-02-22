@@ -257,16 +257,19 @@ namespace GeneXus.Application
 			}
 			else if (_responseData.Count >= 1 && !_responseData.ContainsKey(varName.ToLower()))
 			{
+
 #if NETCORE
-				if (sdt.FromJSonString(JsonSerializer.Serialize(_responseData).ToString(), null))
+				string rData = JsonSerializer.Serialize(_responseData);
+				if (sdt.FromJSonString(rData, null))
 					return sdt;
 				else
-					sdt.FromJSonString("{" + varName + ":" + JsonSerializer.Serialize(_responseData) + "}", null);
+					sdt.FromJSonString("{" + varName + ":" + rData + "}", null);
 #else
-				if (sdt.FromJSonString(JSONHelper.Serialize(_responseData).ToString(), null))
+				string rData = JSONHelper.Serialize(_responseData);
+				if (sdt.FromJSonString(rData, null))
 					return sdt;
 				else
-					sdt.FromJSonString("{" + varName + ":" + JSONHelper.Serialize(_responseData) + "}", null);
+					sdt.FromJSonString("{" + varName + ":" + rData + "}", null);
 #endif
 			}
 			return sdt;
