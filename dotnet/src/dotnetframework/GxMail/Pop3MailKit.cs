@@ -197,7 +197,7 @@ namespace GeneXus.Mail
 
 		private void ProcessMailAttachments(GXMailMessage gxmessage, IEnumerable<MimeEntity> attachs)
 		{
-			if (attachs == null || attachs.GetEnumerator().MoveNext())	// Si MoveNext es false significa que el attach viene vacio
+			if (attachs == null)
 				return;
 
 			if (DownloadAttachments)
@@ -229,7 +229,7 @@ namespace GeneXus.Mail
 
 		private void SaveAttachedFile(MimeEntity attach, string attachName)
 		{
-			using (var stream = File.Create(AttachDir + attachName))
+			using (var stream = File.Create(Path.Combine(AttachDir, attachName)))
 			{
 				if (attach is MessagePart)
 				{
