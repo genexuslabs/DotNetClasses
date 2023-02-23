@@ -1,4 +1,6 @@
+using GeneXus.Mock;
 using GeneXus.Programs;
+using MockDBAccess;
 using NUnit.Framework;
 
 namespace TestMockDBAccess
@@ -17,5 +19,16 @@ namespace TestMockDBAccess
 			new aabmtest().executeCmdLine(null) ;
 
         }
-    }
+		[Test]
+		public void TestMockProcedure()
+		{
+			IGxMock mock= new GXMockProcedure();
+			GxMockProvider.Provider = mock;
+			aprocmain test = new aprocmain();
+			test.executeCmdLine(new string[] {"1","2"});
+			string msg = test.GX_msglist.getItemText(1);
+			Assert.AreEqual("Mocking aprocmain Parameters:[AV8clientid,Int16,in] [AV9Number,Int16&,ref] [AV10Message,String&,ref] ", msg);
+
+		}
+	}
 }

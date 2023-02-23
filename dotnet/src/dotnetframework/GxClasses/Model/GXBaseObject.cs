@@ -1,5 +1,6 @@
 using GeneXus.Encryption;
 using GeneXus.Http;
+using GeneXus.Mock;
 using GeneXus.Utils;
 using Jayrock.Json;
 using log4net;
@@ -8,10 +9,15 @@ using Microsoft.AspNetCore.Http.Extensions;
 #endif
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace GeneXus.Application
 {
-
+	public class GxObjectParameter
+	{
+		public ParameterInfo ParmInfo { get; set; }
+		public string ParmName { get; set; }
+	}
 	public class GXBaseObject
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXBaseObject));
@@ -25,7 +31,38 @@ namespace GeneXus.Application
 		}
 		protected virtual void ExecuteImpl()
 		{
-			ExecutePrivate();
+			if (GxMockProvider.Provider.CanHandle(this))
+			{
+				GxMockProvider.Provider.Handle(_Context, this, GetExecuteParameterMap());
+			}
+			else
+			{
+				ExecutePrivate();
+			}
+		}
+		private List<GxObjectParameter> GetExecuteParameterMap()
+		{
+			ParameterInfo[] pars = GetType().GetMethod("execute").GetParameters();
+			string[] parms = GetParameters();
+			int idx = 0;
+			List<GxObjectParameter> parmInfo = new List<GxObjectParameter>();
+			if (pars != null && parms!=null && pars.Length == parms.Length)
+			{
+				foreach (ParameterInfo par in pars)
+				{
+					parmInfo.Add(new GxObjectParameter()
+					{
+						ParmInfo = par,
+						ParmName = parms[idx]
+					});
+					idx++;
+				}
+			}
+			return parmInfo;
+		}
+		protected virtual string[] GetParameters()
+		{
+			return null;
 		}
 
 		public virtual IGxContext context
