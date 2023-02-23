@@ -57,6 +57,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GxObjectProperties.cs" Link="Helpers\GxObjectProperties.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXRestAPIClient.cs" Link="Helpers\GXRestAPIClient.cs" /> 
     <Compile Include="..\..\dotnetframework\GxClasses\Model\GXBaseObject.cs" Link="Model\GXBaseObject.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Model\GxMockProvider.cs" Link="Model\GxMockProvider.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\URLRouter.cs" Link="Model\URLRouter.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\SdtGridState.cs" Link="Model\SdtGridState.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\SdtGridState_InputValuesItem.cs" Link="Model\SdtGridState_InputValuesItem.cs" />

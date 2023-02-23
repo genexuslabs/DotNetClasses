@@ -86,6 +86,10 @@ namespace GeneXus.Http
 		{
 			ExecutePrivate();
 		}
+		protected virtual string[] GetParameters()
+		{
+			return null;
+		}
 
 #endif
 		public virtual void SetPrefix(string s)
