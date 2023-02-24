@@ -27,7 +27,7 @@ namespace TestMockDBAccess
 			aprocmain test = new aprocmain();
 			test.executeCmdLine(new string[] {"1","2"});
 			string msg = test.GX_msglist.getItemText(1);
-			Assert.AreEqual("Mocking aprocmain Parameters:[AV8clientid,Int16,in] [AV9Number,Int16&,ref] [AV10Message,String&,ref] ", msg);
+			Assert.AreEqual("Mocking aprocmain Parameters:[AV8clientid,Int16,in,value:1] [AV9Number,Int16&,ref,value:2] [AV10Message,String&,ref,value:] ", msg);
 
 		}
 	}

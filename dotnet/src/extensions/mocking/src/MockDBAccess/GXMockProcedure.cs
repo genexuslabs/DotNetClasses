@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
@@ -39,7 +40,10 @@ namespace MockDBAccess
 					{
 						builder.Append(",in");
 					}
+					builder.Append(",value:" + objectInstance.GetType().GetField(parameter.ParmName, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(objectInstance));
 					builder.Append("] ");
+
+					//objectInstance.GetType().GetField(parameter.ParmName, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(objectInstance, NEWVALUE) //SET
 				}
 			}
 			objectInstance.context.GX_msglist.addItem(builder.ToString());
