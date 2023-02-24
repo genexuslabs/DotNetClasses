@@ -2707,6 +2707,8 @@ namespace GeneXus.Utils
 
 		static public byte Dow(DateTime dt)
 		{
+			if (dt == null || dt == nullDate)
+				return 0;
 			return (byte)(dt.DayOfWeek + 1);
 		}
 		static public string CDow(DateTime dt, string lang)
