@@ -102,7 +102,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 		private void ProcessMessage(FunctionContext context, ILogger log, Message message)
 		{
 			CallMappings callmap = (CallMappings)_callmappings;
-			GxAzMappings map = callmap.mappings is object ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+			GxAzMappings map = (callmap!=null && callmap.mappings is object) ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
 			string gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
 
 			string exMessage;
