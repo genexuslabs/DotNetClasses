@@ -1777,7 +1777,7 @@ namespace GeneXus.Data
 				case 121: /*A transport-level error has occurred when receiving results from the server. (provider: TCP Provider, error: 0 - The semaphore timeout period has expired.*/
 				case 10054://A transport-level error has occurred when sending the request to the server. (provider: TCP Provider, error: 0 - An existing connection was forcibly closed by the remote host.)
 				case 6404: //The connection is broken and recovery is not possible.  The connection is marked by the server as unrecoverable.  No attempt was made to restore the connection.
-					if (con!=null && m_FailedConnections < MAX_TRIES)//Si es una operacion Open se reintenta.
+					if (!GxContext.isReorganization && con != null && m_FailedConnections < MAX_TRIES)//Si es una operacion Open se reintenta.
 					{
                         try
                         {
