@@ -2707,7 +2707,7 @@ namespace GeneXus.Utils
 
 		static public byte Dow(DateTime dt)
 		{
-			if (dt == null || dt == nullDate)
+			if (dt == nullDate)
 				return 0;
 			return (byte)(dt.DayOfWeek + 1);
 		}
