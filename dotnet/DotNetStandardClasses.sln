@@ -224,6 +224,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.AWS.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetry\GeneXus.OpenTelemetry.csproj", "{00B1FA38-7D0B-47E4-860C-23490249A4D6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynService.CosmosDB", "src\dotnetcore\DynService\Cosmos\DynService.CosmosDB.csproj", "{52DC6C43-58ED-4310-996B-06E95105F848}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -542,6 +544,10 @@ Global
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52DC6C43-58ED-4310-996B-06E95105F848}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52DC6C43-58ED-4310-996B-06E95105F848}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52DC6C43-58ED-4310-996B-06E95105F848}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52DC6C43-58ED-4310-996B-06E95105F848}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -650,6 +656,7 @@ Global
 		{27D54041-BDD5-428E-8CA6-C96D519F5451} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
 		{B5A9DEA7-67EC-49E4-924E-4729C34286EC} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
+		{52DC6C43-58ED-4310-996B-06E95105F848} = {79C9ECC6-2935-4C43-BF32-94698547F584}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}

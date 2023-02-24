@@ -1,32 +1,30 @@
-using GeneXus.Data.Dynamo;
-using GeneXus.Utils;
 using System;
 using System.Collections.Generic;
+using GeneXus.Data.Cosmos;
+using GeneXus.Utils;
 
 namespace GeneXus.Data.NTier
 {
-	public class DynamoDBDataStoreHelper: DynServiceDataStoreHelperBase
+	public class CosmosDBDatastoreHelper : DynServiceDataStoreHelperBase
 	{
 
-		public DynamoQuery NewQuery() => new DynamoQuery(this);
-		public DynamoQuery NewScan() => new DynamoScan(this);
+		public CosmosDBQuery NewQuery() => new CosmosDBQuery(this);
 
-		public DynamoDBMap Map(string name)
+		public CosmosDBMap Map(string name)
 		{
-			return new DynamoDBMap(name);
+			return new CosmosDBMap(name);
 		}
-
 		public object empty(GXType gxtype)
 		{
-			switch(gxtype)
+			switch (gxtype)
 			{
 				case GXType.Number:
 				case GXType.Int16:
 				case GXType.Int32:
 				case GXType.Int64: return 0;
-				case GXType.Date: 
-				case GXType.DateTime: 
-				case GXType.DateTime2:	return DateTimeUtil.NullDate();
+				case GXType.Date:
+				case GXType.DateTime:
+				case GXType.DateTime2: return DateTimeUtil.NullDate();
 				case GXType.Byte:
 				case GXType.NChar:
 				case GXType.NClob:
@@ -44,7 +42,7 @@ namespace GeneXus.Data.NTier
 				case GXType.Image:
 				case GXType.UniqueIdentifier:
 				case GXType.Xml: return string.Empty;
-				case GXType.Geography: 
+				case GXType.Geography:
 				case GXType.Geopoint:
 				case GXType.Geoline:
 				case GXType.Geopolygon: return new Geospatial();
@@ -55,26 +53,10 @@ namespace GeneXus.Data.NTier
 			}
 		}
 	}
-
-	public class DynamoQuery : Query
+	public class CosmosDBQuery : Query
 	{
 		public string Index { get; set; }
-		public bool ScanIndexForward = true;
-		private const string RANGE_KEY_INDEX = "RangeKey";
-		private static readonly char[] indexTrimChars = new char[] { '(', ')' };
-
-		public override Query OrderBy(string index)
-		{
-			if(index.StartsWith("(", StringComparison.InvariantCulture))
-			{
-				ScanIndexForward = false;
-				index = index.Trim(indexTrimChars);
-			}
-			if (index != RANGE_KEY_INDEX)
-				Index = index;
-			return this;
-		}
-
+		
 		public string PartitionKey { get; private set; }
 		public override Query SetKey(string partitionKey)
 		{
@@ -87,6 +69,7 @@ namespace GeneXus.Data.NTier
 			KeyFilters = filters;
 			return this;
 		}
-		public DynamoQuery(DynamoDBDataStoreHelper dataStoreHelper) : base(dataStoreHelper) { }
+
+		public CosmosDBQuery(CosmosDBDatastoreHelper dataStoreHelper) : base(dataStoreHelper) { }
 	}
 }
