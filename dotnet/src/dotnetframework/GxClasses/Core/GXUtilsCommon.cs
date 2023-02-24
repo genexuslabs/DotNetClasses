@@ -5573,6 +5573,7 @@ namespace GeneXus.Utils
 
 		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{										
 				using (Image image = ImageCreateFromStream(imageFile))
@@ -5589,15 +5590,15 @@ namespace GeneXus.Utils
 						double resize = (double)image.Width / (double)width;//get the resize vector
 						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
 					}//return the image resized to the given heigth and width
-					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);					
-					Save(output, imageFile, ImageFormat.Bmp);
+					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);
+					modifiedImage = Save(output, imageFile, ImageFormat.Bmp);
 				}				
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Resize {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string Scale(string imageFile, int percent)
 		{
@@ -5620,6 +5621,7 @@ namespace GeneXus.Utils
 		}
 		public static string Crop(string imageFile, int X, int Y, int Width, int Height)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
@@ -5634,8 +5636,8 @@ namespace GeneXus.Utils
 								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
 								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
 								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
-								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);								
-								Save(bmp, imageFile, OriginalImage.RawFormat);
+								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
+								modifiedImage = Save(bmp, imageFile, OriginalImage.RawFormat);
 							}
 						}
 					}
@@ -5645,10 +5647,11 @@ namespace GeneXus.Utils
 			{
 				GXLogging.Error(log, $"Crop {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string Rotate(string imageFile, int angle)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
@@ -5667,7 +5670,7 @@ namespace GeneXus.Utils
 								g.DrawImage(OriginalImage, new Point(0, 0));
 							}
 							rotatedImage.Save(ms, OriginalImage.RawFormat);
-							Save(rotatedImage, imageFile, OriginalImage.RawFormat);
+							modifiedImage = Save(rotatedImage, imageFile, OriginalImage.RawFormat);
 						}
 					}					
 				}
@@ -5676,60 +5679,76 @@ namespace GeneXus.Utils
 			{
 				GXLogging.Error(log, $"Rotate {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string FlipHorizontally(string imageFile)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
-					return Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					return modifiedImage;
 				}
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Flip Horizontally {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string FlipVertically(string imageFile)
 		{
+			string modifiedImage = string.Empty;	
 			try
 			{
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-					return Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					return modifiedImage;
 				}
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Flip Vertically {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 
 		public static string Save(Image bitmap, string imageFile, ImageFormat format)
-		{			
+		{
+			string destinationImagePath = string.Empty;
 			using (MemoryStream ms = new MemoryStream())
 			{
 				try
 				{
 					bitmap.Save(ms, format);
 				}
-				catch (Exception) {
+				catch (Exception)
+				{
 					//In some cases, copied memory image fails to save when ImageFormat MemoryBmp
 					//https://stackoverflow.com/questions/9073619/image-save-crashing-value-cannot-be-null-r-nparameter-name-encoder
 					bitmap.Save(ms, ImageFormat.Bmp);
 				}
 				ms.Position = 0;
-				GxFile file = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
-				file.Create(ms);
-				file.Close();
+				try
+				{
+					GxFile sourceImage = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
+					string destinationImageName = FileUtil.getTempFileName(GxContext.StaticPhysicalPath(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
+					GxFile destinationImage = new GxFile(GxContext.StaticPhysicalPath(), destinationImageName);
+					destinationImage.Create(ms);
+					destinationImage.Close();
+					destinationImagePath = destinationImage.GetAbsoluteName();
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, $"Save modified image {imageFile} failed", ex);
+				}
 			}
-			return imageFile;
+			return destinationImagePath;
 		}
 
 		public static int GetImageWidth(string imageFile)
