@@ -31,14 +31,13 @@ namespace GeneXus.Application
 		}
 		protected virtual void ExecuteImpl()
 		{
-			if (GxMockProvider.Provider.CanHandle(this))
+			if (GxMockProvider.Provider != null)
 			{
-				GxMockProvider.Provider.Handle(_Context, this, GetExecuteParameterMap());
+				List<GxObjectParameter> parmInfo = GetExecuteParameterMap();
+				if (GxMockProvider.Provider.Handle(_Context, this, parmInfo))
+					return;
 			}
-			else
-			{
-				ExecutePrivate();
-			}
+			ExecutePrivate();
 		}
 		private List<GxObjectParameter> GetExecuteParameterMap()
 		{
