@@ -31,8 +31,50 @@ namespace DotNetCoreUnitTest.HttpClientTest
 
 				Assert.True(client.ToString().Length > 0);
 			}
+		}
+		[Fact]
+		public void HttpClientAbsoluteURLOnExecute()
+		{
+			using (GxHttpClient client = new GxHttpClient())
+			{
+				string url = "https://www.google.com/";
+				client.Port = 80;
+				client.Execute("GET", url);
+				string requestUrl = client.GetRequestURL(url);
+				Assert.Equal(client.StatusCode, (short)System.Net.HttpStatusCode.OK);
+				Assert.True(Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute), "GetRequestURL is an invalid url which will cause Invalid URI at execute");
 
+			}
+		}
+		[Fact]
+		public void HttpClientRelativeURLOnExecute_1()
+		{
+			using (GxHttpClient client = new GxHttpClient())
+			{
+				string url = "imghp";
+				client.Port = 80;
+				client.BaseURL = "https://www.google.com/";
+				client.Execute("GET", url);
+				string requestUrl = client.GetRequestURL(url);
+				Assert.Equal(client.StatusCode, (short)System.Net.HttpStatusCode.OK);
+				Assert.True(Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute), "GetRequestURL is an invalid url which will cause Invalid URI at execute");
 
+			}
+		}
+		[Fact]
+		public void HttpClientRelativeURLOnExecute_2()
+		{
+			using (GxHttpClient client = new GxHttpClient())
+			{
+				string url = "/imghp";
+				client.Port = 80;
+				client.BaseURL = "https://www.google.com";
+				client.Execute("GET", url);
+				string requestUrl = client.GetRequestURL(url);
+				Assert.Equal(client.StatusCode, (short)System.Net.HttpStatusCode.OK);
+				Assert.True(Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute), "GetRequestURL is an invalid url which will cause Invalid URI at execute");
+
+			}
 		}
 	}
 }
