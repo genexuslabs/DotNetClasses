@@ -12,12 +12,7 @@ namespace MockDBAccess
 {
 	public class GXMockProcedure : IGxMock
 	{
-		public bool CanHandle<T>(T objectInstance) where T : GXBaseObject
-		{
-			return true;
-		}
-
-		public void Handle<T>(IGxContext context, T objectInstance, List<GxObjectParameter> parameters) where T : GXBaseObject
+		public bool Handle<T>(IGxContext context, T objectInstance, List<GxObjectParameter> parameters) where T : GXBaseObject
 		{
 			StringBuilder builder = new StringBuilder("Mocking ");
 			builder.Append(objectInstance.GetType().Name);
@@ -47,6 +42,7 @@ namespace MockDBAccess
 				}
 			}
 			objectInstance.context.GX_msglist.addItem(builder.ToString());
+			return true;
 		}
 	}
 }

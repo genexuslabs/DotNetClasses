@@ -25,7 +25,10 @@ namespace TestMockDBAccess
 			IGxMock mock= new GXMockProcedure();
 			GxMockProvider.Provider = mock;
 			aprocmain test = new aprocmain();
-			test.executeCmdLine(new string[] {"1","2"});
+			string message = "";
+			short number = 2;
+			test.execute(1, ref number, out message);
+
 			string msg = test.GX_msglist.getItemText(1);
 			Assert.AreEqual("Mocking aprocmain Parameters:[AV8clientid,Int16,in,value:1] [AV9Number,Int16&,ref,value:2] [AV10Message,String&,ref,value:] ", msg);
 
