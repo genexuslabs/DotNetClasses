@@ -894,23 +894,27 @@ namespace GeneXus.Utils
 		}
 		static string NormalizeText(string txt, string rex)
 		{
-			int idx = rex.IndexOf('$');
-			if (idx == -1)
-			{
+			if (rex.IndexOf('$') == -1 && rex.IndexOf("\\Z", StringComparison.OrdinalIgnoreCase) == -1)
 				return txt;
-			}
-			else
+			int idx = 0;
+			foreach (char c in rex)
 			{
-				int i = 0;
-				foreach (char c in rex)
+				if (IsEndOfStringAnchor(c, idx, rex))
 				{
-					if (c == '$' && (i == 0 || (i > 0 && rex[i - 1] != '\\')))
-						return txt.Replace(StringUtil.NewLine(), "\n");
+					return txt.Replace(StringUtil.NewLine(), "\n");
 				}
-				return txt;
+				idx++;
 			}
+			return txt;
 		}
-
+		static bool IsEndOfStringAnchor(char c, int idx, string rex)
+		{
+			if (c == '$' && (idx == 0 || (idx > 0 && rex[idx - 1] != '\\')))
+				return true;
+			if (c == 'Z' || c=='z'  && idx > 0 && rex[idx-1]=='\\' && (idx==1 || rex[idx-2]!='\\'))
+				return true;
+			return false;
+		}
 		static public bool IsMatch(string txt, string rex)
 		{
 			return IsMatch(txt, rex, RegexOptions.Multiline);
