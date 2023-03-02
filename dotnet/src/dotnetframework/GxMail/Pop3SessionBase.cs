@@ -56,7 +56,9 @@ namespace GeneXus.Mail
 				LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
 				return "";
 			}
-			return uIds[lastReadMessage + 1];
+			int nextMessage = lastReadMessage + 1;
+			int zeroBasedIndexForNextMessage = nextMessage - 1;
+			return uIds[zeroBasedIndexForNextMessage];
 		}
 
 		public abstract void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage);
