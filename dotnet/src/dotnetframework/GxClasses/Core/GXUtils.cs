@@ -892,10 +892,23 @@ namespace GeneXus.Utils
 			lastErrCode = errCode;
 			lastErrDescription = errDescription;
 		}
-		static string normalizeText(string txt)
+		static string NormalizeText(string txt, string rex)
 		{
-			
-			return txt.Replace(StringUtil.NewLine(), "\n");
+			int idx = rex.IndexOf('$');
+			if (idx == -1)
+			{
+				return txt;
+			}
+			else
+			{
+				int i = 0;
+				foreach (char c in rex)
+				{
+					if (c == '$' && (i == 0 || (i > 0 && rex[i - 1] != '\\')))
+						return txt.Replace(StringUtil.NewLine(), "\n");
+				}
+				return txt;
+			}
 		}
 
 		static public bool IsMatch(string txt, string rex)
@@ -909,7 +922,7 @@ namespace GeneXus.Utils
 			try
 			{
 				Regex r = new Regex(rex, options);
-				return r.Match(normalizeText(txt)).Success;
+				return r.Match(NormalizeText(txt, rex)).Success;
 			}
 			catch (Exception e)
 			{
@@ -923,7 +936,7 @@ namespace GeneXus.Utils
 			try
 			{
 				Regex r = new Regex(rex, RegexOptions.Multiline);
-				return r.Replace(normalizeText(txt), repl);
+				return r.Replace(NormalizeText(txt, rex), repl);
 			}
 			catch (Exception e)
 			{
@@ -938,7 +951,7 @@ namespace GeneXus.Utils
 			{
 				Regex r = new Regex(rex, RegexOptions.ExplicitCapture | RegexOptions.Multiline);
 				GxSimpleCollection<string> c = new GxSimpleCollection<string>();
-				c.AddRange(r.Split(normalizeText(txt)));
+				c.AddRange(r.Split(NormalizeText(txt, rex)));
 				return c;
 			}
 			catch (Exception e)
@@ -959,7 +972,7 @@ namespace GeneXus.Utils
 			try
 			{
 				Regex r = new Regex(rex, options);
-				MatchCollection mc = r.Matches(normalizeText(txt));
+				MatchCollection mc = r.Matches(NormalizeText(txt, rex));
 				GxUnknownObjectCollection c = new GxUnknownObjectCollection();
 				foreach (Match m in mc)
 					c.Add(new GxRegexMatch(m));
