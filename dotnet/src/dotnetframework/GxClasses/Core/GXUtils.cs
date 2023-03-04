@@ -940,7 +940,6 @@ namespace GeneXus.Utils
 		}
 		static public string Replace(string txt, string rex, string repl)
 		{
-			System.Diagnostics.Debugger.Launch();
 			resetError();
 			try
 			{
