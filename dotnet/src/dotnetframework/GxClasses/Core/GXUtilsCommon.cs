@@ -5739,7 +5739,7 @@ namespace GeneXus.Utils
 				try
 				{
 					GxFile sourceImage = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
-					string destinationImageName = FileUtil.getTempFileName(GxContext.StaticPhysicalPath(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
+					string destinationImageName = FileUtil.getTempFileName(sourceImage.GetDirectory().GetAbsoluteName(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
 					GxFile destinationImage = new GxFile(GxContext.StaticPhysicalPath(), destinationImageName);
 					destinationImage.Create(ms);
 					destinationImage.Close();
