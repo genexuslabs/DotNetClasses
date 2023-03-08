@@ -65,7 +65,7 @@ namespace GeneXus.Programs
 			this.AV9Number = aP1_Number;
 			this.AV10Message = "";
 			initialize();
-			ExecuteImpl();
+			ExecuteEx();
 			aP1_Number = this.AV9Number;
 			aP2_Message = this.AV10Message;
 		}
