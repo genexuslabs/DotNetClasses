@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 
 namespace GeneXus.Application
 {
@@ -25,11 +26,7 @@ namespace GeneXus.Application
 		protected IGxContext _Context;
 		bool _isMain;
 		protected bool _isApi;
-		protected virtual void ExecutePrivate()
-		{
-
-		}
-		protected virtual void ExecuteImpl()
+		protected virtual void ExecuteEx()
 		{
 			if (GxMockProvider.Provider != null)
 			{
@@ -39,6 +36,45 @@ namespace GeneXus.Application
 			}
 			ExecutePrivate();
 		}
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected virtual void ExecutePrivateCatch(object stateInfo)
+		{
+			try
+			{
+				((GXBaseObject)stateInfo).ExecutePrivate();
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+			}
+		}
+		protected virtual void CloseCursors()
+		{
+
+		}
+
+		protected void Submit(Action<object> executeMethod, object state)
+		{
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
+		}
+		protected WaitCallback PropagateCulture(WaitCallback action)
+		{
+			var currentCulture = Thread.CurrentThread.CurrentCulture;
+			GXLogging.Debug(log, "Submit PropagateCulture " + currentCulture);
+			var currentUiCulture = Thread.CurrentThread.CurrentUICulture;
+			return (x) =>
+			{
+				Thread.CurrentThread.CurrentCulture = currentCulture;
+				Thread.CurrentThread.CurrentUICulture = currentUiCulture;
+				action(x);
+			};
+		}
+
+
 		private List<GxObjectParameter> GetExecuteParameterMap()
 		{
 			ParameterInfo[] pars = GetType().GetMethod("execute").GetParameters();

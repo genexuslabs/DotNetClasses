@@ -20,7 +20,6 @@ namespace GeneXus.Procedure
 
 	public abstract class GXProcedure: GXBaseObject
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Procedure.GXProcedure));
 		public abstract void initialize();
 
 		protected int handle;
@@ -59,12 +58,12 @@ namespace GeneXus.Procedure
 #endif
 		}
 
-		/*protected static int MainImpl(string[] args, GXProcedure instance)
+		protected int MainImpl(string[] args)
 		{
 			try
 			{
 				Config.ParseArgs(ref args);
-				return instance.ExecuteCmdLine(args);
+				return ExecuteCmdLine(args);
 			}
 			catch (Exception e)
 			{
@@ -75,46 +74,30 @@ namespace GeneXus.Procedure
 		}
 		protected virtual int ExecuteCmdLine(string[] args)
 		{
+			initialize();
+			ExecutePrivate();
 			return GX.GXRuntime.ExitCode;
-		}*/
+		}
 		protected void SubmitImpl()
 		{
 			context.SetSubmitInitialConfig(context);
 			initialize();
 			Submit(ExecutePrivateCatch, this);
 		}
-		protected virtual void ExecutePrivateCatch(object stateInfo)
+
+		public override void cleanup()
 		{
-			try
+			CloseCursors();
+			if (IsMain)
 			{
-				((GXProcedure)stateInfo).ExecutePrivate();
+				context.CloseConnections();
 			}
-			catch (Exception e)
-			{
-				GXUtil.SaveToEventLog("Design", e);
-				Console.WriteLine(e.ToString());
-			}
+			ExitApp();
 		}
 		public bool DisconnectAtCleanup
 		{
 			get{ return disconnectUserAtCleanup;}
 			set{ disconnectUserAtCleanup=value;}
-		}
-		protected void Submit(Action<object> executeMethod, object state)
-		{
-			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
-		}
-		public static WaitCallback PropagateCulture(WaitCallback action)
-		{
-			var currentCulture = Thread.CurrentThread.CurrentCulture;
-			GXLogging.Debug(log, "Submit PropagateCulture " + currentCulture);
-			var currentUiCulture = Thread.CurrentThread.CurrentUICulture;
-			return (x) =>
-			{
-				Thread.CurrentThread.CurrentCulture = currentCulture;
-				Thread.CurrentThread.CurrentUICulture = currentUiCulture;
-				action(x);
-			};
 		}
 		protected void ExitApp()
 		{

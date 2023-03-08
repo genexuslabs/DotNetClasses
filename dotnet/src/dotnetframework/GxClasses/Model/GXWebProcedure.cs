@@ -8,6 +8,8 @@ namespace GeneXus.Procedure
 	using System.Threading;
 	using GeneXus.Mime;
 	using GeneXus.Utils;
+	using log4net;
+	using GeneXus.Application;
 
 	public class GXWebProcedure : GXHttpHandler
 	{
@@ -35,7 +37,12 @@ namespace GeneXus.Procedure
 		public override void initialize() { }
 		protected override void createObjects() { }
 		public override void skipLines(long nToSkip) { }
-
+		protected void SubmitImpl()
+		{
+			context.SetSubmitInitialConfig(context);
+			initialize();
+			Submit(ExecutePrivateCatch, this);
+		}
 		public override void cleanup()
 		{
 			if (!context.WillRedirect() && context.IsLocalStorageSupported())
@@ -218,15 +225,6 @@ namespace GeneXus.Procedure
 		protected void GxDrawDynamicBitMap(int printBlock, int controlId, string value, int aspectRatio, int line)
 		{
 			reportMetadata.GxDrawBitMap(printBlock, controlId, line, value, aspectRatio);
-		}
-
-		protected static WaitCallback PropagateCulture(WaitCallback action)
-		{
-			return GXProcedure.PropagateCulture(action);
-		}
-		protected void Submit(Action<object> executeMethod, object state)
-		{
-			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
 		}
 
 	}
