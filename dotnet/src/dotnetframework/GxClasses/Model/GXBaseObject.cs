@@ -1,3 +1,4 @@
+using GeneXus.Data.NTier;
 using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.Mock;
@@ -52,11 +53,21 @@ namespace GeneXus.Application
 				Console.WriteLine(e.ToString());
 			}
 		}
+		protected void SubmitImpl()
+		{
+			context = new GxContext();
+			DataStoreUtil.LoadDataStores(context);
+			IsMain = true;
+			context.SetSubmitInitialConfig(context);
+			initialize();
+			Submit(ExecutePrivateCatch, this);
+		}
+
 		protected virtual void CloseCursors()
 		{
 
 		}
-
+		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
 		protected void Submit(Action<object> executeMethod, object state)
 		{
 			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
