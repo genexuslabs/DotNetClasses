@@ -3,25 +3,21 @@ using System.Threading;
 namespace GeneXus.Procedure
 {
 	using System;
-    using GeneXus.Encryption;
-    using GeneXus.Configuration;
-	using GeneXus.Application;
-	using GeneXus.Printer;
-	using System.Reflection;
-	using System.IO;
-	using log4net;
-	using GeneXus.Performance;
-	using GeneXus.Utils;
-	using System.Globalization;
 	using System.Collections.Generic;
-	using GeneXus.XML;
-	using GeneXus.Metadata;
+	using System.IO;
+	using System.Reflection;
+	using GeneXus.Application;
+	using GeneXus.Configuration;
 	using GeneXus.Data;
+	using GeneXus.Metadata;
+	using GeneXus.Performance;
+	using GeneXus.Printer;
+	using GeneXus.Utils;
+	using GeneXus.XML;
+	using log4net;
 
 	public abstract class GXProcedure: GXBaseObject
 	{
-		public abstract void initialize();
-
 		protected int handle;
 
         protected GXReportMetadata reportMetadata;
@@ -78,13 +74,6 @@ namespace GeneXus.Procedure
 			ExecutePrivate();
 			return GX.GXRuntime.ExitCode;
 		}
-		protected void SubmitImpl()
-		{
-			context.SetSubmitInitialConfig(context);
-			initialize();
-			Submit(ExecutePrivateCatch, this);
-		}
-
 		public override void cleanup()
 		{
 			CloseCursors();
