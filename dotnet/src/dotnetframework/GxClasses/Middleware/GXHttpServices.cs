@@ -478,7 +478,7 @@ namespace GeneXus.Http
 			{
 				GxSecurityProvider.Provider.oauthlogout(context, out string URL, out short statusCode);
 
-				if (statusCode == 303)
+				if (statusCode == (int)HttpStatusCode.SeeOther)
 					localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
 				else
 					localHttpContext.Response.StatusCode = statusCode;
