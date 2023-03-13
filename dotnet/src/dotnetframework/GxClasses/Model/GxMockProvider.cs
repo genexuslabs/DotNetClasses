@@ -20,7 +20,10 @@ namespace GeneXus.Mock
 			}
 			set{
 				provider = value;
-				GXLogging.Debug(log, "Mock provider: " + provider.GetType().FullName);
+				if (provider != null)
+					GXLogging.Debug(log, "Mock provider: " + provider.GetType().FullName);
+				else
+					GXLogging.Debug(log, "Mock provider set to null ");
 			}
 		}
 	}
