@@ -28,7 +28,7 @@ namespace GeneXus.Programs
 						   out genexusserverlessapi.SdtEventMessageResponse aP1_ExternalEventMessageResponse)
 		{
 			aP1_ExternalEventMessageResponse = new GeneXus.Programs.genexusserverlessapi.SdtEventMessageResponse(context);
-			aP1_ExternalEventMessageResponse.gxTpr_Handled = true;
+			aP1_ExternalEventMessageResponse.gxTpr_Handlefailure = false;
 		}
 
 		public override void initialize()
