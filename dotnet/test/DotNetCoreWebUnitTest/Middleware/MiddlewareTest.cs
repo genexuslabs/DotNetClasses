@@ -19,6 +19,7 @@ namespace xUnitTesting
 		{
 			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
 			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(DOTNET_ENVIRONMENT));
+			server.PreserveExecutionContext= true;
 			server.CreateClient();
 		}
 		protected string GetHeader(HttpResponseMessage response, string headerName)
