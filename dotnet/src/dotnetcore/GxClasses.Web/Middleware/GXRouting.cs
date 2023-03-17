@@ -185,7 +185,7 @@ namespace GxClasses.Web.Middleware
 					IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
 					context = new GxHttpContextAccesor(contextAccessor);
 				}
-
+				Task result = Task.CompletedTask;
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
 				bool isServiceInPath = ServiceInPath(path, out actualPath);
@@ -231,23 +231,23 @@ namespace GxClasses.Web.Middleware
 					{
 						if (HttpMethods.IsGet(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsGet(controllerInfo.Verb)))
 						{
-							return controller.Get(controllerInfo.Parameters);
+							result = controller.Get(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPost(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPost(controllerInfo.Verb)))
 						{
-							return controller.Post();
+							result = controller.Post();
 						}
 						else if (HttpMethods.IsDelete(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsDelete(controllerInfo.Verb)))
 						{
-							return controller.Delete(controllerInfo.Parameters);
+							result = controller.Delete(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPut(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPut(controllerInfo.Verb)))
 						{
-							return controller.Put(controllerInfo.Parameters);
+							result = controller.Put(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPatch(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPatch(controllerInfo.Verb)))
 						{
-							return controller.Patch(controllerInfo.Parameters);
+							result = controller.Patch(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
@@ -283,10 +283,12 @@ namespace GxClasses.Web.Middleware
 					{
 						GXLogging.Error(log, $"ProcessRestRequest controller not found path:{path} controllerWithParms:{controllerWithParms}");
 						context.Response.Headers.Clear();
-						return Task.FromException(new PageNotFoundException(path));
+						result = Task.FromException(new PageNotFoundException(path));
 					}
 				}
-				return Task.CompletedTask;
+				context.CommitSession();
+
+				return result;
 			}
 			catch (Exception ex)
 			{
