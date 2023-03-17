@@ -56,7 +56,10 @@ namespace GeneXus.Http
             if (context.HttpContext != null)
             {
 #if NETCORE
-				_httpSession = new HttpSessionState(context.HttpContext.Session);
+				if (context.HttpContext is GxHttpContextAccesor)
+					_httpSession = new HttpSyncSessionState(context.HttpContext);
+				else
+					_httpSession = new HttpSessionState(context.HttpContext.Session);
 #else
 				_httpSession = context.HttpContext.Session;
 #endif
