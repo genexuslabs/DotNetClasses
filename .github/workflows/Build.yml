@@ -81,7 +81,8 @@ jobs:
         $COMMIT_MESSAGE = $(git log -1 --pretty=%B)
         $LAST_COMMITTER = $(git log -1 --pretty=format:%an)
 
-        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:COMMIT_NUMBER=$COMMIT_NUMBER
+        echo "COMMIT_NUMBER=$COMMIT_NUMBER" >> $env:GITHUB_ENV
+        $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)" > $null
         $GetFileVersionOutput = $Matches[0]
         
