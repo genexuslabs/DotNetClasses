@@ -28,6 +28,7 @@ using GeneXus.Data;
 using System.Runtime.Serialization;
 using GeneXus.Mime;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace GeneXus.Http
 {
