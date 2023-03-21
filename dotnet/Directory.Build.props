@@ -32,6 +32,6 @@
 	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">
-		<Message Importance="high" Text="FileVersion:$(FileVersionWithoutRevision)"></Message>
+		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
 	</Target>
 </Project>
