@@ -7,8 +7,10 @@
 		<RevisionFileVersion Condition="'$(COMMIT_NUMBER)'!=''">$(COMMIT_NUMBER)</RevisionFileVersion>
 		<RevisionFileVersion Condition="'$(COMMIT_NUMBER)'==''">0</RevisionFileVersion>
 		<FileVersionWithoutRevision>$(MajorFileVersion).$(MinorFileVersion).$(RevisionFileVersion)</FileVersionWithoutRevision>
-		<FileVersionWithoutRevision Condition="$(GIT_REF.EndsWith('beta')) Or $(GIT_REF.EndsWith('master'))">$(MajorFileVersion).$(MinorFileVersion).0</FileVersionWithoutRevision>
-		<FileVersion>$(FileVersionWithoutRevision).$(RevisionFileVersion)</FileVersion>
+		<BetaOrMaster Condition="$(GIT_REF.EndsWith('beta')) Or $(GIT_REF.EndsWith('master'))">true</BetaOrMaster>
+		<FileVersionWithoutRevision Condition="'$(BetaOrMaster)'=='true'">$(MajorFileVersion).$(MinorFileVersion).0</FileVersionWithoutRevision>
+		<FileVersion>$(FileVersionWithoutRevision)</FileVersion>
+		<FileVersion Condition="'$(BetaOrMaster)'=='true'">$(FileVersionWithoutRevision).$(RevisionFileVersion)</FileVersion>
 		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GIT_SHA)</InformationalVersion>
 		<Company>GeneXus</Company>
 		<AssemblyCulture></AssemblyCulture>
