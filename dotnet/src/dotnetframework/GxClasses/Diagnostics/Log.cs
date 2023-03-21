@@ -29,6 +29,7 @@ namespace GeneXus.Diagnostics
 
 		private static ILog GetLogger(string topic)
 		{
+			GXLogging.EnsureThreadIdPropertyExistsInContext();
 			if (!String.IsNullOrEmpty(topic))
 			{
 				string loggerName = topic.StartsWith("$") ? topic.Substring(1) : string.Format("{0}.{1}", defaultUserLogNamespace, topic.Trim());
