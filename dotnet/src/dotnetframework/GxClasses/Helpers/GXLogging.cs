@@ -10,7 +10,7 @@ namespace GeneXus
 
 	public static class GXLogging
 	{
-		private static void EnsureThreadIdPropertyExistsInContext()
+		internal static void EnsureThreadIdPropertyExistsInContext()
 		{
 #if NETCORE
 			log4net.ThreadContext.Properties["threadid"] ??= Thread.CurrentThread.ManagedThreadId;
