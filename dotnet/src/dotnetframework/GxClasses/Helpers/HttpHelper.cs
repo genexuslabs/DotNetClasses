@@ -193,7 +193,7 @@ namespace GeneXus.Http
 			{
 				wcfcontext.OutgoingResponse.StatusCode = httpStatusCode;
 				if (httpStatusCode==HttpStatusCode.Unauthorized){
-					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(StringUtil.Sanitize(wcfcontext.IncomingRequest.Headers["Host"],StringUtil.HostWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty));
+					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(StringUtil.Sanitize(wcfcontext.IncomingRequest.Headers["Host"],StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty));
 				}
 				if (!string.IsNullOrEmpty(statusDescription))
 					wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
@@ -211,7 +211,7 @@ namespace GeneXus.Http
 #endif
 				if (httpStatusCode == HttpStatusCode.Unauthorized)
 				{
-					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HostWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
+					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
 				}
 
 #if !NETCORE
@@ -447,7 +447,6 @@ namespace GeneXus.Http
 				return query.Split(',');
 			}
 		}
-
 		internal static void AllowHeader(HttpContext httpContext, List<string> methods)
 		{
 			httpContext.Response.AppendHeader(HeaderNames.Allow, string.Join(",", methods));
