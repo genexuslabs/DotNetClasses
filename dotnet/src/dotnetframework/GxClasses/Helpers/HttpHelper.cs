@@ -132,10 +132,10 @@ namespace GeneXus.Http
 			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList);
 
 			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 
@@ -150,10 +150,10 @@ namespace GeneXus.Http
 			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList);
 
 			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 		}
@@ -170,10 +170,10 @@ namespace GeneXus.Http
 			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, true.ToString());
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, requestHeaders);
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList));
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, requestMethods);
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList));
 
 			httpResponse.AppendHeader(HeaderNames.AccessControlMaxAge, CORS_MAX_AGE_SECONDS);
 		}
