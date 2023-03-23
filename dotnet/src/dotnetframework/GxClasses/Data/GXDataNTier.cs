@@ -37,6 +37,7 @@ namespace GeneXus.Data.NTier
         DateTime serverNow();
 		DateTime serverNowMs();
 		string userId();
+		GxSmartCacheProvider SmartCacheProvider { get; }
     }
 
 	public interface IRemoteDataStoreProvider
@@ -380,7 +381,13 @@ namespace GeneXus.Data.NTier
 			dataStoreRequestCount++;
 
 		}
-
+		public GxSmartCacheProvider SmartCacheProvider
+		{
+			get
+			{
+				return _ds.SmartCacheProvider;
+			}
+		}
 		ICursor getCursor( int cursor)
 		{
 			return _cursor[cursor];
@@ -499,19 +506,25 @@ namespace GeneXus.Data.NTier
 			Cursor oCur = getCursor(cursor) as Cursor;
 			try
 			{
-				oCur.readNext();
-				_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
-				dataStoreRequestCount++;
+				if (oCur != null)
+				{
+					oCur.readNext();
+					_dataStoreHelper.getResults(cursor, oCur.getFieldGetter(), results[cursor]);
+					dataStoreRequestCount++;
+				}
 			}
 			catch (GxADODataException e)
 			{
 				bool retry = false;
 				int retryCount = 0;
-				bool pe = oCur.Command.ProcessException(e, ref retry, retryCount, "FETCH");
-				GXLogging.Error(log, "readNext Error", e);
-				if (!pe)
+				if (oCur != null)
 				{
-					throw;
+					bool pe = oCur.Command.ProcessException(e, ref retry, retryCount, "FETCH");
+					GXLogging.Error(log, "readNext Error", e);
+					if (!pe)
+					{
+						throw;
+					}
 				}
 			}
 

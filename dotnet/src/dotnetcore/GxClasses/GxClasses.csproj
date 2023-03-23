@@ -17,6 +17,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Dialog\IProcess.cs" Link="Helpers\Process\IProcess.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Attributes\GXApi.cs" Link="Attributes\GXApi.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ConfigurationManager.cs" Link="Configuration\ConfigurationManager.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Configuration\LogConfiguration.cs" Link="Configuration\LogConfiguration.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Configuration\ExternalStorage.cs" Link="Configuration\ExternalStorage.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXAsymmetricEncryption.cs" Link="Helpers\Cryptography\GXAsymmetricEncryption.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Cryptography\GXCertificate.cs" Link="Helpers\Cryptography\GXCertificate.cs" />
@@ -121,7 +122,6 @@
     <Folder Include="Domain\SD\" />
     <Folder Include="Attributes\" />
     <Folder Include="Configuration\" />
-    <Folder Include="Helpers\Cryptography\Encryption\" />
     <Folder Include="Helpers\Cryptography\Signing\Standards\" />
     <Folder Include="Helpers\Process\" />
     <Folder Include="Services\CoreWebAPI\Helpers\" />
@@ -149,26 +149,23 @@
 	<ItemGroup>
 		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" />
 		<PackageReference Include="log4net" Version="2.0.11" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.0.19269.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-		<PackageReference Include="MySqlConnector" Version="1.0.1" />
+		<PackageReference Include="MySqlConnector" Version="2.2.3" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" />
 		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" />
 		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" />
 		<PackageReference Include="Npgsql" Version="3.2.7" />
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.110" PrivateAssets="All" />
-		<!--OracleManagedDataAccess has PrivateAssets to avoid deploying the assembly for any datastore-->
-		
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
-		<PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+		<PackageReference Include="System.Drawing.Common" Version="4.7.2" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" />
 		<PackageReference Include="NUglify" Version="1.16.4" />
 	</ItemGroup>

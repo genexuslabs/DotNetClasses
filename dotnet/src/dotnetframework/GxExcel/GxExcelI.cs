@@ -131,7 +131,7 @@ namespace GeneXus.Office
             }
             set
             {
-                bool storageEnabled = GXServices.Instance != null && GXServices.Instance.Get(GXServices.STORAGE_SERVICE) != null;
+                bool storageEnabled = ServiceFactory.GetExternalProvider() != null;
                 template = value;
                 if (storageEnabled)
                 {                    
@@ -231,7 +231,7 @@ namespace GeneXus.Office
                 closed = false;
                 try
                 {
-                    if (GXServices.Instance == null || GXServices.Instance.Get(GXServices.STORAGE_SERVICE) == null)
+                    if (ServiceFactory.GetExternalProvider() == null)
                     {
                         if (!Path.IsPathRooted(this.fileName))
                             this.fileName = Path.Combine(GxContext.StaticPhysicalPath(), this.fileName);
@@ -245,11 +245,17 @@ namespace GeneXus.Office
                 {
                     GXLogging.Warn(log, "Setting Rooted Path on " + this.fileName, e);
                 }
-                return document.Open(this.fileName);
+				if (document != null)
+					return document.Open(this.fileName);
+				else
+					return -1;
             }
             else
             {
-                return document.ErrCode;
+				if (document != null)
+					return document.ErrCode;
+				else
+					return 0;
             }
         }
 

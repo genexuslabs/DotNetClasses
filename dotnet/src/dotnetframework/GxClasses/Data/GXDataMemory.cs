@@ -871,18 +871,7 @@ namespace GeneXus.Data
 				{
 					MemoryStream memStream = new MemoryStream();
 					Stream oStream = (Stream)value;
-					byte[] buffer = new byte[4096];
-
-					oStream.Seek(0, SeekOrigin.Begin);
-
-					int len;
-					do
-					{
-						len = oStream.Read(buffer, 0, buffer.Length);
-						memStream.Write(buffer, 0, len);
-					}
-					while (len > 0);
-
+					oStream.CopyTo(memStream);
 					return memStream;
 				}
                 else

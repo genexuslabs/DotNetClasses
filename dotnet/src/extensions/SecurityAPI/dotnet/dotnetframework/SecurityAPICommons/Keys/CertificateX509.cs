@@ -254,6 +254,7 @@ namespace SecurityAPICommons.Keys
         private bool loadPublicKeyFromPEMFile(string path)
         {
             bool flag = false;
+
 			using (StreamReader streamReader = new StreamReader(path))
 			{
 				PemReader pemReader = new PemReader(streamReader);
@@ -297,6 +298,7 @@ namespace SecurityAPICommons.Keys
 				pemReader.Reader.Close();
 			}
             return flag;
+
 
         }
 

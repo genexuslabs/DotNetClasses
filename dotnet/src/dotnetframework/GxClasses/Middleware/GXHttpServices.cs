@@ -279,6 +279,9 @@ namespace GeneXus.Http
 		public GXObjectUploadServices(IGxContext ctx)
 		{
 			this.context = ctx;
+#if NETCORE
+			localHttpContext.Request.EnableBuffering();
+#endif
 		}
 
 		public override void webExecute()
@@ -329,8 +332,12 @@ namespace GeneXus.Http
 					localHttpContext.Response.Write(jsonObj);
 				}
 				else
-				{					
-					WcfExecute(localHttpContext.Request.GetInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+				{
+#if NETCORE
+					WcfExecute(localHttpContext.Request.Body, localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+#else
+					WcfExecute(localHttpContext.Request.GetBufferedInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+#endif
 				}
 			}
 			catch (Exception e)
@@ -466,12 +473,28 @@ namespace GeneXus.Http
 
 		public override void webExecute()
 		{
+			string genexus_agent = localHttpContext.Request.Headers["Genexus-Agent"];
 			try
 			{
-				GxSecurityProvider.Provider.oauthlogout(context);
+				GxSecurityProvider.Provider.oauthlogout(context, out string URL, out short statusCode);
+
+				if (statusCode == (int)HttpStatusCode.SeeOther)
+					localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
+				else
+					localHttpContext.Response.StatusCode = statusCode;
+
+				JObject jObj = new JObject();
+				if (genexus_agent == "WebFrontend Application" && URL.Length > 0)
+				{
+					localHttpContext.Response.AddHeader("GXLocation", URL);					
+					jObj.Put("GXLocation", URL);
+				}
+				else
+				{
+					jObj.Put("code", statusCode.ToString());					
+				}
+				localHttpContext.Response.Write(jObj.ToString());
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-				localHttpContext.Response.StatusCode = 200;
-				localHttpContext.Response.Write(new JObject().ToString());
 				context.CloseConnections();
 			}
 			catch (Exception e)

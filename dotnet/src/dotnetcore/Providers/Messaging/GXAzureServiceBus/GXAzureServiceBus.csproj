@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	<PackageId>GeneXus.Azure.ServiceBus</PackageId>
+	<PackageTags>Azure ServiceBus Messaging</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.11.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GXMessageBroker\GXMessageBroker.csproj" />
+  </ItemGroup>
+
+</Project>

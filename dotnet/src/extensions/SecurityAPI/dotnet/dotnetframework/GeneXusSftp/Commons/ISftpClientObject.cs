@@ -18,7 +18,8 @@ namespace Sftp.GeneXusCommons
 		public abstract bool Get(string remoteFilePath, string localDir);
 #pragma warning restore CA1716 // Identifiers should not match keywords
 		public abstract void Disconnect();
+		public abstract bool Rm(string remoteFilePath);
 
-        public abstract string GetWorkingDirectory();
+		public abstract string GetWorkingDirectory();
     }
 }

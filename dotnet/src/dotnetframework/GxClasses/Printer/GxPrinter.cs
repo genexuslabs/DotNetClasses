@@ -90,7 +90,6 @@ namespace GeneXus.Printer
         void setOutputStream(object stream);
 	}
 	
-#if !NETCORE
 	public class GxReportBuilderNative : IReportHandler
 	{
 		public const string END_PAGE = "EPG";
@@ -823,7 +822,7 @@ namespace GeneXus.Printer
 		{
 			PrintingPermission pp = new PrintingPermission(PrintingPermissionLevel.AllPrinting);
 			pp.Demand();
-			PrintDocument pd = new PrintDocument(); 
+			PrintDocument pd = new PrintDocument();
 			pd.PrintController = new StandardPrintController(); 
 			pd.PrintPage += new PrintPageEventHandler(evt_PrintPage);
 			if (configString.Length > 0)
@@ -835,9 +834,17 @@ namespace GeneXus.Printer
 				streamToRead.Close();
 				throw new Exception("Printer settins not valid");
 			}
+			pd.Dispose();
 		}
 		public void Close()
 		{
+			try
+			{
+				streamToRead.Close();
+			}catch(Exception)
+			{
+				//NOOP
+			}
 		}
 		void initPrnReport( string configString, PrinterSettings printerSettings, PageSettings pageSettings)
 		{
@@ -1169,6 +1176,13 @@ namespace GeneXus.Printer
 		public void Close()
 		{
 			streamToWrite.Close();
+			try
+			{
+				streamToRead.Close();
+			}catch(Exception)
+			{
+				//NOOP
+			}
 		}
 		void processPrinterCommand( string line)
 		{
@@ -1331,6 +1345,19 @@ namespace GeneXus.Printer
 		public void Close()
 		{
 			streamToWrite.Close();
+			try
+			{
+				streamToRead.Close();
+				foreach (Font font in reportFonts.Values)
+				{
+					font.Dispose();
+				}
+			}
+			catch(Exception)
+			{
+				//NOOP
+			}
+
 		}
 		void processPrinterCommand(string line )
 		{
@@ -1527,8 +1554,10 @@ namespace GeneXus.Printer
 						"\\pichgoal"+(height * LOGICAL2TWIP).ToString()+
 						"\n";
 			streamToWrite.Write( sBuffer);
-			Bitmap bm = new Bitmap(bitmap);
-			bm.Save( streamToWrite.BaseStream, ImageFormat.Emf);
+			using (Bitmap bm = new Bitmap(bitmap))
+			{
+				bm.Save(streamToWrite.BaseStream, ImageFormat.Emf);
+			}
 			streamToWrite.Write( "}}\n");
 		}
 		void DrawText(string text, Point p1, Point p2, Font fnt, int align, Color foreColor, Color backColor)
@@ -2114,7 +2143,7 @@ namespace GeneXus.Printer
 
 	#endregion
 	}
-#endif
+
 	[Serializable()]
 	public class ProcessInterruptedException: Exception
 	{
@@ -2140,11 +2169,11 @@ namespace GeneXus.Printer
 	{
 		static public string AddPath(string name, string path)
 		{
-			if( name.IndexOf(":") != -1 ||
+			if (Path.IsPathRooted(name) || name.IndexOf(":") != -1 ||
 				(name.Length >=2 && (name.Substring( 0,2) == "//" || name.Substring( 0,2) == @"\\")) ||
 				(name.StartsWith("http:" ) || name.StartsWith("https:" )))
 				return name;
-			return path + name;
+			return Path.Combine(path, name);
 		}
 	}
 

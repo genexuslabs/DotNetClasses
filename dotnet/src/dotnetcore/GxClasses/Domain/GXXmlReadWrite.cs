@@ -165,7 +165,7 @@ namespace GeneXus.XML
 				else
 				{
 					string sBaseDirectory = GxContext.StaticPhysicalPath();
-					if (!sBaseDirectory.EndsWith("\\")) sBaseDirectory += '\\';
+					if (!sBaseDirectory.EndsWith(Path.DirectorySeparatorChar)) sBaseDirectory += Path.DirectorySeparatorChar;
 					Uri baseUri = new Uri( sBaseDirectory );
 					Resolver.Myself = new Uri(baseUri, URL);
 					XMLInput = URL;
@@ -235,7 +235,15 @@ namespace GeneXus.XML
 			Close();
 			EntitiesContainer.Reset();
 			CreateXMLSettings();
-			XMLInput = httpClient.ReceiveStream;
+			GxHttpClient gxHttpClient = httpClient as GxHttpClient;
+			if (gxHttpClient!=null && gxHttpClient.ReceiveData != null)
+			{
+				XMLInput = new MemoryStream(gxHttpClient.ReceiveData);
+			}
+			else
+			{
+				XMLInput = string.Empty;
+			}
 			return 0;
 		}
 
@@ -263,7 +271,7 @@ namespace GeneXus.XML
 			Close();
 			EntitiesContainer.Reset();
 			string sBaseDirectory = GxContext.StaticPhysicalPath();
-			if (!sBaseDirectory.EndsWith("\\")) sBaseDirectory += '\\';
+			if (!sBaseDirectory.EndsWith(Path.DirectorySeparatorChar)) sBaseDirectory += Path.DirectorySeparatorChar;
 			Uri baseUri = new Uri( sBaseDirectory );
 			Resolver.Myself = baseUri;
 			CreateXMLSettings();

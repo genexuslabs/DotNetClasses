@@ -309,8 +309,8 @@ namespace GeneXus.Utils
 			{
 				object LoadKeyItem = Key.Item(i);
 				Type LoadKeyItemType = LoadKeyItem.GetType();
-				string Name = LoadKeyItemType.InvokeMember("gxTpr_Name", BindingFlags.GetProperty, null, LoadKeyItem, Array.Empty<object>()) as string;
-				string Value = LoadKeyItemType.InvokeMember("gxTpr_Value", BindingFlags.GetProperty, null, LoadKeyItem, Array.Empty<object>()) as string;
+				string Name = LoadKeyItemType.InvokeMember("gxTpr_Name", BindingFlags.GetProperty, null, LoadKeyItem, Array.Empty<object>()).ToString();
+				string Value = LoadKeyItemType.InvokeMember("gxTpr_Value", BindingFlags.GetProperty, null, LoadKeyItem, Array.Empty<object>()).ToString();
 
 				string FieldName = "gxTpr_" + Name.Substring(0, 1).ToUpper() + Name.Substring(1).ToLower();
 				Type MemberType = me.GetProperty(FieldName).PropertyType;
@@ -393,7 +393,10 @@ namespace GeneXus.Utils
 			{
 				Object levelInstance = me.InvokeMember(FieldName, BindingFlags.GetProperty, null, this, Array.Empty<object>());
 				IGxCollection Col = levelInstance as IGxCollection;
-				Col.FromJSonString(Value);
+				if (Col != null)
+				{
+					Col.FromJSonString(Value);
+				}
 			}
 			else
 				me.InvokeMember(FieldName, BindingFlags.SetProperty, null, this, new object[] { Convert.ChangeType(Value, MemberType, System.Globalization.CultureInfo.InvariantCulture) });

@@ -1,14 +1,14 @@
 namespace GeneXus.Http
 {
 	using System;
-	using GeneXus.Application;
-	using System.Web;
-	using System.Web.Hosting;
-	using System.IO;
-	using GeneXus.Http;
-	using System.Web.UI;
-	using System.Text;
 	using System.Collections.Specialized;
+	using System.IO;
+	using System.Text;
+#if !NETCORE
+	using System.Web.UI;
+#else
+	using GeneXus.Utils;
+#endif
 
 	public class GxWebWrapper
 	{

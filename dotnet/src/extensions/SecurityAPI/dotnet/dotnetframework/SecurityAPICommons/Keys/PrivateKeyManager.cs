@@ -344,6 +344,7 @@ namespace SecurityAPICommons.Keys
 				//throw new FileLoadException(path + "not found or wrong password.");
 			}
 
+
 			if (pkcs12 != null)
 			{
 				string pName = null;
@@ -428,9 +429,11 @@ namespace SecurityAPICommons.Keys
 					this.error.setError("PK009", "The file contains a public key");
 					flag = false;
 
+
 				}
 				pemReader.Reader.Close();
 			}
+
 
 
 			return flag;
@@ -450,6 +453,7 @@ namespace SecurityAPICommons.Keys
 
 			if (key is DsaPrivateKeyParameters)
 			{
+
 
 				DsaPrivateKeyParameters _key = (DsaPrivateKeyParameters)key;
 				this.hasPrivateKey = true;

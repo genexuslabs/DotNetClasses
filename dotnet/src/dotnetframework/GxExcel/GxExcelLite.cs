@@ -384,7 +384,7 @@ namespace GeneXus.Office.ExcelLite
 						ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "GemBox.Spreadsheet.dll"));
 						if (ass==null)
 						{
-							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), @"bin\GemBox.Spreadsheet.dll"));
+							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "GemBox.Spreadsheet.dll"));
 						}
 						if (ass!=null)
 						{
@@ -398,7 +398,7 @@ namespace GeneXus.Office.ExcelLite
 							}
 							if (ass==null)
 							{
-								ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), @"bin\GemBox.ExcelLite.dll"));
+								ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "GemBox.ExcelLite.dll"));
 							}
 							if (ass!=null)
 							{
@@ -412,7 +412,7 @@ namespace GeneXus.Office.ExcelLite
 						ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), nmspace + ".dll"));
 						if (ass==null)
 						{
-							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), @"bin\" + nmspace + ".dll"));
+							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", nmspace + ".dll"));
 						}
 					}
 					GXLogging.Debug(log, "nmspace:"  + nmspace);
@@ -476,9 +476,11 @@ namespace GeneXus.Office.ExcelLite
 					{
 						GXLogging.Debug(log,"Opening Template " + template);
                         var stream = templateFile.GetStream();
-                        stream.Position = 0;
-
-                        GxExcelUtils.Invoke(ef, "LoadXls", new object[] { stream });
+						if (stream != null)
+						{
+							stream.Position = 0;
+							GxExcelUtils.Invoke(ef, "LoadXls", new object[] { stream });
+						}
                     }
 					else
 					{
@@ -490,9 +492,11 @@ namespace GeneXus.Office.ExcelLite
 				else if (file.Exists())
 				{
                     var stream = file.GetStream();
-                    stream.Position = 0;
-
-                    GxExcelUtils.Invoke(ef, "LoadXls", new object[]{stream});
+					if (stream != null)
+					{
+						stream.Position = 0;
+						GxExcelUtils.Invoke(ef, "LoadXls", new object[] { stream });
+					}
 				}
 				else
 				{

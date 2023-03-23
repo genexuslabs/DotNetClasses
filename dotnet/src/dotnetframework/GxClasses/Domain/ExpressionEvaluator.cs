@@ -949,6 +949,8 @@ namespace GeneXus.Utils
 		public override bool Equals(object obj)
 		{
 			EvalValue b = obj as EvalValue;
+			if (b == null)
+				return false;
 			if (stringValue == null)
 				return D == b.D;
 			else

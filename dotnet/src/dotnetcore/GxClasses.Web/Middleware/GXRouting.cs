@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
@@ -20,6 +21,7 @@ using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Net.Http.Headers;
 
 namespace GxClasses.Web.Middleware
 {
@@ -34,6 +36,8 @@ namespace GxClasses.Web.Middleware
 		static char[] urlSeparator = { '/', '\\' };
 		const char QUESTIONMARK = '?';
 		const string oauthRoute = "/oauth";
+		const string SvcExtension = ".svc";
+		const string SvcExtensionPattern = "*.svc";
 		public static string UrlTemplateControllerWithParms;
 
 		//Azure Functions
@@ -48,6 +52,7 @@ namespace GxClasses.Web.Middleware
 		public Dictionary<String, Dictionary<string, SingleMap>> servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
 		public Dictionary<string, List<string>> servicesValidPath = new Dictionary<string, List<string>>();
+		public HashSet<string> svcFiles;
 		public string restBaseURL;
 
 		public GXRouting(string baseURL)
@@ -185,7 +190,7 @@ namespace GxClasses.Web.Middleware
 					IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
 					context = new GxHttpContextAccesor(contextAccessor);
 				}
-
+				Task result = Task.CompletedTask;
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
 				bool isServiceInPath = ServiceInPath(path, out actualPath);
@@ -231,46 +236,44 @@ namespace GxClasses.Web.Middleware
 					{
 						if (HttpMethods.IsGet(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsGet(controllerInfo.Verb)))
 						{
-							return controller.Get(controllerInfo.Parameters);
+							result = controller.Get(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPost(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPost(controllerInfo.Verb)))
 						{
-							return controller.Post();
+							result = controller.Post();
 						}
 						else if (HttpMethods.IsDelete(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsDelete(controllerInfo.Verb)))
 						{
-							return controller.Delete(controllerInfo.Parameters);
+							result = controller.Delete(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPut(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPut(controllerInfo.Verb)))
 						{
-							return controller.Put(controllerInfo.Parameters);
+							result = controller.Put(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPatch(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPatch(controllerInfo.Verb)))
 						{
-							return controller.Patch(controllerInfo.Parameters);
+							result = controller.Patch(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
-							string mthheaders = "OPTIONS,HEAD";
-							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath))
+							List<string> mthheaders = new List<string>() { $"{HttpMethod.Options.Method},{HttpMethod.Head.Method}" };
+							if (!String.IsNullOrEmpty(actualPath) && servicesMapData.ContainsKey(actualPath) && !string.IsNullOrEmpty(controllerWithParms))
 							{
 								foreach (Tuple<string, string> t in servicesMapData[actualPath].Keys)
 								{
 									if (t.Item1.Equals(controllerWithParms.ToLower()))
 									{
-										mthheaders += "," + t.Item2;
+										mthheaders.Add(t.Item2);
 									}
 								}
 							}
 							else
 							{
-								mthheaders += ", GET, POST";
+								mthheaders.Add(HttpMethod.Get.Method);
+								mthheaders.Add(HttpMethod.Post.Method);
 							}
-							context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { (string)context.Request.Headers["Origin"] });
-							context.Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Origin, X-Requested-With, Content-Type, Accept" });
-							context.Response.Headers.Add("Access-Control-Allow-Methods", new[] { mthheaders });
-							context.Response.Headers.Add("Access-Control-Allow-Credentials", new[] { "true" });
-							context.Response.Headers.Add("Allow", mthheaders);
+							HttpHelper.CorsHeaders(context);
+							HttpHelper.AllowHeader(context, mthheaders);
 							context.Response.StatusCode = (int)HttpStatusCode.OK;
 						}
 						else
@@ -283,10 +286,12 @@ namespace GxClasses.Web.Middleware
 					{
 						GXLogging.Error(log, $"ProcessRestRequest controller not found path:{path} controllerWithParms:{controllerWithParms}");
 						context.Response.Headers.Clear();
-						return Task.FromException(new PageNotFoundException(path));
+						result = Task.FromException(new PageNotFoundException(path));
 					}
 				}
-				return Task.CompletedTask;
+				context.CommitSession();
+
+				return result;
 			}
 			catch (Exception ex)
 			{
@@ -410,9 +415,9 @@ namespace GxClasses.Web.Middleware
 			else
 			{
 				string controllerLower = controller.ToLower();
-				string svcFile = Path.Combine(ContentRootPath, $"{controller}.svc");
-				if (!File.Exists(svcFile))
-					svcFile = Path.Combine(ContentRootPath, $"{controllerLower}.svc");
+				string svcFile = SvcFile($"{controller}{SvcExtension}");
+				if (svcFile==null)
+					svcFile = SvcFile($"{controllerLower}{SvcExtension}");
 				if (File.Exists(svcFile))
 				{
 					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
@@ -443,6 +448,24 @@ namespace GxClasses.Web.Middleware
 			}
 			GXLogging.Warn(log, $"Controller was not found");
 			return null;
+		}
+		string SvcFile(string controller)
+		{
+			if (svcFiles == null)
+			{
+				svcFiles = new HashSet<string>();
+				foreach (string file in Directory.GetFiles(ContentRootPath, SvcExtensionPattern, SearchOption.AllDirectories))
+				{
+					svcFiles.Add(file);
+				}
+			}
+			string fileName;
+			string controllerFullName = Path.Combine(ContentRootPath, controller);
+			if (svcFiles.TryGetValue(new FileInfo(controllerFullName).FullName, out fileName))
+				return fileName;
+			else
+				return null;
+			
 		}
 		public void ServicesGroupSetting()
 		{
@@ -522,14 +545,13 @@ namespace GxClasses.Web.Middleware
 				throw;
 			}
 		}
-
 		public void ServicesFunctionsMetadata()
 		{
 			//Used for Azure functions
-			
+
 			string functionMetadataFile = "functions.metadata";
 			string metadataFilePath = Path.Combine(ContentRootPath, functionMetadataFile);
-			
+
 			if (File.Exists(metadataFilePath))
 			{
 				AzureRuntime = true;

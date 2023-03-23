@@ -509,7 +509,26 @@ namespace GeneXus.Utils
 		const char QMARK = '_';
 		static char[] numbersAndSep = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9', '-' };
 		static char[] numbers = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+		internal static Dictionary<char, char> LogUserEntryWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_=/[]{}\":, ".ToDictionary(item => item, item => item);
+		internal static Dictionary<char, char> HttpHeaderWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789./;-@(){}[]?,<>\\".ToDictionary(item => item, item => item);
 
+		internal static string Sanitize(string input, Dictionary<char, char> WhiteList)
+		{
+			StringBuilder sanitizedInput = new StringBuilder();
+			if (!string.IsNullOrEmpty(input))
+			{
+				foreach (char c in input)
+				{
+					if (WhiteList.TryGetValue(c, out char wchar))
+						sanitizedInput.Append(wchar);
+				}
+				return sanitizedInput.ToString();
+			}
+			else
+			{
+				return String.Empty;
+			}
+		}
 		public StringUtil(NumberFormatInfo numFmt)
 		{
 			numFmtInfo = numFmt;
@@ -1974,6 +1993,8 @@ namespace GeneXus.Utils
 		const long timeConversionFactor = 10000000L;
 		readonly static DateTime datetTime1970 = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 		internal static DateTime nullDate = ResetTime(DateTime.MinValue);
+		const string ISO_8601_TIME_SEPARATOR = "T";
+		const string ISO_8601_TIME_SEPARATOR_1 = ":";
 
 		enum DatePictureFmt
 		{
@@ -2586,6 +2607,17 @@ namespace GeneXus.Utils
 			}
 			return nullDate;
 		}
+		internal static DateTime CToDT2(string jsonDate) {
+
+			if (!string.IsNullOrEmpty(jsonDate) && (jsonDate.Contains(ISO_8601_TIME_SEPARATOR) || jsonDate.Contains(ISO_8601_TIME_SEPARATOR_1)))
+			{
+				return CToT2(jsonDate);
+			}
+			else
+			{
+				return CToD2(jsonDate);
+			}
+		}
 		public static DateTime CToT2(string value)
 		{
 			if (isNullJsonDate(value))
@@ -2675,6 +2707,8 @@ namespace GeneXus.Utils
 
 		static public byte Dow(DateTime dt)
 		{
+			if (dt == nullDate)
+				return 0;
 			return (byte)(dt.DayOfWeek + 1);
 		}
 		static public string CDow(DateTime dt, string lang)
@@ -3496,8 +3530,7 @@ namespace GeneXus.Utils
 			}
 			catch
 			{
-				FileInfo fi = new FileInfo(FileName); //Local file that do not exist
-				extension = fi.Extension;
+				extension = Path.GetExtension(FileName); //Local file that do not exist
 			}
 			int extStart = extension.LastIndexOf('.');
 			if (extStart == -1)
@@ -3837,7 +3870,7 @@ namespace GeneXus.Utils
 			if (domains == null)
 			{
 				domains = new Hashtable();
-				DOMAINS_FILE = GxContext.StaticPhysicalPath() + Path.DirectorySeparatorChar + "domains.ini";
+				DOMAINS_FILE = Path.Combine(GxContext.StaticPhysicalPath(), "domains.ini");
 			}
 			if (domains[domainId] == null)
 			{
@@ -4589,35 +4622,35 @@ namespace GeneXus.Utils
 			GxStringCollection usernames = new GxStringCollection();
 			try
 			{
-				DirectoryEntry Entry = GetAppPoolEntry();
-				if (Entry != null)
-				{
-					PropertyCollection Properties = Entry.Properties;
-					string AppPoolIdentityType = Properties["AppPoolIdentityType"][0].ToString().Trim();
-					switch (AppPoolIdentityType)
+				using (DirectoryEntry Entry = GetAppPoolEntry()) { 
+					if (Entry != null)
 					{
-						case APPPOOL_IDENTITY_TYPE_APPPOOL:
+						PropertyCollection Properties = Entry.Properties;
+						string AppPoolIdentityType = Properties["AppPoolIdentityType"][0].ToString().Trim();
+						switch (AppPoolIdentityType)
+						{
+							case APPPOOL_IDENTITY_TYPE_APPPOOL:
 #if NETCORE
-							usernames.Add(IDENTITY_NETCORE_APPPOOL);
+								usernames.Add(IDENTITY_NETCORE_APPPOOL);
 #else
 							usernames.Add(IDENTITY_CLASSIC_APPPOOL);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
 #endif
-							break;
-						case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
-						case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
-							usernames.Add(IDENTITY_NETWORK_SERVICE);
-							break;
-						case APPPOOL_IDENTITY_TYPE_LOCALSERVICE:
-							usernames.Add(IDENTITY_LOCAL_SERVICE);
-							break;
-						case APPPOOL_IDENTITY_TYPE_SPECIFICUSER:
-							usernames.Add(Properties["WAMUserName"][0].ToString());
-							break;
+								break;
+							case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
+							case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
+								usernames.Add(IDENTITY_NETWORK_SERVICE);
+								break;
+							case APPPOOL_IDENTITY_TYPE_LOCALSERVICE:
+								usernames.Add(IDENTITY_LOCAL_SERVICE);
+								break;
+							case APPPOOL_IDENTITY_TYPE_SPECIFICUSER:
+								usernames.Add(Properties["WAMUserName"][0].ToString());
+								break;
+						}
 					}
 				}
-
 			}
 			catch (Exception ex)
 			{
@@ -5176,8 +5209,7 @@ namespace GeneXus.Utils
 			return GetHash(WebSecurityHelper.StripInvalidChars(value), Cryptography.Constants.SecurityHashAlgorithm) == Crypto.Decrypt64(hash, key);
 		}
 
-		[Obsolete("GetMD5Hash is deprecated for security reasons, please use GetHash instead.", false)]
-		public static string GetMD5Hash(string s)  //MD5 is NOT FIPS-compilant
+		public static string GetMD5Hash(string s)
 		{
 			return GetHash(s, "MD5");
 		}
@@ -5521,14 +5553,18 @@ namespace GeneXus.Utils
 		{
 			using (Stream s = ImageFile(filePathOrUrl).GetStream())
 			{
-				return new Bitmap(s);
+				if (s != null)
+					return new Bitmap(s);
+				return null;
 			}
 		}
 		private static Image ImageCreateFromStream(string filePathOrUrl)
 		{
 			using (Stream s = ImageFile(filePathOrUrl).GetStream())
 			{
-				return Image.FromStream(s);
+				if (s != null)
+					return Image.FromStream(s);
+				return null;
 			}
 		}
 
@@ -5539,10 +5575,13 @@ namespace GeneXus.Utils
 
 		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{										
 				using (Image image = ImageCreateFromStream(imageFile))
 				{
+					if (image == null)
+						return string.Empty;
 					int newheight = height;
 					// Prevent using images internal thumbnail
 					image.RotateFlip(RotateFlipType.Rotate180FlipNone);
@@ -5553,15 +5592,15 @@ namespace GeneXus.Utils
 						double resize = (double)image.Width / (double)width;//get the resize vector
 						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
 					}//return the image resized to the given heigth and width
-					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);					
-					Save(output, imageFile, ImageFormat.Bmp);
+					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);
+					modifiedImage = Save(output, imageFile, ImageFormat.Bmp);
 				}				
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Resize {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string Scale(string imageFile, int percent)
 		{
@@ -5584,6 +5623,7 @@ namespace GeneXus.Utils
 		}
 		public static string Crop(string imageFile, int X, int Y, int Width, int Height)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
@@ -5598,8 +5638,8 @@ namespace GeneXus.Utils
 								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
 								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
 								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
-								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);								
-								Save(bmp, imageFile, OriginalImage.RawFormat);
+								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
+								modifiedImage = Save(bmp, imageFile, OriginalImage.RawFormat);
 							}
 						}
 					}
@@ -5609,10 +5649,11 @@ namespace GeneXus.Utils
 			{
 				GXLogging.Error(log, $"Crop {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string Rotate(string imageFile, int angle)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
@@ -5631,7 +5672,7 @@ namespace GeneXus.Utils
 								g.DrawImage(OriginalImage, new Point(0, 0));
 							}
 							rotatedImage.Save(ms, OriginalImage.RawFormat);
-							Save(rotatedImage, imageFile, OriginalImage.RawFormat);
+							modifiedImage = Save(rotatedImage, imageFile, OriginalImage.RawFormat);
 						}
 					}					
 				}
@@ -5640,60 +5681,76 @@ namespace GeneXus.Utils
 			{
 				GXLogging.Error(log, $"Rotate {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string FlipHorizontally(string imageFile)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
-					return Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					return modifiedImage;
 				}
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Flip Horizontally {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string FlipVertically(string imageFile)
 		{
+			string modifiedImage = string.Empty;	
 			try
 			{
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-					return Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					return modifiedImage;
 				}
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Flip Vertically {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 
 		public static string Save(Image bitmap, string imageFile, ImageFormat format)
-		{			
+		{
+			string destinationImagePath = string.Empty;
 			using (MemoryStream ms = new MemoryStream())
 			{
 				try
 				{
 					bitmap.Save(ms, format);
 				}
-				catch (Exception) {
+				catch (Exception)
+				{
 					//In some cases, copied memory image fails to save when ImageFormat MemoryBmp
 					//https://stackoverflow.com/questions/9073619/image-save-crashing-value-cannot-be-null-r-nparameter-name-encoder
 					bitmap.Save(ms, ImageFormat.Bmp);
 				}
 				ms.Position = 0;
-				GxFile file = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
-				file.Create(ms);
-				file.Close();
+				try
+				{
+					GxFile sourceImage = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
+					string destinationImageName = FileUtil.getTempFileName(sourceImage.GetDirectory().GetAbsoluteName(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
+					GxFile destinationImage = new GxFile(GxContext.StaticPhysicalPath(), destinationImageName);
+					destinationImage.Create(ms);
+					destinationImage.Close();
+					destinationImagePath = destinationImage.GetAbsoluteName();
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, $"Save modified image {imageFile} failed", ex);
+				}
 			}
-			return imageFile;
+			return destinationImagePath;
 		}
 
 		public static int GetImageWidth(string imageFile)
@@ -5702,7 +5759,10 @@ namespace GeneXus.Utils
 			{				
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
-					return bmp.Width;
+					if (bmp != null)
+					{
+						return bmp.Width;
+					}
 				}
 			}
 			catch (Exception ex)
@@ -5812,9 +5872,20 @@ namespace GeneXus.Utils
 				ThreadPool.QueueUserWorkItem(
 					arg =>
 					{
-						callbak(state);
-						resetEvent.Set();
-						events.TryRemove(eventGuid, out ManualResetEvent _);
+						try
+						{
+							callbak(state);
+						}
+						catch (Exception ex)
+						{
+							GXLogging.Error(log, "Error on submit of " + state.GetType(), ex);
+							throw;
+						}
+						finally
+						{
+							resetEvent.Set();
+							events.TryRemove(eventGuid, out ManualResetEvent _);
+						}
 
 					});
 				events[eventGuid]= resetEvent;

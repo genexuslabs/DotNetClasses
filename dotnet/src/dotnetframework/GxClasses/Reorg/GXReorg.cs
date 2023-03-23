@@ -225,8 +225,6 @@ namespace GeneXus.Reorg
 
         public bool BeginResume()
         {
-			StreamReader input = null;
-				
             try
             {
                 if (createDataBase || ignoreResume)
@@ -235,27 +233,29 @@ namespace GeneXus.Reorg
                 }
                 else if (File.Exists(RESUME_REOR_FILE))
                 {
-					input = File.OpenText(RESUME_REOR_FILE);
-                    String statement = input.ReadLine();
-					if (!string.IsNullOrEmpty(statement))
-                    {
-                        string timeStamp;
-                        Config.GetValueOf("VER_STAMP", out timeStamp);
-                        if (statement!=timeStamp)
-                        {
-							AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed1"), null);
-							AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed2"), null);
-							AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed3"), null);
-							GXReorganization.Error = true;
-                            return false;
-                        }
-                    }
-                    while (statement != null)
-                    {
-                        executedStatements[statement] = null;
-                        statement = input.ReadLine();
-                    }
-					executingResume = true;
+					using (StreamReader input = File.OpenText(RESUME_REOR_FILE))
+					{
+						String statement = input.ReadLine();
+						if (!string.IsNullOrEmpty(statement))
+						{
+							string timeStamp;
+							Config.GetValueOf("VER_STAMP", out timeStamp);
+							if (statement != timeStamp)
+							{
+								AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed1"), null);
+								AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed2"), null);
+								AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed3"), null);
+								GXReorganization.Error = true;
+								return false;
+							}
+						}
+						while (statement != null)
+						{
+							executedStatements[statement] = null;
+							statement = input.ReadLine();
+						}
+						executingResume = true;
+					}
                 }
 				return true;
             }
@@ -268,8 +268,6 @@ namespace GeneXus.Reorg
             finally
             {
 #if !NETCORE
-				if (input != null)
-					input.Close();
                 SerializeExecutedStatements();
 #endif
 			}

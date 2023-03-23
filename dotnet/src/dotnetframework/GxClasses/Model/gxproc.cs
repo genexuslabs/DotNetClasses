@@ -46,7 +46,6 @@ namespace GeneXus.Procedure
 		private DateTime beginExecute;
 		private ProcedureInfo pInfo;
 #endif
-		
 		public GXProcedure()
 		{
 #if !NETCORE
@@ -56,10 +55,10 @@ namespace GeneXus.Procedure
 				beginExecute = DateTime.Now;
 				pInfo = ProceduresInfo.addProcedureInfo(name);
 				pInfo.incCount();
-				
 			}
 #endif
 		}
+
 		public bool DisconnectAtCleanup
 		{
 			get{ return disconnectUserAtCleanup;}
@@ -91,7 +90,7 @@ namespace GeneXus.Procedure
 		}
 		private void exitApplication(bool flushBatchCursor)
 		{
-			if (IsMain && !(context as GxContext).IsSubmited)
+			if (!(GxContext.IsHttpContext || GxContext.IsRestService) && IsMain && GxApplication.MainContext==context)
 				ThreadUtil.WaitForEnd();
 
 			if (flushBatchCursor)
@@ -317,10 +316,6 @@ namespace GeneXus.Procedure
 			context.wjLoc = url;
 		}
 
-		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack)
-		{
-		}
-
 		private Diagnostics.GXDebugInfo dbgInfo;
 		protected void initialize(int objClass, int objId, int dbgLines, long hash)
 		{
@@ -345,14 +340,13 @@ namespace GeneXus.Procedure
 		static public IReportHandler GetPrinter( int outputType, string path, Stream reportOutputStream)
 		{
 			IReportHandler reportHandler;
-#if !NETCORE
 			if	(outputType == OUTPUT_RVIEWER_NATIVE)
 				reportHandler = new GxReportBuilderNative(path, reportOutputStream);
+#if !NETCORE
 			else if	(outputType == OUTPUT_RVIEWER_DLL)
 				reportHandler = new GxReportBuilderDll(path);
-			else
 #endif
-			if  (outputType == OUTPUT_PDF)
+			else if (outputType == OUTPUT_PDF)
 			{
 				try
 				{

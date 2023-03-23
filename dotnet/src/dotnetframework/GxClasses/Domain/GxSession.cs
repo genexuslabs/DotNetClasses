@@ -56,7 +56,10 @@ namespace GeneXus.Http
             if (context.HttpContext != null)
             {
 #if NETCORE
-				_httpSession = new HttpSessionState(context.HttpContext.Session);
+				if (context.HttpContext is GxHttpContextAccesor)
+					_httpSession = new HttpSyncSessionState(context.HttpContext);
+				else
+					_httpSession = new HttpSessionState(context.HttpContext.Session);
 #else
 				_httpSession = context.HttpContext.Session;
 #endif
@@ -79,7 +82,7 @@ namespace GeneXus.Http
         public void Set(string key, string val)
         {
 			key = GXUtil.NormalizeKey(key);
-			GXLogging.Debug(log, "Set Key" + key + "=" + val);
+			GXLogging.DebugSanitized(log, "Set Key" + key + "=" + val);
 			if (_httpSession != null)
 			{
 				GXLogging.Debug(log, "SetObject SessionId : " + _httpSession.SessionID);

@@ -393,20 +393,23 @@ namespace ConnectionBuilder
 			{
 				try
 				{
-					var command = connectionTest.CreateCommand();
-					command.CommandText = "select * from master.sys.databases";
-
-					var reader = command.ExecuteReader();
-
-					Cursor = Cursors.WaitCursor;
-					while (reader.Read())
+					using (var command = connectionTest.CreateCommand())
 					{
-						try
+						command.CommandText = "select * from master.sys.databases";
+						using (var reader = command.ExecuteReader())
 						{
-							this.cboDatabase.Items.Add(reader.GetValue(0).ToString());
-						}
-						catch
-						{
+
+							Cursor = Cursors.WaitCursor;
+							while (reader.Read())
+							{
+								try
+								{
+									this.cboDatabase.Items.Add(reader.GetValue(0).ToString());
+								}
+								catch
+								{
+								}
+							}
 						}
 					}
 					this.cboDatabase.Sorted = true;

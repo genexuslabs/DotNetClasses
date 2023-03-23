@@ -503,21 +503,24 @@ namespace GeneXus.Utils
 		{
 			IGxJSONAble ijsonprop;
 			JArray jarray = jsonArr as JArray;
-			if ((ijsonprop = prop as IGxJSONAble) != null)
+			if (jarray != null)
 			{
-				GxUserType bc = ijsonprop as GxUserType;
-				if (bc != null)
-					jarray.Add(bc.GetJSONObject(includeState));
+				if ((ijsonprop = prop as IGxJSONAble) != null)
+				{
+					GxUserType bc = ijsonprop as GxUserType;
+					if (bc != null)
+						jarray.Add(bc.GetJSONObject(includeState));
+					else
+						jarray.Add(ijsonprop.GetJSONObject());
+				}
+				else if (prop is DateTime)
+				{
+					jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
+				}
 				else
-					jarray.Add(ijsonprop.GetJSONObject());
-			}
-			else if (prop is DateTime)
-			{
-				jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
-			}
-			else
-			{
-				jarray.Add(prop);
+				{
+					jarray.Add(prop);
+				}
 			}
 		}
 		public Object GetJSONObject(bool includeState)
@@ -534,11 +537,14 @@ namespace GeneXus.Utils
 		{
 			base.Clear();
 			JArray jobj = obj as JArray;
-			for (int i = 0; i < jobj.Length; i++)
+			if (jobj != null)
 			{
-				T obj1 = (T)Activator.CreateInstance(typeof(T), new object[] { context });
-				obj1.FromJSONObject(jobj[i]);
-				Add(obj1);
+				for (int i = 0; i < jobj.Length; i++)
+				{
+					T obj1 = (T)Activator.CreateInstance(typeof(T), new object[] { context });
+					obj1.FromJSONObject(jobj[i]);
+					Add(obj1);
+				}
 			}
 		}
 	}
@@ -693,6 +699,8 @@ namespace GeneXus.Utils
 			try
 			{
 				Object[][] itemKey = item.GetBCKey();
+				if (itemKey == null)
+					return false;
 				Object[] returnedKey = new Object[itemKey.Length];
 				Object[] parsedKey = new Object[key.Length];
 				for (int i = 0; i < itemKey.Length; i++)

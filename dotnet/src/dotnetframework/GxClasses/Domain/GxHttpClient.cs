@@ -56,15 +56,16 @@ namespace GeneXus.Http.Client
 			HeaderTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n" + "Content-Type: {2}\r\n\r\n";
 		}
 	}
-	public class GxHttpClient : IGxHttpClient
+	public class GxHttpClient : IGxHttpClient, IDisposable
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.Client.GxHttpClient));
 		public const int _Basic = 0;
 		public const int _Digest = 1;
 		public const int _NTLM = 2;
 		public const int _Kerberos = 3;
+		const int StreamWriterDefaultBufferSize = 1024;
 		Stream _sendStream;
-		Stream _receiveStream;
+		byte[] _receiveData;
 		int _timeout = 30000;
 		short _statusCode = 0;
 		string _proxyHost;
@@ -120,17 +121,21 @@ namespace GeneXus.Http.Client
 				_sendStream = value;
 			}
 		}
+
 		public Stream ReceiveStream
 		{
 			get
 			{
-				if (_receiveStream == null)
-					_receiveStream = new MemoryStream();
-
-				return _receiveStream;
+				return null; 
 			}
 		}
-
+		internal byte[] ReceiveData
+		{
+			get
+			{
+				return _receiveData;
+			}
+		}
 
 #if NETCORE
 		[SecuritySafeCritical]
@@ -351,12 +356,25 @@ namespace GeneXus.Http.Client
 					sHost = sHost.Substring(0, sHost.Length - 1);
 			}
 			sBaseUrl = _baseUrl;
-			if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
-				sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
-			_url = _scheme + sHost + sPort + "/" + sBaseUrl;
+			if (IsAbsolute(sBaseUrl))
+			{
+				_url = sBaseUrl;
+			}
+			else
+			{
+				if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
+					sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
+
+				_url = _scheme + sHost + sPort + "/" + sBaseUrl;
+			}
 			if (_url.EndsWith("/"))
 				_url = _url.Substring(0, _url.Length - 1);
 		}
+		bool IsAbsolute(string url)
+		{
+			return Uri.IsWellFormedUriString(url, UriKind.Absolute);
+		}
+
 		public void ClearHeaders()
 		{
 			_headers.Clear();
@@ -407,7 +425,7 @@ namespace GeneXus.Http.Client
 			_formVars.Add(name, value);
 		}
 
-		void sendVariables(Stream reqStream)
+		void SendVariables(Stream reqStream)
 		{
 			List<string> vars = new List<string>();
 			for (int i = 0; i < _formVars.Count; i++)
@@ -418,8 +436,15 @@ namespace GeneXus.Http.Client
 			if (vars.Count > 0)
 			{
 				string buffer = string.Join(variableSeparator(), vars.ToArray());
-				StreamWriter sw = new StreamWriter(reqStream);
-				sw.Write(buffer);
+				WriteToStream(buffer, reqStream);
+			}
+		}
+		void WriteToStream(string data, Stream stream, Encoding encoding=null)
+		{
+			Encoding streamEncoding = encoding != null ? encoding : new UTF8Encoding(false, true);
+			using (StreamWriter sw = new StreamWriter(stream, streamEncoding, StreamWriterDefaultBufferSize, true))
+			{
+				sw.Write(data);
 				sw.Flush();
 			}
 		}
@@ -445,13 +470,7 @@ namespace GeneXus.Http.Client
 		}
 		public void AddString(string s)
 		{
-			StreamWriter sw;
-			if (_contentEncoding != null)
-				sw = new StreamWriter(SendStream, _contentEncoding);
-			else
-				sw = new StreamWriter(SendStream);
-			sw.Write(s);
-			sw.Flush();
+			WriteToStream(s, SendStream, _contentEncoding);
 		}
 		public void ClearFiles()
 		{
@@ -644,16 +663,26 @@ namespace GeneXus.Http.Client
 			setHttpVersion(request);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
+			{
 				handler.Proxy = proxy;
+#if !NETCORE
+				handler.WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy;
+#endif
+			}
 			HttpResponseMessage response;
+			TimeSpan milliseconds = TimeSpan.FromMilliseconds(_timeout);
+#if !NETCORE
+			handler.ReceiveDataTimeout = milliseconds;
+			handler.ReceiveHeadersTimeout = milliseconds;
+#endif
 			using (client = new HttpClient(handler))
 			{
-				client.Timeout = TimeSpan.FromMilliseconds(_timeout);
+				client.Timeout = milliseconds;
 				client.BaseAddress = request.RequestUri;
 
 				using (MemoryStream reqStream = new MemoryStream())
 				{
-					sendVariables(reqStream);
+					SendVariables(reqStream);
 					SendStream.Seek(0, SeekOrigin.Begin);
 					BytesRead = SendStream.Read(Buffer, 0, 1024);
 					GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
@@ -675,9 +704,7 @@ namespace GeneXus.Http.Client
 		}
 		void ReadReponseContent(HttpResponseMessage response)
 		{
-			_receiveStream = new MemoryStream();
-			int BytesRead;
-			Byte[] Buffer = new Byte[1024];
+			_receiveData = Array.Empty<byte>();
 			try
 			{
 				Stream stream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
@@ -686,9 +713,6 @@ namespace GeneXus.Http.Client
 					charset = null;
 				else
 					charset = response.Content.Headers.ContentType.CharSet;
-				Buffer = new Byte[1024];
-				BytesRead = stream.Read(Buffer, 0, 1024);
-				GXLogging.Debug(log, "BytesRead " + BytesRead);
 				bool encodingFound = false;
 				if (!string.IsNullOrEmpty(charset))
 				{
@@ -706,16 +730,18 @@ namespace GeneXus.Http.Client
 						charset = String.Empty;
 					}
 				}
-				while (BytesRead > 0)
+				
+				using (MemoryStream ms = new MemoryStream())
 				{
-					if (!encodingFound)
-					{
-						_encoding = DetectEncoding(charset, out encodingFound, Buffer, BytesRead);
-					}
-					_receiveStream.Write(Buffer, 0, BytesRead);
-					BytesRead = stream.Read(Buffer, 0, 1024);
-					GXLogging.Debug(log, "BytesRead " + BytesRead);
+					stream.CopyTo(ms);
+					_receiveData = ms.ToArray();
 				}
+				int bytesRead = _receiveData.Length;
+				GXLogging.Debug(log, "BytesRead " + _receiveData.Length);
+				if (bytesRead > 0 && !encodingFound)
+				{
+					_encoding = DetectEncoding(charset, out encodingFound, _receiveData, bytesRead);
+				}				
 			}
 			catch (IOException ioEx)
 			{
@@ -724,12 +750,33 @@ namespace GeneXus.Http.Client
 				else
 					throw ioEx;
 			}
-			_receiveStream.Seek(0, SeekOrigin.Begin);
 		}
-		public void Execute(string method, string name)
+		bool UseOldHttpClient(string name)
 		{
 			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+				return true;
+
+#if !NETCORE
+			try
 			{
+				string requestUrl = GetRequestURL(name);
+				Uri uri = new Uri(requestUrl);
+				if (!uri.IsDefaultPort)
+					return true;
+			}
+			catch (Exception e)
+			{
+				GXLogging.Warn(log, "UseOldHttpClient", e);
+			}
+#endif
+			return false;
+		}
+
+		public void Execute(string method, string name)
+		{
+			if (UseOldHttpClient(name))
+			{
+				GXLogging.Debug(log, "Using legacy GxHttpClient");
 				WebExecute(method, name);
 			}
 			else
@@ -821,9 +868,11 @@ namespace GeneXus.Http.Client
 				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + _statusDescription + ".";
 			}
 			ClearSendStream();
-			GXLogging.Debug(log, "_responseString " + ToString());
+			GXLogging.DebugSanitized(log, "_responseString " + ToString());
 		}
 		NameValueCollection _respHeaders;
+		private bool disposedValue;
+
 		void LoadResponseHeaders(HttpResponseMessage resp)
 		{
 			_respHeaders = new NameValueCollection();
@@ -991,10 +1040,17 @@ namespace GeneXus.Http.Client
 				return name;
 			else
 			{
-				if (!string.IsNullOrEmpty(name) && name.IndexOf('/') == 0)
-					return _url + name;
+				if (IsAbsolute(name))
+				{
+					return name;
+				}
 				else
-					return _url + "/" + name;
+				{
+					if (!string.IsNullOrEmpty(name) && name.IndexOf('/') == 0)
+						return _url + name;
+					else
+						return _url + "/" + name;
+				}
 			}
 		}
 #if !NETCORE
@@ -1046,7 +1102,7 @@ namespace GeneXus.Http.Client
 				using (Stream reqStream = req.GetRequestStreamAsync().GetAwaiter().GetResult())
 #endif
 				{
-					sendVariables(reqStream);
+					SendVariables(reqStream);
 					SendStream.Seek(0, SeekOrigin.Begin);
 					BytesRead = SendStream.Read(Buffer, 0, 1024);
 					GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
@@ -1118,8 +1174,6 @@ namespace GeneXus.Http.Client
 		{
 			HttpWebRequest req;
 			HttpWebResponse resp = null;
-			int BytesRead;
-			Byte[] Buffer = new Byte[1024];
 
 			_errCode = 0;
 			_errDescription = string.Empty;
@@ -1146,8 +1200,6 @@ namespace GeneXus.Http.Client
 				_errCode = 1;
 				_errDescription = e.Message;
 				resp = (HttpWebResponse)(e.Response);
-				if (resp == null)
-					return;
 			}
 #if NETCORE
 			catch (AggregateException aex)
@@ -1162,65 +1214,71 @@ namespace GeneXus.Http.Client
 					resp = baseEx.Response as HttpWebResponse;
 					_errDescription = baseEx.Message;
 				}
-				if (resp == null)
-					return;
 			}
 #endif
-
-			GXLogging.Debug(log, "Reading response...");
-			loadResponseHeaders(resp);
-			_receiveStream = new MemoryStream();
-			using (Stream rStream = resp.GetResponseStream())
+			catch (Exception e)
 			{
-				try
-				{
-					Buffer = new Byte[1024];
-					BytesRead = rStream.Read(Buffer, 0, 1024);
-					GXLogging.Debug(log, "BytesRead " + BytesRead);
-					bool encodingFound = false;
-					String charset = resp.ContentType;
-					if (!string.IsNullOrEmpty(charset))
-					{
-						int idx = charset.IndexOf("charset=");
-						if (idx > 0)
-						{
-							idx += 8;
-							charset = charset.Substring(idx, charset.Length - idx);
-							_encoding = GetEncoding(charset);
-							if (_encoding != null)
-								encodingFound = true;
-						}
-						else
-						{
-							charset = String.Empty;
-						}
-					}
-					while (BytesRead > 0)
-					{
-						if (!encodingFound)
-						{
-							_encoding = DetectEncoding(charset, out encodingFound, Buffer, BytesRead);
-						}
-						_receiveStream.Write(Buffer, 0, BytesRead);
-						BytesRead = rStream.Read(Buffer, 0, 1024);
-						GXLogging.Debug(log, "BytesRead " + BytesRead);
-					}
-				}
-				catch (IOException ioEx)
-				{
-					if (_errCode == 1)
-						GXLogging.Warn(log, "Could not read response", ioEx);
-					else
-						throw ioEx;
-				}
+				GXLogging.Warn(log, "Error Execute", e);
+				_errCode = 1;
+				_errDescription = e.Message;
 			}
-			_receiveStream.Seek(0, SeekOrigin.Begin);
-			_statusCode = (short)resp.StatusCode;
-			_statusDescription = resp.StatusDescription;
-			resp.Close();
-			ClearSendStream();
-			GXLogging.Debug(log, "_responseString " + ToString());
 
+
+			_receiveData = Array.Empty<byte>();
+			if (resp != null)
+			{
+				GXLogging.Debug(log, "Reading response...");
+				loadResponseHeaders(resp);
+
+				String charset = resp.ContentType;
+				using (Stream rStream = resp.GetResponseStream())
+				{
+					try
+					{
+						bool encodingFound = false;
+						if (!string.IsNullOrEmpty(charset))
+						{
+							int idx = charset.IndexOf("charset=");
+							if (idx > 0)
+							{
+								idx += 8;
+								charset = charset.Substring(idx, charset.Length - idx);
+								_encoding = GetEncoding(charset);
+								if (_encoding != null)
+									encodingFound = true;
+							}
+							else
+							{
+								charset = String.Empty;
+							}
+						}
+						using (MemoryStream ms = new MemoryStream())
+						{
+							rStream.CopyTo(ms);
+							_receiveData = ms.ToArray();
+						}
+						int bytesRead = _receiveData.Length;
+						GXLogging.Debug(log, "BytesRead " + bytesRead);
+
+						if (bytesRead > 0 && !encodingFound)
+						{
+							_encoding = DetectEncoding(charset, out encodingFound, _receiveData, bytesRead);
+						}
+					}
+					catch (IOException ioEx)
+					{
+						if (_errCode == 1)
+							GXLogging.Warn(log, "Could not read response", ioEx);
+						else
+							throw ioEx;
+					}
+				}
+				_statusCode = (short)resp.StatusCode;
+				_statusDescription = resp.StatusDescription;
+				resp.Close();
+				GXLogging.DebugSanitized(log, "_responseString " + ToString());
+			}
+			ClearSendStream();
 		}
 		private Encoding GetEncoding(string charset)
 		{
@@ -1306,34 +1364,23 @@ namespace GeneXus.Http.Client
 		{
 			if (_encoding == null)
 				_encoding = Encoding.UTF8;
-			MemoryStream ms = (MemoryStream)ReceiveStream;
-			ms.Seek(0, SeekOrigin.Begin);
-			Byte[] Buffer = ms.ToArray();
-			return _encoding.GetString(Buffer, 0, Buffer.Length);
+			if (_receiveData == null)
+				return string.Empty;
+			return _encoding.GetString(_receiveData);
 		}
 		public void ToFile(string fileName)
 		{
-			FileStream fs;
 			string pathName = fileName;
 
 #if !NETCORE
 			if (HttpContext.Current != null)
 #endif
-				if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)
-					pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-			using (fs = new FileStream(pathName, FileMode.Create, FileAccess.Write))
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+			if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)
+				pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
+
+			if (_receiveData != null)
 			{
-				ReceiveStream.Seek(0, SeekOrigin.Begin);
-				Byte[] Buffer = new Byte[1024];
-				int BytesRead = ReceiveStream.Read(Buffer, 0, 1024);
-				while (BytesRead > 0)
-				{
-					fs.Write(Buffer, 0, BytesRead);
-					BytesRead = ReceiveStream.Read(Buffer, 0, 1024);
-				}
-				ReceiveStream.Seek(0, SeekOrigin.Begin);
+				File.WriteAllBytes(pathName, _receiveData);
 			}
 		}
 
@@ -1399,6 +1446,29 @@ namespace GeneXus.Http.Client
 				c = new X509Certificate2(file, pass);
 			}
 			_certificateCollection.Add(c);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					_receiveData = null;
+					_sendStream?.Dispose();
+				}
+				disposedValue = true;
+			}
+		}
+		~GxHttpClient()
+		{
+		     Dispose(false);
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 	}
 

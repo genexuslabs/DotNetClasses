@@ -23,6 +23,7 @@ namespace GeneXus.Services
 		public static string SESSION_SERVICE = "Session";
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
 		public static string QUEUE_SERVICE = "QueueService";
+		public static string MESSAGEBROKER_SERVICE = "MessageBrokerService";
 		private static string[] SERVICES_FILE = new string[] { "CloudServices.dev.config", "CloudServices.config" };
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
 		private Dictionary<string, GXService> services = new Dictionary<string, GXService>();
@@ -48,6 +49,12 @@ namespace GeneXus.Services
 				}
 				return s_instance;
 			}
+			set { }			
+		}
+
+		public void AddService(string name, GXService service)
+		{
+			services[name] = service;
 		}
 
 		public static void LoadFromFile(string fileName, ref GXServices services)
@@ -121,9 +128,9 @@ namespace GeneXus.Services
 			service.Properties = properties;
 			service.AllowMultiple = string.IsNullOrEmpty(allowMultiple) ? false : bool.Parse(allowMultiple);
 			if (service.AllowMultiple)
-				services[$"{service.Type}:{service.Name}"] = service;
+				AddService($"{service.Type}:{service.Name}", service);
 			else
-				services[type] = service;
+				AddService(type, service);
 
 		}
 
@@ -196,12 +203,17 @@ namespace GeneXus.Services
 			return externalProvider;
 		}
 
+		public static void SetExternalProvider(ExternalProvider provider)
+		{
+			externalProvider = provider;
+		}
+
 		public static ExternalProvider GetExternalProviderImpl(string service)
 		{
 			ExternalProvider externalProviderImpl = null;
 			if (GetGXServices() != null)
 			{
-				GXService providerService = GetGXServices().Get(service);
+				GXService providerService = GetGXServices()?.Get(service);
 				if (providerService != null)
 				{
 					try

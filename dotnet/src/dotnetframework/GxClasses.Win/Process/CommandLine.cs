@@ -129,11 +129,7 @@ namespace GeneXus.Utils
 					//If WorkingDirectory is an empty string, the current directory is understood to contain the executable.
 					try
 					{
-						if (Path.IsPathRooted(file))
-						{
-							p.StartInfo.WorkingDirectory = "\"" + Path.GetDirectoryName(file) + "\"";
-						}
-						else
+						if (!Path.IsPathRooted(file))
 						{
 							p.StartInfo.WorkingDirectory = GxContext.StaticPhysicalPath();
 						}
@@ -145,7 +141,7 @@ namespace GeneXus.Utils
 				}
 				try
 				{
-					p.StartInfo.FileName = "\"" + file + "\"";
+					p.StartInfo.FileName = file;
 				}
 				catch (Exception e)
 				{

@@ -245,14 +245,16 @@ namespace GeneXus.Utils
 						context1 = "/" + context;
 					AuthenticationTypes at = getAuthentication();
 					_entry = new DirectoryEntry("LDAP://" + getPath() + context1, _user, _password, at);
-					DirectorySearcher ds = new DirectorySearcher(_entry, filter, new string[] { name });
-					foreach (SearchResult result in ds.FindAll())
+					using (DirectorySearcher ds = new DirectorySearcher(_entry, filter, new string[] { name }))
 					{
-						PropertyValueCollection values = (PropertyValueCollection)(result.GetDirectoryEntry().Properties[name]);
-						StringBuilder sb = new StringBuilder();
-						for (int i = 0; i < values.Count; i++)
-							sb.Append(values[i].ToString() + " ");
-						sc.Add(sb.ToString());
+						foreach (SearchResult result in ds.FindAll())
+						{
+							PropertyValueCollection values = (PropertyValueCollection)(result.GetDirectoryEntry().Properties[name]);
+							StringBuilder sb = new StringBuilder();
+							for (int i = 0; i < values.Count; i++)
+								sb.Append(values[i].ToString() + " ");
+							sc.Add(sb.ToString());
+						}
 					}
 				}
 			}

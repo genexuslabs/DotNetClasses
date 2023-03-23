@@ -14,6 +14,7 @@ using log4net;
 using System.Web.SessionState;
 using System.Web.Configuration;
 using System.Security;
+using System.Net.Http;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -74,26 +75,42 @@ namespace GeneXus.Http.HttpModules
 				ServicesGroupSetting(GxContext.StaticPhysicalPath());
 				GXAPIModule.moduleStarted = true;
 			}
-			context.PostMapRequestHandler += new EventHandler(context_PostMapRequestHandler);
+			context.PostMapRequestHandler += context_PostMapRequestHandler;
+			context.PostResolveRequestCache += onPostResolveRequestCache;
 		}
-
+		private void onPostResolveRequestCache(object sender, EventArgs eventArgs)
+		{
+			if (string.Equals(HttpContext.Current.Request.HttpMethod, HttpMethod.Options.Method, StringComparison.OrdinalIgnoreCase))
+			{
+				IHttpHandler apiHandler = MapHandler(sender, eventArgs);
+				if (apiHandler != null)
+					HttpContext.Current.RemapHandler(apiHandler);
+			}
+		}
 		void IHttpModule.Dispose()
 		{
 		}
-		
-		private void context_PostMapRequestHandler(object sender, EventArgs e)
+
+		private void context_PostMapRequestHandler(object sender, EventArgs eventArgs)
+		{
+			HttpApplication httpApp = sender as HttpApplication;
+			IHttpHandler apiHandler = MapHandler(sender, eventArgs);
+			if (apiHandler != null)
+				httpApp.Context.Handler = apiHandler;
+
+		}
+		private IHttpHandler MapHandler(object sender, EventArgs e)
 		{
 			HttpApplication httpApp = sender as HttpApplication;
 			HttpContext context = httpApp.Context;
-			String actualPath = "";			
-			if (GXAPIModule.serviceInPath(context.Request.FilePath, actualPath: out actualPath))
+			if (GXAPIModule.serviceInPath(context.Request.FilePath, actualPath: out _))
 			{
-				IHttpHandler myHandler = new GeneXus.HttpHandlerFactory.HandlerFactory().GetHandler(context, context.Request.RequestType, context.Request.Url.AbsoluteUri, context.Request.FilePath);
-				if (myHandler !=null)
-					context.Handler = myHandler;
+				return new GeneXus.HttpHandlerFactory.HandlerFactory().GetHandler(context, context.Request.RequestType, context.Request.Url.AbsoluteUri, context.Request.FilePath);
 			}
+			else
+				return null;
 		}
-		
+
 		public static Boolean serviceInPath(String path, out String actualPath)
 		{
 			actualPath = "";
@@ -191,7 +208,7 @@ namespace GeneXus.Http.HttpModules
 
 		public void Init(HttpApplication app)
 		{
-			App = app;
+			App = app; 
 			try
 			{
 				SessionStateSection sessionStateSection = (SessionStateSection)System.Configuration.ConfigurationManager.GetSection("system.web/sessionState");

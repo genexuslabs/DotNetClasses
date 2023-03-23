@@ -7,6 +7,7 @@ using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Services;
+using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
 using log4net;
@@ -22,26 +23,37 @@ using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+
 
 namespace GeneXus.Application
 {
 	public class Program
 	{
 		const string DEFAULT_PORT = "80";
+		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
 		public static void Main(string[] args)
 		{
 			try
 			{
 				string port = DEFAULT_PORT;
+				string schema = DEFAULT_SCHEMA;
 				if (args.Length > 2)
 				{
 					Startup.VirtualPath = args[0];
 					Startup.LocalPath = args[1];
 					port = args[2];
+					if (args.Length > 3 && Uri.UriSchemeHttps.Equals(args[3], StringComparison.OrdinalIgnoreCase))
+						schema = Uri.UriSchemeHttps;
+				}
+				else
+				{
+					LocatePhysicalLocalPath();
+
 				}
 				if (port == DEFAULT_PORT)
 				{
@@ -49,7 +61,7 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					BuildWebHostPort(null, port).Run();
+					BuildWebHostPort(null, port, schema).Run();
 				}
 			}
 			catch (Exception e)
@@ -57,22 +69,37 @@ namespace GeneXus.Application
 				Console.Error.WriteLine("ERROR:");
 				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
 				Console.Read();
-			}
+			}			
 		}
+
 		public static IWebHost BuildWebHost(string[] args) =>
 		   WebHost.CreateDefaultBuilder(args)
 			.ConfigureLogging(logging => logging.AddConsole())
 			.UseStartup<Startup>()
+			.UseContentRoot(Startup.LocalPath)
 			.Build();
 
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
+			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
+		}
+		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
+		{
 			return WebHost.CreateDefaultBuilder(args)
 				 .ConfigureLogging(logging => logging.AddConsole())
-				 .UseUrls(Preferences.HttpProtocolSecure() ? $"{Uri.UriSchemeHttps}://*:{port}" : $"{Uri.UriSchemeHttp}://*:{port}")
+				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
+				.UseContentRoot(Startup.LocalPath)
 				.Build();
 		}
+		private static void LocatePhysicalLocalPath()
+		{
+			string startup = FileUtil.GetStartupDirectory();
+			string startupParent = Directory.GetParent(startup).FullName;
+			if (startup == Startup.LocalPath && !File.Exists(Path.Combine(startup, Startup.APP_SETTINGS)) && File.Exists(Path.Combine(startupParent, Startup.APP_SETTINGS)))
+				Startup.LocalPath = startupParent;
+		}
+
 	}
 
 	public static class GXHandlerExtensions
@@ -97,6 +124,7 @@ namespace GeneXus.Application
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
+		internal static string APP_SETTINGS = "appsettings.json";
 
 		const string UrlTemplateControllerWithParms = "controllerWithParms";
 		const string RESOURCES_FOLDER = "Resources";
@@ -108,13 +136,17 @@ namespace GeneXus.Application
 		const string SWAGGER_DEFAULT_YAML = "default.yaml";
 		const string DEVELOPER_MENU = "developermenu.html";
 		const string SWAGGER_SUFFIX = "swagger";
+		const string CORS_POLICY_NAME = "AllowSpecificOriginsPolicy";
+		const string CORS_ANY_ORIGIN = "*";
+		const double CORS_MAX_AGE_SECONDS = 86400;
 
 		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
 
-		public Startup(Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
+		public Startup(IConfiguration configuration, IHostingEnvironment env)
 		{
+			Config.ConfigRoot = configuration;
 			GXRouting.ContentRootPath = env.ContentRootPath;
 			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
 			GxContext.IsHttpContext = true;
@@ -122,6 +154,8 @@ namespace GeneXus.Application
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
+			OpenTelemetryService.Setup(services);
+
 			services.AddMvc(option => option.EnableEndpointRouting = false);
 			services.Configure<KestrelServerOptions>(options =>
 			{
@@ -193,7 +227,39 @@ namespace GeneXus.Application
 					options.EnableForHttps = true;
 				});
 			}
+			DefineCorsPolicy(services);
 			services.AddMvc();
+		}
+
+		private void DefineCorsPolicy(IServiceCollection services)
+		{
+			if (Preferences.CorsEnabled)
+			{
+				string corsAllowedOrigins = Preferences.CorsAllowedOrigins();
+				if (!string.IsNullOrEmpty(corsAllowedOrigins))
+				{
+					string[] origins = corsAllowedOrigins.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+					foreach (string origin in origins)
+					{
+						GXLogging.Info(log, $"Adding origin to CORS policy:", origin);
+					}
+					services.AddCors(options =>
+					{
+						options.AddPolicy(name: CORS_POLICY_NAME,
+										  policy =>
+										  {
+											  policy.WithOrigins(origins);
+											  if (!corsAllowedOrigins.Contains(CORS_ANY_ORIGIN))
+											  {
+												  policy.AllowCredentials();
+											  }
+											  policy.AllowAnyHeader();
+											  policy.AllowAnyMethod();
+											  policy.SetPreflightMaxAge(TimeSpan.FromSeconds(CORS_MAX_AGE_SECONDS));
+										  });
+					});
+				}
+			}
 		}
 
 		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
@@ -220,7 +286,7 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
-			
+			LogConfiguration.SetupLog4Net();			
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";
@@ -246,6 +312,7 @@ namespace GeneXus.Application
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
+			ConfigureCors(app);
 			ConfigureSwaggerUI(app, baseVirtualPath);
 
 			if (Directory.Exists(Path.Combine(LocalPath, RESOURCES_FOLDER)))
@@ -298,7 +365,7 @@ namespace GeneXus.Application
 				OnPrepareResponse = s =>
 				{
 					var path = s.Context.Request.Path;
-					if (path.HasValue &&  path.Value.IndexOf("/appsettings.json", StringComparison.OrdinalIgnoreCase)>=0)
+					if (path.HasValue &&  path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase)>=0)
 					{
 						s.Context.Response.StatusCode = 401;
 						s.Context.Response.Body = Stream.Null;
@@ -351,6 +418,14 @@ namespace GeneXus.Application
 				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
 			});
 			app.UseEnableRequestRewind();
+		}
+
+		private void ConfigureCors(IApplicationBuilder app)
+		{
+			if (Preferences.CorsEnabled)
+			{
+				app.UseCors(CORS_POLICY_NAME);
+			}
 		}
 
 		private void ConfigureSwaggerUI(IApplicationBuilder app, string baseVirtualPath)
