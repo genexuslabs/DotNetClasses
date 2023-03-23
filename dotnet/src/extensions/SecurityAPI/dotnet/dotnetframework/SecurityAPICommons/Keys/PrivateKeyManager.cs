@@ -49,6 +49,15 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool Load(string privateKeyPath)
 		{
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			/******* INPUT VERIFICATION - END *******/
 			return LoadPKCS12(privateKeyPath, "", "");
 		}
 
@@ -56,6 +65,17 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool LoadEncrypted(string privateKeyPath, string encryptionPassword)
 		{
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
+			SecurityUtils.validateStringInput("password", encryptionPassword, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			/******* INPUT VERIFICATION - END *******/
+
 			this.encryptionPassword = encryptionPassword;
 			return LoadPKCS12(privateKeyPath, "", "");
 
@@ -66,6 +86,15 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool LoadPKCS12(string privateKeyPath, string alias, string password)
 		{
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			/******* INPUT VERIFICATION - END *******/
 			try
 			{
 				loadKeyFromFile(privateKeyPath, alias, password);
@@ -74,7 +103,7 @@ namespace SecurityAPICommons.Keys
 			catch (Exception e)
 #pragma warning restore CA1031 // Do not catch general exception types
 			{
-				this.error.setError("PK018", e.Message);
+				this.error.setError("PK001", e.Message);
 				return false;
 			}
 			if (this.HasError())
@@ -88,6 +117,15 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool FromBase64(string base64)
 		{
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput("base64", base64, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			/******* INPUT VERIFICATION - END *******/
 			bool res;
 			try
 			{
@@ -95,7 +133,7 @@ namespace SecurityAPICommons.Keys
 			}
 			catch (Exception e)
 			{
-				this.error.setError("PK0015", e.Message);
+				this.error.setError("PK002", e.Message);
 				return false;
 			}
 			this.hasPrivateKey = res;
@@ -115,7 +153,7 @@ namespace SecurityAPICommons.Keys
 				}
 				catch (Exception e)
 				{
-					this.error.setError("PK0017", e.Message);
+					this.error.setError("PK003", e.Message);
 					return "";
 				}
 				return encoded;
@@ -158,7 +196,7 @@ namespace SecurityAPICommons.Keys
 			if (this.privateKeyInfo == null)
 
 			{
-				this.error.setError("PK015", "Could not read private key from base64 string");
+				this.error.setError("PK004", "Could not read private key from base64 string");
 				return false;
 			}
 
@@ -171,7 +209,7 @@ namespace SecurityAPICommons.Keys
 		{
 			if (!this.hasPrivateKey)
 			{
-				this.error.setError("PK0021", "No private key loaded");
+				this.error.setError("PK011", "No private key loaded");
 				return null;
 			}
 			string algorithm = getAlgorithm();
@@ -216,7 +254,7 @@ namespace SecurityAPICommons.Keys
 			}
 			else
 			{
-				this.error.setError("PK002", "XML signature with ECDSA keys is not implemented on Net Framework");
+				this.error.setError("PK012", "XML signature with ECDSA keys is not implemented on Net Framework");
 				return null;
 				//https://stackoverflow.com/questions/27420789/sign-xml-with-ecdsa-and-sha256-in-net?rq=1
 				// https://www.powershellgallery.com/packages/Posh-ACME/2.6.0/Content/Private%5CConvertFrom-BCKey.ps1
@@ -237,7 +275,7 @@ namespace SecurityAPICommons.Keys
 			}
 			catch (Exception e)
 			{
-				this.error.setError("XXX", e.Message);
+				this.error.setError("PK013", e.Message);
 			}
 			return akp;
 		}
@@ -268,7 +306,7 @@ namespace SecurityAPICommons.Keys
 			}
 			if (SecurityUtils.extensionIs(path, ".jks"))
 			{
-				this.error.setError("PK003", "Java Key Stores not allowed on .Net applications");
+				this.error.setError("PK014", "Java Key Stores not allowed on .Net applications");
 				//throw new Exception("Java Key Stores not allowed on .Net applications");
 			}
 			if (flag) { setAlgorithm(); }
@@ -286,7 +324,7 @@ namespace SecurityAPICommons.Keys
 			bool flag = false;
 			if (password == null)
 			{
-				this.error.setError("PK004", "Alias and Password are required for PKCS12 keys");
+				this.error.setError("PK008", "Alias and Password are required for PKCS12 keys");
 				return false;
 			}
 			Pkcs12Store pkcs12 = null;
@@ -300,9 +338,9 @@ namespace SecurityAPICommons.Keys
 				}
 			}
 
-			catch
+			catch(Exception e)
 			{
-				this.error.setError("PK005", path + "not found or wrong password.");
+				this.error.setError("PK015", e.Message);
 				//throw new FileLoadException(path + "not found or wrong password.");
 			}
 
@@ -323,7 +361,7 @@ namespace SecurityAPICommons.Keys
 				}
 
 			}
-			this.error.setError("PK006", path + " not found");
+			this.error.setError("PK016", "Path not found");
 			return flag;
 
 		}
@@ -346,11 +384,6 @@ namespace SecurityAPICommons.Keys
 				}
 				catch (Exception)
 				{
-					if (this.encryptionPassword == null)
-					{
-						this.error.setError("PK024", "Password for key decryption is empty");
-						return false;
-					}
 					try
 					{
 						using (StreamReader sReader = new StreamReader(path))
@@ -363,7 +396,7 @@ namespace SecurityAPICommons.Keys
 					}
 					catch (Exception ex)
 					{
-						this.error.setError("PK023", ex.Message);
+						this.error.setError("PK017", ex.Message);
 						return false;
 					}
 				}
@@ -378,7 +411,7 @@ namespace SecurityAPICommons.Keys
 				}
 				if (obj.GetType() == typeof(Pkcs8EncryptedPrivateKeyInfo))
 				{
-					this.error.setError("PK007", "Encrypted key, remove the key password");
+					this.error.setError("PK018", "Encrypted key, remove the key password or use the adecuate function");
 					flag = false;
 				}
 				if (obj.GetType() == typeof(AsymmetricCipherKeyPair))
@@ -392,7 +425,7 @@ namespace SecurityAPICommons.Keys
 				}
 				if (obj.GetType() == typeof(X509Certificate))
 				{
-					this.error.setError("PK008", "The file contains a public key");
+					this.error.setError("PK009", "The file contains a public key");
 					flag = false;
 
 				}
@@ -471,7 +504,7 @@ namespace SecurityAPICommons.Keys
 
 				return new PrivateKeyInfo(algID, keyStruct.ToAsn1Object());
 			}
-			this.error.setError("PK013", "Class provided is not convertible: " + key.GetType().FullName);
+			this.error.setError("PK019", "Class provided is not convertible: " + key.GetType().FullName);
 			this.hasPrivateKey = false;
 			throw new ArgumentNullException("Class provided is not convertible: " + key.GetType().FullName);
 
@@ -483,7 +516,7 @@ namespace SecurityAPICommons.Keys
 		{
 			if (!this.hasPrivateKey)
 			{
-				this.error.setError("PK0020", "No private key loaded");
+				this.error.setError("PK011", "No private key loaded");
 				return null;
 			}
 			AsymmetricAlgorithm alg;
@@ -548,13 +581,13 @@ namespace SecurityAPICommons.Keys
 					}
 					catch (Exception e)
 					{
-						this.error.setError("PK022", e.Message);
+						this.error.setError("PK020", e.Message);
 						return null;
 					}
 					break;
 				default:
 
-					this.error.setError("PK019", "Unrecognized key type");
+					this.error.setError("PK021", "Unrecognized key type");
 					return null;
 			}
 			if (alg != null)

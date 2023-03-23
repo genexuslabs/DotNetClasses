@@ -323,7 +323,10 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
 			foreach (XmlNode nsNode in _xmlNameSpaceList)
 			{
-				nsMgr.AddNamespace(nsNode.LocalName, nsNode.Value);
+				if (!SecurityUtils.compareStrings(nsNode.LocalName, "xmlns"))
+				{
+					nsMgr.AddNamespace(nsNode.LocalName, nsNode.Value);
+				}
 			}
 
 			return nsMgr;

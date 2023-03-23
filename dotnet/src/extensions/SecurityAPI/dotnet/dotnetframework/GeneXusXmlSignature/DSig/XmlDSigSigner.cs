@@ -605,7 +605,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
 				case KeyInfoType.X509Certificate:
 					if (hash != null)
 					{
-						this.error.setError("XXX", "The file included is a Public Key, cannot include a certificate on the signature");
+						this.error.setError("XD002", "The file included is a Public Key, cannot include a certificate on the signature");
 						return null;
 					}
 					X509Certificate2 x509Certificate = ((CertificateX509)certificate).Cert;

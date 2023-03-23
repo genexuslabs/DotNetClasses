@@ -58,14 +58,6 @@ namespace GeneXusJWT.GenexusComons
             this.certificate = cert;
         }
 
-        /*[SecuritySafeCritical]
-        public CertificateX509 GetCertificate()
-        {
-            return this.certificate;
-        }*/
-
-
-
         [SecuritySafeCritical]
         public void SetSecret(string value)
         {

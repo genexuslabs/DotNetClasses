@@ -134,7 +134,7 @@ namespace GeneXusJWT.GenexusJWT
 		{
 			if (options == null)
 			{
-				this.error.setError("JW000", "Options parameter is null");
+				this.error.setError("JW004", "Options parameter is null");
 				return "";
 			}
 			JWTAlgorithm alg = JWTAlgorithmUtils.getJWTAlgorithm(algorithm, this.error);
@@ -158,7 +158,7 @@ namespace GeneXusJWT.GenexusJWT
 			{
 				if (privateClaims == null)
 				{
-					this.error.setError("JW000", "PrivateClaims parameter is null");
+					this.error.setError("JW005", "PrivateClaims parameter is null");
 					return "";
 				}
 				payload = doBuildPayload(privateClaims, options);
@@ -198,12 +198,12 @@ namespace GeneXusJWT.GenexusJWT
 							genericKey = new ECDsaSecurityKey((ECDsa)key.getAsymmetricAlgorithm());
 							break;
 						default:
-							this.error.setError("JW012", "Not recognized key algorithm");
+							this.error.setError("JW019", "Not recognized key algorithm");
 							return "";
 					}
 				}catch(Exception e)
 				{
-					this.error = key.HasError() ? key.GetError() : new Error("XXX", e.Message);
+					this.error = key.HasError() ? key.GetError() : new Error("JW020", e.Message);
 					return "";
 				}
 			}
@@ -237,7 +237,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 
-				this.error.setError("JW003", "key size: " +  /*genericKey.KeySize.ToString()*/e.Message + e.StackTrace);
+				this.error.setError("JW006", e.Message);
 
 				return "";
 			}
@@ -250,7 +250,7 @@ namespace GeneXusJWT.GenexusJWT
 		{
 			if (options == null)
 			{
-				this.error.setError("JW004", "Options parameter is null");
+				this.error.setError("JW007", "Options parameter is null");
 				return false;
 			}
 			JWTAlgorithm expectedJWTAlgorithm = JWTAlgorithmUtils.getJWTAlgorithm(expectedAlgorithm, this.error);
@@ -311,7 +311,7 @@ namespace GeneXusJWT.GenexusJWT
 			}
 			if (JWTAlgorithmUtils.getJWTAlgorithm(jwtToken.Header.Alg, this.error) != expectedJWTAlgorithm || this.HasError())
 			{
-				this.error.setError("JW008", "Expected algorithm does not match token algorithm");
+				this.error.setError("JW009", "Expected algorithm does not match token algorithm");
 				return false;
 			}
 			SecurityKey genericKey = null;
@@ -334,12 +334,12 @@ namespace GeneXusJWT.GenexusJWT
 							genericKey = new ECDsaSecurityKey((ECDsa)cert.getAsymmetricAlgorithm());
 							break;
 						default:
-							this.error.setError("JW015", "Not recognized key algorithm");
+							this.error.setError("JW019", "Not recognized key algorithm");
 							return false;
 					}
 				}catch(Exception e)
 				{
-					this.error = cert.HasError() ? cert.GetError(): new Error("XXX", e.Message);
+					this.error = cert.HasError() ? cert.GetError(): new Error("JW020", e.Message);
 					return false;
 				}
 			}
@@ -359,7 +359,7 @@ namespace GeneXusJWT.GenexusJWT
 			}
 			catch (Exception e)
 			{
-				this.error.setError("JW009", e.Message);
+				this.error.setError("JW008", e.Message);
 
 				return false;
 			}
@@ -414,7 +414,7 @@ namespace GeneXusJWT.GenexusJWT
 					}
 					else
 					{
-						this.error.setError("JW016", "Unrecognized data type");
+						this.error.setError("JW014", "Unrecognized data type");
 					}
 
 					//System.Security.Claims.Claim netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), privateClaim.getValue());
@@ -502,7 +502,7 @@ namespace GeneXusJWT.GenexusJWT
 					}
 					else
 					{
-						error.setError("JW011", String.Format("{0} wrong registered claim key", registeredClaimKey));
+						error.setError("JW017", String.Format("{0} wrong registered claim key", registeredClaimKey));
 						return false;
 					}
 				}
@@ -528,7 +528,7 @@ namespace GeneXusJWT.GenexusJWT
 				case "id":
 					return jwtToken.Payload.Jti;
 				default:
-					error.setError("JW007", "Unknown token segment");
+					error.setError("JW012", "Unknown token segment");
 					return "";
 			}
 
@@ -550,7 +550,7 @@ namespace GeneXusJWT.GenexusJWT
 			}
 			catch (Exception e)
 			{
-				this.error.setError("JW012", e.Message);
+				this.error.setError("JW018", e.Message);
 				return false;
 			}
 			this.counter = 0;
