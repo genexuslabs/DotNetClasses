@@ -228,8 +228,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.AWS.A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetry\GeneXus.OpenTelemetry.csproj", "{00B1FA38-7D0B-47E4-860C-23490249A4D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{ACED4C6A-38E1-4E16-B262-2490E97278C5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -556,10 +554,6 @@ Global
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ACED4C6A-38E1-4E16-B262-2490E97278C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ACED4C6A-38E1-4E16-B262-2490E97278C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ACED4C6A-38E1-4E16-B262-2490E97278C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ACED4C6A-38E1-4E16-B262-2490E97278C5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
