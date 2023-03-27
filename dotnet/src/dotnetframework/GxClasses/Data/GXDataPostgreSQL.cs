@@ -452,7 +452,7 @@ namespace GeneXus.Data
 		}
 		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt)
 		{
-			if (dt.Equals(DateTimeUtil.NullDate()))
+			if (dt.Equals(DateTimeUtil.NullDate()) && NpgsqlAssembly.GetName().Version.Major <=3)
 			{
 				return DateTime.MinValue.AddTicks(1);//Avoid -infinity DateTimes (sac 20807)
 			}
