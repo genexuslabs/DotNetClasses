@@ -454,6 +454,7 @@ namespace GeneXus.Data
 		{
 			return (precision) ? DateTimeUtil.ResetMicroseconds(dt) : DateTimeUtil.ResetMillisecondsTicks(dt);
 		}
+		
 		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt)
 		{
 			if (dt.Equals(DateTimeUtil.NullDate()) && NpgsqlAssembly.GetName().Version.Major <=3)
