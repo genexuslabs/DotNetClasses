@@ -313,7 +313,14 @@ namespace GeneXus.Data
 				return count;
 			}
 		}
-		//ByteArrayToByteaTextEscaped
+		public override void SetParameter(IDbDataParameter parameter, object value)
+		{
+			if (value is Guid)
+			{
+				value = value.ToString();
+			}
+			base.SetParameter(parameter, value);
+		}
 		public override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
 		{
 			if (_byteaOutputEscape)
