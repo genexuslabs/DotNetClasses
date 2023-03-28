@@ -128,7 +128,7 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					return SetError(((int)HttpStatusCode.NotFound).ToString(), HttpStatusCode.NotFound.ToString());
+					return SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), HttpStatusCode.NotFound.ToString());
 				}
 			}
 			catch (Exception e)
@@ -166,7 +166,7 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					return SetError(((int)HttpStatusCode.NotFound).ToString(), HttpStatusCode.NotFound.ToString());
+					return SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), HttpStatusCode.NotFound.ToString());
 				}
 			}
 			catch (Exception e)
@@ -191,12 +191,12 @@ namespace GeneXus.Application
 				{
 					bool gxcheck = IsRestParameter(CHECK_PARAMETER);
 					GxSilentTrnSdt entity = (GxSilentTrnSdt)Activator.CreateInstance(_worker.GetType(), new Object[] { _gxContext });
-					var entity_interface = MakeRestType(entity, false);
+					object entity_interface = MakeRestType(entity, false);
 					entity_interface = ReadRequestBodySDTObj(entity_interface.GetType());
 					string entityHash = entity_interface.GetType().GetProperty("Hash").GetValue(entity_interface) as string;
 
 					ReflectionHelper.CallBCMethod(_worker, LOAD_METHOD, key);
-					var worker_interface = MakeRestType(_worker, false);
+					object worker_interface = MakeRestType(_worker, false);
 					string currentHash = worker_interface.GetType().GetProperty("Hash").GetValue(worker_interface) as string;
 					if (entityHash == currentHash)
 					{
@@ -227,12 +227,12 @@ namespace GeneXus.Application
 					}
 					else
 					{
-						return SetError(HttpStatusCode.Conflict.ToString(), _worker.trn.context.GetMessage("GXM_waschg", new object[] { this.GetType().Name }));
+						return SetError(HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), _worker.trn.context.GetMessage("GXM_waschg", new object[] { _worker.GetName() }));
 					}
 				}
 				else
 				{
-					return SetError(((int)HttpStatusCode.NotFound).ToString(), HttpStatusCode.NotFound.ToString());
+					return SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), HttpStatusCode.NotFound.ToString());
 				}
 			}
 			catch (Exception e)
