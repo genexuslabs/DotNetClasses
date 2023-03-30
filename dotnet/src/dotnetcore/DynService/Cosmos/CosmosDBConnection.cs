@@ -88,7 +88,7 @@ namespace GeneXus.Data.NTier
 		private static void Initialize()
 		{
 			if (!string.IsNullOrEmpty(mserviceURI) && !string.IsNullOrEmpty(mapplicationRegion) && (!string.IsNullOrEmpty(mdatabase)))
-				cosmosClient = new CosmosClient(mserviceURI, new CosmosClientOptions() { ApplicationRegion = mapplicationRegion });
+				cosmosClient = new CosmosClient(mserviceURI, new CosmosClientOptions() { EnableContentResponseOnWrite = false, ApplicationRegion = mapplicationRegion });
 			else
 			{
 				if (string.IsNullOrEmpty(mapplicationRegion))
@@ -100,18 +100,6 @@ namespace GeneXus.Data.NTier
 						throw new Exception("Connection string is not set or is not valid. Unable to connect.");
 			}
 			cosmosDatabase = cosmosClient.GetDatabase(mdatabase);
-		}
-
-		private PartitionKey ToPartitionKey(object value)
-		{
-			if (value is double)
-				return new PartitionKey((double)value);
-			if (value is bool)
-				return new PartitionKey((bool)value);
-			if (value is string)
-				return new PartitionKey((string)value);
-			else
-				throw new Exception("Partitionkey can be double, bool or string.");	
 		}
 		private Container GetContainer(string containerName)
 		{
@@ -263,7 +251,7 @@ namespace GeneXus.Data.NTier
 								object idField = keyCondition["id"];
 
 								GXLogging.Debug(logger,$"Delete : id= {idField.ToString()}, partitionKey= {keyCondition[partitionKey].ToString()}");
-								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.DeleteItemStreamAsync(idField.ToString(), ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
+								Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.DeleteItemStreamAsync(idField.ToString(), CosmosDBHelper.ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
 								if (task.Result.IsSuccessStatusCode)
 								{
 									return 1;
@@ -303,8 +291,7 @@ namespace GeneXus.Data.NTier
 									GXLogging.Debug(logger,$"Insert : {jsonData}");
 									using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonData)))
 									{
-									PartitionKey p = ToPartitionKey(keyCondition[partitionKey]);
-										Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.CreateItemStreamAsync(stream, ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
+										Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.CreateItemStreamAsync(stream, CosmosDBHelper.ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
 										if (task.Result.IsSuccessStatusCode)
 											return 1;
 										else
@@ -346,7 +333,7 @@ namespace GeneXus.Data.NTier
 
 								using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonData)))
 								{
-									Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.UpsertItemStreamAsync(stream, ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
+									Task<ResponseMessage> task = Task.Run<ResponseMessage>(async () => await container.UpsertItemStreamAsync(stream, CosmosDBHelper.ToPartitionKey(keyCondition[partitionKey])).ConfigureAwait(false));
 									if (task.Result.IsSuccessStatusCode)
 										return 1;
 									else
@@ -394,39 +381,19 @@ namespace GeneXus.Data.NTier
 			}
 		}
 
-		private VarValue GetDataEqualParameterfromQueryVars(string filter, IEnumerable<VarValue> values, out string name)
+		private VarValue GetDataEqualParameterfromQueryVars(string varName, IEnumerable<VarValue> values)
 		{
-			string Equal_Filter_pattern = @"\((.*) = :(.*)\)";
-			VarValue varValue = null;
-			name = string.Empty;
-			Match match = Regex.Match(filter, Equal_Filter_pattern);
-			if (match.Groups.Count > 1)
-			{
-				string varName = match.Groups[2].Value;
-				varName = varName.Remove(varName.Length - 1);
-				name = match.Groups[1].Value;
-				varValue = values.FirstOrDefault(v => v.Name == $":{varName}");
-			}
-			return varValue;
+			return values.FirstOrDefault(v => v.Name == $":{varName}");
 		}
-		private string GetDataEqualParameterfromCollection(string filter, IDataParameterCollection parms, out string name)
-		{
-			string Equal_Filter_pattern = @"\((.*) = :(.*)\)";
-			name = string.Empty;
-			Match match = Regex.Match(filter, Equal_Filter_pattern);
-			if (match.Groups.Count > 1)
+		private object GetDataEqualParameterfromCollection(string varName, IDataParameterCollection parms)
+		{		
+			if (parms[varName] is ServiceParameter serviceParm)
 			{
-				string varName = match.Groups[2].Value;
-				name = match.Groups[1].Value;
-				varName = varName.Remove(varName.Length - 1);
-				if (parms[varName] is ServiceParameter serviceParm)
-				{
-					return serviceParm.Value.ToString();
-				}
+				return serviceParm.Value;
 			}
-			return string.Empty;
+			return null;
 		}
-		private CosmosDBDataReader GetDataReaderQueryByPK(ServiceCursorDef cursorDef, Container container, string idValue, string partitionKeyValue,out RequestWrapper requestWrapper)
+		private CosmosDBDataReader GetDataReaderQueryByPK(ServiceCursorDef cursorDef, Container container, string idValue, object partitionKeyValue,out RequestWrapper requestWrapper)
 		{
 			requestWrapper = new RequestWrapper(cosmosClient, container, null);
 			requestWrapper.idValue = idValue;
@@ -448,30 +415,37 @@ namespace GeneXus.Data.NTier
 		/// <param name="requestWrapper"></param>
 		private void CreateCosmosQuery(CosmosDBQuery query,ServiceCursorDef cursorDef, IDataParameterCollection parms, Container container, out CosmosDBDataReader cosmosDBDataReader,out RequestWrapper requestWrapper)
 		{
-			//Check if the filters are the Primary Key
-			if (query.Filters.Any())
+			//Check if the filters are the Primary Key	
+			if (query.Filters.Count() == 1)
 			{
-				if (query.Filters.Count() == 2)
+				string regex = @"^\(\(id = :([a-zA-Z0-9]+):\) and \(([a-zA-Z0-9]+) = :([a-zA-Z0-9]+):\)\)";
+				Match match = Regex.Match(query.Filters.ElementAt(0), regex);	
+				if (match.Groups.Count > 0)
 				{
-					string fieldValue1 = string.Empty;
-					string fieldValue2 = string.Empty;
-
-					fieldValue1 = GetDataEqualParameterfromQueryVars(query.Filters.First(), query.Vars, out string fieldName1)?.Value.ToString();
-					fieldValue1 = fieldValue1 ?? GetDataEqualParameterfromCollection(query.Filters.First(), parms, out fieldName1);
-
-					fieldValue2 = GetDataEqualParameterfromQueryVars(query.Filters.Skip(1).First(), query.Vars, out string fieldName2)?.Value.ToString();
-					fieldValue2 = fieldValue2 ?? GetDataEqualParameterfromCollection(query.Filters.Skip(1).First(), parms, out fieldName2);
-
-					if (fieldName1 == "id" && fieldName2 == query.PartitionKey)
+					string pkParmValue;
+					string idParmValue;
+					string attItem = match.Groups[2].Value;
+					if (attItem.Equals(query.PartitionKey))
 					{
-						cosmosDBDataReader = GetDataReaderQueryByPK(cursorDef, container, fieldValue1, fieldValue2, out requestWrapper);
-						return;
-					}
-					else
-					{
-						if (fieldName1 == query.PartitionKey && fieldName2 == "id")
-						{
-							cosmosDBDataReader = GetDataReaderQueryByPK(cursorDef, container, fieldValue2, fieldValue1, out requestWrapper);
+						pkParmValue = match.Groups[3].Value;
+						VarValue fieldValue2 = GetDataEqualParameterfromQueryVars(pkParmValue, query.Vars);
+						object pkValue;
+						if (fieldValue2 != null)
+							pkValue = fieldValue2.Value;
+						else
+							pkValue = GetDataEqualParameterfromCollection(pkParmValue, parms);
+
+							
+						idParmValue = match.Groups[1].Value;
+						VarValue fieldValue1 = GetDataEqualParameterfromQueryVars(idParmValue, query.Vars);
+						object idValue;
+						if (fieldValue1 != null)
+							idValue = fieldValue1.Value;
+						else
+							idValue = GetDataEqualParameterfromCollection(idParmValue, parms);
+						if (idValue != null && pkValue != null)
+						{ 
+							cosmosDBDataReader = GetDataReaderQueryByPK(cursorDef, container, idValue.ToString(), pkValue, out requestWrapper);
 							return;
 						}
 					}
