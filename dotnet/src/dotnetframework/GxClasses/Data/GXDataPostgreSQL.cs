@@ -313,7 +313,14 @@ namespace GeneXus.Data
 				return count;
 			}
 		}
-		//ByteArrayToByteaTextEscaped
+		public override void SetParameter(IDbDataParameter parameter, object value)
+		{
+			if (value is Guid)
+			{
+				value = value.ToString();
+			}
+			base.SetParameter(parameter, value);
+		}
 		public override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
 		{
 			if (_byteaOutputEscape)
@@ -447,7 +454,7 @@ namespace GeneXus.Data
 		}
 		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt)
 		{
-			if (dt.Equals(DateTimeUtil.NullDate()))
+			if (dt.Equals(DateTimeUtil.NullDate()) && NpgsqlAssembly.GetName().Version.Major <=3)
 			{
 				return DateTime.MinValue.AddTicks(1);//Avoid -infinity DateTimes (sac 20807)
 			}

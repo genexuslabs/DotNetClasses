@@ -79,6 +79,19 @@ namespace GeneXus.Data.NTier
 			mVarValues.Add(new VarValue($":const{ mVarValues.Count + 1 }", gxType, parm));
 			return this;
 		}
+
+		public virtual Query SetKey(string key)
+		{
+			return null;
+		}
+		public virtual Query KeyFilter(string[] filters)
+		{
+			return null;
+		}
+		public virtual Query OrderBy(string index)
+		{
+			return null;
+		}
 	}
 
 	public class VarValue

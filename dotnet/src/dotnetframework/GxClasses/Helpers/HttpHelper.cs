@@ -132,10 +132,10 @@ namespace GeneXus.Http
 			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList);
 
 			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 
@@ -150,10 +150,10 @@ namespace GeneXus.Http
 			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList);
 
 			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 		}
@@ -170,10 +170,10 @@ namespace GeneXus.Http
 			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, true.ToString());
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, requestHeaders);
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList));
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, requestMethods);
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList));
 
 			httpResponse.AppendHeader(HeaderNames.AccessControlMaxAge, CORS_MAX_AGE_SECONDS);
 		}
@@ -193,7 +193,7 @@ namespace GeneXus.Http
 			{
 				wcfcontext.OutgoingResponse.StatusCode = httpStatusCode;
 				if (httpStatusCode==HttpStatusCode.Unauthorized){
-					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(StringUtil.Sanitize(wcfcontext.IncomingRequest.Headers["Host"],StringUtil.HostWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty));
+					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(StringUtil.Sanitize(wcfcontext.IncomingRequest.Headers["Host"],StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty));
 				}
 				if (!string.IsNullOrEmpty(statusDescription))
 					wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
@@ -211,7 +211,7 @@ namespace GeneXus.Http
 #endif
 				if (httpStatusCode == HttpStatusCode.Unauthorized)
 				{
-					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HostWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
+					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
 				}
 
 #if !NETCORE
@@ -447,7 +447,6 @@ namespace GeneXus.Http
 				return query.Split(',');
 			}
 		}
-
 		internal static void AllowHeader(HttpContext httpContext, List<string> methods)
 		{
 			httpContext.Response.AppendHeader(HeaderNames.Allow, string.Join(",", methods));
@@ -707,6 +706,45 @@ namespace GeneXus.Http
 			context.Response.StatusDescription = statusDescription;
 #endif
 		}
+#if NETCORE
+		internal static void CommitSession(this HttpContext context)
+		{
+			Dictionary<string, string> _contextSession;
+			if (context.Items.TryGetValue(HttpSyncSessionState.CTX_SESSION, out object ctxSession))
+			{
+				_contextSession = ctxSession as Dictionary<string, string>;
+				if (_contextSession != null && _contextSession.Count > 0)
+				{
+					ISession _httpSession = context.Session;
+					var locker = LockTracker.Get(_httpSession.Id);
+					using (locker)
+					{
+						lock (locker)
+						{
+							FieldInfo loaded = _httpSession.GetType().GetField("_loaded", BindingFlags.Instance | BindingFlags.NonPublic);
+							if (loaded != null)
+							{
+								loaded.SetValue(_httpSession, false);
+								_httpSession.LoadAsync().Wait();
+							}
+							foreach (string s in _contextSession.Keys)
+							{
+								if (_contextSession[s] == null)
+									_httpSession.Remove(s);
+								else
+								{
+									_httpSession.SetString(s, _contextSession[s]);
+								}
+							}
+							context.Items.Remove(HttpSyncSessionState.CTX_SESSION);
+							_httpSession.CommitAsync().Wait();
+						}
+					}
+				}
+			}
+		}
+#endif
+
 	}
 
 	public static class HttpRequestExtensions

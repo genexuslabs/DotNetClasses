@@ -1,22 +1,26 @@
-using log4net;
-using log4net.Core;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Threading;
+using log4net;
+using log4net.Core;
 
 namespace GeneXus
 {
 
 	public static class GXLogging
 	{
-
+		internal static void EnsureThreadIdPropertyExistsInContext()
+		{
+#if NETCORE
+			log4net.ThreadContext.Properties["threadid"] ??= Thread.CurrentThread.ManagedThreadId;
+#endif
+		}
 		public static void Trace(this ILog log, params string[] list)
 		{
 			if (log.Logger.IsEnabledFor(Level.Trace))
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				log.Logger.Log(MethodBase.GetCurrentMethod().DeclaringType, Level.Trace, String.Join(" ", list), null);
 			}
 		}
@@ -24,6 +28,7 @@ namespace GeneXus
 		{
 			if (log.IsErrorEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				log.Error(msg, ex);
 			}
 		}
@@ -32,6 +37,7 @@ namespace GeneXus
 		{
 			if (log.IsErrorEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				log.Error(Utils.StringUtil.Sanitize(msg, Utils.StringUtil.LogUserEntryWhiteList), ex);
 			}
 		}
@@ -43,6 +49,7 @@ namespace GeneXus
         public static void Error(ILog log, Exception ex, params string[] list)
 		{
 			if (log.IsErrorEnabled){
+				EnsureThreadIdPropertyExistsInContext();
 				foreach (string parm in list){
 					log.Error(parm);
 				}
@@ -57,6 +64,7 @@ namespace GeneXus
 		{
 			if (log.IsWarnEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				StringBuilder msg = new StringBuilder();
 				foreach (string parm in list)
 				{
@@ -76,6 +84,7 @@ namespace GeneXus
 		{
 			if (log.IsWarnEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				log.Warn(msg, ex);
 			}
 		}
@@ -83,6 +92,7 @@ namespace GeneXus
 		{
 			if (log.IsDebugEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				StringBuilder msg = new StringBuilder();
 				foreach (string parm in list)
 				{
@@ -99,6 +109,7 @@ namespace GeneXus
 		{
 			if (log.IsDebugEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				StringBuilder msg = new StringBuilder();
 				foreach (string parm in list)
 				{
@@ -127,6 +138,7 @@ namespace GeneXus
 		{
 			if (log.IsDebugEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				string msg = buildMsg();
 				log.Debug(startMsg + msg);
 			}
@@ -139,6 +151,7 @@ namespace GeneXus
 		{
 			if (log.IsDebugEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				log.Debug(msg, ex);
 			}
 		}
@@ -146,6 +159,7 @@ namespace GeneXus
 		{
 			if (log.IsInfoEnabled)
 			{
+				EnsureThreadIdPropertyExistsInContext();
 				StringBuilder msg = new StringBuilder();
 				foreach (string parm in list)
 				{
