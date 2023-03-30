@@ -478,10 +478,7 @@ namespace GeneXus.Http
 			{
 				GxSecurityProvider.Provider.oauthlogout(context, out string URL, out short statusCode);
 
-				if (statusCode == (int)HttpStatusCode.SeeOther)
-					localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
-				else
-					localHttpContext.Response.StatusCode = statusCode;
+				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 
 				JObject jObj = new JObject();
 				if (genexus_agent == "WebFrontend Application" && URL.Length > 0)
@@ -493,14 +490,19 @@ namespace GeneXus.Http
 				{
 					jObj.Put("code", statusCode.ToString());					
 				}
+
+				if (statusCode == (int)HttpStatusCode.SeeOther)
+					localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
+				else
+					localHttpContext.Response.StatusCode = statusCode;
+
 				localHttpContext.Response.Write(jObj.ToString());
-				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 				context.CloseConnections();
 			}
 			catch (Exception e)
 			{
-				localHttpContext.Response.Write(e.Message);
 				localHttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+				localHttpContext.Response.Write(e.Message);
 			}
 		}
 
