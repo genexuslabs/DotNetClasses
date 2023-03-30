@@ -479,7 +479,6 @@ namespace GeneXus.Http
 				GxSecurityProvider.Provider.oauthlogout(context, out string URL, out short statusCode);
 
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-
 				JObject jObj = new JObject();
 				if (genexus_agent == "WebFrontend Application" && URL.Length > 0)
 				{
