@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using GeneXus.Data.Cosmos;
 using log4net;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
@@ -15,7 +16,7 @@ namespace GeneXus.Data.NTier.CosmosDB
 		private readonly QueryDefinition m_queryDefinition;
 		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(RequestWrapper));
 		public string idValue { get; set; }
-		public string partitionKeyValue { get; set; }
+		public object partitionKeyValue { get; set; }
 		public bool queryByPK { get; set; }
 		public RequestWrapper(CosmosClient cosmosClient, Container container, QueryDefinition queryDefinition)
 		{
@@ -50,11 +51,11 @@ namespace GeneXus.Data.NTier.CosmosDB
 			}
 			return Items;
 		}
-		private async Task<ResponseWrapper> ReadItemAsyncByPK(string idValue, string partitionKeyValue)
+		private async Task<ResponseWrapper> ReadItemAsyncByPK(string idValue, object partitionKeyValue)
 		{
 			List<Dictionary<string, object>> Items = new List<Dictionary<string, object>>();
 			using (ResponseMessage responseMessage = await m_container.ReadItemStreamAsync(
-				partitionKey: new PartitionKey(partitionKeyValue),
+				partitionKey: CosmosDBHelper.ToPartitionKey(partitionKeyValue),
 				id: idValue).ConfigureAwait(false))
 			{
 
@@ -84,7 +85,6 @@ namespace GeneXus.Data.NTier.CosmosDB
 			
 			QueryRequestOptions requestOptions = new QueryRequestOptions() { MaxBufferedItemCount = 100 };
 			//options.MaxConcurrency = 1;
-			//TODO Cancelation Token + request options 
 			using (FeedIterator feedIterator = m_container.GetItemQueryStreamIterator(m_queryDefinition, null, requestOptions))
 
 			return new ResponseWrapper(feedIterator);

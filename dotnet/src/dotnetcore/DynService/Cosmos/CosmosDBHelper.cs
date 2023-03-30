@@ -4,11 +4,23 @@ using System.Data;
 using System.Linq;
 using System.Text.Json.Nodes;
 using GeneXus.Data.NTier;
+using Microsoft.Azure.Cosmos;
 
 namespace GeneXus.Data.Cosmos
 {
 	internal class CosmosDBHelper
 	{
+		internal static PartitionKey ToPartitionKey(object value)
+		{
+			if (value is double)
+				return new PartitionKey((double)value);
+			if (value is bool)
+				return new PartitionKey((bool)value);
+			if (value is string)
+				return new PartitionKey((string)value);
+			else
+				throw new Exception("Partitionkey can be double, bool or string.");
+		}
 		internal static bool AddItemValue(string parmName, string fromName, Dictionary<string, object> values, IDataParameterCollection parms, IEnumerable<VarValue> queryVars, ref JsonObject jsonObject)
 		{		
 			if (!AddItemValue(parmName, values, parms[fromName] as ServiceParameter, ref jsonObject))
