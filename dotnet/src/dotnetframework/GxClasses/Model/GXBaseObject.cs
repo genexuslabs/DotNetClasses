@@ -60,7 +60,6 @@ namespace GeneXus.Application
 			newInstance.initialize();
 			Submit(ExecutePrivateCatch, newInstance);
 		}
-
 		protected virtual void CloseCursors()
 		{
 
