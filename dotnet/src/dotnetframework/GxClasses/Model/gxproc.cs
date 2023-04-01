@@ -53,6 +53,18 @@ namespace GeneXus.Procedure
 			}
 #endif
 		}
+		protected int MainImplEx(string[] args)
+		{
+			try
+			{
+				Config.ParseArgs(ref args);
+				return ExecuteCmdLine(args);
+			}
+			catch (Exception ex)
+			{
+				return GXUtil.HandleException(ex, GetType().ToString(), args); ;
+			}
+		}
 
 		protected int MainImpl(string[] args)
 		{
