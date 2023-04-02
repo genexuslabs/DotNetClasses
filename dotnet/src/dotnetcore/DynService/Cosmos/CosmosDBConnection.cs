@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -483,8 +484,17 @@ namespace GeneXus.Data.NTier
 						if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringGXType(item.Type))
 							varValuestr = '"' + $"{item.Value.ToString()}" + '"';
 						else
-						{
-							varValuestr = item.Value.ToString();
+						{						
+							if (item.Value is double)
+							{
+								NumberFormatInfo nfi = new NumberFormatInfo();
+								nfi.NumberDecimalSeparator = ".";
+								double dValue = (double)item.Value;
+								varValuestr = dValue.ToString(nfi);
+							}
+							else
+								varValuestr = item.Value.ToString();
+
 							varValuestr = varValuestr.Equals("True") ? "true" : varValuestr;
 							varValuestr = varValuestr.Equals("False") ? "false" : varValuestr;
 						}

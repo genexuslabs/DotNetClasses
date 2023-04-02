@@ -17,7 +17,39 @@ namespace GeneXus.Data.Cosmos
 			if (value is bool)
 				return new PartitionKey((bool)value);
 			if (value is string)
-				return new PartitionKey((string)value);
+				return new PartitionKey((string)value);		
+			if (value is decimal)
+			{
+				decimal valueDecimal = (decimal)value;
+				try
+				{ 		
+					double convertedDouble = (double)value;
+					decimal convertedDecimal = (decimal)convertedDouble;
+
+					//Possible loss of precision when converting from decimal to double
+
+					if (valueDecimal != convertedDecimal)
+						throw new Exception("Loss of precision converting from decimal to double. Partitionkey should be double.");
+					else
+					return new PartitionKey(convertedDouble);
+				}
+				catch 
+				{
+					try
+					{ 
+					double convertedDouble = Convert.ToDouble(value);
+					decimal convertedDecimal = Convert.ToDecimal(convertedDouble);
+					if (valueDecimal != convertedDecimal)
+						throw new Exception("Loss of precision converting from decimal to double. Partitionkey should be double.");
+					else
+						return new PartitionKey(convertedDouble);
+					}
+					catch
+					{
+						throw new Exception("Loss of precision converting from decimal to double. Partitionkey should be double.");
+					}
+				}
+			}
 			else
 				throw new Exception("Partitionkey can be double, bool or string.");
 		}
