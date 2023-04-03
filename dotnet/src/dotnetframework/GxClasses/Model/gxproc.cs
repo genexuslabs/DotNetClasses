@@ -62,7 +62,7 @@ namespace GeneXus.Procedure
 			}
 			catch (Exception ex)
 			{
-				return GXUtil.HandleException(ex, GetType().ToString(), args); ;
+				return GXUtil.HandleException(ex, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location), args); ;
 			}
 		}
 
