@@ -189,9 +189,9 @@ namespace GeneXus.Data.Cosmos
 
 		public DateTime GetDateTime(int i)
 		{
-		   if (GetAttValue(i) is DateTime value)
-				return value;
-			return default(DateTime);
+			DateTime.TryParseExact(GetAttValue(i).ToString(), CosmosDBHelper.ISO_DATE_FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out DateTime dt);
+			return dt;
+		
 		}
 		public decimal GetDecimal(int i)
 		{

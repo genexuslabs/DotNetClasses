@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json.Nodes;
 using GeneXus.Data.NTier;
@@ -10,6 +11,7 @@ namespace GeneXus.Data.Cosmos
 {
 	internal class CosmosDBHelper
 	{
+		internal const string ISO_DATE_FORMAT = "yyyy-MM-ddTHH:mm:ss:fffK";
 		internal static PartitionKey ToPartitionKey(object value)
 		{
 			if (value is double)
@@ -54,7 +56,7 @@ namespace GeneXus.Data.Cosmos
 				throw new Exception("Partitionkey can be double, bool or string.");
 		}
 		internal static bool AddItemValue(string parmName, string fromName, Dictionary<string, object> values, IDataParameterCollection parms, IEnumerable<VarValue> queryVars, ref JsonObject jsonObject)
-		{		
+		{
 			if (!AddItemValue(parmName, values, parms[fromName] as ServiceParameter, ref jsonObject))
 			{
 				VarValue varValue = queryVars.FirstOrDefault(v => v.Name == $":{fromName}");
@@ -66,20 +68,36 @@ namespace GeneXus.Data.Cosmos
 						jsonObject.Add(keyvalue);
 					}
 					else
-						jsonObject.Add(parmName, JsonValue.Create(varValue.Value));
+						if (FormattedAsStringDateGXType(varValue.Type))
+						{
+							DateTime dt =	DateTime.SpecifyKind((DateTime)varValue.Value, DateTimeKind.Utc);
+							jsonObject.Add(parmName, dt.ToString(ISO_DATE_FORMAT));
+						}
+						else
+							jsonObject.Add(parmName, JsonValue.Create(varValue.Value));
 					values[parmName] = varValue.Value;
 				}
 				return varValue != null;
 			}
 			return true;
 		}
-		public static bool FormattedAsStringGXType(GXType gXType)
+
+		internal static bool FormattedAsStringDateGXType(GXType gXType)
 		{
-			return (gXType == GXType.Date || gXType == GXType.DateTime || gXType == GXType.DateTime2 || gXType == GXType.VarChar || gXType == GXType.DateAsChar || gXType == GXType.NVarChar || gXType == GXType.LongVarChar || gXType == GXType.NChar ||  gXType == GXType.Char || gXType == GXType.Text || gXType == GXType.NText);
+			return (gXType == GXType.Date || gXType == GXType.DateTime || gXType == GXType.DateTime2);
+		}
+		internal static bool FormattedAsStringGXType(GXType gXType)
+		{
+			return (gXType == GXType.VarChar || gXType == GXType.DateAsChar || gXType == GXType.NVarChar || gXType == GXType.LongVarChar || gXType == GXType.NChar ||  gXType == GXType.Char || gXType == GXType.Text || gXType == GXType.NText);
+		}
+
+		internal static bool FormattedAsStringDateDbType(DbType dbType)
+		{
+			return (dbType == DbType.Date || dbType == DbType.DateTime || dbType == DbType.DateTime2 || dbType == DbType.DateTimeOffset || dbType == DbType.Time);
 		}
 		internal static bool FormattedAsStringDbType(DbType dbType)
 		{
-			return (dbType == DbType.String || dbType == DbType.Date || dbType == DbType.DateTime || dbType == DbType.DateTime2 || dbType == DbType.DateTimeOffset || dbType == DbType.StringFixedLength || dbType == DbType.AnsiString || dbType == DbType.AnsiStringFixedLength || dbType == DbType.Guid || dbType == DbType.Time);
+			return (dbType == DbType.String || dbType == DbType.StringFixedLength || dbType == DbType.AnsiString || dbType == DbType.AnsiStringFixedLength || dbType == DbType.Guid);
 		}
 		internal static string FormatExceptionMessage(string statusCode, string message)
 		{
@@ -97,7 +115,13 @@ namespace GeneXus.Data.Cosmos
 					jsonObject.Add(keyvalue);
 				}
 				else
-					jsonObject.Add(parmName, JsonValue.Create(parm.Value));
+					if (FormattedAsStringDateDbType(parm.DbType))
+					{
+						DateTime dt = DateTime.SpecifyKind((DateTime)parm.Value, DateTimeKind.Utc);
+						jsonObject.Add(parmName, dt.ToString(ISO_DATE_FORMAT));
+					}
+					else
+						jsonObject.Add(parmName, JsonValue.Create(parm.Value));
 				dynParm[parmName] = parm.Value;
 				return true;
 			}
