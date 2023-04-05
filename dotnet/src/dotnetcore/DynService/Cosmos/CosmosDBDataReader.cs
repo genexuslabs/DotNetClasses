@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using GeneXus.Cache;
 using GeneXus.Data.NTier;
 using GeneXus.Data.NTier.CosmosDB;
 using log4net;
@@ -344,5 +345,60 @@ namespace GeneXus.Data.Cosmos
 			return GetAttValue(i);
 		}
 	}
+	public class GxCosmosDBCacheDataReader : GxCacheDataReader
+	{
+		public GxCosmosDBCacheDataReader(CacheItem cacheItem, bool computeSize, string keyCache)
+			: base(cacheItem, computeSize, keyCache)
+		{ }
 
+		public override DateTime GetDateTime(int i)
+		{
+			DateTime.TryParseExact(GetAttValue(i).ToString(), CosmosDBHelper.ISO_DATE_FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out DateTime dt);
+			return dt;
+		}
+
+		public override decimal GetDecimal(int i)
+		{
+			return Convert.ToDecimal(GetAttValue(i), CultureInfo.InvariantCulture);
+		}
+
+		public override short GetInt16(int i)
+		{
+			return Convert.ToInt16(GetAttValue(i));
+		}
+
+		public override int GetInt32(int i)
+		{
+			return Convert.ToInt32(GetAttValue(i));
+		}
+
+		public override long GetInt64(int i)
+		{
+			return Convert.ToInt64(GetAttValue(i)); ;
+		}
+		public override bool GetBoolean(int i)
+		{
+			if (GetAttValue(i) is bool value)
+			{
+				return value;
+			}
+			return false;
+		}
+		public override string GetString(int i)
+		{
+			return GetAttValue(i).ToString();
+		}
+		public override long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
+		{
+			MemoryStream ms = (MemoryStream)GetAttValue(i);
+			if (ms == null)
+				return 0;
+			ms.Seek(fieldOffset, SeekOrigin.Begin);
+			return ms.Read(buffer, bufferoffset, length);
+		}
+		private object GetAttValue(int i)
+		{
+			return block.Item(pos, i);
+		}
+	}
 }
