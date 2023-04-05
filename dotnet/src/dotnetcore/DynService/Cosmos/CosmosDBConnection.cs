@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GeneXus.Cache;
 using GeneXus.Data.Cosmos;
 using GeneXus.Data.NTier.CosmosDB;
 using log4net;
@@ -19,6 +21,10 @@ namespace GeneXus.Data.NTier
 	public class CosmosDBService : GxService
 	{
 		public CosmosDBService(string id, string providerId) : base(id, providerId, typeof(CosmosDBConnection)){}
+		public override IDataReader GetCacheDataReader(CacheItem item, bool computeSize, string keyCache)
+		{
+			return new GxCosmosDBCacheDataReader(item, computeSize, keyCache);
+		}
 	}
 
 	public class CosmosDBConnection : ServiceConnection
@@ -358,7 +364,6 @@ namespace GeneXus.Data.NTier
 		}
 		public override IDataReader ExecuteReader(ServiceCursorDef cursorDef, IDataParameterCollection parms, CommandBehavior behavior)
 		{
-
 			Initialize();
 			CosmosDBQuery query = cursorDef.Query as CosmosDBQuery;
 			Container container = GetContainer(query?.TableName);
@@ -484,9 +489,25 @@ namespace GeneXus.Data.NTier
 							varValuestr = '"' + $"{item.Value.ToString()}" + '"';
 						else
 						{
-							varValuestr = item.Value.ToString();
-							varValuestr = varValuestr.Equals("True") ? "true" : varValuestr;
-							varValuestr = varValuestr.Equals("False") ? "false" : varValuestr;
+							if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringDateGXType(item.Type))
+							{
+								DateTime dt = DateTime.SpecifyKind((DateTime)item.Value, DateTimeKind.Utc);
+								varValuestr = '"' + $"{dt.ToString(CosmosDBHelper.ISO_DATE_FORMAT)}" + '"';
+							}
+							else
+							{
+								if (item.Value is double)
+								{
+									double dValue = (double)item.Value;
+									varValuestr = dValue.ToString(CultureInfo.InvariantCulture.NumberFormat);
+								}
+								else
+								{ 
+									varValuestr = item.Value.ToString();
+									varValuestr = varValuestr.Equals("True") ? "true" : varValuestr;
+									varValuestr = varValuestr.Equals("False") ? "false" : varValuestr;
+								}
+							}
 						}
 						filterProcess = filterProcess.Replace(string.Format($"{item.Name}:"), varValuestr);
 					}
@@ -502,8 +523,24 @@ namespace GeneXus.Data.NTier
 							if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringDbType(p1.DbType))
 								varValuestr = '"' + $"{p1.Value.ToString()}" + '"';
 							else
-								varValuestr = p1.Value.ToString();
-									
+								if (GeneXus.Data.Cosmos.CosmosDBHelper.FormattedAsStringDateDbType(p1.DbType))
+								{
+									DateTime dt = DateTime.SpecifyKind((DateTime)p1.Value, DateTimeKind.Utc);
+									varValuestr = '"' + $"{dt.ToString(CosmosDBHelper.ISO_DATE_FORMAT)}" + '"';
+								}
+								else
+									if (p1.Value is double)
+									{
+										double dValue = (double)p1.Value;
+										varValuestr = dValue.ToString(CultureInfo.InvariantCulture.NumberFormat);
+									}
+									else
+									{
+										varValuestr = p1.Value.ToString();
+										varValuestr = varValuestr.Equals("True") ? "true" : varValuestr;
+										varValuestr = varValuestr.Equals("False") ? "false" : varValuestr;
+									}
+
 							filterProcess = filterProcess.Replace(string.Format($":{p1.ParameterName}:"), varValuestr);
 						}
 					}
