@@ -55,10 +55,13 @@ namespace GeneXus.Application
 		}
 		protected void SubmitImpl()
 		{
-			GXBaseObject newInstance = (GXBaseObject)Activator.CreateInstance(GetType());
-			newInstance.context.SetSubmitInitialConfig(context);
-			newInstance.initialize();
-			Submit(ExecutePrivateCatch, newInstance);
+			GxContext submitContext = new GxContext();
+			DataStoreUtil.LoadDataStores(submitContext);
+			IsMain = true;
+			submitContext.SetSubmitInitialConfig(context);
+			this.context= submitContext;
+			initialize();
+			Submit(ExecutePrivateCatch, this);
 		}
 		protected virtual void CloseCursors()
 		{
