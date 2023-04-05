@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using GeneXus.Cache;
 using GeneXus.Data.Cosmos;
 using GeneXus.Data.NTier.CosmosDB;
 using log4net;
@@ -20,6 +21,10 @@ namespace GeneXus.Data.NTier
 	public class CosmosDBService : GxService
 	{
 		public CosmosDBService(string id, string providerId) : base(id, providerId, typeof(CosmosDBConnection)){}
+		public override IDataReader GetCacheDataReader(CacheItem item, bool computeSize, string keyCache)
+		{
+			return new GxCosmosDBCacheDataReader(item, computeSize, keyCache);
+		}
 	}
 
 	public class CosmosDBConnection : ServiceConnection
