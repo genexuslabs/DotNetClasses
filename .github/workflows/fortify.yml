@@ -9,9 +9,6 @@ on:
       - 'master'
       - 'beta'
       - 'release-*'
-  #Run at the end of every day
-  schedule:
-    - cron: '0 0 * * *'
   
 jobs:
   FoD-SAST-Scan:
