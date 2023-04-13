@@ -415,7 +415,7 @@ namespace GeneXus.Configuration
 #if NETCORE
 		public static IConfiguration ConfigRoot { get; set; }
 		const string Log4NetShortName = "log4net";
-		static Version Log4NetVersion = new Version(2, 0, 11);
+		static Version Log4NetVersion = new Version(2, 0, 15);
 
 		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
