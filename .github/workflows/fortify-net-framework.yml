@@ -1,17 +1,18 @@
 
 name: Fortify on Demand Scan (.NET Framework)
 
-# TODO: Customize trigger events based on your DevSecOps processes and typical FoD SAST scan time
+# Run FoD SAST on each pull request and on merge to master, beta and release.
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - 'master'
+      - 'release-*'
   push:
     branches:
       - 'master'
       - 'beta'
       - 'release-*'
-  #Run at the end of every day
-  schedule:
-    - cron: '0 0 * * *'
   
 jobs:
   FoD-SAST-Scan:
