@@ -628,14 +628,17 @@ namespace GeneXus.Utils
 					if (o != null)
 					{
 #if NETCORE
-					var fixedPoint = "F";
-					if (o is decimal)
-						s += ((decimal)o).ToString(fixedPoint, CultureInfo.InvariantCulture);
-					else
-						s += o.ToString();
+						string fixedPoint = "F";
+						if (o is decimal)
+							s += ((decimal)o).ToString(fixedPoint, CultureInfo.InvariantCulture);
 #else
-						s += o.ToString();
+						if (o is decimal)
+							s += ((decimal)o).ToString(CultureInfo.InvariantCulture);
 #endif
+						else if (o is DateTime)
+							s += ((DateTime)o).ToString(CultureInfo.InvariantCulture);
+						else
+							s += o.ToString();
 					}
 				}
 			}
