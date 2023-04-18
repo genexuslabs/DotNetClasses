@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<DefineConstants>NETCORE;</DefineConstants>
+		<AppDesignerFolder>Properties</AppDesignerFolder>
+		<SignAssembly>false</SignAssembly>
+		<AssemblyName>GeneXus.OpenTelemetry.Azure.AppInsights</AssemblyName>
+		<PackageTags>Azure Application Insights OpenTelemetry GeneXus</PackageTags>
+		<PackageId>GeneXus.OpenTelemetry.Azure.AppInsights</PackageId>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.0.0-beta.10" />
+		<PackageReference Include="OpenTelemetry.Api" Version="1.5.0-alpha.2" NoWarn="NU5104" />
+		<PackageReference Include="OpenTelemetry" Version="1.5.0-alpha.2" NoWarn="NU5104" />
+		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.0-alpha.2" NoWarn="NU5104" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.5.0-alpha.2" NoWarn="NU5104" />
+		<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.5.0-alpha.2" NoWarn="NU5104" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.14" NoWarn="NU5104" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.14" NoWarn="NU5104" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.0.0-rc9.14" NoWarn="NU5104" />
+		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0-preview.3.23174.8" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\OpenTelemetry\GeneXus.OpenTelemetry.csproj" />
+	</ItemGroup>
+</Project>
