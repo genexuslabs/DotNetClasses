@@ -44,9 +44,11 @@ namespace GeneXus.Http
 	using GeneXus.Notifications;
 	using Web.Security;
 	using System.Web.SessionState;
+	using GeneXus.Mock;
+	using GeneXus.Data.NTier;
 #endif
 
-	
+
 
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
@@ -278,6 +280,61 @@ namespace GeneXus.Http
 		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void cleanup() { }
 		virtual public bool UploadEnabled() { return false; }
+
+		protected virtual void ExecuteEx()
+		{
+			ExecutePrivate();
+		}
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected virtual void ExecutePrivateCatch(object stateInfo)
+		{
+			try
+			{
+				((GXHttpHandler)stateInfo).ExecutePrivate();
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+			}
+		}
+		protected void SubmitImpl()
+		{
+			GxContext submitContext = new GxContext();
+			DataStoreUtil.LoadDataStores(submitContext);
+			IsMain = true;
+			submitContext.SetSubmitInitialConfig(context);
+			this.context = submitContext;
+			initialize();
+			Submit(ExecutePrivateCatch, this);
+		}
+		protected virtual void CloseCursors()
+		{
+
+		}
+		protected void Submit(Action<object> executeMethod, object state)
+		{
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
+		}
+		public static WaitCallback PropagateCulture(WaitCallback action)
+		{
+			var currentCulture = Thread.CurrentThread.CurrentCulture;
+			GXLogging.Debug(log, "Submit PropagateCulture " + currentCulture);
+			var currentUiCulture = Thread.CurrentThread.CurrentUICulture;
+			return (x) =>
+			{
+				Thread.CurrentThread.CurrentCulture = currentCulture;
+				Thread.CurrentThread.CurrentUICulture = currentUiCulture;
+				action(x);
+			};
+		}
+		protected virtual string[] GetParameters()
+		{
+			return null;
+		}
 #endif
 		public virtual bool SupportAjaxEvent() { return false; }
 		public virtual String AjaxOnSessionTimeout() { return "Ignore"; }
