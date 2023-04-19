@@ -38,6 +38,7 @@ namespace GeneXus.Procedure
 		public override void initialize() { }
 		protected override void createObjects() { }
 		public override void skipLines(long nToSkip) { }
+
 		public override void cleanup()
 		{
 			if (!context.WillRedirect() && context.IsLocalStorageSupported())
@@ -221,6 +222,15 @@ namespace GeneXus.Procedure
 		{
 			reportMetadata.GxDrawBitMap(printBlock, controlId, line, value, aspectRatio);
 		}
-
+#if !NETCORE
+		protected static WaitCallback PropagateCulture(WaitCallback action)
+		{
+			return GXProcedure.PropagateCulture(action);
+		}
+		protected void Submit(Action<object> executeMethod, object state)
+		{
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
+		}
+#endif
 	}
 }

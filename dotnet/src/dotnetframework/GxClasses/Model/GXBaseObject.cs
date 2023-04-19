@@ -72,7 +72,7 @@ namespace GeneXus.Application
 		{
 			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
 		}
-		protected WaitCallback PropagateCulture(WaitCallback action)
+		public static WaitCallback PropagateCulture(WaitCallback action)
 		{
 			var currentCulture = Thread.CurrentThread.CurrentCulture;
 			GXLogging.Debug(log, "Submit PropagateCulture " + currentCulture);
