@@ -114,7 +114,7 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 									foreach (string key in singleDoc.Keys)
 									{
 										System.Text.Json.JsonElement jsonElement = (System.Text.Json.JsonElement)singleDoc[key];
-										string strValue = jsonElement.ToString().Trim(); //DATES - NULLS
+										string strValue = jsonElement.ToString().Trim(); 
 				
 										if (key == "id")
 											idValue = strValue;
@@ -125,7 +125,7 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 
 									//Event
 
-									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", string.Format($"{eventId.ToString()}_{idValue}"));
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", $"{eventId.ToString()}_{idValue}");
 									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.CosmosDB);
 									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", DateTime.UtcNow);
 									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
