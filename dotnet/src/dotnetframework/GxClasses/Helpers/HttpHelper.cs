@@ -48,6 +48,7 @@ namespace GeneXus.Http
 		public static string CACHE_CONTROL = "Cache-Control";
 		public static string LAST_MODIFIED = "Last-Modified";
 		public static string EXPIRES = "Expires";
+		public static string XGXFILENAME = "x-gx-filename";
 	}
 	[DataContract()]
 	public class HttpJsonError

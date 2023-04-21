@@ -322,7 +322,7 @@ namespace GeneXus.Utils
 		{
 			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
 			IncomingWebRequestContext request = WebOperationContext.Current.IncomingRequest;
-			gxobject.WcfExecute(stream, request.ContentType, request.ContentLength);
+			gxobject.WcfExecute(stream, request.ContentType, request.ContentLength, context.GetHeader(HttpHeader.XGXFILENAME));
 		}
 		public void ErrorCheck(IGxSilentTrn trn)
 		{
