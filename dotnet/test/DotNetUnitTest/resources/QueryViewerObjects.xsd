@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+		   targetNamespace="qv"
+		   xmlns="qv"
+		   elementFormDefault="qualified">
+	<xs:element name="Objects">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Object" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="DefaultOutput">
+								<xs:complexType>
+									<xs:attribute name="type" type="outputType" use="required"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="name" type="xs:string" use="required"/>
+						<xs:attribute name="id" type="xs:nonNegativeInteger" use="required"/>
+						<xs:attribute name="type" type="objectType" use="required"/>
+						<xs:attribute name="IntegratedSecurityLevel" type="securityLevel"/>
+						<xs:attribute name="PermissionPrefix" type="xs:string"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:simpleType name="objectType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Query"/>
+			<xs:enumeration value="DataProvider"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="securityLevel">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="SecurityNone"/>
+			<xs:enumeration value="SecurityLow"/>
+			<xs:enumeration value="SecurityHigh"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="outputType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="OutputTypeCard"/>
+			<xs:enumeration value="OutputTypeMap"/>
+			<xs:enumeration value="OutputTypePivotTable"/>
+			<xs:enumeration value="OutputTypeTable"/>
+			<xs:enumeration value="OutputTypeChartColumn"/>
+			<xs:enumeration value="OutputTypeChartColumn3D"/>
+			<xs:enumeration value="OutputTypeChartStackedColumn"/>
+			<xs:enumeration value="OutputTypeChartStackedColumn3D"/>
+			<xs:enumeration value="OutputTypeChartStackedColumn100"/>
+			<xs:enumeration value="OutputTypeChartBar"/>
+			<xs:enumeration value="OutputTypeChartStackedBar"/>
+			<xs:enumeration value="OutputTypeChartStackedBar100"/>
+			<xs:enumeration value="OutputTypeChartArea"/>
+			<xs:enumeration value="OutputTypeChartStackedArea"/>
+			<xs:enumeration value="OutputTypeChartStackedArea100"/>
+			<xs:enumeration value="OutputTypeChartSmoothArea"/>
+			<xs:enumeration value="OutputTypeChartStepArea"/>
+			<xs:enumeration value="OutputTypeChartLine"/>
+			<xs:enumeration value="OutputTypeChartStackedLine"/>
+			<xs:enumeration value="OutputTypeChartStackedLine100"/>
+			<xs:enumeration value="OutputTypeChartSmoothLine"/>
+			<xs:enumeration value="OutputTypeChartStepLine"/>
+			<xs:enumeration value="OutputTypeChartPie"/>
+			<xs:enumeration value="OutputTypeChartPie3D"/>
+			<xs:enumeration value="OutputTypeChartDoughnut"/>
+			<xs:enumeration value="OutputTypeChartDoughnut3D"/>
+			<xs:enumeration value="OutputTypeChartLinearGauge"/>
+			<xs:enumeration value="OutputTypeChartCircularGauge"/>
+			<xs:enumeration value="OutputTypeChartRadar"/>
+			<xs:enumeration value="OutputTypeChartFilledRadar"/>
+			<xs:enumeration value="OutputTypeChartPolarArea"/>
+			<xs:enumeration value="OutputTypeChartFunnel"/>
+			<xs:enumeration value="OutputTypeChartPyramid"/>
+			<xs:enumeration value="OutputTypeChartColumnLine"/>
+			<xs:enumeration value="OutputTypeChartColumn3DLine"/>
+			<xs:enumeration value="OutputTypeChartTimeline"/>
+			<xs:enumeration value="OutputTypeChartSmoothTimeline"/>
+			<xs:enumeration value="OutputTypeChartStepTimeline"/>
+			<xs:enumeration value="OutputTypeChartSparkline"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
