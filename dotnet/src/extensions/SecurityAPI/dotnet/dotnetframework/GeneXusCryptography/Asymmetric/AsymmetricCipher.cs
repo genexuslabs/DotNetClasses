@@ -11,7 +11,7 @@ using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Utilities.Encoders;
 using System.Security;
-
+using SecurityAPICommons.Utils;
 
 namespace GeneXusCryptography.Asymmetric
 {
@@ -35,45 +35,121 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string DoEncrypt_WithPrivateKey(string hashAlgorithm, string asymmetricEncryptionPadding, PrivateKeyManager key, string plainText)
 		{
-
-			if (this.HasError() || key == null)
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateObjectInput("key", key, this.error);
+			if (this.HasError())
 			{
 				return "";
 			}
-			return DoEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, true, plainText);
+
+			/******* INPUT VERIFICATION - END *******/
+			return DoEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, true, plainText, false);
 		}
 
 		[SecuritySafeCritical]
-		public string DoEncrypt_WithPublicKey(string hashAlgorithm, string asymmetricEncryptionPadding, CertificateX509 certificate, string plainText)
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		public string DoEncrypt_WithPublicKey(string hashAlgorithm, string asymmetricEncryptionPadding, PublicKey key, string plainText)
+#pragma warning restore CA1707 // Identifiers should not contain underscores
 		{
 
-			if (this.HasError() || certificate == null)
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateObjectInput("key", key, this.error);
+			if (this.HasError())
 			{
 				return "";
 			}
-			return DoEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, certificate, false, plainText);
+
+			/******* INPUT VERIFICATION - END *******/
+
+			return DoEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, false, plainText, true);
+		}
+
+		[SecuritySafeCritical]
+		public string DoEncrypt_WithCertificate(string hashAlgorithm, string asymmetricEncryptionPadding, CertificateX509 certificate, string plainText)
+		{
+
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+			if (this.HasError())
+			{
+				return "";
+			}
+
+			/******* INPUT VERIFICATION - END *******/
+
+			return DoEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, certificate, false, plainText, false);
 		}
 
 		[SecuritySafeCritical]
 		public string DoDecrypt_WithPrivateKey(string hashAlgorithm, string asymmetricEncryptionPadding, PrivateKeyManager key, string encryptedInput)
 		{
-
-			if (this.HasError() || key == null)
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateObjectInput("key", key, this.error);
+			if (this.HasError())
 			{
 				return "";
 			}
-			return DoDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, true, encryptedInput);
+
+			/******* INPUT VERIFICATION - END *******/
+
+			return DoDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, true, encryptedInput, false);
 		}
 
 		[SecuritySafeCritical]
-		public string DoDecrypt_WithPublicKey(string hashAlgorithm, string asymmetricEncryptionPadding, CertificateX509 certificate, string encryptedInput)
+		public string DoDecrypt_WithCertificate(string hashAlgorithm, string asymmetricEncryptionPadding, CertificateX509 certificate, string encryptedInput)
 		{
-
-			if (this.HasError() || certificate == null)
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+			if (this.HasError())
 			{
 				return "";
 			}
-			return DoDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, certificate, false, encryptedInput);
+
+			/******* INPUT VERIFICATION - END *******/
+
+			return DoDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, certificate, false, encryptedInput, false);
+		}
+
+		[SecuritySafeCritical]
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+		public string DoDecrypt_WithPublicKey(string hashAlgorithm, string asymmetricEncryptionPadding, PublicKey key, string encryptedInput)
+#pragma warning restore CA1707 // Identifiers should not contain underscores
+		{
+
+			this.error.cleanError();
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateObjectInput("key", key, this.error);
+			if (this.HasError())
+			{
+				return "";
+			}
+
+			/******* INPUT VERIFICATION - END *******/
+
+			return DoDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, false, encryptedInput, true);
 		}
 
 
@@ -92,7 +168,7 @@ namespace GeneXusCryptography.Asymmetric
 		/// <param name="password">Srting keysore/certificate pkcs12 format alias</param>
 		/// <param name="plainText">string to encrypt</param>
 		/// <returns>string Base64 encrypted plainText text</returns>
-		private string DoEncryptInternal(string hashAlgorithm, string asymmetricEncryptionPadding, Key key, bool isPrivate, string plainText)
+		private string DoEncryptInternal(string hashAlgorithm, string asymmetricEncryptionPadding, Key key, bool isPrivate, string plainText, bool isPublicKey)
 		{
 			this.error.cleanError();
 
@@ -113,9 +189,9 @@ namespace GeneXusCryptography.Asymmetric
 					this.error = keyMan.GetError();
 					return "";
 				}
-				asymmetricEncryptionAlgorithm = keyMan.getPrivateKeyAlgorithm();
+				asymmetricEncryptionAlgorithm = keyMan.getAlgorithm();
 
-				asymKey = keyMan.getPrivateKeyParameterForEncryption();
+				asymKey = keyMan.getAsymmetricKeyParameter();
 				if (keyMan.HasError())
 				{
 					this.error = keyMan.GetError();
@@ -124,14 +200,19 @@ namespace GeneXusCryptography.Asymmetric
 			}
 			else
 			{
-				CertificateX509 cert = (CertificateX509)key;
-				if (!cert.Inicialized || cert.HasError())
+				PublicKey cert = isPublicKey ? (PublicKey)key : (CertificateX509)key;
+				if (cert.HasError())
 				{
 					this.error = cert.GetError();
 					return "";
 				}
-				asymmetricEncryptionAlgorithm = cert.getPublicKeyAlgorithm();
-				asymKey = cert.getPublicKeyParameterForEncryption();
+				if (cert.HasError())
+				{
+					this.error = cert.GetError();
+					return "";
+				}
+				asymmetricEncryptionAlgorithm = cert.getAlgorithm();
+				asymKey = cert.getAsymmetricKeyParameter();
 				if (cert.HasError())
 				{
 					this.error = cert.GetError();
@@ -166,7 +247,7 @@ namespace GeneXusCryptography.Asymmetric
 		/// <param name="password">Srting keysore/certificate pkcs12 format alias</param>
 		/// <param name="encryptedInput"></param>
 		/// <returns>string decypted encryptedInput text</returns>
-		private string DoDecryptInternal(string hashAlgorithm, string asymmetricEncryptionPadding, Key key, bool isPrivate, string encryptedInput)
+		private string DoDecryptInternal(string hashAlgorithm, string asymmetricEncryptionPadding, Key key, bool isPrivate, string encryptedInput, bool isPublicKey)
 		{
 			this.error.cleanError();
 
@@ -187,9 +268,9 @@ namespace GeneXusCryptography.Asymmetric
 					this.error = keyMan.GetError();
 					return "";
 				}
-				asymmetricEncryptionAlgorithm = keyMan.getPrivateKeyAlgorithm();
+				asymmetricEncryptionAlgorithm = keyMan.getAlgorithm();
 
-				asymKey = keyMan.getPrivateKeyParameterForEncryption();
+				asymKey = keyMan.getAsymmetricKeyParameter();
 				if (keyMan.HasError())
 				{
 					this.error = keyMan.GetError();
@@ -198,14 +279,14 @@ namespace GeneXusCryptography.Asymmetric
 			}
 			else
 			{
-				CertificateX509 cert = (CertificateX509)key;
-				if (!cert.Inicialized || cert.HasError())
+				PublicKey cert = isPublicKey ? (PublicKey)key : (CertificateX509)key;
+				if (cert.HasError())
 				{
 					this.error = cert.GetError();
 					return "";
 				}
-				asymmetricEncryptionAlgorithm = cert.getPublicKeyAlgorithm();
-				asymKey = cert.getPublicKeyParameterForEncryption();
+				asymmetricEncryptionAlgorithm = cert.getAlgorithm();
+				asymKey = cert.getAsymmetricKeyParameter();
 				if (cert.HasError())
 				{
 					this.error = cert.GetError();
