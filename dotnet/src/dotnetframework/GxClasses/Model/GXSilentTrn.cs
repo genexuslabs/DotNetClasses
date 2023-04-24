@@ -608,6 +608,7 @@ namespace GeneXus.Utils
 
 		public bool isWrappedInCollection = true;
 
+		const string DateFormat = "M/d/yyyy h:mm:ss tt";
 		public override string ToString()
 		{
 			string s = "";
@@ -636,7 +637,7 @@ namespace GeneXus.Utils
 							s += ((decimal)o).ToString(CultureInfo.InvariantCulture);
 #endif
 						else if (o is DateTime)
-							s += ((DateTime)o).ToString(CultureInfo.InvariantCulture);
+							s += ((DateTime)o).ToString(DateFormat, CultureInfo.InvariantCulture); 
 						else
 							s += o.ToString();
 					}
