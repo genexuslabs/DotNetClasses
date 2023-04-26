@@ -247,15 +247,15 @@ namespace GeneXus.Application
 		public T GetBodySdt<T>(string varName) where T:GxUserType, new()
 		{
 			T sdt = new T();
-			if (_responseData.ContainsKey(varName.ToLower()))
+			if (_responseData.ContainsKey(varName.ToLower()) && _responseData.Count == 1) //wrapped sdt
 			{
 				sdt.FromJSonString(_responseData[varName.ToLower()].ToString(), null);
 			}
-			else if (_responseData.Count == 1 && _responseData.ContainsKey(String.Empty))
+			else if (_responseData.Count == 1 && _responseData.ContainsKey(String.Empty)) // unwrapped 
 			{
 				sdt.FromJSonString(_responseData[String.Empty].ToString(), null);
-			}
-			else if (_responseData.Count >= 1 && !_responseData.ContainsKey(varName.ToLower()))
+			}			
+			else if (_responseData.Count >= 1) // can contain the same key (recursive unwrapped)
 			{
 
 #if NETCORE
