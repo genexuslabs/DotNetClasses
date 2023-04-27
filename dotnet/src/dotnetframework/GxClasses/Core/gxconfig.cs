@@ -783,6 +783,7 @@ namespace GeneXus.Configuration
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
+		static int sessionTimeout = -1;
 		internal static string DefaultDatastore
 		{
 			get
@@ -1322,6 +1323,19 @@ namespace GeneXus.Configuration
 		internal static bool CorsEnabled {
 			get {
 				return !string.IsNullOrEmpty(CorsAllowedOrigins());
+			}
+		}
+		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
+		public static int SessionTimeout {
+			get {
+				if (sessionTimeout == -1)
+				{
+					if (Config.GetValueOf("SessionTimeout", out string SessionTimeoutStr) && int.TryParse(SessionTimeoutStr, out int value))
+						sessionTimeout = value;
+					else
+						sessionTimeout = DEFAULT_SESSION_TIMEOUT_MINUTES;
+				}
+				return sessionTimeout;
 			}
 		}
 
