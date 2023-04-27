@@ -121,7 +121,6 @@ namespace GeneXus.Application
 	{ 
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
-		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
@@ -189,10 +188,7 @@ namespace GeneXus.Application
 			services.AddHttpContextAccessor();
 			services.AddSession(options =>
 			{
-				if (Config.GetValueOf("SessionTimeout", out string SessionTimeoutStr) && int.TryParse(SessionTimeoutStr, out int SessionTimeout))
-					options.IdleTimeout = TimeSpan.FromMinutes(SessionTimeout);
-				else
-					options.IdleTimeout = TimeSpan.FromMinutes(DEFAULT_SESSION_TIMEOUT_MINUTES); 
+				options.IdleTimeout = TimeSpan.FromMinutes(Preferences.SessionTimeout);
 				options.Cookie.HttpOnly = true;
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
@@ -281,6 +277,7 @@ namespace GeneXus.Application
 					options.ConnectionString = sessionService.ConnectionString;
 					options.SchemaName = sessionService.Schema;
 					options.TableName = sessionService.TableName;
+					options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
 				});
 			}
 		}
