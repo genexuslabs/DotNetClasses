@@ -20,25 +20,30 @@ namespace GeneXus.Services
 			{
 				try
 				{
+					Type type = null;
 					string className = providerService.ClassName;
 					//Compatibility 
 					if (string.IsNullOrEmpty(className))
 					{
 						if (providerService.Name.Equals(REDIS, StringComparison.OrdinalIgnoreCase))
-							className = typeof(GxRedisSession).FullName;
+							type = typeof(GxRedisSession);
 						else if (providerService.Name.Equals(DATABASE, StringComparison.OrdinalIgnoreCase))
-							className = typeof(GxDatabaseSession).FullName;
+							type = typeof(GxDatabaseSession);
 					}
-
-					GXLogging.Debug(log, "Loading Session provider:", providerService.ClassName);
-					if (!string.IsNullOrEmpty(providerService.ClassName))
+					else
 					{
+
+						GXLogging.Debug(log, "Loading Session provider:", className);
 #if !NETCORE
-						Type type = Type.GetType(providerService.ClassName, true, true);
+						type = Type.GetType(className, true, true);
 #else
-						Type type = AssemblyLoader.GetType(providerService.ClassName);
+						type = AssemblyLoader.GetType(className);
 #endif
+					}
+					if (type != null)
+					{
 						sessionService = (ISessionService)Activator.CreateInstance(type, new object[] { providerService });
+						return sessionService;
 					}
 				}
 				catch (Exception e)

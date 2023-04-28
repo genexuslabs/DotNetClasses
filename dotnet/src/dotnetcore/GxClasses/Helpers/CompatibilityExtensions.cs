@@ -15,10 +15,17 @@ namespace GxClasses.Helpers
 		}
 		internal static Type GetType(string typeFullName)
 		{
-			string typeName = typeFullName.Split(',').First();
-			string assemblyName = typeFullName.Substring(typeName.Length + 1);
-			AssemblyName assName = new AssemblyName(assemblyName);
-			return LoadContext.LoadFromAssemblyName(assName).GetType(typeName);
+			if (typeFullName.Contains(','))
+			{
+				string typeName = typeFullName.Split(',').First();
+				string assemblyName = typeFullName.Substring(typeName.Length + 1);
+				AssemblyName assName = new AssemblyName(assemblyName);
+				return LoadContext.LoadFromAssemblyName(assName).GetType(typeName);
+			}
+			else
+			{
+				return Type.GetType(typeFullName, true, true);
+			}
 		}
 		/*Try to resolve by name when resolution fails. Keep compatibility with previous resolver*/
 		private static Assembly LoadContext_Resolving(AssemblyLoadContext arg1, AssemblyName assemblyName)
