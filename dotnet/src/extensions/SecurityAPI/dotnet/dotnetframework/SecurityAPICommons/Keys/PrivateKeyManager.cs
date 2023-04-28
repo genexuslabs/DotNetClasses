@@ -526,9 +526,14 @@ namespace SecurityAPICommons.Keys
 
 					byte[] serializedPrivateBytes = this.privateKeyInfo.ToAsn1Object().GetDerEncoded();
 					string serializedPrivate = Convert.ToBase64String(serializedPrivateBytes);
+					
 					RsaPrivateCrtKeyParameters privateKey = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(serializedPrivate));
 #if NETCORE
-					alg = DotNetUtilities.ToRSA(privateKey);
+					RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+					alg = rsa;
+					byte[] serializedPrivateBytes1 = this.privateKeyInfo.ToAsn1Object().GetEncoded();
+					int bytesread = 0;
+					alg.ImportPkcs8PrivateKey(serializedPrivateBytes,out bytesread);
 #else
 
 
