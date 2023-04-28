@@ -20,7 +20,7 @@
 		<SignAssembly Condition="'$(AssemblyOriginatorKeyFile)'!=''">true</SignAssembly>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningLevel>4</WarningLevel>
-		<RunCodeAnalysis>false</RunCodeAnalysis>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
 		<RepositoryType>git</RepositoryType>
