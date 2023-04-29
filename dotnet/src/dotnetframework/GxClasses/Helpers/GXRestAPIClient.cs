@@ -65,6 +65,11 @@ namespace GeneXus.Application
 		{
 			_queryVars[varName] = varValue.ToString();
 		}
+		public void AddQueryVar(String varName, long varValue)
+		{
+			_queryVars[varName] = varValue.ToString();
+		}
+
 		public void AddQueryVar(String varName, short varValue)
 		{
 			_queryVars[varName] = varValue.ToString();
@@ -148,7 +153,10 @@ namespace GeneXus.Application
 		{
 			_bodyVars[varName] = varValue.ToString();
 		}
-
+		public void AddBodyVar(String varName, long varValue)
+		{
+			_bodyVars[varName] = varValue.ToString();
+		}
 		public void AddBodyVar(String varName, bool varValue)
 		{
 			_bodyVars[varName] = varValue.ToString();
@@ -210,7 +218,10 @@ namespace GeneXus.Application
 		{
 			return Decimal.Parse( GetJsonStr(varName));
 		}
-
+		public long GetBodyLong(string varName)
+		{
+			return long.Parse(GetJsonStr(varName));
+		}
 		public int GetBodyInt(string varName)
 		{
 			return Int32.Parse(GetJsonStr(varName));
@@ -220,6 +231,7 @@ namespace GeneXus.Application
 		{			
 			return (short)Int16.Parse(GetJsonStr(varName));
 		}
+
 		public Geospatial GetBodyGeospatial(string varName)
 		{
 			Geospatial g = new Geospatial(GetJsonStr(varName));
