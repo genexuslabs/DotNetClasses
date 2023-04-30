@@ -215,8 +215,8 @@ namespace GeneXus.Application
 		}
 
 		public Decimal GetBodyNum(string varName)
-		{
-			return Decimal.Parse( GetJsonStr(varName));
+		{			
+			return Decimal.Parse( GetJsonStr(varName), System.Globalization.NumberStyles.Float);
 		}
 		public long GetBodyLong(string varName)
 		{
