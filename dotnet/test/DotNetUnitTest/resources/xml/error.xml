@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<msbuild>
+	<Message>
+		<Info>##  SE SETEA LA PROPIEDAD DE: DATASTORE CS_DBNAME CON EL VALOR: ARTF72355 PARA LA KB EN: c:&#xC;ullgxkbaux##</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info />
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info />
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>__________________________________________________</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>Project "c:\fullgx\MSBuild\test.msbuild" (OpenKnowledgeBase;SetActiveEnvironment;SetDataStoreProperty target(s)):</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info />
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>Target OpenKnowledgeBase:</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>========== Open Knowledge Base Task started ==========</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>&gt; Open Knowledge Base Task Success</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>========== Open Knowledge Base Task finished ==========</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>Target SetActiveEnvironment:</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>========== Set Active Environment started ==========</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>&gt; Set Active Environment Success</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>========== Set Active Environment finished ==========</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info />
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>Build succeeded.</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>0 Warning(s)</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info>0 Error(s)</Info>
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info />
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info />
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info />
+		<Level>3</Level>
+	</Message>
+	<Message>
+		<Info />
+		<Level>3</Level>
+	</Message>
+</msbuild>
