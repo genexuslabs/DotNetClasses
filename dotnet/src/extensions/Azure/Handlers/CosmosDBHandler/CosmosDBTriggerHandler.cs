@@ -11,6 +11,9 @@ using GeneXus.Metadata;
 using GeneXus.Utils;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using System.Text.Json.Nodes;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 {
@@ -87,8 +90,10 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 
 							if (parameters[0].ParameterType == typeof(string))
 							{
-								string docSerialized = JSONHelper.Serialize(doc);
-								parametersdata = new object[] { docSerialized, null };
+								string jsonDocuments = string.Empty;
+								foreach (Dictionary<string, object> singleDoc in doc )
+									jsonDocuments = string.Join("", ConvertToJsonObject(singleDoc).ToJsonString());	
+								parametersdata = new object[] { jsonDocuments, null };
 							}
 							else
 							{
@@ -113,7 +118,7 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 									string idValue = string.Empty;
 									foreach (string key in singleDoc.Keys)
 									{
-										System.Text.Json.JsonElement jsonElement = (System.Text.Json.JsonElement)singleDoc[key];
+										JsonElement jsonElement = (JsonElement)singleDoc[key];
 										string strValue = jsonElement.ToString().Trim(); 
 				
 										if (key == "id")
@@ -178,6 +183,43 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Event Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, eventId);
 				throw new Exception(exMessage);
 			}
+		}
+		private JsonArray ConvertToJsonArray(JsonElement jsonElement)
+		{
+			JsonArray jsonArray = new JsonArray();
+			JsonElement.ArrayEnumerator jsonElements = jsonElement.EnumerateArray();
+			foreach (JsonElement j in jsonElements)
+				jsonArray.Add(ConvertToJsonObject(j));
+			return jsonArray;
+		}
+		private JsonNode ConvertToJsonObject(JsonElement jsonElement)
+		{
+			JsonNode jsonValue = null;
+			if (jsonElement.ValueKind == JsonValueKind.Array)
+				jsonValue = ConvertToJsonArray(jsonElement);
+			else
+				if (jsonElement.ValueKind == JsonValueKind.Object)
+				{
+					JsonSerializerOptions options = new JsonSerializerOptions
+					{
+						Converters = { new JsonStringEnumConverter() }
+					};
+					jsonValue = JsonSerializer.Deserialize<JsonNode>(jsonElement.GetRawText(), options);
+				}
+				else
+					jsonValue = JsonValue.Create(jsonElement);
+			return jsonValue;
+		}
+		private JsonObject ConvertToJsonObject(Dictionary<string,object> jsondoc)
+		{	
+			JsonObject keyValuePairs = new JsonObject();
+			foreach (KeyValuePair<string,object> element in jsondoc)
+			{
+				string key = element.Key;
+				JsonElement value = (JsonElement)element.Value;
+				keyValuePairs.Add(key, ConvertToJsonObject(value));
+			}
+			return keyValuePairs;
 		}
 		private GxUserType CreateEventMessageProperty(Type eventMessPropsItemType, string propertyId, object propertyValue, GxContext gxContext)
 		{
