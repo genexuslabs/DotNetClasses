@@ -25,7 +25,7 @@ namespace GeneXus.Utils
 {
 	public class DocumentHandler
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.DocumentHandler));
+		private static readonly ILog log = LogManager.GetLogger(typeof(DocumentHandler));
 
 		static IndexReader reader;
 		static ConcurrentDictionary<string, Query> queries = new ConcurrentDictionary<string, Query>();
