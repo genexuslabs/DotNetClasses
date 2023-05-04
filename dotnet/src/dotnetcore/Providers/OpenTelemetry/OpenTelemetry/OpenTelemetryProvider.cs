@@ -13,7 +13,7 @@ namespace GeneXus.OpenTelemetry.OpenTelemetry
 
 		public bool InstrumentAspNetCoreApplication(IServiceCollection services)
 		{
-			services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
+			services.AddOpenTelemetryTracing(tracerProviderBuilder =>
 			{
 				tracerProviderBuilder
 				.AddOtlpExporter()
