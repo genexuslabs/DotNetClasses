@@ -17,7 +17,12 @@ namespace GeneXus.Application
 {
 	public class GXRestAPIClient
 	{
-
+		private const string DATE_NULL = "0000-00-00";
+		private const string DATETIME_NULL = "0000-00-00'T'00:00:00";
+		private const string DATE_FORMAT = "yyyy-MM-dd";
+		private const string DATETIME_FORMAT = "yyyy-MM-ddTHH:mm:ss";
+		private const string DATETIME_MS_FORMAT = "yyyy-MM-ddTHH:mm:ss.fff";
+		
 		public GXRestAPIClient()
 		{
 			Location = new GxLocation();
@@ -82,14 +87,14 @@ namespace GeneXus.Application
 
 		public void AddQueryVar(String varName, DateTime varValue)
 		{
-			_queryVars[varName] = varValue.ToString("yyyy-MM-dd");
+			_queryVars[varName] = varValue.ToString(DATE_FORMAT);
 		}
 
 		public void AddQueryVar(String varName, DateTime varValue, bool hasMilliseconds)
 		{
-			string fmt = "yyyy-MM-ddTHH:mm:ss";
+			string fmt = DATETIME_FORMAT;
 			if (hasMilliseconds)
-				fmt = "yyyy-MM-ddTHH:mm:ss.fff";
+				fmt = DATETIME_MS_FORMAT;
 			_queryVars[varName] = varValue.ToString(fmt);
 		}
 		public void AddQueryVar(String varName, Guid varValue)
@@ -125,14 +130,14 @@ namespace GeneXus.Application
 
 		public void AddBodyVar(String varName, DateTime varValue)
 		{
-			_bodyVars[varName] = "\"" +  varValue.ToString("yyyy-MM-dd") + "\"";
+			_bodyVars[varName] = "\"" +  varValue.ToString(DATE_FORMAT) + "\"";
 		}
 
 		public void AddBodyVar(String varName, DateTime varValue, bool hasMilliseconds)
 		{
-			string fmt = "yyyy-MM-ddTHH:mm:ss";
+			string fmt = DATETIME_FORMAT;
 			if (hasMilliseconds)
-				fmt = "yyyy-MM-ddTHH:mm:ss.fff";
+				fmt = DATETIME_MS_FORMAT;
 			_bodyVars[varName] = "\"" + varValue.ToString(fmt) + "\"";
 		}
 
@@ -193,16 +198,22 @@ namespace GeneXus.Application
 		}
 
 		public DateTime GetBodyDate(string varName)
-		{	
-		 	return DateTime.ParseExact(GetJsonStr(varName), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+		{
+			string val = GetJsonStr(varName);
+			if (val.StartsWith(DATE_NULL))
+				return DateTimeUtil.NullDate();
+			return DateTime.ParseExact(val, DATE_FORMAT, System.Globalization.CultureInfo.InvariantCulture);
 		}
 
 		public DateTime GetBodyDateTime(string varName, bool hasMilliseconds)
 		{
-			string fmt = "yyyy-MM-ddTHH:mm:ss";
+			string val = GetJsonStr(varName);
+			if (val.StartsWith(DATETIME_NULL))
+				return DateTimeUtil.NullDate();
+			string fmt = DATETIME_FORMAT;
 			if (hasMilliseconds)
-				fmt += ".fff";
-			return DateTime.ParseExact(GetJsonStr(varName), fmt,System.Globalization.CultureInfo.InvariantCulture);
+				fmt = DATETIME_MS_FORMAT;
+			return DateTime.ParseExact(val, fmt,System.Globalization.CultureInfo.InvariantCulture);
 		}
 
 		public bool GetBodyBool(string varName)
