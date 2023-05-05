@@ -257,7 +257,6 @@ namespace GeneXus.Application
 			}			
 			else if (_responseData.Count >= 1) // can contain the same key (recursive unwrapped)
 			{
-
 #if NETCORE
 				string rData = JsonSerializer.Serialize(_responseData);
 				if (sdt.FromJSonString(rData, null))
