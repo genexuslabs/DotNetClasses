@@ -80,9 +80,10 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 						}
 						else
 						{
-							//Two valid signatures for the GX procedure:
+							//Three valid signatures for the GX procedure:
 							//parm(in:&EventMessageCollection, out:&ExternalEventMessageResponse );
 							//parm(in:&rawData, out:&ExternalEventMessageResponse );
+							//parm(in:&EventMessagesList, out:&ExternalEventMessageResponse );
 
 							GxContext gxcontext = new GxContext();
 							object[] parametersdata;
@@ -91,56 +92,69 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 							if (parameters[0].ParameterType == typeof(string))
 							{
 								string jsonDocuments = string.Empty;
-								foreach (Dictionary<string, object> singleDoc in doc )
-									jsonDocuments = string.Join("", ConvertToJsonObject(singleDoc).ToJsonString());	
+								foreach (Dictionary<string, object> singleDoc in doc)
+									jsonDocuments = string.Join("", ConvertToJsonObject(singleDoc).ToJsonString());
 								parametersdata = new object[] { jsonDocuments, null };
 							}
 							else
-							{
-								//Initialization
+								try
+								{ 			
+									string jsonDocuments = string.Empty;
+									Type eventMessagesListType = parameters[0].ParameterType; //SdtEventMessagesList
+									GxUserType eventMessagesList = (GxUserType)Activator.CreateInstance(eventMessagesListType, new object[] { gxcontext }); // instance of SdtEventMessagesList
 
-								Type eventMessagesType = parameters[0].ParameterType; //SdtEventMessages
-								GxUserType eventMessages = (GxUserType)Activator.CreateInstance(eventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
-
-								IList eventMessage = (IList)ClassLoader.GetPropValue(eventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
-								Type eventMessageItemType = eventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
-
-								GxUserType eventMessageItem = (GxUserType)Activator.CreateInstance(eventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
-
-								IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
-								Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
-
-								GxUserType eventMessageProperty;
-
-								foreach (Dictionary<string,object> singleDoc in doc)
-								{
-
-									string idValue = string.Empty;
-									foreach (string key in singleDoc.Keys)
-									{
-										JsonElement jsonElement = (JsonElement)singleDoc[key];
-										string strValue = jsonElement.ToString().Trim(); 
-				
-										if (key == "id")
-											idValue = strValue;
-
-										eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType,key, strValue, gxcontext);
-										eventMessageProperties.Add(eventMessageProperty);
-									}
-
-									//Event
-
-									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", $"{eventId.ToString()}_{idValue}");
-									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.CosmosDB);
-									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", DateTime.UtcNow);
-									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
-									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
-
-									//List of Events
-									eventMessage.Add(eventMessageItem);
+									IList eventMessageItems = (IList)ClassLoader.GetPropValue(eventMessagesList, "gxTpr_Items_GxSimpleCollection");
+									foreach (Dictionary<string, object> singleDoc in doc)
+										eventMessageItems.Add(ConvertToJsonObject(singleDoc).ToJsonString());
+									
+									parametersdata = new object[] { eventMessagesList, null };
+								
 								}
-								parametersdata = new object[] { eventMessages, null };
-							}
+								catch (Exception)
+								{ 					
+									Type eventMessagesType = parameters[0].ParameterType; //SdtEventMessages
+									GxUserType eventMessages = (GxUserType)Activator.CreateInstance(eventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
+
+									IList eventMessage = (IList)ClassLoader.GetPropValue(eventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
+									Type eventMessageItemType = eventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
+
+									GxUserType eventMessageItem = (GxUserType)Activator.CreateInstance(eventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
+
+									IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
+									Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
+
+									GxUserType eventMessageProperty;
+
+									foreach (Dictionary<string,object> singleDoc in doc)
+									{
+
+										string idValue = string.Empty;
+										foreach (string key in singleDoc.Keys)
+										{
+											JsonElement jsonElement = (JsonElement)singleDoc[key];
+											string strValue = jsonElement.ToString().Trim(); 
+				
+											if (key == "id")
+												idValue = strValue;
+
+											eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType,key, strValue, gxcontext);
+											eventMessageProperties.Add(eventMessageProperty);
+										}
+
+										//Event
+
+										ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", $"{eventId.ToString()}_{idValue}");
+										ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.CosmosDB);
+										ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", DateTime.UtcNow);
+										ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
+										ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
+
+										//List of Events
+										eventMessage.Add(eventMessageItem);
+									}
+									parametersdata = new object[] { eventMessages, null };
+								
+								}
 							try
 							{
 								method.Invoke(objgxproc, parametersdata);
@@ -194,7 +208,7 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 		}
 		private JsonNode ConvertToJsonObject(JsonElement jsonElement)
 		{
-			JsonNode jsonValue = null;
+			JsonNode jsonValue = null;		
 			if (jsonElement.ValueKind == JsonValueKind.Array)
 				jsonValue = ConvertToJsonArray(jsonElement);
 			else
@@ -202,12 +216,13 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 				{
 					JsonSerializerOptions options = new JsonSerializerOptions
 					{
-						Converters = { new JsonStringEnumConverter() }
+						Converters = { new JsonStringEnumConverter()}
 					};
 					jsonValue = JsonSerializer.Deserialize<JsonNode>(jsonElement.GetRawText(), options);
 				}
 				else
 					jsonValue = JsonValue.Create(jsonElement);
+			
 			return jsonValue;
 		}
 		private JsonObject ConvertToJsonObject(Dictionary<string,object> jsondoc)
@@ -215,9 +230,13 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 			JsonObject keyValuePairs = new JsonObject();
 			foreach (KeyValuePair<string,object> element in jsondoc)
 			{
-				string key = element.Key;
-				JsonElement value = (JsonElement)element.Value;
-				keyValuePairs.Add(key, ConvertToJsonObject(value));
+				//Json Null Serialization: include non null
+				if (element.Value != null)
+				{ 
+					string key = element.Key;
+					JsonElement value = (JsonElement)element.Value;
+					keyValuePairs.Add(key, ConvertToJsonObject(value));
+				}
 			}
 			return keyValuePairs;
 		}
