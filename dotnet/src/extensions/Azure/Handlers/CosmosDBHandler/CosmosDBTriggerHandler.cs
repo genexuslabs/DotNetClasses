@@ -91,10 +91,11 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 
 							if (parameters[0].ParameterType == typeof(string))
 							{
-								string jsonDocuments = string.Empty;
+								StringBuilder st = new StringBuilder();
 								foreach (Dictionary<string, object> singleDoc in doc)
-									jsonDocuments = string.Join("", ConvertToJsonObject(singleDoc).ToJsonString());
-								parametersdata = new object[] { jsonDocuments, null };
+									st.Append(ConvertToJsonObject(singleDoc).ToJsonString());
+								
+								parametersdata = new object[] { st.ToString(), null };
 							}
 							else
 								try
