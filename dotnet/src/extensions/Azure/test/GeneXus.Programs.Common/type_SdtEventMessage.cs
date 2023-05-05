@@ -89,12 +89,16 @@ namespace GeneXus.Programs.genexusserverlessapi
 			AddObjectProperty("EventMessageData", gxTpr_Eventmessagedata, false);
 
 
+			if (gxTv_SdtEventMessage_Eventmessageproperties != null)
+			{
+				AddObjectProperty("EventMessageProperties", gxTv_SdtEventMessage_Eventmessageproperties, false);
+			}
+			
+			
+			
 			AddObjectProperty("EventMessageVersion", gxTpr_Eventmessageversion, false);
 
-			if (gxTv_SdtEventMessage_Eventmessagecustompayload != null)
-			{
-				AddObjectProperty("EventMessageCustomPayload", gxTv_SdtEventMessage_Eventmessagecustompayload, false);  
-			}
+			
 			return;
 		}
 		#endregion
@@ -174,6 +178,57 @@ namespace GeneXus.Programs.genexusserverlessapi
 		}
 
 
+	[SoapElement(ElementName="EventMessageProperties" )]
+		[XmlArray(ElementName="EventMessageProperties"  )]
+		[XmlArrayItemAttribute(ElementName="EventMessageProperty" , IsNullable=false )]
+		public GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty> gxTpr_Eventmessageproperties_GXBaseCollection
+		{
+			get {
+				if ( gxTv_SdtEventMessage_Eventmessageproperties == null )
+				{
+					gxTv_SdtEventMessage_Eventmessageproperties = new GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>( context, "EventMessageProperty", "");
+				}
+				return gxTv_SdtEventMessage_Eventmessageproperties;
+			}
+			set {
+				gxTv_SdtEventMessage_Eventmessageproperties_N = false;
+				gxTv_SdtEventMessage_Eventmessageproperties = value;
+			}
+		}
+
+		[XmlIgnore]
+		public GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty> gxTpr_Eventmessageproperties
+		{
+			get {
+				if ( gxTv_SdtEventMessage_Eventmessageproperties == null )
+				{
+					gxTv_SdtEventMessage_Eventmessageproperties = new GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>( context, "EventMessageProperty", "");
+				}
+				gxTv_SdtEventMessage_Eventmessageproperties_N = false;
+				return gxTv_SdtEventMessage_Eventmessageproperties ;
+			}
+			set {
+				gxTv_SdtEventMessage_Eventmessageproperties_N = false;
+				gxTv_SdtEventMessage_Eventmessageproperties = value;
+				SetDirty("Eventmessageproperties");
+			}
+		}
+
+		public void gxTv_SdtEventMessage_Eventmessageproperties_SetNull()
+		{
+			gxTv_SdtEventMessage_Eventmessageproperties_N = true;
+			gxTv_SdtEventMessage_Eventmessageproperties = null;
+		}
+
+		public bool gxTv_SdtEventMessage_Eventmessageproperties_IsNull()
+		{
+			return gxTv_SdtEventMessage_Eventmessageproperties == null;
+		}
+		public bool ShouldSerializegxTpr_Eventmessageproperties_GXBaseCollection_Json()
+		{
+			return gxTv_SdtEventMessage_Eventmessageproperties != null && gxTv_SdtEventMessage_Eventmessageproperties.Count > 0;
+
+		}
 
 
 		[SoapElement(ElementName="EventMessageVersion")]
@@ -192,72 +247,7 @@ namespace GeneXus.Programs.genexusserverlessapi
 
 
 
-		[SoapElement(ElementName="EventMessageCustomPayload" )]
-		[XmlArray(ElementName="EventMessageCustomPayload"  )]
-		[XmlArrayItemAttribute(ElementName="CustomPayloadItem" , IsNullable=false )]
-		public GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventCustomPayload_CustomPayloadItem> gxTpr_Eventmessagecustompayload_GXBaseCollection
-		{
-			get {
-				if ( gxTv_SdtEventMessage_Eventmessagecustompayload == null )
-				{
-					gxTv_SdtEventMessage_Eventmessagecustompayload = new GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventCustomPayload_CustomPayloadItem>( context, "EventCustomPayload", "");
-				}
-				return gxTv_SdtEventMessage_Eventmessagecustompayload;
-			}
-			set {
-				if ( gxTv_SdtEventMessage_Eventmessagecustompayload == null )
-				{
-					gxTv_SdtEventMessage_Eventmessagecustompayload = new GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventCustomPayload_CustomPayloadItem>( context, "EventCustomPayload", "");
-				}
-				gxTv_SdtEventMessage_Eventmessagecustompayload_N = 0;
-
-				gxTv_SdtEventMessage_Eventmessagecustompayload = value;
-			}
-		}
-
-		[XmlIgnore]
-		public GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventCustomPayload_CustomPayloadItem> gxTpr_Eventmessagecustompayload
-		{
-			get {
-				if ( gxTv_SdtEventMessage_Eventmessagecustompayload == null )
-				{
-					gxTv_SdtEventMessage_Eventmessagecustompayload = new GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventCustomPayload_CustomPayloadItem>( context, "EventCustomPayload", "");
-				}
-				gxTv_SdtEventMessage_Eventmessagecustompayload_N = 0;
-
-				return gxTv_SdtEventMessage_Eventmessagecustompayload ;
-			}
-			set {
-				gxTv_SdtEventMessage_Eventmessagecustompayload_N = 0;
-
-				gxTv_SdtEventMessage_Eventmessagecustompayload = value;
-				SetDirty("Eventmessagecustompayload");
-			}
-		}
-
-		public void gxTv_SdtEventMessage_Eventmessagecustompayload_SetNull()
-		{
-			gxTv_SdtEventMessage_Eventmessagecustompayload_N = 1;
-
-			gxTv_SdtEventMessage_Eventmessagecustompayload = null;
-			return  ;
-		}
-
-		public bool gxTv_SdtEventMessage_Eventmessagecustompayload_IsNull()
-		{
-			if (gxTv_SdtEventMessage_Eventmessagecustompayload == null)
-			{
-				return true ;
-			}
-			return false ;
-		}
-
-		public bool ShouldSerializegxTpr_Eventmessagecustompayload_GXBaseCollection_Json()
-		{
-				return gxTv_SdtEventMessage_Eventmessagecustompayload != null && gxTv_SdtEventMessage_Eventmessagecustompayload.Count > 0;
-
-		}
-
+		
 
 		public override bool ShouldSerializeSdtJson()
 		{
@@ -275,9 +265,10 @@ namespace GeneXus.Programs.genexusserverlessapi
 			gxTv_SdtEventMessage_Eventmessagedate = (DateTime)(DateTime.MinValue);
 			gxTv_SdtEventMessage_Eventmessagesourcetype = "";
 			gxTv_SdtEventMessage_Eventmessagedata = "";
+			gxTv_SdtEventMessage_Eventmessageproperties_N = true;
 			gxTv_SdtEventMessage_Eventmessageversion = "";
 
-			gxTv_SdtEventMessage_Eventmessagecustompayload_N = 1;
+		
 
 			datetime_STZ = (DateTime)(DateTime.MinValue);
 			sDateCnv = "";
@@ -306,11 +297,13 @@ namespace GeneXus.Programs.genexusserverlessapi
 
 		protected string gxTv_SdtEventMessage_Eventmessagedata;
 		 
+		protected bool gxTv_SdtEventMessage_Eventmessageproperties_N;
+		protected GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty> gxTv_SdtEventMessage_Eventmessageproperties = null;  
 
 		protected string gxTv_SdtEventMessage_Eventmessageversion;
 		 
-		protected short gxTv_SdtEventMessage_Eventmessagecustompayload_N;
-		protected GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventCustomPayload_CustomPayloadItem> gxTv_SdtEventMessage_Eventmessagecustompayload = null;  
+	
+	
 
 
 		#endregion

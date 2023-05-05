@@ -473,18 +473,35 @@ namespace GeneXus.Http
 
 		public override void webExecute()
 		{
+			string genexus_agent = localHttpContext.Request.Headers["Genexus-Agent"];
 			try
 			{
-				GxSecurityProvider.Provider.oauthlogout(context);
+				GxSecurityProvider.Provider.oauthlogout(context, out string URL, out short statusCode);
+
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-				localHttpContext.Response.StatusCode = 200;
-				localHttpContext.Response.Write(new JObject().ToString());
+				JObject jObj = new JObject();
+				if (genexus_agent == "WebFrontend Application" && URL.Length > 0)
+				{
+					localHttpContext.Response.AddHeader("GXLocation", URL);					
+					jObj.Put("GXLocation", URL);
+				}
+				else
+				{
+					jObj.Put("code", statusCode.ToString());					
+				}
+
+				if (statusCode == (int)HttpStatusCode.SeeOther)
+					localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
+				else
+					localHttpContext.Response.StatusCode = statusCode;
+
+				localHttpContext.Response.Write(jObj.ToString());
 				context.CloseConnections();
 			}
 			catch (Exception e)
 			{
-				localHttpContext.Response.Write(e.Message);
 				localHttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+				localHttpContext.Response.Write(e.Message);
 			}
 		}
 

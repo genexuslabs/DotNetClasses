@@ -1,4 +1,4 @@
-﻿using GeneXusJWT.GenexusJWTClaims;
+using GeneXusJWT.GenexusJWTClaims;
 using GeneXusJWT.GenexusJWTUtils;
 using SecurityAPICommons.Commons;
 using SecurityAPICommons.Keys;
@@ -18,6 +18,7 @@ namespace GeneXusJWT.GenexusComons
         private byte[] secret;
         private RevocationList revocationList;
         private CertificateX509 certificate;
+		private PublicKey publicKey;
         private PrivateKeyManager privateKey;
         private HeaderParameters parameters;
 
@@ -39,6 +40,12 @@ namespace GeneXusJWT.GenexusComons
             this.privateKey = key;
         }
 
+		[SecuritySafeCritical]
+		public void SetPublicKey(PublicKey key)
+		{
+			this.publicKey = key;
+		}
+
         [SecuritySafeCritical]
         public PrivateKeyManager GetPrivateKey()
         {
@@ -49,12 +56,6 @@ namespace GeneXusJWT.GenexusComons
         public void SetCertificate(CertificateX509 cert)
         {
             this.certificate = cert;
-        }
-
-        [SecuritySafeCritical]
-        public CertificateX509 GetCertificate()
-        {
-            return this.certificate;
         }
 
         [SecuritySafeCritical]
@@ -119,8 +120,14 @@ namespace GeneXusJWT.GenexusComons
 
 
 
-        /******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
-        public bool hasPublicClaims()
+		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
+
+		public PublicKey GetPublicKey()
+		{
+			return (this.certificate == null) ? this.publicKey : this.certificate;
+		}
+
+		public bool hasPublicClaims()
         {
             return !publicClaims.isEmpty();
         }

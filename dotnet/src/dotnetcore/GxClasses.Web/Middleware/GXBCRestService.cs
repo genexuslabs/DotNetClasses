@@ -128,7 +128,7 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					return SetError(((int)HttpStatusCode.NotFound).ToString(), HttpStatusCode.NotFound.ToString());
+					return SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), HttpStatusCode.NotFound.ToString());
 				}
 			}
 			catch (Exception e)
@@ -166,7 +166,7 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					return SetError(((int)HttpStatusCode.NotFound).ToString(), HttpStatusCode.NotFound.ToString());
+					return SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), HttpStatusCode.NotFound.ToString());
 				}
 			}
 			catch (Exception e)
@@ -227,12 +227,12 @@ namespace GeneXus.Application
 					}
 					else
 					{
-						return SetError(HttpStatusCode.Conflict.ToString(), _worker.trn.context.GetMessage("GXM_waschg", new object[] { this.GetType().Name }));
+						return SetError(HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), _worker.trn.context.GetMessage("GXM_waschg", new object[] { _worker.GetName() }));
 					}
 				}
 				else
 				{
-					return SetError(((int)HttpStatusCode.NotFound).ToString(), HttpStatusCode.NotFound.ToString());
+					return SetError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), HttpStatusCode.NotFound.ToString());
 				}
 			}
 			catch (Exception e)

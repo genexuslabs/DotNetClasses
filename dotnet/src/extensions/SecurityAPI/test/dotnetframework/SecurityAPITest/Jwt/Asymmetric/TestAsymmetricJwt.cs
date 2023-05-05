@@ -1,4 +1,4 @@
-﻿using SecurityAPITest.SecurityAPICommons.commons;
+using SecurityAPITest.SecurityAPICommons.commons;
 using NUnit.Framework;
 using GeneXusJWT.GenexusComons;
 using GeneXusJWT.GenexusJWT;
@@ -7,6 +7,7 @@ using GeneXusJWT.GenexusJWTUtils;
 using GeneXusJWT.GenexusJWTClaims;
 using System;
 using System.IO;
+using SecurityAPICommons.Commons;
 
 namespace SecurityAPITest.Jwt.Asymmetric
 {
@@ -24,6 +25,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 		protected static string path_RSA_sha256_2048;
 		protected static string path_RSA_sha512_2048;
 		protected static string path_EC;
+		protected static string path_ECDSA_sha256;
 
 		protected static string alias;
 		protected static string password;
@@ -56,7 +58,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			path_RSA_sha256_2048 = Path.Combine(BASE_PATH, "dummycerts", "RSA_sha256_2048");
 			path_RSA_sha512_2048 = Path.Combine(BASE_PATH, "dummycerts", "RSA_sha512_2048");
 			path_EC = Path.Combine(BASE_PATH, "dummycerts", "JWT_ECDSA", "prime_test");
-
+			path_ECDSA_sha256 = Path.Combine(BASE_PATH, "dummycerts", "ECDSA_sha256");
 			alias = "1";
 			password = "dummy";
 
@@ -72,7 +74,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "RS256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 		[Test]
@@ -85,7 +87,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "RS256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 
@@ -100,7 +102,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.LoadPKCS12(pathKey, alias, password);
 			cert.LoadPKCS12(pathCert, alias, password);
 			string alg = "RS256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 		[Test]
@@ -113,7 +115,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "RS256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 		[Test]
@@ -126,7 +128,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "RS256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 
@@ -141,7 +143,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.LoadPKCS12(pathKey, alias, password);
 			cert.LoadPKCS12(pathCert, alias, password);
 			string alg = "RS256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 		[Test]
@@ -154,7 +156,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "RS512";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 		[Test]
@@ -167,7 +169,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "RS512";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 
@@ -182,10 +184,10 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.LoadPKCS12(pathKey, alias, password);
 			cert.LoadPKCS12(pathCert, alias, password);
 			string alg = "RS512";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
-		/*[Test]
+		[Test]
 		public void Test_sha256_EC()
 		{
 			string pathKey = Path.Combine(path_EC, "key.pem");
@@ -195,8 +197,11 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "ES256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
+
+
+
 
 		[Test]
 		public void Test_sha384_EC()
@@ -208,7 +213,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "ES384";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 		[Test]
@@ -221,19 +226,27 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.Load(pathKey);
 			cert.Load(pathCert);
 			string alg = "ES512";
-			bulkTest(key, cert, alg);
-		}*/
+			bulkTest(key, cert, alg, false);
+		}
 
 
 
-		private void bulkTest(PrivateKeyManager key, CertificateX509 cert, string alg)
+		private void bulkTest(PrivateKeyManager key, Key cert, string alg, bool isPublicKey)
 		{
 			options.SetPrivateKey(key);
-			options.SetCertificate(cert);
+			if(isPublicKey)
+			{
+				options.SetPublicKey((PublicKey)cert);
+			}
+			else
+			{
+				options.SetCertificate((CertificateX509)cert);
+			}
+			
 			string token = jwt.DoCreate(alg, claims, options);
 			Assert.IsFalse(jwt.HasError());
-			//bool verification = jwt.DoVerify(token, alg, claims, options);
-			//True(verification, jwt);
+			bool verification = jwt.DoVerify(token, alg, claims, options);
+			True(verification, jwt);
 		}
 
 		[Test]
@@ -246,7 +259,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.LoadEncrypted(pathKey, password);
 			cert.Load(pathCert);
 			string alg = "RS512";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 		[Test]
@@ -259,7 +272,7 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.LoadEncrypted(pathKey, password);
 			cert.Load(pathCert);
 			string alg = "RS256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
 
 		[Test]
@@ -272,8 +285,62 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			key.LoadEncrypted(pathKey, password);
 			cert.Load(pathCert);
 			string alg = "RS256";
-			bulkTest(key, cert, alg);
+			bulkTest(key, cert, alg, false);
 		}
+
+		[Test]
+		public void Test_sha512_2048_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha512_2048, "sha512_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha512_2048, "sha512_pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.LoadEncrypted(pathKey, password);
+			cert.Load(pathCert);
+			string alg = "RS512";
+			bulkTest(key, cert, alg, true);
+		}
+
+		[Test]
+		public void Test_sha256_1024_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha256_1024, "sha256_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha256_1024, "sha256_pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.LoadEncrypted(pathKey, password);
+			cert.Load(pathCert);
+			string alg = "RS256";
+			bulkTest(key, cert, alg, true);
+		}
+
+		[Test]
+		public void Test_sha256_2048_PEM_PublicKey()
+		{
+			string pathKey = Path.Combine(path_RSA_sha256_2048, "sha256_key.pem");
+			string pathCert = Path.Combine(path_RSA_sha256_2048, "sha256_pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.LoadEncrypted(pathKey, password);
+			cert.Load(pathCert);
+			string alg = "RS256";
+			bulkTest(key, cert, alg, true);
+		}
+
+
+		[Test]
+		public void Test_sha256_EC_PublicKey()
+		{
+			string pathKey = Path.Combine(path_ECDSA_sha256, "sha256_key.pem");
+			string pathCert = Path.Combine(path_ECDSA_sha256, "sha256_pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.Load(pathKey);
+			cert.Load(pathCert);
+			string alg = "ES256";
+			bulkTest(key, cert, alg, true);
+		}
+
 
 	}
 }

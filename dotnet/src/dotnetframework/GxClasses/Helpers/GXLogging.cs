@@ -1,18 +1,14 @@
-using log4net;
-using log4net.Core;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
+using log4net;
+using log4net.Core;
 
 namespace GeneXus
 {
 
 	public static class GXLogging
 	{
-
 		public static void Trace(this ILog log, params string[] list)
 		{
 			if (log.Logger.IsEnabledFor(Level.Trace))

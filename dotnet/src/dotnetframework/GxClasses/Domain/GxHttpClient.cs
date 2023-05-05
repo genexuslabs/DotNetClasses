@@ -356,12 +356,25 @@ namespace GeneXus.Http.Client
 					sHost = sHost.Substring(0, sHost.Length - 1);
 			}
 			sBaseUrl = _baseUrl;
-			if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
-				sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
-			_url = _scheme + sHost + sPort + "/" + sBaseUrl;
+			if (IsAbsolute(sBaseUrl))
+			{
+				_url = sBaseUrl;
+			}
+			else
+			{
+				if (!string.IsNullOrEmpty(sBaseUrl) && sBaseUrl.StartsWith("/"))
+					sBaseUrl = sBaseUrl.Substring(1, sBaseUrl.Length - 1);
+
+				_url = _scheme + sHost + sPort + "/" + sBaseUrl;
+			}
 			if (_url.EndsWith("/"))
 				_url = _url.Substring(0, _url.Length - 1);
 		}
+		bool IsAbsolute(string url)
+		{
+			return Uri.IsWellFormedUriString(url, UriKind.Absolute);
+		}
+
 		public void ClearHeaders()
 		{
 			_headers.Clear();
@@ -744,10 +757,17 @@ namespace GeneXus.Http.Client
 				return true;
 
 #if !NETCORE
-			string requestUrl = GetRequestURL(name);
-			Uri uri = new Uri(requestUrl);
-			if (!uri.IsDefaultPort)
-				return true;
+			try
+			{
+				string requestUrl = GetRequestURL(name);
+				Uri uri = new Uri(requestUrl);
+				if (!uri.IsDefaultPort)
+					return true;
+			}
+			catch (Exception e)
+			{
+				GXLogging.Warn(log, "UseOldHttpClient", e);
+			}
 #endif
 			return false;
 		}
@@ -756,6 +776,7 @@ namespace GeneXus.Http.Client
 		{
 			if (UseOldHttpClient(name))
 			{
+				GXLogging.Debug(log, "Using legacy GxHttpClient");
 				WebExecute(method, name);
 			}
 			else
@@ -1019,10 +1040,17 @@ namespace GeneXus.Http.Client
 				return name;
 			else
 			{
-				if (!string.IsNullOrEmpty(name) && name.IndexOf('/') == 0)
-					return _url + name;
+				if (IsAbsolute(name))
+				{
+					return name;
+				}
 				else
-					return _url + "/" + name;
+				{
+					if (!string.IsNullOrEmpty(name) && name.IndexOf('/') == 0)
+						return _url + name;
+					else
+						return _url + "/" + name;
+				}
 			}
 		}
 #if !NETCORE
@@ -1188,6 +1216,13 @@ namespace GeneXus.Http.Client
 				}
 			}
 #endif
+			catch (Exception e)
+			{
+				GXLogging.Warn(log, "Error Execute", e);
+				_errCode = 1;
+				_errDescription = e.Message;
+			}
+
 
 			_receiveData = Array.Empty<byte>();
 			if (resp != null)

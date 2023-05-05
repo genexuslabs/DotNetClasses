@@ -31,8 +31,44 @@ namespace DotNetCoreUnitTest.HttpClientTest
 
 				Assert.True(client.ToString().Length > 0);
 			}
+		}
+		[Fact]
+		public void HttpClientAbsoluteURLOnExecute()
+		{
+			using (GxHttpClient client = new GxHttpClient())
+			{
+				string url = "https://www.google.com/";
+				client.Port = 80;
+				string requestUrl = client.GetRequestURL(url);
+				Assert.True(Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute), "GetRequestURL is an invalid url which will cause Invalid URI at execute");
 
+			}
+		}
+		[Fact]
+		public void HttpClientRelativeURLOnExecute_1()
+		{
+			using (GxHttpClient client = new GxHttpClient())
+			{
+				string url = "imghp";
+				client.Port = 80;
+				client.BaseURL = "https://www.google.com/";
+				string requestUrl = client.GetRequestURL(url);
+				Assert.True(Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute), "GetRequestURL is an invalid url which will cause Invalid URI at execute");
 
+			}
+		}
+		[Fact]
+		public void HttpClientRelativeURLOnExecute_2()
+		{
+			using (GxHttpClient client = new GxHttpClient())
+			{
+				string url = "/imghp";
+				client.Port = 80;
+				client.BaseURL = "https://www.google.com";
+				string requestUrl = client.GetRequestURL(url);
+				Assert.True(Uri.IsWellFormedUriString(requestUrl, UriKind.Absolute), "GetRequestURL is an invalid url which will cause Invalid URI at execute");
+
+			}
 		}
 	}
 }
