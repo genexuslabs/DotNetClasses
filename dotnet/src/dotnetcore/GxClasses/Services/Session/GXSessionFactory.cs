@@ -114,7 +114,7 @@ namespace GeneXus.Services
 		internal static string SESSION_PROVIDER_DATABASE = "SESSION_PROVIDER_DATABASE";
 		internal static string SESSION_PROVIDER_USER = "SESSION_PROVIDER_USER";
 
-		internal GxDatabaseSession(GXService serviceProvider)
+		public GxDatabaseSession(GXService serviceProvider)
 		{
 			string password = serviceProvider.Properties.Get(SESSION_PASSWORD);
 			if (!string.IsNullOrEmpty(password))
