@@ -31,7 +31,7 @@ namespace GeneXus.OpenTelemetry.Lightstep
 				return false;
 			}
 
-			services.AddOpenTelemetryTracing(tracerProviderBuilder =>
+			services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
 			{
 				 tracerProviderBuilder
 				 .AddOtlpExporter(opt =>
