@@ -117,29 +117,31 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 									GxUserType eventMessages = (GxUserType)Activator.CreateInstance(eventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
 
 									IList eventMessage = (IList)ClassLoader.GetPropValue(eventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
-									Type eventMessageItemType = eventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
-
-									GxUserType eventMessageItem = (GxUserType)Activator.CreateInstance(eventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
-
-									IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
-									Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
+									Type eventMessageItemType = eventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage									
 
 									GxUserType eventMessageProperty;
 
 									foreach (Dictionary<string,object> singleDoc in doc)
 									{
-
 										string idValue = string.Empty;
+										GxUserType eventMessageItem = (GxUserType)Activator.CreateInstance(eventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
+
+										IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
+										Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty
+
 										foreach (string key in singleDoc.Keys)
 										{
-											JsonElement jsonElement = (JsonElement)singleDoc[key];
-											string strValue = jsonElement.ToString().Trim(); 
+											if (singleDoc[key] != null)
+											{ 
+												JsonElement jsonElement = (JsonElement)singleDoc[key];
+												string strValue = jsonElement.ToString().Trim(); 
 				
-											if (key == "id")
-												idValue = strValue;
+												if (key == "id")
+													idValue = strValue;
 
-											eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType,key, strValue, gxcontext);
-											eventMessageProperties.Add(eventMessageProperty);
+												eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType,key, strValue, gxcontext);
+												eventMessageProperties.Add(eventMessageProperty);
+											}
 										}
 
 										//Event
