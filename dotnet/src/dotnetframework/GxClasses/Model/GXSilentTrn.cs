@@ -609,6 +609,7 @@ namespace GeneXus.Utils
 
 		public bool isWrappedInCollection = true;
 
+		const string DateFormat = "M/d/yyyy h:mm:ss tt";
 		public override string ToString()
 		{
 			string s = "";
@@ -629,14 +630,17 @@ namespace GeneXus.Utils
 					if (o != null)
 					{
 #if NETCORE
-					var fixedPoint = "F";
-					if (o is decimal)
-						s += ((decimal)o).ToString(fixedPoint, CultureInfo.InvariantCulture);
-					else
-						s += o.ToString();
+						string fixedPoint = "F";
+						if (o is decimal)
+							s += ((decimal)o).ToString(fixedPoint, CultureInfo.InvariantCulture);
 #else
-						s += o.ToString();
+						if (o is decimal)
+							s += ((decimal)o).ToString(CultureInfo.InvariantCulture);
 #endif
+						else if (o is DateTime)
+							s += ((DateTime)o).ToString(DateFormat, CultureInfo.InvariantCulture); 
+						else
+							s += o.ToString();
 					}
 				}
 			}
