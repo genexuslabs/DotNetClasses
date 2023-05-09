@@ -13,7 +13,7 @@ namespace GeneXus.OpenTelemetry.Azure
 	public class AzureAppInsights : IOpenTelemetryProvider
 	{
 		private static readonly ILog log = LogManager.GetLogger(typeof(AzureAppInsights));
-		private const string AZURE_OTEL_EXPORTER_CONNECTIONSTRING = "AZURE_OTEL_EXPORTER_CONNECTIONSTRING";
+		private const string AZURE_OTEL_EXPORTER_CONNECTIONSTRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 		private const string ACTIVITY_SOURCE = "OTel.AzureMonitor.GXApp";
 		private const string ACTIVITY_NAME = "GeneXusApplicationActivity";
 
