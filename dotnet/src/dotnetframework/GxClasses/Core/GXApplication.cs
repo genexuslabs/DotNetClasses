@@ -70,6 +70,7 @@ namespace GeneXus.Application
 		void DisableSpaRequest();
 		String AjaxCmpContent { get; set; }
 		bool isCloseCommand { get; }
+		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
 		OlsonTimeZone GetOlsonTimeZone();
 		String GetTimeZone();
 		Boolean SetTimeZone(String sTZ);
@@ -3507,7 +3508,7 @@ namespace GeneXus.Application
 		}
 
 		internal static string GX_REQUEST_TIMEZONE = "GxTZOffset";
-
+		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead", false)]
 		public OlsonTimeZone ClientTimeZone
 		{
 			get
@@ -3575,6 +3576,7 @@ namespace GeneXus.Application
 				return _currentTimeZoneId;
 			}
 		}
+		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
 		public OlsonTimeZone GetOlsonTimeZone()
 		{
 			return TimeZoneUtil.GetInstanceFromOlsonName(GetTimeZone());

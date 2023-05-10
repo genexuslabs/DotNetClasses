@@ -82,6 +82,7 @@ namespace GeneXus.Utils
 	
 	public class TimeZoneUtil
 	{
+		[Obsolete("GetInstanceFromWin32Id is deprecated.", false)]
 		public static OlsonTimeZone GetInstanceFromWin32Id(string sTZ)
 		{
 			lock (OlsonTimeZone.SyncRoot)
@@ -96,7 +97,7 @@ namespace GeneXus.Utils
 				}
 			}
 		}
-
+		[Obsolete("GetInstanceFromOlsonName is deprecated.", false)]
 		public static OlsonTimeZone GetInstanceFromOlsonName(string sTZ)
 		{
 			lock (OlsonTimeZone.SyncRoot)

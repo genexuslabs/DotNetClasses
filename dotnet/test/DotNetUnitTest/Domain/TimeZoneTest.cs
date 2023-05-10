@@ -23,8 +23,10 @@ namespace xUnitTesting
 			#endregion
 
 			#region TZ4Net
+#pragma warning disable CS0618 // Type or member is obsolete
 			OlsonTimeZone mdeoTimezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
 			result = DateTimeUtil.DBserver2local(dt, mdeoTimezone);
+#pragma warning restore CS0618 // Type or member is obsolete
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -37,7 +39,9 @@ namespace xUnitTesting
 			#endregion
 
 			#region TZ4Net
+#pragma warning disable CS0618 // Type or member is obsolete
 			result = DateTimeUtil.DBserver2local(dt, mdeoTimezone);
+#pragma warning restore CS0618 // Type or member is obsolete
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -54,8 +58,10 @@ namespace xUnitTesting
 			#endregion
 
 			#region T4ZNet
+#pragma warning disable CS0618 // Type or member is obsolete
 			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(GUADALAJARA_IANA_TIMEZONE_ID);
 			result = DateTimeUtil.DBserver2local(dt, timezone);
+#pragma warning restore CS0618 // Type or member is obsolete
 			Assert.Equal(expected.AddHours(1), result); //Olson has a mistake with this timezone
 			#endregion
 		}
@@ -81,10 +87,12 @@ namespace xUnitTesting
 			#endregion
 
 			#region T4ZNet
+#pragma warning disable CS0618 // Type or member is obsolete
 			OlsonTimeZone parisTimezone = TimeZoneUtil.GetInstanceFromOlsonName(PARIS_IANA_TIMEZONE_ID);
 			result1 = DateTimeUtil.DBserver2local(dt1, parisTimezone);
 			result2 = DateTimeUtil.DBserver2local(dt2, parisTimezone);
 			result3 = DateTimeUtil.DBserver2local(dt3, parisTimezone);
+#pragma warning restore CS0618 // Type or member is obsolete
 			Assert.Equal(expected1, result1);
 			Assert.Equal(expected2, result2);
 			Assert.Equal(expected3, result3);
