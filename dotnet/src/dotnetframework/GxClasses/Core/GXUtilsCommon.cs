@@ -19,6 +19,8 @@ using TZ4Net;
 using GxClasses.Helpers;
 using System.Net;
 #endif
+using NodaTime;
+using NodaTime.TimeZones;
 using NUglify;
 using NUglify.Html;
 using GeneXus.Web.Security;
@@ -2014,6 +2016,11 @@ namespace GeneXus.Utils
 			DMY
 		}
 
+		internal static string LocalTimeZoneId
+		{
+			get { return DateTimeZoneProviders.Tzdb.GetSystemDefault().Id; }
+		}
+
 		public DateTimeUtil(CultureInfo culture, AMPMFmt amPmFormat)
 		{
 			cultureInfo = culture;
@@ -2407,9 +2414,36 @@ namespace GeneXus.Utils
 		{
 			if (context == null)
 				context = GxContext.Current;
+#if NODATIME
+			TimeSpan ts = CurrentOffset(context.GetTimeZone());
+#else
 			TimeSpan ts = CurrentOffset(context.GetOlsonTimeZone());
+#endif
 			return (short)(ts.Hours * 60 + ts.Minutes);
 		}
+
+		static private TimeSpan CurrentOffset(string clientTimeZone)
+		{
+			DateTimeZone clientTimeZoneObj = DateTimeZoneProviders.Tzdb[clientTimeZone];
+			if (clientTimeZoneObj == null)
+				clientTimeZoneObj = DateTimeZoneProviders.Tzdb[LocalTimeZoneId];
+			Instant now = SystemClock.Instance.GetCurrentInstant();
+
+			try
+			{
+				Offset offset = clientTimeZoneObj.GetUtcOffset(now);
+				return offset.ToTimeSpan();
+			}
+			catch (ArgumentOutOfRangeException)
+			{
+				Duration oneHour = Duration.FromHours(1);
+				Instant oneHourAgo = now.Minus(oneHour);
+				//Avoid InSpringForwardGap/InFallBackRange condition
+				Offset offset = clientTimeZoneObj.GetUtcOffset(oneHourAgo);
+				return offset.ToTimeSpan();
+			}
+		}
+
 		static private TimeSpan CurrentOffset(OlsonTimeZone clientTimeZone)
 		{
 			DateTime currentDate = DateTime.Now;
@@ -2447,11 +2481,20 @@ namespace GeneXus.Utils
 			return TimeZone.CurrentTimeZone.ToUniversalTime(dt);
 #endif
 		}
-
+		static DateTime ConvertFromLocal(DateTime dt, IGxContext context)
+		{
+#if NODATIME
+			return ConvertDateTime(DateTime.Now, LocalTimeZoneId, context.GetTimeZone());
+#else
+			OlsonTimeZone fromTimezone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
+			OlsonTimeZone toTimezone = context.GetOlsonTimeZone();
+			return ConvertDateTime(dt, fromTimezone, toTimezone);
+#endif
+		}
 		static public DateTime Today(IGxContext context)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ResetTime(ConvertDateTime(DateTime.Now, TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone())));
+				return ResetMillisecondsTicks(ResetTime(ConvertFromLocal(DateTime.Now, context)));
 			return ResetMillisecondsTicks(DateTime.Today);
 		}
 		static public DateTime Now(IGxContext context)
@@ -2462,7 +2505,7 @@ namespace GeneXus.Utils
 		static public DateTime NowTicks(IGxContext context)
 		{
 			if (Preferences.useTimezoneFix())
-				return ConvertDateTime(DateTime.Now, TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone());
+				return ConvertFromLocal(DateTime.Now, context);
 			return DateTime.Now;
 		}
 
@@ -2907,7 +2950,7 @@ namespace GeneXus.Utils
 			if (dataStore == null)
 				return ServerNowMs(context, new DataStoreHelperBase().getDataStoreName());
 			if (Preferences.useTimezoneFix())
-				return ResetMicroseconds(ConvertDateTime(dataStore.serverNowMs(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMicroseconds(ConvertFromLocal(dataStore.serverNowMs(), context));
 			return ResetMicroseconds(dataStore.serverNowMs());
 		}
 		static public DateTime ServerNow(IGxContext context, IDataStoreProvider dataStore)
@@ -2915,7 +2958,7 @@ namespace GeneXus.Utils
 			if (dataStore == null)
 				return ServerNow(context, new DataStoreHelperBase().getDataStoreName());
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ConvertDateTime(dataStore.serverNow(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMillisecondsTicks(ConvertFromLocal(dataStore.serverNow(), context));
 			return ResetMillisecondsTicks(dataStore.serverNow());
 		}
 #if !NETCORE
@@ -2924,13 +2967,13 @@ namespace GeneXus.Utils
 		static public DateTime ServerNowMs(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMicroseconds( ConvertDateTime(context.ServerNowMs(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMicroseconds( ConvertFromLocal(context.ServerNowMs(dataSource), context));
 			return ResetMicroseconds(context.ServerNowMs(dataSource));
 		}
 		static public DateTime ServerNow(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ConvertDateTime(context.ServerNow(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMillisecondsTicks(ConvertFromLocal(context.ServerNow(dataSource), context));
 			return ResetMillisecondsTicks(context.ServerNow(dataSource));
 		}
 		public static string ServerTime(IGxContext context, IDataStoreProvider dataStore)
@@ -3107,6 +3150,7 @@ namespace GeneXus.Utils
 			if (hasMilliseconds) sDate += StringUtil.PadL(StringUtil.Str(MilliSecond(date), 3, 0), 3, '0');
 			return (sDate);
 		}
+
 		private static DateTime ConvertDateTime(DateTime dt, OlsonTimeZone FromTimezone, OlsonTimeZone ToTimezone)
 		{
 			if (isNullDate(dt))
@@ -3181,6 +3225,60 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+
+		private static DateTime ConvertDateTime(DateTime dt, string fromTimezone, string toTimezone)
+		{
+			if (isNullDate(dt))
+				return dt;
+
+			DateTimeZone toZone;
+
+			if (string.IsNullOrEmpty(toTimezone) || DateTimeZoneProviders.Tzdb[toTimezone]==null)
+				toZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
+			else
+				toZone = DateTimeZoneProviders.Tzdb[toTimezone];
+
+			LocalDateTime dtLocal = LocalDateTime.FromDateTime(dt);
+			DateTimeZone fromZone = DateTimeZoneProviders.Tzdb[fromTimezone];
+			ZonedDateTime fromZoned = dtLocal.InZoneLeniently(fromZone);
+
+			ZonedDateTime toZoned = fromZoned.WithZone(toZone);
+			return toZoned.LocalDateTime.ToDateTimeUnspecified();
+		}
+		internal static DateTime Local2DBserver(DateTime dt, string clientTimezone)
+		{
+			try
+			{
+				Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+				if (clientTimezone == null || isNullDate(dt) || storagePty == Preferences.StorageTimeZonePty.Undefined)
+					return dt;
+				string toTimezone = (storagePty == Preferences.StorageTimeZonePty.Utc) ? DateTimeZone.Utc.Id : LocalTimeZoneId;
+				return ConvertDateTime(dt, clientTimezone, toTimezone);
+
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "Local2DBserver error");
+				throw ex;
+			}
+		}
+		public static DateTime DBserver2local(DateTime dt, string clientTimezone)
+		{
+			try
+			{
+				Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+				if (clientTimezone == null || isNullDate(dt) || storagePty == Preferences.StorageTimeZonePty.Undefined)
+					return dt;
+				string fromTimezone = (storagePty == Preferences.StorageTimeZonePty.Utc) ? DateTimeZone.Utc.Id : LocalTimeZoneId;
+				return ConvertDateTime(dt, fromTimezone, clientTimezone);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "DBserver2local error");
+				throw ex;
+			}
+		}
+
 		public static string FormatDateTimeParmMS(DateTime date)
 		{
 			if (date.Equals(nullDate))
@@ -3268,6 +3366,21 @@ namespace GeneXus.Utils
 		{
 			return new DateTime(datetTime1970.Ticks + ticks * timeConversionFactor);
 		}
+		static private DateTime fromUniversalTime(DateTime dt, string toTimezone)
+		{
+			DateTimeZone toTimeZone = DateTimeZoneProviders.Tzdb[toTimezone];
+			Instant instant = Instant.FromDateTimeUtc(dt);
+			ZonedDateTime zonedDateTime = instant.InZone(toTimeZone);
+			return zonedDateTime.ToDateTimeUnspecified();
+		}
+		static private DateTime toUniversalTime(DateTime dt, string fromTimezone)
+		{
+			DateTimeZone localZone = DateTimeZoneProviders.Tzdb[fromTimezone];
+			ZonedDateTime localDateTime = LocalDateTime.FromDateTime(dt).InZoneLeniently(localZone);
+			ZonedDateTime utcDateTime = localDateTime.ToInstant().InUtc();
+			return utcDateTime.ToDateTimeUtc();
+		}
+
 		static private DateTime fromUniversalTime(DateTime dt, OlsonTimeZone ToTimezone)
 		{
 
@@ -3354,25 +3467,41 @@ namespace GeneXus.Utils
 
 		static public DateTime fromUniversalTime(DateTime dt)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, GxContext.Current.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, GxContext.Current.GetOlsonTimeZone());
+#endif
 		}
 
 		static public DateTime toUniversalTime(DateTime dt)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, GxContext.Current.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, GxContext.Current.GetOlsonTimeZone());
+#endif
 		}
 
 		static public DateTime toUniversalTime(DateTime dt, IGxContext context)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, context.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, context.GetOlsonTimeZone());
+#endif
 		}
 
 		static public DateTime FromTimeZone(DateTime dt, String sTZ, IGxContext context)
 		{
+#if NODATIME
+			return ConvertDateTime(dt, sTZ, context.GetTimeZone());
+#else
 			OlsonTimeZone fromTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
 			if (fromTimeZone != null)
 				return ConvertDateTime(dt, fromTimeZone, context.GetOlsonTimeZone());
 			return dt;
+#endif
 		}
 
 	}

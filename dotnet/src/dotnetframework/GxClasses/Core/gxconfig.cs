@@ -1188,10 +1188,10 @@ namespace GeneXus.Configuration
 			if (storageTimezone == -1)
 			{
 				string sValue;
-				storageTimezone = (int)StorageTimeZonePty.Undefined;
+				int tz = (int)StorageTimeZonePty.Undefined;
 				if (Config.GetValueOf("StorageTimeZone", out sValue))
-					int.TryParse(sValue, out storageTimezone);
-
+					int.TryParse(sValue, out tz);
+				storageTimezone= tz;
 			}
 			return (StorageTimeZonePty)storageTimezone;
 		}
