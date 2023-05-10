@@ -47,7 +47,7 @@
   <ItemGroup>
     <Reference Include="System.Web" />
     <Reference Include="TZ4Net">
-      <HintPath>..\..\..\..\DotNetClassesBetaOri\dotnet\src\dotnetframework\libs\TZ4Net.dll</HintPath>
+      <HintPath>..\..\src\dotnetframework\libs\TZ4Net.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
