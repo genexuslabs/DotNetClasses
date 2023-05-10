@@ -3191,7 +3191,7 @@ namespace GeneXus.Utils
 			}
 			return dtconverted.AddMilliseconds(milliSeconds);
 		}
-
+		[Obsolete("Local2DBserver is deprecated. Use Local2DBserver(DateTime dt, string clientTimezone) instead.", false)]
 		public static DateTime Local2DBserver(DateTime dt, OlsonTimeZone ClientTimezone)
 		{
 			try
@@ -3209,6 +3209,7 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		[Obsolete("DBserver2local is deprecated. Use DBserver2local(DateTime dt, string clientTimezone) instead.", false)]
 		public static DateTime DBserver2local(DateTime dt, OlsonTimeZone ClientTimezone)
 		{
 			try
