@@ -234,6 +234,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynService.CosmosDB", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.OpenTelemetry.Azure.AppInsights", "src\dotnetcore\Providers\OpenTelemetry\OpenTelemetryAzureMonitor\GeneXus.OpenTelemetry.Azure.AppInsights.csproj", "{7AD4B13D-FA17-489B-9721-C00BCB6A3F2C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCoreOpenTelemetryTest", "test\DotNetCoreOpenTelemetryTest\DotNetCoreOpenTelemetryTest.csproj", "{B040A39A-53DC-4514-BE7F-A275FE1355FF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5937CEC2-5C16-4650-B0E6-78CD34357384} = {5937CEC2-5C16-4650-B0E6-78CD34357384}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "test\TestApp\TestApp.csproj", "{5937CEC2-5C16-4650-B0E6-78CD34357384}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -564,6 +571,14 @@ Global
 		{7AD4B13D-FA17-489B-9721-C00BCB6A3F2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7AD4B13D-FA17-489B-9721-C00BCB6A3F2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7AD4B13D-FA17-489B-9721-C00BCB6A3F2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B040A39A-53DC-4514-BE7F-A275FE1355FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B040A39A-53DC-4514-BE7F-A275FE1355FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B040A39A-53DC-4514-BE7F-A275FE1355FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B040A39A-53DC-4514-BE7F-A275FE1355FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5937CEC2-5C16-4650-B0E6-78CD34357384}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5937CEC2-5C16-4650-B0E6-78CD34357384}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5937CEC2-5C16-4650-B0E6-78CD34357384}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5937CEC2-5C16-4650-B0E6-78CD34357384}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -671,6 +686,8 @@ Global
 		{00B1FA38-7D0B-47E4-860C-23490249A4D6} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
 		{52DC6C43-58ED-4310-996B-06E95105F848} = {79C9ECC6-2935-4C43-BF32-94698547F584}
 		{7AD4B13D-FA17-489B-9721-C00BCB6A3F2C} = {BBE020D4-C0FF-41A9-9EB1-D1EE12CC4BB8}
+		{B040A39A-53DC-4514-BE7F-A275FE1355FF} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
+		{5937CEC2-5C16-4650-B0E6-78CD34357384} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
