@@ -986,11 +986,8 @@ namespace GeneXus.Utils
 		{
 			if (values != null)
 			{
-				int idx = 0;
-				foreach (string v in values.Groups)
-				{
-					values.Groups[idx] = RestoreEndOfString(v);
-				}
+				for (int i=0; i < values.Groups.Count; i++)
+					values.Groups[i] = RestoreEndOfString(values.Groups[i]);
 			}
 		}
 		static public GxSimpleCollection<string> Split(string txt, string rex)
