@@ -3370,7 +3370,8 @@ namespace GeneXus.Utils
 		static private DateTime fromUniversalTime(DateTime dt, string toTimezone)
 		{
 			DateTimeZone toTimeZone = DateTimeZoneProviders.Tzdb[toTimezone];
-			Instant instant = Instant.FromDateTimeUtc(dt);
+			DateTime dateTimeUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+			Instant instant = Instant.FromDateTimeUtc(dateTimeUtc);
 			ZonedDateTime zonedDateTime = instant.InZone(toTimeZone);
 			return zonedDateTime.ToDateTimeUnspecified();
 		}
