@@ -372,7 +372,7 @@ namespace GeneXus.Utils
 			}
 			if (!emptyHeader)
 			{
-				AddHeader(WARNING_HEADER, header.ToString());
+				AddHeader(WARNING_HEADER, StringUtil.Sanitize(header.ToString(), StringUtil.HttpHeaderWhiteList));
 			}
 		}
 		public void SetError(string code, string message)
@@ -477,7 +477,7 @@ namespace GeneXus.Utils
 							}
 							else
 							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description));
+								AddHeader(HttpHeader.AUTHENTICATE_HEADER, StringUtil.Sanitize(HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description), StringUtil.HttpHeaderWhiteList));
 								SetStatusCode(HttpStatusCode.Unauthorized);
 							}
 							return false;
