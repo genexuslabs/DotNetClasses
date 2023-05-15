@@ -28,7 +28,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Net.Http.Headers;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Linq;
+using System.Globalization;
 
 namespace GeneXus.Http
 {
@@ -453,6 +453,82 @@ namespace GeneXus.Http
 		{
 			httpContext.Response.AppendHeader(HeaderNames.Allow, string.Join(",", methods));
 		}
+		internal static string HtmlEncodeJsonValue(string value)
+		{
+			return GXUtil.HtmlEncodeInputValue(JsonQuote(value));
+		}
+
+		static void AppendCharAsUnicodeJavaScript(StringBuilder builder, char c)
+		{
+			builder.Append("\\u");
+			int num = c;
+			builder.Append(num.ToString("x4", CultureInfo.InvariantCulture));
+		}
+		/**
+		 * Produce a string in double quotes with backslash sequences in all the
+		 * right places. A backslash will be inserted within </, allowing JSON
+		 * text to be delivered in HTML. In JSON text, a string cannot contain a
+		 * control character or an unescaped quote or backslash.
+		 * */
+		internal static string JsonQuote(string value)
+		{
+
+			if (value == null || value.Length == 0)
+			{
+				return "\"\"";
+			}
+
+			char b;
+			char c = (char)0;
+			int i;
+			int len = value.Length;
+			StringBuilder sb = new StringBuilder(len + 4);
+
+			sb.Append('"');
+			for (i = 0; i < len; i += 1)
+			{
+				b = c;
+				c = value[i];
+				switch (c)
+				{
+					case '\\':
+					case '"':
+						sb.Append('\\');
+						sb.Append(c);
+						break;
+					case '\b':
+						sb.Append("\\b");
+						break;
+					case '\t':
+						sb.Append("\\t");
+						break;
+					case '\n':
+						sb.Append("\\n");
+						break;
+					case '\f':
+						sb.Append("\\f");
+						break;
+					case '\r':
+						sb.Append("\\r");
+						break;
+					default:
+						{
+							if (c < ' ')
+							{
+								AppendCharAsUnicodeJavaScript(sb, c);
+							}
+							else
+							{
+								sb.Append(c);
+							}
+						}
+						break;
+				}
+			}
+			sb.Append('"');
+			return sb.ToString();
+		}
+
 	}
 #if NETCORE
 	public class HttpCookieCollection : Dictionary<string, HttpCookie>
