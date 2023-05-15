@@ -3,6 +3,7 @@
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>DotNetUnitTest</RootNamespace>
 		<AssemblyName>DotNetUnitTest</AssemblyName>
+		<DefineConstants>NODATIME</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="client.exe.config" />
@@ -45,6 +46,9 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Web" />
+    <Reference Include="TZ4Net">
+      <HintPath>..\..\src\dotnetframework\libs\TZ4Net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Update="resources\text.txt">

@@ -387,7 +387,7 @@ namespace GeneXus.Data.ADO
 		private string lastSQLStatement;
         private string lastObject;
 		private bool lastSqlStatementEnded;
-        
+		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead.", false)]
 		public OlsonTimeZone ClientTimeZone
 		{
 			get { return dataStore.ClientTimeZone; } 
@@ -2425,6 +2425,7 @@ namespace GeneXus.Data.ADO
 		public GxDataStore( IGxDataRecord db, string id) : this( db, id, null, "")
 		{
 		}
+		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead.", false)]
 		public OlsonTimeZone ClientTimeZone
 		{
 			get {

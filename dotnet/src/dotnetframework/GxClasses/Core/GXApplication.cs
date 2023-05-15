@@ -42,6 +42,8 @@ namespace GeneXus.Application
 #if NETCORE
 	using Microsoft.AspNetCore.Http.Features;
 #endif
+	using NodaTime;
+	using NodaTime.TimeZones;
 	using System.Threading;
 	using System.Security.Claims;
 	using System.Security;
@@ -68,6 +70,7 @@ namespace GeneXus.Application
 		void DisableSpaRequest();
 		String AjaxCmpContent { get; set; }
 		bool isCloseCommand { get; }
+		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
 		OlsonTimeZone GetOlsonTimeZone();
 		String GetTimeZone();
 		Boolean SetTimeZone(String sTZ);
@@ -392,6 +395,8 @@ namespace GeneXus.Application
 		private bool _isSumbited;
 		[NonSerialized]
 		private OlsonTimeZone _currentTimeZone;
+		[NonSerialized]
+		private String _currentTimeZoneId;
 
 		[NonSerialized]
 		MessageQueueTransaction _mqTransaction;
@@ -3503,7 +3508,7 @@ namespace GeneXus.Application
 		}
 
 		internal static string GX_REQUEST_TIMEZONE = "GxTZOffset";
-
+		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead", false)]
 		public OlsonTimeZone ClientTimeZone
 		{
 			get
@@ -3541,7 +3546,37 @@ namespace GeneXus.Application
 				return _currentTimeZone;
 			}
 		}
+		internal string ClientTimeZoneId
+		{
+			get
+			{
+				if (_currentTimeZoneId != null)
+					return _currentTimeZoneId;
+				string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
+				GXLogging.DebugSanitized(log, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
+				if (String.IsNullOrEmpty(sTZ))
+				{
+					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(log, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
+				try
+				{
+					_currentTimeZoneId = String.IsNullOrEmpty(sTZ) ? DateTimeZoneProviders.Tzdb.GetSystemDefault().Id : sTZ;
+				}
+				catch (Exception e1)
+				{
+					GXLogging.Warn(log, "ClientTimeZone GetInstanceFromWin32Id error", e1);
+					Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+					if (storagePty == Preferences.StorageTimeZonePty.Undefined)
+						_currentTimeZoneId = null;
+					else
+						throw e1;
+				}
 
+				return _currentTimeZoneId;
+			}
+		}
+		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
 		public OlsonTimeZone GetOlsonTimeZone()
 		{
 			return TimeZoneUtil.GetInstanceFromOlsonName(GetTimeZone());
@@ -3554,15 +3589,45 @@ namespace GeneXus.Application
 			{
 				SetTimeZone(sTZ);
 			}
+
+#if NODATIME
+			if (_currentTimeZoneId == null)
+				_currentTimeZoneId = ClientTimeZoneId;
+			if (_currentTimeZoneId==null)
+				_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+			return _currentTimeZoneId;
+#else
 			if (_currentTimeZone == null)
 				_currentTimeZone = ClientTimeZone;
 			return _currentTimeZone == null ? TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id).Name : _currentTimeZone.Name;
+#endif
 		}
 
 		public Boolean SetTimeZone(String sTZ)
 		{
 			sTZ = StringUtil.RTrim(sTZ);
 			Boolean ret = false;
+#if NODATIME
+			string tzId;
+			try
+			{
+				if (DateTimeZoneProviders.Tzdb[sTZ] != null)
+				{
+					tzId = DateTimeZoneProviders.Tzdb[sTZ].Id;
+				}
+				else
+				{
+					tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+				}
+				ret = true;
+			}
+			catch (Exception)
+			{
+				tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+			}
+			SetProperty("GXTimezone", tzId);
+			_currentTimeZoneId = tzId;
+#else
 			try
 			{
 				_currentTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
@@ -3581,6 +3646,7 @@ namespace GeneXus.Application
 				}
 			}
 			SetProperty("GXTimezone", _currentTimeZone.Name);
+#endif
 			return ret;
 		}
 		private static ConcurrentDictionary<string, HashSet<string>> m_imagesDensity = new ConcurrentDictionary<string, HashSet<string>>();
