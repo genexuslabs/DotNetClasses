@@ -2588,13 +2588,14 @@ namespace GeneXus.Http
 			{
 
 				string url = name;
-				Object[] actualParms = null;
-				name = ObjectSignatureFromUrl(url, ctorParms, ref actualParms);
+				string completeName, queryParameters;
+				name = ObjectSignatureFromUrl(url, out completeName, out queryParameters);
 
 				if (url.Equals(name))
 					return new GXErrorWebComponent(name);
 				GXWebComponent webComp = getWebComponent(caller, nameSpace, name, ctorParms);
-				webComp.setParms(actualParms);
+				object[] urlParms = webComp.GetParmsFromUrl(completeName, queryParameters);
+				webComp.setParms(urlParms);
 				objComponent = webComp;
 			}
 			return objComponent;
@@ -2611,9 +2612,8 @@ namespace GeneXus.Http
 			return url;
 		}
 
-		protected static string ObjectSignatureFromUrl(string url, Object[] ctorParms, ref object[] parms)
+		internal static string ObjectSignatureFromUrl(string url, out string completeName, out string queryParameters)
 		{
-			string parameters;
 			string name;
 			try
 			{
@@ -2622,7 +2622,7 @@ namespace GeneXus.Http
 				if (!uri.IsAbsoluteUri)
 					uri = new Uri("http://gxhost/" + url);
 				name = uri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
-				parameters = uri.GetComponents(UriComponents.Query, UriFormat.UriEscaped);
+				queryParameters = uri.GetComponents(UriComponents.Query, UriFormat.UriEscaped);
 			}
 			catch (Exception)
 			{
@@ -2633,35 +2633,15 @@ namespace GeneXus.Http
 				Regex r = new Regex(regexPattern);
 				Match m = r.Match(url);
 				name = m.Groups["p0"].Value;
-				parameters = m.Groups["q0"].Value;
+				queryParameters = m.Groups["q0"].Value;
 			}
 
+			completeName = name;
 			if (string.IsNullOrEmpty(name))
 				return url;
 
-			string completeName = name;
 			if (name.LastIndexOf('.') > 0)
 				name = name.Substring(0, name.LastIndexOf('.'));
-
-			IGxContext context = null;
-			foreach (object parm in ctorParms)
-			{
-				context = parm as IGxContext;
-			}
-
-			string encKey = GXUtil.ParmsEncryptionKey(context);
-			if (!String.IsNullOrEmpty(parameters))
-				parameters = GXUtil.DecryptParm(parameters, encKey);
-
-			// Remove "salt" part from parameter
-			if (!String.IsNullOrEmpty(encKey) && !String.IsNullOrEmpty(parameters) && parameters.StartsWith(completeName))
-			{
-				parameters = parameters.Substring(completeName.Length);
-			}
-			parms = HttpHelper.GetParameterValues(parameters);
-			for (int i = 0; i < parms.Length; i++)
-				parms[i] = GXUtil.UrlDecode((string)parms[i]);
-
 			return name;
 		}
 
@@ -2802,7 +2782,12 @@ namespace GeneXus.Http
 		protected void trkrng(int lineNro, int lineNro2) => dbgInfo?.TrkRng(lineNro, 0, lineNro2, 0);
 		protected void trkrng(int lineNro, int colNro, int lineNro2, int colNro2) => dbgInfo?.TrkRng(lineNro, colNro, lineNro2, colNro2);
 	}
-
+	public enum EncryptionType
+	{
+		SESSION,
+		SITE,
+		NONE
+	}
 	public abstract class GXWebComponent : GXHttpHandler
 	{
 
@@ -2833,26 +2818,67 @@ namespace GeneXus.Http
 
 		public void setparmsfromurl(string url)
 		{
-			Object[] urlParms = null;
-			GXHttpHandler.ObjectSignatureFromUrl(url, new Object[] { context }, ref urlParms);
-			if (urlParms != null)
+			string parameters, completeName;
+			ObjectSignatureFromUrl(url, out completeName, out parameters);
+			if (parameters != null)
 			{
-				this.setParms(urlParms);
+				object[] urlParms = GetParmsFromUrl(completeName, parameters);
+				setParms(urlParms);
 			}
 		}
 
 		public void setParms(object[] parms)
 		{
-			object[] FixedParms = new object[parms.Length];
-			ParameterInfo[] pars = GetType().GetMethod("execute").GetParameters();
-			for (int i = 0; i < pars.Length; i++)
+			if (parms != null)
 			{
-				if (i >= parms.Length)
-					break;
-				FixedParms[i] = convertparm(pars, i, parms[i]);
+				object[] FixedParms = new object[parms.Length];
+				ParameterInfo[] pars = GetType().GetMethod("execute").GetParameters();
+				for (int i = 0; i < pars.Length; i++)
+				{
+					if (i >= parms.Length)
+						break;
+					FixedParms[i] = convertparm(pars, i, parms[i]);
+				}
+				mFixedParms = FixedParms;
 			}
-			mFixedParms = FixedParms;
+		}
+		internal object[] GetParmsFromUrl(string completeName, string queryParameters)
+		{
+			if (!string.IsNullOrEmpty(queryParameters))
+			{
 
+				EncryptionType keySourceType = GetEncryptionType();
+				string encKey;
+				switch (keySourceType)
+				{
+					case EncryptionType.SESSION:
+						encKey = Crypto.Decrypt64(context.GetCookie("GX_SESSION_ID"), Crypto.GetServerKey());
+						break;
+					case EncryptionType.SITE:
+						encKey = Crypto.GetSiteKey();
+						break;
+					default:
+						encKey = null;
+						break;
+				}
+
+				queryParameters = GXUtil.DecryptParm(queryParameters, encKey);
+
+				// Remove "salt" part from parameter
+				if (!String.IsNullOrEmpty(encKey) && queryParameters.StartsWith(completeName))
+				{
+					queryParameters = queryParameters.Substring(completeName.Length);
+				}
+				object[] parms = HttpHelper.GetParameterValues(queryParameters);
+				for (int i = 0; i < parms.Length; i++)
+					parms[i] = GXUtil.UrlDecode((string)parms[i]);
+
+				return parms;
+			}
+			else
+			{
+				return Array.Empty<Object>();
+			}
 		}
 
 		public override object getParm(object[] parms, int index)
@@ -2876,6 +2902,10 @@ namespace GeneXus.Http
 			set { _prefixId = value; }
 		}
 
+		protected virtual EncryptionType GetEncryptionType()
+		{
+			return EncryptionType.NONE;
+		}
 		public void ComponentInit()
 		{
 			IsMain = false;
