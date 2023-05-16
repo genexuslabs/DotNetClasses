@@ -334,9 +334,9 @@ namespace GeneXus.Http
 				else
 				{
 #if NETCORE
-					WcfExecute(localHttpContext.Request.Body, localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength, context.GetHeader(HttpHeader.XGXFILENAME));
+					WcfExecute(localHttpContext.Request.Body, localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength, localHttpContext.Request.Headers[HttpHeader.XGXFILENAME]);
 #else
-					WcfExecute(localHttpContext.Request.GetBufferedInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength, context.GetHeader(HttpHeader.XGXFILENAME));
+					WcfExecute(localHttpContext.Request.GetBufferedInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength, localHttpContext.Request.Headers[HttpHeader.XGXFILENAME]);
 #endif
 				}
 			}
@@ -364,6 +364,10 @@ namespace GeneXus.Http
 			if (!string.IsNullOrEmpty(gxFileName))
 			{
 				ext = Path.GetExtension(gxFileName);
+				if (!string.IsNullOrEmpty(ext))
+				{
+					ext = ext.TrimStart('.');
+				}
 				fName = Path.GetFileNameWithoutExtension(gxFileName);
 			}
 			if (string.IsNullOrEmpty(ext))
