@@ -28,6 +28,7 @@ using GeneXus.Data;
 using System.Runtime.Serialization;
 using GeneXus.Mime;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace GeneXus.Http
 {
@@ -82,6 +83,8 @@ namespace GeneXus.Http
 			HttpStatusCode httpStatusCode = MapStatusCode(statusCode);
 			SetResponseStatus(httpContext, httpStatusCode, statusDescription);
 		}
+
+
 		public static void SetResponseStatus(HttpContext httpContext, HttpStatusCode httpStatusCode, string statusDescription)
 		{
 #if !NETCORE
@@ -339,6 +342,82 @@ namespace GeneXus.Http
 				return query.Split(',');
 			}
 		}
+		internal static string HtmlEncodeJsonValue(string value)
+		{
+			return GXUtil.HtmlEncodeInputValue(JsonQuote(value));
+		}
+
+		static void AppendCharAsUnicodeJavaScript(StringBuilder builder, char c)
+		{
+			builder.Append("\\u");
+			int num = c;
+			builder.Append(num.ToString("x4", CultureInfo.InvariantCulture));
+		}
+		/**
+		 * Produce a string in double quotes with backslash sequences in all the
+		 * right places. A backslash will be inserted within </, allowing JSON
+		 * text to be delivered in HTML. In JSON text, a string cannot contain a
+		 * control character or an unescaped quote or backslash.
+		 * */
+		internal static string JsonQuote(string value, bool addDoubleQuotes=false)
+		{
+			string text = string.Empty;
+			if (!string.IsNullOrEmpty(value))
+			{
+				int i;
+				int len = value.Length;
+				StringBuilder sb = new StringBuilder(len + 4);
+
+				for (i = 0; i < len; i += 1)
+				{
+					char c = value[i];
+					switch (c)
+					{
+						case '\\':
+						case '"':
+							sb.Append('\\');
+							sb.Append(c);
+							break;
+						case '\b':
+							sb.Append("\\b");
+							break;
+						case '\t':
+							sb.Append("\\t");
+							break;
+						case '\n':
+							sb.Append("\\n");
+							break;
+						case '\f':
+							sb.Append("\\f");
+							break;
+						case '\r':
+							sb.Append("\\r");
+							break;
+						default:
+							{
+								if (c < ' ')
+								{
+									AppendCharAsUnicodeJavaScript(sb, c);
+								}
+								else
+								{
+									sb.Append(c);
+								}
+							}
+							break;
+					}
+				}
+				text = sb.ToString();
+			}
+			if (!addDoubleQuotes)
+			{
+				return text;
+			}
+			else
+			{
+				return "\"" + text + "\"";
+			}
+		}
 
 	}
 #if NETCORE
@@ -467,7 +546,7 @@ namespace GeneXus.Http
 
 		public static void Write(this HttpResponse response, string value)
 		{
-			//response.WriteAsync(value).Wait();
+			//response.WriteAsync(value).Wait();//Unsupported by GxHttpAzureResponse
 			response.Body.Write(Encoding.UTF8.GetBytes(value));
 		}
 		public static void WriteFile(this HttpResponse response, string fileName)
