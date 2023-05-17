@@ -12,7 +12,7 @@ namespace xUnitTesting
 		const string GUADALAJARA_IANA_TIMEZONE_ID = "America/Mexico_City";
 		const string PARIS_IANA_TIMEZONE_ID = "Europe/Paris";
 		[Fact]
-		public void TimeZoneConversion()
+		public void MontevideoTimeZoneConversion_offset3()
 		{
 			DateTime dt = new DateTime(1967, 10, 28, 7, 10, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(1967, 10, 28, 4, 10, 0, DateTimeKind.Local);
@@ -46,6 +46,28 @@ namespace xUnitTesting
 			#endregion
 
 		}
+#if NETCORE
+		[Fact]
+		public void MontevideoTimeZoneConversion_offset2()
+		{
+			DateTime dt = new DateTime(2012, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+			DateTime expected = new DateTime(2012, 1, 1, 12, 0, 0, DateTimeKind.Local);
+
+
+			#region TZ4Net
+#pragma warning disable CS0618 // Type or member is obsolete
+			OlsonTimeZone mdeoTimezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.Local2DBserver(dt, mdeoTimezone);
+#pragma warning restore CS0618 // Type or member is obsolete
+			Assert.Equal(expected, result);
+			#endregion
+			
+			#region NodaTime
+			result = DateTimeUtil.Local2DBserver(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			Assert.Equal(expected, result);
+			#endregion
+		}
+#endif
 		[Fact]
 		public void MexicoTimeZoneConversion()
 		{
