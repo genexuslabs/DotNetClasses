@@ -470,63 +470,64 @@ namespace GeneXus.Http
 		 * text to be delivered in HTML. In JSON text, a string cannot contain a
 		 * control character or an unescaped quote or backslash.
 		 * */
-		internal static string JsonQuote(string value)
+		internal static string JsonQuote(string value, bool addDoubleQuotes=false)
 		{
-
-			if (value == null || value.Length == 0)
+			string text = string.Empty;
+			if (!string.IsNullOrEmpty(value))
 			{
-				return "\"\"";
-			}
+				int i;
+				int len = value.Length;
+				StringBuilder sb = new StringBuilder(len + 4);
 
-			char b;
-			char c = (char)0;
-			int i;
-			int len = value.Length;
-			StringBuilder sb = new StringBuilder(len + 4);
-
-			sb.Append('"');
-			for (i = 0; i < len; i += 1)
-			{
-				b = c;
-				c = value[i];
-				switch (c)
+				for (i = 0; i < len; i += 1)
 				{
-					case '\\':
-					case '"':
-						sb.Append('\\');
-						sb.Append(c);
-						break;
-					case '\b':
-						sb.Append("\\b");
-						break;
-					case '\t':
-						sb.Append("\\t");
-						break;
-					case '\n':
-						sb.Append("\\n");
-						break;
-					case '\f':
-						sb.Append("\\f");
-						break;
-					case '\r':
-						sb.Append("\\r");
-						break;
-					default:
-						{
-							if (c < ' ')
+					char c = value[i];
+					switch (c)
+					{
+						case '\\':
+						case '"':
+							sb.Append('\\');
+							sb.Append(c);
+							break;
+						case '\b':
+							sb.Append("\\b");
+							break;
+						case '\t':
+							sb.Append("\\t");
+							break;
+						case '\n':
+							sb.Append("\\n");
+							break;
+						case '\f':
+							sb.Append("\\f");
+							break;
+						case '\r':
+							sb.Append("\\r");
+							break;
+						default:
 							{
-								AppendCharAsUnicodeJavaScript(sb, c);
+								if (c < ' ')
+								{
+									AppendCharAsUnicodeJavaScript(sb, c);
+								}
+								else
+								{
+									sb.Append(c);
+								}
 							}
-							else
-							{
-								sb.Append(c);
-							}
-						}
-						break;
+							break;
+					}
 				}
+				text = sb.ToString();
 			}
-			sb.Append('"');
-			return sb.ToString();
+			if (!addDoubleQuotes)
+			{
+				return text;
+			}
+			else
+			{
+				return "\"" + text + "\"";
+			}
 		}
 
 	}
