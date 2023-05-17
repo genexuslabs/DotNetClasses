@@ -1,51 +1,39 @@
 using System;
-using GeneXus.Services.OpenTelemetry;
-using Microsoft.Extensions.DependencyInjection;
-using OpenTelemetry;
-using OpenTelemetry.Trace;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using GeneXus.Services;
-using System.Diagnostics;
-using Azure.Monitor.OpenTelemetry.Exporter;
+using GeneXus.Services.OpenTelemetry;
 using log4net;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace GeneXus.OpenTelemetry.Azure
 {
 	public class AzureAppInsights : IOpenTelemetryProvider
 	{
 		private static readonly ILog log = LogManager.GetLogger(typeof(AzureAppInsights));
-		private const string AZURE_OTEL_EXPORTER_CONNECTIONSTRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
-		private const string ACTIVITY_SOURCE = "OTel.AzureMonitor.GXApp";
-		private const string ACTIVITY_NAME = "GeneXusApplicationActivity";
+		private const string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
 		public AzureAppInsights(GXService s)
 		{
 		}
 
-		private static readonly ActivitySource GXActivitySource = new ActivitySource(ACTIVITY_SOURCE);
-
-		public bool InstrumentAspNetCoreApplication(IServiceCollection _)
+		public bool InstrumentAspNetCoreApplication(IServiceCollection services)
 		{
-			string oltpEndpoint = Environment.GetEnvironmentVariable(AZURE_OTEL_EXPORTER_CONNECTIONSTRING);
+			string oltpEndpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
 		
 			if (!string.IsNullOrEmpty(oltpEndpoint))
-			{ 
-				using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-					.AddAzureMonitorTraceExporter(o =>
+			{
+				services.AddOpenTelemetry()
+				.UseAzureMonitor( o =>
 					{
 						o.ConnectionString = oltpEndpoint;
-					})
-					.AddSource(ACTIVITY_SOURCE)
-					.AddGxAspNetInstrumentation()
-					.Build();
+					});
 
-				using (var activity = GXActivitySource.StartActivity(ACTIVITY_NAME))
-				{
-				}
 				return true;
 			}
 			else
 			{ 
-				log.Warn("OpenTelemetry Azure Monitor was not initialized due to missing 'AZURE_OTEL_EXPORTER_CONNECTIONSTRING' Environment Variable");
+				log.Warn("OpenTelemetry Azure Monitor was not initialized due to missing 'APPLICATIONINSIGHTS_CONNECTION_STRING' Environment Variable");
 				return false;
 			}
 		}
