@@ -1548,7 +1548,7 @@ namespace GeneXus.Http
 				context.httpAjaxContext.AddStylesHidden();
 				if (IsSpaRequest())
 				{
-					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse('" + GXUtil.HtmlEncodeInputValue(HttpUtility.JavaScriptStringEncode(context.getJSONResponse())) + "');</script>");
+					context.WriteHtmlTextNl("<script>gx.ajax.saveJsonResponse('" + HttpHelper.HtmlEncodeJsonValue(context.getJSONResponse()) + "');</script>");
 				}
 				else
 				{
