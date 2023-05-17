@@ -73,6 +73,7 @@ namespace DotNetCoreUnitTest.HttpUtils
 
 			string jsonEncoded = HttpHelper.HtmlEncodeJsonValue(state);
 			Assert.Contains("&amp;", jsonEncoded, StringComparison.OrdinalIgnoreCase);
+			Assert.StartsWith("{", jsonEncoded, StringComparison.OrdinalIgnoreCase);
 		}
 
 	}
