@@ -264,6 +264,7 @@ namespace GeneXus.Application
 			{
 				services.AddStackExchangeRedisCache(options =>
 				{
+					GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
 					options.Configuration = sessionService.ConnectionString;
 					options.InstanceName = sessionService.InstanceName;
 				});
@@ -273,6 +274,7 @@ namespace GeneXus.Application
 			{
 				services.AddDistributedSqlServerCache(options =>
 				{
+					GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
 					options.ConnectionString = sessionService.ConnectionString;
 					options.SchemaName = sessionService.Schema;
 					options.TableName = sessionService.TableName;
@@ -472,6 +474,7 @@ namespace GeneXus.Application
 	}
 	public class CustomExceptionHandlerMiddleware
 	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomExceptionHandlerMiddleware));
 		public async Task Invoke(HttpContext httpContext)
 		{
 			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
@@ -485,6 +488,7 @@ namespace GeneXus.Application
 				else
 				{
 					httpStatusCode = HttpStatusCode.InternalServerError;
+					GXLogging.Error(log, $"Internal error", ex);
 				}
 			}
 			if (httpStatusCode!= HttpStatusCode.OK)

@@ -135,11 +135,11 @@ namespace GeneXus.Services
 
 			if (!string.IsNullOrEmpty(serverName))
 			{
-				ConnectionString = $"Data Source={serverName};";
+				ConnectionString += $"Data Source={serverName};";
 			}
 			if (!string.IsNullOrEmpty(database))
 			{
-				ConnectionString = $"Initial Catalog={database}";
+				ConnectionString += $"Initial Catalog={database}";
 			}
 			if (!string.IsNullOrEmpty(password))
 			{
