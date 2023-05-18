@@ -3226,25 +3226,41 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
-
+		private static DateTime OlsonMinTime = new DateTime(1901, 12, 13, 20, 45, 52);
 		private static DateTime ConvertDateTime(DateTime dt, string fromTimezone, string toTimezone)
 		{
 			if (isNullDate(dt))
 				return dt;
 
 			DateTimeZone toZone;
+			TimeSpan offset;
+			DateTime dtconverted;
+			int milliSeconds = dt.Millisecond;
+			dt = ResetMilliseconds(dt);
+
+			DateTime ret = toUniversalTime(dt, fromTimezone);
+
 
 			if (string.IsNullOrEmpty(toTimezone) || DateTimeZoneProviders.Tzdb[toTimezone]==null)
 				toZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
 			else
 				toZone = DateTimeZoneProviders.Tzdb[toTimezone];
 
-			LocalDateTime dtLocal = LocalDateTime.FromDateTime(dt);
-			DateTimeZone fromZone = DateTimeZoneProviders.Tzdb[fromTimezone];
-			ZonedDateTime fromZoned = dtLocal.InZoneLeniently(fromZone);
+			if (ret < OlsonMinTime)
+			{
+				offset = CurrentOffset(toTimezone);
+				dtconverted = ret + offset; 
+			}
+			else
+			{
 
-			ZonedDateTime toZoned = fromZoned.WithZone(toZone);
-			return toZoned.LocalDateTime.ToDateTimeUnspecified();
+				LocalDateTime dtLocal = LocalDateTime.FromDateTime(ret);
+				DateTimeZone fromZone = DateTimeZoneProviders.Tzdb[fromTimezone];
+				ZonedDateTime fromZoned = dtLocal.InZoneLeniently(fromZone);
+				ZonedDateTime toZoned = fromZoned.WithZone(toZone);
+				dtconverted = toZoned.LocalDateTime.ToDateTimeUnspecified();
+			}
+			return dtconverted.AddMilliseconds(milliSeconds);
 		}
 		internal static DateTime Local2DBserver(DateTime dt, string clientTimezone)
 		{
@@ -3369,18 +3385,69 @@ namespace GeneXus.Utils
 		}
 		static private DateTime fromUniversalTime(DateTime dt, string toTimezone)
 		{
-			DateTimeZone toTimeZone = DateTimeZoneProviders.Tzdb[toTimezone];
-			DateTime dateTimeUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
-			Instant instant = Instant.FromDateTimeUtc(dateTimeUtc);
-			ZonedDateTime zonedDateTime = instant.InZone(toTimeZone);
-			return zonedDateTime.ToDateTimeUnspecified();
+			int milliSeconds = 0;
+
+			if (!isNullDate(dt))
+			{
+				milliSeconds = dt.Millisecond;
+				dt = ResetMilliseconds(dt);
+			}
+			DateTime ret;
+			TimeSpan offset;
+			if (string.IsNullOrEmpty(toTimezone))
+				ret = CurrentTimeZoneToLocalTime(dt);
+			else
+			{
+				if (dt < OlsonMinTime)
+				{
+					offset = CurrentOffset(toTimezone);
+					ret = dt + offset; 
+				}
+				else
+				{
+					DateTimeZone toTimeZone = DateTimeZoneProviders.Tzdb[toTimezone];
+					DateTime dateTimeUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+					Instant instant = Instant.FromDateTimeUtc(dateTimeUtc);
+					ZonedDateTime zonedDateTime = instant.InZone(toTimeZone);
+					ret = zonedDateTime.ToDateTimeUnspecified();
+				}
+			}
+			return ret.AddMilliseconds(milliSeconds);
 		}
 		static private DateTime toUniversalTime(DateTime dt, string fromTimezone)
 		{
-			DateTimeZone localZone = DateTimeZoneProviders.Tzdb[fromTimezone];
-			ZonedDateTime localDateTime = LocalDateTime.FromDateTime(dt).InZoneLeniently(localZone);
-			ZonedDateTime utcDateTime = localDateTime.ToInstant().InUtc();
-			return utcDateTime.ToDateTimeUtc();
+			if (fromTimezone == DateTimeZone.Utc.Id)
+				return dt;
+
+			int milliSeconds = 0;
+
+			if (!isNullDate(dt))
+			{
+				milliSeconds = dt.Millisecond;
+				dt = DateTimeUtil.ResetMilliseconds(dt);
+			}
+
+			DateTime ret;
+			TimeSpan offset;
+			if (string.IsNullOrEmpty(fromTimezone))
+				ret = CurrentTimeZoneToUniversalTime(dt);
+			else
+			{
+				if (dt < OlsonMinTime)
+				{
+					offset = CurrentOffset(fromTimezone);
+					ret = dt - offset; 
+				}
+				else
+				{
+
+					DateTimeZone localZone = DateTimeZoneProviders.Tzdb[fromTimezone];
+					ZonedDateTime localDateTime = LocalDateTime.FromDateTime(dt).InZoneLeniently(localZone);
+					ZonedDateTime utcDateTime = localDateTime.ToInstant().InUtc();
+					ret = utcDateTime.ToDateTimeUtc();
+				}
+			}
+			return ret.AddMilliseconds(milliSeconds);
 		}
 
 		static private DateTime fromUniversalTime(DateTime dt, OlsonTimeZone ToTimezone)
