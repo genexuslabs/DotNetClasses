@@ -120,7 +120,6 @@ namespace GeneXus.Application
 	{ 
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
-		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
@@ -188,10 +187,7 @@ namespace GeneXus.Application
 			services.AddHttpContextAccessor();
 			services.AddSession(options =>
 			{
-				if (Config.GetValueOf("SessionTimeout", out string SessionTimeoutStr) && int.TryParse(SessionTimeoutStr, out int SessionTimeout))
-					options.IdleTimeout = TimeSpan.FromMinutes(SessionTimeout);
-				else
-					options.IdleTimeout = TimeSpan.FromMinutes(DEFAULT_SESSION_TIMEOUT_MINUTES); 
+				options.IdleTimeout = TimeSpan.FromMinutes(Preferences.SessionTimeout);
 				options.Cookie.HttpOnly = true;
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
@@ -268,6 +264,7 @@ namespace GeneXus.Application
 			{
 				services.AddStackExchangeRedisCache(options =>
 				{
+					GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
 					options.Configuration = sessionService.ConnectionString;
 					options.InstanceName = sessionService.InstanceName;
 				});
@@ -277,9 +274,11 @@ namespace GeneXus.Application
 			{
 				services.AddDistributedSqlServerCache(options =>
 				{
+					GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
 					options.ConnectionString = sessionService.ConnectionString;
 					options.SchemaName = sessionService.Schema;
 					options.TableName = sessionService.TableName;
+					options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
 				});
 			}
 		}
@@ -475,6 +474,7 @@ namespace GeneXus.Application
 	}
 	public class CustomExceptionHandlerMiddleware
 	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomExceptionHandlerMiddleware));
 		public async Task Invoke(HttpContext httpContext)
 		{
 			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
@@ -488,6 +488,7 @@ namespace GeneXus.Application
 				else
 				{
 					httpStatusCode = HttpStatusCode.InternalServerError;
+					GXLogging.Error(log, $"Internal error", ex);
 				}
 			}
 			if (httpStatusCode!= HttpStatusCode.OK)
