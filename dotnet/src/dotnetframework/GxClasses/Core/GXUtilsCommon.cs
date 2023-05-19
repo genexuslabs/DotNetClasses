@@ -1969,6 +1969,12 @@ namespace GeneXus.Utils
 			return dtu.ParseDateOrDTimeParm(valueString);
 		}
 	}
+	public enum EncryptionType
+	{
+		SESSION,
+		SITE,
+		NONE
+	}
 	public enum AMPMFmt
 	{
 		T24,
