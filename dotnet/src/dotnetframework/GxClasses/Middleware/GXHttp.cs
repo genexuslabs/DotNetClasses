@@ -2732,12 +2732,6 @@ namespace GeneXus.Http
 		protected void trkrng(int lineNro, int lineNro2) => dbgInfo?.TrkRng(lineNro, 0, lineNro2, 0);
 		protected void trkrng(int lineNro, int colNro, int lineNro2, int colNro2) => dbgInfo?.TrkRng(lineNro, colNro, lineNro2, colNro2);
 	}
-	public enum EncryptionType
-	{
-		SESSION,
-		SITE,
-		NONE
-	}
 	public abstract class GXWebComponent : GXHttpHandler
 	{
 
