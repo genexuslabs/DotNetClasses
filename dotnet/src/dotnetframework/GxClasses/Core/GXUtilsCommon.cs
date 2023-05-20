@@ -3238,7 +3238,6 @@ namespace GeneXus.Utils
 			if (isNullDate(dt))
 				return dt;
 
-			DateTimeZone toZone;
 			TimeSpan offset;
 			DateTime dtconverted;
 			int milliSeconds = dt.Millisecond;
@@ -3248,9 +3247,7 @@ namespace GeneXus.Utils
 
 
 			if (string.IsNullOrEmpty(toTimezone) || DateTimeZoneProviders.Tzdb[toTimezone]==null)
-				toZone = DateTimeZoneProviders.Tzdb.GetSystemDefault();
-			else
-				toZone = DateTimeZoneProviders.Tzdb[toTimezone];
+				toTimezone = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
 
 			if (ret < OlsonMinTime)
 			{
@@ -3259,12 +3256,7 @@ namespace GeneXus.Utils
 			}
 			else
 			{
-
-				LocalDateTime dtLocal = LocalDateTime.FromDateTime(ret);
-				DateTimeZone fromZone = DateTimeZoneProviders.Tzdb[fromTimezone];
-				ZonedDateTime fromZoned = dtLocal.InZoneLeniently(fromZone);
-				ZonedDateTime toZoned = fromZoned.WithZone(toZone);
-				dtconverted = toZoned.LocalDateTime.ToDateTimeUnspecified();
+				dtconverted = fromUniversalTime(ret, toTimezone);
 			}
 			return dtconverted.AddMilliseconds(milliSeconds);
 		}
