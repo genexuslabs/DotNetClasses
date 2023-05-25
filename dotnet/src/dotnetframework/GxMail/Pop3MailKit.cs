@@ -58,7 +58,6 @@ namespace GeneXus.Mail
 					BasicAuth(_sessionInfo, client);
 				count = client.Count;
 				uIds = (List<string>)client.GetMessageUids();
-				/*uIds.Insert(0, string.Empty);*/
 
 			}
 			catch (NotSupportedException e)
