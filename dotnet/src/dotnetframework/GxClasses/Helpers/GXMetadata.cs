@@ -269,7 +269,14 @@ namespace GeneXus.Metadata
 							pm[2] = pi.ParameterType.IsByRef;
 							pms[i] = pm;
 						}
-						o.GetType().InvokeMember(mthd, BindingFlags.InvokeMethod, null, o, args, pms, null, null);
+						try
+						{
+							o.GetType().InvokeMember(mthd, BindingFlags.InvokeMethod, null, o, args, pms, null, null);
+
+						}catch(MissingMethodException)
+						{
+							throw new GxClassLoaderException("Method " + mi.DeclaringType.FullName + "." + mi.Name + " for " + args.Length + " parameters ("+ String.Join(",", args) + ") not found");
+						}
 					}
 					else
 					{
