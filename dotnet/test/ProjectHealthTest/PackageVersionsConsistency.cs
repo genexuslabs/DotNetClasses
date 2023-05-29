@@ -194,7 +194,7 @@ namespace ProjectHealthTest
 
 			Assert.True(packagesWithIncoherentVersions.Count == 0, errorMessage);
 		}
-
+		const string VersionPattern= @"[0-9]+(?:\.[0-9]+)+";
 		private bool AnyDirectReferenceLessThanTransitiveVersion(ICollection<PackageVersionItem> value)
 		{
 			if (!value.Any(k => !k.Transitive))
@@ -204,11 +204,14 @@ namespace ProjectHealthTest
 				return false;
 			else
 			{
-				Version directVersion = new Version(directReference.Version);
-				return value.Any(k => new Version(k.Version) > directVersion);
+				Version directVersion = GetVersion(directReference.Version);
+				return value.Any(k => GetVersion(k.Version) > directVersion);
 			}
 		}
-
+		private Version GetVersion(String versionString)
+		{
+			return Version.Parse(Regex.Match(versionString, VersionPattern).Value);
+		}
 		private bool IsTargetFramework(XmlDocument doc, string targetFramework)
 		{
 			XmlNode targetFrameworkNode = doc.SelectSingleNode(TARGET_FRAMEWORK);

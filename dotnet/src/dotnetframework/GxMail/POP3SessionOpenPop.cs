@@ -35,7 +35,6 @@ namespace GeneXus.Mail
                 client.Authenticate(UserName, Password, OpenPop.Pop3.AuthenticationMethod.Auto);
                 count = client.GetMessageCount();
                 uIds = client.GetMessageUids();
-                uIds.Insert(0, string.Empty);
             }
             catch (PopServerNotAvailableException e)
             {
