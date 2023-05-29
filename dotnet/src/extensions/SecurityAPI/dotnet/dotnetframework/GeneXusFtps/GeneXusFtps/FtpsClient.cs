@@ -353,6 +353,7 @@ namespace GeneXusFtps.GeneXusFtps
 
         private SslProtocols SetProtocol(FtpsOptions options)
         {
+#pragma warning disable SYSLIB0039 // Type or member is obsolete
 #pragma warning disable CA5397 // Do not use deprecated SslProtocols values
 			switch (options.GetFtpsProtocol())
             {
@@ -372,6 +373,7 @@ namespace GeneXusFtps.GeneXusFtps
 					return SslProtocols.Tls;
 			}
 #pragma warning restore CA5397 // Do not use deprecated SslProtocols values
+#pragma warning restore SYSLIB0039 // Type or member is obsolete
 		}
 
 		private bool IsSameDir(String path1, String path2)
