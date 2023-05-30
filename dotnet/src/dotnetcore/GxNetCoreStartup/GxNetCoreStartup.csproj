@@ -32,11 +32,11 @@
 	<Target Name="CustomContentTarget">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json">
-				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackagePath>contentFiles/any/$(TargetFramework)</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).runtimeconfig.json">
-				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackagePath>contentFiles/any/$(TargetFramework)</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
 		</ItemGroup>
