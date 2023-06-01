@@ -90,7 +90,9 @@ namespace GeneXus.Http.Server
 	{
         HttpResponse _httpRes;
         IGxContext _context;
-
+#if !NETCORE
+		bool _chunkedResponse;
+#endif
 		public GxHttpResponse(IGxContext context)
 		{
             _context = context;
@@ -131,8 +133,14 @@ namespace GeneXus.Http.Server
 		{
 			if (Response != null)
 			{
+#if !NETCORE
+				if (_chunkedResponse)
+				{
+					Response.Buffer = false;
+				}
+#endif
 				Response.Write(s);
-			}			
+			}
 		}
 
 		public void AddFile( string fileName)
@@ -144,14 +152,23 @@ namespace GeneXus.Http.Server
 		}
 		public void AppendHeader( string name, string value)
 		{
-			if(string.Compare(name, "Content-Disposition", true) == 0)
+			bool transferEncodingHeader = (name.Equals(HttpHeader.TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase) && value.Equals(HttpHeaderValue.TRANSFER_ENCODING_CHUNKED, StringComparison.OrdinalIgnoreCase));
+#if !NETCORE
+			if (transferEncodingHeader)
+				_chunkedResponse = true;
+#endif
+
+			if (string.Compare(name, "Content-Disposition", true) == 0)
 			{
 				value = GXUtil.EncodeContentDispositionHeader(value, _context.GetBrowserType());
 			}
-            if (_context!=null) 
-                _context.SetHeader(name, value);
+			if (!transferEncodingHeader)
+			{
+				if (_context != null)
+					_context.SetHeader(name, value);
+			}
 		}
-	
+
 	}
 
 	public class GxSoapRequest : GxHttpRequest
