@@ -1877,10 +1877,9 @@ namespace GeneXus.Http
 			InitPrivates();
 			try
 			{
-#if NETCORE
 				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
-#endif
+
 				bool validSession = ValidWebSession();
 				if (validSession && IntegratedSecurityEnabled)
 					validSession = ValidSession();
@@ -1915,9 +1914,6 @@ namespace GeneXus.Http
 						context.DispatchAjaxCommands();
 				}
 				SetCompression(httpContext);
-#if !NETCORE
-				SendHeaders();
-#endif
 				context.ResponseCommited = true;
 			}
 			catch (Exception e)
