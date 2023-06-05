@@ -1,6 +1,6 @@
+using GeneXus.Application;
 using GeneXus.Programs;
 using GeneXus.Utils;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace xUnitTesting
@@ -58,7 +58,23 @@ namespace xUnitTesting
 			Assert.Equal(14, sdt.gxTpr_Sdt1_datetime.Hour);
 			Assert.Equal(29, sdt.gxTpr_Sdt1_datetime.Minute);
 		}
+		[Fact]
+		public void TestZPicture()
+		{
+			GxContext context = new GxContext();
+			decimal dec1 = 123456.12M;
+			string dec1Str = context.localUtil.Format(dec1, "ZZZZZZZZZZ9.ZZZZZZ");
 
-		
+			decimal dec2 = 123456.12M;
+			string dec2Str = context.localUtil.Format(dec2, "ZZZZZZZZZZ9.999999");
+
+			decimal dec3 = 123456.12M;
+			string dec3Str = context.localUtil.Format(dec3, "99999999999.999999");
+
+			Assert.Equal("         123456.12", dec1Str);
+			Assert.Equal("     123456.120000", dec2Str);
+			Assert.Equal("00000123456.120000", dec3Str);
+
+		}
 	}
 }
