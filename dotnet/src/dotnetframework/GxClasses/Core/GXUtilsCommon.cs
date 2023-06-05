@@ -671,7 +671,6 @@ namespace GeneXus.Utils
 			if (string.IsNullOrEmpty(gxpicture))
 				return string.Empty;
 
-			bool inDecimals = false;
 			StringBuilder strPicture = new StringBuilder("{0,");
 			strPicture.Append(gxpicture.Length);
 			strPicture.Append(':');
@@ -693,16 +692,7 @@ namespace GeneXus.Utils
 			{
 				if (gxpicture[i] == 'Z')
 				{
-					if (inDecimals)
-					{
-						//The Z on the right of the decimal point are taken as 9
-
-						//The "##" format string causes the value to be rounded to the nearest digit preceding the decimal, 
-						//where rounding away from zero is always used. For example, formatting 34.5 with "##" would result in the value 35.
-						strPicture.Append('0');
-					}
-					else
-						strPicture.Append('#');
+					strPicture.Append('#');
 				}
 				else if (gxpicture[i] == '9')
 				{
@@ -711,7 +701,6 @@ namespace GeneXus.Utils
 				}
 				else if (gxpicture[i] == '.')
 				{
-					inDecimals = true;
 					if (i > 0 && strPicture[strPicture.Length - 1] == '#') strPicture[strPicture.Length - 1] = '0';
 					if (separatorsAsLiterals)
 						strPicture.Append("\".\"");
@@ -1192,7 +1181,6 @@ namespace GeneXus.Utils
 			{
 				return ReplaceSeparators(res, numFmtInfo.NumberDecimalSeparator, numFmtInfo.NumberGroupSeparator);
 			}
-
 		}
 		string FormatNumber(string s, string p)
 		{
