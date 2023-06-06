@@ -110,7 +110,7 @@ namespace GeneXus.Application
 					if (!IsAuthenticated(synchronizer))
 						return Task.CompletedTask;
 				}
-				else if (!IsAuthenticated())
+				else if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
 				{
 					return Task.CompletedTask;
 				}
@@ -135,7 +135,7 @@ namespace GeneXus.Application
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-					bodyParameters = PreProcessApiSdtParameter(_procWorker, innerMethod, bodyParameters, this._variableAlias);
+					bodyParameters = PreProcessApiSdtParameter( _procWorker, innerMethod, bodyParameters, this._variableAlias);
 				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
@@ -300,7 +300,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
 				{
 					return Task.CompletedTask; 
 				}
@@ -536,6 +536,13 @@ namespace GeneXus.Application
 				if (!validSynchronizer)
 					SetError("0", "Invalid Synchronizer " + synchronizer);
 			}
+		}
+		public bool IsAuthenticatedMethod(string serviceMethod, bool isApi)
+		{
+			if (!String.IsNullOrEmpty(serviceMethod) && isApi)
+				return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ApiExecutePermissionPrefix2(serviceMethod));
+			else
+				return IsAuthenticated();
 		}
 		public bool IsAuthenticated()
 		{
