@@ -110,7 +110,7 @@ namespace GeneXus.Application
 					if (!IsAuthenticated(synchronizer))
 						return Task.CompletedTask;
 				}
-				else if (!IsAuthenticated())
+				else if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
 				{
 					return Task.CompletedTask;
 				}
@@ -300,7 +300,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
 				{
 					return Task.CompletedTask; 
 				}
@@ -536,6 +536,13 @@ namespace GeneXus.Application
 				if (!validSynchronizer)
 					SetError("0", "Invalid Synchronizer " + synchronizer);
 			}
+		}
+		public bool IsAuthenticatedMethod(string serviceMethod, bool isApi)
+		{
+			if (!String.IsNullOrEmpty(serviceMethod) && isApi)
+				return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ApiExecutePermissionPrefix2(serviceMethod));
+			else
+				return IsAuthenticated();
 		}
 		public bool IsAuthenticated()
 		{

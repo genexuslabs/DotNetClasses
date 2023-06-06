@@ -134,7 +134,7 @@ namespace GeneXus.Application
 		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
 		public bool IsSynchronizer2 { get { return IsSynchronizer; } }
 		public string ExecutePermissionPrefix2 { get { return ExecutePermissionPrefix; } }
-
+		public string ApiExecutePermissionPrefix2(string gxMethod) { return ApiExecutePermissionPrefix(gxMethod); } 
 		public virtual string ServiceExecutePermissionPrefix { get { return string.Empty; } }
 		public virtual string ServiceDeletePermissionPrefix { get { return string.Empty; } }
 		public virtual string ServiceInsertPermissionPrefix { get { return string.Empty; } }
@@ -144,6 +144,8 @@ namespace GeneXus.Application
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
 		protected virtual bool IsSynchronizer { get { return false; } }
 		protected virtual string ExecutePermissionPrefix { get { return String.Empty; } }
+
+		protected virtual string ApiExecutePermissionPrefix(string gxMethod) { return ExecutePermissionPrefix2; } 
 		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack) { }
 
 		public virtual void CallWebObject(string url)
