@@ -21,7 +21,6 @@ namespace GeneXus.Procedure
 		protected IReportHandler oldReportHandler;
 		string outputFileName;
 		string outputType;
-		bool fileContentInline;
 
 		protected int lineHeight;
 		protected int Gx_line;
@@ -119,20 +118,17 @@ namespace GeneXus.Procedure
 
 		private void setOuputFileName()
 		{
-			if (fileContentInline)
+			string fileName = GetType().Name;
+			string fileType = "pdf";
+			if (!string.IsNullOrEmpty(outputFileName))
 			{
-				string fileName = GetType().Name;
-				string fileType = "pdf";
-				if (!string.IsNullOrEmpty(outputFileName))
-				{
-					fileName = outputFileName;
-				}
-				if (!string.IsNullOrEmpty(outputType))
-				{
-					fileType = outputType.ToLower();
-				}
-				context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, $"inline; filename={fileName}.{fileType}");
+				fileName = outputFileName;
 			}
+			if (!string.IsNullOrEmpty(outputType))
+			{
+				fileType = outputType.ToLower();
+			}
+			context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, $"inline; filename={fileName}.{fileType}");
 		}
 
 		public virtual int getOutputType()
@@ -144,7 +140,6 @@ namespace GeneXus.Procedure
 			string idiom;
 			if (!Config.GetValueOf("LANGUAGE", out idiom))
 				idiom = "eng";
-			fileContentInline = true;
 #if NETCORE
 			setOuputFileName();
 #endif
