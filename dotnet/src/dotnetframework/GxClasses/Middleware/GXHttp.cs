@@ -2161,11 +2161,7 @@ namespace GeneXus.Http
 						return;
 
 					string safeIECompMode = IE_COMP_Edge.Equals(IE_COMP_EmulateIE7) ? IE_COMP_Edge : IE_COMP_Edge;
-#if NETCORE
 					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + safeIECompMode;
-#else
-					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + safeIECompMode);
-#endif
 				}
 			}
 
@@ -2173,11 +2169,7 @@ namespace GeneXus.Http
 
 		protected virtual void sendSpaHeaders()
 		{
-#if NETCORE
 			localHttpContext.Response.Headers[GX_SPA_GXOBJECT_RESPONSE_HEADER] = GetPgmname().ToLower();
-#else
-			localHttpContext.Response.AddHeader(GX_SPA_GXOBJECT_RESPONSE_HEADER, GetPgmname().ToLower());
-#endif
 		}
 
 		private void webExecuteWorker(object target)
