@@ -335,6 +335,9 @@ namespace GeneXus.Procedure
 		public static int OUTPUT_RVIEWER_NATIVE = 1;
 		public static int OUTPUT_RVIEWER_DLL = 2;
 		public static int OUTPUT_PDF     = 3;
+#if NETCORE
+		const string PDF_LIBRARY_ITEXT8 = "ITEXT8";
+#endif
 		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		static public IReportHandler GetPrinter( int outputType, string path, Stream reportOutputStream)
@@ -369,7 +372,8 @@ namespace GeneXus.Procedure
 					Type classType = assem.GetType( "GeneXus.Printer.GxReportBuilderPdf", false, true);
 					reportHandler = (IReportHandler) Activator.CreateInstance(classType,new Object[]{path, reportOutputStream});
 #else
-					reportHandler = (IReportHandler)(ClassLoader.FindInstance("GxPdfReportsCS", "GeneXus.Printer", "GxReportBuilderPdf", new Object[] { path, reportOutputStream }, null));
+					string reportBuidler = Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_ITEXT8, StringComparison.OrdinalIgnoreCase) ? "GxReportBuilderPdf7" : "GxReportBuilderPdf";
+					reportHandler = (IReportHandler)(ClassLoader.FindInstance("GxPdfReportsCS", "GeneXus.Printer", reportBuidler, new Object[] { path, reportOutputStream }, null));
 #endif
 				}
 				catch (TargetInvocationException ex)

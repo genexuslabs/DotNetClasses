@@ -50,6 +50,7 @@
 
 
 	<ItemGroup>
+		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.0" />
 		<PackageReference Include="iTextSharp" Version="5.5.13.2" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" PrivateAssets="All" />
