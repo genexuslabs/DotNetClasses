@@ -762,6 +762,7 @@ namespace GeneXus.Configuration
 		static int oldSTR = -1;
 		static int instrumented = -1;
 		static string mediaPath;
+		static string pdfLib;
 		static string blobPath;
 		static string blobPathFolderName;
 		static int blankEmptyDates = -1;
@@ -1175,6 +1176,28 @@ namespace GeneXus.Configuration
 				}
 			}
 			return mediaPath;
+		}
+		internal static string PdfReportLibrary()
+		{
+			if (pdfLib == null)
+			{
+				lock (syncRoot)
+				{
+					if (pdfLib == null)
+					{
+						if (Config.GetValueOf("PDF_RPT_LIBRARY", out pdfLib))
+						{
+							pdfLib = pdfLib.Trim();
+						}
+						else
+						{
+							pdfLib = string.Empty;
+						}
+						GXLogging.Debug(log, "PDF_RPT_LIBRARY:", pdfLib);
+					}
+				}
+			}
+			return pdfLib;
 		}
 		public enum StorageTimeZonePty { Undefined = 0, Utc = 1, Local = 2 };
 
