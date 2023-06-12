@@ -1,5 +1,7 @@
 using System;
+using GeneXus.Application;
 using GeneXus.Configuration;
+using GeneXus.Data;
 using GeneXus.Encryption;
 using GxClasses.Helpers;
 using log4net;
@@ -110,47 +112,44 @@ namespace GeneXus.Services
 		internal static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
 		internal static string SESSION_SCHEMA = "SESSION_PROVIDER_SCHEMA";
 		internal static string SESSION_TABLE_NAME = "SESSION_PROVIDER_TABLE_NAME";
-		internal static string SESSION_PROVIDER_SERVER = "SESSION_PROVIDER_SERVER";
-		internal static string SESSION_PROVIDER_DATABASE = "SESSION_PROVIDER_DATABASE";
-		internal static string SESSION_PROVIDER_USER = "SESSION_PROVIDER_USER";
+		internal static string SESSION_DATASTORE = "SESSION_PROVIDER_DATASTORE";
 
 		public GxDatabaseSession(GXService serviceProvider)
 		{
-			string password = serviceProvider.Properties.Get(SESSION_PASSWORD);
-			if (!string.IsNullOrEmpty(password))
+			string datastoreName = serviceProvider.Properties.Get(SESSION_DATASTORE);
+			if (!string.IsNullOrEmpty(datastoreName))
 			{
-				password = CryptoImpl.Decrypt(password);
+				GxContext context = GxContext.CreateDefaultInstance();
+				IGxDataStore datastore = context.GetDataStore(datastoreName);
+				string schema = datastore.Connection.CurrentSchema;
+				string tableName = serviceProvider.Properties.Get(SESSION_TABLE_NAME);
+				ConnectionString = datastore.Connection.ConnectionString;
+				Schema = schema;
+				TableName = tableName;
+				context.CloseConnections();
 			}
-			string serverName = serviceProvider.Properties.Get(SESSION_PROVIDER_SERVER);
-			string userName = serviceProvider.Properties.Get(SESSION_PROVIDER_USER);
-			string database = serviceProvider.Properties.Get(SESSION_PROVIDER_DATABASE);
-			string schema = serviceProvider.Properties.Get(SESSION_SCHEMA);
-			string tableName = serviceProvider.Properties.Get(SESSION_TABLE_NAME);
+			else //Backward compatibility configuration
+			{
+				string password = serviceProvider.Properties.Get(SESSION_PASSWORD);
+				if (!string.IsNullOrEmpty(password))
+				{
+					password = CryptoImpl.Decrypt(password);
+				}
+				string schema = serviceProvider.Properties.Get(SESSION_SCHEMA);
+				string tableName = serviceProvider.Properties.Get(SESSION_TABLE_NAME);
+				string sessionAddresCompatibility = serviceProvider.Properties.Get(SESSION_ADDRESS);
+				if (!string.IsNullOrEmpty(sessionAddresCompatibility))
+				{
+					ConnectionString = sessionAddresCompatibility;
+				}
+				if (!string.IsNullOrEmpty(password))
+				{
+					ConnectionString += $";password={password}";
+				}
+				Schema = schema;
+				TableName = tableName;
 
-			string sessionAddresCompatibility = serviceProvider.Properties.Get(GxDatabaseSession.SESSION_ADDRESS);
-			if (!string.IsNullOrEmpty(sessionAddresCompatibility))
-			{
-				ConnectionString = sessionAddresCompatibility;
 			}
-
-			if (!string.IsNullOrEmpty(serverName))
-			{
-				ConnectionString += $"Data Source={serverName};";
-			}
-			if (!string.IsNullOrEmpty(database))
-			{
-				ConnectionString += $"Initial Catalog={database}";
-			}
-			if (!string.IsNullOrEmpty(password))
-			{
-				ConnectionString += $";password={password}";
-			}
-			if (!string.IsNullOrEmpty(userName))
-			{
-				ConnectionString += $";user={userName}";
-			}
-			Schema = schema;
-			TableName = tableName;
 			SessionTimeout = Preferences.SessionTimeout;
 		}
 		public GxDatabaseSession(string host, string password, string schema, string tableName)
