@@ -60,6 +60,7 @@ namespace GeneXus.Services
 	}
 	public class GxRedisSession : ISessionService
 	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxRedisSession));
 		internal static string SESSION_ADDRESS = "SESSION_PROVIDER_ADDRESS";
 		internal static string SESSION_INSTANCE = "SESSION_PROVIDER_INSTANCE_NAME";
 		internal static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
@@ -87,6 +88,8 @@ namespace GeneXus.Services
 				int.TryParse(sessionTimeoutStrCompatibility, out sessionTimeoutMinutes);
 
 			SessionTimeout = sessionTimeoutMinutes;
+			GXLogging.Debug(log, "Redis Host:", host, ", InstanceName:", instanceName);
+			GXLogging.Debug(log, "Redis sessionTimeoutMinutes:", sessionTimeoutMinutes.ToString());
 		}
 		public GxRedisSession(string host, string password, string instanceName, int sessionTimeout)
 		{
@@ -97,6 +100,9 @@ namespace GeneXus.Services
 			}
 			InstanceName = instanceName;
 			SessionTimeout = sessionTimeout;
+			GXLogging.Debug(log, "Redis Host:", host, ", InstanceName:", instanceName);
+			GXLogging.Debug(log, "Redis sessionTimeoutMinutes:", sessionTimeout.ToString());
+
 		}
 		public string ConnectionString { get; }
 		public string InstanceName { get; }
@@ -108,6 +114,8 @@ namespace GeneXus.Services
 	}
 	public class GxDatabaseSession : ISessionService
 	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDatabaseSession));
+
 		internal static string SESSION_ADDRESS = "SESSION_PROVIDER_ADDRESS";
 		internal static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
 		internal static string SESSION_SCHEMA = "SESSION_PROVIDER_SCHEMA";
@@ -127,6 +135,12 @@ namespace GeneXus.Services
 				Schema = schema;
 				TableName = tableName;
 				context.CloseConnections();
+				GxDataRecord dr = datastore.Db as GxDataRecord;
+				if (dr != null)
+				{
+					GXLogging.Debug(log, "Database ConnectionString:",  dr.ConnectionStringForLog());
+				}
+
 			}
 			else //Backward compatibility configuration
 			{
@@ -151,6 +165,7 @@ namespace GeneXus.Services
 
 			}
 			SessionTimeout = Preferences.SessionTimeout;
+			GXLogging.Debug(log, "Database sessionTimeoutMinutes:", SessionTimeout.ToString());
 		}
 		public GxDatabaseSession(string host, string password, string schema, string tableName)
 		{
