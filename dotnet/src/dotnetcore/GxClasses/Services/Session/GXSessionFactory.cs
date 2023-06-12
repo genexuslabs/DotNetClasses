@@ -2,6 +2,7 @@ using System;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Data;
+using GeneXus.Data.ADO;
 using GeneXus.Encryption;
 using GxClasses.Helpers;
 using log4net;
@@ -121,6 +122,7 @@ namespace GeneXus.Services
 		internal static string SESSION_SCHEMA = "SESSION_PROVIDER_SCHEMA";
 		internal static string SESSION_TABLE_NAME = "SESSION_PROVIDER_TABLE_NAME";
 		internal static string SESSION_DATASTORE = "SESSION_PROVIDER_DATASTORE";
+		const string DEFAULT_SQLSERVER_SCHEMA = "dbo";
 
 		public GxDatabaseSession(GXService serviceProvider)
 		{
@@ -130,15 +132,18 @@ namespace GeneXus.Services
 				GxContext context = GxContext.CreateDefaultInstance();
 				IGxDataStore datastore = context.GetDataStore(datastoreName);
 				string schema = datastore.Connection.CurrentSchema;
+				if (string.IsNullOrEmpty(schema))
+					schema = DEFAULT_SQLSERVER_SCHEMA;
 				string tableName = serviceProvider.Properties.Get(SESSION_TABLE_NAME);
-				ConnectionString = datastore.Connection.ConnectionString;
+				GxConnection conn = datastore.Connection as GxConnection;
 				Schema = schema;
 				TableName = tableName;
 				context.CloseConnections();
 				GxDataRecord dr = datastore.Db as GxDataRecord;
-				if (dr != null)
+				if (dr != null && conn!=null)
 				{
-					GXLogging.Debug(log, "Database ConnectionString:",  dr.ConnectionStringForLog());
+					ConnectionString = dr.BuildConnectionStringImpl(conn.DataSourceName, conn.InternalUserId, conn.UserPassword, conn.DatabaseName, conn.Port, conn.CurrentSchema, conn.Data);
+					GXLogging.Debug(log, "Database ConnectionString:", dr.ConnectionStringForLog());
 				}
 
 			}
