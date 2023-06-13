@@ -14,7 +14,6 @@ namespace GeneXus.Services
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXSessionServiceFactory));
 		static string REDIS = "REDIS";
 		static string DATABASE = "DATABASE";
-		
 		public static ISessionService GetProvider()
 		{
 			ISessionService sessionService = null;
@@ -35,7 +34,6 @@ namespace GeneXus.Services
 					}
 					else
 					{
-
 						GXLogging.Debug(log, "Loading Session provider:", className);
 #if !NETCORE
 						type = Type.GetType(className, true, true);
@@ -56,7 +54,6 @@ namespace GeneXus.Services
 				}
 			}
 			return null;
-				
 		}
 	}
 	public class GxRedisSession : ISessionService
@@ -66,7 +63,6 @@ namespace GeneXus.Services
 		internal static string SESSION_INSTANCE = "SESSION_PROVIDER_INSTANCE_NAME";
 		internal static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
 		static string SESSION_TIMEOUT = "SESSION_PROVIDER_SESSION_TIMEOUT";
-
 		public GxRedisSession(GXService serviceProvider)
 		{
 			string password = serviceProvider.Properties.Get(SESSION_PASSWORD);
@@ -103,27 +99,22 @@ namespace GeneXus.Services
 			SessionTimeout = sessionTimeout;
 			GXLogging.Debug(log, "Redis Host:", host, ", InstanceName:", instanceName);
 			GXLogging.Debug(log, "Redis sessionTimeoutMinutes:", sessionTimeout.ToString());
-
 		}
 		public string ConnectionString { get; }
 		public string InstanceName { get; }
 		public int SessionTimeout { get; }
-
 		public string Schema => throw new NotImplementedException();
-
 		public string TableName => throw new NotImplementedException();
 	}
 	public class GxDatabaseSession : ISessionService
 	{
 		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDatabaseSession));
-
 		internal static string SESSION_ADDRESS = "SESSION_PROVIDER_ADDRESS";
 		internal static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
 		internal static string SESSION_SCHEMA = "SESSION_PROVIDER_SCHEMA";
 		internal static string SESSION_TABLE_NAME = "SESSION_PROVIDER_TABLE_NAME";
 		internal static string SESSION_DATASTORE = "SESSION_PROVIDER_DATASTORE";
 		const string DEFAULT_SQLSERVER_SCHEMA = "dbo";
-
 		public GxDatabaseSession(GXService serviceProvider)
 		{
 			string datastoreName = serviceProvider.Properties.Get(SESSION_DATASTORE);
@@ -140,12 +131,11 @@ namespace GeneXus.Services
 				TableName = tableName;
 				context.CloseConnections();
 				GxDataRecord dr = datastore.Db as GxDataRecord;
-				if (dr != null && conn!=null)
+				if (dr != null && conn != null)
 				{
 					ConnectionString = dr.BuildConnectionStringImpl(conn.DataSourceName, conn.InternalUserId, conn.UserPassword, conn.DatabaseName, conn.Port, conn.CurrentSchema, conn.Data);
 					GXLogging.Debug(log, "Database ConnectionString:", dr.ConnectionStringForLog());
 				}
-
 			}
 			else //Backward compatibility configuration
 			{
@@ -167,7 +157,6 @@ namespace GeneXus.Services
 				}
 				Schema = schema;
 				TableName = tableName;
-
 			}
 			SessionTimeout = Preferences.SessionTimeout;
 			GXLogging.Debug(log, "Database sessionTimeoutMinutes:", SessionTimeout.ToString());
@@ -183,16 +172,11 @@ namespace GeneXus.Services
 			TableName = tableName;
 		}
 		public string ConnectionString { get; }
-
 		public string Schema { get; }
-
 		public string TableName { get; }
-
 		public string InstanceName => throw new NotImplementedException();
-
 		public int SessionTimeout { get; }
 	}
-
 	public interface ISessionService
 	{
 		string ConnectionString { get; }
