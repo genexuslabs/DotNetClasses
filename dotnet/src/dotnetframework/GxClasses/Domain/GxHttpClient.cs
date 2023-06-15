@@ -1381,33 +1381,61 @@ namespace GeneXus.Http.Client
 			}
 			return enc;
 		}
+		public bool Eof
+		{
+			get
+			{
+				if (_chunkedResponse && _receiveStream != null)
+				{
+					return _receiveStream.EndOfStream;
+				}
+				return true;
+			}
+		}
 
+		public string ReadChunk()
+		{
+			if (_chunkedResponse)
+			{
+				if (_receiveStream != null)
+				{
+					if (!_receiveStream.EndOfStream)
+					{
+						string line = _receiveStream.ReadLine();
+						if (line != null)
+							return line;
+					}
+					else
+					{
+						_receiveStream.Dispose();
+						_receiveStream = null;
+						response.Dispose();
+						response = null;
+					}
+				}
+				return string.Empty;
+			}
+			else
+				return ToString();
+		}
 		public override string ToString()
 		{
-			if (_chunkedResponse && _receiveStream != null)
-			{ 
-				if (!_receiveStream.EndOfStream)
-				{
-					string line= _receiveStream.ReadLine();
-					if (line != null)
-						return line;
-					else
-						return "EOF";
+			if (_chunkedResponse)
+			{
+				StringBuilder sb = new StringBuilder();
+				while (!Eof){
+					sb.Append(ReadChunk());
 				}
-				else
-				{
-					_receiveStream.Dispose();
-					_receiveStream = null;
-					response.Dispose();
-					response = null;
-					return "EOF";
-				}
+				return sb.ToString();
 			}
-			if (_encoding == null)
-				_encoding = Encoding.UTF8;
-			if (_receiveData == null)
-				return string.Empty;
-			return _encoding.GetString(_receiveData);
+			else
+			{
+				if (_encoding == null)
+					_encoding = Encoding.UTF8;
+				if (_receiveData == null)
+					return string.Empty;
+				return _encoding.GetString(_receiveData);
+			}
 		}
 		public void ToFile(string fileName)
 		{
