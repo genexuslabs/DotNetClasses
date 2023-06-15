@@ -62,18 +62,64 @@ namespace xUnitTesting
 		public void TestZPicture()
 		{
 			GxContext context = new GxContext();
-			decimal dec1 = 123456.12M;
-			string dec1Str = context.localUtil.Format(dec1, "ZZZZZZZZZZ9.ZZZZZZ");
+			decimal decNumber = 123456.12M;
+			string decStr = context.localUtil.Format(decNumber, "ZZZZZZZZZZ9.ZZZZZZ");
+			Assert.Equal("     123456.120000", decStr);
 
-			decimal dec2 = 123456.12M;
-			string dec2Str = context.localUtil.Format(dec2, "ZZZZZZZZZZ9.999999");
+			decStr = context.localUtil.Format(decNumber, "ZZZZZZZZZZ9.999999");
+			Assert.Equal("     123456.120000", decStr);
 
-			decimal dec3 = 123456.12M;
-			string dec3Str = context.localUtil.Format(dec3, "99999999999.999999");
+			decStr = context.localUtil.Format(decNumber, "99999999999.999999");
+			Assert.Equal("00000123456.120000", decStr);
 
-			Assert.Equal("         123456.12", dec1Str);
-			Assert.Equal("     123456.120000", dec2Str);
-			Assert.Equal("00000123456.120000", dec3Str);
+			decStr = context.localUtil.Format(decNumber, "##########9.######");
+			Assert.Equal("         123456.12", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "??????????9.??????");
+			Assert.Equal("     123456.12    ", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "\\# ??????????9.??????");
+			Assert.Equal("#      123456.12    ", decStr);
+
+
+			decStr = context.localUtil.Format(decNumber, "##,###,###,##9.######");
+			Assert.Equal("           123,456.12", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "??,???,???,??9.??????");
+			Assert.Equal("        123456.12    ", decStr);
+
+			//=====================Zero========================================
+			decNumber = 0;
+			decStr = context.localUtil.Format(decNumber, "###########.######");
+			Assert.Equal("                  ", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "???????????.??????");
+			Assert.Equal("                  ", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "\\# ??????????9.??????");
+			Assert.Equal(" #           0      ", decStr);
+
+			//=====================0.1========================================
+			decNumber = 0.1M;
+			decStr = context.localUtil.Format(decNumber, "???????????.??????");
+			Assert.Equal("           .1     ", decStr);
+
+
+			//=====================Negatives========================================
+			decNumber = -123456.12M;
+			decStr = context.localUtil.Format(decNumber, "(??????????9.??????)");
+			Assert.Equal(" (    123456.12    )", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "(##########9.######)");
+			Assert.Equal("         (123456.12)", decStr);
+
+			//=====================Positives========================================
+			decNumber = 123456.12M;
+			decStr = context.localUtil.Format(decNumber, "+ ??????????9.??????");
+			Assert.Equal("+      123456.12    ", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "+ ##########9.######");
+			Assert.Equal("         + 123456.12", decStr);
 
 		}
 	}
