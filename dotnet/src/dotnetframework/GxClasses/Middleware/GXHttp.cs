@@ -3004,15 +3004,6 @@ namespace GeneXus.Http
 
 		protected GXMasterPage MasterPageObj { get; set; }
 
-		protected override void sendSpaHeaders()
-		{
-			base.sendSpaHeaders();
-			if (MasterPageObj != null)
-			{
-				localHttpContext.Response.AddHeader(GX_SPA_MASTERPAGE_HEADER, MasterPageObj.GetPgmname());
-			}
-		}
-
 		protected override void ValidateSpaRequest()
 		{
 			string sourceMasterPage = localHttpContext.Request.Headers[GX_SPA_MASTERPAGE_HEADER];
@@ -3020,6 +3011,10 @@ namespace GeneXus.Http
 			{
 				context.DisableSpaRequest();
 				sendSpaHeaders();
+			}
+			if (MasterPageObj != null)
+			{
+				localHttpContext.Response.Headers[GX_SPA_MASTERPAGE_HEADER] = MasterPageObj.GetPgmname();
 			}
 		}
 	}
