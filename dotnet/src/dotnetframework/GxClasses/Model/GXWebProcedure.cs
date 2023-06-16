@@ -45,7 +45,6 @@ namespace GeneXus.Procedure
 		public override void initialize() { }
 		protected override void createObjects() { }
 		public override void skipLines(long nToSkip) { }
-		protected virtual bool ChunkedStreaming() { return false; }
 
 		public override void cleanup()
 		{
@@ -53,15 +52,6 @@ namespace GeneXus.Procedure
 			{
 				context.DeleteReferer();
 			}
-		}
-		public GXWebProcedure()
-		{
-#if !NETCORE
-			if (ChunkedStreaming())
-			{
-				context.HttpContext.Response.Buffer = false;
-			}
-#endif
 		}
 		protected override void SetCompression(HttpContext httpContext)
 		{

@@ -1907,8 +1907,6 @@ namespace GeneXus.Http
 			get { return _isMain; }
 		}
 #endif
-
-
 		public void ProcessRequest(HttpContext httpContext)
 		{
 			localHttpContext = httpContext;
@@ -1933,6 +1931,7 @@ namespace GeneXus.Http
 			InitPrivates();
 			try
 			{
+				SetStreaming();
 				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
 
@@ -1983,6 +1982,17 @@ namespace GeneXus.Http
 				handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
 				throw new Exception("GXApplication exception", e);
 			}
+		}
+		protected virtual bool ChunkedStreaming() { return false; }
+
+		private void SetStreaming()
+		{
+#if !NETCORE
+			if (ChunkedStreaming())
+			{
+				context.HttpContext.Response.Buffer = false;
+			}
+#endif
 		}
 		internal string DumpHeaders(HttpContext httpContext)
 		{
