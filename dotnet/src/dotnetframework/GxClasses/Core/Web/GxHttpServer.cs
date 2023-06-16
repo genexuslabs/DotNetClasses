@@ -12,12 +12,6 @@ namespace GeneXus.Http.Server
 	using System.Linq;
 	using Microsoft.AspNetCore.Http.Features;
 	using System.Text;
-	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Mvc.Formatters;
-	using System.Net.Http;
-	using Stubble.Core.Contexts;
-	using System.Net.Mime;
-
 #endif
 
 	public class GxHttpCookie
@@ -96,9 +90,6 @@ namespace GeneXus.Http.Server
 	{
         HttpResponse _httpRes;
         IGxContext _context;
-#if !NETCORE
-		bool _chunkedResponse;
-#endif
 		public GxHttpResponse(IGxContext context)
 		{
             _context = context;
@@ -139,12 +130,6 @@ namespace GeneXus.Http.Server
 		{
 			if (Response != null)
 			{
-#if !NETCORE
-				if (_chunkedResponse)
-				{
-					Response.Buffer = false;
-				}
-#endif
 				Response.Write(s);
 			}
 		}
@@ -156,23 +141,14 @@ namespace GeneXus.Http.Server
 				Response.WriteFile(fileName.Trim());
 			}
 		}
-		public void AppendHeader( string name, string value)
+		public void AppendHeader(string name, string value)
 		{
-			bool transferEncodingHeader = (name.Equals(HttpHeader.TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase) && value.Equals(HttpHeaderValue.TRANSFER_ENCODING_CHUNKED, StringComparison.OrdinalIgnoreCase));
-#if !NETCORE
-			if (transferEncodingHeader)
-				_chunkedResponse = true;
-#endif
-
 			if (string.Compare(name, "Content-Disposition", true) == 0)
 			{
 				value = GXUtil.EncodeContentDispositionHeader(value, _context.GetBrowserType());
 			}
-			if (!transferEncodingHeader)
-			{
-				if (_context != null)
-					_context.SetHeader(name, value);
-			}
+			if (_context != null)
+				_context.SetHeader(name, value);
 		}
 
 	}
