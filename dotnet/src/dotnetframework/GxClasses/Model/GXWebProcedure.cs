@@ -11,6 +11,12 @@ namespace GeneXus.Procedure
 	using log4net;
 	using GeneXus.Application;
 	using GeneXus.Data.NTier;
+	
+#if NETCORE
+	using Microsoft.AspNetCore.Http;
+#else
+	using System.Web;
+#endif
 
 	public class GXWebProcedure : GXHttpHandler
 	{
@@ -39,6 +45,7 @@ namespace GeneXus.Procedure
 		public override void initialize() { }
 		protected override void createObjects() { }
 		public override void skipLines(long nToSkip) { }
+		protected virtual bool ChunkedStreaming() { return false; }
 
 		public override void cleanup()
 		{
@@ -47,7 +54,22 @@ namespace GeneXus.Procedure
 				context.DeleteReferer();
 			}
 		}
-
+		public GXWebProcedure()
+		{
+#if !NETCORE
+			if (ChunkedStreaming())
+			{
+				context.HttpContext.Response.Buffer = false;
+			}
+#endif
+		}
+		protected override void SetCompression(HttpContext httpContext)
+		{
+			if (!ChunkedStreaming())
+			{
+				base.SetCompression(httpContext);
+			}
+		}
 		public void setContextReportHandler()
 		{
 
