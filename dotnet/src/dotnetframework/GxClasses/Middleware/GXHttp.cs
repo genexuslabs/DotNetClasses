@@ -44,7 +44,12 @@ namespace GeneXus.Http
 	using GeneXus.Notifications;
 	using Web.Security;
 	using System.Web.SessionState;
+	using GeneXus.Mock;
+	using GeneXus.Data.NTier;
 #endif
+
+
+
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -271,15 +276,68 @@ namespace GeneXus.Http
 		public virtual void InitializeDynEvents() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void initialize_properties() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void webExecute() { throw new Exception("The method or operation is not implemented."); }
-		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
 #if !NETCORE
+		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void cleanup() { }
+		virtual public bool UploadEnabled() { return false; }
+
+		protected virtual void ExecuteEx()
+		{
+			ExecutePrivate();
+		}
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected virtual void ExecutePrivateCatch(object stateInfo)
+		{
+			try
+			{
+				((GXHttpHandler)stateInfo).ExecutePrivate();
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+			}
+		}
+		protected void SubmitImpl()
+		{
+			GxContext submitContext = new GxContext();
+			DataStoreUtil.LoadDataStores(submitContext);
+			IsMain = true;
+			submitContext.SetSubmitInitialConfig(context);
+			this.context = submitContext;
+			initialize();
+			Submit(ExecutePrivateCatch, this);
+		}
+		protected virtual void CloseCursors()
+		{
+
+		}
+		protected void Submit(Action<object> executeMethod, object state)
+		{
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
+		}
+		public static WaitCallback PropagateCulture(WaitCallback action)
+		{
+			var currentCulture = Thread.CurrentThread.CurrentCulture;
+			GXLogging.Debug(log, "Submit PropagateCulture " + currentCulture);
+			var currentUiCulture = Thread.CurrentThread.CurrentUICulture;
+			return (x) =>
+			{
+				Thread.CurrentThread.CurrentCulture = currentCulture;
+				Thread.CurrentThread.CurrentUICulture = currentUiCulture;
+				action(x);
+			};
+		}
+		protected virtual string[] GetParameters()
+		{
+			return null;
+		}
 #endif
 		public virtual bool SupportAjaxEvent() { return false; }
 		public virtual String AjaxOnSessionTimeout() { return "Ignore"; }
-#if !NETCORE
-		virtual public bool UploadEnabled() { return false; }
-#endif
 #if NETCORE
 		public void DoAjaxLoad(int SId, GXWebRow row)
 		{
@@ -1545,8 +1603,6 @@ namespace GeneXus.Http
 		{
 			SendResponseStatus((int)statusCode, string.Empty);
 		}
-
-
 #if !NETCORE
 		protected void SendResponseStatus(int statusCode, string statusDescription)
 		{
@@ -2221,22 +2277,16 @@ namespace GeneXus.Http
 		{
 			return GXUtil.CompressResponse();
 		}
-
-#if NETCORE
-		protected virtual void Render(HtmlTextWriter output)
-#else
-		protected override void Render(HtmlTextWriter output)
-#endif
-		{
 #if !NETCORE
-			localHttpContext = Context;         
-#endif
+		protected override void Render(HtmlTextWriter output)
+		{
+			localHttpContext = Context;
 			ControlOutputWriter = output;
 			LoadParameters(Parms);
 			InitPrivates();
 			webExecuteEx(localHttpContext);
 		}
-
+#endif
 		public void InitPrivates()
 		{
 			context.GX_msglist = new msglist();
@@ -2856,21 +2906,18 @@ namespace GeneXus.Http
 			createObjects();
 			initialize();
 		}
-
+#if !NETCORE
 		protected override void Render(HtmlTextWriter output)
 		{
 			ControlOutputWriter = output;
-#if NETCORE
-			localHttpContext = localHttpContext;
-#else
 			localHttpContext = Context;
-#endif
 			LoadParameters(Parms);
 			InitPrivates();
 			SetPrefix(_prefixId + "_");         // Load Prefix from Name property
 			initpars();                         // Initialize Iterator Parameters
 			webExecuteEx(localHttpContext);
 		}
+#endif
 		public virtual void componentdrawstyles()
 		{
 		}

@@ -8,6 +8,9 @@ namespace GeneXus.Procedure
 	using System.Threading;
 	using GeneXus.Mime;
 	using GeneXus.Utils;
+	using log4net;
+	using GeneXus.Application;
+	using GeneXus.Data.NTier;
 
 	public class GXWebProcedure : GXHttpHandler
 	{
@@ -219,15 +222,5 @@ namespace GeneXus.Procedure
 		{
 			reportMetadata.GxDrawBitMap(printBlock, controlId, line, value, aspectRatio);
 		}
-
-		protected static WaitCallback PropagateCulture(WaitCallback action)
-		{
-			return GXProcedure.PropagateCulture(action);
-		}
-		protected void Submit(Action<object> executeMethod, object state)
-		{
-			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
-		}
-
 	}
 }
