@@ -679,7 +679,6 @@ namespace GeneXus.Http.Client
 			handler.ReceiveDataTimeout = milliseconds;
 			handler.ReceiveHeadersTimeout = milliseconds;
 #endif
-
 			using (client = new HttpClient(handler))
 			{
 				client.Timeout = milliseconds;

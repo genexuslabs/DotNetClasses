@@ -1907,6 +1907,8 @@ namespace GeneXus.Http
 			get { return _isMain; }
 		}
 #endif
+
+
 		public void ProcessRequest(HttpContext httpContext)
 		{
 			localHttpContext = httpContext;
