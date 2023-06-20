@@ -45,6 +45,9 @@ namespace GeneXus.Http
 	using Web.Security;
 	using System.Web.SessionState;
 #endif
+
+
+
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -1545,8 +1548,6 @@ namespace GeneXus.Http
 		{
 			SendResponseStatus((int)statusCode, string.Empty);
 		}
-
-
 #if !NETCORE
 		protected void SendResponseStatus(int statusCode, string statusDescription)
 		{
@@ -1851,6 +1852,8 @@ namespace GeneXus.Http
 			get { return _isMain; }
 		}
 #endif
+
+
 		public void ProcessRequest(HttpContext httpContext)
 		{
 			localHttpContext = httpContext;

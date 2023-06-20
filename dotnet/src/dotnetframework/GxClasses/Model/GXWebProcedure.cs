@@ -136,6 +136,7 @@ namespace GeneXus.Procedure
 			{
 				fileType = outputType.ToLower();
 			}
+
 			context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, $"inline; filename={fileName}.{fileType}");
 		}
 
