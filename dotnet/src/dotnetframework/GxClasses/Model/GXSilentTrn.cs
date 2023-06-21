@@ -121,7 +121,6 @@ namespace GeneXus.Utils
 		{
 		}
 
-		public virtual void initialize() {  }
 		public void flushBuffer(){	}
 
 		public virtual object getParm(object[] parms, int index)
