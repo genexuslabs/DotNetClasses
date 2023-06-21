@@ -38,7 +38,7 @@ namespace DotNetUnitTest.Excel
 			excel.SetColumnWidth(1, 100);
 			excel.GetCells(2, 1, 1, 5).NumericValue = 123.456M;
 			ExcelStyle newCellStyle = new ExcelStyle();
-			newCellStyle.			CellFont.			Bold = true;
+			newCellStyle.CellFont.Bold = true;
 			excel.GetCells(2, 1, 1, 5).SetCellStyle(newCellStyle);
 
 			bool ok = excel.Save();
