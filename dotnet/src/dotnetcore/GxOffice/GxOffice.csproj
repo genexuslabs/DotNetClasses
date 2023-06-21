@@ -2,9 +2,10 @@
   <PropertyGroup>
     <TargetFrameworks>net6.0</TargetFrameworks>
     <DefineConstants>NETCORE</DefineConstants>
-    <AssemblyName>GxOffice</AssemblyName>
-	<PackageTags>Excel NPoi</PackageTags>
-	<PackageId>GeneXus.Excel.NPoi</PackageId>
+	<AssemblyName>Genexus.Office</AssemblyName>
+	<RootNamespace>GxOffice</RootNamespace>
+	<PackageTags>Office Excel Poi</PackageTags>
+	<PackageId>GeneXus.Office.Core</PackageId>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\dotnetframework\GxOffice\Constants.cs" Link="Constants.cs" />
