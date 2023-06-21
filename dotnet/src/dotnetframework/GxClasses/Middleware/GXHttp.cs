@@ -1937,7 +1937,7 @@ namespace GeneXus.Http
 #if !NETCORE
 			if (ChunkedStreaming())
 			{
-				context.HttpContext.Response.Buffer = false;
+				context.HttpContext.Response.BufferOutput = false;
 			}
 #endif
 		}
