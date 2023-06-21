@@ -38,6 +38,7 @@
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses.Win\GxClasses.Win.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxMail\GxMail.csproj" />
+    <ProjectReference Include="..\..\src\dotnetframework\GxOffice\GxOffice.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
