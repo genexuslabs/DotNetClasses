@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using GeneXus.Application;
-using GeneXus.MSOffice.Excel.exception;
-using GeneXus.MSOffice.Excel.poi.xssf;
 using log4net;
 using NPOI.SS.UserModel;
 using NPOI.Util;

@@ -1,8 +1,5 @@
 
 using System;
-using GeneXus.MSOffice.Excel.exception;
-using GeneXus.MSOffice.Excel.Poi.Xssf;
-using GeneXus.MSOffice.Excel.style;
 using GeneXus.MSOffice.Excel.Style;
 using GeneXus.Utils;
 using log4net;
@@ -13,7 +10,7 @@ using NPOI.XSSF.Model;
 using NPOI.XSSF.UserModel;
 using NPOI.XSSF.UserModel.Extensions;
 
-namespace GeneXus.MSOffice.Excel.poi.xssf
+namespace GeneXus.MSOffice.Excel.Poi.Xssf
 {
 	public class ExcelCells : IExcelCellRange
 	{

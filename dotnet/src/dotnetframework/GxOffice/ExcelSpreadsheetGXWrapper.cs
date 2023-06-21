@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using GeneXus.MSOffice.Excel.exception;
-using GeneXus.MSOffice.Excel.poi.xssf;
+using GeneXus.MSOffice.Excel.Poi.Xssf;
 using log4net;
 
 namespace GeneXus.MSOffice.Excel

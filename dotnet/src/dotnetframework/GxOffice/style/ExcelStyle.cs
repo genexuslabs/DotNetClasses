@@ -1,6 +1,4 @@
-using GeneXus.MSOffice.Excel.Style;
-
-namespace GeneXus.MSOffice.Excel.style
+namespace GeneXus.MSOffice.Excel.Style
 {
 	public class ExcelStyle : ExcelStyleDimension
 	{

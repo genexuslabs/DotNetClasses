@@ -1,6 +1,6 @@
 using System;
 
-namespace GeneXus.MSOffice.Excel.exception
+namespace GeneXus.MSOffice.Excel
 {
 	public class ExcelException : Exception
 	{

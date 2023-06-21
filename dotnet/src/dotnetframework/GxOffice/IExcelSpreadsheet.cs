@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using GeneXus.MSOffice.Excel.poi.xssf;
+using GeneXus.MSOffice.Excel.Poi.Xssf;
 
 namespace GeneXus.MSOffice.Excel
 {

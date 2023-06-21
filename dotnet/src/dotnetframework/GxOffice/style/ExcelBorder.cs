@@ -1,5 +1,3 @@
-using GeneXus.MSOffice.Excel.style;
-
 namespace GeneXus.MSOffice.Excel.Style
 {
 	public class ExcelBorder : ExcelStyleDimension
