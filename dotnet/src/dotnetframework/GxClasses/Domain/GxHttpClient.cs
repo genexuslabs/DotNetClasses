@@ -415,9 +415,7 @@ namespace GeneXus.Http.Client
 					GXLogging.Error(log, String.Format("Error parsing charset ", value, ex));
 				}
 			}
-			if (name.Equals( HttpHeader.ACCEPT, StringComparison.OrdinalIgnoreCase) && value.Equals(HttpHeaderValue.ACCEPT_SERVER_SENT_EVENT, StringComparison.OrdinalIgnoreCase))
-				_chunkedResponse = true;
-			
+		
 			_headers.Set(name, value);
 		}
 		public void ClearVariables()
@@ -701,10 +699,7 @@ namespace GeneXus.Http.Client
 					reqStream.Seek(0, SeekOrigin.Begin);
 					request.Content = new ByteArrayContent(reqStream.ToArray());
 					setHeaders(request, handler.CookieContainer);
-					if (_chunkedResponse)
-						response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
-					else
-						response = client.SendAsync(request).GetAwaiter().GetResult();
+					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
 				}
 			}
 			return response;
@@ -715,6 +710,7 @@ namespace GeneXus.Http.Client
 			try
 			{
 				Stream stream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+				_chunkedResponse = response.Headers.TransferEncodingChunked.HasValue && response.Headers.TransferEncodingChunked.Value;
 				string charset;
 				if (response.Content.Headers.ContentType == null)
 					charset = null;
@@ -884,10 +880,6 @@ namespace GeneXus.Http.Client
 				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + _statusDescription + ".";
 			}
 			ClearSendStream();
-			if (!_chunkedResponse)
-			{
-				GXLogging.DebugSanitized(log, "_responseString " + ToString());
-			}
 		}
 		NameValueCollection _respHeaders;
 		private bool disposedValue;
@@ -1419,13 +1411,14 @@ namespace GeneXus.Http.Client
 		}
 		public override string ToString()
 		{
+			string responseString;
 			if (_chunkedResponse)
 			{
 				StringBuilder sb = new StringBuilder();
 				while (!Eof){
 					sb.Append(ReadChunk());
 				}
-				return sb.ToString();
+				responseString = sb.ToString();
 			}
 			else
 			{
@@ -1433,8 +1426,11 @@ namespace GeneXus.Http.Client
 					_encoding = Encoding.UTF8;
 				if (_receiveData == null)
 					return string.Empty;
-				return _encoding.GetString(_receiveData);
+
+				responseString = _encoding.GetString(_receiveData);
 			}
+			GXLogging.DebugSanitized(log, "_responseString " + responseString);
+			return responseString;
 		}
 		public void ToFile(string fileName)
 		{
