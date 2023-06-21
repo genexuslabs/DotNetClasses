@@ -1,5 +1,7 @@
+using GeneXus.Data.NTier;
 using GeneXus.Encryption;
 using GeneXus.Http;
+using GeneXus.Mock;
 using GeneXus.Utils;
 using Jayrock.Json;
 using log4net;
@@ -8,10 +10,16 @@ using Microsoft.AspNetCore.Http.Extensions;
 #endif
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
 
 namespace GeneXus.Application
 {
-
+	public class GxObjectParameter
+	{
+		public ParameterInfo ParmInfo { get; set; }
+		public string ParmName { get; set; }
+	}
 	public class GXBaseObject
 	{
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXBaseObject));
@@ -19,6 +27,89 @@ namespace GeneXus.Application
 		protected IGxContext _Context;
 		bool _isMain;
 		protected bool _isApi;
+		protected virtual void ExecuteEx()
+		{
+			if (GxMockProvider.Provider != null)
+			{
+				List<GxObjectParameter> parmInfo = GetExecuteParameterMap();
+				if (GxMockProvider.Provider.Handle(_Context, this, parmInfo))
+					return;
+			}
+			ExecutePrivate();
+		}
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected virtual void ExecutePrivateCatch(object stateInfo)
+		{
+			try
+			{
+				((GXBaseObject)stateInfo).ExecutePrivate();
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+			}
+		}
+		protected void SubmitImpl()
+		{
+			GxContext submitContext = new GxContext();
+			DataStoreUtil.LoadDataStores(submitContext);
+			IsMain = true;
+			submitContext.SetSubmitInitialConfig(context);
+			this.context= submitContext;
+			initialize();
+			Submit(ExecutePrivateCatch, this);
+		}
+		protected virtual void CloseCursors()
+		{
+
+		}
+		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
+		protected void Submit(Action<object> executeMethod, object state)
+		{
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
+		}
+		public static WaitCallback PropagateCulture(WaitCallback action)
+		{
+			var currentCulture = Thread.CurrentThread.CurrentCulture;
+			GXLogging.Debug(log, "Submit PropagateCulture " + currentCulture);
+			var currentUiCulture = Thread.CurrentThread.CurrentUICulture;
+			return (x) =>
+			{
+				Thread.CurrentThread.CurrentCulture = currentCulture;
+				Thread.CurrentThread.CurrentUICulture = currentUiCulture;
+				action(x);
+			};
+		}
+
+
+		private List<GxObjectParameter> GetExecuteParameterMap()
+		{
+			ParameterInfo[] pars = GetType().GetMethod("execute").GetParameters();
+			string[] parms = GetParameters();
+			int idx = 0;
+			List<GxObjectParameter> parmInfo = new List<GxObjectParameter>();
+			if (pars != null && parms!=null && pars.Length == parms.Length)
+			{
+				foreach (ParameterInfo par in pars)
+				{
+					parmInfo.Add(new GxObjectParameter()
+					{
+						ParmInfo = par,
+						ParmName = parms[idx]
+					});
+					idx++;
+				}
+			}
+			return parmInfo;
+		}
+		protected virtual string[] GetParameters()
+		{
+			return null;
+		}
 
 		public virtual IGxContext context
 		{
