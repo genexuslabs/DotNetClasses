@@ -16,24 +16,24 @@ namespace GeneXus.MSOffice.Excel.Style
 		{
 		}
 
-		public void SetHorizontalAlignment(int value)
+		public int HorizontalAlignment
 		{
-			horizontalAlignment = value;
-			SetChanged();
-		}
-		public int GetHorizontalAlignment()
-		{
-			return horizontalAlignment;
+			get => horizontalAlignment;
+			set
+			{
+				horizontalAlignment = value;
+				SetChanged();
+			}
 		}
 
-		public int GetVerticalAlignment()
+		public int VerticalAlignment
 		{
-			return verticalAlignment;
-		}
-		public void SetVerticalAlignment(int value)
-		{
-			verticalAlignment = value;
-			SetChanged();
+			get => verticalAlignment;
+			set
+			{
+				verticalAlignment = value;
+				SetChanged();
+			}
 		}
 	}
 }

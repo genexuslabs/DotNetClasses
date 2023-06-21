@@ -17,57 +17,24 @@ namespace GeneXus.MSOffice.Excel.Style
 			borderRight = borderStyle;
 		}
 
-		public ExcelBorder GetBorderBottom()
-		{
-			return borderBottom;
-		}
-		public void SetBorderBottom(ExcelBorder value)
-		{
-			borderBottom = value;
-		}
+		public ExcelBorder BorderBottom { get => borderBottom; set => borderBottom = value; }
 
-		public ExcelBorder GetBorderTop()
-		{
-			return borderTop; 
-		}
+		public ExcelBorder BorderTop => borderTop;
 		public void GetBorderTop(ExcelBorder value)
 		{
 			borderTop = value; 
 		}
 
-		public ExcelBorder GetBorderLeft()
-		{
-			return borderLeft;
-		}
+		public ExcelBorder BorderLeft => borderLeft;
 		public void GetBorderLeft(ExcelBorder value)
 		{
 			borderLeft = value;
 		}
 
-		public ExcelBorder GetBorderRight()
-		{
-			return borderRight;
-		}
-		public void SetBorderRight(ExcelBorder value)
-		{
-			borderRight = value;
-		}
+		public ExcelBorder BorderRight { get => borderRight; set => borderRight = value; }
 
-		public ExcelBorder GetBorderDiagonalUp()
-		{
-			return borderDiagonalUp;
-		}
-		public void SetBorderDiagonalUp(ExcelBorder value)
-		{
-			borderDiagonalUp = value;
-		}
-		public ExcelBorder GetBorderDiagonalDown()
-		{
-			return borderDiagonalDown;
-		}
-		public void SetBorderDiagonalDown(ExcelBorder value)
-		{
-			borderDiagonalDown = value;
-		}
+		public ExcelBorder BorderDiagonalUp { get => borderDiagonalUp; set => borderDiagonalUp = value; }
+
+		public ExcelBorder BorderDiagonalDown { get => borderDiagonalDown; set => borderDiagonalDown = value; }
 	}
 }

@@ -27,9 +27,9 @@ namespace GeneXus.MSOffice.Excel.Style
 			return _locked;
 		}
 
-		public void SetLocked(bool value)
+		public bool Locked
 		{
-			_locked = value;
+			set { _locked = value; }
 		}
 
 		public bool IsHidden()
@@ -37,89 +37,32 @@ namespace GeneXus.MSOffice.Excel.Style
 			return _hidden;
 		}
 
-		public void SetHidden(bool value)
+		public bool Hidden
 		{
-			_hidden = value;
+			set => _hidden = value;
 		}
 
-		public ExcelAlignment GetCellAlignment()
-		{
-			return _cellAlignment;
-		}
+		public ExcelAlignment CellAlignment => _cellAlignment;
 
-		public ExcelFill GetCellFill()
-		{
-			return _cellFill;
-		}
+		public ExcelFill CellFill => _cellFill;
 
-		public ExcelFont GetCellFont()
-		{
-			return _cellFont;
-		}
+		public ExcelFont CellFont => _cellFont;
 
 		public override bool IsDirty()
 		{
 			return base.IsDirty() || _cellFill.IsDirty() || _cellFont.IsDirty() || _cellAlignment.IsDirty();
 		}
 
-		public bool GetWrapText()
-		{
-			return _wrapText;
-		}
+		public bool WrapText { get => _wrapText; set => _wrapText = value; }
 
-		public void SetWrapText(bool wrapText)
-		{
-			_wrapText = wrapText;
-		}
+		public bool ShrinkToFit { get => _shrinkToFit; set => _shrinkToFit = value; }
 
-		public bool GetShrinkToFit()
-		{
-			return _shrinkToFit;
-		}
+		public int TextRotation { get => _textRotation; set => _textRotation = value; }
 
-		public void SetShrinkToFit(bool shrinkToFit)
-		{
-			_shrinkToFit = shrinkToFit;
-		}
+		public ExcelCellBorder Border { get => _borders; set => _borders = value; }
 
-		public int GetTextRotation()
-		{
-			return _textRotation;
-		}
+		public int Indentation { get => _indentation; set => _indentation = value; }
 
-		public void SetTextRotation(int textRotation)
-		{
-			_textRotation = textRotation;
-		}
-
-		public ExcelCellBorder GetBorder()
-		{
-			return _borders;
-		}
-
-		public void SetBorder(ExcelCellBorder borders)
-		{
-			_borders = borders;
-		}
-
-		public int GetIndentation()
-		{
-			return _indentation;
-		}
-
-		public void SetIndentation(int indentation)
-		{
-			_indentation = indentation;
-		}
-
-		public string GetDataFormat()
-		{
-			return _dataFormat;
-		}
-
-		public void SetDataFormat(string dataFormat)
-		{
-			_dataFormat = dataFormat;
-		}
+		public string DataFormat { get => _dataFormat; set => _dataFormat = value; }
 	}
 }

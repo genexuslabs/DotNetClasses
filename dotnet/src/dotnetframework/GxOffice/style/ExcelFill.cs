@@ -9,10 +9,7 @@ namespace GeneXus.MSOffice.Excel.Style
 			cellBackColor = new ExcelColor();
 		}
 
-		public ExcelColor GetCellBackColor()
-		{
-			return cellBackColor;
-		}
+		public ExcelColor CellBackColor => cellBackColor;
 
 		public override bool IsDirty()
 		{

@@ -5,17 +5,17 @@ namespace GeneXus.MSOffice.Excel
 {
 	public interface IExcelCellRange
 	{
-		int GetRowStart();
+		int RowStart { get; }
 
-		int GetRowEnd();
+		int RowEnd { get; }
 
-		int GetColumnStart();
+		int ColumnStart { get; }
 
-		int GetColumnEnd();
+		int ColumnEnd { get; }
 
 		string GetCellAdress();
 
-		string GetValueType();
+		string ValueType { get; }
 
 		/*
          * 
@@ -24,17 +24,11 @@ namespace GeneXus.MSOffice.Excel
          * N: Numerics
          * U: Unknown
          */
-		string GetText();
+		string Text { get; set; }
 
-		decimal GetNumericValue();
+		decimal NumericValue { get; set; }
 
-		DateTime GetDateValue();
-
-		bool SetText(string value);
-
-		bool SetNumericValue(decimal value);
-
-		bool SetDateValue(DateTime value);
+		DateTime DateValue { get; set; }
 
 		bool Empty();
 

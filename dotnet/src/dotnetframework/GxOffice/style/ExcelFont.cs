@@ -15,63 +15,66 @@ namespace GeneXus.MSOffice.Excel.Style
 			color = new ExcelColor();
 		}
 
-		public string GetFontFamily()
+		public string FontFamily
 		{
-			return fontFamily;
+			get => fontFamily;
+			set
+			{
+				this.fontFamily = value;
+				SetChanged();
+			}
 		}
-		public void SetFontFamily(string fontFamily)
+
+		public bool Italic
 		{
-			this.fontFamily = fontFamily;
-			SetChanged();
+			get => italic;
+			set
+			{
+				this.italic = value;
+				SetChanged();
+			}
 		}
-		public bool GetItalic()
+
+		public int Size
 		{
-			return italic;
+			get => size;
+			set
+			{
+				this.size = value;
+				SetChanged();
+			}
 		}
-		public void SetItalic(bool italic)
+
+		public bool Strike
 		{
-			this.italic = italic;
-			SetChanged();
+			get => strike;
+			set
+			{
+				this.strike = value;
+				SetChanged();
+			}
 		}
-		public int GetSize()
+
+		public bool Underline
 		{
-			return size;
+			get => underline;
+			set
+			{
+				this.underline = value;
+				SetChanged();
+			}
 		}
-		public void SetSize(int size)
+
+		public bool Bold
 		{
-			this.size = size;
-			SetChanged();
+			get => bold;
+			set
+			{
+				this.bold = value;
+				SetChanged();
+			}
 		}
-		public bool GetStrike()
-		{
-			return strike;
-		}
-		public void SetStrike(bool strike)
-		{
-			this.strike = strike;
-			SetChanged();
-		}
-		public bool GetUnderline()
-		{
-			return underline;
-		}
-		public void SetUnderline(bool underline)
-		{
-			this.underline = underline;
-			SetChanged();
-		}
-		public bool GetBold()
-		{
-			return bold;
-		}
-		public void SetBold(bool bold)
-		{
-			this.bold = bold;
-			SetChanged();
-		}
-		public ExcelColor GetColor()
-		{
-			return color;
-		}
+
+		public ExcelColor Color => color;
 	}
 }

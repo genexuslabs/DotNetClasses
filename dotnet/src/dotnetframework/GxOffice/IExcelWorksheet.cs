@@ -2,8 +2,10 @@ namespace GeneXus.MSOffice.Excel
 {
 	public interface IExcelWorksheet
 	{
-		string GetName();
-		bool IsHidden();
+		string Name { get; }
+
+		bool Hidden { get; }
+
 		bool Rename(string newName);
 		bool Copy(string newName);
 		void SetProtected(string password);
