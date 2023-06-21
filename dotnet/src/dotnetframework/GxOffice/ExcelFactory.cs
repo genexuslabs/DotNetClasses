@@ -1,6 +1,5 @@
 using System.IO;
 using GeneXus.Application;
-using GeneXus.MSOffice.Excel.exception;
 using GeneXus.MSOffice.Excel.Poi.Xssf;
 
 namespace GeneXus.MSOffice.Excel

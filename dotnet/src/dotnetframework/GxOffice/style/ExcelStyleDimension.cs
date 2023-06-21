@@ -1,4 +1,4 @@
-namespace GeneXus.MSOffice.Excel.style
+namespace GeneXus.MSOffice.Excel.Style
 {
 	public abstract class ExcelStyleDimension
 	{

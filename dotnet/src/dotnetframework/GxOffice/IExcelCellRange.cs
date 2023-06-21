@@ -1,5 +1,5 @@
 using System;
-using GeneXus.MSOffice.Excel.style;
+using GeneXus.MSOffice.Excel.Style;
 
 namespace GeneXus.MSOffice.Excel
 {

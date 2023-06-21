@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NPOI.XSSF.UserModel;
 
-namespace GeneXus.MSOffice.Excel.poi.xssf
+namespace GeneXus.MSOffice.Excel.Poi.Xssf
 {
 	public class StylesCache
 	{
