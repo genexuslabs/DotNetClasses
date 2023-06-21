@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <DefineConstants>NETCORE</DefineConstants>
+    <AssemblyName>GxOffice</AssemblyName>
+	<PackageTags>Excel NPoi</PackageTags>
+	<PackageId>GeneXus.Excel.NPoi</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\dotnetframework\GxOffice\Constants.cs" Link="Constants.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\ExcelFactory.cs" Link="ExcelFactory.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\ExcelSpreadsheetGXWrapper.cs" Link="ExcelSpreadsheetGXWrapper.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\exception\ExcelDocumentNotSupported.cs" Link="exception\ExcelDocumentNotSupported.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\exception\ExcelException.cs" Link="exception\ExcelException.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\exception\ExcelReadonlyException.cs" Link="exception\ExcelReadonlyException.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\exception\ExcelTemplateNotFoundException.cs" Link="exception\ExcelTemplateNotFoundException.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\IExcelCellRange.cs" Link="IExcelCellRange.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\IExcelSpreadsheet.cs" Link="IExcelSpreadsheet.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\IExcelWorksheet.cs" Link="IExcelWorksheet.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\IGXError.cs" Link="IGXError.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\poi\xssf\ExcelCells.cs" Link="poi\xssf\ExcelCells.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\poi\xssf\ExcelSpreadsheet.cs" Link="poi\xssf\ExcelSpreadsheet.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\poi\xssf\ExcelWorksheet.cs" Link="poi\xssf\ExcelWorksheet.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\poi\xssf\StylesCache.cs" Link="poi\xssf\StylesCache.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\style\ExcelAlignment.cs" Link="style\ExcelAlignment.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\style\ExcelBorder.cs" Link="style\ExcelBorder.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\style\ExcelCellBorder.cs" Link="style\ExcelCellBorder.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\style\ExcelColor.cs" Link="style\ExcelColor.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\style\ExcelFill.cs" Link="style\ExcelFill.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\style\ExcelFont.cs" Link="style\ExcelFont.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\style\ExcelStyle.cs" Link="style\ExcelStyle.cs" />
+    <Compile Include="..\..\dotnetframework\GxOffice\style\ExcelStyleDimension.cs" Link="style\ExcelStyleDimension.cs" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="NPOI" Version="2.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="exception\" />
+    <Folder Include="poi\xssf\" />
+    <Folder Include="style\" />
+  </ItemGroup>
+
+</Project>
