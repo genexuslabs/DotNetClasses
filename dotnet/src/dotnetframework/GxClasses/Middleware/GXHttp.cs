@@ -1992,7 +1992,7 @@ namespace GeneXus.Http
 #if !NETCORE
 			if (ChunkedStreaming())
 			{
-				context.HttpContext.Response.Buffer = false;
+				context.HttpContext.Response.BufferOutput = false;
 			}
 #endif
 		}
@@ -2041,7 +2041,6 @@ namespace GeneXus.Http
 #else
 			bool isExpired = IsFullAjaxRequest(HttpContext.Current) && this.AjaxOnSessionTimeout() == "Warn" && GxWebSession.IsSessionExpired(localHttpContext);
 #endif
-
 			if (isExpired)
 			{
 				GXLogging.Info(log, "440 Session timeout. Web Session has expired and GX' OnSessionTimeout' Pty is set to 'WARN'");
