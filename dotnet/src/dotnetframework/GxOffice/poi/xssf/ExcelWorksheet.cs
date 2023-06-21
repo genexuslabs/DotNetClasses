@@ -16,30 +16,28 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			_sheet = sheet;
 		}
 
-		public string GetName()
-		{
-			return _sheet.SheetName;
-		}
+		public string Name => _sheet.SheetName;
 
-		public bool SetHidden(bool hidden)
+		public bool Hidden
 		{
-			if (_sheet != null)
+			get
 			{
-				XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
-				wb.SetSheetHidden(SheetIndex(wb), hidden ? NPOI.SS.UserModel.SheetState.Hidden : NPOI.SS.UserModel.SheetState.Visible);
-				return true;
+				if (_sheet != null)
+				{
+					XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
+					return wb.IsSheetHidden(SheetIndex(wb));
+				}
+				return false;
 			}
-			return false;
-		}
 
-		public bool IsHidden()
-		{
-			if (_sheet != null)
+			set
 			{
-				XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
-				return wb.IsSheetHidden(SheetIndex(wb));
+				if (_sheet != null)
+				{
+					XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
+					wb.SetSheetHidden(SheetIndex(wb), value ? NPOI.SS.UserModel.SheetState.Hidden : NPOI.SS.UserModel.SheetState.Visible);
+				}
 			}
-			return false;
 		}
 
 		public bool Rename(string newName)
@@ -47,9 +45,9 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			if (_sheet != null)
 			{
 				XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
-				int sheetIndex = wb.GetSheetIndex(GetName());
+				int sheetIndex = wb.GetSheetIndex(Name);
 				wb.SetSheetName(sheetIndex, newName);
-				return GetName() == newName;
+				return Name == newName;
 			}
 			return false;
 		}
@@ -61,7 +59,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
 				if (wb.GetSheet(newName) == null)
 				{
-					wb.CloneSheet(wb.GetSheetIndex(GetName()), newName);
+					wb.CloneSheet(wb.GetSheetIndex(Name), newName);
 					return true;
 				}
 			}
@@ -81,7 +79,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		private int SheetIndex(XSSFWorkbook wb)
 		{
-			return wb.GetSheetIndex(GetName());
+			return wb.GetSheetIndex(Name);
 		}
 	}
 }

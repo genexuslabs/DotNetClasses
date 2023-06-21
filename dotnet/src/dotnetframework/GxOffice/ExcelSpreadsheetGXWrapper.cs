@@ -16,12 +16,15 @@ namespace GeneXus.MSOffice.Excel
 		private bool _autofit = false;
 		private const string DEFAULT_SHEET_NAME = "Sheet";
 
-		public void SetAutofit(bool value)
+		public bool Autofit
 		{
-			_autofit = value;
-			if (_document != null)
+			set
 			{
-				_document.SetAutofit(_autofit);
+				_autofit = value;
+				if (_document != null)
+				{
+					_document.Autofit = _autofit;
+				}
 			}
 		}
 
@@ -59,7 +62,7 @@ namespace GeneXus.MSOffice.Excel
 				_document = ExcelFactory.Create(this, filePath, template);
 				if (_autofit)
 				{
-					_document.SetAutofit(_autofit);
+					_document.Autofit = _autofit;
 				}
 			}
 			catch (ExcelTemplateNotFoundException e)
@@ -180,7 +183,7 @@ namespace GeneXus.MSOffice.Excel
 				_currentWorksheet = _document.GetWorksheets()[zeroIndexSheet];
 				if (_currentWorksheet != null)
 				{
-					_document.SetActiveWorkSheet(_currentWorksheet.GetName());
+					_document.SetActiveWorkSheet(_currentWorksheet.Name);
 				}
 				return true;
 			}
@@ -334,23 +337,20 @@ namespace GeneXus.MSOffice.Excel
 			_errDescription = description;
 		}
 
-		public int GetErrCode()
-		{
-			return _errCode;
-		}
+		public int ErrCode => _errCode;
 
-		public string GetErrDescription()
-		{
-			return _errDescription;
-		}
+		public string ErrDescription => _errDescription;
 
-		public ExcelWorksheet GetCurrentWorksheet()
+		public ExcelWorksheet CurrentWorksheet
 		{
-			if (Initialize())
+			get
 			{
-				return (ExcelWorksheet)_currentWorksheet;
+				if (Initialize())
+				{
+					return (ExcelWorksheet)_currentWorksheet;
+				}
+				return null;
 			}
-			return null;
 		}
 
 		public List<ExcelWorksheet> GetWorksheets()

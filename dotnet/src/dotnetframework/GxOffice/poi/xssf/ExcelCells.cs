@@ -231,32 +231,48 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				throw new ExcelReadonlyException();
 			}
 		}
-		public string GetText()
+		public string Text
 		{
-			try
+			get
 			{
-				if (pCells[1].CellType == CellType.Formula)
-					return "=" + pCells[1].CellFormula;
-				else if (pCells[1].CellType == CellType.Numeric)
+				try
 				{
-					if (DateUtil.IsCellDateFormatted(pCells[1]))
+					if (pCells[1].CellType == CellType.Formula)
+						return "=" + pCells[1].CellFormula;
+					else if (pCells[1].CellType == CellType.Numeric)
 					{
-						return pCells[1].DateCellValue.ToString();
+						if (DateUtil.IsCellDateFormatted(pCells[1]))
+						{
+							return pCells[1].DateCellValue.ToString();
+						}
+						else
+						{
+							return pCells[1].NumericCellValue.ToString();
+						}
 					}
 					else
-					{
-						return pCells[1].NumericCellValue.ToString();
-					}
+						return pCells[1].StringCellValue;
 				}
-				else
-					return pCells[1].StringCellValue;
+				catch (Exception)
+				{
+					_errorHandler.SetErrCod(7);
+					_errorHandler.SetErrDes("Invalid cell value");
+				}
+				return null;
 			}
-			catch (Exception)
+			set
 			{
-				_errorHandler.SetErrCod(7);
-				_errorHandler.SetErrDes("Invalid cell value");
+				try
+				{
+					SetTextImpl(value);
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
+
 			}
-			return null;
 		}
 
 		public decimal GetValue()
@@ -838,105 +854,78 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		}
 
 
-		public int GetRowStart()
-		{
-			return rowStartIdx + 1;
-		}
+		public int RowStart => rowStartIdx + 1;
 
-		public int GetRowEnd()
-		{
-			return rowEndIdx + 1;
-		}
+		public int RowEnd => rowEndIdx + 1;
 
-		public int GetColumnStart()
-		{
-			return colStartIdx + 1;
-		}
+		public int ColumnStart => colStartIdx + 1;
 
-		public int GetColumnEnd()
-		{
-			return colEndIdx + 1;
-		}
+		public int ColumnEnd => colEndIdx + 1;
 
 		public string GetCellAdress()
 		{
 			return null;
 		}
 
-		public string GetValueType()
+		public string ValueType => this.GetCellType();
+
+		public decimal NumericValue
 		{
-			return this.GetCellType();
+			get
+			{
+				try
+				{
+					return this.GetNumber();
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
+				return new decimal(0);
+			}
+			set
+			{
+				try
+				{
+					SetNumber(Convert.ToDouble(value));
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
+			}
 		}
 
-		public decimal GetNumericValue()
+		public DateTime DateValue
 		{
-			try
+			get
 			{
-				return this.GetNumber();
+				try
+				{
+					return GetDate();
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
+				return DateTimeUtil.NullDate();
 			}
-			catch (ExcelException e)
+			set
 			{
-				_errorHandler.SetErrCod((short)e.ErrorCode);
-				_errorHandler.SetErrDes(e.ErrorDescription);
+				try
+				{
+					SetDate(value);
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
 			}
-			return new decimal(0);
 		}
-
-		public DateTime GetDateValue()
-		{
-			try
-			{
-				return this.GetDate();
-			}
-			catch (ExcelException e)
-			{
-				_errorHandler.SetErrCod((short)e.ErrorCode);
-				_errorHandler.SetErrDes(e.ErrorDescription);
-			}
-			return DateTimeUtil.NullDate();
-		}
-
-		public bool SetText(string value)
-		{
-			try
-			{
-				return this.SetTextImpl(value);
-			}
-			catch (ExcelException e)
-			{
-				_errorHandler.SetErrCod((short)e.ErrorCode);
-				_errorHandler.SetErrDes(e.ErrorDescription);
-			}
-			return false;
-		}
-
-		public bool SetNumericValue(decimal d)
-		{
-			try
-			{
-				return this.SetNumber(Convert.ToDouble(d));
-			}
-			catch (ExcelException e)
-			{
-				_errorHandler.SetErrCod((short)e.ErrorCode);
-				_errorHandler.SetErrDes(e.ErrorDescription);
-			}
-			return false;
-		}
-		public bool SetDateValue(DateTime value)
-		{
-			try
-			{
-				return this.SetDate(value);
-			}
-			catch (ExcelException e)
-			{
-				_errorHandler.SetErrCod((short)e.ErrorCode);
-				_errorHandler.SetErrDes(e.ErrorDescription);
-			}
-			return false;
-		}
-
 		public bool Empty()
 		{
 			for (int i = 1; i <= cellCount; i++)
@@ -988,56 +977,56 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		}
 		private XSSFCellStyle ApplyNewCellStyle(XSSFCellStyle cellStyle, ExcelStyle newCellStyle)
 		{
-			ExcelFont cellFont = newCellStyle.GetCellFont();
+			ExcelFont cellFont = newCellStyle.CellFont;
 			if (cellFont != null && cellFont.IsDirty())
 			{
 				XSSFFont cellStyleFont = (XSSFFont)pWorkbook.CreateFont();
 				cellStyle.SetFont(cellStyleFont);
-				ExcelFont font = newCellStyle.GetCellFont();
+				ExcelFont font = newCellStyle.CellFont;
 				if (font != null)
 				{
-					if (font.GetBold())
+					if (font.Bold)
 					{
-						cellStyleFont.IsBold = font.GetBold();
+						cellStyleFont.IsBold = font.Bold;
 					}
-					if (font.GetFontFamily() != null && font.GetFontFamily().Length > 0)
+					if (font.FontFamily != null && font.FontFamily.Length > 0)
 					{
-						cellStyleFont.FontName = font.GetFontFamily();
+						cellStyleFont.FontName = font.FontFamily;
 					}
-					if (font.GetItalic())
+					if (font.Italic)
 					{
-						cellStyleFont.IsItalic = font.GetItalic();
+						cellStyleFont.IsItalic = font.Italic;
 					}
-					if (font.GetStrike())
+					if (font.Strike)
 					{
-						cellStyleFont.IsStrikeout = font.GetStrike();
+						cellStyleFont.IsStrikeout = font.Strike;
 					}
-					cellStyleFont.FontHeight = font.GetSize();
+					cellStyleFont.FontHeight = font.Size;
 
-					if (font.GetUnderline())
+					if (font.Underline)
 					{
-						cellStyleFont.Underline = font.GetUnderline() ? FontUnderlineType.Single : FontUnderlineType.None;
+						cellStyleFont.Underline = font.Underline ? FontUnderlineType.Single : FontUnderlineType.None;
 					}
-					if (font.GetColor() != null && font.GetColor().IsDirty())
+					if (font.Color != null && font.Color.IsDirty())
 					{
-						cellStyleFont.SetColor(ToColor(font.GetColor()));
+						cellStyleFont.SetColor(ToColor(font.Color));
 					}
 				}
 			}
-			ExcelFill cellfill = newCellStyle.GetCellFill();
-			if (cellfill != null && cellfill.GetCellBackColor() != null && cellfill.GetCellBackColor().IsDirty())
+			ExcelFill cellfill = newCellStyle.CellFill;
+			if (cellfill != null && cellfill.CellBackColor != null && cellfill.CellBackColor.IsDirty())
 			{
-				cellStyle.SetFillForegroundColor(ToColor(cellfill.GetCellBackColor()));
+				cellStyle.SetFillForegroundColor(ToColor(cellfill.CellBackColor));
 				cellStyle.FillPattern = FillPattern.SolidForeground;
 			}
 
-			ExcelAlignment alignment = newCellStyle.GetCellAlignment();
+			ExcelAlignment alignment = newCellStyle.CellAlignment;
 			if (alignment != null && alignment.IsDirty())
 			{
-				if (alignment.GetHorizontalAlignment() != 0)
+				if (alignment.HorizontalAlignment != 0)
 				{
 					HorizontalAlignment align;
-					switch (alignment.GetHorizontalAlignment())
+					switch (alignment.HorizontalAlignment)
 					{
 						case ExcelAlignment.HORIZONTAL_ALIGN_CENTER:
 							align = HorizontalAlignment.Center;
@@ -1049,15 +1038,15 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 							align = HorizontalAlignment.Right;
 							break;
 						default:
-							align = (HorizontalAlignment)alignment.GetHorizontalAlignment();
+							align = (HorizontalAlignment)alignment.HorizontalAlignment;
 							break;
 					}
 					cellStyle.Alignment = align;
 				}
-				if (alignment.GetVerticalAlignment() != 0)
+				if (alignment.VerticalAlignment != 0)
 				{
 					VerticalAlignment align;
-					switch (alignment.GetHorizontalAlignment())
+					switch (alignment.HorizontalAlignment)
 					{
 						case ExcelAlignment.VERTICAL_ALIGN_BOTTOM:
 							align = VerticalAlignment.Bottom;
@@ -1069,7 +1058,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 							align = VerticalAlignment.Top;
 							break;
 						default:
-							align = (VerticalAlignment)alignment.GetHorizontalAlignment();
+							align = (VerticalAlignment)alignment.HorizontalAlignment;
 							break;
 					}
 					cellStyle.VerticalAlignment = align;
@@ -1086,47 +1075,47 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				cellStyle.IsHidden = newCellStyle.IsHidden();
 			}
 
-			if (newCellStyle.GetShrinkToFit())
+			if (newCellStyle.ShrinkToFit)
 			{
-				cellStyle.ShrinkToFit = newCellStyle.GetShrinkToFit();
+				cellStyle.ShrinkToFit = newCellStyle.ShrinkToFit;
 			}
 
-			if (newCellStyle.GetWrapText())
+			if (newCellStyle.WrapText)
 			{
-				cellStyle.WrapText = newCellStyle.GetWrapText();
+				cellStyle.WrapText = newCellStyle.WrapText;
 			}
 
-			if (newCellStyle.GetTextRotation() != 0)
+			if (newCellStyle.TextRotation != 0)
 			{
-				cellStyle.Rotation = (short)newCellStyle.GetTextRotation();
+				cellStyle.Rotation = (short)newCellStyle.TextRotation;
 			}
 
-			if (newCellStyle.GetIndentation() >= 0)
+			if (newCellStyle.Indentation >= 0)
 			{
-				cellStyle.Indention = (short)newCellStyle.GetIndentation();
+				cellStyle.Indention = (short)newCellStyle.Indentation;
 			}
 
-			if (newCellStyle.GetDataFormat() != null && newCellStyle.GetDataFormat().Length > 0)
+			if (newCellStyle.DataFormat != null && newCellStyle.DataFormat.Length > 0)
 			{
-				cellStyle.DataFormat = pWorkbook.CreateDataFormat().GetFormat(newCellStyle.GetDataFormat());
+				cellStyle.DataFormat = pWorkbook.CreateDataFormat().GetFormat(newCellStyle.DataFormat);
 			}
 
-			if (newCellStyle.GetBorder() != null)
+			if (newCellStyle.Border != null)
 			{
-				ExcelCellBorder cellBorder = newCellStyle.GetBorder();
-				ApplyBorderSide(cellStyle, BorderCellSide.TOP, cellBorder.GetBorderTop());
-				ApplyBorderSide(cellStyle, BorderCellSide.BOTTOM, cellBorder.GetBorderBottom());
-				ApplyBorderSide(cellStyle, BorderCellSide.LEFT, cellBorder.GetBorderLeft());
-				ApplyBorderSide(cellStyle, BorderCellSide.RIGHT, cellBorder.GetBorderRight());
+				ExcelCellBorder cellBorder = newCellStyle.Border;
+				ApplyBorderSide(cellStyle, BorderCellSide.TOP, cellBorder.BorderTop);
+				ApplyBorderSide(cellStyle, BorderCellSide.BOTTOM, cellBorder.BorderBottom);
+				ApplyBorderSide(cellStyle, BorderCellSide.LEFT, cellBorder.BorderLeft);
+				ApplyBorderSide(cellStyle, BorderCellSide.RIGHT, cellBorder.BorderRight);
 
-				bool hasDiagonalUp = cellBorder.GetBorderDiagonalUp() != null && cellBorder.GetBorderDiagonalUp().IsDirty();
-				bool hasDiagonalDown = cellBorder.GetBorderDiagonalDown() != null && cellBorder.GetBorderDiagonalDown().IsDirty();
+				bool hasDiagonalUp = cellBorder.BorderDiagonalUp != null && cellBorder.BorderDiagonalUp.IsDirty();
+				bool hasDiagonalDown = cellBorder.BorderDiagonalDown != null && cellBorder.BorderDiagonalDown.IsDirty();
 				if (hasDiagonalUp || hasDiagonalDown)
 				{
 					CT_Xf _cellXf = cellStyle.GetCoreXf();
-					ExcelBorder border = (hasDiagonalUp) ? cellBorder.GetBorderDiagonalUp() : cellBorder.GetBorderDiagonalDown();
-					XSSFColor diagonalColor = ToColor(border.GetBorderColor());
-					BorderStyle.TryParse(border.GetBorder(), out BorderStyle borderStyle);
+					ExcelBorder border = (hasDiagonalUp) ? cellBorder.BorderDiagonalUp : cellBorder.BorderDiagonalDown;
+					XSSFColor diagonalColor = ToColor(border.BorderColor);
+					BorderStyle.TryParse(border.Border, out BorderStyle borderStyle);
 					SetBorderDiagonal(borderStyle, diagonalColor, this.pWorkbook.GetStylesSource(), _cellXf, hasDiagonalUp, hasDiagonalDown);
 				}
 			}
@@ -1251,18 +1240,18 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		{
 			if (border != null && border.IsDirty())
 			{
-				if (border.GetBorderColor().IsDirty())
+				if (border.BorderColor.IsDirty())
 				{
 					try
 					{
 						BorderSide borderSide = (BorderSide)Enum.Parse(typeof(BorderSide), bSide.ToString());
-						cellStyle.SetBorderColor(borderSide, ToColor(border.GetBorderColor()));
+						cellStyle.SetBorderColor(borderSide, ToColor(border.BorderColor));
 					}
 					catch (ArgumentException) { }
 				}
-				if (border.GetBorder() != null && border.GetBorder().Length > 0)
+				if (border.Border != null && border.Border.Length > 0)
 				{
-					BorderStyle bs = ConvertToBorderStyle(border.GetBorder());
+					BorderStyle bs = ConvertToBorderStyle(border.Border);
 					if (bSide == BorderCellSide.BOTTOM)
 					{
 						cellStyle.BorderBottom = bs;
@@ -1284,14 +1273,24 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		}
 		internal BorderStyle ConvertToBorderStyle(string style)
 		{
-			BorderStyle borderStyle;
-			if (Enum.TryParse(style, true, out borderStyle))
+			style = style.ToUpper();
+			switch (style)
 			{
-				return borderStyle;
-			}
-			else
-			{
-				throw new ArgumentException("Invalid border style: " + style);
+				case "NONE": return BorderStyle.None;
+				case "DASH_DOT": return BorderStyle.DashDot;
+				case "DASH_DOT_DOT": return BorderStyle.DashDotDot;
+				case "DASHED": return BorderStyle.Dashed;
+				case "DOTTED": return BorderStyle.Dotted;
+				case "DOUBLE": return BorderStyle.Double;
+				case "HAIR": return BorderStyle.Hair;
+				case "MEDIUM": return BorderStyle.Medium;
+				case "MEDIUM_DASH_DOT": return BorderStyle.MediumDashDot;
+				case "MEDIUM_DASH_DOT_DOT":return BorderStyle.MediumDashDotDot;
+				case "MEDIUM_DASHED":return BorderStyle.MediumDashed;
+				case "SLANTED_DASH_DOT": return BorderStyle.SlantedDashDot;
+				case "THICK": return BorderStyle.Thick;
+				case "THIN":return BorderStyle.Thin;
+				default: throw new ArgumentException("Invalid border style: " + style);
 			}
 		}
 		internal enum BorderCellSide

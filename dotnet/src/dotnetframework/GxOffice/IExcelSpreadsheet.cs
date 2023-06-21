@@ -21,7 +21,7 @@ namespace GeneXus.MSOffice.Excel
 		List<ExcelWorksheet> GetWorksheets();
 		ExcelWorksheet GetWorkSheet(string name);
 		bool InsertWorksheet(string newSheetName, int idx);
-		bool GetAutofit();
+		bool Autofit { set; }
 		void SetColumnWidth(IExcelWorksheet worksheet, int colIdx, int width);
 		void SetRowHeight(IExcelWorksheet worksheet, int rowIdx, int height);
 		bool SetActiveWorkSheet(string name);
@@ -30,6 +30,5 @@ namespace GeneXus.MSOffice.Excel
 		bool ToggleColumn(IExcelWorksheet worksheet, int colIdx, bool visible);
 		bool ToggleRow(IExcelWorksheet _currentWorksheet, int i, bool visible);
 		bool CloneSheet(string sheetName, string newSheetName);
-		void SetAutofit(bool autofit);
 	}
 }

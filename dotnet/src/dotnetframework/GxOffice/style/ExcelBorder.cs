@@ -5,14 +5,14 @@ namespace GeneXus.MSOffice.Excel.Style
 		private ExcelColor borderColor;
 		private string borderStyle = string.Empty;
 
-		public string GetBorder()
+		public string Border
 		{
-			return borderStyle;
-		}
-		public void SetBorder(string value)
-		{
+			get => borderStyle;
+			set
+			{
 				borderStyle = value;
 				SetChanged();
+			}
 		}
 
 		public ExcelBorder()
@@ -20,13 +20,6 @@ namespace GeneXus.MSOffice.Excel.Style
 			borderColor = new ExcelColor();
 		}
 
-		public ExcelColor GetBorderColor()
-		{
-			return borderColor;
-		}
-		public void SetBorderColor(ExcelColor value)
-		{
-			borderColor = value;
-		}
+		public ExcelColor BorderColor { get => borderColor; set => borderColor = value; }
 	}
 }
