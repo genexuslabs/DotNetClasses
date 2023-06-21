@@ -364,7 +364,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				try
 				{
 					DateTime dVal = pCells[1].DateCellValue;
-					if (dVal != null)
+					if (dVal != DateTime.MinValue)
 					{
 						return "D";
 					}
