@@ -73,7 +73,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				ByteArrayOutputStream fs = new ByteArrayOutputStream();
 				_workbook.Write(fs);
 
-				ByteArrayInputStream inStream = new ByteArrayInputStream(fs.ToByteArray());
+				MemoryStream inStream = new MemoryStream(fs.ToByteArray());
 				fs.Close();
 				_workbook.Close();
 
