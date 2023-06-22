@@ -3459,7 +3459,7 @@ namespace GeneXus.Application
 
 		public int SetLanguage(string id)
 		{
-			if (Config.GetLanguageProperty(id, "code") != null)
+			if (Config.ValidLanguage(id))
 			{
 				SetProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
@@ -3473,7 +3473,7 @@ namespace GeneXus.Application
 		}
 		private int SetLanguageWithoutSession(string id)
 		{
-			if (Config.GetLanguageProperty(id, "code") != null)
+			if (Config.ValidLanguage(id))
 			{
 				SetContextProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
