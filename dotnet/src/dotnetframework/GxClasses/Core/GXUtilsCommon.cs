@@ -511,7 +511,7 @@ namespace GeneXus.Utils
 		const char QMARK = '_';
 		static char[] numbersAndSep = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9', '-' };
 		static char[] numbers = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-		internal static Dictionary<char, char> LogUserEntryWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890+-_=/[]{}\":, ".ToDictionary(item => item, item => item);
+		internal static Dictionary<char, char> LogUserEntryWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890.;+-_=/[]{}\"':, @()?<>\\&".ToDictionary(item => item, item => item);
 		internal static Dictionary<char, char> HttpHeaderWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890.;+-_=/[]{}\"':, @()?<>\\&".ToDictionary(item => item, item => item);
 
 		internal static string Sanitize(string input, Dictionary<char, char> WhiteList)
