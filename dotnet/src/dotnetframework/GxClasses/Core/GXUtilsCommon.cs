@@ -5470,7 +5470,7 @@ namespace GeneXus.Utils
 			try
 			{
 				IDictionary<string, string> maps = new Dictionary<string, string>();
-				foreach (Match match in Regex.Matches(pagingSelect, @"GX_ICTE\.(\[\w+\]) AS \b(\w+)\b", RegexOptions.Compiled | RegexOptions.CultureInvariant))
+				foreach (Match match in Regex.Matches(pagingSelect, @"GX_ICTE\.(\[\w+]) AS \b(\w+)\b(?=,|$)", RegexOptions.Compiled | RegexOptions.CultureInvariant))
 				{
 					if (match.Groups.Count == 3)
 					{
