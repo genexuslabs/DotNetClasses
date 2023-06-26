@@ -134,6 +134,14 @@ namespace GeneXus.Http.Client
 		{
 			get
 			{
+				if (_chunkedResponse && _receiveData == null && _receiveStream!=null)
+				{
+					using (MemoryStream memstream = new MemoryStream())
+					{
+						_receiveStream.BaseStream.CopyTo(memstream);
+						_receiveData = memstream.ToArray();
+					}
+				}
 				return _receiveData;
 			}
 		}
@@ -739,6 +747,7 @@ namespace GeneXus.Http.Client
 						_encoding = Encoding.UTF8;
 
 					_receiveStream = new StreamReader(stream, _encoding);
+					_receiveData = null;
 				}
 				else
 				{
@@ -1520,6 +1529,7 @@ namespace GeneXus.Http.Client
 				{
 					_receiveData = null;
 					_sendStream?.Dispose();
+					_receiveStream?.Dispose();
 				}
 				disposedValue = true;
 			}
