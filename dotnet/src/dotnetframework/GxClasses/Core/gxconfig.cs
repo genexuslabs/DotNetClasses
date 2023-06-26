@@ -280,6 +280,22 @@ namespace GeneXus.Configuration
 				return null;
 		}
 #endif
+		internal static bool ValidLanguage(string language)
+		{
+			if (languages != null)
+				return languages.Contains(language);
+			else
+			{
+#if NETCORE
+				return false;
+#else
+#pragma warning disable CS0618 // Type or member is obsolete
+				Hashtable appsettings = (Hashtable)ConfigurationSettings.GetConfig("languages/" + language);
+#pragma warning restore CS0618 // Type or member is obsolete
+				return (appsettings != null);
+#endif
+			}
+		}
 		public static string GetLanguageProperty(string language, string property)
 		{
 			string sString = null;
