@@ -19,15 +19,15 @@ namespace xUnitTesting
 		public async Task TestSessionRenew()
 		{
 			var httpContext = new DefaultHttpContext() { Session = new MockHttpSession() };
-			var authMiddleware = new MyAuthMiddleware(next: (innerHttpContext) => Task.FromResult(0));
+			var authMiddleware = new MyAuthMiddleware();
 
 			await authMiddleware.Invoke(httpContext);
 		}
 		[Fact]
 		public async Task TestSessionCookieContainer()
 		{
-			var httpContext = new DefaultHttpContext() { Session = new MockHttpSession() };
-			var authMiddleware = new MyAuthMiddleware(next: (innerHttpContext) => Task.FromResult(0));
+			DefaultHttpContext httpContext = new DefaultHttpContext() { Session = new MockHttpSession() };
+			MyAuthMiddleware authMiddleware = new MyAuthMiddleware();
 
 			await authMiddleware.SessionCookieContainerSerialization(httpContext);
 		}
@@ -35,11 +35,8 @@ namespace xUnitTesting
 	}
 	public class MyAuthMiddleware
 	{
-		private readonly RequestDelegate _next;
-
-		public MyAuthMiddleware(RequestDelegate next)
+		public MyAuthMiddleware()
 		{
-			_next = next;
 		}
 		public async Task SessionCookieContainerSerialization(HttpContext context)
 		{
@@ -55,7 +52,7 @@ namespace xUnitTesting
 			gxcontext.UpdateSessionCookieContainer();
 			container = gxcontext.GetCookieContainer(url, true);
 			Assert.Equal(1, container.Count);
-			await _next(context);
+			await Task.CompletedTask;
 		}
 
 		public async Task Invoke(HttpContext context)
@@ -76,7 +73,7 @@ namespace xUnitTesting
 				throw;
 			}
 			Assert.Equal(InternalKeyAjaxEncryptionKey, gxcontext.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY));
-			await _next(context);
+			await Task.CompletedTask;
 		}
 	}
 	public class MockHttpSession : ISession
