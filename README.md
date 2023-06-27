@@ -66,8 +66,8 @@ This repository contains projects for .NET and .NET Framework. It is organized a
 # How to build
 
 ## Requirements
-- Visual Studio 2022
-- .NET 6 
+- Visual Studio 2022 (17.6.1 if using .NET 8 up to preview 3 or 17.7 if using .NET 8 last preview).
+- .NET 6 & .NET 8 
 - .NET Framework 4.7 DevPack
 
 # Instructions
