@@ -38,6 +38,12 @@ jobs:
         with:
           vs-version: 10.0
           
+      - name: Install .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.x'
+          include-prerelease: true
+
       - name: Create temporal solution
         run: |
           $fortifysolution = "FortifySolution"
