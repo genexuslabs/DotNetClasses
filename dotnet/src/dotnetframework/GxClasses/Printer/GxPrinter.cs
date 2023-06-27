@@ -2147,11 +2147,6 @@ namespace GeneXus.Printer
 	[Serializable()]
 	public class ProcessInterruptedException: Exception
 	{
-		public ProcessInterruptedException(SerializationInfo info, StreamingContext ctx)
-			: base(info, ctx)
-		{
-			
-		}
 		public ProcessInterruptedException()
 		{
 

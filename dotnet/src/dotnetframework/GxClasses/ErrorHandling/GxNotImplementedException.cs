@@ -8,10 +8,6 @@ namespace GeneXus.Data
 	[Serializable()]
 	public class GxNotImplementedException : Exception
 	{
-		public GxNotImplementedException(SerializationInfo info, StreamingContext ctx) : base(info, ctx)
-		{
-
-		}
 		public GxNotImplementedException(string message)
 			: base(message)
 		{
