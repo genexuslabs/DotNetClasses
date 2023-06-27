@@ -48,9 +48,9 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup Condition="$(GenStdVersion)==''">
-		<Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
+		<Content Include="$(OutputPath)$(TargetFramework)\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
 			<Pack>true</Pack>
-			<PackagePath>./lib/net6.0/</PackagePath>
+			<PackagePath>./lib/$(TargetFramework)/</PackagePath>
 		</Content>
 		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
 			<Pack>true</Pack>
