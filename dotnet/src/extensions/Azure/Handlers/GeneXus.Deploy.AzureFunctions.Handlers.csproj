@@ -6,6 +6,7 @@
 		<IsPublishable>false</IsPublishable>
 		<AssemblyName>GeneXus.Deploy.AzureFunctions.Handlers</AssemblyName>
 		<NoWarn>1701;1702;NU1701</NoWarn>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 	  <DebugType>portable</DebugType>
@@ -47,16 +48,19 @@
 			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</None>
 	</ItemGroup>
-	<ItemGroup Condition="$(GenStdVersion)==''">
-		<Content Include="$(OutputPath)$(TargetFramework)\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
-			<Pack>true</Pack>
-			<PackagePath>./lib/$(TargetFramework)/</PackagePath>
-		</Content>
-		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
-			<Pack>true</Pack>
-			<PackagePath>./src/</PackagePath>
-		</Content>
-	</ItemGroup>
+	<Target Name="CustomContentTarget">
+		<ItemGroup Condition="$(GenStdVersion)==''">
+			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
+				<PackagePath>./lib/$(TargetFramework)/</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+			<TfmSpecificPackageFile Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
+				<PackagePath>./src/</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
+
 	<Target Name="CopyFunctionsMetadata" AfterTargets="Build" Condition="Exists('functions.metadata')">
 		<Copy SourceFiles="functions.metadata" DestinationFolder="$(OutputPath)"></Copy>
 	</Target>
