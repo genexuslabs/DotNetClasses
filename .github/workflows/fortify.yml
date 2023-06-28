@@ -59,7 +59,7 @@ jobs:
       - name: Download Fortify ScanCentral Client
         uses: fortify/gha-setup-scancentral-client@v1
       - name: Package Code + Dependencies
-        run: scancentral package -bt msbuild -bf ./dotnet/FortifySolution.sln -o package.zip
+        run: scancentral package -bt "dotnet msbuild" -bf ./dotnet/FortifySolution.sln -o package.zip
       
       - name: Show package contents
         run: unzip -v package.zip
