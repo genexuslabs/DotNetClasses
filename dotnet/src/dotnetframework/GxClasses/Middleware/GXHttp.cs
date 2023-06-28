@@ -1992,9 +1992,15 @@ namespace GeneXus.Http
 #if !NETCORE
 			if (ChunkedStreaming())
 			{
+				BringSessionStateToLife();
 				context.HttpContext.Response.BufferOutput = false;
 			}
 #endif
+		}
+		private void BringSessionStateToLife()
+		{
+			string sessionId = context.HttpContext.Session.SessionID;
+			GXLogging.Debug(log, "Session is alive: " + sessionId);
 		}
 		internal string DumpHeaders(HttpContext httpContext)
 		{
