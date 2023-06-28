@@ -1997,11 +1997,13 @@ namespace GeneXus.Http
 			}
 #endif
 		}
+#if !NETCORE
 		private void BringSessionStateToLife()
 		{
 			string sessionId = context.HttpContext.Session.SessionID;
 			GXLogging.Debug(log, "Session is alive: " + sessionId);
 		}
+#endif
 		internal string DumpHeaders(HttpContext httpContext)
 		{
 			StringBuilder str = new StringBuilder();
