@@ -961,7 +961,6 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				XSSFCellStyle style = (XSSFCellStyle)pWorkbook.CreateCellStyle();
 
-				style.CloneStyleFrom(style);
 				ApplyNewCellStyle(style, newCellStyle);
 				for (int i = 1; i <= cellCount; i++)
 				{
@@ -1001,7 +1000,10 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 					{
 						cellStyleFont.IsStrikeout = font.Strike;
 					}
-					cellStyleFont.FontHeight = font.Size;
+					if (font.Size != 0)
+					{
+						cellStyleFont.FontHeightInPoints = font.Size;
+					}
 
 					if (font.Underline)
 					{

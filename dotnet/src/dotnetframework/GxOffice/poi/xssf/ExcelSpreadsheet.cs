@@ -28,10 +28,10 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 			if (!string.IsNullOrEmpty(template))
 			{
-				FileInfo templateFile = new FileInfo(template);
-				if (templateFile.Exists)
+				GxFile templateFile = new GxFile(GxContext.StaticPhysicalPath(), fileName, GxFileType.Private);
+				if (templateFile.Exists())
 				{
-					_workbook = new XSSFWorkbook(template);
+					_workbook = new XSSFWorkbook(templateFile.GetStream());
 				}
 				else
 				{
@@ -40,10 +40,10 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			}
 			else
 			{
-				FileInfo file = new FileInfo(fileName);
-				if (file.Exists)
+				GxFile file = new GxFile(GxContext.StaticPhysicalPath(), fileName, GxFileType.Private);
+				if (file.Exists())
 				{
-					_workbook = new XSSFWorkbook(file);
+					_workbook = new XSSFWorkbook(file.GetStream());
 				}
 				else
 				{
@@ -70,19 +70,19 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 			try
 			{
-				ByteArrayOutputStream fs = new ByteArrayOutputStream();
-				_workbook.Write(fs);
+				using (ByteArrayOutputStream fs = new ByteArrayOutputStream())
+				{
+					_workbook.Write(fs);
 
-				MemoryStream inStream = new MemoryStream(fs.ToByteArray());
-				fs.Close();
-				_workbook.Close();
-
-				GxFile file = new GxFile(GxContext.StaticPhysicalPath(), fileName, GxFileType.Private);
-				file.Create(inStream);
-				int errCode = file.ErrCode;
-				inStream.Close();
-				file.Close();
-				return errCode == 0;
+					using (MemoryStream inStream = new MemoryStream(fs.ToByteArray()))
+					{
+						GxFile file = new GxFile(GxContext.StaticPhysicalPath(), fileName, GxFileType.Private);
+						file.Create(inStream);
+						int errCode = file.ErrCode;
+						file.Close();
+						return errCode == 0;
+					}
+				}
 			}
 			catch (Exception ex)
 			{
@@ -98,7 +98,18 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public bool Close()
 		{
-			return Save();
+			bool result;
+			try
+			{
+				result = Save();
+				_workbook.Close();
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(logger, "Close error", ex);
+				return false;
+			}
+			return result;
 		}
 
 		public IExcelCellRange GetCells(IExcelWorksheet worksheet, int startRow, int startCol, int rowCount, int colCount)
