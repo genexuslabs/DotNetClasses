@@ -130,8 +130,8 @@ namespace GeneXus.Application
 		public virtual void cleanup() { }
 
 		virtual public bool UploadEnabled() { return false; }
-		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
-		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
+		internal bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
+		internal GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
 
 		internal bool IsSynchronizer2 { get { return IsSynchronizer; } }
 		internal string ExecutePermissionPrefix2 { get { return ExecutePermissionPrefix; } }
