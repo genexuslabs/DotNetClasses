@@ -540,7 +540,10 @@ namespace GeneXus.Application
 		public bool IsAuthenticatedMethod(string serviceMethod, bool isApi)
 		{
 			if (!String.IsNullOrEmpty(serviceMethod) && isApi)
-				return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ApiExecutePermissionPrefix2(serviceMethod));
+			{
+				bool integratedSecurityEnabled = (Worker.IntegratedSecurityEnabled2 && Worker.ApiIntegratedSecurityLevel2(serviceMethod) != GAMSecurityLevel.SecurityNone);
+				return IsAuthenticated(Worker.ApiIntegratedSecurityLevel2(serviceMethod), integratedSecurityEnabled, Worker.ApiExecutePermissionPrefix2(serviceMethod));
+			}
 			else
 				return IsAuthenticated();
 		}
