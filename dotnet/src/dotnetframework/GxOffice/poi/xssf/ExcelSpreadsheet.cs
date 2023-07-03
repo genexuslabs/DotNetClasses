@@ -28,7 +28,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 			if (!string.IsNullOrEmpty(template))
 			{
-				GxFile templateFile = new GxFile(GxContext.StaticPhysicalPath(), fileName, GxFileType.Private);
+				GxFile templateFile = new GxFile(GxContext.StaticPhysicalPath(), template, GxFileType.Private);
 				if (templateFile.Exists())
 				{
 					_workbook = new XSSFWorkbook(templateFile.GetStream());
