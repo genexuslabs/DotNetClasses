@@ -42,11 +42,11 @@ namespace GeneXus.Application
 		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
 		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
 
-		public bool IsSynchronizer2 { get { return IsSynchronizer; } }
-		public string ExecutePermissionPrefix2 { get { return ExecutePermissionPrefix; } }
-		public string ApiExecutePermissionPrefix2(string gxMethod) { return ApiExecutePermissionPrefix(gxMethod); }
-		public bool ApiIntegratedSecurityEnabled2(string gxMethod) { return ApiIntegratedSecurityEnabled(gxMethod); }
-		public GAMSecurityLevel ApiIntegratedSecurityLevel2(string gxMethod) { return ApiIntegratedSecurityLevel(gxMethod); }
+		internal bool IsSynchronizer2 { get { return IsSynchronizer; } }
+		internal string ExecutePermissionPrefix2 { get { return ExecutePermissionPrefix; } }
+		internal string ApiExecutePermissionPrefix2(string gxMethod) { return ApiExecutePermissionPrefix(gxMethod); }
+		internal bool ApiIntegratedSecurityEnabled2(string gxMethod) { return ApiIntegratedSecurityEnabled(gxMethod); }
+		internal GAMSecurityLevel ApiIntegratedSecurityLevel2(string gxMethod) { return ApiIntegratedSecurityLevel(gxMethod); }
 		public virtual string ServiceExecutePermissionPrefix { get { return string.Empty; } }
 		public virtual string ServiceDeletePermissionPrefix { get { return string.Empty; } }
 		public virtual string ServiceInsertPermissionPrefix { get { return string.Empty; } }
