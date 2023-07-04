@@ -43,13 +43,6 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				throw;
 			}
 		}
-		private GxUserType CreateEventMessageProperty(Type eventMessPropsItemType, string propertyId, object propertyValue, GxContext gxContext)
-		{
-			GxUserType eventMessageProperty = (GxUserType)Activator.CreateInstance(eventMessPropsItemType, new object[] { gxContext }); // instance of SdtEventMessageProperty
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyid", propertyId);
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyvalue", propertyValue);
-			return eventMessageProperty;
-		}
 		private Message SetupMessage(FunctionContext context, string item)
 		{
 			Message message = new Message();
@@ -172,14 +165,14 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 								{
 									if ((messageProp.key != "UserProperties") & (messageProp.key != "SystemProperties"))
 									{
-										eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, messageProp.key, Convert.ToString(messageProp.value), gxcontext);
+										eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, messageProp.key, Convert.ToString(messageProp.value), gxcontext);
 										eventMessageProperties.Add(eventMessageProperty);
 									}
 								}
 
 								//Body
 
-								eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "Body", message.Body, gxcontext);
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Body", message.Body, gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
 								//user Properties
@@ -187,7 +180,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 								{
 									foreach (string key in message.UserProperties.Keys)
 									{
-										eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, key, JSONHelper.Serialize(message.UserProperties[key]), gxcontext);
+										eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, key, JSONHelper.Serialize(message.UserProperties[key]), gxcontext);
 										eventMessageProperties.Add(eventMessageProperty);
 									}
 								}
@@ -201,7 +194,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 									foreach (var prop in sysProps)
 										if (prop.GetIndexParameters().Length == 0)
 										{
-											eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, prop.Name, Convert.ToString(prop.GetValue(message.SystemProperties)), gxcontext);
+											eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, prop.Name, Convert.ToString(prop.GetValue(message.SystemProperties)), gxcontext);
 											eventMessageProperties.Add(eventMessageProperty);
 										}
 								}
