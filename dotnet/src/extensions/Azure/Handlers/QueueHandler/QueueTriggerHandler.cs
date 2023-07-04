@@ -147,13 +147,13 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 
 								foreach (var messageProp in queueMessage.MessageProperties)
 								{
-									eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, messageProp.key, messageProp.value, gxcontext);
+									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, messageProp.key, messageProp.value, gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
 								}
 
 								//Body
 
-								eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "Body", queueMessage.Body, gxcontext);
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Body", queueMessage.Body, gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
 								//Event
@@ -219,14 +219,6 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Message Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
 				throw new Exception(exMessage);
 			}
-		}
-		
-		private GxUserType CreateEventMessageProperty(Type eventMessPropsItemType, string propertyId, object propertyValue, GxContext gxContext)
-		{
-			GxUserType eventMessageProperty = (GxUserType)Activator.CreateInstance(eventMessPropsItemType, new object[] { gxContext }); // instance of SdtEventMessageProperty
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyid", propertyId);
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyvalue", propertyValue);
-			return eventMessageProperty;
 		}
 
 		[DataContract]

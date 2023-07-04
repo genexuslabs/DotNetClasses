@@ -139,7 +139,7 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 												if (key == "id")
 													idValue = strValue;
 
-												eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType,key, strValue, gxcontext);
+												eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType,key, strValue, gxcontext);
 												eventMessageProperties.Add(eventMessageProperty);
 											}
 										}
@@ -242,13 +242,6 @@ namespace GeneXus.Deploy.AzureFunctions.CosmosDBHandler
 				}
 			}
 			return keyValuePairs;
-		}
-		private GxUserType CreateEventMessageProperty(Type eventMessPropsItemType, string propertyId, object propertyValue, GxContext gxContext)
-		{
-			GxUserType eventMessageProperty = (GxUserType)Activator.CreateInstance(eventMessPropsItemType, new object[] { gxContext }); // instance of SdtEventMessageProperty
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyid", propertyId);
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyvalue", propertyValue);
-			return eventMessageProperty;
 		}
 	}	
 }
