@@ -44,8 +44,7 @@ namespace GeneXus.Application
 
 		internal bool IsSynchronizer2 { get { return IsSynchronizer; } }
 		internal string ExecutePermissionPrefix2 { get { return ExecutePermissionPrefix; } }
-		internal string ApiExecutePermissionPrefix2(string gxMethod) { return ApiExecutePermissionPrefix(gxMethod); }
-		internal bool ApiIntegratedSecurityEnabled2(string gxMethod) { return ApiIntegratedSecurityEnabled(gxMethod); }
+		internal string ApiExecutePermissionPrefix2(string gxMethod) { return ApiExecutePermissionPrefix(gxMethod); }		
 		internal GAMSecurityLevel ApiIntegratedSecurityLevel2(string gxMethod) { return ApiIntegratedSecurityLevel(gxMethod); }
 		public virtual string ServiceExecutePermissionPrefix { get { return string.Empty; } }
 		public virtual string ServiceDeletePermissionPrefix { get { return string.Empty; } }
@@ -58,14 +57,13 @@ namespace GeneXus.Application
 		protected virtual string ExecutePermissionPrefix { get { return String.Empty; } }
 
 		protected virtual string ApiExecutePermissionPrefix(string gxMethod) { return ExecutePermissionPrefix2; }
-		protected virtual bool ApiIntegratedSecurityEnabled(string gxMethod){ return IntegratedSecurityEnabled2; }
 		protected virtual GAMSecurityLevel ApiIntegratedSecurityLevel(string gxMethod) {  return IntegratedSecurityLevel2; }
 		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack) { }
 
 		public virtual void CallWebObject(string url)
 		{
 			string target = GetCallTargetFromUrl(url);
-			if (String.IsNullOrEmpty(target))
+			if (String.IsNullOrEmpty(target))                                                               
 			{
 				context.wjLoc = url;
 			}

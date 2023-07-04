@@ -541,7 +541,7 @@ namespace GeneXus.Application
 		{
 			if (!String.IsNullOrEmpty(serviceMethod) && isApi)
 			{
-				bool integratedSecurityEnabled = (Worker.IntegratedSecurityEnabled2 && Worker.ApiIntegratedSecurityLevel2(serviceMethod) != GAMSecurityLevel.SecurityNone);
+				bool integratedSecurityEnabled = ( Worker.IntegratedSecurityEnabled2 && Worker.ApiIntegratedSecurityLevel2(serviceMethod) != GAMSecurityLevel.SecurityNone);
 				return IsAuthenticated(Worker.ApiIntegratedSecurityLevel2(serviceMethod), integratedSecurityEnabled, Worker.ApiExecutePermissionPrefix2(serviceMethod));
 			}
 			else
@@ -549,7 +549,7 @@ namespace GeneXus.Application
 		}
 		public bool IsAuthenticated()
 		{
-			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
+			return IsAuthenticated( Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
 		}
 		protected bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{
