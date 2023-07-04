@@ -233,6 +233,7 @@ namespace GeneXus.Utils
         private HttpContext httpContext;
         private WebOperationContext wcfContext;
         protected string permissionPrefix;
+		protected string permissionMethod;
         bool runAsMain = true;
 
         public GxRestService()
