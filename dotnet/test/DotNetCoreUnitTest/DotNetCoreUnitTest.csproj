@@ -73,6 +73,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxOffice\GxOffice.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
