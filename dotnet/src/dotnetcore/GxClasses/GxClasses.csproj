@@ -8,6 +8,7 @@
 		<PackageId>GeneXus.Classes.Core</PackageId>
 		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
 		<NoWarn>618;1607;1698;SYSLIB0021;SYSLIB0027;SYSLIB0028;SYSLIB0023</NoWarn>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
    <ItemGroup>
@@ -189,6 +190,16 @@
 		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net6.0'">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\Jayrock.dll</HintPath>
+			<Private>True</Private>
 		</Reference>
 	</ItemGroup>
+	<Target Name="CustomContentTarget" Condition="'$(TargetFramework)'=='net8.0'">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(OutputPath)\Jayrock.dll">
+				<PackagePath>lib/$(TargetFramework)</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
+
 </Project>
