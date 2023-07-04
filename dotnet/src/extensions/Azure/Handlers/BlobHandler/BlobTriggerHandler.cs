@@ -1,36 +1,37 @@
 using System;
-using System.Text;
+using System.Collections;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text;
+using GeneXus.Application;
+using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
+using GeneXus.Metadata;
+using GeneXus.Utils;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using GeneXus.Application;
-using GeneXus.Utils;
-using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
-using System.Collections;
-using GeneXus.Metadata;
-using System.Linq;
+using Newtonsoft.Json.Linq;
 
-namespace GeneXus.Deploy.AzureFunctions.TimerHandler
+namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 {
-    public class TimerTriggerHandler
-    {
+	public class BlobTriggerHandler
+	{
 		private ICallMappings _callmappings;
 
-		public TimerTriggerHandler(ICallMappings callMappings)
+		public BlobTriggerHandler(ICallMappings callMappings)
 		{
 			_callmappings = callMappings;
 		}
-		public void Run(MyInfo TimerInfo, FunctionContext context) 
+		public void Run(string myTriggerItem, FunctionContext context)
 		{
-			var logger = context.GetLogger("TimerTriggerHandler");
+			var logger = context.GetLogger("BlobTriggerHandler");
 			string functionName = context.FunctionDefinition.Name;
 			Guid messageId = new Guid(context.InvocationId);
-			logger.LogInformation($"GeneXus Timer trigger handler. Function processed: {functionName}. Message Id: {messageId}. Function executed at: {DateTime.Now}. Next timer schedule at: {TimerInfo.ScheduleStatus.Next}");
+			logger.LogInformation($"GeneXus Blob trigger handler. Function processed: {functionName}. Message Id: {messageId}. Function executed at: {DateTime.Now}");
 
 			try
 			{
-				ProcessMessage(context, logger, TimerInfo, messageId.ToString());
+				ProcessMessage(context, logger, myTriggerItem, messageId.ToString());
 			}
 			catch (Exception ex) //Catch System exception and retry
 			{
@@ -38,7 +39,7 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				throw;
 			}
 		}
-		private void ProcessMessage(FunctionContext context, ILogger log, MyInfo TimerInfo, string messageId)
+		private void ProcessMessage(FunctionContext context, ILogger log, string myTriggerItem, string messageId)
 		{
 			CallMappings callmap = (CallMappings)_callmappings;
 
@@ -86,10 +87,8 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 							parametersdata = new object[] { null };
 
 							if (parameters[0].ParameterType == typeof(string))
-							{
-								string queueMessageSerialized = JSONHelper.Serialize(TimerInfo);
-								parametersdata = new object[] { queueMessageSerialized, null };
-							}
+								parametersdata = new object[] { myTriggerItem, null };
+							
 							else
 							{
 								//Initialization
@@ -105,25 +104,43 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 								IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
 								Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
 
+								if (context.BindingContext.BindingData.TryGetValue("Uri", out object urivalue))
+								{
+									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Uri", urivalue.ToString(), gxcontext);
+									eventMessageProperties.Add(eventMessageProperty);
+								}
 
-								//Payload
+								if (context.BindingContext.BindingData.TryGetValue("name", out object namevalue))
+								{
+									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "name", namevalue.ToString(), gxcontext);
+									eventMessageProperties.Add(eventMessageProperty);
+								}
 
-								GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToUniversalTime().ToString(), gxcontext);
-								eventMessageProperties.Add(eventMessageProperty);
+								if (context.BindingContext.BindingData.TryGetValue("Metadata", out object metadatavalue))
+								{
+									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Metadata", namevalue.ToString(), gxcontext);
+									eventMessageProperties.Add(eventMessageProperty);
+								}
 
-								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToUniversalTime().ToString(), gxcontext);
-								eventMessageProperties.Add(eventMessageProperty);
+								if (context.BindingContext.BindingData.TryGetValue("Properties", out object propsvalue))
+								{
+									JToken jsonToken = JToken.Parse(propsvalue.ToString());
+									foreach (JProperty property in jsonToken)
+									{
+										string propertyName = property.Name;
+										string propertyValue = property.Value.ToString();
 
-								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToUniversalTime().ToString(), gxcontext);
-								eventMessageProperties.Add(eventMessageProperty);
+										GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, propertyName, propertyValue, gxcontext);
+										eventMessageProperties.Add(eventMessageProperty);
 
-								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "IsPastDue", TimerInfo.IsPastDue.ToString(), gxcontext);
-								eventMessageProperties.Add(eventMessageProperty);
+									}
+								}
 
 								//Event
 
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", messageId.ToString());
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.Timer);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.Blob);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", myTriggerItem);
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", DateTime.UtcNow);
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
@@ -175,20 +192,5 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				throw new Exception(exMessage);
 			}
 		}
-	}	
-	public class MyInfo
-	{
-		public MyScheduleStatus ScheduleStatus { get; set; }
-
-		public bool IsPastDue { get; set; }
 	}
-
-	public class MyScheduleStatus
-	{
-		public DateTime Last { get; set; }
-
-		public DateTime Next { get; set; }
-
-		public DateTime LastUpdated { get; set; }
-	}	
 }
