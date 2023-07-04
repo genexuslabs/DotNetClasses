@@ -106,19 +106,19 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 
 								if (context.BindingContext.BindingData.TryGetValue("Uri", out object urivalue))
 								{
-									GxUserType eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "Uri", urivalue.ToString(), gxcontext);
+									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Uri", urivalue.ToString(), gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
 								}
 
 								if (context.BindingContext.BindingData.TryGetValue("name", out object namevalue))
 								{
-									GxUserType eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "name", namevalue.ToString(), gxcontext);
+									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "name", namevalue.ToString(), gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
 								}
 
 								if (context.BindingContext.BindingData.TryGetValue("Metadata", out object metadatavalue))
 								{
-									GxUserType eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "Metadata", namevalue.ToString(), gxcontext);
+									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Metadata", namevalue.ToString(), gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
 								}
 
@@ -130,7 +130,7 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 										string propertyName = property.Name;
 										string propertyValue = property.Value.ToString();
 
-										GxUserType eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, propertyName, propertyValue, gxcontext);
+										GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, propertyName, propertyValue, gxcontext);
 										eventMessageProperties.Add(eventMessageProperty);
 
 									}
@@ -191,13 +191,6 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Message Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, messageId);
 				throw new Exception(exMessage);
 			}
-		}
-		private GxUserType CreateEventMessageProperty(Type eventMessPropsItemType, string propertyId, object propertyValue, GxContext gxContext)
-		{
-			GxUserType eventMessageProperty = (GxUserType)Activator.CreateInstance(eventMessPropsItemType, new object[] { gxContext }); // instance of SdtEventMessageProperty
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyid", propertyId);
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyvalue", propertyValue);
-			return eventMessageProperty;
 		}
 	}
 }
