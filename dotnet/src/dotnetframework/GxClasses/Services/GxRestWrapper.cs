@@ -537,7 +537,7 @@ namespace GeneXus.Application
 					SetError("0", "Invalid Synchronizer " + synchronizer);
 			}
 		}
-		public bool IsAuthenticatedMethod(string serviceMethod, bool isApi)
+		protected bool IsAuthenticatedMethod(string serviceMethod, bool isApi)
 		{
 			if (!String.IsNullOrEmpty(serviceMethod) && isApi)
 			{
