@@ -2429,8 +2429,6 @@ namespace GeneXus.Application
 
 		private void SetCustomHttpHeader(string name, string value)
 		{
-			_HttpContext.Response.AppendHeader(name, value);
-
 #if !NETCORE
 			switch (name.ToUpper())
 			{
@@ -2458,6 +2456,9 @@ namespace GeneXus.Application
 						}
 					}
 					break;
+				default:
+					_HttpContext.Response.Headers[name]=value;
+					break;
 			}
 #else
 			switch (name.ToUpper())
@@ -2475,6 +2476,9 @@ namespace GeneXus.Application
 							GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
 							break;
 					}
+					break;
+				default:
+					_HttpContext.Response.Headers[name] = value;
 					break;
 			}
 #endif
