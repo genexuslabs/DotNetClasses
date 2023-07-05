@@ -53,10 +53,10 @@ namespace GeneXus.Configuration
 			if (!String.IsNullOrEmpty(appenderName))
 			{
 				Hierarchy h = (Hierarchy) LogManager.GetRepository();
-				IAppender appenderToAdd = h.GetAppenders().First(a => a.Name == appenderName);
+				IAppender appenderToAdd = h.GetAppenders().FirstOrDefault(a => a.Name == appenderName);
 				if (appenderToAdd == null)
 				{
-					LogConfiguration.logger.Error($"Appender '{appenderName}' was not found on Log4Net Config file");
+					LogConfiguration.logger.Warning($"Appender '{appenderName}' was not found on Log4Net Config file");
 					return;
 				}
 				
