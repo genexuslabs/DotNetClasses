@@ -56,7 +56,7 @@ namespace GeneXus.Configuration
 				IAppender appenderToAdd = h.GetAppenders().FirstOrDefault(a => a.Name == appenderName);
 				if (appenderToAdd == null)
 				{
-					LogConfiguration.logger.Warning($"Appender '{appenderName}' was not found on Log4Net Config file");
+					LogConfiguration.logger.Warn($"Appender '{appenderName}' was not found on Log4Net Config file");
 					return;
 				}
 				
