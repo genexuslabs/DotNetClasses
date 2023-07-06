@@ -15,6 +15,7 @@ namespace GeneXus.Metadata
 #endif
 	using GeneXus.Application;
 	using System.Collections.Concurrent;
+	using System.Text;
 
 	public class ClassLoader
 	{
@@ -266,7 +267,10 @@ namespace GeneXus.Metadata
 							pm[0] = ((pi.Attributes & ParameterAttributes.In) != ParameterAttributes.None);
 							pm[1] = ((pi.Attributes & ParameterAttributes.Out) != ParameterAttributes.None);
 							pm[2] = pi.ParameterType.IsByRef;
-							pms[i] = pm;
+							if (i < pms.Length)
+							{
+								pms[i] = pm;
+							}
 						}
 						try
 						{
@@ -274,7 +278,7 @@ namespace GeneXus.Metadata
 
 						}catch(MissingMethodException)
 						{
-							throw new GxClassLoaderException("Method " + mi.DeclaringType.FullName + "." + mi.Name + " for " + args.Length + " parameters ("+ String.Join(",", args) + ") not found");
+							throw new GxClassLoaderException(BuildParameterMismatchErrorMessage(mi.DeclaringType.FullName, pis, args));
 						}
 					}
 					else
@@ -289,6 +293,107 @@ namespace GeneXus.Metadata
 			{
 				GXLogging.Error(log, "Error in invoke ", e);
 				throw GxClassLoaderException.ProcessException(e);
+			}
+		}
+		static string BuildParameterMismatchErrorMessage(string objectName, ParameterInfo[] methodParameters, object[] runtimeMethodParameters)
+		{
+			string parmInfo = GetParameterTypesString(methodParameters);
+			string runtimeParms = GetParameterValuesString(runtimeMethodParameters);
+			StringBuilder errorMessage = new StringBuilder();
+			if (methodParameters.Length == 0)
+			{
+				errorMessage.Append($"The object {objectName} does not have any parameters, thus it does not match the ");
+			}
+			else if (methodParameters.Length == 1)
+			{
+				errorMessage.Append($"The parm rule of {objectName} with parameter: {parmInfo} does not match the ");
+			}
+			else
+			{
+				errorMessage.Append($"The parm rule of {objectName} with parameters: {parmInfo} does not match the ");
+			}
+
+			if (runtimeMethodParameters.Length == 0)
+			{
+				errorMessage.Append($"absence of values provided at runtime. ");
+			}
+			else if (runtimeMethodParameters.Length == 1)
+			{
+				errorMessage.Append($"value provided in runtime: {runtimeParms}. ");
+			}
+			else
+			{
+				errorMessage.Append($"values provided in runtime: {runtimeParms}. ");
+			}
+			errorMessage.Append($"Please check the parm rule of the {objectName}.");
+
+			return errorMessage.ToString();
+		}
+
+		static string GetParameterValuesString(object[] runtimeMethodParameters)
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.Append('(');
+
+			for (int i = 0; i < runtimeMethodParameters.Length; i++)
+			{
+				object parmValue = runtimeMethodParameters[i];
+				string parmStringValue =  (parmValue is string) ? $"\"{parmValue}\"" : parmValue.ToString();
+				sb.Append(parmStringValue);
+				if (i < runtimeMethodParameters.Length - 1)
+				{
+					sb.Append(", ");
+				}
+			}
+			sb.Append(')');
+			return sb.ToString();
+		}
+
+		static string GetParameterTypesString(ParameterInfo[] parameters)
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.Append('(');
+
+			for (int i = 0; i < parameters.Length; i++)
+			{
+				string parmTypeName = ParameterTypeName(parameters[i].ParameterType);
+				sb.Append(parmTypeName);
+				if (i < parameters.Length - 1)
+				{
+					sb.Append(", ");
+				}
+			}
+			sb.Append(')');
+			return sb.ToString();
+		}
+
+		static string ParameterTypeName(Type parameterType)
+		{
+			Type innerType = (parameterType.IsByRef && parameterType.GetElementType()!=null) ? parameterType.GetElementType() : parameterType;
+			if (IsNumericType(innerType))
+				return "Numeric";
+			return innerType.Name;			
+		}
+
+		static bool IsNumericType(Type type)
+		{
+			if (type == typeof(byte) ||
+				type == typeof(sbyte) ||
+				type == typeof(short) ||
+				type == typeof(ushort) ||
+				type == typeof(int) ||
+				type == typeof(uint) ||
+				type == typeof(long) ||
+				type == typeof(ulong) ||
+				type == typeof(float) ||
+				type == typeof(double) ||
+				type == typeof(decimal))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
 			}
 		}
 		static public void ExecuteRef(object o, string mthd, Object[] args)
