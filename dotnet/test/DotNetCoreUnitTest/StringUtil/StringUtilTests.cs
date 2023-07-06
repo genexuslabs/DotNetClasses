@@ -59,6 +59,15 @@ namespace xUnitTesting
 			Assert.Equal(29, sdt.gxTpr_Sdt1_datetime.Minute);
 		}
 		[Fact]
+		public void TestZPictureCompatibiliy()
+		{
+			string picture = "$ 9.99";
+			GxContext context = new GxContext();
+			decimal decNumber = 5;
+			string decStr = context.localUtil.Format(decNumber, picture);
+			Assert.Equal("$ 5.00", decStr);
+		}
+		[Fact]
 		public void TestZPicture()
 		{
 			GxContext context = new GxContext();
