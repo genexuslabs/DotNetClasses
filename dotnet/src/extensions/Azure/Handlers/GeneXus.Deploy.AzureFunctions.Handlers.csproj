@@ -28,6 +28,11 @@
 		<Compile Include ="Helpers\*;Program.cs" />
 	</ItemGroup>
 	
+	<ItemGroup Condition="'$(BlobSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.1" />
+		<Compile Include="BlobHandler\BlobTriggerHandler.cs;Dummies\BlobTriggerDummy.cs" /> 
+	</ItemGroup>
+	
 	<ItemGroup Condition="'$(CosmosDBSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.CosmosDB" Version="4.0.1" />
 		<Compile Include="CosmosDBHandler\CosmosDBTriggerHandler.cs;Dummies\CosmosDBTriggerDummy.cs" /> 
@@ -39,7 +44,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(AzureQueueSupport)' == 'true'">
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.1" />
 		<Compile Include="QueueHandler\QueueTriggerHandler.cs;Dummies\QueueTriggerDummy.cs" />
 	</ItemGroup>
 

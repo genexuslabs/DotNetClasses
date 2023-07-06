@@ -5467,6 +5467,25 @@ namespace GeneXus.Utils
 				pagingSelect = pagingSelect.Substring(9);
 
 			pagingSelect = Regex.Replace(pagingSelect, @"T\d+\.", "GX_ICTE.");
+			try
+			{
+				IDictionary<string, string> maps = new Dictionary<string, string>();
+				foreach (Match match in Regex.Matches(pagingSelect, @"GX_ICTE\.(\[\w+]) AS \b(\w+)\b(?=,|$)", RegexOptions.Compiled | RegexOptions.CultureInvariant))
+				{
+					if (match.Groups.Count == 3)
+					{
+						maps[match.Groups[0].Value] = $"GX_ICTE.[{match.Groups[2].Value}]";
+						maps[match.Groups[1].Value] = $"[{match.Groups[2].Value}]";
+					}
+				}
+				foreach (KeyValuePair<string, string> map in maps)
+					pagingSelect = pagingSelect.Replace(map.Key, map.Value);
+			}
+			catch (RegexMatchTimeoutException ex)
+			{
+				GXLogging.Warn(log, ex, "Timeout parsing paging select");
+			}
+
 			return pagingSelect;
 		}
 
