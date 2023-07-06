@@ -47,7 +47,7 @@ namespace GeneXus.Application
 	using System.Threading;
 	using System.Security.Claims;
 	using System.Security;
-
+	
 	public interface IGxContext
 	{
 		void disableOutput();
@@ -2429,37 +2429,39 @@ namespace GeneXus.Application
 
 		private void SetCustomHttpHeader(string name, string value)
 		{
-#if !NETCORE
-			switch (name.ToUpper())
+			try
 			{
-				case "CACHE-CONTROL":
-					var Cache = _HttpContext.Response.Cache;
-					string[] values = value.Split(',');
-					foreach (string v in values)
-					{
-						switch (v.Trim().ToUpper())
+#if !NETCORE
+				switch (name.ToUpper())
+				{
+					case "CACHE-CONTROL":
+						var Cache = _HttpContext.Response.Cache;
+						string[] values = value.Split(',');
+						foreach (string v in values)
 						{
-							case "PUBLIC":
-								Cache.SetCacheability(HttpCacheability.Public);
-								break;
-							case "PRIVATE":
-								Cache.SetCacheability(HttpCacheability.Private);
-								break;
-							case "NO-CACHE":
-								Cache.SetCacheability(HttpCacheability.NoCache);
-								break;
-							case "NO-STORE":
-								Cache.AppendCacheExtension("no-store, must-revalidate");
-								break;
-							default:
-								break;
+							switch (v.Trim().ToUpper())
+							{
+								case "PUBLIC":
+									Cache.SetCacheability(HttpCacheability.Public);
+									break;
+								case "PRIVATE":
+									Cache.SetCacheability(HttpCacheability.Private);
+									break;
+								case "NO-CACHE":
+									Cache.SetCacheability(HttpCacheability.NoCache);
+									break;
+								case "NO-STORE":
+									Cache.AppendCacheExtension("no-store, must-revalidate");
+									break;
+								default:
+									break;
+							}
 						}
-					}
-					break;
-				default:
-					_HttpContext.Response.Headers[name]=value;
-					break;
-			}
+						break;
+					default:
+						_HttpContext.Response.Headers[name] = value;
+						break;
+				}
 #else
 			switch (name.ToUpper())
 			{
@@ -2478,10 +2480,14 @@ namespace GeneXus.Application
 					}
 					break;
 				default:
-					_HttpContext.Response.Headers[name] = value;
+					_HttpContext.Response.AddHeader(name, value);
 					break;
 			}
 #endif
+			}catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "Error adding header ", name, value);
+			}
 		}
 
 		public string GetHeader(string name)
