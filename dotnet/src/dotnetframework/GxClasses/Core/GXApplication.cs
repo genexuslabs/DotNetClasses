@@ -3268,7 +3268,7 @@ namespace GeneXus.Application
 			{
 				inBeforeCommit = true;
 				if (beforeCommitObj != null)
-					ClassLoader.ExecuteVoidRef(beforeCommitObj, "execute", new Object[] { callerName });
+					ClassLoader.ExecuteVoidRef(beforeCommitObj, "execute", new Object[] { callerName }, "Before Commit");
 				inBeforeCommit = false;
 			}
 		}
@@ -3279,7 +3279,7 @@ namespace GeneXus.Application
 			{
 				inAfterCommit = true;
 				if (afterCommitObj != null)
-					ClassLoader.ExecuteVoidRef(afterCommitObj, "execute", new Object[] { callerName });
+					ClassLoader.ExecuteVoidRef(afterCommitObj, "execute", new Object[] { callerName },"After Commit");
 				inAfterCommit = false;
 			}
 		}
@@ -3290,7 +3290,7 @@ namespace GeneXus.Application
 			{
 				inBeforeRollback = true;
 				if (beforeRollbackObj != null)
-					ClassLoader.ExecuteVoidRef(beforeRollbackObj, "execute", new Object[] { callerName });
+					ClassLoader.ExecuteVoidRef(beforeRollbackObj, "execute", new Object[] { callerName }, "Before Rollback");
 				inBeforeRollback = false;
 			}
 		}
@@ -3301,7 +3301,7 @@ namespace GeneXus.Application
 			{
 				inAfterRollback = true;
 				if (afterRollbackObj != null)
-					ClassLoader.ExecuteVoidRef(afterRollbackObj, "execute", new Object[] { callerName });
+					ClassLoader.ExecuteVoidRef(afterRollbackObj, "execute", new Object[] { callerName }, "After Rollback");
 				inAfterRollback = false;
 			}
 		}
@@ -3311,7 +3311,7 @@ namespace GeneXus.Application
 			if (beforeConnectObj != null)
 			{
 				GXLogging.Debug(Logger, "ExecuteBeforeConnect");
-				ClassLoader.ExecuteVoidRef(beforeConnectObj, "execute", new Object[] { datastore });
+				ClassLoader.ExecuteVoidRef(beforeConnectObj, "execute", new Object[] { datastore }, "Before Connect");
 				return true;
 			}
 			else
@@ -3325,7 +3325,7 @@ namespace GeneXus.Application
 			if (afterConnectObj != null)
 			{
 				GXLogging.Debug(Logger, "ExecuteAfterConnect");
-				ClassLoader.ExecuteVoidRef(afterConnectObj, "execute", new Object[] { datastoreName });
+				ClassLoader.ExecuteVoidRef(afterConnectObj, "execute", new Object[] { datastoreName }, "After Connect");
 				return true;
 			}
 			else
