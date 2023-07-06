@@ -231,8 +231,11 @@ namespace GeneXus.Metadata
 			}
 			return argsConstr;
 		}
-
 		static public void ExecuteVoidRef(object o, string mthd, Object[] args)
+		{
+			ExecuteVoidRef(o, mthd, args, null);
+		}
+		internal static void ExecuteVoidRef(object o, string mthd, Object[] args, string propertyName)
 		{
 			try
 			{
@@ -278,7 +281,7 @@ namespace GeneXus.Metadata
 
 						}catch(MissingMethodException)
 						{
-							throw new GxClassLoaderException(BuildParameterMismatchErrorMessage(mi.DeclaringType.FullName, pis, args));
+							throw new GxClassLoaderException(BuildParameterMismatchErrorMessage(mi.DeclaringType.FullName, pis, args, propertyName));
 						}
 					}
 					else
@@ -295,35 +298,38 @@ namespace GeneXus.Metadata
 				throw GxClassLoaderException.ProcessException(e);
 			}
 		}
-		static string BuildParameterMismatchErrorMessage(string objectName, ParameterInfo[] methodParameters, object[] runtimeMethodParameters)
+		static string BuildParameterMismatchErrorMessage(string objectName, ParameterInfo[] methodParameters, object[] runtimeMethodParameters, string propertyName)
 		{
 			string parmInfo = GetParameterTypesString(methodParameters);
 			string runtimeParms = GetParameterValuesString(runtimeMethodParameters);
 			StringBuilder errorMessage = new StringBuilder();
+
+			errorMessage.Append($"Program {objectName} ");
+			if (!string.IsNullOrEmpty(propertyName))
+			{
+				errorMessage.Append($"referenced in {propertyName} property ");
+			}
+			errorMessage.Append($"does not have the expected parameter definition.");
 			if (methodParameters.Length == 0)
 			{
-				errorMessage.Append($"The object {objectName} does not have any parameters, thus it does not match the ");
+				errorMessage.Append($"It does not have any parameters.");
 			}
-			else if (methodParameters.Length == 1)
+			else 
 			{
-				errorMessage.Append($"The parm rule of {objectName} with parameter: {parmInfo} does not match the ");
-			}
-			else
-			{
-				errorMessage.Append($"The parm rule of {objectName} with parameters: {parmInfo} does not match the ");
+				errorMessage.Append($"Program parameter definition: {parmInfo}.");
 			}
 
 			if (runtimeMethodParameters.Length == 0)
 			{
-				errorMessage.Append($"absence of values provided at runtime. ");
+				errorMessage.Append($"No parameter values were provided at runtime. ");
 			}
 			else if (runtimeMethodParameters.Length == 1)
 			{
-				errorMessage.Append($"value provided in runtime: {runtimeParms}. ");
+				errorMessage.Append($"Parameter value provided at runtime: {runtimeParms}. ");
 			}
 			else
 			{
-				errorMessage.Append($"values provided in runtime: {runtimeParms}. ");
+				errorMessage.Append($"Parameter values provided at runtime: {runtimeParms}. ");
 			}
 			errorMessage.Append($"Please check the parm rule of the {objectName}.");
 
