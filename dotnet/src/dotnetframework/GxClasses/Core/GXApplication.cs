@@ -2464,10 +2464,10 @@ namespace GeneXus.Application
 										Cache.AppendCacheExtension("no-store, must-revalidate");
 										break;
 									default:
+										GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
 										break;
 								}
 							}
-							_HttpContext.Response.Headers[name] = value;
 						}
 						break;
 					default:
