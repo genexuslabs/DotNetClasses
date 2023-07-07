@@ -2441,7 +2441,7 @@ namespace GeneXus.Application
 					case "CACHE-CONTROL":
 						if (CacheControlHeaderValue.TryParse(value, out CacheControlHeaderValue parsedValue))
 						{
-							HttpContext.Current.Response.Headers[name] = parsedValue.ToString();
+							HttpContext.Current.Response.CacheControl = parsedValue.ToString();
 						}
 						else
 						{
