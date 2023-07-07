@@ -13,10 +13,12 @@ namespace GeneXus.Application
 	using System.Messaging;
 	using System.ServiceModel.Web;
 	using GeneXus.UserControls;
+	using System.Net.Http.Headers;
 #else
 	using Microsoft.AspNetCore.Http;
 	using GxClasses.Helpers;
 	using Experimental.System.Messaging;
+	using Microsoft.Net.Http.Headers;
 #endif
 	using GeneXus.Configuration;
 	using GeneXus.Metadata;
@@ -2359,8 +2361,8 @@ namespace GeneXus.Application
 				Secure = cookie.Secure
 			};
 			string sameSite;
-			SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
-			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+            Microsoft.AspNetCore.Http.SameSiteMode sameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode.Unspecified;
+			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<Microsoft.AspNetCore.Http.SameSiteMode>(sameSite, out sameSiteMode))
 			{
 				cookieOptions.SameSite = sameSiteMode;
 			}
@@ -2429,55 +2431,83 @@ namespace GeneXus.Application
 
 		private void SetCustomHttpHeader(string name, string value)
 		{
-			_HttpContext.Response.AppendHeader(name, value);
+			try
+			{
 
 #if !NETCORE
-			switch (name.ToUpper())
-			{
-				case "CACHE-CONTROL":
-					var Cache = _HttpContext.Response.Cache;
-					string[] values = value.Split(',');
-					foreach (string v in values)
-					{
-						switch (v.Trim().ToUpper())
+				
+				switch (name.ToUpper())
+				{
+					case "CACHE-CONTROL":
+						if (CacheControlHeaderValue.TryParse(value, out CacheControlHeaderValue parsedValue))
 						{
-							case "PUBLIC":
-								Cache.SetCacheability(HttpCacheability.Public);
-								break;
-							case "PRIVATE":
-								Cache.SetCacheability(HttpCacheability.Private);
-								break;
-							case "NO-CACHE":
-								Cache.SetCacheability(HttpCacheability.NoCache);
-								break;
-							case "NO-STORE":
-								Cache.AppendCacheExtension("no-store, must-revalidate");
-								break;
-							default:
-								break;
+							HttpContext.Current.Response.Headers[name] = parsedValue.ToString();
 						}
-					}
-					break;
-			}
+						else
+						{
+							var Cache = _HttpContext.Response.Cache;
+							string[] values = value.Split(',');
+							foreach (string v in values)
+							{
+								switch (v.Trim().ToUpper())
+								{
+									case "PUBLIC":
+										Cache.SetCacheability(HttpCacheability.Public);
+										break;
+									case "PRIVATE":
+										Cache.SetCacheability(HttpCacheability.Private);
+										break;
+									case "NO-CACHE":
+										Cache.SetCacheability(HttpCacheability.NoCache);
+										break;
+									case "NO-STORE":
+										Cache.AppendCacheExtension("no-store, must-revalidate");
+										break;
+									default:
+										GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
+										break;
+								}
+							}
+						}
+						break;
+					default:
+						_HttpContext.Response.Headers[name] = value;
+						break;
+				}
 #else
-			switch (name.ToUpper())
-			{
-				case "CACHE-CONTROL":
-					switch (value.ToUpper())
-					{
-						case "PUBLIC":
-							_HttpContext.Response.AddHeader("Cache-Control", "public");
-							break;
-						case "PRIVATE":
-							_HttpContext.Response.AddHeader("Cache-Control", "private");
-							break;
-						default:
-							GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
-							break;
-					}
-					break;
-			}
+				switch (name.ToUpper())
+				{
+					case "CACHE-CONTROL":
+						if (CacheControlHeaderValue.TryParse(value, out CacheControlHeaderValue parsedValue))
+						{
+							_HttpContext.Response.GetTypedHeaders().CacheControl = parsedValue;
+						}
+						else
+						{
+							switch (value.ToUpper())
+							{
+								case "PUBLIC":
+									_HttpContext.Response.AddHeader("Cache-Control", "public");
+									break;
+								case "PRIVATE":
+									_HttpContext.Response.AddHeader("Cache-Control", "private");
+									break;
+								default:
+									GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
+									break;
+							}
+						}
+						break;
+					default:
+						_HttpContext.Response.AddHeader(name, value);
+						break;
+				}
 #endif
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "Error adding header ", name, value);
+			}
 		}
 
 		public string GetHeader(string name)
