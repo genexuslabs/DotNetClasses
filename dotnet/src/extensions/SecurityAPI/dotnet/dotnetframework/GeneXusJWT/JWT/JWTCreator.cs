@@ -182,6 +182,11 @@ namespace GeneXusJWT.GenexusJWT
 			{
 
 				PrivateKeyManager key = options.GetPrivateKey();
+				if(key == null)
+				{
+					this.error.setError("JW018", "Add the private key using JWTOptions.SetPrivateKey function");
+					return "";
+				}
 				if (key.HasError())
 				{
 					this.error = key.GetError();
@@ -209,6 +214,11 @@ namespace GeneXusJWT.GenexusJWT
 			}
 			else
 			{
+				if(options.getSecret() == null)
+				{
+					this.error.setError("JW021", "Set the secret using JWTOptions.SetSecret function");
+					return "";
+				}
 				SymmetricSecurityKey symKey = new SymmetricSecurityKey(options.getSecret());
 				genericKey = symKey;
 			}
@@ -318,6 +328,11 @@ namespace GeneXusJWT.GenexusJWT
 			if (JWTAlgorithmUtils.isPrivate(alg))
 			{
 				PublicKey cert = options.GetPublicKey();
+				if(cert == null)
+				{
+					this.error.setError("JW022", "Public key or certificate not loaded for verification");
+					return false;
+				}
 				if (cert.HasError())
 				{
 					this.error = cert.GetError();
@@ -345,6 +360,11 @@ namespace GeneXusJWT.GenexusJWT
 			}
 			else
 			{
+				if(options.getSecret() == null)
+				{
+					this.error.setError("JW022", "Symmetric key not loaded for verification");
+					return false;
+				}	
 				SymmetricSecurityKey symKey = new SymmetricSecurityKey(options.getSecret());
 				genericKey = symKey;
 			}
