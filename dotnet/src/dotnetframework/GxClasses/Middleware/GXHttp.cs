@@ -1933,10 +1933,10 @@ namespace GeneXus.Http
 			InitPrivates();
 			try
 			{
-				SetStreaming();
+#if NETCORE
 				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
-
+#endif
 				bool validSession = ValidWebSession();
 				if (validSession && IntegratedSecurityEnabled)
 					validSession = ValidSession();
@@ -1971,6 +1971,9 @@ namespace GeneXus.Http
 						context.DispatchAjaxCommands();
 				}
 				SetCompression(httpContext);
+#if !NETCORE
+				SendHeaders();
+#endif
 				context.ResponseCommited = true;
 			}
 			catch (Exception e)
@@ -1985,25 +1988,6 @@ namespace GeneXus.Http
 				throw new Exception("GXApplication exception", e);
 			}
 		}
-		protected virtual bool ChunkedStreaming() { return false; }
-
-		private void SetStreaming()
-		{
-#if !NETCORE
-			if (ChunkedStreaming())
-			{
-				BringSessionStateToLife();
-				context.HttpContext.Response.BufferOutput = false;
-			}
-#endif
-		}
-#if !NETCORE
-		private void BringSessionStateToLife()
-		{
-			string sessionId = context.HttpContext.Session.SessionID;
-			GXLogging.Debug(log, "Session is alive: " + sessionId);
-		}
-#endif
 		internal string DumpHeaders(HttpContext httpContext)
 		{
 			StringBuilder str = new StringBuilder();
@@ -2049,6 +2033,7 @@ namespace GeneXus.Http
 #else
 			bool isExpired = IsFullAjaxRequest(HttpContext.Current) && this.AjaxOnSessionTimeout() == "Warn" && GxWebSession.IsSessionExpired(localHttpContext);
 #endif
+
 			if (isExpired)
 			{
 				GXLogging.Info(log, "440 Session timeout. Web Session has expired and GX' OnSessionTimeout' Pty is set to 'WARN'");
@@ -2236,7 +2221,11 @@ namespace GeneXus.Http
 						return;
 
 					string safeIECompMode = IE_COMP_Edge.Equals(IE_COMP_EmulateIE7) ? IE_COMP_Edge : IE_COMP_Edge;
+#if NETCORE
 					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + safeIECompMode;
+#else
+					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + safeIECompMode);
+#endif
 				}
 			}
 
@@ -2244,7 +2233,11 @@ namespace GeneXus.Http
 
 		protected virtual void sendSpaHeaders()
 		{
+#if NETCORE
 			localHttpContext.Response.Headers[GX_SPA_GXOBJECT_RESPONSE_HEADER] = GetPgmname().ToLower();
+#else
+			localHttpContext.Response.AddHeader(GX_SPA_GXOBJECT_RESPONSE_HEADER, GetPgmname().ToLower());
+#endif
 		}
 
 		private void webExecuteWorker(object target)
@@ -3070,6 +3063,15 @@ namespace GeneXus.Http
 
 		protected GXMasterPage MasterPageObj { get; set; }
 
+		protected override void sendSpaHeaders()
+		{
+			base.sendSpaHeaders();
+			if (MasterPageObj != null)
+			{
+				localHttpContext.Response.AddHeader(GX_SPA_MASTERPAGE_HEADER, MasterPageObj.GetPgmname());
+			}
+		}
+
 		protected override void ValidateSpaRequest()
 		{
 			string sourceMasterPage = localHttpContext.Request.Headers[GX_SPA_MASTERPAGE_HEADER];
@@ -3077,10 +3079,6 @@ namespace GeneXus.Http
 			{
 				context.DisableSpaRequest();
 				sendSpaHeaders();
-			}
-			if (MasterPageObj != null)
-			{
-				localHttpContext.Response.Headers[GX_SPA_MASTERPAGE_HEADER] = MasterPageObj.GetPgmname();
 			}
 		}
 	}

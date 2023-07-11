@@ -8,11 +8,6 @@ namespace GeneXus.Procedure
 	using System.Threading;
 	using GeneXus.Mime;
 	using GeneXus.Utils;
-#if NETCORE
-	using Microsoft.AspNetCore.Http;
-#else
-	using System.Web;
-#endif
 	using log4net;
 	using GeneXus.Application;
 	using GeneXus.Data.NTier;
@@ -51,13 +46,7 @@ namespace GeneXus.Procedure
 				context.DeleteReferer();
 			}
 		}
-		protected override void SetCompression(HttpContext httpContext)
-		{
-			if (!ChunkedStreaming())
-			{
-				base.SetCompression(httpContext);
-			}
-		}
+
 		public void setContextReportHandler()
 		{
 
