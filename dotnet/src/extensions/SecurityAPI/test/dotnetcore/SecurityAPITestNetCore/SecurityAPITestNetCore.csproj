@@ -38,6 +38,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtRevocationList.cs" Link="Jwt\Features\TestJwtRevocationList.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Features\TestJwtVerifyJustSignature.cs" Link="Jwt\Features\TestJwtVerifyJustSignature.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue81664.cs" Link="Jwt\Others\TestIssue81664.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue103626.cs" Link="Jwt\Others\TestIssue103626.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue83649.cs" Link="Jwt\Others\TestIssue83649.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue84142.cs" Link="Jwt\Others\TestIssue84142.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Jwt\Other\TestIssue84859.cs" Link="Jwt\Others\TestIssue84859.cs" />
