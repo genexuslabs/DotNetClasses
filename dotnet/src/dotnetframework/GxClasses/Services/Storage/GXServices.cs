@@ -24,6 +24,7 @@ namespace GeneXus.Services
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
 		public static string QUEUE_SERVICE = "QueueService";
 		public static string MESSAGEBROKER_SERVICE = "MessageBrokerService";
+		public static string EVENTROUTER_SERVICE = "EventRouterService";
 		private static string[] SERVICES_FILE = new string[] { "CloudServices.dev.config", "CloudServices.config" };
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
 		private Dictionary<string, GXService> services = new Dictionary<string, GXService>();

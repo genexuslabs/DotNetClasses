@@ -249,6 +249,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxOffice", "src\dotnetcore\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "excel", "excel", "{B521FF6D-E081-4DE6-AC00-A9BE3B6439D1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXEventRouter", "src\dotnetcore\Providers\Messaging\GXEventRouter\GXEventRouter.csproj", "{5BBC75F0-E51A-4EBD-A628-92498D319B1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXAzureEventGrid", "src\dotnetcore\Providers\Messaging\GXAzureEventGrid\GXAzureEventGrid.csproj", "{7250CDB1-95C4-4822-B01B-3CBD73324CC9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -595,6 +599,14 @@ Global
 		{E1CD114A-F8A5-4246-B5E3-FD27EDEC7C82}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E1CD114A-F8A5-4246-B5E3-FD27EDEC7C82}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E1CD114A-F8A5-4246-B5E3-FD27EDEC7C82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BBC75F0-E51A-4EBD-A628-92498D319B1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BBC75F0-E51A-4EBD-A628-92498D319B1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BBC75F0-E51A-4EBD-A628-92498D319B1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BBC75F0-E51A-4EBD-A628-92498D319B1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7250CDB1-95C4-4822-B01B-3CBD73324CC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7250CDB1-95C4-4822-B01B-3CBD73324CC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7250CDB1-95C4-4822-B01B-3CBD73324CC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7250CDB1-95C4-4822-B01B-3CBD73324CC9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -708,6 +720,8 @@ Global
 		{BE108BE8-805D-4FCF-86BA-B2EAF581FFB2} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
 		{E1CD114A-F8A5-4246-B5E3-FD27EDEC7C82} = {B521FF6D-E081-4DE6-AC00-A9BE3B6439D1}
 		{B521FF6D-E081-4DE6-AC00-A9BE3B6439D1} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
+		{5BBC75F0-E51A-4EBD-A628-92498D319B1D} = {4C43F2DA-59E5-46F5-B691-195449498555}
+		{7250CDB1-95C4-4822-B01B-3CBD73324CC9} = {30159B0F-BE61-4DB7-AC02-02851426BE4B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
