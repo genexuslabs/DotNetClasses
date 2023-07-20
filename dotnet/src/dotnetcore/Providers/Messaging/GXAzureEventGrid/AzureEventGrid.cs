@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure;
+using Azure.Identity;
 using Azure.Messaging;
 using Azure.Messaging.EventGrid;
 using GeneXus.Messaging.Common;
@@ -31,9 +31,23 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			ServiceSettings serviceSettings = new(PropertyConstants.EVENT_ROUTER, Name, providerService);
 			_endpoint = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.URI_ENDPOINT);
 			_accessKey = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.ACCESS_KEY);
-			_client = new EventGridPublisherClient(
-				new Uri(_endpoint),
-				new AzureKeyCredential(_accessKey));
+
+			if (!string.IsNullOrEmpty(_endpoint)) { 
+				if (string.IsNullOrEmpty(_accessKey))
+				
+					//Try using Active Directory authentication
+					_client = new EventGridPublisherClient(
+					new Uri(_endpoint),
+					new DefaultAzureCredential());
+				
+				else
+
+				_client = new EventGridPublisherClient(
+					new Uri(_endpoint),
+					new AzureKeyCredential(_accessKey));
+			}
+			else
+				throw new Exception("Endpoint URI must be set.");
 		}
 		public override string GetName()
 		{
@@ -54,7 +68,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				}
 				else
 				{
-					throw new Exception("SendEvent: There was an error at the Event Grid initialization.");
+					throw new Exception("There was an error at the Event Grid initialization.");
 				}
 			}
 			catch (AggregateException ae)
@@ -80,7 +94,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				}
 				else
 				{
-					throw new Exception("SendEvents: There was an error at the Event Grid initialization.");
+					throw new Exception("There was an error at the Event Grid initialization.");
 				}
 			}
 			catch (AggregateException ae)
@@ -232,7 +246,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		{
 			try
 			{
-				HttpListenerException az_ex = (HttpListenerException)ex;
+				RequestFailedException az_ex = (RequestFailedException)ex;
 				msg.gxTpr_Id = az_ex.ErrorCode.ToString();
 				msg.gxTpr_Description = az_ex.Message;
 				return true;
@@ -255,7 +269,9 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				evt.Id = gxEventGridSchema.id;
 			if (!string.IsNullOrEmpty(gxEventGridSchema.topic))
 				evt.Topic = gxEventGridSchema.topic;
-			
+			if (gxEventGridSchema.eventtime != DateTime.MinValue)
+				evt.EventTime = gxEventGridSchema.eventtime;
+
 			return evt;
 		}
 		private CloudEvent ToCloudEvent(GXCloudEvent gxCloudEvent, bool isBinaryData)
@@ -264,9 +280,13 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			if (string.IsNullOrEmpty(gxCloudEvent.data))
 				evt = new CloudEvent(gxCloudEvent.source, gxCloudEvent.type, null);
 			else
-			{ 
+			{
 				if (!isBinaryData)
-					evt = new CloudEvent(gxCloudEvent.source, gxCloudEvent.type, gxCloudEvent.data);
+				{ 
+					if (string.IsNullOrEmpty(gxCloudEvent.datacontenttype))
+						gxCloudEvent.datacontenttype = "application/json";
+					evt = new CloudEvent(gxCloudEvent.source, gxCloudEvent.type, BinaryData.FromString(gxCloudEvent.data),gxCloudEvent.datacontenttype,CloudEventDataFormat.Json);
+				}
 				else
 				{
 					if (string.IsNullOrEmpty(gxCloudEvent.datacontenttype))
@@ -280,6 +300,8 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				evt.DataSchema = gxCloudEvent.dataschema;
 			if (!string.IsNullOrEmpty(gxCloudEvent.subject))
 				evt.Subject = gxCloudEvent.subject;
+			if (gxCloudEvent.time != DateTime.MinValue)
+				evt.Time = gxCloudEvent.time;
 			return evt;
 		}
 		#endregion
@@ -300,6 +322,13 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		public string data { get; set; }
 		[DataMember]
 		public string dataversion { get; set; }
+
+		[DataMember]
+		public DateTime eventtime { get; set; }
+
+		[DataMember]
+		public string metadataversion { get; set; }
+
 
 	}
 }
