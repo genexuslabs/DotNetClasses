@@ -22,7 +22,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			success = successConnect;
 			return evtRouterProvider;
 		}
-		public EventRouterProviderBase Connect(string endpoint, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		/*public EventRouterProviderBase Connect(string endpoint, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			EventRouterProvider eventRouterProvider = new EventRouterProvider();
 			GXProperties properties = new GXProperties
@@ -34,6 +34,6 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			errorMessages = errorMessagesConnect;
 			success = successConnect;
 			return evtRouterProvider;
-		}
+		}*/
 	}
 }
