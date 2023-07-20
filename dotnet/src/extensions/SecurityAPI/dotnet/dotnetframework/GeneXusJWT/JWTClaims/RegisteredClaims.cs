@@ -43,7 +43,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                 customTimeValidationClaims.Add(key, customValidationSeconds);
                 try
                 {
-                    date = (Int32)DateTime.ParseExact(value, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture).Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                    date = (Int32)DateTime.ParseExact(value, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture).ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
                 }
                 catch (Exception)
                 {
