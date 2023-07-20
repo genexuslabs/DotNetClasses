@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json;
@@ -279,8 +280,9 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		private CloudEvent ToCloudEvent(GXCloudEvent gxCloudEvent, bool isBinaryData)
 		{
 			CloudEvent evt;
+			Dictionary<string, object> emptyData = new Dictionary<string, object>();
 			if (string.IsNullOrEmpty(gxCloudEvent.data))
-				evt = new CloudEvent(gxCloudEvent.source, gxCloudEvent.type, null);
+				evt = new CloudEvent(source:gxCloudEvent.source, type:gxCloudEvent.type, emptyData);
 			else
 			{
 				if (!isBinaryData)
