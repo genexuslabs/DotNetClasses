@@ -1,6 +1,6 @@
-using GeneXus.Utils;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using GeneXus.Utils;
 
 namespace GeneXus.Messaging.Common
 {
@@ -20,6 +20,8 @@ namespace GeneXus.Messaging.Common
 		public string id { get; set; }
 		public string dataschema { get; set; }
 		public string subject { get; set; }
+		public string data_base64 { get; set; }
+		public DateTime time { get; set; }
 	}
 
 }

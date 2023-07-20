@@ -177,6 +177,8 @@ namespace GeneXus.Messaging.Common
 				gxCloudEvent.id = evt.GetPropertyValue<string>("Id");
 				gxCloudEvent.subject = evt.GetPropertyValue<string>("Subject");
 				gxCloudEvent.dataschema = evt.GetPropertyValue<string>("Dataschema");
+				gxCloudEvent.data_base64 = evt.GetPropertyValue<string>("Data_base64");
+				gxCloudEvent.time = evt.GetPropertyValue<DateTime>("Time");
 				return gxCloudEvent;
 			}
 			return null;
@@ -187,7 +189,7 @@ namespace GeneXus.Messaging.Common
 	internal class ServiceFactory
 	{
 		private static IEventRouter eventRouter;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.ServiceFactory));
+		private static readonly ILog log = LogManager.GetLogger(typeof(Services.ServiceFactory));
 
 		public static GXServices GetGXServices()
 		{
