@@ -4,7 +4,6 @@ using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure;
-using Azure.Identity;
 using Azure.Messaging;
 using Azure.Messaging.EventGrid;
 using GeneXus.Messaging.Common;
@@ -32,15 +31,18 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			_endpoint = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.URI_ENDPOINT);
 			_accessKey = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.ACCESS_KEY);
 
+			//Package Azure.Identity cannot be referenced because it conflicts with Microsoft.Identity.Client pack version
+			//used transitively by gxmail and dynamoDB projects.
+
+			/*if (string.IsNullOrEmpty(_accessKey))
+
+				//Try using Active Directory authentication
+				_client = new EventGridPublisherClient(
+				new Uri(_endpoint),
+				new DefaultAzureCredential());*/
+
+
 			if (!string.IsNullOrEmpty(_endpoint)) { 
-				if (string.IsNullOrEmpty(_accessKey))
-				
-					//Try using Active Directory authentication
-					_client = new EventGridPublisherClient(
-					new Uri(_endpoint),
-					new DefaultAzureCredential());
-				
-				else
 
 				_client = new EventGridPublisherClient(
 					new Uri(_endpoint),
