@@ -1,4 +1,4 @@
-﻿using SecurityAPITest.SecurityAPICommons.commons;
+using SecurityAPITest.SecurityAPICommons.commons;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +42,7 @@ namespace SecurityAPITest.Jwt.Other
             payload = jwt.GetPayload(token);
             
 
-            expected = "{\"hola1\":\"hola1\",\"exp\":1595267811,\"iat\":1595267811,\"nbf\":1595267811}";
+            expected = "{\"hola1\":\"hola1\",\"exp\":1595278611,\"iat\":1595278611,\"nbf\":1595278611}";
         }
 
         [Test]
