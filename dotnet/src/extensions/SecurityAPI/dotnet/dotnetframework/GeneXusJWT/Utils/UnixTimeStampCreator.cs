@@ -17,7 +17,7 @@ namespace GeneXusJWT.Utils
 			long newdate;
 			try
 			{
-				newdate= (long)DateTime.ParseExact(date, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture).ToUniversalTime().Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+				newdate= (long)DateTime.ParseExact(date, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture).ToUniversalTime().Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).ToUniversalTime()).TotalSeconds;
 			}
 			catch (Exception)
 			{
