@@ -25,6 +25,7 @@
     <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\RegisteredClaims.cs" Link="JWTClaims\RegisteredClaims.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\JWT\JWTCreator.cs" Link="JWT\JWTCreator.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\DateUtil.cs" Link="Utils\DateUtil.cs" />
+		<Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\UnixTimeStampCreator.cs" Link="Utils\UnixTimeStampCreator.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\GUID.cs" Link="Utils\GUID.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\JWTAlgorithm.cs" Link="Utils\JWTAlgorithm.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\KeyPair.cs" Link="Utils\KeyPair.cs" />
