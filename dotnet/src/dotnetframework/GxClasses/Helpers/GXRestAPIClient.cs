@@ -229,10 +229,23 @@ namespace GeneXus.Application
 		{			
 			return Decimal.Parse( GetJsonStr(varName), System.Globalization.NumberStyles.Float);
 		}
+		
 		public long GetBodyLong(string varName)
 		{
-			return long.Parse(GetJsonStr(varName));
-		}
+			System.Diagnostics.Debugger.Launch();
+			string svalue = GetJsonStr(varName);
+			long numvalue;
+			try
+			{
+				numvalue = long.Parse(svalue);
+			}
+			catch (Exception e) when (e is FormatException || e is OverflowException)
+			{
+				numvalue = long.Parse(GetJsonStr(varName), System.Globalization.NumberStyles.Float);
+			}
+			return numvalue;
+		}	
+
 		public int GetBodyInt(string varName)
 		{
 			return Int32.Parse(GetJsonStr(varName));
