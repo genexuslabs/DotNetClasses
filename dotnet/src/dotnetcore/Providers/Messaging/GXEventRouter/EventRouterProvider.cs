@@ -13,9 +13,7 @@ namespace GeneXus.Messaging.Common
 	{
 		static readonly ILog logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 		private static GXService providerService;
-		public EventRouterProvider()
-		{
-
+		public EventRouterProvider() {
 		}
 		public EventRouterProviderBase Connect(string providerTypeName, GXProperties properties, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
