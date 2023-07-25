@@ -32,17 +32,6 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			_endpoint = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.URI_ENDPOINT);
 			_accessKey = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.ACCESS_KEY);
 
-			//Package Azure.Identity cannot be referenced because it conflicts with Microsoft.Identity.Client pack version
-			//used transitively by gxmail and dynamoDB projects.
-
-			/*if (string.IsNullOrEmpty(_accessKey))
-
-				//Try using Active Directory authentication
-				_client = new EventGridPublisherClient(
-				new Uri(_endpoint),
-				new DefaultAzureCredential());*/
-
-
 			if (!string.IsNullOrEmpty(_endpoint)) { 
 
 				_client = new EventGridPublisherClient(
