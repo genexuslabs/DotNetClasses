@@ -158,11 +158,11 @@ namespace GeneXus.Messaging.Common
 					}
 					while (ex.InnerException != null);
 					if (foundGeneralException)
-						GXUtil.ErrorToMessages("GXEventRouter1002", ex, errorMessages);
+						GXUtil.ErrorToMessages("GXEventRouter", ex, errorMessages);
 				}
 				else
 				{
-					GXUtil.ErrorToMessages("GXEventRouter1002", ex, errorMessages);
+					GXUtil.ErrorToMessages("GXEventRouter", ex, errorMessages);
 				}
 			}
 		}		
