@@ -52,11 +52,11 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			bool success = false;
 			try
 			{
-				Task<bool> task;
+				Task task;
 				if (_client != null)
 				{
-					task = Task.Run<bool>(async () => await sendEvtAsync(evt).ConfigureAwait(false));
-					success = task.Result;
+					task = Task.Run(async () => await sendEvtAsync(evt).ConfigureAwait(false));
+					success = true;
 				}
 				else
 				{
@@ -78,11 +78,11 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			bool success = false;
 			try
 			{
-				Task<bool> task;
+				Task task;
 				if (_client != null)
 				{
-					task = Task.Run<bool>(async () => await sendEvtsAsync(evts).ConfigureAwait(false));
-					success = task.Result;
+					task = Task.Run(async () => await sendEvtsAsync(evts).ConfigureAwait(false));
+					success = true;
 				}
 				else
 				{
@@ -112,11 +112,11 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				bool success = false;
 				try
 				{
-					Task<bool> task;
+					Task task;
 					if (_client != null)
 					{
-						task = Task.Run<bool>(async () => await sendEventGridSchemaEventsAsync(eventGridEvents).ConfigureAwait(false));
-						success = task.Result;
+						task = Task.Run(async () => await sendEventGridSchemaEventsAsync(eventGridEvents).ConfigureAwait(false));
+						success = true;
 					}
 					else
 					{
@@ -137,11 +137,11 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 					bool success = false;
 					try
 					{
-						Task<bool> task;
+						Task task;
 						if (_client != null)
 						{
-							task = Task.Run<bool>(async () => await sendEventGridSchemaEventAsync(ToEventGridSchema(evt, isBinary)).ConfigureAwait(false));
-							success = task.Result;
+							task = Task.Run(async () => await sendEventGridSchemaEventAsync(ToEventGridSchema(evt, isBinary)).ConfigureAwait(false));
+							success = true;
 						}
 						else
 						{
@@ -167,68 +167,38 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		/// </summary>
 		/// <param name="evt"></param>
 		/// <returns></returns>
-		private async Task<bool> sendEventGridSchemaEventAsync(EventGridEvent evt)
+		private async Task sendEventGridSchemaEventAsync(EventGridEvent evt)
 		{
-			try
-			{
-				await _client.SendEventAsync(evt).ConfigureAwait(false);
-				return true;
-			}
-			catch (Exception ex)
-			{
-				throw ex;
-			}
+			await _client.SendEventAsync(evt).ConfigureAwait(false);
+			
 		}
 		/// <summary>
 		/// Send asynchronously a list of events formatted as Azure EventGrid Schema.
 		/// </summary>
 		/// <param name="evts"></param>
 		/// <returns></returns>
-		private async Task<bool> sendEventGridSchemaEventsAsync(IEnumerable<EventGridEvent> evts)
-		{
-			try
-			{
-				await _client.SendEventsAsync(evts).ConfigureAwait(false);
-				return true;
-			}
-			catch (Exception ex)
-			{
-				throw ex;
-			}
+		private async Task sendEventGridSchemaEventsAsync(IEnumerable<EventGridEvent> evts)
+		{	
+			await _client.SendEventsAsync(evts).ConfigureAwait(false);
 		}
 		/// <summary>
 		/// Send asynchronously an event formatted as CloudEvent Schema.
 		/// </summary>
 		/// <param name="cloudEvent"></param>
 		/// <returns></returns>
-		private async Task<bool> sendEvtAsync(CloudEvent cloudEvent)
+		private async Task sendEvtAsync(CloudEvent cloudEvent)
 		{
-			try
-			{
-				await _client.SendEventAsync(cloudEvent).ConfigureAwait(false);
-				return true;
-			}
-			catch (Exception ex)
-			{
-				throw ex;
-			}
+			await _client.SendEventAsync(cloudEvent).ConfigureAwait(false);
+	
 		}
 		/// <summary>
 		/// Send asynchronously a list of CloudEvent Schema formatted events.
 		/// </summary>
 		/// <param name="cloudEvents"></param>
 		/// <returns></returns>
-		private async Task<bool> sendEvtsAsync(IEnumerable<CloudEvent> cloudEvents)
+		private async Task sendEvtsAsync(IEnumerable<CloudEvent> cloudEvents)
 		{
-			try
-			{
-				await _client.SendEventsAsync(cloudEvents).ConfigureAwait(false);
-				return true;
-			}
-			catch (Exception ex)
-			{
-				throw ex;
-			}
+			await _client.SendEventsAsync(cloudEvents).ConfigureAwait(false);	
 		}
 
 		#endregion
