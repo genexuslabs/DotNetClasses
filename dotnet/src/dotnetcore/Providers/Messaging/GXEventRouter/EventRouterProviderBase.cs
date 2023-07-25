@@ -32,17 +32,6 @@ namespace GeneXus.Messaging.Common
 				throw new Exception("Event Router was not instantiated.");
 			}
 		}
-		private static Assembly LoadAssembly(string fileName)
-		{
-			if (File.Exists(fileName))
-			{
-				Assembly assemblyLoaded = Assembly.LoadFrom(fileName);
-				return assemblyLoaded;
-			}
-			else
-				return null;
-		}
-
 		private static void LoadAssemblyIfRequired()
 		{
 			if (assembly == null)
