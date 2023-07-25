@@ -137,12 +137,12 @@ namespace GeneXus.Messaging.Common
 		{
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			bool foundGeneralException = false;
-			if (errorMessages != null && ex != null)
+			if (ex != null)
 			{
 				SdtMessages_Message msg = new SdtMessages_Message();
-				if (eventRouter != null)
-				{		
-					while (ex.InnerException != null)
+				if (eventRouter != null && ex.InnerException != null)
+				{
+					do
 					{
 						if (eventRouter.GetMessageFromException(ex.InnerException, msg))
 						{
@@ -156,6 +156,7 @@ namespace GeneXus.Messaging.Common
 						}
 						ex = ex.InnerException;
 					}
+					while (ex.InnerException != null);
 					if (foundGeneralException)
 						GXUtil.ErrorToMessages("GXEventRouter1002", ex, errorMessages);
 				}
