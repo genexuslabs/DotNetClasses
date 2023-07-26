@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
-    <PackageId>GeneXus.Message.Queue</PackageId>
+	<PackageId>GeneXus.Message.EventRouter</PackageId>
+	<PackageTags>Event Bus Messaging Router</PackageTags>
+	<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+	<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
-
 </Project>
