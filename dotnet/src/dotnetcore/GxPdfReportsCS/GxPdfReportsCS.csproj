@@ -13,6 +13,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <EmbeddedResource Include="..\..\dotnetframework\GxPdfReportsCS\sRGB Color Space Profile.icm" Link="sRGB Color Space Profile.icm" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="iTextSharp-LGPL" Version="4.1.6" />
 		<PackageReference Include="log4net" Version="2.0.15" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
