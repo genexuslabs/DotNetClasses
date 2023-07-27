@@ -25,6 +25,25 @@ namespace GeneXus.Data.NTier
 		{
 			return new GxCosmosDBCacheDataReader(item, computeSize, keyCache);
 		}
+		protected override string BuildConnectionStringForLog(string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra)
+		{
+			StringBuilder connectionString = new StringBuilder();
+			if (!string.IsNullOrEmpty(datasourceName))
+			{
+				connectionString.AppendFormat("Data Source={0};", NaV);
+			}
+			if (userId != null)
+			{
+				connectionString.AppendFormat(";User ID={0};Password={1}", userId, NaV);
+			}
+			if (!string.IsNullOrEmpty(extra))
+			{
+
+				connectionString.AppendFormat(";{0}", extra);
+			}
+			return connectionString.ToString();
+		}
 	}
 
 	public class CosmosDBConnection : ServiceConnection
