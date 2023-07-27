@@ -39,7 +39,6 @@ namespace GeneXus.Data.NTier
 			}
 			if (!string.IsNullOrEmpty(extra))
 			{
-
 				connectionString.AppendFormat(";{0}", extra);
 			}
 			return connectionString.ToString();
