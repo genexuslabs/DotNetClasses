@@ -358,7 +358,13 @@ namespace GeneXus.Data
 		}
 
 		protected abstract string BuildConnectionString(string datasourceName, string userId, 
-			string userPassword,string databaseName, string port, string schema,  string extra); 
+			string userPassword,string databaseName, string port, string schema,  string extra);
+
+		protected virtual string BuildConnectionStringForLog(string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra)
+		{
+			return BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
+		}
 
 		public virtual object[] ExecuteStoredProcedure(IDbCommand cmd)
 		{
