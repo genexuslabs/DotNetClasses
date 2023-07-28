@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure;
+using Azure.Identity;
 using Azure.Messaging;
 using Azure.Messaging.EventGrid;
 using GeneXus.Messaging.Common;
@@ -32,11 +33,19 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			_endpoint = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.URI_ENDPOINT);
 			_accessKey = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.ACCESS_KEY);
 
-			if (!string.IsNullOrEmpty(_endpoint)) { 
+			if (!string.IsNullOrEmpty(_endpoint)) {
 
+				if (!string.IsNullOrEmpty(_accessKey)) 
 				_client = new EventGridPublisherClient(
 					new Uri(_endpoint),
 					new AzureKeyCredential(_accessKey));
+				else
+				//Try authenticating using AD
+				{
+					_client = new EventGridPublisherClient(
+					new Uri(_endpoint),
+					new DefaultAzureCredential());
+				}
 			}
 			else
 				throw new Exception("Endpoint URI must be set.");
