@@ -43,7 +43,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				else
 				//Try authenticating using AD
 				{
-					logger.Debug("Authentication using Oauth 2.0.");
+					GXLogging.Debug(logger,"Authentication using Oauth 2.0.");
 					_client = new EventGridPublisherClient(
 					new Uri(_endpoint),
 					new DefaultAzureCredential());
@@ -167,7 +167,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		private async Task<bool> sendEventGridSchemaEventAsync(EventGridEvent evt)
 		{
 			Response response = await _client.SendEventAsync(evt).ConfigureAwait(false);
-			logger.Debug(string.Format("Send Event GridSchema: {0} {1}", response.Status, response.ReasonPhrase));
+			GXLogging.Debug(logger,string.Format("Send Event GridSchema: {0} {1}", response.Status, response.ReasonPhrase));
 			return !response.IsError;
 
 		}
@@ -179,7 +179,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		private async Task<bool> sendEventGridSchemaEventsAsync(IEnumerable<EventGridEvent> evts)
 		{	
 			Response response = await _client.SendEventsAsync(evts).ConfigureAwait(false);
-			logger.Debug(string.Format("Send Events GridSchema: {0} {1}", response.Status, response.ReasonPhrase));
+			GXLogging.Debug(logger,string.Format("Send Events GridSchema: {0} {1}", response.Status, response.ReasonPhrase));
 			return !response.IsError;
 		}
 		/// <summary>
@@ -190,7 +190,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		private async Task<bool> sendEvtAsync(CloudEvent cloudEvent)
 		{
 			Response response = await _client.SendEventAsync(cloudEvent).ConfigureAwait(false);
-			logger.Debug(string.Format("Send Event: {0} {1}", response.Status,response.ReasonPhrase));
+			GXLogging.Debug(logger,string.Format("Send Event: {0} {1}", response.Status,response.ReasonPhrase));
 			return !response.IsError;
 		}
 		/// <summary>
@@ -201,7 +201,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		private async Task<bool> sendEvtsAsync(IEnumerable<CloudEvent> cloudEvents)
 		{
 			Response response = await _client.SendEventsAsync(cloudEvents).ConfigureAwait(false);
-			logger.Debug(string.Format("Send Events: {0} {1}", response.Status, response.ReasonPhrase));
+			GXLogging.Debug(logger,string.Format("Send Events: {0} {1}", response.Status, response.ReasonPhrase));
 			return !response.IsError;
 		}
 
