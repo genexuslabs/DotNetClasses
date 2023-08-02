@@ -1,15 +1,16 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure;
+using Azure.Identity;
 using Azure.Messaging;
 using Azure.Messaging.EventGrid;
 using GeneXus.Messaging.Common;
 using GeneXus.Services;
 using GeneXus.Utils;
+using log4net;
 
 namespace GeneXus.Messaging.GXAzureEventGrid
 {
@@ -19,6 +20,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		private EventGridPublisherClient _client;
 		private string _endpoint;
 		private string _accessKey;
+		static readonly ILog logger = LogManager.GetLogger(typeof(AzureEventGrid));
 		public AzureEventGrid() : this(null)
 		{
 		}
@@ -32,11 +34,20 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 			_endpoint = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.URI_ENDPOINT);
 			_accessKey = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.ACCESS_KEY);
 
-			if (!string.IsNullOrEmpty(_endpoint)) { 
+			if (!string.IsNullOrEmpty(_endpoint)) {
 
+				if (!string.IsNullOrEmpty(_accessKey)) 
 				_client = new EventGridPublisherClient(
 					new Uri(_endpoint),
 					new AzureKeyCredential(_accessKey));
+				else
+				//Try authenticating using AD
+				{
+					GXLogging.Debug(logger,"Authentication using Oauth 2.0.");
+					_client = new EventGridPublisherClient(
+					new Uri(_endpoint),
+					new DefaultAzureCredential());
+				}
 			}
 			else
 				throw new Exception("Endpoint URI must be set.");
@@ -50,22 +61,15 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		{
 			CloudEvent evt = ToCloudEvent(gxCloudEvent, binaryData);
 			bool success = false;
-			try
+			Task<bool> task;
+			if (_client != null)
 			{
-				Task task;
-				if (_client != null)
-				{
-					task = Task.Run(async () => await sendEvtAsync(evt).ConfigureAwait(false));
-					success = true;
-				}
-				else
-				{
-					throw new Exception("There was an error at the Event Grid initialization.");
-				}
+				task = Task.Run(async () => await sendEvtAsync(evt).ConfigureAwait(false));
+				success = task.Result;
 			}
-			catch (AggregateException ae)
+			else
 			{
-				throw ae;
+				throw new Exception("There was an error at the Event Grid initialization.");
 			}
 			return success;
 		}
@@ -76,22 +80,15 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				evts.Add(ToCloudEvent(e, binaryData));
 
 			bool success = false;
-			try
+			Task<bool> task;
+			if (_client != null)
 			{
-				Task task;
-				if (_client != null)
-				{
-					task = Task.Run(async () => await sendEvtsAsync(evts).ConfigureAwait(false));
-					success = true;
-				}
-				else
-				{
-					throw new Exception("There was an error at the Event Grid initialization.");
-				}
+				task = Task.Run(async () => await sendEvtsAsync(evts).ConfigureAwait(false));
+				success = task.Result;
 			}
-			catch (AggregateException ae)
+			else
 			{
-				throw ae;
+				throw new Exception("There was an error at the Event Grid initialization.");
 			}
 			return success;
 		}
@@ -112,11 +109,11 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				bool success = false;
 				try
 				{
-					Task task;
+					Task<bool> task;
 					if (_client != null)
 					{
 						task = Task.Run(async () => await sendEventGridSchemaEventsAsync(eventGridEvents).ConfigureAwait(false));
-						success = true;
+						success = task.Result;
 					}
 					else
 					{
@@ -137,11 +134,11 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 					bool success = false;
 					try
 					{
-						Task task;
+						Task<bool> task;
 						if (_client != null)
 						{
 							task = Task.Run(async () => await sendEventGridSchemaEventAsync(ToEventGridSchema(evt, isBinary)).ConfigureAwait(false));
-							success = true;
+							success = task.Result;
 						}
 						else
 						{
@@ -166,39 +163,46 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		/// Send asynchronously an event formatted as Azure EventGrid Schema.
 		/// </summary>
 		/// <param name="evt"></param>
-		/// <returns></returns>
-		private async Task sendEventGridSchemaEventAsync(EventGridEvent evt)
+		/// <returns>bool</returns>
+		private async Task<bool> sendEventGridSchemaEventAsync(EventGridEvent evt)
 		{
-			await _client.SendEventAsync(evt).ConfigureAwait(false);
-			
+			Response response = await _client.SendEventAsync(evt).ConfigureAwait(false);
+			GXLogging.Debug(logger,string.Format("Send Event GridSchema: {0} {1}", response.Status, response.ReasonPhrase));
+			return !response.IsError;
+
 		}
 		/// <summary>
 		/// Send asynchronously a list of events formatted as Azure EventGrid Schema.
 		/// </summary>
 		/// <param name="evts"></param>
-		/// <returns></returns>
-		private async Task sendEventGridSchemaEventsAsync(IEnumerable<EventGridEvent> evts)
+		/// <returns>bool</returns>
+		private async Task<bool> sendEventGridSchemaEventsAsync(IEnumerable<EventGridEvent> evts)
 		{	
-			await _client.SendEventsAsync(evts).ConfigureAwait(false);
+			Response response = await _client.SendEventsAsync(evts).ConfigureAwait(false);
+			GXLogging.Debug(logger,string.Format("Send Events GridSchema: {0} {1}", response.Status, response.ReasonPhrase));
+			return !response.IsError;
 		}
 		/// <summary>
 		/// Send asynchronously an event formatted as CloudEvent Schema.
 		/// </summary>
 		/// <param name="cloudEvent"></param>
-		/// <returns></returns>
-		private async Task sendEvtAsync(CloudEvent cloudEvent)
+		/// <returns>bool</returns>
+		private async Task<bool> sendEvtAsync(CloudEvent cloudEvent)
 		{
-			await _client.SendEventAsync(cloudEvent).ConfigureAwait(false);
-	
+			Response response = await _client.SendEventAsync(cloudEvent).ConfigureAwait(false);
+			GXLogging.Debug(logger,string.Format("Send Event: {0} {1}", response.Status,response.ReasonPhrase));
+			return !response.IsError;
 		}
 		/// <summary>
 		/// Send asynchronously a list of CloudEvent Schema formatted events.
 		/// </summary>
 		/// <param name="cloudEvents"></param>
-		/// <returns></returns>
-		private async Task sendEvtsAsync(IEnumerable<CloudEvent> cloudEvents)
+		/// <returns>bool</returns>
+		private async Task<bool> sendEvtsAsync(IEnumerable<CloudEvent> cloudEvents)
 		{
-			await _client.SendEventsAsync(cloudEvents).ConfigureAwait(false);	
+			Response response = await _client.SendEventsAsync(cloudEvents).ConfigureAwait(false);
+			GXLogging.Debug(logger,string.Format("Send Events: {0} {1}", response.Status, response.ReasonPhrase));
+			return !response.IsError;
 		}
 
 		#endregion
