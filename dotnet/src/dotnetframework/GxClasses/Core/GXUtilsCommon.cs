@@ -2570,9 +2570,9 @@ namespace GeneXus.Utils
 
 		static private TimeSpan CurrentOffset(string clientTimeZone)
 		{
-			DateTimeZone clientTimeZoneObj = DateTimeZoneProviders.Tzdb[clientTimeZone];
+			DateTimeZone clientTimeZoneObj = DateTimeZoneProviders.Tzdb.GetZoneOrNull(clientTimeZone);
 			if (clientTimeZoneObj == null)
-				clientTimeZoneObj = DateTimeZoneProviders.Tzdb[LocalTimeZoneId];
+				clientTimeZoneObj = DateTimeZoneProviders.Tzdb.GetZoneOrNull(LocalTimeZoneId);
 			Instant now = SystemClock.Instance.GetCurrentInstant();
 
 			try
@@ -3386,7 +3386,7 @@ namespace GeneXus.Utils
 			DateTime ret = toUniversalTime(dt, fromTimezone);
 
 
-			if (string.IsNullOrEmpty(toTimezone) || DateTimeZoneProviders.Tzdb[toTimezone]==null)
+			if (!ValidTimeZone(toTimezone))
 				toTimezone = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
 
 			if (ret < OlsonMinTime)
@@ -3400,6 +3400,11 @@ namespace GeneXus.Utils
 			}
 			return dtconverted.AddMilliseconds(milliSeconds);
 		}
+		internal static bool ValidTimeZone(string timeZone)
+		{
+			return !string.IsNullOrEmpty(timeZone) && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZone) != null;
+		}
+
 		internal static DateTime Local2DBserver(DateTime dt, string clientTimezone)
 		{
 			try
@@ -3702,7 +3707,10 @@ namespace GeneXus.Utils
 		static public DateTime FromTimeZone(DateTime dt, String sTZ, IGxContext context)
 		{
 #if NODATIME
-			return ConvertDateTime(dt, sTZ, context.GetTimeZone());
+			if (ValidTimeZone(sTZ))
+				return ConvertDateTime(dt, sTZ, context.GetTimeZone());
+			else
+				return dt;
 #else
 			OlsonTimeZone fromTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
 			if (fromTimeZone != null)
