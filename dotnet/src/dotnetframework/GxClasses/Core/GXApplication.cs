@@ -3591,7 +3591,8 @@ namespace GeneXus.Application
 				}
 				try
 				{
-					_currentTimeZoneId = String.IsNullOrEmpty(sTZ) ? DateTimeZoneProviders.Tzdb.GetSystemDefault().Id : sTZ;
+					_currentTimeZoneId = !DateTimeUtil.ValidTimeZone(sTZ) ? DateTimeZoneProviders.Tzdb.GetSystemDefault().Id : sTZ;
+
 				}
 				catch (Exception e1)
 				{
@@ -3636,14 +3637,15 @@ namespace GeneXus.Application
 		public Boolean SetTimeZone(String sTZ)
 		{
 			sTZ = StringUtil.RTrim(sTZ);
-			Boolean ret = false;
+			bool ret = false;
 #if NODATIME
 			string tzId;
 			try
 			{
-				if (DateTimeZoneProviders.Tzdb[sTZ] != null)
+				DateTimeZone zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(sTZ);
+				if (zone != null)
 				{
-					tzId = DateTimeZoneProviders.Tzdb[sTZ].Id;
+					tzId = zone.Id;
 				}
 				else
 				{
