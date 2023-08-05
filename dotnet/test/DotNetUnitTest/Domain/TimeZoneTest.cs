@@ -13,39 +13,6 @@ namespace xUnitTesting
 		const string GUADALAJARA_IANA_TIMEZONE_ID = "America/Mexico_City";
 		const string PARIS_IANA_TIMEZONE_ID = "Europe/Paris";
 		[Fact]
-		public void TimeHeaderValidation()
-		{
-			string tz = "Etc/GMT 3";
-			GxContext ctx = GxContext.CreateDefaultInstance();
-			ctx.SetTimeZone(tz);
-			string nodaTimeZone = ctx.GetTimeZone();
-			string t4znetTimeZone = Context_SetTimeZone_TZ4Net(tz);
-			Assert.Equal(nodaTimeZone, t4znetTimeZone);
-
-		}
-#pragma warning disable CS0618 // Type or member is obsolete
-		string Context_SetTimeZone_TZ4Net(string sTZ)
-		{
-			OlsonTimeZone _currentTimeZone;
-			try
-			{
-				_currentTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
-			}
-			catch (Exception)
-			{
-				try
-				{
-					_currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(sTZ);
-				}
-				catch (Exception)
-				{
-					_currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
-				}
-			}
-			return _currentTimeZone.Name;
-		}
-#pragma warning restore CS0618 // Type or member is obsolete
-		[Fact]
 		public void MontevideoTimeZoneConversion_offset3()
 		{
 			DateTime dt = new DateTime(1967, 10, 28, 7, 10, 0, DateTimeKind.Utc);

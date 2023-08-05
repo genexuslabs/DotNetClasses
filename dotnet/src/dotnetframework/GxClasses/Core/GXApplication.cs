@@ -2319,6 +2319,20 @@ namespace GeneXus.Application
 			}
 			return cookieVal;
 		}
+		internal string GetUndecodedCookie(string name)
+		{
+			string cookieVal = string.Empty;
+			HttpCookie cookie = TryGetCookie(localCookies, name);
+			if (cookie == null && _HttpContext != null)
+			{
+				cookie = TryGetCookie(_HttpContext.Request.GetCookies(), name);
+			}
+			if (cookie != null && cookie.Value != null)
+			{
+				cookieVal = cookie.Value;
+			}
+			return cookieVal;
+		}
 
 		private HttpCookie TryGetCookie(HttpCookieCollection cookieColl, string name)
 		{
@@ -3595,6 +3609,11 @@ namespace GeneXus.Application
 				{
 					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
 					GXLogging.Debug(log, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
+				if (!DateTimeUtil.ValidTimeZone(sTZ))
+				{
+					sTZ = (string)GetUndecodedCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(log, "Try reading undecoded ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
 				}
 				try
 				{
