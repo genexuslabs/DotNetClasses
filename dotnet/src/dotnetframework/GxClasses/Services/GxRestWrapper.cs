@@ -602,7 +602,6 @@ namespace GeneXus.Application
 				{
 					string CSRFToken;
 					bool useCSRFToken = false;
-					token = token.Replace("OAuth ", "");
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;
