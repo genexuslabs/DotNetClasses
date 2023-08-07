@@ -455,7 +455,7 @@ namespace GeneXus.Utils
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;
-						if (Config.GetValueOf("CSRFToken", out string useCSRFTokenStr) && bool.TryParse(useCSRFTokenStr, out bool useCSRFTokenValue))
+						if (Config.GetValueOf("ValidateCSRF", out string useCSRFTokenStr) && bool.TryParse(useCSRFTokenStr, out bool useCSRFTokenValue))
 						{
 							useCSRFToken = useCSRFTokenValue;
 						}
