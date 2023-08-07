@@ -32,7 +32,6 @@ namespace GeneXus.XML
 	}
 	public class GXXMLReader : IDisposable
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Configuration.Config));
 		public const short ElementType					= 1;
 		public const short EndTagType					= 2;
 		public const short TextType						= 4;
@@ -277,14 +276,6 @@ namespace GeneXus.XML
 			Uri baseUri = new Uri( sBaseDirectory );
 			Resolver.Myself = baseUri;
 			CreateXMLSettings();
-			try
-			{
-				if (File.Exists(s))
-					XMLInput = new FileStream(s, FileMode.Open, FileAccess.Read);
-			}
-			catch(Exception ex) {
-				GXLogging.Warn(log, "OpenFromString file failed", ex);
-			}
 			if (XMLInput ==null)
 				XMLInput = new StringReader(s);
 		}

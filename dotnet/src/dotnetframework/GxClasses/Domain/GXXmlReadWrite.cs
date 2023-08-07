@@ -299,14 +299,7 @@ namespace GeneXus.XML
 			Resolver.Myself = baseUri;
 			treader = null;
 			mreader = null;
-			try
-			{
-				if (File.Exists(s))
-					treader = new XmlTextReader(s);
-			}
-			catch { }
-			if (treader==null)
-				treader = new XmlTextReader(new StringReader(s));
+			treader = new XmlTextReader(new StringReader(s));
 			SetDtdProcessing(treader, Resolver, validationType);
 			vreader = new XmlValidatingReader( treader );
 			vreader.XmlResolver = Resolver;
