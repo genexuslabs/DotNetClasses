@@ -795,7 +795,7 @@ namespace GeneXus.Configuration
 		public static string DefaultRewriteFile = "rewrite.config";
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
 		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
-		const string YES = "1";
+		internal const string YES = "1";
 		const string NO = "0";
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";

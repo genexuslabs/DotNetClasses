@@ -451,15 +451,12 @@ namespace GeneXus.Utils
 				{
 					
 					string CSRFToken;
-					bool useCSRFToken = false;
+					bool validateCSRFToken = false;
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;
-						if (Config.GetValueOf("ValidateCSRF", out string useCSRFTokenStr) && bool.TryParse(useCSRFTokenStr, out bool useCSRFTokenValue))
-						{
-							useCSRFToken = useCSRFTokenValue;
-						}
-						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, useCSRFToken, out CSRFToken, out isOK);
+						validateCSRFToken = RestAPIHelpers.ValidateCsrfToken();
+						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, validateCSRFToken, out CSRFToken, out isOK);
 						if (!isOK)
 						{
 							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
@@ -475,7 +472,7 @@ namespace GeneXus.Utils
 					else if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
 					{
 						bool sessionOk, permissionOk;
-						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(context, useCSRFToken, objPermissionPrefix, out CSRFToken, out sessionOk, out permissionOk);
+						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(context, validateCSRFToken, objPermissionPrefix, out CSRFToken, out sessionOk, out permissionOk);
 						if (permissionOk)
 						{
 							if (!string.IsNullOrEmpty(CSRFToken))

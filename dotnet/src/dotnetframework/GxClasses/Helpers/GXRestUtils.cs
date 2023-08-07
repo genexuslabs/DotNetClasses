@@ -11,8 +11,7 @@ using System.Text.Json.Serialization;
 using log4net;
 using System.IO;
 using Jayrock.Json;
-
-
+using GeneXus.Configuration;
 
 namespace GeneXus.Utils
 {
@@ -139,6 +138,11 @@ namespace GeneXus.Utils
 				}
 			}
 			return bodyParameters;
+		}
+
+		internal static bool ValidateCsrfToken()
+		{
+			return Config.GetValueOf("ValidateCSRF", Preferences.YES) == Preferences.YES;
 		}
 	}
 }
