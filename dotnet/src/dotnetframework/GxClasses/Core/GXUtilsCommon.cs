@@ -6063,7 +6063,6 @@ namespace GeneXus.Utils
 		}
 		public static string RoundBorders(string imageFile, int topLeftRadius, int topRightRadius, int bottomLeftRadius, int bottomRightRadius)
 		{
-			System.Diagnostics.Debugger.Launch();
 			string modifiedImage = string.Empty;
 			try
 			{
