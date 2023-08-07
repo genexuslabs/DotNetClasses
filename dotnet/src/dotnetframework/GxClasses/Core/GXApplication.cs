@@ -2425,11 +2425,10 @@ namespace GeneXus.Application
 				_httpHeaders = new NameValueCollection();
 			}
 			_httpHeaders[name] = value;
-			SetCustomHttpHeader(name, value);
-			return 0;
+			return SetCustomHttpHeader(name, value);
 		}
 
-		private void SetCustomHttpHeader(string name, string value)
+		private byte SetCustomHttpHeader(string name, string value)
 		{
 			try
 			{
@@ -2437,34 +2436,27 @@ namespace GeneXus.Application
 
 				if (name.Equals(HeaderNames.CacheControl, StringComparison.OrdinalIgnoreCase))
 				{
-					if (System.Net.Http.Headers.CacheControlHeaderValue.TryParse(value, out System.Net.Http.Headers.CacheControlHeaderValue parsedValue))
+					var Cache = _HttpContext.Response.Cache;
+					string[] values = value.Split(',');
+					foreach (string v in values)
 					{
-						HttpContext.Current.Response.CacheControl = parsedValue.ToString();
-					}
-					else
-					{
-						var Cache = _HttpContext.Response.Cache;
-						string[] values = value.Split(',');
-						foreach (string v in values)
+						switch (v.Trim().ToUpper())
 						{
-							switch (v.Trim().ToUpper())
-							{
-								case "PUBLIC":
-									Cache.SetCacheability(HttpCacheability.Public);
-									break;
-								case "PRIVATE":
-									Cache.SetCacheability(HttpCacheability.Private);
-									break;
-								case "NO-CACHE":
-									Cache.SetCacheability(HttpCacheability.NoCache);
-									break;
-								case "NO-STORE":
-									Cache.AppendCacheExtension("no-store, must-revalidate");
-									break;
-								default:
-									GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
-									break;
-							}
+							case "PUBLIC":
+								Cache.SetCacheability(HttpCacheability.Public);
+								break;
+							case "PRIVATE":
+								Cache.SetCacheability(HttpCacheability.Private);
+								break;
+							case "NO-CACHE":
+								Cache.SetCacheability(HttpCacheability.NoCache);
+								break;
+							case "NO-STORE":
+								Cache.AppendCacheExtension("no-store, must-revalidate");
+								break;
+							default:
+								GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
+								break;
 						}
 					}
 				}
@@ -2472,15 +2464,20 @@ namespace GeneXus.Application
 				{
 					_HttpContext.Response.ContentType = value;
 				}
+				else if (name.Equals(HeaderNames.Location, StringComparison.OrdinalIgnoreCase))
+				{
+					_HttpContext.Response.RedirectLocation = value;
+				}
 				else
 				{
-					if (!string.IsNullOrEmpty(_HttpContext.Response.Headers[name]))
+					try
 					{
 						_HttpContext.Response.Headers[name] = value;
-					}
-					else
+
+					}catch (PlatformNotSupportedException ex)
 					{
 						_HttpContext.Response.AppendHeader(name, value);
+						GXLogging.Warn(log, ex, "SetHeader ", name, value);
 					}
 				}
 #else
@@ -2510,10 +2507,12 @@ namespace GeneXus.Application
 						_HttpContext.Response.AddHeader(name, value);
 				}
 #endif
+				return 0;
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, ex, "Error adding header ", name, value);
+				return 1;
 			}
 		}
 
