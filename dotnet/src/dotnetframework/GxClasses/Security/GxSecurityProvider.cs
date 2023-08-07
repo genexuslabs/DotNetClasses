@@ -20,7 +20,9 @@ namespace GeneXus.Security
 	public interface ISecurityProvider
 	{
 		GxResult checkaccesstoken(IGxContext context, String token, out bool isOK);
+		GxResult checkaccesstoken(IGxContext context, bool useCSRF_Token, out string CSRF_Token, out bool isOK);
 		GxResult checkaccesstokenprm(IGxContext context, String token, String permissionPrefix, out bool sessionOk, out bool permissionOk);
+		GxResult checkaccesstokenprm(IGxContext context, bool useCSRF_Token, string permissionName, out string CSRF_Token, out bool sessionOk, out bool permission);
 		void checksession(IGxContext context, string CleanAbsoluteUri, out bool isOK);
 		void checksessionprm(IGxContext context, string pathAndQuery, String permissionPrefix, out bool isOK, out bool isPermissionOK);
 		GxResult refreshtoken(IGxContext context, String clientId, String clientSecret, String refreshToken, out OutData outData, out bool flag);
@@ -88,14 +90,25 @@ namespace GeneXus.Security
 			isOK = false;
 			return new GxResult();
 		}
-
+		public GxResult checkaccesstoken(IGxContext context, bool useCSRF_Token, out string CSRF_Token, out bool isOK)
+		{
+			isOK = false;
+			CSRF_Token = string.Empty;
+			return new GxResult();
+		}
 		public GxResult checkaccesstokenprm(IGxContext context, string token, string permissionPrefix, out bool sessionOk, out bool permissionOk)
 		{
 			permissionOk = false;
 			sessionOk = true;
 			return new GxResult();
 		}
-
+		public GxResult checkaccesstokenprm(IGxContext context, bool useCSRF_Token, string permissionName, out string CSRF_Token, out bool sessionOk, out bool permission)
+		{
+			sessionOk = false;
+			permission = false;
+			CSRF_Token = string.Empty;
+			return new GxResult();
+		}
 		public void checksession(IGxContext context, string CleanAbsoluteUri, out bool isOK)
 		{
 			isOK = false;

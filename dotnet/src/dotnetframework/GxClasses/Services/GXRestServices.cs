@@ -450,23 +450,37 @@ namespace GeneXus.Utils
 				else
 				{
 					
-					token = token.Replace("OAuth ", "");
+					string CSRFToken;
+					bool useCSRFToken = false;
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;
-						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
+						if (Config.GetValueOf("CSRFToken", out string useCSRFTokenStr) && bool.TryParse(useCSRFTokenStr, out bool useCSRFTokenValue))
+						{
+							useCSRFToken = useCSRFTokenValue;
+						}
+						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, useCSRFToken, out CSRFToken, out isOK);
 						if (!isOK)
 						{
 							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							return false;
 						}
+						else
+						{
+							if (!string.IsNullOrEmpty(CSRFToken))
+								AddHeader(HttpHeader.X_GXCSRF_TOKEN, CSRFToken);
+						}
+									
 					}
 					else if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
 					{
 						bool sessionOk, permissionOk;
-						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(context, token, objPermissionPrefix, out sessionOk, out permissionOk);
+						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(context, useCSRFToken, objPermissionPrefix, out CSRFToken, out sessionOk, out permissionOk);
 						if (permissionOk)
 						{
+							if (!string.IsNullOrEmpty(CSRFToken))
+								AddHeader(HttpHeader.X_GXCSRF_TOKEN, CSRFToken);
+
 							return true;
 						}
 						else
