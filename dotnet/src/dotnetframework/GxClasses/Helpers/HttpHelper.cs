@@ -51,7 +51,7 @@ namespace GeneXus.Http
 		public static string XGXFILENAME = "x-gx-filename";
 		internal static string ACCEPT = "Accept";
 		internal static string TRANSFER_ENCODING = "Transfer-Encoding";
-		internal static string X_GXCSRF_TOKEN= "X-GXCSRF-TOKEN":
+		internal static string X_GXCSRF_TOKEN = "X-GXCSRF-TOKEN";
 	}
 	internal class HttpHeaderValue
 	{
