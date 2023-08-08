@@ -13,7 +13,7 @@ namespace ProjectHealthTest
 	{
 		private const string PROJECTS = "*.csproj";
 
-		private const string PACKAGES_NODE_NAME = "Project/ItemGroup/PackageReference";
+		private const string PACKAGES_NODE_NAME = "Project/ItemGroup/PackageReference[not(@TargetFramework='net462')]";
 		private const string PACKAGE_NAME = "Include";
 		private const string SRC_DIR = @"..\..\..\..\..\src";
 		private const string PACKAGE_VERSION_ATTRIBUTE_NAME = "Version";
@@ -98,6 +98,17 @@ namespace ProjectHealthTest
 					{
 						foreach (XmlNode packageNode in packagesNodes)
 						{
+							XmlAttribute condition = packageNode.ParentNode.Attributes["Condition"];
+							if (condition != null) {
+								if (targetFramework == NET6 && condition.Value.Contains($"=='{NET_FRAMEWORK}'", StringComparison.OrdinalIgnoreCase))
+									continue;
+								else if (targetFramework == NET_FRAMEWORK && condition.Value.Contains($"=='{NET6}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
+
+							}
+
 							if (packageNode.Attributes == null)
 							{
 								continue;
