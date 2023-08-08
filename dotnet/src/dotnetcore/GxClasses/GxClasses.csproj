@@ -152,7 +152,7 @@
 	<ItemGroup>
 		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" />
 		<PackageReference Include="log4net" Version="2.0.15" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.2" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 		  <PrivateAssets>all</PrivateAssets>
@@ -168,9 +168,9 @@
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.8.0" />
 		<PackageReference Include="System.Drawing.Common" Version="4.7.2" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.8.0" />
 		<PackageReference Include="NUglify" Version="1.16.4" />
 	</ItemGroup>
 
