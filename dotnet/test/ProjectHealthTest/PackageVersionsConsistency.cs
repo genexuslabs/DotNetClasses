@@ -13,7 +13,7 @@ namespace ProjectHealthTest
 	{
 		private const string PROJECTS = "*.csproj";
 
-		private const string PACKAGES_NODE_NAME = "Project/ItemGroup/PackageReference[not(@TargetFramework='net462')]";
+		private const string PACKAGES_NODE_NAME = "Project/ItemGroup/PackageReference";
 		private const string PACKAGE_NAME = "Include";
 		private const string SRC_DIR = @"..\..\..\..\..\src";
 		private const string PACKAGE_VERSION_ATTRIBUTE_NAME = "Version";
