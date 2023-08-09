@@ -451,11 +451,10 @@ namespace GeneXus.Utils
 				{
 					
 					string CSRFToken;
-					bool validateCSRFToken = false;
+					bool validateCSRFToken = RestAPIHelpers.ValidateCsrfToken(); ;
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;
-						validateCSRFToken = RestAPIHelpers.ValidateCsrfToken();
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, validateCSRFToken, out CSRFToken, out isOK);
 						if (!isOK)
 						{
