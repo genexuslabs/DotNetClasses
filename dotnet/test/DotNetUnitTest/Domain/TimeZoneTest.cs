@@ -1,4 +1,5 @@
 using System;
+using GeneXus.Application;
 using GeneXus.Utils;
 using TZ4Net;
 using Xunit;
