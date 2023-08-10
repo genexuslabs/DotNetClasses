@@ -5768,7 +5768,8 @@ namespace GeneXus.Utils
 
 		private static Bitmap BitmapCreateFromStream(string filePathOrUrl)
 		{
-			if (filePathOrUrl.StartsWith("http://") || filePathOrUrl.StartsWith("https://"))
+			Uri uri;
+			if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
 			{
 				using (HttpClient httpClient = new HttpClient())
 				{
@@ -5799,7 +5800,8 @@ namespace GeneXus.Utils
 		}
 		private static Image ImageCreateFromStream(string filePathOrUrl)
 		{
-			if (filePathOrUrl.StartsWith("http://") || filePathOrUrl.StartsWith("https://"))
+			Uri uri;
+			if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
 			{
 				using (HttpClient httpClient = new HttpClient())
 				{
