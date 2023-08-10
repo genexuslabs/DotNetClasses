@@ -568,11 +568,10 @@ namespace GeneXus.Application
 				else
 				{
 					string CSRFToken;
-					bool validateCSRFToken = false;
+					bool validateCSRFToken = RestAPIHelpers.ValidateCsrfToken();
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;
-						validateCSRFToken = RestAPIHelpers.ValidateCsrfToken();
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(_gxContext, validateCSRFToken, out CSRFToken, out isOK);
 						if (!isOK)
 						{
