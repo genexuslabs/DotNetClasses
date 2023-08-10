@@ -3616,8 +3616,22 @@ namespace GeneXus.Application
 				}
 				try
 				{
-					_currentTimeZoneId = !DateTimeUtil.ValidTimeZone(sTZ) ? DateTimeZoneProviders.Tzdb.GetSystemDefault().Id : sTZ;
-
+					if (!DateTimeUtil.ValidTimeZone(sTZ))
+					{
+						try
+						{
+							string invalidTimezone = DateTimeZoneProviders.Tzdb[sTZ].Id; 
+						}catch(Exception ex)//DateTimeZoneNotFound
+						{
+							GXLogging.Warn(log, $"Client timezone not found: {sTZ}", ex);
+						}
+						_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+						GXLogging.Warn(log, $"Setting Client timezone to System default: {_currentTimeZoneId}");
+					}
+					else
+					{
+						_currentTimeZoneId = sTZ;
+					}
 				}
 				catch (Exception e1)
 				{
