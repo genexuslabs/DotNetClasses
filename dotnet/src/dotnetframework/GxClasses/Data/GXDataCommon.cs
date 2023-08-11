@@ -26,8 +26,6 @@ using System.Globalization;
 using GeneXus.Metadata;
 using System.Data.Common;
 using System.Linq;
-using Experimental.System.Messaging;
-using NodaTime.Calendars;
 
 namespace GeneXus.Data
 {
@@ -1976,6 +1974,7 @@ namespace GeneXus.Data
 					return Convert.ToInt16(sqldecimal.Value);
 			}
 		}
+#if NETCORE
 		private bool UserPasswordAllowed(SqlConnectionStringBuilder sqlConnectionString)
 		{
 			if (sqlConnectionString != null && (sqlConnectionString.Authentication == SqlAuthenticationMethod.ActiveDirectoryIntegrated ||
@@ -1993,6 +1992,7 @@ namespace GeneXus.Data
 			else
 				return true;
 		}
+#endif
 		protected override string BuildConnectionString(string datasourceName, string userId, 
 			string userPassword,string databaseName, string port, string schema, string extra)
 		{
