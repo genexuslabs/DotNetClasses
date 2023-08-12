@@ -5,6 +5,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using GeneXus.Configuration;
 using GeneXus.Http;
@@ -104,32 +105,31 @@ namespace GeneXus.Application
 
 		private static void WebHostConfigureLogging(WebHostBuilderContext hostingContext, ILoggingBuilder loggingBuilder)
 		{
+			loggingBuilder.AddConsole();
 			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
 			if (providerService != null && providerService.ClassName.StartsWith(OPENTELEMETRY_AZURE_DISTRO))
 			{
 				string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
-				if (!string.IsNullOrEmpty(endpoint))
+				var resourceBuilder = ResourceBuilder.CreateDefault()
+				.AddTelemetrySdk();
+
+				loggingBuilder.AddOpenTelemetry(loggerOptions =>
 				{
-					var resourceBuilder = ResourceBuilder.CreateDefault()
-					.AddTelemetrySdk();
+					loggerOptions
+						.SetResourceBuilder(resourceBuilder)
+						.AddAzureMonitorLogExporter(options =>
+						{ if (!string.IsNullOrEmpty(endpoint))
+								options.ConnectionString = endpoint;
+							else
+								options.Credential = new DefaultAzureCredential();
+						})
+						.AddConsoleExporter();
 
-					loggingBuilder.AddOpenTelemetry(loggerOptions =>
-					{
-						loggerOptions
-							.SetResourceBuilder(resourceBuilder)
-							.AddAzureMonitorLogExporter(options =>
-								options.ConnectionString = endpoint)
-							.AddConsoleExporter();
-
-						loggerOptions.IncludeFormattedMessage = true;
-						loggerOptions.IncludeScopes = true;
-						loggerOptions.ParseStateValues = true;
-					});
-				}
+					loggerOptions.IncludeFormattedMessage = true;
+					loggerOptions.IncludeScopes = true;
+					loggerOptions.ParseStateValues = true;
+				});	
 			}
-			else
-				loggingBuilder.AddConsole();
-
 		}
 
 		private static void LocatePhysicalLocalPath()
