@@ -18,11 +18,21 @@
 		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.0" />
 
-		<PackageReference Include="Azure.Identity" Version="1.9.0" />
-		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.0.0-beta.13" NoWarn="NU5104"/>
-
-		<PackageReference Include="OpenTelemetry" Version="1.5.1" />
-		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.1" />
+		<PackageReference Include="Azure.Identity" Version="1.9.0" >
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.0.0-beta.13" NoWarn="NU5104">
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="OpenTelemetry" Version="1.5.1">
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.1">
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.ApplicationInsights.Log4NetAppender" Version="2.21.0" >
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
