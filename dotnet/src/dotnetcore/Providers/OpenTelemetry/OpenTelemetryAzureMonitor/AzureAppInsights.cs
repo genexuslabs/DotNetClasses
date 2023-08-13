@@ -62,7 +62,8 @@ namespace GeneXus.OpenTelemetry.Azure
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Azure Monitor Opentelemetry initialization error. " + ex.Message);
+				log.Warn("Azure Monitor Opentelemetry could not be initialized. " + ex.Message);
+				return false;
 			}
 		}
 	}
