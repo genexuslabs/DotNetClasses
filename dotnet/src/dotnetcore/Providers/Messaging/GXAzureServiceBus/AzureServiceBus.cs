@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using GeneXus.Messaging.Common;
 using GeneXus.Services;
 using GeneXus.Utils;
+using log4net;
 
 namespace GeneXus.Messaging.GXAzureServiceBus
 {
@@ -15,12 +17,14 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 	{
 		private const int MAX_MESSAGES_DEFAULT = 10;
 		private const short LOCK_DURATION = 5;
-		public static String Name = "AZURESB";
+		public static string Name = "AZURESB";
+		static readonly ILog logger = LogManager.GetLogger(typeof(AzureServiceBus));
 
 		private ConcurrentDictionary<string, Tuple<DateTime, ServiceBusReceivedMessage>> m_messages = new ConcurrentDictionary<string, Tuple<DateTime, ServiceBusReceivedMessage>>();
 		ServiceBusClient _serviceBusClient { get; set; }
 		private string _queueOrTopicName { get; set; }
 		private string _connectionString { get; set; }
+		private string _fullyqualifiedNamespace { get; set; }
 		private string _subscriptionName { get; set; }
 		private ServiceBusSender _sender { get; set; }
 		private ServiceBusReceiver _receiver { get; set; }
@@ -41,6 +45,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			_queueOrTopicName = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.QUEUE_NAME);
 			_connectionString = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.QUEUE_CONNECTION_STRING);
 			_subscriptionName = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.TOPIC_SUBSCRIPTION);
+			_fullyqualifiedNamespace = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.FULLYQUALIFIEDNAMESPACE);
 
 			string sessionEnabled = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.SESSION_ENABLED);
 
@@ -58,7 +63,18 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			//TO DO Consider connection options here
 			//https://docs.microsoft.com/en-us/javascript/api/@azure/service-bus/servicebusclientoptions?view=azure-node-latest#@azure-service-bus-servicebusclientoptions-websocketoptions
 
-			_serviceBusClient = new ServiceBusClient(_connectionString);
+			//First try authenticating using Azure Active Directory
+			if (!string.IsNullOrEmpty(_fullyqualifiedNamespace))
+			{ 
+				_serviceBusClient = new ServiceBusClient(_fullyqualifiedNamespace, new DefaultAzureCredential());
+				GXLogging.Debug(logger, "Authenticate to Azure Service Bus using Active Directory authentication.");
+			}
+			else
+			{ 
+				_serviceBusClient = new ServiceBusClient(_connectionString);
+				GXLogging.Debug(logger, "Authenticate to Azure Service Bus using SAS authentication.");
+			}
+
 			if (_serviceBusClient != null)
 			{
 				_sender = _serviceBusClient.CreateSender(_queueOrTopicName, serviceBusSenderOptions);
