@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Metadata;
+using Microsoft.Extensions.Logging;
 using Xunit;
 using xUnitTesting;
 
@@ -22,6 +23,7 @@ namespace DotNetCoreWebUnitTest
 		[Fact]
 		public async Task TestCouldNotLoadSystemDiagnosticsDiagnosticSource7_0_0_0()
 		{
+			Environment.SetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING", "xxxx");
 			server.AllowSynchronousIO = true;
 			HttpClient client = server.CreateClient();
 			HttpResponseMessage response = await client.PostAsync("rest/apps/testservice", null);
