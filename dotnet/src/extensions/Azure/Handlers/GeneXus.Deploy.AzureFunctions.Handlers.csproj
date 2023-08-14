@@ -81,6 +81,7 @@
 		<PackageReference Include="GeneXus.Mail.Core" Version="$(GenStdVersion)" />
 		<PackageReference Include="GeneXus.Excel.Core" Version="$(GenStdVersion)" />
 		<PackageReference Include="GeneXus.Redis.Core" Version="$(GenStdVersion)" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="host.json">
