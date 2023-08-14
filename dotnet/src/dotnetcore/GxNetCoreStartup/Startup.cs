@@ -109,29 +109,33 @@ namespace GeneXus.Application
 			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
 			if (providerService != null && providerService.ClassName.StartsWith(OPENTELEMETRY_AZURE_DISTRO))
 			{
-				string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
-				var resourceBuilder = ResourceBuilder.CreateDefault()
-				.AddTelemetrySdk();
-
-				loggingBuilder.AddOpenTelemetry(loggerOptions =>
-				{
-					loggerOptions
-						.SetResourceBuilder(resourceBuilder)
-						.AddAzureMonitorLogExporter(options =>
-						{ if (!string.IsNullOrEmpty(endpoint))
-								options.ConnectionString = endpoint;
-							else
-								options.Credential = new DefaultAzureCredential();
-						})
-						.AddConsoleExporter();
-
-					loggerOptions.IncludeFormattedMessage = true;
-					loggerOptions.IncludeScopes = true;
-					loggerOptions.ParseStateValues = true;
-				});	
+				ConfigureAzureOpentelemetry(loggingBuilder);
 			}
 		}
+		private static void ConfigureAzureOpentelemetry(ILoggingBuilder loggingBuilder)
+		{
+			string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
+			var resourceBuilder = ResourceBuilder.CreateDefault()
+			.AddTelemetrySdk();
 
+			loggingBuilder.AddOpenTelemetry(loggerOptions =>
+			{
+				loggerOptions
+					.SetResourceBuilder(resourceBuilder)
+					.AddAzureMonitorLogExporter(options =>
+					{
+						if (!string.IsNullOrEmpty(endpoint))
+							options.ConnectionString = endpoint;
+						else
+							options.Credential = new DefaultAzureCredential();
+					})
+					.AddConsoleExporter();
+
+				loggerOptions.IncludeFormattedMessage = true;
+				loggerOptions.IncludeScopes = true;
+				loggerOptions.ParseStateValues = true;
+			});
+		}
 		private static void LocatePhysicalLocalPath()
 		{
 			string startup = FileUtil.GetStartupDirectory();
