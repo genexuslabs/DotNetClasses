@@ -13,7 +13,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 
 		#region Azure Active Directory Authentication
 
-		public MessageQueue authenticate(string queueName, string fullyQualifiedNamespace, bool sessionEnabled, GxUserType receiverOptions, string senderIdentifier, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public MessageQueue Authenticate(string queueName, string fullyQualifiedNamespace, bool sessionEnabled, GxUserType receiverOptions, string senderIdentifier, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			ReceiverOptions options = TransformGXUserTypeToReceiverOptions(receiverOptions);
@@ -36,7 +36,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			return messageQueue;
 		}
 
-		public MessageQueue authenticate(string topicName, string subcriptionName, string fullyQualifiedNamespace, bool sessionEnabled, GxUserType receiverOptions, string senderIdentifier, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public MessageQueue Authenticate(string topicName, string subcriptionName, string fullyQualifiedNamespace, bool sessionEnabled, GxUserType receiverOptions, string senderIdentifier, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			GXProperties properties = new GXProperties();
@@ -58,7 +58,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			return messageQueue;
 		}
 
-		public MessageQueue authenticate(string queueName, string fullyQualifiedNamespace, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public MessageQueue Authenticate(string queueName, string fullyQualifiedNamespace, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			GXProperties properties = new GXProperties
@@ -72,7 +72,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			success = successConnect;
 			return messageQueue;
 		}
-		public MessageQueue authenticate(string topicName, string subcriptionName, string fullyQualifiedNamespace, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		public MessageQueue Authenticate(string topicName, string subcriptionName, string fullyQualifiedNamespace, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			GXProperties properties = new GXProperties
