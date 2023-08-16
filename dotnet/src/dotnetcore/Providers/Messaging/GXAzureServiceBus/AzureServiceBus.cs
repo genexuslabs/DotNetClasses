@@ -46,16 +46,16 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			_connectionString = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.QUEUE_CONNECTION_STRING);
 			_subscriptionName = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.TOPIC_SUBSCRIPTION);
 			_fullyqualifiedNamespace = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.FULLYQUALIFIEDNAMESPACE);
-			string authenticationMethod = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.AUTHENTICATION_METHOD);
+			string authenticationMethod = serviceSettings.GetPropertiesValue(PropertyConstants.AUTHENTICATION_METHOD);
 
-			string sessionEnabled = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.SESSION_ENABLED);
+			string sessionEnabled = serviceSettings.GetPropertiesValue(PropertyConstants.SESSION_ENABLED);
 
 			if (!string.IsNullOrEmpty(sessionEnabled))
 				_sessionEnabled = Convert.ToBoolean(sessionEnabled);
 			else
 				_sessionEnabled = false;
 
-			string senderIdentifier = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.SENDER_IDENTIFIER);
+			string senderIdentifier = serviceSettings.GetPropertiesValue(PropertyConstants.SENDER_IDENTIFIER);
 
 			ServiceBusSenderOptions serviceBusSenderOptions = new ServiceBusSenderOptions();
 			if (!string.IsNullOrEmpty(senderIdentifier))
@@ -82,9 +82,9 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				{
 					_serviceBusReceiverOptions = new ServiceBusReceiverOptions();
 
-					string receiveMode = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVE_MODE);
-					string prefetchCount = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.PREFETCH_COUNT);
-					string receiverIdentifier = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.RECEIVER_IDENTIFIER);
+					string receiveMode = serviceSettings.GetPropertiesValue(PropertyConstants.RECEIVE_MODE);
+					string prefetchCount = serviceSettings.GetPropertiesValue(PropertyConstants.PREFETCH_COUNT);
+					string receiverIdentifier = serviceSettings.GetPropertiesValue(PropertyConstants.RECEIVER_IDENTIFIER);
 
 					if (!string.IsNullOrEmpty(receiveMode))
 						_serviceBusReceiverOptions.ReceiveMode = (ServiceBusReceiveMode)Convert.ToInt16(receiveMode);
