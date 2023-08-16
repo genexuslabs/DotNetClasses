@@ -43,6 +43,11 @@ namespace DotNetCoreUnitTest.Domain
 			Assert.DoesNotContain(password, connStr, StringComparison.OrdinalIgnoreCase);
 			Assert.DoesNotContain(user, connStr, StringComparison.OrdinalIgnoreCase);
 
+			additionalConnectionString = "Authentication=Active Directory Integrated;Integrated Security=yes";
+			connStr = sqlserver.BuildConnectionStringImpl(server, user, password, database, port, string.Empty, additionalConnectionString);
+			Assert.Contains("Integrated Security=no", connStr, StringComparison.OrdinalIgnoreCase);
+			Assert.Contains("Authentication=Active Directory Integrated", connStr, StringComparison.OrdinalIgnoreCase);
+
 		}
 	}
 }

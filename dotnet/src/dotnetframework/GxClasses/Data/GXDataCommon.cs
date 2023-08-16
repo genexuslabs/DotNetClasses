@@ -1016,6 +1016,33 @@ namespace GeneXus.Data
 						res.Append(newKeyword);
 						res.Append('=');
 						res.Append(prop[1]);
+						res.Append(';');
+					}
+					else
+					{
+						res.Append(s);
+						res.Append(';');
+					}
+				}
+			}
+			return res.ToString();
+		}
+		public virtual string ReplaceKeyValue(string data, string keyword, string newValue)
+		{
+			char[] sep = { ';' };
+			StringBuilder res = new StringBuilder("");
+			string[] props = data.Split(sep);
+			foreach (string s in props)
+			{
+				if (s != null && s.Length > 0)
+				{
+					string[] prop = s.Split('=');
+					if (prop != null && prop.Length == 2 && prop[0].Trim().Equals(keyword, StringComparison.OrdinalIgnoreCase))
+					{
+						res.Append(keyword);
+						res.Append('=');
+						res.Append(newValue);
+						res.Append(';');
 					}
 					else
 					{
@@ -1066,21 +1093,19 @@ namespace GeneXus.Data
 				return string.Empty;
 			else
 			{
-				
-				int posBegin = 0;
-				int posEnd = 0;
 				string paramVal = string.Empty;
 
-				posBegin = conStr.IndexOf(searchParam, StringComparison.OrdinalIgnoreCase);
+				int posBegin = conStr.IndexOf(searchParam, StringComparison.OrdinalIgnoreCase);
 				if (posBegin > -1)
 				{
 					
 					posBegin += searchParam.Length + 1;
+					int posEnd;
 					if (conStr.LastIndexOf(';') > posBegin)
-						
+
 						posEnd = conStr.IndexOf(';', posBegin);
 					else
-						
+
 						posEnd = conStr.Length;
 
 					paramVal = conStr.Substring(posBegin, (posEnd - posBegin));
@@ -1570,6 +1595,8 @@ namespace GeneXus.Data
 		private int MAX_CREATE_TRIES = 3;
 		private const int MILLISECONDS_BETWEEN_RETRY_ATTEMPTS = 500;
 		private const string MULTIPLE_DATAREADERS = "MultipleActiveResultSets";
+		private const string INTEGRATED_SECURITY = "Integrated Security";
+		private const string INTEGRATED_SECURITY_NO = "no";
 
 		private bool multipleDatareadersEnabled;
 
@@ -1992,6 +2019,14 @@ namespace GeneXus.Data
 			else
 				return true;
 		}
+		private string ResolveConnectionStringAuthentication(string extra, SqlConnectionStringBuilder sqlConnectionString)
+		{
+			if (sqlConnectionString!=null && sqlConnectionString.Authentication != SqlAuthenticationMethod.NotSpecified && sqlConnectionString.IntegratedSecurity)
+			{
+				return ReplaceKeyValue(extra, INTEGRATED_SECURITY, INTEGRATED_SECURITY_NO);
+			}
+			return extra;
+		}
 #endif
 		protected override string BuildConnectionString(string datasourceName, string userId, 
 			string userPassword,string databaseName, string port, string schema, string extra)
@@ -2020,6 +2055,7 @@ namespace GeneXus.Data
 			{
 				connectionString.AppendFormat(";Password={0}", userPassword);
 			}
+			extra = ResolveConnectionStringAuthentication(extra, additionalConnectionString);
 #else
 			if (userId!=null)
 			{
