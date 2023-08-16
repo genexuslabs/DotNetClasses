@@ -27,7 +27,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				{ PropertyConstants.PREFETCH_COUNT, options.PrefetchCount.ToString() },
 				{ PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier },
 				{ PropertyConstants.RECEIVER_SESSIONID, options.SessionId },
-				{ PropertyConstants.SENDER_IDENTIFIER, senderIdentifier }
+				{ PropertyConstants.SENDER_IDENTIFIER, senderIdentifier },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.ActiveDirectory.ToString()}
 			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
@@ -51,6 +52,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			properties.Add(PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier);
 			properties.Add(PropertyConstants.RECEIVER_SESSIONID, options.SessionId);
 			properties.Add(PropertyConstants.SENDER_IDENTIFIER, senderIdentifier);
+			properties.Add(PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.ActiveDirectory.ToString());
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
 			errorMessages = errorMessagesConnect;
@@ -64,7 +66,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			GXProperties properties = new GXProperties
 			{
 				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName },
-				{ PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE, fullyQualifiedNamespace }
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE, fullyQualifiedNamespace },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.ActiveDirectory.ToString()}
 			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
@@ -79,7 +82,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			{
 				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, topicName },
 				{ PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME, subcriptionName },
-				{ PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE, fullyQualifiedNamespace }
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE, fullyQualifiedNamespace },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.ActiveDirectory.ToString()}
 			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
@@ -96,7 +100,9 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			GXProperties properties = new GXProperties
 			{
 				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName },
-				{ PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString }
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.Password.ToString()}
+
 			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
@@ -112,7 +118,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			{
 				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, topicName },
 				{ PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME, subcriptionName },
-				{ PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString }
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.Password.ToString()}
 			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
@@ -135,7 +142,8 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 				{ PropertyConstants.PREFETCH_COUNT, options.PrefetchCount.ToString() },
 				{ PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier },
 				{ PropertyConstants.RECEIVER_SESSIONID, options.SessionId },
-				{ PropertyConstants.SENDER_IDENTIFIER, senderIdentifier }
+				{ PropertyConstants.SENDER_IDENTIFIER, senderIdentifier },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.Password.ToString()}
 			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
@@ -159,6 +167,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			properties.Add(PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier);
 			properties.Add(PropertyConstants.RECEIVER_SESSIONID, options.SessionId);
 			properties.Add(PropertyConstants.SENDER_IDENTIFIER, senderIdentifier);
+			properties.Add(PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.Password.ToString());
 			
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
 			errorMessages = errorMessagesConnect;
