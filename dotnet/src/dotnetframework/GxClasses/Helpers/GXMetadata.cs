@@ -83,9 +83,8 @@ namespace GeneXus.Metadata
 			string clss = string.IsNullOrEmpty(ns) ? clssWithoutNamespace : string.Format("{0}.{1}", ns, clssWithoutNamespace);
 			Type objType = null;
 			string appNS;
-			loadedAssemblies.TryGetValue(clss, out objType);
-			if (objType == null)
-            {
+			if (!loadedAssemblies.TryGetValue(clss, out objType))
+			{
 				if (defaultAssembly != null)
                 {
 					try
@@ -199,15 +198,15 @@ namespace GeneXus.Metadata
                         }
                     }
 
-					if (objType == null)
-					{
-						GXLogging.Error(log, "Failed to load type: " + clss + " from currentdomain");
-						throw new GxClassLoaderException("Failed to load type: " + clss);
-					}
                 }
 
 				loadedAssemblies[clss] = objType;
             }
+			if (objType == null)
+			{
+				GXLogging.Error(log, "Failed to load type: " + clss + " from currentdomain");
+				throw new GxClassLoaderException("Failed to load type: " + clss);
+			}
 			return objType;
 
 		}
