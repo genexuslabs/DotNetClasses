@@ -349,7 +349,32 @@ namespace GeneXus.Procedure
 		protected void trkrng(int lineNro, int lineNro2) => dbgInfo?.TrkRng(lineNro, 0, lineNro2, 0);
 		protected void trkrng(int lineNro, int colNro, int lineNro2, int colNro2) => dbgInfo?.TrkRng(lineNro, colNro, lineNro2, colNro2);
 	}
-
+	public class GXDataGridProcedure : GXProcedure
+	{
+		protected virtual long RecordCount()
+		{
+			return 0;
+		}
+		internal long InternalRecordCount()
+		{
+			return RecordCount();
+		}
+		protected long GetPaginationStart(long start, long count)
+		{
+			if (start >= 0)
+				return start;
+			else //last page
+			{
+				long totalRecords = RecordCount();
+				long lastPageRecords = totalRecords % count;
+				if (lastPageRecords == 0)
+					start = totalRecords - count;
+				else
+					start = totalRecords - lastPageRecords;
+				return start;
+			}
+		}
+	}
 	public class GxReportUtils
 	{
 		public static int OUTPUT_RVIEWER_NATIVE = 1;
