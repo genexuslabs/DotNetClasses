@@ -1,10 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GeneXus.Encryption;
-using GeneXus.Messaging.Common;
 using GeneXus.Services;
 using log4net;
 
@@ -12,7 +7,7 @@ namespace GeneXus.Messaging.Common
 {
 	public class ServiceSettings 
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(ServiceSettings));
+		static readonly ILog logger = LogManager.GetLogger(typeof(ServiceSettings));
 
 		internal GXService service;
 		public string serviceNameResolver { get; }
@@ -22,33 +17,33 @@ namespace GeneXus.Messaging.Common
 		{
 			this.serviceNameResolver = serviceNameResolver;
 			this.name = name;
-			this.service = gXService;
+			service = gXService;
 		}
 
 		public string GetEncryptedOptPropertyValue(string propertyName, string alternativePropertyName = null)
 		{
-			String value = GetEncryptedPropertyValue(propertyName, alternativePropertyName, null);		
+			string value = GetEncryptedPropertyValue(propertyName, alternativePropertyName, null);		
 			return value;
 		}
 		public string GetEncryptedPropertyValue(string propertyName, string alternativePropertyName = null)
 		{
-			String value = GetEncryptedPropertyValue(propertyName, alternativePropertyName, null);
+			string value = GetEncryptedPropertyValue(propertyName, alternativePropertyName, null);
 			if (value == null)
 			{
-				String errorMessage = String.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
-				logger.Fatal(errorMessage);
+				string errorMessage = string.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
+				GXLogging.Error(logger, errorMessage);
 				throw new Exception(errorMessage);
 			}
 			return value;
 		}
 		public string GetEncryptedPropertyValue(string propertyName, string alternativePropertyName, string defaultValue)
 		{
-			String value = GetPropertyValue(propertyName, alternativePropertyName, defaultValue);
-			if (!String.IsNullOrEmpty(value))
+			string value = GetPropertyValue(propertyName, alternativePropertyName, defaultValue);
+			if (!string.IsNullOrEmpty(value))
 			{
 				try
 				{
-					string ret = String.Empty;
+					string ret = string.Empty;
 					if (CryptoImpl.Decrypt(ref ret, value))
 					{
 						value = ret;
@@ -56,7 +51,7 @@ namespace GeneXus.Messaging.Common
 				}
 				catch (Exception)
 				{
-					logger.Warn($"Could not decrypt property name: {ResolvePropertyName(propertyName)}");
+					GXLogging.Warn(logger, $"Could not decrypt property name: {ResolvePropertyName(propertyName)}");
 				}
 			}
 			return value;
@@ -64,11 +59,11 @@ namespace GeneXus.Messaging.Common
 
 		internal string GetPropertyValue(string propertyName, string alternativePropertyName = null)
 		{
-			String value = GetPropertyValue(propertyName, alternativePropertyName, null);
+			string value = GetPropertyValue(propertyName, alternativePropertyName, null);
 			if (value == null)
 			{
-				String errorMessage = String.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
-				logger.Fatal(errorMessage);
+				string errorMessage = string.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
+				GXLogging.Error(logger,errorMessage);
 				throw new Exception(errorMessage);
 			}
 			return value;
@@ -76,7 +71,7 @@ namespace GeneXus.Messaging.Common
 
 		internal string GetPropertyValue(string propertyName, string alternativePropertyName, string defaultValue)
 		{
-			String value = null;
+			string value = null;
 			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(ResolvePropertyName(propertyName)) : value;
 			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(propertyName) : value;
 			value = string.IsNullOrEmpty(value) ? GetPropertyValueImpl(alternativePropertyName) : value;
@@ -86,7 +81,7 @@ namespace GeneXus.Messaging.Common
 
 		internal string GetPropertyValueImpl(string propertyName)
 		{
-			String value = null;
+			string value = null;
 			if (!string.IsNullOrEmpty(propertyName))
 			{
 				value = Environment.GetEnvironmentVariable(propertyName);

@@ -11,7 +11,7 @@ namespace GeneXus.Messaging.Common
 	[GXApi]
 	public class MessageBrokerProvider : MessageQueue
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly ILog logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 		private static GXService providerService;
 		public MessageBrokerProvider()
 		{
@@ -64,7 +64,7 @@ namespace GeneXus.Messaging.Common
 			success = true;
 			return (messageQueue);
 		}
-		private static void Preprocess(String name, GXProperties properties)
+		private static void Preprocess(string name, GXProperties properties)
 		{
 			string className;
 
@@ -75,6 +75,7 @@ namespace GeneXus.Messaging.Common
 					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME);
 					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME);
 					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING);
+					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE);
 					if (string.IsNullOrEmpty(providerService.ClassName) || !providerService.ClassName.Contains(className))
 					{
 						providerService.ClassName = PropertyConstants.AZURE_SB_PROVIDER_CLASSNAME;
@@ -84,11 +85,11 @@ namespace GeneXus.Messaging.Common
 					throw new SystemException(string.Format("Provider {0} is not supported.", name));
 			}
 		}
-		private static void SetEncryptedProperty(GXProperties properties, String prop)
+		private static void SetEncryptedProperty(GXProperties properties, string prop)
 		{
-			String value = properties.Get(prop);
+			string value = properties.Get(prop);
 			if (string.IsNullOrEmpty(value))
-				value = String.Empty;
+				value = string.Empty;
 			value = CryptoImpl.Encrypt(value);
 			properties.Set(prop, value);
 		}
