@@ -1595,9 +1595,10 @@ namespace GeneXus.Data
 		private int MAX_CREATE_TRIES = 3;
 		private const int MILLISECONDS_BETWEEN_RETRY_ATTEMPTS = 500;
 		private const string MULTIPLE_DATAREADERS = "MultipleActiveResultSets";
+#if NETCORE
 		private const string INTEGRATED_SECURITY = "Integrated Security";
 		private const string INTEGRATED_SECURITY_NO = "no";
-
+#endif
 		private bool multipleDatareadersEnabled;
 
 		public override int GetCommandTimeout()
