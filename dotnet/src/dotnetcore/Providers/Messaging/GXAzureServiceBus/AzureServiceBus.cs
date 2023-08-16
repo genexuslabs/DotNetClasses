@@ -46,6 +46,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			_connectionString = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.QUEUE_CONNECTION_STRING);
 			_subscriptionName = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.TOPIC_SUBSCRIPTION);
 			_fullyqualifiedNamespace = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.FULLYQUALIFIEDNAMESPACE);
+			string authenticationMethod = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.AUTHENTICATION_METHOD);
 
 			string sessionEnabled = serviceSettings.GetEncryptedOptPropertyValue(PropertyConstants.SESSION_ENABLED);
 
@@ -63,8 +64,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			//TO DO Consider connection options here
 			//https://docs.microsoft.com/en-us/javascript/api/@azure/service-bus/servicebusclientoptions?view=azure-node-latest#@azure-service-bus-servicebusclientoptions-websocketoptions
 
-			//First try authenticating using Azure Active Directory
-			if (!string.IsNullOrEmpty(_fullyqualifiedNamespace))
+			if (authenticationMethod.Equals(AuthenticationMethod.ActiveDirectory.ToString()))
 			{ 
 				_serviceBusClient = new ServiceBusClient(_fullyqualifiedNamespace, new DefaultAzureCredential());
 				GXLogging.Debug(logger, "Authenticate to Azure Service Bus using Active Directory authentication.");

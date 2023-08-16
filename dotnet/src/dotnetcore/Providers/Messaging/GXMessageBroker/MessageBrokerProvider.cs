@@ -76,6 +76,7 @@ namespace GeneXus.Messaging.Common
 					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME);
 					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING);
 					SetEncryptedProperty(properties, PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE);
+					SetEncryptedProperty(properties, PropertyConstants.AUTHENTICATION_METHOD);
 					if (string.IsNullOrEmpty(providerService.ClassName) || !providerService.ClassName.Contains(className))
 					{
 						providerService.ClassName = PropertyConstants.AZURE_SB_PROVIDER_CLASSNAME;

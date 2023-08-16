@@ -23,5 +23,12 @@ namespace GeneXus.Messaging.Common
 		public const string TOPIC_SUBSCRIPTION = "SUBSCRIPTION";
 		public const string MESSAGE_BROKER = "MESSAGEBROKER";
 		public const string SESSION_ENABLED = "SESSION_ENABLED";
+
+		public const string AUTHENTICATION_METHOD = "AUTHENTICATION_METHOD";
 	}
+	public enum AuthenticationMethod
+		{
+		 ActiveDirectory,
+		 Password
+		}
 }
