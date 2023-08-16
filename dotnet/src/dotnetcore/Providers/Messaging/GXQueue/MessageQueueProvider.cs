@@ -11,11 +11,9 @@ namespace GeneXus.Messaging.Common
 	[GXApi]
 	public class MessageQueueProvider : SimpleMessageQueue
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly ILog logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 		private static GXService providerService;
-		public MessageQueueProvider()
-		{
-
+		public MessageQueueProvider(){
 		}
 
 		public SimpleMessageQueue Connect(string providerTypeName, GXProperties properties, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
@@ -69,19 +67,19 @@ namespace GeneXus.Messaging.Common
 			return (simpleMessageQueue);
 		}
 
-		private static void Preprocess(String name, GXProperties properties)
+		private static void Preprocess(string name, GXProperties properties)
 		{
 			string className;
-
 			switch (name)
 			{
 				case "AZUREQUEUE":
-					className = "GeneXus.Messaging.Queue.AzureQueue";
-					SetEncryptedProperty(properties, "QUEUE_AZUREQUEUE_QUEUENAME");
-					SetEncryptedProperty(properties, "QUEUE_AZUREQUEUE_CONNECTIONSTRING");
+					className = PropertyConstants.AZURE_QUEUE_CLASSNAME;
+					SetEncryptedProperty(properties, PropertyConstants.QUEUENAME);
+					SetEncryptedProperty(properties, PropertyConstants.CONNECTIONSTRING);
+					SetEncryptedProperty(properties, PropertyConstants.QUEUEURI);
 					if (string.IsNullOrEmpty(providerService.ClassName) || !providerService.ClassName.Contains(className))
 					{
-						providerService.ClassName = "GeneXus.Messaging.Queue.AzureQueue, GXAzureQueue, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
+						providerService.ClassName = PropertyConstants.AZURE_QUEUE_PROVIDER_CLASSNAME;
 					}
 					break;
 				case "AWS_SQS":
@@ -100,11 +98,11 @@ namespace GeneXus.Messaging.Common
 					throw new SystemException(string.Format("Provider {0} is not supported.", name));
 			}
 		}
-		private static void SetEncryptedProperty(GXProperties properties, String prop)
+		private static void SetEncryptedProperty(GXProperties properties, string prop)
 		{
-			String value = properties.Get(prop);
+			string value = properties.Get(prop);
 			if (string.IsNullOrEmpty(value))
-				value = String.Empty;
+				value = string.Empty;
 			value = CryptoImpl.Encrypt(value);
 			properties.Set(prop, value);
 		}
