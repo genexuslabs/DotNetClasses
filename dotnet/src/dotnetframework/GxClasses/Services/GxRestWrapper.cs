@@ -352,19 +352,17 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				IHeaderDictionary headers = GetHeaders();
-				if (headers != null && !string.IsNullOrEmpty(headers[RecordCount]))
+				GXDataGridProcedure dataGridWorker = _procWorker as GXDataGridProcedure;
+				if (dataGridWorker != null)
 				{
-					MethodInfo methodInfo = _procWorker.GetType().GetMethod(RecordCount, BindingFlags.Instance | BindingFlags.NonPublic);
-					if (methodInfo != null)
+					IHeaderDictionary headers = GetHeaders();
+					if (headers != null && !string.IsNullOrEmpty(headers[RecordCount]))
 					{
 						_procWorker.initialize();
-						object count = methodInfo.Invoke(_procWorker, null);
-						if (count != null)
-						{
-							GXLogging.Debug(log, $"Adding '{RecordCount}' header:", count.ToString());
-							AddHeader(RecordCount, count.ToString());
-						}
+						long count = dataGridWorker.InternalRecordCount();
+
+					GXLogging.Debug(log, $"Adding '{RecordCount}' header:", count.ToString());
+						AddHeader(RecordCount, count.ToString());
 					}
 				}
 			}catch (Exception ex)
