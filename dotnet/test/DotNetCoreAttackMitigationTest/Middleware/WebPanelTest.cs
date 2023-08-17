@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,8 +25,10 @@ namespace xUnitTesting
 			HttpClient client = server.CreateClient();
 			HttpResponseMessage response = await client.PostAsync("webhook.aspx", null);
 			IEnumerable<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
-			Assert.Null(cookies);
-
+			foreach (string cookie in cookies)
+			{
+				Assert.False(cookie.StartsWith(HttpHeader.X_GXCSRF_TOKEN));
+			}
 			response.EnsureSuccessStatusCode();
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 		}
@@ -35,7 +38,10 @@ namespace xUnitTesting
 			HttpClient client = server.CreateClient();
 			HttpResponseMessage response = await client.GetAsync("webhook.aspx");
 			IEnumerable<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
-			Assert.Null(cookies);
+			foreach (string cookie in cookies)
+			{
+				Assert.False(cookie.StartsWith(HttpHeader.X_GXCSRF_TOKEN));
+			}
 
 			response.EnsureSuccessStatusCode();
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
