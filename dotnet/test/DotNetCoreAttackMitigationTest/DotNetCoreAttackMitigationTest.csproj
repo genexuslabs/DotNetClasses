@@ -14,10 +14,7 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="Codeuctivity.PdfAValidator" Version="2.3.104" />
-		<PackageReference Include="FreeSpire.PDF" Version="8.6.0" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
 		<PackageReference Include="xunit" Version="2.4.1" />
@@ -29,7 +26,6 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
 	</ItemGroup>
 
   <ItemGroup>
