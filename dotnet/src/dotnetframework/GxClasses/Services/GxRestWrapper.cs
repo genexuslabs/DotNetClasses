@@ -568,7 +568,7 @@ namespace GeneXus.Application
 				else
 				{
 					string CSRFToken;
-					bool validateCSRFToken = RestAPIHelpers.ValidateCsrfToken();
+					bool validateCSRFToken = false;// RestAPIHelpers.ValidateCsrfToken();
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;

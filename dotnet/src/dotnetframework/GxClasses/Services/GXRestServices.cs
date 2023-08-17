@@ -451,7 +451,7 @@ namespace GeneXus.Utils
 				{
 					
 					string CSRFToken;
-					bool validateCSRFToken = RestAPIHelpers.ValidateCsrfToken(); ;
+					bool validateCSRFToken = false;//RestAPIHelpers.ValidateCsrfToken(); ;
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;
