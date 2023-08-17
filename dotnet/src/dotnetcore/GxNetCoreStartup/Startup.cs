@@ -279,6 +279,8 @@ namespace GeneXus.Application
 				services.AddAntiforgery(options =>
 				{
 					options.HeaderName = HttpHeader.X_GXCSRF_TOKEN;
+					options.Cookie.Name = HttpHeader.X_GXCSRF_TOKEN;
+					options.SuppressXFrameOptionsHeader = false;
 				});
 			}
 			DefineCorsPolicy(services);
@@ -455,7 +457,8 @@ namespace GeneXus.Application
 
 					if (string.Equals(requestPath, $"/{restBasePath}VerificationToken", StringComparison.OrdinalIgnoreCase))
 					{
-						var tokenSet = antiforgery.GetAndStoreTokens(context);
+						//var tokenSet = antiforgery.GetAndStoreTokens(context);
+						var tokenSet = antiforgery.GetTokens(context);
 						context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,
 							new CookieOptions { HttpOnly = false });
 					}
@@ -642,26 +645,27 @@ namespace GeneXus.Application
 
 		public async Task Invoke(HttpContext context)
 		{
-			if (context.Request.Path.HasValue && context.Request.Path.Value.StartsWith(_basePath) && (HttpMethods.IsPost(context.Request.Method)||
-				HttpMethods.IsDelete(context.Request.Method)||
-				HttpMethods.IsPut(context.Request.Method)))
+			if (context.Request.Path.HasValue && context.Request.Path.Value.StartsWith(_basePath))
 			{
-				GXLogging.Debug(log, $"Antiforgery validation starts");
-				await _antiforgery.ValidateRequestAsync(context);
-				GXLogging.Debug(log, $"Antiforgery validation OK");
-			}
-			else if (HttpMethods.IsGet(context.Request.Method))
-			{
-				string tokens = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
-				if (string.IsNullOrEmpty(tokens))
+				if (HttpMethods.IsPost(context.Request.Method) ||
+				HttpMethods.IsDelete(context.Request.Method) ||
+				HttpMethods.IsPut(context.Request.Method))
 				{
-					GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN);
-					var tokenSet = _antiforgery.GetAndStoreTokens(context);
-					context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,
-							new CookieOptions { HttpOnly = false });
+					GXLogging.Debug(log, $"Antiforgery validation starts");
+					await _antiforgery.ValidateRequestAsync(context);
+					GXLogging.Debug(log, $"Antiforgery validation OK");
+				}
+				else if (HttpMethods.IsGet(context.Request.Method))
+				{
+					string tokens = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
+					if (string.IsNullOrEmpty(tokens))
+					{
+						AntiforgeryTokenSet tokenSet = _antiforgery.GetTokens(context);
+						context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,new CookieOptions { HttpOnly = false });
+						GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN, "=", tokenSet.RequestToken!);
+					}
 				}
 			}
-
 			await _next(context);
 		}
 		

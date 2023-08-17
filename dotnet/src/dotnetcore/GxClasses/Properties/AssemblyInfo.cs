@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("GXEventRouter")]
 [assembly: InternalsVisibleTo("DotNetCoreUnitTest")]
 [assembly: InternalsVisibleTo("DotNetCoreWebUnitTest")]
+[assembly: InternalsVisibleTo("DotNetCoreAttackMitigationTest")]
 [assembly: InternalsVisibleTo("GeneXus.Deploy.AzureFunctions.Handlers")]
 [assembly: InternalsVisibleTo("AzureFunctionsTest")]
 [assembly: InternalsVisibleTo("GXMessageBroker")]
