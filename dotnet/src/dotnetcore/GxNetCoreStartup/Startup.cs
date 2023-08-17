@@ -598,7 +598,9 @@ namespace GeneXus.Application
 
 		public async Task Invoke(HttpContext context)
 		{
-			if (context.Request.Path.HasValue && context.Request.Path.Value.StartsWith(_basePath) && HttpMethods.IsPost(context.Request.Method))
+			if (context.Request.Path.HasValue && context.Request.Path.Value.StartsWith(_basePath) && (HttpMethods.IsPost(context.Request.Method)||
+				HttpMethods.IsDelete(context.Request.Method)||
+				HttpMethods.IsPut(context.Request.Method)))
 			{
 				GXLogging.Debug(log, $"Antiforgery validation starts");
 				await _antiforgery.ValidateRequestAsync(context);
