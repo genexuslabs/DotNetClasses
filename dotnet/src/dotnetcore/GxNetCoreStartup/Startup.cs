@@ -399,27 +399,13 @@ namespace GeneXus.Application
 				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
 				AllowStatusCode404Response = true
 			});
-
 			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
 			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
+			IAntiforgery antiforgery = null;
 			if (RestAPIHelpers.ValidateCsrfToken())
 			{
-
-				var antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
+				antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
 				app.UseAntiforgeryTokens(restBasePath);
-				app.Run(async context =>
-				{
-					string requestPath = context.Request.Path.Value;
-
-					if (string.Equals(requestPath, $"/{restBasePath}VerificationToken", StringComparison.OrdinalIgnoreCase))
-					{
-						//var tokenSet = antiforgery.GetAndStoreTokens(context);
-						var tokenSet = antiforgery.GetTokens(context);
-						context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,
-							new CookieOptions { HttpOnly = false });
-					}
-					await Task.CompletedTask;
-				});
 			}
 			app.UseMvc(routes =>
 			{
@@ -432,6 +418,18 @@ namespace GeneXus.Application
 						routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
 					}
 				}
+				routes.MapRoute($"{restBasePath}VerificationToken", (context) =>
+				{
+					string requestPath = context.Request.Path.Value;
+
+					if (string.Equals(requestPath, $"/{restBasePath}VerificationToken", StringComparison.OrdinalIgnoreCase) && antiforgery!=null)
+					{
+						var tokenSet = antiforgery.GetTokens(context);
+						context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,
+							new CookieOptions { HttpOnly = false });
+					}
+					return Task.CompletedTask;
+				});
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
 			});
@@ -607,9 +605,19 @@ namespace GeneXus.Application
 				HttpMethods.IsDelete(context.Request.Method) ||
 				HttpMethods.IsPut(context.Request.Method))
 				{
-					GXLogging.Debug(log, $"Antiforgery validation starts");
-					await _antiforgery.ValidateRequestAsync(context);
-					GXLogging.Debug(log, $"Antiforgery validation OK");
+					GXLogging.Debug(log, $"Antiforgery validation starts");  
+					string cookieToken = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
+					string headerToken = context.Request.Headers[HttpHeader.X_GXCSRF_TOKEN];
+
+					if (headerToken == cookieToken)
+					{
+						GXLogging.Debug(log, $"headerToken == cookieToken OK");
+					}
+					else
+					{
+						await _antiforgery.ValidateRequestAsync(context);
+						GXLogging.Debug(log, $"Antiforgery validation OK");
+					}
 				}
 				else if (HttpMethods.IsGet(context.Request.Method))
 				{
