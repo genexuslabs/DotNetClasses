@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using GeneXus.Services;
 using GeneXus.Utils;
 using GxClasses.Helpers;
@@ -257,12 +256,12 @@ namespace GeneXus.Messaging.Common
 		{
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			bool foundGeneralException = false;
-			if (errorMessages != null && ex != null)
+			if (ex != null)
 			{
 				SdtMessages_Message msg = new SdtMessages_Message();
-				if (messageBroker != null)
-				{		
-					while (ex.InnerException != null)
+				if (messageBroker != null && ex.InnerException != null)
+				{
+					do
 					{
 						if (messageBroker.GetMessageFromException(ex.InnerException, msg))
 						{
@@ -276,6 +275,7 @@ namespace GeneXus.Messaging.Common
 						}
 						ex = ex.InnerException;
 					}
+					while (ex.InnerException != null);
 					if (foundGeneralException)
 						GXUtil.ErrorToMessages("GXServiceBus1002", ex, errorMessages);
 				}
