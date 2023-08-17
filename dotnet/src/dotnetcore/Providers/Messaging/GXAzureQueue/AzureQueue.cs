@@ -43,8 +43,8 @@ namespace GeneXus.Messaging.Queue
 			};
 
 			if (authenticationMethod.Equals(AuthenticationMethod.ActiveDirectory.ToString()))
-			{
-				ChainedTokenCredential credential = new ChainedTokenCredential(new ManagedIdentityCredential(), new EnvironmentCredential(), new AzureCliCredential());
+			{	
+				ChainedTokenCredential credential = new ChainedTokenCredential(new ManagedIdentityCredential(), new ManagedIdentityCredential(Environment.GetEnvironmentVariable("AZURE_CLIENT_ID")), new EnvironmentCredential(), new AzureCliCredential());
 				_queueClient = new QueueClient(new Uri(_queueURI), credential,queueClientOptions);
 				GXLogging.Debug(logger, "Authenticate to Azure Storage Queue using Active Directory authentication.");
 			}
