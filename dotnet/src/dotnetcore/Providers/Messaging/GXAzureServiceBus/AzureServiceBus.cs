@@ -66,7 +66,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 
 			if (authenticationMethod.Equals(AuthenticationMethod.ActiveDirectory.ToString()))
 			{
-				ChainedTokenCredential credential = new ChainedTokenCredential(new ManagedIdentityCredential(), new EnvironmentCredential(), new AzureCliCredential());
+				ChainedTokenCredential credential = new ChainedTokenCredential(new ManagedIdentityCredential(), new ManagedIdentityCredential(Environment.GetEnvironmentVariable("AZURE_CLIENT_ID")), new EnvironmentCredential(), new AzureCliCredential());
 				_serviceBusClient = new ServiceBusClient(_fullyqualifiedNamespace, credential);
 				GXLogging.Debug(logger, "Authenticate to Azure Service Bus using Active Directory authentication.");
 			}
