@@ -1,17 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using GeneXus.Metadata;
-using Xunit;
 using GeneXus.Http;
-using Microsoft.AspNetCore.Http;
-using System.Net;
+using GeneXus.Metadata;
 using Microsoft.Net.Http.Headers;
-using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Asn1.Ocsp;
+using Xunit;
 
 namespace xUnitTesting
 {

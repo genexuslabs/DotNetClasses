@@ -280,7 +280,6 @@ namespace GeneXus.Application
 				{
 					options.HeaderName = HttpHeader.X_GXCSRF_TOKEN;
 					options.Cookie.Name = HttpHeader.X_GXCSRF_TOKEN;
-					options.SuppressXFrameOptionsHeader = false;
 				});
 			}
 			DefineCorsPolicy(services);
@@ -653,7 +652,7 @@ namespace GeneXus.Application
 					string cookieToken = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
 					string headerToken = context.Request.Headers[HttpHeader.X_GXCSRF_TOKEN];
 
-					if (headerToken == cookieToken)
+					if (!string.IsNullOrEmpty(headerToken) && !string.IsNullOrEmpty(cookieToken) && headerToken == cookieToken)
 					{
 						GXLogging.Debug(log, $"headerToken == cookieToken OK");
 					}
