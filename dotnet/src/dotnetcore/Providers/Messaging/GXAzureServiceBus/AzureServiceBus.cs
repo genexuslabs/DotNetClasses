@@ -65,8 +65,9 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			//https://docs.microsoft.com/en-us/javascript/api/@azure/service-bus/servicebusclientoptions?view=azure-node-latest#@azure-service-bus-servicebusclientoptions-websocketoptions
 
 			if (authenticationMethod.Equals(AuthenticationMethod.ActiveDirectory.ToString()))
-			{ 
-				_serviceBusClient = new ServiceBusClient(_fullyqualifiedNamespace, new DefaultAzureCredential());
+			{
+				ChainedTokenCredential credential = new ChainedTokenCredential(new ManagedIdentityCredential(), new EnvironmentCredential(), new AzureCliCredential());
+				_serviceBusClient = new ServiceBusClient(_fullyqualifiedNamespace, credential);
 				GXLogging.Debug(logger, "Authenticate to Azure Service Bus using Active Directory authentication.");
 			}
 			else
