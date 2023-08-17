@@ -796,7 +796,7 @@ namespace GeneXus.Configuration
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
 		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
 		internal const string YES = "1";
-		const string NO = "0";
+		internal const string NO = "0";
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
