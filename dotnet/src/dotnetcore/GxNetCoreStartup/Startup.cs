@@ -236,6 +236,7 @@ namespace GeneXus.Application
 				{
 					options.HeaderName = HttpHeader.X_GXCSRF_TOKEN;
 					options.Cookie.Name = HttpHeader.X_GXCSRF_TOKEN;
+					options.SuppressXFrameOptionsHeader = false;
 				});
 			}
 			DefineCorsPolicy(services);
