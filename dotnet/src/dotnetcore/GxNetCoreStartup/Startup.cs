@@ -1,3 +1,5 @@
+
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +18,7 @@ using GeneXus.Utils;
 using GxClasses.Web.Middleware;
 using log4net;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
@@ -148,6 +151,10 @@ namespace GeneXus.Application
 
 	public static class GXHandlerExtensions
 	{
+		public static IApplicationBuilder UseAntiforgeryTokens(this IApplicationBuilder app, string basePath)
+		{
+			return app.UseMiddleware<ValidateAntiForgeryTokenMiddleware>(basePath);
+		}
 		public static IApplicationBuilder UseGXHandlerFactory(this IApplicationBuilder builder, string basePath)
 		{
 			return builder.UseMiddleware<HandlerFactory>(basePath);
@@ -265,6 +272,13 @@ namespace GeneXus.Application
 							"application/pdf"
 							};
 					options.EnableForHttps = true;
+				});
+			}
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+				services.AddAntiforgery(options =>
+				{
+					options.HeaderName = HttpHeader.X_GXCSRF_TOKEN;
 				});
 			}
 			DefineCorsPolicy(services);
@@ -430,6 +444,24 @@ namespace GeneXus.Application
 
 			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
 			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+
+				var antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
+				app.UseAntiforgeryTokens(restBasePath);
+				app.Run(async context =>
+				{
+					string requestPath = context.Request.Path.Value;
+
+					if (string.Equals(requestPath, $"/{restBasePath}VerificationToken", StringComparison.OrdinalIgnoreCase))
+					{
+						var tokenSet = antiforgery.GetAndStoreTokens(context);
+						context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,
+							new CookieOptions { HttpOnly = false });
+					}
+					await Task.CompletedTask;
+				});
+			}
 			app.UseMvc(routes =>
 			{
 				foreach (string serviceBasePath in servicesBase)
@@ -529,6 +561,13 @@ namespace GeneXus.Application
 				{
 					httpStatusCode = HttpStatusCode.NotFound;
 				}
+
+				else if (ex is AntiforgeryValidationException)
+				{
+					//"The required antiforgery header value "X-GXCSRF-TOKEN" is not present.
+					httpStatusCode = HttpStatusCode.BadRequest;
+					GXLogging.Error(log, $"Validation of antiforgery failed", ex);
+				}
 				else
 				{
 					httpStatusCode = HttpStatusCode.InternalServerError;
@@ -585,5 +624,44 @@ namespace GeneXus.Application
 			}
 			return Redirect(defaultFiles[0]);
 		}
+	}
+	public class ValidateAntiForgeryTokenMiddleware
+	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ValidateAntiForgeryTokenMiddleware));
+
+		private readonly RequestDelegate _next;
+		private readonly IAntiforgery _antiforgery;
+		private string _basePath;
+
+		public ValidateAntiForgeryTokenMiddleware(RequestDelegate next, IAntiforgery antiforgery, String basePath)
+		{
+			_next = next;
+			_antiforgery = antiforgery;
+			_basePath = "/" + basePath;
+		}
+
+		public async Task Invoke(HttpContext context)
+		{
+			if (context.Request.Path.HasValue && context.Request.Path.Value.StartsWith(_basePath) && HttpMethods.IsPost(context.Request.Method))
+			{
+				GXLogging.Debug(log, $"Antiforgery validation starts");
+				await _antiforgery.ValidateRequestAsync(context);
+				GXLogging.Debug(log, $"Antiforgery validation OK");
+			}
+			else if (HttpMethods.IsGet(context.Request.Method))
+			{
+				string tokens = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
+				if (string.IsNullOrEmpty(tokens))
+				{
+					GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN);
+					var tokenSet = _antiforgery.GetAndStoreTokens(context);
+					context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,
+							new CookieOptions { HttpOnly = false });
+				}
+			}
+
+			await _next(context);
+		}
+		
 	}
 }
