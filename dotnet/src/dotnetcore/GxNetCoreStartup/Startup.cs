@@ -250,7 +250,14 @@ namespace GeneXus.Application
 				}
 			});
 
-
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+				services.AddAntiforgery(options =>
+				{
+					options.HeaderName = HttpHeader.X_GXCSRF_TOKEN;
+					options.SuppressXFrameOptionsHeader = false;
+				});
+			}
 			services.AddDirectoryBrowser();
 			if (GXUtil.CompressResponse())
 			{
@@ -272,15 +279,6 @@ namespace GeneXus.Application
 							"application/pdf"
 							};
 					options.EnableForHttps = true;
-				});
-			}
-			if (RestAPIHelpers.ValidateCsrfToken())
-			{
-				services.AddAntiforgery(options =>
-				{
-					options.HeaderName = HttpHeader.X_GXCSRF_TOKEN;
-					options.Cookie.Name = HttpHeader.X_GXCSRF_TOKEN;
-					options.SuppressXFrameOptionsHeader = false;
 				});
 			}
 			DefineCorsPolicy(services);
@@ -468,9 +466,7 @@ namespace GeneXus.Application
 
 					if (string.Equals(requestPath, $"/{restBasePath}VerificationToken", StringComparison.OrdinalIgnoreCase) && antiforgery!=null)
 					{
-						var tokenSet = antiforgery.GetTokens(context);
-						context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,
-							new CookieOptions { HttpOnly = false });
+						ValidateAntiForgeryTokenMiddleware.SetAntiForgeryTokens(antiforgery, context);
 					}
 					return Task.CompletedTask;
 				});
@@ -649,33 +645,31 @@ namespace GeneXus.Application
 				HttpMethods.IsDelete(context.Request.Method) ||
 				HttpMethods.IsPut(context.Request.Method))
 				{
-					GXLogging.Debug(log, $"Antiforgery validation starts");  
 					string cookieToken = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
 					string headerToken = context.Request.Headers[HttpHeader.X_GXCSRF_TOKEN];
+					GXLogging.Debug(log, $"Antiforgery validation, cookieToken:{cookieToken}, headerToken:{headerToken}");
 
-					if (!string.IsNullOrEmpty(headerToken) && !string.IsNullOrEmpty(cookieToken) && headerToken == cookieToken)
-					{
-						GXLogging.Debug(log, $"headerToken == cookieToken OK");
-					}
-					else
-					{
-						await _antiforgery.ValidateRequestAsync(context);
-						GXLogging.Debug(log, $"Antiforgery validation OK");
-					}
+					await _antiforgery.ValidateRequestAsync(context);
+					GXLogging.Debug(log, $"Antiforgery validation OK");
 				}
 				else if (HttpMethods.IsGet(context.Request.Method))
 				{
 					string tokens = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
 					if (string.IsNullOrEmpty(tokens))
 					{
-						AntiforgeryTokenSet tokenSet = _antiforgery.GetTokens(context);
-						context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken!,new CookieOptions { HttpOnly = false });
-						GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN, "=", tokenSet.RequestToken!);
+						SetAntiForgeryTokens(_antiforgery, context);
 					}
 				}
 			}
 			await _next(context);
 		}
-		
+		internal static void SetAntiForgeryTokens(IAntiforgery _antiforgery, HttpContext context)
+		{
+			AntiforgeryTokenSet tokenSet = _antiforgery.GetAndStoreTokens(context);
+			context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken,
+				new CookieOptions { HttpOnly = false, Secure = GxContext.GetHttpSecure(context) == 1 });
+			GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN, "=", tokenSet.RequestToken);
+		}
+
 	}
 }

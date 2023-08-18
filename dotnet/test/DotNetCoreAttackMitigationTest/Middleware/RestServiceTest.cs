@@ -35,7 +35,7 @@ namespace xUnitTesting
 			Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
 		}
 
-		[Fact(Skip ="Disable until solve concurrency issue")]
+		[Fact]
 		public async Task RunController()
 		{
 
