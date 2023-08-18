@@ -503,9 +503,11 @@ namespace GeneXus.Application
 	}
 	public class CustomExceptionHandlerMiddleware
 	{
+		const string InvalidCSRFToken = "InvalidCSRFToken";
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomExceptionHandlerMiddleware));
 		public async Task Invoke(HttpContext httpContext)
 		{
+			string httpReasonPhrase=string.Empty;
 			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
 			HttpStatusCode httpStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
 			if (ex!=null)
@@ -519,6 +521,7 @@ namespace GeneXus.Application
 				{
 					//"The required antiforgery header value "X-GXCSRF-TOKEN" is not present.
 					httpStatusCode = HttpStatusCode.BadRequest;
+					httpReasonPhrase = InvalidCSRFToken;
 					GXLogging.Error(log, $"Validation of antiforgery failed", ex);
 				}
 				else
@@ -537,6 +540,12 @@ namespace GeneXus.Application
 				else
 				{
 					httpContext.Response.StatusCode = (int)httpStatusCode;
+				}
+				if (!string.IsNullOrEmpty(httpReasonPhrase))
+				{
+					IHttpResponseFeature responseReason = httpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>();
+					if (responseReason!=null)
+						responseReason.ReasonPhrase = httpReasonPhrase;
 				}
 			}
 			await Task.CompletedTask;
