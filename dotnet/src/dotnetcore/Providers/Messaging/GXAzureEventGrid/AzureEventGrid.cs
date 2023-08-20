@@ -43,10 +43,11 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 				else
 				//Try authenticating using AD
 				{
+					ChainedTokenCredential credential = new ChainedTokenCredential(new ManagedIdentityCredential(), new ManagedIdentityCredential(Environment.GetEnvironmentVariable("AZURE_CLIENT_ID")), new EnvironmentCredential(), new AzureCliCredential());
 					GXLogging.Debug(logger,"Authentication using Oauth 2.0.");
 					_client = new EventGridPublisherClient(
 					new Uri(_endpoint),
-					new DefaultAzureCredential());
+					credential);
 				}
 			}
 			else
