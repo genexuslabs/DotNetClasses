@@ -15,6 +15,7 @@
 		<AzureQueueSupport>true</AzureQueueSupport>
 		<TimerSupport>true</TimerSupport>
 		<HttpSupport>true</HttpSupport>
+		<BlobSupport>true</BlobSupport>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -27,9 +28,12 @@
 	<ItemGroup>
 		<Compile Include ="Helpers\*;Program.cs" />
 	</ItemGroup>
-	
-	<ItemGroup Condition="'$(BlobSupport)' == 'true'">
+
+	<ItemGroup Condition="'$(BlobSupport)' == 'true' OR '$(AzureQueueSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.1" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(BlobSupport)' == 'true'">
 		<Compile Include="BlobHandler\BlobTriggerHandler.cs;Dummies\BlobTriggerDummy.cs" /> 
 	</ItemGroup>
 	
@@ -44,7 +48,6 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(AzureQueueSupport)' == 'true'">
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.1" />
 		<Compile Include="QueueHandler\QueueTriggerHandler.cs;Dummies\QueueTriggerDummy.cs" />
 	</ItemGroup>
 
@@ -62,9 +65,9 @@
 		<PackageReference Include="log4net" Version="2.0.15" />	
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.9.0" OutputItemType="Analyzer" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.2" />
-		
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" />
 		<PackageReference Include="StackExchange.Redis" Version="2.0.593" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 	
 	<ItemGroup Condition="$(GenStdVersion)==''">
