@@ -392,7 +392,7 @@ namespace GeneXus.Utils
             {
                 throw ex;
             }
-            else if (ex is FormatException || ex is HttpAntiForgeryException)
+            else if (ex is FormatException || (RestAPIHelpers.ValidateCsrfToken() && AntiForgeryException(ex)))
 			{
 				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.BadRequest, ex);
 			}
@@ -401,6 +401,12 @@ namespace GeneXus.Utils
 				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.InternalServerError, ex);
             }
         }
+		[SecuritySafeCritical]
+		private bool AntiForgeryException(Exception ex)
+		{
+			return ex is HttpAntiForgeryException;
+		}
+
 		public bool IsAuthenticated(string synchronizer)
 		{
 			GXLogging.Debug(log, "IsMainAuthenticated synchronizer:" + synchronizer);
