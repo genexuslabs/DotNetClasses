@@ -16,7 +16,7 @@ namespace GeneXus.Messaging.Queue
 	public class AWSQueue : QueueBase, IQueue
 	{
 
-		public static String Name = "AWSSQS";
+		public static string Name = "AWSSQS";
 		const string ACCESS_KEY = "ACCESS_KEY";
 		const string SECRET_ACCESS_KEY = "SECRET_KEY";
 		const string REGION = "REGION";
@@ -313,13 +313,14 @@ namespace GeneXus.Messaging.Queue
 			messageQueueResult.MessageId = response.MessageId;
 			messageQueueResult.MessageStatus = MessageQueueResultStatus.Sent;
 
-			messageQueueResult.MessageAttributes = new GXProperties();
-
-			messageQueueResult.MessageAttributes.Add("MD5OfMessageSystemAttributes", response.MD5OfMessageSystemAttributes);
-			messageQueueResult.MessageAttributes.Add("MD5OfMessageAttributes", response.MD5OfMessageAttributes);
-			messageQueueResult.MessageAttributes.Add("ContentLength", response.ContentLength.ToString());
-			messageQueueResult.MessageAttributes.Add("MD5OfMessageBody", response.MD5OfMessageBody);
-			messageQueueResult.MessageAttributes.Add("SequenceNumber", response.SequenceNumber);
+			messageQueueResult.MessageAttributes = new GXProperties
+			{
+				{ "MD5OfMessageSystemAttributes", response.MD5OfMessageSystemAttributes },
+				{ "MD5OfMessageAttributes", response.MD5OfMessageAttributes },
+				{ "ContentLength", response.ContentLength.ToString() },
+				{ "MD5OfMessageBody", response.MD5OfMessageBody },
+				{ "SequenceNumber", response.SequenceNumber }
+			};
 
 			Type t = response.ResponseMetadata.GetType();
 			PropertyInfo[] props = t.GetProperties();
@@ -342,12 +343,13 @@ namespace GeneXus.Messaging.Queue
 			messageQueueResult.MessageId = response.Id;
 			messageQueueResult.MessageStatus = MessageQueueResultStatus.Sent;
 
-			messageQueueResult.MessageAttributes = new GXProperties();
-
-			messageQueueResult.MessageAttributes.Add("MD5OfMessageSystemAttributes", response.MD5OfMessageSystemAttributes);
-			messageQueueResult.MessageAttributes.Add("MD5OfMessageAttributes", response.MD5OfMessageAttributes);
-			messageQueueResult.MessageAttributes.Add("MD5OfMessageBody", response.MD5OfMessageBody);
-			messageQueueResult.MessageAttributes.Add("SequenceNumber", response.SequenceNumber);
+			messageQueueResult.MessageAttributes = new GXProperties
+			{
+				{ "MD5OfMessageSystemAttributes", response.MD5OfMessageSystemAttributes },
+				{ "MD5OfMessageAttributes", response.MD5OfMessageAttributes },
+				{ "MD5OfMessageBody", response.MD5OfMessageBody },
+				{ "SequenceNumber", response.SequenceNumber }
+			};
 			return messageQueueResult;
 		}
 
@@ -378,11 +380,12 @@ namespace GeneXus.Messaging.Queue
 			simpleQueueMessage.MessageBody = response.Body;
 			simpleQueueMessage.MessageHandleId = response.ReceiptHandle;
 
-			simpleQueueMessage.MessageAttributes = new GXProperties();
-			
-			simpleQueueMessage.MessageAttributes.Add("MD5OfMessageAttributes", response.MD5OfMessageAttributes);
-			simpleQueueMessage.MessageAttributes.Add("MD5OfBody", response.MD5OfBody);
-			
+			simpleQueueMessage.MessageAttributes = new GXProperties
+			{
+				{ "MD5OfMessageAttributes", response.MD5OfMessageAttributes },
+				{ "MD5OfBody", response.MD5OfBody }
+			};
+
 			foreach (var messageAttribute in response.MessageAttributes)
 			{
 				MessageAttributeValue messageAttributeValue = messageAttribute.Value;
