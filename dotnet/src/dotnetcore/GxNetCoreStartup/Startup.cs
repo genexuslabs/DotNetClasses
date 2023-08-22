@@ -441,6 +441,7 @@ namespace GeneXus.Application
 				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
 				AllowStatusCode404Response = true
 			});
+
 			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
 			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
 			IAntiforgery antiforgery = null;
@@ -560,7 +561,6 @@ namespace GeneXus.Application
 				{
 					httpStatusCode = HttpStatusCode.NotFound;
 				}
-
 				else if (ex is AntiforgeryValidationException)
 				{
 					//"The required antiforgery header value "X-GXCSRF-TOKEN" is not present.
@@ -578,7 +578,7 @@ namespace GeneXus.Application
 			{
 				string redirectPage = Config.MapCustomError(httpStatusCode.ToString(HttpHelper.INT_FORMAT));
 				if (!string.IsNullOrEmpty(redirectPage))
-{
+				{
 					httpContext.Response.Redirect($"{httpContext.Request.GetApplicationPath()}/{redirectPage}");
 				}
 				else
