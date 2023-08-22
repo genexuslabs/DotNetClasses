@@ -459,34 +459,23 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					
-					string CSRFToken;
-					bool validateCSRFToken = false;//RestAPIHelpers.ValidateCsrfToken(); ;
+					token = token.Replace("OAuth ", "");
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
 						bool isOK;
-						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, validateCSRFToken, out CSRFToken, out isOK);
+						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
 						if (!isOK)
 						{
 							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							return false;
 						}
-						else
-						{
-							if (!string.IsNullOrEmpty(CSRFToken))
-								AddHeader(HttpHeader.X_GXCSRF_TOKEN, CSRFToken);
-						}
-									
 					}
 					else if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
 					{
 						bool sessionOk, permissionOk;
-						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(context, validateCSRFToken, objPermissionPrefix, out CSRFToken, out sessionOk, out permissionOk);
+						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(context, token, objPermissionPrefix, out sessionOk, out permissionOk);
 						if (permissionOk)
 						{
-							if (!string.IsNullOrEmpty(CSRFToken))
-								AddHeader(HttpHeader.X_GXCSRF_TOKEN, CSRFToken);
-
 							return true;
 						}
 						else
