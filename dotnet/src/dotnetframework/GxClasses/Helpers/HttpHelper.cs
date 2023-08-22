@@ -93,7 +93,6 @@ namespace GeneXus.Http
 		const string GAM_CODE_OTP_USER_ACCESS_CODE_SENT = "400";
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
-		const string GAM_CODE_CSRF_INVALID_TOKEN = "550";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
 
 		const string CORS_MAX_AGE_SECONDS = "86400";
@@ -254,10 +253,6 @@ namespace GeneXus.Http
 			else if (code == GAM_CODE_TOKEN_EXPIRED)
 			{
 				return HttpStatusCode.Forbidden;
-			}
-			else if (code == GAM_CODE_CSRF_INVALID_TOKEN)
-			{
-				return HttpStatusCode.BadRequest;
 			}
 			return defaultCode;
 		}
