@@ -88,12 +88,14 @@ namespace GeneXus.Security
 			isOK = false;
 			return new GxResult();
 		}
+
 		public GxResult checkaccesstokenprm(IGxContext context, string token, string permissionPrefix, out bool sessionOk, out bool permissionOk)
 		{
 			permissionOk = false;
 			sessionOk = true;
 			return new GxResult();
 		}
+
 		public void checksession(IGxContext context, string CleanAbsoluteUri, out bool isOK)
 		{
 			isOK = false;
