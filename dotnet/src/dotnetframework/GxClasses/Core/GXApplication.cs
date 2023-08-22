@@ -2134,17 +2134,21 @@ namespace GeneXus.Application
 		}
 		public virtual short GetHttpSecure()
 		{
+			return GetHttpSecure(_HttpContext);
+		}
+		static internal short GetHttpSecure(HttpContext httpContext)
+		{
 			try
 			{
-				if (HttpContext == null)
+				if (httpContext == null)
 					return 0;
-				if (_HttpContext.Request.GetIsSecureFrontEnd())
+				if (httpContext.Request.GetIsSecureFrontEnd())
 				{
 					GXLogging.Debug(log, "Front-End-Https header activated");
 					return 1;
 				}
 				else
-					return _HttpContext.Request.GetIsSecureConnection();
+					return httpContext.Request.GetIsSecureConnection();
 			}
 			catch
 			{
