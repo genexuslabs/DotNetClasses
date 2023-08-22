@@ -2134,17 +2134,21 @@ namespace GeneXus.Application
 		}
 		public virtual short GetHttpSecure()
 		{
+			return GetHttpSecure(_HttpContext);
+		}
+		static internal short GetHttpSecure(HttpContext httpContext)
+		{
 			try
 			{
-				if (HttpContext == null)
+				if (httpContext == null)
 					return 0;
-				if (_HttpContext.Request.GetIsSecureFrontEnd())
+				if (httpContext.Request.GetIsSecureFrontEnd())
 				{
 					GXLogging.Debug(log, "Front-End-Https header activated");
 					return 1;
 				}
 				else
-					return _HttpContext.Request.GetIsSecureConnection();
+					return httpContext.Request.GetIsSecureConnection();
 			}
 			catch
 			{
@@ -2319,6 +2323,20 @@ namespace GeneXus.Application
 			}
 			return cookieVal;
 		}
+		internal string GetUndecodedCookie(string name)
+		{
+			string cookieVal = string.Empty;
+			HttpCookie cookie = TryGetCookie(localCookies, name);
+			if (cookie == null && _HttpContext != null)
+			{
+				cookie = TryGetCookie(_HttpContext.Request.GetCookies(), name);
+			}
+			if (cookie != null && cookie.Value != null)
+			{
+				cookieVal = cookie.Value;
+			}
+			return cookieVal;
+		}
 
 		private HttpCookie TryGetCookie(HttpCookieCollection cookieColl, string name)
 		{
@@ -2425,11 +2443,10 @@ namespace GeneXus.Application
 				_httpHeaders = new NameValueCollection();
 			}
 			_httpHeaders[name] = value;
-			SetCustomHttpHeader(name, value);
-			return 0;
+			return SetCustomHttpHeader(name, value);
 		}
 
-		private void SetCustomHttpHeader(string name, string value)
+		private byte SetCustomHttpHeader(string name, string value)
 		{
 			try
 			{
@@ -2437,34 +2454,27 @@ namespace GeneXus.Application
 
 				if (name.Equals(HeaderNames.CacheControl, StringComparison.OrdinalIgnoreCase))
 				{
-					if (System.Net.Http.Headers.CacheControlHeaderValue.TryParse(value, out System.Net.Http.Headers.CacheControlHeaderValue parsedValue))
+					var Cache = _HttpContext.Response.Cache;
+					string[] values = value.Split(',');
+					foreach (string v in values)
 					{
-						HttpContext.Current.Response.CacheControl = parsedValue.ToString();
-					}
-					else
-					{
-						var Cache = _HttpContext.Response.Cache;
-						string[] values = value.Split(',');
-						foreach (string v in values)
+						switch (v.Trim().ToUpper())
 						{
-							switch (v.Trim().ToUpper())
-							{
-								case "PUBLIC":
-									Cache.SetCacheability(HttpCacheability.Public);
-									break;
-								case "PRIVATE":
-									Cache.SetCacheability(HttpCacheability.Private);
-									break;
-								case "NO-CACHE":
-									Cache.SetCacheability(HttpCacheability.NoCache);
-									break;
-								case "NO-STORE":
-									Cache.AppendCacheExtension("no-store, must-revalidate");
-									break;
-								default:
-									GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
-									break;
-							}
+							case "PUBLIC":
+								Cache.SetCacheability(HttpCacheability.Public);
+								break;
+							case "PRIVATE":
+								Cache.SetCacheability(HttpCacheability.Private);
+								break;
+							case "NO-CACHE":
+								Cache.SetCacheability(HttpCacheability.NoCache);
+								break;
+							case "NO-STORE":
+								Cache.AppendCacheExtension("no-store, must-revalidate");
+								break;
+							default:
+								GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
+								break;
 						}
 					}
 				}
@@ -2472,15 +2482,20 @@ namespace GeneXus.Application
 				{
 					_HttpContext.Response.ContentType = value;
 				}
+				else if (name.Equals(HeaderNames.Location, StringComparison.OrdinalIgnoreCase))
+				{
+					_HttpContext.Response.RedirectLocation = value;
+				}
 				else
 				{
-					if (!string.IsNullOrEmpty(_HttpContext.Response.Headers[name]))
+					try
 					{
 						_HttpContext.Response.Headers[name] = value;
-					}
-					else
+
+					}catch (PlatformNotSupportedException ex)
 					{
 						_HttpContext.Response.AppendHeader(name, value);
+						GXLogging.Warn(log, ex, "SetHeader ", name, value);
 					}
 				}
 #else
@@ -2510,10 +2525,12 @@ namespace GeneXus.Application
 						_HttpContext.Response.AddHeader(name, value);
 				}
 #endif
+				return 0;
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, ex, "Error adding header ", name, value);
+				return 1;
 			}
 		}
 
@@ -3596,9 +3613,29 @@ namespace GeneXus.Application
 					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
 					GXLogging.Debug(log, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
 				}
+				if (!DateTimeUtil.ValidTimeZone(sTZ))
+				{
+					sTZ = (string)GetUndecodedCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(log, "Try reading undecoded ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
 				try
 				{
-					_currentTimeZoneId = String.IsNullOrEmpty(sTZ) ? DateTimeZoneProviders.Tzdb.GetSystemDefault().Id : sTZ;
+					if (!DateTimeUtil.ValidTimeZone(sTZ))
+					{
+						try
+						{
+							string invalidTimezone = DateTimeZoneProviders.Tzdb[sTZ].Id; 
+						}catch(Exception ex)//DateTimeZoneNotFound
+						{
+							GXLogging.Warn(log, $"Client timezone not found: {sTZ}", ex);
+						}
+						_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+						GXLogging.Warn(log, $"Setting Client timezone to System default: {_currentTimeZoneId}");
+					}
+					else
+					{
+						_currentTimeZoneId = sTZ;
+					}
 				}
 				catch (Exception e1)
 				{
@@ -3643,14 +3680,15 @@ namespace GeneXus.Application
 		public Boolean SetTimeZone(String sTZ)
 		{
 			sTZ = StringUtil.RTrim(sTZ);
-			Boolean ret = false;
+			bool ret = false;
 #if NODATIME
 			string tzId;
 			try
 			{
-				if (DateTimeZoneProviders.Tzdb[sTZ] != null)
+				DateTimeZone zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(sTZ);
+				if (zone != null)
 				{
-					tzId = DateTimeZoneProviders.Tzdb[sTZ].Id;
+					tzId = zone.Id;
 				}
 				else
 				{

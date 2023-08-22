@@ -1,6 +1,12 @@
+using System.IO;
 using System.Net;
+using GeneXus.Application;
 using GeneXus.Http.Client;
 using Xunit;
+#if !NETCORE
+using System.Web.SessionState;
+using System.Web;
+#endif
 
 namespace xUnitTesting
 {
@@ -39,6 +45,20 @@ namespace xUnitTesting
 				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), httpclient.StatusCode);
 			}
 		}
+#if !NETCORE
+		[Fact]
+		public void NoStoreHeader()
+		{
+			var httpRequest = new HttpRequest("", "http://localhost/", "");
+			var httpResponce = new HttpResponse(new StringWriter());
+			var httpContext = new HttpContext(httpRequest, httpResponce);
+			HttpContext.Current = httpContext;
 
+			GxContext gxcontext = new GxContext();
+			gxcontext.HttpContext = HttpContext.Current;
+			byte result = gxcontext.SetHeader("CACHE", "no-store");
+			Assert.Equal(0, result);
+		}
+#endif
 	}
 }

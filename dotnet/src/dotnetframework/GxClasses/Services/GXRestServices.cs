@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
+using System.Security;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Configuration;
@@ -15,6 +16,8 @@ using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Web;
 using System.Text;
 using System.Web;
+using System.Web.Helpers;
+using System.Web.Mvc;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Data;
@@ -22,6 +25,7 @@ using GeneXus.Http;
 using GeneXus.Metadata;
 using GeneXus.Security;
 using log4net;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 
 namespace GeneXus.Utils
@@ -388,7 +392,7 @@ namespace GeneXus.Utils
             {
                 throw ex;
             }
-            else if (ex is FormatException)
+            else if (ex is FormatException || (RestAPIHelpers.ValidateCsrfToken() && AntiForgeryException(ex)))
 			{
 				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.BadRequest, ex);
 			}
@@ -397,6 +401,12 @@ namespace GeneXus.Utils
 				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.InternalServerError, ex);
             }
         }
+		[SecuritySafeCritical]
+		private bool AntiForgeryException(Exception ex)
+		{
+			return ex is HttpAntiForgeryException;
+		}
+
 		public bool IsAuthenticated(string synchronizer)
 		{
 			GXLogging.Debug(log, "IsMainAuthenticated synchronizer:" + synchronizer);
@@ -449,7 +459,6 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					
 					token = token.Replace("OAuth ", "");
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
@@ -546,8 +555,13 @@ namespace GeneXus.Utils
                 httpContext.Response.Headers[header]= value;
             }
         }
+		[SecuritySafeCritical]
 		public bool ProcessHeaders(string queryId)
 		{
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+				ValidateAntiforgery();
+			}
 
 			NameValueCollection headers = GetHeaders();
 			String language = null, theme = null, etag = null;
@@ -585,6 +599,39 @@ namespace GeneXus.Utils
 				return false;
 			}
 			return true;
+		}
+
+		[SecurityCritical]
+		private void ValidateAntiforgery()
+		{
+			string cookieToken, formToken;
+			string httpMethod = context.HttpContext.Request.HttpMethod;
+			string tokens = context.HttpContext.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN]?.Value;
+			string internalCookieToken = context.HttpContext.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN]?.Value;
+			if (httpMethod == HttpMethod.Get.Method && (string.IsNullOrEmpty(tokens) || string.IsNullOrEmpty(internalCookieToken)))
+			{
+				AntiForgery.GetTokens(null, out cookieToken, out formToken);
+#pragma warning disable SCS0009 // The cookie is missing security flag HttpOnly
+				HttpCookie cookie = new HttpCookie(HttpHeader.X_GXCSRF_TOKEN, formToken)
+				{
+					HttpOnly = false,
+					Secure = context.GetHttpSecure() == 1,
+				};
+#pragma warning restore SCS0009 // The cookie is missing security flag HttpOnly
+				HttpCookie internalCookie = new HttpCookie(AntiForgeryConfig.CookieName, cookieToken)
+				{
+					HttpOnly = true,
+					Secure = context.GetHttpSecure() == 1,
+				};
+				context.HttpContext.Response.SetCookie(cookie);
+				context.HttpContext.Response.SetCookie(internalCookie);
+			}
+			if (httpMethod == HttpMethod.Delete.Method || httpMethod == HttpMethod.Post.Method || httpMethod == HttpMethod.Put.Method)
+			{
+				cookieToken = context.HttpContext.Request.Cookies[AntiForgeryConfig.CookieName]?.Value;
+				string headerToken = context.HttpContext.Request.Headers[HttpHeader.X_GXCSRF_TOKEN];
+				AntiForgery.Validate(cookieToken, headerToken);
+			}
 		}
 
 		private void SendCacheHeaders()

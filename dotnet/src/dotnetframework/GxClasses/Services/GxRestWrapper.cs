@@ -567,7 +567,6 @@ namespace GeneXus.Application
 				}
 				else
 				{
-
 					token = token.Replace("OAuth ", "");
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
