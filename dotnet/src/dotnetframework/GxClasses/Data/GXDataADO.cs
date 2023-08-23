@@ -1728,7 +1728,10 @@ namespace GeneXus.Data.ADO
 			catch (Exception e)
 			{
 				GXLogging.Error(log, "Return GxCommand.ExecuteReader Error ", e);
-
+				if (e.InnerException != null)
+				{
+					GXLogging.Error(log, "Inner Error", e.InnerException);
+				}
 				throw (new GxADODataException(e));
 			}
 
