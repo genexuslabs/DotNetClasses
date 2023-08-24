@@ -44,7 +44,12 @@ namespace GeneXus.Http
 	using GeneXus.Notifications;
 	using Web.Security;
 	using System.Web.SessionState;
+	using GeneXus.Mock;
+	using GeneXus.Data.NTier;
 #endif
+
+
+
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -271,15 +276,68 @@ namespace GeneXus.Http
 		public virtual void InitializeDynEvents() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void initialize_properties() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void webExecute() { throw new Exception("The method or operation is not implemented."); }
-		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
 #if !NETCORE
+		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void cleanup() { }
+		virtual public bool UploadEnabled() { return false; }
+
+		protected virtual void ExecuteEx()
+		{
+			ExecutePrivate();
+		}
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected virtual void ExecutePrivateCatch(object stateInfo)
+		{
+			try
+			{
+				((GXHttpHandler)stateInfo).ExecutePrivate();
+			}
+			catch (Exception e)
+			{
+				GXUtil.SaveToEventLog("Design", e);
+				Console.WriteLine(e.ToString());
+			}
+		}
+		protected void SubmitImpl()
+		{
+			GxContext submitContext = new GxContext();
+			DataStoreUtil.LoadDataStores(submitContext);
+			IsMain = true;
+			submitContext.SetSubmitInitialConfig(context);
+			this.context = submitContext;
+			initialize();
+			Submit(ExecutePrivateCatch, this);
+		}
+		protected virtual void CloseCursors()
+		{
+
+		}
+		protected void Submit(Action<object> executeMethod, object state)
+		{
+			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
+		}
+		public static WaitCallback PropagateCulture(WaitCallback action)
+		{
+			var currentCulture = Thread.CurrentThread.CurrentCulture;
+			GXLogging.Debug(log, "Submit PropagateCulture " + currentCulture);
+			var currentUiCulture = Thread.CurrentThread.CurrentUICulture;
+			return (x) =>
+			{
+				Thread.CurrentThread.CurrentCulture = currentCulture;
+				Thread.CurrentThread.CurrentUICulture = currentUiCulture;
+				action(x);
+			};
+		}
+		protected virtual string[] GetParameters()
+		{
+			return null;
+		}
 #endif
 		public virtual bool SupportAjaxEvent() { return false; }
 		public virtual String AjaxOnSessionTimeout() { return "Ignore"; }
-#if !NETCORE
-		virtual public bool UploadEnabled() { return false; }
-#endif
 #if NETCORE
 		public void DoAjaxLoad(int SId, GXWebRow row)
 		{
@@ -1545,8 +1603,6 @@ namespace GeneXus.Http
 		{
 			SendResponseStatus((int)statusCode, string.Empty);
 		}
-
-
 #if !NETCORE
 		protected void SendResponseStatus(int statusCode, string statusDescription)
 		{
@@ -1877,10 +1933,10 @@ namespace GeneXus.Http
 			InitPrivates();
 			try
 			{
-#if NETCORE
+				SetStreaming();
 				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
-#endif
+
 				bool validSession = ValidWebSession();
 				if (validSession && IntegratedSecurityEnabled)
 					validSession = ValidSession();
@@ -1915,9 +1971,6 @@ namespace GeneXus.Http
 						context.DispatchAjaxCommands();
 				}
 				SetCompression(httpContext);
-#if !NETCORE
-				SendHeaders();
-#endif
 				context.ResponseCommited = true;
 			}
 			catch (Exception e)
@@ -1932,6 +1985,25 @@ namespace GeneXus.Http
 				throw new Exception("GXApplication exception", e);
 			}
 		}
+		protected virtual bool ChunkedStreaming() { return false; }
+
+		private void SetStreaming()
+		{
+#if !NETCORE
+			if (ChunkedStreaming())
+			{
+				BringSessionStateToLife();
+				context.HttpContext.Response.BufferOutput = false;
+			}
+#endif
+		}
+#if !NETCORE
+		private void BringSessionStateToLife()
+		{
+			string sessionId = context.HttpContext.Session.SessionID;
+			GXLogging.Debug(log, "Session is alive: " + sessionId);
+		}
+#endif
 		internal string DumpHeaders(HttpContext httpContext)
 		{
 			StringBuilder str = new StringBuilder();
@@ -1977,7 +2049,6 @@ namespace GeneXus.Http
 #else
 			bool isExpired = IsFullAjaxRequest(HttpContext.Current) && this.AjaxOnSessionTimeout() == "Warn" && GxWebSession.IsSessionExpired(localHttpContext);
 #endif
-
 			if (isExpired)
 			{
 				GXLogging.Info(log, "440 Session timeout. Web Session has expired and GX' OnSessionTimeout' Pty is set to 'WARN'");
@@ -2165,11 +2236,7 @@ namespace GeneXus.Http
 						return;
 
 					string safeIECompMode = IE_COMP_Edge.Equals(IE_COMP_EmulateIE7) ? IE_COMP_Edge : IE_COMP_Edge;
-#if NETCORE
 					localHttpContext.Response.Headers["X-UA-Compatible"] = "IE=" + safeIECompMode;
-#else
-					localHttpContext.Response.AddHeader("X-UA-Compatible", "IE=" + safeIECompMode);
-#endif
 				}
 			}
 
@@ -2177,11 +2244,7 @@ namespace GeneXus.Http
 
 		protected virtual void sendSpaHeaders()
 		{
-#if NETCORE
 			localHttpContext.Response.Headers[GX_SPA_GXOBJECT_RESPONSE_HEADER] = GetPgmname().ToLower();
-#else
-			localHttpContext.Response.AddHeader(GX_SPA_GXOBJECT_RESPONSE_HEADER, GetPgmname().ToLower());
-#endif
 		}
 
 		private void webExecuteWorker(object target)
@@ -2221,22 +2284,16 @@ namespace GeneXus.Http
 		{
 			return GXUtil.CompressResponse();
 		}
-
-#if NETCORE
-		protected virtual void Render(HtmlTextWriter output)
-#else
-		protected override void Render(HtmlTextWriter output)
-#endif
-		{
 #if !NETCORE
-			localHttpContext = Context;         
-#endif
+		protected override void Render(HtmlTextWriter output)
+		{
+			localHttpContext = Context;
 			ControlOutputWriter = output;
 			LoadParameters(Parms);
 			InitPrivates();
 			webExecuteEx(localHttpContext);
 		}
-
+#endif
 		public void InitPrivates()
 		{
 			context.GX_msglist = new msglist();
@@ -2856,21 +2913,18 @@ namespace GeneXus.Http
 			createObjects();
 			initialize();
 		}
-
+#if !NETCORE
 		protected override void Render(HtmlTextWriter output)
 		{
 			ControlOutputWriter = output;
-#if NETCORE
-			localHttpContext = localHttpContext;
-#else
 			localHttpContext = Context;
-#endif
 			LoadParameters(Parms);
 			InitPrivates();
 			SetPrefix(_prefixId + "_");         // Load Prefix from Name property
 			initpars();                         // Initialize Iterator Parameters
 			webExecuteEx(localHttpContext);
 		}
+#endif
 		public virtual void componentdrawstyles()
 		{
 		}
@@ -3016,15 +3070,6 @@ namespace GeneXus.Http
 
 		protected GXMasterPage MasterPageObj { get; set; }
 
-		protected override void sendSpaHeaders()
-		{
-			base.sendSpaHeaders();
-			if (MasterPageObj != null)
-			{
-				localHttpContext.Response.AddHeader(GX_SPA_MASTERPAGE_HEADER, MasterPageObj.GetPgmname());
-			}
-		}
-
 		protected override void ValidateSpaRequest()
 		{
 			string sourceMasterPage = localHttpContext.Request.Headers[GX_SPA_MASTERPAGE_HEADER];
@@ -3032,6 +3077,10 @@ namespace GeneXus.Http
 			{
 				context.DisableSpaRequest();
 				sendSpaHeaders();
+			}
+			if (MasterPageObj != null)
+			{
+				localHttpContext.Response.Headers[GX_SPA_MASTERPAGE_HEADER] = MasterPageObj.GetPgmname();
 			}
 		}
 	}

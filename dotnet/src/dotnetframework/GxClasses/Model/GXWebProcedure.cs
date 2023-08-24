@@ -8,6 +8,14 @@ namespace GeneXus.Procedure
 	using System.Threading;
 	using GeneXus.Mime;
 	using GeneXus.Utils;
+#if NETCORE
+	using Microsoft.AspNetCore.Http;
+#else
+	using System.Web;
+#endif
+	using log4net;
+	using GeneXus.Application;
+	using GeneXus.Data.NTier;
 
 	public class GXWebProcedure : GXHttpHandler
 	{
@@ -18,6 +26,7 @@ namespace GeneXus.Procedure
 		protected IReportHandler oldReportHandler;
 		string outputFileName;
 		string outputType;
+		bool fileContentInline;
 
 		protected int lineHeight;
 		protected int Gx_line;
@@ -43,7 +52,13 @@ namespace GeneXus.Procedure
 				context.DeleteReferer();
 			}
 		}
-
+		protected override void SetCompression(HttpContext httpContext)
+		{
+			if (!ChunkedStreaming())
+			{
+				base.SetCompression(httpContext);
+			}
+		}
 		public void setContextReportHandler()
 		{
 
@@ -115,18 +130,21 @@ namespace GeneXus.Procedure
 
 		private void setOuputFileName()
 		{
-			string fileName = GetType().Name;
-			string fileType = "pdf";
-			if (!string.IsNullOrEmpty(outputFileName))
+			if (fileContentInline)
 			{
-				fileName = outputFileName;
-			}
-			if (!string.IsNullOrEmpty(outputType))
-			{
-				fileType = outputType.ToLower();
-			}
+				string fileName = GetType().Name;
+				string fileType = "pdf";
+				if (!string.IsNullOrEmpty(outputFileName))
+				{
+					fileName = outputFileName;
+				}
+				if (!string.IsNullOrEmpty(outputType))
+				{
+					fileType = outputType.ToLower();
+				}
 
-			context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, $"inline; filename={fileName}.{fileType}");
+				context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, $"inline; filename={fileName}.{fileType}");
+			}
 		}
 
 		public virtual int getOutputType()
@@ -138,6 +156,7 @@ namespace GeneXus.Procedure
 			string idiom;
 			if (!Config.GetValueOf("LANGUAGE", out idiom))
 				idiom = "eng";
+			fileContentInline = true;
 #if NETCORE
 			setOuputFileName();
 #endif
@@ -219,15 +238,5 @@ namespace GeneXus.Procedure
 		{
 			reportMetadata.GxDrawBitMap(printBlock, controlId, line, value, aspectRatio);
 		}
-
-		protected static WaitCallback PropagateCulture(WaitCallback action)
-		{
-			return GXProcedure.PropagateCulture(action);
-		}
-		protected void Submit(Action<object> executeMethod, object state)
-		{
-			ThreadUtil.Submit(PropagateCulture(new WaitCallback(executeMethod)), state);
-		}
-
 	}
 }

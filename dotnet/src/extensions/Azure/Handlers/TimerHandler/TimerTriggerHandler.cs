@@ -108,16 +108,16 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 
 								//Payload
 
-								GxUserType eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToUniversalTime().ToString(), gxcontext);
+								GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusNext", TimerInfo.ScheduleStatus.Next.ToUniversalTime().ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
-								eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToUniversalTime().ToString(), gxcontext);
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusLast", TimerInfo.ScheduleStatus.Last.ToUniversalTime().ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
-								eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToUniversalTime().ToString(), gxcontext);
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ScheduleStatusLastUpdated", TimerInfo.ScheduleStatus.LastUpdated.ToUniversalTime().ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
-								eventMessageProperty = CreateEventMessageProperty(eventMessPropsItemType, "IsPastDue", TimerInfo.IsPastDue.ToString(), gxcontext);
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "IsPastDue", TimerInfo.IsPastDue.ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
 								//Event
@@ -174,13 +174,6 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Message Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, messageId);
 				throw new Exception(exMessage);
 			}
-		}
-		private GxUserType CreateEventMessageProperty(Type eventMessPropsItemType, string propertyId, object propertyValue, GxContext gxContext)
-		{
-			GxUserType eventMessageProperty = (GxUserType)Activator.CreateInstance(eventMessPropsItemType, new object[] { gxContext }); // instance of SdtEventMessageProperty
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyid", propertyId);
-			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyvalue", propertyValue);
-			return eventMessageProperty;
 		}
 	}	
 	public class MyInfo

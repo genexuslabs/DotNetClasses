@@ -25,6 +25,24 @@ namespace GeneXus.Data.NTier
 		{
 			return new GxCosmosDBCacheDataReader(item, computeSize, keyCache);
 		}
+		protected override string BuildConnectionStringForLog(string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra)
+		{
+			StringBuilder connectionString = new StringBuilder();
+			if (!string.IsNullOrEmpty(datasourceName))
+			{
+				connectionString.AppendFormat("Data Source={0};", NaV);
+			}
+			if (userId != null)
+			{
+				connectionString.AppendFormat(";User ID={0};Password={1}", userId, NaV);
+			}
+			if (!string.IsNullOrEmpty(extra))
+			{
+				connectionString.AppendFormat(";{0}", extra);
+			}
+			return connectionString.ToString();
+		}
 	}
 
 	public class CosmosDBConnection : ServiceConnection
@@ -461,9 +479,13 @@ namespace GeneXus.Data.NTier
 			IEnumerable<string> projection = query.Projection;
 			string element;
 			string projectionList = string.Empty;
+			string regexSpecialChars = "[^A-Za-z0-9]";
 			foreach (string key in projection)
 			{
-				element = $"{TABLE_ALIAS}.{key}";
+				if (Regex.IsMatch(key, regexSpecialChars))
+					element = $"{TABLE_ALIAS}[\"{key}\"]";
+				else
+					element = $"{TABLE_ALIAS}.{key}";
 				if (!string.IsNullOrEmpty(projectionList))
 					projectionList = $"{element},{projectionList}";
 				else
@@ -550,7 +572,10 @@ namespace GeneXus.Data.NTier
 				foreach (string d in projection)
 				{
 					string wholeWordPattern = String.Format(@"\b{0}\b", d);
-					filterProcess = Regex.Replace(filterProcess, wholeWordPattern, $"{TABLE_ALIAS}.{d}");
+					if (Regex.IsMatch(wholeWordPattern, regexSpecialChars))
+						filterProcess = Regex.Replace(filterProcess, wholeWordPattern, $"{TABLE_ALIAS}[\"{d}\"]");
+					else
+						filterProcess = Regex.Replace(filterProcess, wholeWordPattern, $"{TABLE_ALIAS}.{d}");
 				}
 				keyFilterQ = new string[] { filterProcess };
 				allFiltersQuery = allFiltersQuery.Concat(keyFilterQ);
@@ -563,7 +588,10 @@ namespace GeneXus.Data.NTier
 
 			foreach (string orderAtt in query.OrderBys)
 			{
-				expression = orderAtt.StartsWith("(") ? $"{TABLE_ALIAS}.{orderAtt.Remove(orderAtt.Length-1,1).Remove(0,1)} DESC" : $"{TABLE_ALIAS}.{orderAtt} ASC";
+				if (!Regex.IsMatch(orderAtt, regexSpecialChars))
+					expression = orderAtt.StartsWith("(") ? $"{TABLE_ALIAS}.{orderAtt.Remove(orderAtt.Length-1,1).Remove(0,1)} DESC" : $"{TABLE_ALIAS}.{orderAtt} ASC";
+				else
+					expression = orderAtt.StartsWith("(") ? $"{TABLE_ALIAS}[\"{orderAtt.Remove(orderAtt.Length - 1, 1).Remove(0, 1)}\"] DESC" : $"{TABLE_ALIAS}[\"{orderAtt}\"] ASC";
 				orderExpressionList = orderExpressionList.Concat(new string[] { expression });
 			}
 

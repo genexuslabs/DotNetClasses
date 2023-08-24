@@ -48,6 +48,14 @@ namespace GeneXus.Http
 		public static string LAST_MODIFIED = "Last-Modified";
 		public static string EXPIRES = "Expires";
 		public static string XGXFILENAME = "x-gx-filename";
+		internal static string ACCEPT = "Accept";
+		internal static string TRANSFER_ENCODING = "Transfer-Encoding";
+		internal static string X_GXCSRF_TOKEN = "X-GXCSRF-TOKEN";
+	}
+	internal class HttpHeaderValue
+	{
+		internal static string ACCEPT_SERVER_SENT_EVENT = "text/event-stream";
+		internal static string TRANSFER_ENCODING_CHUNKED = "chunked";
 	}
 	[DataContract()]
 	public class HttpJsonError

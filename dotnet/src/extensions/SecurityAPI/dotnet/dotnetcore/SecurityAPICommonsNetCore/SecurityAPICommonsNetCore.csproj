@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
@@ -23,6 +23,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\EncodingUtil.cs" Link="Config\EncodingUtil.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\SecurityApiGlobal.cs" Link="Config\Global.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\Base64Encoder.cs" Link="Encoders\Base64Encoder.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\Base64UrlEncoder.cs" Link="Encoders\Base64UrlEncoder.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\HexaEncoder.cs" Link="Encoders\HexaEncoder.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\CertificateX509.cs" Link="Keys\CertificateX509.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\PrivateKeyManager.cs" Link="Keys\PrivateKeyManager.cs" />

@@ -7,25 +7,70 @@
 		<AssemblyName>GeneXus.Deploy.AzureFunctions.Handlers</AssemblyName>
 		<NoWarn>1701;1702;NU1701</NoWarn>
 		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 	</PropertyGroup>
+	
+	<PropertyGroup>	
+		<CosmosDBSupport>true</CosmosDBSupport>
+		<ServiceBusSupport>true</ServiceBusSupport>
+		<AzureQueueSupport>true</AzureQueueSupport>
+		<TimerSupport>true</TimerSupport>
+		<HttpSupport>true</HttpSupport>
+		<BlobSupport>true</BlobSupport>
+	</PropertyGroup>
+	
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 	  <DebugType>portable</DebugType>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 	  <DebugType>none</DebugType>
 	</PropertyGroup>
+	
 	<ItemGroup>
-		<PackageReference Include="log4net" Version="2.0.15" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
+		<Compile Include ="Helpers\*;Program.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(BlobSupport)' == 'true' OR '$(AzureQueueSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.1" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(BlobSupport)' == 'true'">
+		<Compile Include="BlobHandler\BlobTriggerHandler.cs;Dummies\BlobTriggerDummy.cs" /> 
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(CosmosDBSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.CosmosDB" Version="4.0.1" />
+		<Compile Include="CosmosDBHandler\CosmosDBTriggerHandler.cs;Dummies\CosmosDBTriggerDummy.cs" /> 
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(ServiceBusSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="4.2.1" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.0" />
+		<Compile Include="ServiceBusHandler\ServiceBusTriggerHandler.cs;Dummies\ServiceBusQueueDummy.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(AzureQueueSupport)' == 'true'">
+		<Compile Include="QueueHandler\QueueTriggerHandler.cs;Dummies\QueueTriggerDummy.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TimerSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.0.1" />
+		<Compile Include="TimerHandler\TimerTriggerHandler.cs;Dummies\TimerTriggerDummy.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(HttpSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
+		<Compile Include="HttpHandler\*;Dummies\HttpTriggerDummy.cs" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="log4net" Version="2.0.15" />	
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.9.0" OutputItemType="Analyzer" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.2" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.CosmosDB" Version="4.0.1" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.2" />
 		<PackageReference Include="StackExchange.Redis" Version="2.0.593" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
+	
 	<ItemGroup Condition="$(GenStdVersion)==''">
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />

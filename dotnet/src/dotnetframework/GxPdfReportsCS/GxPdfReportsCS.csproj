@@ -6,6 +6,12 @@
 		<PackageTags>Itext PDF Report</PackageTags>
 		<PackageId>GeneXus.PdfReportsCS</PackageId>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="sRGB Color Space Profile.icm" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="sRGB Color Space Profile.icm" />
+	</ItemGroup>
 
 
 	<ItemGroup>

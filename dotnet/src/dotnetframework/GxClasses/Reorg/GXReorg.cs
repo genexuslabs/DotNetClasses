@@ -54,6 +54,10 @@ namespace GeneXus.Reorg
             GxContext.isReorganization = true;
            GXLogging.Debug(log, "GXReorganization.Ctr()");
         }
+		protected virtual void ExecutePrivate()
+		{
+
+		}
         public IGxContext context
         {
             get { return _Context; }
@@ -387,9 +391,14 @@ namespace GeneXus.Reorg
 			return false;
 #endif
 		}
+		protected virtual void CloseCursors()
+		{
+
+		}
+
 	}
 
-		public delegate void BlockEndCallback(string blockName, int errorCode);
+	public delegate void BlockEndCallback(string blockName, int errorCode);
 
 	public class ReorgExecute
 	{

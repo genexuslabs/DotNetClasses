@@ -25,6 +25,7 @@
     <Compile Include="..\..\dotnetframework\GeneXusJWT\JWTClaims\RegisteredClaims.cs" Link="JWTClaims\RegisteredClaims.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\JWT\JWTCreator.cs" Link="JWT\JWTCreator.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\DateUtil.cs" Link="Utils\DateUtil.cs" />
+		<Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\UnixTimeStampCreator.cs" Link="Utils\UnixTimeStampCreator.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\GUID.cs" Link="Utils\GUID.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\JWTAlgorithm.cs" Link="Utils\JWTAlgorithm.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusJWT\Utils\KeyPair.cs" Link="Utils\KeyPair.cs" />
@@ -32,12 +33,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="6.5.1" />
-    <PackageReference Include="Microsoft.IdentityModel.Logging" Version="6.5.1" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="6.8.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Logging" Version="6.8.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.8.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.8.0" />
   </ItemGroup>
 
   <ItemGroup>

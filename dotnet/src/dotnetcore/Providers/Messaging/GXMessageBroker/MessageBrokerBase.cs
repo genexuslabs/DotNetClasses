@@ -28,6 +28,6 @@ namespace GeneXus.Messaging.Common
 
 			service = s;
 		}
-		public abstract String GetName();
+		public abstract string GetName();
 	}
 }

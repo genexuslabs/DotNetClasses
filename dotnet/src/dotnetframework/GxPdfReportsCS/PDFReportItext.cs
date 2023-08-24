@@ -22,6 +22,7 @@ using GeneXus;
 using GeneXus.Utils;
 using System.Reflection;
 using GeneXus.Metadata;
+using GeneXus.Configuration;
 
 namespace com.genexus.reports
 {
@@ -45,6 +46,7 @@ namespace com.genexus.reports
 		private bool fontUnderline;
 		private bool fontStrikethru;
 		private int fontSize;
+		private string language;
 
 		//Color for, BaseColor for => Itext5
 		private object backColor, foreColor, templateColorFill;
@@ -60,7 +62,7 @@ namespace com.genexus.reports
 		private bool modal = false; 
 		private String docName = "PDFReport.pdf"; 
 		private static NativeSharpFunctionsMS nativeCode = new NativeSharpFunctionsMS();
-		private Hashtable fontSubstitutes = new Hashtable(); 
+		private static Hashtable fontSubstitutes = new Hashtable(); 
 		private static String configurationFile = null;
 		private static String configurationTemplateFile = null;
 		private static String defaultRelativePrepend = null; 
@@ -89,6 +91,7 @@ namespace com.genexus.reports
 		public static float DOTS_UNITS_ON = 1;
 		public bool lineCapProjectingSquare = true;
 		public bool barcode128AsImage = true;
+		private PdfConformanceLevel complianceLevel = PdfConformanceLevel.None;
 		internal Dictionary<string, Image> documentImages;
 		float[] STYLE_SOLID = new float[] { 1, 0 };//0
 		float[] STYLE_NONE = null;//1
@@ -312,7 +315,11 @@ namespace com.genexus.reports
 			printerSettings.setupProperty(form, Const.COLOR, color + "");
 			printerSettings.setupProperty(form, Const.DUPLEX, duplex + "");
 		}
-
+		internal static void SetDefaultComplianceLevel(PdfConformanceLevel level)
+		{
+			if (props!=null)
+				props.setGeneralProperty(Const.COMPLIANCE_LEVEL, level.ToString());
+		}
 		private void loadProps()
 		{
 			if (props == null)
@@ -350,6 +357,7 @@ namespace com.genexus.reports
 						props.setupGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER.ToString().ToLower());
 						props.setupGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, ".");
 						props.setupGeneralProperty(Const.LEADING, "2");
+						props.setupGeneralProperty(Const.COMPLIANCE_LEVEL, PdfConformanceLevel.None.ToString()); 
 						props.setupGeneralProperty(Const.RUN_DIRECTION, Const.RUN_DIRECTION_LTR);
 						props.setupGeneralProperty(Const.JUSTIFIED_TYPE_ALL, "false");
 
@@ -415,16 +423,24 @@ namespace com.genexus.reports
 			try
 			{
 				writer = PdfWriter.GetInstance(document, outputStream);
+				string level = props.getGeneralProperty(Const.COMPLIANCE_LEVEL);
+				if (Enum.TryParse(level, true, out complianceLevel))
+				{
+					if (SetComplainceLevel(complianceLevel))
+						writer.SetTagged();
+				}
+				document.Open();
+
 			}
 			catch (DocumentException de)
 			{
-				GXLogging.Debug(log,"GxDrawRect error", de);
+				GXLogging.Debug(log, "init error", de);
 			}
-			document.Open();
 		}
 
 		public void GxRVSetLanguage(String lang)
 		{
+			language = lang;
 		}
 
 		public void GxSetTextMode(int nHandle, int nGridX, int nGridY, int nPageLength)
@@ -795,6 +811,7 @@ namespace com.genexus.reports
 			{
 				iTextSharp.text.Image image;
 				iTextSharp.text.Image imageRef;
+				
 				if (documentImages != null && documentImages.TryGetValue(bitmap, out imageRef))
 				{
 					image = imageRef;
@@ -848,7 +865,9 @@ namespace com.genexus.reports
 						image.ScaleToFit(rightAux - leftAux, bottomAux - topAux);
 
 					PdfContentByte cb = writer.DirectContent;
+					image.Alt = Path.GetFileName(bitmap);
 					cb.AddImage(image);
+					
 				}
 			}
 			catch (DocumentException de)
@@ -1046,8 +1065,16 @@ namespace com.genexus.reports
 				baseFont = CreateDefaultFont();
 			}
 		}
+		BaseFont defaultFont;
 		private BaseFont CreateDefaultFont() {
-			return BaseFont.CreateFont("Helvetica", BaseFont.WINANSI, BaseFont.NOT_EMBEDDED); 
+			if (defaultFont == null)
+			{
+				if (IsPdfA())
+					defaultFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.EMBEDDED);
+				else
+					defaultFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+			}
+			return defaultFont;
 		}
 		private string GetFontLocation(string fontName)
 		{
@@ -1082,9 +1109,14 @@ namespace com.genexus.reports
 
 		private bool IsEmbeddedFont(string fontName)
 		{
-			bool generalEmbeedFont = props.getBooleanGeneralProperty(Const.EMBEED_SECTION, false);
-			bool generalEmbeedNotSpecified = props.getBooleanGeneralProperty(Const.EMBEED_NOT_SPECIFIED_SECTION, false);
-			return generalEmbeedFont && props.getBooleanProperty(Const.EMBEED_SECTION, fontName, generalEmbeedNotSpecified);
+			if (IsPdfA())
+				return true;
+			else
+			{
+				bool generalEmbeedFont = props.getBooleanGeneralProperty(Const.EMBEED_SECTION, false);
+				bool generalEmbeedNotSpecified = props.getBooleanGeneralProperty(Const.EMBEED_NOT_SPECIFIED_SECTION, false);
+				return generalEmbeedFont && props.getBooleanProperty(Const.EMBEED_SECTION, fontName, generalEmbeedNotSpecified);
+			}
 		}
 		private void LoadAsianFontsDll()
 		{
@@ -1970,7 +2002,22 @@ namespace com.genexus.reports
 				}
 				
 			}
+			if (IsPdfA())
+			{
+				using (Stream iccProfile = ReadResource("sRGB Color Space Profile.icm"))
+				{
+					ICC_Profile icc = ICC_Profile.GetInstance(iccProfile);
+					writer.SetOutputIntents("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", icc);
+				}
 
+				writer.ExtraCatalog.Put(PdfName.LANG, new PdfString(Config.GetCultureForLang(language).Name));
+				PdfDictionary markInfo = new PdfDictionary(PdfName.MARKINFO);
+				markInfo.Put(PdfName.MARKED, new PdfBoolean(PdfBoolean.TRUE));
+				writer.ExtraCatalog.Put(PdfName.MARKINFO, markInfo);
+
+				writer.CreateXmpMetadata();
+
+			}
 			document.Close();
 
 
@@ -2046,6 +2093,17 @@ namespace com.genexus.reports
 
 			GXLogging.Debug(log,"GxEndDocument End");
 
+		}
+		Stream ReadResource(string fileName)
+		{
+			Assembly assembly = GetType().Assembly;
+			string resourcePath = $"{assembly.GetName().Name}.{fileName}";
+			return assembly.GetManifestResourceStream(resourcePath);
+		}
+
+		private bool IsPdfA()
+		{
+			return complianceLevel != 0;
 		}
 
 		public void GxEndPrinter()
@@ -2285,6 +2343,20 @@ namespace com.genexus.reports
 		private void SetSimpleColumn(ColumnText col, Rectangle rect)
 		{
 			col.SetSimpleColumn(rect.Left, rect.Bottom, rect.Right, rect.Top);
+		}
+		internal bool SetComplainceLevel(PdfConformanceLevel level)
+		{
+			switch (level)
+			{
+				case PdfConformanceLevel.Pdf_A1A:
+					writer.PDFXConformance = PdfWriter.PDFA1A;
+					return true;
+				case PdfConformanceLevel.Pdf_A1B:
+					writer.PDFXConformance = PdfWriter.PDFA1B;
+					return true;
+				default:
+					return false;
+			}
 		}
 	}
 
@@ -2737,7 +2809,8 @@ namespace com.genexus.reports
 		public static String ADJUST_TO_PAPER = "AdjustToPaper"; //fit to page
 		public static String LINE_CAP_PROJECTING_SQUARE = "LineCapProjectingSquare";
 		public static String BARCODE128_AS_IMAGE = "Barcode128AsImage";
-        public static String LEADING = "Leading"; 
+        public static String LEADING = "Leading";
+		internal static String COMPLIANCE_LEVEL = "ComplianceLevel";
 
 		//Printer settings
 		public static String PRINTER = "Printer"; 
@@ -3227,6 +3300,16 @@ namespace com.genexus.reports
 		}
 
 	}
-
+	internal enum PdfConformanceLevel
+	{
+		None,
+		Pdf_A1B,
+		Pdf_X1A2001,
+		Pdf_A1A,
+		Pdf_A2A,
+		Pdf_A2B,
+		Pdf_A3A,
+		Pdf_A3B
+	}
 }
 
