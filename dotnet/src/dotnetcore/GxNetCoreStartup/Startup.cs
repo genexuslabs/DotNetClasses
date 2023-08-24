@@ -76,6 +76,7 @@ namespace GeneXus.Application
 		   WebHost.CreateDefaultBuilder(args)
 			.ConfigureLogging(logging => logging.AddConsole())
 			.UseStartup<Startup>()
+			.UseWebRoot(Startup.LocalPath)
 			.UseContentRoot(Startup.LocalPath)
 			.Build();
 
@@ -89,6 +90,7 @@ namespace GeneXus.Application
 				 .ConfigureLogging(logging => logging.AddConsole())
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
+				.UseWebRoot(Startup.LocalPath)
 				.UseContentRoot(Startup.LocalPath)
 				.Build();
 		}
