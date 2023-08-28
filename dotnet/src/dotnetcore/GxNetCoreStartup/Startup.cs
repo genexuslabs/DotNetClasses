@@ -4,7 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
@@ -30,6 +33,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
 using StackExchange.Redis;
 
 
@@ -39,6 +44,10 @@ namespace GeneXus.Application
 	{
 		const string DEFAULT_PORT = "80";
 		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
+
+		private static string OPENTELEMETRY_SERVICE = "Observability";
+		private static string OPENTELEMETRY_AZURE_DISTRO = "GeneXus.OpenTelemetry.Azure.AzureAppInsights";
+		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 		public static void Main(string[] args)
 		{
 			try
@@ -76,12 +85,12 @@ namespace GeneXus.Application
 		}
 
 		public static IWebHost BuildWebHost(string[] args) =>
-		   WebHost.CreateDefaultBuilder(args)
-			.ConfigureLogging(logging => logging.AddConsole())
-			.UseStartup<Startup>()
-			.UseContentRoot(Startup.LocalPath)
-			.Build();
-
+		  WebHost.CreateDefaultBuilder(args)
+		   .ConfigureLogging(WebHostConfigureLogging)
+		   .UseStartup<Startup>()
+		   .UseContentRoot(Startup.LocalPath)
+		   .Build();
+		
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
 			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
@@ -89,11 +98,45 @@ namespace GeneXus.Application
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				 .ConfigureLogging(logging => logging.AddConsole())
+				 .ConfigureLogging(WebHostConfigureLogging)
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
 				.UseContentRoot(Startup.LocalPath)
 				.Build();
+		}
+
+		private static void WebHostConfigureLogging(WebHostBuilderContext hostingContext, ILoggingBuilder loggingBuilder)
+		{
+			loggingBuilder.AddConsole();
+			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
+			if (providerService != null && providerService.ClassName.StartsWith(OPENTELEMETRY_AZURE_DISTRO))
+			{
+				ConfigureAzureOpentelemetry(loggingBuilder);
+			}
+		}
+		private static void ConfigureAzureOpentelemetry(ILoggingBuilder loggingBuilder)
+		{
+			string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
+			var resourceBuilder = ResourceBuilder.CreateDefault()
+			.AddTelemetrySdk();
+
+			loggingBuilder.AddOpenTelemetry(loggerOptions =>
+			{
+				loggerOptions
+					.SetResourceBuilder(resourceBuilder)
+					.AddAzureMonitorLogExporter(options =>
+					{
+						if (!string.IsNullOrEmpty(endpoint))
+							options.ConnectionString = endpoint;
+						else
+							options.Credential = new DefaultAzureCredential();
+					})
+					.AddConsoleExporter();
+
+				loggerOptions.IncludeFormattedMessage = true;
+				loggerOptions.IncludeScopes = true;
+				loggerOptions.ParseStateValues = true;
+			});
 		}
 		private static void LocatePhysicalLocalPath()
 		{
