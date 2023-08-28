@@ -677,9 +677,15 @@ namespace GeneXus.Application
 		internal static void SetAntiForgeryTokens(IAntiforgery _antiforgery, HttpContext context)
 		{
 			AntiforgeryTokenSet tokenSet = _antiforgery.GetAndStoreTokens(context);
-			context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken,
-				new CookieOptions { HttpOnly = false, Secure = GxContext.GetHttpSecure(context) == 1 });
-			GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN, "=", tokenSet.RequestToken);
+			string sameSite;
+			CookieOptions cookieOptions = new CookieOptions { HttpOnly = false, Secure = GxContext.GetHttpSecure(context) == 1 };
+			SameSiteMode sameSiteMode= SameSiteMode.Unspecified;
+			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse(sameSite, out sameSiteMode))
+			{
+				cookieOptions.SameSite = sameSiteMode;
+			}
+			context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken, cookieOptions);
+			GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN, "=", tokenSet.RequestToken, " samesite:" + sameSiteMode);
 		}
 
 	}
