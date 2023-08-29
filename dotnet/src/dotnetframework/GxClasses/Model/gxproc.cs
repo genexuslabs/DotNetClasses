@@ -351,13 +351,55 @@ namespace GeneXus.Procedure
 	}
 	public class GXDataGridProcedure : GXProcedure
 	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXDataGridProcedure));
+
+		const string HAS_NEXT_PAGE = "HasNextPage";
+		const string RECORD_COUNT = "RecordCount";
+		long totalRecordCount = -1;
 		protected virtual long RecordCount()
 		{
 			return 0;
 		}
-		internal long InternalRecordCount()
+		protected void SetPaginationHeaders(bool hasNextPage)
 		{
-			return RecordCount();
+			try
+			{
+				SetHasNextPageHeader(hasNextPage);
+				SetRecordCountHeader();
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Warn(log, $"A processing error occurred while setting pagination headers", ex);
+			}
+		}
+
+		private void SetHasNextPageHeader(bool hasNextPage)
+		{
+			context.SetHeader(HAS_NEXT_PAGE, StringUtil.BoolToStr(hasNextPage));
+		}
+
+		internal void SetRecordCountHeader()
+		{
+			bool recordCountHeaderRequired = false;
+			bool setHeader = false;
+			if (context.HttpContext != null)
+			{
+				recordCountHeaderRequired = !string.IsNullOrEmpty(context.HttpContext.Request.Headers[RECORD_COUNT]);
+			}
+			if (totalRecordCount != -1)
+			{
+				setHeader = true;
+			}
+			else if (recordCountHeaderRequired)
+			{
+				totalRecordCount = RecordCount();
+				setHeader = true;
+			}
+			if (setHeader)
+			{
+				GXLogging.Debug(log, $"Adding '{RECORD_COUNT}' header:", totalRecordCount.ToString());
+				context.SetHeader(RECORD_COUNT, totalRecordCount.ToString());
+			}
 		}
 		protected long GetPaginationStart(long start, long count)
 		{
@@ -365,12 +407,12 @@ namespace GeneXus.Procedure
 				return start;
 			else //last page
 			{
-				long totalRecords = RecordCount();
-				long lastPageRecords = totalRecords % count;
+				totalRecordCount = RecordCount();
+				long lastPageRecords = totalRecordCount % count;
 				if (lastPageRecords == 0)
-					start = totalRecords - count;
+					start = totalRecordCount - count;
 				else
-					start = totalRecords - lastPageRecords;
+					start = totalRecordCount - lastPageRecords;
 				return start;
 			}
 		}

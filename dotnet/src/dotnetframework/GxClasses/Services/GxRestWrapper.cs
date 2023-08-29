@@ -308,7 +308,6 @@ namespace GeneXus.Application
 				if (!ProcessHeaders(_procWorker.GetType().Name))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
-				ProcessRecordCountHeader();
 				IDictionary<string,object> queryParameters = ReadQueryParameters(this._variableAlias);
 				addPathParameters(queryParameters);
 				string innerMethod = EXECUTE_METHOD;
@@ -346,35 +345,6 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-#if NETCORE
-		const string RecordCount= "RecordCount";
-		void ProcessRecordCountHeader()
-		{
-			try
-			{
-				GXDataGridProcedure dataGridWorker = _procWorker as GXDataGridProcedure;
-				if (dataGridWorker != null)
-				{
-					IHeaderDictionary headers = GetHeaders();
-					if (headers != null && !string.IsNullOrEmpty(headers[RecordCount]))
-					{
-						_procWorker.initialize();
-						long count = dataGridWorker.InternalRecordCount();
-
-					GXLogging.Debug(log, $"Adding '{RecordCount}' header:", count.ToString());
-						AddHeader(RecordCount, count.ToString());
-					}
-				}
-			}catch (Exception ex)
-			{
-				GXLogging.Warn(log, $"A processing error occurred while handling the '{RecordCount}' header.", ex);
-			}
-		}
-#else
-		void ProcessRecordCountHeader()
-		{
-		}
-#endif
 		bool GetWrappedStatus(GXBaseObject worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
 		{
 			if (worker.IsApiObject)
