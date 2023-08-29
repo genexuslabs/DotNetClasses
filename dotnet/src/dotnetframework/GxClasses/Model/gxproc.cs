@@ -355,10 +355,15 @@ namespace GeneXus.Procedure
 
 		const string HAS_NEXT_PAGE = "HasNextPage";
 		const string RECORD_COUNT = "RecordCount";
+		const string RECORD_COUNT_SUPPORTED = "RecordCountSupported";
 		long totalRecordCount = -1;
 		protected virtual long RecordCount()
 		{
-			return 0;
+			return -1;
+		}
+		protected virtual bool RecordCountSupported()
+		{
+			return true;
 		}
 		protected void SetPaginationHeaders(bool hasNextPage)
 		{
@@ -366,10 +371,19 @@ namespace GeneXus.Procedure
 			{
 				SetHasNextPageHeader(hasNextPage);
 				SetRecordCountHeader();
+				SetRecordCountSupportedHeader();
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Warn(log, $"A processing error occurred while setting pagination headers", ex);
+			}
+		}
+		private void SetRecordCountSupportedHeader()
+		{
+			if (!RecordCountSupported())
+			{
+				GXLogging.Debug(log, $"Adding '{RECORD_COUNT_SUPPORTED}' header");
+				context.SetHeader(RECORD_COUNT_SUPPORTED, false.ToString());
 			}
 		}
 
@@ -378,7 +392,7 @@ namespace GeneXus.Procedure
 			context.SetHeader(HAS_NEXT_PAGE, StringUtil.BoolToStr(hasNextPage));
 		}
 
-		internal void SetRecordCountHeader()
+		private void SetRecordCountHeader()
 		{
 			bool recordCountHeaderRequired = false;
 			bool setHeader = false;
