@@ -684,8 +684,13 @@ namespace GeneXus.Application
 			{
 				cookieOptions.SameSite = sameSiteMode;
 			}
+			Uri referer = context.Request.GetUrlReferrer();
+			if (referer != null)
+			{
+				cookieOptions.Domain = referer.Host;
+			}
 			context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken, cookieOptions);
-			GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN, "=", tokenSet.RequestToken, " samesite:" + sameSiteMode);
+			GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN, "=", tokenSet.RequestToken, " samesite:" + sameSiteMode, " domain:" + cookieOptions.Domain);
 		}
 
 	}
