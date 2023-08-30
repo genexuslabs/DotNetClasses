@@ -370,7 +370,6 @@ namespace GeneXus.Procedure
 			try
 			{
 				SetHasNextPageHeader(hasNextPage);
-				SetRecordCountHeader();
 				SetRecordCountSupportedHeader();
 			}
 			catch (Exception ex)
@@ -417,9 +416,7 @@ namespace GeneXus.Procedure
 		}
 		protected long GetPaginationStart(long start, long count)
 		{
-			if (start >= 0)
-				return start;
-			else //last page
+			if (start < 0) //last page
 			{
 				totalRecordCount = RecordCount();
 				long lastPageRecords = totalRecordCount % count;
@@ -427,8 +424,9 @@ namespace GeneXus.Procedure
 					start = totalRecordCount - count;
 				else
 					start = totalRecordCount - lastPageRecords;
-				return start;
 			}
+			SetRecordCountHeader();
+			return start;
 		}
 	}
 	public class GxReportUtils
