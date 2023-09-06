@@ -30,7 +30,6 @@ using Microsoft.Net.Http.Headers;
 using System.Net.Http;
 using System.Diagnostics;
 using GeneXus.Diagnostics;
-using System.Reflection;
 
 namespace GeneXus.Application
 
