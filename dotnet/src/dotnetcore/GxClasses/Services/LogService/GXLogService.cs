@@ -38,9 +38,7 @@ namespace GeneXus.Services.Log
 			}
 			else
 			{
-				string log4net_config = GxContext.IsHttpContext ? "log.config" : "log.console.config";
-				Log4NetProvider log4NetProvider = new Log4NetProvider(log4net_config);
-				return LoggerFactory.Create(builder => builder.AddProvider(log4NetProvider));
+				return null;
 			}
 			
 		}

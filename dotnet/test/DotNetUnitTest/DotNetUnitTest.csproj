@@ -4,15 +4,20 @@
 		<RootNamespace>DotNetUnitTest</RootNamespace>
 		<AssemblyName>DotNetUnitTest</AssemblyName>
 		<DefineConstants>NODATIME</DefineConstants>
+		<SignAssembly>true</SignAssembly>
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="client.exe.config" />
+	  <None Remove="log.console.config" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Content Include="applications.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="client.exe.config">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="log.console.config">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="MS923.txt">
