@@ -8,7 +8,7 @@ namespace DotNetUnitTest.Log
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<LogTest>();
 		[Fact]
-		public void TestSessionRenew()
+		public void TestLogOutput()
 		{
 			Config.LoadConfiguration();
 			GXLogging.Debug(log, "Test Debug");
