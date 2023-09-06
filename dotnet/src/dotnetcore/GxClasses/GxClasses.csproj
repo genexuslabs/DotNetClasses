@@ -78,7 +78,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxHttpClient.cs" Link="Domain\GxHttpClient.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Core\Web\GxHttpServer.cs" Link="Core\Web\GxHttpServer.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxLocations.cs" Link="Domain\GxLocations.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXLogging.cs" Link="Helpers\GXLogging.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXMetadata.cs" Link="Helpers\GXMetadata.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Printer\GxPrinter.cs" Link="Printer\GxPrinter.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\gxproc.cs" Link="Model\gxproc.cs" />
