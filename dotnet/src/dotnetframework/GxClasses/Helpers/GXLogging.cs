@@ -45,7 +45,7 @@ namespace GeneXus
 		void LogInfo(string msg);
 	}
 #if NETCORE
-	public class GXLoggerMsExtensions : IGXLogger
+	internal class GXLoggerMsExtensions : IGXLogger
 	{
 
 		internal GXLoggerMsExtensions(Microsoft.Extensions.Logging.ILogger logInstance)
@@ -109,7 +109,7 @@ namespace GeneXus
 		}
 	}
 #endif
-	public class GXLoggerLog4Net:IGXLogger
+	internal class GXLoggerLog4Net:IGXLogger
 	{
 
 		internal ILog log { get; set; }
