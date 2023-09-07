@@ -78,6 +78,7 @@ namespace GeneXus.Http.HttpModules
 			context.PostMapRequestHandler += context_PostMapRequestHandler;
 			context.PostResolveRequestCache += onPostResolveRequestCache;
 		}
+	
 		private void onPostResolveRequestCache(object sender, EventArgs eventArgs)
 		{
 			if (string.Equals(HttpContext.Current.Request.HttpMethod, HttpMethod.Options.Method, StringComparison.OrdinalIgnoreCase))
@@ -85,6 +86,11 @@ namespace GeneXus.Http.HttpModules
 				IHttpHandler apiHandler = MapHandler(sender, eventArgs);
 				if (apiHandler != null)
 					HttpContext.Current.RemapHandler(apiHandler);
+			}
+			else if (string.Equals(HttpContext.Current.Request.HttpMethod, HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) &&
+				HttpContext.Current.Request.Path.EndsWith("/" + REST_BASE_URL, StringComparison.OrdinalIgnoreCase))
+			{
+				CSRFHelper.ValidateAntiforgery(HttpContext.Current);
 			}
 		}
 		void IHttpModule.Dispose()
