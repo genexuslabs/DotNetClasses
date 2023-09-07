@@ -86,6 +86,11 @@ namespace GeneXus.Http.HttpModules
 				if (apiHandler != null)
 					HttpContext.Current.RemapHandler(apiHandler);
 			}
+			else if (string.Equals(HttpContext.Current.Request.HttpMethod, HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) &&
+				HttpContext.Current.Request.Path.EndsWith("/" + REST_BASE_URL, StringComparison.OrdinalIgnoreCase))
+			{
+				CSRFHelper.ValidateAntiforgery(HttpContext.Current);
+			}
 		}
 		void IHttpModule.Dispose()
 		{
