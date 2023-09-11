@@ -5560,7 +5560,7 @@ namespace GeneXus.Utils
 				{
 					try
 					{
-						byte[] data = httpClient.GetByteArrayAsync(filePathOrUrl).Result;
+						byte[] data = httpClient.GetByteArrayAsync(uri).Result;
 						using (MemoryStream mem = new MemoryStream(data))
 						{
 							return new Bitmap(mem);
@@ -5592,7 +5592,7 @@ namespace GeneXus.Utils
 				{
 					try
 					{
-						byte[] data = httpClient.GetByteArrayAsync(filePathOrUrl).Result;
+						byte[] data = httpClient.GetByteArrayAsync(uri).Result;
 						using (MemoryStream mem = new MemoryStream(data))
 						{
 							return Image.FromStream(mem);
