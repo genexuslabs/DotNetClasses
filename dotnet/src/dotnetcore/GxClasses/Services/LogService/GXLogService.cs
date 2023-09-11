@@ -10,11 +10,11 @@ namespace GeneXus.Services.Log
 		ILoggerFactory GetLoggerFactory();
 	}
 
-	public static class GXLogService
+	internal static class GXLogService
 	{
 		private static string LOG_SERVICE = "Log";
 	
-		public static ILoggerFactory GetLogFactory()
+		internal static ILoggerFactory GetLogFactory()
 		{
 			IGXLogProvider gxLogProvider = null;
 			GXService providerService = GXServices.Instance?.Get(LOG_SERVICE);
