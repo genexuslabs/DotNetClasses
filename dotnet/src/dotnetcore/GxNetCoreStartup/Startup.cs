@@ -253,7 +253,6 @@ namespace GeneXus.Application
 					options.HeaderName = HttpHeader.X_CSRF_TOKEN_HEADER;
 					options.SuppressXFrameOptionsHeader = false;
 				});
-				services.AddSingleton<IAntiforgeryAdditionalDataProvider, SessionIdAntiforgeryAdditionalDataProvider>();
 			}
 			services.AddDirectoryBrowser();
 			if (GXUtil.CompressResponse())
