@@ -62,29 +62,4 @@ namespace GeneXus.Application
 		}
 
 	}
-	public class SessionIdAntiforgeryAdditionalDataProvider : IAntiforgeryAdditionalDataProvider
-	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(SessionIdAntiforgeryAdditionalDataProvider));
-		public string GetAdditionalData(HttpContext context)
-		{
-			context.NewSessionCheck();
-			GXLogging.Debug(log, $"Setting session id as additional CSRF token data:", context.Session.Id);
-			return context.Session.Id.Trim();
-		}
-
-		public bool ValidateAdditionalData(HttpContext context, string additionalData)
-		{
-			if (context.IsNewSession())
-			{
-				return true;
-			}
-			else
-			{
-				bool validSession = context.Session.Id.Trim().CompareTo(additionalData.Trim()) == 0 ? true : false;
-				GXLogging.Warn(log, $"Session id in CSRF token ({additionalData}) does not match the current session id ({context.Session.Id})");
-				return validSession;
-			}
-		}
-	}
-
 }
