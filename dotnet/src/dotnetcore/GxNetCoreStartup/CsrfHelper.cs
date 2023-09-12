@@ -74,9 +74,16 @@ namespace GeneXus.Application
 
 		public bool ValidateAdditionalData(HttpContext context, string additionalData)
 		{
-			bool validSession = context.Session.Id.Trim().CompareTo(additionalData.Trim()) == 0 ? true : false;
-			GXLogging.Warn(log, $"Session id in CSRF token ({additionalData}) does not match the current session id ({context.Session.Id})");
-			return validSession;
+			if (context.IsNewSession())
+			{
+				return true;
+			}
+			else
+			{
+				bool validSession = context.Session.Id.Trim().CompareTo(additionalData.Trim()) == 0 ? true : false;
+				GXLogging.Warn(log, $"Session id in CSRF token ({additionalData}) does not match the current session id ({context.Session.Id})");
+				return validSession;
+			}
 		}
 	}
 
