@@ -5925,7 +5925,7 @@ namespace GeneXus.Utils
 				{
 					try
 					{
-						byte[] data = httpClient.GetByteArrayAsync(filePathOrUrl).Result;
+						byte[] data = httpClient.GetByteArrayAsync(uri).Result;
 						using (MemoryStream mem = new MemoryStream(data))
 						{
 							return new Bitmap(mem);
@@ -5957,7 +5957,7 @@ namespace GeneXus.Utils
 				{
 					try
 					{
-						byte[] data = httpClient.GetByteArrayAsync(filePathOrUrl).Result;
+						byte[] data = httpClient.GetByteArrayAsync(uri).Result;
 						using (MemoryStream mem = new MemoryStream(data))
 						{
 							return Image.FromStream(mem);
@@ -6196,6 +6196,7 @@ namespace GeneXus.Utils
 
 		public static string Save(Image bitmap, string imageFile, ImageFormat format)
 		{
+			System.Diagnostics.Debugger.Launch();
 			string destinationImagePath = string.Empty;
 			using (MemoryStream ms = new MemoryStream())
 			{
@@ -6218,7 +6219,7 @@ namespace GeneXus.Utils
 						imageFile = Path.GetFileName(uri.AbsolutePath);
 					}
 					GxFile sourceImage = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
-					string destinationImageName = FileUtil.getTempFileName(sourceImage.GetDirectory().GetAbsoluteName(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
+					string destinationImageName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
 					GxFile destinationImage = new GxFile(GxContext.StaticPhysicalPath(), destinationImageName);
 					destinationImage.Create(ms);
 					destinationImage.Close();
