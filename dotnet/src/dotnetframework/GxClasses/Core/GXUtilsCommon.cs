@@ -6196,7 +6196,6 @@ namespace GeneXus.Utils
 
 		public static string Save(Image bitmap, string imageFile, ImageFormat format)
 		{
-			System.Diagnostics.Debugger.Launch();
 			string destinationImagePath = string.Empty;
 			using (MemoryStream ms = new MemoryStream())
 			{
@@ -6219,8 +6218,9 @@ namespace GeneXus.Utils
 						imageFile = Path.GetFileName(uri.AbsolutePath);
 					}
 					GxFile sourceImage = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
-					string destinationImageName = FileUtil.getTempFileName(Preferences.getTMP_MEDIA_PATH(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
-					GxFile destinationImage = new GxFile(GxContext.StaticPhysicalPath(), destinationImageName);
+					string tempDirectory = Preferences.getTMP_MEDIA_PATH();
+					string destinationImageName = FileUtil.getTempFileName(tempDirectory, Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
+					GxFile destinationImage = new GxFile(tempDirectory, destinationImageName);
 					destinationImage.Create(ms);
 					destinationImage.Close();
 					destinationImagePath = destinationImage.GetAbsoluteName();
