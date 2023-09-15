@@ -349,7 +349,86 @@ namespace GeneXus.Procedure
 		protected void trkrng(int lineNro, int lineNro2) => dbgInfo?.TrkRng(lineNro, 0, lineNro2, 0);
 		protected void trkrng(int lineNro, int colNro, int lineNro2, int colNro2) => dbgInfo?.TrkRng(lineNro, colNro, lineNro2, colNro2);
 	}
+	public class GXDataGridProcedure : GXProcedure
+	{
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXDataGridProcedure));
 
+		const string HAS_NEXT_PAGE = "HasNextPage";
+		const string RECORD_COUNT = "RecordCount";
+		const string RECORD_COUNT_SUPPORTED = "RecordCountSupported";
+		long totalRecordCount = -1;
+		protected virtual long RecordCount()
+		{
+			return -1;
+		}
+		protected virtual bool RecordCountSupported()
+		{
+			return true;
+		}
+		protected void SetPaginationHeaders(bool hasNextPage)
+		{
+			try
+			{
+				SetHasNextPageHeader(hasNextPage);
+				SetRecordCountSupportedHeader();
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Warn(log, $"A processing error occurred while setting pagination headers", ex);
+			}
+		}
+		private void SetRecordCountSupportedHeader()
+		{
+			if (!RecordCountSupported())
+			{
+				GXLogging.Debug(log, $"Adding '{RECORD_COUNT_SUPPORTED}' header");
+				context.SetHeader(RECORD_COUNT_SUPPORTED, false.ToString());
+			}
+		}
+
+		private void SetHasNextPageHeader(bool hasNextPage)
+		{
+			context.SetHeader(HAS_NEXT_PAGE, StringUtil.BoolToStr(hasNextPage));
+		}
+
+		private void SetRecordCountHeader()
+		{
+			bool recordCountHeaderRequired = false;
+			bool setHeader = false;
+			if (context.HttpContext != null)
+			{
+				recordCountHeaderRequired = !string.IsNullOrEmpty(context.HttpContext.Request.Headers[RECORD_COUNT]);
+			}
+			if (totalRecordCount != -1)
+			{
+				setHeader = true;
+			}
+			else if (recordCountHeaderRequired)
+			{
+				totalRecordCount = RecordCount();
+				setHeader = true;
+			}
+			if (setHeader)
+			{
+				GXLogging.Debug(log, $"Adding '{RECORD_COUNT}' header:", totalRecordCount.ToString());
+				context.SetHeader(RECORD_COUNT, totalRecordCount.ToString());
+			}
+		}
+		protected long GetPaginationStart(long start, long count)
+		{
+			if (start < 0) //last page
+			{
+				totalRecordCount = RecordCount();
+				long lastPageRecords = totalRecordCount % count;
+				if (lastPageRecords == 0)
+					start = totalRecordCount - count;
+				else
+					start = totalRecordCount - lastPageRecords;
+			}
+			SetRecordCountHeader();
+			return start;
+		}
+	}
 	public class GxReportUtils
 	{
 		public static int OUTPUT_RVIEWER_NATIVE = 1;
