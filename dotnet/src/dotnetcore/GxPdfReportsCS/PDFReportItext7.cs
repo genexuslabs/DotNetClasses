@@ -22,6 +22,7 @@ using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Font;
+using iText.Layout.Layout;
 using iText.Layout.Properties;
 using log4net;
 using NetTopologySuite.Utilities;
@@ -407,6 +408,7 @@ namespace com.genexus.reports
 		public override void GxDrawLine(int left, int top, int right, int bottom, int width, int foreRed, int foreGreen, int foreBlue, int style)
 		{
 			PdfCanvas cb = new PdfCanvas(pdfPage);
+
 			Color foreColor = new DeviceRgb(foreRed, foreGreen, foreBlue);
 
 			float widthAux = (float)convertScale(width);
@@ -447,6 +449,7 @@ namespace com.genexus.reports
 		}
 		public override void GxDrawBitMap(String bitmap, int left, int top, int right, int bottom, int aspectRatio)
 		{
+
 			try
 			{
 				Image image;
@@ -497,7 +500,7 @@ namespace com.genexus.reports
 					float bottomAux = (float)convertScale(bottom);
 					float leftAux = (float)convertScale(left);
 					float topAux = (float)convertScale(top);
-					image.SetFixedPosition(leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin);
+					image.SetFixedPosition(this.getPage(),leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin);
 					if (aspectRatio == 0)
 						image.ScaleAbsolute(rightAux - leftAux, bottomAux - topAux);
 					else
@@ -769,26 +772,30 @@ namespace com.genexus.reports
 				bottomAux = (float)convertScale(bottom);
 				topAux = (float)convertScale(top);
 
-
-				Canvas cb = new Canvas(canvas, new Rectangle(leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, rightAux - leftAux, bottomAux - topAux));
+				Rectangle htmlRectangle = new Rectangle(leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, rightAux - leftAux, bottomAux - topAux);
+				Canvas cb = new Canvas(canvas, htmlRectangle);
 				TextAlignment colAlignment = (TextAlignment)GetTextAlignment(alignment);
 				cb.SetTextAlignment(colAlignment);
 
 				try
 				{
-					IList<IElement> objects = HtmlConverter.ConvertToElements(sTxt, properties);
+					bottomAux = (float)convertScale(bottom);
+					topAux = (float)convertScale(top);
+					float drawingPageHeight = this.pageSize.GetTop() - topMargin - bottomMargin;
 
-					foreach (IElement element in objects)
-					{
-						Paragraph p = element as Paragraph;
-						if (p != null)
-						{
-							if (alignment != 0)
-								p.SetTextAlignment(colAlignment);
-						}
+					float llx = leftAux + leftMargin;
+					float lly = drawingPageHeight - bottomAux;
+					float urx = rightAux + leftMargin;
+					float ury = drawingPageHeight - topAux;
+				
+					YPosition yPosition = new YPosition(htmlRectangle.GetTop());
 
-						cb.Add((IBlockElement)element);
-					}
+					ConverterProperties converterProperties = new ConverterProperties();
+					converterProperties.SetFontProvider(document.GetFontProvider());
+					//Iterate over the elements (a.k.a the parsed HTML string) and handle each case accordingly
+					IList<IElement> elements = HtmlConverter.ConvertToElements(sTxt, properties);
+					foreach (IElement element in elements)
+						processHTMLElement(cb, colAlignment, htmlRectangle, yPosition, (IBlockElement)element);
 				}
 				catch (Exception ex1)
 				{
@@ -972,6 +979,94 @@ namespace com.genexus.reports
 				}
 			}
 			
+		}
+
+		private void processHTMLElement(Canvas cb, TextAlignment colAlignment, Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement)
+		{
+			Div div = blockElement as Div;
+			if (div != null) {
+				// Iterate through the children of the Div and process each child element recursively
+				foreach (IElement child in div.GetChildren())
+					if (child is IBlockElement)
+						processHTMLElement(cb, colAlignment, htmlRectangle, currentYPosition, (IBlockElement)child);
+					
+			}
+
+			float blockElementHeight = getBlockElementHeight(blockElement, htmlRectangle);
+			float availableSpace = currentYPosition.CurrentYPosition - htmlRectangle.GetBottom();
+			if (blockElementHeight > availableSpace)
+			{
+				GXLogging.Error(log, "You are trying to render an element of height " + blockElementHeight + " in a space of height " + availableSpace);
+				return;
+			}
+
+			Link anchor = blockElement as Link;
+			if (anchor != null)
+			{
+				anchor.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				document.Add((IBlockElement) anchor);
+				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
+				return;
+			}
+
+			Paragraph p = blockElement as Paragraph;
+			if (p != null)
+			{
+				p.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				document.Add(p);
+				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
+				return;
+			}
+
+			Table table = blockElement as Table;
+			if (table != null)
+			{
+				table.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				table.SetTextAlignment(colAlignment);
+				cb.Add(table);
+				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
+				return;
+			}
+
+			List list = blockElement as List;
+			if (list != null)
+			{
+				// This is a hack for the specific case of rendering a list as cb.Add(list) fails to add numeration to each element but document.Add(list) fails to
+				// consider the numeration of each element as part of it. Solution is to use document.Add(list) and move the list to the right.
+				float numWidth = new Paragraph("1. ").CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
+				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX() + numWidth, currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+
+				list.SetTextAlignment(colAlignment);
+				document.Add(list);
+				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
+				return;
+			}
+
+			Image image = blockElement as Image;
+			if (image != null)
+			{
+				image.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				image.SetTextAlignment(colAlignment);
+				document.Add(image);
+				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
+				return;
+			}
+
+		}
+
+		private float getBlockElementHeight(IBlockElement blockElement, Rectangle htmlRectangle)
+		{
+			return blockElement.CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
+		}
+
+		private class YPosition
+		{
+			public YPosition(float initialYPosition)
+			{
+				CurrentYPosition = initialYPosition;
+			}
+
+			public float CurrentYPosition { get; set; }
 		}
 
 		private BaseDirection? GetBaseDirection(int runDirection)
