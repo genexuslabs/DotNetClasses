@@ -94,13 +94,21 @@ namespace com.genexus.reports
 			else
 				justifiedType = TextAlignment.JUSTIFIED;
 
-			writer = new PdfWriter(outputStream); 
+			writer = new PdfWriter(outputStream);
 			writer.SetCompressionLevel(CompressionConstants.BEST_COMPRESSION);
 			try
 			{
+				string level = props.getGeneralProperty(Const.COMPLIANCE_LEVEL);
+				if (Enum.TryParse(level, true, out complianceLevel))
+				{
+					//if (SetComplainceLevel(complianceLevel))
+						//writer.SetTagged();
+				}
+
 				pdfDocument = new PdfDocument(writer);
 				pdfDocument.SetDefaultPageSize(this.pageSize);
 				document = new Document(pdfDocument);
+
 
 			}
 			catch (PdfException de)
@@ -109,13 +117,27 @@ namespace com.genexus.reports
 			}
 		}
 
+		internal override bool SetComplainceLevel(PdfConformanceLevel level)
+		{
+			/*switch (level)
+			{
+				case PdfConformanceLevel.Pdf_A1A:
+					writer.PDFXConformance = PdfWriter.PDFA1A;
+					return true;
+				case PdfConformanceLevel.Pdf_A1B:
+					writer.PDFXConformance = PdfWriter.PDFA1B;
+					return true;
+				default:
+					return false;
+			}*/
+			return false;
+	}
 
+	/**
+	* @param hideCorners indicates whether corner triangles should be hidden when the side that joins them is hidden.
+	*/
 
-		/**
-		* @param hideCorners indicates whether corner triangles should be hidden when the side that joins them is hidden.
-		*/
-
-		private void drawRectangle(PdfCanvas cb, float x, float y, float w, float h,
+	private void drawRectangle(PdfCanvas cb, float x, float y, float w, float h,
 			int styleTop, int styleBottom, int styleRight, int styleLeft,
 			float radioTL, float radioTR, float radioBL, float radioBR, float penAux, bool hideCorners)
 		{
@@ -505,6 +527,7 @@ namespace com.genexus.reports
 						image.ScaleAbsolute(rightAux - leftAux, bottomAux - topAux);
 					else
 						image.ScaleToFit(rightAux - leftAux, bottomAux - topAux);
+					image.GetAccessibilityProperties().SetAlternateDescription(Path.GetFileName(bitmap));
 					document.Add(image);
 				}
 			}
@@ -671,8 +694,17 @@ namespace com.genexus.reports
 				baseFont = CreateDefaultFont();
 			}
 		}
+		PdfFont defaultFont;
 		private PdfFont CreateDefaultFont()
 		{
+			if (defaultFont == null)
+			{
+				if (IsPdfA())
+					defaultFont = PdfFontFactory.CreateFont("Helvetica", PdfEncodings.CP1252, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED); 
+				else
+					defaultFont = PdfFontFactory.CreateFont("Helvetica", PdfEncodings.WINANSI, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
+			}
+
 			return PdfFontFactory.CreateFont("Helvetica", PdfEncodings.WINANSI, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
 		}
 		public override void setAsianFont(String fontName, String style)
@@ -1235,6 +1267,22 @@ namespace com.genexus.reports
 				pdfDocument.GetCatalog().SetOpenAction(PdfAction.CreateJavaScript(javascript.ToString()));
 			}
 
+			if (IsPdfA())
+			{
+				/*using (Stream iccProfile = ReadResource("sRGB Color Space Profile.icm"))
+				{
+					ICC_Profile icc = ICC_Profile.GetInstance(iccProfile);
+					writer.SetOutputIntents("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", icc);
+				}
+
+				writer.ExtraCatalog.Put(PdfName.LANG, new PdfString(Config.GetCultureForLang(language).Name));
+				PdfDictionary markInfo = new PdfDictionary(PdfName.MARKINFO);
+				markInfo.Put(PdfName.MARKED, new PdfBoolean(PdfBoolean.TRUE));
+				writer.ExtraCatalog.Put(PdfName.MARKINFO, markInfo);
+
+				writer.CreateXmpMetadata();*/
+
+			}
 			document.Close();
 
 

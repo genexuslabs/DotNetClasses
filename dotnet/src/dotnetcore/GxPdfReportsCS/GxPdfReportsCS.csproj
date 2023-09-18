@@ -12,6 +12,9 @@
 		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PDFReportCommon.cs" Link="PDFReportCommon.cs" />
 		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PDFReportItext4.cs" Link="PDFReportItext4.cs" />
 	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="..\..\dotnetframework\GxPdfReportsCS\sRGB Color Space Profile.icm" Link="sRGB Color Space Profile.icm" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="itext7" Version="8.0.0" PrivateAssets="All" />

@@ -23,6 +23,7 @@ using GeneXus.Utils;
 using System.Reflection;
 using GeneXus.Metadata;
 using com.genexus.reports;
+using GeneXus.Configuration;
 
 namespace com.genexus.reports
 {
@@ -73,6 +74,13 @@ namespace com.genexus.reports
 			try
 			{
 				writer = PdfWriter.GetInstance(document, outputStream);
+				string level = props.getGeneralProperty(Const.COMPLIANCE_LEVEL);
+				if (Enum.TryParse(level, true, out complianceLevel))
+				{
+					if (SetComplainceLevel(complianceLevel))
+						writer.SetTagged();
+				}
+				
 			}
 			catch (DocumentException de)
 			{
@@ -467,6 +475,7 @@ namespace com.genexus.reports
 						image.ScaleToFit(rightAux - leftAux, bottomAux - topAux);
 
 					PdfContentByte cb = writer.DirectContent;
+					image.Alt = Path.GetFileName(bitmap);
 					cb.AddImage(image);
 				}
 			}
@@ -645,9 +654,17 @@ namespace com.genexus.reports
 				baseFont = CreateDefaultFont();
 			}
 		}
+		BaseFont defaultFont;
 		private BaseFont CreateDefaultFont()
 		{
-			return BaseFont.CreateFont("Helvetica", BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+			if (defaultFont == null)
+			{
+				if (IsPdfA())
+					defaultFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.EMBEDDED);
+				else
+					defaultFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+			}
+			return defaultFont;		
 		}
 		private void LoadAsianFontsDll()
 		{
@@ -1384,6 +1401,22 @@ namespace com.genexus.reports
 				}
 
 			}
+			if (IsPdfA())
+			{
+				using (Stream iccProfile = ReadResource("sRGB Color Space Profile.icm"))
+				{
+					ICC_Profile icc = ICC_Profile.GetInstance(iccProfile);
+					writer.SetOutputIntents("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", icc);
+				}
+
+				writer.ExtraCatalog.Put(PdfName.LANG, new PdfString(Config.GetCultureForLang(language).Name));
+				PdfDictionary markInfo = new PdfDictionary(PdfName.MARKINFO);
+				markInfo.Put(PdfName.MARKED, new PdfBoolean(PdfBoolean.TRUE));
+				writer.ExtraCatalog.Put(PdfName.MARKINFO, markInfo);
+
+				writer.CreateXmpMetadata();
+
+			}			
 
 			document.Close();
 
@@ -1498,6 +1531,21 @@ namespace com.genexus.reports
 		private void SetSimpleColumn(ColumnText col, Rectangle rect)
 		{
 			col.SetSimpleColumn(rect.Left, rect.Bottom, rect.Right, rect.Top);
+		}
+
+		internal override bool SetComplainceLevel(PdfConformanceLevel level)
+		{
+			switch (level)
+			{
+				case PdfConformanceLevel.Pdf_A1A:
+					writer.PDFXConformance = PdfWriter.PDFA1A;
+					return true;
+				case PdfConformanceLevel.Pdf_A1B:
+					writer.PDFXConformance = PdfWriter.PDFA1B;
+					return true;
+				default:
+					return false;
+			}
 		}
 	}
 
