@@ -30,18 +30,8 @@ namespace com.genexus.reports
 		MIDDLE = 1,
 		BOTTOM = 2,
 	}
-	public enum PdfConformanceLevel
-	{
-		None,
-		Pdf_A1B,
-		Pdf_X1A2001,
-		Pdf_A1A,
-		Pdf_A2A,
-		Pdf_A2B,
-		Pdf_A3A,
-		Pdf_A3B
-	}
-	public class PDFReportItextBase : IReportHandler
+
+	public abstract class PDFReportItextBase : IReportHandler
 	{
 		protected int lineHeight, pageLines;
 
@@ -51,8 +41,7 @@ namespace com.genexus.reports
 		protected bool fontStrikethru;
 		protected int fontSize;
 		protected string language;
-		protected PdfConformanceLevel complianceLevel = PdfConformanceLevel.None;
-
+   
 		protected Stream outputStream = null;
 
 		protected static object syncRoot = new Object();
@@ -89,6 +78,7 @@ namespace com.genexus.reports
 		public static float DOTS_UNITS_ON = 1;
 		public bool lineCapProjectingSquare = true;
 		public bool barcode128AsImage = true;
+		protected PdfConformanceLevel complianceLevel = PdfConformanceLevel.None;
 		protected float[] STYLE_SOLID = new float[] { 1, 0 };//0
 		protected float[] STYLE_NONE = null;//1
 		protected float[] STYLE_DOTTED, //2
@@ -309,7 +299,7 @@ namespace com.genexus.reports
 		}
 		internal static void SetDefaultComplianceLevel(PdfConformanceLevel level)
 		{
-			if (props != null)
+			if (props!=null)
 				props.setGeneralProperty(Const.COMPLIANCE_LEVEL, level.ToString());
 		}
 		private void loadProps()
@@ -349,7 +339,7 @@ namespace com.genexus.reports
 						props.setupGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER.ToString().ToLower());
 						props.setupGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, ".");
 						props.setupGeneralProperty(Const.LEADING, "2");
-						props.setupGeneralProperty(Const.COMPLIANCE_LEVEL, PdfConformanceLevel.None.ToString());
+						props.setupGeneralProperty(Const.COMPLIANCE_LEVEL, PdfConformanceLevel.None.ToString()); 
 						props.setupGeneralProperty(Const.RUN_DIRECTION, Const.RUN_DIRECTION_LTR);
 						props.setupGeneralProperty(Const.JUSTIFIED_TYPE_ALL, "false");
 
@@ -719,6 +709,7 @@ namespace com.genexus.reports
 		{
 			return complianceLevel != 0;
 		}
+
 		public void GxEndPrinter()
 		{
 		}
@@ -906,8 +897,9 @@ namespace com.genexus.reports
 		{
 			float result = value / (float)(SCALE_FACTOR / PPP);
 			return result;
-		}  
+		}
 
+		internal abstract bool SetComplainceLevel(PdfConformanceLevel level);
 	}
 
 	public class ParseINI
@@ -1359,7 +1351,7 @@ namespace com.genexus.reports
 		public static String ADJUST_TO_PAPER = "AdjustToPaper"; //fit to page
 		public static String LINE_CAP_PROJECTING_SQUARE = "LineCapProjectingSquare";
 		public static String BARCODE128_AS_IMAGE = "Barcode128AsImage";
-		public static String LEADING = "Leading";
+        public static String LEADING = "Leading";
 		internal static String COMPLIANCE_LEVEL = "ComplianceLevel";
 
 		//Printer settings
@@ -1850,6 +1842,16 @@ namespace com.genexus.reports
 		}
 
 	}
-
+	public enum PdfConformanceLevel
+	{
+		None,
+		Pdf_A1B,
+		Pdf_X1A2001,
+		Pdf_A1A,
+		Pdf_A2A,
+		Pdf_A2B,
+		Pdf_A3A,
+		Pdf_A3B
+	}
 }
 

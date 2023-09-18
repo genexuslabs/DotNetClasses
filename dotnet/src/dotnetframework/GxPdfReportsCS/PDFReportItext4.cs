@@ -664,7 +664,7 @@ namespace com.genexus.reports
 				else
 					defaultFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
 			}
-			return defaultFont;
+			return defaultFont;		
 		}
 		private void LoadAsianFontsDll()
 		{
@@ -1401,7 +1401,6 @@ namespace com.genexus.reports
 				}
 
 			}
-
 			if (IsPdfA())
 			{
 				using (Stream iccProfile = ReadResource("sRGB Color Space Profile.icm"))
@@ -1417,7 +1416,8 @@ namespace com.genexus.reports
 
 				writer.CreateXmpMetadata();
 
-			}
+			}			
+
 			document.Close();
 
 
@@ -1532,7 +1532,8 @@ namespace com.genexus.reports
 		{
 			col.SetSimpleColumn(rect.Left, rect.Bottom, rect.Right, rect.Top);
 		}
-		internal bool SetComplainceLevel(PdfConformanceLevel level)
+
+		internal override bool SetComplainceLevel(PdfConformanceLevel level)
 		{
 			switch (level)
 			{
