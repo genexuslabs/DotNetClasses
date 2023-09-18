@@ -5,14 +5,105 @@ using GeneXus.Utils;
 
 namespace GeneXus.Messaging.GXAzureServiceBus
 {
+	/// <summary>
+	/// Implementation of AzureServiceBus.MessageBrokerProvider external object.
+	/// </summary>
 	public class ServiceBusMessageBrokerProvider
 	{
-		public MessageQueue Connect(string queueName, string connectionString, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+
+		#region Azure Active Directory Authentication
+
+		public MessageQueue Authenticate(string queueName, string fullyQualifiedNamespace, bool sessionEnabled, GxUserType receiverOptions, string senderIdentifier, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		{
+			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
+			ReceiverOptions options = TransformGXUserTypeToReceiverOptions(receiverOptions);
+
+			GXProperties properties = new GXProperties
+			{
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName },
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE, fullyQualifiedNamespace },
+				{ PropertyConstants.SESSION_ENABLED, sessionEnabled.ToString() },
+				{ PropertyConstants.RECEIVE_MODE, options.ReceiveMode.ToString() },
+				{ PropertyConstants.PREFETCH_COUNT, options.PrefetchCount.ToString() },
+				{ PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier },
+				{ PropertyConstants.RECEIVER_SESSIONID, options.SessionId },
+				{ PropertyConstants.SENDER_IDENTIFIER, senderIdentifier },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.ActiveDirectory.ToString()}
+			};
+
+			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
+			errorMessages = errorMessagesConnect;
+			success = successConnect;
+			return messageQueue;
+		}
+
+		public MessageQueue Authenticate(string topicName, string subcriptionName, string fullyQualifiedNamespace, bool sessionEnabled, GxUserType receiverOptions, string senderIdentifier, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			GXProperties properties = new GXProperties();
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName);
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString);
+			ReceiverOptions options = TransformGXUserTypeToReceiverOptions(receiverOptions);
+
+			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, topicName);
+			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME, subcriptionName);
+			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE, fullyQualifiedNamespace);
+			properties.Add(PropertyConstants.SESSION_ENABLED, sessionEnabled.ToString());
+			properties.Add(PropertyConstants.RECEIVE_MODE, options.ReceiveMode.ToString());
+			properties.Add(PropertyConstants.PREFETCH_COUNT, options.PrefetchCount.ToString());
+			properties.Add(PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier);
+			properties.Add(PropertyConstants.RECEIVER_SESSIONID, options.SessionId);
+			properties.Add(PropertyConstants.SENDER_IDENTIFIER, senderIdentifier);
+			properties.Add(PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.ActiveDirectory.ToString());
+
+			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
+			errorMessages = errorMessagesConnect;
+			success = successConnect;
+			return messageQueue;
+		}
+
+		public MessageQueue Authenticate(string queueName, string fullyQualifiedNamespace, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		{
+			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
+			GXProperties properties = new GXProperties
+			{
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName },
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE, fullyQualifiedNamespace },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.ActiveDirectory.ToString()}
+			};
+
+			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
+			errorMessages = errorMessagesConnect;
+			success = successConnect;
+			return messageQueue;
+		}
+		public MessageQueue Authenticate(string topicName, string subcriptionName, string fullyQualifiedNamespace, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		{
+			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
+			GXProperties properties = new GXProperties
+			{
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, topicName },
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME, subcriptionName },
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_FULLYQUALIFIEDNAMESPACE, fullyQualifiedNamespace },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.ActiveDirectory.ToString()}
+			};
+
+			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
+			errorMessages = errorMessagesConnect;
+			success = successConnect;
+			return messageQueue;
+		}
+		#endregion
+
+		#region Connect using SAS (Shared Access Signatures)
+		public MessageQueue Connect(string queueName, string connectionString, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
+		{
+			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
+			GXProperties properties = new GXProperties
+			{
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName },
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.Password.ToString()}
+
+			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
 			errorMessages = errorMessagesConnect;
@@ -23,10 +114,13 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		public MessageQueue Connect(string topicName, string subcriptionName, string connectionString, out GXBaseCollection<SdtMessages_Message> errorMessages, out bool success)
 		{
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
-			GXProperties properties = new GXProperties();
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, topicName);
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME, subcriptionName);
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString);
+			GXProperties properties = new GXProperties
+			{
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, topicName },
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_SUBSCRIPTION_NAME, subcriptionName },
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.Password.ToString()}
+			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
 			errorMessages = errorMessagesConnect;
@@ -39,15 +133,18 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			MessageBrokerProvider messageBrokerProvider = new MessageBrokerProvider();
 			ReceiverOptions options = TransformGXUserTypeToReceiverOptions(receiverOptions);
 
-			GXProperties properties = new GXProperties();
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName);
-			properties.Add(PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString);
-			properties.Add(PropertyConstants.SESSION_ENABLED, sessionEnabled.ToString());
-			properties.Add(PropertyConstants.RECEIVE_MODE, options.ReceiveMode.ToString());
-			properties.Add(PropertyConstants.PREFETCH_COUNT, options.PrefetchCount.ToString());
-			properties.Add(PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier);
-			properties.Add(PropertyConstants.RECEIVER_SESSIONID, options.SessionId);
-			properties.Add(PropertyConstants.SENDER_IDENTIFIER, senderIdentifier);
+			GXProperties properties = new GXProperties
+			{
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_QUEUENAME, queueName },
+				{ PropertyConstants.MESSAGEBROKER_AZURESB_CONNECTIONSTRING, connectionString },
+				{ PropertyConstants.SESSION_ENABLED, sessionEnabled.ToString() },
+				{ PropertyConstants.RECEIVE_MODE, options.ReceiveMode.ToString() },
+				{ PropertyConstants.PREFETCH_COUNT, options.PrefetchCount.ToString() },
+				{ PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier },
+				{ PropertyConstants.RECEIVER_SESSIONID, options.SessionId },
+				{ PropertyConstants.SENDER_IDENTIFIER, senderIdentifier },
+				{ PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.Password.ToString()}
+			};
 
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
 			errorMessages = errorMessagesConnect;
@@ -70,12 +167,15 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 			properties.Add(PropertyConstants.RECEIVER_IDENTIFIER, options.Identifier);
 			properties.Add(PropertyConstants.RECEIVER_SESSIONID, options.SessionId);
 			properties.Add(PropertyConstants.SENDER_IDENTIFIER, senderIdentifier);
+			properties.Add(PropertyConstants.AUTHENTICATION_METHOD, AuthenticationMethod.Password.ToString());
 			
 			MessageQueue messageQueue = messageBrokerProvider.Connect(PropertyConstants.AZURESERVICEBUS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
 			errorMessages = errorMessagesConnect;
 			success = successConnect;
 			return messageQueue;
 		}
+
+		#endregion
 
 		#region Transformation methods
 		private ReceiverOptions TransformGXUserTypeToReceiverOptions(GxUserType options)

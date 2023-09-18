@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	<PackageId>GeneXus.Message.EventRouter</PackageId>
+	<PackageTags>Event Bus Messaging Router</PackageTags>
+	<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\GXMessageBroker\ServiceSettings.cs" Link="ServiceSettings.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+</Project>

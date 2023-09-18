@@ -19,6 +19,8 @@ using TZ4Net;
 using GxClasses.Helpers;
 using System.Net;
 #endif
+using NodaTime;
+using NodaTime.TimeZones;
 using NUglify;
 using NUglify.Html;
 using GeneXus.Web.Security;
@@ -46,6 +48,8 @@ using System.Security;
 using System.Threading.Tasks;
 using System.Drawing.Imaging;
 using System.Net.Http.Headers;
+using Image = System.Drawing.Image;
+using System.Net.Http;
 
 namespace GeneXus.Utils
 {
@@ -509,8 +513,8 @@ namespace GeneXus.Utils
 		const char QMARK = '_';
 		static char[] numbersAndSep = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9', '-' };
 		static char[] numbers = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-		internal static Dictionary<char, char> LogUserEntryWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789+-_=/[]{}\":, ".ToDictionary(item => item, item => item);
-		internal static Dictionary<char, char> HttpHeaderWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789./;-@(){}[]?,<>\\".ToDictionary(item => item, item => item);
+		internal static Dictionary<char, char> LogUserEntryWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890.;+-_=/[]{}\"':, @()?<>\\&".ToDictionary(item => item, item => item);
+		internal static Dictionary<char, char> HttpHeaderWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890.;+-_=/[]{}\"':, @()?<>\\&".ToDictionary(item => item, item => item);
 
 		internal static string Sanitize(string input, Dictionary<char, char> WhiteList)
 		{
@@ -1967,6 +1971,12 @@ namespace GeneXus.Utils
 			return dtu.ParseDateOrDTimeParm(valueString);
 		}
 	}
+	public enum EncryptionType
+	{
+		SESSION,
+		SITE,
+		NONE
+	}
 	public enum AMPMFmt
 	{
 		T24,
@@ -2012,6 +2022,11 @@ namespace GeneXus.Utils
 			YMD,
 			MDY,
 			DMY
+		}
+
+		internal static string LocalTimeZoneId
+		{
+			get { return DateTimeZoneProviders.Tzdb.GetSystemDefault().Id; }
 		}
 
 		public DateTimeUtil(CultureInfo culture, AMPMFmt amPmFormat)
@@ -2407,9 +2422,36 @@ namespace GeneXus.Utils
 		{
 			if (context == null)
 				context = GxContext.Current;
+#if NODATIME
+			TimeSpan ts = CurrentOffset(context.GetTimeZone());
+#else
 			TimeSpan ts = CurrentOffset(context.GetOlsonTimeZone());
+#endif
 			return (short)(ts.Hours * 60 + ts.Minutes);
 		}
+
+		static private TimeSpan CurrentOffset(string clientTimeZone)
+		{
+			DateTimeZone clientTimeZoneObj = DateTimeZoneProviders.Tzdb.GetZoneOrNull(clientTimeZone);
+			if (clientTimeZoneObj == null)
+				clientTimeZoneObj = DateTimeZoneProviders.Tzdb.GetZoneOrNull(LocalTimeZoneId);
+			Instant now = SystemClock.Instance.GetCurrentInstant();
+
+			try
+			{
+				Offset offset = clientTimeZoneObj.GetUtcOffset(now);
+				return offset.ToTimeSpan();
+			}
+			catch (ArgumentOutOfRangeException)
+			{
+				Duration oneHour = Duration.FromHours(1);
+				Instant oneHourAgo = now.Minus(oneHour);
+				//Avoid InSpringForwardGap/InFallBackRange condition
+				Offset offset = clientTimeZoneObj.GetUtcOffset(oneHourAgo);
+				return offset.ToTimeSpan();
+			}
+		}
+
 		static private TimeSpan CurrentOffset(OlsonTimeZone clientTimeZone)
 		{
 			DateTime currentDate = DateTime.Now;
@@ -2447,11 +2489,20 @@ namespace GeneXus.Utils
 			return TimeZone.CurrentTimeZone.ToUniversalTime(dt);
 #endif
 		}
-
+		static DateTime ConvertFromLocal(DateTime dt, IGxContext context)
+		{
+#if NODATIME
+			return ConvertDateTime(DateTime.Now, LocalTimeZoneId, context.GetTimeZone());
+#else
+			OlsonTimeZone fromTimezone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
+			OlsonTimeZone toTimezone = context.GetOlsonTimeZone();
+			return ConvertDateTime(dt, fromTimezone, toTimezone);
+#endif
+		}
 		static public DateTime Today(IGxContext context)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ResetTime(ConvertDateTime(DateTime.Now, TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone())));
+				return ResetMillisecondsTicks(ResetTime(ConvertFromLocal(DateTime.Now, context)));
 			return ResetMillisecondsTicks(DateTime.Today);
 		}
 		static public DateTime Now(IGxContext context)
@@ -2462,7 +2513,7 @@ namespace GeneXus.Utils
 		static public DateTime NowTicks(IGxContext context)
 		{
 			if (Preferences.useTimezoneFix())
-				return ConvertDateTime(DateTime.Now, TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone());
+				return ConvertFromLocal(DateTime.Now, context);
 			return DateTime.Now;
 		}
 
@@ -2907,7 +2958,7 @@ namespace GeneXus.Utils
 			if (dataStore == null)
 				return ServerNowMs(context, new DataStoreHelperBase().getDataStoreName());
 			if (Preferences.useTimezoneFix())
-				return ResetMicroseconds(ConvertDateTime(dataStore.serverNowMs(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMicroseconds(ConvertFromLocal(dataStore.serverNowMs(), context));
 			return ResetMicroseconds(dataStore.serverNowMs());
 		}
 		static public DateTime ServerNow(IGxContext context, IDataStoreProvider dataStore)
@@ -2915,7 +2966,7 @@ namespace GeneXus.Utils
 			if (dataStore == null)
 				return ServerNow(context, new DataStoreHelperBase().getDataStoreName());
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ConvertDateTime(dataStore.serverNow(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMillisecondsTicks(ConvertFromLocal(dataStore.serverNow(), context));
 			return ResetMillisecondsTicks(dataStore.serverNow());
 		}
 #if !NETCORE
@@ -2924,13 +2975,13 @@ namespace GeneXus.Utils
 		static public DateTime ServerNowMs(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMicroseconds( ConvertDateTime(context.ServerNowMs(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMicroseconds( ConvertFromLocal(context.ServerNowMs(dataSource), context));
 			return ResetMicroseconds(context.ServerNowMs(dataSource));
 		}
 		static public DateTime ServerNow(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ConvertDateTime(context.ServerNow(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMillisecondsTicks(ConvertFromLocal(context.ServerNow(dataSource), context));
 			return ResetMillisecondsTicks(context.ServerNow(dataSource));
 		}
 		public static string ServerTime(IGxContext context, IDataStoreProvider dataStore)
@@ -3107,6 +3158,7 @@ namespace GeneXus.Utils
 			if (hasMilliseconds) sDate += StringUtil.PadL(StringUtil.Str(MilliSecond(date), 3, 0), 3, '0');
 			return (sDate);
 		}
+
 		private static DateTime ConvertDateTime(DateTime dt, OlsonTimeZone FromTimezone, OlsonTimeZone ToTimezone)
 		{
 			if (isNullDate(dt))
@@ -3147,7 +3199,7 @@ namespace GeneXus.Utils
 			}
 			return dtconverted.AddMilliseconds(milliSeconds);
 		}
-
+		[Obsolete("Local2DBserver is deprecated. Use Local2DBserver(DateTime dt, string clientTimezone) instead.", false)]
 		public static DateTime Local2DBserver(DateTime dt, OlsonTimeZone ClientTimezone)
 		{
 			try
@@ -3165,6 +3217,7 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		[Obsolete("DBserver2local is deprecated. Use DBserver2local(DateTime dt, string clientTimezone) instead.", false)]
 		public static DateTime DBserver2local(DateTime dt, OlsonTimeZone ClientTimezone)
 		{
 			try
@@ -3181,6 +3234,73 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		private static DateTime OlsonMinTime = new DateTime(1901, 12, 13, 20, 45, 52);
+		private static DateTime ConvertDateTime(DateTime dt, string fromTimezone, string toTimezone)
+		{
+			if (isNullDate(dt))
+				return dt;
+
+			TimeSpan offset;
+			DateTime dtconverted;
+			int milliSeconds = dt.Millisecond;
+			dt = ResetMilliseconds(dt);
+
+			DateTime ret = toUniversalTime(dt, fromTimezone);
+
+
+			if (!ValidTimeZone(toTimezone))
+				toTimezone = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+
+			if (ret < OlsonMinTime)
+			{
+				offset = CurrentOffset(toTimezone);
+				dtconverted = ret + offset; 
+			}
+			else
+			{
+				dtconverted = fromUniversalTime(ret, toTimezone);
+			}
+			return dtconverted.AddMilliseconds(milliSeconds);
+		}
+		internal static bool ValidTimeZone(string timeZone)
+		{
+			return !string.IsNullOrEmpty(timeZone) && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZone) != null;
+		}
+
+		internal static DateTime Local2DBserver(DateTime dt, string clientTimezone)
+		{
+			try
+			{
+				Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+				if (clientTimezone == null || isNullDate(dt) || storagePty == Preferences.StorageTimeZonePty.Undefined)
+					return dt;
+				string toTimezone = (storagePty == Preferences.StorageTimeZonePty.Utc) ? DateTimeZone.Utc.Id : LocalTimeZoneId;
+				return ConvertDateTime(dt, clientTimezone, toTimezone);
+
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "Local2DBserver error");
+				throw ex;
+			}
+		}
+		public static DateTime DBserver2local(DateTime dt, string clientTimezone)
+		{
+			try
+			{
+				Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+				if (clientTimezone == null || isNullDate(dt) || storagePty == Preferences.StorageTimeZonePty.Undefined)
+					return dt;
+				string fromTimezone = (storagePty == Preferences.StorageTimeZonePty.Utc) ? DateTimeZone.Utc.Id : LocalTimeZoneId;
+				return ConvertDateTime(dt, fromTimezone, clientTimezone);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "DBserver2local error");
+				throw ex;
+			}
+		}
+
 		public static string FormatDateTimeParmMS(DateTime date)
 		{
 			if (date.Equals(nullDate))
@@ -3268,6 +3388,73 @@ namespace GeneXus.Utils
 		{
 			return new DateTime(datetTime1970.Ticks + ticks * timeConversionFactor);
 		}
+		static private DateTime fromUniversalTime(DateTime dt, string toTimezone)
+		{
+			int milliSeconds = 0;
+
+			if (!isNullDate(dt))
+			{
+				milliSeconds = dt.Millisecond;
+				dt = ResetMilliseconds(dt);
+			}
+			DateTime ret;
+			TimeSpan offset;
+			if (string.IsNullOrEmpty(toTimezone))
+				ret = CurrentTimeZoneToLocalTime(dt);
+			else
+			{
+				if (dt < OlsonMinTime)
+				{
+					offset = CurrentOffset(toTimezone);
+					ret = dt + offset; 
+				}
+				else
+				{
+					DateTimeZone toTimeZone = DateTimeZoneProviders.Tzdb[toTimezone];
+					DateTime dateTimeUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+					Instant instant = Instant.FromDateTimeUtc(dateTimeUtc);
+					ZonedDateTime zonedDateTime = instant.InZone(toTimeZone);
+					ret = zonedDateTime.ToDateTimeUnspecified();
+				}
+			}
+			return ret.AddMilliseconds(milliSeconds);
+		}
+		static private DateTime toUniversalTime(DateTime dt, string fromTimezone)
+		{
+			if (fromTimezone == DateTimeZone.Utc.Id)
+				return dt;
+
+			int milliSeconds = 0;
+
+			if (!isNullDate(dt))
+			{
+				milliSeconds = dt.Millisecond;
+				dt = DateTimeUtil.ResetMilliseconds(dt);
+			}
+
+			DateTime ret;
+			TimeSpan offset;
+			if (string.IsNullOrEmpty(fromTimezone))
+				ret = CurrentTimeZoneToUniversalTime(dt);
+			else
+			{
+				if (dt < OlsonMinTime)
+				{
+					offset = CurrentOffset(fromTimezone);
+					ret = dt - offset; 
+				}
+				else
+				{
+
+					DateTimeZone localZone = DateTimeZoneProviders.Tzdb[fromTimezone];
+					ZonedDateTime localDateTime = LocalDateTime.FromDateTime(dt).InZoneLeniently(localZone);
+					ZonedDateTime utcDateTime = localDateTime.ToInstant().InUtc();
+					ret = utcDateTime.ToDateTimeUtc();
+				}
+			}
+			return ret.AddMilliseconds(milliSeconds);
+		}
+
 		static private DateTime fromUniversalTime(DateTime dt, OlsonTimeZone ToTimezone)
 		{
 
@@ -3354,25 +3541,44 @@ namespace GeneXus.Utils
 
 		static public DateTime fromUniversalTime(DateTime dt)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, GxContext.Current.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, GxContext.Current.GetOlsonTimeZone());
+#endif
 		}
 
 		static public DateTime toUniversalTime(DateTime dt)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, GxContext.Current.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, GxContext.Current.GetOlsonTimeZone());
+#endif
 		}
 
 		static public DateTime toUniversalTime(DateTime dt, IGxContext context)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, context.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, context.GetOlsonTimeZone());
+#endif
 		}
 
 		static public DateTime FromTimeZone(DateTime dt, String sTZ, IGxContext context)
 		{
+#if NODATIME
+			if (ValidTimeZone(sTZ))
+				return ConvertDateTime(dt, sTZ, context.GetTimeZone());
+			else
+				return dt;
+#else
 			OlsonTimeZone fromTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
 			if (fromTimeZone != null)
 				return ConvertDateTime(dt, fromTimeZone, context.GetOlsonTimeZone());
 			return dt;
+#endif
 		}
 
 	}
@@ -5271,6 +5477,25 @@ namespace GeneXus.Utils
 				pagingSelect = pagingSelect.Substring(9);
 
 			pagingSelect = Regex.Replace(pagingSelect, @"T\d+\.", "GX_ICTE.");
+			try
+			{
+				IDictionary<string, string> maps = new Dictionary<string, string>();
+				foreach (Match match in Regex.Matches(pagingSelect, @"GX_ICTE\.(\[\w+]) AS \b(\w+)\b(?=,|$)", RegexOptions.Compiled | RegexOptions.CultureInvariant))
+				{
+					if (match.Groups.Count == 3)
+					{
+						maps[match.Groups[0].Value] = $"GX_ICTE.[{match.Groups[2].Value}]";
+						maps[match.Groups[1].Value] = $"[{match.Groups[2].Value}]";
+					}
+				}
+				foreach (KeyValuePair<string, string> map in maps)
+					pagingSelect = pagingSelect.Replace(map.Key, map.Value);
+			}
+			catch (RegexMatchTimeoutException ex)
+			{
+				GXLogging.Warn(log, ex, "Timeout parsing paging select");
+			}
+
 			return pagingSelect;
 		}
 
@@ -5551,20 +5776,65 @@ namespace GeneXus.Utils
 
 		private static Bitmap BitmapCreateFromStream(string filePathOrUrl)
 		{
-			using (Stream s = ImageFile(filePathOrUrl).GetStream())
+			Uri uri;
+			if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
 			{
-				if (s != null)
-					return new Bitmap(s);
-				return null;
+				using (HttpClient httpClient = new HttpClient())
+				{
+					try
+					{
+						byte[] data = httpClient.GetByteArrayAsync(filePathOrUrl).Result;
+						using (MemoryStream mem = new MemoryStream(data))
+						{
+							return new Bitmap(mem);
+						}
+					}
+					catch
+					{
+						return null;
+					}
+				}
 			}
+			else
+			{
+				using (Stream s = ImageFile(filePathOrUrl).GetStream())
+				{
+					if (s != null)
+						return new Bitmap(s);
+					return null;
+				}
+			}
+
 		}
 		private static Image ImageCreateFromStream(string filePathOrUrl)
 		{
-			using (Stream s = ImageFile(filePathOrUrl).GetStream())
+			Uri uri;
+			if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
 			{
-				if (s != null)
-					return Image.FromStream(s);
-				return null;
+				using (HttpClient httpClient = new HttpClient())
+				{
+					try
+					{
+						byte[] data = httpClient.GetByteArrayAsync(filePathOrUrl).Result;
+						using (MemoryStream mem = new MemoryStream(data))
+						{
+							return Image.FromStream(mem);
+						}
+					}
+					catch
+					{
+						return null;
+					}
+				}
+			}
+			else
+			{
+				using (Stream s = ImageFile(filePathOrUrl).GetStream())
+				{
+					if (s != null)
+						return Image.FromStream(s);
+					return null;
+				}
 			}
 		}
 
@@ -5648,6 +5918,68 @@ namespace GeneXus.Utils
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Crop {imageFile} failed", ex);
+			}
+			return modifiedImage;
+		}
+		public static string RoundBorders(string imageFile, int topLeftRadius, int topRightRadius, int bottomLeftRadius, int bottomRightRadius)
+		{
+			string modifiedImage = string.Empty;
+			try
+			{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					using (Image OriginalImage = ImageCreateFromStream(imageFile))
+					{
+						int w = OriginalImage.Width;
+						int h = OriginalImage.Height;
+
+						using (Bitmap roundedImage = new Bitmap(w, h))
+						{
+							roundedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+							using (Graphics g = Graphics.FromImage(roundedImage))
+							{
+								g.SmoothingMode = SmoothingMode.AntiAlias;
+								g.Clear(Color.Transparent);
+
+								using (GraphicsPath path = new GraphicsPath())
+								{
+									path.StartFigure();
+									if (topLeftRadius > 0)
+										path.AddArc(0, 0, 2 * topLeftRadius, 2 * topLeftRadius, (float) 180, (float) 90);
+									path.AddLine(topLeftRadius, 0, w - topRightRadius, 0);
+									if (topRightRadius > 0)
+										path.AddArc(w - 2 * topRightRadius, 0, 2 * topRightRadius, 2 * topRightRadius, (float) 270, (float) 90);
+									path.AddLine(w, topRightRadius, w, h - bottomRightRadius);
+									if (bottomRightRadius > 0)
+										path.AddArc(w - 2 * bottomRightRadius, h - 2 * bottomRightRadius, 2 * bottomRightRadius, 2 * bottomRightRadius, (float) 0, (float) 90);
+									path.AddLine(w - bottomLeftRadius, h, bottomLeftRadius, h);
+									if (bottomLeftRadius > 0)
+										path.AddArc(0, h - 2 * bottomLeftRadius, 2 * bottomLeftRadius, 2 * bottomLeftRadius, (float) 90, (float) 90);
+									path.CloseFigure();
+
+									g.FillPath(Brushes.White, path);
+
+									using (TextureBrush br = new TextureBrush(new Bitmap(OriginalImage), WrapMode.Clamp))
+									{
+										g.FillPath(br, path);
+									}
+								}
+							}
+							// Rounded images are basically images with transparent rounded borders and jpg and jpeg formats do not
+							// support transparency, so we have to create a new identical image but in png format
+							if (imageFile.IndexOf(".jpg") > 0)
+								modifiedImage = Save(roundedImage, imageFile.Replace(".jpg", ".png"), ImageFormat.Png);
+							else if (imageFile.IndexOf(".jpeg") > 0)
+								modifiedImage = Save(roundedImage, imageFile.Replace(".jpeg", ".png"), ImageFormat.Png);
+							else
+								modifiedImage = Save(roundedImage, imageFile, OriginalImage.RawFormat);
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"RoundBorders {imageFile} failed", ex);
 			}
 			return modifiedImage;
 		}
@@ -5738,6 +6070,11 @@ namespace GeneXus.Utils
 				ms.Position = 0;
 				try
 				{
+					if (imageFile.StartsWith("http://") || imageFile.StartsWith("https://"))
+					{
+						Uri uri = new Uri(imageFile);
+						imageFile = Path.GetFileName(uri.AbsolutePath);
+					}
 					GxFile sourceImage = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
 					string destinationImageName = FileUtil.getTempFileName(sourceImage.GetDirectory().GetAbsoluteName(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
 					GxFile destinationImage = new GxFile(GxContext.StaticPhysicalPath(), destinationImageName);

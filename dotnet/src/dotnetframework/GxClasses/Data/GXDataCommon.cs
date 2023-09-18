@@ -175,6 +175,7 @@ namespace GeneXus.Data
 		string ErrDescription {get;}      
 		[Obsolete("IGxDataStore.SmartCacheProvider is deprecated, use IDataStoreProvider.SmartCacheProvider instead", false)]
         GxSmartCacheProvider SmartCacheProvider {get;}
+		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead.", false)]
 		OlsonTimeZone ClientTimeZone { get; }
         void CloseConnections();
 		void Release();
@@ -211,6 +212,7 @@ namespace GeneXus.Data
 		short Method { get;}
         new string Database { get; set; }
 		string DatabaseName { get;}
+		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead.", false)]
 		OlsonTimeZone ClientTimeZone { get;}
 		string DataSourceName {get ;set ;}
 		string DriverName {get ;set ;}
@@ -356,7 +358,13 @@ namespace GeneXus.Data
 		}
 
 		protected abstract string BuildConnectionString(string datasourceName, string userId, 
-			string userPassword,string databaseName, string port, string schema,  string extra); 
+			string userPassword,string databaseName, string port, string schema,  string extra);
+
+		protected virtual string BuildConnectionStringForLog(string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra)
+		{
+			return BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
+		}
 
 		public virtual object[] ExecuteStoredProcedure(IDbCommand cmd)
 		{
@@ -1008,6 +1016,33 @@ namespace GeneXus.Data
 						res.Append(newKeyword);
 						res.Append('=');
 						res.Append(prop[1]);
+						res.Append(';');
+					}
+					else
+					{
+						res.Append(s);
+						res.Append(';');
+					}
+				}
+			}
+			return res.ToString();
+		}
+		public virtual string ReplaceKeyValue(string data, string keyword, string newValue)
+		{
+			char[] sep = { ';' };
+			StringBuilder res = new StringBuilder("");
+			string[] props = data.Split(sep);
+			foreach (string s in props)
+			{
+				if (s != null && s.Length > 0)
+				{
+					string[] prop = s.Split('=');
+					if (prop != null && prop.Length == 2 && prop[0].Trim().Equals(keyword, StringComparison.OrdinalIgnoreCase))
+					{
+						res.Append(keyword);
+						res.Append('=');
+						res.Append(newValue);
+						res.Append(';');
 					}
 					else
 					{
@@ -1058,21 +1093,19 @@ namespace GeneXus.Data
 				return string.Empty;
 			else
 			{
-				
-				int posBegin = 0;
-				int posEnd = 0;
 				string paramVal = string.Empty;
 
-				posBegin = conStr.IndexOf(searchParam, StringComparison.OrdinalIgnoreCase);
+				int posBegin = conStr.IndexOf(searchParam, StringComparison.OrdinalIgnoreCase);
 				if (posBegin > -1)
 				{
 					
 					posBegin += searchParam.Length + 1;
+					int posEnd;
 					if (conStr.LastIndexOf(';') > posBegin)
-						
+
 						posEnd = conStr.IndexOf(';', posBegin);
 					else
-						
+
 						posEnd = conStr.Length;
 
 					paramVal = conStr.Substring(posBegin, (posEnd - posBegin));
@@ -1559,18 +1592,22 @@ namespace GeneXus.Data
 		private int m_FailedConnections;
 		private int m_FailedCreate;
 		private int MAX_TRIES;
-		private int MAX_CREATE_TRIES=3;
-		private const int MILLISECONDS_BETWEEN_RETRY_ATTEMPTS=500;
+		private int MAX_CREATE_TRIES = 3;
+		private const int MILLISECONDS_BETWEEN_RETRY_ATTEMPTS = 500;
 		private const string MULTIPLE_DATAREADERS = "MultipleActiveResultSets";
+#if NETCORE
+		private const string INTEGRATED_SECURITY = "Integrated Security";
+		private const string INTEGRATED_SECURITY_NO = "no";
+#endif
 		private bool multipleDatareadersEnabled;
 
-        public override int GetCommandTimeout()
-        {
-            return base.GetCommandTimeout();
-        }
+		public override int GetCommandTimeout()
+		{
+			return base.GetCommandTimeout();
+		}
 
-		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId, 
-			string userPassword,string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
+		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
 		{
 #if !NETCORE
 			if (showPrompt)
@@ -1581,48 +1618,48 @@ namespace GeneXus.Data
 #endif
 			{
 				if (m_connectionString == null)
-					m_connectionString=BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
+					m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 			}
 
-			GXLogging.Debug(log, "Setting connectionString property ", ()=> BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
-			MssqlConnectionWrapper connection=new MssqlConnectionWrapper(m_connectionString,connectionCache, isolationLevel);
+			GXLogging.Debug(log, "Setting connectionString property ", () => BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
+			MssqlConnectionWrapper connection = new MssqlConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 
 			m_FailedConnections = 0;
-			m_FailedCreate=0;
+			m_FailedCreate = 0;
 
 			return connection;
 		}
-        public override bool AllowsDuplicateParameters
-        {
-            get
-            {
-                return false;
-            }
-        }
+		public override bool AllowsDuplicateParameters
+		{
+			get
+			{
+				return false;
+			}
+		}
 		public override IDbDataParameter CreateParameter()
 		{
 			return new SqlParameter();
 		}
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
-			SqlParameter parm =new SqlParameter();
-			SqlDbType type= GXTypeToSqlDbType(dbtype);
-			parm.SqlDbType=type;
-			parm.IsNullable=true;
+			SqlParameter parm = new SqlParameter();
+			SqlDbType type = GXTypeToSqlDbType(dbtype);
+			parm.SqlDbType = type;
+			parm.IsNullable = true;
 			parm.Size = gxlength;
-			if(type==SqlDbType.Decimal)
+			if (type == SqlDbType.Decimal)
 			{
 				parm.Precision = (byte)gxlength;
-				parm.Scale= (byte)gxdec;
+				parm.Scale = (byte)gxdec;
 			}
-			
+
 #if !NETCORE
 			else if (type == SqlDbType.Udt)
 			{
 				parm.UdtTypeName = "Geography";                    
 			}
 #endif
-			parm.ParameterName=name;
+			parm.ParameterName = name;
 			return parm;
 		}
 		private SqlDbType GXTypeToSqlDbType(object type)
@@ -1645,11 +1682,11 @@ namespace GeneXus.Data
 				case GXType.Geopolygon:
 					return SqlDbType.Udt;
 #endif
-				case GXType.Int16: return SqlDbType.SmallInt; 
+				case GXType.Int16: return SqlDbType.SmallInt;
 				case GXType.Int32: return SqlDbType.Int;
 				case GXType.Int64: return SqlDbType.BigInt;
 				case GXType.Number: return SqlDbType.Float;
-				case GXType.Decimal: return SqlDbType.Decimal; 
+				case GXType.Decimal: return SqlDbType.Decimal;
 				case GXType.DateTime: return SqlDbType.DateTime;
 				case GXType.DateTime2: return SqlDbType.DateTime2;
 				case GXType.NChar: return SqlDbType.NChar;
@@ -1675,7 +1712,7 @@ namespace GeneXus.Data
 		{
 			if (multipleDatareadersEnabled)
 			{
-				
+
 				return con.ConnectionCache.GetAvailablePreparedCommand(stmt);
 			}
 			else
@@ -1684,10 +1721,10 @@ namespace GeneXus.Data
 			}
 		}
 		public override DbDataAdapter CreateDataAdapeter()
-        {
-            return new SqlDataAdapter();
-        }
-        public override bool MultiThreadSafe
+		{
+			return new SqlDataAdapter();
+		}
+		public override bool MultiThreadSafe
 		{
 			get
 			{
@@ -1696,23 +1733,23 @@ namespace GeneXus.Data
 		}
 		public override IDataReader GetDataReader(
 			IGxConnectionManager connManager,
-			IGxConnection con, 
-			GxParameterCollection parameters ,
-			string stmt, ushort fetchSize, 
-			bool forFirst, int handle, 
+			IGxConnection con,
+			GxParameterCollection parameters,
+			string stmt, ushort fetchSize,
+			bool forFirst, int handle,
 			bool cached, SlidingTime expiration,
 			bool hasNested,
 			bool dynStmt)
 		{
-		
+
 			IDataReader idatareader;
 			if (!hasNested || multipleDatareadersEnabled)//Client Cursor
 			{
-				idatareader= new GxSqlDataReader(connManager,this, con,parameters,stmt,fetchSize,forFirst,handle,cached,expiration,dynStmt);
+				idatareader = new GxSqlDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
 			}
 			else //Server Cursor
 			{
-				idatareader= new GxSqlCursorDataReader(connManager,this, con,parameters,stmt,fetchSize,forFirst,handle,cached,expiration,dynStmt); 
+				idatareader = new GxSqlCursorDataReader(connManager, this, con, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt);
 			}
 			return idatareader;
 
@@ -1720,7 +1757,7 @@ namespace GeneXus.Data
 
 		public override bool IsBlobType(IDbDataParameter idbparameter)
 		{
-            SqlDbType type = ((SqlParameter)idbparameter).SqlDbType;
+			SqlDbType type = ((SqlParameter)idbparameter).SqlDbType;
 			return (type == SqlDbType.Image || type == SqlDbType.VarBinary);
 		}
 
@@ -1742,10 +1779,10 @@ namespace GeneXus.Data
 		}
 		public override void SetTimeout(IGxConnectionManager connManager, IGxConnection connection, int handle)
 		{
-			if (m_lockTimeout>0)
+			if (m_lockTimeout > 0)
 			{
-				GXLogging.Debug(log, "Set Lock Timeout to " +m_lockTimeout/1000);
-				IDbCommand cmd = GetCommand(connection,SetTimeoutSentence(m_lockTimeout), new GxParameterCollection());
+				GXLogging.Debug(log, "Set Lock Timeout to " + m_lockTimeout / 1000);
+				IDbCommand cmd = GetCommand(connection, SetTimeoutSentence(m_lockTimeout), new GxParameterCollection());
 				cmd.ExecuteNonQuery();
 			}
 		}
@@ -1754,40 +1791,40 @@ namespace GeneXus.Data
 		{
 			return "SET LOCK_TIMEOUT " + milliseconds;
 		}
-		public override bool ProcessError( int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
-			
+		public override bool ProcessError(int dbmsErrorCode, string emsg, GxErrorMask errMask, IGxConnection con, ref int status, ref bool retry, int retryCount)
+
 		{
-			GXLogging.Debug(log, "ProcessError: dbmsErrorCode=" + dbmsErrorCode +", emsg '"+ emsg + "'");
+			GXLogging.Debug(log, "ProcessError: dbmsErrorCode=" + dbmsErrorCode + ", emsg '" + emsg + "'");
 			switch (dbmsErrorCode)
 			{
 				case 1801: //Database '%.*ls' already exists. 
 				case 15032: //The database '%s' already exists.
 					break;
-                case 20:    /*The instance of SQL Server you attempted to connect to does not support encryption. (PMcE: amazingly, this is transient)*/
-                case 64:    /*A connection was successfully established with the server, but then an error occurred during the login process.*/
-                case 233:   /*The client was unable to establish a connection because of an error during connection initialization process before login*/
-                case 10053: /*A transport-level error has occurred when receiving results from the server.*/
-                case 10060: /*A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible.*/
-                case 40143: /*The service has encountered an error processing your request. Please try again.*/
-                case 40197: /*The service has encountered an error processing your request. Please try again.*/
-                case 40501: /*The service is currently busy. Retry the request after 10 seconds.*/
-                case 40613: /*Database '%.*ls' on server '%.*ls' is not currently available. Please retry the connection later.*/
+				case 20:    /*The instance of SQL Server you attempted to connect to does not support encryption. (PMcE: amazingly, this is transient)*/
+				case 64:    /*A connection was successfully established with the server, but then an error occurred during the login process.*/
+				case 233:   /*The client was unable to establish a connection because of an error during connection initialization process before login*/
+				case 10053: /*A transport-level error has occurred when receiving results from the server.*/
+				case 10060: /*A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible.*/
+				case 40143: /*The service has encountered an error processing your request. Please try again.*/
+				case 40197: /*The service has encountered an error processing your request. Please try again.*/
+				case 40501: /*The service is currently busy. Retry the request after 10 seconds.*/
+				case 40613: /*Database '%.*ls' on server '%.*ls' is not currently available. Please retry the connection later.*/
 				case 53:/*A network-related or instance-specific error occurred while establishing a connection to SQL Server*/
-                case 11:
+				case 11:
 				case 121: /*A transport-level error has occurred when receiving results from the server. (provider: TCP Provider, error: 0 - The semaphore timeout period has expired.*/
 				case 10054://A transport-level error has occurred when sending the request to the server. (provider: TCP Provider, error: 0 - An existing connection was forcibly closed by the remote host.)
 				case 6404: //The connection is broken and recovery is not possible.  The connection is marked by the server as unrecoverable.  No attempt was made to restore the connection.
 					if (!GxContext.isReorganization && con != null && m_FailedConnections < MAX_TRIES)//Si es una operacion Open se reintenta.
 					{
-                        try
-                        {
-                            con.Close();
-                        }
-                        catch { }
-						status=104; // General network error.  Check your network documentation - Retry [Max Pool Size] times.
+						try
+						{
+							con.Close();
+						}
+						catch { }
+						status = 104; // General network error.  Check your network documentation - Retry [Max Pool Size] times.
 						m_FailedConnections++;
 						Thread.Sleep(MILLISECONDS_BETWEEN_RETRY_ATTEMPTS);
-						retry=true;
+						retry = true;
 						GXLogging.Debug(log, "ProcessError: General network error, FailedConnections:" + m_FailedConnections);
 					}
 					else
@@ -1803,7 +1840,7 @@ namespace GeneXus.Data
 							con.Close();
 						}
 						catch { }
-						status = 104; 
+						status = 104;
 						m_FailedCreate++;
 						Thread.Sleep(MILLISECONDS_BETWEEN_RETRY_ATTEMPTS);
 						retry = true;
@@ -1814,32 +1851,32 @@ namespace GeneXus.Data
 						return false;
 					}
 					break;
-				case 903:		// Locked
+				case 903:       // Locked
 				case 1222:
 					retry = Retry(errMask, retryCount);
 					if (retry)
-						status=110;// Locked - Retry
-					else 
-						status=103;//Locked
+						status = 110;// Locked - Retry
+					else
+						status = 103;//Locked
 					return retry;
-				case 2601:		// Duplicated record
-				case 2627:		// Duplicated record
-					status = 1; 
+				case 2601:      // Duplicated record
+				case 2627:      // Duplicated record
+					status = 1;
 					break;
-				case 3701:		// File not found
-				case 3703:		// File not found
-				case 3704:		// File not found
-				case 3731:		// File not found
-				case 4902:		// File not found
-				case 3727:		// File not found
-				case 3728:		// File not found
-					status = 105; 
+				case 3701:      // File not found
+				case 3703:      // File not found
+				case 3704:      // File not found
+				case 3731:      // File not found
+				case 4902:      // File not found
+				case 3727:      // File not found
+				case 3728:      // File not found
+					status = 105;
 					break;
-				case 503:		// Parent key not found
-				case 547:		//conflicted with COLUMN FOREIGN KEY constraint
+				case 503:       // Parent key not found
+				case 547:       //conflicted with COLUMN FOREIGN KEY constraint
 					if ((errMask & GxErrorMask.GX_MASKFOREIGNKEY) == 0)
 					{
-						status = 500;		// ForeignKeyError
+						status = 500;       // ForeignKeyError
 						return false;
 					}
 					break;
@@ -1851,9 +1888,9 @@ namespace GeneXus.Data
 		}
 		public override string ToDbmsConstant(DateTime Value)
 		{
-			if (Value == System.DateTime.MinValue) 
+			if (Value == System.DateTime.MinValue)
 				Value = System.Data.SqlTypes.SqlDateTime.MinValue.Value;
-			return "'" + Value.ToString("yyyy-MM-dd HH\\:mm\\:ss").Replace("'","''") + "'";
+			return "'" + Value.ToString("yyyy-MM-dd HH\\:mm\\:ss").Replace("'", "''") + "'";
 		}
 
 		public override IGeographicNative GetGeospatial(IGxDbCommand cmd, IDataRecord DR, int i)
@@ -1924,7 +1961,7 @@ namespace GeneXus.Data
 				GXLogging.Error(log, "GetValues error", ex);
 			}
 		}
-		static internal decimal ReadSQLDecimal(SqlDataReader sqlReader, int idx){
+		static internal decimal ReadSQLDecimal(SqlDataReader sqlReader, int idx) {
 			//Reduce the precision
 			//The SQlServer data type NUMBER can hold up to 38 precision, and the .NET Decimal type can hold up to 28 precision
 			SqlDecimal sqldecimal = sqlReader.GetSqlDecimal(idx);
@@ -1965,11 +2002,38 @@ namespace GeneXus.Data
 					return Convert.ToInt16(sqldecimal.Value);
 			}
 		}
+#if NETCORE
+		private bool UserPasswordAllowed(SqlConnectionStringBuilder sqlConnectionString)
+		{
+			if (sqlConnectionString != null && (sqlConnectionString.Authentication == SqlAuthenticationMethod.ActiveDirectoryIntegrated ||
+					sqlConnectionString.Authentication == SqlAuthenticationMethod.ActiveDirectoryInteractive ||
+					sqlConnectionString.Authentication == SqlAuthenticationMethod.ActiveDirectoryManagedIdentity ||
+					sqlConnectionString.Authentication == SqlAuthenticationMethod.ActiveDirectoryDeviceCodeFlow))
+				return false;
+			else
+				return true;
+		}
+		private bool UserIdAllowed(SqlConnectionStringBuilder sqlConnectionString)
+		{
+			if (sqlConnectionString != null && sqlConnectionString.Authentication == SqlAuthenticationMethod.ActiveDirectoryDeviceCodeFlow)
+				return false;
+			else
+				return true;
+		}
+		private string ResolveConnectionStringAuthentication(string extra, SqlConnectionStringBuilder sqlConnectionString)
+		{
+			if (sqlConnectionString!=null && sqlConnectionString.Authentication != SqlAuthenticationMethod.NotSpecified && sqlConnectionString.IntegratedSecurity)
+			{
+				return ReplaceKeyValue(extra, INTEGRATED_SECURITY, INTEGRATED_SECURITY_NO);
+			}
+			return extra;
+		}
+#endif
 		protected override string BuildConnectionString(string datasourceName, string userId, 
 			string userPassword,string databaseName, string port, string schema, string extra)
 		{
 			StringBuilder connectionString = new StringBuilder();
-			string port1 = port!=null ? port.Trim() : "";
+			string port1 = port!=null ? port.Trim() : string.Empty;
 			if (!string.IsNullOrEmpty(datasourceName) && port1.Length > 0 && !HasKey(extra, "Data Source"))
 			{
 				connectionString.AppendFormat("Data Source={0},{1};",datasourceName, port1);
@@ -1978,10 +2042,27 @@ namespace GeneXus.Data
 			{
 				connectionString.AppendFormat("Data Source={0};",datasourceName);
 			}
+#if NETCORE
+			SqlConnectionStringBuilder additionalConnectionString=null;
+			if (!string.IsNullOrEmpty(extra))
+			{
+				additionalConnectionString = new SqlConnectionStringBuilder(extra);
+			}
+			if (userId != null && UserIdAllowed(additionalConnectionString))
+			{
+				connectionString.AppendFormat(";User ID={0}", userId);
+			}
+			if (!string.IsNullOrEmpty(userPassword) && UserPasswordAllowed(additionalConnectionString))
+			{
+				connectionString.AppendFormat(";Password={0}", userPassword);
+			}
+			extra = ResolveConnectionStringAuthentication(extra, additionalConnectionString);
+#else
 			if (userId!=null)
 			{
 				connectionString.AppendFormat(";User ID={0};Password={1}",userId,userPassword);
 			}
+#endif
 			if (databaseName != null && databaseName.Trim().Length > 0 && !HasKey(extra, "Database"))
 			{
 				connectionString.AppendFormat(";Database={0}",databaseName);
@@ -2006,6 +2087,7 @@ namespace GeneXus.Data
 				MAX_TRIES = Convert.ToInt32(maxpoolSize);
 			return connstr;
 		}
+
 
 #if !NETCORE
 		public override Object Net2DbmsGeo(GXType type, IGeographicNative geo)

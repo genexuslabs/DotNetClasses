@@ -1,15 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GxClasses</RootNamespace>
 		<NoWarn>618;1607;1698</NoWarn>
+		<DefineConstants>NODATIME</DefineConstants>
 		<AssemblyName>GxClasses</AssemblyName>
 		<PackageTags>Data Access</PackageTags>
 		<PackageId>GeneXus.Classes</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="GeneXus.NodaTime" Version="2.4.19.1" />
 		<PackageReference Include="ManagedFusion.Rewriter" Version="3.7.0" />
+		<PackageReference Include="Microsoft.AspNet.WebPages" Version="3.2.9" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
 		<PackageReference Include="Microsoft.Net.Http.Headers" Version="2.2.0" />
 		<PackageReference Include="MySqlConnector" Version="2.2.3" />

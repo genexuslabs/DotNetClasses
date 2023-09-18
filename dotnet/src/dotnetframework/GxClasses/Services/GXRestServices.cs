@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
+using System.Security;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Configuration;
@@ -15,6 +16,8 @@ using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Web;
 using System.Text;
 using System.Web;
+using System.Web.Helpers;
+using System.Web.Mvc;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Data;
@@ -22,6 +25,7 @@ using GeneXus.Http;
 using GeneXus.Metadata;
 using GeneXus.Security;
 using log4net;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 
 namespace GeneXus.Utils
@@ -233,6 +237,7 @@ namespace GeneXus.Utils
         private HttpContext httpContext;
         private WebOperationContext wcfContext;
         protected string permissionPrefix;
+		protected string permissionMethod;
         bool runAsMain = true;
 
         public GxRestService()
@@ -322,7 +327,7 @@ namespace GeneXus.Utils
 		{
 			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
 			IncomingWebRequestContext request = WebOperationContext.Current.IncomingRequest;
-			gxobject.WcfExecute(stream, request.ContentType, request.ContentLength);
+			gxobject.WcfExecute(stream, request.ContentType, request.ContentLength, request.Headers[HttpHeader.XGXFILENAME]);
 		}
 		public void ErrorCheck(IGxSilentTrn trn)
 		{
@@ -372,7 +377,7 @@ namespace GeneXus.Utils
 			}
 			if (!emptyHeader)
 			{
-				AddHeader(WARNING_HEADER, header.ToString());
+				AddHeader(WARNING_HEADER, StringUtil.Sanitize(header.ToString(), StringUtil.HttpHeaderWhiteList));
 			}
 		}
 		public void SetError(string code, string message)
@@ -387,7 +392,7 @@ namespace GeneXus.Utils
             {
                 throw ex;
             }
-            else if (ex is FormatException)
+            else if (ex is FormatException || (RestAPIHelpers.ValidateCsrfToken() && AntiForgeryException(ex)))
 			{
 				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.BadRequest, ex);
 			}
@@ -396,6 +401,12 @@ namespace GeneXus.Utils
 				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.InternalServerError, ex);
             }
         }
+		[SecuritySafeCritical]
+		private bool AntiForgeryException(Exception ex)
+		{
+			return ex is HttpAntiForgeryException;
+		}
+
 		public bool IsAuthenticated(string synchronizer)
 		{
 			GXLogging.Debug(log, "IsMainAuthenticated synchronizer:" + synchronizer);
@@ -448,7 +459,6 @@ namespace GeneXus.Utils
 				}
 				else
 				{
-					
 					token = token.Replace("OAuth ", "");
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
@@ -477,7 +487,7 @@ namespace GeneXus.Utils
 							}
 							else
 							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description));
+								AddHeader(HttpHeader.AUTHENTICATE_HEADER, StringUtil.Sanitize(HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description), StringUtil.HttpHeaderWhiteList));
 								SetStatusCode(HttpStatusCode.Unauthorized);
 							}
 							return false;
@@ -545,9 +555,11 @@ namespace GeneXus.Utils
                 httpContext.Response.Headers[header]= value;
             }
         }
+		[SecuritySafeCritical]
 		public bool ProcessHeaders(string queryId)
 		{
-
+			CSRFHelper.ValidateAntiforgery(context.HttpContext);
+			
 			NameValueCollection headers = GetHeaders();
 			String language = null, theme = null, etag = null;
 			if (headers != null)
@@ -585,6 +597,8 @@ namespace GeneXus.Utils
 			}
 			return true;
 		}
+
+	
 
 		private void SendCacheHeaders()
 		{

@@ -110,7 +110,7 @@ namespace GeneXus.Application
 					if (!IsAuthenticated(synchronizer))
 						return Task.CompletedTask;
 				}
-				else if (!IsAuthenticated())
+				else if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
 				{
 					return Task.CompletedTask;
 				}
@@ -135,13 +135,13 @@ namespace GeneXus.Application
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-					bodyParameters = PreProcessApiSdtParameter(_procWorker, innerMethod, bodyParameters, this._variableAlias);
+					bodyParameters = PreProcessApiSdtParameter( _procWorker, innerMethod, bodyParameters, this._variableAlias);
 				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
-				RestProcess(outputParameters);
+				RestProcess(_procWorker, outputParameters);
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
 				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
@@ -300,7 +300,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
 				{
 					return Task.CompletedTask; 
 				}
@@ -329,7 +329,7 @@ namespace GeneXus.Application
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
-				RestProcess(outputParameters);			  
+				RestProcess(_procWorker, outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
 				ServiceHeaders();
@@ -537,9 +537,19 @@ namespace GeneXus.Application
 					SetError("0", "Invalid Synchronizer " + synchronizer);
 			}
 		}
+		protected bool IsAuthenticatedMethod(string serviceMethod, bool isApi)
+		{
+			if (!String.IsNullOrEmpty(serviceMethod) && isApi)
+			{
+				bool integratedSecurityEnabled = ( Worker.IntegratedSecurityEnabled2 && Worker.ApiIntegratedSecurityLevel2(serviceMethod) != GAMSecurityLevel.SecurityNone);
+				return IsAuthenticated(Worker.ApiIntegratedSecurityLevel2(serviceMethod), integratedSecurityEnabled, Worker.ApiExecutePermissionPrefix2(serviceMethod));
+			}
+			else
+				return IsAuthenticated();
+		}
 		public bool IsAuthenticated()
 		{
-			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
+			return IsAuthenticated( Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
 		}
 		protected bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{
@@ -557,7 +567,6 @@ namespace GeneXus.Application
 				}
 				else
 				{
-
 					token = token.Replace("OAuth ", "");
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
@@ -700,7 +709,7 @@ namespace GeneXus.Application
 		}
 		public Task WebException(Exception ex)
 		{
-#if NETCORE			
+#if NETCORE
 			GxHttpActivitySourceHelper.SetException(Activity.Current, ex);
 #endif
 			GXLogging.Error(log, "WebException", ex);
@@ -799,7 +808,7 @@ namespace GeneXus.Application
 			sdt.FromJSonString(value);
 		}
 
-		private static void RestProcess(Dictionary<string, object> outputParameters)
+		private static void RestProcess(GXBaseObject worker, Dictionary<string, object> outputParameters)
 		{
 			foreach (string k in outputParameters.Keys.ToList())
 			{
@@ -810,7 +819,7 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					object o = MakeRestType(outputParameters[k]);
+					object o = MakeRestType(outputParameters[k], worker.IsApiObject);
 					if (p !=null && p.SdtSerializeAsNull())
 					{						
 						outputParameters[k] = JNull.Value;
@@ -826,7 +835,7 @@ namespace GeneXus.Application
 			}			
 		}
 		
-		protected static object MakeRestType(object v)
+		protected static object MakeRestType( object v, bool isApiObject)
 		{
 			Type vType = v.GetType();
 			Type itemType;
@@ -834,7 +843,7 @@ namespace GeneXus.Application
 			{
 				Type restItemType=null;
 				itemType = v.GetType().GetGenericArguments()[0];
-				if (typeof(IGXBCCollection).IsAssignableFrom(vType))//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				if ((typeof(IGXBCCollection).IsAssignableFrom(vType)) && !isApiObject)//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
 				{
 					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
 				}

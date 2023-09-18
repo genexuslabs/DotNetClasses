@@ -22,6 +22,7 @@ namespace GeneXus.OpenTelemetry.AWS
 
 			Sdk.CreateTracerProviderBuilder()
 				.AddXRayTraceId()    // for generating AWS X-Ray compliant trace IDs
+				.AddAWSInstrumentation()
 				.AddOtlpExporter(options =>
 				{
 					if (!string.IsNullOrEmpty(oltpEndpoint))

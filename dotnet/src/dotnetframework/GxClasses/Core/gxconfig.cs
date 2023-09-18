@@ -280,6 +280,22 @@ namespace GeneXus.Configuration
 				return null;
 		}
 #endif
+		internal static bool ValidLanguage(string language)
+		{
+			if (languages != null)
+				return languages.Contains(language);
+			else
+			{
+#if NETCORE
+				return false;
+#else
+#pragma warning disable CS0618 // Type or member is obsolete
+				Hashtable appsettings = (Hashtable)ConfigurationSettings.GetConfig("languages/" + language);
+#pragma warning restore CS0618 // Type or member is obsolete
+				return (appsettings != null);
+#endif
+			}
+		}
 		public static string GetLanguageProperty(string language, string property)
 		{
 			string sString = null;
@@ -779,11 +795,12 @@ namespace GeneXus.Configuration
 		public static string DefaultRewriteFile = "rewrite.config";
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
 		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
-		const string YES = "1";
-		const string NO = "0";
+		internal const string YES = "1";
+		internal const string NO = "0";
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
+		static int sessionTimeout = -1;
 		internal static string DefaultDatastore
 		{
 			get
@@ -851,9 +868,9 @@ namespace GeneXus.Configuration
 				if (rewriteEnabled == -1)
 				{
 #if NETCORE
-					var basePath = FileUtil.GetBasePath();
+					string basePath = FileUtil.GetBasePath();
 #else
-					var basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+					string basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #endif
 					string rewriteFile = Path.Combine(basePath, DefaultRewriteFile);
 					rewriteEnabled = File.Exists(rewriteFile)?1:0;
@@ -1210,10 +1227,10 @@ namespace GeneXus.Configuration
 			if (storageTimezone == -1)
 			{
 				string sValue;
-				storageTimezone = (int)StorageTimeZonePty.Undefined;
+				int tz = (int)StorageTimeZonePty.Undefined;
 				if (Config.GetValueOf("StorageTimeZone", out sValue))
-					int.TryParse(sValue, out storageTimezone);
-
+					int.TryParse(sValue, out tz);
+				storageTimezone= tz;
 			}
 			return (StorageTimeZonePty)storageTimezone;
 		}
@@ -1345,6 +1362,19 @@ namespace GeneXus.Configuration
 		internal static bool CorsEnabled {
 			get {
 				return !string.IsNullOrEmpty(CorsAllowedOrigins());
+			}
+		}
+		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
+		public static int SessionTimeout {
+			get {
+				if (sessionTimeout == -1)
+				{
+					if (Config.GetValueOf("SessionTimeout", out string SessionTimeoutStr) && int.TryParse(SessionTimeoutStr, out int value))
+						sessionTimeout = value;
+					else
+						sessionTimeout = DEFAULT_SESSION_TIMEOUT_MINUTES;
+				}
+				return sessionTimeout;
 			}
 		}
 

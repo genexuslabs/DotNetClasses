@@ -82,6 +82,7 @@ namespace GeneXus.Utils
 	
 	public class TimeZoneUtil
 	{
+		[Obsolete("GetInstanceFromWin32Id is deprecated.", false)]
 		public static OlsonTimeZone GetInstanceFromWin32Id(string sTZ)
 		{
 			lock (OlsonTimeZone.SyncRoot)
@@ -96,7 +97,7 @@ namespace GeneXus.Utils
 				}
 			}
 		}
-
+		[Obsolete("GetInstanceFromOlsonName is deprecated.", false)]
 		public static OlsonTimeZone GetInstanceFromOlsonName(string sTZ)
 		{
 			lock (OlsonTimeZone.SyncRoot)
@@ -986,11 +987,8 @@ namespace GeneXus.Utils
 		{
 			if (values != null)
 			{
-				int idx = 0;
-				foreach (string v in values.Groups)
-				{
-					values.Groups[idx] = RestoreEndOfString(v);
-				}
+				for (int i=0; i < values.Groups.Count; i++)
+					values.Groups[i] = RestoreEndOfString(values.Groups[i]);
 			}
 		}
 		static public GxSimpleCollection<string> Split(string txt, string rex)

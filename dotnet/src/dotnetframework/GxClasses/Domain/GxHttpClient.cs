@@ -41,6 +41,7 @@ namespace GeneXus.Http.Client
 	{
 		public string Boundary;
 		public string FormdataTemplate;
+		public string FormdataSeparator;		
 		public byte[] Boundarybytes;
 		public byte[] EndBoundaryBytes;
 		public string HeaderTemplate;
@@ -50,7 +51,8 @@ namespace GeneXus.Http.Client
 		{
 			Boundary = "----------------------------" + DateTime.Now.Ticks.ToString("x");
 			ContentType = $"multipart/form-data; boundary={Boundary}";
-			FormdataTemplate = "\r\n--" + Boundary + "\r\nContent-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}";
+			FormdataSeparator = "\r\n";
+			FormdataTemplate = "--" + Boundary + "\r\nContent-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}";
 			Boundarybytes = Encoding.ASCII.GetBytes($"\r\n--{Boundary}\r\n");
 			EndBoundaryBytes = Encoding.ASCII.GetBytes($"\r\n--{Boundary}--");
 			HeaderTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n" + "Content-Type: {2}\r\n\r\n";
@@ -431,7 +433,7 @@ namespace GeneXus.Http.Client
 			for (int i = 0; i < _formVars.Count; i++)
 			{
 				if (_formVars.Keys[i] != null)
-					vars.Add(buildVariableToSend(_formVars.Keys[i], _formVars[i]));
+					vars.Add(buildVariableToSend(_formVars.Keys[i], _formVars[i], vars.Count));
 			}
 			if (vars.Count > 0)
 			{
@@ -457,11 +459,15 @@ namespace GeneXus.Http.Client
 			else
 				return "&";
 		}
-		string buildVariableToSend(string key, string value)
+		string buildVariableToSend(string key, string value, int idx)
 		{
+			bool needsCLRF = idx > 0;
 			if (IsMultipart)
 			{
-				return string.Format(MultiPart.FormdataTemplate, key, value);
+				if (needsCLRF)
+					return MultiPart.FormdataSeparator + string.Format(MultiPart.FormdataTemplate, key, value);
+				else
+					return string.Format(MultiPart.FormdataTemplate, key, value);
 			}
 			else
 			{
@@ -1276,6 +1282,7 @@ namespace GeneXus.Http.Client
 				_statusCode = (short)resp.StatusCode;
 				_statusDescription = resp.StatusDescription;
 				resp.Close();
+
 				GXLogging.DebugSanitized(log, "_responseString " + ToString());
 			}
 			ClearSendStream();

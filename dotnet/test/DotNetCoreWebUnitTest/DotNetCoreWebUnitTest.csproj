@@ -14,9 +14,11 @@
 
 
 	<ItemGroup>
+		<PackageReference Include="Codeuctivity.PdfAValidator" Version="2.3.104" />
+		<PackageReference Include="FreeSpire.PDF" Version="8.6.0" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.5.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.2" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.8.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
 		<PackageReference Include="xunit" Version="2.4.1" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
@@ -34,6 +36,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
   </ItemGroup>
 
@@ -66,6 +69,12 @@
 		</None>
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="lamp.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="PDFReport.ini">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="uruguay.flag.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

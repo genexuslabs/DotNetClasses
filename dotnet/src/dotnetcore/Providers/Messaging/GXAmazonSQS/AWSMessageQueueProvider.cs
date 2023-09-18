@@ -21,8 +21,10 @@ namespace GeneXus.Messaging.Queue
 
 		{
 			MessageQueueProvider messageQueueProvider = new MessageQueueProvider();
-			GXProperties properties = new GXProperties();
-			properties.Add("QUEUE_AWSSQS_QUEUE_URL", queueURL);
+			GXProperties properties = new GXProperties
+			{
+				{ "QUEUE_AWSSQS_QUEUE_URL", queueURL }
+			};
 			SimpleMessageQueue simpleMessageQueue = messageQueueProvider.Connect(AWS_SQS, properties, out GXBaseCollection<SdtMessages_Message> errorMessagesConnect, out bool successConnect);
 			errorMessages = errorMessagesConnect;
 			success = successConnect;
@@ -31,10 +33,12 @@ namespace GeneXus.Messaging.Queue
 
 		public GXProperties TransformAWSCredentials(GxUserType awsCredentials)
 		{
-			GXProperties properties = new GXProperties();
-			properties.Add("QUEUE_AWSSQS_ACCESS_KEY", awsCredentials.GetPropertyValue<string>("Accesskey"));
-			properties.Add("QUEUE_AWSSQS_SECRET_KEY", awsCredentials.GetPropertyValue<string>("Secretkey"));
-			properties.Add("QUEUE_AWSSQS_REGION", awsCredentials.GetPropertyValue<string>("Region"));
+			GXProperties properties = new GXProperties
+			{
+				{ "QUEUE_AWSSQS_ACCESS_KEY", awsCredentials.GetPropertyValue<string>("Accesskey") },
+				{ "QUEUE_AWSSQS_SECRET_KEY", awsCredentials.GetPropertyValue<string>("Secretkey") },
+				{ "QUEUE_AWSSQS_REGION", awsCredentials.GetPropertyValue<string>("Region") }
+			};
 			return properties;
 		}
 	}

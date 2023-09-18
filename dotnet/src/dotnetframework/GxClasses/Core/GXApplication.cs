@@ -13,6 +13,7 @@ namespace GeneXus.Application
 	using System.Messaging;
 	using System.ServiceModel.Web;
 	using GeneXus.UserControls;
+	using System.Net.Http.Headers;
 #else
 	using Microsoft.AspNetCore.Http;
 	using GxClasses.Helpers;
@@ -42,9 +43,12 @@ namespace GeneXus.Application
 #if NETCORE
 	using Microsoft.AspNetCore.Http.Features;
 #endif
+	using NodaTime;
+	using NodaTime.TimeZones;
 	using System.Threading;
 	using System.Security.Claims;
 	using System.Security;
+	using Microsoft.Net.Http.Headers;
 
 	public interface IGxContext
 	{
@@ -68,6 +72,7 @@ namespace GeneXus.Application
 		void DisableSpaRequest();
 		String AjaxCmpContent { get; set; }
 		bool isCloseCommand { get; }
+		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
 		OlsonTimeZone GetOlsonTimeZone();
 		String GetTimeZone();
 		Boolean SetTimeZone(String sTZ);
@@ -392,6 +397,8 @@ namespace GeneXus.Application
 		private bool _isSumbited;
 		[NonSerialized]
 		private OlsonTimeZone _currentTimeZone;
+		[NonSerialized]
+		private String _currentTimeZoneId;
 
 		[NonSerialized]
 		MessageQueueTransaction _mqTransaction;
@@ -2127,17 +2134,21 @@ namespace GeneXus.Application
 		}
 		public virtual short GetHttpSecure()
 		{
+			return GetHttpSecure(_HttpContext);
+		}
+		static internal short GetHttpSecure(HttpContext httpContext)
+		{
 			try
 			{
-				if (HttpContext == null)
+				if (httpContext == null)
 					return 0;
-				if (_HttpContext.Request.GetIsSecureFrontEnd())
+				if (httpContext.Request.GetIsSecureFrontEnd())
 				{
 					GXLogging.Debug(log, "Front-End-Https header activated");
 					return 1;
 				}
 				else
-					return _HttpContext.Request.GetIsSecureConnection();
+					return httpContext.Request.GetIsSecureConnection();
 			}
 			catch
 			{
@@ -2312,6 +2323,20 @@ namespace GeneXus.Application
 			}
 			return cookieVal;
 		}
+		internal string GetUndecodedCookie(string name)
+		{
+			string cookieVal = string.Empty;
+			HttpCookie cookie = TryGetCookie(localCookies, name);
+			if (cookie == null && _HttpContext != null)
+			{
+				cookie = TryGetCookie(_HttpContext.Request.GetCookies(), name);
+			}
+			if (cookie != null && cookie.Value != null)
+			{
+				cookieVal = cookie.Value;
+			}
+			return cookieVal;
+		}
 
 		private HttpCookie TryGetCookie(HttpCookieCollection cookieColl, string name)
 		{
@@ -2354,8 +2379,8 @@ namespace GeneXus.Application
 				Secure = cookie.Secure
 			};
 			string sameSite;
-			SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
-			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+            Microsoft.AspNetCore.Http.SameSiteMode sameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode.Unspecified;
+			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<Microsoft.AspNetCore.Http.SameSiteMode>(sameSite, out sameSiteMode))
 			{
 				cookieOptions.SameSite = sameSiteMode;
 			}
@@ -2418,18 +2443,17 @@ namespace GeneXus.Application
 				_httpHeaders = new NameValueCollection();
 			}
 			_httpHeaders[name] = value;
-			SetCustomHttpHeader(name, value);
-			return 0;
+			return SetCustomHttpHeader(name, value);
 		}
 
-		private void SetCustomHttpHeader(string name, string value)
+		private byte SetCustomHttpHeader(string name, string value)
 		{
-			_HttpContext.Response.AppendHeader(name, value);
-
-#if !NETCORE
-			switch (name.ToUpper())
+			try
 			{
-				case "CACHE-CONTROL":
+#if !NETCORE
+
+				if (name.Equals(HeaderNames.CacheControl, StringComparison.OrdinalIgnoreCase))
+				{
 					var Cache = _HttpContext.Response.Cache;
 					string[] values = value.Split(',');
 					foreach (string v in values)
@@ -2449,30 +2473,65 @@ namespace GeneXus.Application
 								Cache.AppendCacheExtension("no-store, must-revalidate");
 								break;
 							default:
+								GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
 								break;
 						}
 					}
-					break;
-			}
-#else
-			switch (name.ToUpper())
-			{
-				case "CACHE-CONTROL":
-					switch (value.ToUpper())
+				}
+				else if (name.Equals(HeaderNames.ContentType, StringComparison.OrdinalIgnoreCase))
+				{
+					_HttpContext.Response.ContentType = value;
+				}
+				else if (name.Equals(HeaderNames.Location, StringComparison.OrdinalIgnoreCase))
+				{
+					_HttpContext.Response.RedirectLocation = value;
+				}
+				else
+				{
+					try
 					{
-						case "PUBLIC":
-							_HttpContext.Response.AddHeader("Cache-Control", "public");
-							break;
-						case "PRIVATE":
-							_HttpContext.Response.AddHeader("Cache-Control", "private");
-							break;
-						default:
-							GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
-							break;
+						_HttpContext.Response.Headers[name] = value;
+
+					}catch (PlatformNotSupportedException ex)
+					{
+						_HttpContext.Response.AppendHeader(name, value);
+						GXLogging.Warn(log, ex, "SetHeader ", name, value);
 					}
-					break;
-			}
+				}
+#else
+				if (name.Equals(HeaderNames.CacheControl, StringComparison.OrdinalIgnoreCase))
+				{
+					if (CacheControlHeaderValue.TryParse(value, out CacheControlHeaderValue parsedValue))
+					{
+						_HttpContext.Response.GetTypedHeaders().CacheControl = parsedValue;
+					}
+					else
+					{
+						switch (value.ToUpper())
+						{
+							case "PUBLIC":
+								_HttpContext.Response.AddHeader(HeaderNames.CacheControl, "public");
+								break;
+							case "PRIVATE":
+								_HttpContext.Response.AddHeader(HeaderNames.CacheControl, "private");
+								break;
+							default:
+								GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
+								break;
+						}
+					}
+				}
+				else { 
+						_HttpContext.Response.AddHeader(name, value);
+				}
 #endif
+				return 0;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "Error adding header ", name, value);
+				return 1;
+			}
 		}
 
 		public string GetHeader(string name)
@@ -3454,7 +3513,7 @@ namespace GeneXus.Application
 
 		public int SetLanguage(string id)
 		{
-			if (Config.GetLanguageProperty(id, "code") != null)
+			if (Config.ValidLanguage(id))
 			{
 				SetProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
@@ -3468,7 +3527,7 @@ namespace GeneXus.Application
 		}
 		private int SetLanguageWithoutSession(string id)
 		{
-			if (Config.GetLanguageProperty(id, "code") != null)
+			if (Config.ValidLanguage(id))
 			{
 				SetContextProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
@@ -3503,7 +3562,7 @@ namespace GeneXus.Application
 		}
 
 		internal static string GX_REQUEST_TIMEZONE = "GxTZOffset";
-
+		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead", false)]
 		public OlsonTimeZone ClientTimeZone
 		{
 			get
@@ -3541,7 +3600,57 @@ namespace GeneXus.Application
 				return _currentTimeZone;
 			}
 		}
+		internal string ClientTimeZoneId
+		{
+			get
+			{
+				if (_currentTimeZoneId != null)
+					return _currentTimeZoneId;
+				string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
+				GXLogging.DebugSanitized(log, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
+				if (String.IsNullOrEmpty(sTZ))
+				{
+					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(log, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
+				if (!DateTimeUtil.ValidTimeZone(sTZ))
+				{
+					sTZ = (string)GetUndecodedCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(log, "Try reading undecoded ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
+				try
+				{
+					if (!DateTimeUtil.ValidTimeZone(sTZ))
+					{
+						try
+						{
+							string invalidTimezone = DateTimeZoneProviders.Tzdb[sTZ].Id; 
+						}catch(Exception ex)//DateTimeZoneNotFound
+						{
+							GXLogging.Warn(log, $"Client timezone not found: {sTZ}", ex);
+						}
+						_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+						GXLogging.Warn(log, $"Setting Client timezone to System default: {_currentTimeZoneId}");
+					}
+					else
+					{
+						_currentTimeZoneId = sTZ;
+					}
+				}
+				catch (Exception e1)
+				{
+					GXLogging.Warn(log, "ClientTimeZone GetInstanceFromWin32Id error", e1);
+					Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+					if (storagePty == Preferences.StorageTimeZonePty.Undefined)
+						_currentTimeZoneId = null;
+					else
+						throw e1;
+				}
 
+				return _currentTimeZoneId;
+			}
+		}
+		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
 		public OlsonTimeZone GetOlsonTimeZone()
 		{
 			return TimeZoneUtil.GetInstanceFromOlsonName(GetTimeZone());
@@ -3554,15 +3663,46 @@ namespace GeneXus.Application
 			{
 				SetTimeZone(sTZ);
 			}
+
+#if NODATIME
+			if (_currentTimeZoneId == null)
+				_currentTimeZoneId = ClientTimeZoneId;
+			if (_currentTimeZoneId==null)
+				_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+			return _currentTimeZoneId;
+#else
 			if (_currentTimeZone == null)
 				_currentTimeZone = ClientTimeZone;
 			return _currentTimeZone == null ? TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id).Name : _currentTimeZone.Name;
+#endif
 		}
 
 		public Boolean SetTimeZone(String sTZ)
 		{
 			sTZ = StringUtil.RTrim(sTZ);
-			Boolean ret = false;
+			bool ret = false;
+#if NODATIME
+			string tzId;
+			try
+			{
+				DateTimeZone zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(sTZ);
+				if (zone != null)
+				{
+					tzId = zone.Id;
+				}
+				else
+				{
+					tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+				}
+				ret = true;
+			}
+			catch (Exception)
+			{
+				tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+			}
+			SetProperty("GXTimezone", tzId);
+			_currentTimeZoneId = tzId;
+#else
 			try
 			{
 				_currentTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
@@ -3581,6 +3721,7 @@ namespace GeneXus.Application
 				}
 			}
 			SetProperty("GXTimezone", _currentTimeZone.Name);
+#endif
 			return ret;
 		}
 		private static ConcurrentDictionary<string, HashSet<string>> m_imagesDensity = new ConcurrentDictionary<string, HashSet<string>>();

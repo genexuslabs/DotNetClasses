@@ -12,12 +12,6 @@ namespace GeneXus.Http.Server
 	using System.Linq;
 	using Microsoft.AspNetCore.Http.Features;
 	using System.Text;
-	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Mvc.Formatters;
-	using System.Net.Http;
-	using Stubble.Core.Contexts;
-	using System.Net.Mime;
-
 #endif
 
 	public class GxHttpCookie
@@ -396,7 +390,7 @@ namespace GeneXus.Http.Server
 		public override string ToString()
 		{
 			if (_httpReq == null)
-				return String.Empty;
+				return string.Empty;
 #if NETCORE
 			return _httpReq.GetRawBodyString();
 #else

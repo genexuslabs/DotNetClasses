@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
@@ -12,6 +14,7 @@ using GeneXus.Utils;
 using GxClasses.Web.Middleware;
 using log4net;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
@@ -27,6 +30,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
 using StackExchange.Redis;
 
 
@@ -36,6 +41,10 @@ namespace GeneXus.Application
 	{
 		const string DEFAULT_PORT = "80";
 		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
+
+		private static string OPENTELEMETRY_SERVICE = "Observability";
+		private static string OPENTELEMETRY_AZURE_DISTRO = "GeneXus.OpenTelemetry.Azure.AzureAppInsights";
+		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 		public static void Main(string[] args)
 		{
 			try
@@ -73,12 +82,12 @@ namespace GeneXus.Application
 		}
 
 		public static IWebHost BuildWebHost(string[] args) =>
-		   WebHost.CreateDefaultBuilder(args)
-			.ConfigureLogging(logging => logging.AddConsole())
-			.UseStartup<Startup>()
-			.UseContentRoot(Startup.LocalPath)
-			.Build();
-
+		  WebHost.CreateDefaultBuilder(args)
+		   .ConfigureLogging(WebHostConfigureLogging)
+		   .UseStartup<Startup>()
+		   .UseContentRoot(Startup.LocalPath)
+		   .Build();
+		
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
 			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
@@ -86,11 +95,45 @@ namespace GeneXus.Application
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				 .ConfigureLogging(logging => logging.AddConsole())
+				 .ConfigureLogging(WebHostConfigureLogging)
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
 				.UseContentRoot(Startup.LocalPath)
 				.Build();
+		}
+
+		private static void WebHostConfigureLogging(WebHostBuilderContext hostingContext, ILoggingBuilder loggingBuilder)
+		{
+			loggingBuilder.AddConsole();
+			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
+			if (providerService != null && providerService.ClassName.StartsWith(OPENTELEMETRY_AZURE_DISTRO))
+			{
+				ConfigureAzureOpentelemetry(loggingBuilder);
+			}
+		}
+		private static void ConfigureAzureOpentelemetry(ILoggingBuilder loggingBuilder)
+		{
+			string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
+			var resourceBuilder = ResourceBuilder.CreateDefault()
+			.AddTelemetrySdk();
+
+			loggingBuilder.AddOpenTelemetry(loggerOptions =>
+			{
+				loggerOptions
+					.SetResourceBuilder(resourceBuilder)
+					.AddAzureMonitorLogExporter(options =>
+					{
+						if (!string.IsNullOrEmpty(endpoint))
+							options.ConnectionString = endpoint;
+						else
+							options.Credential = new DefaultAzureCredential();
+					})
+					.AddConsoleExporter();
+
+				loggerOptions.IncludeFormattedMessage = true;
+				loggerOptions.IncludeScopes = true;
+				loggerOptions.ParseStateValues = true;
+			});
 		}
 		private static void LocatePhysicalLocalPath()
 		{
@@ -104,6 +147,10 @@ namespace GeneXus.Application
 
 	public static class GXHandlerExtensions
 	{
+		public static IApplicationBuilder UseAntiforgeryTokens(this IApplicationBuilder app, string basePath)
+		{
+			return app.UseMiddleware<ValidateAntiForgeryTokenMiddleware>(basePath);
+		}
 		public static IApplicationBuilder UseGXHandlerFactory(this IApplicationBuilder builder, string basePath)
 		{
 			return builder.UseMiddleware<HandlerFactory>(basePath);
@@ -120,7 +167,6 @@ namespace GeneXus.Application
 	{ 
 
 		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
-		const int DEFAULT_SESSION_TIMEOUT_MINUTES = 20;
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
@@ -188,10 +234,7 @@ namespace GeneXus.Application
 			services.AddHttpContextAccessor();
 			services.AddSession(options =>
 			{
-				if (Config.GetValueOf("SessionTimeout", out string SessionTimeoutStr) && int.TryParse(SessionTimeoutStr, out int SessionTimeout))
-					options.IdleTimeout = TimeSpan.FromMinutes(SessionTimeout);
-				else
-					options.IdleTimeout = TimeSpan.FromMinutes(DEFAULT_SESSION_TIMEOUT_MINUTES); 
+				options.IdleTimeout = TimeSpan.FromMinutes(Preferences.SessionTimeout);
 				options.Cookie.HttpOnly = true;
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
@@ -203,7 +246,14 @@ namespace GeneXus.Application
 				}
 			});
 
-
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+				services.AddAntiforgery(options =>
+				{
+					options.HeaderName = HttpHeader.X_CSRF_TOKEN_HEADER;
+					options.SuppressXFrameOptionsHeader = false;
+				});
+			}
 			services.AddDirectoryBrowser();
 			if (GXUtil.CompressResponse())
 			{
@@ -268,6 +318,7 @@ namespace GeneXus.Application
 			{
 				services.AddStackExchangeRedisCache(options =>
 				{
+					GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
 					options.Configuration = sessionService.ConnectionString;
 					options.InstanceName = sessionService.InstanceName;
 				});
@@ -277,9 +328,11 @@ namespace GeneXus.Application
 			{
 				services.AddDistributedSqlServerCache(options =>
 				{
+					GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
 					options.ConnectionString = sessionService.ConnectionString;
 					options.SchemaName = sessionService.Schema;
 					options.TableName = sessionService.TableName;
+					options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
 				});
 			}
 		}
@@ -387,6 +440,12 @@ namespace GeneXus.Application
 
 			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
 			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
+			IAntiforgery antiforgery = null;
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+				antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
+				app.UseAntiforgeryTokens(restBasePath);
+			}
 			app.UseMvc(routes =>
 			{
 				foreach (string serviceBasePath in servicesBase)
@@ -401,7 +460,7 @@ namespace GeneXus.Application
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
 			});
-
+			
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = basePath;
@@ -475,8 +534,11 @@ namespace GeneXus.Application
 	}
 	public class CustomExceptionHandlerMiddleware
 	{
+		const string InvalidCSRFToken = "InvalidCSRFToken";
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomExceptionHandlerMiddleware));
 		public async Task Invoke(HttpContext httpContext)
 		{
+			string httpReasonPhrase=string.Empty;
 			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
 			HttpStatusCode httpStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
 			if (ex!=null)
@@ -485,21 +547,35 @@ namespace GeneXus.Application
 				{
 					httpStatusCode = HttpStatusCode.NotFound;
 				}
+				else if (ex is AntiforgeryValidationException)
+				{
+					//"The required antiforgery header value "X-GXCSRF-TOKEN" is not present.
+					httpStatusCode = HttpStatusCode.BadRequest;
+					httpReasonPhrase = InvalidCSRFToken;
+					GXLogging.Error(log, $"Validation of antiforgery failed", ex);
+				}
 				else
 				{
 					httpStatusCode = HttpStatusCode.InternalServerError;
+					GXLogging.Error(log, $"Internal error", ex);
 				}
 			}
 			if (httpStatusCode!= HttpStatusCode.OK)
 			{
 				string redirectPage = Config.MapCustomError(httpStatusCode.ToString(HttpHelper.INT_FORMAT));
 				if (!string.IsNullOrEmpty(redirectPage))
-{
+				{
 					httpContext.Response.Redirect($"{httpContext.Request.GetApplicationPath()}/{redirectPage}");
 				}
 				else
 				{
 					httpContext.Response.StatusCode = (int)httpStatusCode;
+				}
+				if (!string.IsNullOrEmpty(httpReasonPhrase))
+				{
+					IHttpResponseFeature responseReason = httpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>();
+					if (responseReason!=null)
+						responseReason.ReasonPhrase = httpReasonPhrase;
 				}
 			}
 			await Task.CompletedTask;

@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\GXMessageBroker\ServiceSettings.cs" Link="ServiceSettings.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 

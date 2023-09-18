@@ -3,6 +3,7 @@
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>DotNetUnitTest</RootNamespace>
 		<AssemblyName>DotNetUnitTest</AssemblyName>
+		<DefineConstants>NODATIME</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="client.exe.config" />
@@ -37,6 +38,7 @@
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses.Win\GxClasses.Win.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxMail\GxMail.csproj" />
+    <ProjectReference Include="..\..\src\dotnetframework\GxOffice\GxOffice.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetframework\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
@@ -45,6 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Web" />
+    <Reference Include="TZ4Net">
+      <HintPath>..\..\src\dotnetframework\libs\TZ4Net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Update="resources\text.txt">

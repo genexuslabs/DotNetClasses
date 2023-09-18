@@ -16,12 +16,14 @@
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Certificate.cs" Link="Commons\Certificate.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Error.cs" Link="Commons\Error.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\Key.cs" Link="Commons\Key.cs" />
-    <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\PrivateKey.cs" Link="Commons\PrivateKey.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\PublicKey.cs" Link="Commons\PublicKey.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\PrivateKey.cs" Link="Commons\PrivateKey.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Commons\SecurityAPIObject.cs" Link="Commons\SecurityAPIObject.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\AvailableEncoding.cs" Link="Config\AvailableEncoding.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\EncodingUtil.cs" Link="Config\EncodingUtil.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Config\SecurityApiGlobal.cs" Link="Config\Global.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\Base64Encoder.cs" Link="Encoders\Base64Encoder.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\Base64UrlEncoder.cs" Link="Encoders\Base64UrlEncoder.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Encoders\HexaEncoder.cs" Link="Encoders\HexaEncoder.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\CertificateX509.cs" Link="Keys\CertificateX509.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPICommons\Keys\PrivateKeyManager.cs" Link="Keys\PrivateKeyManager.cs" />

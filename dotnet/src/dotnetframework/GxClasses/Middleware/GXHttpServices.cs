@@ -334,9 +334,9 @@ namespace GeneXus.Http
 				else
 				{
 #if NETCORE
-					WcfExecute(localHttpContext.Request.Body, localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+					WcfExecute(localHttpContext.Request.Body, localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength, localHttpContext.Request.Headers[HttpHeader.XGXFILENAME]);
 #else
-					WcfExecute(localHttpContext.Request.GetBufferedInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+					WcfExecute(localHttpContext.Request.GetBufferedInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength, localHttpContext.Request.Headers[HttpHeader.XGXFILENAME]);
 #endif
 				}
 			}
@@ -358,12 +358,28 @@ namespace GeneXus.Http
 
 		}
 
-		internal void WcfExecute(Stream istream, string contentType, long streamLength)
+		internal void WcfExecute(Stream istream, string contentType, long streamLength, string gxFileName)
 		{
-			string ext, fName;
-			ext = context.ExtensionForContentType(contentType);
+			string ext=null, fName=null;
+			if (!string.IsNullOrEmpty(gxFileName))
+			{
+				ext = Path.GetExtension(gxFileName);
+				if (!string.IsNullOrEmpty(ext))
+				{
+					ext = ext.TrimStart('.');
+				}
+				fName = Path.GetFileNameWithoutExtension(gxFileName);
+			}
+			if (string.IsNullOrEmpty(ext))
+			{
+				ext = context.ExtensionForContentType(contentType);
+			}
+			if (string.IsNullOrEmpty(fName))
+			{
+				fName = string.Empty;
+			}
 			string tempDir = Preferences.getTMP_MEDIA_PATH();			
-			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);			
+			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir, fName), GxFileType.PrivateAttribute);			
 			file.Create(new NetworkInputStream(istream, streamLength));
 
 			JObject obj = new JObject();

@@ -54,7 +54,7 @@ namespace GeneXus.Mail
 			if (lastReadMessage == count)
 			{
 				LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
-				return "";
+				return string.Empty;
 			}
 			int nextMessage = lastReadMessage + 1;
 			int zeroBasedIndexForNextMessage = nextMessage - 1;

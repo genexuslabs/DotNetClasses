@@ -11,11 +11,21 @@ namespace UnitTesting
 	public class SubmitTest
 	{
 		internal static ConcurrentDictionary<Guid, int> numbers = new ConcurrentDictionary<Guid, int>();
+		internal static short SubmitParameter;
 		[Fact]
 		public void SubmitAll()
 		{
 			MainProc proc = new MainProc();
 			proc.execute();
+		}
+		[Fact]
+		public void ParametersOnSubmit()
+		{
+			SubmitParametersProc proc = new SubmitParametersProc();
+			short parmValueTest = 20;
+			proc.executeSubmit(parmValueTest);
+			ThreadUtil.WaitForEnd();
+			Assert.Equal(SubmitParameter, parmValueTest);
 		}
 	}
 	public class MainProc : GXProcedure
@@ -82,5 +92,26 @@ namespace UnitTesting
 		{
 
 		}
+	}
+	public class SubmitParametersProc : GXProcedure
+	{
+		public SubmitParametersProc()
+		{
+			context = new GxContext();
+		}
+		public void executeSubmit(short parmValue)
+		{
+			this.internalParmValue = parmValue;
+			SubmitImpl();
+		}
+		protected override void ExecutePrivate()
+		{
+			SubmitTest.SubmitParameter = this.internalParmValue;
+		}
+		public override void initialize()
+		{
+
+		}
+		private short internalParmValue;
 	}
 }
