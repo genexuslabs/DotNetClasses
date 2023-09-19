@@ -24,8 +24,10 @@ using iText.Layout.Element;
 using iText.Layout.Font;
 using iText.Layout.Layout;
 using iText.Layout.Properties;
+using iText.Layout.Splitting;
 using log4net;
 using NetTopologySuite.Utilities;
+using static iText.Kernel.Pdf.Colorspace.PdfPattern;
 using Path = System.IO.Path;
 using Text = iText.Layout.Element.Text;
 
@@ -955,7 +957,6 @@ namespace com.genexus.reports
 
 				if (wrap || justified)
 				{
-
 					bottomAux = (float)convertScale(bottomOri);
 					topAux = (float)convertScale(topOri);
 
@@ -969,7 +970,7 @@ namespace com.genexus.reports
 					float urx = rightAux + leftMargin;
 					float ury = (float)this.pageSize.GetTop() - topAux - topMargin - bottomMargin;
 
-					DrawColumnText(canvas, llx, lly, urx, ury, p, leading, runDirection, valign, alignment);
+					DrawColumnText(canvas, llx, lly, urx, ury, p, leading, runDirection, valign, alignment, wrap);
 
 				}
 				else //no wrap
@@ -992,7 +993,6 @@ namespace com.genexus.reports
 						text.AddStyle(fontStyle);
 
 					Paragraph phrase = new Paragraph(text).SetVerticalAlignment(VerticalAlignment.TOP).SetFontColor(foreColor);
-					
 					switch (alignment)
 					{
 						case 1: // Center Alignment
@@ -1006,7 +1006,7 @@ namespace com.genexus.reports
 							break;
 						case 3: // Justified, only one text line
 							cb.ShowTextAligned(phrase, leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin + startHeight, justifiedType);//0, runDirection, arabicOptions);
-							break; 
+							break;
 					}
 				}
 			}
@@ -1131,19 +1131,72 @@ namespace com.genexus.reports
 			return null;
 		}
 
-		void DrawColumnText(PdfCanvas pdfCanvas, float llx, float lly, float urx, float ury, Paragraph p, float leading, int runDirection, int valign, int alignment)
+		void DrawColumnText(PdfCanvas pdfCanvas, float llx, float lly, float urx, float ury, Paragraph p, float leading, int runDirection, int valign, int alignment, Boolean wrap)
 		{
-			float width = urx - llx;
-			float height = ury - lly;
+			if (VerticalAlign.MIDDLE.Equals(valign))
+			{
+				ury = ury + leading;
+				p.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+			}
+			else if (VerticalAlign.BOTTOM.Equals(valign))
+			{
+				ury = ury + leading;
+				p.SetVerticalAlignment(VerticalAlignment.BOTTOM);
+			}
+			else if (VerticalAlign.TOP.Equals(valign))
+			{
+				ury = ury + leading / 2;
+				p.SetVerticalAlignment(VerticalAlignment.TOP);
+			}
+			Rectangle rect = new Rectangle(llx, lly, urx - llx, ury - lly);
+			p.SetTextAlignment(GetTextAlignment(alignment));
 
-			p.SetTextAlignment(GetTextAlignment(alignment))
-			.SetVerticalAlignment(GetVericalAlignment(valign))
-			.SetMultipliedLeading(MULTIPLIED_LEADING)
-			.SetWidth(width)
-			.SetMaxHeight(height);
-			//.SetMargin(10);
-			Canvas cb = new Canvas(pdfCanvas, new Rectangle(llx, lly, width, height));
-			cb.Add(p);
+			if (wrap)
+			{
+				p.SetProperty(Property.SPLIT_CHARACTERS, new CustomSplitCharacters());
+				Table table = new Table(1);
+				table.SetFixedPosition(this.getPage(), rect.GetX(), rect.GetY(), rect.GetWidth());
+				Cell cell = new Cell();
+				cell.SetWidth(rect.GetWidth());
+				cell.SetHeight(rect.GetHeight());
+				cell.SetBorder(Border.NO_BORDER);
+				cell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+				cell.Add(p);
+				table.AddCell(cell);
+				document.Add(table);
+			}
+			else
+			{
+				try
+				{
+					Canvas canvas = new Canvas(pdfCanvas, rect);
+					canvas.Add(p);
+					canvas.Close();
+				}
+				catch (Exception e) { GXLogging.Error(log, "GxDrawText failed to justify text column: ", e); }
+			}
+		}
+
+		public class CustomSplitCharacters : DefaultSplitCharacters
+		{
+			public override bool IsSplitCharacter(GlyphLine text, int glyphPos)
+			{
+				if (!text.Get(glyphPos).HasValidUnicode())
+				{
+					return false;
+				}
+
+				bool baseResult = base.IsSplitCharacter(text, glyphPos);
+				bool myResult = false;
+				Glyph glyph = text.Get(glyphPos);
+
+				if (glyph.GetUnicode() == '_')
+				{
+					myResult = true;
+				}
+
+				return myResult || baseResult;
+			}
 		}
 
 #pragma warning restore CS0612 // Type or member is obsolete
