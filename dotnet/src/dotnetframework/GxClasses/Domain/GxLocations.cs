@@ -77,7 +77,7 @@ namespace GeneXus.Utils
 			get {return _authenticationMethod;}
 			set {_authenticationMethod = value;}
 		}
-		public string AcessToken
+		public string AccessToken
 		{
 			get { return _accessToken; }
 			set { _accessToken = value; }
