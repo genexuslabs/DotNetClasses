@@ -371,6 +371,10 @@ namespace GeneXus.Application
 					httpClient.AddHeader("Content-Type", _contentType);
 				}
 			}
+			if (this.Location.AuthenticationMethod == 4 && !String.IsNullOrEmpty(this.Location.AcessToken))
+			{
+				httpClient.AddHeader("Authorization", this.Location.AcessToken);
+			}
 			string serviceuri = ((this.Location.Secure > 0) ? "https" : "http") + "://" + this.Location.Host;
 			serviceuri += (this.Location.Port != 80) ? ":" + this.Location.Port.ToString() : String.Empty;
 			serviceuri += "/" + this.Location.BaseUrl.TrimEnd('/').TrimStart('/') + "/" + this.Location.ResourceName;
