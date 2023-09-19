@@ -16,6 +16,7 @@ namespace GeneXus.Utils
 		string _resourceName = "";
 		short _authentication;
 		short _authenticationMethod;
+		string _accessToken = "";
 		string _authenticationUser = "";
 		string _authenticationRealm = "";
 		string _authenticationPassword = "";
@@ -75,6 +76,11 @@ namespace GeneXus.Utils
 		{
 			get {return _authenticationMethod;}
 			set {_authenticationMethod = value;}
+		}
+		public string AcessToken
+		{
+			get { return _accessToken; }
+			set { _accessToken = value; }
 		}
 		public string AuthenticationUser
 		{
