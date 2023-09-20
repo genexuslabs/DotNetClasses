@@ -73,15 +73,17 @@ namespace com.genexus.reports
 		private Rectangle templateRectangle;
 		private float templatex, templatey;
 		private PdfFont templateFont;
+		private PdfFont defaultFont;
 		internal Dictionary<string, Image> documentImages;
-		TextAlignment justifiedType;
 		Barcode128 barcode;
-		int ASCENT_CHAR_A = 65;
-		float ITEXT_DEFAULT_UNDERLINE_THICKNESS = 0.75f;
+		private Boolean fontBold;
+		private Boolean fontItalic;
+
 		public PDFReportItextSharp7(String appPath) : base(appPath)
 		{
 			documentImages = new Dictionary<string, Image>();
 		}
+
 		protected override void init(ref int gxYPage, ref int gxXPage, int pageWidth, int pageLength)
 		{
 			this.pageSize = ComputePageSize(leftMargin, topMargin, pageWidth, pageLength, props.getBooleanGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER));
@@ -90,11 +92,6 @@ namespace com.genexus.reports
 				gxYPage = (int)(pageLength / GX_PAGE_SCALE_Y);
 			else
 				gxYPage = (int)(pageLength / GX_PAGE_SCALE_Y_OLD);
-
-			if (props.getBooleanGeneralProperty(Const.JUSTIFIED_TYPE_ALL, false))
-				justifiedType = TextAlignment.JUSTIFIED_ALL;
-			else
-				justifiedType = TextAlignment.JUSTIFIED;
 
 			writer = new PdfWriter(outputStream);
 			writer.SetCompressionLevel(CompressionConstants.BEST_COMPRESSION);
@@ -139,9 +136,8 @@ namespace com.genexus.reports
 	* @param hideCorners indicates whether corner triangles should be hidden when the side that joins them is hidden.
 	*/
 
-	private void drawRectangle(PdfCanvas cb, float x, float y, float w, float h,
-			int styleTop, int styleBottom, int styleRight, int styleLeft,
-			float radioTL, float radioTR, float radioBL, float radioBR, float penAux, bool hideCorners)
+	private void drawRectangle(PdfCanvas cb, float x, float y, float w, float h, int styleTop, int styleBottom, int styleRight, int styleLeft,
+								float radioTL, float radioTR, float radioBL, float radioBR, float penAux, bool hideCorners)
 		{
 
 			float[] dashPatternTop = getDashedPattern(styleTop);
@@ -291,8 +287,8 @@ namespace com.genexus.reports
 			cb.Stroke();
 
 		}
-		private void roundRectangle(PdfCanvas cb, float x, float y, float w, float h,
-			float radioTL, float radioTR, float radioBL, float radioBR)
+
+		private void roundRectangle(PdfCanvas cb, float x, float y, float w, float h, float radioTL, float radioTR, float radioBL, float radioBR)
 		{
 			//-------------------bottom line---------------------
 
@@ -333,13 +329,15 @@ namespace com.genexus.reports
 				cb.CurveTo(x, y + radioBL * b, x + radioBL * b, y, x + radioBL, y);
 			}
 		}
+
 		public override void GxDrawRect(int left, int top, int right, int bottom, int pen, int foreRed, int foreGreen, int foreBlue, int backMode, int backRed, int backGreen, int backBlue,
-			int styleTop, int styleBottom, int styleRight, int styleLeft, int cornerRadioTL, int cornerRadioTR, int cornerRadioBL, int cornerRadioBR)
+											int styleTop, int styleBottom, int styleRight, int styleLeft, int cornerRadioTL, int cornerRadioTR, int cornerRadioBL, int cornerRadioBR)
 		{
 			Color rectBackColor = new DeviceRgb(backRed, backGreen, backBlue);
 			Color rectForeColor = new DeviceRgb(foreRed, foreGreen, foreBlue);
 			GxDrawRect(left, top, right, bottom, pen, rectForeColor, backMode, rectBackColor, styleTop, styleBottom, styleRight, styleLeft, cornerRadioTL, cornerRadioTR, cornerRadioBL, cornerRadioBR);
 		}
+
 		void GxDrawRect(int left, int top, int right, int bottom, int pen, Color foreColor, int backMode, Color backColor,
 			int styleTop, int styleBottom, int styleRight, int styleLeft, int cornerRadioTL, int cornerRadioTR, int cornerRadioBL, int cornerRadioBR)
 		{
@@ -350,6 +348,7 @@ namespace com.genexus.reports
 			float bottomAux = (float)convertScale(bottom);
 			float leftAux = (float)convertScale(left);
 			float topAux = (float)convertScale(top);
+
 			GXLogging.Debug(log, "GxDrawRect -> (" + left + "," + top + ") - (" + right + "," + bottom + ")  BackMode: " + backMode + " Pen:" + pen + ",leftMargin:" + leftMargin);
 			cb.SaveState();
 
@@ -360,7 +359,6 @@ namespace com.genexus.reports
 			y2 = pageSize.GetTop() - topAux - topMargin - bottomMargin;
 
 			cb.SetLineWidth(penAux);
-
 			cb.SetLineCapStyle(PdfCanvasConstants.LineCapStyle.PROJECTING_SQUARE);
 
 			if (cornerRadioBL == 0 && cornerRadioBR == 0 && cornerRadioTL == 0 && cornerRadioTR == 0 && styleBottom == 0 && styleLeft == 0 && styleRight == 0 && styleTop == 0)
@@ -377,6 +375,7 @@ namespace com.genexus.reports
 					cb.SetFillColor(backColor);
 					cb.FillStroke();
 				}
+
 				cb.ClosePathStroke();
 			}
 			else
@@ -410,9 +409,7 @@ namespace com.genexus.reports
 				{
 					cb.SetStrokeColor(backColor);
 					cb.SetLineWidth(0);
-					roundRectangle(cb, x1, y1, w, h,
-						cRadioTL, cRadioTR,
-						cRadioBL, cRadioBR);
+					roundRectangle(cb, x1, y1, w, h, cRadioTL, cRadioTR, cRadioBL, cRadioBR);
 					cb.SetFillColor(backColor);
 					cb.FillStroke();
 					cb.SetLineWidth(penAux);
@@ -420,6 +417,7 @@ namespace com.genexus.reports
 				if (pen > 0)
 				{
 					//Rectangle edge
+					cb.SetFillColor(backColor);
 					cb.SetStrokeColor(foreColor);
 					drawRectangle(cb, x1, y1, w, h,
 						styleTop, styleBottom, styleRight, styleLeft,
@@ -471,6 +469,7 @@ namespace com.genexus.reports
 
 			cb.RestoreState();
 		}
+
 		public override void GxDrawBitMap(String bitmap, int left, int top, int right, int bottom, int aspectRatio)
 		{
 
@@ -545,7 +544,6 @@ namespace com.genexus.reports
 			{
 				GXLogging.Error(log, "GxDrawBitMap error", e);
 			}
-
 		}
 
 		public override void GxAttris(String fontName, int fontSize, bool fontBold, bool fontItalic, bool fontUnderline, bool fontStrikethru, int Pen, int foreRed, int foreGreen, int foreBlue, int backMode, int backRed, int backGreen, int backBlue)
@@ -562,6 +560,7 @@ namespace com.genexus.reports
 			GXLogging.Debug(log, "\\-> Font: " + fontName + " (" + fontSize + ")" + (fontBold ? " BOLD" : "") + (fontItalic ? " ITALIC" : "") + (fontStrikethru ? " Strike" : ""));
 			GXLogging.Debug(log, "\\-> Fore (" + foreRed + ", " + foreGreen + ", " + foreBlue + ")");
 			GXLogging.Debug(log, "\\-> Back (" + backRed + ", " + backGreen + ", " + backBlue + ")");
+
 			if (barcode128AsImage && fontName.ToLower().IndexOf("barcode 128") >= 0 || fontName.ToLower().IndexOf("barcode128") >= 0)
 			{
 				barcode = new Barcode128(pdfDocument);
@@ -574,6 +573,8 @@ namespace com.genexus.reports
 			this.fontUnderline = fontUnderline;
 			this.fontStrikethru = fontStrikethru;
 			this.fontSize = fontSize;
+			this.fontBold = fontBold;
+			this.fontItalic = fontItalic;
 			foreColor = new DeviceRgb(foreRed, foreGreen, foreBlue);
 			backColor = new DeviceRgb(backRed, backGreen, backBlue);
 
@@ -696,7 +697,7 @@ namespace com.genexus.reports
 				baseFont = CreateDefaultFont();
 			}
 		}
-		PdfFont defaultFont;
+
 		private PdfFont CreateDefaultFont()
 		{
 			if (defaultFont == null)
@@ -709,6 +710,7 @@ namespace com.genexus.reports
 
 			return PdfFontFactory.CreateFont("Helvetica", PdfEncodings.WINANSI, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
 		}
+
 		public override void setAsianFont(String fontName, String style)
 		{
 			//LoadAsianFontsDll();
@@ -734,38 +736,40 @@ namespace com.genexus.reports
 				GXLogging.Debug(log, "setAsianFont io error", ioe);
 			}
 		}
+
 		public override void GxDrawText(String sTxt, int left, int top, int right, int bottom, int align, int htmlformat, int border, int valign)
 		{
 			GXLogging.Debug(log, "GxDrawText, text:" + sTxt);
+
 			bool printRectangle = false;
 			if (props.getBooleanGeneralProperty(Const.BACK_FILL_IN_CONTROLS, true))
 				printRectangle = true;
 
 			if (printRectangle && (border == 1 || backFill))
-			{
 				GxDrawRect(left, top, right, bottom, border, foreColor, backFill ? 1 : 0, backColor, 0, 0, 0, 0, 0, 0, 0, 0);
-			}
-			PdfCanvas canvas = new PdfCanvas(pdfPage);
 
-			//int arabicOptions = 0;
-			canvas.SetFontAndSize(this.baseFont, fontSize);
-			canvas.SetFillColor(foreColor);
+			PdfCanvas canvas = new PdfCanvas(pdfPage);
 			sTxt = sTxt.TrimEnd(TRIM_CHARS);
 
-			float captionHeight = baseFont.GetAscent(ASCENT_CHAR_A, fontSize);
+			PdfFont font = baseFont;
+			canvas.SetFontAndSize(this.baseFont, fontSize);
+			canvas.SetFillColor(foreColor);
+			float captionHeight = baseFont.GetAscent(sTxt, fontSize) / 1000;
 			float rectangleWidth = baseFont.GetWidth(sTxt, fontSize);
-
+			float lineHeight = (1 / 1000) * (baseFont.GetAscent(sTxt, fontSize) - baseFont.GetDescent(sTxt, fontSize)) + (fontSize * 1.2f);
+			float textBlockHeight = (float)convertScale(bottom - top);
+			int linesCount = (int)(textBlockHeight / lineHeight);
 			int bottomOri = bottom;
 			int topOri = top;
 
-			float bottomAux = (float)convertScale(bottom) - ((float)convertScale(bottom - top) - captionHeight) / 2;
-			//Space between the text and the edge of the textblock is substracted from bottom
-			//Because coordinates x,y for a genexus report corresponds to the box containing the text,
-			//and itext expects x,y of the text itself.
-			//The box is bigger thant the text (depends on the type of font)
-			float topAux = (float)convertScale(top) + ((float)convertScale(bottom - top) - captionHeight) / 2;
+			if (linesCount >= 2 && !((align & 16) == 16) && htmlformat != 1)
+				if (valign == (int)VerticalAlign.TOP)
+					bottom = top + (int)reconvertScale(lineHeight);
+				else if (valign == (int)VerticalAlign.BOTTOM)
+					top = bottom - (int)reconvertScale(lineHeight);
 
-			float startHeight = bottomAux - topAux - captionHeight;
+			float bottomAux = (float)convertScale(bottom) - ((float)convertScale(bottom - top) - captionHeight) / 2;
+			float topAux = (float)convertScale(top) + ((float)convertScale(bottom - top) - captionHeight) / 2; ;
 
 			float leftAux = (float)convertScale(left);
 			float rightAux = (float)convertScale(right);
@@ -890,127 +894,85 @@ namespace com.genexus.reports
 			else
 			{
 
-				if (backFill)
-				{
-					Rectangle rectangle = new Rectangle(0, 0);
-					//Text with background
-					switch (alignment)
-					{
-						case 1: // Center Alignment Element.ALIGN_CENTER
-							rectangle = rectangle.SetBbox((float)(leftAux + rightAux) / 2 + leftMargin - rectangleWidth / 2, (float)this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, (leftAux + rightAux) / 2 + leftMargin + rectangleWidth / 2, (float)this.pageSize.GetTop() - topAux - topMargin - bottomMargin);
-							break;
-						case 2: // Right Alignment  Element.ALIGN_RIGHT
-							rectangle = rectangle.SetBbox(rightAux + leftMargin - rectangleWidth, (float)this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, rightAux + leftMargin, (float)this.pageSize.GetTop() - topAux - topMargin - bottomMargin);
-							break;
-						case 0: // Left Alignment Element.ALIGN_LEFT
-							rectangle = rectangle.SetBbox(leftAux + leftMargin, (float)this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, leftAux + leftMargin + rectangleWidth, (float)this.pageSize.GetTop() - topAux - topMargin - bottomMargin);
-							break;
-					}
-					canvas.SetFillColor(backColor);
-					try
-					{
-						canvas.Rectangle(rectangle);
-						canvas.Fill();
-					}
-					catch (PdfException de)
-					{
-						GXLogging.Error(log, "GxDrawText error", de);
-					}
-				}
-
-				Canvas cb = new Canvas(canvas, new Rectangle(leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, rightAux - leftAux, bottomAux - topAux));
-
-				//Underlined text
-				if (fontUnderline)
-				{
-					cb.SetUnderline();
-				}
-				//Crossed text
-				if (fontStrikethru)
-				{
-					cb.SetUnderline(ITEXT_DEFAULT_UNDERLINE_THICKNESS, fontSize / 2);
-				}
-
 				if (sTxt.Trim().ToLower().Equals("{{pages}}"))
 				{
-					if (!templateCreated)
-					{
+					GXLogging.Debug(log, "GxDrawText addTemplate-> (" + (leftAux + leftMargin) + "," + (this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin) + ") ");
+					templateRectangle = new Rectangle(leftAux + leftMargin, (float)this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, rightAux + leftMargin, (float)this.pageSize.GetTop() - topAux - topMargin - bottomMargin);
 
-						GXLogging.Debug(log, "GxDrawText addTemplate-> (" + (leftAux + leftMargin) + "," + (this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin) + ") ");
-						templateRectangle = new Rectangle(leftAux + leftMargin, (float)this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, rightAux + leftMargin, (float)this.pageSize.GetTop() - topAux - topMargin - bottomMargin);
-
-						templatex = leftAux + leftMargin;
-						templatey = this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin;
-						templateFont = this.baseFont;
-						templateFontSize = fontSize;
-						templateColorFill = foreColor;
-						templateAlignment = alignment;
-						templateCreated = true;
-					}
-					return;
+					templatex = leftAux + leftMargin;
+					templatey = this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin;
+					templateFont = this.baseFont;
+					templateFontSize = fontSize;
+					templateColorFill = foreColor;
+					templateAlignment = alignment;
+					templateCreated = true;
 				}
 
 				float textBlockWidth = rightAux - leftAux;
-				float TxtWidth = this.baseFont.GetWidth(sTxt, fontSize);
-				bool justified = (alignment == 3) && textBlockWidth < TxtWidth;
-				bool wrap = (align & 16) == 16;
+				float TxtWidth = baseFont.GetWidth(sTxt, fontSize);
+				Boolean justified = (alignment == 3) && textBlockWidth < TxtWidth;
+				Boolean wrap = ((align & 16) == 16);
+
+				float leading = (float)Convert.ToDouble(props.getGeneralProperty(Const.LEADING), CultureInfo.InvariantCulture.NumberFormat);
+				Style style = new Style();
+				if (fontBold) style.SetBold();
+				if (fontItalic) style.SetItalic();
+				if (fontStrikethru) style.SetUnderline(fontSize / 6, fontSize / 2);
+				if (fontUnderline) style.SetUnderline(fontSize / 6, 0);
+				style.SetFont(font);
+				style.SetFontSize(fontSize);
+				style.SetFontColor(foreColor);
 
 				if (wrap || justified)
 				{
 					bottomAux = (float)convertScale(bottomOri);
 					topAux = (float)convertScale(topOri);
 
-					float leading = (float)Convert.ToDouble(props.getGeneralProperty(Const.LEADING), CultureInfo.InvariantCulture.NumberFormat);
-					Paragraph p = new Paragraph(sTxt).SetFont(baseFont).SetFontSize(fontSize);
-					if (fontStyle!=null)
-						p.AddStyle(fontStyle);
-
 					float llx = leftAux + leftMargin;
-					float lly = (float)this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin;
+					float lly = this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin;
 					float urx = rightAux + leftMargin;
-					float ury = (float)this.pageSize.GetTop() - topAux - topMargin - bottomMargin;
+					float ury = this.pageSize.GetTop() - topAux - topMargin - bottomMargin;
 
-					DrawColumnText(canvas, llx, lly, urx, ury, p, leading, runDirection, valign, alignment, wrap);
-
+					DrawTextColumn(llx, lly, urx, ury, leading, sTxt, valign, alignment, style, wrap);
 				}
-				else //no wrap
+				else
 				{
-					startHeight = 0;
-					if (!autoResize)
+					try
 					{
-						//It removes the last char from the text until it reaches a string whose width is passed only by one character
-						// of the width of the textblock. That is the most similar text to design in genexus
-						String newsTxt = sTxt;
-						while (TxtWidth > textBlockWidth && (newsTxt.Length - 1 >= 0))
+						if (!autoResize)
 						{
-							sTxt = newsTxt;
-							newsTxt = newsTxt.Remove(newsTxt.Length - 1, 1);
-							TxtWidth = this.baseFont.GetWidth(newsTxt, fontSize);
+							String newsTxt = sTxt;
+							while (TxtWidth > textBlockWidth && (newsTxt.Length - 1 >= 0))
+							{
+								sTxt = newsTxt;
+								newsTxt = newsTxt.Substring(0, newsTxt.Length - 1);
+								TxtWidth = this.baseFont.GetWidth(newsTxt, fontSize);
+							}
+						}
+
+						Paragraph p = new Paragraph(sTxt);
+						p.AddStyle(style);
+
+						switch (alignment)
+						{
+							case 1: // Center Alignment
+								document.ShowTextAligned(p, ((leftAux + rightAux) / 2) + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, this.getPage(), TextAlignment.CENTER, VerticalAlignment.MIDDLE, 0);
+								break;
+							case 2: // Right Alignment
+								document.ShowTextAligned(p, rightAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, this.getPage(), TextAlignment.RIGHT, VerticalAlignment.MIDDLE, 0);
+								break;
+							case 0: // Left Alignment
+							case 3: // Justified, only one text line
+								document.ShowTextAligned(p, leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, this.getPage(), TextAlignment.LEFT, VerticalAlignment.MIDDLE, 0);
+								break;
 						}
 					}
-					Text text = new Text(sTxt).SetFont(baseFont).SetFontSize(fontSize).SetHorizontalAlignment(HorizontalAlignment.LEFT);
-					if (fontStyle != null)
-						text.AddStyle(fontStyle);
-
-					Paragraph phrase = new Paragraph(text).SetVerticalAlignment(VerticalAlignment.TOP).SetFontColor(foreColor);
-					switch (alignment)
+					catch (Exception e)
 					{
-						case 1: // Center Alignment
-							cb.ShowTextAligned(phrase, ((leftAux + rightAux) / 2) + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin + startHeight, TextAlignment.CENTER);//0, runDirection, arabicOptions);
-							break;
-						case 2: // Right Alignment
-							cb.ShowTextAligned(phrase, rightAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin + startHeight, TextAlignment.RIGHT);//0, runDirection, arabicOptions);
-							break;
-						case 0: // Left Alignment
-							cb.ShowTextAligned(phrase, leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin + startHeight, TextAlignment.LEFT);//0, runDirection, arabicOptions);
-							break;
-						case 3: // Justified, only one text line
-							cb.ShowTextAligned(phrase, leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin + startHeight, justifiedType);//0, runDirection, arabicOptions);
-							break;
+						GXLogging.Error(log, "GxDrawText failed to draw simple text: ", e);
 					}
 				}
 			}
-			
 		}
 
 		private void processHTMLElement(Canvas cb, TextAlignment colAlignment, Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement)
@@ -1041,11 +1003,16 @@ namespace com.genexus.reports
 				return;
 			}
 
-			Paragraph p = blockElement as Paragraph;
-			if (p != null)
+			List list = blockElement as List;
+			if (list != null)
 			{
-				p.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add(p);
+				// This is a hack for the specific case of rendering a list as cb.Add(list) fails to add numeration to each element but document.Add(list) fails to
+				// consider the numeration of each element as part of it. Solution is to use document.Add(list) and move the list to the right.
+				float numWidth = new Paragraph("1. ").CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
+				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX() + numWidth, currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+
+				list.SetTextAlignment(colAlignment);
+				document.Add(list);
 				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
 				return;
 			}
@@ -1060,16 +1027,11 @@ namespace com.genexus.reports
 				return;
 			}
 
-			List list = blockElement as List;
-			if (list != null)
+			Paragraph p = blockElement as Paragraph;
+			if (p != null)
 			{
-				// This is a hack for the specific case of rendering a list as cb.Add(list) fails to add numeration to each element but document.Add(list) fails to
-				// consider the numeration of each element as part of it. Solution is to use document.Add(list) and move the list to the right.
-				float numWidth = new Paragraph("1. ").CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
-				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX() + numWidth, currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-
-				list.SetTextAlignment(colAlignment);
-				document.Add(list);
+				p.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				document.Add(p);
 				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
 				return;
 			}
@@ -1093,6 +1055,7 @@ namespace com.genexus.reports
 
 		private class YPosition
 		{
+			//Utility class used to know where the cursor is left after each block element (HTML tag) is rendered
 			public YPosition(float initialYPosition)
 			{
 				CurrentYPosition = initialYPosition;
@@ -1109,7 +1072,8 @@ namespace com.genexus.reports
 				default: return null;
 			}
 		}
-		private VerticalAlignment GetVericalAlignment(float valign)
+
+		private VerticalAlignment GetVerticalAlignment(float valign)
 		{
 			if (valign == (int)VerticalAlign.TOP)
 				return VerticalAlignment.TOP;
@@ -1117,8 +1081,8 @@ namespace com.genexus.reports
 				return VerticalAlignment.BOTTOM;
 			else
 				return VerticalAlignment.MIDDLE;
-
 		}
+
 		private TextAlignment? GetTextAlignment(int alignment)
 		{
 			switch (alignment)
@@ -1131,25 +1095,28 @@ namespace com.genexus.reports
 			return null;
 		}
 
-		void DrawColumnText(PdfCanvas pdfCanvas, float llx, float lly, float urx, float ury, Paragraph p, float leading, int runDirection, int valign, int alignment, Boolean wrap)
+		void DrawTextColumn(float llx, float lly, float urx, float ury, float leading, String text, int valign, int alignment, Style style, Boolean wrap)
 		{
-			if (VerticalAlign.MIDDLE.Equals(valign))
+			Paragraph p = new Paragraph(text);
+
+			if (valign == (int)VerticalAlign.MIDDLE)
 			{
 				ury = ury + leading;
 				p.SetVerticalAlignment(VerticalAlignment.MIDDLE);
 			}
-			else if (VerticalAlign.BOTTOM.Equals(valign))
+			else if (valign == (int)VerticalAlign.BOTTOM)
 			{
 				ury = ury + leading;
 				p.SetVerticalAlignment(VerticalAlignment.BOTTOM);
 			}
-			else if (VerticalAlign.TOP.Equals(valign))
+			else if (valign == (int)VerticalAlign.TOP)
 			{
 				ury = ury + leading / 2;
 				p.SetVerticalAlignment(VerticalAlignment.TOP);
 			}
 			Rectangle rect = new Rectangle(llx, lly, urx - llx, ury - lly);
 			p.SetTextAlignment(GetTextAlignment(alignment));
+			p.AddStyle(style);
 
 			if (wrap)
 			{
@@ -1169,6 +1136,7 @@ namespace com.genexus.reports
 			{
 				try
 				{
+					PdfCanvas pdfCanvas = new PdfCanvas(pdfPage);
 					Canvas canvas = new Canvas(pdfCanvas, rect);
 					canvas.Add(p);
 					canvas.Close();
