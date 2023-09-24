@@ -16,7 +16,8 @@ namespace GeneXus.Utils
 	[SecuritySafeCritical]
 	public class GxQueueMessage
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GxQueueMessage));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GxQueueMessage>();
+
 		int priority;
 
 		Message message;
@@ -207,7 +208,7 @@ namespace GeneXus.Utils
 	[SecuritySafeCritical]
 	public class GxQueue
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxQueue));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxQueue>();
 
 		string provider;
 		string user;

@@ -142,7 +142,7 @@ namespace GeneXus.Data.NTier
 	public class DataStoreHelperBase
 	{
 		/*DO NOT ADD INSTANCE VARIABLES IN THIS CLASS, THIS IS REFERENCED BY THE STATIC CURSORDEF ARRAY IN THE XX___DEFAULT, ALL THE VARIABLES HERE LIVE FOREVER*/
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(DataStoreHelperBase));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<DataStoreHelperBase>();
 		private const string AND = " and ";
 		private const string WHERE = " WHERE ";
 
@@ -342,7 +342,8 @@ namespace GeneXus.Data.NTier
 
 	public class DataStoreProvider : IDataStoreProviderBase,IDataStoreProvider
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.NTier.DataStoreProvider));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.NTier.DataStoreProvider>();
+
 		ICursor[] _cursor;
 		Object[][] results;
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]

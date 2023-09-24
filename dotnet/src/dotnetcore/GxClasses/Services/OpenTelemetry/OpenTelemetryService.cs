@@ -11,7 +11,8 @@ namespace GeneXus.Services.OpenTelemetry
 
 	public static class OpenTelemetryService
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(OpenTelemetryService));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+
 		private static string OPENTELEMETRY_SERVICE = "Observability";
 		public static string GX_ACTIVITY_SOURCE_NAME = "GeneXus.Tracing";
 		
@@ -49,7 +50,7 @@ namespace GeneXus.Services.OpenTelemetry
 				bool started = provider.InstrumentAspNetCoreApplication(services);
 				if (started)
 				{
-					log.Info("OpenTelemetry instrumentation started");
+					GXLogging.Info(log, "OpenTelemetry instrumentation started");
 				}
 			}
 		}

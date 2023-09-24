@@ -18,7 +18,7 @@ namespace GeneXus.Http.WebSocket
 {
 	public class WSHandler: WebSocketHandler, IGXWebSocketAsync
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WSHandler));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WSHandler>();
 		private const string GX_NOTIFICATIONINFO_NAME = "GeneXus.Core.genexus.server.SdtNotificationInfo";
 		protected static WebSocketConnectionManager WebSocketConnectionManager = new WebSocketConnectionManager();
 

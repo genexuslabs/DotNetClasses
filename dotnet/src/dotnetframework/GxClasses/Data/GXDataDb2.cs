@@ -116,7 +116,8 @@ namespace GeneXus.Data
 	public class GxDb2 : GxDataRecord
 	{
 
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+
 		public static string SQL_NULL_DATE_10="0000-00-00";
 		public static string SQL_NULL_DATE_8="00000000";
         static Assembly _db2Assembly;
@@ -523,7 +524,7 @@ namespace GeneXus.Data
 		private static int changeConnState=-1;
 		private static int changeConnStateExecuting = -1;
 		private int openDataReaders;
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		public Db2ConnectionWrapper()
 		{
             try

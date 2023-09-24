@@ -267,7 +267,7 @@ namespace GeneXus.Utils
 
 	public class FileIO
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.FileIO));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.FileIO>();
 		const short GX_ASCDEL_BADFMTSTR = -10;
 		const short GX_ASCDEL_WRITEERROR = -9;
 		const short GX_ASCDEL_INVALIDDATE = -7;

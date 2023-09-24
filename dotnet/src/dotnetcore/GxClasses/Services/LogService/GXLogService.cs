@@ -1,46 +1,25 @@
 using System;
-using GeneXus.Application;
-using GxClasses.Helpers;
+using GeneXus.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GeneXus.Services.Log
 {
-	public interface IGXLogProvider : ILoggerFactory
-	{
-		ILoggerFactory GetLoggerFactory();
-	}
-
 	public static class GXLogService
 	{
-		private static string LOG_SERVICE = "Log";
-	
+		private static string AZURE_APPLICATION_INSIGHTS_LOG = "AZUREAPPLICATIONINSIGHTS";
+		private const string LOG_OUTPUT_ENVVAR = "GX_LOG_OUTPUT";
 		public static ILoggerFactory GetLogFactory()
 		{
-			IGXLogProvider gxLogProvider = null;
-			GXService providerService = GXServices.Instance?.Get(LOG_SERVICE);
+			string logoutput = Environment.GetEnvironmentVariable(LOG_OUTPUT_ENVVAR);
+			if (logoutput == null) { 
 
-			if (providerService != null)
-			{
-				try
-				{
-#if !NETCORE
-					Type type = Type.GetType(providerService.ClassName, true, true);
-#else
-					Type type = AssemblyLoader.GetType(providerService.ClassName);
-#endif
-					gxLogProvider = (IGXLogProvider)Activator.CreateInstance(type, new object[] { providerService });
-					return gxLogProvider.GetLoggerFactory();
-				}
-				catch (Exception e)
-				{
-					throw e;
-				}
+				Config.GetValueOf("LOG_OUTPUT", out string logProvider);
+				logoutput = logProvider;
 			}
+			if (logoutput == AZURE_APPLICATION_INSIGHTS_LOG)
+				return GeneXus.Services.Log.AzureAppInsightsLogProvider.GetLoggerFactory();
 			else
-			{
 				return null;
-			}
-			
 		}
 	}
 }

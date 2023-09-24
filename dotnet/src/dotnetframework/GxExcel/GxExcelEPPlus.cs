@@ -10,9 +10,9 @@ namespace GeneXus.Office.ExcelGXEPPlus
 
 	public class ExcelDocument : IGxError, IExcelDocument
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
-        private ExcelPackage p;
+		private ExcelPackage p;
         public string dateFormat = "m/d/yy h:mm";
 		public bool OpenFromTemplate { get; set;}
 
@@ -357,9 +357,9 @@ namespace GeneXus.Office.ExcelGXEPPlus
     public class ExcelCells : IExcelCells
     {
 
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
-        private IGxError m_errAccess;
+		private IGxError m_errAccess;
         private int pWidth, pHeight;
         private int pColPos;
         private ExcelWorksheet pSelectedSheet;

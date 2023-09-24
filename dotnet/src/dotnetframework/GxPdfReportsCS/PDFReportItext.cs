@@ -37,9 +37,7 @@ namespace com.genexus.reports
 	public class PDFReportItextSharp : IReportHandler
 	{
 		private int lineHeight, pageLines;
-
-		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		private iTextSharp.text.Rectangle pageSize;   
 		private BaseFont baseFont;
 		Barcode barcode = null;
@@ -2362,7 +2360,7 @@ namespace com.genexus.reports
 
 	public class ParseINI
 	{
-		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
 		private static int MAX_LINE_LENGTH=255; 
 		private static String GENERAL="&General&"; 
@@ -2889,9 +2887,7 @@ namespace com.genexus.reports
 
 	public class NativeSharpFunctionsMS 
 	{
-
-		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		public int shellExecute(String cmd, String fileName)
 		{
 			Process p = new Process();
@@ -3166,7 +3162,7 @@ namespace com.genexus.reports
 
 	public class MSPDFFontDescriptor 
 	{
-		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
 		private static String TRUE_TYPE_REGISTRY_SIGNATURE = "(TrueType)"; 
 		private static String REGISTRY_FONTS_ENTRY = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Fonts"; // Fonts NT/2000

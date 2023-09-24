@@ -55,7 +55,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\Encryption.cs" Link="Helpers\Encryption.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\EnvVarReader.cs" Link="Helpers\EnvVarReader.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXFileWatcher.cs" Link="Helpers\GXFileWatcher.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXLogging.cs" Link="Helpers\GXLogging.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GxObjectProperties.cs" Link="Helpers\GxObjectProperties.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXRestAPIClient.cs" Link="Helpers\GXRestAPIClient.cs" /> 
     <Compile Include="..\..\dotnetframework\GxClasses\Model\GXBaseObject.cs" Link="Model\GXBaseObject.cs" />
@@ -78,6 +77,7 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxHttpClient.cs" Link="Domain\GxHttpClient.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Core\Web\GxHttpServer.cs" Link="Core\Web\GxHttpServer.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Domain\GxLocations.cs" Link="Domain\GxLocations.cs" />
+    <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXLogging.cs" Link="Helpers\GXLogging.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXMetadata.cs" Link="Helpers\GXMetadata.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Printer\GxPrinter.cs" Link="Printer\GxPrinter.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Model\gxproc.cs" Link="Model\gxproc.cs" />

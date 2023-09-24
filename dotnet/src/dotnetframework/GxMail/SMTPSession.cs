@@ -16,7 +16,7 @@ namespace GeneXus.Mail.Internals
     
     internal class SMTPSession: ISMTPSession
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(SMTPSession));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<SMTPSession>();
         #region Mail Constants
         private const int CR = 13;
         private const int LF = 10;

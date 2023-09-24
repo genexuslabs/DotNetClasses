@@ -10,7 +10,7 @@ namespace GeneXus.Mail.Internals
 	
 	internal class OutlookSession
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(OutlookSession));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<OutlookSession>();
 
 		private enum RecipientType
 		{

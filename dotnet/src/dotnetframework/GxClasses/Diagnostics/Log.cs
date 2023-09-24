@@ -1,7 +1,10 @@
-using System;
 using GeneXus.Attributes;
 using GeneXus.Configuration;
 using log4net;
+#if NETCORE
+using GeneXus.Services.Log;
+using Microsoft.Extensions.Logging;
+#endif
 
 namespace GeneXus.Diagnostics
 {
@@ -19,22 +22,28 @@ namespace GeneXus.Diagnostics
 			Fatal = 30
 		}
 #if NETCORE
-		static readonly string defaultRepository = LogManager.GetRepository(System.Reflection.Assembly.GetEntryAssembly()).Name;
-#else
-		static readonly string defaultRepository = LogManager.GetRepository().Name;
+		public static ILoggerFactory _instance = GXLogService.GetLogFactory();
 #endif
-		public static string defaultUserLogNamespace = Configuration.Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
-
-		static readonly ILog globalLog = LogManager.GetLogger(defaultRepository, defaultUserLogNamespace);
-
-		private static ILog GetLogger(string topic)
+	
+		public static IGXLogger GetLogger(string topic)
 		{
-			if (!String.IsNullOrEmpty(topic))
+			string defaultUserLogNamespace = Configuration.Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
+			string loggerName = defaultUserLogNamespace;
+			if (!string.IsNullOrEmpty(topic))
 			{
-				string loggerName = topic.StartsWith("$") ? topic.Substring(1) : string.Format("{0}.{1}", defaultUserLogNamespace, topic.Trim());
-				return LogManager.GetLogger(defaultRepository, loggerName);
+				loggerName = topic.StartsWith("$") ? topic.Substring(1) : string.Format("{0}.{1}", defaultUserLogNamespace, topic.Trim());
 			}
-			return globalLog;
+#if NETCORE
+			if (_instance != null)
+			{
+				return new GXLoggerMsExtensions(_instance.CreateLogger(loggerName));
+			}
+			string defaultRepository = LogManager.GetRepository(System.Reflection.Assembly.GetEntryAssembly()).Name;
+#else
+			string defaultRepository = LogManager.GetRepository().Name;
+#endif
+			return new GXLoggerLog4Net(log4net.LogManager.GetLogger(defaultRepository, loggerName));
+			
 		}
 
 		public static void Write(int logLevel, string message, string topic)
@@ -44,7 +53,7 @@ namespace GeneXus.Diagnostics
 
 		public static void Write(string message, string topic, int logLevel)
 		{
-			ILog log = GetLogger(topic);
+			IGXLogger log = GetLogger(topic);
 			LogLevel logLvl = (LogLevel)logLevel;
 
 			switch (logLvl)
@@ -52,57 +61,63 @@ namespace GeneXus.Diagnostics
 				case LogLevel.Off: 
 					break;
 				case LogLevel.Trace:
-					log.Debug(message);
+					GXLogging.Trace(log, message);
 					break;
 				case LogLevel.Debug:
-					log.Debug(message);
+					GXLogging.Debug(log, message);
 					break;
 				case LogLevel.Info:
-					log.Info(message);
+					GXLogging.Info(log, message);
 					break;
 				case LogLevel.Warn:
-					log.Warn(message);
+					GXLogging.Warn(log, message);
 					break;
 				case LogLevel.Error:
-					log.Error(message);
+					GXLogging.Error(log, message);
 					break;
 				case LogLevel.Fatal:
-					log.Fatal(message);
+					GXLogging.Critical(log, message);
 					break;
 				default:
-					log.Debug(message);
+					GXLogging.Debug(log, message);
 					break;
 			}			
 		}
 		
 		public static void Write(string message, string topic = "")
 		{
-			GetLogger(topic).Debug(message);
+			IGXLogger log = GetLogger(topic);
+			GXLogging.Debug(log, message);
 		}
 		
 		public static void Fatal(string message, string topic = "")
 		{
-			GetLogger(topic).Fatal(message);
+			IGXLogger log = GetLogger(topic);
+			GXLogging.Critical(log, message);
 		}
 
 		public static void Error(string message, string topic = "")
 		{
-			GetLogger(topic).Error(message);
+			IGXLogger log = GetLogger(topic);
+			GXLogging.Error(log, message);
 		}
 
 		public static void Warning(string message, string topic = "")
 		{
-			GetLogger(topic).Warn(message);
+			IGXLogger log = GetLogger(topic);
+			GXLogging.Warn(log, message);
 		}
 
 		public static void Info(string message, string topic = "")
 		{
-			GetLogger(topic).Info(message);
+			IGXLogger log = GetLogger(topic);
+			GXLogging.Info(log, message);
 		}
 
 		public static void Debug(string message, string topic = "")
 		{
-			GetLogger(topic).Debug(message);
+			IGXLogger log = GetLogger(topic);
+			GXLogging.Debug(log, message);
 		}
 	}
 }

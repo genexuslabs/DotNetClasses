@@ -33,7 +33,7 @@ namespace GeneXus.Utils
 
 	class SQLGeographyWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.SQLGeographyWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.SQLGeographyWrapper>();
 		static Assembly _geoAssembly;
 		public const string SqlGeographyClass = "Microsoft.SqlServer.Types.SqlGeography";
 		public const string SqlGeometryClass = "Microsoft.SqlServer.Types.SqlGeometry";
@@ -152,7 +152,7 @@ namespace GeneXus.Utils
 	[DataContract]
 	public class Geospatial : IGeographicNative
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.Geospatial));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.Geospatial>();
 
 		internal const string EMPTY_GEOMETRY = "GEOMETRYCOLLECTION EMPTY";
 		const string EMPTY_GEOGRAPHY = "GEOGRAPHY EMPTY";

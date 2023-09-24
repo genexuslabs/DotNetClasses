@@ -204,7 +204,7 @@ namespace GeneXus.Data.NTier.ADO
     }
     public class GXFatFieldGetter : IFieldGetter
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.NTier.ADO.GXFatFieldGetter));
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.NTier.ADO.GXFatFieldGetter>();
         IGxDbCommand _gxDbCommand;
         IDataReader _DR; 
         public GXFatFieldGetter(GxCommand gxDbCommand)
@@ -499,7 +499,7 @@ namespace GeneXus.Data.NTier.ADO
     }
     public class GXFatFieldSetter : IFieldSetter
     {
-		protected static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXFatFieldSetter));
+		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFatFieldSetter>();
 		GxCommand _gxDbCommand;
         public GXFatFieldSetter(GxCommand gxDbCommand)
         {
@@ -792,7 +792,7 @@ namespace GeneXus.Data.NTier.ADO
 	}
     public class Cursor : ICursor
     {
-        protected static readonly ILog log = log4net.LogManager.GetLogger(typeof(Cursor));
+        protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<Cursor>();
         protected int _state = 0;   
         protected string _name;
         protected string _stmt;

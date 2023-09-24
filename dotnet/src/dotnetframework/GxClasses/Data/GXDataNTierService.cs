@@ -65,7 +65,7 @@ namespace GeneXus.Data.NTier
 
 	public class GxServiceFactory
 	{
-		protected static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
 		public static GxService Create(string id, string providerId, string serviceClass)		
 		{
@@ -75,7 +75,7 @@ namespace GeneXus.Data.NTier
 
 	public class GxService : GxDataRecord
 	{
-		protected static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		private Type m_ServiceType;
 		private CursorDef m_CursorDef;
 
@@ -316,8 +316,7 @@ namespace GeneXus.Data.NTier
 
 	sealed public class ServiceConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		public ServiceConnectionWrapper(Type runtimeClassType, String connectionString, GxConnectionCache connCache, IsolationLevel isolationLevel, String dataSource)
 		{
 			try

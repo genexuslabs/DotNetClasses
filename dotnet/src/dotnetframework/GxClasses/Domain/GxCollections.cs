@@ -798,8 +798,8 @@ namespace GeneXus.Utils
 
 	public class GxObjectCollectionBase : GxSimpleCollection<object>
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GxObjectCollectionBase));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GxObjectCollectionBase>();
+		
 		public string _containedName;
 		public string _containedXmlNamespace;
 		public string _containedType;
@@ -1038,7 +1038,7 @@ namespace GeneXus.Utils
 	[XmlType(IncludeInSchema = false)]
 	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable, IGXAssigned
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GxUserType));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GxUserType>();
 		protected GXProperties dirties = new GXProperties();
 
 		static object setupChannelObject = null;

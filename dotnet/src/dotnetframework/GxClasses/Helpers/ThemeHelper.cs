@@ -10,7 +10,7 @@ namespace GeneXus.Helpers
 {
 	public sealed class ThemeHelper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Helpers.ThemeHelper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Helpers.ThemeHelper>();
 		private static ConcurrentDictionary<string, ThemeData> m_themes = new ConcurrentDictionary<string, ThemeData>();
 		private static ThemeData CreateDefaultThemeData(string themeName)
 		{

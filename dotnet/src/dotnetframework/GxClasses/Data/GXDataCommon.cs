@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Text;
 using System.Threading;
-using log4net;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;
@@ -297,7 +296,8 @@ namespace GeneXus.Data
 	public abstract class GxDataRecord : IGxDataRecord
 	{
 
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxDataRecord));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxDataRecord>();
+	
 		public static int RETRY_SLEEP = 500; //500 milliseconds.
 		protected string m_connectionString;
 		protected string m_datasource;
@@ -1188,8 +1188,8 @@ namespace GeneXus.Data
 	public class SqlUtil
 	{
 		public static Hashtable mapping;
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.SqlUtil));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.SqlUtil>();
+		
 		public static string SqlTypeToDbType(SqlParameter parameter)
 		{
 			SqlDbType type = parameter.SqlDbType;
@@ -1464,8 +1464,7 @@ namespace GeneXus.Data
 
 	public class GxSqlDataReader : GxDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxSqlDataReader));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxSqlDataReader>();
 		public GxSqlDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, ushort fetchSize,bool forFirst, int handle, bool withCached, SlidingTime expiration, bool dynStmt):base(connManager, dr, connection, parameters,
 			stmt, fetchSize, forFirst, handle, withCached, expiration, dynStmt)
@@ -1583,7 +1582,7 @@ namespace GeneXus.Data
 	}
 	public class GxSqlServer : GxDataRecord
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxSqlServer));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxSqlServer>();
 
 		private static int MAX_NET_DECIMAL_PRECISION = 28;
 		private static int MAX_GX_DECIMAL_SCALE = 15;
@@ -2168,7 +2167,7 @@ namespace GeneXus.Data
 	
 	public class GxDataReader: IDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDataReader>();
 		protected IDataReader reader;
 		protected GxParameterCollection parameters;
 		protected int fetchSize;
@@ -2541,7 +2540,8 @@ namespace GeneXus.Data
 
 	public class GxConnectionCache 
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxConnectionCache));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxConnectionCache>();
+		
 		private static  int MAX_SIZE=Preferences.GetMaximumOpenCursors();
 		
 		private SqlCommand fetchCommand;
@@ -2647,6 +2647,7 @@ namespace GeneXus.Data
 			if (!preparedStmtCache.TryGetValue(stmt, out s))
 			{
 				GXLogging.Info(log, "AddPreparedStmt, totalCachedStmtCursors:" + totalCachedCursors + ", cursorId: " + cursorId + ", stmt:" + stmt);
+				//GXLogging.Info(log, "AddPreparedStmt, totalCachedStmtCursors: {totalCachedCursors} cursorId:  {cursorId}  stmt {stmt}",totalCachedCursors.ToString(),cursorId.ToString(),stmt);
 				totalCachedCursors++;
 				CheckCacheSize();
 
@@ -3130,7 +3131,8 @@ namespace GeneXus.Data
 
 	public class GxPreparedStatementCache : Dictionary<string, GxItemStmt>
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxPreparedStatementCache));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxPreparedStatementCache>();
+
 		private IGxConnection conn;
 
 		public GxPreparedStatementCache(IGxConnection connection, int maxSize):base(maxSize)
@@ -3183,7 +3185,7 @@ namespace GeneXus.Data
 
 	public class GxSqlCursorDataReader: IDataReader
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxSqlCursorDataReader));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxSqlCursorDataReader>();
 		private static int STARTPOS = -1;
 		private int pos= STARTPOS;
 		private ushort fetchSize;
@@ -4124,7 +4126,7 @@ namespace GeneXus.Data
 
 	sealed internal class MssqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.MssqlConnectionWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.MssqlConnectionWrapper>();
 		int sqlserver7 = -1;
 		int sqlserver9 = -1;
 
@@ -4241,7 +4243,7 @@ namespace GeneXus.Data
 
 		public abstract class GxAbstractConnectionWrapper : IDbConnection 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxAbstractConnectionWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxAbstractConnectionWrapper>();
 		protected short m_spid;
 		protected IDbConnection _connection;
 		protected bool m_autoCommit;
@@ -4380,7 +4382,7 @@ namespace GeneXus.Data
 		
 	public class GxCacheDataReader: IDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxCacheDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxCacheDataReader>();
 		protected GxArrayList block;
 		protected int pos;
 		int blockSize;

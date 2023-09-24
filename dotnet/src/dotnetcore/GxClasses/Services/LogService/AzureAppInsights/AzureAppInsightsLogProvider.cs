@@ -1,24 +1,23 @@
 using System;
-using GeneXus.Services;
-using GeneXus.Services.Log;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Configuration;
 
-namespace GeneXus.Log.Azure
+namespace GeneXus.Services.Log
 {
-	public class AzureAppInsightsLogProvider : IGXLogProvider
+	public class AzureAppInsightsLogProvider : ILoggerFactory
 	{
 		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
 		public static ILoggerFactory loggerFactory;
-
-		public AzureAppInsightsLogProvider(GXService s) { }
-		public ILoggerFactory GetLoggerFactory()
+		
+		public static ILoggerFactory GetLoggerFactory()
 		{
 			string appInsightsConnection = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
 			if (appInsightsConnection != null) { 
 			loggerFactory = LoggerFactory.Create(builder => builder.AddApplicationInsights(
 
 				configureTelemetryConfiguration: (config) =>
+				//config.SetAzureTokenCredential
 				config.ConnectionString = appInsightsConnection,
 				configureApplicationInsightsLoggerOptions: (options) => { }
 				)

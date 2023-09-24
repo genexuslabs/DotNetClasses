@@ -355,7 +355,7 @@ namespace GeneXus.Procedure
 		public static int OUTPUT_RVIEWER_NATIVE = 1;
 		public static int OUTPUT_RVIEWER_DLL = 2;
 		public static int OUTPUT_PDF     = 3;
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
 		static public IReportHandler GetPrinter( int outputType, string path, Stream reportOutputStream)
 		{

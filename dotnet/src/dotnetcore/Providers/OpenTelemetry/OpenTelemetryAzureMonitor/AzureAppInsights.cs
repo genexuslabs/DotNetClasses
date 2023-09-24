@@ -10,7 +10,7 @@ namespace GeneXus.OpenTelemetry.Azure
 {
 	public class AzureAppInsights : IOpenTelemetryProvider
 	{
-		private static readonly ILog log = LogManager.GetLogger(typeof(AzureAppInsights));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<AzureAppInsights>();
 		private const string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
 		public AzureAppInsights(GXService s)
@@ -32,8 +32,8 @@ namespace GeneXus.OpenTelemetry.Azure
 				return true;
 			}
 			else
-			{ 
-				log.Warn("OpenTelemetry Azure Monitor was not initialized due to missing 'APPLICATIONINSIGHTS_CONNECTION_STRING' Environment Variable");
+			{
+				GXLogging.Warn(log, "OpenTelemetry Azure Monitor was not initialized due to missing 'APPLICATIONINSIGHTS_CONNECTION_STRING' Environment Variable");
 				return false;
 			}
 		}

@@ -15,7 +15,8 @@ namespace GeneXus.Services
 {
 	public class GXServices
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.GXServices));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Services.GXServices>();
+
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
@@ -178,8 +179,7 @@ namespace GeneXus.Services
 	public class ServiceFactory
 	{
 		private static ExternalProvider externalProvider = null;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.ServiceFactory));
-
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Services.ServiceFactory>();
 		public static GXServices GetGXServices()
 		{
 			return GXServices.Instance;

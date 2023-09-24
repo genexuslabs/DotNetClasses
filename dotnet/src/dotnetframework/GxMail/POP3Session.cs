@@ -15,8 +15,7 @@ namespace GeneXus.Mail.Internals
 	
     internal class POP3Session : Pop3SessionBase
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(POP3Session));
-		
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<POP3Session>();
 		private const string CRLF = "\r\n";
 
 		private string userName;

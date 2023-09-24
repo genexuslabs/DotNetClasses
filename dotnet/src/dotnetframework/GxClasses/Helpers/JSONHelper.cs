@@ -137,7 +137,7 @@ namespace GeneXus.Utils
 	public class JSONHelper
 	{
 		
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.JSONHelper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.JSONHelper>();
 		static string WFCDateTimeFormat = Preferences.WFCDateTimeMillis ? DateTimeUtil.JsonDateFormatMillis : DateTimeUtil.JsonDateFormat;
 		public static bool IsJsonNull(object jobject)
 		{

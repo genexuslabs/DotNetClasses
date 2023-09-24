@@ -1116,7 +1116,7 @@ namespace GeneXus.Printer
 	}
 	public class GxTxtPrinter : IPrintHandler
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxTxtPrinter));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxTxtPrinter>();
 		StreamReader streamToRead;
 		StreamWriter streamToWrite;
 		List<string> pageContents;

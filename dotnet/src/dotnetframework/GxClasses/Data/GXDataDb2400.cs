@@ -45,7 +45,7 @@ namespace GeneXus.Data
 	}
 	sealed internal class Db2ISeriesConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		public Db2ISeriesConnectionWrapper()
 		{
 			try
@@ -121,7 +121,7 @@ namespace GeneXus.Data
 	public class GxDb2ISeries : GxDataRecord
 	{
 
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		private bool m_UseCharInDate;
 		public static string SQL_NULL_DATE="00000000";
 		private string m_InitialCatalog;
@@ -768,7 +768,7 @@ namespace GeneXus.Data
 	}
 	sealed internal class Db2ISeriesHISConnectionWrapper : GxAbstractConnectionWrapper 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		public Db2ISeriesHISConnectionWrapper() : base(new MsDb2Connection()) 
 		{	}
 
@@ -827,7 +827,7 @@ namespace GeneXus.Data
 	public class GxISeriesHIS : GxDataRecord
 	{
 
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		private bool m_UseCharInDate;
 		private string m_InitialCatalog;
 		private string m_SqlPackage;

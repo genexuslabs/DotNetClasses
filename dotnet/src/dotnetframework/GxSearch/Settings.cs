@@ -11,7 +11,7 @@ namespace GeneXus.Search
 	[SecuritySafeCritical]	
 	public class Settings
 	{
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Search.Settings));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Search.Settings>();
         private static Settings m_instance = new Settings();
 		private Lucene.Net.Store.Directory m_storeFolder;
 		private string m_indexFolder;

@@ -14,7 +14,7 @@ namespace GeneXus.Messaging.Common
 	{
 		internal IMessageBroker messageBroker = null;
 		public static Assembly assembly;
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(MessageQueue));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<MessageQueue>();
 		private const string SDT_MESSAGE_CLASS_NAME = @"SdtMessage";
 		private const string SDT_MESSAGEPROPERTY_CLASS_NAME = @"SdtMessageProperty";
 		private const string NAMESPACE = @"GeneXus.Programs.genexusmessagingmessagebroker";
@@ -345,7 +345,7 @@ namespace GeneXus.Messaging.Common
 	internal class ServiceFactory
 	{
 		private static IMessageBroker messageBroker;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.ServiceFactory));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Services.ServiceFactory>();
 
 		public static GXServices GetGXServices()
 		{

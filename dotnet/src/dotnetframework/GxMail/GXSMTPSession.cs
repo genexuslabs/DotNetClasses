@@ -9,9 +9,8 @@ namespace GeneXus.Mail
     
     public class GXSMTPSession : GXMailSession
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXSMTPSession));
-
-        private ISMTPSession session;
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXSMTPSession>();
+		private ISMTPSession session;
         private string attachDir;
         private short authentication;
         private short secure;
