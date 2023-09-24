@@ -206,7 +206,7 @@ namespace GeneXus.Http.HttpModules
 	}
 	public class GXSessionModule : IHttpModule
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXSessionModule));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXSessionModule>();
 		HttpApplication App;
 		const string ASPNETSESSION_COOKIE = "ASP.NET_SessionId";
 		string cookieName= ASPNETSESSION_COOKIE;
@@ -311,7 +311,7 @@ namespace GeneXus.Http.HttpModules
     }
 	public class GXRewriter : IHttpModule
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXRewriter));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXRewriter>();
 		private static RewriterModule rewriter;
 		private static bool moduleStarted;
 		private static bool enabled;

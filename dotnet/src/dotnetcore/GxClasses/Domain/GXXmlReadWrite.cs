@@ -1,19 +1,17 @@
 using System;
-using System.Xml;
 using System.Collections;
 using System.Collections.Specialized;
-using System.Text;
-using System.Net;
 using System.IO;
+using System.Net;
+using System.Text;
+using System.Xml;
 using System.Xml.Schema;
+using System.Xml.XPath;
+using System.Xml.Xsl;
 using GeneXus.Application;
 using GeneXus.Http.Client;
 using GeneXus.Http.Server;
 using GeneXus.Utils;
-using log4net;
-
-using System.Xml.Xsl;
-using System.Xml.XPath;
 
 namespace GeneXus.XML
 {
@@ -1890,7 +1888,7 @@ namespace GeneXus.XML
 
 	public class GXXMLWriter: IDisposable
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXXMLWriter));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXXMLWriter>();
 		private XmlTextWriter writer;
 
 		private short errorCode;

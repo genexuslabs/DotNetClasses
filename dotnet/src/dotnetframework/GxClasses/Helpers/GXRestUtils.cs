@@ -96,7 +96,7 @@ namespace GeneXus.Utils
 
 	internal class RestAPIHelpers
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.RestAPIHelpers));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.RestAPIHelpers>();
 
 		public static Dictionary<string, object> ReadRestParameters(string restData)
 		{

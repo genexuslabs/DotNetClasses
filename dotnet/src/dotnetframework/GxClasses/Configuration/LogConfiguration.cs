@@ -11,7 +11,7 @@ namespace GeneXus.Configuration
 {
 	internal class LogConfiguration
 	{
-		private static readonly ILog logger = log4net.LogManager.GetLogger(typeof(LogConfiguration));
+		//private static readonly IGXLogger logger = GXLoggerFactory.GetLogger<LogConfiguration>();
 
 		public  const string USER_LOG_TOPIC = "GeneXusUserLog";
 		private const string LOG_LEVEL_ENVVAR = "GX_LOG_LEVEL";
@@ -56,7 +56,7 @@ namespace GeneXus.Configuration
 				IAppender appenderToAdd = h.GetAppenders().FirstOrDefault(a => a.Name == appenderName);
 				if (appenderToAdd == null)
 				{
-					LogConfiguration.logger.Warn($"Appender '{appenderName}' was not found on Log4Net Config file");
+					//LogConfiguration.logger.Warn($"Appender '{appenderName}' was not found on Log4Net Config file");
 					return;
 				}
 				

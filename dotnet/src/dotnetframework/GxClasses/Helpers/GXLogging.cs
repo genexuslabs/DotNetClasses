@@ -15,6 +15,16 @@ namespace GeneXus
 #if NETCORE
 		public static ILoggerFactory _instance = GXLogService.GetLogFactory();
 #endif
+		public static IGXLogger GetLogger(string categoryName)
+		{
+#if NETCORE
+			if (_instance != null)
+			{
+				return new GXLoggerMsExtensions(_instance.CreateLogger(categoryName));
+			}
+#endif
+			return new GXLoggerLog4Net(log4net.LogManager.GetLogger(categoryName));
+		}
 		public static IGXLogger GetLogger<T>() where T : class
 		{
 #if NETCORE
@@ -29,114 +39,179 @@ namespace GeneXus
 	}
 	public interface IGXLogger
 	{
-		bool IsTraceEnabled();
-		bool IsErrorEnabled();
-		bool IsWarningEnabled();
-		bool IsDebugEnabled();
-		bool IsInfoEnabled();
+		bool IsTraceEnabled { get; }
+		bool IsErrorEnabled { get; }
+		bool IsWarningEnabled { get; }
+		bool IsDebugEnabled { get; }
+		bool IsInfoEnabled { get; }
+		bool IsCriticalEnabled { get; }
+
+		bool TraceEnabled();
+		bool CriticalEnabled();
+		bool ErrorEnabled();
+		bool WarningEnabled();
+		bool DebugEnabled();
+		bool InfoEnabled();
+
+	
 		void LogTrace(string value);
 		void LogError(string msg, Exception ex);
 
 		void LogError(string msg);
+		void LogError(string msg, params string[] list);
 		void LogWarning(Exception ex, string msg);
 		void LogWarning(string msg);
+		void LogWarning(string msg, params string[] list);
 		void LogDebug(string msg);
 		void LogDebug(Exception ex, string msg);
+		void LogDebug(string msg, params string[] list);
 		void LogInfo(string msg);
+		void LogInfo(string msg, params string[] list);
+		void LogCritical(string msg);
+		void LogCritical(Exception ex , string msg);
+		void LogCritical(string msg, params string[] list);
 	}
 #if NETCORE
 	internal class GXLoggerMsExtensions : IGXLogger
 	{
+		internal Microsoft.Extensions.Logging.ILogger log { get; set; }
 
 		internal GXLoggerMsExtensions(Microsoft.Extensions.Logging.ILogger logInstance)
 		{
 			log = logInstance;
 		}
-		internal Microsoft.Extensions.Logging.ILogger log { get; set; }
-		public bool IsTraceEnabled()
+
+		public bool IsTraceEnabled { get => TraceEnabled(); }
+		public bool IsErrorEnabled { get => ErrorEnabled(); }
+		public bool IsWarningEnabled { get => WarningEnabled(); }
+		public bool IsDebugEnabled { get => DebugEnabled(); }
+		public bool IsInfoEnabled { get => InfoEnabled(); }
+		public bool IsCriticalEnabled { get => CriticalEnabled(); }
+		public bool TraceEnabled()
 		{
 			return log.IsEnabled(LogLevel.Trace);
 		}
-		public bool IsErrorEnabled()
+		public bool ErrorEnabled()
 		{
 			return log.IsEnabled(LogLevel.Error);
 		}
-		public bool IsWarningEnabled()
+		public bool WarningEnabled()
 		{
 			return log.IsEnabled(LogLevel.Warning);
 		}
-		public bool IsDebugEnabled()
+		public bool DebugEnabled()
 		{
 			return log.IsEnabled(LogLevel.Debug);
 		}
-		public bool IsInfoEnabled()
+		public bool InfoEnabled()
 		{
 			return log.IsEnabled(LogLevel.Information);
 		}
 
-		public void LogTrace(string value)
+		public bool CriticalEnabled()
 		{
-			log.LogTrace(value);
+			return log.IsEnabled(LogLevel.Critical);
+		}
+		public void LogTrace(string msg)
+		{
+			log.LogTrace(msg);
 		}
 		public void LogError(string msg, Exception ex)
 		{
-			log.LogError(msg, ex);
+			log.LogError(ex, msg);
 		}
 		public void LogError(string msg)
 		{
 			log.LogError(msg);
 		}
+		public void LogError(string msg, params string[] list)
+		{
+			log.LogError(msg, list);
+		}
 		public void LogWarning(Exception ex, string msg)
 		{
-			log.LogWarning(msg, ex);
+			log.LogWarning(ex, msg);
 		}
 		public void LogWarning(string msg)
 		{
 			log.LogWarning(msg);
 		}
+		public void LogWarning(string msg, params string[] list)
+		{
+			log.LogWarning(msg, list);
+		}
 		public void LogDebug(string msg)
 		{
 			log.LogDebug(msg);
 		}
-
+		public void LogDebug(string msg, params string[] list)
+		{
+			log.LogDebug(msg, list);
+		}
 		public void LogDebug(Exception ex, string msg)
 		{
-			log.LogDebug(msg, ex);
+			log.LogDebug(ex, msg);
 		}
 		public void LogInfo(string msg)
 		{
 			log.LogInformation(msg);
 		}
+
+		public void LogInfo(string msg, params string[] list)
+		{
+			log.LogInformation(msg, list);
+		}
+		public void LogCritical(string msg)
+		{
+			log.LogCritical(msg);
+		}
+		public void LogCritical(Exception ex, string msg)
+		{
+			log.LogCritical(ex, msg);
+		}
+		public void LogCritical(string msg, params string[] list)
+		{
+			log.LogCritical(msg, list);
+		}
 	}
 #endif
-	internal class GXLoggerLog4Net:IGXLogger
+	internal class GXLoggerLog4Net : IGXLogger
 	{
-
 		internal ILog log { get; set; }
 
 		internal GXLoggerLog4Net(ILog logInstance)
 		{
 			log = logInstance;
 		}
-		public bool IsTraceEnabled()
+		public bool IsTraceEnabled { get => TraceEnabled(); }
+		public bool IsErrorEnabled { get => ErrorEnabled(); }
+		public bool IsWarningEnabled { get => WarningEnabled(); }
+		public bool IsDebugEnabled { get => DebugEnabled(); }
+		public bool IsInfoEnabled { get => InfoEnabled(); }
+		public bool IsCriticalEnabled { get => CriticalEnabled(); }
+		public bool TraceEnabled()
 		{
 			return log.Logger.IsEnabledFor(Level.Trace);
 		}
-		public bool IsErrorEnabled()
+		public bool ErrorEnabled()
 		{
 			return log.IsErrorEnabled;
 		}
-		public bool IsWarningEnabled()
+		public bool WarningEnabled()
 		{
 			return log.IsWarnEnabled;
 		}
-		public bool IsDebugEnabled()
+		public bool DebugEnabled()
 		{
 			return log.IsDebugEnabled;
 		}
-		public bool IsInfoEnabled()
+		public bool InfoEnabled()
 		{
 			return log.IsInfoEnabled;
+		}
+		public bool CriticalEnabled()
+		{
+			return log.IsFatalEnabled;
 		}
 
 		public void LogTrace(string value)
@@ -151,6 +226,17 @@ namespace GeneXus
 		{
 			log.Error(msg);
 		}
+		public void LogError(string msg, params string[] list)
+		{
+			StringBuilder message = new StringBuilder();
+			message.Append(msg);
+			foreach (string parm in list)
+			{
+				message.Append(parm);
+			}
+
+			log.Error(message.ToString());
+		}
 		public void LogWarning(Exception ex, string msg)
 		{
 			log.Warn(msg, ex);
@@ -158,6 +244,17 @@ namespace GeneXus
 		public void LogWarning(string msg)
 		{
 			log.Warn(msg);
+		}
+		public void LogWarning(string msg, params string[] list)
+		{
+			StringBuilder message = new StringBuilder();
+			message.Append(msg);
+			foreach (string parm in list)
+			{
+				message.Append(parm);
+			}
+
+			log.Warn(message.ToString());
 		}
 		public void LogDebug(string msg)
 		{
@@ -168,25 +265,64 @@ namespace GeneXus
 		{
 			log.Debug(msg, ex);
 		}
+		public void LogDebug(string msg, params string[] list)
+		{
+			StringBuilder message = new StringBuilder();
+			message.Append(msg);
+			foreach (string parm in list)
+			{
+				message.Append(parm);
+			}
+
+			log.Debug(message.ToString());
+		}
 		public void LogInfo(string msg)
 		{
 			log.Info(msg);
 		}
+		public void LogInfo(string msg, params string[] list)
+		{
+			StringBuilder message = new StringBuilder();
+			message.Append(msg);
+			foreach (string parm in list)
+			{
+				message.Append(parm);
+			}
 
+			log.Info(message.ToString());
+		}
+
+		public void LogCritical(string msg)
+		{
+			log.Fatal(msg);
+		}
+		public void LogCritical(Exception ex, string msg)
+		{
+			log.Fatal(msg, ex);
+		}
+
+		public void LogCritical(string msg, params string[] list)
+		{
+			StringBuilder message = new StringBuilder();
+			message.Append(msg);
+			foreach (string parm in list)
+			{
+				message.Append(parm);
+			}
+
+			log.Fatal(message.ToString());
+		}
 	}
 	public static class GXLogging
 	{
+		#region log4NET
+		// Legacy //
 		public static void Trace(this ILog log, params string[] list)
 		{
 			if (log.Logger.IsEnabledFor(Level.Trace))
 			{
 				log.Logger.Log(MethodBase.GetCurrentMethod().DeclaringType, Level.Trace, string.Join(" ", list), null);
 			}
-		}
-		internal static void Trace(IGXLogger logger, params string[] list)
-		{
-			if (logger.IsTraceEnabled())
-				logger.LogTrace(string.Join(" ", list));
 		}
 		public static void Error(ILog log, string msg, Exception ex)
 		{
@@ -195,15 +331,6 @@ namespace GeneXus
 				log.Error(msg, ex);
 			}
 		}
-
-		internal static void Error(IGXLogger logger, string msg, Exception ex)
-		{
-			if (logger.IsErrorEnabled())
-			{
-				logger.LogError(msg, ex);
-			}
-		}
-
 		public static void ErrorSanitized(ILog log, string msg, Exception ex)
 		{
 			if (log.IsErrorEnabled)
@@ -211,23 +338,9 @@ namespace GeneXus
 				log.Error(Utils.StringUtil.Sanitize(msg, Utils.StringUtil.LogUserEntryWhiteList), ex);
 			}
 		}
-
-		internal static void ErrorSanitized(IGXLogger logger, string msg, Exception ex)
-		{
-			if (logger.IsErrorEnabled())
-			{
-				logger.LogError(Utils.StringUtil.Sanitize(msg, Utils.StringUtil.LogUserEntryWhiteList), ex);
-			}
-		}
-
 		public static void Error(ILog log, string msg1, string msg2, Exception ex)
 		{
 			Error(log, msg1 + msg2, ex);
-		}
-
-		internal static void Error(IGXLogger logger, string msg1, string msg2, Exception ex)
-		{
-			Error(logger, msg1 + msg2, ex);
 		}
 		public static void Error(ILog log, Exception ex, params string[] list)
 		{
@@ -239,26 +352,10 @@ namespace GeneXus
 				}
 			}
 		}
-		internal static void Error(IGXLogger logger, Exception ex, params string[] list)
-		{
-			if (logger.IsErrorEnabled())
-			{
-				foreach (string parm in list)
-				{
-					logger.LogError(parm);
-				}
-			}
-		}
 		public static void Error(ILog log, params string[] list)
 		{
 			Error(log, null, list);
 		}
-
-		internal static void Error(IGXLogger logger, params string[] list)
-		{
-			Error(logger, null, list);
-		}
-
 		public static void Warn(ILog log, Exception ex, params string[] list)
 		{
 			if (log.IsWarnEnabled)
@@ -274,32 +371,10 @@ namespace GeneXus
 					log.Warn(msg);
 			}
 		}
-
-		public static void Warn(IGXLogger logger, Exception ex, params string[] list)
-		{
-			if (logger.IsWarningEnabled())
-			{
-				StringBuilder msg = new StringBuilder();
-				foreach (string parm in list)
-				{
-					msg.Append(parm);
-				}
-				if (ex != null)
-					logger.LogWarning(ex, msg.ToString());
-				else
-					logger.LogWarning(msg.ToString());
-			}
-		}
 		public static void Warn(ILog log, params string[] list)
 		{
 			Warn(log, null, list);
 		}
-
-		public static void Warn(IGXLogger logger, params string[] list)
-		{
-			Warn(logger, null, list);
-		}
-
 		public static void Warn(ILog log, string msg, Exception ex)
 		{
 			if (log.IsWarnEnabled)
@@ -307,12 +382,24 @@ namespace GeneXus
 				log.Warn(msg, ex);
 			}
 		}
-		internal static void Warn(IGXLogger logger, string msg, Exception ex)
+		public static void DebugSanitized(ILog log, Exception ex, params string[] list)
 		{
-			if (logger.IsWarningEnabled())
+			if (log.IsDebugEnabled)
 			{
-				logger.LogWarning(ex, msg);
+				StringBuilder msg = new StringBuilder();
+				foreach (string parm in list)
+				{
+					msg.Append(Utils.StringUtil.Sanitize(parm, Utils.StringUtil.LogUserEntryWhiteList));
+				}
+				if (ex != null)
+					log.Debug(msg, ex);
+				else
+					log.Debug(msg);
 			}
+		}
+		public static void Debug(ILog log, params string[] list)
+		{
+			Debug(log, null, list);
 		}
 		public static void Debug(ILog log, Exception ex, params string[] list)
 		{
@@ -329,71 +416,9 @@ namespace GeneXus
 					log.Debug(msg);
 			}
 		}
-		public static void Debug(IGXLogger logger, Exception ex, params string[] list)
-		{
-			if (logger.IsDebugEnabled())
-			{
-				StringBuilder msg = new StringBuilder();
-				foreach (string parm in list)
-				{
-					msg.Append(parm);
-				}
-				if (ex != null)
-					logger.LogDebug(ex, msg.ToString());
-				else
-					logger.LogDebug(msg.ToString());
-			}
-		}
-
-		public static void DebugSanitized(ILog log, Exception ex, params string[] list)
-		{
-			if (log.IsDebugEnabled)
-			{
-				StringBuilder msg = new StringBuilder();
-				foreach (string parm in list)
-				{
-					msg.Append(Utils.StringUtil.Sanitize(parm, Utils.StringUtil.LogUserEntryWhiteList));
-				}
-				if (ex != null)
-					log.Debug(msg, ex);
-				else
-					log.Debug(msg);
-			}
-		}
-
-		internal static void DebugSanitized(IGXLogger logger, Exception ex, params string[] list)
-		{
-			if (logger.IsDebugEnabled())
-			{
-				StringBuilder msg = new StringBuilder();
-				foreach (string parm in list)
-				{
-					msg.Append(Utils.StringUtil.Sanitize(parm, Utils.StringUtil.LogUserEntryWhiteList));
-				}
-				if (ex != null)
-					logger.LogDebug(ex, msg.ToString());
-				else
-					logger.LogDebug(msg.ToString());
-			}
-		}
-
-		public static void Debug(ILog log, params string[] list)
-		{
-			Debug(log, null, list);
-		}
-
-		public static void Debug(IGXLogger logger, params string[] list)
-		{
-			Debug(logger, null, list);
-		}
-
 		public static void DebugSanitized(ILog log, params string[] list)
 		{
 			DebugSanitized(log, null, list);
-		}
-		internal static void DebugSanitized(IGXLogger logger, params string[] list)
-		{
-			DebugSanitized(logger, null, list);
 		}
 
 		public static void Debug(ILog log, string startMsg, Func<string> buildMsg)
@@ -415,13 +440,6 @@ namespace GeneXus
 				log.Debug(msg, ex);
 			}
 		}
-		internal static void Debug(IGXLogger logger, string msg, Exception ex)
-		{
-			if (logger.IsDebugEnabled())
-			{
-				logger.LogDebug(ex, msg);
-			}
-		}
 		public static void Info(ILog log, params string[] list)
 		{
 			if (log.IsInfoEnabled)
@@ -434,17 +452,282 @@ namespace GeneXus
 				log.Info(msg);
 			}
 		}
-		public static void Info(IGXLogger logger, params string[] list)
+		#endregion
+
+		#region Microsoft.Extensions
+		internal static void Trace(IGXLogger logger, params string[] list)
 		{
-			if (logger.IsInfoEnabled())
+			if (logger != null)
 			{
-				StringBuilder msg = new StringBuilder();
-				foreach (string parm in list)
-				{
-					msg.Append(parm);
-				}
-				logger.LogInfo(msg.ToString());
+				if (logger.IsTraceEnabled)
+					logger.LogTrace(string.Join(" ", list));
 			}
 		}
+		public static void Critical(IGXLogger logger, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsCriticalEnabled)
+				{
+					logger.LogCritical(string.Join(" ", list));
+				}
+			}
+		}
+		public static void Critical(IGXLogger logger, string msg, Exception ex)
+		{
+			if (logger != null)
+			{
+				if (logger.IsCriticalEnabled)
+				{
+					logger.LogCritical(ex, msg);
+				}
+			}
+		}
+		public static void Critical(IGXLogger logger, string msg, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsCriticalEnabled)
+				{
+					logger.LogCritical(msg, list);
+				}
+			}
+		}
+
+		public static void Error(IGXLogger logger, string msg, Exception ex)
+		{
+			if (logger != null)
+			{
+				if (logger.IsErrorEnabled)
+				{
+					logger.LogError(msg, ex);
+				}
+			}
+		}
+		public static void Error(IGXLogger logger, string msg, params string[] list )
+		{
+			if (logger != null)
+			{
+				if (logger.IsErrorEnabled)
+				{
+					logger.LogError(msg, list);
+				}
+			}
+		}
+
+		internal static void ErrorSanitized(IGXLogger logger, string msg, Exception ex)
+		{
+			if (logger != null)
+			{
+				if (logger.IsErrorEnabled)
+				{
+					logger.LogError(Utils.StringUtil.Sanitize(msg, Utils.StringUtil.LogUserEntryWhiteList), ex);
+				}
+			}
+		}
+
+		internal static void Error(IGXLogger logger, string msg1, string msg2, Exception ex)
+		{
+			Error(logger, msg1 + msg2, ex);
+		}
+		
+		internal static void Error(IGXLogger logger, Exception ex, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsErrorEnabled)
+				{
+					logger.LogError(ex.Message);
+					foreach (string parm in list)
+					{
+						logger.LogError(parm);
+					}
+				}
+			}
+		}
+		internal static void Error(IGXLogger logger, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsErrorEnabled)
+				{
+					foreach (string parm in list)
+					{
+						logger.LogError(parm);
+					}
+				}
+			}
+		}
+		public static void Warn(IGXLogger logger, Exception ex, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsWarningEnabled)
+				{
+					StringBuilder msg = new StringBuilder();
+					foreach (string parm in list)
+					{
+						msg.Append(parm);
+					}
+					if (ex != null)
+						logger.LogWarning(ex, msg.ToString());
+					else
+						logger.LogWarning(msg.ToString());
+				}
+			}
+		}
+		public static void Warn(IGXLogger logger, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsWarningEnabled)
+				{
+					StringBuilder msg = new StringBuilder();
+					foreach (string parm in list)
+					{
+						msg.Append(parm);
+					}
+
+					logger.LogWarning(msg.ToString());
+				}
+			}
+		}
+		public static void Warn(IGXLogger logger, string msg, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsWarningEnabled)
+				{
+					logger.LogWarning(msg, list);
+				}
+			}
+		}
+		public static void Warn(IGXLogger logger, string msg, Exception ex)
+		{
+			if (logger != null)
+			{
+				if (logger.IsWarningEnabled)
+				{
+					logger.LogWarning(ex, msg);
+				}
+			}
+		}
+		internal static void DebugSanitized(IGXLogger logger, Exception ex, params string[] list)
+		{
+			if (logger != null)
+			{ 
+				if (logger.IsDebugEnabled)
+				{
+					StringBuilder msg = new StringBuilder();
+					foreach (string parm in list)
+					{
+						msg.Append(Utils.StringUtil.Sanitize(parm, Utils.StringUtil.LogUserEntryWhiteList));
+					}
+					if (ex != null)
+						logger.LogDebug(ex, msg.ToString());
+					else
+						logger.LogDebug(msg.ToString());
+				}
+			}
+		}
+		internal static void DebugSanitized(IGXLogger logger, params string[] list)
+		{
+			DebugSanitized(logger, null, list);
+		}
+		public static void Debug(IGXLogger logger, Exception ex, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsDebugEnabled)
+				{
+					StringBuilder msg = new StringBuilder();
+					foreach (string parm in list)
+					{
+						msg.Append(parm);
+					}
+					if (ex != null)
+						logger.LogDebug(ex, msg.ToString());
+					else
+						logger.LogDebug(msg.ToString());
+				}
+			}
+		}
+		public static void Debug(IGXLogger logger, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsDebugEnabled)
+				{
+					StringBuilder msg = new StringBuilder();
+					foreach (string parm in list)
+					{
+						msg.Append(parm);
+					}
+				
+					logger.LogDebug(msg.ToString());
+				}
+			}
+		}
+		
+		public static void Debug(IGXLogger logger, string startMsg, Func<string> buildMsg)
+		{
+			if (logger != null)
+			{
+				if (logger.IsDebugEnabled)
+				{
+					string msg = buildMsg();
+					logger.LogDebug(startMsg + msg);
+				}
+			}
+		}
+		public static void Debug(IGXLogger logger, string msg1, string msg2, Exception ex)
+		{
+			Debug(logger, msg1 + msg2, ex);
+		}
+		public static void Debug(IGXLogger logger, string msg, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsDebugEnabled)
+				{
+					logger.LogDebug(msg, list);
+				}
+			}
+		}
+		public static void Debug(IGXLogger logger, string msg, Exception ex)
+		{
+			if (logger != null)
+			{
+				if (logger.IsDebugEnabled)
+				{
+					logger.LogDebug(ex, msg);
+				}
+			}
+		}
+		public static void Info(IGXLogger logger, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsInfoEnabled)
+				{
+					StringBuilder msg = new StringBuilder();
+					foreach (string parm in list)
+					{
+						msg.Append(parm);
+					}
+					logger.LogInfo(msg.ToString());
+				}
+			}
+		}
+		public static void Info(IGXLogger logger, string msg, params string[] list)
+		{
+			if (logger != null) { 
+				if (logger.IsInfoEnabled)
+				{
+					logger.LogInfo(msg.ToString(), list);
+				}
+			}
+		}
+		#endregion
 	}
 }

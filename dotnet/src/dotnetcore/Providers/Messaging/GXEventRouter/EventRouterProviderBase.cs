@@ -14,7 +14,7 @@ namespace GeneXus.Messaging.Common
 	{
 		internal IEventRouter eventRouter = null;
 		public static Assembly assembly;
-		static readonly ILog logger = LogManager.GetLogger(typeof(EventRouterProviderBase));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<EventRouterProviderBase>();
 		private const string MODULE_DLL = @"GeneXusEventMessaging";
 
 		public EventRouterProviderBase()
@@ -179,7 +179,7 @@ namespace GeneXus.Messaging.Common
 	internal class ServiceFactory
 	{
 		private static IEventRouter eventRouter;
-		private static readonly ILog log = LogManager.GetLogger(typeof(Services.ServiceFactory));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ServiceFactory>();
 
 		public static GXServices GetGXServices()
 		{

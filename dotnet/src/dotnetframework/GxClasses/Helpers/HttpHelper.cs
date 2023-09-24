@@ -77,7 +77,7 @@ namespace GeneXus.Http
 
 	public class HttpHelper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Http.HttpHelper>();
 		/*
 		* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
 		* Specifying no-cache or max-age=0 indicates that 

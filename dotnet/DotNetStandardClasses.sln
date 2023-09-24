@@ -255,10 +255,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXAzureEventGrid", "src\dot
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCoreAttackMitigationTest", "test\DotNetCoreAttackMitigationTest\DotNetCoreAttackMitigationTest.csproj", "{2D615969-53E2-4B77-9A9A-75C33865CF76}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gxlogging", "gxlogging", "{AA04A8A9-3CBD-431D-9711-C4D481E4A1E5}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Log.Azure.AzureAppInsights", "src\dotnetcore\Providers\Logging\GeneXus.Log.Azure.AzureAppInsights\GeneXus.Log.Azure.AzureAppInsights.csproj", "{6B28F942-D355-44A2-9C5D-92AF2D256A0D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -617,10 +613,6 @@ Global
 		{2D615969-53E2-4B77-9A9A-75C33865CF76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D615969-53E2-4B77-9A9A-75C33865CF76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D615969-53E2-4B77-9A9A-75C33865CF76}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6B28F942-D355-44A2-9C5D-92AF2D256A0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6B28F942-D355-44A2-9C5D-92AF2D256A0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6B28F942-D355-44A2-9C5D-92AF2D256A0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6B28F942-D355-44A2-9C5D-92AF2D256A0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -737,8 +729,6 @@ Global
 		{5BBC75F0-E51A-4EBD-A628-92498D319B1D} = {4C43F2DA-59E5-46F5-B691-195449498555}
 		{7250CDB1-95C4-4822-B01B-3CBD73324CC9} = {30159B0F-BE61-4DB7-AC02-02851426BE4B}
 		{2D615969-53E2-4B77-9A9A-75C33865CF76} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
-		{AA04A8A9-3CBD-431D-9711-C4D481E4A1E5} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
-		{6B28F942-D355-44A2-9C5D-92AF2D256A0D} = {AA04A8A9-3CBD-431D-9711-C4D481E4A1E5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}

@@ -89,7 +89,7 @@ namespace GeneXus.Utils
 
 	public class NumberUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.NumberUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.NumberUtil>();
 
 		private NumberFormatInfo numberFormat;
 		public NumberUtil(NumberFormatInfo numFmt)
@@ -503,7 +503,7 @@ namespace GeneXus.Utils
 
 	public class StringUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.StringUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.StringUtil>();
 
 		private NumberFormatInfo numFmtInfo;
 		private const int STR_LEN_DEFAULT = 10;
@@ -2135,7 +2135,8 @@ namespace GeneXus.Utils
 	}
 	public class DateTimeUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.DateTimeUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.DateTimeUtil>();
+
 		private CultureInfo cultureInfo;
 		public static bool useConfigForDates;
 		public static bool useConfigForTimes;
@@ -3725,7 +3726,7 @@ namespace GeneXus.Utils
 
 	public class FileUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.FileUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.FileUtil>();
 		public static byte DeleteFile(string fileName)
 		{
 			try
@@ -4157,7 +4158,7 @@ namespace GeneXus.Utils
 
 	public class GXUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GXUtil>();
 #if !NETCORE
 		static Hashtable domains;
 		static string DOMAINS_FILE;
@@ -5693,7 +5694,7 @@ namespace GeneXus.Utils
 #endif
 	public static class GXDbFile
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXDbFile));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
 		private static Regex schemeRegex = new Regex("^" + Scheme + ":", RegexOptions.Compiled);
 
@@ -5914,8 +5915,7 @@ namespace GeneXus.Utils
 
 	public static class GxImageUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxImageUtil));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		private static Bitmap BitmapCreateFromStream(string filePathOrUrl)
 		{
 			Uri uri;
@@ -6340,7 +6340,7 @@ namespace GeneXus.Utils
 	}
 	internal class ThreadUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ThreadUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ThreadUtil>();
 		private static ConcurrentDictionary<Guid, ManualResetEvent> events = new ConcurrentDictionary<Guid, ManualResetEvent>();
 		const int MAX_WAIT_HANDLES = 64;
 		internal static void Submit(WaitCallback callbak, object state)

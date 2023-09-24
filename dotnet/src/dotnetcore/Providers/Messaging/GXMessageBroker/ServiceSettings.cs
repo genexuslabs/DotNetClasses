@@ -7,7 +7,7 @@ namespace GeneXus.Messaging.Common
 {
 	public class ServiceSettings 
 	{
-		static readonly ILog logger = LogManager.GetLogger(typeof(ServiceSettings));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ServiceSettings>();
 
 		internal GXService service;
 		public string serviceNameResolver { get; }

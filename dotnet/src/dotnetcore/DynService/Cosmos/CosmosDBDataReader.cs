@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using GeneXus.Cache;
 using GeneXus.Data.NTier;
 using GeneXus.Data.NTier.CosmosDB;
-using log4net;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
@@ -27,7 +26,7 @@ namespace GeneXus.Data.Cosmos
 		private int ItemCount;
 		private List<Dictionary<string, object>> Items = null;
 
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(CosmosDBDataReader));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<CosmosDBDataReader>();
 		private void CheckCurrentPosition()
 		{
 			if (m_currentEntry == null)

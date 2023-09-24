@@ -95,8 +95,9 @@ namespace GeneXus.Cache
 
 	public class CacheFactory
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Cache.CacheFactory));
-        public static string CACHE_SD = "SD";
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Cache.CacheFactory>();
+	
+		public static string CACHE_SD = "SD";
         public static string CACHE_DB = "DB";
         public static string CACHE_FILES = "FL";
 		public static string FORCE_HIGHEST_TIME_TO_LIVE = "FORCE_HIGHEST_TIME_TO_LIVE";
@@ -175,7 +176,7 @@ namespace GeneXus.Cache
     }
     public sealed class InProcessCache : ICacheService2
 	{
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Cache.InProcessCache));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Cache.InProcessCache>();
         ICacheStorage cacheStorage;
         IScavengingAlgorithm storageScavengingImplementation;
 
@@ -644,7 +645,7 @@ namespace GeneXus.Cache
     public class SingletonCacheStorage : ICacheStorage
     {
 
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Cache.SingletonCacheStorage));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Cache.SingletonCacheStorage>();
         private HybridDictionary cacheStorage = new HybridDictionary();
         private long size;
 
@@ -715,8 +716,9 @@ namespace GeneXus.Cache
 
     public class LruScavenging : IScavengingAlgorithm
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Cache.LruScavenging));
-        private HybridDictionary itemsLastUsed;
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Cache.LruScavenging>();
+
+		private HybridDictionary itemsLastUsed;
         private ICacheService cachingService;
         private ICacheStorage cacheStorage;
         private ICacheMetadata cacheMetadata;

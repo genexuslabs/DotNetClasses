@@ -20,7 +20,7 @@ namespace GeneXus.Messaging.GXAzureEventGrid
 		private EventGridPublisherClient _client;
 		private string _endpoint;
 		private string _accessKey;
-		static readonly ILog logger = LogManager.GetLogger(typeof(AzureEventGrid));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<AzureEventGrid>();
 		public AzureEventGrid() : this(null)
 		{
 		}

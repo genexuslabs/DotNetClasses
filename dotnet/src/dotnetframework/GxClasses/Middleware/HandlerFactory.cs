@@ -56,7 +56,7 @@ namespace GeneXus.HttpHandlerFactory
 	}
 	class HandlerFactory : IHttpHandlerFactory
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		private static List<string> GxNamespaces;
 
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)

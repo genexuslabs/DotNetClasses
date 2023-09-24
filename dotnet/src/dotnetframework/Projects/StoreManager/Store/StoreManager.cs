@@ -13,8 +13,7 @@ namespace GeneXus.SD.Store
 {
 	public class StoreManager
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(StoreManager));
-
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<StoreManager>();
 		public int ErrCode
 		{
 			get; set;

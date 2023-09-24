@@ -6,7 +6,7 @@ namespace GeneXus.Mail
 	
 	public abstract class GXMailSession
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXMailSession));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXMailSession>();
 
 		protected short errorCode;
 		protected string errorDescription;

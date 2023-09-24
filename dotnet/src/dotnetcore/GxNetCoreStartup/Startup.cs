@@ -168,9 +168,9 @@ namespace GeneXus.Application
 	}
   
 	public class Startup
-	{ 
-
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
+	{
+		public static bool IsHttpContext = InitializeHttpContext();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Startup>();
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
@@ -194,6 +194,11 @@ namespace GeneXus.Application
 
 		private GXRouting gxRouting;
 
+		static bool InitializeHttpContext()
+		{
+			GxContext.IsHttpContext = true;
+			return true;
+		}
 		public Startup(IConfiguration configuration, IHostingEnvironment env)
 		{
 			Config.ConfigRoot = configuration;
@@ -343,7 +348,11 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
-			LogConfiguration.SetupLog4Net();			
+			Config.GetValueOf("LOG_OUTPUT", out string logProvider);
+			if (logProvider == "ASPNetTraceAppender" || logProvider == "ConsoleAppender" || logProvider == "EventLogAppender" || logProvider == "RollingFile")
+			{
+				LogConfiguration.SetupLog4Net();
+			}
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";
@@ -539,7 +548,7 @@ namespace GeneXus.Application
 	public class CustomExceptionHandlerMiddleware
 	{
 		const string InvalidCSRFToken = "InvalidCSRFToken";
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomExceptionHandlerMiddleware));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
 			string httpReasonPhrase=string.Empty;

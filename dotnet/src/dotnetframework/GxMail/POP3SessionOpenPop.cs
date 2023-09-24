@@ -13,9 +13,9 @@ namespace GeneXus.Mail
 {
     internal class POP3SessionOpenPop : Pop3SessionBase
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(POP3SessionOpenPop));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<POP3SessionOpenPop>();
 
-        private Pop3Client client;
+		private Pop3Client client;
 
         public override int GetMessageCount()
         {

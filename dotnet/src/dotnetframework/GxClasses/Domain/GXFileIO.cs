@@ -223,8 +223,9 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
 }
 public class GxFileInfo : IGxFileInfo
 {
-	private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFileInfo));
-    private FileInfo _file;
+	private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxFileInfo>();
+
+	private FileInfo _file;
     private string _baseDirectory;
 
 	public GxFileInfo(FileInfo file)
@@ -654,7 +655,7 @@ public enum GxFileType
 public class GxFile
 {
 
-    private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFile));
+    private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxFile>();
 
     internal IGxFileInfo _file;
 	string _baseDirectory;
@@ -1574,7 +1575,7 @@ public class GxFile
 
 public class GxDirectory
 {
-    private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDirectory));
+    private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDirectory>();
     IGxDirectoryInfo _directory;
     string _baseDirectory;
     int _lastError;

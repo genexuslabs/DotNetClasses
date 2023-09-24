@@ -6,7 +6,7 @@ namespace GeneXus.Messaging.Common
 {
 	public abstract class MessageBrokerBase
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(MessageBrokerBase));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<MessageBrokerBase>();
 		internal GXService service;
 		public MessageBrokerBase()
 		{
