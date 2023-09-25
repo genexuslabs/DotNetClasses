@@ -103,6 +103,7 @@ namespace com.genexus.reports
 				pdfDocument = new PdfDocument(writer);
 				pdfDocument.SetDefaultPageSize(this.pageSize);
 				document = new Document(pdfDocument);
+				document.SetFontProvider(new DefaultFontProvider());
 
 			}
 			catch (PdfException de)
@@ -775,7 +776,7 @@ namespace com.genexus.reports
 				try
 				{
 					ConverterProperties converterProperties = new ConverterProperties();
-					FontProvider fontProvider = new DefaultFontProvider();
+					FontProvider fontProvider = document.GetFontProvider();
 					if (IsTrueType(baseFont))
 					{
 						Hashtable locations = GetFontLocations();
@@ -794,7 +795,6 @@ namespace com.genexus.reports
 							}
 						}
 					}
-					document.SetFontProvider(fontProvider);
 					converterProperties.SetFontProvider(fontProvider);
 					bottomAux = (float)convertScale(bottom);
 					topAux = (float)convertScale(top);
@@ -960,12 +960,13 @@ namespace com.genexus.reports
 		private void ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement)
 		{
 			Div div = blockElement as Div;
-			if (div != null) {
+			if (div != null)
+			{
 				// Iterate through the children of the Div and process each child element recursively
 				foreach (IElement child in div.GetChildren())
 					if (child is IBlockElement)
 						ProcessHTMLElement(htmlRectangle, currentYPosition, (IBlockElement)child);
-					
+
 			}
 
 			float blockElementHeight = GetBlockElementHeight(blockElement, htmlRectangle);
@@ -976,55 +977,42 @@ namespace com.genexus.reports
 				return;
 			}
 
-			Link anchor = blockElement as Link;
-			if (anchor != null)
-			{
-				anchor.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add((IBlockElement) anchor);
-				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
-				return;
-			}
-
+			Paragraph p = blockElement as Paragraph;
+			Table table = blockElement as Table;
 			List list = blockElement as List;
-			if (list != null)
+			Link anchor = blockElement as Link;
+			Image image = blockElement as Image;
+			if (p != null)
+			{
+				p.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				document.Add(p);
+			}
+			else if (table != null)
+			{
+				table.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				document.Add(table);
+			}
+			else if (list != null)
 			{
 				// This is a hack for the specific case of rendering a list as cb.Add(list) fails to add numeration to each element but document.Add(list) fails to
 				// consider the numeration of each element as part of it. Solution is to use document.Add(list) and move the list to the right.
 				float numWidth = new Paragraph("1. ").CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
 				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX() + numWidth, currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-
 				document.Add(list);
-				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
-				return;
 			}
-
-			Table table = blockElement as Table;
-			if (table != null)
+			else if (anchor != null)
 			{
-				table.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add(table);
-				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
-				return;
+				anchor.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				document.Add((IBlockElement)anchor);
 			}
-
-			Paragraph p = blockElement as Paragraph;
-			if (p != null)
-			{
-				p.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add(p);
-				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
-				return;
-			}
-
-			Image image = blockElement as Image;
-			if (image != null)
+			else if (image != null)
 			{
 				image.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
 				document.Add(image);
-				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
-				return;
 			}
+			currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
 
+			return;
 		}
 
 		private float GetBlockElementHeight(IBlockElement blockElement, Rectangle htmlRectangle)
