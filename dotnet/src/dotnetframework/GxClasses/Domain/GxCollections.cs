@@ -60,7 +60,10 @@ namespace GeneXus.Utils
 		{
 			return parameters.Add(value);
 		}
-
+		internal void Reverse()
+		{
+			parameters.Reverse();
+		}
 		public void Clear()
 		{
 			parameters.Clear();
@@ -158,6 +161,7 @@ namespace GeneXus.Utils
 						parms.Add(this[j].ParameterName);
 					}
 				}
+				uniqueParms.Reverse();
 				return uniqueParms;
 			}
 			else

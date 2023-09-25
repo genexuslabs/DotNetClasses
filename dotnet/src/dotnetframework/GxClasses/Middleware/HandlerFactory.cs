@@ -208,7 +208,7 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				foreach (SingleMap m in GXAPIModule.servicesMap[actualPath].Values)
 				{
-					if (!m.Path.Equals(m.PathRegexp) && GxRegex.IsMatch(objectName, m.PathRegexp))
+					if (!m.Path.Equals(m.PathRegexp) && GxRegex.IsMatch(objectName, m.PathRegexp) && m.Verb.Equals(requestType))
 					{
 						mapName = m.Name;						
 						routeParms = new Dictionary<string, object>();

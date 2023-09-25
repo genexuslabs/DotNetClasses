@@ -709,7 +709,7 @@ namespace GeneXus.Application
 		}
 		public Task WebException(Exception ex)
 		{
-#if NETCORE			
+#if NETCORE
 			GxHttpActivitySourceHelper.SetException(Activity.Current, ex);
 #endif
 			GXLogging.Error(log, "WebException", ex);
