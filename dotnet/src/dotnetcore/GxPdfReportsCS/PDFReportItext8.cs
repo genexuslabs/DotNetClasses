@@ -26,22 +26,19 @@ using iText.Layout.Layout;
 using iText.Layout.Properties;
 using iText.Layout.Splitting;
 using log4net;
-using NetTopologySuite.Utilities;
-using static iText.Kernel.Pdf.Colorspace.PdfPattern;
 using Path = System.IO.Path;
-using Text = iText.Layout.Element.Text;
 
 namespace GeneXus.Printer
 {
 
-	public class GxReportBuilderPdf7 : GxReportBuilderPdf
+	public class GxReportBuilderPdf8 : GxReportBuilderPdf
 	{
 		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-		public GxReportBuilderPdf7() { }
-		public GxReportBuilderPdf7(string appPath, Stream outputStream)
+		public GxReportBuilderPdf8() { }
+		public GxReportBuilderPdf8(string appPath, Stream outputStream)
 		{
 
-			_pdfReport = new com.genexus.reports.PDFReportItextSharp7(appPath);
+			_pdfReport = new com.genexus.reports.PDFReportItext8(appPath);
 			if (outputStream != null)
 			{
 				_pdfReport.setOutputStream(outputStream);
@@ -54,7 +51,7 @@ namespace GeneXus.Printer
 namespace com.genexus.reports
 {
 
-	public class PDFReportItextSharp7 : PDFReportItextBase
+	public class PDFReportItext8 : PDFReportItextBase
 	{
 
 		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -78,7 +75,7 @@ namespace com.genexus.reports
 		private Boolean fontBold;
 		private Boolean fontItalic;
 
-		public PDFReportItextSharp7(String appPath) : base(appPath)
+		public PDFReportItext8(String appPath) : base(appPath)
 		{
 			documentImages = new Dictionary<string, Image>();
 		}
@@ -777,6 +774,28 @@ namespace com.genexus.reports
 			{
 				try
 				{
+					ConverterProperties converterProperties = new ConverterProperties();
+					FontProvider fontProvider = new DefaultFontProvider();
+					if (IsTrueType(baseFont))
+					{
+						Hashtable locations = GetFontLocations();
+						foreach (string fontName in locations.Keys)
+						{
+							string fontPath = (string)locations[fontName];
+							if (string.IsNullOrEmpty(fontPath))
+							{
+								MSPDFFontDescriptor fontDescriptor = new MSPDFFontDescriptor();
+								fontPath = fontDescriptor.getTrueTypeFontLocation(fontName);
+							}
+							if (!string.IsNullOrEmpty(fontPath))
+							{
+
+								fontProvider.AddFont(fontPath);
+							}
+						}
+					}
+					document.SetFontProvider(fontProvider);
+					converterProperties.SetFontProvider(fontProvider);
 					bottomAux = (float)convertScale(bottom);
 					topAux = (float)convertScale(top);
 					float drawingPageHeight = this.pageSize.GetTop() - topMargin - bottomMargin;
@@ -792,12 +811,11 @@ namespace com.genexus.reports
 					PdfCanvas htmlPdfCanvas = new PdfCanvas(pdfPage);
 					Canvas htmlCanvas = new Canvas(canvas, htmlRectangle);
 
-					ConverterProperties converterProperties = new ConverterProperties();
-					converterProperties.SetFontProvider(new DefaultFontProvider());
+
 					//Iterate over the elements (a.k.a the parsed HTML string) and handle each case accordingly
-					IList<IElement> elements = HtmlConverter.ConvertToElements(sTxt, new ConverterProperties());
+					IList<IElement> elements = HtmlConverter.ConvertToElements(sTxt, converterProperties);
 					foreach (IElement element in elements)
-						ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element);
+						ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element, fontProvider);
 				}
 				catch (Exception ex1)
 				{
@@ -939,14 +957,14 @@ namespace com.genexus.reports
 			}
 		}
 
-		private void ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement)
+		private void ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement, FontProvider fontProvider)
 		{
 			Div div = blockElement as Div;
 			if (div != null) {
 				// Iterate through the children of the Div and process each child element recursively
 				foreach (IElement child in div.GetChildren())
 					if (child is IBlockElement)
-						ProcessHTMLElement(htmlRectangle, currentYPosition, (IBlockElement)child);
+						ProcessHTMLElement(htmlRectangle, currentYPosition, (IBlockElement)child, fontProvider);
 					
 			}
 
