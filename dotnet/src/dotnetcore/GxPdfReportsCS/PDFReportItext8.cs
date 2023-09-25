@@ -815,7 +815,7 @@ namespace com.genexus.reports
 					//Iterate over the elements (a.k.a the parsed HTML string) and handle each case accordingly
 					IList<IElement> elements = HtmlConverter.ConvertToElements(sTxt, converterProperties);
 					foreach (IElement element in elements)
-						ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element, fontProvider);
+						ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element);
 				}
 				catch (Exception ex1)
 				{
@@ -957,14 +957,14 @@ namespace com.genexus.reports
 			}
 		}
 
-		private void ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement, FontProvider fontProvider)
+		private void ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement)
 		{
 			Div div = blockElement as Div;
 			if (div != null) {
 				// Iterate through the children of the Div and process each child element recursively
 				foreach (IElement child in div.GetChildren())
 					if (child is IBlockElement)
-						ProcessHTMLElement(htmlRectangle, currentYPosition, (IBlockElement)child, fontProvider);
+						ProcessHTMLElement(htmlRectangle, currentYPosition, (IBlockElement)child);
 					
 			}
 
