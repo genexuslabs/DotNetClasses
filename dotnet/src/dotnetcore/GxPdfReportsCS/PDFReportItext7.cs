@@ -44,7 +44,6 @@ namespace GeneXus.Printer
 			_pdfReport = new com.genexus.reports.PDFReportItextSharp7(appPath);
 			if (outputStream != null)
 			{
-
 				_pdfReport.setOutputStream(outputStream);
 				GXLogging.Debug(log, "GxReportBuilderPdf outputStream: binaryWriter");
 			}
@@ -107,7 +106,6 @@ namespace com.genexus.reports
 				pdfDocument = new PdfDocument(writer);
 				pdfDocument.SetDefaultPageSize(this.pageSize);
 				document = new Document(pdfDocument);
-
 
 			}
 			catch (PdfException de)
@@ -622,7 +620,6 @@ namespace com.genexus.reports
 								break;
 							}
 						}
-
 						baseFont = PdfFontFactory.CreateFont(fontName, PdfEncodings.WINANSI, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
 					}
 				}
@@ -634,7 +631,6 @@ namespace com.genexus.reports
 						fontStyle = new Style();
 						if (fontItalic) fontStyle.SetItalic();
 						if (fontBold) fontStyle.SetBold();
-
 					}
 					string fontPath = GetFontLocation(fontName);
 					bool foundFont = true;
@@ -707,7 +703,6 @@ namespace com.genexus.reports
 				else
 					defaultFont = PdfFontFactory.CreateFont("Helvetica", PdfEncodings.WINANSI, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
 			}
-
 			return PdfFontFactory.CreateFont("Helvetica", PdfEncodings.WINANSI, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
 		}
 
@@ -780,41 +775,6 @@ namespace com.genexus.reports
 			GXLogging.Debug(log, "GxDrawText leftAux: " + leftAux + ",leftMargin:" + leftMargin + ",pageSize.Top:" + pageSize.GetTop() + ",bottomAux:" + bottomAux + ",topMargin:" + topMargin + ",bottomMargin:" + bottomMargin);
 			if (htmlformat == 1)
 			{
-				ConverterProperties properties = new ConverterProperties();
-				if (IsTrueType(this.baseFont))
-				{
-					Hashtable locations = GetFontLocations();
-					foreach (string fontName in locations.Keys)
-					{
-						string fontPath = (string)locations[fontName];
-						if (string.IsNullOrEmpty(fontPath))
-						{
-							MSPDFFontDescriptor fontDescriptor = new MSPDFFontDescriptor();
-							fontPath = fontDescriptor.getTrueTypeFontLocation(fontName);
-						}
-						if (!string.IsNullOrEmpty(fontPath))
-						{
-							FontProvider fontProvider = new DefaultFontProvider();
-
-							if (IsEmbeddedFont(fontName))
-								fontProvider.AddFont(fontPath, PdfEncodings.IDENTITY_H);
-							else
-								fontProvider.AddFont(fontPath, PdfEncodings.WINANSI);
-
-							properties.SetFontProvider(fontProvider);
-						}
-					}
-				}
-
-				//Bottom and top are the absolutes, regardless of the actual height at which the letters are written.
-				bottomAux = (float)convertScale(bottom);
-				topAux = (float)convertScale(top);
-
-				Rectangle htmlRectangle = new Rectangle(leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin, rightAux - leftAux, bottomAux - topAux);
-				Canvas cb = new Canvas(canvas, htmlRectangle);
-				TextAlignment colAlignment = (TextAlignment)GetTextAlignment(alignment);
-				cb.SetTextAlignment(colAlignment);
-
 				try
 				{
 					bottomAux = (float)convertScale(bottom);
@@ -825,15 +785,19 @@ namespace com.genexus.reports
 					float lly = drawingPageHeight - bottomAux;
 					float urx = rightAux + leftMargin;
 					float ury = drawingPageHeight - topAux;
-				
+
+					Rectangle htmlRectangle = new Rectangle(llx, lly, urx - llx, ury - lly);
 					YPosition yPosition = new YPosition(htmlRectangle.GetTop());
 
+					PdfCanvas htmlPdfCanvas = new PdfCanvas(pdfPage);
+					Canvas htmlCanvas = new Canvas(canvas, htmlRectangle);
+
 					ConverterProperties converterProperties = new ConverterProperties();
-					converterProperties.SetFontProvider(document.GetFontProvider());
+					converterProperties.SetFontProvider(new DefaultFontProvider());
 					//Iterate over the elements (a.k.a the parsed HTML string) and handle each case accordingly
-					IList<IElement> elements = HtmlConverter.ConvertToElements(sTxt, properties);
+					IList<IElement> elements = HtmlConverter.ConvertToElements(sTxt, new ConverterProperties());
 					foreach (IElement element in elements)
-						processHTMLElement(cb, colAlignment, htmlRectangle, yPosition, (IBlockElement)element);
+						ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element);
 				}
 				catch (Exception ex1)
 				{
@@ -975,18 +939,18 @@ namespace com.genexus.reports
 			}
 		}
 
-		private void processHTMLElement(Canvas cb, TextAlignment colAlignment, Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement)
+		private void ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement)
 		{
 			Div div = blockElement as Div;
 			if (div != null) {
 				// Iterate through the children of the Div and process each child element recursively
 				foreach (IElement child in div.GetChildren())
 					if (child is IBlockElement)
-						processHTMLElement(cb, colAlignment, htmlRectangle, currentYPosition, (IBlockElement)child);
+						ProcessHTMLElement(htmlRectangle, currentYPosition, (IBlockElement)child);
 					
 			}
 
-			float blockElementHeight = getBlockElementHeight(blockElement, htmlRectangle);
+			float blockElementHeight = GetBlockElementHeight(blockElement, htmlRectangle);
 			float availableSpace = currentYPosition.CurrentYPosition - htmlRectangle.GetBottom();
 			if (blockElementHeight > availableSpace)
 			{
@@ -1011,7 +975,6 @@ namespace com.genexus.reports
 				float numWidth = new Paragraph("1. ").CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
 				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX() + numWidth, currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
 
-				list.SetTextAlignment(colAlignment);
 				document.Add(list);
 				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
 				return;
@@ -1021,8 +984,7 @@ namespace com.genexus.reports
 			if (table != null)
 			{
 				table.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				table.SetTextAlignment(colAlignment);
-				cb.Add(table);
+				document.Add(table);
 				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
 				return;
 			}
@@ -1040,7 +1002,6 @@ namespace com.genexus.reports
 			if (image != null)
 			{
 				image.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				image.SetTextAlignment(colAlignment);
 				document.Add(image);
 				currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
 				return;
@@ -1048,14 +1009,14 @@ namespace com.genexus.reports
 
 		}
 
-		private float getBlockElementHeight(IBlockElement blockElement, Rectangle htmlRectangle)
+		private float GetBlockElementHeight(IBlockElement blockElement, Rectangle htmlRectangle)
 		{
 			return blockElement.CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
 		}
 
+		//Utility class used to know where the cursor is left after each block element (HTML tag) is rendered
 		private class YPosition
 		{
-			//Utility class used to know where the cursor is left after each block element (HTML tag) is rendered
 			public YPosition(float initialYPosition)
 			{
 				CurrentYPosition = initialYPosition;
@@ -1162,7 +1123,6 @@ namespace com.genexus.reports
 				{
 					myResult = true;
 				}
-
 				return myResult || baseResult;
 			}
 		}
@@ -1206,10 +1166,9 @@ namespace com.genexus.reports
 					Canvas canvas = new Canvas(page, templateRectangle);
 					canvas.ShowTextAligned(i.ToString(CultureInfo.InvariantCulture), templatex, templatey, TextAlignment.CENTER).SetBackgroundColor(templateColorFill).SetFont(templateFont).SetFontSize(templateFontSize);
 				}
-
 			}
-			int copies = 1;
 
+			int copies = 1;
 			try
 			{
 				copies = Convert.ToInt32(printerSettings.getProperty(form, Const.COPIES));
@@ -1305,10 +1264,7 @@ namespace com.genexus.reports
 
 			}
 			document.Close();
-
-
 			GXLogging.Debug(log, "GxEndDocument!");
-
 			try
 			{
 				props.save();
@@ -1328,22 +1284,15 @@ namespace com.genexus.reports
 					{
 						outputStream.Close();
 						GXLogging.Debug(log, "GxEndDocument OUTPUT_SCREEN outputstream length" + outputStream.ToString().Length);
-
 					}
 					catch (IOException e)
 					{
-						;
-
 						GXLogging.Error(log, "GxEndDocument OUTPUT_SCREEN error", e);
-
 					}
 					try { showReport(docName, modal); }
-					catch (Exception)
-					{
-
-					}
-
+					catch (Exception){}
 					break;
+
 				case Const.OUTPUT_PRINTER:
 					try { outputStream.Close(); }
 					catch (IOException) {; } // Cierro el archivo
@@ -1354,11 +1303,9 @@ namespace com.genexus.reports
 							printReport(docName, this.printerOutputMode == 0, printerSettings.getProperty(form, Const.PRINTER));
 						}
 					}
-					catch (Exception)
-					{
-
-					}
+					catch (Exception){}
 					break;
+
 				case Const.OUTPUT_FILE:
 					try
 					{
@@ -1368,19 +1315,16 @@ namespace com.genexus.reports
 					catch (IOException e)
 					{
 						GXLogging.Error(log, "GxEndDocument OUTPUT_FILE error", e);
-
-						;
 					}
 					break;
+
 				case Const.OUTPUT_STREAM:
 				case Const.OUTPUT_STREAM_PRINTER:
-
 				default: break;
 			}
 			outputStream = null;
 
 			GXLogging.Debug(log, "GxEndDocument End");
-
 		}
 		public override void GxStartPage()
 		{
@@ -1401,6 +1345,5 @@ namespace com.genexus.reports
 			return font.GetFontProgram() is TrueTypeFont;
 		}
 	}
-
 }
 
