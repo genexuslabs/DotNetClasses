@@ -471,7 +471,7 @@ namespace GeneXus.Procedure
 					Type classType = assem.GetType( "GeneXus.Printer.GxReportBuilderPdf", false, true);
 					reportHandler = (IReportHandler) Activator.CreateInstance(classType,new Object[]{path, reportOutputStream});
 #else
-					string reportBuidler = Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_ITEXT8, StringComparison.OrdinalIgnoreCase) ? "GxReportBuilderPdf7" : "GxReportBuilderPdf";
+					string reportBuidler = Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_ITEXT8, StringComparison.OrdinalIgnoreCase) ? "GxReportBuilderPdf8" : "GxReportBuilderPdf";
 					reportHandler = (IReportHandler)(ClassLoader.FindInstance("GxPdfReportsCS", "GeneXus.Printer", reportBuidler, new Object[] { path, reportOutputStream }, null));
 #endif
 				}
