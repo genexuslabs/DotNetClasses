@@ -99,12 +99,10 @@ namespace com.genexus.reports
 					//if (SetComplainceLevel(complianceLevel))
 						//writer.SetTagged();
 				}
-
 				pdfDocument = new PdfDocument(writer);
 				pdfDocument.SetDefaultPageSize(this.pageSize);
 				document = new Document(pdfDocument);
 				document.SetFontProvider(new DefaultFontProvider());
-
 			}
 			catch (PdfException de)
 			{
@@ -132,7 +130,7 @@ namespace com.genexus.reports
 	* @param hideCorners indicates whether corner triangles should be hidden when the side that joins them is hidden.
 	*/
 
-	private void drawRectangle(PdfCanvas cb, float x, float y, float w, float h, int styleTop, int styleBottom, int styleRight, int styleLeft,
+		private void drawRectangle(PdfCanvas cb, float x, float y, float w, float h, int styleTop, int styleBottom, int styleRight, int styleLeft,
 								float radioTL, float radioTR, float radioBL, float radioBR, float penAux, bool hideCorners)
 		{
 
@@ -468,7 +466,6 @@ namespace com.genexus.reports
 
 		public override void GxDrawBitMap(String bitmap, int left, int top, int right, int bottom, int aspectRatio)
 		{
-
 			try
 			{
 				Image image;
@@ -994,10 +991,7 @@ namespace com.genexus.reports
 			}
 			else if (list != null)
 			{
-				// This is a hack for the specific case of rendering a list as cb.Add(list) fails to add numeration to each element but document.Add(list) fails to
-				// consider the numeration of each element as part of it. Solution is to use document.Add(list) and move the list to the right.
-				float numWidth = new Paragraph("1. ").CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
-				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX() + numWidth, currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
+				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
 				document.Add(list);
 			}
 			else if (anchor != null)
