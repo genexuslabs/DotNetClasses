@@ -974,32 +974,27 @@ namespace com.genexus.reports
 				return;
 			}
 
-			Paragraph p = blockElement as Paragraph;
-			Table table = blockElement as Table;
-			List list = blockElement as List;
-			Link anchor = blockElement as Link;
-			Image image = blockElement as Image;
-			if (p != null)
+			if (blockElement is Paragraph p)
 			{
 				p.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
 				document.Add(p);
 			}
-			else if (table != null)
+			else if (blockElement is Table table)
 			{
 				table.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
 				document.Add(table);
 			}
-			else if (list != null)
+			else if (blockElement is List list)
 			{
 				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
 				document.Add(list);
 			}
-			else if (anchor != null)
+			else if (blockElement is Link anchor)
 			{
 				anchor.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
 				document.Add((IBlockElement)anchor);
 			}
-			else if (image != null)
+			else if (blockElement is Image image)
 			{
 				image.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
 				document.Add(image);
