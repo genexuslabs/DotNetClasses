@@ -102,7 +102,6 @@ namespace GeneXus.Application
 			if (startup == Startup.LocalPath && !File.Exists(Path.Combine(startup, Startup.APP_SETTINGS)) && File.Exists(Path.Combine(startupParent, Startup.APP_SETTINGS)))
 				Startup.LocalPath = startupParent;
 		}
-
 	}
 
 	public static class GXHandlerExtensions
