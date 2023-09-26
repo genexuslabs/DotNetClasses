@@ -1,6 +1,5 @@
 using System;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Configuration;
 
 namespace GeneXus.Services.Log
 {
@@ -17,7 +16,6 @@ namespace GeneXus.Services.Log
 			loggerFactory = LoggerFactory.Create(builder => builder.AddApplicationInsights(
 
 				configureTelemetryConfiguration: (config) =>
-				//config.SetAzureTokenCredential
 				config.ConnectionString = appInsightsConnection,
 				configureApplicationInsightsLoggerOptions: (options) => { }
 				)

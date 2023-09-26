@@ -2647,7 +2647,6 @@ namespace GeneXus.Data
 			if (!preparedStmtCache.TryGetValue(stmt, out s))
 			{
 				GXLogging.Info(log, "AddPreparedStmt, totalCachedStmtCursors:" + totalCachedCursors + ", cursorId: " + cursorId + ", stmt:" + stmt);
-				//GXLogging.Info(log, "AddPreparedStmt, totalCachedStmtCursors: {totalCachedCursors} cursorId:  {cursorId}  stmt {stmt}",totalCachedCursors.ToString(),cursorId.ToString(),stmt);
 				totalCachedCursors++;
 				CheckCacheSize();
 

@@ -14,7 +14,6 @@ using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
-using log4net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
@@ -35,7 +34,6 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using StackExchange.Redis;
-
 
 namespace GeneXus.Application
 {
@@ -171,6 +169,7 @@ namespace GeneXus.Application
 	{
 		public static bool IsHttpContext = InitializeHttpContext();
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Startup>();
+
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
@@ -193,7 +192,6 @@ namespace GeneXus.Application
 		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
-
 		static bool InitializeHttpContext()
 		{
 			GxContext.IsHttpContext = true;
@@ -348,11 +346,8 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
-			Config.GetValueOf("LOG_OUTPUT", out string logProvider);
-			if (logProvider == "ASPNetTraceAppender" || logProvider == "ConsoleAppender" || logProvider == "EventLogAppender" || logProvider == "RollingFile")
-			{
-				LogConfiguration.SetupLog4Net();
-			}
+			LogConfiguration.SetupLog4Net();
+			
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";
