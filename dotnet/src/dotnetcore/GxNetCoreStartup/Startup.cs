@@ -42,9 +42,6 @@ namespace GeneXus.Application
 		const string DEFAULT_PORT = "80";
 		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
 
-		private static string OPENTELEMETRY_SERVICE = "Observability";
-		private static string OPENTELEMETRY_AZURE_DISTRO = "GeneXus.OpenTelemetry.Azure.AzureAppInsights";
-		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 		public static void Main(string[] args)
 		{
 			try
@@ -82,13 +79,12 @@ namespace GeneXus.Application
 		}
 
 		public static IWebHost BuildWebHost(string[] args) =>
-		  WebHost.CreateDefaultBuilder(args)
-		   .ConfigureLogging(WebHostConfigureLogging)
+		   WebHost.CreateDefaultBuilder(args)
 		   .UseStartup<Startup>()
 		   .UseWebRoot(Startup.LocalPath)
 		   .UseContentRoot(Startup.LocalPath)
 		   .Build();
-		
+
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
 			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
@@ -96,7 +92,6 @@ namespace GeneXus.Application
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				 .ConfigureLogging(WebHostConfigureLogging)
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
 				.UseWebRoot(Startup.LocalPath)
@@ -104,7 +99,73 @@ namespace GeneXus.Application
 				.Build();
 		}
 
-		private static void WebHostConfigureLogging(WebHostBuilderContext hostingContext, ILoggingBuilder loggingBuilder)
+		private static void LocatePhysicalLocalPath()
+		{
+			string startup = FileUtil.GetStartupDirectory();
+			string startupParent = Directory.GetParent(startup).FullName;
+			if (startup == Startup.LocalPath && !File.Exists(Path.Combine(startup, Startup.APP_SETTINGS)) && File.Exists(Path.Combine(startupParent, Startup.APP_SETTINGS)))
+				Startup.LocalPath = startupParent;
+		}
+
+	}
+
+	public static class GXHandlerExtensions
+	{
+		public static IApplicationBuilder UseAntiforgeryTokens(this IApplicationBuilder app, string basePath)
+		{
+			return app.UseMiddleware<ValidateAntiForgeryTokenMiddleware>(basePath);
+		}
+		public static IApplicationBuilder UseGXHandlerFactory(this IApplicationBuilder builder, string basePath)
+		{
+			return builder.UseMiddleware<HandlerFactory>(basePath);
+		}
+		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app, string basePath)
+		{
+			return app
+					.Map($"{basePath}/gxwebsocket"    , (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>())
+					.Map($"{basePath}/gxwebsocket.svc", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>()); //Compatibility reasons. Remove in the future.
+		}
+	}
+  
+	public class Startup
+	{
+		static IGXLogger log;
+		private static string OPENTELEMETRY_SERVICE = "Observability";
+		private static string OPENTELEMETRY_AZURE_DISTRO = "GeneXus.OpenTelemetry.Azure.AzureAppInsights";
+		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
+
+		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
+		public static string VirtualPath = string.Empty;
+		public static string LocalPath = Directory.GetCurrentDirectory();
+		internal static string APP_SETTINGS = "appsettings.json";
+
+		const string UrlTemplateControllerWithParms = "controllerWithParms";
+		const string RESOURCES_FOLDER = "Resources";
+		const string TRACE_FOLDER = "logs";
+		const string TRACE_PATTERN = "trace.axd";
+		const string REST_BASE_URL = "rest/";
+		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
+		const string REWRITE_FILE = "rewrite.config";
+		const string SWAGGER_DEFAULT_YAML = "default.yaml";
+		const string DEVELOPER_MENU = "developermenu.html";
+		const string SWAGGER_SUFFIX = "swagger";
+		const string CORS_POLICY_NAME = "AllowSpecificOriginsPolicy";
+		const string CORS_ANY_ORIGIN = "*";
+		const double CORS_MAX_AGE_SECONDS = 86400;
+
+		public List<string> servicesBase = new List<string>();		
+
+		private GXRouting gxRouting;
+		public Startup(IConfiguration configuration, IHostingEnvironment env)
+		{	
+			Config.ConfigRoot = configuration;
+			GxContext.IsHttpContext = true;
+			GXRouting.ContentRootPath = env.ContentRootPath;
+			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
+			gxRouting = new GXRouting(REST_BASE_URL);
+			log = GXLoggerFactory.GetLogger<Startup>();
+		}
+		private static void WebHostConfigureLogging(ILoggingBuilder loggingBuilder)
 		{
 			loggingBuilder.AddConsole();
 			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
@@ -137,74 +198,6 @@ namespace GeneXus.Application
 				loggerOptions.ParseStateValues = true;
 			});
 		}
-		private static void LocatePhysicalLocalPath()
-		{
-			string startup = FileUtil.GetStartupDirectory();
-			string startupParent = Directory.GetParent(startup).FullName;
-			if (startup == Startup.LocalPath && !File.Exists(Path.Combine(startup, Startup.APP_SETTINGS)) && File.Exists(Path.Combine(startupParent, Startup.APP_SETTINGS)))
-				Startup.LocalPath = startupParent;
-		}
-
-	}
-
-	public static class GXHandlerExtensions
-	{
-		public static IApplicationBuilder UseAntiforgeryTokens(this IApplicationBuilder app, string basePath)
-		{
-			return app.UseMiddleware<ValidateAntiForgeryTokenMiddleware>(basePath);
-		}
-		public static IApplicationBuilder UseGXHandlerFactory(this IApplicationBuilder builder, string basePath)
-		{
-			return builder.UseMiddleware<HandlerFactory>(basePath);
-		}
-		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app, string basePath)
-		{
-			return app
-					.Map($"{basePath}/gxwebsocket"    , (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>())
-					.Map($"{basePath}/gxwebsocket.svc", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>()); //Compatibility reasons. Remove in the future.
-		}
-	}
-  
-	public class Startup
-	{
-		public static bool IsHttpContext = InitializeHttpContext();
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Startup>();
-
-		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
-		public static string VirtualPath = string.Empty;
-		public static string LocalPath = Directory.GetCurrentDirectory();
-		internal static string APP_SETTINGS = "appsettings.json";
-
-		const string UrlTemplateControllerWithParms = "controllerWithParms";
-		const string RESOURCES_FOLDER = "Resources";
-		const string TRACE_FOLDER = "logs";
-		const string TRACE_PATTERN = "trace.axd";
-		const string REST_BASE_URL = "rest/";
-		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
-		const string REWRITE_FILE = "rewrite.config";
-		const string SWAGGER_DEFAULT_YAML = "default.yaml";
-		const string DEVELOPER_MENU = "developermenu.html";
-		const string SWAGGER_SUFFIX = "swagger";
-		const string CORS_POLICY_NAME = "AllowSpecificOriginsPolicy";
-		const string CORS_ANY_ORIGIN = "*";
-		const double CORS_MAX_AGE_SECONDS = 86400;
-
-		public List<string> servicesBase = new List<string>();		
-
-		private GXRouting gxRouting;
-		static bool InitializeHttpContext()
-		{
-			GxContext.IsHttpContext = true;
-			return true;
-		}
-		public Startup(IConfiguration configuration, IHostingEnvironment env)
-		{
-			Config.ConfigRoot = configuration;
-			GXRouting.ContentRootPath = env.ContentRootPath;
-			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
-			GxContext.IsHttpContext = true;
-			gxRouting = new GXRouting(REST_BASE_URL);
-		}
 		public void ConfigureServices(IServiceCollection services)
 		{
 			OpenTelemetryService.Setup(services);
@@ -220,7 +213,7 @@ namespace GeneXus.Application
 				options.AllowSynchronousIO = true;
 			});
 			services.AddDistributedMemoryCache();
-
+			services.AddLogging(builder => WebHostConfigureLogging(builder));
 			services.Configure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
