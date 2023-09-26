@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using GeneXus;
 using iText.Barcodes;
@@ -805,14 +806,27 @@ namespace com.genexus.reports
 					Rectangle htmlRectangle = new Rectangle(llx, lly, urx - llx, ury - lly);
 					YPosition yPosition = new YPosition(htmlRectangle.GetTop());
 
-					PdfCanvas htmlPdfCanvas = new PdfCanvas(pdfPage);
 					Canvas htmlCanvas = new Canvas(canvas, htmlRectangle);
-
+					htmlCanvas.SetFontProvider(fontProvider);
 
 					//Iterate over the elements (a.k.a the parsed HTML string) and handle each case accordingly
 					IList<IElement> elements = HtmlConverter.ConvertToElements(sTxt, converterProperties);
 					foreach (IElement element in elements)
-						ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element);
+					{
+						bool fitInPage = ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element, htmlCanvas, drawingPageHeight);
+						if (!fitInPage)
+						{
+							GxEndPage();
+							GxStartPage();
+							htmlCanvas.Close();
+							float remainingDrawingPageHeight = bottomAux - drawingPageHeight;
+							htmlRectangle.SetY(drawingPageHeight - (remainingDrawingPageHeight));
+							htmlCanvas = new Canvas(canvas, htmlRectangle);
+							htmlCanvas.SetFontProvider(fontProvider);
+							ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element, htmlCanvas, remainingDrawingPageHeight);
+						}
+					}
+
 				}
 				catch (Exception ex1)
 				{
@@ -954,56 +968,24 @@ namespace com.genexus.reports
 			}
 		}
 
-		private void ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement)
+		private bool ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement, Canvas canvas, float drawingPageHeight)
 		{
-			Div div = blockElement as Div;
-			if (div != null)
-			{
-				// Iterate through the children of the Div and process each child element recursively
-				foreach (IElement child in div.GetChildren())
-					if (child is IBlockElement)
-						ProcessHTMLElement(htmlRectangle, currentYPosition, (IBlockElement)child);
-
-			}
 
 			float blockElementHeight = GetBlockElementHeight(blockElement, htmlRectangle);
 			float availableSpace = currentYPosition.CurrentYPosition - htmlRectangle.GetBottom();
-			if (blockElementHeight > availableSpace)
+			if (PageHeightExceeded(blockElementHeight, availableSpace))
 			{
-				GXLogging.Error(log, "You are trying to render an element of height " + blockElementHeight + " in a space of height " + availableSpace);
-				return;
+				GXLogging.Warn(log, "You are trying to render an element of height " + blockElementHeight + " in a space of height " + availableSpace);
+				return false;
 			}
-
-			if (blockElement is Paragraph p)
-			{
-				p.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add(p);
-			}
-			else if (blockElement is Table table)
-			{
-				table.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add(table);
-			}
-			else if (blockElement is List list)
-			{
-				list.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add(list);
-			}
-			else if (blockElement is Link anchor)
-			{
-				anchor.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add((IBlockElement)anchor);
-			}
-			else if (blockElement is Image image)
-			{
-				image.SetFixedPosition(this.getPage(), htmlRectangle.GetX(), currentYPosition.CurrentYPosition - blockElementHeight, htmlRectangle.GetWidth());
-				document.Add(image);
-			}
+			canvas.Add(blockElement);
 			currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
-
-			return;
+			return true;
 		}
-
+		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
+		{
+			return bottomAux > drawingPageHeight;
+		}
 		private float GetBlockElementHeight(IBlockElement blockElement, Rectangle htmlRectangle)
 		{
 			return blockElement.CreateRendererSubTree().SetParent(document.GetRenderer()).Layout(new LayoutContext(new LayoutArea(this.getPage(), htmlRectangle))).GetOccupiedArea().GetBBox().GetHeight();
