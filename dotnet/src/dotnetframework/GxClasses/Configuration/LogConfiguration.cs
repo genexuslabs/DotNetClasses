@@ -20,7 +20,11 @@ namespace GeneXus.Configuration
 
 		public static void SetupLog4Net()
 		{
-			SetupLog4NetFromEnvironmentVariables();
+			Config.GetValueOf("LOG_OUTPUT", out string logProvider);
+			if (logProvider == "ASPNetTraceAppender" || logProvider == "ConsoleAppender" || logProvider == "EventLogAppender" || logProvider == "RollingFile")
+			{
+				SetupLog4NetFromEnvironmentVariables();
+			}
 		}
 
 		private static void SetupLog4NetFromEnvironmentVariables()

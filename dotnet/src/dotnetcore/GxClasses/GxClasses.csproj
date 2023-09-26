@@ -159,7 +159,7 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.21.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.21.0" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 		<PackageReference Include="MySqlConnector" Version="2.2.3" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" />

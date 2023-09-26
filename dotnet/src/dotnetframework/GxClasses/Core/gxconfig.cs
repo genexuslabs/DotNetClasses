@@ -43,7 +43,7 @@ namespace GeneXus.Configuration
 		private static string configFileName;
 		public static string loadedConfigFile;
 		private static bool configLog = true;
-		public static bool configLoaded;
+		internal static bool configLoaded;
 		static NameValueCollection _config;
 		static ConcurrentDictionary<string, string> s_confMapping;
 		const string CONFMAPPING_FILE = "confmapping.json";
@@ -81,11 +81,7 @@ namespace GeneXus.Configuration
 				}
 
 			}
-			Config.GetValueOf("LOG_OUTPUT", out string logProvider);
-			if (logProvider == "ASPNetTraceAppender" || logProvider == "ConsoleAppender" || logProvider == "EventLogAppender" || logProvider == "RollingFile")
-			{
-				LogConfiguration.SetupLog4Net();
-			}
+			LogConfiguration.SetupLog4Net();
 		}
 
 		private static void RemoveArg(ref string[] args, ref int i)
@@ -434,7 +430,7 @@ namespace GeneXus.Configuration
 		}
 
 #if NETCORE
-		public static IConfiguration ConfigRoot { get; set; }
+		public static IConfiguration ConfigRoot { get ; set; }
 		const string Log4NetShortName = "log4net";
 		static Version Log4NetVersion = new Version(2, 0, 15);
 
@@ -444,17 +440,13 @@ namespace GeneXus.Configuration
 		const string ITextSharpFileName = "iTextSharp.dll";
 		const string ITextSharpAssemblyName = "itextsharp";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-		{
-			Config.GetValueOf("LOG_OUTPUT", out string logProvider);
-			if (logProvider == "ASPNetTraceAppender" || logProvider == "ConsoleAppender" || logProvider == "EventLogAppender" || logProvider == "RollingFile")
-			{
-				var requestedAssembly = new AssemblyName(args.Name);
-				if (requestedAssembly.Name == Log4NetShortName){
-					requestedAssembly.Version = Log4NetVersion;
-					return Assembly.Load(requestedAssembly);
-				}
+		{		
+			var requestedAssembly = new AssemblyName(args.Name);
+			if (requestedAssembly.Name == Log4NetShortName){
+				requestedAssembly.Version = Log4NetVersion;
+				return Assembly.Load(requestedAssembly);
 			}
-
+			
 			if (args.Name.StartsWith(ConfigurationManagerBak))
 			{
 				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), ConfigurationManagerFileName);
@@ -621,7 +613,6 @@ namespace GeneXus.Configuration
 								
 							}
 							configLoaded = true;
-							GxContext.configurationLoaded = configLoaded;
 							log = GXLoggerFactory.GetLogger<Config>();
 
 							string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";

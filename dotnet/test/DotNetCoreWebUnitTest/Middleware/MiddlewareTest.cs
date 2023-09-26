@@ -16,9 +16,9 @@ namespace xUnitTesting
 
 		protected TestServer server;
 		public MiddlewareTest()
-		{
-			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
+		{		
 			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(DOTNET_ENVIRONMENT));
+			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
 			server.PreserveExecutionContext= true;
 			server.CreateClient();
 		}
