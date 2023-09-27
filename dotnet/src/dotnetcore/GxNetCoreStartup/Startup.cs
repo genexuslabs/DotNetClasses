@@ -172,35 +172,26 @@ namespace GeneXus.Application
 		private static void ConfigureAzureOpentelemetry(ILoggingBuilder loggingBuilder)
 		{
 			string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
-			if (string.IsNullOrEmpty(endpoint))
-				GXLogging.Warn(log, "Azure Monitor Opentelemetry could not be initialized. Missing APPLICATIONINSIGHTS_CONNECTION_STRING environment variable");
-			else
-			{ 
-				var resourceBuilder = ResourceBuilder.CreateDefault()
-				.AddTelemetrySdk();
-				try
-				{ 
-				loggingBuilder.AddOpenTelemetry(loggerOptions =>
-				{
-					loggerOptions
-						.SetResourceBuilder(resourceBuilder)
-						.AddAzureMonitorLogExporter(options =>
-						{
-							options.ConnectionString = endpoint;
-							
-						})
-						.AddConsoleExporter();
+			var resourceBuilder = ResourceBuilder.CreateDefault()
+			.AddTelemetrySdk();
 
-					loggerOptions.IncludeFormattedMessage = true;
-					loggerOptions.IncludeScopes = true;
-					loggerOptions.ParseStateValues = true;
-				});
-				}
-				catch (Exception ex)
-				{
-					GXLogging.Warn(log, "Azure Monitor Opentelemetry could not be initialized. " + ex.Message);
-				}
-			}
+			loggingBuilder.AddOpenTelemetry(loggerOptions =>
+			{
+				loggerOptions
+					.SetResourceBuilder(resourceBuilder)
+					.AddAzureMonitorLogExporter(options =>
+					{
+						if (!string.IsNullOrEmpty(endpoint))
+							options.ConnectionString = endpoint;
+						else
+							options.Credential = new DefaultAzureCredential();
+					})
+					.AddConsoleExporter();
+
+				loggerOptions.IncludeFormattedMessage = true;
+				loggerOptions.IncludeScopes = true;
+				loggerOptions.ParseStateValues = true;
+			});
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
