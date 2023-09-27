@@ -131,7 +131,7 @@ namespace GeneXus.Application
 		static IGXLogger log;
 		private static string OPENTELEMETRY_SERVICE = "Observability";
 		private static string OPENTELEMETRY_AZURE_DISTRO = "GeneXus.OpenTelemetry.Azure.AzureAppInsights";
-		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
+		internal static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
