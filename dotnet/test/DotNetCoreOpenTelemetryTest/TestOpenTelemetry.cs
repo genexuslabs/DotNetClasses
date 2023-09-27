@@ -24,7 +24,7 @@ namespace DotNetCoreWebUnitTest
 		[Fact]
 		public async Task TestCouldNotLoadSystemDiagnosticsDiagnosticSource7_0_0_0()
 		{
-			Environment.SetEnvironmentVariable(Startup.APPLICATIONINSIGHTS_CONNECTION_STRING, "DummyConnectionString");
+			Environment.SetEnvironmentVariable(Startup.APPLICATIONINSIGHTS_CONNECTION_STRING, "DummyConnectionString", EnvironmentVariableTarget.Process);
 			server.AllowSynchronousIO = true;
 			HttpClient client = server.CreateClient();
 			HttpResponseMessage response = await client.PostAsync("rest/apps/testservice", null);
