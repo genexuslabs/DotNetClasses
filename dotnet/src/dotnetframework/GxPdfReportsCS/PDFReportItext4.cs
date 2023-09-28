@@ -1,29 +1,16 @@
 using System;
-
-using System.IO;
 using System.Collections;
-using System.Threading;
-using System.Text;
-using Microsoft.Win32;
-using System.Runtime.InteropServices;
-using System.Globalization;
-
-using System.util;
-using System.Diagnostics;
-using log4net;
-using iTextSharp.text.pdf;
-using iTextSharp.text;
-
-using GeneXus.Printer;
-using iTextSharp.text.html.simpleparser;
 using System.Collections.Generic;
-using System.Security;
-using GeneXus;
-using GeneXus.Utils;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
-using GeneXus.Metadata;
-using com.genexus.reports;
+using GeneXus;
 using GeneXus.Configuration;
+using GeneXus.Metadata;
+using iTextSharp.text;
+using iTextSharp.text.html.simpleparser;
+using iTextSharp.text.pdf;
+using log4net;
 
 namespace com.genexus.reports
 {
