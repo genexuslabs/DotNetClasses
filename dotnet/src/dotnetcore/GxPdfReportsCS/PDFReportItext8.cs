@@ -30,7 +30,6 @@ using Path = System.IO.Path;
 
 namespace GeneXus.Printer
 {
-
 	public class GxReportBuilderPdf8 : GxReportBuilderPdf
 	{
 		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
