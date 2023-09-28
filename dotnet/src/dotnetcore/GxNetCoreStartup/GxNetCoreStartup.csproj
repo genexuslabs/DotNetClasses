@@ -22,6 +22,7 @@
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.0.0-beta.13" NoWarn="NU5104" PrivateAssets ="All"/>
 		<PackageReference Include="OpenTelemetry" Version="1.5.1" PrivateAssets ="All"/>
 		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.1" PrivateAssets ="All"/>
+		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.21.0" PrivateAssets ="All"/>
 	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
