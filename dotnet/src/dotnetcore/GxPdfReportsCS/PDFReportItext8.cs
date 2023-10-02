@@ -24,6 +24,7 @@ using iText.Layout.Element;
 using iText.Layout.Font;
 using iText.Layout.Layout;
 using iText.Layout.Properties;
+using iText.Layout.Renderer;
 using iText.Layout.Splitting;
 using log4net;
 using Path = System.IO.Path;
@@ -811,18 +812,30 @@ namespace com.genexus.reports
 					IList<IElement> elements = HtmlConverter.ConvertToElements(sTxt, converterProperties);
 					foreach (IElement element in elements)
 					{
-						bool fitInPage = ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element, htmlCanvas, drawingPageHeight);
-						if (!fitInPage)
+						float blockElementHeight = GetBlockElementHeight((IBlockElement)element, htmlRectangle);
+
+						if (PageHeightExceeded(bottomMargin, yPosition.CurrentYPosition))
 						{
+							llx = leftAux + leftMargin;
+							lly = drawingPageHeight - bottomAux;
+							urx = rightAux + leftMargin;
+							ury = drawingPageHeight - topAux;
+							htmlRectangle = new Rectangle(llx, lly, urx - llx, ury - lly);
+							yPosition = new YPosition(htmlRectangle.GetTop());
+							bottomAux -= drawingPageHeight;
 							GxEndPage();
 							GxStartPage();
-							htmlCanvas.Close();
-							float remainingDrawingPageHeight = bottomAux - drawingPageHeight;
-							htmlRectangle.SetY(drawingPageHeight - (remainingDrawingPageHeight));
+
+							canvas = new PdfCanvas(pdfPage);
+							sTxt = sTxt.TrimEnd(TRIM_CHARS);
+							canvas.SetFontAndSize(this.baseFont, fontSize);
+							canvas.SetFillColor(foreColor);
+
 							htmlCanvas = new Canvas(canvas, htmlRectangle);
 							htmlCanvas.SetFontProvider(fontProvider);
-							ProcessHTMLElement(htmlRectangle, yPosition, (IBlockElement)element, htmlCanvas, remainingDrawingPageHeight);
 						}
+						ProcessHTMLElement((IBlockElement)element, alignment, htmlCanvas);
+						yPosition.CurrentYPosition -= blockElementHeight;
 					}
 
 				}
@@ -966,19 +979,14 @@ namespace com.genexus.reports
 			}
 		}
 
-		private bool ProcessHTMLElement(Rectangle htmlRectangle, YPosition currentYPosition, IBlockElement blockElement, Canvas canvas, float drawingPageHeight)
+		private void ProcessHTMLElement(IBlockElement blockElement, int alignment, Canvas htmlCanvas)
 		{
-
-			float blockElementHeight = GetBlockElementHeight(blockElement, htmlRectangle);
-			float availableSpace = currentYPosition.CurrentYPosition - htmlRectangle.GetBottom();
-			if (PageHeightExceeded(blockElementHeight, availableSpace))
+			if (blockElement is Paragraph p)
 			{
-				GXLogging.Warn(log, "You are trying to render an element of height " + blockElementHeight + " in a space of height " + availableSpace);
-				return false;
+				if (alignment != 0)
+					p.SetTextAlignment(GetTextAlignment(alignment));
 			}
-			canvas.Add(blockElement);
-			currentYPosition.CurrentYPosition = currentYPosition.CurrentYPosition - blockElementHeight;
-			return true;
+			htmlCanvas.Add(blockElement);
 		}
 		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
 		{
