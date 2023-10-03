@@ -23,6 +23,11 @@
 		<PackageReference Include="OpenTelemetry" Version="1.5.1" PrivateAssets ="All"/>
 		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.1" PrivateAssets ="All"/>
 		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.21.0" PrivateAssets ="All"/>
+
+		<PackageReference Include="itext7" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="itext7.font-asian" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="itext7.pdfhtml" Version="5.0.0" PrivateAssets="All"/>
+
 	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
