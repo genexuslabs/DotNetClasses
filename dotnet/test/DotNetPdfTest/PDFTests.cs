@@ -17,8 +17,11 @@ namespace UnitTesting
 				File.Delete(report);
 			try
 			{
-				apdfformat test = new apdfformat();
+				apdfformats2 test = new apdfformats2();
 				test.execute();
+
+				longHtml test2 = new longHtml();
+				test2.execute();
 			}
 #pragma warning disable CA1031 // Do not catch general exception types
 			catch (Exception ex)
