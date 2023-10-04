@@ -6101,9 +6101,12 @@ namespace GeneXus.Utils
 
 									g.FillPath(Brushes.White, path);
 
-									using (TextureBrush br = new TextureBrush(new Bitmap(OriginalImage), WrapMode.Clamp))
+									using (Bitmap bitmap = new Bitmap(OriginalImage))
 									{
-										g.FillPath(br, path);
+										using (TextureBrush br = new TextureBrush(bitmap, WrapMode.Clamp))
+										{
+											g.FillPath(br, path);
+										}
 									}
 								}
 							}
