@@ -19,12 +19,15 @@ namespace GeneXus.HttpHandlerFactory
 	internal class OptionsApiObjectRequestHandler : IHttpHandler
 	{
 		string actualPath;
+		string regexpPath;
 		string objectName;
-		internal OptionsApiObjectRequestHandler(string path, string name)
+		internal OptionsApiObjectRequestHandler(string path, string name, string regexp)
 		{
 			actualPath = path;
 			objectName = name;
+			regexpPath = regexp;
 		}
+
 		public void ProcessRequest(HttpContext context)
 		{
 			// OPTIONS VERB
@@ -32,7 +35,7 @@ namespace GeneXus.HttpHandlerFactory
 			bool found = false;
 			foreach (Tuple<string, string> t in GXAPIModule.servicesMapData[actualPath].Keys)
 			{
-				if (t.Item1.Equals(objectName.ToLower()))
+				if (t.Item1.Equals(objectName.ToLower()) || (GxRegex.IsMatch( t.Item1,regexpPath)))
 				{
 					mthheaders.Add(t.Item2);
 					found = true;
@@ -61,14 +64,14 @@ namespace GeneXus.HttpHandlerFactory
 
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
 		{
-			IHttpHandler handlerToReturn;			
+			IHttpHandler handlerToReturn;
 
 			string relativeURL = context.Request.AppRelativeCurrentExecutionFilePath;
 			string fname = relativeURL.Substring(relativeURL.LastIndexOf('~') + 2);
 			String cname1 = (fname.Contains(".")) ? fname.Substring(0, fname.LastIndexOf('.')) : fname;
 			string cname0 = cname1.ToLower();
 			string actualPath = "";
-			
+
 			if (cname0 == "gxoauthlogout")
 			{
 				return new GeneXus.Http.GXOAuthLogout();
@@ -85,7 +88,7 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				return new GeneXus.Http.GXMultiCall();
 			}
-            string assemblyName, cname;
+			string assemblyName, cname;
 			if (GXAPIModule.serviceInPath(pathTranslated, actualPath: out actualPath))
 			{
 				string nspace;
@@ -96,33 +99,37 @@ namespace GeneXus.HttpHandlerFactory
 				String objectNameUp = GetObjFromPath(cname1, actualPath);
 				//
 				Dictionary<string, object> routeParms;
-				if (GXAPIModule.servicesMapData.ContainsKey(actualPath) && GetSMap(actualPath, objectName, objectNameUp, requestType, out string mapName, out routeParms))					
+				if (GXAPIModule.servicesMapData.ContainsKey(actualPath))
 				{
-					if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
+					bool IsServiceCall = GetSMap(actualPath, objectName, objectNameUp, requestType, out string mapName, out string mapRegExp, out routeParms);
+					if (IsServiceCall)
 					{
-						String tmpController = objClass;
-						String asssemblycontroller = tmpController;
-						if (objClass.Contains("\\"))
+						if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
 						{
-							tmpController = objClass.Substring(objClass.LastIndexOf("\\") + 1);
-							String addNspace = objClass.Substring(0, objClass.LastIndexOf("\\")).Replace("\\", ".");
-							asssemblycontroller = addNspace + "." + tmpController;
-							nspace += "." + addNspace;
+							String tmpController = objClass;
+							String asssemblycontroller = tmpController;
+							if (objClass.Contains("\\"))
+							{
+								tmpController = objClass.Substring(objClass.LastIndexOf("\\") + 1);
+								String addNspace = objClass.Substring(0, objClass.LastIndexOf("\\")).Replace("\\", ".");
+								asssemblycontroller = addNspace + "." + tmpController;
+								nspace += "." + addNspace;
+							}
+							GxContext gxContext = GxContext.CreateDefaultInstance();
+							object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
+	
+							gxContext.HttpContext = context;
+							GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias, routeParms);
+							return restWrapper;
 						}
-						GxContext gxContext = GxContext.CreateDefaultInstance();
-						object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
-
-						gxContext.HttpContext = context;						
-						GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias, routeParms);
-						return restWrapper;
 					}
-				} 
-				else
-				{
-					if ( requestType.Equals(HttpMethod.Options.Method) && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
+					else
 					{
-						return new OptionsApiObjectRequestHandler(actualPath, objectName);
-					}
+						if (requestType.Equals(HttpMethod.Options.Method) && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
+						{
+							return new OptionsApiObjectRequestHandler(actualPath, objectName, mapRegExp);
+						}
+					}					
 				}
 				return null;
 			}
@@ -197,30 +204,36 @@ namespace GeneXus.HttpHandlerFactory
 			return objectName;
 		}
 
-		public bool  GetSMap(string actualPath, string objectName, string objectNameUp, string requestType, out string mapName, out Dictionary<string, object> routeParms)
+		public bool  GetSMap(string actualPath, string objectName, string objectNameUp, string requestType, out string mapName, out string mapRegexp, out Dictionary<string, object> routeParms)
 		{
 			routeParms = null;
 			if (GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out mapName))
-			{				
+			{
+				mapRegexp = mapName;
 				return true;
 			}
 			else
 			{
+				mapRegexp = mapName;
 				foreach (SingleMap m in GXAPIModule.servicesMap[actualPath].Values)
 				{
-					if (!m.Path.Equals(m.PathRegexp) && GxRegex.IsMatch(objectName, m.PathRegexp) && m.Verb.Equals(requestType))
+					if (!m.Path.Equals(m.PathRegexp) && GxRegex.IsMatch(objectName, m.PathRegexp))
 					{
-						mapName = m.Name;						
-						routeParms = new Dictionary<string, object>();
-						int i=0;
-						foreach (string smatch in ((GxRegexMatch)GxRegex.Matches(objectNameUp, m.PathRegexp, RegexOptions.Multiline | RegexOptions.IgnoreCase)[0]).Groups)
-						{
-							string var  = ((GxRegexMatch)GxRegex.Matches(m.Path, m.PathRegexp)[0]).Groups[i];
-							var = var.Substring(1, var.Length -2);
-							routeParms.Add(var, smatch);
-							i++;
+						mapName = m.Name;
+						mapRegexp = m.PathRegexp;
+						if (m.Verb.Equals(requestType))
+						{							
+							routeParms = new Dictionary<string, object>();
+							int i = 0;
+							foreach (string smatch in ((GxRegexMatch)GxRegex.Matches(objectNameUp, m.PathRegexp, RegexOptions.Multiline | RegexOptions.IgnoreCase)[0]).Groups)
+							{
+								string var = ((GxRegexMatch)GxRegex.Matches(m.Path, m.PathRegexp)[0]).Groups[i];
+								var = var.Substring(1, var.Length - 2);
+								routeParms.Add(var, smatch);
+								i++;
+							}
+							return true;
 						}
-						return true;
 					}
 				}
 			}
