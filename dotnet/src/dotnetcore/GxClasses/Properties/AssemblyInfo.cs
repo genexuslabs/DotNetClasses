@@ -14,3 +14,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("GeneXus.Deploy.AzureFunctions.Handlers")]
 [assembly: InternalsVisibleTo("AzureFunctionsTest")]
 [assembly: InternalsVisibleTo("GXMessageBroker")]
+[assembly: InternalsVisibleTo("DotNetCoreChunkedTest")]
