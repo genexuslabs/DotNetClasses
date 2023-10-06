@@ -102,7 +102,7 @@ namespace com.genexus.reports
 				pdfDocument = new PdfDocument(writer);
 				pdfDocument.SetDefaultPageSize(this.pageSize);
 				document = new Document(pdfDocument);
-				document.SetFontProvider(new DefaultFontProvider());
+				document.SetFontProvider(new DefaultFontProvider(false, false, false));
 			}
 			catch (PdfException de)
 			{
