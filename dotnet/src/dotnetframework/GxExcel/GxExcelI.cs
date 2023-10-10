@@ -53,7 +53,6 @@ namespace GeneXus.Office
         {
             if (Document == null)
             {
-#if !NETCORE
                 if (this.fileName.EndsWith(Constants.EXCEL2003Extension) || this.template.EndsWith(Constants.EXCEL2003ExtensionTemplate))
                 {
                     if (document == null || document.ErrCode == 99)
@@ -64,6 +63,7 @@ namespace GeneXus.Office
                         document.ReadOnly = ReadOnly;
                         document.Init(initErrDesc);
                     }
+#if !NETCORE
                     if (document == null || document.ErrCode != 0) //Automation
                     {
                         GXLogging.Debug(log,"Interop.GXOFFICE2Lib.ExcelDocumentClass");
@@ -71,11 +71,11 @@ namespace GeneXus.Office
                         document.ReadOnly = ReadOnly;
                         document.Init("");
                     }
-			}
-			else
 #endif
-				{
-					document = new GeneXus.Office.ExcelGXEPPlus.ExcelDocument();
+				}
+				else
+					{
+						document = new GeneXus.Office.ExcelGXEPPlus.ExcelDocument();
                     document.ReadOnly = ReadOnly;
                 }
 
@@ -438,9 +438,14 @@ namespace GeneXus.Office
             return fi.GetValue(null);
 
         }
+		internal static object GetEnumValue(Assembly ass, string enumNameClass, string enumField)
+		{
+			Type prn1 = ass.GetType(enumNameClass);
+			return prn1.GetProperty(enumField).GetValue(null);
+		}
 
-    }
-    public interface IGxError
+	}
+	public interface IGxError
     {
         void setErrCod(short errCod);
         void setErrDes(String errDes);

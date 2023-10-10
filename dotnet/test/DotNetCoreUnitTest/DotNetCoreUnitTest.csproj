@@ -78,12 +78,14 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+		<PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454"/>
 	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxExcel\GxExcel.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxOffice\GxOffice.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
@@ -157,6 +159,9 @@
 		</None>
 		<None Update="resources\text.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="SampleXLS.xls">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 

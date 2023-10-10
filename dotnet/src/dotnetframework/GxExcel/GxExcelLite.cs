@@ -6,6 +6,8 @@ using System.IO;
 using log4net;
 using GeneXus.Application;
 using GeneXus.Office.Excel;
+using GxClasses.Helpers;
+
 
 namespace GeneXus.Office.ExcelLite
 {
@@ -368,7 +370,16 @@ namespace GeneXus.Office.ExcelLite
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		public static string nmspace;
+#if NETCORE
+		public static string license = "FREE-LIMITED-KEY";
+		const string LoadMethod = "Load";
+		const string SaveMethod = "Save";
+#else
 		public static string license;
+		const string LoadMethod = "LoadXls";
+		const string SaveMethod = "SaveXls";
+#endif
+
 		public static Assembly ass;
 
 		public short Init(string previousMsgError)
@@ -381,17 +392,25 @@ namespace GeneXus.Office.ExcelLite
 				{
 					if (nmspace==null)
 					{
+#if NETCORE
+						ass = AssemblyLoader.LoadAssembly(new AssemblyName("GemBox.Spreadsheet"));
+#else
+
 						ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "GemBox.Spreadsheet.dll"));
 						if (ass==null)
 						{
 							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "GemBox.Spreadsheet.dll"));
 						}
+#endif
 						if (ass!=null)
 						{
 							nmspace="GemBox.Spreadsheet";
 						}
 						else
 						{
+#if NETCORE
+							ass = AssemblyLoader.LoadAssembly(new AssemblyName("GemBox.ExcelLite"));
+#else
 							if (ass==null)
 							{
 								ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), @"GemBox.ExcelLite.dll"));
@@ -400,6 +419,7 @@ namespace GeneXus.Office.ExcelLite
 							{
 								ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "GemBox.ExcelLite.dll"));
 							}
+#endif
 							if (ass!=null)
 							{
 								nmspace="GemBox.ExcelLite";
@@ -409,11 +429,15 @@ namespace GeneXus.Office.ExcelLite
 					}
 					else
 					{
+#if NETCORE
+						ass = AssemblyLoader.LoadAssembly(new AssemblyName(nmspace));
+#else
 						ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), nmspace + ".dll"));
 						if (ass==null)
 						{
 							ass = loadAssembly(Path.Combine(GxContext.StaticPhysicalPath(), "bin", nmspace + ".dll"));
 						}
+#endif
 					}
 					GXLogging.Debug(log, "nmspace:"  + nmspace);
 
@@ -434,6 +458,7 @@ namespace GeneXus.Office.ExcelLite
 							GXLogging.Error(log, @"Error setting license.", e);
 						}
 					}
+
 				}
 				return 0;
 			}							
@@ -458,7 +483,6 @@ namespace GeneXus.Office.ExcelLite
 			{
 				return null;
 			}
-
 		}
 		public short Open(String fileName)
 		{
@@ -479,7 +503,11 @@ namespace GeneXus.Office.ExcelLite
 						if (stream != null)
 						{
 							stream.Position = 0;
-							GxExcelUtils.Invoke(ef, "LoadXls", new object[] { stream });
+#if NETCORE
+							GxExcelUtils.InvokeStatic(ass, classType.FullName, LoadMethod, new object[] { stream });
+#else
+							GxExcelUtils.Invoke(ef, LoadMethod, new object[] { stream });
+#endif
 						}
                     }
 					else
@@ -495,7 +523,12 @@ namespace GeneXus.Office.ExcelLite
 					if (stream != null)
 					{
 						stream.Position = 0;
-						GxExcelUtils.Invoke(ef, "LoadXls", new object[] { stream });
+
+#if NETCORE
+						ef = GxExcelUtils.InvokeStatic(ass, classType.FullName, LoadMethod, new object[] { stream });
+#else
+						GxExcelUtils.Invoke(ef, LoadMethod, new object[] { stream });
+#endif
 					}
 				}
 				else
@@ -523,8 +556,14 @@ namespace GeneXus.Office.ExcelLite
 			{
                 GxFile file = new GxFile(Path.GetDirectoryName(xlsFileName), xlsFileName, GxFileType.Private);
                 MemoryStream content = new MemoryStream();
-				GxExcelUtils.Invoke(ef, "SaveXls", new object[]{content});
-                content.Position = 0;
+
+#if NETCORE
+				object saveOption = GxExcelUtils.GetEnumValue(ExcelDocument.ass, ExcelDocument.nmspace + ".SaveOptions", "XlsDefault");
+				GxExcelUtils.Invoke(ef, SaveMethod, new object[] { content, saveOption });
+#else
+				GxExcelUtils.Invoke(ef, SaveMethod, new object[]{content});
+#endif
+				content.Position = 0;
                 file.Create(content);
 			}
 			catch (Exception e)
