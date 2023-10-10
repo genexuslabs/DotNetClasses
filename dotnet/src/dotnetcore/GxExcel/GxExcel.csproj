@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="EPPlus" Version="4.5.3.2" />
+    <PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454" PrivateAssets="All"/>
     <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="6.0.3" />
   </ItemGroup>
