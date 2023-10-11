@@ -78,7 +78,7 @@ namespace GeneXus.Http.Client
 		NameValueCollection _formVars;
 		MultiPartTemplate _multipartTemplate;
 		bool _isChunkedResponse;
-		HttpResponseMessage _chunkedResponse;
+		HttpResponseMessage _response;
 		bool _eof;
 		bool _encodingFound;
 		string _charset;
@@ -140,7 +140,7 @@ namespace GeneXus.Http.Client
 		{
 			get
 			{
-				ReadReponseData();
+				ReadResponseData();
 				return _receiveData;
 			}
 		}
@@ -714,14 +714,14 @@ namespace GeneXus.Http.Client
 			}
 			return response;
 		}		
-		void ReadReponseData()
+		void ReadResponseData()
 		{
-			if (_receiveData == null && _chunkedResponse!=null)
+			if (_receiveData == null && _response!=null)
 			{
 				_receiveData = Array.Empty<byte>();
 				try
 				{
-					Stream stream = _chunkedResponse.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+					Stream stream = _response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
 
 					using (MemoryStream ms = new MemoryStream())
 					{
@@ -780,10 +780,10 @@ namespace GeneXus.Http.Client
 		}
 		internal void ProcessResponse(HttpResponseMessage httpResponse)
 		{
-			_chunkedResponse = httpResponse;
-			LoadResponseHeaders(_chunkedResponse);
-			_statusCode = ((short)_chunkedResponse.StatusCode);
-			_statusDescription = GetStatusCodeDescrption(_chunkedResponse);
+			_response = httpResponse;
+			LoadResponseHeaders(_response);
+			_statusCode = ((short)_response.StatusCode);
+			_statusDescription = GetStatusCodeDescrption(_response);
 			if ((_statusCode >= 400 && _statusCode < 600) && _errCode != 1)
 			{
 				_errCode = 1;
@@ -792,7 +792,7 @@ namespace GeneXus.Http.Client
 		}
 		public void HttpClientExecute(string method, string name)
 		{
-			_chunkedResponse = null;
+			_response = null;
 			Byte[] Buffer = new Byte[1024];
 			_errCode = 0;
 			_errDescription = string.Empty;
@@ -802,7 +802,7 @@ namespace GeneXus.Http.Client
 				string requestUrl = GetRequestURL(name);
 				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
 				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
-				_chunkedResponse = ExecuteRequest(method, requestUrl, cookies);
+				_response = ExecuteRequest(method, requestUrl, cookies);
 
 				if (contextCookies)
 					_context.UpdateSessionCookieContainer();
@@ -818,9 +818,9 @@ namespace GeneXus.Http.Client
 					_errDescription = aex.InnerException.Message;
 				else
 					_errDescription = aex.Message;
-				_chunkedResponse = new HttpResponseMessage();
-				_chunkedResponse.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
-				_chunkedResponse.StatusCode = HttpStatusCode.InternalServerError;
+				_response = new HttpResponseMessage();
+				_response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
+				_response.StatusCode = HttpStatusCode.InternalServerError;
 			}
 #endif
 			catch (HttpRequestException e)
@@ -831,12 +831,12 @@ namespace GeneXus.Http.Client
 					_errDescription = e.Message + " " + e.InnerException.Message;
 				else
 					_errDescription = e.Message;
-				_chunkedResponse = new HttpResponseMessage();
-				_chunkedResponse.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
+				_response = new HttpResponseMessage();
+				_response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 #if NETCORE
-				_chunkedResponse.StatusCode = (HttpStatusCode)(e.StatusCode != null ? e.StatusCode : HttpStatusCode.InternalServerError);
+				_response.StatusCode = (HttpStatusCode)(e.StatusCode != null ? e.StatusCode : HttpStatusCode.InternalServerError);
 #else
-				_chunkedResponse.StatusCode = HttpStatusCode.InternalServerError;
+				_response.StatusCode = HttpStatusCode.InternalServerError;
 #endif
 			}
 			catch (TaskCanceledException e)
@@ -844,9 +844,9 @@ namespace GeneXus.Http.Client
 				GXLogging.Warn(log, "Error Execute", e);
 				_errCode = 1;
 				_errDescription = "The request has timed out. " + e.Message;
-				_chunkedResponse = new HttpResponseMessage();
-				_chunkedResponse.StatusCode = 0;
-				_chunkedResponse.Content = new StringContent(String.Empty);
+				_response = new HttpResponseMessage();
+				_response.StatusCode = 0;
+				_response.Content = new StringContent(String.Empty);
 			}
 			catch (Exception e)
 			{
@@ -856,14 +856,14 @@ namespace GeneXus.Http.Client
 					_errDescription = e.Message + " " + e.InnerException.Message;
 				else
 					_errDescription = e.Message;
-				_chunkedResponse = new HttpResponseMessage();
-				_chunkedResponse.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
-				_chunkedResponse.StatusCode = HttpStatusCode.InternalServerError;
+				_response = new HttpResponseMessage();
+				_response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
+				_response.StatusCode = HttpStatusCode.InternalServerError;
 			}
 			GXLogging.Debug(log, "Reading response...");
-			if (_chunkedResponse == null)
+			if (_response == null)
 				return;
-			ProcessResponse(_chunkedResponse);
+			ProcessResponse(_response);
 			ClearSendStream();
 		}
 		NameValueCollection _respHeaders;
@@ -882,10 +882,10 @@ namespace GeneXus.Http.Client
 			}
 			_isChunkedResponse = resp.Headers.TransferEncodingChunked.HasValue && resp.Headers.TransferEncodingChunked.Value;
 
-			if (_chunkedResponse.Content.Headers.ContentType == null)
+			if (_response.Content.Headers.ContentType == null)
 				_charset = null;
 			else
-				_charset = _chunkedResponse.Content.Headers.ContentType.CharSet;
+				_charset = _response.Content.Headers.ContentType.CharSet;
 			_encodingFound = false;
 			if (!string.IsNullOrEmpty(_charset))
 			{
@@ -1393,13 +1393,13 @@ namespace GeneXus.Http.Client
 			if (!_isChunkedResponse)
 				return ToString();
 
-			if (_chunkedResponse == null)
+			if (_response == null)
 				return string.Empty;
 			try
 			{
 				if (_receivedChunkedStream == null)
 				{
-					_receivedChunkedStream = new StreamReader(_chunkedResponse.Content.ReadAsStreamAsync().GetAwaiter().GetResult());
+					_receivedChunkedStream = new StreamReader(_response.Content.ReadAsStreamAsync().GetAwaiter().GetResult());
 				}
 				_eof = _receivedChunkedStream.EndOfStream;
 				if (!_eof)
