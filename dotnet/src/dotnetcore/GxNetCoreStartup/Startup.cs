@@ -1,10 +1,10 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
@@ -30,6 +30,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
 using StackExchange.Redis;
 
 
@@ -39,6 +41,10 @@ namespace GeneXus.Application
 	{
 		const string DEFAULT_PORT = "80";
 		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
+
+		private static string OPENTELEMETRY_SERVICE = "Observability";
+		private static string OPENTELEMETRY_AZURE_DISTRO = "GeneXus.OpenTelemetry.Azure.AzureAppInsights";
+		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 		public static void Main(string[] args)
 		{
 			try
@@ -76,13 +82,12 @@ namespace GeneXus.Application
 		}
 
 		public static IWebHost BuildWebHost(string[] args) =>
-		   WebHost.CreateDefaultBuilder(args)
-			.ConfigureLogging(logging => logging.AddConsole())
-			.UseStartup<Startup>()
-			.UseWebRoot(Startup.LocalPath)
-			.UseContentRoot(Startup.LocalPath)
-			.Build();
-
+		  WebHost.CreateDefaultBuilder(args)
+		   .ConfigureLogging(WebHostConfigureLogging)
+		   .UseStartup<Startup>()
+		   .UseContentRoot(Startup.LocalPath)
+		   .Build();
+		
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
 			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
@@ -90,12 +95,46 @@ namespace GeneXus.Application
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				 .ConfigureLogging(logging => logging.AddConsole())
+				 .ConfigureLogging(WebHostConfigureLogging)
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
 				.UseWebRoot(Startup.LocalPath)
 				.UseContentRoot(Startup.LocalPath)
 				.Build();
+		}
+
+		private static void WebHostConfigureLogging(WebHostBuilderContext hostingContext, ILoggingBuilder loggingBuilder)
+		{
+			loggingBuilder.AddConsole();
+			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
+			if (providerService != null && providerService.ClassName.StartsWith(OPENTELEMETRY_AZURE_DISTRO))
+			{
+				ConfigureAzureOpentelemetry(loggingBuilder);
+			}
+		}
+		private static void ConfigureAzureOpentelemetry(ILoggingBuilder loggingBuilder)
+		{
+			string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
+			var resourceBuilder = ResourceBuilder.CreateDefault()
+			.AddTelemetrySdk();
+
+			loggingBuilder.AddOpenTelemetry(loggerOptions =>
+			{
+				loggerOptions
+					.SetResourceBuilder(resourceBuilder)
+					.AddAzureMonitorLogExporter(options =>
+					{
+						if (!string.IsNullOrEmpty(endpoint))
+							options.ConnectionString = endpoint;
+						else
+							options.Credential = new DefaultAzureCredential();
+					})
+					.AddConsoleExporter();
+
+				loggerOptions.IncludeFormattedMessage = true;
+				loggerOptions.IncludeScopes = true;
+				loggerOptions.ParseStateValues = true;
+			});
 		}
 		private static void LocatePhysicalLocalPath()
 		{
@@ -212,7 +251,7 @@ namespace GeneXus.Application
 			{
 				services.AddAntiforgery(options =>
 				{
-					options.HeaderName = HttpHeader.X_GXCSRF_TOKEN;
+					options.HeaderName = HttpHeader.X_CSRF_TOKEN_HEADER;
 					options.SuppressXFrameOptionsHeader = false;
 				});
 			}
@@ -419,20 +458,10 @@ namespace GeneXus.Application
 						routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
 					}
 				}
-				routes.MapRoute($"{restBasePath}VerificationToken", (context) =>
-				{
-					string requestPath = context.Request.Path.Value;
-
-					if (string.Equals(requestPath, $"/{restBasePath}VerificationToken", StringComparison.OrdinalIgnoreCase) && antiforgery!=null)
-					{
-						ValidateAntiForgeryTokenMiddleware.SetAntiForgeryTokens(antiforgery, context);
-					}
-					return Task.CompletedTask;
-				});
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
 			});
-
+			
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = basePath;
@@ -588,55 +617,5 @@ namespace GeneXus.Application
 			}
 			return Redirect(defaultFiles[0]);
 		}
-	}
-	public class ValidateAntiForgeryTokenMiddleware
-	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ValidateAntiForgeryTokenMiddleware));
-
-		private readonly RequestDelegate _next;
-		private readonly IAntiforgery _antiforgery;
-		private string _basePath;
-
-		public ValidateAntiForgeryTokenMiddleware(RequestDelegate next, IAntiforgery antiforgery, String basePath)
-		{
-			_next = next;
-			_antiforgery = antiforgery;
-			_basePath = "/" + basePath;
-		}
-
-		public async Task Invoke(HttpContext context)
-		{
-			if (context.Request.Path.HasValue && context.Request.Path.Value.StartsWith(_basePath))
-			{
-				if (HttpMethods.IsPost(context.Request.Method) ||
-				HttpMethods.IsDelete(context.Request.Method) ||
-				HttpMethods.IsPut(context.Request.Method))
-				{
-					string cookieToken = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
-					string headerToken = context.Request.Headers[HttpHeader.X_GXCSRF_TOKEN];
-					GXLogging.Debug(log, $"Antiforgery validation, cookieToken:{cookieToken}, headerToken:{headerToken}");
-
-					await _antiforgery.ValidateRequestAsync(context);
-					GXLogging.Debug(log, $"Antiforgery validation OK");
-				}
-				else if (HttpMethods.IsGet(context.Request.Method))
-				{
-					string tokens = context.Request.Cookies[HttpHeader.X_GXCSRF_TOKEN];
-					if (string.IsNullOrEmpty(tokens))
-					{
-						SetAntiForgeryTokens(_antiforgery, context);
-					}
-				}
-			}
-			await _next(context);
-		}
-		internal static void SetAntiForgeryTokens(IAntiforgery _antiforgery, HttpContext context)
-		{
-			AntiforgeryTokenSet tokenSet = _antiforgery.GetAndStoreTokens(context);
-			context.Response.Cookies.Append(HttpHeader.X_GXCSRF_TOKEN, tokenSet.RequestToken,
-				new CookieOptions { HttpOnly = false, Secure = GxContext.GetHttpSecure(context) == 1 });
-			GXLogging.Debug(log, $"Setting cookie ", HttpHeader.X_GXCSRF_TOKEN, "=", tokenSet.RequestToken);
-		}
-
 	}
 }
