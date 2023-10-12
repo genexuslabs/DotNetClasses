@@ -792,6 +792,7 @@ namespace GeneXus.Http.Client
 		}
 		public void HttpClientExecute(string method, string name)
 		{
+			_receiveData = null;
 			_response = null;
 			Byte[] Buffer = new Byte[1024];
 			_errCode = 0;
