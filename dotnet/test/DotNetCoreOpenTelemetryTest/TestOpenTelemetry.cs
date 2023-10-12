@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Metadata;
+using Microsoft.Extensions.Logging;
 using Xunit;
 using xUnitTesting;
 

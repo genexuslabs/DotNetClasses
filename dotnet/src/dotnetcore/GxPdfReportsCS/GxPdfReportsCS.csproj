@@ -9,15 +9,19 @@
 
 	<ItemGroup>
 		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PdfReportInterface.cs" Link="PdfReportInterface.cs" />
-		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PDFReportItext.cs" Link="PDFReportItext.cs" />
+		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PDFReportCommon.cs" Link="PDFReportCommon.cs" />
+		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PDFReportItext4.cs" Link="PDFReportItext4.cs" />
 	</ItemGroup>
-
 	<ItemGroup>
 	  <EmbeddedResource Include="..\..\dotnetframework\GxPdfReportsCS\sRGB Color Space Profile.icm" Link="sRGB Color Space Profile.icm" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="iTextSharp-LGPL" Version="4.1.6" />
+		<PackageReference Include="itext7" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="itext7.font-asian" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="itext7.pdfhtml" Version="5.0.0" PrivateAssets="All"/>
+
+		<PackageReference Include="iTextSharp-LGPL" Version="4.1.6"  PrivateAssets="All" />
 		<PackageReference Include="log4net" Version="2.0.15" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 			<PrivateAssets>all</PrivateAssets>

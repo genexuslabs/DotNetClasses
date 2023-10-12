@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using log4net;
 
@@ -10,7 +9,7 @@ namespace GeneXus.Printer
 		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		string _appPath;
-		IReportHandler _pdfReport;
+		protected IReportHandler _pdfReport;
 
 		public GxReportBuilderPdf(string appPath, Stream outputStream)
 		{

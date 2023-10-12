@@ -136,14 +136,14 @@ namespace GeneXus.Application
 				{
 					innerMethod = this._serviceMethod;
 					bodyParameters = PreProcessApiSdtParameter( _procWorker, innerMethod, bodyParameters, this._variableAlias);
-				}				
+				}
+				ServiceHeaders();
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
 				RestProcess(_procWorker, outputParameters);
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
-				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -312,6 +312,7 @@ namespace GeneXus.Application
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
 				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
+				ServiceHeaders();
 				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
 					innerMethod = _serviceMethodPattern;
@@ -332,7 +333,6 @@ namespace GeneXus.Application
 				RestProcess(_procWorker, outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
-				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -709,7 +709,7 @@ namespace GeneXus.Application
 		}
 		public Task WebException(Exception ex)
 		{
-#if NETCORE			
+#if NETCORE
 			GxHttpActivitySourceHelper.SetException(Activity.Current, ex);
 #endif
 			GXLogging.Error(log, "WebException", ex);

@@ -53,14 +53,14 @@ namespace xUnitTesting
 			foreach (var item in SetCookieHeaderValue.ParseList(values.ToList()))
 				cookies.Add(requestUriObj, new Cookie(item.Name.Value, item.Value.Value, item.Path.Value));
 
-			var setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_GXCSRF_TOKEN, StringComparison.OrdinalIgnoreCase));
+			var setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
 			csrfToken = setCookie.Value.Value;
 
 			response.EnsureSuccessStatusCode();
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode); //When failed, turn on log.config to see server side error.
 
 			StringContent body = new StringContent("{\"Image\":\"imageName\",\"ImageDescription\":\"imageDescription\"}");
-			client.DefaultRequestHeaders.Add(HttpHeader.X_GXCSRF_TOKEN, csrfToken);
+			client.DefaultRequestHeaders.Add(HttpHeader.X_CSRF_TOKEN_HEADER, csrfToken);
 			client.DefaultRequestHeaders.Add("Cookie", values);// //cookies.GetCookieHeader(requestUriObj));
 
 			response = await client.PostAsync("rest/apps/saveimage", body);
@@ -74,7 +74,7 @@ namespace xUnitTesting
 			IEnumerable<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
 			foreach (string cookie in cookies)
 			{
-				Assert.False(cookie.StartsWith(HttpHeader.X_GXCSRF_TOKEN));
+				Assert.False(cookie.StartsWith(HttpHeader.X_CSRF_TOKEN_COOKIE));
 			}
 			response.EnsureSuccessStatusCode();
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
@@ -87,7 +87,7 @@ namespace xUnitTesting
 			IEnumerable<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
 			foreach (string cookie in cookies)
 			{
-				Assert.False(cookie.StartsWith(HttpHeader.X_GXCSRF_TOKEN));
+				Assert.False(cookie.StartsWith(HttpHeader.X_CSRF_TOKEN_COOKIE));
 			}
 
 			response.EnsureSuccessStatusCode();

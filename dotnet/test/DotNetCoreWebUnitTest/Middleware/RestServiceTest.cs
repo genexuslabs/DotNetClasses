@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -11,6 +13,7 @@ using GeneXus.Services;
 using GeneXus.Storage.GXAmazonS3;
 using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Net.Http.Headers;
 using Xunit;
 namespace xUnitTesting
 {
@@ -22,7 +25,7 @@ namespace xUnitTesting
 			ClassLoader.FindType("apps.saveimage", "GeneXus.Programs.apps", "saveimage", Assembly.GetExecutingAssembly(), true);//Force loading assembly for saveimage procedure
 			server.AllowSynchronousIO = true;
 		}
-
+		const string serviceBodyResponse = "OK";
 		[Fact]
 		public async Task TestMultiCall()
 		{
@@ -33,7 +36,7 @@ namespace xUnitTesting
 			response.EnsureSuccessStatusCode();
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 			string responseBody = await response.Content.ReadAsStringAsync();
-			Assert.Empty(responseBody);
+			Assert.Equal($"{serviceBodyResponse}{serviceBodyResponse}{serviceBodyResponse}",responseBody);
 		}
 
 		[Fact]
@@ -125,6 +128,18 @@ namespace xUnitTesting
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode); //When failed, turn on log.config to see server side error.
 			return response;
 		}
+		string ACCESS_CONTROL_MAX_AGE_HEADER = "86400";
+		[Fact]
+		public async Task TestHttpResponseOnRestService()
+		{
+			HttpClient client = server.CreateClient();
+			HttpResponseMessage response  = await RunController(client);
+			bool headerAllow = response.Headers.TryGetValues(HeaderNames.AccessControlMaxAge, out IEnumerable<string> values);
+			Assert.True(headerAllow, $"The {HeaderNames.AccessControlMaxAge} header was not configured by the REST service.");
+			if (headerAllow)
+				Assert.Equal(ACCESS_CONTROL_MAX_AGE_HEADER, values.FirstOrDefault());
+		}
+
 	}
 
 }
