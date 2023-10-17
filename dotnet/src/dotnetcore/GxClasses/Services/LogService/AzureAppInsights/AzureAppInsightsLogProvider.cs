@@ -33,12 +33,10 @@ namespace GeneXus.Services.Log
 		{
 			loggerFactory.AddProvider(provider);
 		}
-
 		public void Dispose()
 		{
 			loggerFactory.Dispose();
 		}
-
 		public ILogger CreateLogger(string name)
 		{
 			return loggerFactory.CreateLogger(name);
