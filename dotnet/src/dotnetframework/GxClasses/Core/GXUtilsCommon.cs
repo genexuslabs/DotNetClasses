@@ -5959,9 +5959,12 @@ namespace GeneXus.Utils
 
 									g.FillPath(Brushes.White, path);
 
-									using (TextureBrush br = new TextureBrush(new Bitmap(OriginalImage), WrapMode.Clamp))
+									using (Bitmap bitmap = new Bitmap(OriginalImage))
 									{
-										g.FillPath(br, path);
+										using (TextureBrush br = new TextureBrush(bitmap, WrapMode.Clamp))
+										{
+											g.FillPath(br, path);
+										}
 									}
 								}
 							}
@@ -6070,7 +6073,7 @@ namespace GeneXus.Utils
 				ms.Position = 0;
 				try
 				{
-					if (imageFile.StartsWith("http://") || imageFile.StartsWith("https://"))
+					if ((imageFile.StartsWith("http://") || imageFile.StartsWith("https://")) && ServiceFactory.GetExternalProvider() == null)
 					{
 						Uri uri = new Uri(imageFile);
 						imageFile = Path.GetFileName(uri.AbsolutePath);
