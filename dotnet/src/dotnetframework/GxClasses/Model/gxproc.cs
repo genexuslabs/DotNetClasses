@@ -351,8 +351,7 @@ namespace GeneXus.Procedure
 	}
 	public class GXDataGridProcedure : GXProcedure
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXDataGridProcedure));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXDataGridProcedure>();
 		const string HAS_NEXT_PAGE = "HasNextPage";
 		const string RECORD_COUNT = "RecordCount";
 		const string RECORD_COUNT_SUPPORTED = "RecordCountSupported";
