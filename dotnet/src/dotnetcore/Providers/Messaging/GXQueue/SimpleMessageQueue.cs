@@ -434,7 +434,7 @@ namespace GeneXus.Messaging.Common
 	internal class ServiceFactory
 	{
 		private static IQueue queue;
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Services.ServiceFactory>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<ServiceFactory>();
 
 		public static GXServices GetGXServices()
 		{

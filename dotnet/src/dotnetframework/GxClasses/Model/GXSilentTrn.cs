@@ -138,7 +138,7 @@ namespace GeneXus.Utils
 	[Serializable]
 	public class GxSilentTrnSdt : GxUserType
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GxSilentTrnSdt>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxSilentTrnSdt>();
 		public GxSilentTrnSdt(IGxContext context){
             this.context = context;
             

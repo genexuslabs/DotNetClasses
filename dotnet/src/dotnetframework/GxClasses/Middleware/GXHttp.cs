@@ -56,7 +56,7 @@ namespace GeneXus.Http
 	public abstract class GXHttpHandler : WebControl, IHttpHandler
 #endif
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Http.GXHttpHandler>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXHttpHandler>();
 
 		internal const string GX_AJAX_REQUEST_HEADER = "GxAjaxRequest";
 		internal const string GX_SPA_GXOBJECT_RESPONSE_HEADER = "X-GXOBJECT";

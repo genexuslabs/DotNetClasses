@@ -16,7 +16,7 @@ namespace GeneXus.Utils
 	[SecuritySafeCritical]
 	public class GxQueueMessage
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GxQueueMessage>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxQueueMessage>();
 
 		int priority;
 
