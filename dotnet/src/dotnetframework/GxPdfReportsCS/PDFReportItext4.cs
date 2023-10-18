@@ -17,8 +17,7 @@ namespace com.genexus.reports
 	public class PDFReportItextSharp : PDFReportItextBase
 	{
 
-		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportItextSharp>();
 		private BaseFont baseFont;
 		Barcode barcode = null;
 		//Color for, BaseColor for => Itext5
