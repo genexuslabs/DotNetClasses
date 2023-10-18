@@ -95,7 +95,7 @@
 	</ItemGroup>
 	<Target Name="CustomContentTarget">
 		<ItemGroup Condition="$(GenStdVersion)==''">
-			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
+			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json;$(OutputPath)\$(MSBuildProjectName).runtimeconfig.json">
 				<PackagePath>./lib/$(TargetFramework)/</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
