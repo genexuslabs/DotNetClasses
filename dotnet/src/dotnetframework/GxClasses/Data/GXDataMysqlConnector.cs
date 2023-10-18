@@ -22,7 +22,7 @@ namespace GeneXus.Data
 
 	public class GxMySqlConnector : GxDataRecord 
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxMySqlConnector>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxMySqlConnector>();
 		private int MAX_TRIES;
 		private int m_FailedConnections;
 #if NETCORE
@@ -480,7 +480,7 @@ namespace GeneXus.Data
 	sealed internal class MySqlConnectorConnectionWrapper : GxAbstractConnectionWrapper
 	{
 	
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.MySqlConnectorConnectionWrapper>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<MySqlConnectorConnectionWrapper>();
 
 		[SecuritySafeCritical]
 		public MySqlConnectorConnectionWrapper() : base(new MySQLConnection())
@@ -601,7 +601,7 @@ namespace GeneXus.Data
 	[SecuritySafeCritical]
 	public class GxMySQLConnectorCursorDataReader : GxDataReader
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.GxDataReader>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDataReader>();
 		public GxMySQLConnectorCursorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool hasNested, bool dynStmt)
 		{

@@ -342,7 +342,7 @@ namespace GeneXus.Data.NTier
 
 	public class DataStoreProvider : IDataStoreProviderBase,IDataStoreProvider
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.NTier.DataStoreProvider>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<DataStoreProvider>();
 
 		ICursor[] _cursor;
 		Object[][] results;

@@ -204,7 +204,7 @@ namespace GeneXus.Data.NTier.ADO
     }
     public class GXFatFieldGetter : IFieldGetter
     {
-        static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.NTier.ADO.GXFatFieldGetter>();
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFatFieldGetter>();
         IGxDbCommand _gxDbCommand;
         IDataReader _DR; 
         public GXFatFieldGetter(GxCommand gxDbCommand)

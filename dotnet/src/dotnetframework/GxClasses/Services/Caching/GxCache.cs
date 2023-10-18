@@ -95,7 +95,7 @@ namespace GeneXus.Cache
 
 	public class CacheFactory
     {
-        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Cache.CacheFactory>();
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<CacheFactory>();
 	
 		public static string CACHE_SD = "SD";
         public static string CACHE_DB = "DB";
@@ -176,7 +176,7 @@ namespace GeneXus.Cache
     }
     public sealed class InProcessCache : ICacheService2
 	{
-        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Cache.InProcessCache>();
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<InProcessCache>();
         ICacheStorage cacheStorage;
         IScavengingAlgorithm storageScavengingImplementation;
 
@@ -645,7 +645,7 @@ namespace GeneXus.Cache
     public class SingletonCacheStorage : ICacheStorage
     {
 
-        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Cache.SingletonCacheStorage>();
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<SingletonCacheStorage>();
         private HybridDictionary cacheStorage = new HybridDictionary();
         private long size;
 
@@ -716,7 +716,7 @@ namespace GeneXus.Cache
 
     public class LruScavenging : IScavengingAlgorithm
     {
-        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Cache.LruScavenging>();
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<LruScavenging>();
 
 		private HybridDictionary itemsLastUsed;
         private ICacheService cachingService;

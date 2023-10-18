@@ -19,7 +19,7 @@ namespace GeneXus.Utils
 	}
 	public class GxProcess : IProcessHelper
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GxProcess>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxProcess>();
 		public short OpenPrintDocument(string commandString)
 		{
 			Process p = new Process();

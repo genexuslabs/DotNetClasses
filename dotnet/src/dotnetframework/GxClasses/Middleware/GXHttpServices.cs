@@ -573,7 +573,7 @@ namespace GeneXus.Http
 
 	internal class GXOAuthAccessToken : GXHttpHandler, IRequiresSessionState
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Http.GXOAuthAccessToken>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXOAuthAccessToken>();
 
 		public GXOAuthAccessToken()
 		{

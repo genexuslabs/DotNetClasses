@@ -17,7 +17,7 @@ namespace GeneXus.Utils
 	/// </summary>
 	public class ExpressionEvaluator
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.ExpressionEvaluator>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExpressionEvaluator>();
 		internal IGxContext context;
 		internal bool throwExceptions;
 

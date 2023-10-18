@@ -25,7 +25,7 @@ namespace GeneXus.Utils
 {
 	public class DocumentHandler
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.DocumentHandler>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<DocumentHandler>();
 
 		static IndexReader reader;
 		static ConcurrentDictionary<string, Query> queries = new ConcurrentDictionary<string, Query>();
@@ -152,7 +152,7 @@ namespace GeneXus.Utils
 	public class NTidyHTMLHandler : IDocumentHandler
 	{
 #if !NETCORE
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.DocumentHandler>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<DocumentHandler>();
 		Assembly ntidy;
 #endif
 		public NTidyHTMLHandler()

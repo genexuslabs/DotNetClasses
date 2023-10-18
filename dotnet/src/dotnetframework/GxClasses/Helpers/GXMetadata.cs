@@ -19,7 +19,7 @@ namespace GeneXus.Metadata
 
 	public class ClassLoader
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Metadata.ClassLoader>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<ClassLoader>();
 
 #if NETCORE
 		private const string GXWEBPROCEDURE_TYPE = "GeneXus.Procedure.GXWebProcedure";

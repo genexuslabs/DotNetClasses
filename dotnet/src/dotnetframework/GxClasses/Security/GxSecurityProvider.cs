@@ -35,7 +35,7 @@ namespace GeneXus.Security
 	}
 	public class GxSecurityProvider 
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Security.GxSecurityProvider>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxSecurityProvider>();
 
 		private static volatile ISecurityProvider provider;
 		private static object syncRoot = new Object();

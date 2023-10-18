@@ -89,7 +89,7 @@ namespace GeneXus.Utils
 
 	public class NumberUtil
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.NumberUtil>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<NumberUtil>();
 
 		private NumberFormatInfo numberFormat;
 		public NumberUtil(NumberFormatInfo numFmt)
@@ -503,7 +503,7 @@ namespace GeneXus.Utils
 
 	public class StringUtil
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.StringUtil>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<StringUtil>();
 
 		private NumberFormatInfo numFmtInfo;
 		private const int STR_LEN_DEFAULT = 10;
@@ -2135,7 +2135,7 @@ namespace GeneXus.Utils
 	}
 	public class DateTimeUtil
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.DateTimeUtil>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<DateTimeUtil>();
 
 		private CultureInfo cultureInfo;
 		public static bool useConfigForDates;
@@ -3726,7 +3726,7 @@ namespace GeneXus.Utils
 
 	public class FileUtil
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.FileUtil>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<FileUtil>();
 		public static byte DeleteFile(string fileName)
 		{
 			try
@@ -4158,7 +4158,7 @@ namespace GeneXus.Utils
 
 	public class GXUtil
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GXUtil>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXUtil>();
 #if !NETCORE
 		static Hashtable domains;
 		static string DOMAINS_FILE;

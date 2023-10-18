@@ -50,7 +50,7 @@ namespace GeneXus.Utils
 	public class GXBaseCollection<T> : GXBaseList<T>, IGxXMLSerializable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable where T : GxUserType, IGxXMLSerializable, IGxJSONAble, new()
 	{
 
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GXBaseCollection<T>>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXBaseCollection<T>>();
 		public string _containedName;
 		public string _containedXmlNamespace;
 		public IGxContext context;
@@ -619,7 +619,7 @@ namespace GeneXus.Utils
 	[Serializable]
 	public class GXBCCollection<T> : GXBaseCollection<T>, IGXBCCollection where T : GxSilentTrnSdt, new()
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.GXBCCollection<T>>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXBCCollection<T>>();
 
 		public GXBCCollection() : base() { }
 		public GXBCCollection(IGxContext context,

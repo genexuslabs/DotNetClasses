@@ -64,7 +64,7 @@ namespace GeneXus.Data.ADO
 
 	public class GxConnectionManager :IGxConnectionManager
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.ADO.GxConnectionManager>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxConnectionManager>();
 
 		private static volatile GxConnectionManager instance;
         private static object instanceSync = new Object();
@@ -345,7 +345,7 @@ namespace GeneXus.Data.ADO
     public class GxConnection: IGxConnection
 #endif
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.ADO.GxConnection>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxConnection>();
 		private IDbTransaction transaction;
 		private short lastErrorCode;
 		private string lastErrorMsg;
@@ -1319,7 +1319,7 @@ namespace GeneXus.Data.ADO
 	public class GxCommand: IGxDbCommand
 	{
 		internal List<ParDef> ParmDefinition;
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Data.ADO.GxCommand>();
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxCommand>();
 		string stmt;
         String stmtId;
         GxParameterCollection parameters;

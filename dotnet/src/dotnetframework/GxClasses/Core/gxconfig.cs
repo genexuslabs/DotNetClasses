@@ -796,7 +796,7 @@ namespace GeneXus.Configuration
 	}
 	public class Preferences
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Configuration.Preferences>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Preferences>();
 		static object syncRoot = new Object();
 		static Hashtable cachingTtl;
 		static string _applicationPath = "";

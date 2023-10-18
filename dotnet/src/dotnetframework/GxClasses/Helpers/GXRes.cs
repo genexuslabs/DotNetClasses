@@ -20,7 +20,7 @@ namespace GeneXus.Resources
 
 	public class GXResourceManager
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Resources.GXResourceManager>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXResourceManager>();
         static ConcurrentDictionary<string, ResourceSet> _rm = new ConcurrentDictionary<string, ResourceSet>();
 		static ConcurrentDictionary<string, LocalUtil> _localUtils = new ConcurrentDictionary<string,LocalUtil>();
 		static string _defaultLangName;

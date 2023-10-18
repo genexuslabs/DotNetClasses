@@ -60,7 +60,7 @@ namespace GeneXus.Http.Client
 	}
 	public class GxHttpClient : IGxHttpClient, IDisposable
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Http.Client.GxHttpClient>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxHttpClient>();
 		public const int _Basic = 0;
 		public const int _Digest = 1;
 		public const int _NTLM = 2;

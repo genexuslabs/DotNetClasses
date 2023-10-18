@@ -18,7 +18,7 @@ namespace GeneXus.Search
 	[SecuritySafeCritical]
 	public sealed class Searcher
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Search.Searcher>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Searcher>();
 		#region Singleton
 
 		private static Searcher m_instance = new Searcher();
