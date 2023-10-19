@@ -155,6 +155,7 @@ namespace GeneXus.Application
 		{	
 			Config.ConfigRoot = configuration;
 			GxContext.IsHttpContext = true;
+			Config.LoadConfiguration();
 			GXRouting.ContentRootPath = env.ContentRootPath;
 			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
 			gxRouting = new GXRouting(REST_BASE_URL);
