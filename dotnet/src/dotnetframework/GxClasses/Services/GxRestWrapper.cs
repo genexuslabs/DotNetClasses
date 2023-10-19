@@ -51,7 +51,7 @@ namespace GeneXus.Application
 	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxRestWrapper>();
 		protected HttpContext _httpContext;
 		protected IGxContext _gxContext;
 		private GXBaseObject _procWorker;
@@ -110,7 +110,7 @@ namespace GeneXus.Application
 					if (!IsAuthenticated(synchronizer))
 						return Task.CompletedTask;
 				}
-				else if (!IsAuthenticated())
+				else if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
 				{
 					return Task.CompletedTask;
 				}
@@ -135,15 +135,16 @@ namespace GeneXus.Application
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-					bodyParameters = PreProcessApiSdtParameter(_procWorker, innerMethod, bodyParameters, this._variableAlias);
-				}				
+					bodyParameters = PreProcessApiSdtParameter( _procWorker, innerMethod, bodyParameters, this._variableAlias);
+				}
+				ServiceHeaders();
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
+				int originalParameterCount = outputParameters.Count;
 				RestProcess(_procWorker, outputParameters);
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
-				ServiceHeaders();
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count, originalParameterCount);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -300,7 +301,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticated())
+				if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
 				{
 					return Task.CompletedTask; 
 				}
@@ -312,6 +313,7 @@ namespace GeneXus.Application
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
 				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
+				ServiceHeaders();
 				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
 					innerMethod = _serviceMethodPattern;
@@ -329,10 +331,10 @@ namespace GeneXus.Application
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
+				int originalParameterCount = outputParameters.Count;
 				RestProcess(_procWorker, outputParameters);			  
-				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
-				ServiceHeaders();
+				bool wrapped = true;
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount, originalParameterCount);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -344,13 +346,14 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-		bool GetWrappedStatus(GXBaseObject worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
+		bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
 		{
+			bool wrapped = defaultWrapped;
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
-					if (Preferences.FlattenSingleApiOutput)
+					if ((originalParCount == 1) || (originalParCount > 1 && Preferences.FlattenSingleApiOutput))
 					{
 						wrapped = false;
 						Object v = outputParameters.First().Value;
@@ -368,10 +371,6 @@ namespace GeneXus.Application
 								wrapped = (parCount > 1) ? true : false;
 							}
 						}
-					}
-					else
-					{
-						wrapped = true;
 					}
 				}
 			}
@@ -544,9 +543,19 @@ namespace GeneXus.Application
 					SetError("0", "Invalid Synchronizer " + synchronizer);
 			}
 		}
+		protected bool IsAuthenticatedMethod(string serviceMethod, bool isApi)
+		{
+			if (!String.IsNullOrEmpty(serviceMethod) && isApi)
+			{
+				bool integratedSecurityEnabled = ( Worker.IntegratedSecurityEnabled2 && Worker.ApiIntegratedSecurityLevel2(serviceMethod) != GAMSecurityLevel.SecurityNone);
+				return IsAuthenticated(Worker.ApiIntegratedSecurityLevel2(serviceMethod), integratedSecurityEnabled, Worker.ApiExecutePermissionPrefix2(serviceMethod));
+			}
+			else
+				return IsAuthenticated();
+		}
 		public bool IsAuthenticated()
 		{
-			return IsAuthenticated(Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
+			return IsAuthenticated( Worker.IntegratedSecurityLevel2, Worker.IntegratedSecurityEnabled2, Worker.ExecutePermissionPrefix2);
 		}
 		protected bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{
@@ -564,7 +573,6 @@ namespace GeneXus.Application
 				}
 				else
 				{
-
 					token = token.Replace("OAuth ", "");
 					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
 					{
@@ -707,7 +715,7 @@ namespace GeneXus.Application
 		}
 		public Task WebException(Exception ex)
 		{
-#if NETCORE			
+#if NETCORE
 			GxHttpActivitySourceHelper.SetException(Activity.Current, ex);
 #endif
 			GXLogging.Error(log, "WebException", ex);
