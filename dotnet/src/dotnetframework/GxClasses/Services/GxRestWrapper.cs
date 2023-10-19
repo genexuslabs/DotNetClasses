@@ -142,8 +142,9 @@ namespace GeneXus.Application
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
+				int originalParameterCount = outputParameters.Count;
 				RestProcess(_procWorker, outputParameters);
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count, originalParameterCount);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -330,9 +331,10 @@ namespace GeneXus.Application
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
+				int originalParameterCount = outputParameters.Count;
 				RestProcess(_procWorker, outputParameters);			  
-				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
+				bool wrapped = true;
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount, originalParameterCount);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -344,13 +346,14 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-		bool GetWrappedStatus(GXBaseObject worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
+		bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
 		{
+			bool wrapped = defaultWrapped;
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
-					if (Preferences.FlattenSingleApiOutput)
+					if ((originalParCount == 1) || (originalParCount > 1 && Preferences.FlattenSingleApiOutput))
 					{
 						wrapped = false;
 						Object v = outputParameters.First().Value;
@@ -368,10 +371,6 @@ namespace GeneXus.Application
 								wrapped = (parCount > 1) ? true : false;
 							}
 						}
-					}
-					else
-					{
-						wrapped = true;
 					}
 				}
 			}
