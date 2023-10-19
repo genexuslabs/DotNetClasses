@@ -1312,6 +1312,17 @@ namespace GeneXus.Configuration
 			set { _applicationPath = value; }
 		}
 
+		const bool DefaultFlattenSingleApiOutput = true;
+		internal static bool FlattenSingleApiOutput
+		{
+			get
+			{
+				if (Config.GetValueOf("FLATTEN_SINGLE_API_OUTPUT", out string flatten))
+					return (int.TryParse(flatten, out int value) && value == 1);
+				else
+					return DefaultFlattenSingleApiOutput;
+			}
+		}
 		public static int GetMaximumOpenCursors()
 		{
 			if (maximumOpenCursors == 0)

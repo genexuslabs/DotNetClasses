@@ -139,8 +139,9 @@ namespace GeneXus.Application
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
+				int originalParameterCount = outputParameters.Count;
 				RestProcess(outputParameters);
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count, originalParameterCount);
 				SendCacheHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
@@ -328,9 +329,10 @@ namespace GeneXus.Application
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
+				int originalParameterCount = outputParameters.Count;
 				RestProcess(outputParameters);			  
-				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
+				bool wrapped = true;
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount, originalParameterCount);
 				SendCacheHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
@@ -343,27 +345,33 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-		bool GetWrappedStatus(GXBaseObject worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
+		bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
 		{
+			bool wrapped = defaultWrapped;
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
-					wrapped = false;
-					Object v = outputParameters.First().Value;
+					if ((originalParCount == 1) || (originalParCount > 1 && Preferences.FlattenSingleApiOutput))
+					{
+						wrapped = false;
+						Object v = outputParameters.First().Value;
 
-					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
-					{
-						wrapped = (v as IGxGenericCollectionWrapped).GetIsWrapped();
-					}
-					if (v is IGxGenericCollectionItem item)
-					{
-						if (item.Sdt is GxSilentTrnSdt)
+						if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 						{
-							wrapped = (parCount>1)?true:false;
+							IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
+							if (icollwrapped != null)
+								wrapped = icollwrapped.GetIsWrapped();
+						}
+						if (v is IGxGenericCollectionItem item)
+						{
+							if (item.Sdt is GxSilentTrnSdt)
+							{
+								wrapped = (parCount > 1) ? true : false;
+							}
 						}
 					}
-				}			
+				}
 			}
 			return wrapped;
 		}
