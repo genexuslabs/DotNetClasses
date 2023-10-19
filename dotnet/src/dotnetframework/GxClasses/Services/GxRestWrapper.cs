@@ -350,23 +350,30 @@ namespace GeneXus.Application
 			{
 				if (outputParameters.Count == 1)
 				{
-					wrapped = false;
-					Object v = outputParameters.First().Value;
+					if (Preferences.FlattenSingleApiOutput)
+					{
+						wrapped = false;
+						Object v = outputParameters.First().Value;
 
-					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
-					{
-						IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
-						if (icollwrapped != null) 
-							wrapped = icollwrapped.GetIsWrapped();
-					}
-					if (v is IGxGenericCollectionItem item)
-					{
-						if (item.Sdt is GxSilentTrnSdt)
+						if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 						{
-							wrapped = (parCount>1)?true:false;
+							IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
+							if (icollwrapped != null)
+								wrapped = icollwrapped.GetIsWrapped();
+						}
+						if (v is IGxGenericCollectionItem item)
+						{
+							if (item.Sdt is GxSilentTrnSdt)
+							{
+								wrapped = (parCount > 1) ? true : false;
+							}
 						}
 					}
-				}			
+					else
+					{
+						wrapped = true;
+					}
+				}
 			}
 			return wrapped;
 		}
