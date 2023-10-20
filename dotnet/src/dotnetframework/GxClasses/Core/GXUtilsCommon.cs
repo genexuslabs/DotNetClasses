@@ -5988,6 +5988,7 @@ namespace GeneXus.Utils
 		}
 		public static string Rotate(string imageFile, int angle)
 		{
+			System.Diagnostics.Debugger.Launch();
 			string modifiedImage = string.Empty;
 			try
 			{
@@ -6073,17 +6074,17 @@ namespace GeneXus.Utils
 				ms.Position = 0;
 				try
 				{
-					if ((imageFile.StartsWith("http://") || imageFile.StartsWith("https://")) && ServiceFactory.GetExternalProvider() == null)
-					{
-						Uri uri = new Uri(imageFile);
-						imageFile = Path.GetFileName(uri.AbsolutePath);
-					}
-					GxFile sourceImage = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
-					string destinationImageName = FileUtil.getTempFileName(sourceImage.GetDirectory().GetAbsoluteName(), Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
-					GxFile destinationImage = new GxFile(GxContext.StaticPhysicalPath(), destinationImageName);
+					string destinationImageName = FileUtil.getTempFileName(
+																"",
+																Path.GetFileNameWithoutExtension(imageFile),
+																Path.GetExtension(imageFile).TrimStart('.')
+															);
+					GxFile destinationImage = new GxFile(Preferences.getTMP_MEDIA_PATH(), destinationImageName, GxFileType.PrivateAttribute);
 					destinationImage.Create(ms);
 					destinationImage.Close();
-					destinationImagePath = destinationImage.GetAbsoluteName();
+
+					//destinationImagePath = ServiceFactory.GetExternalProvider() != null ? ServiceFactory.GetExternalProvider().GetBaseURL() + destinationImage.GetAbsoluteName() : destinationImage.GetAbsoluteName();
+					destinationImagePath = destinationImage.GetURI();
 				}
 				catch (Exception ex)
 				{
