@@ -6075,13 +6075,15 @@ namespace GeneXus.Utils
 						Uri uri = new Uri(imageFile);
 						imageFile = Path.GetFileName(uri.AbsolutePath);
 					}
-					GxFile sourceImage = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
-					string tempDirectory = Preferences.getTMP_MEDIA_PATH();
-					string destinationImageName = FileUtil.getTempFileName(tempDirectory, Path.GetFileNameWithoutExtension(sourceImage.GetName()), sourceImage.GetExtension());
-					GxFile destinationImage = new GxFile(tempDirectory, destinationImageName);
+					string destinationImageName = FileUtil.getTempFileName(
+																"",
+																Path.GetFileNameWithoutExtension(imageFile),
+																Path.GetExtension(imageFile).TrimStart('.')
+															);
+					GxFile destinationImage = new GxFile(Preferences.getTMP_MEDIA_PATH(), destinationImageName, GxFileType.PrivateAttribute);
 					destinationImage.Create(ms);
 					destinationImage.Close();
-					destinationImagePath = destinationImage.GetAbsoluteName();
+					destinationImagePath = destinationImage.GetURI();
 				}
 				catch (Exception ex)
 				{
