@@ -333,7 +333,7 @@ namespace GeneXus.Application
 				_procWorker.cleanup();
 				int originalParameterCount = outputParameters.Count;
 				RestProcess(_procWorker, outputParameters);			  
-				bool wrapped = true;
+				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount, originalParameterCount);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
@@ -371,6 +371,10 @@ namespace GeneXus.Application
 								wrapped = (parCount > 1) ? true : false;
 							}
 						}
+					}
+					if (originalParCount > 1 && Preferences.FlattenSingleApiOutput)
+					{
+						wrapped = true; //Ignore defaultWrapped parameter.
 					}
 				}
 			}
