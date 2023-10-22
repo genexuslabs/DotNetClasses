@@ -125,8 +125,6 @@ namespace GeneXus.Application
 	public class Startup
 	{
 		static IGXLogger log;
-		private static string OPENTELEMETRY_SERVICE = "Observability";
-		private static string OPENTELEMETRY_AZURE_DISTRO = "GeneXus.OpenTelemetry.Azure.AzureAppInsights";
 		internal static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
@@ -152,7 +150,7 @@ namespace GeneXus.Application
 
 		private GXRouting gxRouting;
 		public Startup(IConfiguration configuration, IHostingEnvironment env)
-		{	
+		{
 			Config.ConfigRoot = configuration;
 			GxContext.IsHttpContext = true;
 			Config.LoadConfiguration();
@@ -160,39 +158,6 @@ namespace GeneXus.Application
 			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
 			gxRouting = new GXRouting(REST_BASE_URL);
 			log = GXLoggerFactory.GetLogger<Startup>();
-		}
-		private static void WebHostConfigureLogging(ILoggingBuilder loggingBuilder)
-		{
-			loggingBuilder.AddConsole();
-			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
-			if (providerService != null && providerService.ClassName.StartsWith(OPENTELEMETRY_AZURE_DISTRO))
-			{
-				ConfigureAzureOpentelemetry(loggingBuilder);
-			}
-		}
-		private static void ConfigureAzureOpentelemetry(ILoggingBuilder loggingBuilder)
-		{
-			string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
-			var resourceBuilder = ResourceBuilder.CreateDefault()
-			.AddTelemetrySdk();
-
-			loggingBuilder.AddOpenTelemetry(loggerOptions =>
-			{
-				loggerOptions
-					.SetResourceBuilder(resourceBuilder)
-					.AddAzureMonitorLogExporter(options =>
-					{
-						if (!string.IsNullOrEmpty(endpoint))
-							options.ConnectionString = endpoint;
-						else
-							options.Credential = new DefaultAzureCredential();
-					})
-					.AddConsoleExporter();
-
-				loggerOptions.IncludeFormattedMessage = true;
-				loggerOptions.IncludeScopes = true;
-				loggerOptions.ParseStateValues = true;
-			});
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
@@ -209,7 +174,7 @@ namespace GeneXus.Application
 				options.AllowSynchronousIO = true;
 			});
 			services.AddDistributedMemoryCache();
-			services.AddLogging(builder => WebHostConfigureLogging(builder));
+			services.AddLogging(builder => builder.AddConsole());
 			services.Configure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
