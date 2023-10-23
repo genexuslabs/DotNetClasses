@@ -371,7 +371,7 @@ namespace GeneXus.Application
 							}
 						}
 					}
-					if (originalParCount > 1 && Preferences.FlattenSingleApiOutput)
+					if (originalParCount > 1 && !Preferences.FlattenSingleApiOutput)
 					{
 						wrapped = true; //Ignore defaultWrapped parameter.
 					}
