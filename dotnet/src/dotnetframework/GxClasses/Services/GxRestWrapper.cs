@@ -352,7 +352,7 @@ namespace GeneXus.Application
 			{
 				if (outputParameters.Count == 1)
 				{
-					if ((originalParCount == 1) || (originalParCount > 1 && Preferences.FlattenSingleApiOutput))
+					if ((originalParCount == 1) || (originalParCount > 1 && !Preferences.WrapSingleApiOutput))
 					{
 						wrapped = false;
 						Object v = outputParameters.First().Value;
@@ -371,7 +371,7 @@ namespace GeneXus.Application
 							}
 						}
 					}
-					if (originalParCount > 1 && !Preferences.FlattenSingleApiOutput)
+					if (originalParCount > 1 && Preferences.WrapSingleApiOutput)
 					{
 						wrapped = true; //Ignore defaultWrapped parameter.
 					}
