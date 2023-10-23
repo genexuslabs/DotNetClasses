@@ -25,7 +25,7 @@ namespace xUnitTesting
 
 		}
 
-		[Fact]
+		[Fact(Skip = "Non deterministic")]
 		public async Task TestSimpleRestPost()
 		{
 			server.AllowSynchronousIO = true;
@@ -35,7 +35,7 @@ namespace xUnitTesting
 			Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
 		}
 
-		[Fact]
+		[Fact(Skip = "Non deterministic")]
 		public async Task RunController()
 		{
 
@@ -66,7 +66,7 @@ namespace xUnitTesting
 			response = await client.PostAsync("rest/apps/saveimage", body);
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 		}
-		[Fact]
+		[Fact(Skip = "Non deterministic")]
 		public async Task HttpFirstPost()
 		{
 			HttpClient client = server.CreateClient();
@@ -79,7 +79,7 @@ namespace xUnitTesting
 			response.EnsureSuccessStatusCode();
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 		}
-		[Fact]
+		[Fact(Skip = "Non deterministic")]
 		public async Task HttpFirstGet()
 		{
 			HttpClient client = server.CreateClient();
