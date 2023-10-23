@@ -22,10 +22,10 @@ namespace GeneXus.Diagnostics
 			Fatal = 30
 		}
 #if NETCORE
-		public static ILoggerFactory _instance = GXLogService.GetLogFactory();
+		static ILoggerFactory _instance = GXLogService.GetLogFactory();
 #endif
 	
-		public static IGXLogger GetLogger(string topic)
+		internal static IGXLogger GetLogger(string topic)
 		{
 			string defaultUserLogNamespace = Configuration.Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
 			string loggerName = defaultUserLogNamespace;
