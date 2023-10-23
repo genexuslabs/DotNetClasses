@@ -30,7 +30,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 			string functionName = context.FunctionDefinition.Name;
 
 			QueueMessage queueMessage = SetupMessage(context, myQueueItem);
-			log.LogInformation($"GeneXus Queue trigger handler. Function processed: {functionName} Invocation Id: {context.InvocationId}. Queue item : {queueMessage.Id}");
+			log.LogInformation($"GeneXus Queue trigger handler. Function processed: {functionName} Invocation Id: {context.InvocationId}. Queue item : {StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList)}");
 
 			try
 			{
