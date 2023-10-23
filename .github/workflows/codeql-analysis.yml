@@ -40,13 +40,6 @@ jobs:
 
     steps:
           
-    - name: configure Pagefile
-      uses: al-cheb/configure-pagefile-action@v1.3
-      with:
-          minimum-size: 2GB
-          maximum-size: 7GB
-          disk-root: "D:"
-          
     - name: Checkout repository
       uses: actions/checkout@v3
 
@@ -66,6 +59,12 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0.100-rc.1.23455.8' 
+
+    - name: Create temporal solution
+      run: |
+        $fortifysolution = "FortifySolution"
+        dotnet new sln --name $fortifysolution --output dotnet --force
+        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$fortifysolution /m:1
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
