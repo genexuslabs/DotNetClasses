@@ -638,7 +638,6 @@ namespace GeneXus.Configuration
 							}
 						}
 					}
-					GXServices.LoadServices();
 					log = GXLoggerFactory.GetLogger<Config>();
 					GXLogging.Debug(log, "GxClasses version:", GxContext.StdClassesVersion());
 					if (configuredFilename != null)

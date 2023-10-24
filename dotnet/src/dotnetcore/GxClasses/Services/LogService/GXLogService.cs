@@ -6,22 +6,16 @@ namespace GeneXus.Services.Log
 	public static class GXLogService
 	{
 		private static string AZURE_APPLICATION_INSIGHTS_LOG = "AZUREAPPLICATIONINSIGHTS";
-		private static string OPENTELEMETRY_SERVICE = "Observability";
-		const string AZUREMONITOR_PROVIDER = "AZUREMONITOR";
+		const string OTEL_AZUREMONITOR_EXPORTER = "OTEL_AZUREMONITOR_EXPORTER";
 		const string LOG_OUTPUT = "LOG_OUTPUT";
 		public static ILoggerFactory GetLogFactory()
 		{
-			if (GXServices.LoadedServices)
+			if (Config.GetValueOf(LOG_OUTPUT, out string logProvider))
 			{
-				GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
-				if (providerService != null && providerService.Name.Equals(AZUREMONITOR_PROVIDER))
-				{
-					return AzureAppInsightsLogProvider.GetAzureMonitorLoggerFactory();
-				}
-			}
-			if (Config.GetValueOf(LOG_OUTPUT, out string logProvider) && logProvider == AZURE_APPLICATION_INSIGHTS_LOG)
-			{
-				return AzureAppInsightsLogProvider.GetLoggerFactory();
+				 if (logProvider == AZURE_APPLICATION_INSIGHTS_LOG)
+					return AzureAppInsightsLogProvider.GetLoggerFactory();
+				 else if (logProvider == OTEL_AZUREMONITOR_EXPORTER)
+					AzureAppInsightsLogProvider.GetAzureMonitorLoggerFactory(); 
 			}
 			return null;
 		}
