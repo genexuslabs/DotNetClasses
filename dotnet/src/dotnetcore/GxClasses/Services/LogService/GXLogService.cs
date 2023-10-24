@@ -1,6 +1,4 @@
-using System;
 using GeneXus.Configuration;
-using GeneXus.Services.OpenTelemetry;
 using Microsoft.Extensions.Logging;
 
 namespace GeneXus.Services.Log
@@ -10,6 +8,7 @@ namespace GeneXus.Services.Log
 		private static string AZURE_APPLICATION_INSIGHTS_LOG = "AZUREAPPLICATIONINSIGHTS";
 		private static string OPENTELEMETRY_SERVICE = "Observability";
 		const string AZUREMONITOR_PROVIDER = "AZUREMONITOR";
+		const string LOG_OUTPUT = "LOG_OUTPUT";
 		public static ILoggerFactory GetLogFactory()
 		{
 			if (GXServices.LoadedServices)
@@ -20,7 +19,7 @@ namespace GeneXus.Services.Log
 					return AzureAppInsightsLogProvider.GetAzureMonitorLoggerFactory();
 				}
 			}
-			if (Config.GetValueOf("LOG_OUTPUT", out string logProvider) && logProvider == AZURE_APPLICATION_INSIGHTS_LOG)
+			if (Config.GetValueOf(LOG_OUTPUT, out string logProvider) && logProvider == AZURE_APPLICATION_INSIGHTS_LOG)
 			{
 				return AzureAppInsightsLogProvider.GetLoggerFactory();
 			}
