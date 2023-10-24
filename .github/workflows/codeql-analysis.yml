@@ -60,16 +60,19 @@ jobs:
       with:
         dotnet-version: '8.0.100-rc.1.23455.8' 
 
-    - name: Create temporal solution
+    - name: Create temporary solution
       run: |
-        $fortifysolution = "FortifySolution"
-        dotnet new sln --name $fortifysolution --output dotnet --force
-        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$fortifysolution /m:1
+        $tempsolution = "CodeqlSolution"
+        dotnet new sln --name $tempsolution --output dotnet --force
+        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$tempsolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
+
+    - name: Build Solution
+      run: dotnet build CodeqlSolution.sln --configuration Release
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+    # - name: Autobuild
+    #   uses: github/codeql-action/autobuild@v2
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
