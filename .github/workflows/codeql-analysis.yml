@@ -28,7 +28,7 @@ jobs:
     
     env:
       Configuration: Release
-      SolutionFile: dotnet\DotNetStandardClasses.sln
+      SolutionFile: dotnet\CodeqlSolution.sln
 
     strategy:
       fail-fast: false
@@ -60,10 +60,19 @@ jobs:
       with:
         dotnet-version: '8.0.100-rc.1.23455.8' 
 
+    - name: Create temporary solution
+      run: |
+        $TempSolution = "CodeqlSolution"
+        dotnet new sln --name $TempSolution --output dotnet --force
+        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$TempSolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net6
+
+    - name: Build temporary solution
+      run: dotnet build dotnet\CodeqlSolution.sln --framework net6.0
+
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+    #- name: Autobuild
+    #  uses: github/codeql-action/autobuild@v2
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
