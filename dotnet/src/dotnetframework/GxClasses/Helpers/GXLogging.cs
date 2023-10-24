@@ -13,7 +13,7 @@ namespace GeneXus
 	public class GXLoggerFactory
 	{
 #if NETCORE
-		public static ILoggerFactory _instance = GXLogService.GetLogFactory();
+		static ILoggerFactory _instance = GXLogService.GetLogFactory();
 #endif
 		public static IGXLogger GetLogger(string categoryName)
 		{
