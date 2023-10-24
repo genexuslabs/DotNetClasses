@@ -26,38 +26,27 @@ namespace GeneXus.Services
 		private Dictionary<string, GXService> services = new Dictionary<string, GXService>();
 		private static GXServices s_instance = null;
 		private static object syncRoot = new Object();
-		private static bool loaded = false;
 		public static GXServices Instance
 		{
 			get
 			{
-				LoadServices();
+				if (s_instance == null)
+				{
+					lock (syncRoot)
+					{
+						if (s_instance == null)
+						{
+							foreach (string file in SERVICES_FILE)
+							{
+								LoadFromFile(file, ref s_instance);
+							}
+						}
+					}
+				}
 				return s_instance;
 			}
 			set { }			
 		}
-		internal static bool LoadedServices
-		{
-			get { return loaded; }
-		}
-		internal static void LoadServices()
-		{
-			if (s_instance == null)
-			{
-				lock (syncRoot)
-				{
-					if (s_instance == null)
-					{
-						foreach (string file in SERVICES_FILE)
-						{
-							LoadFromFile(file, ref s_instance);
-						}
-						loaded = true;
-					}
-				}
-			}
-		}
-
 		public void AddService(string name, GXService service)
 		{
 			services[name] = service;
