@@ -510,11 +510,12 @@ namespace GeneXus.Configuration
 			{
 				if (!configLoaded || _config == null)
 				{
+					string configuredFilename = null;
 					lock (syncRoot)
 					{
 						if (_config == null)
 						{
-	
+
 							bool isNetTrustException = false;
 							Exception netTrustedException = null;
 							try
@@ -532,120 +533,124 @@ namespace GeneXus.Configuration
 								loadedConfigFile = configFileName;
 								_config = loadConfig(configFileName, out logConfigSource);
 								if (!string.IsNullOrEmpty(logConfigSource))
-									logConfig(logConfigSource);
+									logConfig(logConfigSource, out configuredFilename);
 								else
-									logConfig(configFileName);
-								return _config;
+									logConfig(configFileName, out configuredFilename);
 							}
+							else
+							{
 #if !NETCORE
-					log = GXLoggerFactory.GetLogger<Config>();
+								log = GXLoggerFactory.GetLogger<Config>();
 
-					if (GxContext.IsHttpContext &&
-						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
-					{
-						logConfig(null);
-						if (log.IsDebugEnabled) loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
-						_config = ConfigurationSettings.AppSettings;
-						foreach (string key in _config.Keys)
-						{
-							string value = MappedValue(key, _config[key]);
-							if (value!=_config[key])
-								_config[key] = value;
-						}
-						languages = null;
-						return _config;
-					}
-					if (GxContext.IsHttpContext &&
-						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config")))
-					
-					{
+								if (GxContext.IsHttpContext &&
+									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
+								{
+									logConfig(null, out configuredFilename);
+									if (log.IsDebugEnabled) loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
+									_config = ConfigurationSettings.AppSettings;
+									foreach (string key in _config.Keys)
+									{
+										string value = MappedValue(key, _config[key]);
+										if (value != _config[key])
+											_config[key] = value;
+									}
+									languages = null;
+									return _config;
+								}
+								if (GxContext.IsHttpContext &&
+									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config")))
 
-						logConfig("bin/log.config");
-						if (log.IsDebugEnabled)
-							loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
-						_config = loadConfig("bin/client.exe.config");
-						return _config;
-					}
-					if (File.Exists("client.exe.config"))
-					{
-						logConfig("log.console.config");
-						if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath("client.exe.config");
-						_config = loadConfig("client.exe.config");
-					}
-					else
-					{
-						string file = FileUtil.GetStartupDirectory() + "/client.exe.config";
-						string logFile = FileUtil.GetStartupDirectory() + "/log.console.config";
-						logConfig(logFile);
-						if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath(file);
-						_config = loadConfig(file);
+								{
 
-					}
+									logConfig("bin/log.config", out configuredFilename);
+									if (log.IsDebugEnabled)
+										loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
+									_config = loadConfig("bin/client.exe.config");
+									return _config;
+								}
+								if (File.Exists("client.exe.config"))
+								{
+									logConfig("log.console.config", out configuredFilename);
+									if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath("client.exe.config");
+									_config = loadConfig("client.exe.config");
+								}
+								else
+								{
+									string file = FileUtil.GetStartupDirectory() + "/client.exe.config";
+									string logFile = FileUtil.GetStartupDirectory() + "/log.console.config";
+									logConfig(logFile, out configuredFilename);
+									if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath(file);
+									_config = loadConfig(file);
+
+								}
 
 #else
-							string basePath = FileUtil.GetBasePath();
-							string currentDir = Directory.GetCurrentDirectory();
-							string startupDir = FileUtil.GetStartupDirectory();
-							string appSettings = "appsettings.json";
-							string clientConfig = "client.exe.config";
+								string basePath = FileUtil.GetBasePath();
+								string currentDir = Directory.GetCurrentDirectory();
+								string startupDir = FileUtil.GetStartupDirectory();
+								string appSettings = "appsettings.json";
+								string clientConfig = "client.exe.config";
 
-							string logConfigurationSource = string.Empty;
+								string logConfigurationSource = string.Empty;
 
-							if (File.Exists(Path.Combine(basePath, appSettings)))
-							{
-								_config = loadConfigJson(basePath, appSettings);
-					
-							}
-							else if (File.Exists(appSettings))
-							{
-								_config = loadConfigJson(currentDir, appSettings);
-					
-							}
-							else if (File.Exists(Path.Combine(startupDir, appSettings)))
-							{
-								_config = loadConfigJson(startupDir, appSettings);
-					
-							}
-							else if (File.Exists(clientConfig))
-							{
-								_config = loadConfig(clientConfig, out logConfigSource);
-								logConfigurationSource = logConfigSource;
-								
-							}
-							configLoaded = true;
-							log = GXLoggerFactory.GetLogger<Config>();
+								if (File.Exists(Path.Combine(basePath, appSettings)))
+								{
+									_config = loadConfigJson(basePath, appSettings);
 
-							string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
-							if (File.Exists(Path.Combine(basePath, appSettings)))
-								logConfig(Path.Combine(basePath, logConfigFile));
+								}
+								else if (File.Exists(appSettings))
+								{
+									_config = loadConfigJson(currentDir, appSettings);
 
-							else if (File.Exists(appSettings))
-								logConfig(logConfigFile);
+								}
+								else if (File.Exists(Path.Combine(startupDir, appSettings)))
+								{
+									_config = loadConfigJson(startupDir, appSettings);
 
-							else if (File.Exists(Path.Combine(startupDir, appSettings)))
-								logConfig(Path.Combine(startupDir, logConfigFile));
+								}
+								else if (File.Exists(clientConfig))
+								{
+									_config = loadConfig(clientConfig, out logConfigSource);
+									logConfigurationSource = logConfigSource;
 
-							else if (File.Exists(clientConfig))
-								if (!string.IsNullOrEmpty(logConfigurationSource))
-									logConfig(logConfigurationSource);
-								else
-									logConfig(logConfigFile);
-							
-							try
-							{
-								Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-							}
-							catch (Exception ex)
-							{
-								GXLogging.Info(log, "Could not register encoding provider", ex.Message);
-							}
+								}
+								configLoaded = true;
+
+								string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
+								if (File.Exists(Path.Combine(basePath, appSettings)))
+									logConfig(Path.Combine(basePath, logConfigFile), out configuredFilename);
+
+								else if (File.Exists(appSettings))
+									logConfig(logConfigFile, out configuredFilename);
+
+								else if (File.Exists(Path.Combine(startupDir, appSettings)))
+									logConfig(Path.Combine(startupDir, logConfigFile), out configuredFilename);
+
+								else if (File.Exists(clientConfig))
+									if (!string.IsNullOrEmpty(logConfigurationSource))
+										logConfig(logConfigurationSource, out configuredFilename);
+									else
+										logConfig(logConfigFile, out configuredFilename);
+
+								try
+								{
+									Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+								}
+								catch (Exception ex)
+								{
+									GXLogging.Info(log, "Could not register encoding provider", ex.Message);
+								}
 #endif
-							if (isNetTrustException)
-								GXLogging.Info(log, ".NET trust level is lower than full", netTrustedException.Message);
-							
+								if (isNetTrustException)
+									GXLogging.Info(log, ".NET trust level is lower than full", netTrustedException.Message);
+							}
 						}
-
 					}
+					log = GXLoggerFactory.GetLogger<Config>();
+					GXLogging.Debug(log, "GxClasses version:", GxContext.StdClassesVersion());
+					if (configuredFilename != null)
+						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", configuredFilename);
+
 				}
 				return _config;
 			}
@@ -689,8 +694,9 @@ namespace GeneXus.Configuration
 			return cfg;
 		}
 #endif
-		private static void logConfig(string filename)
+		private static void logConfig(string filename, out string configuredFilename)
 		{
+			configuredFilename = null;
 			if (configLog) 
 			{
 				try
@@ -700,22 +706,20 @@ namespace GeneXus.Configuration
 					{
 						var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 						XmlConfigurator.ConfigureAndWatch(logRepository, new FileInfo(filename));
-						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", filename);
+						configuredFilename = filename;
 					}
 #else
 					if (filename != null)
 					{
 						XmlConfigurator.ConfigureAndWatch(new FileInfo(filename));
-						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", filename);
+						configuredFilename = filename;
 					}
 					else
 					{
 						XmlConfigurator.Configure();
-						GXLogging.Debug(log, "DOMConfigurator log4net configured with web.config");
+						configuredFilename = "web.config";
 					}
 #endif
-					GXLogging.Debug(log, "GxClasses version:", GxContext.StdClassesVersion());
-
 				}
 				catch (Exception ex)
 				{
@@ -732,7 +736,6 @@ namespace GeneXus.Configuration
 		}
 		static NameValueCollection loadConfig(string filename, out string logConfigSource)
 		{
-			//GXLogging.Debug(log, "Start loadConfig, filename '", filename, "'");
 			NameValueCollection cfg = new NameValueCollection(StringComparer.Ordinal); //Case sensitive
 			logConfigSource = null;
 			if (!File.Exists(filename))
@@ -781,7 +784,6 @@ namespace GeneXus.Configuration
 					}
 				}
 			}
-			//GXLogging.Debug(log, "Return loadConfig");
 			return cfg;
 		}
 		private static string MappedValue(string key, string value)
