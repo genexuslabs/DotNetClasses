@@ -555,20 +555,17 @@ namespace GeneXus.Configuration
 											_config[key] = value;
 									}
 									languages = null;
-									return _config;
 								}
-								if (GxContext.IsHttpContext &&
+								else if (GxContext.IsHttpContext &&
 									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config")))
-
 								{
 
 									logConfig("bin/log.config", out configuredFilename);
 									if (log.IsDebugEnabled)
 										loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
 									_config = loadConfig("bin/client.exe.config");
-									return _config;
 								}
-								if (File.Exists("client.exe.config"))
+								else if (File.Exists("client.exe.config"))
 								{
 									logConfig("log.console.config", out configuredFilename);
 									if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath("client.exe.config");
