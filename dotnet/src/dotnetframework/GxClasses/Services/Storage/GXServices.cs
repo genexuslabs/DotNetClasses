@@ -15,7 +15,8 @@ namespace GeneXus.Services
 {
 	public class GXServices
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXServices>();
+		//private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXServices>();
+		private static IGXLogger log;
 
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
@@ -68,7 +69,7 @@ namespace GeneXus.Services
 				{
 					if (services == null)
 						services = new GXServices();
-					GXLogging.Debug(log, "Loading service:", filePath);
+					
 					GXXMLReader reader = new GXXMLReader();
 					reader.Open(filePath);
 					reader.ReadType(1, "Services");
@@ -84,9 +85,12 @@ namespace GeneXus.Services
 						}
 						reader.Close();
 					}
+					log = GXLoggerFactory.GetLogger<GXServices>();
+					GXLogging.Debug(log, "Loading service:", filePath);
 				}
 				catch (Exception ex)
 				{
+					log = GXLoggerFactory.GetLogger<GXServices>();
 					GXLogging.Error(log, "Couldn't create service from:", filePath, ex);
 					throw ex;
 				}
