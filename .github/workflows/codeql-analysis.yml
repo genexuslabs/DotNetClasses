@@ -64,7 +64,7 @@ jobs:
       run: |
         $TempSolution = "CodeqlSolution"
         dotnet new sln --name $TempSolution --output dotnet --force
-        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$TempSolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
+        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$TempSolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net6
 
     - name: Build temporary solution
       run: dotnet build dotnet\CodeqlSolution.sln --framework net6.0
