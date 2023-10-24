@@ -510,14 +510,14 @@ namespace GeneXus.Configuration
 			{
 				if (!configLoaded || _config == null)
 				{
+					bool isNetTrustException = false;
+					Exception netTrustedException = null;
 					string configuredFilename = null;
 					lock (syncRoot)
 					{
 						if (_config == null)
 						{
 
-							bool isNetTrustException = false;
-							Exception netTrustedException = null;
 							try
 							{
 								AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
@@ -544,7 +544,7 @@ namespace GeneXus.Configuration
 									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
 								{
 									logConfig(null, out configuredFilename);
-									if (log.IsDebugEnabled) loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
+									loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
 									_config = ConfigurationSettings.AppSettings;
 									foreach (string key in _config.Keys)
 									{
@@ -559,14 +559,13 @@ namespace GeneXus.Configuration
 								{
 
 									logConfig("bin/log.config", out configuredFilename);
-									if (log.IsDebugEnabled)
-										loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
+									loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
 									_config = loadConfig("bin/client.exe.config");
 								}
 								else if (File.Exists("client.exe.config"))
 								{
 									logConfig("log.console.config", out configuredFilename);
-									if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath("client.exe.config");
+									loadedConfigFile = Path.GetFullPath("client.exe.config");
 									_config = loadConfig("client.exe.config");
 								}
 								else
@@ -574,7 +573,7 @@ namespace GeneXus.Configuration
 									string file = FileUtil.GetStartupDirectory() + "/client.exe.config";
 									string logFile = FileUtil.GetStartupDirectory() + "/log.console.config";
 									logConfig(logFile, out configuredFilename);
-									if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath(file);
+									loadedConfigFile = Path.GetFullPath(file);
 									_config = loadConfig(file);
 
 								}
@@ -631,21 +630,21 @@ namespace GeneXus.Configuration
 								{
 									Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 								}
-								catch (Exception ex)
+								catch (Exception)
 								{
-									GXLogging.Info(log, "Could not register encoding provider", ex.Message);
+									//"Could not register encoding provider";
 								}
 #endif
-								if (isNetTrustException)
-									GXLogging.Info(log, ".NET trust level is lower than full", netTrustedException.Message);
 							}
 						}
 					}
+					GXServices.LoadServices();
 					log = GXLoggerFactory.GetLogger<Config>();
 					GXLogging.Debug(log, "GxClasses version:", GxContext.StdClassesVersion());
 					if (configuredFilename != null)
 						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", configuredFilename);
-
+					if (isNetTrustException)
+						GXLogging.Info(log, ".NET trust level is lower than full", netTrustedException.Message);
 				}
 				return _config;
 			}

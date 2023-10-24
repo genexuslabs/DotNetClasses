@@ -1,22 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using GeneXus.Application;
 using GeneXus.Utils;
 using GeneXus.XML;
-using log4net;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using GxClasses.Helpers;
-
-using System.Reflection.Emit;
 
 namespace GeneXus.Services
 {
 	public class GXServices
 	{
-		//private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXServices>();
-		private static IGXLogger log;
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXServices>();
 
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
@@ -32,27 +26,36 @@ namespace GeneXus.Services
 		private Dictionary<string, GXService> services = new Dictionary<string, GXService>();
 		private static GXServices s_instance = null;
 		private static object syncRoot = new Object();
-
+		private static bool loaded = false;
 		public static GXServices Instance
 		{
 			get
 			{
-				if (s_instance == null)
-				{
-					lock (syncRoot)
-					{
-						if (s_instance == null)
-						{
-							foreach (string file in SERVICES_FILE)
-							{
-								LoadFromFile(file, ref s_instance);
-							}
-						}
-					}
-				}
+				LoadServices();
 				return s_instance;
 			}
 			set { }			
+		}
+		internal static bool LoadedServices
+		{
+			get { return loaded; }
+		}
+		internal static void LoadServices()
+		{
+			if (s_instance == null)
+			{
+				lock (syncRoot)
+				{
+					if (s_instance == null)
+					{
+						foreach (string file in SERVICES_FILE)
+						{
+							LoadFromFile(file, ref s_instance);
+						}
+						loaded = true;
+					}
+				}
+			}
 		}
 
 		public void AddService(string name, GXService service)
@@ -85,12 +88,9 @@ namespace GeneXus.Services
 						}
 						reader.Close();
 					}
-					log = GXLoggerFactory.GetLogger<GXServices>();
-					GXLogging.Debug(log, "Loading service:", filePath);
 				}
 				catch (Exception ex)
 				{
-					log = GXLoggerFactory.GetLogger<GXServices>();
 					GXLogging.Error(log, "Couldn't create service from:", filePath, ex);
 					throw ex;
 				}
