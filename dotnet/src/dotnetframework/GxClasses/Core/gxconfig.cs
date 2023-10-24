@@ -540,8 +540,6 @@ namespace GeneXus.Configuration
 							else
 							{
 #if !NETCORE
-								log = GXLoggerFactory.GetLogger<Config>();
-
 								if (GxContext.IsHttpContext &&
 									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
 								{
