@@ -233,31 +233,26 @@ namespace GeneXus.Http
 #if NETCORE
 		private GXWebRow _currentGridRow;
 		private Dictionary<string,string> EventsMetadata = new Dictionary<string, string>();
-		private string EventHandler;
 #else
 		private Hashtable EventsMetadata = new Hashtable();
 #endif
 
+#if NETCORE
 		protected void setEventMetadata(string EventName, string Metadata)
 		{
-			SetEvent(EventName, Metadata);
+			if (EventsMetadata.ContainsKey(EventName))
+				EventsMetadata[EventName] += Metadata;
+			else
+				EventsMetadata[EventName] = Metadata;
 		}
-#if NETCORE
-		protected void SetEvent(string EventName, string handler, string Metadata)
+#else
+		protected void setEventMetadata(string EventName, string Metadata)
 		{
 			if (EventsMetadata[EventName] == null)
 				EventsMetadata[EventName] = string.Empty;
 			EventsMetadata[EventName] += Metadata;
-			EventHandler = handler;
 		}
 #endif
-		protected void SetEvent(string EventName, string Metadata)
-		{
-			if (EventsMetadata[EventName] == null)
-				EventsMetadata[EventName] = string.Empty;
-			EventsMetadata[EventName] += Metadata;
-		}
-
 		public void webExecuteEx(HttpContext httpContext)
 		{
 			if (IsUploadRequest(httpContext))
@@ -544,11 +539,10 @@ namespace GeneXus.Http
 #if NETCORE
 
 						JObject eventMetadata = JSONHelper.ReadJSON<JObject>(targetObj.EventsMetadata[eventName.ToString()]);
-						eventHandlers[eventCount] = targetObj.EventHandler;
 #else
 						JObject eventMetadata = JSONHelper.ReadJSON<JObject>((string)targetObj.EventsMetadata[eventName.ToString()]);
-						eventHandlers[eventCount] = (string)eventMetadata["handler"];
 #endif
+						eventHandlers[eventCount] = (string)eventMetadata["handler"];
 						JArray eventInputParms = (JArray)eventMetadata["iparms"];
 						foreach (JObject inputParm in eventInputParms)
 						{
