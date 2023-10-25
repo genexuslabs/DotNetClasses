@@ -97,8 +97,23 @@ namespace GeneXus.Utils
 	internal abstract class GXJsonSerializer
 	{
 		private static GXJsonSerializer s_instance = null;
-		private static object syncRoot = new Object();
-		static GXJsonSerializerType DefaultJSonSerializer= GXJsonSerializerType.Jayrock;
+		private static object syncRoot = new object();
+		internal static GXJsonSerializerType DefaultJSonSerializer
+		{
+			get
+			{
+#if NETCORE
+				if (Config.GetValueOf("USE_JAYROCK", out string value) && value == "0")
+				{
+					return GXJsonSerializerType.TextJson;
+				}
+				else
+#endif
+				{
+					return GXJsonSerializerType.Jayrock;
+				}
+			}
+		}
 		internal static GXJsonSerializer Instance
 		{
 			get
