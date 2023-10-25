@@ -466,11 +466,12 @@ namespace GeneXus.Configuration
 			else
 			{
 				AssemblyName assName = new AssemblyName(args.Name);
-				bool strongNamedAssembly = assName.GetPublicKeyToken().Length > 0;
 				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{assName.Name}.dll");
-				if (!strongNamedAssembly && File.Exists(fileName))
+				if (File.Exists(fileName))
 				{
-					return Assembly.LoadFrom(fileName);
+					Assembly assm = Assembly.LoadFrom(fileName);
+					if (assm!=null && assm.GetName().Version == assName.Version)
+						return assm;
 				}
 			}
 			return null;
