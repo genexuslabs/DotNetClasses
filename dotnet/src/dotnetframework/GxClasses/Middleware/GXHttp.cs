@@ -232,10 +232,26 @@ namespace GeneXus.Http
 		int _currParameter;
 #if NETCORE
 		private GXWebRow _currentGridRow;
-#endif
+		private Dictionary<string,string> EventsMetadata = new Dictionary<string, string>();
+		private string EventHandler;
+#else
 		private Hashtable EventsMetadata = new Hashtable();
+#endif
 
 		protected void setEventMetadata(string EventName, string Metadata)
+		{
+			SetEvent(EventName, Metadata);
+		}
+#if NETCORE
+		protected void SetEvent(string EventName, string handler, string Metadata)
+		{
+			if (EventsMetadata[EventName] == null)
+				EventsMetadata[EventName] = string.Empty;
+			EventsMetadata[EventName] += Metadata;
+			EventHandler = handler;
+		}
+#endif
+		protected void SetEvent(string EventName, string Metadata)
 		{
 			if (EventsMetadata[EventName] == null)
 				EventsMetadata[EventName] = string.Empty;
@@ -525,8 +541,14 @@ namespace GeneXus.Http
 					int eventCount = 0;
 					foreach (string eventName in events)
 					{
+#if NETCORE
+
+						JObject eventMetadata = JSONHelper.ReadJSON<JObject>(targetObj.EventsMetadata[eventName.ToString()]);
+						eventHandlers[eventCount] = targetObj.EventHandler;
+#else
 						JObject eventMetadata = JSONHelper.ReadJSON<JObject>((string)targetObj.EventsMetadata[eventName.ToString()]);
 						eventHandlers[eventCount] = (string)eventMetadata["handler"];
+#endif
 						JArray eventInputParms = (JArray)eventMetadata["iparms"];
 						foreach (JObject inputParm in eventInputParms)
 						{
@@ -534,9 +556,12 @@ namespace GeneXus.Http
 							eventUseInternalParms[eventCount] = eventUseInternalParms[eventCount] || IsInternalParm(inputParm);
 						}
 						JArray eventOutputParms = (JArray)eventMetadata["oparms"];
-						foreach (JObject outputParm in eventOutputParms)
+						if (eventOutputParms != null)
 						{
-							AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+							foreach (JObject outputParm in eventOutputParms)
+							{
+								AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+							}
 						}
 						eventCount++;
 					}
