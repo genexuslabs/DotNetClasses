@@ -13,6 +13,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Azure.Core" Version="1.35.0" />
 		<PackageReference Include="Microsoft.Azure.Cosmos" Version="3.36.0" />
 	</ItemGroup>
 
