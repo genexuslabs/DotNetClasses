@@ -29,7 +29,7 @@ namespace GeneXus.Services.Log
 				}
 				else
 				{
-					throw new ArgumentNullException(APPLICATIONINSIGHTS_CONNECTION_STRING, "Application Insight Log could not be initialized due to missing APPLICATIONINSIGHTS_CONNECTION_STRING environment variable.");
+					throw new ArgumentNullException(APPLICATIONINSIGHTS_CONNECTION_STRING, "Opentelemetry Provider is Azure Monitor. Application Insight Log could not be initialized due to missing APPLICATIONINSIGHTS_CONNECTION_STRING environment variable.");
 				}
 			}
 			catch (Exception ex)
@@ -58,7 +58,7 @@ namespace GeneXus.Services.Log
 				}
 				else
 				{
-					throw new ArgumentNullException(APPLICATIONINSIGHTS_CONNECTION_STRING, "Application Insight Log could not be initialized due to missing APPLICATIONINSIGHTS_CONNECTION_STRING environment variable.");
+					throw new ArgumentNullException(APPLICATIONINSIGHTS_CONNECTION_STRING, "LogOutput is Application Insights. Application Insight Log could not be initialized due to missing APPLICATIONINSIGHTS_CONNECTION_STRING environment variable.");
 				}
 			}
 			catch (Exception ex)
