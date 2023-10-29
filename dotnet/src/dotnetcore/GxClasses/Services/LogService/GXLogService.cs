@@ -12,10 +12,10 @@ namespace GeneXus.Services.Log
 		{
 			if (Config.GetValueOf(LOG_OUTPUT, out string logProvider))
 			{
-				 if (logProvider == AZURE_APPLICATION_INSIGHTS_LOG)
+				if (logProvider == OTEL_AZUREMONITOR_EXPORTER)
+					return AzureAppInsightsLogProvider.GetAzureMonitorLoggerFactory();
+				else if (logProvider == AZURE_APPLICATION_INSIGHTS_LOG)
 					return AzureAppInsightsLogProvider.GetLoggerFactory();
-				 else if (logProvider == OTEL_AZUREMONITOR_EXPORTER)
-					AzureAppInsightsLogProvider.GetAzureMonitorLoggerFactory(); 
 			}
 			return null;
 		}
