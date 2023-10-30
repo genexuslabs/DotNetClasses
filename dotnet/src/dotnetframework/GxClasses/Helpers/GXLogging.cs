@@ -107,7 +107,6 @@ namespace GeneXus
 		{
 			return log.IsEnabled(LogLevel.Information);
 		}
-
 		public bool CriticalEnabled()
 		{
 			return log.IsEnabled(LogLevel.Critical);
