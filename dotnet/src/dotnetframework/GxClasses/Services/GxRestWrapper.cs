@@ -51,7 +51,7 @@ namespace GeneXus.Application
 	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxRestWrapper>();
+		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
 		protected HttpContext _httpContext;
 		protected IGxContext _gxContext;
 		private GXBaseObject _procWorker;
@@ -110,7 +110,7 @@ namespace GeneXus.Application
 					if (!IsAuthenticated(synchronizer))
 						return Task.CompletedTask;
 				}
-				else if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
+				else if (!IsAuthenticated())
 				{
 					return Task.CompletedTask;
 				}
@@ -135,9 +135,8 @@ namespace GeneXus.Application
 				if (!String.IsNullOrEmpty(this._serviceMethod))
 				{
 					innerMethod = this._serviceMethod;
-					bodyParameters = PreProcessApiSdtParameter( _procWorker, innerMethod, bodyParameters, this._variableAlias);
-				}
-				ServiceHeaders();
+					bodyParameters = PreProcessApiSdtParameter(_procWorker, innerMethod, bodyParameters, this._variableAlias);
+				}				
 				Dictionary<string, object> outputParameters = ReflectionHelper.CallMethod(_procWorker, innerMethod, bodyParameters, _gxContext);
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
@@ -145,6 +144,7 @@ namespace GeneXus.Application
 				int originalParameterCount = outputParameters.Count;
 				RestProcess(_procWorker, outputParameters);
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count, originalParameterCount);
+				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -301,7 +301,7 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				if (!IsAuthenticatedMethod(this._serviceMethod, _procWorker.IsApiObject))
+				if (!IsAuthenticated())
 				{
 					return Task.CompletedTask; 
 				}
@@ -313,7 +313,6 @@ namespace GeneXus.Application
 				string innerMethod = EXECUTE_METHOD;
 				Dictionary<string, object> outputParameters;
 				Dictionary<string, string> formatParameters = new Dictionary<string, string>();
-				ServiceHeaders();
 				if (!string.IsNullOrEmpty(_serviceMethodPattern))
 				{
 					innerMethod = _serviceMethodPattern;
@@ -335,6 +334,7 @@ namespace GeneXus.Application
 				RestProcess(_procWorker, outputParameters);			  
 				bool wrapped = false;
 				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount, originalParameterCount);
+				ServiceHeaders();
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -546,16 +546,6 @@ namespace GeneXus.Application
 				if (!validSynchronizer)
 					SetError("0", "Invalid Synchronizer " + synchronizer);
 			}
-		}
-		protected bool IsAuthenticatedMethod(string serviceMethod, bool isApi)
-		{
-			if (!String.IsNullOrEmpty(serviceMethod) && isApi)
-			{
-				bool integratedSecurityEnabled = ( Worker.IntegratedSecurityEnabled2 && Worker.ApiIntegratedSecurityLevel2(serviceMethod) != GAMSecurityLevel.SecurityNone);
-				return IsAuthenticated(Worker.ApiIntegratedSecurityLevel2(serviceMethod), integratedSecurityEnabled, Worker.ApiExecutePermissionPrefix2(serviceMethod));
-			}
-			else
-				return IsAuthenticated();
 		}
 		public bool IsAuthenticated()
 		{
