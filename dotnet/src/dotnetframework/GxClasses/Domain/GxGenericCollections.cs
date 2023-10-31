@@ -1,6 +1,8 @@
 using GeneXus.Application;
 using GeneXus.XML;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 using log4net;
 using System;
 using System.Collections;

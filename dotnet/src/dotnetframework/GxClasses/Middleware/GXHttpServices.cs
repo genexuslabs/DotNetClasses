@@ -23,7 +23,9 @@ namespace GeneXus.Http
 	using GeneXus.WebControls;
 
 	using log4net;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Web.SessionState;
 	using System.Web;
 #if NETCORE

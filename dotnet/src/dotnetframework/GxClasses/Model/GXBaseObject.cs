@@ -3,7 +3,9 @@ using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.Mock;
 using GeneXus.Utils;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;

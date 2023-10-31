@@ -2,7 +2,11 @@ using System;
 using System.Globalization;
 using System.Runtime.Serialization;
 using System.Collections;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using log4net;
 using System.Reflection;
 using GeneXus.Metadata;

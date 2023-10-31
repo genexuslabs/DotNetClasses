@@ -2,7 +2,11 @@ using System;
 using System.Collections;
 using System.Globalization;
 using System.Runtime.Serialization;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using GeographicLib;
 using log4net;
 using NetTopologySuite.Geometries;
@@ -406,7 +410,7 @@ namespace GeneXus.Utils
 			}
 		}
 
-		public String JSONPointToWKT(JArray coords)
+		internal String JSONPointToWKT(JArray coords)
 		{
 			String[] jbuffer = new String[] { "", "" };
 			jbuffer[0] = "";

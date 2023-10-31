@@ -4,7 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.IO;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using log4net;
 using GeneXus.Utils;
 using System.Globalization;

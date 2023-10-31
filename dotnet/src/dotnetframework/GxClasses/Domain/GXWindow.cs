@@ -1,6 +1,8 @@
 using GeneXus.Utils;
 using System;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 namespace GeneXus.Application
 {
 	public class GXWindow : IGxJSONAble

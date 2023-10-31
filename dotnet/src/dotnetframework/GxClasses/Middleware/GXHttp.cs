@@ -22,7 +22,9 @@ namespace GeneXus.Http
 	using GeneXus.WebControls;
 
 	using log4net;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using Helpers;
 	using System.Collections.Concurrent;
 	using Microsoft.Net.Http.Headers;
@@ -456,7 +458,7 @@ namespace GeneXus.Http
 				}
 				if (objMessage.Contains("fullPost"))
 				{
-					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
+					this.targetObj._Context.httpAjaxContext.ParseGXState((JObject)objMessage["fullPost"]);
 				}
 			}
 			private void ParseGridsDataParms(JObject gxGrids)
@@ -904,7 +906,7 @@ namespace GeneXus.Http
 										{
 											try
 											{
-												JObject hashObj = (JObject)(hash_i < inHashValues.Length ? inHashValues[hash_i] : new Jayrock.Json.JObject());
+												JObject hashObj = (JObject)(hash_i < inHashValues.Length ? inHashValues[hash_i] : new JObject());
 												string sRow = hashObj.Contains("row") ? (string)hashObj["row"] : string.Empty;
 												string hash = hashObj.Contains("hsh") ? (string)hashObj["hsh"] : string.Empty;
 												SetScalarOrCollectionValue((string)parm["av"], inParmsValues[parm_i], columnValues);

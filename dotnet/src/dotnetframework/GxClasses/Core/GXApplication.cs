@@ -22,7 +22,9 @@ namespace GeneXus.Application
 	using GeneXus.Configuration;
 	using GeneXus.Metadata;
 	using log4net;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using GeneXus.Http;
 	using System.Collections.Specialized;
 	using System.Collections.Generic;
