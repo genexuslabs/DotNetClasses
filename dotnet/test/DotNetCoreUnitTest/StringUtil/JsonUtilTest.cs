@@ -3,9 +3,9 @@ using System.Collections;
 using System.Xml.Serialization;
 using GeneXus.Application;
 using GeneXus.Utils;
+using System.ServiceModel;
 #if !NETCORE
 using Jayrock.Json;
-using System.ServiceModel;
 #endif
 using Xunit;
 
