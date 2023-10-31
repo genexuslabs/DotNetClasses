@@ -12,6 +12,7 @@ using Jayrock.Json;
 using System.Runtime.Serialization;
 using GeneXus.Configuration;
 using System.Linq;
+using System.Text.Encodings.Web;
 #if NETCORE
 using System.Buffers.Text;
 using System.Text.Json;
@@ -77,7 +78,9 @@ namespace GeneXus.Utils
 		}
 		internal override string WriteJSON<T>(T kbObject)
 		{
-			return JsonSerializer.Serialize<T>(kbObject);
+			JsonSerializerOptions opts = new JsonSerializerOptions();
+			opts.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+			return JsonSerializer.Serialize<T>(kbObject, opts);
 		}
 	}
 #else

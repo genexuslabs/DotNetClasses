@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
-using System.ServiceModel;
 using System.Xml.Serialization;
 using GeneXus.Application;
 using GeneXus.Utils;
 #if !NETCORE
 using Jayrock.Json;
+using System.ServiceModel;
 #endif
 using Xunit;
 
@@ -57,6 +57,23 @@ namespace xUnitTesting
 			string json = "{\"testeID\":1,\"testeName\":\"" + StringUtil.JSONEncode(specialCharacters) + "\"}";
 			sdt.FromJSonString(json, null);
 			Assert.Equal(specialCharacters, sdt.gxTpr_Testename);
+		}
+
+		[Fact]
+		public void SerializationWithSpecialCharacters_js()
+		{
+			JObject jObject = new JObject();
+			jObject.Put("Grid1ContainerData", "{\"GridName\":\"Links\",\"CmpContext\":\"MPW0020\",\"Caption\":\"One+Two<>&\"}");
+			string json = JSONHelper.WriteJSON<JObject>(jObject);
+			Assert.Contains("\\\"GridName\\\"", json, StringComparison.OrdinalIgnoreCase);
+		}
+		[Fact]
+		public void DeserializationWithSpecialCharacters_js()
+		{
+			string json="{\"GridName\":\"Links\",\"CmpContext\":\"MPW0020\",\"Caption\":\"One+Two<>&\"}";
+			JObject jObject = JSONHelper.ReadJSON<JObject>(json);
+			string caption = (string)jObject["Caption"];
+			Assert.Equal("One+Two<>&", caption);
 		}
 	}
 
