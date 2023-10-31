@@ -6,7 +6,9 @@ namespace GeneXus.Utils
 	using GeneXus.Application;
 	using System.Xml.Serialization;
 	using System.Collections.Generic;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Text;
 	using System.Security.Cryptography;
 	using System.Reflection;

@@ -4,7 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using System.Runtime.Serialization;
 using GeneXus.Configuration;
 using System.Linq;
@@ -76,7 +80,7 @@ namespace GeneXus.Utils
 			return JsonSerializer.Serialize<T>(kbObject);
 		}
 	}
-#endif
+#else
 	internal class JayRockJsonSerializer : GXJsonSerializer
 	{
 		internal override bool IsJsonNull(object jobject)
@@ -98,6 +102,7 @@ namespace GeneXus.Utils
 			return null;
 		}
 	}
+#endif
 	internal enum GXJsonSerializerType
 	{
 		Utf8,
@@ -108,22 +113,6 @@ namespace GeneXus.Utils
 	{
 		private static GXJsonSerializer s_instance = null;
 		private static object syncRoot = new object();
-		internal static GXJsonSerializerType DefaultJSonSerializer
-		{
-			get
-			{
-#if NETCORE
-				if (Config.GetValueOf("USE_JAYROCK", out string value) && value == "0")
-				{
-					return GXJsonSerializerType.TextJson;
-				}
-				else
-#endif
-				{
-					return GXJsonSerializerType.Jayrock;
-				}
-			}
-		}
 		internal static GXJsonSerializer Instance
 		{
 			get
@@ -134,17 +123,11 @@ namespace GeneXus.Utils
 					{
 						if (s_instance == null)
 						{
-							switch (DefaultJSonSerializer)
-							{
 #if NETCORE
-								case GXJsonSerializerType.TextJson:
-									s_instance = new TextJsonSerializer();
-									break;
+							s_instance = new TextJsonSerializer();
+#else
+							s_instance = new JayRockJsonSerializer();
 #endif
-								default:
-									s_instance = new JayRockJsonSerializer();
-									break;
-							}
 						}
 					}
 				}

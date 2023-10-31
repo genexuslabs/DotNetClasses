@@ -20,7 +20,7 @@
 //
 #endregion
 
-namespace Imported.Jayrock.Json
+namespace GeneXus.Application
 {
     #region Imports
 

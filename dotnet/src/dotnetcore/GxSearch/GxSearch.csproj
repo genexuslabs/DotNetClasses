@@ -30,12 +30,4 @@
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
   
-  <ItemGroup>
-	<Reference Include="Jayrock-JSON">
-		<SpecificVersion>False</SpecificVersion>
-		<HintPath>..\libs\Jayrock.dll</HintPath>
-	</Reference>  
-  </ItemGroup>
-
-
 </Project>

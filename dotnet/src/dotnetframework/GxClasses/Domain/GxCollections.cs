@@ -11,7 +11,9 @@ namespace GeneXus.Utils
 	using GeneXus.Application;
 	using System.Text;
 	using System.Globalization;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using log4net;
 	using System.ComponentModel;
 	using System.Xml;

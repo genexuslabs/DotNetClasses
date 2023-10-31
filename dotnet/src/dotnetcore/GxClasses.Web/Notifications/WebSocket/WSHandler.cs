@@ -4,7 +4,11 @@ using GeneXus.Notifications.WebSocket;
 using GeneXus.Procedure;
 using GeneXus.Services;
 using GeneXus.Utils;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using log4net;
 using System;
 using System.Collections.Generic;

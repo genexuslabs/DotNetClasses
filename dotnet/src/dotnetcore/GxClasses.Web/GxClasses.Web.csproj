@@ -43,11 +43,5 @@
 		<Folder Include="Notifications\WebSocket\" />
 		<Folder Include="View\UserControls\" />
 	</ItemGroup>
-  <ItemGroup>
-	<Reference Include="Jayrock-JSON">
-		<SpecificVersion>False</SpecificVersion>
-		<HintPath>..\libs\Jayrock.dll</HintPath>
-	</Reference>  
-  </ItemGroup>	
   
 </Project>
