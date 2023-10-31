@@ -3,14 +3,36 @@ using System.Collections;
 using System.ServiceModel;
 using System.Xml.Serialization;
 using GeneXus.Application;
-using GeneXus.Programs;
 using GeneXus.Utils;
+using Jayrock.Json;
 using Xunit;
 
 namespace xUnitTesting
 {
 	public class JsonUtilTest
 	{
+		[Fact]
+		public void SerializationWithNumbers()
+		{
+			JObject jObject = new JObject();
+			jObject.Put("gridId", 2);
+			string json = JSONHelper.WriteJSON<JObject>(jObject);
+			Assert.Contains(":2", json, StringComparison.OrdinalIgnoreCase);
+		}
+		[Fact]
+		public void DeserializationWithNumbers()
+		{
+			string json = "{\"MPage\":false,\"cmpCtx\":\"\",\"parms\":[0,\"\",\"\",\"\",[{\"pRow\":\"\",\"c\":[],\"v\":null}],\"\",\"0\",{\"gridRC\":53903859.090,\"hsh\":true,\"grid\":2},\"0\",null],\"hsh\":[],\"objClass\":\"testsac42351\",\"pkgName\":\"GeneXus.Programs\",\"events\":[\"'BTN_SEARCH'\"],\"grids\":{\"Grid1\":{\"id\":2,\"lastRow\":0,\"pRow\":\"\"}}}";
+			JObject jObj = JSONHelper.ReadJSON<JObject>(json);
+			JObject parm = ((Jayrock.Json.JObject)((Jayrock.Json.JArray)jObj["parms"])[7]);
+			Assert.NotNull(parm);
+			int gridId = (int)(parm["grid"]);
+			Assert.Equal(2, gridId);
+			decimal gridRC = Convert.ToDecimal(parm["gridRC"]);
+			Assert.Equal(53903859.090M, gridRC);
+			bool hash = (bool)parm["hsh"];
+			Assert.True(hash);
+		}
 
 		[Fact]
 		public void SerializationWithBigDecimalsTest_Issue70446()
