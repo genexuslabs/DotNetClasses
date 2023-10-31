@@ -36,10 +36,20 @@ namespace GeneXus.Utils
 					return JsonSerializer.Deserialize<JArray>(ref reader, options);
 				case JsonTokenType.StartObject:
 					return JsonSerializer.Deserialize<JObject>(ref reader, options);
+				case JsonTokenType.Number:
+					if (reader.TryGetInt32(out int l))
+						return l;
+					else
+						if (reader.TryGetDecimal(out decimal d))
+						return d;
+					else
+						return reader.GetDouble();
+				case JsonTokenType.String:
+					return reader.GetString();
 				default:
 					using (JsonDocument document = JsonDocument.ParseValue(ref reader))
 					{
-						return document.RootElement.Clone().ToString();
+						return document.RootElement.Clone();
 					}
 			}
 		}
