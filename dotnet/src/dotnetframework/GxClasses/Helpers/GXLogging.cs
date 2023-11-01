@@ -180,9 +180,11 @@ namespace GeneXus
 #endif
 	internal class GXLoggerLog4Net : IGXLogger
 	{
+#if NETCORE
 		const string ThreadNameNet8 = ".NET TP Worker";
 		const string ThreadNameNet6 = ".NET ThreadPool Worker";
 		const string ThreadId = "threadid";
+#endif
 		internal ILog log { get; set; }
 
 		internal GXLoggerLog4Net(ILog logInstance)
