@@ -75,6 +75,21 @@ namespace xUnitTesting
 			string caption = (string)jObject["Caption"];
 			Assert.Equal("One+Two<>&", caption);
 		}
+
+		[Fact]
+		public void SerializationPropertiesKeepOrder()
+		{
+			string json = JSONHelper.WriteJSON<dynamic>(GetJSONObject());
+			Assert.Equal("{\"ClientId\":0,\"ClientName\":\"John\",\"ClientActive\":false}", json);
+		}
+		object GetJSONObject()
+		{
+			JObject jObject = new JObject();
+			jObject.Put("ClientId", 0);
+			jObject.Put("ClientName", "John");
+			jObject.Put("ClientActive", false);
+			return jObject;
+		}
 	}
 
 	[XmlSerializerFormat]
