@@ -8,7 +8,8 @@ namespace GeneXus.Mail
 	
 	public class GXPOP3Session : GXMailSession
 	{
-		private static readonly ILog log = LogManager.GetLogger(typeof(GXSMTPSession));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXPOP3Session>();
+
 		private IPOP3Session session;
 		private short secure;
 		private short newMessages;

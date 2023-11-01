@@ -14,7 +14,8 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 {
 	public class ExcelCells : IExcelCellRange
 	{
-		private static readonly ILog logger = LogManager.GetLogger(typeof(ExcelCells));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExcelCells>();
+
 		protected IGXError _errorHandler;
 		protected ExcelSpreadsheet doc;
 		protected int cellCount;
@@ -428,7 +429,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(logger, "SetSize error", ex);
+				GXLogging.Error(log, "SetSize error", ex);
 			}
 		}
 

@@ -1,4 +1,4 @@
-﻿using log4net;
+using log4net;
 using Microsoft.Exchange.WebServices.Data;
 using System;
 using System.Collections.Generic;
@@ -9,14 +9,10 @@ namespace GeneXus.Mail.Exchange
 {
     public class TraceListener : ITraceListener
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(TraceListener));
-        
-        public void Trace(string traceType, string traceMessage)
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<TraceListener>();
+		public void Trace(string traceType, string traceMessage)
         {
-            if (log.IsDebugEnabled)
-            {
-                log.Debug(String.Format("Trace Type: {0} - Message: {1}", traceType, traceMessage));
-            }            
+			GXLogging.Debug(log, string.Format("Trace Type: {0} - Message: {1}", traceType, traceMessage));           
         }         
     }
 }

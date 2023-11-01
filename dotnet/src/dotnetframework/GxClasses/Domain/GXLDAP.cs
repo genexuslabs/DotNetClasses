@@ -11,7 +11,7 @@ namespace GeneXus.Utils
 {
 	public class GXLDAPClient
 	{
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
 		string _server;
 		int _port;

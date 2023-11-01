@@ -11,7 +11,7 @@ namespace GeneXus.Messaging.Common
 	[GXApi]
 	public class MessageQueueProvider : SimpleMessageQueue
 	{
-		static readonly ILog logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<MessageQueueProvider>();
 		private static GXService providerService;
 		public MessageQueueProvider(){
 		}

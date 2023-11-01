@@ -26,7 +26,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public HttpResponse httpResponseData;
 		private ICacheService2 _redis;
 		private string sessionId;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXHttpAzureContextAccessor));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXHttpAzureContextAccessor>();
 		internal const string AzureSessionId = "GX_AZURE_SESSIONID";
 		public GXHttpAzureContextAccessor(HttpRequestData requestData, HttpResponseData responseData, ICacheService2 redis)
 		{

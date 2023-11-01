@@ -12,11 +12,6 @@
 	<ItemGroup>
 	  <EmbeddedResource Include="sRGB Color Space Profile.icm" />
 	</ItemGroup>
-
-
-	<ItemGroup>
-		<PackageReference Include="log4net" Version="2.0.11" />
-	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>

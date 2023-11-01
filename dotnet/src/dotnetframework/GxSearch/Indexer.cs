@@ -24,7 +24,7 @@ namespace GeneXus.Search
 	[SecuritySafeCritical]
 	public sealed class Indexer
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Search.Indexer));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Indexer>();
 
 		public static Lucene.Net.Util.Version LUCENE_VERSION = Lucene.Net.Util.Version.LUCENE_24;
 		#region Singleton

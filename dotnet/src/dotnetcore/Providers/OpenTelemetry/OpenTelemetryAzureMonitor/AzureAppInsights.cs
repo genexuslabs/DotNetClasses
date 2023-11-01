@@ -3,7 +3,6 @@ using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
-using log4net;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -15,7 +14,7 @@ namespace GeneXus.OpenTelemetry.Azure
 {
 	public class AzureAppInsights : IOpenTelemetryProvider
 	{
-		private static readonly ILog log = LogManager.GetLogger(typeof(AzureAppInsights));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<AzureAppInsights>();
 		private const string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
 		public AzureAppInsights(GXService s)
@@ -39,7 +38,7 @@ namespace GeneXus.OpenTelemetry.Azure
 					else
 					{
 						o.Credential = new DefaultAzureCredential();
-						log.Debug("Connect to Azure monitor Opentelemetry Trace exporter using Default Azure credential");
+						GXLogging.Debug(log, "Connect to Azure monitor Opentelemetry Trace exporter using Default Azure credential");
 					}
 				})
 				.AddGxAspNetInstrumentation()
@@ -54,7 +53,7 @@ namespace GeneXus.OpenTelemetry.Azure
 					else
 					{
 						o.Credential = new DefaultAzureCredential();
-						log.Debug("Connect to Azure monitor Opentelemetry Metrics exporter using Default Azure credential");
+						GXLogging.Debug(log, "Connect to Azure monitor Opentelemetry Metrics exporter using Default Azure credential");
 					}
 				})
 				.Build();
@@ -62,7 +61,7 @@ namespace GeneXus.OpenTelemetry.Azure
 			}
 			catch (Exception ex)
 			{
-				log.Warn("Azure Monitor Opentelemetry could not be initialized. " + ex.Message);
+				GXLogging.Warn(log, "Azure Monitor Opentelemetry could not be initialized. " + ex.Message);
 				return false;
 			}
 		}

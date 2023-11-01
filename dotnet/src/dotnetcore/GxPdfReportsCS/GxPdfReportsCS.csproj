@@ -19,10 +19,9 @@
 	<ItemGroup>
 		<PackageReference Include="itext7" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="itext7.font-asian" Version="8.0.0" PrivateAssets="All" />
-		<PackageReference Include="itext7.pdfhtml" Version="5.0.0" PrivateAssets="All"/>
+		<PackageReference Include="itext7.pdfhtml" Version="5.0.0" PrivateAssets="All" />
 
-		<PackageReference Include="iTextSharp-LGPL" Version="4.1.6"  PrivateAssets="All" />
-		<PackageReference Include="log4net" Version="2.0.15" />
+		<PackageReference Include="iTextSharp-LGPL" Version="4.1.6" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

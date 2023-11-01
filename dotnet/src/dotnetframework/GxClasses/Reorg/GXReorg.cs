@@ -31,7 +31,7 @@ namespace GeneXus.Reorg
 
     public class GXReorganization
     {
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Reorg.GXReorganization));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXReorganization>();
         public virtual void initialize() { }
 		public virtual void cleanup() { }
 		static ArrayList lstMsgs;

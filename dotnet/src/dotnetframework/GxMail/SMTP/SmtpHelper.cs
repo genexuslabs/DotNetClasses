@@ -11,7 +11,7 @@ namespace GeneXus.Mail.Smtp
 	public class SmtpHelper
 	{
 
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(SMTPMailClient));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<SMTPMailClient>();
 #if NETCORE
 		const string SMTP_TRANSPORT = "_transport";
 		const string SMTP_CONNECTION = "_connection";

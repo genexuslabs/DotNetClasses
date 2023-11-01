@@ -17,7 +17,8 @@ namespace GeneXus.Cache
 {
 	public sealed class Redis : ICacheService2
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Redis));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Redis>();
+
 		ConnectionMultiplexer _redisConnection;
 		IDatabase _redisDatabase;
 		ConfigurationOptions _redisConnectionOptions;

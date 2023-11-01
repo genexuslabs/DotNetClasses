@@ -20,7 +20,7 @@ namespace GeneXus.Data
 {
 	public class GxPostgreSql : GxDataRecord
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		const string ConnectionStringEncoding = "encoding";
 		private byte[] _buffer;
 		static Assembly _npgsqlAssembly;
@@ -587,7 +587,7 @@ namespace GeneXus.Data
 	}
 	sealed internal class PostgresqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 		public PostgresqlConnectionWrapper()
 		{
 			_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection");

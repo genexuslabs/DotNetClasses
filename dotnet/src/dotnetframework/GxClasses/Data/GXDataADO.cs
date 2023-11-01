@@ -11,6 +11,7 @@ using GeneXus.Utils;
 using GeneXus.XML;
 using GxClasses.Helpers;
 using log4net;
+using log4net.Core;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -21,7 +22,6 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using TZ4Net;
-
 namespace GeneXus.Data.ADO
 {
 
@@ -64,7 +64,7 @@ namespace GeneXus.Data.ADO
 
 	public class GxConnectionManager :IGxConnectionManager
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxConnectionManager));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxConnectionManager>();
 
 		private static volatile GxConnectionManager instance;
         private static object instanceSync = new Object();
@@ -345,7 +345,7 @@ namespace GeneXus.Data.ADO
     public class GxConnection: IGxConnection
 #endif
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxConnection));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxConnection>();
 		private IDbTransaction transaction;
 		private short lastErrorCode;
 		private string lastErrorMsg;
@@ -1319,7 +1319,7 @@ namespace GeneXus.Data.ADO
 	public class GxCommand: IGxDbCommand
 	{
 		internal List<ParDef> ParmDefinition;
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxCommand));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxCommand>();
 		string stmt;
         String stmtId;
         GxParameterCollection parameters;
@@ -2411,7 +2411,7 @@ namespace GeneXus.Data.ADO
 	
 	public class GxDataStore : IGxDataStore
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDataStore));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDataStore>();
 		string id;
 		IGxConnection connection;
 		int handle;		

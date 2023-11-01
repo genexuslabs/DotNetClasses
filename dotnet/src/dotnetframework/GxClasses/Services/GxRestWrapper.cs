@@ -51,7 +51,7 @@ namespace GeneXus.Application
 	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxRestWrapper>();
 		protected HttpContext _httpContext;
 		protected IGxContext _gxContext;
 		private GXBaseObject _procWorker;

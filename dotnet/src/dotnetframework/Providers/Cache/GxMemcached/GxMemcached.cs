@@ -15,7 +15,7 @@ namespace GeneXus.Cache
 	[SecuritySafeCritical]
 	public class Memcached : ICacheService2
 	{
-		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(typeof(Memcached));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Memcached>();
 
 		MemcachedClient _cache;
 		const int DEFAULT_MEMCACHED_PORT = 11211;

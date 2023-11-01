@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using GeneXus.Data.Cosmos;
-using log4net;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 
@@ -14,7 +13,7 @@ namespace GeneXus.Data.NTier.CosmosDB
 		private readonly Container m_container;
 		private readonly CosmosClient m_cosmosClient;
 		private readonly QueryDefinition m_queryDefinition;
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(RequestWrapper));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<RequestWrapper>();
 		public string idValue { get; set; }
 		public object partitionKeyValue { get; set; }
 		public bool queryByPK { get; set; }

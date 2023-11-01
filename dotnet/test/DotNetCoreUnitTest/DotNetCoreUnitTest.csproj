@@ -10,6 +10,9 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="log.console.config" />
+	</ItemGroup>
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\ConfigMappings\ConfigTest.cs" Link="ConfigMappings\ConfigTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\GxHttpClientTest.cs" Link="Domain\GxHttpClientTest.cs" />		
@@ -28,6 +31,7 @@
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderGoogleTest.cs" Link="ExternalProvider\ExternalProviderGoogleTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderOracleTest.cs" Link="ExternalProvider\ExternalProviderOracleTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\FileIO\MimeTypesTest.cs" Link="FileIO\MimeTypesTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\Log\LogTest.cs" Link="Log\LogTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\PDF\apdfbasictest.cs" Link="PDF\apdfbasictest.cs" />		
 		<Compile Include="..\DotNetUnitTest\PDF\PDFTests.cs" Link="PDF\PDFTests.cs" />		
 	</ItemGroup>
@@ -45,6 +49,9 @@
 		<Content Include="..\DotNetUnitTest\UserControlRender.cs" Link="UserControlRender.cs" />
 		<Content Include="FullTextSearch\Ugly.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="log.console.config">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
@@ -104,9 +111,6 @@
 		<None Update="Document.txt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="log.config">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<None Update="MS923.txt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -161,6 +165,7 @@
 	<ItemGroup>
 	  <Folder Include="ConfigMappings\" />
 	  <Folder Include="Domain\" />
+	  <Folder Include="Log\" />
 	  <Folder Include="PDF\" />
 	  <Folder Include="resources\xml\" />
 	</ItemGroup>

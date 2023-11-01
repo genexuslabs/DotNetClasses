@@ -20,7 +20,7 @@ namespace GeneXus.Diagnostics
 
 		private static bool initialized;
 		private static GXDebugManager m_Instance;
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxContext));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxContext>();
 		public static GXDebugManager Instance
 		{
 			get

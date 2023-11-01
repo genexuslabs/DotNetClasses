@@ -12,7 +12,8 @@ namespace GeneXus.Data
 {
 	public class GxMySql : GxDataRecord 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxMySql));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxMySql>();
+
 		private int MAX_TRIES;
 		private int m_FailedConnections;
 		private bool preparedStmts;
@@ -403,7 +404,7 @@ namespace GeneXus.Data
 
 	sealed internal class MySqlDriverCSConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.MySqlDriverCSConnectionWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<MySqlDriverCSConnectionWrapper>();
 		public MySqlDriverCSConnectionWrapper() : base(new MySQLConnection())
 		{ }
 
@@ -516,7 +517,7 @@ namespace GeneXus.Data
 	}
 	public class GxMySQLDriverCSCursorDataReader : GxDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDataReader>();
 
 		public GxMySQLDriverCSCursorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool hasNested, bool dynStmt)

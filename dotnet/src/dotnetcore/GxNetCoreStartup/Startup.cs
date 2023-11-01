@@ -12,7 +12,6 @@ using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
-using log4net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
@@ -34,7 +33,6 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using StackExchange.Redis;
 
-
 namespace GeneXus.Application
 {
 	public class Program
@@ -42,9 +40,6 @@ namespace GeneXus.Application
 		const string DEFAULT_PORT = "80";
 		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
 
-		private static string OPENTELEMETRY_SERVICE = "Observability";
-		private static string OPENTELEMETRY_AZURE_DISTRO = "GeneXus.OpenTelemetry.Azure.AzureAppInsights";
-		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 		public static void Main(string[] args)
 		{
 			try
@@ -82,12 +77,11 @@ namespace GeneXus.Application
 		}
 
 		public static IWebHost BuildWebHost(string[] args) =>
-		  WebHost.CreateDefaultBuilder(args)
-		   .ConfigureLogging(WebHostConfigureLogging)
+		   WebHost.CreateDefaultBuilder(args)
 		   .UseStartup<Startup>()
 		   .UseContentRoot(Startup.LocalPath)
 		   .Build();
-		
+
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
 			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
@@ -95,46 +89,12 @@ namespace GeneXus.Application
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				 .ConfigureLogging(WebHostConfigureLogging)
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
 				.UseContentRoot(Startup.LocalPath)
 				.Build();
 		}
 
-		private static void WebHostConfigureLogging(WebHostBuilderContext hostingContext, ILoggingBuilder loggingBuilder)
-		{
-			loggingBuilder.AddConsole();
-			GXService providerService = GXServices.Instance?.Get(OPENTELEMETRY_SERVICE);
-			if (providerService != null && providerService.ClassName.StartsWith(OPENTELEMETRY_AZURE_DISTRO))
-			{
-				ConfigureAzureOpentelemetry(loggingBuilder);
-			}
-		}
-		private static void ConfigureAzureOpentelemetry(ILoggingBuilder loggingBuilder)
-		{
-			string endpoint = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
-			var resourceBuilder = ResourceBuilder.CreateDefault()
-			.AddTelemetrySdk();
-
-			loggingBuilder.AddOpenTelemetry(loggerOptions =>
-			{
-				loggerOptions
-					.SetResourceBuilder(resourceBuilder)
-					.AddAzureMonitorLogExporter(options =>
-					{
-						if (!string.IsNullOrEmpty(endpoint))
-							options.ConnectionString = endpoint;
-						else
-							options.Credential = new DefaultAzureCredential();
-					})
-					.AddConsoleExporter();
-
-				loggerOptions.IncludeFormattedMessage = true;
-				loggerOptions.IncludeScopes = true;
-				loggerOptions.ParseStateValues = true;
-			});
-		}
 		private static void LocatePhysicalLocalPath()
 		{
 			string startup = FileUtil.GetStartupDirectory();
@@ -142,7 +102,6 @@ namespace GeneXus.Application
 			if (startup == Startup.LocalPath && !File.Exists(Path.Combine(startup, Startup.APP_SETTINGS)) && File.Exists(Path.Combine(startupParent, Startup.APP_SETTINGS)))
 				Startup.LocalPath = startupParent;
 		}
-
 	}
 
 	public static class GXHandlerExtensions
@@ -164,9 +123,10 @@ namespace GeneXus.Application
 	}
   
 	public class Startup
-	{ 
+	{
+		static IGXLogger log;
+		internal static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
@@ -189,14 +149,15 @@ namespace GeneXus.Application
 		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
-
 		public Startup(IConfiguration configuration, IHostingEnvironment env)
 		{
 			Config.ConfigRoot = configuration;
+			GxContext.IsHttpContext = true;
+			Config.LoadConfiguration();
 			GXRouting.ContentRootPath = env.ContentRootPath;
 			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
-			GxContext.IsHttpContext = true;
 			gxRouting = new GXRouting(REST_BASE_URL);
+			log = GXLoggerFactory.GetLogger<Startup>();
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
@@ -213,7 +174,7 @@ namespace GeneXus.Application
 				options.AllowSynchronousIO = true;
 			});
 			services.AddDistributedMemoryCache();
-
+			services.AddLogging(builder => builder.AddConsole());
 			services.Configure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
@@ -339,7 +300,8 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
-			LogConfiguration.SetupLog4Net();			
+			LogConfiguration.SetupLog4Net();
+			
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";
@@ -535,7 +497,7 @@ namespace GeneXus.Application
 	public class CustomExceptionHandlerMiddleware
 	{
 		const string InvalidCSRFToken = "InvalidCSRFToken";
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomExceptionHandlerMiddleware));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
 			string httpReasonPhrase=string.Empty;
