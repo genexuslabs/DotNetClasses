@@ -8,6 +8,7 @@ namespace GeneXus.Services.Log
 	public class AzureAppInsightsLogProvider : ILoggerFactory
 	{
 		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
+		private const string LOG_LEVEL_ENVVAR = "GX_LOG_LEVEL";
 		public static ILoggerFactory loggerFactory;
 
 		public static ILoggerFactory GetAzureMonitorLoggerFactory()
@@ -18,13 +19,19 @@ namespace GeneXus.Services.Log
 
 				if (appInsightsConnection != null)
 				{
+					string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
+					LogLevel loglevel = LogLevel.Information;
+					if (!string.IsNullOrEmpty(loglevelvalue))
+					{
+						Enum.TryParse<LogLevel>(loglevelvalue, out loglevel);
+					}
 					loggerFactory = LoggerFactory.Create(builder =>
 					{
 						builder.AddOpenTelemetry(options =>
 						{
 							options.AddAzureMonitorLogExporter(o => o.ConnectionString = appInsightsConnection);
 							options.AddConsoleExporter();
-						});
+						}).SetMinimumLevel(loglevel);
 					});
 				}
 				else
@@ -48,12 +55,18 @@ namespace GeneXus.Services.Log
 
 				if (appInsightsConnection != null)
 				{
+					string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
+					LogLevel loglevel = LogLevel.Information;
+					if (!string.IsNullOrEmpty(loglevelvalue))
+					{
+						Enum.TryParse<LogLevel>(loglevelvalue, out loglevel);
+					}
 					loggerFactory = LoggerFactory.Create(builder => builder.AddApplicationInsights(
 
 						configureTelemetryConfiguration: (config) =>
 						config.ConnectionString = appInsightsConnection,
 						configureApplicationInsightsLoggerOptions: (options) => { }
-						)
+						).SetMinimumLevel(loglevel)
 					);
 				}
 				else
