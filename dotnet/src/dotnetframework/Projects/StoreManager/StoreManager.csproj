@@ -10,12 +10,11 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Google.Apis.AndroidPublisher.v3" Version="1.55.0.2582" />
-		<PackageReference Include="log4net" Version="2.0.11" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="Zlib.Portable.Signed" Version="1.11.0" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj"/>
+		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="Jayrock-JSON">
