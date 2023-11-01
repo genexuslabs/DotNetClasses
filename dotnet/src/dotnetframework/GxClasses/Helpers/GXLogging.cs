@@ -3,6 +3,10 @@ using System.Reflection;
 using System.Text;
 using log4net;
 using log4net.Core;
+using System.Threading;
+using log4net.Util;
+using System.Globalization;
+using System.Security;
 #if NETCORE
 using GeneXus.Services.Log;
 using Microsoft.Extensions.Logging;
@@ -176,11 +180,39 @@ namespace GeneXus
 #endif
 	internal class GXLoggerLog4Net : IGXLogger
 	{
+		const string ThreadNameNet8 = ".NET TP Worker";
+		const string ThreadNameNet6 = ".NET ThreadPool Worker";
+		const string ThreadId = "threadid";
 		internal ILog log { get; set; }
 
 		internal GXLoggerLog4Net(ILog logInstance)
 		{
 			log = logInstance;
+		}
+		void SetThreadIdForLogging()
+		{
+#if NETCORE
+			if (ThreadContext.Properties[ThreadId] == null)
+			{
+				string name = Thread.CurrentThread.Name;
+				if (!string.IsNullOrEmpty(name) && name != ThreadNameNet6 && !name.StartsWith(ThreadNameNet8))
+				{
+					ThreadContext.Properties[ThreadId] = name;
+				}
+				else
+				{
+					try
+					{
+						ThreadContext.Properties[ThreadId] = SystemInfo.CurrentThreadId.ToString(NumberFormatInfo.InvariantInfo);
+					}
+					catch (SecurityException)
+					{
+						log.Debug("Security exception while trying to get current thread ID. Error Ignored. Empty thread name.");
+						ThreadContext.Properties[ThreadId] = Thread.CurrentThread.GetHashCode().ToString(CultureInfo.InvariantCulture);
+					}
+				}
+			}
+#endif
 		}
 		public bool IsTraceEnabled { get => TraceEnabled(); }
 		public bool IsErrorEnabled { get => ErrorEnabled(); }
@@ -215,14 +247,17 @@ namespace GeneXus
 
 		public void LogTrace(string value)
 		{
+			SetThreadIdForLogging();
 			log.Logger.Log(MethodBase.GetCurrentMethod().DeclaringType, Level.Trace, value, null);
 		}
 		public void LogError(string msg, Exception ex)
 		{
+			SetThreadIdForLogging();
 			log.Error(msg, ex);
 		}
 		public void LogError(string msg)
 		{
+			SetThreadIdForLogging();
 			log.Error(msg);
 		}
 		public void LogError(string msg, params string[] list)
@@ -234,14 +269,16 @@ namespace GeneXus
 				message.Append(parm);
 			}
 
-			log.Error(message.ToString());
+			LogError(message.ToString());
 		}
 		public void LogWarning(Exception ex, string msg)
 		{
+			SetThreadIdForLogging();
 			log.Warn(msg, ex);
 		}
 		public void LogWarning(string msg)
 		{
+			SetThreadIdForLogging();
 			log.Warn(msg);
 		}
 		public void LogWarning(string msg, params string[] list)
@@ -253,15 +290,17 @@ namespace GeneXus
 				message.Append(parm);
 			}
 
-			log.Warn(message.ToString());
+			LogWarning(message.ToString());
 		}
 		public void LogDebug(string msg)
 		{
+			SetThreadIdForLogging();
 			log.Debug(msg);
 		}
 
 		public void LogDebug(Exception ex, string msg)
 		{
+			SetThreadIdForLogging();
 			log.Debug(msg, ex);
 		}
 		public void LogDebug(string msg, params string[] list)
@@ -273,10 +312,11 @@ namespace GeneXus
 				message.Append(parm);
 			}
 
-			log.Debug(message.ToString());
+			LogDebug(message.ToString());
 		}
 		public void LogInfo(string msg)
 		{
+			SetThreadIdForLogging();
 			log.Info(msg);
 		}
 		public void LogInfo(string msg, params string[] list)
@@ -288,15 +328,17 @@ namespace GeneXus
 				message.Append(parm);
 			}
 
-			log.Info(message.ToString());
+			LogInfo(message.ToString());
 		}
 
 		public void LogCritical(string msg)
 		{
+			SetThreadIdForLogging();
 			log.Fatal(msg);
 		}
 		public void LogCritical(Exception ex, string msg)
 		{
+			SetThreadIdForLogging();
 			log.Fatal(msg, ex);
 		}
 
@@ -309,7 +351,7 @@ namespace GeneXus
 				message.Append(parm);
 			}
 
-			log.Fatal(message.ToString());
+			LogCritical(message.ToString());
 		}
 	}
 	public static class GXLogging
