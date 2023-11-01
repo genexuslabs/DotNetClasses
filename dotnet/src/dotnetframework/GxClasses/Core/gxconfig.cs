@@ -1402,7 +1402,17 @@ namespace GeneXus.Configuration
 				return sessionTimeout;
 			}
 		}
-
+		const bool DefaultWrapSingleApiOutput = false;
+		internal static bool WrapSingleApiOutput
+		{
+			get
+			{
+				if (Config.GetValueOf("WRAP_SINGLE_API_OUTPUT", out string flatten))
+					return (int.TryParse(flatten, out int value) && value == 1);
+				else
+					return DefaultWrapSingleApiOutput;
+			}
+		}
 		internal static string CorsAllowedOrigins()
 		{
 			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
