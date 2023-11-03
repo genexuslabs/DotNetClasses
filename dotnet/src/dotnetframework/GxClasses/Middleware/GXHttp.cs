@@ -2275,7 +2275,11 @@ namespace GeneXus.Http
 
 		protected virtual void SetCompression(HttpContext httpContext)
 		{
+#if NETCORE
 			if (CompressHtmlResponse())
+#else
+			if (CompressHtmlResponse() && httpContext.Response.BufferOutput)
+#endif
 			{
 				GXUtil.SetGZip(httpContext);
 			}
