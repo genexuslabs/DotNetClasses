@@ -19,21 +19,7 @@ namespace GeneXus.Services.Log
 
 				if (appInsightsConnection != null)
 				{
-					string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
-					LogLevel loglevel = LogLevel.Information;
-					if (!string.IsNullOrEmpty(loglevelvalue))
-					{
-						if (!Enum.TryParse<LogLevel>(loglevelvalue, out loglevel))
-						{
-							CustomLogLevel customLogLevel = CustomLogLevel.Info;
-							if (Enum.TryParse<CustomLogLevel>(loglevelvalue, out customLogLevel))
-							{
-								loglevel = toLogLevel(customLogLevel);
-							}
-							else
-								loglevel = LogLevel.Information;
-						}
-					}
+					LogLevel loglevel = GetLogLevel();
 					loggerFactory = LoggerFactory.Create(builder =>
 					{
 						builder.AddOpenTelemetry(options =>
@@ -64,21 +50,7 @@ namespace GeneXus.Services.Log
 
 				if (appInsightsConnection != null)
 				{
-					string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
-					LogLevel loglevel = LogLevel.Information;
-					if (!string.IsNullOrEmpty(loglevelvalue))
-					{
-						if (!Enum.TryParse<LogLevel>(loglevelvalue, out loglevel))
-						{
-							CustomLogLevel customLogLevel = CustomLogLevel.Info;
-							if (Enum.TryParse<CustomLogLevel>(loglevelvalue, out customLogLevel))
-							{
-								loglevel = toLogLevel(customLogLevel);
-							}
-							else
-								loglevel = LogLevel.Information;
-						}
-					}
+					LogLevel loglevel = GetLogLevel();
 					loggerFactory = LoggerFactory.Create(builder => builder.AddApplicationInsights(
 
 						configureTelemetryConfiguration: (config) =>
@@ -98,6 +70,25 @@ namespace GeneXus.Services.Log
 			}
 
 			return loggerFactory;
+		}
+		private static LogLevel GetLogLevel()
+		{
+			string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
+			LogLevel loglevel = LogLevel.Information;
+			if (!string.IsNullOrEmpty(loglevelvalue))
+			{
+				if (!Enum.TryParse<LogLevel>(loglevelvalue, out loglevel))
+				{
+					CustomLogLevel customLogLevel = CustomLogLevel.Info;
+					if (Enum.TryParse<CustomLogLevel>(loglevelvalue, out customLogLevel))
+					{
+						loglevel = toLogLevel(customLogLevel);
+					}
+					else
+						loglevel = LogLevel.Information;
+				}
+			}
+			return loglevel;
 		}
 
 		public void AddProvider(ILoggerProvider provider)
