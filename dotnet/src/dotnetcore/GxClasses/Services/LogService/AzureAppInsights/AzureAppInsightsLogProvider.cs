@@ -19,12 +19,7 @@ namespace GeneXus.Services.Log
 
 				if (appInsightsConnection != null)
 				{
-					string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
-					LogLevel loglevel = LogLevel.Information;
-					if (!string.IsNullOrEmpty(loglevelvalue))
-					{
-						Enum.TryParse<LogLevel>(loglevelvalue, out loglevel);
-					}
+					LogLevel loglevel = GetLogLevel();
 					loggerFactory = LoggerFactory.Create(builder =>
 					{
 						builder.AddOpenTelemetry(options =>
@@ -55,12 +50,7 @@ namespace GeneXus.Services.Log
 
 				if (appInsightsConnection != null)
 				{
-					string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
-					LogLevel loglevel = LogLevel.Information;
-					if (!string.IsNullOrEmpty(loglevelvalue))
-					{
-						Enum.TryParse<LogLevel>(loglevelvalue, out loglevel);
-					}
+					LogLevel loglevel = GetLogLevel();
 					loggerFactory = LoggerFactory.Create(builder => builder.AddApplicationInsights(
 
 						configureTelemetryConfiguration: (config) =>
@@ -81,6 +71,25 @@ namespace GeneXus.Services.Log
 
 			return loggerFactory;
 		}
+		private static LogLevel GetLogLevel()
+		{
+			string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
+			LogLevel loglevel = LogLevel.Information;
+			if (!string.IsNullOrEmpty(loglevelvalue))
+			{
+				if (!Enum.TryParse<LogLevel>(loglevelvalue, out loglevel))
+				{
+					CustomLogLevel customLogLevel = CustomLogLevel.Info;
+					if (Enum.TryParse<CustomLogLevel>(loglevelvalue, out customLogLevel))
+					{
+						loglevel = toLogLevel(customLogLevel);
+					}
+					else
+						loglevel = LogLevel.Information;
+				}
+			}
+			return loglevel;
+		}
 
 		public void AddProvider(ILoggerProvider provider)
 		{
@@ -94,6 +103,29 @@ namespace GeneXus.Services.Log
 		{
 			return loggerFactory.CreateLogger(name);
 		}
-
+		private enum CustomLogLevel
+		{
+			None,
+			All,
+			Debug,
+			Info,
+			Warn,
+			Error,
+			Fatal
+		}
+		private static LogLevel toLogLevel(CustomLogLevel customLogLevel)
+		{
+			switch (customLogLevel)
+			{
+				case CustomLogLevel.None: return LogLevel.None;
+				case CustomLogLevel.All: return LogLevel.Trace;
+				case CustomLogLevel.Debug: return LogLevel.Debug;
+				case CustomLogLevel.Info: return LogLevel.Information;
+				case CustomLogLevel.Warn: return LogLevel.Warning;
+				case CustomLogLevel.Error: return LogLevel.Error;
+				case CustomLogLevel.Fatal: return LogLevel.Critical;
+				default: return LogLevel.Information;
+			}
+		}
 	}
 }
