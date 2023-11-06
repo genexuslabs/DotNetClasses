@@ -90,6 +90,13 @@ namespace xUnitTesting
 			jObject.Put("ClientActive", false);
 			return jObject;
 		}
+		[Fact]
+		public void DeserializationTrailingCommasCompatibility()
+		{
+			string json = "[[\"Client\",\"5a4ff115ab7e9d0f6c290b4ef33e34ce\"],[\"Invoice\",\"6c656e4034128018024144afdcc756aa\"],[\"InvoiceLine\",\"cd07f8e2bc014e27340005d9f26ec626\"],[\"Product\",\"84da0573bd448e9761ce20a4c4f9fce1\"],[\"ClientAutonumber\",\"479484926ef142cc026b362e2579a9f3\"],[\"Orders\",\"d857b7ff7dbf9329047b52918f7c5cac\"],[\"TiposDeDatos\",\"0c9a48d30dc26bd787ce466f235a5b3f\"],]";
+			JArray array = JSONHelper.ReadJSON<JArray>(json);
+			Assert.Equal(7, array.Count);
+		}
 	}
 
 	[XmlSerializerFormat]

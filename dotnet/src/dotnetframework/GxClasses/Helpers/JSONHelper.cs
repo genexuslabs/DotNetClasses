@@ -74,6 +74,7 @@ namespace GeneXus.Utils
 		{
 			JsonSerializerOptions opts = new JsonSerializerOptions();
 			opts.Converters.Add(new GxJsonConverter());
+			opts.AllowTrailingCommas = true;
 			return JsonSerializer.Deserialize<T>(json, opts);
 		}
 		internal override string WriteJSON<T>(T kbObject)
