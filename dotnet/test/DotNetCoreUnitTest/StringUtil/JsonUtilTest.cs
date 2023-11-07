@@ -14,6 +14,34 @@ namespace xUnitTesting
 	public class JsonUtilTest
 	{
 		[Fact]
+		public void SerializationWithDateTimes()
+		{
+			object[] parms = new object[]
+			{
+				new DateTime(2016, 6, 29, 0, 0, 0),
+				new DateTime(2016, 6, 29, 12, 12, 0),
+				true
+			};
+			JArray jarray = new JArray(parms);
+			string json = jarray.ToString();
+			Assert.Equal("[\"06/29/2016 00:00:00\",\"06/29/2016 12:12:00\",true]", json);
+
+			JObject jObject = new JObject();
+			jObject.Put("datetime", new DateTime(2016, 6, 29, 12, 12, 0));
+			json = jObject.ToString();
+			Assert.Equal("{\"datetime\":\"06/29/2016 12:12:00\"}", json);
+		}
+		[Fact]
+		public void DeserializationWithDateTimes()
+		{
+			string json = "{\"parms\": [\"2016/06/29 00:00:00\",    \"2016/06/29 12:12:00\", true]}";
+			JObject jObj = JSONHelper.ReadJSON<JObject>(json);
+			string parm = (string)((JArray)jObj["parms"])[1];
+			GxContext gxContext = new GxContext();
+			DateTime dParm = gxContext.localUtil.CToT(parm, 0, 0);
+			Assert.Equal(new DateTime(2016, 6, 29, 12, 12, 0), dParm);
+		}
+		[Fact]
 		public void SerializationWithNumbers()
 		{
 			JObject jObject = new JObject();

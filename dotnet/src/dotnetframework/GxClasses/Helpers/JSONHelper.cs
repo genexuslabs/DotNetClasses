@@ -13,6 +13,7 @@ using System.Runtime.Serialization;
 using GeneXus.Configuration;
 using System.Linq;
 using System.Text.Encodings.Web;
+using System.Globalization;
 #if NETCORE
 using System.Buffers.Text;
 using System.Text.Json;
@@ -64,6 +65,18 @@ namespace GeneXus.Utils
 			throw new NotImplementedException();
 		}
 	}
+	internal class CustomDateTimeConverter : JsonConverter<DateTime>
+	{
+		public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			throw new NotImplementedException();
+		}
+
+		public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+		{
+			writer.WriteStringValue(Convert.ToString(value, CultureInfo.InvariantCulture)); //"dd/MM/yyyy HH:mm:ss"
+		}
+	}
 	internal class TextJsonSerializer : GXJsonSerializer
 	{
 		internal override bool IsJsonNull(object jobject)
@@ -81,6 +94,7 @@ namespace GeneXus.Utils
 		{
 			JsonSerializerOptions opts = new JsonSerializerOptions();
 			opts.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+			opts.Converters.Add(new CustomDateTimeConverter());
 			return JsonSerializer.Serialize<T>(kbObject, opts);
 		}
 	}
