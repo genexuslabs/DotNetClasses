@@ -91,6 +91,7 @@ namespace GeneXus.Application
 			return WebHost.CreateDefaultBuilder(args)
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
+				.UseWebRoot(Startup.LocalPath)
 				.UseContentRoot(Startup.LocalPath)
 				.Build();
 		}

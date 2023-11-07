@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<PackageTags>GxNetCoreStartup</PackageTags>
 		<PackageId>GeneXus.NetCoreStartup</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
@@ -34,20 +34,25 @@
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 	<ItemGroup>
-		<Reference Include="Jayrock-JSON">
+		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net8.0'">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\net8.0\Jayrock.dll</HintPath>
+		</Reference>
+		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net6.0'">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\Jayrock.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
+
 	<Target Name="CustomContentTarget">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json">
-				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackagePath>contentFiles/any/$(TargetFramework)</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).runtimeconfig.json">
-				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackagePath>contentFiles/any/$(TargetFramework)</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
 		</ItemGroup>
