@@ -1898,7 +1898,7 @@ namespace GeneXus.XML
 
 	public class GXXMLWriter: IDisposable
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXXMLWriter));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXXMLWriter>();
 		private XmlTextWriter writer;
 
 		private short errorCode;

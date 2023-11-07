@@ -22,7 +22,8 @@ namespace GeneXus.Application
 	}
 	public class GXBaseObject
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXBaseObject));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXBaseObject>();
+
 		private Dictionary<string, string> callTargetsByObject = new Dictionary<string, string>();
 		protected IGxContext _Context;
 		bool _isMain;

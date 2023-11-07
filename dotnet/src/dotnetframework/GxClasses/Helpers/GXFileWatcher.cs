@@ -19,7 +19,7 @@ namespace GeneXus.Application
 
 	public class GXFileWatcher : IDisposable
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXFileWatcher));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFileWatcher>();
 		private static volatile GXFileWatcher m_Instance;
 		private static object m_SyncRoot = new Object();
 		TimeSpan TIMEOUT;

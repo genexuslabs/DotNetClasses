@@ -19,7 +19,7 @@ namespace GX
     public class GXGeolocation
     {
 		private const String MAPS_URI = "https://maps.google.com/maps/api/";
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GX.GXGeolocation));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GX.GXGeolocation>();
 
         private static double GetComponent(String geolocation, int item)
         {

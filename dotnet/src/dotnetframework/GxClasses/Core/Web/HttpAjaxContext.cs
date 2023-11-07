@@ -122,7 +122,7 @@ namespace GeneXus.Http
 	public class HttpAjaxContext : IHttpAjaxContext
 	{
 		private IGxContext _context;
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(HttpAjaxContext));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HttpAjaxContext>();
 		private Stack cmpContents = new Stack();
 		private GXAjaxCommandCollection commands = new GXAjaxCommandCollection();
 		private JArray _AttValues = new JArray();

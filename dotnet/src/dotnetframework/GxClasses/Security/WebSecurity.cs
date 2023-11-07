@@ -1,8 +1,3 @@
-using GeneXus.Application;
-using GeneXus.Configuration;
-using GeneXus.Utils;
-using log4net;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -10,6 +5,11 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Claims;
 using System.Text;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Utils;
+using log4net;
+using Microsoft.IdentityModel.Tokens;
 using static GeneXus.Web.Security.SecureTokenHelper;
 
 namespace GeneXus.Web.Security
@@ -17,7 +17,8 @@ namespace GeneXus.Web.Security
 	[SecuritySafeCritical]
 	public static class WebSecurityHelper
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(GeneXus.Web.Security.WebSecurityHelper));
+		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+
 		const int SecretKeyMinimumLength = 16;
 
         public static string StripInvalidChars(string input)
@@ -111,9 +112,10 @@ namespace GeneXus.Web.Security
 	[SecuritySafeCritical]
 	public static class SecureTokenHelper
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(GeneXus.Web.Security.SecureTokenHelper));
+        
+		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
-        public enum SecurityMode
+		public enum SecurityMode
         {
             Sign,
             SignEncrypt,           

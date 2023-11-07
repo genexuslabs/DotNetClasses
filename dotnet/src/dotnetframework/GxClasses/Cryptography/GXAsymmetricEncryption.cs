@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using log4net;
 using GeneXus.Cryptography.CryptoException;
 using GeneXus.Cryptography.Encryption;
 
 namespace GeneXus.Cryptography
 {
-    public class GXAsymmetricEncryption
+	public class GXAsymmetricEncryption
     {
-        private static readonly ILog _log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private int _lastError;
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXAsymmetricEncryption>();
+		private int _lastError;
         private string _lastErrorDescription;
         private GXCertificate _cert;
         private IGXAsymmetricEncryption _asymAlg;
@@ -62,7 +56,7 @@ namespace GeneXus.Cryptography
                 catch (EncryptionException e)
                 {
                     SetError(1, e.Message);
-                    _log.Error("Encryption Error", e);
+					GXLogging.Error(log, "Encryption Error", e);
                 }
             }
             return encrypted;
@@ -89,7 +83,7 @@ namespace GeneXus.Cryptography
                 catch (EncryptionException e)
                 {
                     SetError(1, e.Message);
-                    _log.Error("Encryption Error", e);
+                    GXLogging.Error(log, "Encryption Error", e);
                 }
             }
             return decrypted;

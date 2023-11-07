@@ -12,7 +12,7 @@ namespace GeneXus.Mail
 
 	internal class SMTPMailKit : ISMTPSession
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(SMTPMailKit));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<SMTPMailKit>();
 
 		SmtpClient client;
 		private string attachDir;

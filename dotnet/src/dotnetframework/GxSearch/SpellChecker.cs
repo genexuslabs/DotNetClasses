@@ -12,7 +12,7 @@ namespace GeneXus.Search
 {
 	public sealed class Spelling
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Search.Indexer));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Indexer>();
 		#region Singleton
 
 		private static Spelling m_instance = new Spelling();

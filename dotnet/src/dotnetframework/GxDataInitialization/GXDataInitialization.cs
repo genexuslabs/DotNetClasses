@@ -26,7 +26,7 @@ namespace GeneXus.Utils
 
 	public class GXDataInitialization : GXProcedure
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXDataInitialization));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXDataInitialization>();
 		public GXDataInitialization()
 		{
 			context = GxContext.CreateDefaultInstance();

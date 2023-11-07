@@ -13,8 +13,7 @@ namespace GeneXus.Mail
 {
 	internal class Pop3MailKit : Pop3SessionBase
 	{
-
-		private static readonly ILog log = LogManager.GetLogger(typeof(Pop3MailKit));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Pop3MailKit>();
 
 		private Pop3Client client;
 

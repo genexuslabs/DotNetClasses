@@ -18,7 +18,7 @@ namespace GeneXus.Metadata
 
 	public class ClassLoader
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Metadata.ClassLoader));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<ClassLoader>();
 
 #if NETCORE
 		private const string GXWEBPROCEDURE_TYPE = "GeneXus.Procedure.GXWebProcedure";

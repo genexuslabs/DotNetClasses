@@ -6,7 +6,7 @@ namespace GeneXus.Messaging.Common
 {
 	public abstract class EventRouterBase
 	{
-		static readonly ILog logger = LogManager.GetLogger(typeof(EventRouterBase));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<EventRouterBase>();
 		internal GXService service;
 		public EventRouterBase()
 		{

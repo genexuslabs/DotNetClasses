@@ -19,7 +19,7 @@ namespace GeneXus.Data
 {
 	public class GxSqlite : GxDataRecord
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxSqlite));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxSqlite>();
 		private int MAX_TRIES = 10;
 		private int m_FailedConnections;
 
@@ -310,8 +310,7 @@ namespace GeneXus.Data
 
 	sealed internal class SQLiteConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.SQLiteConnectionWrapper));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<SQLiteConnectionWrapper>();
 		public SQLiteConnectionWrapper()
 			: base(new SQLiteConnection())
 		{ }

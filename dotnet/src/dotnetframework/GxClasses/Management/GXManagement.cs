@@ -345,7 +345,7 @@ namespace GeneXus.Management
 	[SecuritySafeCritical]
 	public class WMIApplicationServer : IWMIApplicationServer
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMIApplicationServer));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMIApplicationServer>();
 		private static WMIApplicationServer instance;
 		private static object syncObj = new object();
 		public static WMIApplicationServer Instance()
@@ -434,7 +434,8 @@ namespace GeneXus.Management
 	[SecuritySafeCritical]
 	public class WMICache : IWMICache
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMICache));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMICache>();
+
 		InProcessCache cache;
 		Hashtable wmicacheItems;
 		long maxCacheStorageSize;
@@ -543,7 +544,7 @@ namespace GeneXus.Management
 	[SecuritySafeCritical]
 	public class WMICacheItem :IWMICacheItem
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMICacheItem));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMICacheItem>();
 
 		string stmt;
 		ICacheItemExpiration itemExpiration;
@@ -635,7 +636,7 @@ namespace GeneXus.Management
 	[SecuritySafeCritical]
 	public class WMIConnection : IWMIConnection
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMIConnection));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMIConnection>();
 		GxConnection connection;
 
 		public WMIConnection(GxConnection connection)
@@ -786,7 +787,7 @@ namespace GeneXus.Management
 	[SecuritySafeCritical]
 	public class WMIDataSource : IWMIDataSource
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMIDataSource));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMIDataSource>();
 		GxDataStore dataSource;
 
 		public WMIDataSource(GxDataStore dataSource)
@@ -861,7 +862,7 @@ namespace GeneXus.Management
 	[SecuritySafeCritical]
 	public class WMIServerUserInformation :IWMIServerUserInformation
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMIServerUserInformation));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMIServerUserInformation>();
 
 		ServerUserInformation userInfo;
 		string lastConnectionId;

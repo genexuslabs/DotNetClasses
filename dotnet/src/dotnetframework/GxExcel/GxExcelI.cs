@@ -12,9 +12,10 @@ namespace GeneXus.Office
 {
     public class ExcelDocumentI
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public short Index = -1;
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+
+		public short Index = -1;
 		
         private string fileName;
         [Obsolete("It is here for backward compatibility", false)]
@@ -52,7 +53,6 @@ namespace GeneXus.Office
         {
             if (Document == null)
             {
-#if !NETCORE
                 if (this.fileName.EndsWith(Constants.EXCEL2003Extension) || this.template.EndsWith(Constants.EXCEL2003ExtensionTemplate))
                 {
                     if (document == null || document.ErrCode == 99)
@@ -63,6 +63,7 @@ namespace GeneXus.Office
                         document.ReadOnly = ReadOnly;
                         document.Init(initErrDesc);
                     }
+#if !NETCORE
                     if (document == null || document.ErrCode != 0) //Automation
                     {
                         GXLogging.Debug(log,"Interop.GXOFFICE2Lib.ExcelDocumentClass");
@@ -70,11 +71,11 @@ namespace GeneXus.Office
                         document.ReadOnly = ReadOnly;
                         document.Init("");
                     }
-			}
-			else
 #endif
-				{
-					document = new GeneXus.Office.ExcelGXEPPlus.ExcelDocument();
+				}
+				else
+					{
+						document = new GeneXus.Office.ExcelGXEPPlus.ExcelDocument();
                     document.ReadOnly = ReadOnly;
                 }
 
@@ -437,9 +438,14 @@ namespace GeneXus.Office
             return fi.GetValue(null);
 
         }
+		internal static object GetEnumValue(Assembly ass, string enumNameClass, string enumField)
+		{
+			Type prn1 = ass.GetType(enumNameClass);
+			return prn1.GetProperty(enumField).GetValue(null);
+		}
 
-    }
-    public interface IGxError
+	}
+	public interface IGxError
     {
         void setErrCod(short errCod);
         void setErrDes(String errDes);
@@ -734,7 +740,7 @@ namespace GeneXus.Office
 
     public class IExcelDocumentWrapper : IExcelDocument
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
         Interop.GXOFFICE2Lib.IExcelDocument doc;
 
@@ -930,9 +936,8 @@ namespace GeneXus.Office
 #endif
 	public class ExcelUtils
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        public static void Show(string xlsFileName)
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		public static void Show(string xlsFileName)
         {
             Process p = new Process();
             p.StartInfo.FileName = "excel";

@@ -9,7 +9,7 @@ namespace GeneXus.Mock
 	}
 	public class GxMockProvider 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxMockProvider));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxMockProvider>();
 
 		private static volatile IGxMock provider;
 

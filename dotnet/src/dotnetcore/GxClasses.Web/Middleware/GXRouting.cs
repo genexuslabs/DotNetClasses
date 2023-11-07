@@ -28,7 +28,7 @@ namespace GxClasses.Web.Middleware
 	internal class GXRouting : IGXRouting
 	{
 
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(IGXRouting));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<IGXRouting>();
 
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();

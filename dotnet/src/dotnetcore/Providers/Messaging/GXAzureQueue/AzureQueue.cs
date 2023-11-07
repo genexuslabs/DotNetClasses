@@ -8,6 +8,7 @@ using GeneXus.Messaging.Common;
 using GeneXus.Services;
 using GeneXus.Utils;
 using log4net;
+using Microsoft.Extensions.Logging;
 
 namespace GeneXus.Messaging.Queue
 {
@@ -15,7 +16,8 @@ namespace GeneXus.Messaging.Queue
 	{
 		public static string Name = "AZUREQUEUE";
 
-		static readonly ILog logger = LogManager.GetLogger(typeof(AzureQueue));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<AzureQueue>();
+
 		QueueClient _queueClient { get; set; }
 		private string _queueName { get; set; }
 		private string _connectionString { get; set; }

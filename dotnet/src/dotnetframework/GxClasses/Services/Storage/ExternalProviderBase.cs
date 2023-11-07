@@ -12,7 +12,7 @@ namespace GeneXus.Services
 {
 	public abstract class ExternalProviderBase
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(ExternalProviderBase));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ExternalProviderBase>();
 
 		private GXService service;
 
@@ -41,7 +41,7 @@ namespace GeneXus.Services
 					s = ServiceFactory.GetGXServices()?.Get(GXServices.STORAGE_SERVICE);
 				}
 				catch (Exception) {
-					logger.Warn("STORAGE_SERVICE is not activated in CloudServices.config");
+					GXLogging.Warn(logger, "STORAGE_SERVICE is not activated in CloudServices.config");
 				}
 			}
 			
@@ -82,7 +82,7 @@ namespace GeneXus.Services
 			if (value == null)
 			{
 				String errorMessage = String.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
-				logger.Fatal(errorMessage);
+				GXLogging.Critical(logger, errorMessage);	
 				throw new Exception(errorMessage);
 			}
 			return value;
@@ -102,7 +102,7 @@ namespace GeneXus.Services
 				}
 				catch (Exception)
 				{
-					logger.Warn($"Could not decrypt property name: {ResolvePropertyName(propertyName)}");
+					GXLogging.Warn(logger, $"Could not decrypt property name: {ResolvePropertyName(propertyName)}");
 				}
 			}
 			return value;
@@ -114,7 +114,7 @@ namespace GeneXus.Services
 			if (value == null)
 			{
 				String errorMessage = String.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
-				logger.Fatal(errorMessage);
+				GXLogging.Critical(logger, errorMessage);
 				throw new Exception(errorMessage);
 			}
 			return value;

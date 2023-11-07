@@ -351,8 +351,7 @@ namespace GeneXus.Procedure
 	}
 	public class GXDataGridProcedure : GXProcedure
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXDataGridProcedure));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXDataGridProcedure>();
 		const string HAS_NEXT_PAGE = "HasNextPage";
 		const string RECORD_COUNT = "RecordCount";
 		const string RECORD_COUNT_SUPPORTED = "RecordCountSupported";
@@ -434,11 +433,12 @@ namespace GeneXus.Procedure
 		public static int OUTPUT_RVIEWER_NATIVE = 1;
 		public static int OUTPUT_RVIEWER_DLL = 2;
 		public static int OUTPUT_PDF     = 3;
+
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+
 #if NETCORE
 		const string PDF_LIBRARY_ITEXT8 = "ITEXT8";
 #endif
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
 		static public IReportHandler GetPrinter( int outputType, string path, Stream reportOutputStream)
 		{
 			IReportHandler reportHandler;

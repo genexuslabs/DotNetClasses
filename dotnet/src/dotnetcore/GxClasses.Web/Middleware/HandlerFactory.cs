@@ -32,7 +32,7 @@ namespace GeneXus.HttpHandlerFactory
 
 	public class HandlerFactory
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.HttpHandlerFactory.HandlerFactory));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<HandlerFactory>();
 		private string _basePath;
 		static Dictionary<string, Type> _aspxObjects = new Dictionary<string, Type>(){
 												{"gxoauthlogout",typeof(GXOAuthLogout)},

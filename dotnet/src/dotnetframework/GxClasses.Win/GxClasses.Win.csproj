@@ -8,11 +8,10 @@
 		<PackageId>GeneXus.Classes.Win</PackageId>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="log4net" Version="2.0.11"/>
 		<Reference Include="System.Windows.Forms" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 
 </Project>

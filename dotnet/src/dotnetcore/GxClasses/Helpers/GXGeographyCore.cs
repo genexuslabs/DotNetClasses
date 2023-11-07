@@ -204,7 +204,7 @@ namespace GeneXus.Utils
 	[DataContract]
 	public class Geospatial : IGeographicNative
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.Geospatial));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.Geospatial>();
 
 		internal const string EMPTY_GEOMETRY = "GEOMETRYCOLLECTION EMPTY";
 		const string EMPTY_GEOGRAPHY = "GEOGRAPHY EMPTY";

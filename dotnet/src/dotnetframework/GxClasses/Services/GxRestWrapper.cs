@@ -51,7 +51,7 @@ namespace GeneXus.Application
 	public class GxRestWrapper : IHttpHandler, IRequiresSessionState
 #endif
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxRestWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxRestWrapper>();
 		protected HttpContext _httpContext;
 		protected IGxContext _gxContext;
 		private GXBaseObject _procWorker;
@@ -142,8 +142,9 @@ namespace GeneXus.Application
 				Dictionary<string, string> formatParameters = ReflectionHelper.ParametersFormat(_procWorker, innerMethod);				
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
+				int originalParameterCount = outputParameters.Count;
 				RestProcess(_procWorker, outputParameters);
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, outputParameters.Count, originalParameterCount);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -330,9 +331,10 @@ namespace GeneXus.Application
 				int parCount = outputParameters.Count;
 				setWorkerStatus(_procWorker);
 				_procWorker.cleanup();
+				int originalParameterCount = outputParameters.Count;
 				RestProcess(_procWorker, outputParameters);			  
 				bool wrapped = false;
-				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount);
+				wrapped = GetWrappedStatus(_procWorker, wrapped, outputParameters, parCount, originalParameterCount);
 				return Serialize(outputParameters, formatParameters, wrapped);
 			}
 			catch (Exception e)
@@ -344,29 +346,37 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-		bool GetWrappedStatus(GXBaseObject worker, bool wrapped, Dictionary<string, object> outputParameters, int parCount)
+		bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
 		{
+			bool wrapped = defaultWrapped;
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
-					wrapped = false;
-					Object v = outputParameters.First().Value;
+					if ((originalParCount == 1) || (originalParCount > 1 && !Preferences.WrapSingleApiOutput))
+					{
+						wrapped = false;
+						Object v = outputParameters.First().Value;
 
-					if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
-					{
-						IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
-						if (icollwrapped != null) 
-							wrapped = icollwrapped.GetIsWrapped();
-					}
-					if (v is IGxGenericCollectionItem item)
-					{
-						if (item.Sdt is GxSilentTrnSdt)
+						if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 						{
-							wrapped = (parCount>1)?true:false;
+							IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
+							if (icollwrapped != null)
+								wrapped = icollwrapped.GetIsWrapped();
+						}
+						if (v is IGxGenericCollectionItem item)
+						{
+							if (item.Sdt is GxSilentTrnSdt)
+							{
+								wrapped = (parCount > 1) ? true : false;
+							}
 						}
 					}
-				}			
+					if (originalParCount > 1 && Preferences.WrapSingleApiOutput)
+					{
+						wrapped = true; //Ignore defaultWrapped parameter.
+					}
+				}
 			}
 			return wrapped;
 		}

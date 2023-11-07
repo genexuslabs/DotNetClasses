@@ -1,21 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using GeneXus.Application;
 using GeneXus.Utils;
 using GeneXus.XML;
-using log4net;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using GxClasses.Helpers;
-
-using System.Reflection.Emit;
 
 namespace GeneXus.Services
 {
 	public class GXServices
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.GXServices));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXServices>();
+
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
@@ -30,7 +26,6 @@ namespace GeneXus.Services
 		private Dictionary<string, GXService> services = new Dictionary<string, GXService>();
 		private static GXServices s_instance = null;
 		private static object syncRoot = new Object();
-
 		public static GXServices Instance
 		{
 			get
@@ -52,7 +47,6 @@ namespace GeneXus.Services
 			}
 			set { }			
 		}
-
 		public void AddService(string name, GXService service)
 		{
 			services[name] = service;
@@ -67,7 +61,7 @@ namespace GeneXus.Services
 				{
 					if (services == null)
 						services = new GXServices();
-					GXLogging.Debug(log, "Loading service:", filePath);
+					
 					GXXMLReader reader = new GXXMLReader();
 					reader.Open(filePath);
 					reader.ReadType(1, "Services");
@@ -178,8 +172,7 @@ namespace GeneXus.Services
 	public class ServiceFactory
 	{
 		private static ExternalProvider externalProvider = null;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.ServiceFactory));
-
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<ServiceFactory>();
 		public static GXServices GetGXServices()
 		{
 			return GXServices.Instance;

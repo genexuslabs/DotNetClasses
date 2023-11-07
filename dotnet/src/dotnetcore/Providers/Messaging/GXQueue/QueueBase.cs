@@ -10,7 +10,7 @@ namespace GeneXus.Messaging.Common
 {
 	public abstract class QueueBase
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(QueueBase));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<QueueBase>();
 		internal GXService service;
 		public QueueBase()
 		{
