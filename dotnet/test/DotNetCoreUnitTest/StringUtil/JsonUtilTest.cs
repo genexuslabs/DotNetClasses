@@ -14,6 +14,21 @@ namespace xUnitTesting
 	public class JsonUtilTest
 	{
 		[Fact]
+		public void DeserializationInvalidJsonNoDuplicateError()
+		{
+			string invalidJson1 = "{\"id\":1,\"name\":\"uno\",\"date\":\"2016-02-24\"'";
+			GXBaseCollection<SdtMessages_Message> messages = new GXBaseCollection<SdtMessages_Message>();
+			JSONHelper.ReadJSON<JObject>(invalidJson1, messages);
+			string errMessage = messages.ToJSonString();
+#if NETCORE
+			string expectedError = "[{\"Id\":\"FromJson Error\",\"Type\":1,\"Description\":\"''' is invalid after a value. Expected either ',', '}', or ']'. Path: $.date | LineNumber: 0 | BytePositionInLine: 40.\"}]";
+#else
+			string expectedError = "[{\"Id\":\"FromJson Error\",\"Type\":1,\"Description\":\"Expected a ',' or '}'.\"}]";
+#endif
+			Assert.Equal(expectedError, errMessage);
+		}
+
+		[Fact]
 		public void SerializationWithDateTimes()
 		{
 			object[] parms = new object[]
