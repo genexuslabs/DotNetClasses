@@ -22,7 +22,7 @@ namespace UnitTesting
 			context.FileIOInstance.dfwclose();
 
 			string content = File.ReadAllText(fileName);
-			Assert.Contains(content, "99999999999999999,5", StringComparison.OrdinalIgnoreCase);
+			Assert.Contains("99999999999999999.5", content, StringComparison.OrdinalIgnoreCase);
 		}
 		[Fact]
 		public void dfrgtxtANSITest()
