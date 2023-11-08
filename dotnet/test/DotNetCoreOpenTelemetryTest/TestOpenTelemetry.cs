@@ -1,13 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using GeneXus.Configuration;
+using GeneXus.Application;
 using GeneXus.Metadata;
-using Microsoft.Extensions.Logging;
 using Xunit;
 using xUnitTesting;
 
@@ -19,6 +15,10 @@ namespace DotNetCoreWebUnitTest
 			ClassLoader.FindType("TestApp", "GeneXus.Programs.apps", "testservice", Assembly.GetExecutingAssembly(), true);//Force loading assembly for testservice
 			server.AllowSynchronousIO = true;
 
+		}
+		protected override void SetEnvironmentVars()
+		{
+			Environment.SetEnvironmentVariable(Startup.APPLICATIONINSIGHTS_CONNECTION_STRING, "InstrumentationKey=dummykey;IngestionEndpoint=https://dummyendpoint;", EnvironmentVariableTarget.Process);
 		}
 		[Fact]
 		public async Task TestCouldNotLoadSystemDiagnosticsDiagnosticSource7_0_0_0()

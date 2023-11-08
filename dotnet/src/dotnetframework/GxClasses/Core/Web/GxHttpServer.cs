@@ -148,7 +148,16 @@ namespace GeneXus.Http.Server
 			{
 				value = GXUtil.EncodeContentDispositionHeader(value, _context.GetBrowserType());
 			}
-            if (_context!=null) 
+#if !NETCORE
+			else if (string.Compare(name,"Content-Type", true) == 0)
+			{
+				if (string.Compare(value, "text/event-stream", true) == 0)
+				{
+					_context.HttpContext.Response.BufferOutput = false;
+				}
+			}
+#endif
+			if (_context!=null) 
                 _context.SetHeader(name, value);
 		}
 	

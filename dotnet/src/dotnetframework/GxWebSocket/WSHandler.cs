@@ -20,7 +20,7 @@ namespace GeneXus.Http.WebSocket
 {
 	public class WSHandler : WebSocketHandler, IGXWebSocketAsync
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WSHandler));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WSHandler>();
 
 		private const string GX_NOTIFICATIONINFO_NAME = "GeneXus.Core.genexus.server.SdtNotificationInfo";
 
@@ -131,7 +131,7 @@ namespace GeneXus.Http.WebSocket
 			string key = GetClientKey(this);
 			if (!ExecuteHandler(HandlerType.OnError, new Object[] { key }))
 			{
-				log.Debug($"An unknown error ocurred on WebSocket client ('{key}')");
+				GXLogging.Debug(log, $"An unknown error ocurred on WebSocket client ('{key}')");
 			}
 			OnSessionClosed?.Invoke(key, "WebSocket Error");
 		}
@@ -150,7 +150,7 @@ namespace GeneXus.Http.WebSocket
 
 		private static void LogError(string msg, Exception e = null)
 		{
-			GXLogging.Error(log, e, msg);
+			GXLogging.Error(log, msg, e);
 		}
 		public enum HandlerType
 		{

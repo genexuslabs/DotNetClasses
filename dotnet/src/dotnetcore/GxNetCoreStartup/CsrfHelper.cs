@@ -11,8 +11,7 @@ namespace GeneXus.Application
 {
 	public class ValidateAntiForgeryTokenMiddleware
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ValidateAntiForgeryTokenMiddleware));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ValidateAntiForgeryTokenMiddleware>();
 		private readonly RequestDelegate _next;
 		private readonly IAntiforgery _antiforgery;
 		private string _basePath;

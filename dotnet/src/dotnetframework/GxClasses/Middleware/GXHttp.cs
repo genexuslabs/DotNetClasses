@@ -58,7 +58,8 @@ namespace GeneXus.Http
 	public abstract class GXHttpHandler : WebControl, IHttpHandler
 #endif
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GXHttpHandler));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXHttpHandler>();
+
 		internal const string GX_AJAX_REQUEST_HEADER = "GxAjaxRequest";
 		internal const string GX_SPA_GXOBJECT_RESPONSE_HEADER = "X-GXOBJECT";
 		internal const string GX_SPA_MASTERPAGE_HEADER = "X-SPA-MP";
@@ -1858,7 +1859,7 @@ namespace GeneXus.Http
 					SendResponseStatus(HttpStatusCode.Unauthorized);
 					if (context.GetBrowserType() != GxContext.BROWSER_INDEXBOT)
 					{
-						if (log.IsWarnEnabled)
+						if (log.IsWarningEnabled)
 						{
 							GXLogging.Warn(log, $"Validation security token '{GetObjectAccessWebToken(cmpCtx)}' failed for program: '{cmpCtx + this.GetPgmname().ToUpper()}'");
 						}
@@ -2295,7 +2296,11 @@ namespace GeneXus.Http
 
 		protected virtual void SetCompression(HttpContext httpContext)
 		{
+#if NETCORE
 			if (CompressHtmlResponse())
+#else
+			if (CompressHtmlResponse() && httpContext.Response.BufferOutput)
+#endif
 			{
 				GXUtil.SetGZip(httpContext);
 			}

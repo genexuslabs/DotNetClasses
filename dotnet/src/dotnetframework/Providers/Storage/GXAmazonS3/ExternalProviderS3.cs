@@ -17,8 +17,7 @@ namespace GeneXus.Storage.GXAmazonS3
 {
 	public class ExternalProviderS3 : ExternalProviderBase, ExternalProvider
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(ExternalProviderS3));
-
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExternalProviderS3>();
 		public const string Name = "AWSS3";
 		
 		const string ACCESS_KEY = "ACCESS_KEY";
@@ -220,7 +219,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			if (!DoesS3BucketExist())
 			{
-				log.Warn(String.Format("Bucket {0} doesn't exist, please create the bucket", Bucket));
+				GXLogging.Warn(log, String.Format("Bucket {0} doesn't exist, please create the bucket", Bucket));
 			}
 		}
 

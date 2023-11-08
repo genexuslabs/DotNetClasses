@@ -15,4 +15,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("AzureFunctionsTest")]
 [assembly: InternalsVisibleTo("GXMessageBroker")]
 [assembly: InternalsVisibleTo("GeneXus.SD.Store.StoreManager")]
-
+[assembly: InternalsVisibleTo("DotNetCoreChunkedTest")]

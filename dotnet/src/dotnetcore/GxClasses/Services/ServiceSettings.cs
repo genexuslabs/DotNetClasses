@@ -6,7 +6,7 @@ namespace GeneXus.Services.Common
 {
 	public class ServiceSettingsReader 
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(ServiceSettingsReader));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ServiceSettingsReader>();
 
 		internal GXService service;
 		public string serviceNameResolver { get; }
@@ -25,7 +25,7 @@ namespace GeneXus.Services.Common
 			if (value == null)
 			{
 				String errorMessage = String.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
-				logger.Fatal(errorMessage);
+				GXLogging.Critical(logger, errorMessage);
 				throw new Exception(errorMessage);
 			}
 			return value;
@@ -45,7 +45,7 @@ namespace GeneXus.Services.Common
 				}
 				catch (Exception)
 				{
-					logger.Warn($"Could not decrypt property name: {ResolvePropertyName(propertyName)}");
+					GXLogging.Warn(logger, $"Could not decrypt property name: {ResolvePropertyName(propertyName)}");
 				}
 			}
 			return value;
@@ -57,7 +57,7 @@ namespace GeneXus.Services.Common
 			if (value == null)
 			{
 				String errorMessage = String.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
-				logger.Fatal(errorMessage);
+				GXLogging.Critical(logger, errorMessage);
 				throw new Exception(errorMessage);
 			}
 			return value;

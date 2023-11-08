@@ -8,9 +8,9 @@ namespace GeneXus.Mail.Exchange
 {
     public static class Service
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Service));
-
-        static Service()
+ 
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static Service()
         {
             CertificateCallback.Initialize();
         }

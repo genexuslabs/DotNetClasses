@@ -33,7 +33,7 @@ namespace GeneXus.Http
 
     public class GxWebSession : IGxSession
     {
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GxWebSession));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxWebSession>();
         private HttpSessionState _httpSession;
 		#region InternalKeys
 		GXNavigationHelper InternalKeyNavigationHelper;

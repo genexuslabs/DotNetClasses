@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<DefineConstants>NETCORE</DefineConstants>
 		<AssemblyName>Genexus.Office</AssemblyName>
 		<RootNamespace>GxOffice</RootNamespace>
@@ -35,7 +35,6 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="log4net" Version="2.0.15" />
 		<PackageReference Include="NPOI" Version="2.5.6" />
 	</ItemGroup>
 

@@ -42,7 +42,9 @@ namespace GeneXus.Cryptography.Hashing
 					_hash = new SHA512CryptoServiceProvider();
 					break;
 				default:
+#pragma warning disable SYSLIB0045 // Type or member is obsolete
 					_hash = HashAlgorithm.Create(algorithm);
+#pragma warning restore SYSLIB0045 // Type or member is obsolete
 					break;
 			}
 

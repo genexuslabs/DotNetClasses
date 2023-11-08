@@ -1,8 +1,7 @@
 using System;
-using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using System.Security.Cryptography;
-using log4net;
+using System.Security.Cryptography.X509Certificates;
 using GeneXus.Utils;
 
 
@@ -10,9 +9,9 @@ namespace GeneXus.Cryptography
 {
 	public class GXCertificate
     {
-        static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXCertificate>();
 
-        private X509Certificate2 _cert;
+		private X509Certificate2 _cert;
         private int _lastError;
         private string _lastErrorDescription;
         private string _password;

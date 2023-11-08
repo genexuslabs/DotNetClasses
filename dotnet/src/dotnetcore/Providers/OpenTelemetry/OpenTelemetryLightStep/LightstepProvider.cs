@@ -13,7 +13,7 @@ namespace GeneXus.OpenTelemetry.Lightstep
 
 	public class LightStepOpenTelemetry : IOpenTelemetryProvider
 	{
-		private static readonly ILog log = LogManager.GetLogger(typeof(LightStepOpenTelemetry));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<LightStepOpenTelemetry>();
 		private const string LIGHTSTEP_INGREST_URL = "ingest.lightstep.com:443";
 		private const string LIGHTSTEP_ACCESS_TOKEN = "LS_ACCESS_TOKEN";
 
@@ -27,7 +27,7 @@ namespace GeneXus.OpenTelemetry.Lightstep
 
 			if (string.IsNullOrEmpty(lightstepToken))
 			{
-				log.Warn("OpenTelemetry Lightstep was not initialized due to missing 'LS_ACCESS_TOKEN' Environment Variable");
+				GXLogging.Warn(log, "OpenTelemetry Lightstep was not initialized due to missing 'LS_ACCESS_TOKEN' Environment Variable");
 				return false;
 			}
 

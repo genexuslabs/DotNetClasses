@@ -16,8 +16,7 @@ namespace GeneXus.Configuration
 
 		private GXService providerService;
 
-		static readonly ILog logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
 		public ExternalStorage()
 		{
@@ -59,7 +58,7 @@ namespace GeneXus.Configuration
 				}
 
 				string typeFullName = providerService.ClassName;
-				logger.Debug("Loading storage provider: "+ typeFullName);
+				GXLogging.Debug(logger, "Loading storage provider: " + typeFullName);
 #if !NETCORE
 				Type type = Type.GetType(typeFullName, true, true);
 #else
@@ -70,7 +69,7 @@ namespace GeneXus.Configuration
 			}
 			catch (Exception ex)
 			{
-				logger.Error("Couldn't connect to external storage provider. ", ex);
+				GXLogging.Error(logger, "Couldn't connect to external storage provider. ", ex);
 				StorageMessages(ex, messages);
 				return false;
 			}

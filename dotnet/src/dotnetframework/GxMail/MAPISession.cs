@@ -8,8 +8,7 @@ namespace GeneXus.Mail.Internals
 	
 	internal class MAPISession
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(MAPISession));
-
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<MAPISession>();
 		private enum RecipientType
 		{
 			TO = 1,

@@ -11,9 +11,9 @@ namespace GX
 {
 	public class ClientInformation
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GX.ClientInformation));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GX.ClientInformation>();
 
-        public static string AppVersionCode
+		public static string AppVersionCode
         {
             get
             {

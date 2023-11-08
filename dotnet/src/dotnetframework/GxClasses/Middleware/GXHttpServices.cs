@@ -36,6 +36,8 @@ namespace GeneXus.Http
 	using System.Linq;
 	using GeneXus.Procedure;
 	using GxClasses.Web.Middleware;
+	using Microsoft.AspNetCore.Hosting;
+
 
 #else
 	using System.Web.UI;
@@ -146,7 +148,8 @@ namespace GeneXus.Http
 
 	public class GXReorServices : GXHttpHandler
 	{
-		static readonly ILog log = LogManager.GetLogger(typeof(GXReorServices));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXReorServices>();
+
 		static Assembly _reorAssembly;
 		static Assembly _gxDataInitializationAssembly;
 		readonly string[] reorArgs = { "-force", "-ignoreresume", "-nogui", "-noverifydatabaseschema" };
@@ -572,7 +575,7 @@ namespace GeneXus.Http
 
 	internal class GXOAuthAccessToken : GXHttpHandler, IRequiresSessionState
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GXOAuthAccessToken));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXOAuthAccessToken>();
 
 		public GXOAuthAccessToken()
 		{

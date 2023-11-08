@@ -661,7 +661,7 @@ namespace GeneXus.Performance
 	[SecuritySafeCritical]
 	public class WMIDataStoreProviders:WMIDataStoreProvidersBase
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMIDataStoreProviders));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMIDataStoreProviders>();
 
 		private WMIDataStoreProviders()
 		{
@@ -735,7 +735,7 @@ namespace GeneXus.Performance
 	[SecuritySafeCritical]
 	public class WMIDataStoreProviderBase
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMIDataStoreProviderBase));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMIDataStoreProviderBase>();
 
 		private long statementCount;
 		private long statementSelectCount;

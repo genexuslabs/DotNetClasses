@@ -107,7 +107,7 @@ namespace GeneXus.Utils
 	}
 	class CustomOperationSelector : WebHttpDispatchOperationSelector
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomOperationSelector));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomOperationSelector>();
 		public CustomOperationSelector(ServiceEndpoint endpoint) : base(endpoint) { }
 		protected override string SelectOperation(ref Message message, out bool uriMatched)
 		{
@@ -231,7 +231,8 @@ namespace GeneXus.Utils
     }
     public class GxRestService : System.Web.SessionState.IRequiresSessionState
 	{
-        static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxRestService));
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxRestService>();
+
 		internal const string WARNING_HEADER = "Warning";
 		protected IGxContext context;
         private HttpContext httpContext;

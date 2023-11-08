@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using GeneXus.Application;
-using log4net;
 using NPOI.SS.UserModel;
 using NPOI.Util;
 using NPOI.XSSF.UserModel;
@@ -11,7 +10,9 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 {
 	public class ExcelSpreadsheet : IExcelSpreadsheet
 	{
-		private static readonly ILog logger = LogManager.GetLogger(typeof(ExcelSpreadsheet));
+
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ExcelSpreadsheet>();
+
 		private XSSFWorkbook _workbook;
 		private string _documentFileName;
 		private bool _autoFitColumnsOnSave = false;
@@ -247,7 +248,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			}
 			catch (Exception e)
 			{
-				logger.Error("recalculateFormulas", e);
+				GXLogging.Error(logger, "recalculateFormulas", e);
 			}
 		}
 

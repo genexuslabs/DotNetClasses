@@ -31,7 +31,7 @@ namespace GeneXus.Messaging.Queue
 		public const string MESSSAGE_GROUP_ID = "MessageGroupId";
 		public const string MESSSAGE_DEDUPLICATION_ID = "MessageDeduplicationId";
 
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(AWSQueue));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<AWSQueue>();
 
 		public AWSQueue() : this(null)
 		{

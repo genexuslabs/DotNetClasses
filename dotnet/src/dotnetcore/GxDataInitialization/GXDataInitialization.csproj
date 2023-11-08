@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<PackageTags>DataInitialization</PackageTags>
 		<PackageId>GeneXus.DataInitialization.Core</PackageId>
@@ -19,11 +19,11 @@
 	<Target Name="CustomContentTarget">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json">
-				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackagePath>contentFiles/any/$(TargetFramework)</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).runtimeconfig.json">
-				<PackagePath>contentFiles/any/any</PackagePath>
+				<PackagePath>contentFiles/any/$(TargetFramework)</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
 		</ItemGroup>

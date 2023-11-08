@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using GeneXus.Cache;
 using GeneXus.Data.Cosmos;
 using GeneXus.Data.NTier.CosmosDB;
-using log4net;
 using Microsoft.Azure.Cosmos;
 
 namespace GeneXus.Data.NTier
@@ -65,7 +64,7 @@ namespace GeneXus.Data.NTier
 		//Options not supported by the spec yet
 		//private const string DISTINCT = "DISTINCT";
 		
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(CosmosDBConnection));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<CosmosDBConnection>();
 		public override string ConnectionString
 		{
 			get

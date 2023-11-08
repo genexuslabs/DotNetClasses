@@ -12,9 +12,10 @@ namespace GeneXus.Office
 {
     public class ExcelDocumentI
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public short Index = -1;
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+
+		public short Index = -1;
 		
         private string fileName;
         [Obsolete("It is here for backward compatibility", false)]
@@ -739,7 +740,7 @@ namespace GeneXus.Office
 
     public class IExcelDocumentWrapper : IExcelDocument
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
 
         Interop.GXOFFICE2Lib.IExcelDocument doc;
 
@@ -935,9 +936,8 @@ namespace GeneXus.Office
 #endif
 	public class ExcelUtils
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        public static void Show(string xlsFileName)
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		public static void Show(string xlsFileName)
         {
             Process p = new Process();
             p.StartInfo.FileName = "excel";

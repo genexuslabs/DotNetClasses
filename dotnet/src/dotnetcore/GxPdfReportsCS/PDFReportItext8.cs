@@ -33,7 +33,7 @@ namespace GeneXus.Printer
 {
 	public class GxReportBuilderPdf8 : GxReportBuilderPdf
 	{
-		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static IGXLogger log = GXLoggerFactory.GetLogger<GxReportBuilderPdf8>();
 		public GxReportBuilderPdf8() { }
 		public GxReportBuilderPdf8(string appPath, Stream outputStream)
 		{
@@ -53,8 +53,8 @@ namespace com.genexus.reports
 
 	public class PDFReportItext8 : PDFReportItextBase
 	{
+		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportItext8>();
 
-		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 		//const int ASCENT_NORMALIZED_UNITS = 1000;
 
 		private PageSize pageSize;

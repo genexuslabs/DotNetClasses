@@ -18,7 +18,7 @@ namespace GeneXus.Messaging.GXAzureServiceBus
 		private const int MAX_MESSAGES_DEFAULT = 10;
 		private const short LOCK_DURATION = 5;
 		public static string Name = "AZURESB";
-		static readonly ILog logger = LogManager.GetLogger(typeof(AzureServiceBus));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<AzureServiceBus>();
 
 		private ConcurrentDictionary<string, Tuple<DateTime, ServiceBusReceivedMessage>> m_messages = new ConcurrentDictionary<string, Tuple<DateTime, ServiceBusReceivedMessage>>();
 		ServiceBusClient _serviceBusClient { get; set; }

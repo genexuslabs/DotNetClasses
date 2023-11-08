@@ -16,7 +16,7 @@ namespace GeneXus.Messaging.Common
 	{
 		internal IQueue queue = null;
 		public static Assembly assembly;
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(SimpleMessageQueue));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<SimpleMessageQueue>();
 		private const string SDT_MESSAGE_CLASS_NAME = @"SdtMessage";
 		private const string SDT_MESSAGEPROPERTY_CLASS_NAME = @"SdtMessageProperty";
 		private const string SDT_MESSAGERESULT_CLASS_NAME = @"SdtMessageResult";
@@ -434,7 +434,7 @@ namespace GeneXus.Messaging.Common
 	internal class ServiceFactory
 	{
 		private static IQueue queue;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.ServiceFactory));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<ServiceFactory>();
 
 		public static GXServices GetGXServices()
 		{

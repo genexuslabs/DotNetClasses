@@ -29,7 +29,9 @@ namespace SecurityAPITest.SecurityAPICommons.commons
 
 		static string GetStartupDirectory()
 		{
+#pragma warning disable SYSLIB0044
 			string dir = Assembly.GetCallingAssembly().GetName().CodeBase;
+#pragma warning restore SYSLIB0044
 			Uri uri = new Uri(dir);
 			return Path.GetDirectoryName(uri.LocalPath);
 		}

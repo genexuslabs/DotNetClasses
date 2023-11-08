@@ -713,7 +713,7 @@ namespace GeneXus.WebControls
 
     public abstract class GXWebControl : IGxJSONAble, IGxJSONSerializable
     {
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXWebControl));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXWebControl>();
 		bool ForeColorFlag;
         bool BackColorFlag;
         Color _ForeColor;

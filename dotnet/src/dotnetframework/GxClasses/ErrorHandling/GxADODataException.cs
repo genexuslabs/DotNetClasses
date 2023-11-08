@@ -21,10 +21,6 @@ namespace GeneXus.Data
 	[Serializable()]      
 	public class GxADODataException : Exception
 	{
-		public GxADODataException(SerializationInfo info,StreamingContext ctx):base(info,ctx)
-		{
-			
-		}
 		public GxADODataException(string mes, Exception ex) : base(mes, ex)
 		{
 			if (ex != null)

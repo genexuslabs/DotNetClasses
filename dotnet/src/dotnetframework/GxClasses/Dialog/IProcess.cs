@@ -18,7 +18,8 @@ namespace GeneXus.Utils
 	}
 	public class OSHelper
 	{
-		protected static readonly ILog log = log4net.LogManager.GetLogger(typeof(OSHelper));
+		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<OSHelper>();
+
 		protected static string OsProviderAssembly = "GxClasses.Win";
 		protected static object syncRoot = new Object();
 
