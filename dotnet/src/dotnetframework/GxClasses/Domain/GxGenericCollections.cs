@@ -472,7 +472,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}
