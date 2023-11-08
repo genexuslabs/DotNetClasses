@@ -2141,6 +2141,10 @@ namespace GeneXus.XML
 		public short WriteElement (string Name, string Value)
 		{
 			WriteStartElement(Name);
+			if (Value==null)
+			{
+				Value = string.Empty;
+			}
 			valueBuffer = Value;
 			return 0;
 		}
@@ -2154,7 +2158,7 @@ namespace GeneXus.XML
 
 		public short WriteElement (string Name)
 		{
-			WriteElement (Name, "");
+			WriteElement (Name, string.Empty);
 			return 0;
 		}
 
