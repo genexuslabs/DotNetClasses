@@ -14,6 +14,7 @@ namespace DotNetUnitTest.Log
 			GXLogging.Debug(log, "Test Debug");
 			GXLogging.Info(log, "Test Info");
 			GXLogging.Warn(log, "Test Warn");
+			GXLogging.Trace(log, "Test Trace {p1}", "parameter1");
 		} 
 	}
 }

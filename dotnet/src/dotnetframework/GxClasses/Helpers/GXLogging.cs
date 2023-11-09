@@ -59,6 +59,7 @@ namespace GeneXus
 
 	
 		void LogTrace(string value);
+		void LogTrace(string value, params string[] list);
 		void LogError(string msg, Exception ex);
 
 		void LogError(string msg);
@@ -118,6 +119,10 @@ namespace GeneXus
 		public void LogTrace(string msg)
 		{
 			log.LogTrace(msg);
+		}
+		public void LogTrace(string msg, params string[] list)
+		{
+			log.LogTrace(msg, list);
 		}
 		public void LogError(string msg, Exception ex)
 		{
@@ -255,6 +260,18 @@ namespace GeneXus
 		{
 			SetThreadIdForLogging();
 			log.Logger.Log(MethodBase.GetCurrentMethod().DeclaringType, Level.Trace, value, null);
+		}
+
+		public void LogTrace(string value, params string[] list)
+		{
+			SetThreadIdForLogging();
+			StringBuilder message = new StringBuilder();
+			message.Append(value);
+			foreach (string parm in list)
+			{
+				message.Append(parm);
+			}
+			log.Logger.Log(MethodBase.GetCurrentMethod().DeclaringType, Level.Trace, message.ToString(), null);
 		}
 		public void LogError(string msg, Exception ex)
 		{
@@ -517,6 +534,14 @@ namespace GeneXus
 			{
 				if (logger.IsTraceEnabled)
 					logger.LogTrace(string.Join(" ", list));
+			}
+		}
+		internal static void Trace(IGXLogger logger, string msg, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsTraceEnabled)
+					logger.LogTrace(msg, list);
 			}
 		}
 		internal static void Trace(IGXLogger logger, Func<string> buildMsg)
