@@ -20,6 +20,7 @@ namespace GeneXus.Utils
 	using Configuration;
 	using System.Globalization;
 	using GeneXus.Http;
+	using System.Diagnostics;
 
 	public interface IGxSilentTrn
 	{
@@ -162,6 +163,7 @@ namespace GeneXus.Utils
 			get	{return trn;}
 			set {trn = value;}
 		}
+
 		public IGxSilentTrn getTransaction()
 		{
 			return trn;
@@ -171,30 +173,105 @@ namespace GeneXus.Utils
 			dirties.Clear();
 			trn = t;
 		}
+#if NETCORE
+		protected virtual bool GenOtelSpanEnabled() { return false; }
+		private Activity StartSpan(string methodName)
+		{
+			if (GenOtelSpanEnabled())
+			{
+				return InitializeSpan(methodName);
+			}
+			return null;
+		}
+		private void EndSpan(Activity activity)
+		{
+			if (GenOtelSpanEnabled())
+			{
+				activity?.Stop();
+			}
+		}
+		private Activity InitializeSpan(string methodName)
+		{
+			if (GenOtelSpanEnabled())
+			{
+				return GXBaseObject.ActivitySource.StartActivity($"{this.GetType().FullName}.{methodName}");
+			}
+			return null;
+		}
+#endif
 		public virtual void Save()
 		{
-			if( Transaction != null) 
+			if (Transaction != null)
+			{
+#if NETCORE
+				Activity activity = StartSpan("Save");
+#endif
 				Transaction.Save();
+#if NETCORE
+				EndSpan(activity);
+#endif
+			}
 		}
   
         public virtual bool Insert()
         {
-            if (Transaction != null)
-                return Transaction.Insert();
-            return false;
+			if (Transaction != null)
+			{
+#if NETCORE
+				Activity activity = StartSpan("Insert");
+#endif
+				try
+				{
+					return Transaction.Insert();
+				}
+				finally
+				{
+#if NETCORE
+					EndSpan(activity);
+
+#endif
+				}
+			}
+			return false;
         }
 
         public virtual bool Update()
         {
             if (Transaction != null)
-                return Transaction.Update();
-            return false;
+			{
+#if NETCORE
+				Activity activity = StartSpan("Update");
+#endif
+				try
+				{ 
+					return Transaction.Update();
+				}
+				finally {
+#if NETCORE
+					EndSpan(activity);
+#endif
+				}
+			}
+			return false;
         }
 
-        public virtual bool InsertOrUpdate()
-        {
-            if (Transaction != null)
-                return Transaction.InsertOrUpdate();
+		public virtual bool InsertOrUpdate()
+		{
+			if (Transaction != null)
+			{
+#if NETCORE
+				Activity activity = StartSpan("InsertOrUpdate");
+#endif
+				try
+				{
+					return Transaction.InsertOrUpdate();
+				}
+				finally {
+#if NETCORE
+					EndSpan(activity);
+#endif
+				}
+			}	
             return false;
         }
 
@@ -207,8 +284,14 @@ namespace GeneXus.Utils
 		{
 			if( Transaction != null) 
 			{
+#if NETCORE
+				Activity activity = StartSpan("Delete");
+#endif
 				Transaction.SetMode("DLT") ;
 				Transaction.Save();
+#if NETCORE
+				EndSpan(activity);
+#endif
 			}
 		}
 		public virtual bool Success()
