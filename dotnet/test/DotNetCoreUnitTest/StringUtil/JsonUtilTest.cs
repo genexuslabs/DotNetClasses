@@ -4,6 +4,7 @@ using System.Xml.Serialization;
 using GeneXus.Application;
 using GeneXus.Utils;
 using System.ServiceModel;
+using GeneXus.Programs;
 #if !NETCORE
 using Jayrock.Json;
 #endif
@@ -13,6 +14,18 @@ namespace xUnitTesting
 {
 	public class JsonUtilTest
 	{
+		[Fact]
+		public void SerializationFloatingNumbers()
+		{
+			SdtSDTGeneric genericSdt = new SdtSDTGeneric();
+			genericSdt.gxTpr_Itemnum = 1;
+			genericSdt.gxTpr_Itemchar = "Caso Base";
+			genericSdt.gxTpr_Itemgeopoint = new Geospatial("POINT(-56.248367 -34.873821)");
+			genericSdt.gxTpr_Itemgeography = new Geospatial("-34.873821, -56.248367");
+			string json = genericSdt.ToJSonString();
+			string expectedJson = "{\"ItemNum\":1,\"ItemChar\":\"Caso Base\",\"ItemGeoPoint\":\"POINT (-56.248367 -34.873821)\",\"ItemGeography\":\"\",\"ItemGEolocation\":\"\"}";
+			Assert.Equal(expectedJson, json);
+		}
 		[Fact]
 		public void DeserializationInvalidJsonNoDuplicateError()
 		{
@@ -80,7 +93,7 @@ namespace xUnitTesting
 		}
 
 		[Fact]
-		public void SerializationWithBigDecimalsTest_Issue70446()
+		public void DeserializationWithBigDecimalsTest_Issue70446()
 		{
 			decimal expectedBigdecimal = 53903859.09090909M;
 			GxContext context = new GxContext();
@@ -90,6 +103,20 @@ namespace xUnitTesting
 			Assert.Equal(expectedBigdecimal, sdt.gxTpr_Testenumero);
 			Assert.Equal(1, sdt.gxTpr_Testeid);
 			Assert.Equal("um", sdt.gxTpr_Testename);
+		}
+		[Fact]
+		public void SerializationWithBigDecimalsTest_Issue70446()
+		{
+			decimal expectedBigdecimal = 53903859.09090909M;
+			GxContext context = new GxContext();
+			SdtSDTteste sdt = new SdtSDTteste(context);
+			sdt.gxTpr_Testeid = 1;
+			sdt.gxTpr_Testename = "um";
+			sdt.gxTpr_Testenumero = expectedBigdecimal;
+
+			string expectedJson = "{\"testeID\":1,\"testeName\":\"um\",\"testeNumero\":\"53903859.09090909\"}";
+			string json = sdt.ToJSonString();
+			Assert.Equal(expectedJson, json);
 		}
 		[Fact]
 		public void SerializationWithSpecialCharacters_Issue69271()
