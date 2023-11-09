@@ -51,6 +51,58 @@ namespace GeneXus.Diagnostics
 			Write(message, topic, logLevel);
 		}
 
+		private static void LoggingFunc(string message, string topic, int logLevel, params string[] list)
+		{
+			IGXLogger log = GetLogger(topic);
+			LogLevel logLvl = (LogLevel)logLevel;
+
+			switch (logLvl)
+			{
+				case LogLevel.Off:
+					break;
+				case LogLevel.Trace:
+					GXLogging.Trace(log, message, list);
+					break;
+				case LogLevel.Debug:
+					GXLogging.Debug(log, message, list);
+					break;
+				case LogLevel.Info:
+					GXLogging.Info(log, message, list);
+					break;
+				case LogLevel.Warn:
+					GXLogging.Warn(log, message, list);
+					break;
+				case LogLevel.Error:
+					GXLogging.Error(log, message, list);
+					break;
+				case LogLevel.Fatal:
+					GXLogging.Critical(log, message, list);
+					break;
+				default:
+					GXLogging.Debug(log, message, list);
+					break;
+			}
+		}
+		public static void Write(string message, string topic, int logLevel, string propertyvalue1)
+		{
+			LoggingFunc(message, topic, logLevel, propertyvalue1);
+		}
+		public static void Write(string message, string topic, int logLevel, string propertyvalue1, string propertyvalue2)
+		{
+			LoggingFunc(message, topic, logLevel, propertyvalue1, propertyvalue2);
+		}
+		public static void Write(string message, string topic, int logLevel, string propertyvalue1, string propertyvalue2, string propertyvalue3)
+		{
+			LoggingFunc(message, topic, logLevel, propertyvalue1, propertyvalue2, propertyvalue3);
+		}
+		public static void Write(string message, string topic, int logLevel, string propertyvalue1, string propertyvalue2, string propertyvalue3, string propertyvalue4)
+		{
+			LoggingFunc(message, topic, logLevel, propertyvalue1, propertyvalue2, propertyvalue3, propertyvalue4);
+		}
+		public static void Write(string message, string topic, int logLevel, string propertyvalue1, string propertyvalue2, string propertyvalue3, string propertyvalue4, string propertyvalue5)
+		{
+			LoggingFunc(message, topic, logLevel, propertyvalue1, propertyvalue2, propertyvalue3, propertyvalue4, propertyvalue5);
+		}
 		public static void Write(string message, string topic, int logLevel)
 		{
 			IGXLogger log = GetLogger(topic);
