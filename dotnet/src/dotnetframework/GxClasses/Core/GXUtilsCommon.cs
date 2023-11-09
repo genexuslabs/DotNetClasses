@@ -5599,14 +5599,21 @@ namespace GeneXus.Utils
 		}
 		public static void ErrorToMessages(string errorId, Exception ex, GXBaseCollection<SdtMessages_Message> Messages)
 		{
+			ErrorToMessages(errorId, ex, Messages, true);
+		}
+		internal static void ErrorToMessages(string errorId, Exception ex, GXBaseCollection<SdtMessages_Message> Messages, bool parseInnerExceptions)
+		{
 			if (Messages != null && ex != null)
 			{
 				StringBuilder str = new StringBuilder();
 				str.Append(ex.Message);
-				while (ex.InnerException != null)
+				if (parseInnerExceptions)
 				{
-					str.Append(ex.InnerException.Message);
-					ex = ex.InnerException;
+					while (ex.InnerException != null)
+					{
+						str.Append(ex.InnerException.Message);
+						ex = ex.InnerException;
+					}
 				}
 				ErrorToMessages(errorId, str.ToString(), Messages);
 			}
