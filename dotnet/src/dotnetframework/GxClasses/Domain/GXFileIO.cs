@@ -584,7 +584,12 @@ public class GxExternalFileInfo : IGxFileInfo
 	private string URL
 	{
 		get {
-			return _provider == null ? String.Empty : _provider.GetUrl(_name, _fileTypeAtt, 0);
+			if (_provider == null)
+				return string.Empty;
+			else if (!string.IsNullOrEmpty(_url))
+				return _url;
+			else
+				return _provider.GetUrl(_name, _fileTypeAtt, 0);
 		}
 	}
 
