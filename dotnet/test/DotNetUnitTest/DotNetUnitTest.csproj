@@ -12,6 +12,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Compile Include="..\DotNetCoreUnitTest\StringUtil\JsonUtilTest.cs" Link="StringUtil\JsonUtilTest.cs" />
+	  <Compile Include="..\DotNetCoreUnitTest\StringUtil\type_SdtSDTGeneric.cs" Link="StringUtil\type_SdtSDTGeneric.cs" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Content Include="applications.json">

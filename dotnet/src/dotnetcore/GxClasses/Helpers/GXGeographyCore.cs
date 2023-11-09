@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Globalization;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 #if NETCORE
 using GeneXus.Application;
 #else
@@ -206,6 +207,7 @@ namespace GeneXus.Utils
 	[KnownType(typeof(System.Double[]))]
 	[KnownType(typeof(System.Collections.ArrayList))]
 	[DataContract]
+	[JsonConverter(typeof(CustomGeospatialConverter))]
 	public class Geospatial : IGeographicNative
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.Geospatial>();
