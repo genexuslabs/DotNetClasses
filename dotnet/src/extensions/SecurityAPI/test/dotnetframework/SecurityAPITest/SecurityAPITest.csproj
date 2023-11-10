@@ -369,7 +369,7 @@
     <None Update="dummycerts\RSA_sha256_2048\sha256e_cert.p12">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-		<None Update="dummycerts\RSA_sha256_2048\sha256_pubckey.pem">
+		<None Update="dummycerts\RSA_sha256_2048\sha256_pubkey.pem">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
     <None Update="dummycerts\RSA_sha256_2048\sha256_cert.crt">
