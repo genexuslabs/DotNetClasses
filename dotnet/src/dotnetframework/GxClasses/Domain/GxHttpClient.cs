@@ -19,7 +19,6 @@ namespace GeneXus.Http.Client
 	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
-	using log4net;
 #if NETCORE
 	using Microsoft.AspNetCore.WebUtilities;
 #endif

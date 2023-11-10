@@ -3,7 +3,6 @@ using System.IO;
 using System.Collections;
 using GeneXus.Utils;
 using GeneXus.Application;
-using log4net;
 using System.Runtime.CompilerServices;
 using GeneXus.Services;
 using System.Collections.Generic;

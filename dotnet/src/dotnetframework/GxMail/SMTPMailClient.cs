@@ -1,13 +1,12 @@
 using System;
-using System.Text;
-using System.Net.Mail;
 using System.IO;
-using log4net;
+using System.Net.Mail;
+using System.Text;
 using GeneXus.Mail.Smtp;
 
 namespace GeneXus.Mail
 {
-    internal class SMTPMailClient : ISMTPSession
+	internal class SMTPMailClient : ISMTPSession
     {
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<SMTPMailClient>();
 

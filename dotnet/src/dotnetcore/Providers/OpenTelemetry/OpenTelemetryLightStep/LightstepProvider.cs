@@ -1,12 +1,9 @@
 
 using System;
+using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
-using OpenTelemetry;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Resources;
-using log4net;
-using GeneXus.Services;
 
 namespace GeneXus.OpenTelemetry.Lightstep
 {

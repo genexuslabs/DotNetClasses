@@ -1,5 +1,4 @@
 using System;
-using System.Web;
 using System.Drawing;
 #if !NETCORE
 using System.Web.UI;
@@ -15,14 +14,12 @@ using System.Collections.Specialized;
 using GeneXus.Utils;
 using System.Text.RegularExpressions;
 using Jayrock.Json;
-using System.IO;
 using GeneXus.Configuration;
 using GeneXus.Application;
-using log4net;
 
 namespace GeneXus.WebControls
 {
-    public class GXWebStdMethods
+	public class GXWebStdMethods
     {
         private static Type webStdType;
 

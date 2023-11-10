@@ -1,11 +1,10 @@
 using System;
-using GeneXus.Mail.Internals;
 using GeneXus.Configuration;
-using log4net;
+using GeneXus.Mail.Internals;
 
 namespace GeneXus.Mail
 {
-	
+
 	public class GXPOP3Session : GXMailSession
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXPOP3Session>();

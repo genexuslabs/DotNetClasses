@@ -1,23 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Text;
+using System.Security;
 using System.Threading;
-
+using GeneXus.Utils;
+using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.Search;
-using Lucene.Net.Store;
-
-using log4net;
-
-using GeneXus.Utils;
-using Lucene.Net.Analysis;
-using System.Globalization;
-using System.Security;
 
 namespace GeneXus.Search
 {
@@ -34,7 +25,7 @@ namespace GeneXus.Search
         private Thread worker;
 		private Indexer()
 		{
-			var folder = Settings.Instance.IndexFolder;
+			string folder = Settings.Instance.IndexFolder;
             GXLogging.Debug(log,"LUCENE_INDEX_DIRECTORY: " + folder);
 			worker = new Thread(new ThreadStart(BackgroundIndexer));
 			worker.Start();

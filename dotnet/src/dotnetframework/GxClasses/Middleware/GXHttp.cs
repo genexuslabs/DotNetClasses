@@ -20,12 +20,9 @@ namespace GeneXus.Http
 	using GeneXus.Utils;
 	using GeneXus.XML;
 	using GeneXus.WebControls;
-
-	using log4net;
 	using Jayrock.Json;
 	using Helpers;
 	using System.Collections.Concurrent;
-	using Microsoft.Net.Http.Headers;
 	using System.Net.Http;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;

@@ -1,18 +1,14 @@
-using GeneXus.Application;
-using GeneXus.Configuration;
-using GeneXus.Data.NTier;
-using GeneXus.Metadata;
-using GeneXus.Procedure;
-using GeneXus.Reorg;
-using GeneXus.Resources;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Metadata;
+using GeneXus.Procedure;
+using GeneXus.Resources;
 
 namespace GeneXus.Utils
 {

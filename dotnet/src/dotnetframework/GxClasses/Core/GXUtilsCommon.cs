@@ -1,6 +1,5 @@
 using GeneXus.Application;
 using GeneXus.Configuration;
-using log4net;
 using System;
 using System.Collections;
 using System.Diagnostics;
@@ -20,7 +19,6 @@ using GxClasses.Helpers;
 using System.Net;
 #endif
 using NodaTime;
-using NodaTime.TimeZones;
 using NUglify;
 using NUglify.Html;
 using GeneXus.Web.Security;
@@ -45,7 +43,6 @@ using GeneXus.Storage;
 using GeneXus.Services;
 using GeneXus.Http;
 using System.Security;
-using System.Threading.Tasks;
 using System.Drawing.Imaging;
 using System.Net.Http.Headers;
 using Image = System.Drawing.Image;

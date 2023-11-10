@@ -1,24 +1,22 @@
 namespace GeneXus.Printer
 {
 	using System;
-	using System.Runtime.InteropServices;
-	using System.Runtime.CompilerServices;
-	using System.Drawing;
-	using System.Drawing.Printing;
-	using System.Drawing.Imaging;
-	using System.IO;
-	using System.Text.RegularExpressions;
+	using System.Collections;
+	using System.Collections.Generic;
 	using System.Collections.Specialized;
-    using System.Collections.Generic;
-    using System.Collections;
-	using System.Threading;
-    using System.Globalization;
+	using System.Drawing;
+	using System.Drawing.Imaging;
+	using System.Drawing.Printing;
+	using System.Globalization;
+	using System.IO;
+	using System.Runtime.CompilerServices;
+	using System.Runtime.InteropServices;
 	using System.Text;
-	using GeneXus.Configuration;
-    using GeneXus.XML;
-	using log4net;
-	using System.Runtime.Serialization;
+	using System.Text.RegularExpressions;
+	using System.Threading;
 	using System.Threading.Tasks;
+	using GeneXus.Configuration;
+	using GeneXus.XML;
 
 	public interface IPrintHandler
 	{

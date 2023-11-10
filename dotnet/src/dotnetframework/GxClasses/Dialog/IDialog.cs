@@ -1,6 +1,5 @@
-using ConnectionBuilder;
-using log4net;
 using System;
+using ConnectionBuilder;
 
 namespace GeneXus.Utils
 {
@@ -36,7 +35,7 @@ namespace GeneXus.Utils
 					}
 					catch (Exception ex)
 					{
-						var strErrorMsg = $"Error loading Dialogs provider. Check if {OsProviderAssembly}.dll exists ";
+						string strErrorMsg = $"Error loading Dialogs provider. Check if {OsProviderAssembly}.dll exists ";
 						GXLogging.Debug(log, strErrorMsg, ex);
 						throw new Exception(strErrorMsg, ex);
 					}

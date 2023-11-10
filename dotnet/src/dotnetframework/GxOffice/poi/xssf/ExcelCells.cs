@@ -2,7 +2,6 @@
 using System;
 using GeneXus.MSOffice.Excel.Style;
 using GeneXus.Utils;
-using log4net;
 using NPOI.OpenXmlFormats.Spreadsheet;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;

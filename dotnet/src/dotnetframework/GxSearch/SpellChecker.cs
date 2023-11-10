@@ -2,10 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-using log4net;
-
 using Lucene.Net.Index;
-using Lucene.Net.Store;
 using SpellChecker.Net.Search.Spell;
 
 namespace GeneXus.Search

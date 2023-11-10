@@ -1,18 +1,17 @@
 using System;
-using System.Web;
-using System.Reflection;
-using GeneXus.Configuration;
 using System.Collections.Generic;
-using log4net;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Web;
 using GeneXus.Application;
-using GeneXus.Utils;
+using GeneXus.Configuration;
+using GeneXus.Http;
 using GeneXus.Http.HttpModules;
 using GeneXus.Metadata;
-using System.Net;
-using System.Text.RegularExpressions;
-using System.Net.Http;
-using GeneXus.Http;
+using GeneXus.Utils;
 
 namespace GeneXus.HttpHandlerFactory
 {

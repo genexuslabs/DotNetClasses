@@ -10,14 +10,12 @@ namespace GeneXus.Utils
 	using System.Text;
 	using System.Security.Cryptography;
 	using System.Reflection;
-	using log4net;
 	using System.Runtime.Serialization;
 #if !NETCORE
 	using System.ServiceModel;
 #endif
 	using Configuration;
 	using System.Globalization;
-	using GeneXus.Http;
 
 	public interface IGxSilentTrn
 	{

@@ -1,13 +1,11 @@
 using System;
-using GeneXus.Mail.Internals;
-using GeneXus.Utils;
 using GeneXus.Configuration;
-using log4net;
+using GeneXus.Mail.Internals;
 
 namespace GeneXus.Mail
 {
-    
-    public class GXSMTPSession : GXMailSession
+
+	public class GXSMTPSession : GXMailSession
     {
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXSMTPSession>();
 		private ISMTPSession session;

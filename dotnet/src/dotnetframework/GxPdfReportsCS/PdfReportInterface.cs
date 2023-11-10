@@ -1,5 +1,4 @@
 using System.IO;
-using log4net;
 
 namespace GeneXus.Printer
 {

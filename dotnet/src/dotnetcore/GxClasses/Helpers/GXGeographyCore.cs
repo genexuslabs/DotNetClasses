@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Runtime.Serialization;
 using Jayrock.Json;
 using GeographicLib;
-using log4net;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 

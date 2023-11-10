@@ -1,6 +1,5 @@
 using System;
 using GeneXus.Http.WebSocket;
-using log4net;
 
 namespace GeneXus.Notifications.WebSocket
 {

@@ -1,10 +1,9 @@
-using GeneXus.Application;
-using GeneXus.Utils;
-using log4net;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.Serialization;
+using GeneXus.Application;
+using GeneXus.Utils;
 
 namespace GeneXus.Helpers
 {

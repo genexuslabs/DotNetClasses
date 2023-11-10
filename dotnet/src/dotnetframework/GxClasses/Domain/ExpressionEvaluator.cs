@@ -1,10 +1,8 @@
 using System;
-using GeneXus.Metadata;
+using System.Reflection;
 using GeneXus.Application;
 using GeneXus.Configuration;
-using System.Reflection;
-using log4net;
-using System.Collections;
+using GeneXus.Metadata;
 namespace GeneXus.Utils
 {
 

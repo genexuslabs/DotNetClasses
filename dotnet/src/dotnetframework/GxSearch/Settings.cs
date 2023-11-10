@@ -3,8 +3,6 @@ using System.IO;
 using System.Security;
 using GeneXus.Configuration;
 
-using log4net;
-
 namespace GeneXus.Search
 {
 

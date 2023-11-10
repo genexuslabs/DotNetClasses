@@ -1,20 +1,19 @@
 using System;
-using System.Data;
 using System.Collections;
-using GeneXus.Data.ADO;
-using GeneXus.Configuration;
-using GeneXus.Utils;
-using System.IO;
-using log4net;
-using GeneXus.Application;
 using System.Collections.Generic;
-using GeneXus.Services;
+using System.Data;
+using System.IO;
 using System.Net;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Data.ADO;
+using GeneXus.Services;
 using GeneXus.Storage;
+using GeneXus.Utils;
 
 namespace GeneXus.Data.NTier.ADO
 {
-    public class GXFatErrorFieldGetter : IFieldGetter
+	public class GXFatErrorFieldGetter : IFieldGetter
     {
         GxCommand _gxDbCommand;
         public GXFatErrorFieldGetter(GxCommand gxDbCommand)

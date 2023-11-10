@@ -1,16 +1,14 @@
 using System;
-using System.Reflection;
-using log4net;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using GeneXus.Application;
-using GeneXus.Utils;
-using GeneXus.Services;
 using GeneXus.Office.Excel;
+using GeneXus.Services;
 
 namespace GeneXus.Office
 {
-    public class ExcelDocumentI
+	public class ExcelDocumentI
     {
 
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
