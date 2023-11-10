@@ -65,11 +65,22 @@ namespace GeneXus.Utils
 			throw new NotImplementedException();
 		}
 	}
+	internal class CustomGeospatialConverter : JsonConverter<Geospatial>
+	{
+		public override Geospatial Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+			throw new NotImplementedException("Deserialization is not supported.");
+
+		public override void Write(Utf8JsonWriter writer, Geospatial value, JsonSerializerOptions options)
+		{
+			string stringValue = value?.ToString();
+			JsonSerializer.Serialize(writer, stringValue, options);
+		}
+	}
 	internal class CustomDateTimeConverter : JsonConverter<DateTime>
 	{
 		public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			throw new NotImplementedException();
+			throw new NotImplementedException("Deserialization is not supported.");
 		}
 
 		public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
@@ -92,10 +103,19 @@ namespace GeneXus.Utils
 		}
 		internal override string WriteJSON<T>(T kbObject)
 		{
+			if (kbObject != null)
+			{
+				return kbObject.ToString();
+			}
+			return null;
+		}
+		internal static string SerializeToJayrockCompatibleJson<T>(T value) where T : IJayrockCompatible
+		{
 			JsonSerializerOptions opts = new JsonSerializerOptions();
 			opts.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
 			opts.Converters.Add(new CustomDateTimeConverter());
-			return JsonSerializer.Serialize<T>(kbObject, opts);
+			opts.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
+			return JsonSerializer.Serialize(value, opts);
 		}
 	}
 #else
