@@ -30,11 +30,15 @@ namespace GeneXus.Application
 
     /// <summary>
     /// Represent the one and only representation of the "null" value in JSON.
-    /// </summary>
+	/// </summary>
 
-    [ Serializable ]
-    internal sealed class JNull 
-    {
+	internal interface IJayrockCompatible
+	{
+
+	}
+	[ Serializable ]
+    internal sealed class JNull : IJayrockCompatible
+	{
         public static readonly JNull Value = new JNull();
 
         public override string ToString()

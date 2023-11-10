@@ -43,8 +43,8 @@ namespace GeneXus.Application
 	/// </remarks>
 
 	[ Serializable ]
-    internal class JArray : CollectionBase
-    {
+    internal class JArray : CollectionBase, IJayrockCompatible
+	{
         public JArray() {}
 
         public JArray(IEnumerable collection)
@@ -187,7 +187,7 @@ namespace GeneXus.Application
 
         public override string ToString()
         {
-			return JSONHelper.WriteJSON(this);
+			return TextJsonSerializer.SerializeToJayrockCompatibleJson(this);
 		}
 
       

@@ -103,11 +103,19 @@ namespace GeneXus.Utils
 		}
 		internal override string WriteJSON<T>(T kbObject)
 		{
+			if (kbObject != null)
+			{
+				return kbObject.ToString();
+			}
+			return null;
+		}
+		internal static string SerializeToJayrockCompatibleJson<T>(T value) where T : IJayrockCompatible
+		{
 			JsonSerializerOptions opts = new JsonSerializerOptions();
 			opts.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
 			opts.Converters.Add(new CustomDateTimeConverter());
 			opts.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
-			return JsonSerializer.Serialize<T>(kbObject, opts);
+			return JsonSerializer.Serialize(value, opts);
 		}
 	}
 #else
