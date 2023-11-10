@@ -1,7 +1,6 @@
 namespace GeneXus.Http
 {
 	using System;
-	using System.IO;
 #if !NETCORE
 	using Jayrock.Json;
 #endif
@@ -19,9 +18,7 @@ namespace GeneXus.Http
 #else
 	using Microsoft.AspNetCore.Http;
 #endif
-	using System.Diagnostics;
 	using GeneXus.Configuration;
-	using log4net;
 
 	public interface IHttpAjaxContext
 	{

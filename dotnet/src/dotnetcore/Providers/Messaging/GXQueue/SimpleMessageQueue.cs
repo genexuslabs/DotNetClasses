@@ -1,14 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Text;
-using GeneXus.Application;
 using GeneXus.Services;
 using GeneXus.Utils;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Messaging.Common
 {

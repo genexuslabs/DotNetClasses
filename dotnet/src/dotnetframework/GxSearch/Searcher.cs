@@ -1,17 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.QueryParsers;
-using Lucene.Net.Search;
-
-using log4net;
-
+using System.Security;
 using GeneXus.Application;
 using Lucene.Net.Analysis;
-using System.Security;
+using Lucene.Net.QueryParsers;
+using Lucene.Net.Search;
 
 namespace GeneXus.Search
 {

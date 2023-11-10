@@ -14,7 +14,6 @@ namespace GeneXus.Procedure
 	using GeneXus.Printer;
 	using GeneXus.Utils;
 	using GeneXus.XML;
-	using log4net;
 
 	public abstract class GXProcedure: GXBaseObject
 	{

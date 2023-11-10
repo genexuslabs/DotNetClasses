@@ -5,13 +5,7 @@ namespace GeneXus.Procedure
 	using GeneXus.Printer;
 	using System.Globalization;
 	using GeneXus.Http;
-	using System.Threading;
 	using GeneXus.Mime;
-	using GeneXus.Utils;
-	using log4net;
-	using GeneXus.Application;
-	using GeneXus.Data.NTier;
-	
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 #else

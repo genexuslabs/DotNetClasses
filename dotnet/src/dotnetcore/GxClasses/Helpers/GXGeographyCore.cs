@@ -9,7 +9,6 @@ using GeneXus.Application;
 using Jayrock.Json;
 #endif
 using GeographicLib;
-using log4net;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 

@@ -1,7 +1,6 @@
 using System;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Text;
@@ -9,7 +8,6 @@ using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Utils;
 using GxClasses.Helpers;
-using log4net;
 using MySQLCommand = MySqlConnector.MySqlCommand;
 using MySQLConnection = MySqlConnector.MySqlConnection;
 using MySQLDataAdapter = MySqlConnector.MySqlDataAdapter;

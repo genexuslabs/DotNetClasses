@@ -1,6 +1,5 @@
 using System;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Services.OpenTelemetry
 {

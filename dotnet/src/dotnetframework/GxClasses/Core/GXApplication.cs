@@ -21,7 +21,6 @@ namespace GeneXus.Application
 #endif
 	using GeneXus.Configuration;
 	using GeneXus.Metadata;
-	using log4net;
 #if !NETCORE
 	using Jayrock.Json;
 #endif
@@ -46,7 +45,6 @@ namespace GeneXus.Application
 	using Microsoft.AspNetCore.Http.Features;
 #endif
 	using NodaTime;
-	using NodaTime.TimeZones;
 	using System.Threading;
 	using System.Security.Claims;
 	using System.Security;

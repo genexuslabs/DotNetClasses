@@ -1,15 +1,13 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Serialization;
 using GeneXus.Application;
 using GeneXus.XML;
 #if !NETCORE
 using Jayrock.Json;
 #endif
-using log4net;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Xml.Serialization;
 
 namespace GeneXus.Utils
 {

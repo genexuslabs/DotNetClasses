@@ -9,7 +9,6 @@ using GeneXus.Utils;
 #if !NETCORE
 using Jayrock.Json;
 #endif
-using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;
 #endif

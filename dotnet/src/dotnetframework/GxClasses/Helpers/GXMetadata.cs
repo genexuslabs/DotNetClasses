@@ -3,7 +3,6 @@ namespace GeneXus.Metadata
 	using System;
 	using System.Reflection;
 	using System.Collections;
-	using log4net;
 	using System.IO;
 	using GeneXus.Utils;
 	using GeneXus.Configuration;

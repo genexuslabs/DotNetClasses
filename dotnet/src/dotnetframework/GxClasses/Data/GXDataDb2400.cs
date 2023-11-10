@@ -6,7 +6,6 @@ using System.Text;
 #if !NETCORE
 using Microsoft.HostIntegration.MsDb2Client;
 #endif
-using log4net;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;

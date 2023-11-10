@@ -1,25 +1,20 @@
 
 using System;
-
-using System.IO;
 using System.Collections;
-using System.Threading;
-using System.Text;
-using Microsoft.Win32;
-using System.Runtime.InteropServices;
-using System.Globalization;
-
-using System.util;
-using System.Diagnostics;
-using log4net;
-
-using GeneXus.Printer;
 using System.Collections.Generic;
-using System.Security;
-using GeneXus;
-using GeneXus.Utils;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
-using GeneXus.Metadata;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
+using System.Threading;
+using System.util;
+using GeneXus;
+using GeneXus.Printer;
+using GeneXus.Utils;
+using Microsoft.Win32;
 
 namespace com.genexus.reports
 {

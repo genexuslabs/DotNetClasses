@@ -1,20 +1,19 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Net;
 using System.Net.Sockets;
-using System.Globalization;
-using log4net;
-using GeneXus.Utils;
+using System.Text;
 using GeneXus.Mail.Internals.Smtp;
-using Org.Mentalis.Security.Ssl;
+using GeneXus.Utils;
 using Org.Mentalis.Security.Certificates;
-using System.Collections.Generic;
+using Org.Mentalis.Security.Ssl;
 
 namespace GeneXus.Mail.Internals
 {
-    
-    internal class SMTPSession: ISMTPSession
+
+	internal class SMTPSession: ISMTPSession
     {
         private static readonly IGXLogger log = GXLoggerFactory.GetLogger<SMTPSession>();
         #region Mail Constants

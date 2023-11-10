@@ -9,7 +9,6 @@ using GeneXus.Cache;
 using GeneXus.Metadata;
 using GeneXus.Utils;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Data
 {

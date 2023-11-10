@@ -1,6 +1,5 @@
 using System;
 using System.Text;
-using log4net;
 using System.Data;
 using System.Data.Common;
 using GeneXus.Utils;

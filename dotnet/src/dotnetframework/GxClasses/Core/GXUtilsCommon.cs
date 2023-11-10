@@ -1,6 +1,5 @@
 using GeneXus.Application;
 using GeneXus.Configuration;
-using log4net;
 using System;
 using System.Collections;
 using System.Diagnostics;
@@ -20,7 +19,6 @@ using GxClasses.Helpers;
 using System.Net;
 #endif
 using NodaTime;
-using NodaTime.TimeZones;
 using NUglify;
 using NUglify.Html;
 using GeneXus.Web.Security;

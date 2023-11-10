@@ -1,13 +1,8 @@
-using log4net;
 using Microsoft.Exchange.WebServices.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace GeneXus.Mail.Exchange
 {
-    public class TraceListener : ITraceListener
+	public class TraceListener : ITraceListener
     {
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<TraceListener>();
 		public void Trace(string traceType, string traceMessage)

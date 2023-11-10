@@ -1,3 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Metadata;
 using GeneXus.Notifications.WebSocket;
@@ -9,14 +16,7 @@ using GeneXus.Application;
 #else
 using Jayrock.Json;
 #endif
-using log4net;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace GeneXus.Http.WebSocket
 {

@@ -10,7 +10,6 @@ using Azure.Messaging.EventGrid;
 using GeneXus.Messaging.Common;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
 
 namespace GeneXus.Messaging.GXAzureEventGrid
 {

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using GeneXus.Encryption;
-using log4net;
 #if NETCORE
 using GeneXus.Mime;
 #else
