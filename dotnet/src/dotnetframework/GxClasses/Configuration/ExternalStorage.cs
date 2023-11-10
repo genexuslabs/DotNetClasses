@@ -3,7 +3,6 @@ using GeneXus.Services;
 using GeneXus.Attributes;
 using GeneXus.Utils;
 using GeneXus.Encryption;
-using log4net;
 #if NETCORE
 using GxClasses.Helpers;
 #endif

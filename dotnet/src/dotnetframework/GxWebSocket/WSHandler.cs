@@ -9,7 +9,6 @@ using GeneXus.Procedure;
 using GeneXus.Services;
 using GeneXus.Utils;
 using Jayrock.Json;
-using log4net;
 using Microsoft.Web.WebSockets;
 
 namespace GeneXus.Http.WebSocket

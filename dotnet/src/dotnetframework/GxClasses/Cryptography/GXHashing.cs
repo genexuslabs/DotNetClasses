@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Security.Cryptography;
-using log4net;
-using GeneXus.Cryptography.Hashing;
 using GeneXus.Cryptography.CryptoException;
+using GeneXus.Cryptography.Hashing;
 
 namespace GeneXus.Cryptography
 {

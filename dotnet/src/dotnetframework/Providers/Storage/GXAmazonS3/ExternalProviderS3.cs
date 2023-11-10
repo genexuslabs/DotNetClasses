@@ -1,16 +1,14 @@
-using Amazon.Runtime;
-using Amazon.S3;
-using Amazon.S3.IO;
-using Amazon.S3.Model;
-
-using Amazon.S3.Transfer;
-using GeneXus.Services;
-using GeneXus.Utils;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.IO;
+using Amazon.S3.Model;
+using Amazon.S3.Transfer;
+using GeneXus.Services;
+using GeneXus.Utils;
 
 
 namespace GeneXus.Storage.GXAmazonS3

@@ -4,7 +4,6 @@ using System;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Http;
-using log4net;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 namespace GeneXus.Application

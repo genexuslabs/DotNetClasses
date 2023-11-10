@@ -1,9 +1,7 @@
 using System;
-using GeneXus.Office;
 using System.Collections;
-using System.Reflection;
 using System.IO;
-using log4net;
+using System.Reflection;
 using GeneXus.Application;
 using GeneXus.Office.Excel;
 using GxClasses.Helpers;

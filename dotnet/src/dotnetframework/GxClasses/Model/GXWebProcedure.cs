@@ -5,17 +5,12 @@ namespace GeneXus.Procedure
 	using GeneXus.Printer;
 	using System.Globalization;
 	using GeneXus.Http;
-	using System.Threading;
 	using GeneXus.Mime;
-	using GeneXus.Utils;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
 #else
 	using System.Web;
 #endif
-	using log4net;
-	using GeneXus.Application;
-	using GeneXus.Data.NTier;
 
 	public class GXWebProcedure : GXHttpHandler
 	{

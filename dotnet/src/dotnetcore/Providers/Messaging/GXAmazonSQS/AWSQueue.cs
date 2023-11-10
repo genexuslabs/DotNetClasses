@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.SQS;
@@ -7,9 +9,6 @@ using Amazon.SQS.Model;
 using GeneXus.Messaging.Common;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
-using System.Threading.Tasks;
-using System.Reflection;
 
 namespace GeneXus.Messaging.Queue
 {

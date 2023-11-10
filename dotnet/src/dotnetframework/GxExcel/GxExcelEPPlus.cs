@@ -1,9 +1,8 @@
 using System;
 using System.IO;
-using log4net;
+using GeneXus.Office.Excel;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using GeneXus.Office.Excel;
 
 namespace GeneXus.Office.ExcelGXEPPlus
 {

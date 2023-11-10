@@ -4,7 +4,6 @@ namespace GeneXus.Application
 	using System.Collections;
 	using System.IO;
 	using GeneXus.Configuration;
-	using log4net;
 	using System.Collections.Generic;
 	using System.Web;
 	using System.Threading;
@@ -14,7 +13,6 @@ namespace GeneXus.Application
 	using System.Web.Configuration;
 #endif
 	using System.Xml;
-	using GeneXus.Http;
 	using System.Collections.Concurrent;
 
 	public class GXFileWatcher : IDisposable

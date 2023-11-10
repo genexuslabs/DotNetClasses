@@ -1,8 +1,7 @@
-using GeneXus.Application;
-using log4net;
 using System;
 using System.Diagnostics;
 using System.IO;
+using GeneXus.Application;
 
 namespace GeneXus.Utils
 {

@@ -7,8 +7,6 @@ using Azure.Storage.Queues.Models;
 using GeneXus.Messaging.Common;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
-using Microsoft.Extensions.Logging;
 
 namespace GeneXus.Messaging.Queue
 {

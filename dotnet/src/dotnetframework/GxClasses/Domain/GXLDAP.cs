@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.DirectoryServices;
 using System.Text;
-using log4net;
 #if NETCORE
 using Novell.Directory.Ldap;
 #endif

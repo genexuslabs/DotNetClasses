@@ -1,11 +1,10 @@
 using System;
-using log4net;
 using GeneXus.Utils;
 using MAPI;
 
 namespace GeneXus.Mail.Internals
 {
-	
+
 	internal class MAPISession
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<MAPISession>();
