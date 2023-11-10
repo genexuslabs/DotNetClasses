@@ -387,7 +387,8 @@ namespace GeneXus.Application
 					PathString path = s.Context.Request.Path;
 					bool appSettingsPath = path.HasValue && path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase) >= 0;
 					bool tempMediaPath = path.StartsWithSegments($"{baseVirtualPath}/{tempMediaDir}", StringComparison.OrdinalIgnoreCase);
-					if (appSettingsPath || tempMediaPath)
+					bool privatePath = path.StartsWithSegments($"{baseVirtualPath}/{GXRouting.PRIVATE_DIR}", StringComparison.OrdinalIgnoreCase);
+					if (appSettingsPath || tempMediaPath || privatePath)
 					{
 						s.Context.Response.StatusCode = 401;
 						s.Context.Response.Body = Stream.Null;
