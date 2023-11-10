@@ -6,9 +6,11 @@
 	 <NoWarn>CA1031</NoWarn>
 	 <PackageId>GeneXus.SecurityApi.XmlSignature</PackageId>
   </PropertyGroup>
+ <ItemGroup>
+   <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
+ </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Security" />
