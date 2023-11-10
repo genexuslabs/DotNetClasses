@@ -15,6 +15,29 @@ namespace xUnitTesting
 	public class JsonUtilTest
 	{
 		[Fact]
+		public void PropertiesSerialization()
+		{
+			GXProperties AV9properties = new GXProperties();
+			string url = "http://localhost/OuvidoriaOuvidoriaAndroidHomologa/login.aspx?pmsa";
+			string user = "mpsa";
+			string AV8json = "{\"Url\" : \""+ url + "\",\"User\" : \"" + user + "\"}";
+			AV9properties.FromJSonString(AV8json, null);
+			GxKeyValuePair AV10property = AV9properties.GetFirst();
+			Assert.Equal("Url", AV10property.Key);
+			Assert.Equal(url, AV10property.Value);
+			AV10property = AV9properties.GetNext();
+			Assert.Equal("User", AV10property.Key);
+			Assert.Equal(user, AV10property.Value);
+
+		}
+		[Fact]
+		public void StringSerialization()
+		{
+			string result = JSONHelper.WriteJSON<dynamic>("myvalue");
+			Assert.Equal("myvalue", result);
+
+		}
+		[Fact]
 		public void SerializationFloatingNumbers()
 		{
 			SdtSDTGeneric genericSdt = new SdtSDTGeneric();

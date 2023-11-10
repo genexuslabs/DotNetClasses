@@ -16,8 +16,8 @@ namespace GeneXus.Application
 	/// an instance is rendered as text.</para>
 
 	[ Serializable ]
-    internal class JObject : OrderedDictionary
-    {
+    internal class JObject : OrderedDictionary, IJayrockCompatible
+	{
         public JObject() {}
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace GeneXus.Application
         
         public override string ToString()
         {
-			return JSONHelper.WriteJSON(this);
+			return TextJsonSerializer.SerializeToJayrockCompatibleJson(this);
 		}
 
 
