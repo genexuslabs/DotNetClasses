@@ -1,12 +1,21 @@
 using System;
 using System.Diagnostics;
+using GeneXus.Application;
 using OpenTelemetry.Trace;
+using static GeneXus.OpenTelemetry.Diagnostics.OtelTracer;
 
-namespace GxClasses.Diagnostics.Opentelemetry
+namespace GeneXus.OpenTelemetry.Diagnostics
 {
 	public class OtelSpan
 	{
 		private Activity _activity;
+
+		public enum SpanStatusCode
+		{
+			Unset,
+			Ok,
+			Error
+		}
 		public string Id
 		{ get => _activity?.Id; }
 
@@ -29,8 +38,8 @@ namespace GxClasses.Diagnostics.Opentelemetry
 			}
 		}
 
-		public SpanKind Kind
-		{ get => (SpanKind)_activity?.Kind; }
+		public short Kind
+		{ get => (short)_activity?.Kind; }
 
 		public string ParentId
 		{ get => _activity?.ParentId; }
@@ -41,21 +50,18 @@ namespace GxClasses.Diagnostics.Opentelemetry
 		public string TraceId
 		{ get => _activity?.TraceId.ToString(); }
 
-		public SpanStatusCode Status
-		{ get => (SpanStatusCode)_activity?.Status; }
-
-		public enum SpanStatusCode
-		{
-			Unset,
-			Ok,
-			Error
-		}
+		public short Status
+		{ get => (short)_activity?.Status; }
 		
 		internal OtelSpan(Activity activity)
 		{
 			_activity = activity;
 		}
 
+		public OtelSpan()
+		{
+			_activity = Activity.Current;
+		}
 		public void Start()
 		{
 			_activity?.Start();
