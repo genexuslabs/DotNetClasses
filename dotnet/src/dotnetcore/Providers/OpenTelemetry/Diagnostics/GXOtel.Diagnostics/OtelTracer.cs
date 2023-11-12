@@ -2,12 +2,12 @@ using System.Diagnostics;
 using GeneXus.Application;
 using GeneXus.Attributes;
 
-namespace GxClasses.Diagnostics.Opentelemetry
+namespace GeneXus.OpenTelemetry.Diagnostics
 {
 	[GXApi]
 	public class OtelTracer
 	{
-		public enum SpanKind
+		public enum SpanType
 		{
 			Client,
 			Consumer,
@@ -16,18 +16,18 @@ namespace GxClasses.Diagnostics.Opentelemetry
 			Server
 		}
 
-		public static OtelSpan CreateSpan(string name, SpanKind kind)
+		public OtelSpan CreateSpan(string name, SpanType kind)
 		{
 			Activity activity = GXBaseObject.ActivitySource.StartActivity(name, (ActivityKind)kind);
 			return new OtelSpan(activity);
 		}
 
-		public static OtelSpan GetCurrent()
+		public OtelSpan GetCurrent()
 		{
 			return new OtelSpan(Activity.Current);
 		}
 
-		public static bool HasListeners()
+		public bool HasListeners()
 		{
 			return GXBaseObject.ActivitySource.HasListeners();
 		}
