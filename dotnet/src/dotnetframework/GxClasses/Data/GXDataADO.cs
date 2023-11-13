@@ -1152,7 +1152,13 @@ namespace GeneXus.Data.ADO
         }
 		public string BlobPath
 		{
-			get {return blobPath;}
+			get {
+				if (blobPath == null)
+				{
+					blobPath = Preferences.getBLOB_PATH();
+				}
+				return blobPath;
+			}
 			set {blobPath=value;}
 		}
 		public string MultimediaPath
@@ -2631,7 +2637,6 @@ namespace GeneXus.Data.ADO
 			if ( ! cfg)
 				connection.ConnectionString = connectionString;
 
-			connection.BlobPath = Preferences.getBLOB_PATH();
 			string strCache;
 			connection.Cache=((Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive) && ! GxContext.isReorganization;
 			connection.DataStore = this;
