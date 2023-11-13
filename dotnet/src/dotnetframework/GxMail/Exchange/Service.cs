@@ -2,11 +2,10 @@ using System;
 using System.Net;
 
 using Microsoft.Exchange.WebServices.Data;
-using log4net;
 
 namespace GeneXus.Mail.Exchange
 {
-    public static class Service
+	public static class Service
     {
  
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);

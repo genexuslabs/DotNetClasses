@@ -8,7 +8,6 @@ using System.Text;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Utils;
-using log4net;
 using Microsoft.IdentityModel.Tokens;
 using static GeneXus.Web.Security.SecureTokenHelper;
 
@@ -25,7 +24,7 @@ namespace GeneXus.Web.Security
         {
 			if (string.IsNullOrEmpty(input))
 				return input;
-            var output = new string(input.Where(c => !char.IsControl(c)).ToArray());
+			string output = new string(input.Where(c => !char.IsControl(c)).ToArray());
             return output.Trim();
         }
 

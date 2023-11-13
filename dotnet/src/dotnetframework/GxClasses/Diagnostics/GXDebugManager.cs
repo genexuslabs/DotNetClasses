@@ -5,11 +5,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using GeneXus.Application;
-using log4net;
 
 namespace GeneXus.Diagnostics
 {
-	
+
 	public class GXDebugManager
 	{
 		public const short GXDEBUG_VERSION = 2;

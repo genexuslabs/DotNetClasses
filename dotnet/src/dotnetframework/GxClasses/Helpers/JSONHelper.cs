@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Json;
@@ -7,13 +6,11 @@ using System.Text;
 using Jayrock.Json;
 using System.Runtime.Serialization;
 using GeneXus.Configuration;
-using System.Linq;
 #if NETCORE
 using System.Buffers.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 #endif
-using log4net;
 
 namespace GeneXus.Utils
 {

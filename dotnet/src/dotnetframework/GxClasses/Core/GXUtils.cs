@@ -11,7 +11,6 @@ namespace GeneXus.Utils
 	using Cache;
 	using GeneXus.Application;
 	using GeneXus.Services;
-	using log4net;
 	using TZ4Net;
 
 	public class GxMail

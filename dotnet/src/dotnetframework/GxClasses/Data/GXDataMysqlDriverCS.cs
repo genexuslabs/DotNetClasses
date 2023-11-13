@@ -1,12 +1,11 @@
-using GeneXus.Application;
-using GeneXus.Cache;
-using GeneXus.Utils;
-using log4net;
-using MySQLDriverCS;
 using System;
 using System.Data;
 using System.Data.Common;
 using System.Text;
+using GeneXus.Application;
+using GeneXus.Cache;
+using GeneXus.Utils;
+using MySQLDriverCS;
 
 namespace GeneXus.Data
 {

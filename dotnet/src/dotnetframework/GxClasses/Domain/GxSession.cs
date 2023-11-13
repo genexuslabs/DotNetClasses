@@ -6,16 +6,13 @@ using System.Web.SessionState;
 #else
 using Microsoft.AspNetCore.Http;
 #endif
-using System.Threading;
 using GeneXus.Utils;
 using GeneXus.Encryption;
 using GeneXus.Application;
-using log4net;
-using System.Collections.Generic;
 
 namespace GeneXus.Http
 {
-    public interface IGxSession
+	public interface IGxSession
     {
         void Set(string key, string val);
 		void Set<T>(string key, T val) where T:class;

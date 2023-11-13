@@ -9,7 +9,6 @@ using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Metadata;
 using GeneXus.Utils;
-using log4net;
 using System.IO;
 #if NETCORE
 using GxClasses.Helpers;

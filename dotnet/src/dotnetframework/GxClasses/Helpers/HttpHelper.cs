@@ -1,7 +1,6 @@
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Utils;
-using log4net;
 #if NETCORE
 using GxClasses.Helpers;
 using Microsoft.AspNetCore.Http;

@@ -1,19 +1,17 @@
 using System;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
-using log4net;
+using System.Text;
 using GeneXus.Mail.Internals.Pop3;
-using Org.Mentalis.Security.Ssl;
 using Org.Mentalis.Security.Certificates;
-using System.Linq;
+using Org.Mentalis.Security.Ssl;
 
 namespace GeneXus.Mail.Internals
 {
-	
-    internal class POP3Session : Pop3SessionBase
+
+	internal class POP3Session : Pop3SessionBase
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<POP3Session>();
 		private const string CRLF = "\r\n";

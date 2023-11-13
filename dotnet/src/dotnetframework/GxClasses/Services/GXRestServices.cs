@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Security;
 using System.ServiceModel;
@@ -16,7 +15,6 @@ using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Web;
 using System.Text;
 using System.Web;
-using System.Web.Helpers;
 using System.Web.Mvc;
 using GeneXus.Application;
 using GeneXus.Configuration;
@@ -24,8 +22,6 @@ using GeneXus.Data;
 using GeneXus.Http;
 using GeneXus.Metadata;
 using GeneXus.Security;
-using log4net;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 
 namespace GeneXus.Utils

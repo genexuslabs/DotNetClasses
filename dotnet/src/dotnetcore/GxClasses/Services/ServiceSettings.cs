@@ -1,6 +1,5 @@
 using System;
 using GeneXus.Encryption;
-using log4net;
 
 namespace GeneXus.Services.Common
 {

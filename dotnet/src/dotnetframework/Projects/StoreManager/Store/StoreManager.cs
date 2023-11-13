@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using GeneXus.Utils;
-using Jayrock.Json;
-using GeneXus;
-using log4net;
 using GeneXus.SD.Store.Model;
 using GeneXus.SD.Store.Platforms;
+using GeneXus.Utils;
+using Jayrock.Json;
 
 namespace GeneXus.SD.Store
 {

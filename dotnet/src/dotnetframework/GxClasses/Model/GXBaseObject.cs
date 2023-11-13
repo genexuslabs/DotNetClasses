@@ -7,7 +7,6 @@ using GeneXus.Services.OpenTelemetry;
 #endif
 using GeneXus.Utils;
 using Jayrock.Json;
-using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;
 #endif

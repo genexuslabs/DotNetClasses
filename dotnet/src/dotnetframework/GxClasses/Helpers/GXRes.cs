@@ -7,7 +7,6 @@ namespace GeneXus.Resources
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
 	using System.IO;
-	using log4net;
 	using GeneXus.Application;
 	using System.Collections;
 	using System.Text;

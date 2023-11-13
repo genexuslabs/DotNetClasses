@@ -1,19 +1,15 @@
 using System;
-using System.Xml;
 using System.Collections;
 using System.Collections.Specialized;
-using System.Text;
-using System.Net;
 using System.IO;
+using System.Net;
+using System.Text;
+using System.Xml;
 using System.Xml.Schema;
 using GeneXus.Application;
 using GeneXus.Http.Client;
 using GeneXus.Http.Server;
 using GeneXus.Utils;
-using log4net;
-
-using System.Xml.Xsl;
-using System.Xml.XPath;
 
 namespace GeneXus.XML
 {

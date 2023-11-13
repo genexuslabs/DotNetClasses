@@ -15,13 +15,10 @@ using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Metadata;
-using GeneXus.Procedure;
 using GeneXus.Utils;
-using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Net.Http.Headers;
 
 namespace GxClasses.Web.Middleware
 {
