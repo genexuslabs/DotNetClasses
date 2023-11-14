@@ -44,7 +44,7 @@ namespace GxClasses.Web.Middleware
 
 		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
 
-		const string PRIVATE_DIR = "private";
+		internal const string PRIVATE_DIR = "private";
 		public Dictionary<string, string> servicesPathUrl = new Dictionary<string, string>();
 		public Dictionary<String, Dictionary<string, SingleMap>> servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();

@@ -370,14 +370,22 @@ namespace GeneXus.Application
 			if (File.Exists(rewriteFile))
 				AddRewrite(app, rewriteFile, baseVirtualPath);
 
+			string tempMediaDir = string.Empty;
+			if (Config.GetValueOf("TMPMEDIA_DIR", out string mediaPath) && !PathUtil.IsAbsoluteUrlOrAnyScheme(mediaPath))
+			{
+				tempMediaDir = mediaPath;
+			}
 			app.UseStaticFiles(new StaticFileOptions()
 			{
 				FileProvider = new PhysicalFileProvider(LocalPath),
 				RequestPath = new PathString($"{baseVirtualPath}"),
 				OnPrepareResponse = s =>
 				{
-					var path = s.Context.Request.Path;
-					if (path.HasValue &&  path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase)>=0)
+					PathString path = s.Context.Request.Path;
+					bool appSettingsPath = path.HasValue && path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase) >= 0;
+					bool tempMediaPath = path.StartsWithSegments($"{baseVirtualPath}/{tempMediaDir}", StringComparison.OrdinalIgnoreCase);
+					bool privatePath = path.StartsWithSegments($"{baseVirtualPath}/{GXRouting.PRIVATE_DIR}", StringComparison.OrdinalIgnoreCase);
+					if (appSettingsPath || tempMediaPath || privatePath)
 					{
 						s.Context.Response.StatusCode = 401;
 						s.Context.Response.Body = Stream.Null;
