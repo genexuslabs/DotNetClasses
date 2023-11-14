@@ -41,7 +41,7 @@ jobs:
       - name: Install .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.100-preview.3.23178.7'
+          dotnet-version: '8.0.100'
 
       - name: Create temporal solution
         run: |
