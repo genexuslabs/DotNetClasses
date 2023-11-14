@@ -57,7 +57,11 @@ namespace GeneXus.Reorg
 		{
 
 		}
-        public IGxContext context
+		protected virtual void ExecuteImpl()
+		{
+			ExecutePrivate();
+		}
+		public IGxContext context
         {
             get { return _Context; }
             set { _Context = value; }
