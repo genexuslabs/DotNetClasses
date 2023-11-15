@@ -109,7 +109,7 @@ namespace GeneXus.Application
 
 		public void AddQueryVar(String varName, bool varValue)
 		{
-			_queryVars[varName] = varValue.ToString();
+			_queryVars[varName] = StringUtil.BoolToStr(varValue);
 		}
 
 		public void AddQueryVar(String varName, GxUserType varValue)
@@ -164,7 +164,7 @@ namespace GeneXus.Application
 		}
 		public void AddBodyVar(String varName, bool varValue)
 		{
-			_bodyVars[varName] = varValue.ToString();
+			_bodyVars[varName] = StringUtil.BoolToStr(varValue);
 		}
 		public void AddBodyVar(String varName, Guid varValue)
 		{
