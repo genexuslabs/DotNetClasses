@@ -193,10 +193,7 @@ namespace GeneXus.Utils
 		{
 			if (GenOtelSpanEnabled())
 			{
-				Config.GetValueOf("AppMainNamespace", out string mainNamespace);
-				string gxObjFullName = GetType().FullName;
-				if (gxObjFullName.StartsWith(mainNamespace))
-					gxObjFullName = gxObjFullName.Remove(0, mainNamespace.Length);
+				string gxObjFullName = GXBaseObject.GetObjectNameWithoutNamespace(GetType().FullName);
 				return GXBaseObject.ActivitySource.StartActivity($"{gxObjFullName}.{methodName}");
 			}
 			return null;
