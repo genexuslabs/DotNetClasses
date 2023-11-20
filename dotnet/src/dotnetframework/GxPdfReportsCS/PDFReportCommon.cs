@@ -31,7 +31,7 @@ namespace com.genexus.reports
 		BOTTOM = 2,
 	}
 
-	public abstract class PDFReportItextBase : IReportHandler
+	public abstract class PDFReportBase : IReportHandler
 	{
 		protected int lineHeight, pageLines;
 
@@ -232,7 +232,7 @@ namespace com.genexus.reports
 		}
 
 		private static char alternateSeparator = Path.DirectorySeparatorChar == '/' ? '\\' : '/';
-		public PDFReportItextBase(String appPath)
+		public PDFReportBase(String appPath)
 		{
 			try
 			{
@@ -897,6 +897,11 @@ namespace com.genexus.reports
 		{
 			float result = value / (float)(SCALE_FACTOR / PPP);
 			return result;
+		}
+
+		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
+		{
+			return bottomAux > drawingPageHeight;
 		}
 
 		internal abstract bool SetComplainceLevel(PdfConformanceLevel level);

@@ -51,7 +51,7 @@ namespace GeneXus.Printer
 namespace com.genexus.reports
 {
 
-	public class PDFReportItext8 : PDFReportItextBase
+	public class PDFReportItext8 : PDFReportBase
 	{
 		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportItext8>();
 
