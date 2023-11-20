@@ -826,6 +826,14 @@ namespace GeneXus.Configuration
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
 		static int sessionTimeout = -1;
+		internal static string AppMainNamespace
+		{
+			get
+			{
+				Config.GetValueOf("AppMainNamespace", out string nameSpace);
+				return nameSpace;
+			}
+		}
 		internal static string DefaultDatastore
 		{
 			get
