@@ -67,7 +67,7 @@ namespace GeneXus.Application
 		{
 			string mainNamespace = Preferences.AppMainNamespace;
 			if (gxObjFullName.StartsWith(mainNamespace))
-				gxObjFullName = gxObjFullName.Remove(0, mainNamespace.Length);
+				gxObjFullName = gxObjFullName.Remove(0, mainNamespace.Length + 1);
 			return gxObjFullName;
 		}
 		private void ExecuteUsingSpanCode()
