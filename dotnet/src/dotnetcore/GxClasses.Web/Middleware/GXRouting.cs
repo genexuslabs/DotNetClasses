@@ -377,8 +377,7 @@ namespace GxClasses.Web.Middleware
 			GxContext gxContext = GxContext.CreateDefaultInstance();
 			gxContext.HttpContext = context;
 			context.NewSessionCheck();
-			string nspace;
-			Config.GetValueOf("AppMainNamespace", out nspace);
+			string nspace = Preferences.AppMainNamespace;
 
 			String tmpController = controller;
 			String addNspace = string.Empty;

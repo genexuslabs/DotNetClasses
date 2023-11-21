@@ -119,8 +119,7 @@ namespace GeneXus.Http.WebSocket
 			{
 				try
 				{
-					string nSpace = string.Empty;
-					Config.GetValueOf("AppMainNamespace", out nSpace);
+					string nSpace = Preferences.AppMainNamespace;
 					GXProcedure obj = null;
 					try
 					{

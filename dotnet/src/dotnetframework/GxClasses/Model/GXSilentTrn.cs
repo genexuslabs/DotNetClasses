@@ -191,7 +191,8 @@ namespace GeneXus.Utils
 		{
 			if (GenOtelSpanEnabled())
 			{
-				return GXBaseObject.ActivitySource.StartActivity($"{this.GetType().FullName}.{methodName}");
+				string gxObjFullName = GXBaseObject.GetObjectNameWithoutNamespace(GetType().FullName);
+				return GXBaseObject.ActivitySource.StartActivity($"{gxObjFullName}.{methodName}");
 			}
 			return null;
 		}

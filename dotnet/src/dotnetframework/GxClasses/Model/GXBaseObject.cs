@@ -1,3 +1,4 @@
+using GeneXus.Configuration;
 using GeneXus.Data.NTier;
 using GeneXus.Encryption;
 using GeneXus.Http;
@@ -60,9 +61,17 @@ namespace GeneXus.Application
 			
 		}
 #if NETCORE
+		internal static string GetObjectNameWithoutNamespace(string gxObjFullName)
+		{
+			string mainNamespace = Preferences.AppMainNamespace;
+			if (gxObjFullName.StartsWith(mainNamespace))
+				gxObjFullName = gxObjFullName.Remove(0, mainNamespace.Length + 1);
+			return gxObjFullName;
+		}
 		private void ExecuteUsingSpanCode()
 		{
-			using (Activity activity = ActivitySource.StartActivity($"{this.GetType().FullName}.execute"))
+			string gxObjFullName = GetObjectNameWithoutNamespace(GetType().FullName);
+			using (Activity activity = ActivitySource.StartActivity($"{gxObjFullName}.execute"))
 			{
 				ExecutePrivate();
 			}
