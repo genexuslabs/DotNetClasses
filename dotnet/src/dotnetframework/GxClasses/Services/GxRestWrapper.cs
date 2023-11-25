@@ -845,40 +845,53 @@ namespace GeneXus.Application
 			}			
 		}
 		
-		protected static object MakeRestType( object v, bool isApiObject)
+		protected static object MakeRestType( object collectionValue, bool isApiObject)
 		{
-			Type vType = v.GetType();
+			Type vType = collectionValue.GetType();
 			Type itemType;
 			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
 			{
+				bool isWrapped = false;
+				bool isEmpty = false;
+				object collectionObject = null;
 				Type restItemType=null;
-				itemType = v.GetType().GetGenericArguments()[0];
-				if ((typeof(IGXBCCollection).IsAssignableFrom(vType)) && !isApiObject)//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				itemType = collectionValue.GetType().GetGenericArguments()[0];
+				if (vType.GetGenericTypeDefinition() == typeof(GxSimpleCollection<>) && isApiObject)
 				{
-					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+					restItemType = itemType;
+					isEmpty = true;
+					isWrapped = false;
+					collectionObject = collectionValue;
 				}
-				if (restItemType == null)//Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+				else
 				{
-					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+					if ((typeof(IGXBCCollection).IsAssignableFrom(vType)) && !isApiObject)//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+					{
+						restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+					}
+					if (restItemType == null)//Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+					{
+						restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+					}
+					isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
+					isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
+					Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
+					collectionObject = Activator.CreateInstance(genericListItemType, new object[] { collectionValue, isWrapped });
 				}
-				bool isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
-				bool isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
-				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
-				object c = Activator.CreateInstance(genericListItemType, new object[] { v, isWrapped});
 				// Empty collection serialized w/ noproperty
-				if (c is IList restList)
+				if (collectionObject is IList restList)
 				{
 					if (restList.Count == 0 && !isEmpty)
 						return null;
 				}
-				return c;			
+				return collectionObject;			
 			}
 			else if (typeof(GxUserType).IsAssignableFrom(vType)) //SDTType convert to SDTType_RESTInterface
 			{
 				Type restItemType = ClassLoader.FindType(Config.CommonAssemblyName, vType.FullName + "_RESTInterface", null);
-				return Activator.CreateInstance(restItemType, new object[] { v });
+				return Activator.CreateInstance(restItemType, new object[] { collectionValue });
 			}
-			return v;
+			return collectionValue;
 		}
 
 #if !NETCORE
