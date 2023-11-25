@@ -383,7 +383,7 @@ namespace GeneXus.Application
 			serviceuri += "/" + this.Location.BaseUrl.TrimEnd('/').TrimStart('/') + "/" + this.Location.ResourceName;
 			serviceuri += _queryString;			
 			httpClient.HttpClientExecute( this.HttpMethod, serviceuri);
-			this.ErrorCode = (httpClient.ErrCode == 0)? 1: httpClient.ErrCode;
+			this.ErrorCode = httpClient.ErrCode;
 			this.ErrorMessage = httpClient.ErrDescription;
 			this.StatusCode = httpClient.StatusCode;
 			this.StatusMessage = httpClient.ReasonLine;
