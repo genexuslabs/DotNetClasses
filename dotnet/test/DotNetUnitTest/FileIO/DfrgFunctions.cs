@@ -1,3 +1,4 @@
+using System.IO;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using Xunit;
