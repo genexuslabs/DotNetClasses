@@ -9,6 +9,20 @@ namespace UnitTesting
 		const string APPLICATIONS_CONTENT = "[  {    \"Id\": \"4caaaed5-1160-4132-b54f-0191e527a84a\",    \"Type\": 1,    \"EnvironmentGUID\": \"b3730606-0f2a-4e8a-b395-d8fdf226def8\",    \"IsNew\": false  }]";
 		const string DOCUMENT_CONTENT = "Line 1Line 2Line 3";
 		const string MS923_CONTENT = "1234567890123";
+
+		[Fact]
+		public void dfwpnumTest()
+		{
+			GxContext context = new GxContext();
+			string fileName = Path.Combine(BaseDir, "dfwpnumTest.txt");
+			context.FileIOInstance.dfwopen(fileName, ",", "\"", 0, "UTF-8");
+			context.FileIOInstance.dfwpnum(99999999999999999.5M, 5);
+			context.FileIOInstance.dfwnext();
+			context.FileIOInstance.dfwclose();
+
+			string content = File.ReadAllText(fileName);
+			Assert.Contains("99999999999999999.5", content, StringComparison.OrdinalIgnoreCase);
+		}
 		[Fact]
 		public void dfrgtxtANSITest()
 		{
