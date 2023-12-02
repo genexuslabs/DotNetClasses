@@ -3,7 +3,7 @@
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<SignAssembly>false</SignAssembly>
 		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-		<WarningsNotAsErrors>CS8032;CS1609;CS1069;$(WarningsNotAsErrors)</WarningsNotAsErrors>
+		<WarningsNotAsErrors>CS8032;CS1609;CS1069;CA1825;$(WarningsNotAsErrors)</WarningsNotAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(OverridePackable)'=='true'">
 		<IsPackable>true</IsPackable>
