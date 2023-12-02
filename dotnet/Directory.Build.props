@@ -31,6 +31,7 @@
 		<NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023</NoWarn>
 		<IsPackable>true</IsPackable>
 		<DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
+		<NuGetAudit>false</NuGetAudit>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="!$(TargetFramework.StartsWith('net4'))">
