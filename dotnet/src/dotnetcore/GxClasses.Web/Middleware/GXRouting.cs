@@ -58,6 +58,7 @@ namespace GxClasses.Web.Middleware
 			ServicesGroupSetting();
 			ServicesFunctionsMetadata();
 			GetAzureDeploy();
+			SvcFiles();
 		}
 
 		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
@@ -396,7 +397,7 @@ namespace GxClasses.Web.Middleware
 			bool privateDirExists = Directory.Exists(privateDir);
 
 			GXLogging.Debug(log, $"PrivateDir:{privateDir} asssemblycontroller:{asssemblycontroller}");
-
+			string svcFile=null;
 			if (privateDirExists && File.Exists(Path.Combine(privateDir, $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
@@ -411,9 +412,7 @@ namespace GxClasses.Web.Middleware
 			else
 			{
 				string controllerLower = controller.ToLower();
-				string svcFile = SvcFile($"{controller}{SvcExtension}");
-				if (svcFile==null)
-					svcFile = SvcFile($"{controllerLower}{SvcExtension}");
+				svcFile = SvcFile($"{controller}{SvcExtension}");
 				if (File.Exists(svcFile))
 				{
 					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
@@ -445,22 +444,26 @@ namespace GxClasses.Web.Middleware
 			GXLogging.Warn(log, $"Controller was not found");
 			return null;
 		}
+
+		private void SvcFiles()
+		{
+			svcFiles = new HashSet<string>(new CaseInsensitiveStringEqualityComparer());
+			foreach (string file in Directory.GetFiles(ContentRootPath, SvcExtensionPattern, SearchOption.AllDirectories))
+			{
+				svcFiles.Add(file);
+			}
+		}
 		string SvcFile(string controller)
 		{
-			if (svcFiles == null)
-			{
-				svcFiles = new HashSet<string>();
-				foreach (string file in Directory.GetFiles(ContentRootPath, SvcExtensionPattern, SearchOption.AllDirectories))
-				{
-					svcFiles.Add(file);
-				}
-			}
 			string fileName;
-			string controllerFullName = Path.Combine(ContentRootPath, controller);
-			if (svcFiles.TryGetValue(new FileInfo(controllerFullName).FullName, out fileName))
+			string controllerFullName = new FileInfo(Path.Combine(ContentRootPath, controller)).FullName;
+			if (svcFiles.TryGetValue(controllerFullName, out fileName))
 				return fileName;
 			else
+			{
+				GXLogging.Warn(log, "svc not fount:" + controllerFullName);
 				return null;
+			}
 			
 		}
 		public void ServicesGroupSetting()
@@ -600,7 +603,18 @@ namespace GxClasses.Web.Middleware
 
 
 	}
+	internal class CaseInsensitiveStringEqualityComparer : IEqualityComparer<string>
+	{
+		public bool Equals(string x, string y)
+		{
+			return string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
+		}
 
+		public int GetHashCode(string obj)
+		{
+			return obj.ToLower().GetHashCode();
+		}
+	}
 	public static class AzureFeature
 	{
 		public const string AzureServerless = "AzureServerless";

@@ -152,7 +152,7 @@ namespace GeneXus.Application
 			else if (newType == typeof(DateTime))
 			{
 				string jsonDate = value as string;
-				return DateTimeUtil.CToDT2(jsonDate);
+				return DateTimeUtil.CToDT2(jsonDate, context);
 			}
 			else if (newType == typeof(Geospatial))
 			{

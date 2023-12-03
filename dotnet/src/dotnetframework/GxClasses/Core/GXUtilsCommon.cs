@@ -2797,18 +2797,18 @@ namespace GeneXus.Utils
 			}
 			return nullDate;
 		}
-		internal static DateTime CToDT2(string jsonDate) {
+		internal static DateTime CToDT2(string jsonDate, IGxContext context) {
 
 			if (!string.IsNullOrEmpty(jsonDate) && (jsonDate.Contains(ISO_8601_TIME_SEPARATOR) || jsonDate.Contains(ISO_8601_TIME_SEPARATOR_1)))
 			{
-				return CToT2(jsonDate);
+				return CToT2(jsonDate, context);
 			}
 			else
 			{
 				return CToD2(jsonDate);
 			}
 		}
-		public static DateTime CToT2(string value)
+		public static DateTime CToT2(string value, IGxContext context)
 		{
 			if (isNullJsonDate(value))
 				return nullDate;
@@ -2825,38 +2825,76 @@ namespace GeneXus.Utils
 					}
 				}
 				if (Preferences.useTimezoneFix())
-					ret = fromUniversalTime(ret);
+				{
+					if (context==null)
+						ret = fromUniversalTime(ret);
+					else
+						ret = fromUniversalTime(ret, context);
+				}
 				return ret;
 			}
 		}
+		//[Obsolete("CToT2 is deprecated, use CToT2(string, IGxContext) instead", false)]
+		public static DateTime CToT2(string value)
+		{
+			return CToT2(value, null);
+		}
+		//[Obsolete("TToC2 is deprecated, use TToC2(DateTime, IGxContext) instead", false)]
 		public static string TToC2(DateTime dt)
 		{
 			return TToC2(dt, true);
 		}
+		public static string TToC2(DateTime dt, IGxContext context)
+		{
+			return TToC2(dt, true, context);
+		}
+		//[Obsolete("TToC2 is deprecated, use TToC2(DateTime, bool, IGxContext) instead", false)]
 		public static string TToC2(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, null, toUTC);
 		}
+		internal static string TToC2(DateTime dt, bool toUTC, IGxContext context)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, context, toUTC);
+		}
+		//[Obsolete("TToC3 is deprecated, use TToC3(DateTime, IGxContext) instead", false)]
 
 		public static string TToC3(DateTime dt)
 		{
 			return TToC3(dt, true);
 		}
+		public static string TToC3(DateTime dt, IGxContext context)
+		{
+			return TToC3(dt, true, context);
+		}
 		internal const string JsonDateFormatMillis = "yyyy-MM-ddTHH:mm:ss.fff";
 		internal const string JsonDateFormat = "yyyy-MM-ddTHH:mm:ss";
-		
+
+		//[Obsolete("TToC3 is deprecated, use TToC3(DateTime, bool, IGxContext) instead", false)]
 		public static string TToC3(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, null, toUTC);
+		}
+		internal static string TToC3(DateTime dt, bool toUTC, IGxContext context)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, context, toUTC);
 		}
 
-		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
+		static string TToCRest(DateTime dt, String nullString, String formatStr, IGxContext context, bool toUTC=true)
 		{
 			if (dt == nullDate)
 				return FormatEmptyDate(nullString);
 			else
 			{
-				DateTime ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt) : dt) : dt;
+				DateTime ret;
+				if (context != null)
+				{
+					ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt, context) : dt) : dt;
+				}
+				else
+				{
+					ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt) : dt) : dt;
+				}
 				return ret.ToString(formatStr, CultureInfo.InvariantCulture);
 			}
 		}
@@ -3677,7 +3715,7 @@ namespace GeneXus.Utils
 			else
 				return isNullDate(dt);
 		}
-
+		//[Obsolete("fromUniversalTime is deprecated, use fromUniversalTime(DateTime, IGxContext) instead", false)]
 		static public DateTime fromUniversalTime(DateTime dt)
 		{
 #if NODATIME
@@ -3686,7 +3724,15 @@ namespace GeneXus.Utils
 			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, GxContext.Current.GetOlsonTimeZone());
 #endif
 		}
-
+		static public DateTime fromUniversalTime(DateTime dt, IGxContext context)
+		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, context.GetTimeZone());
+#else
+			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, context.GetOlsonTimeZone());
+#endif
+		}
+		//[Obsolete("toUniversalTime is deprecated, use toUniversalTime(DateTime, IGxContext) instead", false)]
 		static public DateTime toUniversalTime(DateTime dt)
 		{
 #if NODATIME
