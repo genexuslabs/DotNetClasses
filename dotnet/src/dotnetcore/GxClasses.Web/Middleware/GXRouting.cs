@@ -462,7 +462,7 @@ namespace GxClasses.Web.Middleware
 				return fileName;
 			else
 			{
-				GXLogging.Warn(log, "svc not fount:" + controllerFullName);
+				GXLogging.Warn(log, "Service file not found:" + controllerFullName);
 				return null;
 			}
 			
