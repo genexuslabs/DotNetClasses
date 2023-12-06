@@ -1,4 +1,4 @@
-﻿using SecurityAPITest.SecurityAPICommons.commons;
+using SecurityAPITest.SecurityAPICommons.commons;
 using NUnit.Framework;
 using SecurityAPICommons.Config;
 using SecurityAPICommons.Keys;
@@ -116,28 +116,6 @@ namespace SecurityAPITest.Cryptography.Symmetric
 			// ISAAC 32, 8192 key, no nonce
 			testBulkAlgorithms("ISAAC", key32, "");
 			testBulkAlgorithms("ISAAC", key8192, "");
-		}
-
-		[Test]
-		public void TestVMPC()
-		{
-			// key 8 o 6144, nonce 1...6144 bits
-			testBulkAlgorithms("VMPC", key8, IV64);
-			testBulkAlgorithms("VMPC", key8, IV128);
-			testBulkAlgorithms("VMPC", key8, IV192);
-			testBulkAlgorithms("VMPC", key8, IV256);
-			testBulkAlgorithms("VMPC", key8, IV512);
-			testBulkAlgorithms("VMPC", key8, IV1024);
-			testBulkAlgorithms("VMPC", key8, IV6144);
-
-			testBulkAlgorithms("VMPC", key6144, IV64);
-			testBulkAlgorithms("VMPC", key6144, IV128);
-			testBulkAlgorithms("VMPC", key6144, IV192);
-			testBulkAlgorithms("VMPC", key6144, IV256);
-			testBulkAlgorithms("VMPC", key6144, IV512);
-			testBulkAlgorithms("VMPC", key6144, IV1024);
-			testBulkAlgorithms("VMPC", key6144, IV6144);
-
 		}
 
 		private void testBulkAlgorithms(string algorithm, string key, string IV)

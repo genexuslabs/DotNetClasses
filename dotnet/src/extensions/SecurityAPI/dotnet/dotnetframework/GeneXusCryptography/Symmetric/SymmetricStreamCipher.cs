@@ -152,9 +152,6 @@ namespace GeneXusCryptography.Symmetric
 				case SymmetricStreamAlgorithm.ISAAC:
 					engine = new IsaacEngine();
 					break;
-				case SymmetricStreamAlgorithm.VMPC:
-					engine = new VmpcEngine();
-					break;
 				default:
 					this.GetError().setError("SS005", "Cipher " + algorithm + " not recognised.");
 					break;
