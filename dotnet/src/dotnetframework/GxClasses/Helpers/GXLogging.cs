@@ -185,11 +185,13 @@ namespace GeneXus
 		const string ThreadNameNet6 = ".NET ThreadPool Worker";
 		const string ThreadId = "threadid";
 #endif
+		private bool _traceEnabled = false;
 		internal ILog log { get; set; }
 
 		internal GXLoggerLog4Net(ILog logInstance)
 		{
 			log = logInstance;
+			_traceEnabled = log.Logger.IsEnabledFor(Level.Trace);
 		}
 		void SetThreadIdForLogging()
 		{
@@ -224,7 +226,7 @@ namespace GeneXus
 		public bool IsCriticalEnabled { get => CriticalEnabled(); }
 		public bool TraceEnabled()
 		{
-			return log.Logger.IsEnabledFor(Level.Trace);
+			return _traceEnabled;
 		}
 		public bool ErrorEnabled()
 		{
