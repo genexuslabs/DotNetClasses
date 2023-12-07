@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Text;
@@ -496,7 +497,7 @@ namespace GeneXus.Data
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
-			block = new GxArrayList(fetchSize);
+			block = new List<object[]>(fetchSize);
 			pos = -1;
 			if (cached)
 			{
@@ -541,7 +542,7 @@ namespace GeneXus.Data
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
-			block = new GxArrayList(fetchSize);
+			block = new List<object[]>(fetchSize);
 			pos = -1;
 			if (cached)
 			{

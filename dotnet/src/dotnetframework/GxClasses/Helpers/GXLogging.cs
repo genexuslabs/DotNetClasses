@@ -531,6 +531,19 @@ namespace GeneXus
 					logger.LogTrace(msg, list);
 			}
 		}
+
+		internal static void Trace(IGXLogger logger, Func<string> buildMsg)
+		{
+			if (logger != null)
+			{
+				if (logger.IsTraceEnabled)
+				{
+					string msg = buildMsg();	
+					logger.LogTrace(msg);
+				}
+			}
+		}
+
 		public static void Critical(IGXLogger logger, params string[] list)
 		{
 			if (logger != null)
