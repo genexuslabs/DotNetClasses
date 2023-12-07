@@ -190,11 +190,15 @@ namespace GeneXus
 		const string ThreadNameNet6 = ".NET ThreadPool Worker";
 		const string ThreadId = "threadid";
 #endif
+		private bool _traceEnabled = false;
+		private bool _debugEnabled = false;
 		internal ILog log { get; set; }
 
 		internal GXLoggerLog4Net(ILog logInstance)
 		{
 			log = logInstance;
+			_traceEnabled = log.Logger.IsEnabledFor(Level.Trace);
+			_debugEnabled = log.IsDebugEnabled;
 		}
 		void SetThreadIdForLogging()
 		{
@@ -221,15 +225,15 @@ namespace GeneXus
 			}
 #endif
 		}
-		public bool IsTraceEnabled { get => TraceEnabled(); }
+		public bool IsTraceEnabled { get => _traceEnabled; }
 		public bool IsErrorEnabled { get => ErrorEnabled(); }
 		public bool IsWarningEnabled { get => WarningEnabled(); }
-		public bool IsDebugEnabled { get => DebugEnabled(); }
+		public bool IsDebugEnabled { get => _debugEnabled; }
 		public bool IsInfoEnabled { get => InfoEnabled(); }
 		public bool IsCriticalEnabled { get => CriticalEnabled(); }
 		public bool TraceEnabled()
 		{
-			return log.Logger.IsEnabledFor(Level.Trace);
+			return _traceEnabled;
 		}
 		public bool ErrorEnabled()
 		{
@@ -241,7 +245,7 @@ namespace GeneXus
 		}
 		public bool DebugEnabled()
 		{
-			return log.IsDebugEnabled;
+			return _debugEnabled;
 		}
 		public bool InfoEnabled()
 		{
@@ -542,6 +546,13 @@ namespace GeneXus
 					logger.LogTrace(msg);
 				}
 			}
+		}
+		internal static bool TraceEnabled(IGXLogger logger)
+		{
+			if (logger != null)
+				return logger.IsTraceEnabled;
+			else
+				return false;
 		}
 
 		public static void Critical(IGXLogger logger, params string[] list)
