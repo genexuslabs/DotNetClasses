@@ -15,7 +15,7 @@ namespace GeneXus.Configuration
 
 		private GXService providerService;
 
-		static readonly IGXLogger logger = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ExternalStorage>();
 
 		public ExternalStorage()
 		{
