@@ -21,29 +21,21 @@ namespace GeneXus.Diagnostics
 			Error = 20,
 			Fatal = 30
 		}
-#if NETCORE
-		static ILoggerFactory _instance = GXLogService.GetLogFactory();
-#endif
-	
+		private static readonly string DefaultRepository = LogManager.GetRepository().Name;
+		private static readonly string DefaultUserLogNamespace = Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
+		private static readonly IGXLogger GlobalLog = new GXLoggerLog4Net(LogManager.GetLogger(DefaultRepository, DefaultUserLogNamespace));
+
 		internal static IGXLogger GetLogger(string topic)
 		{
-			string defaultUserLogNamespace = Configuration.Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
-			string loggerName = defaultUserLogNamespace;
 			if (!string.IsNullOrEmpty(topic))
 			{
-				loggerName = topic.StartsWith("$") ? topic.Substring(1) : string.Format("{0}.{1}", defaultUserLogNamespace, topic.Trim());
+				string loggerName = topic.StartsWith("$") ? topic.Substring(1) : string.Format("{0}.{1}", DefaultUserLogNamespace, topic.Trim());
+				return GXLoggerFactory.GetLogger(loggerName);
 			}
-#if NETCORE
-			if (_instance != null)
+			else
 			{
-				return new GXLoggerMsExtensions(_instance.CreateLogger(loggerName));
+				return GlobalLog;
 			}
-			string defaultRepository = LogManager.GetRepository(System.Reflection.Assembly.GetEntryAssembly()).Name;
-#else
-			string defaultRepository = LogManager.GetRepository().Name;
-#endif
-			return new GXLoggerLog4Net(log4net.LogManager.GetLogger(defaultRepository, loggerName));
-			
 		}
 
 		public static void Write(int logLevel, string message, string topic)
