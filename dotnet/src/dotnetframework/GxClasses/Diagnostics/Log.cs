@@ -97,71 +97,70 @@ namespace GeneXus.Diagnostics
 		}
 		public static void Write(string message, string topic, int logLevel)
 		{
-			IGXLogger log = GetLogger(topic);
 			LogLevel logLvl = (LogLevel)logLevel;
-
-			switch (logLvl)
-			{
-				case LogLevel.Off: 
-					break;
-				case LogLevel.Trace:
-					GXLogging.Trace(log, message);
-					break;
-				case LogLevel.Debug:
-					GXLogging.Debug(log, message);
-					break;
-				case LogLevel.Info:
-					GXLogging.Info(log, message);
-					break;
-				case LogLevel.Warn:
-					GXLogging.Warn(log, message);
-					break;
-				case LogLevel.Error:
-					GXLogging.Error(log, message);
-					break;
-				case LogLevel.Fatal:
-					GXLogging.Critical(log, message);
-					break;
-				default:
-					GXLogging.Debug(log, message);
-					break;
-			}			
+			WriteImp(message, topic, logLvl);
 		}
-		
+
+		private static void WriteImp(string message, string topic, LogLevel logLvl)
+		{
+			if (logLvl != LogLevel.Off)
+			{
+				IGXLogger log = GetLogger(topic);
+				switch (logLvl)
+				{
+					case LogLevel.Trace:
+						GXLogging.Trace(log, message);
+						break;
+					case LogLevel.Debug:
+						GXLogging.Debug(log, message);
+						break;
+					case LogLevel.Info:
+						GXLogging.Info(log, message);
+						break;
+					case LogLevel.Warn:
+						GXLogging.Warn(log, message);
+						break;
+					case LogLevel.Error:
+						GXLogging.Error(log, message);
+						break;
+					case LogLevel.Fatal:
+						GXLogging.Critical(log, message);
+						break;
+					default:
+						GXLogging.Debug(log, message);
+						break;
+				}
+			}
+		}
+
 		public static void Write(string message, string topic = "")
 		{
-			IGXLogger log = GetLogger(topic);
-			GXLogging.Debug(log, message);
+			WriteImp(message, topic, LogLevel.Debug);
 		}
-		
+
 		public static void Fatal(string message, string topic = "")
 		{
-			IGXLogger log = GetLogger(topic);
-			GXLogging.Critical(log, message);
+			WriteImp(message, topic, LogLevel.Fatal);
 		}
 
 		public static void Error(string message, string topic = "")
 		{
-			IGXLogger log = GetLogger(topic);
-			GXLogging.Error(log, message);
+			WriteImp(message, topic, LogLevel.Error);
 		}
 
 		public static void Warning(string message, string topic = "")
 		{
-			IGXLogger log = GetLogger(topic);
-			GXLogging.Warn(log, message);
+			WriteImp(message, topic, LogLevel.Warn);
 		}
 
 		public static void Info(string message, string topic = "")
 		{
-			IGXLogger log = GetLogger(topic);
-			GXLogging.Info(log, message);
+			WriteImp(message, topic, LogLevel.Info);
 		}
 
 		public static void Debug(string message, string topic = "")
 		{
-			IGXLogger log = GetLogger(topic);
-			GXLogging.Debug(log, message);
+			WriteImp(message, topic, LogLevel.Debug);
 		}
 	}
 }

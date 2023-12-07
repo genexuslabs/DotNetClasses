@@ -1,5 +1,4 @@
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using GeneXus.Diagnostics;
@@ -13,27 +12,22 @@ namespace BenchmarkTest
 		const int Debug = 5;
 
 		[Benchmark]
-		public void Write_PerformanceTest()
+		public void LogOnPerformanceTest()
 		{
-			for (int i = 0; i < N; i++)
+			for ( int i = 0; i < N; i++)
 			{
-				Log.Write("Test Message", "Test Topi", Debug);
+				Log.Write("Test Message", "Test Topic", Debug);
 			}
 		}
 	}
-
 	public class PerformanceTests
 	{
+#if RELEASE
 		const double MAX_NANOSECONDS = 150000; 
 		[Fact]
 		public void RunLoggerBenchmark()
 		{
-#if DEBUG
-			var config = DefaultConfig.Instance.WithOptions(ConfigOptions.DisableOptimizationsValidator);
-			Summary summary = BenchmarkRunner.Run<LoggerBenchmark>(config);
-#else
 			Summary summary = BenchmarkRunner.Run<LoggerBenchmark>();
-#endif
 			Assert.NotEmpty(summary.Reports);
 			foreach (BenchmarkReport report in summary.Reports)
 			{
@@ -44,5 +38,6 @@ namespace BenchmarkTest
 				}
 			}
 		}
+#endif
 	}
 }
