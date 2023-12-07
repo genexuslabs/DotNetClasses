@@ -5597,7 +5597,7 @@ namespace GeneXus.Utils
 #endif
 	public static class GXDbFile
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(GXDbFile).FullName);
 
 		private static Regex schemeRegex = new Regex("^" + Scheme + ":", RegexOptions.Compiled);
 
@@ -5818,7 +5818,7 @@ namespace GeneXus.Utils
 
 	public static class GxImageUtil
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(GxImageUtil).FullName);
 		private static Bitmap BitmapCreateFromStream(string filePathOrUrl)
 		{
 			Uri uri;
