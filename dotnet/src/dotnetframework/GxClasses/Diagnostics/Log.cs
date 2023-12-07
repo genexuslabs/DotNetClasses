@@ -21,6 +21,8 @@ namespace GeneXus.Diagnostics
 			Error = 20,
 			Fatal = 30
 		}
+
+		private const string LoggerPrefix = "$";
 		private static readonly string DefaultRepository = LogManager.GetRepository().Name;
 		private static readonly string DefaultUserLogNamespace = Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
 		private static readonly IGXLogger GlobalLog = new GXLoggerLog4Net(LogManager.GetLogger(DefaultRepository, DefaultUserLogNamespace));
@@ -29,7 +31,7 @@ namespace GeneXus.Diagnostics
 		{
 			if (!string.IsNullOrEmpty(topic))
 			{
-				string loggerName = topic.StartsWith("$") ? topic.Substring(1) : string.Format("{0}.{1}", DefaultUserLogNamespace, topic.Trim());
+				string loggerName = topic.StartsWith(LoggerPrefix) ? topic.Substring(1) : $"{DefaultUserLogNamespace}.{topic.Trim()}";
 				return GXLoggerFactory.GetLogger(loggerName);
 			}
 			else
