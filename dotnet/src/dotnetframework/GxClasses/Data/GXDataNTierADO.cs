@@ -210,11 +210,11 @@ namespace GeneXus.Data.NTier.ADO
         {
             _gxDbCommand = gxDbCommand;
         }
-		void TraceRow(params string[] list)
+		void TraceRow(Func<string> buildMsg)
 		{
 			if (_gxDbCommand.HasMoreRows)
 			{
-				GXLogging.Trace(log, list);
+				GXLogging.Trace(log, buildMsg);
 			}
 		}
         public IDataReader DataReader
@@ -225,57 +225,57 @@ namespace GeneXus.Data.NTier.ADO
         public short getShort(int id)
         {
 			short value = _gxDbCommand.Db.GetShort(_gxDbCommand, _DR, id - 1);
-			TraceRow("getShort - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(()=> $"getShort - index : {id}  value:{value}");
 			return value;
         }
         public int getInt(int id)
         {
             int value = _gxDbCommand.Db.GetInt(_gxDbCommand, _DR, id - 1);
-			TraceRow("getInt - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getInt - index : {id}  value:{value}");
 			return value;
 		}
 		public bool getBool(int id)
 		{
 			bool value = _gxDbCommand.Db.GetBoolean(_gxDbCommand, _DR, id - 1);
-			TraceRow("getBool - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getBool - index : {id}  value:{value}");
 			return value;
 		}
         public Guid getGuid(int id)
         {
             Guid value = _gxDbCommand.Db.GetGuid(_gxDbCommand, _DR, id - 1);
-			TraceRow("getGuid - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getGuid - index : {id}  value:{value}");
 			return value;
 		}
         public long getLong(int id)
         {
             long value = _gxDbCommand.Db.GetLong(_gxDbCommand, _DR, id - 1);
-			TraceRow("getLong - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getLong - index : {id}  value:{value}");
 			return value;
 
 		}
         public double getDouble(int id)
         {
             double value= _gxDbCommand.Db.GetDouble(_gxDbCommand, _DR, id - 1);
-			TraceRow("getDouble - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDouble - index : {id}  value:{value}");
 			return value;
 		}
         public Decimal getDecimal(int id)
         {
             Decimal value= _gxDbCommand.Db.GetDecimal(_gxDbCommand, _DR, id - 1);
-			TraceRow("getDecimal - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDecimal - index : {id}  value:{value}");
 			return value;
 
 		}
         public string getString(int id, int size)
         {
             String value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1, size);
-			TraceRow("getString - index : ", id.ToString(), " value:", (value!=null ? value.ToString(): string.Empty));
+			TraceRow(() => $"getString - index : {id} value:{(value!=null ? value.ToString(): string.Empty)}");
 			return value;
 		}
         public DateTime getDateTime(int id)
         {
             DateTime value = _gxDbCommand.Db.GetDateTime(_gxDbCommand, _DR, id - 1);
-			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDateTime - index : {id}  value:{value}");
 			return value;
 		}
         public DateTime getDateTime(int id, Boolean precision)
@@ -287,19 +287,19 @@ namespace GeneXus.Data.NTier.ADO
             else {
                 value = _gxDbCommand.Db.GetDateTime(_gxDbCommand, _DR, id - 1);
             }
-			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDateTime - index : {id}  value:{value}");
 			return value;
 		}
         public DateTime getDate(int id)
         {
             DateTime value = _gxDbCommand.Db.GetDate(_gxDbCommand, _DR, id - 1);
-			TraceRow("getDate - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDate - index : {id}  value:{value}");
 			return value;
 		}
         public string getLongVarchar(int id)
         {
             string value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1);
-			TraceRow("getLongVarchar - index : ", id.ToString(), " value:", (value!=null ? value.ToString(): string.Empty));
+			TraceRow(() => $"getLongVarchar - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
         public DateTime getGXDateTime(int id, Boolean precision)
@@ -309,7 +309,7 @@ namespace GeneXus.Data.NTier.ADO
 #else
 			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.ClientTimeZone);
 #endif
-			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDateTime - index : {id}  value:{value}");
 			return value;
 		}
         public DateTime getGXDateTime(int id)
@@ -319,19 +319,19 @@ namespace GeneXus.Data.NTier.ADO
 #else
 			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, false), _gxDbCommand.Conn.ClientTimeZone);
 #endif
-			TraceRow("getGXDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getGXDateTime - index : {id} value:{value.ToString()}");
 			return value;
 		}
 		public DateTime getGXDate(int id)
         {
             DateTime value = getDate(id);
-			TraceRow("getGXDate - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getGXDate - index : {id} value:{value.ToString()}");
 			return value;
 		}
         public string getBLOBFile(int id)
         {
             string value= getBLOBFile(id, "tmp", "");
-			TraceRow("getBLOBFile - index : ", id.ToString(), " value:", (value!=null ? value.ToString() : string.Empty));
+			TraceRow(() => $"getBLOBFile - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
 
@@ -339,7 +339,7 @@ namespace GeneXus.Data.NTier.ADO
         {
             string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.Private);
             String value = getBLOBFile(id, extension, name, fileName, true);
-			TraceRow("getBLOBFile - index : ", id.ToString(), " value:", (value!=null ? value.ToString() : string.Empty));
+			TraceRow(() => $"getBLOBFile - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
 
@@ -389,7 +389,7 @@ namespace GeneXus.Data.NTier.ADO
 				}
 				streamClosed = true;
 
-				TraceRow("GetBlobFile fileName:" + fileName + ", retval bytes:" + retval);
+				TraceRow(() => $"GetBlobFile fileName:{fileName}, retval bytes:{retval}");
 
                 if (temporary)
                     GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context);
@@ -473,20 +473,20 @@ namespace GeneXus.Data.NTier.ADO
 		public string getVarchar(int id)
         {
             string value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1);
-			TraceRow("getVarchar - index : ", id.ToString(), " value:", (value != null ? value.ToString() : string.Empty));
+			TraceRow(() => $"getVarchar - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
         public decimal getBigDecimal(int id, int dec)
         {
 			decimal value =_gxDbCommand.Db.GetDecimal(_gxDbCommand, _DR, id - 1);
-			TraceRow("getBigDecimal - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getBigDecimal - index : {id} value:{value.ToString()}");
 			return value;
 		}
 
         public IGeographicNative getGeospatial(int id)
         {
             IGeographicNative value = _gxDbCommand.Db.GetGeospatial(_gxDbCommand, _DR, id - 1);
-			TraceRow("getGeospatial - index : ", id.ToString(), " value:", (value != null ? value.ToString() : string.Empty));
+			TraceRow(() => $"getGeospatial - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
 

@@ -2044,6 +2044,10 @@ namespace GeneXus.Utils
 		{
 			innerArray = new List<object[]>(capacity);
 		}
+		internal GxArrayList(List<object[]> list)
+		{
+			innerArray = list;
+		}
 		public GxArrayList()
 		{
 			innerArray = new List<object[]>();
@@ -2076,7 +2080,6 @@ namespace GeneXus.Utils
 			return innerArray[index][i];
 		}
 	}
-
 	[CollectionDataContract(Name = "GxUnknownObjectCollection")]
 	[KnownType(typeof(GxSimpleCollection<object>))]
 	[KnownType(typeof(GxStringCollection))]
