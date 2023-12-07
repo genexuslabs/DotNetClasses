@@ -212,7 +212,7 @@ namespace GeneXus.Data.NTier.ADO
         }
 		void TraceRow(Func<string> buildMsg)
 		{
-			if (_gxDbCommand.HasMoreRows)
+			if (GXLogging.TraceEnabled(log) && _gxDbCommand.HasMoreRows)
 			{
 				GXLogging.Trace(log, buildMsg);
 			}
