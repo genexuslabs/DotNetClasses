@@ -11,7 +11,7 @@ namespace GeneXus.Office
 	public class ExcelDocumentI
     {
 
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExcelDocumentI>();
 
 		public short Index = -1;
 		
@@ -589,7 +589,7 @@ namespace GeneXus.Office
             this.cell = cell;
         }
 
-        #region IExcelCells Members
+		#region IExcelCells Members
 
         public DateTime Date
         {
@@ -732,13 +732,13 @@ namespace GeneXus.Office
             }
         }
 
-        #endregion
+		#endregion
 
     }
 
     public class IExcelDocumentWrapper : IExcelDocument
     {
-        static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger<IExcelDocumentWrapper>();
 
         Interop.GXOFFICE2Lib.IExcelDocument doc;
 
@@ -746,7 +746,7 @@ namespace GeneXus.Office
         {
             doc = document;
         }
-        #region IExcelDocument Members
+		#region IExcelDocument Members
 
         public short Init(string previousMsgError)
         {
@@ -928,13 +928,13 @@ namespace GeneXus.Office
             throw new NotImplementedException();
         }
 
-        #endregion
+		#endregion
 
     }
 #endif
 	public class ExcelUtils
     {
-        static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExcelUtils>();
 		public static void Show(string xlsFileName)
         {
             Process p = new Process();

@@ -2174,7 +2174,7 @@ namespace GeneXus.Data
 		protected string stmt;
 		protected GxConnectionCache cache;
 		protected IGxConnection con;
-		protected GxArrayList block;
+		protected List<object[]> block;
 		protected string key;
 		protected int pos;
 		protected bool cached;
@@ -2208,7 +2208,7 @@ namespace GeneXus.Data
 			reader=dr.GetCommand(con,stmt,parameters).ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt); 
 			open=true;
-			block=new GxArrayList(fetchSize);
+			block= new List<object[]>(fetchSize);
 			pos=-1;
             if (cached)
             {
