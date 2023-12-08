@@ -16,7 +16,7 @@ namespace GeneXus.Web.Security
 	[SecuritySafeCritical]
 	public static class WebSecurityHelper
     {
-		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(typeof(WebSecurityHelper).FullName);
 
 		const int SecretKeyMinimumLength = 16;
 
@@ -112,7 +112,7 @@ namespace GeneXus.Web.Security
 	public static class SecureTokenHelper
     {
         
-		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(typeof(SecureTokenHelper).FullName);
 
 		public enum SecurityMode
         {

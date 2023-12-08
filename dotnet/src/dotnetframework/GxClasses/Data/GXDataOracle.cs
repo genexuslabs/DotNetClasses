@@ -1436,7 +1436,7 @@ namespace GeneXus.Data
 #if !NETCORE
 	sealed internal class MSOracleConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<MSOracleConnectionWrapper>();
 		int oracle8 = -1;
 		public MSOracleConnectionWrapper() : base(new MSOracleProvider.OracleConnection())
 		{

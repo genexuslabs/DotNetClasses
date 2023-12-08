@@ -433,7 +433,7 @@ namespace GeneXus.Procedure
 		public static int OUTPUT_RVIEWER_DLL = 2;
 		public static int OUTPUT_PDF     = 3;
 
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxReportUtils>();
 
 #if NETCORE
 		const string PDF_LIBRARY_ITEXT8 = "ITEXT8";

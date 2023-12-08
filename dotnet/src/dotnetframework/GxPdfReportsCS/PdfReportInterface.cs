@@ -5,7 +5,7 @@ namespace GeneXus.Printer
 
 	public class GxReportBuilderPdf : IReportHandler
 	{
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<GxReportBuilderPdf>();
 		string _appPath;
 		protected IReportHandler _pdfReport;
 
