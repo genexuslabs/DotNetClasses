@@ -120,7 +120,7 @@ namespace GeneXus.Application
 					gxobject.webExecute();
 					return Task.CompletedTask;
 				}
-				if (!ProcessHeaders(_procWorker.GetType().Name))
+				if (!ProcessHeaders(GXBaseObject.GetObjectNameWithoutNamespace(_procWorker.GetType().FullName)))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
 				if (bodyParameters == null)
@@ -305,7 +305,7 @@ namespace GeneXus.Application
 				{
 					return Task.CompletedTask; 
 				}
-				if (!ProcessHeaders(_procWorker.GetType().Name))
+				if (!ProcessHeaders(GXBaseObject.GetObjectNameWithoutNamespace(_procWorker.GetType().FullName)))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
 				IDictionary<string,object> queryParameters = ReadQueryParameters(this._variableAlias);
