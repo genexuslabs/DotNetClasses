@@ -62,7 +62,6 @@ namespace GeneXus.Application
 		{
 			
 		}
-#if NETCORE
 		internal static string GetObjectNameWithoutNamespace(string gxObjFullName)
 		{
 			string mainNamespace = Preferences.AppMainNamespace;
@@ -70,6 +69,7 @@ namespace GeneXus.Application
 				gxObjFullName = gxObjFullName.Remove(0, mainNamespace.Length + 1);
 			return gxObjFullName;
 		}
+#if NETCORE
 		private void ExecuteUsingSpanCode()
 		{
 			string gxObjFullName = GetObjectNameWithoutNamespace(GetType().FullName);
