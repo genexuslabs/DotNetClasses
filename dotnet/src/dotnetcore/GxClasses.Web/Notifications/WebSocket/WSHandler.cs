@@ -16,7 +16,6 @@ using GeneXus.Notifications.WebSocket;
 using GeneXus.Procedure;
 using GeneXus.Services;
 using GeneXus.Utils;
-using Jayrock.Json;
 
 namespace GeneXus.Http.WebSocket
 {

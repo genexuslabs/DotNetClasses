@@ -8,7 +8,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using GeneXus.Application;
 using GeneXus.XML;
-using Jayrock.Json;
+
 
 namespace GeneXus.Utils
 {

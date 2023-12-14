@@ -10,7 +10,6 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
 using GeneXus.Metadata;
-using Jayrock.Json;
 #if NETCORE
 using GxClasses.Helpers;
 #endif

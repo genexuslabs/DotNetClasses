@@ -8,7 +8,6 @@ using Jayrock.Json;
 using GeneXus.SD.Store.Model;
 using GeneXus.SD.Store.Platforms;
 using GeneXus.Utils;
-using Jayrock.Json;
 
 namespace GeneXus.SD.Store
 {

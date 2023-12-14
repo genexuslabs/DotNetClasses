@@ -22,7 +22,6 @@ namespace GeneXus.Utils
 	using GeneXus.Http;
 	using GeneXus.Metadata;
 	using GeneXus.XML;
-	using Jayrock.Json;
 
 	public class GxParameterCollection : IDataParameterCollection
 	{
