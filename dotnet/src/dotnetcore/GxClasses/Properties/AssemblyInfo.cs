@@ -16,3 +16,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("GXMessageBroker")]
 [assembly: InternalsVisibleTo("GeneXus.SD.Store.StoreManager")]
 [assembly: InternalsVisibleTo("DotNetCoreChunkedTest")]
+[assembly: InternalsVisibleTo("DotNetCoreChunkedTest")]
+[assembly: InternalsVisibleTo("GeneXus.OpenTelemetry.Diagnostics")]

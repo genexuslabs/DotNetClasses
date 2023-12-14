@@ -1,15 +1,8 @@
-using GeneXus.Configuration;
-using GeneXus.Metadata;
-using GeneXus.Notifications.WebSocket;
-using GeneXus.Procedure;
-using GeneXus.Services;
-using GeneXus.Utils;
 #if NETCORE
 using GeneXus.Application;
 #else
 using Jayrock.Json;
 #endif
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +10,13 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using GeneXus.Configuration;
+using GeneXus.Metadata;
+using GeneXus.Notifications.WebSocket;
+using GeneXus.Procedure;
+using GeneXus.Services;
+using GeneXus.Utils;
+using Jayrock.Json;
 
 namespace GeneXus.Http.WebSocket
 {
@@ -124,8 +124,7 @@ namespace GeneXus.Http.WebSocket
 			{
 				try
 				{
-					string nSpace = string.Empty;
-					Config.GetValueOf("AppMainNamespace", out nSpace);
+					string nSpace = Preferences.AppMainNamespace;
 					GXProcedure obj = null;
 					try
 					{

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Xml;
-using log4net;
 using System.Threading;
 using System.Globalization;
 using GeneXus.Management;
@@ -21,7 +20,7 @@ using System.IO;
 #endif
 namespace GeneXus.Cache
 {
-    internal delegate void AddDataHandler(string key,
+	internal delegate void AddDataHandler(string key,
     ICacheItemExpiration expiration);
 
 	[Obsolete("Not for public use. Replaced by ICacheService2", false)]
@@ -588,7 +587,13 @@ namespace GeneXus.Cache
 		public CacheItem()
 		{
 		}
-
+		internal CacheItem(List<object[]> data, bool hasnext, int blockSize, long sizeInBytes)
+		{
+			Data = new GxArrayList(data);
+			HasNext = hasnext;
+			BlockSize = blockSize;
+			SizeInBytes = sizeInBytes;
+		}
 		public CacheItem(GxArrayList data, bool hasnext, int blockSize, long sizeInBytes)
         {
             Data = data;

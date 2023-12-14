@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Authentication;
-using log4net;
-using MailKit;
-using MailKit.Security;
-using MailKit.Net.Pop3;
-using MimeKit;
-using GeneXus.Utils;
 using System.IO;
+using System.Security.Authentication;
+using GeneXus.Utils;
+using MailKit;
+using MailKit.Net.Pop3;
+using MailKit.Security;
+using MimeKit;
 
 namespace GeneXus.Mail
 {

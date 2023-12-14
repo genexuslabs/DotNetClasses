@@ -1,6 +1,5 @@
 using System;
 using GeneXus.Services;
-using log4net;
 
 namespace GeneXus.Messaging.Common
 {

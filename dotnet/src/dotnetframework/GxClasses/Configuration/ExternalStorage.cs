@@ -3,7 +3,6 @@ using GeneXus.Services;
 using GeneXus.Attributes;
 using GeneXus.Utils;
 using GeneXus.Encryption;
-using log4net;
 #if NETCORE
 using GxClasses.Helpers;
 #endif
@@ -16,7 +15,7 @@ namespace GeneXus.Configuration
 
 		private GXService providerService;
 
-		static readonly IGXLogger logger = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ExternalStorage>();
 
 		public ExternalStorage()
 		{

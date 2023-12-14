@@ -13,7 +13,6 @@ using GeneXus.Application;
 #else
 using Jayrock.Json;
 #endif
-using log4net;
 using Microsoft.Web.WebSockets;
 
 namespace GeneXus.Http.WebSocket

@@ -45,7 +45,7 @@ namespace GeneXus.Application
 		public string ResponseMessage { get => responseMessage; set => responseMessage = value; }
 		public string HttpMethod { get => httpMethod; set => httpMethod = value; }
 
-		public string protocol = "REST";
+		public int protocol = 1;
 
 		private string httpMethod = "GET";
 

@@ -1,25 +1,21 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
-
+using GeneXus.Search;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Search.Highlight;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
-
-using log4net;
-using GeneXus.Search;
-using System.Runtime.CompilerServices;
-using System.Reflection;
-using System.Collections.Concurrent;
-
+using Lucene.Net.Search.Highlight;
 using NUglify;
 using NUglify.Html;
-using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
 
 namespace GeneXus.Utils
 {

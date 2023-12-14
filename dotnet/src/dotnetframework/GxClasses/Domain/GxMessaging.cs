@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using GeneXus.Configuration;
 using GeneXus.Application;
-using log4net;
 using System.Security;
 
 namespace GeneXus.Utils

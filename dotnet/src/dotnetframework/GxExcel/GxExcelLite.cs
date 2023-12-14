@@ -1,9 +1,7 @@
 using System;
-using GeneXus.Office;
 using System.Collections;
-using System.Reflection;
 using System.IO;
-using log4net;
+using System.Reflection;
 using GeneXus.Application;
 using GeneXus.Office.Excel;
 using GxClasses.Helpers;
@@ -13,7 +11,7 @@ namespace GeneXus.Office.ExcelLite
 {
 	public class ExcelCells : IExcelCells
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExcelCells>();
 
 		public ExcelCells(IGxError errAccess,  object ef, int row, int col, int height, int width)
 		{
@@ -368,7 +366,7 @@ namespace GeneXus.Office.ExcelLite
 
 	public class ExcelDocument : IGxError, IExcelDocument
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExcelDocument>();
 		public static string nmspace;
 #if NETCORE
 		public static string license = "FREE-LIMITED-KEY";

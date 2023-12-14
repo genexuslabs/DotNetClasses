@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using GeneXus.Utils;
 #if NETCORE
 using GeneXus.Application;
 #else
 using Jayrock.Json;
 #endif
-using log4net;
 using GeneXus.SD.Store.Model;
 using GeneXus.SD.Store.Platforms;
+using GeneXus.Utils;
+using Jayrock.Json;
 
 namespace GeneXus.SD.Store
 {

@@ -1,6 +1,5 @@
 using System;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Services.OpenTelemetry
 {
@@ -11,7 +10,7 @@ namespace GeneXus.Services.OpenTelemetry
 
 	public static class OpenTelemetryService
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(OpenTelemetryService).FullName);
 
 		private static string OPENTELEMETRY_SERVICE = "Observability";
 		public static string GX_ACTIVITY_SOURCE_NAME = "GeneXus.Tracing";

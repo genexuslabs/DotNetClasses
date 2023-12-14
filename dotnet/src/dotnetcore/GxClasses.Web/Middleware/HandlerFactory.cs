@@ -1,17 +1,15 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
 using System.Reflection;
+using System.Threading.Tasks;
+using GeneXus.Application;
 using GeneXus.Configuration;
-using log4net;
+using GeneXus.Http;
+using GeneXus.Mime;
 using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
-using System.Net;
-using GeneXus.Mime;
-using GeneXus.Http;
-using System.Collections.Generic;
-using GeneXus.Application;
-using System.IO;
 
 namespace GeneXus.HttpHandlerFactory
 {

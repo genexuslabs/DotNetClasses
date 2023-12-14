@@ -3,16 +3,14 @@ using System.Collections;
 using System.ComponentModel;
 using System.Management.Instrumentation;
 using System.Reflection;
+using System.Security;
 using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Data.ADO;
 using GeneXus.Utils;
 using GeneXus.XML;
-using log4net;
-using System.Security;
-using System.Security.Permissions;
 
-[assembly:Instrumented(@"root\GeneXus")]
+[assembly: Instrumented(@"root\GeneXus")]
 namespace GeneXus.Management
 {
 	[RunInstaller(true)]

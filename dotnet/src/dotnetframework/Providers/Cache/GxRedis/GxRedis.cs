@@ -1,17 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading.Tasks;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
 using StackExchange.Redis;
-using System.Reflection;
-using System.Security;
-using System.Threading.Tasks;
 
 namespace GeneXus.Cache
 {
@@ -213,7 +207,7 @@ namespace GeneXus.Cache
 		}
 		private IEnumerable<RedisKey> Key(string cacheid, IEnumerable<string> key)
 		{
-			var prefix = KeyPrefix(cacheid);
+			long? prefix = KeyPrefix(cacheid);
 			return key.Select(k => new RedisKey().Append(FormatKey(cacheid, k, prefix)));
 		}
 		private string FormatKey(string cacheid, string key, Nullable<long> prefix)

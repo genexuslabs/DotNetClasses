@@ -1,25 +1,20 @@
 
 using System;
-
-using System.IO;
 using System.Collections;
-using System.Threading;
-using System.Text;
-using Microsoft.Win32;
-using System.Runtime.InteropServices;
-using System.Globalization;
-
-using System.util;
-using System.Diagnostics;
-using log4net;
-
-using GeneXus.Printer;
 using System.Collections.Generic;
-using System.Security;
-using GeneXus;
-using GeneXus.Utils;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
-using GeneXus.Metadata;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
+using System.Threading;
+using System.util;
+using GeneXus;
+using GeneXus.Printer;
+using GeneXus.Utils;
+using Microsoft.Win32;
 
 namespace com.genexus.reports
 {
@@ -35,7 +30,7 @@ namespace com.genexus.reports
 	{
 		protected int lineHeight, pageLines;
 
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportItextBase>();
 
 		protected bool fontUnderline;
 		protected bool fontStrikethru;
@@ -904,7 +899,7 @@ namespace com.genexus.reports
 
 	public class ParseINI
 	{
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<ParseINI>();
 
 		private static int MAX_LINE_LENGTH=255; 
 		private static String GENERAL="&General&"; 
@@ -1431,7 +1426,7 @@ namespace com.genexus.reports
 
 	public class NativeSharpFunctionsMS 
 	{
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<NativeSharpFunctionsMS>();
 		public int shellExecute(String cmd, String fileName)
 		{
 			Process p = new Process();
@@ -1706,7 +1701,7 @@ namespace com.genexus.reports
 
 	public class MSPDFFontDescriptor 
 	{
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<MSPDFFontDescriptor>();
 
 		private static String TRUE_TYPE_REGISTRY_SIGNATURE = "(TrueType)"; 
 		private static String REGISTRY_FONTS_ENTRY = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Fonts"; // Fonts NT/2000

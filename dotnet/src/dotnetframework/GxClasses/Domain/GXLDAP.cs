@@ -2,7 +2,8 @@ using System;
 using System.Collections;
 using System.DirectoryServices;
 using System.Text;
-using log4net;
+using GeneXus.Data;
+
 #if NETCORE
 using Novell.Directory.Ldap;
 #endif
@@ -11,7 +12,7 @@ namespace GeneXus.Utils
 {
 	public class GXLDAPClient
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXLDAPClient>();
 
 		string _server;
 		int _port;

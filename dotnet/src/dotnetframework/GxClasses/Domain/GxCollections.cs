@@ -1,28 +1,28 @@
 namespace GeneXus.Utils
 {
 	using System;
-	using System.Collections.Specialized;
 	using System.Collections;
+	using System.Collections.Concurrent;
 	using System.Collections.Generic;
-	using GeneXus.XML;
-	using System.Reflection;
-	using System.Xml.Serialization;
+	using System.Collections.Specialized;
+	using System.ComponentModel;
 	using System.Data;
-	using GeneXus.Application;
-	using System.Text;
 	using System.Globalization;
 #if !NETCORE
 	using Jayrock.Json;
 #endif
-	using log4net;
-	using System.ComponentModel;
-	using System.Xml;
-	using System.Runtime.Serialization;
 	using System.Linq;
-	using GeneXus.Http;
+	using System.Reflection;
+	using System.Runtime.Serialization;
+	using System.Text;
+	using System.Xml;
+	using System.Xml.Serialization;
+	using GeneXus.Application;
 	using GeneXus.Configuration;
+	using GeneXus.Http;
 	using GeneXus.Metadata;
-	using System.Collections.Concurrent;
+	using GeneXus.XML;
+	using Jayrock.Json;
 
 	public class GxParameterCollection : IDataParameterCollection
 	{
@@ -2047,6 +2047,10 @@ namespace GeneXus.Utils
 		{
 			innerArray = new List<object[]>(capacity);
 		}
+		internal GxArrayList(List<object[]> list)
+		{
+			innerArray = list;
+		}
 		public GxArrayList()
 		{
 			innerArray = new List<object[]>();
@@ -2079,7 +2083,6 @@ namespace GeneXus.Utils
 			return innerArray[index][i];
 		}
 	}
-
 	[CollectionDataContract(Name = "GxUnknownObjectCollection")]
 	[KnownType(typeof(GxSimpleCollection<object>))]
 	[KnownType(typeof(GxStringCollection))]

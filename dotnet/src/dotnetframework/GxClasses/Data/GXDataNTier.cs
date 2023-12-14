@@ -1,15 +1,14 @@
 using System;
-using GeneXus.Application;
-using System.Data;
-using GeneXus.Configuration;
-using GeneXus.Data.NTier.ADO;
-using GeneXus.Reorg;
-using GeneXus.Performance;
-using log4net;
 using System.Collections.Generic;
-using GeneXus.Data.ADO;
-using GeneXus.Utils;
+using System.Data;
 using System.Text;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Data.ADO;
+using GeneXus.Data.NTier.ADO;
+using GeneXus.Performance;
+using GeneXus.Reorg;
+using GeneXus.Utils;
 
 namespace GeneXus.Data.NTier
 {

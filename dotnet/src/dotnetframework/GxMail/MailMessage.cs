@@ -1,17 +1,16 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using log4net;
 using System.Threading;
 using GeneXus.Utils;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 namespace GeneXus.Mail.Internals.Pop3
 {
-	
+
 	internal class MailMessage
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<MailMessage>();

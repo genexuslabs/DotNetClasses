@@ -533,14 +533,15 @@ namespace GeneXus.Configuration
 							{
 								loadedConfigFile = configFileName;
 								_config = loadConfig(configFileName, out logConfigSource);
+								configLoaded = true;
 								if (!string.IsNullOrEmpty(logConfigSource))
 									logConfig(logConfigSource, out configuredFilename);
 								else
 									logConfig(configFileName, out configuredFilename);
 							}
+#if !NETCORE
 							else
 							{
-#if !NETCORE
 								if (GxContext.IsHttpContext &&
 									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
 								{
@@ -576,10 +577,13 @@ namespace GeneXus.Configuration
 									logConfig(logFile, out configuredFilename);
 									loadedConfigFile = Path.GetFullPath(file);
 									_config = loadConfig(file);
-
 								}
-
+								configLoaded = true;
+							}
 #else
+							else
+							{
+
 								string basePath = FileUtil.GetBasePath();
 								string currentDir = Directory.GetCurrentDirectory();
 								string startupDir = FileUtil.GetStartupDirectory();
@@ -635,8 +639,8 @@ namespace GeneXus.Configuration
 								{
 									//"Could not register encoding provider";
 								}
-#endif
 							}
+#endif
 						}
 					}
 					log = GXLoggerFactory.GetLogger<Config>();
@@ -826,6 +830,14 @@ namespace GeneXus.Configuration
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
 		static int sessionTimeout = -1;
+		internal static string AppMainNamespace
+		{
+			get
+			{
+				Config.GetValueOf("AppMainNamespace", out string nameSpace);
+				return nameSpace;
+			}
+		}
 		internal static string DefaultDatastore
 		{
 			get

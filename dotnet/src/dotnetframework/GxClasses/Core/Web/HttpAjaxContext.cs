@@ -19,9 +19,7 @@ namespace GeneXus.Http
 #else
 	using Microsoft.AspNetCore.Http;
 #endif
-	using System.Diagnostics;
 	using GeneXus.Configuration;
-	using log4net;
 
 	public interface IHttpAjaxContext
 	{

@@ -1,17 +1,4 @@
 
-using GeneXus.Application;
-using GeneXus.Cache;
-using GeneXus.Configuration;
-using GeneXus.Data.NTier.ADO;
-using GeneXus.Diagnostics;
-using GeneXus.Management;
-using GeneXus.Reorg;
-using GeneXus.Services;
-using GeneXus.Utils;
-using GeneXus.XML;
-using GxClasses.Helpers;
-using log4net;
-using log4net.Core;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -21,6 +8,16 @@ using System.Data.Common;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using GeneXus.Application;
+using GeneXus.Cache;
+using GeneXus.Configuration;
+using GeneXus.Data.NTier.ADO;
+using GeneXus.Management;
+using GeneXus.Reorg;
+using GeneXus.Services;
+using GeneXus.Utils;
+using GeneXus.XML;
+using GxClasses.Helpers;
 using TZ4Net;
 namespace GeneXus.Data.ADO
 {
@@ -1155,7 +1152,13 @@ namespace GeneXus.Data.ADO
         }
 		public string BlobPath
 		{
-			get {return blobPath;}
+			get {
+				if (blobPath == null)
+				{
+					blobPath = Preferences.getBLOB_PATH();
+				}
+				return blobPath;
+			}
 			set {blobPath=value;}
 		}
 		public string MultimediaPath
@@ -2634,7 +2637,6 @@ namespace GeneXus.Data.ADO
 			if ( ! cfg)
 				connection.ConnectionString = connectionString;
 
-			connection.BlobPath = Preferences.getBLOB_PATH();
 			string strCache;
 			connection.Cache=((Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive) && ! GxContext.isReorganization;
 			connection.DataStore = this;

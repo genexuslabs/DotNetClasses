@@ -1,23 +1,22 @@
 using System;
-using System.Globalization;
-using System.Runtime.Serialization;
 using System.Collections;
 #if NETCORE
 using GeneXus.Application;
 #else
 using Jayrock.Json;
 #endif
-using log4net;
-using System.Reflection;
-using GeneXus.Metadata;
 using System.Data.SqlTypes;
-using System.IO;
+using System.Globalization;
+using System.Reflection;
+using System.Runtime.Serialization;
+using GeneXus.Metadata;
+using Jayrock.Json;
 #if NETCORE
 using GxClasses.Helpers;
 #endif
 namespace GeneXus.Utils
 {
-    public interface IGeographicNative
+	public interface IGeographicNative
 	{
 
 	Object InnerValue
