@@ -198,6 +198,12 @@ namespace GeneXus.Application
 				options.Cookie.HttpOnly = true;
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
+				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
+				if (!string.IsNullOrEmpty(sessionCookieName))
+				{
+					options.Cookie.Name=sessionCookieName;
+					GxWebSession.SessionCookieName = sessionCookieName;
+				}
 				string sameSite;
 				SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
 				if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
