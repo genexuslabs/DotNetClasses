@@ -1955,6 +1955,9 @@ namespace GeneXus.Http
 				SetStreaming();
 				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
+#if !NETCORE
+				CSRFHelper.ValidateAntiforgery(httpContext);
+#endif
 
 				bool validSession = ValidWebSession();
 				if (validSession && IntegratedSecurityEnabled)
