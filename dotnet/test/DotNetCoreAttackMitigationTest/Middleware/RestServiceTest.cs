@@ -49,7 +49,9 @@ namespace xUnitTesting
 			foreach (var item in SetCookieHeaderValue.ParseList(values.ToList()))
 				cookies.Add(requestUriObj, new Cookie(item.Name.Value, item.Value.Value, item.Path.Value));
 
-			var setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
+			SetCookieHeaderValue setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
+			Assert.NotNull(setCookie);
+			Assert.True(setCookie.Value.HasValue);
 			csrfToken = setCookie.Value.Value;
 
 			response.EnsureSuccessStatusCode();
@@ -78,7 +80,9 @@ namespace xUnitTesting
 			foreach (var item in SetCookieHeaderValue.ParseList(values.ToList()))
 				cookies.Add(requestUriObj, new Cookie(item.Name.Value, item.Value.Value, item.Path.Value));
 
-			var setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
+			SetCookieHeaderValue setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
+			Assert.NotNull(setCookie);
+			Assert.True(setCookie.Value.HasValue);
 			csrfToken = setCookie.Value.Value;
 
 			response.EnsureSuccessStatusCode();
