@@ -7,7 +7,9 @@ using GeneXus.Mock;
 using GeneXus.Services.OpenTelemetry;
 #endif
 using GeneXus.Utils;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;
 #endif

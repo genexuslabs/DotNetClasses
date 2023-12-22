@@ -13,7 +13,9 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using GeneXus.Utils;
 using System.Text.RegularExpressions;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 using GeneXus.Configuration;
 using GeneXus.Application;
 
@@ -323,7 +325,7 @@ namespace GeneXus.WebControls
             return 0;
         }
 
-        public List<JArray> GetColsPropsCommon()
+        internal List<JArray> GetColsPropsCommon()
         {
             return this._ColsPropsCommon;
         }
@@ -733,7 +735,7 @@ namespace GeneXus.WebControls
         Unit _Height = Unit.Empty;
         ListDictionary _attributes = new ListDictionary();
         ListDictionary _styleAttributes = new ListDictionary();
-        protected JObject jsonObj = new JObject();
+        JObject jsonObj = new JObject();
         string _WebTags;
         static Regex rAttributes = new Regex("\\s*(?<att>\\S*)\\s*=\\s*\"(?<value>[^\"]*)\"", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -752,7 +754,16 @@ namespace GeneXus.WebControls
             _ID = "";
             _title = new GxWebControlTitle();
         }
-        public string CssClass
+		protected void PutJsonValue(string key, object value)
+		{
+			jsonObj.Put(key, value);
+		}
+		protected void ClearJsonValues()
+		{
+			jsonObj = new JObject();
+		}
+
+		public string CssClass
         {
             get
             {
@@ -1414,7 +1425,7 @@ namespace GeneXus.WebControls
 
         public override void ToJSON()
         {
-            jsonObj.Put(Value, Value);
+			PutJsonValue(Value, Value);
         }
 
     }
@@ -1525,10 +1536,11 @@ namespace GeneXus.WebControls
         {
             _IsSet = true;
             Items.Clear();
-            jsonObj = new JObject();
+			ClearJsonValues();
             _SelectedIndex = -1;
         }
-        public void removeItem(string itemValue)
+
+		public void removeItem(string itemValue)
         {
             _IsSet = true;
 			foreach (ListItem item in Items)
@@ -1625,8 +1637,8 @@ namespace GeneXus.WebControls
 
         public override void ToJSON()
         {
-            jsonObj.Put("isset", _IsSet);
-            jsonObj.Put("s", SelectedItemValue.Trim());
+			PutJsonValue("isset", _IsSet);
+			PutJsonValue("s", SelectedItemValue.Trim());
             JArray jsonArrValues = new JArray();
             Dictionary<string, JArray> itemsHash = new Dictionary<string, JArray>();
             foreach (ListItem Item in Items)
@@ -1645,7 +1657,7 @@ namespace GeneXus.WebControls
 					itemsHash[itemValue][1] = Item.Text;
 				}
             }
-            jsonObj.Put("v", jsonArrValues);
+            PutJsonValue("v", jsonArrValues);
         }
 
         public override void FromJSONObject(dynamic Obj)
@@ -1729,7 +1741,7 @@ namespace GeneXus.WebControls
 
         public override void ToJSON()
         {
-            jsonObj.Put(CheckedValue, Checked);
+            PutJsonValue(CheckedValue, Checked);
         }
 
     }

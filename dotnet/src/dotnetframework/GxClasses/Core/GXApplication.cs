@@ -21,7 +21,9 @@ namespace GeneXus.Application
 #endif
 	using GeneXus.Configuration;
 	using GeneXus.Metadata;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using GeneXus.Http;
 	using System.Collections.Specialized;
 	using System.Collections.Generic;

@@ -1,13 +1,13 @@
 using GeneXus.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Security.Cryptography.X509Certificates;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.AndroidPublisher.v3;
 using Google.Apis.Services;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 using Google.Apis.AndroidPublisher.v3.Data;
 using GeneXus.Application;
 using System.IO;

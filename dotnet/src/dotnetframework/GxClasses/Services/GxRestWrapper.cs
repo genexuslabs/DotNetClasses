@@ -24,7 +24,9 @@ using System.Web;
 using System.Collections.Specialized;
 using GeneXus.Security;
 using System.Collections;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 using System.Net.Http;
 using System.Diagnostics;
 using GeneXus.Diagnostics;

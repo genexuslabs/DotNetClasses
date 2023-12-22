@@ -20,7 +20,9 @@ namespace GeneXus.Http
 	using GeneXus.Utils;
 	using GeneXus.XML;
 	using GeneXus.WebControls;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using Helpers;
 	using System.Collections.Concurrent;
 	using System.Net.Http;
@@ -229,16 +231,27 @@ namespace GeneXus.Http
 		int _currParameter;
 #if NETCORE
 		private GXWebRow _currentGridRow;
-#endif
+		private Dictionary<string,string> EventsMetadata = new Dictionary<string, string>();
+#else
 		private Hashtable EventsMetadata = new Hashtable();
+#endif
 
+#if NETCORE
+		protected void setEventMetadata(string EventName, string Metadata)
+		{
+			if (EventsMetadata.ContainsKey(EventName))
+				EventsMetadata[EventName] += Metadata;
+			else
+				EventsMetadata[EventName] = Metadata;
+		}
+#else
 		protected void setEventMetadata(string EventName, string Metadata)
 		{
 			if (EventsMetadata[EventName] == null)
 				EventsMetadata[EventName] = string.Empty;
 			EventsMetadata[EventName] += Metadata;
 		}
-
+#endif
 		public void webExecuteEx(HttpContext httpContext)
 		{
 			if (IsUploadRequest(httpContext))
@@ -442,7 +455,7 @@ namespace GeneXus.Http
 				}
 				if (objMessage.Contains("fullPost"))
 				{
-					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
+					this.targetObj._Context.httpAjaxContext.ParseGXState((JObject)objMessage["fullPost"]);
 				}
 			}
 			private void ParseGridsDataParms(JObject gxGrids)
@@ -522,7 +535,12 @@ namespace GeneXus.Http
 					int eventCount = 0;
 					foreach (string eventName in events)
 					{
+#if NETCORE
+
+						JObject eventMetadata = JSONHelper.ReadJSON<JObject>(targetObj.EventsMetadata[eventName.ToString()]);
+#else
 						JObject eventMetadata = JSONHelper.ReadJSON<JObject>((string)targetObj.EventsMetadata[eventName.ToString()]);
+#endif
 						eventHandlers[eventCount] = (string)eventMetadata["handler"];
 						JArray eventInputParms = (JArray)eventMetadata["iparms"];
 						foreach (JObject inputParm in eventInputParms)
@@ -531,9 +549,12 @@ namespace GeneXus.Http
 							eventUseInternalParms[eventCount] = eventUseInternalParms[eventCount] || IsInternalParm(inputParm);
 						}
 						JArray eventOutputParms = (JArray)eventMetadata["oparms"];
-						foreach (JObject outputParm in eventOutputParms)
+						if (eventOutputParms != null)
 						{
-							AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+							foreach (JObject outputParm in eventOutputParms)
+							{
+								AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+							}
 						}
 						eventCount++;
 					}
@@ -882,7 +903,7 @@ namespace GeneXus.Http
 										{
 											try
 											{
-												JObject hashObj = (JObject)(hash_i < inHashValues.Length ? inHashValues[hash_i] : new Jayrock.Json.JObject());
+												JObject hashObj = (JObject)(hash_i < inHashValues.Length ? inHashValues[hash_i] : new JObject());
 												string sRow = hashObj.Contains("row") ? (string)hashObj["row"] : string.Empty;
 												string hash = hashObj.Contains("hsh") ? (string)hashObj["hsh"] : string.Empty;
 												SetScalarOrCollectionValue((string)parm["av"], inParmsValues[parm_i], columnValues);

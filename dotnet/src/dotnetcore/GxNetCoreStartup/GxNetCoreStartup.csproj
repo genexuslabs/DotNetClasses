@@ -33,17 +33,6 @@
     <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
-	<ItemGroup>
-		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net8.0'">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\net8.0\Jayrock.dll</HintPath>
-		</Reference>
-		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net6.0'">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\Jayrock.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
 
 	<Target Name="CustomContentTarget">
 		<ItemGroup>

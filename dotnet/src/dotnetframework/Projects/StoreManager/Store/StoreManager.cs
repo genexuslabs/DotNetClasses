@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
+#if NETCORE
+using GeneXus.Application;
+#else
+using Jayrock.Json;
+#endif
 using GeneXus.SD.Store.Model;
 using GeneXus.SD.Store.Platforms;
 using GeneXus.Utils;
-using Jayrock.Json;
 
 namespace GeneXus.SD.Store
 {
@@ -165,7 +169,7 @@ namespace GeneXus.SD.Store
 			return errCode;
 		}
 
-		public static bool GetConfigValue(string key, JObject storeConfig, out string value)
+		static bool GetConfigValue(string key, JObject storeConfig, out string value)
 		{
 			value = string.Empty;
 			if (storeConfig.Contains(key))

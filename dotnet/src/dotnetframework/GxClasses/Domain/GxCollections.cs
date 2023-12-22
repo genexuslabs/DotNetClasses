@@ -8,6 +8,9 @@ namespace GeneXus.Utils
 	using System.ComponentModel;
 	using System.Data;
 	using System.Globalization;
+#if !NETCORE
+	using Jayrock.Json;
+#endif
 	using System.Linq;
 	using System.Reflection;
 	using System.Runtime.Serialization;
@@ -19,7 +22,6 @@ namespace GeneXus.Utils
 	using GeneXus.Http;
 	using GeneXus.Metadata;
 	using GeneXus.XML;
-	using Jayrock.Json;
 
 	public class GxParameterCollection : IDataParameterCollection
 	{
@@ -235,7 +237,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}
@@ -706,7 +708,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}
@@ -1267,7 +1269,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}

@@ -9,7 +9,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 #endif
 using System.IO;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 using GeneXus.Configuration;
 
 namespace GeneXus.Utils
