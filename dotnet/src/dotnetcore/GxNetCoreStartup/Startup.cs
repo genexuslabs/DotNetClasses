@@ -133,7 +133,7 @@ namespace GeneXus.Application
 		const string RESOURCES_FOLDER = "Resources";
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
-		const string REST_BASE_URL = "rest/";
+		internal const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
 		const string SWAGGER_DEFAULT_YAML = "default.yaml";
@@ -411,7 +411,7 @@ namespace GeneXus.Application
 			if (RestAPIHelpers.ValidateCsrfToken())
 			{
 				antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
-				app.UseAntiforgeryTokens(restBasePath);
+				app.UseAntiforgeryTokens(apiBasePath);
 			}
 			app.UseMvc(routes =>
 			{
