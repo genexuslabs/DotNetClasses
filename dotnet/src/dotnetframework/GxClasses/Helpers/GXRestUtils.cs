@@ -141,7 +141,7 @@ namespace GeneXus.Utils
 
 		internal static bool ValidateCsrfToken()
 		{
-			return Config.GetValueOf("ValidateCSRF", Preferences.NO) == Preferences.YES;
+			return Config.GetValueOf("CSRF_PROTECTION", Preferences.NO) == Preferences.YES;
 		}
 	}
 }
