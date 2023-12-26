@@ -36,17 +36,17 @@ namespace GeneXus.Http
 	using System.Web;
 	using System.Web.UI;
 	using System.Web.UI.WebControls;
-	using System.Web.Script.Serialization;
 	using System.Net;
 	using GeneXus.Notifications;
 	using Web.Security;
 	using System.Web.SessionState;
-	using GeneXus.Mock;
 	using GeneXus.Data.NTier;
+	using System.Web.Mvc;
+	using System.Security;
+
+
+
 #endif
-
-
-
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -1905,8 +1905,9 @@ namespace GeneXus.Http
 			get { return _isMain; }
 		}
 #endif
-
-
+#if !NETCORE
+		[SecuritySafeCritical]
+#endif
 		public void ProcessRequest(HttpContext httpContext)
 		{
 			localHttpContext = httpContext;
@@ -1981,9 +1982,20 @@ namespace GeneXus.Http
 					context.CloseConnections();
 				}
 				catch { }
-				Exception exceptionToHandle = e.InnerException ?? e;
-				handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
-				throw new Exception("GXApplication exception", e);
+#if !NETCORE
+				if (e is HttpAntiForgeryException)
+				{
+					httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+					httpContext.Response.StatusDescription = HttpHelper.InvalidCSRFToken;
+					GXLogging.Error(log, $"Validation of antiforgery failed", e);
+				}
+				else
+#endif
+				{
+					Exception exceptionToHandle = e.InnerException ?? e;
+					handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
+					throw new Exception("GXApplication exception", e);
+				}
 			}
 		}
 		protected virtual bool ChunkedStreaming() { return false; }
