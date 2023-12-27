@@ -133,7 +133,7 @@ namespace GeneXus.Application
 		const string RESOURCES_FOLDER = "Resources";
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
-		const string REST_BASE_URL = "rest/";
+		internal const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
 		const string SWAGGER_DEFAULT_YAML = "default.yaml";
@@ -417,7 +417,7 @@ namespace GeneXus.Application
 			if (RestAPIHelpers.ValidateCsrfToken())
 			{
 				antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
-				app.UseAntiforgeryTokens(restBasePath);
+				app.UseAntiforgeryTokens(apiBasePath);
 			}
 			app.UseMvc(routes =>
 			{
@@ -507,7 +507,6 @@ namespace GeneXus.Application
 	}
 	public class CustomExceptionHandlerMiddleware
 	{
-		const string InvalidCSRFToken = "InvalidCSRFToken";
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
@@ -522,9 +521,8 @@ namespace GeneXus.Application
 				}
 				else if (ex is AntiforgeryValidationException)
 				{
-					//"The required antiforgery header value "X-GXCSRF-TOKEN" is not present.
 					httpStatusCode = HttpStatusCode.BadRequest;
-					httpReasonPhrase = InvalidCSRFToken;
+					httpReasonPhrase = HttpHelper.InvalidCSRFToken;
 					GXLogging.Error(log, $"Validation of antiforgery failed", ex);
 				}
 				else

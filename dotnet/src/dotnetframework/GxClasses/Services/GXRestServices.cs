@@ -389,9 +389,13 @@ namespace GeneXus.Utils
             {
                 throw ex;
             }
-            else if (ex is FormatException || (RestAPIHelpers.ValidateCsrfToken() && AntiForgeryException(ex)))
+            else if (ex is FormatException)
 			{
 				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.BadRequest, ex);
+			}
+			else if (RestAPIHelpers.ValidateCsrfToken() && AntiForgeryException(ex))
+			{
+				HttpHelper.SetUnexpectedError(httpContext, HttpStatusCode.BadRequest, HttpHelper.InvalidCSRFToken, ex);
 			}
 			else
             {
