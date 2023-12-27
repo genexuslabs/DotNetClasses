@@ -15,6 +15,7 @@
 	</ItemGroup>
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\ConfigMappings\ConfigTest.cs" Link="ConfigMappings\ConfigTest.cs" />		
+	    <Compile Include="..\DotNetUnitTest\Domain\GxGenericDictionaryTest.cs" Link="Domain\GxGenericDictionaryTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\GxHttpClientTest.cs" Link="Domain\GxHttpClientTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\ShellTest.cs" Link="Domain\ShellTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\XmlReaderTest.cs" Link="Domain\XmlReaderTest.cs" />		
@@ -76,7 +77,7 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
-		<PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454"/>
+		<PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454" />
 	</ItemGroup>
 
   <ItemGroup>
