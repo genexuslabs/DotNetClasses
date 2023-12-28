@@ -1,1 +1,18 @@
-[{"FunctionName":"timerTest","GXEntrypoint":"amyprochandler"},{"FunctionName":"queueTest","GXEntrypoint":"amyprochandler"}]
+[
+	{
+		"FunctionName": "timerTest",
+		"GXEntrypoint": "amyprochandler"
+	},
+	{
+		"FunctionName": "queueTest",
+		"GXEntrypoint": "amyprochandler"
+	},
+	{
+		"FunctionName": "eventgridTest",
+		"GXEntrypoint": "amyprochandler"
+	},
+	{
+		"FunctionName": "eventgridTestCustomSchema",
+		"GXEntrypoint": "amyprochandler"
+	}
+]

@@ -2,6 +2,8 @@ using GeneXus.Application;
 using GeneXus.Metadata;
 using GeneXus.Utils;
 using System;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace GeneXus.Deploy.AzureFunctions.Handlers.Helpers
 {
@@ -22,5 +24,15 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers.Helpers
 			ClassLoader.SetPropValue(eventMessageProperty, "gxTpr_Propertyvalue", propertyValue);
 			return eventMessageProperty;
 		}
+	}
+	public class CustomEventType
+	{
+		public string Id { get; set; }
+		public string Topic { get; set; }
+		public string Subject { get; set; }
+		public string EventType { get; set; }
+		public string DataVersion { get; set; }
+		public DateTime EventTime { get; set; }
+		public IDictionary<string, JsonElement> Data { get; set; }
 	}
 }
