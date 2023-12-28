@@ -164,7 +164,7 @@ namespace GeneXus.Configuration
 				sString = config.Get(sId);
 				if (String.IsNullOrEmpty(sString))
 				{
-					MappedValue(sId, sString);
+					sString = MappedValue(sId, sString);
 					if (string.IsNullOrEmpty(sString))
 						return false;
 				}
