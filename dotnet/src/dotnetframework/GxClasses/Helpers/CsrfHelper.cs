@@ -1,7 +1,10 @@
+using System.Net;
+using System;
 using System.Net.Http;
 using System.Security;
 using System.Web;
 using System.Web.Helpers;
+using System.Web.Mvc;
 using GeneXus.Application;
 using GeneXus.Utils;
 
@@ -9,6 +12,17 @@ namespace GeneXus.Http
 {
 	internal class CSRFHelper
 	{
+		internal static bool HandleException(Exception e, HttpContext httpContext)
+		{
+			if (RestAPIHelpers.ValidateCsrfToken() && e is HttpAntiForgeryException)
+			{
+				httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+				httpContext.Response.StatusDescription = HttpHelper.InvalidCSRFToken;
+				return true;
+			}
+			return false;
+		}
+
 		[SecuritySafeCritical]
 		internal static void ValidateAntiforgery(HttpContext context)
 		{

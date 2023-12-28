@@ -43,7 +43,6 @@ namespace GeneXus.Http
 	using Web.Security;
 	using System.Web.SessionState;
 	using GeneXus.Data.NTier;
-	using System.Web.Mvc;
 	using System.Security;
 
 
@@ -2004,10 +2003,8 @@ namespace GeneXus.Http
 				}
 				catch { }
 #if !NETCORE
-				if (e is HttpAntiForgeryException)
+				if (CSRFHelper.HandleException(e, httpContext))
 				{
-					httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-					httpContext.Response.StatusDescription = HttpHelper.InvalidCSRFToken;
 					GXLogging.Error(log, $"Validation of antiforgery failed", e);
 				}
 				else
