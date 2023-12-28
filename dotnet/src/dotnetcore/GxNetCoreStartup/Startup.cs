@@ -165,6 +165,11 @@ namespace GeneXus.Application
 			{
 				options.AllowSynchronousIO = true;
 				options.Limits.MaxRequestBodySize = null;
+				if (Config.GetValueOrEnvironmentVarOf("MinRequestBodyDataRate", out string MinRequestBodyDataRateStr) && double.TryParse(MinRequestBodyDataRateStr, out double MinRequestBodyDataRate))
+				{
+					GXLogging.Info(log, $"MinRequestBodyDataRate:{MinRequestBodyDataRate}");
+					options.Limits.MinRequestBodyDataRate = new MinDataRate(bytesPerSecond: MinRequestBodyDataRate, gracePeriod: TimeSpan.FromSeconds(10));
+				}
 			});
 			services.Configure<IISServerOptions>(options =>
 			{
