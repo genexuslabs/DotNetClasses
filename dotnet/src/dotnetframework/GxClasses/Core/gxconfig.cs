@@ -156,7 +156,25 @@ namespace GeneXus.Configuration
 				return false;
 			}
 		}
-
+		internal static bool GetValueOrEnvironmentVarOf(string sId, out string sString)
+		{
+			try
+			{
+				sString = config.Get(sId);
+				if (String.IsNullOrEmpty(sString))
+				{
+					sString = MappedValue(sId, sString);
+					if (string.IsNullOrEmpty(sString))
+						return false;
+				}
+				return true;
+			}
+			catch
+			{
+				sString = string.Empty;
+				return false;
+			}
+		}
 		public static bool GetValueOf(string sId)
 		{
 			string sString;
