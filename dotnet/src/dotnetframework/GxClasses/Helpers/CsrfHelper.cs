@@ -14,7 +14,15 @@ namespace GeneXus.Http
 	{
 		internal static bool HandleException(Exception e, HttpContext httpContext)
 		{
-			if (RestAPIHelpers.ValidateCsrfToken() && e is HttpAntiForgeryException)
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+				return HandleExceptionImp(e, httpContext);
+			}
+			return false;
+		}
+		private static bool HandleExceptionImp(Exception e, HttpContext httpContext)
+		{
+			if (e is HttpAntiForgeryException)
 			{
 				httpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 				httpContext.Response.StatusDescription = HttpHelper.InvalidCSRFToken;
@@ -28,11 +36,11 @@ namespace GeneXus.Http
 		{
 			if (RestAPIHelpers.ValidateCsrfToken())
 			{
-				ValidateAntiforgeryImpl(context);
+				ValidateAntiforgeryImp(context);
 			}
 		}
 		[SecurityCritical]
-		static void ValidateAntiforgeryImpl(HttpContext context)
+		private static void ValidateAntiforgeryImp(HttpContext context)
 		{
 			string cookieToken, formToken;
 			string httpMethod = context.Request.HttpMethod;
