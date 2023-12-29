@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-using GeneXus.Configuration;
 using GeneXus.Programs;
-using GeneXus.Utils;
 using Xunit;
 
 namespace UnitTesting
@@ -13,13 +11,15 @@ namespace UnitTesting
 		public void TestITextFormat()
 		{
 			string report = "PDFFormat.pdf";
-			if (File.Exists(report))
-				File.Delete(report);
+			string outputFileDirectory = @".\temp\";
+
+			string reportFullPath = Path.Combine(Directory.GetCurrentDirectory(), outputFileDirectory, report);
+			if (File.Exists(reportFullPath))
+				File.Delete(reportFullPath);
 			try
 			{
 				apdfformats2 test = new apdfformats2();
 				test.execute();
-
 				longHtml test2 = new longHtml();
 				test2.execute();
 			}
@@ -29,7 +29,7 @@ namespace UnitTesting
 			{
 				Console.WriteLine(ex.ToString());
 			}
-			Assert.True(File.Exists(report));
+			Assert.True(File.Exists(reportFullPath));
 		}
 	}
 }

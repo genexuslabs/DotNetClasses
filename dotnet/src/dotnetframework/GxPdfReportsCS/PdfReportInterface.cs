@@ -117,7 +117,6 @@ namespace GeneXus.Printer
 		}
 		public virtual void GxSetDocName(string docName)
 		{
-			docName = ReportUtils.AddPath( docName, _appPath );
 			_pdfReport.GxSetDocName(docName);
 		}
 		public void GxSetDocFormat(string docFormat)
