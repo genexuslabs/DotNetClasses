@@ -14,5 +14,9 @@
 	{
 		"FunctionName": "eventgridTestCustomSchema",
 		"GXEntrypoint": "amyprochandler"
+	},
+	{
+		"FunctionName": "eventgridTestAzureSchema",
+		"GXEntrypoint": "amyprochandler"
 	}
 ]
