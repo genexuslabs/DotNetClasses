@@ -2911,11 +2911,7 @@ namespace GeneXus.Utils
 
 		public bool RemoveKey(TKey key)
 		{
-			if (ContainsKey(key))
-			{
-				return Remove(key);
-			}
-			return false;
+			return Remove(key);
 		}
 
 		public void RemoveKeys(List<TKey> keys)
