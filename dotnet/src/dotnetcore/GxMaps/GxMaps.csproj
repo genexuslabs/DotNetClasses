@@ -15,4 +15,7 @@
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 
-  </Project>
+  <ItemGroup>
+	<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+  </ItemGroup>
+</Project>

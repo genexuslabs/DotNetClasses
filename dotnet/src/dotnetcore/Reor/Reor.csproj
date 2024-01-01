@@ -16,6 +16,10 @@
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj"/>
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+	</ItemGroup>
+	
 	<Target Name="CustomContentTarget">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json">
