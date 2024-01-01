@@ -27,8 +27,9 @@
     <Folder Include="Store\Model\" />
     <Folder Include="Store\Platforms\" />
   </ItemGroup>
-
+	
 	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 		<PackageReference Include="Google.Apis" Version="1.57.0" />
 		<PackageReference Include="Google.Apis.AndroidPublisher.v3" Version="1.57.0.2741" />
 		<PackageReference Include="Google.Apis.Auth" Version="1.57.0" />

@@ -14,6 +14,7 @@
 
 
 	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.2" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.8.0" />
