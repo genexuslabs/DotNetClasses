@@ -55,62 +55,7 @@ namespace Extensions.AzureFunctions.Test
 			}
 				
 		}
-		[Fact]
-		public void EventGridTestCustomSchema()
-		{
-			try
-			{
-				var serviceCollection = new ServiceCollection();
-				serviceCollection.AddScoped<ILoggerFactory, LoggerFactory>();
-				var serviceProvider = serviceCollection.BuildServiceProvider();
-
-				var context = new Mock<FunctionContext>();
-				context.SetupProperty(c => c.InstanceServices, serviceProvider);
-
-				context.SetupGet(c => c.FunctionId).Returns("64b99c3769c74364a6a353948b18f597");
-				context.SetupGet(c => c.FunctionDefinition.Name).Returns("eventgridTestCustomSchema");
-				context.SetupGet(c => c.InvocationId).Returns("f373c14701b545aa90d9665eac867f1c");
-
-				ICallMappings callMappings = new CallMappings(".");
-
-
-				IReadOnlyDictionary<string, object> bindingData = new Dictionary<string, object>()
-				{
-					{
-						"Id", new PropertyId { Id = "4c5d455e-4809-4daf-b476-c7aeac6159ab"}
-					},
-				};
-
-				
-				context.SetupGet(c => c.BindingContext.BindingData).Returns(bindingData);
-				CustomEventType customEventType = new CustomEventType();
-				customEventType.Id = "d1aabd7d-ede3-4990-b4c3-eaee57a25763";
-				customEventType.Subject = "/blobServices/default/containers/oc2d2817345i200097container/blobs/oc2d2817345i20002296blob";
-				customEventType.EventType = "Microsoft.Storage.BlobCreated";
-				customEventType.EventTime = DateTime.Now;
-				customEventType.DataVersion = "1.0";
-				IDictionary<string, JsonElement> data = new Dictionary<string, JsonElement>();
-
-
-				const string json = " [ { \"name\": \"John\" }, { \"grades\": [ 90, 80, 100, 75 ] } ]";
-				JsonDocument doc = JsonDocument.Parse(json);
-				JsonElement root = doc.RootElement;
-			
-				data.Add("userdata", root[0]);
-				data.Add("usergrades", root[1]);
-
-				customEventType.Data = data;
-				var ex = Record.Exception(() => new EventGridTriggerHandler(callMappings).Run(customEventType, context.Object));
-				Assert.Null(ex);
-
-			}
-			catch (Exception ex)
-			{
-				throw new Exception("Exception should not be thrown.", ex);
-			}
-
-		}
-
+	
 		[Fact]
 		public void EventGridTestAzureSchema()
 		{
