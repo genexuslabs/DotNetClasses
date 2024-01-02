@@ -51,7 +51,7 @@ namespace GeneXus.Http.Client
 			Boundary = "----------------------------" + DateTime.Now.Ticks.ToString("x");
 			ContentType = $"multipart/form-data; boundary={Boundary}";
 			FormdataSeparator = "\r\n";
-			FormdataTemplate = "--" + Boundary + "\r\nContent-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}";
+			FormdataTemplate = "--" + Boundary + "\r\nContent-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
 			Boundarybytes = Encoding.ASCII.GetBytes($"\r\n--{Boundary}\r\n");
 			EndBoundaryBytes = Encoding.ASCII.GetBytes($"\r\n--{Boundary}--");
 			HeaderTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n" + "Content-Type: {2}\r\n\r\n";
