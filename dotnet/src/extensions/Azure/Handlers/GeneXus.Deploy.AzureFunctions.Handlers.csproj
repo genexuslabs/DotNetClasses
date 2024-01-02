@@ -66,7 +66,7 @@
 
 	<ItemGroup Condition="'$(EventGridSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventGrid" Version="3.4.1" />
-		<Compile Include="EventGridHandler\EventGridTriggerHandler.cs;EventGridHandler\EventGridTriggerHandlerCloud.cs;EventGridHandler\EventGridTriggerHandlerAzure.cs;Dummies\EventGridTriggerDummy.cs" />
+		<Compile Include="EventGridHandler\EventGridTriggerHandlerCloud.cs;EventGridHandler\EventGridTriggerHandlerAzure.cs;Dummies\EventGridTriggerDummy.cs" />
 	</ItemGroup>
 	
 	<ItemGroup>
