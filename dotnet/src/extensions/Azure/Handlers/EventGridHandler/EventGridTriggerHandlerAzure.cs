@@ -134,7 +134,6 @@ namespace GeneXus.Deploy.AzureFunctions.EventGridHandler
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", input.EventTime.UtcDateTime);
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", input.Data.ToString());
 
-
 								//List of Events
 								eventMessage.Add(eventMessageItem);
 								parametersdata = new object[] { eventMessages, null };
