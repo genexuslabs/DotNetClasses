@@ -25,7 +25,6 @@ namespace GeneXus.OpenTelemetry.OpenTelemetry
 			{
 				metricsProviderBuilder
 				.AddOtlpExporter()
-				.AddConsoleExporter()
 				.AddGxMeterAspNetInstrumentation();
 			});
 			return true;
