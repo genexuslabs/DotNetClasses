@@ -13,7 +13,6 @@ namespace GeneXus.OpenTelemetry
 		public static MeterProviderBuilder AddGxMeterAspNetInstrumentation(this MeterProviderBuilder meter)
 		{
 			meter
-				.AddConsoleExporter()
 				.AddAspNetCoreInstrumentation()
 				.AddHttpClientInstrumentation()
 				.AddOtlpExporter();
