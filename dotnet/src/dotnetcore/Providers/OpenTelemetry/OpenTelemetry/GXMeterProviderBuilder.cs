@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +16,10 @@ namespace GeneXus.OpenTelemetry
 			meter
 				.AddAspNetCoreInstrumentation()
 				.AddHttpClientInstrumentation()
+				.AddRuntimeInstrumentation()
 				.AddOtlpExporter();
+			if (Environment.GetEnvironmentVariable("ENABLE_METRICS_CONSOLE_EXPORTER")?.ToLower() == "true")
+				meter.AddConsoleExporter();
 			return meter;
 		}
 
