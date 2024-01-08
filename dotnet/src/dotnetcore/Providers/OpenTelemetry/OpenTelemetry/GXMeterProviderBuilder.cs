@@ -18,7 +18,7 @@ namespace GeneXus.OpenTelemetry
 				.AddHttpClientInstrumentation()
 				.AddRuntimeInstrumentation()
 				.AddOtlpExporter();
-			if (Environment.GetEnvironmentVariable("ENABLE_METRICS_CONSOLE_EXPORTER")?.ToLower() == "true")
+			if (Environment.GetEnvironmentVariable("OTEL_METRICS_EXPORTER")?.ToLower() == "console")
 				meter.AddConsoleExporter();
 			return meter;
 		}
