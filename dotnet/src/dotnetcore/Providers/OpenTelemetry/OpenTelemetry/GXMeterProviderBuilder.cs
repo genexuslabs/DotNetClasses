@@ -13,12 +13,13 @@ namespace GeneXus.OpenTelemetry
 	{
 		public static MeterProviderBuilder AddGxMeterAspNetInstrumentation(this MeterProviderBuilder meter)
 		{
+			string envvar = Environment.GetEnvironmentVariable("OTEL_METRICS_EXPORTER");
 			meter
 				.AddAspNetCoreInstrumentation()
 				.AddHttpClientInstrumentation()
 				.AddRuntimeInstrumentation()
 				.AddOtlpExporter();
-			if (Environment.GetEnvironmentVariable("OTEL_METRICS_EXPORTER")?.ToLower() == "console")
+			if (envvar != null && envvar.Contains("console"))
 				meter.AddConsoleExporter();
 			return meter;
 		}
