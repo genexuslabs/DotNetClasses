@@ -26,7 +26,7 @@ namespace GeneXus.OpenTelemetry
 					opt.EnableConnectionLevelAttributes = true;
 					opt.SetDbStatementForText = true;
 				});
-				if (Environment.GetEnvironmentVariable("ENABLE_TRACE_CONSOLE_EXPORTER")?.ToLower() == "true")
+				if (Environment.GetEnvironmentVariable("OTEL_TRACES_EXPORTER")?.ToLower() == "console")
 					tracer.AddConsoleExporter();
 			return tracer;
 		}
