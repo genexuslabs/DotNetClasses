@@ -2,6 +2,8 @@ using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 
 namespace GeneXus.OpenTelemetry.OpenTelemetry
 {
@@ -18,6 +20,11 @@ namespace GeneXus.OpenTelemetry.OpenTelemetry
 				tracerProviderBuilder
 				.AddOtlpExporter()
 				.AddGxAspNetInstrumentation();
+			});
+			services.AddOpenTelemetry().WithMetrics(metricsProviderBuilder =>
+			{
+				metricsProviderBuilder
+				.AddGxMeterAspNetInstrumentation();
 			});
 			return true;
 		}

@@ -18,6 +18,7 @@
 
 
 	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 		<PackageReference Include="itext7" Version="8.0.0" />
 		<PackageReference Include="itext7.font-asian" Version="8.0.0" />
 		<PackageReference Include="itext7.pdfhtml" Version="5.0.0" />
