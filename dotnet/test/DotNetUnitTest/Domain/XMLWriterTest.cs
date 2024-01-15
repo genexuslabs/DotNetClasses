@@ -27,7 +27,7 @@ namespace UnitTesting
 		internal string dfwpnumTest(string varcharValue, bool closeElements)
 		{
 			GxContext context = new GxContext();
-			string fileName = Path.Combine(BaseDir, "dfwpnumTest.txt");
+			string fileName = Path.Combine(BaseDir, "xmlDfwpnumTest.txt");
 			GXXMLWriter GXSoapXMLWriter = new GXXMLWriter(context.GetPhysicalPath());
 			GXSoapXMLWriter.Open(fileName);
 			GXSoapXMLWriter.WriteStartDocument("utf-8", 0);
