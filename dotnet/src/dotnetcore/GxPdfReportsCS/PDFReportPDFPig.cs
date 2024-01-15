@@ -225,11 +225,13 @@ namespace com.genexus.reports
 					}
 					catch (Exception)
 					{
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
 						using (WebClient webClient = new WebClient())
 						{
 							byte[] imageBytes = webClient.DownloadData(bitmap);
 							image = imageType == "jpeg" ? pageBuilder.AddJpeg(imageBytes, position) : pageBuilder.AddPng(imageBytes, position);
 						}
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
 					}
 					if (documentImages == null)
 					{

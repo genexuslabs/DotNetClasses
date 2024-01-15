@@ -15,6 +15,9 @@
 	<ItemGroup>
 	  <EmbeddedResource Include="..\..\dotnetframework\GxPdfReportsCS\sRGB Color Space Profile.icm" Link="sRGB Color Space Profile.icm" />
 	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="PdfPig" Version="0.1.8"  PrivateAssets="All"/>
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="itext7" Version="8.0.0" PrivateAssets="All" />
