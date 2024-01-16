@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.XML;
 using Xunit;
@@ -27,7 +23,7 @@ namespace UnitTesting
 		internal string dfwpnumTest(string varcharValue, bool closeElements)
 		{
 			GxContext context = new GxContext();
-			string fileName = Path.Combine(BaseDir, "dfwpnumTest.txt");
+			string fileName = Path.Combine(BaseDir, "xmlDfwpnumTest.txt");
 			GXXMLWriter GXSoapXMLWriter = new GXXMLWriter(context.GetPhysicalPath());
 			GXSoapXMLWriter.Open(fileName);
 			GXSoapXMLWriter.WriteStartDocument("utf-8", 0);
