@@ -56,6 +56,7 @@ namespace GeneXus.OpenTelemetry.Azure
 						GXLogging.Debug(log, "Connect to Azure monitor Opentelemetry Metrics exporter using Default Azure credential");
 					}
 				})
+				.AddGxMeterAspNetInstrumentation()
 				.Build();
 				return true;
 			}

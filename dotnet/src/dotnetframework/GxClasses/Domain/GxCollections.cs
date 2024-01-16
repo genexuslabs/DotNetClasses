@@ -1,26 +1,27 @@
 namespace GeneXus.Utils
 {
 	using System;
-	using System.Collections.Specialized;
 	using System.Collections;
-	using System.Collections.Generic;
-	using GeneXus.XML;
-	using System.Reflection;
-	using System.Xml.Serialization;
-	using System.Data;
-	using GeneXus.Application;
-	using System.Text;
-	using System.Globalization;
-	using Jayrock.Json;
-	using log4net;
-	using System.ComponentModel;
-	using System.Xml;
-	using System.Runtime.Serialization;
-	using System.Linq;
-	using GeneXus.Http;
-	using GeneXus.Configuration;
-	using GeneXus.Metadata;
 	using System.Collections.Concurrent;
+	using System.Collections.Generic;
+	using System.Collections.Specialized;
+	using System.ComponentModel;
+	using System.Data;
+	using System.Globalization;
+#if !NETCORE
+	using Jayrock.Json;
+#endif
+	using System.Linq;
+	using System.Reflection;
+	using System.Runtime.Serialization;
+	using System.Text;
+	using System.Xml;
+	using System.Xml.Serialization;
+	using GeneXus.Application;
+	using GeneXus.Configuration;
+	using GeneXus.Http;
+	using GeneXus.Metadata;
+	using GeneXus.XML;
 
 	public class GxParameterCollection : IDataParameterCollection
 	{
@@ -236,7 +237,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}
@@ -707,7 +708,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}
@@ -1268,7 +1269,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}
@@ -2045,6 +2046,10 @@ namespace GeneXus.Utils
 		{
 			innerArray = new List<object[]>(capacity);
 		}
+		internal GxArrayList(List<object[]> list)
+		{
+			innerArray = list;
+		}
 		public GxArrayList()
 		{
 			innerArray = new List<object[]>();
@@ -2077,7 +2082,6 @@ namespace GeneXus.Utils
 			return innerArray[index][i];
 		}
 	}
-
 	[CollectionDataContract(Name = "GxUnknownObjectCollection")]
 	[KnownType(typeof(GxSimpleCollection<object>))]
 	[KnownType(typeof(GxStringCollection))]

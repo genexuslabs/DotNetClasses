@@ -8,13 +8,12 @@ using GeneXus.Cache;
 using GeneXus.Metadata;
 using GeneXus.Utils;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Data
 {
 	public class GxHana : GxDataRecord
     {
-        static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxHana>();
         static Assembly _hanaAssembly;
         const string HanaDbTypeEnum = "Sap.Data.Hana.HanaDbType";
 #if NETCORE
@@ -321,7 +320,7 @@ namespace GeneXus.Data
     {
         const string HanaIsolationEnum = "Sap.Data.Hana.HanaIsolationLevel";
 
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HanaConnectionWrapper>();
 		public HanaConnectionWrapper()
         {
             try

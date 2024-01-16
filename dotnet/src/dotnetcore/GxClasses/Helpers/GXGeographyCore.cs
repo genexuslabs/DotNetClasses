@@ -2,9 +2,13 @@ using System;
 using System.Collections;
 using System.Globalization;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using GeographicLib;
-using log4net;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 
@@ -202,6 +206,7 @@ namespace GeneXus.Utils
 	[KnownType(typeof(System.Double[]))]
 	[KnownType(typeof(System.Collections.ArrayList))]
 	[DataContract]
+	[JsonConverter(typeof(CustomGeospatialConverter))]
 	public class Geospatial : IGeographicNative
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.Geospatial>();
@@ -406,7 +411,7 @@ namespace GeneXus.Utils
 			}
 		}
 
-		public String JSONPointToWKT(JArray coords)
+		internal String JSONPointToWKT(JArray coords)
 		{
 			String[] jbuffer = new String[] { "", "" };
 			jbuffer[0] = "";

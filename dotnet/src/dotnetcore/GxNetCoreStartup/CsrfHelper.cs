@@ -4,7 +4,6 @@ using System;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Http;
-using log4net;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 namespace GeneXus.Application
@@ -14,13 +13,15 @@ namespace GeneXus.Application
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ValidateAntiForgeryTokenMiddleware>();
 		private readonly RequestDelegate _next;
 		private readonly IAntiforgery _antiforgery;
+		private string _restBasePath;
 		private string _basePath;
 
-		public ValidateAntiForgeryTokenMiddleware(RequestDelegate next, IAntiforgery antiforgery, String basePath)
+		public ValidateAntiForgeryTokenMiddleware(RequestDelegate next, IAntiforgery antiforgery, string basePath)
 		{
 			_next = next;
 			_antiforgery = antiforgery;
-			_basePath = "/" + basePath;
+			_restBasePath = $"{basePath}{Startup.REST_BASE_URL}";
+			_basePath = $"/{basePath}";
 		}
 
 		public async Task Invoke(HttpContext context)
@@ -43,8 +44,12 @@ namespace GeneXus.Application
 					SetAntiForgeryTokens(_antiforgery, context);
 				}
 			}
-			if (!context.Request.Path.Value.EndsWith(_basePath)) //VerificationToken
+			if (!IsVerificationTokenServiceRequest(context)) 
 				await _next(context);
+		}
+		private bool IsVerificationTokenServiceRequest(HttpContext context)
+		{
+			return context.Request.Path.Value.EndsWith(_restBasePath);
 		}
 		internal static void SetAntiForgeryTokens(IAntiforgery _antiforgery, HttpContext context)
 		{

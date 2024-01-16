@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using GeneXus.MSOffice.Excel.Poi.Xssf;
-using log4net;
 
 namespace GeneXus.MSOffice.Excel
 {

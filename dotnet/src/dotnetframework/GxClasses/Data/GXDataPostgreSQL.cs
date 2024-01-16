@@ -1,6 +1,5 @@
 using System;
 using System.Text;
-using log4net;
 using System.Data;
 using System.Data.Common;
 using GeneXus.Utils;
@@ -20,7 +19,7 @@ namespace GeneXus.Data
 {
 	public class GxPostgreSql : GxDataRecord
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxPostgreSql>();
 		const string ConnectionStringEncoding = "encoding";
 		private byte[] _buffer;
 		static Assembly _npgsqlAssembly;
@@ -587,7 +586,7 @@ namespace GeneXus.Data
 	}
 	sealed internal class PostgresqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<PostgresqlConnectionWrapper>();
 		public PostgresqlConnectionWrapper()
 		{
 			_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection");

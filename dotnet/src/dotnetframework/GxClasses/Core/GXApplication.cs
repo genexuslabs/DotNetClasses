@@ -21,8 +21,9 @@ namespace GeneXus.Application
 #endif
 	using GeneXus.Configuration;
 	using GeneXus.Metadata;
-	using log4net;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using GeneXus.Http;
 	using System.Collections.Specialized;
 	using System.Collections.Generic;
@@ -44,7 +45,6 @@ namespace GeneXus.Application
 	using Microsoft.AspNetCore.Http.Features;
 #endif
 	using NodaTime;
-	using NodaTime.TimeZones;
 	using System.Threading;
 	using System.Security.Claims;
 	using System.Security;
@@ -322,7 +322,6 @@ namespace GeneXus.Application
 	public class GxContext : IGxContext
 	{
 		private static IGXLogger log = null;
-		internal static bool configurationLoaded = Config.configLoaded;
 		internal static string GX_SPA_REQUEST_HEADER = "X-SPA-REQUEST";
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
 		internal const string GXLanguage = "GXLanguage";

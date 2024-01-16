@@ -1,7 +1,9 @@
 namespace GeneXus.Application
 {
 	using System;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Collections.Generic;
 	[Serializable]
 	public class GXNavigationHelper

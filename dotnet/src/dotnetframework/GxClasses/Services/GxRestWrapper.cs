@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -25,8 +24,9 @@ using System.Web;
 using System.Collections.Specialized;
 using GeneXus.Security;
 using System.Collections;
+#if !NETCORE
 using Jayrock.Json;
-using Microsoft.Net.Http.Headers;
+#endif
 using System.Net.Http;
 using System.Diagnostics;
 using GeneXus.Diagnostics;
@@ -120,7 +120,7 @@ namespace GeneXus.Application
 					gxobject.webExecute();
 					return Task.CompletedTask;
 				}
-				if (!ProcessHeaders(_procWorker.GetType().Name))
+				if (!ProcessHeaders(GXBaseObject.GetObjectNameWithoutNamespace(_procWorker.GetType().FullName)))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
 				if (bodyParameters == null)
@@ -305,7 +305,7 @@ namespace GeneXus.Application
 				{
 					return Task.CompletedTask; 
 				}
-				if (!ProcessHeaders(_procWorker.GetType().Name))
+				if (!ProcessHeaders(GXBaseObject.GetObjectNameWithoutNamespace(_procWorker.GetType().FullName)))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
 				IDictionary<string,object> queryParameters = ReadQueryParameters(this._variableAlias);

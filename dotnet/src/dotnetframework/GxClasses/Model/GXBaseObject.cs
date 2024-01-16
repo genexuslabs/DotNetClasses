@@ -1,15 +1,21 @@
+using GeneXus.Configuration;
 using GeneXus.Data.NTier;
 using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.Mock;
+#if NETCORE
+using GeneXus.Services.OpenTelemetry;
+#endif
 using GeneXus.Utils;
+#if !NETCORE
 using Jayrock.Json;
-using log4net;
+#endif
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;
 #endif
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 
@@ -24,10 +30,24 @@ namespace GeneXus.Application
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXBaseObject>();
 
+#if NETCORE
+		internal static ActivitySource activitySource;
+#endif
 		private Dictionary<string, string> callTargetsByObject = new Dictionary<string, string>();
 		protected IGxContext _Context;
 		bool _isMain;
 		protected bool _isApi;
+#if NETCORE
+		internal static ActivitySource ActivitySource {
+			get {
+				if (activitySource == null)
+					activitySource = new(OpenTelemetryService.GX_ACTIVITY_SOURCE_NAME);
+				return activitySource;
+			}
+		}
+#endif
+		protected virtual bool GenOtelSpanEnabled() { return false; }
+		
 		protected virtual void ExecuteEx()
 		{
 			if (GxMockProvider.Provider != null)
@@ -36,11 +56,39 @@ namespace GeneXus.Application
 				if (GxMockProvider.Provider.Handle(_Context, this, parmInfo))
 					return;
 			}
-			ExecutePrivate();
+			ExecuteImpl();
 		}
 		protected virtual void ExecutePrivate()
 		{
-
+			
+		}
+		internal static string GetObjectNameWithoutNamespace(string gxObjFullName)
+		{
+			string mainNamespace = Preferences.AppMainNamespace;
+			if (gxObjFullName.StartsWith(mainNamespace))
+				gxObjFullName = gxObjFullName.Remove(0, mainNamespace.Length + 1);
+			return gxObjFullName;
+		}
+#if NETCORE
+		private void ExecuteUsingSpanCode()
+		{
+			string gxObjFullName = GetObjectNameWithoutNamespace(GetType().FullName);
+			using (Activity activity = ActivitySource.StartActivity($"{gxObjFullName}.execute"))
+			{
+				ExecutePrivate();
+			}
+		}
+#endif
+		protected virtual void ExecuteImpl()
+		{
+#if NETCORE
+			if (GenOtelSpanEnabled())
+				ExecuteUsingSpanCode();
+			else
+				ExecutePrivate();
+#else
+			ExecutePrivate();
+#endif
 		}
 		protected virtual void ExecutePrivateCatch(object stateInfo)
 		{

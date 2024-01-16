@@ -15,13 +15,10 @@ using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Metadata;
-using GeneXus.Procedure;
 using GeneXus.Utils;
-using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Net.Http.Headers;
 
 namespace GxClasses.Web.Middleware
 {
@@ -47,7 +44,7 @@ namespace GxClasses.Web.Middleware
 
 		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
 
-		const string PRIVATE_DIR = "private";
+		internal const string PRIVATE_DIR = "private";
 		public Dictionary<string, string> servicesPathUrl = new Dictionary<string, string>();
 		public Dictionary<String, Dictionary<string, SingleMap>> servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
@@ -61,6 +58,7 @@ namespace GxClasses.Web.Middleware
 			ServicesGroupSetting();
 			ServicesFunctionsMetadata();
 			GetAzureDeploy();
+			SvcFiles();
 		}
 
 		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
@@ -380,8 +378,7 @@ namespace GxClasses.Web.Middleware
 			GxContext gxContext = GxContext.CreateDefaultInstance();
 			gxContext.HttpContext = context;
 			context.NewSessionCheck();
-			string nspace;
-			Config.GetValueOf("AppMainNamespace", out nspace);
+			string nspace = Preferences.AppMainNamespace;
 
 			String tmpController = controller;
 			String addNspace = string.Empty;
@@ -400,7 +397,7 @@ namespace GxClasses.Web.Middleware
 			bool privateDirExists = Directory.Exists(privateDir);
 
 			GXLogging.Debug(log, $"PrivateDir:{privateDir} asssemblycontroller:{asssemblycontroller}");
-
+			string svcFile=null;
 			if (privateDirExists && File.Exists(Path.Combine(privateDir, $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
@@ -415,9 +412,7 @@ namespace GxClasses.Web.Middleware
 			else
 			{
 				string controllerLower = controller.ToLower();
-				string svcFile = SvcFile($"{controller}{SvcExtension}");
-				if (svcFile==null)
-					svcFile = SvcFile($"{controllerLower}{SvcExtension}");
+				svcFile = SvcFile($"{controller}{SvcExtension}");
 				if (File.Exists(svcFile))
 				{
 					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
@@ -449,22 +444,26 @@ namespace GxClasses.Web.Middleware
 			GXLogging.Warn(log, $"Controller was not found");
 			return null;
 		}
+
+		private void SvcFiles()
+		{
+			svcFiles = new HashSet<string>(new CaseInsensitiveStringEqualityComparer());
+			foreach (string file in Directory.GetFiles(ContentRootPath, SvcExtensionPattern, SearchOption.AllDirectories))
+			{
+				svcFiles.Add(file);
+			}
+		}
 		string SvcFile(string controller)
 		{
-			if (svcFiles == null)
-			{
-				svcFiles = new HashSet<string>();
-				foreach (string file in Directory.GetFiles(ContentRootPath, SvcExtensionPattern, SearchOption.AllDirectories))
-				{
-					svcFiles.Add(file);
-				}
-			}
 			string fileName;
-			string controllerFullName = Path.Combine(ContentRootPath, controller);
-			if (svcFiles.TryGetValue(new FileInfo(controllerFullName).FullName, out fileName))
+			string controllerFullName = new FileInfo(Path.Combine(ContentRootPath, controller)).FullName;
+			if (svcFiles.TryGetValue(controllerFullName, out fileName))
 				return fileName;
 			else
+			{
+				GXLogging.Warn(log, "Service file not found:" + controllerFullName);
 				return null;
+			}
 			
 		}
 		public void ServicesGroupSetting()
@@ -604,7 +603,18 @@ namespace GxClasses.Web.Middleware
 
 
 	}
+	internal class CaseInsensitiveStringEqualityComparer : IEqualityComparer<string>
+	{
+		public bool Equals(string x, string y)
+		{
+			return string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
+		}
 
+		public int GetHashCode(string obj)
+		{
+			return obj.ToLower().GetHashCode();
+		}
+	}
 	public static class AzureFeature
 	{
 		public const string AzureServerless = "AzureServerless";

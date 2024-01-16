@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-using Azure.Identity;
-using Azure.Monitor.OpenTelemetry.Exporter;
 using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
@@ -29,8 +27,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Resources;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -137,7 +133,7 @@ namespace GeneXus.Application
 		const string RESOURCES_FOLDER = "Resources";
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
-		const string REST_BASE_URL = "rest/";
+		internal const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
 		const string SWAGGER_DEFAULT_YAML = "default.yaml";
@@ -169,6 +165,11 @@ namespace GeneXus.Application
 			{
 				options.AllowSynchronousIO = true;
 				options.Limits.MaxRequestBodySize = null;
+				if (Config.GetValueOrEnvironmentVarOf("MinRequestBodyDataRate", out string MinRequestBodyDataRateStr) && double.TryParse(MinRequestBodyDataRateStr, out double MinRequestBodyDataRate))
+				{
+					GXLogging.Info(log, $"MinRequestBodyDataRate:{MinRequestBodyDataRate}");
+					options.Limits.MinRequestBodyDataRate = new MinDataRate(bytesPerSecond: MinRequestBodyDataRate, gracePeriod: TimeSpan.FromSeconds(10));
+				}
 			});
 			services.Configure<IISServerOptions>(options =>
 			{
@@ -200,6 +201,12 @@ namespace GeneXus.Application
 				options.Cookie.HttpOnly = true;
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
+				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
+				if (!string.IsNullOrEmpty(sessionCookieName))
+				{
+					options.Cookie.Name=sessionCookieName;
+					GxWebSession.SessionCookieName = sessionCookieName;
+				}
 				string sameSite;
 				SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
 				if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
@@ -374,14 +381,22 @@ namespace GeneXus.Application
 			if (File.Exists(rewriteFile))
 				AddRewrite(app, rewriteFile, baseVirtualPath);
 
+			string tempMediaDir = string.Empty;
+			if (Config.GetValueOf("TMPMEDIA_DIR", out string mediaPath) && !PathUtil.IsAbsoluteUrlOrAnyScheme(mediaPath))
+			{
+				tempMediaDir = mediaPath;
+			}
 			app.UseStaticFiles(new StaticFileOptions()
 			{
 				FileProvider = new PhysicalFileProvider(LocalPath),
 				RequestPath = new PathString($"{baseVirtualPath}"),
 				OnPrepareResponse = s =>
 				{
-					var path = s.Context.Request.Path;
-					if (path.HasValue &&  path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase)>=0)
+					PathString path = s.Context.Request.Path;
+					bool appSettingsPath = path.HasValue && path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase) >= 0;
+					bool tempMediaPath = path.StartsWithSegments($"{baseVirtualPath}/{tempMediaDir}", StringComparison.OrdinalIgnoreCase);
+					bool privatePath = path.StartsWithSegments($"{baseVirtualPath}/{GXRouting.PRIVATE_DIR}", StringComparison.OrdinalIgnoreCase);
+					if (appSettingsPath || tempMediaPath || privatePath)
 					{
 						s.Context.Response.StatusCode = 401;
 						s.Context.Response.Body = Stream.Null;
@@ -407,7 +422,7 @@ namespace GeneXus.Application
 			if (RestAPIHelpers.ValidateCsrfToken())
 			{
 				antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
-				app.UseAntiforgeryTokens(restBasePath);
+				app.UseAntiforgeryTokens(apiBasePath);
 			}
 			app.UseMvc(routes =>
 			{
@@ -497,7 +512,6 @@ namespace GeneXus.Application
 	}
 	public class CustomExceptionHandlerMiddleware
 	{
-		const string InvalidCSRFToken = "InvalidCSRFToken";
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
@@ -512,9 +526,8 @@ namespace GeneXus.Application
 				}
 				else if (ex is AntiforgeryValidationException)
 				{
-					//"The required antiforgery header value "X-GXCSRF-TOKEN" is not present.
 					httpStatusCode = HttpStatusCode.BadRequest;
-					httpReasonPhrase = InvalidCSRFToken;
+					httpReasonPhrase = HttpHelper.InvalidCSRFToken;
 					GXLogging.Error(log, $"Validation of antiforgery failed", ex);
 				}
 				else

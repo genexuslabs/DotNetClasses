@@ -24,9 +24,7 @@ using iText.Layout.Element;
 using iText.Layout.Font;
 using iText.Layout.Layout;
 using iText.Layout.Properties;
-using iText.Layout.Renderer;
 using iText.Layout.Splitting;
-using log4net;
 using Path = System.IO.Path;
 
 namespace GeneXus.Printer

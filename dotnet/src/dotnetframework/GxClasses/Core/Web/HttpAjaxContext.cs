@@ -2,7 +2,9 @@ namespace GeneXus.Http
 {
 	using System;
 	using System.IO;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Web;
 	using GeneXus.Application;
 	using GeneXus.Utils;
@@ -17,9 +19,7 @@ namespace GeneXus.Http
 #else
 	using Microsoft.AspNetCore.Http;
 #endif
-	using System.Diagnostics;
 	using GeneXus.Configuration;
-	using log4net;
 
 	public interface IHttpAjaxContext
 	{
@@ -44,12 +44,6 @@ namespace GeneXus.Http
 		void AddStylesHidden();
 		void ajax_rsp_clear();
 
-		JArray AttValues { get;}
-		JObject HiddenValues { get;}
-		JArray PropValues { get; }
-		JObject WebComponents { get;}
-		JObject Messages { get;}
-		JArray Grids { get; }
 		void LoadFormVars(HttpContext localHttpContext);
 		void disableJsOutput();
 		void enableJsOutput();
@@ -149,24 +143,24 @@ namespace GeneXus.Http
 
 		public string FormCaption { get; set; }
 
-		public JObject HiddenValues
+		internal JObject HiddenValues
 		{ get { return _HiddenValues; } }
-		public JArray AttValues
+		internal JArray AttValues
 		{ get { return _AttValues; } }
-		public JArray PropValues
+		internal JArray PropValues
 		{ get { return _PropValues; } }
-		public JObject WebComponents
+		internal JObject WebComponents
 		{ get { return _WebComponents; } }
-		public Hashtable LoadCommands
+		internal Hashtable LoadCommands
 		{ get { return _LoadCommands; } }
-		public JObject Messages
+		internal JObject Messages
 		{ get {
 				return _Messages;
 			}
 		}
-		public JArray Grids
+		internal JArray Grids
 		{ get { return _Grids; } }
-		public JObject ComponentObjects
+		internal JObject ComponentObjects
 		{ get { return _ComponentObjects; } }
 		public GXAjaxCommandCollection Commands
 		{ get { return commands; } }
@@ -213,7 +207,7 @@ namespace GeneXus.Http
 			commands.AppendCommand(new GXAjaxCommand(cmdType, cmdData));
 		}
 
-		public void appendLoadData(int SId, JObject Data)
+		internal void appendLoadData(int SId, JObject Data)
 		{
 			LoadCommands[SId] = Data;
 		}
@@ -670,7 +664,7 @@ namespace GeneXus.Http
 			return jsonCmdWrapper.ToString();
 		}
 
-		public static JArray GetParmsJArray(Object[] parms)
+		internal static JArray GetParmsJArray(Object[] parms)
 		{
 			JArray inputs = new JArray();
 			for (int i = 0; i < parms.Length; i++)
@@ -747,7 +741,7 @@ namespace GeneXus.Http
 
             }
         }
-		public void ParseGXState(JObject tokenValues)
+		internal void ParseGXState(JObject tokenValues)
 		{
 			if (tokenValues != null)
 			{
@@ -824,7 +818,7 @@ namespace GeneXus.Http
         }
     }
 
-    public class GXJObject : JObject
+    internal class GXJObject : JObject
     {
         private bool base64Encoded;
 
@@ -885,7 +879,7 @@ namespace GeneXus.Http
 			}
 		}
 
-		public JObject JSONObject
+		internal JObject JSONObject
 		{
 			get
 			{
@@ -1030,7 +1024,7 @@ namespace GeneXus.Http
 			return null;
 		}
 
-		public JArray JSONArray
+		internal JArray JSONArray
 		{
 			get
 			{

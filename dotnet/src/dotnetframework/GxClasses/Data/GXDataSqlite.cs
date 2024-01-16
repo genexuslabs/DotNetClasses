@@ -1,6 +1,5 @@
 using GeneXus.Cache;
 using GeneXus.Utils;
-using log4net;
 using System;
 using System.Text;
 using System.Data;

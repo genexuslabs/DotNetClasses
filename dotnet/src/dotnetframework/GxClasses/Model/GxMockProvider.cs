@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using GeneXus.Application;
-using log4net;
 namespace GeneXus.Mock
 {
 	public interface IGxMock

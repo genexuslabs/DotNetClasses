@@ -1,13 +1,14 @@
-using GeneXus.Application;
-using GeneXus.XML;
+#if !NETCORE
 using Jayrock.Json;
-using log4net;
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Serialization;
+using GeneXus.Application;
+using GeneXus.XML;
+
 
 namespace GeneXus.Utils
 {
@@ -470,7 +471,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}

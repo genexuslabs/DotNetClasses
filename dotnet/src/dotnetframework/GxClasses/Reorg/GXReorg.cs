@@ -1,21 +1,20 @@
-namespace GeneXus.Reorg 
+namespace GeneXus.Reorg
 {
 	using System;
-	using System.IO;
 	using System.Collections;
-	using GeneXus.Application;
-	using log4net;
 	using System.Collections.Specialized;
-    using System.Runtime.CompilerServices;
-    using GeneXus.Metadata;
+	using System.IO;
+	using System.Reflection;
+	using System.Runtime.CompilerServices;
 	using System.Threading;
+	using GeneXus.Application;
 	using GeneXus.Configuration;
-	using GeneXus.Data.ADO;
 	using GeneXus.Data;
+	using GeneXus.Data.ADO;
+	using GeneXus.Data.NTier;
+	using GeneXus.Metadata;
 	using GeneXus.Resources;
 	using GeneXus.Utils;
-    using GeneXus.Data.NTier;
-	using System.Reflection;
 
 	public interface IReorgReader
 	{
@@ -58,7 +57,11 @@ namespace GeneXus.Reorg
 		{
 
 		}
-        public IGxContext context
+		protected virtual void ExecuteImpl()
+		{
+			ExecutePrivate();
+		}
+		public IGxContext context
         {
             get { return _Context; }
             set { _Context = value; }

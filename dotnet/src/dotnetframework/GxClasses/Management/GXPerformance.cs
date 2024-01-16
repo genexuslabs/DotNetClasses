@@ -1,15 +1,14 @@
-using System.Management.Instrumentation;
-using System.Collections;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Management.Instrumentation;
+using System.Security;
 using GeneXus.Data;
 using GeneXus.Data.ADO;
 using GeneXus.Data.NTier;
 using GeneXus.Data.NTier.ADO;
 using GeneXus.XML;
-using System.Diagnostics;
-using log4net;
-using System.Security;
-using System.Collections.Concurrent;
 
 namespace GeneXus.Performance
 {

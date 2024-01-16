@@ -1,3 +1,4 @@
+using System;
 using GeneXus.Services.OpenTelemetry;
 using OpenTelemetry.Trace;
 
@@ -19,17 +20,15 @@ namespace GeneXus.OpenTelemetry
 				{
 					opt.RecordException = true;
 				})
-				.AddAspNetCoreInstrumentation(opt =>
-				{
-					opt.RecordException = true;
-				})
 				.AddSqlClientInstrumentation(opt =>
 				{
 					opt.RecordException = true;
 					opt.EnableConnectionLevelAttributes = true;
 					opt.SetDbStatementForText = true;
-				})
-				.AddConsoleExporter();
+				});
+				string envvar = Environment.GetEnvironmentVariable("OTEL_TRACES_EXPORTER");
+				if (envvar != null && envvar.Contains("console"))
+					tracer.AddConsoleExporter();
 			return tracer;
 		}
 	}

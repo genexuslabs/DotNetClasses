@@ -1,12 +1,12 @@
-using GeneXus.Application;
-using GeneXus.Cache;
-using GeneXus.Utils;
-using log4net;
-using MySQLDriverCS;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Text;
+using GeneXus.Application;
+using GeneXus.Cache;
+using GeneXus.Utils;
+using MySQLDriverCS;
 
 namespace GeneXus.Data
 {
@@ -498,7 +498,7 @@ namespace GeneXus.Data
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
-			block = new GxArrayList(fetchSize);
+			block = new List<object[]>(fetchSize);
 			pos = -1;
 			if (cached)
 			{
@@ -543,7 +543,7 @@ namespace GeneXus.Data
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
-			block = new GxArrayList(fetchSize);
+			block = new List<object[]>(fetchSize);
 			pos = -1;
 			if (cached)
 			{

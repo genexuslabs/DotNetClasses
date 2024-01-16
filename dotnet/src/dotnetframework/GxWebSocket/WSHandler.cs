@@ -8,8 +8,11 @@ using GeneXus.Metadata;
 using GeneXus.Procedure;
 using GeneXus.Services;
 using GeneXus.Utils;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
-using log4net;
+#endif
 using Microsoft.Web.WebSockets;
 
 namespace GeneXus.Http.WebSocket

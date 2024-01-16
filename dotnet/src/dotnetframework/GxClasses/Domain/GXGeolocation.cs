@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Net;
 using System.IO;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
-using log4net;
+#endif
 using GeneXus.Utils;
 using System.Globalization;
 using GeneXus;
@@ -16,7 +18,7 @@ using System.Net.Http;
 
 namespace GX
 {
-    public class GXGeolocation
+	public class GXGeolocation
     {
 		private const String MAPS_URI = "https://maps.google.com/maps/api/";
         private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GX.GXGeolocation>();

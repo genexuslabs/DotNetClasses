@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
-using GeneXus.Configuration;
-using System.Web;
 using System.IO;
-using GeneXus.Utils;
-using GeneXus.Application;
-using ManagedFusion.Rewriter;
-using System.Web.Hosting;
-using ManagedFusion.Rewriter.Rules;
-using ManagedFusion.Rewriter.Engines;
-using System.Reflection;
-using log4net;
-using System.Web.SessionState;
-using System.Web.Configuration;
-using System.Security;
 using System.Net.Http;
+using System.Reflection;
+using System.Security;
+using System.Web;
+using System.Web.Configuration;
+using System.Web.Hosting;
+using System.Web.SessionState;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Utils;
+using ManagedFusion.Rewriter;
+using ManagedFusion.Rewriter.Engines;
+using ManagedFusion.Rewriter.Rules;
 
 namespace GeneXus.Http.HttpModules
 {

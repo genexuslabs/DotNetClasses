@@ -11,6 +11,10 @@
 	  <None Remove="log.console.config" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Compile Include="..\DotNetCoreUnitTest\StringUtil\JsonUtilTest.cs" Link="StringUtil\JsonUtilTest.cs" />
+	  <Compile Include="..\DotNetCoreUnitTest\StringUtil\type_SdtSDTGeneric.cs" Link="StringUtil\type_SdtSDTGeneric.cs" />
+	</ItemGroup>
+	<ItemGroup>
 	  <Content Include="applications.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
@@ -51,6 +55,10 @@
     <ProjectReference Include="..\..\src\dotnetframework\Providers\Storage\GXGoogleCloud\GXGoogleCloud.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Jayrock-JSON">
+      <HintPath>..\..\src\dotnetframework\libs\Jayrock-JSON.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
     <Reference Include="TZ4Net">
       <HintPath>..\..\src\dotnetframework\libs\TZ4Net.dll</HintPath>
@@ -92,6 +100,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="StringUtil\" />
     <Folder Include="TestResults\" />
   </ItemGroup>
   <ItemGroup>
@@ -101,5 +110,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
   </ItemGroup>
+	
 </Project>
 

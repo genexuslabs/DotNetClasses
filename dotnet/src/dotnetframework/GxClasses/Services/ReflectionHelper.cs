@@ -7,7 +7,9 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using GeneXus.Utils;
 using System.Linq;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 
 using Type = System.Type;
 
@@ -150,7 +152,7 @@ namespace GeneXus.Application
 			else if (newType == typeof(DateTime))
 			{
 				string jsonDate = value as string;
-				return DateTimeUtil.CToDT2(jsonDate);
+				return DateTimeUtil.CToDT2(jsonDate, context);
 			}
 			else if (newType == typeof(Geospatial))
 			{
@@ -179,9 +181,9 @@ namespace GeneXus.Application
 				Type singleItemType = newType.GetElementType();
 
 				var elements = new ArrayList();
-				foreach (var element in value.ToString().Split(','))
+				foreach (string element in value.ToString().Split(','))
 				{
-					var convertedSingleItem = ConvertSingleJsonItem(element, singleItemType, context);
+					object convertedSingleItem = ConvertSingleJsonItem(element, singleItemType, context);
 					elements.Add(convertedSingleItem);
 				}
 				return elements.ToArray(singleItemType);
@@ -211,11 +213,11 @@ namespace GeneXus.Application
 			var methodParameters = methodInfo.GetParameters();
 			foreach (var methodParameter in methodParameters)
 			{
-				var gxParameterName = GxParameterName(methodParameter.Name);
+				string gxParameterName = GxParameterName(methodParameter.Name);
 				if (IsByRefParameter(methodParameter))
 				{
 					string fmt = "";
-					var attributes = methodParameter.GetCustomAttributes(true);
+					object[] attributes = methodParameter.GetCustomAttributes(true);
 					GxJsonFormatAttribute attFmt = (GxJsonFormatAttribute)attributes.Where(a => a.GetType() == typeof(GxJsonFormatAttribute)).FirstOrDefault();
 					if (attFmt != null)
 						fmt = attFmt.JsonFormat;
@@ -233,7 +235,7 @@ namespace GeneXus.Application
 			int idx = 0;
 			foreach (var methodParameter in methodParameters)
 			{
-				var gxParameterName = GxParameterName(methodParameter.Name);
+				string gxParameterName = GxParameterName(methodParameter.Name);
 				if (IsByRefParameter(methodParameter))
 				{
 					outputParameters.Add(gxParameterName, parametersForInvocation[idx]);
@@ -250,12 +252,12 @@ namespace GeneXus.Application
 		{
 			var methodParameters = methodInfo.GetParameters();
 			object[] parametersForInvocation = new object[methodParameters.Length];
-			var idx = 0;
+			int idx = 0;
 			foreach (var methodParameter in methodParameters)
 			{
 				object value;
 
-				var gxParameterName = GxParameterName(methodParameter.Name).ToLower();
+				string gxParameterName = GxParameterName(methodParameter.Name).ToLower();
 				Type parmType = methodParameter.ParameterType;
 				if (IsByRefParameter(methodParameter))
 				{
@@ -269,13 +271,13 @@ namespace GeneXus.Application
 					}
 					else
 					{
-						var convertedValue = ConvertStringToNewType(value, parmType, context);
+						object convertedValue = ConvertStringToNewType(value, parmType, context);
 						parametersForInvocation[idx] = convertedValue;
 					}
 				}
 				else
 				{
-					var defaultValue = CreateInstance(parmType);
+					object defaultValue = CreateInstance(parmType);
 					parametersForInvocation[idx] = defaultValue;
 				}
 				idx++;
@@ -287,7 +289,7 @@ namespace GeneXus.Application
 		{
 			var methodParameters = methodInfo.GetParameters();
 			object[] parametersForInvocation = new object[methodParameters.Length];
-			var idx = 0;
+			int idx = 0;
 			foreach (var methodParameter in methodParameters)
 			{
 				Type parmType = methodParameter.ParameterType;
@@ -301,7 +303,7 @@ namespace GeneXus.Application
 					//To avoid convertion from string type
 					if (value.GetType() != typeof(string))
 					{
-						var convertedValue = ConvertStringToNewType(value, parmType, context);
+						object convertedValue = ConvertStringToNewType(value, parmType, context);
 						parametersForInvocation[idx] = convertedValue;
 					}
 					else
@@ -335,7 +337,7 @@ namespace GeneXus.Application
 		{
 			var methodParameters = methodInfo.GetParameters();
 			object[] parametersForInvocation = new object[methodParameters.Length];
-			var idx = 0;
+			int idx = 0;
 			string pattern = @"(AV\d+)(.*)";
 			string replacement = "$2";
 			Regex rgx = new Regex(pattern);
@@ -344,7 +346,7 @@ namespace GeneXus.Application
 			{
 				rgx.Replace(methodParameter.Name, replacement);
 				Type parmType = methodParameter.ParameterType;
-				var convertedValue = ConvertStringToNewType(parametersValues[idx], parmType);
+				object convertedValue = ConvertStringToNewType(parametersValues[idx], parmType);
 				parametersForInvocation[idx] = convertedValue;
 				idx++;
 			}

@@ -1,11 +1,7 @@
+using System;
 using GeneXus;
 using GeneXus.Application;
 using GeneXus.Data;
-using GeneXus.Utils;
-using log4net;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace GX
 {

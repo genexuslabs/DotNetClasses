@@ -1,29 +1,21 @@
 namespace GeneXus.Http
 {
 	using System;
-	using System.Collections;
-	using System.Collections.Specialized;
 	using System.Collections.Generic;
-	using System.Globalization;
 	using System.IO;
 	using System.Reflection;
 	using System.Text;
-	using System.Text.RegularExpressions;
-	using System.Threading;
 
 	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Data.NTier;
-	using GeneXus.Encryption;
 	using GeneXus.Metadata;
 	using GeneXus.Mime;
 	using GeneXus.Security;
 	using GeneXus.Utils;
-	using GeneXus.XML;
-	using GeneXus.WebControls;
-
-	using log4net;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Web.SessionState;
 	using System.Web;
 #if NETCORE

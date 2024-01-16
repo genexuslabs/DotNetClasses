@@ -10,7 +10,6 @@ using GeneXus.Metadata;
 using iTextSharp.text;
 using iTextSharp.text.html.simpleparser;
 using iTextSharp.text.pdf;
-using log4net;
 
 namespace com.genexus.reports
 {
