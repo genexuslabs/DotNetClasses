@@ -584,7 +584,12 @@ namespace GeneXus.Http.Client
 						{
 							if (cookie.Contains("="))
 							{
-								cookies.Add(new Uri(request.RequestUri.Host), new Cookie(cookie.Split('=')[0], cookie.Split('=')[1]) { Domain = request.RequestUri.Host });
+								UriBuilder uriBuilder = new UriBuilder(request.RequestUri.Scheme, request.RequestUri.Host);
+								Cookie pCookie = ParseCookie(cookie, request.RequestUri.Host);
+								if (pCookie != null)
+								{
+									cookies.Add(uriBuilder.Uri, pCookie);
+								}
 							}
 						}
 						break;
@@ -607,6 +612,16 @@ namespace GeneXus.Http.Client
 					headers.ConnectionClose = false;
 			}
 			InferContentType(contentType, request);
+		}
+		Cookie ParseCookie(string cookie, string domain)
+		{
+			string[] values = cookie.TrimEnd(';').Split('=');
+			if (values.Length >= 2) {
+				string cookieName = values[0].Trim();
+				string cookieValue = values[1];
+				return new Cookie(cookieName, cookieValue) { Domain = domain };
+			}
+			return null;
 		}
 		void AddHeader(HttpRequestHeaders headers, string headerName, string headerValue)
 		{
