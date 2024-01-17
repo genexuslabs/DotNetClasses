@@ -27,7 +27,6 @@ namespace xUnitTesting
 				httpclient.Execute("GET", string.Empty);
 				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), httpclient.StatusCode);
 			}
-
 		}
 
 		[Fact]
