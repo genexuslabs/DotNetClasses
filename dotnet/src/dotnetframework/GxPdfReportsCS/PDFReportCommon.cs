@@ -30,7 +30,7 @@ namespace com.genexus.reports
 	{
 		protected int lineHeight, pageLines;
 
-		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportItextBase>();
+		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportBase>();
 
 		protected bool fontUnderline;
 		protected bool fontStrikethru;
