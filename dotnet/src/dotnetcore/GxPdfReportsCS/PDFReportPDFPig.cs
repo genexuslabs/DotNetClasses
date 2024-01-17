@@ -71,15 +71,13 @@ namespace com.genexus.reports
 			try
 			{
 				pageSize = ComputePageSize(leftMargin, topMargin, pageWidth, pageLength, props.getBooleanGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER));
-				documentBuilder = new PdfDocumentBuilder(outputStream);
-				GxStartPage();
-
 				gxXPage = (int) pageBuilder.PageSize.TopRight.X;
 				if (props.getBooleanGeneralProperty(Const.FIX_SAC24437, true))
 					gxYPage = (int)(pageLength / GX_PAGE_SCALE_Y);
 				else
 					gxYPage = (int)(pageLength / GX_PAGE_SCALE_Y_OLD);
 
+				documentBuilder = new PdfDocumentBuilder(outputStream);
 			}
 			catch (Exception e)
 			{
@@ -89,13 +87,21 @@ namespace com.genexus.reports
 
 		public PDFReportPDFPig(String appPath) : base(appPath)
 		{
+			documentBuilder = null;
 			documentImages = new Dictionary<string, AddedImage>();
 		}
 
 		public override void GxStartPage()
 		{
-			pageBuilder = documentBuilder.AddPage(pageSize);
-			pages = pages + 1;
+			try
+			{
+				pageBuilder = documentBuilder.AddPage(pageSize);
+				pages = pages + 1;
+			}
+			catch (Exception de)
+			{
+				GXLogging.Error(log, "GxStartPage error", de);
+			}
 		}
 
 		internal override bool SetComplainceLevel(PdfConformanceLevel level)
