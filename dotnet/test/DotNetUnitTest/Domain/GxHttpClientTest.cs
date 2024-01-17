@@ -45,6 +45,32 @@ namespace xUnitTesting
 				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), httpclient.StatusCode);
 			}
 		}
+
+		[Fact]
+		public void HttpClientCookieHeader()
+		{
+			string headerValue = "CognitoIdentityServiceProvider.3tgmin25m9bkg6vgi7vpavu7a9.M00000936.refreshToken=eyJjdHkiOiJKV1QiLCJlbmMiSkRCAmMpYqndvORnWLTfHw; CognitoIdentityServiceProvider.3tgmin25m9bkg6vgi7vpavu7a9.LastAuthUser=M00000936";
+			string headerName = "Cookie";
+			using (GxHttpClient httpclient = new GxHttpClient())
+			{
+				httpclient.AddHeader(headerName, headerValue);
+				httpclient.Host = "localhost";
+				httpclient.Port = 80;
+				httpclient.BaseURL = @"NotFound/NotFound.php";
+				httpclient.HttpClientExecute("GET", string.Empty);
+				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), httpclient.StatusCode);
+			}
+			using (GxHttpClient oldHttpclient = new GxHttpClient())
+			{
+				oldHttpclient.AddHeader(headerName, headerValue);
+				oldHttpclient.Host = "localhost";
+				oldHttpclient.Port = 80;
+				oldHttpclient.BaseURL = @"NotFound/NotFound.php";
+				oldHttpclient.Execute("GET", string.Empty);
+				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), oldHttpclient.StatusCode);
+			}
+
+		}
 #if !NETCORE
 		[Fact]
 		public void NoStoreHeader()
