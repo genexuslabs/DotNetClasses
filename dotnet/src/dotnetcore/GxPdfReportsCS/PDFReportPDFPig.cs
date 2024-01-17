@@ -40,7 +40,7 @@ namespace com.genexus.reports
 
 		private PdfDocumentBuilder documentBuilder;
 		private PdfPageBuilder pageBuilder;
-		private PageSize pageSize;
+		private ExtendedPageSize pageSize;
 
 		private AddedFont baseFont;
 		private string baseFontName;
@@ -71,13 +71,15 @@ namespace com.genexus.reports
 			try
 			{
 				pageSize = ComputePageSize(leftMargin, topMargin, pageWidth, pageLength, props.getBooleanGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER));
+				documentBuilder = new PdfDocumentBuilder(outputStream);
+
+				pageBuilder = documentBuilder.AddPage(pageSize.Width, pageSize.Height);
 				gxXPage = (int) pageBuilder.PageSize.TopRight.X;
 				if (props.getBooleanGeneralProperty(Const.FIX_SAC24437, true))
 					gxYPage = (int)(pageLength / GX_PAGE_SCALE_Y);
 				else
 					gxYPage = (int)(pageLength / GX_PAGE_SCALE_Y_OLD);
 
-				documentBuilder = new PdfDocumentBuilder(outputStream);
 			}
 			catch (Exception e)
 			{
@@ -95,7 +97,10 @@ namespace com.genexus.reports
 		{
 			try
 			{
-				pageBuilder = documentBuilder.AddPage(pageSize);
+				if (pages > 0)
+				{
+					pageBuilder = documentBuilder.AddPage(pageSize.Width, pageSize.Height);
+				}
 				pages = pages + 1;
 			}
 			catch (Exception de)
@@ -672,29 +677,27 @@ namespace com.genexus.reports
 			pageBuilder.AddText(sTxt, fontSize, textStartingPoint, baseFont);
 		}
 
-		private PageSize ComputePageSize(float leftMargin, float topMargin, int width, int length, bool marginsInsideBorder)
+		private ExtendedPageSize ComputePageSize(float leftMargin, float topMargin, int width, int length, bool marginsInsideBorder)
 		{
 			if ((leftMargin == 0 && topMargin == 0) || marginsInsideBorder)
 			{
 				if (length == 23818 && width == 16834)
-					return PageSize.A3;
+					return new ExtendedPageSize(PageSize.A3);
 				else if (length == 16834 && width == 11909)
-					return PageSize.A4;
+					return new ExtendedPageSize(PageSize.A4);
 				else if (length == 11909 && width == 8395)
-					return PageSize.A5;
+					return new ExtendedPageSize(PageSize.A5);
 				else if (length == 15120 && width == 10440)
-					return PageSize.Executive;
+					return new ExtendedPageSize(PageSize.Executive);
 				else if (length == 20160 && width == 12240)
-					return PageSize.Legal;
+					return new ExtendedPageSize(PageSize.Legal);
 				else if (length == 15840 && width == 12240)
-					return PageSize.Letter;
+					return new ExtendedPageSize(PageSize.Letter);
 				else
-					return PageSize.Custom;
+					return new ExtendedPageSize((width / PAGE_SCALE_X), (length / PAGE_SCALE_Y));
 			}
-			return PageSize.Custom;
-			/*
-			 There seems to be no way of creating pages of size B4, B5 and Custom
-			*/
+			return new ExtendedPageSize((width / PAGE_SCALE_X) + leftMargin, (length / PAGE_SCALE_Y) + topMargin);
+
 		}
 
 		public override void GxEndDocument()
@@ -770,6 +773,22 @@ namespace com.genexus.reports
 				default: break;
 			}
 			outputStream = null;
+		}
+
+	}
+	internal class ExtendedPageSize
+	{
+		internal double Width;
+		internal double Height;
+		internal PageSize PageSize;
+		internal ExtendedPageSize(double w, double h)
+		{
+			Width = w;
+			Height = h;
+		}
+		internal ExtendedPageSize(PageSize pageSize)
+		{
+			PageSize = pageSize;
 		}
 
 	}
