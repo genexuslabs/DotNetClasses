@@ -73,7 +73,8 @@ namespace com.genexus.reports
 				pageSize = ComputePageSize(leftMargin, topMargin, pageWidth, pageLength, props.getBooleanGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER));
 				documentBuilder = new PdfDocumentBuilder(outputStream);
 
-				pageBuilder = documentBuilder.AddPage(pageSize.Width, pageSize.Height);
+				pageBuilder = pageSize.IsCustomPageSize() ? documentBuilder.AddPage(pageSize.Width, pageSize.Height) : documentBuilder.AddPage(pageSize.PageSize);
+
 				gxXPage = (int) pageBuilder.PageSize.TopRight.X;
 				if (props.getBooleanGeneralProperty(Const.FIX_SAC24437, true))
 					gxYPage = (int)(pageLength / GX_PAGE_SCALE_Y);
@@ -99,7 +100,7 @@ namespace com.genexus.reports
 			{
 				if (pages > 0)
 				{
-					pageBuilder = documentBuilder.AddPage(pageSize.Width, pageSize.Height);
+					pageBuilder = pageSize.IsCustomPageSize() ? documentBuilder.AddPage(pageSize.Width, pageSize.Height) : documentBuilder.AddPage(pageSize.PageSize);
 				}
 				pages = pages + 1;
 			}
@@ -785,11 +786,15 @@ namespace com.genexus.reports
 		{
 			Width = w;
 			Height = h;
+			PageSize = PageSize.Custom;
 		}
 		internal ExtendedPageSize(PageSize pageSize)
 		{
 			PageSize = pageSize;
 		}
-
+		internal bool IsCustomPageSize()
+		{
+			return PageSize == PageSize.Custom;
+		}
 	}
 }
