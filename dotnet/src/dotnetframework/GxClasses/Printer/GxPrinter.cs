@@ -16,6 +16,7 @@ namespace GeneXus.Printer
 	using System.Threading;
 	using System.Threading.Tasks;
 	using GeneXus.Configuration;
+	using GeneXus.Utils;
 	using GeneXus.XML;
 
 	public interface IPrintHandler
@@ -2162,10 +2163,19 @@ namespace GeneXus.Printer
 	{
 		static public string AddPath(string name, string path)
 		{
-			if (Path.IsPathRooted(name) || name.IndexOf(":") != -1 ||
+			if (name.IndexOf(":") != -1 ||
 				(name.Length >=2 && (name.Substring( 0,2) == "//" || name.Substring( 0,2) == @"\\")) ||
 				(name.StartsWith("http:" ) || name.StartsWith("https:" )))
 				return name;
+#if NETCORE
+			if (Path.IsPathRooted (name))
+				return name;
+#else
+			if (PathUtil.IsValidFilePath(name) && Path.IsPathRooted(name))
+			{
+				return name;
+			}
+#endif
 			return Path.Combine(path, name);
 		}
 	}
