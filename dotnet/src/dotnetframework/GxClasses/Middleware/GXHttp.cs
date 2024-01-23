@@ -2281,6 +2281,9 @@ namespace GeneXus.Http
 		private void webExecuteWorker(object target)
 		{
 			HttpContext httpContext = (HttpContext)target;
+#if !NETCORE
+			HttpContext.Current = httpContext;
+#endif
 			try
 			{
 				webExecuteEx(httpContext);
