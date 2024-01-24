@@ -71,7 +71,7 @@ namespace com.genexus.reports
 			try
 			{
 				pageSize = ComputePageSize(leftMargin, topMargin, pageWidth, pageLength, props.getBooleanGeneralProperty(Const.MARGINS_INSIDE_BORDER, Const.DEFAULT_MARGINS_INSIDE_BORDER));
-				documentBuilder = new PdfDocumentBuilder(outputStream);
+				documentBuilder = new PdfDocumentBuilder();
 
 				pageBuilder = pageSize.IsCustomPageSize() ? documentBuilder.AddPage(pageSize.Width, pageSize.Height) : documentBuilder.AddPage(pageSize.PageSize);
 
@@ -719,7 +719,8 @@ namespace com.genexus.reports
 			try
 			{
 				byte[] documentBytes = documentBuilder.Build();
-				File.WriteAllBytes(docName, documentBytes);
+				outputStream.Write(documentBytes, 0, documentBytes.Length);
+				//File.WriteAllBytes(docName, documentBytes);
 			}
 			catch (IOException e)
 			{
