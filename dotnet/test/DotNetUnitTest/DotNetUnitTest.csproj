@@ -15,9 +15,6 @@
 	  <Compile Include="..\DotNetCoreUnitTest\StringUtil\type_SdtSDTGeneric.cs" Link="StringUtil\type_SdtSDTGeneric.cs" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Compile Include="..\DotNetCoreUnitTest\StringUtil\type_SdtSDT1_SDT1Item.cs" Link="Domain\type_SdtSDT1_SDT1Item.cs" />
-	</ItemGroup>
-	<ItemGroup>
 	  <Content Include="applications.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
@@ -67,9 +64,6 @@
     <Reference Include="TZ4Net">
       <HintPath>..\..\src\dotnetframework\libs\TZ4Net.dll</HintPath>
     </Reference>
-	<Reference Include="Jayrock-JSON">
-		<HintPath>..\..\src\dotnetframework\libs\Jayrock-JSON.dll</HintPath>
-	</Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Update="resources\text.txt">

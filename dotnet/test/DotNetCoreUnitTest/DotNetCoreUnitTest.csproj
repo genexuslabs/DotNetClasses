@@ -38,8 +38,7 @@
 		<Compile Include="..\DotNetUnitTest\PDF\PDFTests.cs" Link="PDF\PDFTests.cs" />		
 	</ItemGroup>
 	<ItemGroup>		
-		<Compile Include="..\DotNetUnitTest\ImageUtils\ImageUtilTest.cs" Link="ImageUtils\ImageUtilTest.cs" />		
-		<Compile Include="..\DotNetUnitTest\StringUtil\StringUtilTests.cs" Link="StringUtil\StringUtilTests.cs" />
+		<Compile Include="..\DotNetUnitTest\ImageUtils\ImageUtilTest.cs" Link="ImageUtils\ImageUtilTest.cs" />
 		
 	</ItemGroup>
 	<ItemGroup>
