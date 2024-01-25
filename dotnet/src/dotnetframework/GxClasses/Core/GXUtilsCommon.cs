@@ -744,6 +744,26 @@ namespace GeneXus.Utils
 				strPicture.Append(';');//Section Separator.
 				strPicture.Append(';');//Section Separator.
 			}
+			if (gxpicture.IndexOf(ESCAPE_CHARACTER) >= 0)
+			{
+				StringBuilder gxEscapedPicture = new StringBuilder();
+				for (int i = 0; i < gxpicture.Length; i++)
+				{
+
+					if (gxpicture[i] == ESCAPE_CHARACTER && i + 1 < gxpicture.Length && gxpicture[i + 1] == ESCAPE_CHARACTER)
+					{
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						i++;
+					}
+					else
+					{
+						gxEscapedPicture.Append(gxpicture[i]);
+					}
+				}
+				gxpicture = gxEscapedPicture.ToString();
+			}
 			for (int i = 0; i < gxpicture.Length; i++)
 			{
 				bool inLiteral = EscapedSymbol(gxpicture, i);

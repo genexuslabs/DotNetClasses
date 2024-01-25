@@ -1,6 +1,7 @@
 using GeneXus.Application;
 using GeneXus.Programs;
 using GeneXus.Utils;
+using Jayrock.Json;
 using Xunit;
 
 namespace xUnitTesting
@@ -66,6 +67,15 @@ namespace xUnitTesting
 			decimal decNumber = 5;
 			string decStr = context.localUtil.Format(decNumber, picture);
 			Assert.Equal("$ 5.00", decStr);
+		}
+		[Fact]
+		public void TestZPictureWithEscapeChar()
+		{
+			string picture = "\\\\\" ZZ,ZZZ,ZZ9";
+			GxContext context = new GxContext();
+			decimal decNumber = 87654321;
+			string decStr = context.localUtil.Format(decNumber, picture);
+			Assert.Equal("\\\" 87,654,321", decStr);
 		}
 		[Fact]
 		public void TestZPicture()
