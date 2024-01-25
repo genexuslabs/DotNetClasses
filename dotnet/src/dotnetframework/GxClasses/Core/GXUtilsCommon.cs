@@ -666,18 +666,74 @@ namespace GeneXus.Utils
 			NEGATIVE_VALUES = -1,
 			ZEROS = 0
 		}
-		private static string GxPictureToNetPicture(string gxpicture, bool separatorsAsLiterals, FORMAT_SECTION section)
+		const char ESCAPE_CHARACTER = '\\';
+		const char NUMBER_SIGN = '#';
+		const char QUESTION_MARK = '?';
+		const char BLANK = ' ';
+		static bool EscapedSymbol(string picture, int idx)
+		{
+			return (idx > 0 && picture[idx - 1] == ESCAPE_CHARACTER);
+		}
+		static int LeadingBlanks(string gxpicture)
+		{
+			int leadingBlanks = 0;
+			bool inBlanks = false;
+			if (gxpicture.Contains(QUESTION_MARK)) {
+				for (int i = 0; i < gxpicture.Length; i++)
+				{
+					if (gxpicture[i] == QUESTION_MARK && !EscapedSymbol(gxpicture, i))
+					{
+						inBlanks = true;
+					}
+					else if ((gxpicture[i] == '.') && !EscapedSymbol(gxpicture, i))
+					{
+						inBlanks = false;
+						break;
+					}
+
+					if (inBlanks)
+						leadingBlanks++;
+				}
+			}
+			return leadingBlanks;
+		}
+		static int TrailingBlanks(string gxpicture)
+		{
+			int trailingBlanks = 0;
+			int sep = gxpicture.IndexOf('.');
+			if (sep >= 0)
+			{
+				string rightPic = gxpicture.Substring(sep);
+				if (rightPic.Contains(QUESTION_MARK))
+				{
+					for (int i = gxpicture.Length-1; i >= 0; i--)
+					{
+						if (gxpicture[i] == QUESTION_MARK && !EscapedSymbol(gxpicture, i))
+							trailingBlanks++;
+						else if (gxpicture[i] == '.' || gxpicture[i] == NUMBER_SIGN || gxpicture[i] == 'Z' || gxpicture[i] == '9')
+							break;
+					}
+				}
+			}
+			return trailingBlanks;
+		}
+
+		private static string GxPictureToNetPicture(string gxpicture, bool separatorsAsLiterals, FORMAT_SECTION section, int digits, int decimals)
 		{
 			if (string.IsNullOrEmpty(gxpicture))
 				return string.Empty;
 
 			bool inDecimals = false;
 			StringBuilder strPicture = new StringBuilder("{0,");
-			strPicture.Append(gxpicture.Length);
+			strPicture.Append(PictureLength(gxpicture));
 			strPicture.Append(':');
 			bool blankwhenzero = true;
 			bool explicitSign = (gxpicture[0] == '+');
 			bool withoutMinusSign = (gxpicture[0] == '(' && gxpicture[gxpicture.Length - 1] == ')') || gxpicture.EndsWith("DB") || explicitSign;
+			int totalLeadingBlanks = LeadingBlanks(gxpicture);
+			int totalRighBlanks = TrailingBlanks(gxpicture);
+			int lBlanks = 0;
+			int rDigits = 0;
 
 			if (section == FORMAT_SECTION.NEGATIVE_VALUES && withoutMinusSign)
 			//If it has a sign, then use the first section (which by default assigns only a negative sign).
@@ -689,9 +745,34 @@ namespace GeneXus.Utils
 				strPicture.Append(';');//Section Separator.
 				strPicture.Append(';');//Section Separator.
 			}
+			if (gxpicture.IndexOf(ESCAPE_CHARACTER) >= 0)
+			{
+				StringBuilder gxEscapedPicture = new StringBuilder();
+				for (int i = 0; i < gxpicture.Length; i++)
+				{
+
+					if (gxpicture[i] == ESCAPE_CHARACTER && i + 1 < gxpicture.Length && gxpicture[i + 1] == ESCAPE_CHARACTER)
+					{
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						i++;
+					}
+					else
+					{
+						gxEscapedPicture.Append(gxpicture[i]);
+					}
+				}
+				gxpicture = gxEscapedPicture.ToString();
+			}
 			for (int i = 0; i < gxpicture.Length; i++)
 			{
-				if (gxpicture[i] == 'Z')
+				bool inLiteral = EscapedSymbol(gxpicture, i);
+				if (inLiteral || gxpicture[i] == ESCAPE_CHARACTER)
+				{
+					strPicture.Append(gxpicture[i]);	
+				}
+				else if (gxpicture[i] == 'Z')
 				{
 					if (inDecimals)
 					{
@@ -702,7 +783,39 @@ namespace GeneXus.Utils
 						strPicture.Append('0');
 					}
 					else
-						strPicture.Append('#');
+						strPicture.Append(NUMBER_SIGN);
+				}
+				else if (gxpicture[i] == NUMBER_SIGN)
+				{
+					strPicture.Append(NUMBER_SIGN);
+				}
+				else if (gxpicture[i] == QUESTION_MARK)
+				{
+					if (inDecimals)
+					{
+						if (rDigits >= decimals && rDigits < totalRighBlanks)
+						{
+							strPicture.Append(BLANK);
+						}
+						else
+						{
+							strPicture.Append(NUMBER_SIGN);
+						}
+						rDigits++;
+					}
+					else
+					{
+						if (lBlanks < (totalLeadingBlanks - digits))
+						{
+							strPicture.Append(BLANK);
+							lBlanks++;
+						}
+						else
+						{
+							strPicture.Append(NUMBER_SIGN);
+						}
+					}
+
 				}
 				else if (gxpicture[i] == '9')
 				{
@@ -712,7 +825,7 @@ namespace GeneXus.Utils
 				else if (gxpicture[i] == '.')
 				{
 					inDecimals = true;
-					if (i > 0 && strPicture[strPicture.Length - 1] == '#') strPicture[strPicture.Length - 1] = '0';
+					if (i > 0 && strPicture[strPicture.Length - 1] == NUMBER_SIGN) strPicture[strPicture.Length - 1] = '0';
 					if (separatorsAsLiterals)
 						strPicture.Append("\".\"");
 					else
@@ -724,6 +837,10 @@ namespace GeneXus.Utils
 						strPicture.Append("\",\"");
 					else
 						strPicture.Append(gxpicture[i]);
+				}
+				else if (gxpicture[i] == BLANK)
+				{
+					strPicture.Append(BLANK);
 				}
 				else
 				{
@@ -741,7 +858,7 @@ namespace GeneXus.Utils
 							//Pictures (99.9) => 12.5    -12.5
 							if (section != FORMAT_SECTION.NEGATIVE_VALUES && withoutMinusSign && (i == 0 || i == gxpicture.Length - 1))
 							{
-								strPicture.Append(' ');
+								strPicture.Append(BLANK);
 							}
 							else
 							{
@@ -752,7 +869,7 @@ namespace GeneXus.Utils
 							//Pictures +99.9 =>  +12.5       -12.5
 							if (explicitSign && i == 0 && section == FORMAT_SECTION.ZEROS)
 							{
-								strPicture.Append(' ');
+								strPicture.Append(BLANK);
 							}
 							else if (explicitSign && i == 0 && section == FORMAT_SECTION.NEGATIVE_VALUES)
 							{
@@ -770,7 +887,7 @@ namespace GeneXus.Utils
 								if (section == FORMAT_SECTION.POSITIVE_VALUES)
 									strPicture.Append('C');
 								else
-									strPicture.Append(' ');
+									strPicture.Append(BLANK);
 							}
 							else
 							{
@@ -783,7 +900,7 @@ namespace GeneXus.Utils
 								if (section == FORMAT_SECTION.POSITIVE_VALUES)
 									strPicture.Append('R');
 								else
-									strPicture.Append(' ');
+									strPicture.Append(BLANK);
 							}
 							else
 							{
@@ -800,14 +917,29 @@ namespace GeneXus.Utils
 			}
 			if (blankwhenzero && section == FORMAT_SECTION.ZEROS)//Z,ZZZ,ZZZ.ZZ format 0.00 to "". sac.20145
 			{
-				return Replicate(' ', gxpicture.Length);
+				return Replicate(BLANK, gxpicture.Length);
 			}
 			else
 			{
 				return strPicture.Append('}').ToString();
 			}
 		}
-		static bool useLiteralSeparators(string gxpicture)
+
+		private static int PictureLength(string gxpicture)
+		{
+			int count = 0;
+			if (gxpicture.Contains(ESCAPE_CHARACTER))
+			{
+				foreach (char ch in gxpicture)
+				{
+					if (ch == ESCAPE_CHARACTER)
+						count++;
+				}
+			}
+			return gxpicture.Length - count;
+		}
+
+		static bool UseLiteralSeparators(string gxpicture)
 		{
 
 			// If it has non-numerical characters, then the separators are used as literals
@@ -862,7 +994,7 @@ namespace GeneXus.Utils
 					}
 					else
 					{
-						str.Append('#');
+						str.Append(NUMBER_SIGN);
 					}
 				}
 			}
@@ -878,14 +1010,14 @@ namespace GeneXus.Utils
 		}
 		public static string Concat(string init, string last)
 		{
-			char[] trimChars = { ' ' };
+			char[] trimChars = { BLANK };
 			StringBuilder fmtString = new StringBuilder(init.TrimEnd(trimChars));
 			fmtString.Append(last);
 			return fmtString.ToString();
 		}
 		public static string Concat(string init, string last, string separator)
 		{
-			char[] trimChars = { ' ' };
+			char[] trimChars = { BLANK };
 			StringBuilder fmtString = new StringBuilder(init.TrimEnd(trimChars));
 			fmtString.Append(separator);
 			fmtString.Append(last);
@@ -1012,7 +1144,7 @@ namespace GeneXus.Utils
 		static public string Trim(string s)
 		{
 			if (!string.IsNullOrEmpty(s))
-				return s.Trim(' ');
+				return s.Trim(BLANK);
 			else
 				return s;
 		}
@@ -1021,8 +1153,8 @@ namespace GeneXus.Utils
 			if (!string.IsNullOrEmpty(s))
 			{
 				int len = s.Length;
-				if (len > 0 && s[len - 1] == ' ')
-					return s.TrimEnd(' ');
+				if (len > 0 && s[len - 1] == BLANK)
+					return s.TrimEnd(BLANK);
 				else
 					return s;
 			}
@@ -1034,8 +1166,8 @@ namespace GeneXus.Utils
 			if (!string.IsNullOrEmpty(s))
 			{
 				int len = s.Length;
-				if (len > 0 && s[0] == ' ')
-					return s.TrimStart(' ');
+				if (len > 0 && s[0] == BLANK)
+					return s.TrimStart(BLANK);
 				else
 					return s;
 			}
@@ -1167,9 +1299,14 @@ namespace GeneXus.Utils
 			{
 				section = FORMAT_SECTION.ZEROS;
 			}
-			bool separatorsAsLiterals = useLiteralSeparators(gxpicture);
+			bool separatorsAsLiterals = UseLiteralSeparators(gxpicture);
+			string invariantStrValue = value.ToString(CultureInfo.InvariantCulture.NumberFormat);
+			int decSeparatorIdx = invariantStrValue.IndexOf(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator);
 
-			string picture = GxPictureToNetPicture(gxpicture, separatorsAsLiterals, section);
+			int digits = WholeDigits(value, invariantStrValue, decSeparatorIdx);
+			int decimals = DecimalDigits(invariantStrValue, decSeparatorIdx);
+
+			string picture = GxPictureToNetPicture(gxpicture, separatorsAsLiterals, section, digits, decimals);
 			//It must consider format because it can have other types of characters that are not Z or 9 or. neither ,.
 			string res;
 			if (!string.IsNullOrEmpty(picture))
@@ -1178,7 +1315,7 @@ namespace GeneXus.Utils
 			}
 			else
 			{
-				res = value.ToString(CultureInfo.InvariantCulture.NumberFormat);
+				res = invariantStrValue;
 			}
 			if (separatorsAsLiterals)
 			{
@@ -1192,7 +1329,31 @@ namespace GeneXus.Utils
 			{
 				return ReplaceSeparators(res, numFmtInfo.NumberDecimalSeparator, numFmtInfo.NumberGroupSeparator);
 			}
+		}
+		int DecimalDigits(string invariantStrValue, int decSeparatorIdx)
+		{
+			int decimals;
+			if (decSeparatorIdx < 0)
+				decimals = 0;
+			else
+				decimals = invariantStrValue.Length - decSeparatorIdx - 1;
 
+			return decimals;
+		}
+		int WholeDigits(decimal value, string invariantStrValue, int decSeparatorIdx)
+		{
+			int digits;
+			if (value < 1 && value >= 0)
+				digits = 0;
+			else if (decSeparatorIdx < 0)
+			{
+				digits = invariantStrValue.Length;
+			}
+			else
+			{
+				digits = decSeparatorIdx;
+			}
+			return digits;
 		}
 		string FormatNumber(string s, string p)
 		{
@@ -1219,7 +1380,7 @@ namespace GeneXus.Utils
 				pStart = p.Length;
 			else
 				pDec = p.Length - pStart;               // decimal count (including point)
-			StringBuilder result = new StringBuilder(new string(' ', Math.Max(p.Length, s.Length)));
+			StringBuilder result = new StringBuilder(new string(BLANK, Math.Max(p.Length, s.Length)));
 			// Process the left of the decimal point
 			j = sStart - 1;
 			k = pStart - 1;
@@ -1230,7 +1391,7 @@ namespace GeneXus.Utils
 					case '9':
 						if (j < 0)
 							result[k--] = '0';
-						else if (s[j] == ' ')
+						else if (s[j] == BLANK)
 							result[k--] = '0';
 						else
 							result[k--] = s[j];
@@ -1238,10 +1399,10 @@ namespace GeneXus.Utils
 						break;
 					case 'Z':
 						if (j < 0)
-							result[k--] = ' ';
+							result[k--] = BLANK;
 						else if (leftZ || leftZero(s, j))
 						{
-							result[k--] = ' ';
+							result[k--] = BLANK;
 							leftZ = true;
 						}
 						else
@@ -1289,7 +1450,7 @@ namespace GeneXus.Utils
 						case 'Z':
 							if (rightZ || rightZero(s, j))
 							{
-								result[i] = ' ';
+								result[i] = BLANK;
 								rightZ = true;
 							}
 							else if (j < s.Length)
@@ -1393,7 +1554,7 @@ namespace GeneXus.Utils
 		}
 		public static string Space(int spaces)
 		{
-			return new string(' ', spaces);
+			return new string(BLANK, spaces);
 		}
 		public static string Right(string text, int size)
 		{
@@ -1419,7 +1580,7 @@ namespace GeneXus.Utils
 
 		static public bool Like(string str, string ptrn)
 		{
-			return Like(str, ptrn, ' ');
+			return Like(str, ptrn, BLANK);
 		}
 		static public bool Like(string str, string ptrn, char escape)
 		{
@@ -1444,10 +1605,10 @@ namespace GeneXus.Utils
 			srchPtr = 0;
 			scapeCount = 0;
 
-			wildChr = ' ';
-			srchChr = ' ';
+			wildChr = BLANK;
+			srchChr = BLANK;
 
-			bool useEscape = escape != ' ';
+			bool useEscape = escape != BLANK;
 			bool isEscape = false;
 			bool applyEscape = false;
 
@@ -1464,7 +1625,7 @@ namespace GeneXus.Utils
 					if (srchPtr <= srchLen)
 						srchChr = str[srchPtr - scapeCount];
 					else
-						srchChr = ' ';
+						srchChr = BLANK;
 				}
 
 				if (isEscape)
@@ -1625,7 +1786,7 @@ namespace GeneXus.Utils
 					sb.Append("\\r");
 				else
 				{
-					if (ch < ' ')
+					if (ch < BLANK)
 					{
 						sb.Append("\\u");
 						sb.Append(((int)ch).ToString("x4", CultureInfo.InvariantCulture));
