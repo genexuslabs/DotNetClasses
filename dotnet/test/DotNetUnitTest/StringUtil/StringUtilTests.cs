@@ -110,15 +110,48 @@ namespace xUnitTesting
 			Assert.Equal("        123456.12    ", decStr);
 
 			//=====================Zero========================================
+
 			decNumber = 0;
+
+			decStr = context.localUtil.Format(decNumber, "ZZZZZZZZZZ9.ZZZZZZ");
+			Assert.Equal("          0.000000", decStr);
+
 			decStr = context.localUtil.Format(decNumber, "###########.######");
 			Assert.Equal("                  ", decStr);
 
 			decStr = context.localUtil.Format(decNumber, "???????????.??????");
 			Assert.Equal("                  ", decStr);
 
+			decStr = context.localUtil.Format(decNumber, "(??????????9.??????)");
+			Assert.Equal("           0        ", decStr);
+
 			decStr = context.localUtil.Format(decNumber, "\\# ??????????9.??????");
-			Assert.Equal(" #           0      ", decStr);
+			Assert.Equal("#           0       ", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "(##########9.######)");
+			Assert.Equal("                  0 ", decStr);
+
+			//=====================One========================================
+
+			decNumber = 1;
+
+			decStr = context.localUtil.Format(decNumber, "ZZZZZZZZZZ9.ZZZZZZ");
+			Assert.Equal("          1.000000", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "###########.######");
+			Assert.Equal("                 1", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "???????????.??????");
+			Assert.Equal("          1       ", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "(??????????9.??????)");
+			Assert.Equal("           1        ", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "\\# ??????????9.??????");
+			Assert.Equal("#           1       ", decStr);
+
+			decStr = context.localUtil.Format(decNumber, "(##########9.######)");
+			Assert.Equal("                  1 ", decStr);
 
 			//=====================0.1========================================
 			decNumber = 0.1M;
@@ -129,7 +162,7 @@ namespace xUnitTesting
 			//=====================Negatives========================================
 			decNumber = -123456.12M;
 			decStr = context.localUtil.Format(decNumber, "(??????????9.??????)");
-			Assert.Equal(" (    123456.12    )", decStr);
+			Assert.Equal("(     123456.12    )", decStr);
 
 			decStr = context.localUtil.Format(decNumber, "(##########9.######)");
 			Assert.Equal("         (123456.12)", decStr);

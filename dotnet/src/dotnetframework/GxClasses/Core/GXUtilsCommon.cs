@@ -697,10 +697,11 @@ namespace GeneXus.Utils
 			}
 			return leadingBlanks;
 		}
-		static int TrailingBlanks(string gxpicture)
+		static int TrailingBlanks(string gxpicture, out bool decimalsAsBlank)
 		{
 			int trailingBlanks = 0;
 			int sep = gxpicture.IndexOf('.');
+			decimalsAsBlank = false;
 			if (sep >= 0)
 			{
 				string rightPic = gxpicture.Substring(sep);
@@ -710,8 +711,16 @@ namespace GeneXus.Utils
 					{
 						if (gxpicture[i] == QUESTION_MARK && !EscapedSymbol(gxpicture, i))
 							trailingBlanks++;
-						else if (gxpicture[i] == '.' || gxpicture[i] == NUMBER_SIGN || gxpicture[i] == 'Z' || gxpicture[i] == '9')
+						else if (gxpicture[i] == '.')
+						{
+							decimalsAsBlank = true;
 							break;
+						}
+						else if (gxpicture[i] == NUMBER_SIGN || gxpicture[i] == 'Z' || gxpicture[i] == '9')
+						{
+							decimalsAsBlank = false;
+							break;
+						}
 					}
 				}
 			}
@@ -731,7 +740,7 @@ namespace GeneXus.Utils
 			bool explicitSign = (gxpicture[0] == '+');
 			bool withoutMinusSign = (gxpicture[0] == '(' && gxpicture[gxpicture.Length - 1] == ')') || gxpicture.EndsWith("DB") || explicitSign;
 			int totalLeadingBlanks = LeadingBlanks(gxpicture);
-			int totalRighBlanks = TrailingBlanks(gxpicture);
+			int totalRighBlanks = TrailingBlanks(gxpicture, out bool decimalsAsBlank);
 			int lBlanks = 0;
 			int rDigits = 0;
 
@@ -829,7 +838,16 @@ namespace GeneXus.Utils
 					if (separatorsAsLiterals)
 						strPicture.Append("\".\"");
 					else
-						strPicture.Append(gxpicture[i]);
+					{
+						if (decimalsAsBlank && decimals == 0)
+						{
+							strPicture.Append(BLANK); //Replace decimal separator by blank
+						}
+						else
+						{
+							strPicture.Append(gxpicture[i]);
+						}
+					}
 				}
 				else if (gxpicture[i] == ',')
 				{
@@ -1300,7 +1318,7 @@ namespace GeneXus.Utils
 				section = FORMAT_SECTION.ZEROS;
 			}
 			bool separatorsAsLiterals = UseLiteralSeparators(gxpicture);
-			string invariantStrValue = value.ToString(CultureInfo.InvariantCulture.NumberFormat);
+			string invariantStrValue = Math.Abs(value).ToString(CultureInfo.InvariantCulture.NumberFormat);
 			int decSeparatorIdx = invariantStrValue.IndexOf(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator);
 
 			int digits = WholeDigits(value, invariantStrValue, decSeparatorIdx);
@@ -1343,7 +1361,11 @@ namespace GeneXus.Utils
 		int WholeDigits(decimal value, string invariantStrValue, int decSeparatorIdx)
 		{
 			int digits;
-			if (value < 1 && value >= 0)
+			if (value == 0)
+			{
+				digits = 1;
+			}
+			else if (value < 1 && value >= 0)
 				digits = 0;
 			else if (decSeparatorIdx < 0)
 			{
