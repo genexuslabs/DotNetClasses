@@ -1408,7 +1408,7 @@ namespace GeneXus.Http
 		}
 		protected string UriDecrypt64(string value, string key)
 		{
-			return Decrypt64(value, key, true);
+			return Decrypt64(value, key);
 		}
 #endif
 		protected string DecryptAjaxCall(string encrypted)
