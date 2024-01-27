@@ -25,10 +25,8 @@ namespace GeneXus.Diagnostics
 		}
 
 		private const string LoggerPrefix = "$";
-		private static readonly string DefaultRepository = LogManager.GetRepository().Name;
 		private static readonly string DefaultUserLogNamespace = Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
-		private static readonly IGXLogger GlobalLog = new GXLoggerLog4Net(LogManager.GetLogger(DefaultRepository, DefaultUserLogNamespace));
-		private static ConcurrentDictionary<string, IGXLogger> LoggerDictionary = new ConcurrentDictionary<string, IGXLogger>() { [string.Empty] = GlobalLog };
+		private static ConcurrentDictionary<string, IGXLogger> LoggerDictionary = new ConcurrentDictionary<string, IGXLogger>() {};
 		internal static IGXLogger GetLogger(string topic)
 		{
 			if (LoggerDictionary.TryGetValue(topic, out IGXLogger logger))

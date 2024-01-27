@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
 
 namespace GeneXus.Services.Log
 {
-	public class AzureAppInsightsLogProvider : ILoggerFactory
+	public class OpentelemetryLogProvider : ILoggerFactory
 	{
 		private static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 		private const string LOG_LEVEL_ENVVAR = "GX_LOG_LEVEL";
@@ -25,7 +28,6 @@ namespace GeneXus.Services.Log
 						builder.AddOpenTelemetry(options =>
 						{
 							options.AddAzureMonitorLogExporter(o => o.ConnectionString = appInsightsConnection);
-							options.AddConsoleExporter();
 						}).SetMinimumLevel(loglevel);
 					});
 				}
@@ -42,7 +44,7 @@ namespace GeneXus.Services.Log
 			return loggerFactory;
 		}
 
-		public static ILoggerFactory GetLoggerFactory()
+		public static ILoggerFactory GetAzureAppInsightsLoggerFactory()
 		{
 			string appInsightsConnection = Environment.GetEnvironmentVariable(APPLICATIONINSIGHTS_CONNECTION_STRING);
 			try
@@ -71,6 +73,23 @@ namespace GeneXus.Services.Log
 
 			return loggerFactory;
 		}
+
+		public static ILoggerFactory GetOpentelemetryLoggerFactory()
+		{
+			LogLevel loglevel = GetLogLevel();
+			loggerFactory = LoggerFactory.Create(builder => builder.AddOpenTelemetry(logging =>
+			{
+				var resourceBuilder = ResourceBuilder.CreateDefault()
+				.AddTelemetrySdk();
+
+				logging.SetResourceBuilder(resourceBuilder);
+				if (GenerateOtelLogsToConsole())
+					logging.AddConsoleExporter();
+				
+			})
+			.SetMinimumLevel(loglevel));
+			return loggerFactory;
+		}
 		private static LogLevel GetLogLevel()
 		{
 			string loglevelvalue = Environment.GetEnvironmentVariable(LOG_LEVEL_ENVVAR);
@@ -79,7 +98,7 @@ namespace GeneXus.Services.Log
 			{
 				if (!Enum.TryParse<LogLevel>(loglevelvalue, out loglevel))
 				{
-					CustomLogLevel customLogLevel = CustomLogLevel.Info;
+					CustomLogLevel customLogLevel = CustomLogLevel.info;
 					if (Enum.TryParse<CustomLogLevel>(loglevelvalue, out customLogLevel))
 					{
 						loglevel = toLogLevel(customLogLevel);
@@ -89,6 +108,13 @@ namespace GeneXus.Services.Log
 				}
 			}
 			return loglevel;
+		}
+
+		private static bool GenerateOtelLogsToConsole()
+		{
+			string otelLogsEnvVar = Environment.GetEnvironmentVariable(GXLogService.OTEL_LOGS_EXPORTER);
+			if (string.IsNullOrEmpty(otelLogsEnvVar)) { return false; }
+			return otelLogsEnvVar.ToLower().Contains("console") || otelLogsEnvVar.ToLower().Contains("logging");
 		}
 
 		public void AddProvider(ILoggerProvider provider)
@@ -105,25 +131,25 @@ namespace GeneXus.Services.Log
 		}
 		private enum CustomLogLevel
 		{
-			None,
-			All,
-			Debug,
-			Info,
-			Warn,
-			Error,
-			Fatal
+			none,
+			all,
+			debug,
+			info,
+			warn,
+			error,
+			fatal
 		}
 		private static LogLevel toLogLevel(CustomLogLevel customLogLevel)
 		{
 			switch (customLogLevel)
 			{
-				case CustomLogLevel.None: return LogLevel.None;
-				case CustomLogLevel.All: return LogLevel.Trace;
-				case CustomLogLevel.Debug: return LogLevel.Debug;
-				case CustomLogLevel.Info: return LogLevel.Information;
-				case CustomLogLevel.Warn: return LogLevel.Warning;
-				case CustomLogLevel.Error: return LogLevel.Error;
-				case CustomLogLevel.Fatal: return LogLevel.Critical;
+				case CustomLogLevel.none: return LogLevel.None;
+				case CustomLogLevel.all: return LogLevel.Trace;
+				case CustomLogLevel.debug: return LogLevel.Debug;
+				case CustomLogLevel.info: return LogLevel.Information;
+				case CustomLogLevel.warn: return LogLevel.Warning;
+				case CustomLogLevel.error: return LogLevel.Error;
+				case CustomLogLevel.fatal: return LogLevel.Critical;
 				default: return LogLevel.Information;
 			}
 		}
