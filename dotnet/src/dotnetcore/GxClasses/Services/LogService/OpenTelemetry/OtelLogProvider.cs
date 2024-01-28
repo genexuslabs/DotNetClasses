@@ -28,6 +28,8 @@ namespace GeneXus.Services.Log
 						builder.AddOpenTelemetry(options =>
 						{
 							options.AddAzureMonitorLogExporter(o => o.ConnectionString = appInsightsConnection);
+							if (GenerateOtelLogsToConsole())
+								options.AddConsoleExporter();
 						}).SetMinimumLevel(loglevel);
 					});
 				}
