@@ -3,6 +3,7 @@ using GeneXus.Configuration;
 using log4net;
 using System.Collections.Concurrent;
 
+
 #if NETCORE
 using GeneXus.Services.Log;
 using Microsoft.Extensions.Logging;
@@ -35,7 +36,12 @@ namespace GeneXus.Diagnostics
 			}
 			else
 			{
-				string loggerName = topic.StartsWith(LoggerPrefix) ? topic.Substring(1) : $"{DefaultUserLogNamespace}.{topic.Trim()}";
+				string loggerName;
+				if (!string.IsNullOrEmpty(topic))
+					loggerName = topic.StartsWith(LoggerPrefix) ? topic.Substring(1) : $"{DefaultUserLogNamespace}.{topic.Trim()}";
+				else
+					loggerName = DefaultUserLogNamespace;
+
 				logger = GXLoggerFactory.GetLogger(loggerName);
 				LoggerDictionary.TryAdd(topic, logger);
 				return logger;
