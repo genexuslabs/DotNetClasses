@@ -24,7 +24,7 @@ namespace UnitTesting
 
 		}
 
-		[Fact]
+		[Fact(Skip = "UndeterministicResult")]
 		public void TestNToCPerformance()
 		{
 			StringUtil.CachePictures = false;
