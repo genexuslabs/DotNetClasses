@@ -18,7 +18,7 @@ namespace GeneXus.Web.Security
     {
 		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(typeof(WebSecurityHelper).FullName);
 
-		const int SecretKeyMinimumLength = 16;
+		const int SecretKeyMinimumLength = 32;
 
         public static string StripInvalidChars(string input)
         {
