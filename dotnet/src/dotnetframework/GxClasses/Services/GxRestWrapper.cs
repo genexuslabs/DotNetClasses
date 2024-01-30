@@ -806,8 +806,10 @@ namespace GeneXus.Application
 #else
 			var responseStream = _httpContext.Response.OutputStream;
 #endif
-			var knownTypes = new List<Type>();
-			knownTypes.Add(value.GetType());
+			var knownTypes = new List<Type>
+			{
+				value.GetType()
+			};
 		
 			JSONHelper.WCFSerialize(value, Encoding.UTF8, knownTypes, responseStream);
 			return Task.CompletedTask;
