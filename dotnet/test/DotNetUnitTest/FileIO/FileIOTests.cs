@@ -117,5 +117,15 @@ namespace UnitTesting
 			string fullPath = ReportUtils.AddPath(name, path);
 			Assert.Equal(name, fullPath);
 		}
+		[Fact]
+		public void ReportUtilAddPathWithIllegalCharacters()
+		{
+			string name = "https://chart.googleapis.com/chart?chs=400x400&cht=qr&chl=http://sistemas.gov/nfceweb/consultarNFCe.jsp?p=13231205514674000128650020009504049878593990|2|1|09|1337.07|4558626967746769617A304E4B7A6D34504B4E61524A474F4D32513D|1|14D0A30916C6C7EA709E7E33E330EE3F290FE25D";
+			string path = "C:/Models/Report/NETModel/Web/";
+			string fullPath = ReportUtils.AddPath(name, path);
+
+			Assert.Equal(name, fullPath);
+		}
+
 	}
 }
