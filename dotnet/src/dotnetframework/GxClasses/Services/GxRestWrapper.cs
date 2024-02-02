@@ -349,32 +349,50 @@ namespace GeneXus.Application
 		bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
 		{
 			bool wrapped = defaultWrapped;
+
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
 					if ((originalParCount == 1) || (originalParCount > 1 && !Preferences.WrapSingleApiOutput))
-					{
-						wrapped = false;
-						Object v = outputParameters.First().Value;
-
-						if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
-						{
-							IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
-							if (icollwrapped != null)
-								wrapped = icollwrapped.GetIsWrapped();
-						}
-						if (v is IGxGenericCollectionItem item)
-						{
-							if (item.Sdt is GxSilentTrnSdt)
-							{
-								wrapped = (parCount > 1) ? true : false;
-							}
-						}
+					{						
+						wrapped = GetCollectionWrappedStatus(outputParameters, parCount, false, true);						
 					}
 					if (originalParCount > 1 && Preferences.WrapSingleApiOutput)
 					{
 						wrapped = true; //Ignore defaultWrapped parameter.
+					}
+				}
+			}
+			else
+			{
+				if (originalParCount == 1)
+					wrapped = GetCollectionWrappedStatus(outputParameters, parCount, wrapped, false);					
+				
+			}
+			return wrapped;
+		}
+
+
+		private bool GetCollectionWrappedStatus(Dictionary<string, object> outputParameters , int parCount, bool defaultWrapped, bool isAPI)
+		{
+
+			Object v = outputParameters.First().Value;
+			bool wrapped = defaultWrapped;
+			if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
+			{
+				IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
+				if (icollwrapped != null)
+					wrapped = icollwrapped.GetIsWrapped();
+			}
+
+			if (isAPI)
+			{
+				if (v is IGxGenericCollectionItem item)
+				{
+					if (item.Sdt is GxSilentTrnSdt)
+					{
+						wrapped = (parCount > 1) ? true : false;
 					}
 				}
 			}
