@@ -66,7 +66,7 @@
 		<PackageReference Include="Azure.Core" Version="1.35.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.15.1" OutputItemType="Analyzer" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.19.0" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.7" />
 		<PackageReference Include="StackExchange.Redis" Version="2.0.593" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
