@@ -11,6 +11,14 @@ using PageSize = UglyToad.PdfPig.Content.PageSize;
 using Color = System.Drawing.Color;
 using static UglyToad.PdfPig.Writer.PdfPageBuilder;
 using System.Net;
+using System.Drawing;
+using Font = System.Drawing.Font;
+using System.Drawing.Text;
+using static GeneXus.Utils.StringUtil;
+using System.Text;
+using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
+using System.Net.Http;
 
 namespace GeneXus.Printer
 {
@@ -43,28 +51,13 @@ namespace com.genexus.reports
 		private ExtendedPageSize pageSize;
 
 		private AddedFont baseFont;
+		private string baseFontPath;
 		private string baseFontName;
-		private bool fontBold;
-		private bool fontItalic;
 		private Color backColor, foreColor;
-
-		private Dictionary<string, AddedImage> documentImages;
 
 		private string barcodeType = null;
 
-		private static HashSet<string> supportedHTMLTags = new HashSet<string>
-		{
-			"div",
-			"span",
-			"p",
-			"h1",
-			"h2",
-			"h3",
-			"h4",
-			"h5",
-			"h6",
-			"a",
-		};
+		private Dictionary<string, AddedImage> documentImages;
 
 		protected override void init(ref int gxYPage, ref int gxXPage, int pageWidth, int pageLength)
 		{
@@ -88,7 +81,7 @@ namespace com.genexus.reports
 			}
 		}
 
-		public PDFReportPDFPig(String appPath) : base(appPath)
+		public PDFReportPDFPig(string appPath) : base(appPath)
 		{
 			documentBuilder = null;
 			documentImages = new Dictionary<string, AddedImage>();
@@ -130,14 +123,16 @@ namespace com.genexus.reports
 			x2 = rightAux + leftMargin;
 			y2 = (float)pageBuilder.PageSize.TopRight.Y - topAux - topMargin - bottomMargin;
 
-			// Corner styling and radio are not taken into consideration because there is no way to render rounded rectangles or style them by corner using PDF Pig
+			// Corner styling and radio are not taken into consideration because the PDFPig
+			// API provides no way to render rounded rectangles or style them 
 
 			if (pen > 0)
 				pageBuilder.SetStrokeColor( (byte)foreRed, (byte)foreGreen, (byte)foreBlue);
 			else
 				pageBuilder.SetStrokeColor( (byte)backRed, (byte)backGreen, (byte)backBlue);
 
-			// There seems to be no way of setting the line cap style
+			// The PDFPig API provides no way of setting the line cap style
+
 			if (backMode != 0)
 			{
 				pageBuilder.SetTextAndFillColor((byte)backRed, (byte)backGreen, (byte)backBlue);
@@ -173,7 +168,7 @@ namespace com.genexus.reports
 
 				if (style != 0)
 				{
-					// There seems to be no way of creating a dashed line in PDFPig
+					// The PDFPig API provides no way of creating a dashed line
 					float[] dashPattern = getDashedPattern(style);
 				}
 
@@ -186,12 +181,12 @@ namespace com.genexus.reports
 			}
 		}
 
-		public override void GxDrawBitMap(String bitmap, int left, int top, int right, int bottom, int aspectRatio)
+		public override void GxDrawBitMap(string bitmap, int left, int top, int right, int bottom, int aspectRatio)
 		{
 			try
 			{
 				string imageType = Path.GetExtension(bitmap).Substring(1);
-				if (imageType.ToLower() != "jpeg" || imageType.ToLower() != "png")
+				if (imageType.ToLower() != "jpeg" && imageType.ToLower() != "png")
 				{
 					GXLogging.Error(log, "GxDrawBitMap : PDFPig only supports adding jpeg or png images to documents");
 					return;
@@ -201,10 +196,23 @@ namespace com.genexus.reports
 				float bottomAux = (float)convertScale(bottom);
 				float leftAux = (float)convertScale(left);
 				float topAux = (float)convertScale(top);
-				float x = leftAux + leftMargin;
-				float y = (float) pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin;
+				
+				float llx = leftAux + leftMargin;
+				float lly = (float) pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin;
+				float width;
+				float height;
+				if (aspectRatio == 0)
+				{
+					width = rightAux - leftAux;
+					height = bottomAux - topAux;
+				}
+				else
+				{
+					width = (rightAux - leftAux) * aspectRatio;
+					height = (bottomAux - topAux) * aspectRatio;
+				}
 
-				PdfRectangle position = new PdfRectangle(new PdfPoint(rightAux, bottomAux), new PdfPoint(leftAux, topAux));
+				PdfRectangle position = new PdfRectangle(llx, lly, llx + width, lly + height);
 
 				AddedImage image;
 				AddedImage imageRef;
@@ -237,13 +245,11 @@ namespace com.genexus.reports
 					}
 					catch (Exception)
 					{
-#pragma warning disable SYSLIB0014 // Type or member is obsolete
-						using (WebClient webClient = new WebClient())
+						using (HttpClient httpClient = new HttpClient())
 						{
-							byte[] imageBytes = webClient.DownloadData(bitmap);
+							byte[] imageBytes = httpClient.GetByteArrayAsync(bitmap).Result;
 							image = imageType == "jpeg" ? pageBuilder.AddJpeg(imageBytes, position) : pageBuilder.AddPng(imageBytes, position);
 						}
-#pragma warning restore SYSLIB0014 // Type or member is obsolete
 					}
 					if (documentImages == null)
 					{
@@ -263,63 +269,44 @@ namespace com.genexus.reports
 			}
 		}
 
-		public override void GxAttris(String fontName, int fontSize, bool fontBold, bool fontItalic, bool fontUnderline, bool fontStrikethru, int Pen, int foreRed, int foreGreen, int foreBlue, int backMode, int backRed, int backGreen, int backBlue)
+		public override void GxAttris(string fontName, int fontSize, bool fontBold, bool fontItalic, bool fontUnderline, bool fontStrikethru, int pen, int foreRed, int foreGreen, int foreBlue, int backMode, int backRed, int backGreen, int backBlue)
 		{
 			bool isCJK = false;
-			bool embeedFont = IsEmbeddedFont(fontName);
+			bool embedFont = IsEmbeddedFont(fontName);
 			string originalFontName = fontName;
-			if (!embeedFont)
+			if (!embedFont)
 			{
 				fontName = getSubstitute(fontName);
 			}
 
-			String fontSubstitute = "";
-			if (originalFontName != fontName)
-			{
-				fontSubstitute = "Original Font: " + originalFontName + " Substitute";
-			}
+			string fontSubstitute = originalFontName != fontName ? $"Original Font: {originalFontName} Substitute" : "";
 
-			GXLogging.Debug(log, "GxAttris: ");
-			GXLogging.Debug(log, "\\-> Font: " + fontName + " (" + fontSize + ")" + (fontBold ? " BOLD" : "") + (fontItalic ? " ITALIC" : "") + (fontStrikethru ? " Strike" : ""));
-			GXLogging.Debug(log, "\\-> Fore (" + foreRed + ", " + foreGreen + ", " + foreBlue + ")");
-			GXLogging.Debug(log, "\\-> Back (" + backRed + ", " + backGreen + ", " + backBlue + ")");
-
-			/*
-			There seems to be no way of natively working with barcodes in PDFPig.
-			The alternative is to just write text with a provided barcode font.
-			*/
-			if (barcode128AsImage && fontName.ToLower().IndexOf("barcode 128") >= 0 || fontName.ToLower().IndexOf("barcode128") >= 0)
-				barcodeType = "barcode128";
+			GXLogging.Debug(log, $"GxAttris: ");
+			GXLogging.Debug(log, $"\\-> Font: {fontName} ({fontSize})" +
+								 (fontBold ? " BOLD" : "") +
+								 (fontItalic ? " ITALIC" : "") +
+								 (fontStrikethru ? " Strike" : ""));
+			GXLogging.Debug(log, $"\\-> Fore ({foreRed}, {foreGreen}, {foreBlue})");
+			GXLogging.Debug(log, $"\\-> Back ({backRed}, {backGreen}, {backBlue})");
 
 			this.fontUnderline = fontUnderline;
 			this.fontStrikethru = fontStrikethru;
 			this.fontSize = fontSize;
-			this.fontBold = fontBold;
-			this.fontItalic = fontItalic;
 			foreColor = Color.FromArgb(foreRed, foreGreen, foreBlue);
 			backColor = Color.FromArgb(backRed, backGreen, backBlue);
 
-			backFill = (backMode != 0);
+			backFill = backMode != 0;
+
 			try
 			{
-				string f = fontName.ToLower();
+				string fontNameLower = fontName.ToLower();
 				if (PDFFont.isType1(fontName))
 				{
-					for (int i = 0; i < Type1FontMetrics.CJKNames.Length; i++)
+					foreach (string[] cjkName in Type1FontMetrics.CJKNames)
 					{
-						if (Type1FontMetrics.CJKNames[i][0].ToLower().Equals(f) ||
-							Type1FontMetrics.CJKNames[i][1].ToLower().Equals(f))
+						if (cjkName[0].ToLower().Equals(fontNameLower) || cjkName[1].ToLower().Equals(fontNameLower))
 						{
-							string style = "";
-							if (fontBold && fontItalic)
-								style = "BoldItalic";
-							else
-							{
-								if (fontItalic)
-									style = "Italic";
-								if (fontBold)
-									style = "Bold";
-							}
+							string style = fontBold && fontItalic ? "BoldItalic" : fontItalic ? "Italic" : fontBold ? "Bold" : "";
 							setAsianFont(fontName, style);
 							isCJK = true;
 							break;
@@ -327,89 +314,71 @@ namespace com.genexus.reports
 					}
 					if (!isCJK)
 					{
-						int style = 0;
-						if (fontBold && fontItalic)
-							style = style + 3;
-						else
+						int style = (fontBold && fontItalic ? 3 : 0) + (fontItalic && !fontBold ? 2 : 0) + (fontBold && !fontItalic ? 1 : 0);
+						foreach (string[] base14Font in PDFFont.base14)
 						{
-							if (fontItalic)
-								style = style + 2;
-							if (fontBold)
-								style = style + 1;
-						}
-						for (int i = 0; i < PDFFont.base14.Length; i++)
-						{
-							if (PDFFont.base14[i][0].ToLower().Equals(f))
+							if (base14Font[0].ToLower().Equals(fontNameLower))
 							{
-								fontName = PDFFont.base14[i][1 + style].Substring(1);
+								fontName = base14Font[1 + style].Substring(1);
 								break;
 							}
 						}
-						baseFont = createType1FontFromName(fontName);
-						if (baseFont != null)
-							baseFontName = fontName;
-						else
-						{
-							byte[] fontBytes = File.ReadAllBytes(GetFontLocation(fontName));
-							baseFont = documentBuilder.AddTrueTypeFont(fontBytes);
-							baseFontName = fontName;
-						}
+						ProcessBaseFont(fontName);
 					}
 				}
 				else
 				{
-					String style = "";
-					if (fontBold && fontItalic)
-						style = ",BoldItalic";
-					else
-					{
-						if (fontItalic)
-							style = ",Italic";
-						if (fontBold)
-							style = ",Bold";
-					}
+					string style = (fontBold && fontItalic ? ",BoldItalic" : "") + (fontItalic && !fontBold ? ",Italic" : "") + (fontBold && !fontItalic ? ",Bold" : "");
+					fontName += style;
+					ProcessBaseFont(fontName);
+				}
 
-					fontName = fontName + style;
-					string fontPath = GetFontLocation(fontName);
-					bool foundFont = true;
-					if (string.IsNullOrEmpty(fontPath))
-					{
-						fontPath = new MSPDFFontDescriptor().getTrueTypeFontLocation(fontName);
-						if (string.IsNullOrEmpty(fontPath))
-						{
-							baseFont = documentBuilder.AddStandard14Font(Standard14Font.Helvetica);
-							baseFontName = "helvetica";
-							foundFont = false;
-						}
-					}
-					if (foundFont)
-					{
-						baseFont = createType1FontFromName(fontName);
-						if (baseFont != null)
-							baseFontName = fontName;
-						else
-						{
-							byte[] fontBytes = File.ReadAllBytes(GetFontLocation(fontName));
-							baseFont = documentBuilder.AddTrueTypeFont(fontBytes);
-							baseFontName = fontName;
-						}
-					}
+				if (barcode128AsImage && (
+						fontName.ToLower().Contains("barcode 128") || fontName.ToLower().Contains("barcode128")
+						||
+						baseFontPath.ToLower().Contains("3of9") || baseFontPath.ToLower().Contains("3 of 9")
+					)
+				)
+				{
+					barcodeType = "barcode128";
 				}
 			}
 			catch (Exception e)
 			{
 				GXLogging.Debug(log, "GxAttris DocumentException", e);
-				throw e;
+				throw;
 			}
 		}
 
-		private AddedFont createType1FontFromName(String fontName)
+		private void ProcessBaseFont(string fontName)
+		{
+			string fontLocation = GetFontLocation(fontName);
+			if (string.IsNullOrEmpty(fontLocation))
+			{
+				fontLocation = new MSPDFFontDescriptor().getTrueTypeFontLocation(fontName);
+			}
+
+			if (!string.IsNullOrEmpty(fontLocation))
+			{
+				byte[] fontBytes = File.ReadAllBytes(fontLocation);
+				baseFont = documentBuilder.AddTrueTypeFont(fontBytes);
+			}
+			else
+			{
+				baseFont = documentBuilder.AddStandard14Font(Standard14Font.TimesRoman);
+			}
+
+			baseFontName = fontName;
+			baseFontPath = fontLocation;
+		}
+
+		private AddedFont createType1FontFromName(string fontName)
 		{
 			switch (fontName.ToLower())
 			{
 				case "times-roman":
 					return documentBuilder.AddStandard14Font(Standard14Font.TimesRoman);
-				case "Ttimes-bold":
+				case "times-bold":
 					return documentBuilder.AddStandard14Font(Standard14Font.TimesBold);
 				case "times-italic":
 					return documentBuilder.AddStandard14Font(Standard14Font.TimesItalic);
@@ -436,12 +405,11 @@ namespace com.genexus.reports
 				case "zapfdingbats":
 					return documentBuilder.AddStandard14Font(Standard14Font.ZapfDingbats);
 				default:
-					// Use Helvetica as default font is fontName does not match any Type 1 font
-					return documentBuilder.AddStandard14Font(Standard14Font.Helvetica);
+					return null;
 			}
 		}
 
-		public override void setAsianFont(String fontName, String style)
+		public override void setAsianFont(string fontName, string style)
 		{
 			try
 			{
@@ -460,7 +428,7 @@ namespace com.genexus.reports
 			}
 		}
 
-		public override void GxDrawText(String sTxt, int left, int top, int right, int bottom, int align, int htmlformat, int border, int valign)
+		public override void GxDrawText(string sTxt, int left, int top, int right, int bottom, int align, int htmlformat, int border, int valign)
 		{
 			bool printRectangle = false;
 			if (props.getBooleanGeneralProperty(Const.BACK_FILL_IN_CONTROLS, true))
@@ -471,15 +439,31 @@ namespace com.genexus.reports
 				GxDrawRect(left, top, right, bottom, border, foreColor.R, foreColor.G, foreColor.B, backFill ? 1 : 0, backColor.R, backColor.G, backColor.B, 0, 0);
 			}
 
-			sTxt = sTxt.TrimEnd(TRIM_CHARS);
+			sTxt = RTrim(sTxt);
 
-			float rectangleWidth = (float)convertScale(right - left);
-			float rectangleHeight = (float)convertScale(top - bottom);
+			AddedFont font = createType1FontFromName(baseFontName);
+			if (font == null)
+			{
+				try
+				{
+					byte[] fontBytes = File.ReadAllBytes(baseFontPath);
+					font = documentBuilder.AddTrueTypeFont(fontBytes);
+				}
+				catch
+				{
+					font = baseFont;
+				}
+			}
 
+			float captionHeight = CalculateFontCaptionHeight(baseFontPath, fontSize);
+			float rectangleWidth = MeasureTextWidth(sTxt, baseFontPath, fontSize);
+			float lineHeight = MeasureTextHeight(sTxt, baseFontPath, fontSize);
+			float textBlockHeight = (float)convertScale(bottom - top);
+			int linesCount = (int)(textBlockHeight / lineHeight);
 			int bottomOri = bottom;
 			int topOri = top;
 
-			if (rectangleHeight / convertScale(fontSize) >= 2 && !((align & 16) == 16) && htmlformat != 1)
+			if (linesCount >= 2 && !((align & 16) == 16) && htmlformat != 1)
 			{
 				if (valign == (int)VerticalAlign.TOP)
 					bottom = top + (int)reconvertScale(lineHeight);
@@ -490,7 +474,7 @@ namespace com.genexus.reports
 			float bottomAux = (float)convertScale(bottom) - ((float)convertScale(bottom - top)) / 2;
 			float topAux = (float)convertScale(top) + ((float)convertScale(bottom - top)) / 2;
 
-			float startHeight = bottomAux - topAux;
+			float startHeight = bottomAux - topAux - captionHeight;
 
 			float leftAux = (float)convertScale(left);
 			float rightAux = (float)convertScale(right);
@@ -499,37 +483,46 @@ namespace com.genexus.reports
 
 			if (htmlformat == 1)
 			{
-				if (supportedHTMLTags == null) { return; }
-				return;
+				GXLogging.Error(log, "GxDrawText: PDFPig report implementation does not support rendering HTML content into PDF reports");
 			}
 
 			if (barcodeType != null)
 			{
-				PdfPoint barcodeStartingPoint;
+				PdfRectangle barcodeRectangle;
 				switch (alignment)
 				{
 					case 1: // Center Alignment
-						barcodeStartingPoint = new PdfPoint(
-								((leftAux + rightAux) / 2) + leftMargin,
-								pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin + startHeight
+						barcodeRectangle = new PdfRectangle(
+							(leftAux + rightAux) / 2 + leftMargin - rectangleWidth / 2,
+							pageBuilder.PageSize.TopRight.Y - (float)convertScale(bottom) - topMargin - bottomMargin,
+							(leftAux + rightAux) / 2 + leftMargin + rectangleWidth / 2,
+							pageBuilder.PageSize.TopRight.Y - (float)convertScale(top) - topMargin - bottomMargin
 							);
 						break;
 					case 2: // Right Alignment
-						barcodeStartingPoint = new PdfPoint(
-								rightAux + leftMargin,
-								pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin + startHeight
+						barcodeRectangle = new PdfRectangle(
+							rightAux + leftMargin - rectangleWidth,
+							pageBuilder.PageSize.TopRight.Y - (float)convertScale(bottom) - topMargin - bottomMargin,
+							rightAux + leftMargin,
+							pageBuilder.PageSize.TopRight.Y - (float)convertScale(top) - topMargin - bottomMargin
 							);
 						break;
 					default: // Left Alignment (Corresponds to alignment = 0 but used as default)
-						barcodeStartingPoint = new PdfPoint(
-								leftAux + leftMargin,
-								pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin + startHeight
+						barcodeRectangle = new PdfRectangle(
+							leftAux + leftMargin,
+							pageBuilder.PageSize.TopRight.Y - (float)convertScale(bottom) - topMargin - bottomMargin,
+							leftAux + leftMargin + rectangleWidth,
+							pageBuilder.PageSize.TopRight.Y - (float)convertScale(top) - topMargin - bottomMargin
 							);
 						break;
 
 				}
-				pageBuilder.SetTextAndFillColor(0, 0, 0);
-				pageBuilder.AddText(sTxt, fontSize, barcodeStartingPoint, baseFont);
+				Image barcodeImage = CreateBarcodeImage((float)barcodeRectangle.Width, (float)barcodeRectangle.Height, baseFontPath, sTxt);
+				using (MemoryStream ms = new MemoryStream())
+				{
+					barcodeImage.Save(ms, ImageFormat.Png);
+					pageBuilder.AddPng(ms.ToArray(), barcodeRectangle);
+				}
 				return;
 			}
 
@@ -558,14 +551,21 @@ namespace com.genexus.reports
 						break;
 
 				}
+
+				decimal width = (decimal)(((leftAux + rightAux) / 2 + leftMargin + rectangleWidth / 2) - ((leftAux + rightAux) / 2 + leftMargin - rectangleWidth / 2));
+				decimal height = (decimal)((pageBuilder.PageSize.TopRight.Y - topAux - topMargin - bottomMargin) - (pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin));
+
 				pageBuilder.SetTextAndFillColor(backColor.R, backColor.G, backColor.B);
-				pageBuilder.DrawRectangle(rectangleStartingPoint, (decimal)rectangleWidth, (decimal)rectangleHeight, 1, true);
+				pageBuilder.DrawRectangle(rectangleStartingPoint, width, height, 1, true);
 			}
 
 			pageBuilder.SetTextAndFillColor(foreColor.R, foreColor.G, foreColor.B);
 
 			if (fontUnderline)
 			{
+				float underlineSeparation = lineHeight / 5;
+				int underlineHeight = (int)underlineSeparation + (int)(underlineSeparation / 4);
+
 				PdfPoint underlineStartingPoint;
 				PdfPoint underlineEndingPoint;
 				switch (alignment)
@@ -602,12 +602,13 @@ namespace com.genexus.reports
 						break;
 
 				}
-				pageBuilder.DrawLine(underlineStartingPoint, underlineEndingPoint, (decimal)convertScale(fontSize) / 10);
+
+				pageBuilder.DrawLine(underlineStartingPoint, underlineEndingPoint, underlineHeight);
 			}
 
 			if (fontStrikethru)
 			{
-				float strikethruSeparation = lineHeight / 2;
+				float strikethruSeparation = (float)(lineHeight / 1.5);
 				PdfPoint strikethruStartingPoint;
 				PdfPoint strikethruEndingPoint;
 				switch (alignment)
@@ -647,35 +648,266 @@ namespace com.genexus.reports
 				pageBuilder.DrawLine(strikethruStartingPoint, strikethruEndingPoint, (decimal)convertScale(fontSize) / 10);
 			}
 
-			/*
-			 There seems to be no way of wrapping text in PDF Pig as the library does not provide a way to
-			 measure the width of a given string
-			*/
+			float textBlockWidth = rightAux - leftAux;
+			float TxtWidth = MeasureTextWidth(sTxt, baseFontPath, fontSize);
+			bool justified = (alignment == 3) && textBlockWidth < TxtWidth;
+			bool wrap = ((align & 16) == 16);
 
-			PdfPoint textStartingPoint;
-			switch (alignment)
+			if (wrap || justified)
 			{
-				case 1: // Center Alignment
-					textStartingPoint = new PdfPoint(
-							((leftAux + rightAux) / 2) + leftMargin,
-							pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin + startHeight
-						);
-					break;
-				case 2: // Right Alignment
-					textStartingPoint = new PdfPoint(
-							rightAux + leftMargin,
-							pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin + startHeight
-						);
-					break;
-				default: // Left Alignment (Corresponds to alignment = 0 but used as default)
-					textStartingPoint = new PdfPoint(
-							leftAux + leftMargin,
-							pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin + startHeight
-						);
-					break;
+				bottomAux = (float)convertScale(bottomOri);
+				topAux = (float)convertScale(topOri);
 
+				float llx = leftAux + leftMargin;
+				float lly = (float)(pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin);
+				float urx = rightAux + leftMargin;
+				float ury = (float)(pageBuilder.PageSize.TopRight.Y - topAux - topMargin - bottomMargin);
+
+				ShowWrappedTextAligned(font, alignment, sTxt, llx, lly, urx, ury);
 			}
-			pageBuilder.AddText(sTxt, fontSize, textStartingPoint, baseFont);
+			else
+			{
+				if (!autoResize)
+				{
+					string newsTxt = sTxt;
+					while (TxtWidth > textBlockWidth && (newsTxt.Length - 1 >= 0))
+					{
+						sTxt = newsTxt;
+						newsTxt = newsTxt.Substring(0, newsTxt.Length - 1);
+						TxtWidth = MeasureTextWidth(sTxt, baseFontPath, fontSize);
+					}
+				}
+				switch (alignment)
+				{
+					case 1: // Center Alignment
+						ShowTextAligned(font, alignment, sTxt, ((leftAux + rightAux) / 2) + leftMargin, (float)(pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin));
+						break;
+					case 2: // Right Alignment
+						ShowTextAligned(font, alignment, sTxt, rightAux + leftMargin, (float)(pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin));
+						break;
+					case 0: // Left Alignment
+					case 3: // Justified, only one text line
+						ShowTextAligned(font, alignment, sTxt, leftAux + leftMargin, (float)(pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin));
+						break;
+				}
+			}
+		}
+
+		public Image CreateBarcodeImage(float width, float height, string fontPath, string text)
+		{
+			PrivateFontCollection fontCollection = new PrivateFontCollection();
+			fontCollection.AddFontFile(fontPath);
+			FontFamily fontFamily = fontCollection.Families[0];
+
+			int bitmapWidth = (int)Math.Ceiling(width);
+			int bitmapHeight = (int)Math.Ceiling(height);
+
+			float fontSize = Math.Min(width, height);
+			Font font;
+			SizeF textSize;
+
+			using (Bitmap tempBitmap = new Bitmap(1, 1))
+			{
+				using (Graphics tempGraphics = Graphics.FromImage(tempBitmap))
+				{
+					do
+					{
+						font = new Font(fontFamily, fontSize, GraphicsUnit.Pixel);
+						textSize = tempGraphics.MeasureString(text, font);
+						fontSize--;
+					} while (textSize.Width > width || textSize.Height > height);
+				}
+			}
+
+			Bitmap bitmap = new Bitmap(bitmapWidth, bitmapHeight);
+			bitmap.SetResolution(600, 600);
+			using (Graphics graphics = Graphics.FromImage(bitmap))
+			{
+				graphics.Clear(Color.White);
+				graphics.SmoothingMode = SmoothingMode.HighQuality;
+				graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+				graphics.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
+				StringFormat format = new StringFormat
+				{
+					Alignment = StringAlignment.Center,
+					LineAlignment = StringAlignment.Center
+				};
+				graphics.DrawString(text, font, Brushes.Black, new RectangleF(0, 0, width, height), format);
+			}
+			font.Dispose();
+			fontCollection.Dispose();
+
+			return bitmap;
+		}
+
+		private float MeasureTextWidth(string text, string fontPath, float fontSize)
+		{
+			Font font;
+			if (string.IsNullOrEmpty(fontPath))
+			{
+				font = new Font("Times New Roman", fontSize, GraphicsUnit.Point);
+			}
+			else
+			{
+				PrivateFontCollection pfc = new PrivateFontCollection();
+				pfc.AddFontFile(fontPath);
+				font = new Font(pfc.Families[0], fontSize, GraphicsUnit.Point);
+			}
+
+			using (font)
+			{
+				using (var fakeImage = new Bitmap(1, 1))
+				{
+					using (var graphics = Graphics.FromImage(fakeImage))
+					{
+						graphics.PageUnit = GraphicsUnit.Point;
+						graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
+						var sizeF = graphics.MeasureString(text, font);
+						return sizeF.Width;
+					}
+				}
+			}
+		}
+
+		private float MeasureTextHeight(string text, string fontPath, float fontSize)
+		{
+			Font font;
+			if (string.IsNullOrEmpty(fontPath))
+			{
+				font = new Font("Times New Roman", fontSize, GraphicsUnit.Point);
+			}
+			else
+			{
+				PrivateFontCollection pfc = new PrivateFontCollection();
+				pfc.AddFontFile(fontPath);
+				font = new Font(pfc.Families[0], fontSize, GraphicsUnit.Point);
+			}
+
+			using (font)
+			{
+				using (var fakeImage = new Bitmap(1, 1))
+				{
+					using (var graphics = Graphics.FromImage(fakeImage))
+					{
+						graphics.PageUnit = GraphicsUnit.Point;
+						graphics.TextRenderingHint = TextRenderingHint.AntiAlias;
+						var sizeF = graphics.MeasureString(text, font);
+						return sizeF.Height;
+					}
+				}
+			}
+		}
+
+		private float CalculateFontCaptionHeight(string fontPath, float fontSize, FontStyle fontStyle = FontStyle.Regular)
+		{
+			Font font;
+			if (string.IsNullOrEmpty(fontPath))
+			{
+				font = new Font("Times New Roman", fontSize, GraphicsUnit.Point);
+			}
+			else
+			{
+				PrivateFontCollection pfc = new PrivateFontCollection();
+				pfc.AddFontFile(fontPath);
+				font = new Font(pfc.Families[0], fontSize, GraphicsUnit.Point);
+			}
+			using (font)
+			{
+				FontFamily ff = font.FontFamily;
+
+				float ascent = ff.GetCellAscent(fontStyle);
+				float descent = ff.GetCellDescent(fontStyle);
+				float lineSpacing = ff.GetLineSpacing(fontStyle);
+
+				float height = fontSize * (ascent + descent) / ff.GetEmHeight(fontStyle);
+
+				return height;
+			}
+		}
+
+		private void ShowTextAligned(AddedFont font, int alignment, string text, float x, float y)
+		{
+			try
+			{
+				float textWidth = MeasureTextWidth(text, baseFontPath, fontSize);
+				switch (alignment)
+				{
+					case 0: // Left-aligned
+					case 3: // Justified, only one text line
+						break;
+					case 1: // Center-aligned
+						x = x - textWidth / 2;
+						break;
+					case 2: // Right-aligned
+						x = x - textWidth;
+						break;
+				}
+				y = (float)(y - fontSize * 0.5);
+				pageBuilder.AddText(text, fontSize, new PdfPoint(x, y), font);
+			}
+			catch (IOException ioe)
+			{
+				GXLogging.Error(log, "failed to draw aligned text: ", ioe);
+			}
+		}
+
+		private void ShowWrappedTextAligned(AddedFont font, int alignment, string text, float llx, float lly, float urx, float ury)
+		{
+			try
+			{
+				List<string> lines = new List<string>();
+				string[] words = text.Split(' ');
+				StringBuilder currentLine = new StringBuilder();
+				foreach (string word in words)
+				{
+					float currentLineWidth = MeasureTextWidth(currentLine + " " + word, baseFontPath, fontSize);
+					if (currentLineWidth < urx - llx)
+					{
+						if (currentLine.Length > 0)
+						{
+							currentLine.Append(" ");
+						}
+						currentLine.Append(word);
+					}
+					else
+					{
+						lines.Add(currentLine.ToString());
+						currentLine.Clear();
+						currentLine.Append(word);
+					}
+				}
+				lines.Add(currentLine.ToString());
+
+				float leading = (float)(lines.Count == 1 ? fontSize : 1.2 * fontSize);
+				float totalTextHeight = fontSize * lines.Count + leading * (lines.Count - 1);
+				float startY = lines.Count == 1 ? lly + (ury - lly - totalTextHeight) / 2 : lly + (ury - lly - totalTextHeight) / 2 + (lines.Count - 1) * (fontSize + leading);
+
+				foreach (string line in lines)
+				{
+					float lineWidth = MeasureTextWidth(line, baseFontPath, fontSize);
+					float startX;
+
+					switch (alignment)
+					{
+						case 1: // Center-aligned
+							startX = llx + (urx - llx - lineWidth) / 2;
+							break;
+						case 2: // Right-aligned
+							startX = urx - lineWidth;
+							break;
+						default: // Left-aligned & Justified, only one text line
+							startX = llx;
+							break;
+					}
+
+					pageBuilder.AddText(line, fontSize, new PdfPoint(startX, startY), font);
+					startY -= leading;
+				}
+			}
+			catch (IOException ioe)
+			{
+				GXLogging.Error(log, "Failed to draw wrapped text", ioe);
+			}
 		}
 
 		private ExtendedPageSize ComputePageSize(float leftMargin, float topMargin, int width, int length, bool marginsInsideBorder)
@@ -709,25 +941,24 @@ namespace com.genexus.reports
 			}
 
 			/*
-			 There seems to be no way of setting the number of copies and the duplex value for the viewer preferences
+			 The PDFPig API provides no way of setting the number of copies and the duplex value for the viewer preferences
 			*/
 
 			/*
-			 There seems to be no way of embedding javascript into the document
+			 The PDFPig API provides no way of embedding javascript into the document
 			*/
 
 			try
 			{
 				byte[] documentBytes = documentBuilder.Build();
 				outputStream.Write(documentBytes, 0, documentBytes.Length);
-				//File.WriteAllBytes(docName, documentBytes);
 			}
 			catch (IOException e)
 			{
 				GXLogging.Debug(log,"GxEndDocument: failed to write document to the output stream", e);
 			}
 
-			String serverPrinting = props.getGeneralProperty(Const.SERVER_PRINTING);
+			string serverPrinting = props.getGeneralProperty(Const.SERVER_PRINTING);
 			bool printingScript = (outputType == Const.OUTPUT_PRINTER || outputType == Const.OUTPUT_STREAM_PRINTER) && serverPrinting.Equals("false");
 			switch (outputType)
 			{
@@ -747,7 +978,7 @@ namespace com.genexus.reports
 
 				case Const.OUTPUT_PRINTER:
 					try { outputStream.Close(); }
-					catch (IOException) {; } // Cierro el archivo
+					catch (IOException) { }
 					try
 					{
 						if (!serverPrinting.Equals("false") && !printingScript)
@@ -778,6 +1009,7 @@ namespace com.genexus.reports
 		}
 
 	}
+
 	internal class ExtendedPageSize
 	{
 		internal double Width;
