@@ -123,15 +123,15 @@ namespace com.genexus.reports
 			x2 = rightAux + leftMargin;
 			y2 = (float)pageBuilder.PageSize.TopRight.Y - topAux - topMargin - bottomMargin;
 
-			// Corner styling and radio are not taken into consideration because the PDFPig
-			// API provides no way to render rounded rectangles or style them 
+			GXLogging.Info(log, "Corner styling and radio are not taken into consideration because the PDFPig " +
+				"API provides no way to render rounded rectangles or style them");
 
 			if (pen > 0)
 				pageBuilder.SetStrokeColor( (byte)foreRed, (byte)foreGreen, (byte)foreBlue);
 			else
 				pageBuilder.SetStrokeColor( (byte)backRed, (byte)backGreen, (byte)backBlue);
 
-			// The PDFPig API provides no way of setting the line cap style
+			GXLogging.Info(log, "The PDFPig API provides no way of setting the line cap style");
 
 			if (backMode != 0)
 			{
@@ -168,7 +168,7 @@ namespace com.genexus.reports
 
 				if (style != 0)
 				{
-					// The PDFPig API provides no way of creating a dashed line
+					GXLogging.Info(log, "The PDFPig API provides no way of creating a dashed line");
 					float[] dashPattern = getDashedPattern(style);
 				}
 
@@ -940,13 +940,9 @@ namespace com.genexus.reports
 				GxStartPage();
 			}
 
-			/*
-			 The PDFPig API provides no way of setting the number of copies and the duplex value for the viewer preferences
-			*/
+			GXLogging.Info(log, "The PDFPig API provides no way of setting the number of copies and the duplex value for the viewer preferences");
 
-			/*
-			 The PDFPig API provides no way of embedding javascript into the document
-			*/
+			GXLogging.Info(log, "The PDFPig API provides no way of embedding javascript into the document");
 
 			try
 			{
