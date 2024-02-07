@@ -437,6 +437,7 @@ namespace GeneXus.Procedure
 
 #if NETCORE
 		const string PDF_LIBRARY_ITEXT8 = "ITEXT8";
+		const string PDF_LIBRARY_PDFPIG = "PDFPIG";
 #endif
 		static public IReportHandler GetPrinter( int outputType, string path, Stream reportOutputStream)
 		{
@@ -470,7 +471,13 @@ namespace GeneXus.Procedure
 					Type classType = assem.GetType( "GeneXus.Printer.GxReportBuilderPdf", false, true);
 					reportHandler = (IReportHandler) Activator.CreateInstance(classType,new Object[]{path, reportOutputStream});
 #else
-					string reportBuidler = Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_ITEXT8, StringComparison.OrdinalIgnoreCase) ? "GxReportBuilderPdf8" : "GxReportBuilderPdf";
+					string reportBuidler;
+					if (Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_ITEXT8, StringComparison.OrdinalIgnoreCase))
+						reportBuidler = "GxReportBuilderPdf8";
+					else if (Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_PDFPIG, StringComparison.OrdinalIgnoreCase))
+						reportBuidler = "GxReportBuilderPDFPig";
+					else
+						reportBuidler = "GxReportBuilderPdf";
 					reportHandler = (IReportHandler)(ClassLoader.FindInstance("GxPdfReportsCS", "GeneXus.Printer", reportBuidler, new Object[] { path, reportOutputStream }, null));
 #endif
 				}
