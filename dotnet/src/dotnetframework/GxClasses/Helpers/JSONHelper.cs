@@ -91,7 +91,7 @@ namespace GeneXus.Utils
 		{
 			return jobject == null;
 		}
-		static JsonSerializerOptions DeserializationOptions = new JsonSerializerOptions() { Converters = { new CustomDateTimeConverter() }, AllowTrailingCommas=true };
+		static JsonSerializerOptions DeserializationOptions = new JsonSerializerOptions() { Converters = { new GxJsonConverter() }, AllowTrailingCommas=true };
 		internal override T ReadJSON<T>(string json)
 		{
 			return JsonSerializer.Deserialize<T>(json, DeserializationOptions);
