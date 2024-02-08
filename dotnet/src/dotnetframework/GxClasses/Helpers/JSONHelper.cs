@@ -91,12 +91,10 @@ namespace GeneXus.Utils
 		{
 			return jobject == null;
 		}
+		static JsonSerializerOptions DeserializationOptions = new JsonSerializerOptions() { Converters = { new CustomDateTimeConverter() }, AllowTrailingCommas=true };
 		internal override T ReadJSON<T>(string json)
 		{
-			JsonSerializerOptions opts = new JsonSerializerOptions();
-			opts.Converters.Add(new GxJsonConverter());
-			opts.AllowTrailingCommas = true;
-			return JsonSerializer.Deserialize<T>(json, opts);
+			return JsonSerializer.Deserialize<T>(json, DeserializationOptions);
 		}
 		internal override string WriteJSON<T>(T kbObject)
 		{
@@ -106,13 +104,13 @@ namespace GeneXus.Utils
 			}
 			return null;
 		}
+		static JsonSerializerOptions JayrockCompatibleOptions = new JsonSerializerOptions() {
+			Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+			Converters = { new CustomDateTimeConverter() },
+			NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals };
 		internal static string SerializeToJayrockCompatibleJson<T>(T value) where T : IJayrockCompatible
 		{
-			JsonSerializerOptions opts = new JsonSerializerOptions();
-			opts.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-			opts.Converters.Add(new CustomDateTimeConverter());
-			opts.NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals;
-			return JsonSerializer.Serialize(value, opts);
+			return JsonSerializer.Serialize(value, JayrockCompatibleOptions);
 		}
 	}
 #else
