@@ -56,7 +56,6 @@ namespace GeneXus.Utils
 					}
 			}
 		}
-
 		public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
 		{
 			throw new NotImplementedException();
