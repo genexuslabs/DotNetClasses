@@ -345,7 +345,7 @@ namespace GeneXus.Http
 					try
 					{
 						JObject obj = GetGxObject(AttValues, CmpContext, IsMasterPage);
-						if (obj != null && (DynAjaxEventContext.isParmModified(AttName, SdtObj) || !isUndefinedOutParam( AttName, SdtObj)))
+						if (obj != null && (!isUndefinedOutParam(AttName, SdtObj) || DynAjaxEventContext.isParmModified(AttName, SdtObj)))
 						{
 							IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
 							if (SdtObjJson != null)
