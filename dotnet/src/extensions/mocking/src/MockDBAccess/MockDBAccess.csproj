@@ -4,6 +4,7 @@
 		<TargetFrameworks>net6.0;net462</TargetFrameworks>
 		<TargetFramework Condition="'$(Publishing)' == 'true'">net462</TargetFramework>
 		<NoWarn>618;1607;1698</NoWarn>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
