@@ -1,13 +1,11 @@
 using System;
+using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry;
-using OpenTelemetry.Trace;
 using OpenTelemetry.Contrib.Extensions.AWSXRay.Trace;
-using GeneXus.Services;
-using GeneXus.Services.Common;
-using GeneXus.Diagnostics;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 namespace GeneXus.OpenTelemetry.AWS
 {
