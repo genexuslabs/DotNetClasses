@@ -1045,7 +1045,7 @@ namespace GeneXus.Utils
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxUserType>();
 		protected GXProperties dirties = new GXProperties();
-		private const string PROPERTY_PREFIX = "gxtpr_";
+
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
 		[XmlIgnore]
@@ -1602,29 +1602,27 @@ namespace GeneXus.Utils
 			ToJSON();
 			return JsonObj;
 		}
+
 		private ICollection getFromJSONObjectOrderIterator(ICollection it)
 		{
-			if (GxUploadAttrs.IsEmpty && !typeof(GxSilentTrnSdt).IsAssignableFrom(this.GetType()))
-			{
-				return it;
-			}
-			List<string> _JsonObjectOrderIterator = new List<string>();
-
+			List<string> v = new List<string>();
 			List<string> vAtEnd = new List<string>();
 			foreach (string name in it)
 			{
-				if (name.EndsWith("_N") || IsGxUploadAttribute(name))
+				string map = JsonMap(name);
+				PropertyInfo objProperty = GetTypeProperty("gxtpr_" + (!string.IsNullOrEmpty(map) ? map : name).ToLower());
+				if (name.EndsWith("_N") || objProperty != null && IsGxUploadAttribute(objProperty))
 				{
 					vAtEnd.Add(name);
 				}
 				else
 				{
-					_JsonObjectOrderIterator.Add(name);//keep the order of attributes that do not end with _N.
+					v.Add(name);//keep the order of attributes that do not end with _N.
 				}
 			}
 			if (vAtEnd.Count > 0)
-				_JsonObjectOrderIterator.AddRange(vAtEnd);
-			return _JsonObjectOrderIterator;
+				v.AddRange(vAtEnd);
+			return v;
 		}
 
 		public void FromJSONObject(dynamic obj)
@@ -1637,7 +1635,9 @@ namespace GeneXus.Utils
 			foreach (string name in jsonIterator)
 			{
 				object currObj = jobj[name];
-				PropertyInfo objProperty = GetTypeProperty(JsonNameToInternalName(name));
+				string map = JsonMap(name);
+				PropertyInfo objProperty = GetTypeProperty("gxtpr_" + (map != null ? map : name).ToLower());
+
 				if (objProperty != null)
 				{
 					if (!JSONHelper.IsJsonNull(currObj))
@@ -1897,64 +1897,32 @@ namespace GeneXus.Utils
 			return success;
 		}
 
-		private static ConcurrentDictionary<string, byte> _gxuploadAttrs;
-		private bool IsGxUploadAttribute(string jsonPropertyName)
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
+		private Dictionary<string, bool> gxuploadAttrs = new Dictionary<string, bool>();
+		private bool IsGxUploadAttribute(PropertyInfo property)
 		{
-			return GxUploadAttrs.ContainsKey(JsonNameToInternalName(jsonPropertyName));
-		}
-		private bool IsGxUploadAttribute(PropertyInfo propertyInfo)
-		{
-			return GxUploadAttrs.ContainsKey(propertyInfo.Name);
-		}
-		private string JsonNameToInternalName(string jsonPropertyName)
-		{
-			string map = JsonMap(jsonPropertyName);
-			if (!string.IsNullOrEmpty(map))
-				return PROPERTY_PREFIX + map.ToLower();
-			else
-				return PROPERTY_PREFIX + jsonPropertyName.ToLower();
-		}
-		private ConcurrentDictionary<string, byte> GxUploadAttrs
-		{
-			get
+			string key = property.Name;
+			if (!gxuploadAttrs.ContainsKey(key))
 			{
-				if (_gxuploadAttrs == null)
-				{
-					_gxuploadAttrs = new ConcurrentDictionary<string, byte>();
-					foreach (PropertyInfo property in TypeProperties.Values)
-					{
-						bool hasAtt = property.IsDefined(typeof(GxUpload), false);
-						if (hasAtt)
-						{
-							_gxuploadAttrs.TryAdd(property.Name.ToLower(), 1);
-						}
-					}
-				}
-				return _gxuploadAttrs;
+				bool hasAtt = property.IsDefined(typeof(GxUpload), false);
+				gxuploadAttrs.Add(key, hasAtt);
 			}
+			return gxuploadAttrs[key];
 		}
-		private static ConcurrentDictionary<string, PropertyInfo> _typeProps;
+
+		private Hashtable props;
 
 		private PropertyInfo GetTypeProperty(string propName)
 		{
-			return TypeProperties[propName];
-		}
-		private ConcurrentDictionary<string, PropertyInfo> TypeProperties
-		{
-			get {
-				if (_typeProps == null)
+			if (props == null)
+			{
+				props = new Hashtable();
+				foreach (PropertyInfo prop in this.GetType().GetProperties())
 				{
-					_typeProps = new ConcurrentDictionary<string, PropertyInfo>();
-					foreach (PropertyInfo prop in this.GetType().GetProperties())
-					{
-						if (prop.Name.StartsWith(PROPERTY_PREFIX, StringComparison.OrdinalIgnoreCase))
-						{
-							_typeProps.TryAdd(prop.Name.ToLower(), prop);
-						}
-					}
+					props.Add(prop.Name.ToLower(), prop);
 				}
-				return _typeProps;
 			}
+			return (PropertyInfo)props[propName];
 		}
 
 		private Hashtable methods;
