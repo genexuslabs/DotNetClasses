@@ -5,6 +5,7 @@ using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Exporter;
 
 namespace GeneXus.Services.Log
 {
@@ -84,7 +85,9 @@ namespace GeneXus.Services.Log
 				var resourceBuilder = ResourceBuilder.CreateDefault()
 				.AddTelemetrySdk();
 
-				logging.SetResourceBuilder(resourceBuilder);
+				logging.SetResourceBuilder(resourceBuilder)
+			   .AddOtlpExporter();
+
 				if (GenerateOtelLogsToConsole())
 					logging.AddConsoleExporter();
 				
