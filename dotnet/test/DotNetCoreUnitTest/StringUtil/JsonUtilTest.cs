@@ -190,6 +190,19 @@ namespace xUnitTesting
 			JArray array = JSONHelper.ReadJSON<JArray>(json);
 			Assert.Equal(7, array.Count);
 		}
+#if NETCORE
+		[Fact]
+		public void DeserializationTwoLevels()
+		{
+			string json = "{\"Name\":\"MainName\",\"Level\":[{\"LevelName\":\"LevelName1\"}, {\"LevelName\":\"LevelName2\"}]}";
+			GxContext context = new GxContext();
+			SdtSDTTwoLevels sdt = new SdtSDTTwoLevels(context);
+			sdt.FromJSonString(json, null);
+			Assert.Equal("MainName", sdt.gxTpr_Name);
+			Assert.Equal("LevelName1",((SdtSDTTwoLevels_LevelItem)sdt.gxTpr_Level.Item(1)).gxTpr_Levelname);
+			Assert.Equal("LevelName2", ((SdtSDTTwoLevels_LevelItem)sdt.gxTpr_Level.Item(2)).gxTpr_Levelname);
+		}
+#endif
 	}
 
 	[XmlSerializerFormat]
