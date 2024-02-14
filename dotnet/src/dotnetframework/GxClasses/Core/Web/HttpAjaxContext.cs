@@ -84,7 +84,7 @@ namespace GeneXus.Http
 
 		public bool isInputParm(string key)
 		{
-			return inParmsMetadataHash.Contains(key);
+			return (inParmsMetadataHash!=null && inParmsMetadataHash.Contains(key));
 		}
 
 		public void Clear()
@@ -104,7 +104,7 @@ namespace GeneXus.Http
 			IGxJSONSerializable jsonValue = value as IGxJSONSerializable;
 			if (jsonValue!=null)
 			{
-				if (!inParmsHashValue.ContainsKey(fieldName))
+				if (inParmsHashValue!=null && !inParmsHashValue.ContainsKey(fieldName))
 					return true;
 				return GXUtil.GetHash(jsonValue.ToJSonString()) != inParmsHashValue[fieldName];
 			}
