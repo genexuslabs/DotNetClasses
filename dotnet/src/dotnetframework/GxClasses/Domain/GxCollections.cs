@@ -1045,7 +1045,7 @@ namespace GeneXus.Utils
 	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable, IGXAssigned
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxUserType>();
-		protected GXProperties dirties = new GXProperties();
+		protected ConcurrentDictionary<string,byte> dirties = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
 		private const string PROPERTY_PREFIX = "gxtpr_";
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
@@ -1104,11 +1104,11 @@ namespace GeneXus.Utils
 
 	public virtual void SetDirty(string fieldName)
 		{
-			dirties[fieldName.ToLower()] = "true";
+			dirties[fieldName] = 1;
 		}
 		public virtual bool IsDirty(string fieldName)
 		{
-			if (dirties.ContainsKey(fieldName.ToLower()))
+			if (dirties.ContainsKey(fieldName))
 				return true;
 			return false;
 		}
@@ -1906,15 +1906,15 @@ namespace GeneXus.Utils
 		}
 		private bool IsGxUploadAttribute(PropertyInfo propertyInfo)
 		{
-			return GxUploadAttrs.ContainsKey(propertyInfo.Name.ToLower());
+			return GxUploadAttrs.ContainsKey(propertyInfo.Name);
 		}
 		private string JsonNameToInternalName(string jsonPropertyName)
 		{
 			string map = JsonMap(jsonPropertyName);
 			if (!string.IsNullOrEmpty(map))
-				return $"{PROPERTY_PREFIX}{map.ToLower()}";
+				return $"{PROPERTY_PREFIX}{map}";
 			else
-				return $"{PROPERTY_PREFIX}{jsonPropertyName.ToLower()}";
+				return $"{PROPERTY_PREFIX}{jsonPropertyName}";
 		}
 		protected virtual GXTypeInfo TypeInfo { get { return _compatibilityGxuploadAttrs; } set { _compatibilityGxuploadAttrs = value; } }
 		private ConcurrentDictionary<string, byte> GxUploadAttrs
@@ -1925,7 +1925,7 @@ namespace GeneXus.Utils
 				{
 					TypeInfo = new GXTypeInfo();
 
-					TypeInfo.UploadAttrs = new ConcurrentDictionary<string, byte>();
+					TypeInfo.UploadAttrs = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
 					foreach (PropertyInfo property in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
 					{
 						if (property.Name.StartsWith(PROPERTY_PREFIX, StringComparison.OrdinalIgnoreCase))
@@ -1933,7 +1933,7 @@ namespace GeneXus.Utils
 							bool hasAtt = property.IsDefined(typeof(GxUpload), false);
 							if (hasAtt)
 							{
-								TypeInfo.UploadAttrs.TryAdd(property.Name.ToLower(), 1);
+								TypeInfo.UploadAttrs.TryAdd(property.Name, 1);
 							}
 						}
 					}
@@ -2025,13 +2025,8 @@ namespace GeneXus.Utils
 			GetType().GetProperty($"gxTpr_{propertyName}").SetValue(this, propertyValue);
 		}
 	}
-	internal class GXCompatibilityTypeInfo : GXTypeInfo
-	{
-
-	}
 	public class GXTypeInfo
 	{
-		public ConcurrentDictionary<string, PropertyInfo> TypeProps { get; set; }
 		public ConcurrentDictionary<string, byte> UploadAttrs { get; set; }
 	}
 	public interface IGxJSONAble
