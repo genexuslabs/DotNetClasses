@@ -1919,7 +1919,7 @@ namespace GeneXus.Utils
 			return success;
 		}
 
-		private GXCompatibilityTypeInfo _compatibilityGxuploadAttrs = new GXCompatibilityTypeInfo();
+		private GXTypeInfo _compatibilityGxuploadAttrs = null;
 		private bool IsGxUploadAttribute(string jsonPropertyName)
 		{
 			return GxUploadAttrs.ContainsKey(JsonNameToInternalName(jsonPropertyName));
@@ -1936,7 +1936,7 @@ namespace GeneXus.Utils
 			else
 				return $"{PROPERTY_PREFIX}{jsonPropertyName.ToLower()}";
 		}
-		protected virtual GXTypeInfo TypeInfo { get { return _compatibilityGxuploadAttrs; } set { } }
+		protected virtual GXTypeInfo TypeInfo { get { return _compatibilityGxuploadAttrs; } set { _compatibilityGxuploadAttrs = value; } }
 		private ConcurrentDictionary<string, byte> GxUploadAttrs
 		{
 			get
@@ -1945,21 +1945,6 @@ namespace GeneXus.Utils
 				{
 					TypeInfo = new GXTypeInfo();
 
-					TypeInfo.UploadAttrs = new ConcurrentDictionary<string, byte>();
-					foreach (PropertyInfo property in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
-					{
-						if (property.Name.StartsWith(PROPERTY_PREFIX, StringComparison.OrdinalIgnoreCase))
-						{
-							bool hasAtt = property.IsDefined(typeof(GxUpload), false);
-							if (hasAtt)
-							{
-								TypeInfo.UploadAttrs.TryAdd(property.Name.ToLower(), 1);
-							}
-						}
-					}
-				}
-				else if (TypeInfo is GXCompatibilityTypeInfo)
-				{
 					TypeInfo.UploadAttrs = new ConcurrentDictionary<string, byte>();
 					foreach (PropertyInfo property in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
 					{
