@@ -376,23 +376,25 @@ namespace GeneXus.Application
 
 		private bool GetCollectionWrappedStatus(Dictionary<string, object> outputParameters , int parCount, bool defaultWrapped, bool isAPI)
 		{
-
-			Object v = outputParameters.First().Value;
 			bool wrapped = defaultWrapped;
-			if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
+			if (outputParameters.Count > 0)
 			{
-				IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
-				if (icollwrapped != null)
-					wrapped = icollwrapped.GetIsWrapped();
-			}
-
-			if (isAPI)
-			{
-				if (v is IGxGenericCollectionItem item)
+				Object v = outputParameters.First().Value;				
+				if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
 				{
-					if (item.Sdt is GxSilentTrnSdt)
+					IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
+					if (icollwrapped != null)
+						wrapped = icollwrapped.GetIsWrapped();
+				}
+
+				if (isAPI)
+				{
+					if (v is IGxGenericCollectionItem item)
 					{
-						wrapped = (parCount > 1) ? true : false;
+						if (item.Sdt is GxSilentTrnSdt)
+						{
+							wrapped = (parCount > 1) ? true : false;
+						}
 					}
 				}
 			}
