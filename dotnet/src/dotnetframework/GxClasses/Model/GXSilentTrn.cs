@@ -583,6 +583,7 @@ namespace GeneXus.Utils
 	public interface IGxGenericCollectionWrapped
 	{
 		bool GetIsWrapped();
+		string GetWrappedStatus();
 		void SetIsWrapped(bool value);
 	}
 
@@ -608,6 +609,12 @@ namespace GeneXus.Utils
 			isWrapped = wrapped;			
 		}
 
+		public GxGenericCollection(IGxCollection x, bool wrapped, string wrappedstatus) : this(x)
+		{
+			isWrapped = wrapped;
+			wrappedStatus = wrappedstatus;
+		}
+
 		public void LoadCollection(IGxCollection x)
 		{
 			foreach (IGxGenericCollectionItem x1 in this)
@@ -628,12 +635,26 @@ namespace GeneXus.Utils
 
 		public bool GetIsWrapped()
 		{
+			if (wrappedStatus.Equals("unwrapped"))
+				isWrapped = false;
 			return isWrapped;
 		}
 
 		public void SetIsWrapped(bool value)
 		{
 			isWrapped = value;
+		}
+
+		private string wrappedStatus = "";
+
+		public string GetWrappedStatus()
+		{
+			return wrappedStatus;
+		}
+
+		public void SetWrappedStatus(string value)
+		{
+			wrappedStatus = value;
 		}
 	}
 	public interface IGxGenericCollectionItem
@@ -649,6 +670,17 @@ namespace GeneXus.Utils
 		}
 	}
 
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxJsonSerialization : Attribute
+	{
+		string unwrapped = default;
+		public GxJsonSerialization(string jsonunwrapped)
+		{
+			unwrapped = jsonunwrapped;
+		}
+		public string JsonUnwrapped { get => unwrapped; set => unwrapped = value; }
+	}
+	
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class GxOmitEmptyCollection : Attribute
 	{
