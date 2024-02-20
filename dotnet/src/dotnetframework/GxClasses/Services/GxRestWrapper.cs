@@ -899,14 +899,7 @@ namespace GeneXus.Application
 				{
 					GxJsonSerialization attFmt = (GxJsonSerialization)serializationAttributes.FirstOrDefault();
 					wrappedStatus = attFmt.JsonUnwrapped;
-					if (attFmt.JsonUnwrapped == "wrapped")
-					{
-						isWrapped = true;
-					}
-					else
-					{
-						isWrapped = false;
-					}
+					isWrapped = (attFmt.JsonUnwrapped == "wrapped")? true:false;
 				}
 				bool isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
 				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
