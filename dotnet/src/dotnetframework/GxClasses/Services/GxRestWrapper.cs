@@ -879,9 +879,9 @@ namespace GeneXus.Application
 			Type vType = collectionValue.GetType();
 			Type itemType;
 			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
-			{
-				bool isWrapped = false;
-      			object collectionObject = null;
+			{				
+				bool isWrapped = (isApiObject)?false:true;				
+				object collectionObject = null;
 				string wrappedStatus = "";
 				Type restItemType=null;
 				itemType = collectionValue.GetType().GetGenericArguments()[0];
@@ -899,7 +899,7 @@ namespace GeneXus.Application
 				{
 					GxJsonSerialization attFmt = (GxJsonSerialization)serializationAttributes.FirstOrDefault();
 					wrappedStatus = attFmt.JsonUnwrapped;
-					isWrapped = (attFmt.JsonUnwrapped == "wrapped")? true:false;
+					isWrapped = (isApiObject)? ((wrappedStatus == "wrapped")? true: false): ((wrappedStatus == "unwrapped") ? false : true);
 				}
 				bool isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
 				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
