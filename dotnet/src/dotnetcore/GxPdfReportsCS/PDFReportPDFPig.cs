@@ -186,11 +186,6 @@ namespace com.genexus.reports
 			try
 			{
 				string imageType = Path.GetExtension(bitmap).Substring(1);
-				if (imageType.ToLower() != "jpeg" && imageType.ToLower() != "png")
-				{
-					GXLogging.Error(log, "GxDrawBitMap : PDFPig only supports adding jpeg or png images to documents");
-					return;
-				}
 
 				float rightAux = (float)convertScale(right);
 				float bottomAux = (float)convertScale(bottom);
@@ -214,7 +209,7 @@ namespace com.genexus.reports
 
 				PdfRectangle position = new PdfRectangle(llx, lly, llx + width, lly + height);
 
-				AddedImage image;
+				AddedImage image = null;
 				AddedImage imageRef;
 				if (documentImages != null && documentImages.TryGetValue(bitmap, out imageRef))
 				{
@@ -245,12 +240,13 @@ namespace com.genexus.reports
 					}
 					catch (Exception)
 					{
-						using (HttpClient httpClient = new HttpClient())
-						{
-							byte[] imageBytes = httpClient.GetByteArrayAsync(bitmap).Result;
-							image = imageType == "jpeg" ? pageBuilder.AddJpeg(imageBytes, position) : pageBuilder.AddPng(imageBytes, position);
-						}
+						image = AddImageFromURL(bitmap, position);
 					}
+					if (image == null)
+					{
+						image = AddImageFromURL(bitmap, position);
+					}
+
 					if (documentImages == null)
 					{
 						documentImages = new Dictionary<string, AddedImage>();
@@ -259,14 +255,32 @@ namespace com.genexus.reports
 				}
 				GXLogging.Debug(log, "GxDrawBitMap ->  '" + bitmap + "' [" + left + "," + top + "] - Size: (" + (right - left) + "," + (bottom - top) + ")");
 			}
-			catch (IOException ioe)
-			{
-				GXLogging.Error(log, "GxDrawBitMap io error", ioe);
-			}
 			catch (Exception e)
 			{
 				GXLogging.Error(log, "GxDrawBitMap error", e);
 			}
+		}
+
+		private AddedImage AddImageFromURL(string url, PdfRectangle position)
+		{
+			AddedImage image = null;
+			using (HttpClient httpClient = new HttpClient())
+			{
+				byte[] imageBytes = httpClient.GetByteArrayAsync(url).Result;
+				try
+				{
+					image = pageBuilder.AddJpeg(imageBytes, position);
+				}
+				catch (Exception)
+				{
+					pageBuilder.AddPng(imageBytes, position);
+				}
+			}
+			if (image == null)
+			{
+				GXLogging.Error(log, "GxDrawBitMap : PDFPig only supports adding jpeg or png images to documents");
+			}
+			return image;
 		}
 
 		public override void GxAttris(string fontName, int fontSize, bool fontBold, bool fontItalic, bool fontUnderline, bool fontStrikethru, int pen, int foreRed, int foreGreen, int foreBlue, int backMode, int backRed, int backGreen, int backBlue)
@@ -365,7 +379,9 @@ namespace com.genexus.reports
 			}
 			else
 			{
-				baseFont = documentBuilder.AddStandard14Font(Standard14Font.TimesRoman);
+				baseFont = createType1FontFromName(fontName);
+				if (baseFont == null)
+					baseFont = documentBuilder.AddStandard14Font(Standard14Font.TimesRoman);
 			}
 
 			baseFontName = fontName;
