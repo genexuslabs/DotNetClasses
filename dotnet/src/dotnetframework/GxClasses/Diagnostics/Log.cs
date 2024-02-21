@@ -3,6 +3,7 @@ using GeneXus.Configuration;
 using log4net;
 using System.Collections.Concurrent;
 
+
 #if NETCORE
 using GeneXus.Services.Log;
 using Microsoft.Extensions.Logging;
@@ -25,10 +26,8 @@ namespace GeneXus.Diagnostics
 		}
 
 		private const string LoggerPrefix = "$";
-		private static readonly string DefaultRepository = LogManager.GetRepository().Name;
 		private static readonly string DefaultUserLogNamespace = Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
-		private static readonly IGXLogger GlobalLog = new GXLoggerLog4Net(LogManager.GetLogger(DefaultRepository, DefaultUserLogNamespace));
-		private static ConcurrentDictionary<string, IGXLogger> LoggerDictionary = new ConcurrentDictionary<string, IGXLogger>() { [string.Empty] = GlobalLog };
+		private static ConcurrentDictionary<string, IGXLogger> LoggerDictionary = new ConcurrentDictionary<string, IGXLogger>() {};
 		internal static IGXLogger GetLogger(string topic)
 		{
 			if (LoggerDictionary.TryGetValue(topic, out IGXLogger logger))
@@ -37,7 +36,12 @@ namespace GeneXus.Diagnostics
 			}
 			else
 			{
-				string loggerName = topic.StartsWith(LoggerPrefix) ? topic.Substring(1) : $"{DefaultUserLogNamespace}.{topic.Trim()}";
+				string loggerName;
+				if (!string.IsNullOrEmpty(topic))
+					loggerName = topic.StartsWith(LoggerPrefix) ? topic.Substring(1) : $"{DefaultUserLogNamespace}.{topic.Trim()}";
+				else
+					loggerName = DefaultUserLogNamespace;
+
 				logger = GXLoggerFactory.GetLogger(loggerName);
 				LoggerDictionary.TryAdd(topic, logger);
 				return logger;

@@ -724,7 +724,7 @@ namespace com.genexus.reports
 			this.docName = docName.Trim();
 			if(!Path.IsPathRooted(docName))
 			{ 
-				string outputDir = props.getGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, "").Replace(alternateSeparator, Path.DirectorySeparatorChar).Trim();
+				string outputDir = props.getGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, string.Empty).Replace(alternateSeparator, Path.DirectorySeparatorChar).Trim();
 				if(!string.IsNullOrEmpty(outputDir) && outputDir!=".")
 				{
 					try
@@ -733,22 +733,22 @@ namespace com.genexus.reports
 						{
 							outputDir += Path.DirectorySeparatorChar;
 						}
-						string[] dirs = Directory.GetDirectories(outputDir);
-						foreach (string dir in dirs)
-						{
-							Directory.CreateDirectory(dir);
-						}
+						Directory.CreateDirectory(outputDir);
 					}catch (Exception ex)
 					{
 						Exception exDetailed = new Exception($"Error creating {Const.OUTPUT_FILE_DIRECTORY} of {Const.INI_FILE} ({outputDir})", ex);
 						GXLogging.Error(log, "GxSetDocName error", exDetailed);
 						throw exDetailed;
 					}
-					this.docName = outputDir + this.docName;
+					this.docName = Path.Combine(outputDir, this.docName);
 				}
 			}
-			if(this.docName.IndexOf('.') < 0)
+			this.docName = ReportUtils.AddPath(this.docName, defaultRelativePrepend);
+
+			if (string.IsNullOrEmpty(new FileInfo(this.docName).Extension))
+			{
 				this.docName += ".pdf";
+			}
 			GXLogging.Debug(log,"GxSetDocName: '" + this.docName + "'");
 		}
 

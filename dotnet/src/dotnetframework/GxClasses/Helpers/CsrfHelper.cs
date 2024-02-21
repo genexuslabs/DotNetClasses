@@ -12,6 +12,7 @@ namespace GeneXus.Http
 {
 	internal class CSRFHelper
 	{
+		[SecuritySafeCritical]
 		internal static bool HandleException(Exception e, HttpContext httpContext)
 		{
 			if (RestAPIHelpers.ValidateCsrfToken())
@@ -20,6 +21,7 @@ namespace GeneXus.Http
 			}
 			return false;
 		}
+		[SecuritySafeCritical]
 		private static bool HandleExceptionImp(Exception e, HttpContext httpContext)
 		{
 			if (e is HttpAntiForgeryException)
