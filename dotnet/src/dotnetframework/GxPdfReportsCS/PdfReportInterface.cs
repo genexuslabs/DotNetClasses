@@ -22,7 +22,7 @@ namespace GeneXus.Printer
 				GXLogging.Debug(log,"GxReportBuilderPdf outputStream: binaryWriter");
 			}
 		} 
-		public GxReportBuilderPdf() : this( "", null)
+		public GxReportBuilderPdf() 
 		{
 		}
 		public bool GxPrintInit(string output, ref int gxXPage, ref int gxYPage, string iniFile, string form, string printer, int mode, int orientation, int pageSize, int pageLength, int pageWidth, int scale, int copies, int defSrc, int quality, int color, int duplex) 
