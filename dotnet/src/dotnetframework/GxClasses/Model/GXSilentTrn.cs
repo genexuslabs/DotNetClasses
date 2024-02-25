@@ -868,6 +868,7 @@ namespace GeneXus.Utils
 	[XmlRoot(ElementName = "Message")]
 	[XmlType(TypeName = "Message", Namespace = "GeneXus")]
 	[Serializable]
+	[GxJsonSerialization("wrapped")]
 	public class SdtMessages_Message : GxUserType
 	{
 		public SdtMessages_Message()
@@ -970,6 +971,7 @@ namespace GeneXus.Utils
 
 	[DataContract(Name = @"Messages.Message", Namespace = "GeneXus")]
 	[GxOmitEmptyCollection]
+	[GxJsonSerialization("wrapped")]
 	public class SdtMessages_Message_RESTInterface : GxGenericCollectionItem<SdtMessages_Message>, System.Web.SessionState.IRequiresSessionState
 	{
 		public SdtMessages_Message_RESTInterface()
