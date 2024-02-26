@@ -28,7 +28,7 @@ namespace GeneXus.Printer
 		public GxReportBuilderPDFPig() { }
 		public GxReportBuilderPDFPig(string appPath, Stream outputStream)
 		{
-
+			_appPath = appPath;
 			_pdfReport = new com.genexus.reports.PDFReportPDFPig(appPath);
 			if (outputStream != null)
 			{
