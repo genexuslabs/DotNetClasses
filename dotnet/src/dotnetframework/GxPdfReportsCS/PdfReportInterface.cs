@@ -6,15 +6,14 @@ namespace GeneXus.Printer
 	public class GxReportBuilderPdf : IReportHandler
 	{
 		static IGXLogger log = GXLoggerFactory.GetLogger<GxReportBuilderPdf>();
-		string _appPath;
+		protected string _appPath;
 		protected IReportHandler _pdfReport;
 
 		public GxReportBuilderPdf(string appPath, Stream outputStream)
 		{
 			_appPath = appPath;
-		{
 			_pdfReport = new com.genexus.reports.PDFReportItextSharp(appPath);
-		}
+		
 			if (outputStream != null)
 			{
 				

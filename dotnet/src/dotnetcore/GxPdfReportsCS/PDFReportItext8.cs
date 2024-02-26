@@ -35,7 +35,7 @@ namespace GeneXus.Printer
 		public GxReportBuilderPdf8() { }
 		public GxReportBuilderPdf8(string appPath, Stream outputStream)
 		{
-
+			_appPath = appPath;
 			_pdfReport = new com.genexus.reports.PDFReportItext8(appPath);
 			if (outputStream != null)
 			{
