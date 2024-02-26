@@ -29,7 +29,7 @@ namespace GeneXus.Programs.apps
 
 		void executePrivate(out string result)
 		{
-			result = context.GetRemoteAddress();
+			result = (context.GetHttpSecure() == 1 ? "https://" : "http://") + context.GetRemoteAddress();
 
 			cleanup();
 		}
