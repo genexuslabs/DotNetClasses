@@ -175,11 +175,6 @@ namespace GeneXus.Application
 					options.Limits.MinRequestBodyDataRate = new MinDataRate(bytesPerSecond: MinRequestBodyDataRate, gracePeriod: TimeSpan.FromSeconds(10));
 				}
 			});
-			services.Configure<ForwardedHeadersOptions>(options =>
-			{
-				options.ForwardedHeaders =
-					ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-			});
 			services.Configure<IISServerOptions>(options =>
 			{
 				options.AllowSynchronousIO = true;
@@ -343,7 +338,6 @@ namespace GeneXus.Application
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
-			app.UseForwardedHeaders();
 			ConfigureCors(app);
 			ConfigureSwaggerUI(app, baseVirtualPath);
 

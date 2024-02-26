@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,6 +12,12 @@ namespace xUnitTesting
 		{
 			ClassLoader.FindType("apps.httpheaders", "GeneXus.Programs.apps", "httpheaders", Assembly.GetExecutingAssembly(), true);//Force loading assembly for append procedure
 			server.AllowSynchronousIO = true;
+
+		}
+		protected override void SetEnvironmentVars()
+		{
+			Environment.SetEnvironmentVariable("ASPNETCORE_FORWARDEDHEADERS_ENABLED", "true", EnvironmentVariableTarget.Process);
+
 		}
 		[Fact]
 		public async Task TestForwardedHeaders()
