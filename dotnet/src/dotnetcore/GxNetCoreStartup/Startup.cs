@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
@@ -170,6 +171,11 @@ namespace GeneXus.Application
 					GXLogging.Info(log, $"MinRequestBodyDataRate:{MinRequestBodyDataRate}");
 					options.Limits.MinRequestBodyDataRate = new MinDataRate(bytesPerSecond: MinRequestBodyDataRate, gracePeriod: TimeSpan.FromSeconds(10));
 				}
+			});
+			services.Configure<ForwardedHeadersOptions>(options =>
+			{
+				options.ForwardedHeaders =
+					ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 			});
 			services.Configure<IISServerOptions>(options =>
 			{
@@ -335,6 +341,7 @@ namespace GeneXus.Application
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
+			app.UseForwardedHeaders();
 			ConfigureCors(app);
 			ConfigureSwaggerUI(app, baseVirtualPath);
 
