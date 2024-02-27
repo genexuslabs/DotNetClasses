@@ -13,6 +13,9 @@
 	  <EmbeddedResource Include="sRGB Color Space Profile.icm" />
 	</ItemGroup>
 	<ItemGroup>
+	  <PackageReference Include="PdfPig" Version="0.1.8"  PrivateAssets="All"/>
+	</ItemGroup>
+	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 	<ItemGroup>
