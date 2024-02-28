@@ -1,24 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing.Text;
 using System.IO;
+using System.Net.Http;
+using System.Text;
 using GeneXus;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Fonts.Standard14Fonts;
 using UglyToad.PdfPig.Writer;
-using PdfRectangle = UglyToad.PdfPig.Core.PdfRectangle;
-using static UglyToad.PdfPig.Writer.PdfDocumentBuilder;
-using PageSize = UglyToad.PdfPig.Content.PageSize;
-using Color = System.Drawing.Color;
-using static UglyToad.PdfPig.Writer.PdfPageBuilder;
-using System.Net;
-using System.Drawing;
-using Font = System.Drawing.Font;
-using System.Drawing.Text;
 using static GeneXus.Utils.StringUtil;
-using System.Text;
-using System.Drawing.Imaging;
-using System.Drawing.Drawing2D;
-using System.Net.Http;
+using static UglyToad.PdfPig.Writer.PdfDocumentBuilder;
+using static UglyToad.PdfPig.Writer.PdfPageBuilder;
+using Color = System.Drawing.Color;
+using Font = System.Drawing.Font;
+using PageSize = UglyToad.PdfPig.Content.PageSize;
+using PdfRectangle = UglyToad.PdfPig.Core.PdfRectangle;
 
 namespace GeneXus.Printer
 {
