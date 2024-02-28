@@ -349,7 +349,7 @@ namespace com.genexus.reports
 				if (barcode128AsImage && (
 						fontName.ToLower().Contains("barcode 128") || fontName.ToLower().Contains("barcode128")
 						||
-						baseFontPath.ToLower().Contains("3of9") || baseFontPath.ToLower().Contains("3 of 9")
+						(!string.IsNullOrEmpty(baseFontPath) && (baseFontPath.ToLower().Contains("3of9") || baseFontPath.ToLower().Contains("3 of 9")))
 					)
 				)
 				{
