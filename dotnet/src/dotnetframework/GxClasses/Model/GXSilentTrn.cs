@@ -652,7 +652,7 @@ namespace GeneXus.Utils
 			return wrappedStatus;
 		}
 
-		public void SetWrappedStatus(string value)
+		internal void SetWrappedStatus(string value)
 		{
 			wrappedStatus = value;
 		}
