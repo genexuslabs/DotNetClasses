@@ -348,7 +348,7 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-		bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
+		private bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
 		{
 			bool wrapped = defaultWrapped;
 
