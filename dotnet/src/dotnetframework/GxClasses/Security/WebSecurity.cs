@@ -128,6 +128,10 @@ namespace GeneXus.Web.Security
 			using (var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey))
 			{
 				var handler = new JwtSecurityTokenHandler();
+				if (signedToken.Length >= handler.MaximumTokenSizeInBytes)
+				{
+					handler.MaximumTokenSizeInBytes = signedToken.Length + 1;
+				}
 				var validationParameters = new TokenValidationParameters
 				{
 					ClockSkew = TimeSpan.FromMinutes(1),
