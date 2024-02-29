@@ -37,6 +37,7 @@ namespace GeneXus.Application
 		protected IGxContext _Context;
 		bool _isMain;
 		protected bool _isApi;
+		protected bool _isDP;
 #if NETCORE
 		internal static ActivitySource ActivitySource {
 			get {
@@ -175,6 +176,11 @@ namespace GeneXus.Application
 		{
 			set { _isApi = value; }
 			get { return _isApi; }
+		}
+		public bool IsDataProvider
+		{
+			set { _isDP = value; }
+			get { return _isDP; }
 		}
 		public virtual void cleanup() { }
 
