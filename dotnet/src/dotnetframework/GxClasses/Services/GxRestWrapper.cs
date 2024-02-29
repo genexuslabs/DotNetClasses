@@ -357,8 +357,8 @@ namespace GeneXus.Application
 				if (outputParameters.Count == 1)
 				{
 					if ((originalParCount == 1) || (originalParCount > 1 && !Preferences.WrapSingleApiOutput))
-					{						
-						wrapped = GetCollectionWrappedStatus(outputParameters, parCount, false, true);						
+					{
+						wrapped = GetCollectionWrappedStatus(outputParameters, parCount, false, true);
 					}
 					if (originalParCount > 1 && Preferences.WrapSingleApiOutput)
 					{
@@ -368,9 +368,12 @@ namespace GeneXus.Application
 			}
 			else
 			{
-				if (originalParCount == 1)
-					wrapped = GetCollectionWrappedStatus(outputParameters, parCount, wrapped, false);					
-				
+				if (!worker.IsDataProvider)
+				{
+					if (originalParCount == 1)
+						wrapped = GetCollectionWrappedStatus(outputParameters, parCount, wrapped, false);
+
+				}
 			}
 			return wrapped;
 		}
