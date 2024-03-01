@@ -28,6 +28,7 @@ using Microsoft.Net.Http.Headers;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Globalization;
+using System.Linq;
 
 namespace GeneXus.Http
 {
@@ -73,7 +74,39 @@ namespace GeneXus.Http
 		[DataMember(Name = "error")]
 		public HttpJsonError Error;
 	}
+#if NETCORE
+	internal static class CookiesHelper
+	{
+		internal static void PopulateCookies(this HttpRequestMessage request, CookieContainer cookieContainer)
+		{
+			if (cookieContainer != null)
+			{
+				IEnumerable<Cookie> cookies = cookieContainer.GetCookies();
+				if (cookies.Any())
+				{
+					request.Headers.Add("Cookie", cookies.ToHeaderFormat());
+				}
+			}
+		}
 
+		private static string ToHeaderFormat(this IEnumerable<Cookie> cookies)
+		{
+			return string.Join(";", cookies); 
+		}
+		internal static void ExtractCookies(this HttpResponseMessage response, CookieContainer cookieContainer)
+		{
+			if (response.Headers.TryGetValues("Set-Cookie", out var cookieEntries))
+			{
+				Uri uri = response.RequestMessage.RequestUri;
+				foreach (string cookieEntry in cookieEntries)
+				{
+					cookieContainer.SetCookies(uri, cookieEntry);
+				}
+
+			}
+		}
+	}
+#endif
 	public class HttpHelper
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HttpHelper>();
