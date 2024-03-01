@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using GeneXus.Application;
@@ -68,8 +69,61 @@ namespace xUnitTesting
 				oldHttpclient.Execute("GET", string.Empty);
 				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), oldHttpclient.StatusCode);
 			}
+		}
+
+		[Fact(Skip ="For local testing only")]
+		public void HttpClientCookiesTest()
+		{
+			GxContext context = new GxContext();
+			string baseUrl = "http://localhost:8082/HttpClientTestNETSQLServer/testcookies.aspx";
+
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url = $"{baseUrl}?id=1";
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
+				CookieContainer cookies = context.GetCookieContainer(url, true);
+				Assert.NotNull(cookies);
+				CookieCollection responseCookies = cookies.GetCookies(new Uri(url));
+				Assert.NotEmpty(responseCookies);
+				string result = httpclient.ToString();
+				Assert.Contains("1", result, StringComparison.OrdinalIgnoreCase);
+
+			}
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url = $"{baseUrl}?id=2";
+				httpclient.IncludeCookies = true;
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
+				string result = httpclient.ToString();
+				Assert.StartsWith("Cookie found ", result, StringComparison.OrdinalIgnoreCase);
+				Assert.Contains("2", result, StringComparison.OrdinalIgnoreCase);
+			}
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url = $"{baseUrl}?id=3";
+				httpclient.IncludeCookies = false;
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
+				string result = httpclient.ToString();
+				Assert.StartsWith("Cookie not found", result, StringComparison.OrdinalIgnoreCase);
+				Assert.Contains("3", result, StringComparison.OrdinalIgnoreCase);
+			}
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url = "https://www.google.com/";
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
+				CookieContainer cookies = context.GetCookieContainer(url, true);
+				Assert.NotNull(cookies);
+				CookieCollection responseCookies = cookies.GetCookies(new Uri(url));
+				Assert.NotEmpty(responseCookies);
+				string result = httpclient.ToString();
+			}
 
 		}
+
 #if !NETCORE
 		[Fact]
 		public void NoStoreHeader()

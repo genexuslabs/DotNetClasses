@@ -848,6 +848,7 @@ namespace GeneXus.Configuration
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
 		static int sessionTimeout = -1;
+		static int singletonHttpClient = -1;
 		internal static string AppMainNamespace
 		{
 			get
@@ -1443,7 +1444,18 @@ namespace GeneXus.Configuration
 					return DefaultWrapSingleApiOutput;
 			}
 		}
-		internal static string CorsAllowedOrigins()
+
+		public static bool SingletonHttpClient()
+		{
+			if (singletonHttpClient == -1)
+			{
+				if (Config.GetValueOf("SingletonHttpClient", out string sValue) && int.TryParse(sValue, out int value))
+					singletonHttpClient = value;
+			}
+			return singletonHttpClient==1;
+}
+
+	internal static string CorsAllowedOrigins()
 		{
 			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
 				return corsOrigin;

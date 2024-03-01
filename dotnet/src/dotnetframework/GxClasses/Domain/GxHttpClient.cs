@@ -2,6 +2,7 @@ namespace GeneXus.Http.Client
 {
 	using System;
 	using System.Collections;
+	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.Globalization;
@@ -9,6 +10,7 @@ namespace GeneXus.Http.Client
 	using System.Net;
 	using System.Net.Http;
 	using System.Net.Http.Headers;
+	using System.Net.Security;
 	using System.Security;
 	using System.Security.Cryptography.X509Certificates;
 	using System.Text;
@@ -60,6 +62,7 @@ namespace GeneXus.Http.Client
 	public class GxHttpClient : IGxHttpClient, IDisposable
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxHttpClient>();
+		private const int DEFAULT_TIMEOUT = 30000;
 		public const int _Basic = 0;
 		public const int _Digest = 1;
 		public const int _NTLM = 2;
@@ -67,7 +70,7 @@ namespace GeneXus.Http.Client
 		const int StreamWriterDefaultBufferSize = 1024;
 		Stream _sendStream;
 		byte[] _receiveData;
-		int _timeout = 30000;
+		int _timeout = DEFAULT_TIMEOUT;
 		short _statusCode = 0;
 		string _proxyHost;
 		int _proxyPort;
@@ -93,18 +96,19 @@ namespace GeneXus.Http.Client
 		IGxContext _context;
 #if NETCORE
 
-		IWebProxy _proxyObject;
+		static IWebProxy _proxyObject;
+		static object syncRootHttpInstance = new Object();
 #else
 
-		WebProxy _proxyObject;
+		static WebProxy _proxyObject;
 #endif
 		ArrayList _authCollection;
 		ArrayList _authProxyCollection;
 		X509Certificate2Collection _certificateCollection;
+		List<string> _fileCertificateCollection;
 		Encoding _encoding;
 		Encoding _contentEncoding;
-
-
+		static object syncRoot = new Object();
 		public MultiPartTemplate MultiPart
 		{
 			get
@@ -144,17 +148,132 @@ namespace GeneXus.Http.Client
 			}
 		}
 
+
 #if NETCORE
-		[SecuritySafeCritical]
-		private HttpClientHandler GetHandler()
+		private const int POOLED_CONNECTION_LIFETIME_MINUTES = 2;
+		private static ConcurrentDictionary<string, HttpClient> _httpClientInstances = new ConcurrentDictionary<string, HttpClient>();
+		private static HttpClient GetHttpClientInstance(Uri URI, int timeout, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, List<string> fileCertificateCollection, string proxyHost, int proxyPort, out bool disposableInstance)
 		{
-			return new HttpClientHandler();
+			if (CacheableInstance(authCollection, authProxyCollection))
+			{
+				HttpClient value;
+				disposableInstance = false;
+				string key = HttpClientInstanceIdentifier(proxyHost, proxyPort, fileCertificateCollection, timeout);
+				if (_httpClientInstances.TryGetValue(key, out value))
+				{
+					return value;
+				}
+				else
+				{
+					lock (syncRootHttpInstance)
+					{
+						if (_httpClientInstances.TryGetValue(key, out value))
+						{
+							return value;
+						}
+						value = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+						value.Timeout = TimeSpan.FromMilliseconds(timeout);
+						_httpClientInstances.TryAdd(key, value);
+						return value;
+					}
+				}
+			}
+			else
+			{
+				disposableInstance = true;
+				return new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+			}
+		}
+
+		private static string HttpClientInstanceIdentifier(string proxyHost, int proxyPort, List<string> fileCertificateCollection, int timeout)
+		{
+			if (string.IsNullOrEmpty(proxyHost) && fileCertificateCollection.Count==0 && timeout== DEFAULT_TIMEOUT)
+			{
+				return string.Empty;
+			}
+			else if (fileCertificateCollection.Count==0)
+			{
+				return $"{proxyHost}:{proxyPort}::{timeout}";
+			}
+			else
+			{
+				return $"{proxyHost}:{proxyPort}:{string.Join(';', fileCertificateCollection)}:{timeout}";
+			}
+		}
+
+		private static bool CacheableInstance(ArrayList authCollection, ArrayList authProxyCollection)
+		{
+			return authCollection.Count == 0 && authProxyCollection.Count == 0 && Preferences.SingletonHttpClient();
+		}
+		private static SocketsHttpHandler GetHandler(Uri URI, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, string proxyHost, int proxyPort)
+		{
+			SocketsHttpHandler handler = new SocketsHttpHandler()
+			{
+				PooledConnectionLifetime = TimeSpan.FromMinutes(POOLED_CONNECTION_LIFETIME_MINUTES)
+			};
+			handler.Credentials = getCredentialCache(URI, authCollection);
+			
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.SslOptions = new SslClientAuthenticationOptions
+				{
+					RemoteCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors))
+				};
+			}
+			if (GXUtil.CompressResponse())
+			{
+				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+			}
+			foreach (X509Certificate2 cert in certificateCollection)
+				handler.SslOptions.ClientCertificates.Add(cert);
+
+			WebProxy proxy = getProxy(proxyHost, proxyPort, authProxyCollection);
+			if (proxy != null)
+			{
+				handler.Proxy = proxy;
+			}
+			handler.UseCookies = false;
+			return handler;
+
 		}
 #else
 		[SecuritySafeCritical]
-		private WinHttpHandler GetHandler()
+
+		private static HttpClient GetHttpClientInstance(Uri URI, int timeout, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, string proxyHost, int proxyPort, CookieContainer cookies)
 		{
-			return new WinHttpHandler();
+			TimeSpan milliseconds = TimeSpan.FromMilliseconds(timeout);
+			HttpClient value = new HttpClient(GetHandler(URI, milliseconds, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort, cookies));
+			value.Timeout = milliseconds;
+			return value;
+		}
+		[SecuritySafeCritical]
+		private static WinHttpHandler GetHandler(Uri URI, TimeSpan milliseconds, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, string proxyHost, int proxyPort, CookieContainer cookies)
+		{
+			WinHttpHandler handler = new WinHttpHandler();
+			handler.ServerCredentials = getCredentialCache(URI, authCollection);
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
+			}
+			handler.CookieUsePolicy = CookieUsePolicy.UseSpecifiedCookieContainer;
+			handler.CookieContainer = cookies;
+			if (GXUtil.CompressResponse())
+			{
+				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+			}
+			foreach (X509Certificate2 cert in certificateCollection)
+				handler.ClientCertificates.Add(cert);
+			WebProxy proxy = getProxy(proxyHost, proxyPort, authProxyCollection);
+			if (proxy != null)
+			{
+				handler.Proxy = proxy;
+				handler.WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy;
+			}
+			
+			handler.ReceiveDataTimeout = milliseconds;
+			handler.ReceiveHeadersTimeout = milliseconds;
+
+			return handler;
 		}
 #endif
 		public GxHttpClient(IGxContext context) : this()
@@ -172,21 +291,18 @@ namespace GeneXus.Http.Client
 			_authCollection = new ArrayList();
 			_authProxyCollection = new ArrayList();
 			_certificateCollection = new X509Certificate2Collection();
+			_fileCertificateCollection = new List<string>();
 			IncludeCookies = true;
 
 
 			_proxyHost = string.Empty;
 			try
 			{
-#if NETCORE
-				_proxyObject = WebRequest.GetSystemWebProxy();
-
-#else
-				_proxyObject = WebProxy.GetDefaultProxy();
-				if (_proxyObject != null && _proxyObject.Address != null)
+#if !NETCORE
+				if (ProxyObject != null && ProxyObject.Address != null)
 				{
-					_proxyHost = _proxyObject.Address.Host;
-					_proxyPort = _proxyObject.Address.Port;
+					_proxyHost = ProxyObject.Address.Host;
+					_proxyPort = ProxyObject.Address.Port;
 				}
 #endif
 			}
@@ -196,7 +312,36 @@ namespace GeneXus.Http.Client
 			}
 
 		}
+#if NETCORE
 
+		private IWebProxy ProxyObject
+#else
+
+		private static WebProxy ProxyObject
+#endif
+		{
+			get {
+				if (_proxyObject == null)
+				{
+					lock (syncRoot)
+					{
+						try
+						{
+#if NETCORE
+							_proxyObject = WebRequest.GetSystemWebProxy();
+#else
+							_proxyObject = WebProxy.GetDefaultProxy();
+#endif
+						}
+						catch (Exception e)
+						{
+							GXLogging.Warn(log, "Error getting ProxyObject", e);
+						}
+					}
+				}
+				return _proxyObject;
+			}
+		}
 		public short Digest
 		{
 			get { return _Digest; }
@@ -532,12 +677,19 @@ namespace GeneXus.Http.Client
 			if (IsMultipart)
 				reqStream.Write(MultiPart.EndBoundaryBytes, 0, MultiPart.EndBoundaryBytes.Length);
 		}
-
-		void setHeaders(HttpRequestMessage request, CookieContainer cookies)
+		void setContentHeaders(HttpRequestMessage request, string contentType)
 		{
-			HttpContentHeaders contentHeaders = request.Content.Headers;
+			if (contentType != null)
+			{
+				HttpContentHeaders contentHeaders = request.Content.Headers;
+				contentHeaders.ContentType = MediaTypeHeaderValue.Parse(contentType);
+			}
+			InferContentType(contentType, request);
+		}
+		void setHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
+		{
 			HttpRequestHeaders headers = request.Headers;
-			string contentType = null;
+			contentType = null;
 			for (int i = 0; i < _headers.Count; i++)
 			{
 				string currHeader = _headers.Keys[i];
@@ -550,7 +702,6 @@ namespace GeneXus.Http.Client
 						break;
 					case "CONTENT-TYPE":
 						contentType = _headers[i].ToString();
-						contentHeaders.ContentType = MediaTypeHeaderValue.Parse(_headers[i].ToString());
 						break;
 					case "ACCEPT":
 						AddHeader(headers, "Accept", _headers[i]);
@@ -611,7 +762,6 @@ namespace GeneXus.Http.Client
 				else
 					headers.ConnectionClose = false;
 			}
-			InferContentType(contentType, request);
 		}
 		Cookie ParseCookie(string cookie, string domain)
 		{
@@ -649,63 +799,33 @@ namespace GeneXus.Http.Client
 				req.Version = HttpVersion.Version11;
 		}
 		[SecuritySafeCritical]
-		HttpResponseMessage ExecuteRequest(string method, string requestUrl, CookieContainer cookies)
+		HttpResponseMessage ExecuteRequest(string method, string requestUrl, bool contextCookies)
 		{
-			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
+			CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
+
+			GXLogging.Debug(log, string.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			HttpRequestMessage request;
-			HttpClient client;
+			HttpClient client = null;
 			int BytesRead;
-			Byte[] Buffer = new Byte[1024];
-
-			request = new HttpRequestMessage();
-			request.RequestUri = new Uri(requestUrl);
-#if NETCORE
-			HttpClientHandler handler = GetHandler();
-			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
-			if (ServicePointManager.ServerCertificateValidationCallback != null)
-			{
-				handler.ServerCertificateCustomValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
-			}
-#else
-			WinHttpHandler handler = GetHandler();
-			handler.ServerCredentials = getCredentialCache(request.RequestUri, _authCollection);
-			if (ServicePointManager.ServerCertificateValidationCallback != null)
-			{
-				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
-			}
-			handler.CookieUsePolicy = CookieUsePolicy.UseSpecifiedCookieContainer;
-#endif
-			if (GXUtil.CompressResponse())
-			{
-				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-			}
-
-			handler.CookieContainer = cookies;
-
-			foreach (X509Certificate2 cert in _certificateCollection)
-				handler.ClientCertificates.Add(cert);
-
-			request.Method = new HttpMethod(method);
-			setHttpVersion(request);
-			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
-			if (proxy != null)
-			{
-				handler.Proxy = proxy;
-#if !NETCORE
-				handler.WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy;
-#endif
-			}
+			byte[] Buffer = new byte[1024];
 			HttpResponseMessage response;
-			TimeSpan milliseconds = TimeSpan.FromMilliseconds(_timeout);
-#if !NETCORE
-			handler.ReceiveDataTimeout = milliseconds;
-			handler.ReceiveHeadersTimeout = milliseconds;
-#endif
-			using (client = new HttpClient(handler))
-			{
-				client.Timeout = milliseconds;
-				client.BaseAddress = request.RequestUri;
 
+			request = new HttpRequestMessage()
+			{
+				RequestUri = new Uri(requestUrl),
+				Method = new HttpMethod(method),
+			};
+			setHeaders(request, cookies, out string contentType);
+			setHttpVersion(request);
+			bool disposableInstance = true;
+			try
+			{
+#if NETCORE
+				request.PopulateCookies(cookies);
+				client = GetHttpClientInstance(request.RequestUri, _timeout, _authCollection, _authProxyCollection, _certificateCollection, _fileCertificateCollection, _proxyHost, _proxyPort, out disposableInstance);
+#else
+				client = GetHttpClientInstance(request.RequestUri, _timeout, _authCollection, _authProxyCollection, _certificateCollection, _proxyHost, _proxyPort, cookies);
+#endif
 				using (MemoryStream reqStream = new MemoryStream())
 				{
 					SendVariables(reqStream);
@@ -722,12 +842,22 @@ namespace GeneXus.Http.Client
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
 					reqStream.Seek(0, SeekOrigin.Begin);
 					request.Content = new ByteArrayContent(reqStream.ToArray());
-					setHeaders(request, handler.CookieContainer);
+					setContentHeaders(request, contentType);
 					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
+#if NETCORE
+					response.ExtractCookies(cookies);
+#endif
+				}
+			}
+			finally
+			{
+				if (disposableInstance && client != null)
+				{
+					client.Dispose();
 				}
 			}
 			return response;
-		}		
+		}
 		void ReadResponseData()
 		{
 			if (_receiveData == null && _response!=null)
@@ -816,12 +946,10 @@ namespace GeneXus.Http.Client
 			{
 				string requestUrl = GetRequestURL(name);
 				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
-				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
-				_response = ExecuteRequest(method, requestUrl, cookies);
+				_response = ExecuteRequest(method, requestUrl, contextCookies);
 
 				if (contextCookies)
 					_context.UpdateSessionCookieContainer();
-
 
 			}
 #if NETCORE
@@ -1035,7 +1163,7 @@ namespace GeneXus.Http.Client
 			}
 		}
 
-		WebProxy getProxy(string proxyHost, int proxyPort, ArrayList authenticationCollection)
+		static WebProxy getProxy(string proxyHost, int proxyPort, ArrayList authenticationCollection)
 		{
 			if (proxyHost.Length > 0)
 			{
@@ -1156,7 +1284,7 @@ namespace GeneXus.Http.Client
 		{
 			return getCredentialCache(new Uri(url), _authCollection);
 		}
-		ICredentials getCredentialCache(Uri URI, ArrayList authenticationCollection)
+		static ICredentials getCredentialCache(Uri URI, ArrayList authenticationCollection)
 		{
 			string sScheme;
 			GxAuthScheme auth;
@@ -1520,6 +1648,7 @@ namespace GeneXus.Http.Client
 			{
 				c = new X509Certificate2(file, pass);
 			}
+			_fileCertificateCollection.Add(file);
 			_certificateCollection.Add(c);
 		}
 
