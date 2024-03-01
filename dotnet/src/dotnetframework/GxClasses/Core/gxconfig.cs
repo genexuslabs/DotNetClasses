@@ -1445,7 +1445,7 @@ namespace GeneXus.Configuration
 			}
 		}
 
-		public static bool SingletonHttpClient()
+		internal static bool SingletonHttpClient()
 		{
 			if (singletonHttpClient == -1)
 			{
