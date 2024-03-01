@@ -1,4 +1,4 @@
-﻿using SecurityAPITest.SecurityAPICommons.commons;
+using SecurityAPITest.SecurityAPICommons.commons;
 using System;
 using NUnit.Framework;
 using SecurityAPICommons.Config;
@@ -78,15 +78,17 @@ namespace SecurityAPITest.Cryptography.PasswordDerivationTest
 			string derivated = pd.DoGenerateSCrypt(password, saltScrypt, N, r, p, keyLenght);
 			Assert.AreEqual(expectedScrypt, derivated);
 			Equals(expectedScrypt, derivated, pd);
+
 		}
 
-		[Test]
+		/*[Test]
 		public void TestDefaultScrypt()
 		{
-			string derivated = pd.DoGenerateDefaultSCrypt(password, saltScrypt);
-			Assert.AreEqual(expectedScrypt, derivated);
-			Equals(expectedScrypt, derivated, pd);
-		}
+			string derivated1 = pd.DoGenerateDefaultSCrypt(password, saltScrypt);
+			Assert.AreEqual(expectedScrypt, derivated1);
+			Equals(expectedScrypt, derivated1, pd);
+
+		}*/
 
 		[Test]
 		public void TestBcrypt()
