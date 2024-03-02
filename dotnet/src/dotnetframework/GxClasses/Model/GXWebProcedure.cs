@@ -55,7 +55,7 @@ namespace GeneXus.Procedure
 			}
 		}
 		public void setContextReportHandler()
-		{
+		{	
 
 			oldReportHandler = null;
 			reportHandler = context.reportHandler;
@@ -92,6 +92,16 @@ namespace GeneXus.Procedure
 			outputType = fileType.Trim();
 		}
 
+#if !NETCORE
+
+        protected bool _isDP;
+
+		public bool IsDataProvider
+		{
+			set { _isDP = value; }
+			get { return _isDP; }
+		}
+#endif
 		protected override void sendCacheHeaders()
 		{
 			
