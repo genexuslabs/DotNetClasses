@@ -44,6 +44,54 @@ namespace GeneXus.Utils
 			base.Insert(idx, TObject);
 			IsAssigned = true;
 		}
+		public bool AddRange(GXBaseList<T> value, int? index)
+		{
+			if (!index.HasValue)
+			{
+				base.AddRange(value);
+				return true;
+			}
+			else if (index == 0)
+			{
+				base.InsertRange(index.Value, value);
+				return true;
+			}
+			else if (index > 0 && index <= Count+1)
+			{
+				base.InsertRange(index.Value - 1, value);
+				return true;
+			}
+			return false;
+		}
+		public bool RemoveRange(int index, int? countItemsToRemove)
+		{
+			if (index > 0 && index <= Count)
+			{
+				if (countItemsToRemove == null)
+				{
+					int countToRemove = Count - (index-1);
+					base.RemoveRange(index - 1, countToRemove);
+					return true;
+				}
+				else if (countItemsToRemove.Value < Count - index)
+				{
+					base.RemoveRange(index - 1, countItemsToRemove.Value);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public bool Set(int index, T value)
+		{
+			if (index > 0 && index < Count)
+			{
+				this[index - 1] = value;
+				return true;
+			}
+			return false;
+		}
+
 	}
 
 	[Serializable]
