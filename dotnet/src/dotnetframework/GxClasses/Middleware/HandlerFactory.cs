@@ -191,7 +191,7 @@ namespace GeneXus.HttpHandlerFactory
 			}
 			else
             {
-                handlerToReturn = (IHttpHandler)System.Web.UI.PageParser.GetCompiledPageInstance(url, pathTranslated, context);
+                handlerToReturn = System.Web.UI.PageParser.GetCompiledPageInstance(url, pathTranslated, context);
             }
 			return handlerToReturn;
 		}
@@ -200,7 +200,7 @@ namespace GeneXus.HttpHandlerFactory
 		{
 			if (cname.LastIndexOf("/") == (cname.Length - 1))
 				cname = cname.Substring(0, cname.Length - 1);
-			String objectName = cname.Remove(0, apath.Length);
+			string objectName = cname.Remove(0, apath.Length);
 			return objectName;
 		}
 
@@ -303,7 +303,7 @@ namespace GeneXus.HttpHandlerFactory
 			try
 			{
 				
-                objType = GeneXus.Metadata.ClassLoader.FindType(assemblyName, className, null);
+                objType = ClassLoader.FindType(assemblyName, className, null);
 				if (objType == null)					
 					objType = Assembly.Load(assemblyName).GetType(className);
 			}
