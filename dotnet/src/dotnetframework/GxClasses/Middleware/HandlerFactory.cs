@@ -88,7 +88,7 @@ namespace GeneXus.HttpHandlerFactory
 			{
 				return new GXMultiCall();
 			}
-			else if (HttpHelper.GamServicesInternalName.Contains(fname.ToLower()))
+			else if (HttpHelper.GamServicesInternalName.Contains(cname0))
 			{
 				mainNamespace = HttpHelper.GAM_NSPACE;
 			}
