@@ -151,7 +151,7 @@ namespace GeneXus.Http.Client
 
 #if NETCORE
 		private const int POOLED_CONNECTION_LIFETIME_MINUTES = 2;
-		private static ConcurrentDictionary<string, HttpClient> _httpClientInstances = new ConcurrentDictionary<string, HttpClient>();
+		internal static ConcurrentDictionary<string, HttpClient> _httpClientInstances = new ConcurrentDictionary<string, HttpClient>();
 		private static HttpClient GetHttpClientInstance(Uri URI, int timeout, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, List<string> fileCertificateCollection, string proxyHost, int proxyPort, out bool disposableInstance)
 		{
 			if (CacheableInstance(authCollection, authProxyCollection))
@@ -209,8 +209,13 @@ namespace GeneXus.Http.Client
 		{
 			SocketsHttpHandler handler = new SocketsHttpHandler()
 			{
-				PooledConnectionLifetime = TimeSpan.FromMinutes(POOLED_CONNECTION_LIFETIME_MINUTES)
+				PooledConnectionLifetime = TimeSpan.FromMinutes(POOLED_CONNECTION_LIFETIME_MINUTES),
 			};
+			int maxConnections = Preferences.GetHttpClientMaxConnectionPerRoute();
+			if (maxConnections != 0)
+			{
+				handler.MaxConnectionsPerServer = maxConnections;
+			}
 			handler.Credentials = getCredentialCache(URI, authCollection);
 			
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
@@ -1015,11 +1020,13 @@ namespace GeneXus.Http.Client
 		internal void LoadResponseHeaders(HttpResponseMessage resp)
 		{
 			_respHeaders = new NameValueCollection();
-			foreach (KeyValuePair<string, IEnumerable<string>> header in resp.Headers)
+			HttpResponseHeaders headers = resp.Headers;
+			foreach (KeyValuePair<string, IEnumerable<string>> header in headers)
 			{
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}
-			foreach (KeyValuePair<string, IEnumerable<string>> header in resp.Content.Headers)
+			HttpContentHeaders contentHeaders = resp.Content.Headers;
+			foreach (KeyValuePair<string, IEnumerable<string>> header in contentHeaders)
 			{
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}

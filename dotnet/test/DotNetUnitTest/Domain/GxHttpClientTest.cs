@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Http.Client;
 using Xunit;
@@ -14,6 +18,10 @@ namespace xUnitTesting
 
 	public class GxHttpClientTest
 	{
+		const int MAX_CONNECTIONS= 5;
+		public GxHttpClientTest() {
+			Environment.SetEnvironmentVariable("GX_HTTPCLIENT_MAX_PER_ROUTE", MAX_CONNECTIONS.ToString(), EnvironmentVariableTarget.Process);
+		}
 		[Fact]
 		public void AddHeaderWithSpecialCharactersDoesNotThrowException()
 		{
@@ -70,8 +78,64 @@ namespace xUnitTesting
 				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), oldHttpclient.StatusCode);
 			}
 		}
+#if NETCORE
+		[Fact(Skip = "For local testing only")]
+		public void TestHttpClientMaxPoolSize()
+		{
+			HttpClientMaxPoolSize().Wait();
+		}
+		async Task HttpClientMaxPoolSize() {
+			GxContext context = new GxContext();
+			string baseUrl = "http://localhost:8082/HttpClientTestNETSQLServer/testcookies.aspx";
 
-		[Fact(Skip ="For local testing only")]
+			var tasks = new List<Task>();
+
+			for (int i = 0; i < MAX_CONNECTIONS * 10; i++)
+			{
+				string url = $"{baseUrl}?id=" + i;
+				tasks.Add(Task.Run(() => ExecuteGet(url)));
+			}
+			await Task.WhenAll(tasks);
+
+			Assert.Single(GxHttpClient._httpClientInstances);
+
+			HttpClient c = GxHttpClient._httpClientInstances.First().Value;
+			Assert.NotNull(c);
+
+			Assert.True(pendingRequestsCount <= MAX_CONNECTIONS, $"Active connections ({pendingRequestsCount}) exceed MaxConnectionsPerServer ({MAX_CONNECTIONS})");
+		}
+		static private int pendingRequestsCount = 0;
+		static private readonly object syncObject = new object();
+		static private void IncrementPendingRequestsCount()
+		{
+			lock (syncObject)
+			{
+				pendingRequestsCount++;
+			}
+		}
+
+		static private void DecrementPendingRequestsCount()
+		{
+			lock (syncObject)
+			{
+				pendingRequestsCount--;
+			}
+		}
+		private string ExecuteGet(string url)
+		{
+			GxContext context = new GxContext();
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				IncrementPendingRequestsCount();
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode); //When failed, turn on log.config to see server side error.
+				DecrementPendingRequestsCount();
+				return httpclient.ToString();
+			}
+		}
+
+#endif
+		[Fact(Skip = "For local testing only")]
 		public void HttpClientCookiesTest()
 		{
 			GxContext context = new GxContext();
