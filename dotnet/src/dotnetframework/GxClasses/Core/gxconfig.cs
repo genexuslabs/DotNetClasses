@@ -1449,13 +1449,14 @@ namespace GeneXus.Configuration
 		{
 			if (singletonHttpClient == -1)
 			{
-				if (Config.GetValueOf("SingletonHttpClient", out string sValue) && int.TryParse(sValue, out int value))
+				if (Config.GetValueOrEnvironmentVarOf("SINGLETON_HTTPCLIENT", out string sValue) && int.TryParse(sValue, out int value))
 					singletonHttpClient = value;
+				else
+					singletonHttpClient = 1;
 			}
 			return singletonHttpClient==1;
-}
-
-	internal static string CorsAllowedOrigins()
+		}
+		internal static string CorsAllowedOrigins()
 		{
 			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
 				return corsOrigin;
@@ -1504,7 +1505,7 @@ namespace GeneXus.Configuration
 				try
 				{
 					string strmax;
-					if (Config.GetValueOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
+					if (Config.GetValueOrEnvironmentVarOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
 					{
 						httpclient_max_per_route = Convert.ToInt32(strmax);
 					}
