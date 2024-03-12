@@ -1497,8 +1497,8 @@ namespace GeneXus.Configuration
 			else
 				return "";
 		}
-
-		public static int GetHttpClientMaxConnectionPerRoute()
+		internal const int DEFAULT_HTTPCLIENT_MAX_PER_ROUTE= 1000;
+		internal static int GetHttpClientMaxConnectionPerRoute()
 		{
 			if (httpclient_max_per_route == -1)
 			{
@@ -1511,13 +1511,13 @@ namespace GeneXus.Configuration
 					}
 					else
 					{
-						httpclient_max_per_route = 1000;
+						httpclient_max_per_route = DEFAULT_HTTPCLIENT_MAX_PER_ROUTE;
 					}
 				}
 				catch (Exception ex)
 				{
 					GXLogging.Error(log, "HttpClientMaxPerRoute error", ex);
-					httpclient_max_per_route = 1000;
+					httpclient_max_per_route = DEFAULT_HTTPCLIENT_MAX_PER_ROUTE;
 				}
 			}
 			return httpclient_max_per_route;
