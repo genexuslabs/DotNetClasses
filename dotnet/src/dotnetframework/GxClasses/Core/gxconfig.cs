@@ -1449,7 +1449,7 @@ namespace GeneXus.Configuration
 		{
 			if (singletonHttpClient == -1)
 			{
-				if (Config.GetValueOrEnvironmentVarOf("SINGLETON_HTTPCLIENT", out string sValue) && int.TryParse(sValue, out int value))
+				if (Config.GetValueOrEnvironmentVarOf("HTTPCLIENT_SINGLETON", out string sValue) && int.TryParse(sValue, out int value))
 					singletonHttpClient = value;
 				else
 					singletonHttpClient = 1;
