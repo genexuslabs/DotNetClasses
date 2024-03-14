@@ -19,6 +19,7 @@ namespace GeneXus.Utils
 	using System.Xml.Serialization;
 	using GeneXus.Application;
 	using GeneXus.Configuration;
+	using GeneXus.Data;
 	using GeneXus.Http;
 	using GeneXus.Metadata;
 	using GeneXus.XML;
@@ -1044,8 +1045,8 @@ namespace GeneXus.Utils
 	public class GxUserType : IGxXMLSerializable, ICloneable, IGxJSONAble, IGxJSONSerializable, IGXAssigned
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxUserType>();
-		protected GXProperties dirties = new GXProperties();
-
+		protected ConcurrentDictionary<string,byte> dirties = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
+		private const string PROPERTY_PREFIX = "gxtpr_";
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
 		[XmlIgnore]
@@ -1103,11 +1104,11 @@ namespace GeneXus.Utils
 
 	public virtual void SetDirty(string fieldName)
 		{
-			dirties[fieldName.ToLower()] = "true";
+			dirties[fieldName] = 1;
 		}
 		public virtual bool IsDirty(string fieldName)
 		{
-			if (dirties.ContainsKey(fieldName.ToLower()))
+			if (dirties.ContainsKey(fieldName))
 				return true;
 			return false;
 		}
@@ -1605,24 +1606,27 @@ namespace GeneXus.Utils
 
 		private ICollection getFromJSONObjectOrderIterator(ICollection it)
 		{
-			List<string> v = new List<string>();
+			if (GxUploadAttrs.IsEmpty && !typeof(GxSilentTrnSdt).IsAssignableFrom(this.GetType()))
+			{
+				return it;
+			}
+			List<string> _JsonObjectOrderIterator = new List<string>();
+
 			List<string> vAtEnd = new List<string>();
 			foreach (string name in it)
 			{
-				string map = JsonMap(name);
-				PropertyInfo objProperty = GetTypeProperty("gxtpr_" + (!string.IsNullOrEmpty(map) ? map : name).ToLower());
-				if (name.EndsWith("_N") || objProperty != null && IsGxUploadAttribute(objProperty))
+				if (name.EndsWith("_N") || IsGxUploadAttribute(name))
 				{
 					vAtEnd.Add(name);
 				}
 				else
 				{
-					v.Add(name);//keep the order of attributes that do not end with _N.
+					_JsonObjectOrderIterator.Add(name);//keep the order of attributes that do not end with _N.
 				}
 			}
 			if (vAtEnd.Count > 0)
-				v.AddRange(vAtEnd);
-			return v;
+				_JsonObjectOrderIterator.AddRange(vAtEnd);
+			return _JsonObjectOrderIterator;
 		}
 
 		public void FromJSONObject(dynamic obj)
@@ -1635,9 +1639,7 @@ namespace GeneXus.Utils
 			foreach (string name in jsonIterator)
 			{
 				object currObj = jobj[name];
-				string map = JsonMap(name);
-				PropertyInfo objProperty = GetTypeProperty("gxtpr_" + (map != null ? map : name).ToLower());
-
+				PropertyInfo objProperty = GetTypeProperty(JsonNameToInternalName(name));
 				if (objProperty != null)
 				{
 					if (!JSONHelper.IsJsonNull(currObj))
@@ -1897,32 +1899,51 @@ namespace GeneXus.Utils
 			return success;
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
-		private Dictionary<string, bool> gxuploadAttrs = new Dictionary<string, bool>();
-		private bool IsGxUploadAttribute(PropertyInfo property)
+		private GXTypeInfo _compatibilityGxuploadAttrs = null;
+		private bool IsGxUploadAttribute(string jsonPropertyName)
 		{
-			string key = property.Name;
-			if (!gxuploadAttrs.ContainsKey(key))
-			{
-				bool hasAtt = property.IsDefined(typeof(GxUpload), false);
-				gxuploadAttrs.Add(key, hasAtt);
-			}
-			return gxuploadAttrs[key];
+			return GxUploadAttrs.ContainsKey(JsonNameToInternalName(jsonPropertyName));
 		}
+		private bool IsGxUploadAttribute(PropertyInfo propertyInfo)
+		{
+			return GxUploadAttrs.ContainsKey(propertyInfo.Name);
+		}
+		private string JsonNameToInternalName(string jsonPropertyName)
+		{
+			string map = JsonMap(jsonPropertyName);
+			if (!string.IsNullOrEmpty(map))
+				return $"{PROPERTY_PREFIX}{map}";
+			else
+				return $"{PROPERTY_PREFIX}{jsonPropertyName}";
+		}
+		protected virtual GXTypeInfo TypeInfo { get { return _compatibilityGxuploadAttrs; } set { _compatibilityGxuploadAttrs = value; } }
+		private ConcurrentDictionary<string, byte> GxUploadAttrs
+		{
+			get
+			{
+				if (TypeInfo == null)
+				{
+					TypeInfo = new GXTypeInfo();
 
-		private Hashtable props;
-
+					TypeInfo.UploadAttrs = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
+					foreach (PropertyInfo property in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+					{
+						if (property.Name.StartsWith(PROPERTY_PREFIX, StringComparison.OrdinalIgnoreCase))
+						{
+							bool hasAtt = property.IsDefined(typeof(GxUpload), false);
+							if (hasAtt)
+							{
+								TypeInfo.UploadAttrs.TryAdd(property.Name, 1);
+							}
+						}
+					}
+				}
+				return TypeInfo.UploadAttrs;
+			}
+		}
 		private PropertyInfo GetTypeProperty(string propName)
 		{
-			if (props == null)
-			{
-				props = new Hashtable();
-				foreach (PropertyInfo prop in this.GetType().GetProperties())
-				{
-					props.Add(prop.Name.ToLower(), prop);
-				}
-			}
-			return (PropertyInfo)props[propName];
+			return this.GetType().GetProperty(propName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 		}
 
 		private Hashtable methods;
@@ -2004,7 +2025,10 @@ namespace GeneXus.Utils
 			GetType().GetProperty($"gxTpr_{propertyName}").SetValue(this, propertyValue);
 		}
 	}
-
+	public class GXTypeInfo
+	{
+		public ConcurrentDictionary<string, byte> UploadAttrs { get; set; }
+	}
 	public interface IGxJSONAble
 	{
 		void AddObjectProperty(string name, object prop);

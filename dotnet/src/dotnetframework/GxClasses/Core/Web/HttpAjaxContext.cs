@@ -85,7 +85,7 @@ namespace GeneXus.Http
 
 		public bool isInputParm(string key)
 		{
-			return inParmsMetadataHash.Contains(key);
+			return (inParmsMetadataHash!=null && inParmsMetadataHash.Contains(key));
 		}
 
 		public void Clear()
@@ -105,7 +105,7 @@ namespace GeneXus.Http
 			IGxJSONSerializable jsonValue = value as IGxJSONSerializable;
 			if (jsonValue!=null)
 			{
-				if (!inParmsHashValue.ContainsKey(fieldName))
+				if (inParmsHashValue!=null && !inParmsHashValue.ContainsKey(fieldName))
 					return true;
 				return GXUtil.GetHash(jsonValue.ToJSonString()) != inParmsHashValue[fieldName];
 			}
@@ -346,7 +346,7 @@ namespace GeneXus.Http
 					try
 					{
 						JObject obj = GetGxObject(AttValues, CmpContext, IsMasterPage);
-						if (obj != null && (DynAjaxEventContext.isParmModified(AttName, SdtObj) || !isUndefinedOutParam( AttName, SdtObj)))
+						if (obj != null && (!isUndefinedOutParam(AttName, SdtObj) || DynAjaxEventContext.isParmModified(AttName, SdtObj)))
 						{
 							IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
 							if (SdtObjJson != null)
