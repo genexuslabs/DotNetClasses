@@ -368,12 +368,12 @@ namespace GeneXus.Application
 			}
 			else
 			{
-				if (!worker.IsDataProvider)
-				{
+				//if (!worker.IsDataProvider)
+				//{
 					if (originalParCount == 1)
 						wrapped = GetCollectionWrappedStatus(outputParameters, parCount, wrapped, false);
 
-				}
+				//}
 			}
 			return wrapped;
 		}
