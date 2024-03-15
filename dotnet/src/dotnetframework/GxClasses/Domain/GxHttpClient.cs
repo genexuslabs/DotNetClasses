@@ -161,6 +161,7 @@ namespace GeneXus.Http.Client
 				string key = HttpClientInstanceIdentifier(proxyHost, proxyPort, fileCertificateCollection, timeout);
 				if (_httpClientInstances.TryGetValue(key, out value))
 				{
+					GXLogging.Debug(log, $"Getting httpClient cached instance");
 					return value;
 				}
 				else
@@ -169,6 +170,7 @@ namespace GeneXus.Http.Client
 					{
 						if (_httpClientInstances.TryGetValue(key, out value))
 						{
+							GXLogging.Debug(log, $"Getting httpClient cached instance");
 							return value;
 						}
 						value = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
@@ -212,10 +214,11 @@ namespace GeneXus.Http.Client
 				PooledConnectionLifetime = TimeSpan.FromMinutes(POOLED_CONNECTION_LIFETIME_MINUTES),
 			};
 			int maxConnections = Preferences.GetHttpClientMaxConnectionPerRoute();
-			if (maxConnections != 0)
+			if (maxConnections != Preferences.DEFAULT_HTTPCLIENT_MAX_PER_ROUTE)
 			{
 				handler.MaxConnectionsPerServer = maxConnections;
 			}
+			GXLogging.Debug(log, $"Creating SocketsHttpHandler MaxConnectionsPerServer:{handler.MaxConnectionsPerServer}");
 			handler.Credentials = getCredentialCache(URI, authCollection);
 			
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
