@@ -77,6 +77,8 @@ namespace GeneXus.Http
 #if NETCORE
 	internal static class CookiesHelper
 	{
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(CookiesHelper).FullName);
+
 		internal static void PopulateCookies(this HttpRequestMessage request, CookieContainer cookieContainer)
 		{
 			if (cookieContainer != null)
@@ -95,12 +97,19 @@ namespace GeneXus.Http
 		}
 		internal static void ExtractCookies(this HttpResponseMessage response, CookieContainer cookieContainer)
 		{
-			if (response.Headers.TryGetValues("Set-Cookie", out var cookieEntries))
+			if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
 			{
 				Uri uri = response.RequestMessage.RequestUri;
-				foreach (string cookieEntry in cookieEntries)
+				foreach (string cookieValue in cookieValues)
 				{
-					cookieContainer.SetCookies(uri, cookieEntry);
+					try
+					{
+						cookieContainer.SetCookies(uri, cookieValue);
+					}
+					catch (CookieException ex)
+					{
+						GXLogging.Warn(log, $"Ignored cookie for container: {cookieValue} url:{uri}", ex);
+					}
 				}
 
 			}
