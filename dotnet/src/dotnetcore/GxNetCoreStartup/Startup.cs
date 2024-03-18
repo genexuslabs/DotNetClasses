@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Http;
@@ -161,7 +162,24 @@ namespace GeneXus.Application
 		{
 			OpenTelemetryService.Setup(services);
 
-			services.AddMvc(option => option.EnableEndpointRouting = false);
+			services.AddControllers();
+			string controllers = Path.Combine(Startup.LocalPath, "bin", "gxcontrollers");
+			IMvcBuilder mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
+			try
+			{
+				if (Directory.Exists(controllers))
+				{
+					foreach (string controller in Directory.GetFiles(controllers))
+					{
+						Console.WriteLine($"Loading controller {controller}");
+						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller)).AddControllersAsServices();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("Error loading gxcontrollers " + ex.Message);
+			}
 			services.Configure<KestrelServerOptions>(options =>
 			{
 				options.AllowSynchronousIO = true;
@@ -248,7 +266,6 @@ namespace GeneXus.Application
 				});
 			}
 			DefineCorsPolicy(services);
-			services.AddMvc();
 		}
 
 		private void DefineCorsPolicy(IServiceCollection services)
@@ -333,6 +350,7 @@ namespace GeneXus.Application
 			{
 				app.UseResponseCompression();
 			}
+			app.UseRouting();
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
@@ -355,6 +373,10 @@ namespace GeneXus.Application
 				app.UseHttpsRedirection();
 				app.UseHsts();
 			}
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapControllers();
+			});
 			if (log.IsDebugEnabled)
 			{
 				try
