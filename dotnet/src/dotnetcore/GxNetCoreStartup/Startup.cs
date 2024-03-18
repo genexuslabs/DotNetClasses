@@ -146,6 +146,7 @@ namespace GeneXus.Application
 		const string CORS_POLICY_NAME = "AllowSpecificOriginsPolicy";
 		const string CORS_ANY_ORIGIN = "*";
 		const double CORS_MAX_AGE_SECONDS = 86400;
+		internal const string GX_CONTROLLERS = "gxcontrollers";
 
 		public List<string> servicesBase = new List<string>();		
 
@@ -165,7 +166,7 @@ namespace GeneXus.Application
 			OpenTelemetryService.Setup(services);
 
 			services.AddControllers();
-			string controllers = Path.Combine(Startup.LocalPath, "bin", "gxcontrollers");
+			string controllers = Path.Combine(Startup.LocalPath, "bin", GX_CONTROLLERS);
 			IMvcBuilder mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
 			try
 			{

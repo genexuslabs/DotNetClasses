@@ -18,12 +18,17 @@ namespace xUnitTesting
 		public MiddlewareTest()
 		{
 			SetEnvironmentVars();
+			BeforeStartup();
 			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(DOTNET_ENVIRONMENT));
 			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
 			server.PreserveExecutionContext= true;
 			server.CreateClient();
 		}
 		protected virtual void SetEnvironmentVars()
+		{
+
+		}
+		protected virtual void BeforeStartup()
 		{
 
 		}
