@@ -39,6 +39,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxNetCoreStartup\GxNetCoreStartup.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Storage\GXAmazonS3\GXAmazonS3.csproj" />
+    <ProjectReference Include="..\NativeAccessControllerTest\AccessTokenController_Test.csproj" />
   </ItemGroup>
 
 
