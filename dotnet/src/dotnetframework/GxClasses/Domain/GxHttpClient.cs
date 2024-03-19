@@ -143,7 +143,7 @@ namespace GeneXus.Http.Client
 		{
 			get
 			{
-				ReadResponseData();
+				ReadResponseData().GetAwaiter().GetResult();
 				return _receiveData;
 			}
 		}
@@ -219,7 +219,11 @@ namespace GeneXus.Http.Client
 				handler.MaxConnectionsPerServer = maxConnections;
 			}
 			GXLogging.Debug(log, $"Creating SocketsHttpHandler MaxConnectionsPerServer:{handler.MaxConnectionsPerServer}");
-			handler.Credentials = getCredentialCache(URI, authCollection);
+			ICredentials cc = getCredentialCache(URI, authCollection);
+			if (cc != null)
+			{
+				handler.Credentials = getCredentialCache(URI, authCollection);
+			}
 			
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
 			{
@@ -258,7 +262,11 @@ namespace GeneXus.Http.Client
 		private static WinHttpHandler GetHandler(Uri URI, TimeSpan milliseconds, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, string proxyHost, int proxyPort, CookieContainer cookies)
 		{
 			WinHttpHandler handler = new WinHttpHandler();
-			handler.ServerCredentials = getCredentialCache(URI, authCollection);
+			ICredentials cc = getCredentialCache(URI, authCollection);
+			if (cc != null)
+			{
+				handler.ServerCredentials = cc;
+			}
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
 			{
 				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
@@ -806,8 +814,12 @@ namespace GeneXus.Http.Client
 			else
 				req.Version = HttpVersion.Version11;
 		}
+#if NETCORE
+		async Task<HttpResponseMessage> ExecuteRequest(string method, string requestUrl, bool contextCookies)
+#else
 		[SecuritySafeCritical]
 		HttpResponseMessage ExecuteRequest(string method, string requestUrl, bool contextCookies)
+#endif
 		{
 			CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
 
@@ -851,8 +863,10 @@ namespace GeneXus.Http.Client
 					reqStream.Seek(0, SeekOrigin.Begin);
 					request.Content = new ByteArrayContent(reqStream.ToArray());
 					setContentHeaders(request, contentType);
+#if !NETCORE
 					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
-#if NETCORE
+#else
+					response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 					response.ExtractCookies(cookies);
 #endif
 				}
@@ -866,14 +880,14 @@ namespace GeneXus.Http.Client
 			}
 			return response;
 		}
-		void ReadResponseData()
+		async Task ReadResponseData()
 		{
 			if (_receiveData == null && _response!=null)
 			{
 				_receiveData = Array.Empty<byte>();
 				try
 				{
-					Stream stream = _response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+					Stream stream = await _response.Content.ReadAsStreamAsync();
 
 					using (MemoryStream ms = new MemoryStream())
 					{
@@ -923,11 +937,19 @@ namespace GeneXus.Http.Client
 			if (UseOldHttpClient(name))
 			{
 				GXLogging.Debug(log, "Using legacy GxHttpClient");
+#if NETCORE
+				WebExecute(method, name).GetAwaiter().GetResult();
+#else
 				WebExecute(method, name);
+#endif
 			}
 			else
 			{
+#if NETCORE
+				HttpClientExecuteAsync(method, name).GetAwaiter().GetResult();
+#else
 				HttpClientExecute(method, name);
+#endif
 			}
 		}
 		internal void ProcessResponse(HttpResponseMessage httpResponse)
@@ -942,7 +964,11 @@ namespace GeneXus.Http.Client
 				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + _statusDescription + ".";
 			}
 		}
+#if NETCORE
+		internal async Task HttpClientExecuteAsync(string method, string name)
+#else
 		public void HttpClientExecute(string method, string name)
+#endif
 		{
 			_receiveData = null;
 			_response = null;
@@ -954,7 +980,11 @@ namespace GeneXus.Http.Client
 			{
 				string requestUrl = GetRequestURL(name);
 				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
+#if NETCORE
+				_response = await ExecuteRequest(method, requestUrl, contextCookies);
+#else
 				_response = ExecuteRequest(method, requestUrl, contextCookies);
+#endif
 
 				if (contextCookies)
 					_context.UpdateSessionCookieContainer();
@@ -1012,10 +1042,11 @@ namespace GeneXus.Http.Client
 				_response.StatusCode = HttpStatusCode.InternalServerError;
 			}
 			GXLogging.Debug(log, "Reading response...");
-			if (_response == null)
-				return;
-			ProcessResponse(_response);
-			ClearSendStream();
+			if (_response != null)
+			{
+				ProcessResponse(_response);
+				ClearSendStream();
+			}
 		}
 		NameValueCollection _respHeaders;
 		private bool disposedValue;
@@ -1239,7 +1270,11 @@ namespace GeneXus.Http.Client
 			httpC.Timeout = _timeout;
 		}
 #endif
+#if !NETCORE
 		HttpWebRequest buildRequest(string method, string requestUrl, CookieContainer cookies)
+#else
+		async Task<HttpWebRequest> buildRequest(string method, string requestUrl, CookieContainer cookies)
+#endif
 		{
 			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			int BytesRead;
@@ -1271,7 +1306,7 @@ namespace GeneXus.Http.Client
 #if !NETCORE
 				using (Stream reqStream = req.GetRequestStream())
 #else
-				using (Stream reqStream = req.GetRequestStreamAsync().GetAwaiter().GetResult())
+				using (Stream reqStream = await req.GetRequestStreamAsync())
 #endif
 				{
 					SendVariables(reqStream);
@@ -1298,7 +1333,7 @@ namespace GeneXus.Http.Client
 		{
 			string sScheme;
 			GxAuthScheme auth;
-			CredentialCache cc = new CredentialCache();
+			CredentialCache cc = null;
 
 			for (int i = 0; i < authenticationCollection.Count; i++)
 			{
@@ -1328,10 +1363,18 @@ namespace GeneXus.Http.Client
 					}
 					else if (sScheme != "Basic")
 					{
+						if (cc == null)
+						{
+							cc = new CredentialCache();
+						}
 						cc.Add(URI, sScheme, new NetworkCredential(auth.User, auth.Password, auth.Realm));
 					}
 					else
 					{
+						if (cc == null)
+						{
+							cc = new CredentialCache();
+						}
 						cc.Add(URI, sScheme, new NetworkCredential(auth.User, auth.Password));
 					}
 				}
@@ -1341,8 +1384,11 @@ namespace GeneXus.Http.Client
 			}
 			return cc;
 		}
-
+#if NETCORE
+		private async Task WebExecute(string method, string name)
+#else
 		private void WebExecute(string method, string name)
+#endif
 		{
 			HttpWebRequest req;
 			HttpWebResponse resp = null;
@@ -1356,13 +1402,14 @@ namespace GeneXus.Http.Client
 				string requestUrl = GetRequestURL(name);
 				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
 				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
-				req = buildRequest(method, requestUrl, cookies);
 
 #if NETCORE
+				req = await buildRequest(method, requestUrl, cookies);
 				resp = req.GetResponse() as HttpWebResponse;
 				if (contextCookies)
 					_context.UpdateSessionCookieContainer();
 #else
+				req = buildRequest(method, requestUrl, cookies);
 				resp = (HttpWebResponse)req.GetResponse();
 #endif
 			}

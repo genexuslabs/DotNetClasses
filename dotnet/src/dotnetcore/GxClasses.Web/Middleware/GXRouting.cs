@@ -38,9 +38,8 @@ namespace GxClasses.Web.Middleware
 		public static string UrlTemplateControllerWithParms;
 
 		//Azure Functions
-		public bool AzureRuntime;
-		public AzureDeployFeature AzureDeploy = new AzureDeployFeature();
-		public static string AzureFunctionName;
+		internal AzureDeployFeature AzureDeploy = new AzureDeployFeature();
+		internal static string AzureFunctionName;
 
 		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
 
@@ -192,10 +191,10 @@ namespace GxClasses.Web.Middleware
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
 				bool isServiceInPath = ServiceInPath(path, out actualPath);
-				if (path.Contains($"/{restBaseURL}") || isServiceInPath || (AzureRuntime && path.Contains(oauthRoute)))
+				if (path.Contains($"/{restBaseURL}") || isServiceInPath || (GxContext.AzureRuntime && path.Contains(oauthRoute)))
 				{
 					string controllerWithParms = string.Empty;
-					if (!AzureRuntime)
+					if (!GxContext.AzureRuntime)
 					{
 						controllerWithParms = context.GetRouteValue(UrlTemplateControllerWithParms) as string;
 						if (String.IsNullOrEmpty(controllerWithParms) && !String.IsNullOrEmpty(actualPath))
@@ -302,7 +301,7 @@ namespace GxClasses.Web.Middleware
 		internal string GetGxRouteValue(string path)
 		{
 			//Not API Objects
-			string basePath = "";
+			string basePath;
 			if (AzureDeploy.Deploy == AzureFeature.AzureServerless && !string.IsNullOrEmpty(AzureDeploy.Route))
 				basePath = AzureDeploy.Route;
 			else
@@ -553,7 +552,7 @@ namespace GxClasses.Web.Middleware
 
 			if (File.Exists(metadataFilePath))
 			{
-				AzureRuntime = true;
+				GxContext.AzureRuntime = true;
 			}
 		}
 		public void GetAzureDeploy()

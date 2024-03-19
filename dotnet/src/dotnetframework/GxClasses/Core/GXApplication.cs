@@ -2449,7 +2449,11 @@ namespace GeneXus.Application
 				return 0;
 			FileInfo fi = new FileInfo(name);
 			ResponseContentType(contentTypeForExtension(fi.Extension));
+#if NETCORE
+			_HttpContext.Response.SendFileAsync(name).GetAwaiter().GetResult();
+#else
 			_HttpContext.Response.WriteFile(name);
+#endif
 			return 0;
 		}
 		public byte SetHeader(string name, string value)
@@ -3018,6 +3022,10 @@ namespace GeneXus.Application
 #if NETCORE
 		static bool _isHttpContext;
 		internal static bool IsAzureContext
+		{ get; set; }
+
+		//Azure Functions
+		internal static bool AzureRuntime
 		{ get; set; }
 #endif
 		public static bool IsHttpContext

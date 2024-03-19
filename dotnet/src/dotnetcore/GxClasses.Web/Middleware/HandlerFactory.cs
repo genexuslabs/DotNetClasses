@@ -74,8 +74,16 @@ namespace GeneXus.HttpHandlerFactory
 						handler.sendAdditionalHeaders();
 						return Task.CompletedTask;
 					});
-					handler.ProcessRequest(context);
-					await Task.CompletedTask;
+					GXHttpHandler gxHttpHandler = handler as GXHttpHandler;
+					if (gxHttpHandler != null)
+					{
+						await gxHttpHandler.ProcessRequestAsync(context);
+					}
+					else
+					{
+						handler.ProcessRequest(context);
+						await Task.CompletedTask;
+					}
 					handler.ControlOutputWriter?.Flush();
 				}
 				else

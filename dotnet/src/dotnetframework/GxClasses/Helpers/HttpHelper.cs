@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GeneXus.Http
 {
@@ -734,8 +735,11 @@ namespace GeneXus.Http
 
 		public static void Write(this HttpResponse response, string value)
 		{
-			//response.WriteAsync(value).Wait();//Unsupported by GxHttpAzureResponse
-			response.Body.Write(Encoding.UTF8.GetBytes(value));
+
+			if (GxContext.AzureRuntime)
+				response.Body.Write(Encoding.UTF8.GetBytes(value));
+			else
+				response.WriteAsync(value).GetAwaiter().GetResult();//Unsupported by GxHttpAzureResponse
 		}
 		public static void WriteFile(this HttpResponse response, string fileName)
 		{
