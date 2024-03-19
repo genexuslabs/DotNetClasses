@@ -177,11 +177,7 @@ namespace GeneXus.Application
 			set { _isApi = value; }
 			get { return _isApi; }
 		}
-		public bool IsDataProvider
-		{
-			set { _isDP = value; }
-			get { return _isDP; }
-		}
+		
 		public virtual void cleanup() { }
 
 		virtual public bool UploadEnabled() { return false; }
