@@ -57,7 +57,7 @@ namespace GeneXus.Procedure
 			}
 		}
 		public void setContextReportHandler()
-		{
+		{	
 
 			oldReportHandler = null;
 			reportHandler = context.reportHandler;

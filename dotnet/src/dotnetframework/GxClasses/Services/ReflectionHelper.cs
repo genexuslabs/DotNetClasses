@@ -235,7 +235,7 @@ namespace GeneXus.Application
 			int idx = 0;
 			foreach (var methodParameter in methodParameters)
 			{
-				string gxParameterName = GxParameterName(methodParameter.Name);
+				string gxParameterName = GxParameterName(methodParameter);
 				if (IsByRefParameter(methodParameter))
 				{
 					outputParameters.Add(gxParameterName, parametersForInvocation[idx]);
@@ -320,12 +320,34 @@ namespace GeneXus.Application
 			return parametersForInvocation;
 		}
 		private static Regex attVar = new Regex(@"^AV?\d{1,}", RegexOptions.Compiled);
+
+		private static string GxParameterName(ParameterInfo methodParameter)
+		{
+			int idx = methodParameter.Name.IndexOf('_');
+			if (idx >= 0)
+			{
+				string mparm = methodParameter.Name.Substring(idx + 1);
+				string PName = methodParameter.ParameterType.FullName;
+				// The root element name should be in the metadata of the SDT 
+				if (mparm.StartsWith("Gx") && mparm.EndsWith("rootcol") && PName.Contains("_"))
+				{
+					int Pos = PName.IndexOf("Sdt") + 3;
+					mparm = PName.Substring(Pos, PName.IndexOf("_") - Pos);
+				}
+				return mparm;
+			}
+			else
+			{
+				return attVar.Replace(methodParameter.Name, string.Empty);
+			}
+		}
+
 		private static string GxParameterName(string methodParameterName)
 		{
 			int idx = methodParameterName.IndexOf('_');
 			if (idx >= 0)
 			{
-				return methodParameterName.Substring(idx + 1);
+				return  methodParameterName.Substring(idx + 1);				
 			}
 			else
 			{

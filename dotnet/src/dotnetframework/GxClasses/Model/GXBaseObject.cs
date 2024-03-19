@@ -37,6 +37,7 @@ namespace GeneXus.Application
 		protected IGxContext _Context;
 		bool _isMain;
 		protected bool _isApi;
+		protected bool _isDP;
 #if NETCORE
 		internal static ActivitySource ActivitySource {
 			get {
@@ -176,6 +177,7 @@ namespace GeneXus.Application
 			set { _isApi = value; }
 			get { return _isApi; }
 		}
+		
 		public virtual void cleanup() { }
 
 		virtual public bool UploadEnabled() { return false; }

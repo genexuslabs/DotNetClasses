@@ -131,6 +131,7 @@ namespace GeneXus.Programs.genexusserverlessapi
 	}
 	#region Rest interface
 	[GxUnWrappedJson()]
+	[GxJsonSerialization("default")]
 	[DataContract(Name = @"EventMessageResponse", Namespace = "GeneXus")]
 	public class SdtEventMessageResponse_RESTInterface : GxGenericCollectionItem<SdtEventMessageResponse>, System.Web.SessionState.IRequiresSessionState
 	{
