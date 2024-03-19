@@ -273,8 +273,7 @@ namespace GeneXus.Configuration
 					{
 						ret = cfgBuf;
 					}
-					if (!string.IsNullOrEmpty(ret))
-						connectionProperties[key] = ret;
+					connectionProperties[key] = ret;
 				}
 			}
 			else
