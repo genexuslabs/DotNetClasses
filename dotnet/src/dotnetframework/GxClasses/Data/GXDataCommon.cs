@@ -2619,7 +2619,6 @@ namespace GeneXus.Data
 		public GxConnectionCache(IGxConnection gxconn,int maxSize)
 		{
 			preparedCommandsCache = new Dictionary<string, GxItemCommand>(MAX_SIZE);
-			InitCommands();
 			preparedStmtCache=new GxPreparedStatementCache(gxconn,maxSize);
 			conn=gxconn;
             dataAdapterCacheQueue = new List<DbDataAdapterElem>();
@@ -2629,7 +2628,6 @@ namespace GeneXus.Data
         {
 			preparedCommandsCache = new Dictionary<string, GxItemCommand>(MAX_SIZE);
             preparedStmtCache = new GxPreparedStatementCache(gxconn, MAX_SIZE);
-            InitCommands();
             conn = gxconn;
             dataAdapterCacheQueue = new List<DbDataAdapterElem>();
         }
@@ -3012,118 +3010,120 @@ namespace GeneXus.Data
 			if (commandsToRemove!=null) commandsToRemove.Clear();
 		}
 
-		private void InitCommands()
+		internal void InitCommands()
 		{
-            int commandTimeout = 0;
+			if (fetchCommand == null)
+			{
+				int commandTimeout = 0;
 
-			//----------------Fetch command
-			fetchCommand=new SqlCommand("sp_cursorfetch");
-			fetchCommand.CommandType=CommandType.StoredProcedure;
-            fetchCommand.CommandTimeout = commandTimeout;
-			SqlParameter p1 = fetchCommand.Parameters.Add("cursor", SqlDbType.Int);
-			p1.Direction = ParameterDirection.Input;
+				//----------------Fetch command
+				fetchCommand = new SqlCommand("sp_cursorfetch");
+				fetchCommand.CommandType = CommandType.StoredProcedure;
+				fetchCommand.CommandTimeout = commandTimeout;
+				SqlParameter p1 = fetchCommand.Parameters.Add("cursor", SqlDbType.Int);
+				p1.Direction = ParameterDirection.Input;
 
-			SqlParameter p2 = fetchCommand.Parameters.Add("fetchtype", SqlDbType.Int);
-			p2.Direction = ParameterDirection.Input;
-			p2.Value = 2;//0x0002  	Next row.
+				SqlParameter p2 = fetchCommand.Parameters.Add("fetchtype", SqlDbType.Int);
+				p2.Direction = ParameterDirection.Input;
+				p2.Value = 2;//0x0002  	Next row.
 
-			SqlParameter p3 = fetchCommand.Parameters.Add("rownumber", SqlDbType.Int);
-			p3.Direction = ParameterDirection.Input;
-			p3.Value = 1;
-			
-			SqlParameter p5 = fetchCommand.Parameters.Add("nrows", SqlDbType.Int);
-			p5.Direction = ParameterDirection.Input;
+				SqlParameter p3 = fetchCommand.Parameters.Add("rownumber", SqlDbType.Int);
+				p3.Direction = ParameterDirection.Input;
+				p3.Value = 1;
 
-			//-----------------PrepExec command
-			prepExecCommand=new SqlCommand("sp_cursorprepexec");
-			prepExecCommand.CommandType=CommandType.StoredProcedure;
-            prepExecCommand.CommandTimeout = commandTimeout;
+				SqlParameter p5 = fetchCommand.Parameters.Add("nrows", SqlDbType.Int);
+				p5.Direction = ParameterDirection.Input;
 
-			prepExecParms=new SqlParameter[7];
-			prepExecParms[0]=new SqlParameter("cursor",SqlDbType.Int); 
-			prepExecParms[0].Direction=ParameterDirection.Output;
-			prepExecParms[0].Value=DBNull.Value;
+				//-----------------PrepExec command
+				prepExecCommand = new SqlCommand("sp_cursorprepexec");
+				prepExecCommand.CommandType = CommandType.StoredProcedure;
+				prepExecCommand.CommandTimeout = commandTimeout;
 
-			prepExecParms[1]=new SqlParameter("handle",SqlDbType.Int); 
-			prepExecParms[1].Direction=ParameterDirection.Output;
-			prepExecParms[1].Value=0;
+				prepExecParms = new SqlParameter[7];
+				prepExecParms[0] = new SqlParameter("cursor", SqlDbType.Int);
+				prepExecParms[0].Direction = ParameterDirection.Output;
+				prepExecParms[0].Value = DBNull.Value;
 
-			prepExecParms[2]=new SqlParameter("parameters",SqlDbType.NVarChar); 
-			prepExecParms[2].Direction=ParameterDirection.Input;
-			
-			prepExecParms[3]=new SqlParameter("stmt",SqlDbType.NVarChar); 
-			prepExecParms[3].Direction=ParameterDirection.Input;
+				prepExecParms[1] = new SqlParameter("handle", SqlDbType.Int);
+				prepExecParms[1].Direction = ParameterDirection.Output;
+				prepExecParms[1].Value = 0;
 
-			prepExecParms[4]=new SqlParameter("scrollopt",SqlDbType.Int);
-			prepExecParms[4].Direction=ParameterDirection.InputOutput;
+				prepExecParms[2] = new SqlParameter("parameters", SqlDbType.NVarChar);
+				prepExecParms[2].Direction = ParameterDirection.Input;
 
-			prepExecParms[5]=new SqlParameter("ccopt",SqlDbType.Int);
-			prepExecParms[5].Direction=ParameterDirection.InputOutput;
-			prepExecParms[5].Value=1;//Readonly
+				prepExecParms[3] = new SqlParameter("stmt", SqlDbType.NVarChar);
+				prepExecParms[3].Direction = ParameterDirection.Input;
 
-			prepExecParms[6]=new SqlParameter("rowcount",SqlDbType.Int); 
-			prepExecParms[6].Direction=ParameterDirection.InputOutput;
+				prepExecParms[4] = new SqlParameter("scrollopt", SqlDbType.Int);
+				prepExecParms[4].Direction = ParameterDirection.InputOutput;
 
-			//-----------------Exec command
-			execCommand = new SqlCommand("sp_cursorexecute");
-			execCommand.CommandType=CommandType.StoredProcedure;
-            execCommand.CommandTimeout = commandTimeout;
+				prepExecParms[5] = new SqlParameter("ccopt", SqlDbType.Int);
+				prepExecParms[5].Direction = ParameterDirection.InputOutput;
+				prepExecParms[5].Value = 1;//Readonly
 
-			execParms=new SqlParameter[5];
-			execParms[0]=new SqlParameter("cursorId",SqlDbType.Int);
-			execParms[0].Direction = ParameterDirection.Input;
-			execParms[1]=new SqlParameter("handle",SqlDbType.Int);
-			execParms[1].Direction = ParameterDirection.Output;
-			execParms[2]=new SqlParameter("scrollopt",SqlDbType.Int);
-			execParms[2].Direction = ParameterDirection.InputOutput;
-			execParms[3]=new SqlParameter("ccopt",SqlDbType.Int);
-			execParms[3].Direction = ParameterDirection.InputOutput;
-			execParms[3].Value=1;//Readonly
-			execParms[4]=new SqlParameter("rowcount",SqlDbType.Int);
-			execParms[4].Direction = ParameterDirection.InputOutput;
+				prepExecParms[6] = new SqlParameter("rowcount", SqlDbType.Int);
+				prepExecParms[6].Direction = ParameterDirection.InputOutput;
 
-			//------------------prepareCursor
-			prepareCommand = new SqlCommand("sp_cursorprepare");
-			prepareCommand.CommandType=CommandType.StoredProcedure;
-            prepareCommand.CommandTimeout = commandTimeout;
-			prepareParms=new SqlParameter[6];
-			
-			prepareParms[0]=new SqlParameter("cursor",SqlDbType.Int);
-			prepareParms[0].Direction = ParameterDirection.Output;
-			prepareParms[0].Value=DBNull.Value;
-			
-			prepareParms[1]=new SqlParameter("parameters",SqlDbType.NVarChar);
-			prepareParms[1].Direction = ParameterDirection.Input;
+				//-----------------Exec command
+				execCommand = new SqlCommand("sp_cursorexecute");
+				execCommand.CommandType = CommandType.StoredProcedure;
+				execCommand.CommandTimeout = commandTimeout;
 
-			prepareParms[2]=new SqlParameter("stmt",SqlDbType.NVarChar);
-			prepareParms[2].Direction = ParameterDirection.Input;
+				execParms = new SqlParameter[5];
+				execParms[0] = new SqlParameter("cursorId", SqlDbType.Int);
+				execParms[0].Direction = ParameterDirection.Input;
+				execParms[1] = new SqlParameter("handle", SqlDbType.Int);
+				execParms[1].Direction = ParameterDirection.Output;
+				execParms[2] = new SqlParameter("scrollopt", SqlDbType.Int);
+				execParms[2].Direction = ParameterDirection.InputOutput;
+				execParms[3] = new SqlParameter("ccopt", SqlDbType.Int);
+				execParms[3].Direction = ParameterDirection.InputOutput;
+				execParms[3].Value = 1;//Readonly
+				execParms[4] = new SqlParameter("rowcount", SqlDbType.Int);
+				execParms[4].Direction = ParameterDirection.InputOutput;
 
-			prepareParms[3]=new SqlParameter("options",SqlDbType.Int);
-			prepareParms[3].Direction = ParameterDirection.Input;
-			prepareParms[3].Value=1;
+				//------------------prepareCursor
+				prepareCommand = new SqlCommand("sp_cursorprepare");
+				prepareCommand.CommandType = CommandType.StoredProcedure;
+				prepareCommand.CommandTimeout = commandTimeout;
+				prepareParms = new SqlParameter[6];
 
-			prepareParms[4]=new SqlParameter("scrollopt",SqlDbType.Int);
-			prepareParms[4].Direction = ParameterDirection.InputOutput;
+				prepareParms[0] = new SqlParameter("cursor", SqlDbType.Int);
+				prepareParms[0].Direction = ParameterDirection.Output;
+				prepareParms[0].Value = DBNull.Value;
 
-			prepareParms[5]=new SqlParameter("ccopt",SqlDbType.Int);
-			prepareParms[5].Direction = ParameterDirection.InputOutput;
-			prepareParms[5].Value=4;
+				prepareParms[1] = new SqlParameter("parameters", SqlDbType.NVarChar);
+				prepareParms[1].Direction = ParameterDirection.Input;
 
-			//----------------Close command
-			closeCommand = new SqlCommand("sp_cursorclose");
-			closeCommand.CommandType=CommandType.StoredProcedure;
-            closeCommand.CommandTimeout = commandTimeout;
-			SqlParameter handle4 = closeCommand.Parameters.Add("handle", SqlDbType.Int);
-			handle4.Direction = ParameterDirection.Input;
+				prepareParms[2] = new SqlParameter("stmt", SqlDbType.NVarChar);
+				prepareParms[2].Direction = ParameterDirection.Input;
 
-			//------------------unprepareCursor
-			unprepareCommand =new SqlCommand("sp_cursorunprepare");
-			unprepareCommand.CommandType = CommandType.StoredProcedure;
-            unprepareCommand.CommandTimeout = commandTimeout;
+				prepareParms[3] = new SqlParameter("options", SqlDbType.Int);
+				prepareParms[3].Direction = ParameterDirection.Input;
+				prepareParms[3].Value = 1;
 
-			SqlParameter cursor1 = unprepareCommand.Parameters.Add("cursor", SqlDbType.Int);
-			cursor1.Direction = ParameterDirection.Input;
+				prepareParms[4] = new SqlParameter("scrollopt", SqlDbType.Int);
+				prepareParms[4].Direction = ParameterDirection.InputOutput;
 
+				prepareParms[5] = new SqlParameter("ccopt", SqlDbType.Int);
+				prepareParms[5].Direction = ParameterDirection.InputOutput;
+				prepareParms[5].Value = 4;
+
+				//----------------Close command
+				closeCommand = new SqlCommand("sp_cursorclose");
+				closeCommand.CommandType = CommandType.StoredProcedure;
+				closeCommand.CommandTimeout = commandTimeout;
+				SqlParameter handle4 = closeCommand.Parameters.Add("handle", SqlDbType.Int);
+				handle4.Direction = ParameterDirection.Input;
+
+				//------------------unprepareCursor
+				unprepareCommand = new SqlCommand("sp_cursorunprepare");
+				unprepareCommand.CommandType = CommandType.StoredProcedure;
+				unprepareCommand.CommandTimeout = commandTimeout;
+
+				SqlParameter cursor1 = unprepareCommand.Parameters.Add("cursor", SqlDbType.Int);
+				cursor1.Direction = ParameterDirection.Input;
+			}
 		}
 	}
 
@@ -4148,6 +4148,7 @@ namespace GeneXus.Data
 		}
 		override public void Open()
 		{
+			m_connectionCache.InitCommands();
 			InternalConnection.Open();
 			if (!m_autoCommit)
 			{
