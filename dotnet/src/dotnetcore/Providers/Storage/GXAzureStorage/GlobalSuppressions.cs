@@ -5,7 +5,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5377:Use Container Level Access Policy", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Storage.GXAzureStorage.AzureStorageExternalProvider.GetURL(Microsoft.WindowsAzure.Storage.Blob.CloudBlockBlob,GxFileType,System.Int32)~System.String")]
 [assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Storage.GXAzureStorage.AzureStorageExternalProvider.Copy(System.String,GxFileType,System.String,GxFileType)~System.String")]
 [assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Storage.GXAzureStorage.AzureStorageExternalProvider.Copy(System.String,System.String,System.String,System.String,GxFileType)~System.String")]
 [assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Storage.GXAzureStorage.AzureStorageExternalProvider.CreateDirectory(System.String)")]

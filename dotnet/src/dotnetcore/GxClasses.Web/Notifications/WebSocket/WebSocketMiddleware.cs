@@ -85,7 +85,7 @@ namespace GeneXus.Notifications.WebSocket
 		private static async Task<WebSocketReceiveResult> ReadDataFromSocket(System.Net.WebSockets.WebSocket socket, byte[] chunkBuffer, MemoryStream ms)
 		{
 			var result = await socket.ReceiveAsync(new ArraySegment<byte>(chunkBuffer), CancellationToken.None);
-			ms.Write(chunkBuffer, 0, result.Count);
+			await ms.WriteAsync(chunkBuffer, 0, result.Count);
 			return result;
 		}
 	}
