@@ -220,7 +220,7 @@ namespace GeneXus.Application
 				services.AddAntiforgery(options =>
 				{
 					options.HeaderName = HttpHeader.X_CSRF_TOKEN_HEADER;
-					options.SuppressXFrameOptionsHeader = false;
+					options.SuppressXFrameOptionsHeader = true;
 				});
 			}
 			services.AddDirectoryBrowser();
