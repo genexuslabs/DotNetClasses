@@ -255,3 +255,5 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Application.GxRestWrapper.WebException(System.Exception)~System.Threading.Tasks.Task")]
 [assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Utils.GxImageUtil.BitmapCreateFromStream(System.String)~System.Drawing.Bitmap")]
 [assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Utils.GxImageUtil.ImageCreateFromStream(System.String)~System.Drawing.Image")]
+[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Http.Client.GxHttpClient.ReadChunk~System.String")]
+[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Http.Client.GxHttpClient.ReceiveData")]
