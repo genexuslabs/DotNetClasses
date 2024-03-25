@@ -652,7 +652,7 @@ namespace GeneXus.Data
             }
             catch (Exception ex)
             {
-                GXLogging.Error(log, "DisposeCommand error", ex);
+                GXLogging.Warn(log, "DisposeCommand error", ex);
 
             }
 		}
