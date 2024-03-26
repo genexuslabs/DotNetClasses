@@ -131,23 +131,15 @@ namespace GeneXus.Http.Server
 		{
 			if (Response != null)
 			{
-#if NETCORE
-				Response.WriteAsync(s).GetAwaiter().GetResult();
-#else
 				Response.Write(s);
-#endif
-			}
+			}			
 		}
 
 		public void AddFile( string fileName)
 		{
 			if (!string.IsNullOrEmpty(fileName))
 			{
-#if NETCORE
-				Response.SendFileAsync(fileName.Trim()).GetAwaiter().GetResult();
-#else
 				Response.WriteFile(fileName.Trim());
-#endif
 			}
 		}
 		public void AppendHeader( string name, string value)
@@ -368,25 +360,19 @@ namespace GeneXus.Http.Server
 		public string GetHeader( string name)
 		{
 			if (_httpReq == null)
-				return string.Empty;
+				return "";
 			string hdr = _httpReq.Headers[name];
 			if (hdr == null)
-				return string.Empty;
+				return "";
 			return hdr;
 		}
 		public string GetValue( string name)
 		{
 			if (_httpReq == null)
-				return string.Empty;
+				return "";
 			try
 			{
-				string s = string.Empty;
-#if NETCORE
-				if (_httpReq.HasFormContentType)
-#endif
-				{
-					s = _httpReq.Form?[name];
-				}
+				string s = _httpReq.Form[name];
 				return string.IsNullOrEmpty(s) ? string.Empty : s;
 			}
 			catch (InvalidOperationException)

@@ -126,11 +126,11 @@ namespace GX
 			{
 				using (HttpClient client = new HttpClient())
 				{
-					using (HttpResponseMessage response = client.GetAsync(urlString).GetAwaiter().GetResult())
+					using (HttpResponseMessage response = client.GetAsync(urlString).Result)
 					{
 						using (HttpContent content = response.Content)
 						{
-							result = content.ReadAsStringAsync().GetAwaiter().GetResult();
+							result = content.ReadAsStringAsync().Result;
 						}
 					}
 				}

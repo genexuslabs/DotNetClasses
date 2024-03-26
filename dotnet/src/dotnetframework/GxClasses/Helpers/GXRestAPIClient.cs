@@ -382,11 +382,7 @@ namespace GeneXus.Application
 			serviceuri += (this.Location.Port != 80) ? ":" + this.Location.Port.ToString() : String.Empty;
 			serviceuri += "/" + this.Location.BaseUrl.TrimEnd('/').TrimStart('/') + "/" + this.Location.ResourceName;
 			serviceuri += _queryString;			
-#if NETCORE
-			httpClient.HttpClientExecuteAsync( this.HttpMethod, serviceuri).GetAwaiter().GetResult();
-#else
 			httpClient.HttpClientExecute( this.HttpMethod, serviceuri);
-#endif
 			this.ErrorCode = httpClient.ErrCode;
 			this.ErrorMessage = httpClient.ErrDescription;
 			this.StatusCode = httpClient.StatusCode;
