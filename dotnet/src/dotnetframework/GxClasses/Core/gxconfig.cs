@@ -848,6 +848,7 @@ namespace GeneXus.Configuration
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
 		static int sessionTimeout = -1;
+		static int singletonHttpClient = -1;
 		internal static string AppMainNamespace
 		{
 			get
@@ -1443,6 +1444,18 @@ namespace GeneXus.Configuration
 					return DefaultWrapSingleApiOutput;
 			}
 		}
+
+		internal static bool SingletonHttpClient()
+		{
+			if (singletonHttpClient == -1)
+			{
+				if (Config.GetValueOrEnvironmentVarOf("HTTPCLIENT_SINGLETON", out string sValue) && int.TryParse(sValue, out int value))
+					singletonHttpClient = value;
+				else
+					singletonHttpClient = 1;
+			}
+			return singletonHttpClient==1;
+		}
 		internal static string CorsAllowedOrigins()
 		{
 			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
@@ -1484,27 +1497,27 @@ namespace GeneXus.Configuration
 			else
 				return "";
 		}
-
-		public static int GetHttpClientMaxConnectionPerRoute()
+		internal const int DEFAULT_HTTPCLIENT_MAX_PER_ROUTE= 1000;
+		internal static int GetHttpClientMaxConnectionPerRoute()
 		{
 			if (httpclient_max_per_route == -1)
 			{
 				try
 				{
 					string strmax;
-					if (Config.GetValueOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
+					if (Config.GetValueOrEnvironmentVarOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
 					{
 						httpclient_max_per_route = Convert.ToInt32(strmax);
 					}
 					else
 					{
-						httpclient_max_per_route = 1000;
+						httpclient_max_per_route = DEFAULT_HTTPCLIENT_MAX_PER_ROUTE;
 					}
 				}
 				catch (Exception ex)
 				{
 					GXLogging.Error(log, "HttpClientMaxPerRoute error", ex);
-					httpclient_max_per_route = 1000;
+					httpclient_max_per_route = DEFAULT_HTTPCLIENT_MAX_PER_ROUTE;
 				}
 			}
 			return httpclient_max_per_route;
