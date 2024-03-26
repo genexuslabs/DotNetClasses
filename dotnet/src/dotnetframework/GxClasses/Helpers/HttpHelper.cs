@@ -28,7 +28,6 @@ using Microsoft.Net.Http.Headers;
 using System.Net.Http;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace GeneXus.Http
 {
@@ -459,42 +458,28 @@ namespace GeneXus.Http
 #if NETCORE
 		public static byte[] DownloadFile(string url, out HttpStatusCode statusCode)
 		{
-			byte[] buffer;
+			byte[] buffer = Array.Empty<byte>();
 			using (var client = new HttpClient())
 			{
-				DownloadFileResult result = DownloadFileAsync(client, url).ConfigureAwait(false).GetAwaiter().GetResult();
-				statusCode = result.StatusCode;
-				buffer = result.Buffer;
+				using (HttpResponseMessage response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result)
+				{
+					if (response.IsSuccessStatusCode)
+					{
+						statusCode = HttpStatusCode.OK;
+						using (HttpContent content = response.Content)
+						{
+							return content.ReadAsByteArrayAsync().Result;
+						}
+					}
+					else
+					{
+						statusCode = response.StatusCode;
+					}
+				}
 			}
 			return buffer;
 		}
-		private static async Task<DownloadFileResult> DownloadFileAsync(HttpClient client, string url)
-		{
-			DownloadFileResult result = new DownloadFileResult();
-			using (HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
-			{
-				if (response.IsSuccessStatusCode)
-				{
-					result.StatusCode = HttpStatusCode.OK;
-					using (HttpContent content = response.Content)
-					{
-						result.Buffer = await content.ReadAsByteArrayAsync();
-					}
-				}
-				else
-				{
-					result.StatusCode = response.StatusCode;
-					result.Buffer = Array.Empty<byte>();
-				}
-			}
-			return result;
-		}
 
-		internal class DownloadFileResult
-		{
-			internal byte[] Buffer;
-			internal HttpStatusCode StatusCode;
-		}
 #else
 		internal static byte[] DownloadFile(string fileName, out HttpStatusCode statusCode)
 		{
@@ -748,11 +733,8 @@ namespace GeneXus.Http
 
 		public static void Write(this HttpResponse response, string value)
 		{
-
-			if (GxContext.AzureRuntime)
-				response.Body.Write(Encoding.UTF8.GetBytes(value));
-			else
-				response.WriteAsync(value).GetAwaiter().GetResult();//Unsupported by GxHttpAzureResponse
+			//response.WriteAsync(value).Wait();//Unsupported by GxHttpAzureResponse
+			response.Body.Write(Encoding.UTF8.GetBytes(value));
 		}
 		public static void WriteFile(this HttpResponse response, string fileName)
 		{

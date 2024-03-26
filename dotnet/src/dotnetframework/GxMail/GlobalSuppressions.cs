@@ -3,8 +3,6 @@
 // Project-level suppressions either have no target or are given
 // a specific target and scoped to a namespace, type, member, etc.
 
-using System.Diagnostics.CodeAnalysis;
-
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5350:Do Not Use Weak Cryptographic Algorithms", Justification = "<Pending>", Scope = "member", Target = "~M:Org.Mentalis.Security.Ssl.Tls1.PseudoRandomDeriveBytes.Initialize(System.Byte[],System.Byte[],System.Byte[])")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms", Justification = "<Pending>", Scope = "member", Target = "~M:Org.Mentalis.Security.Ssl.Tls1.PseudoRandomDeriveBytes.Initialize(System.Byte[],System.Byte[],System.Byte[])")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms", Justification = "<Pending>", Scope = "member", Target = "~M:OpenPop.Pop3.CramMd5.GetSharedSecretInBytes(System.String)~System.Byte[]")]
@@ -175,4 +173,3 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>", Scope = "member", Target = "~P:Org.Mentalis.Security.Cryptography.SymmetricKey.IV")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1044:Properties should not be write only", Justification = "<Pending>", Scope = "member", Target = "~P:OpenPop.Mime.Decode.EncodingFinder.FallbackDecoder")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1721:Property names should not match get methods", Justification = "<Pending>", Scope = "member", Target = "~P:Org.Mentalis.Security.Certificates.Certificate.PublicKey")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Mail.Exchange.ExchangeSession.LoginOAuth(GeneXus.Mail.Exchange.UserData)")]

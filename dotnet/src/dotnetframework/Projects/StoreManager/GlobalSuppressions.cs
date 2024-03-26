@@ -3,8 +3,6 @@
 // Project-level suppressions either have no target or are given
 // a specific target and scoped to a namespace, type, member, etc.
 
-using System.Diagnostics.CodeAnalysis;
-
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~F:GeneXus.SD.Store.Constants.PRODUCT_TYPE_OTHER")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~F:GeneXus.SD.Store.ErrorCodes.MISSING_STORE_CONFIGURATION")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "type", Target = "~T:GeneXus.SD.Store.Constants")]
@@ -17,4 +15,3 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0067:Dispose objects before losing scope", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.SD.Store.Platforms.GooglePlayStoreManager.GetPurchase(System.String,GeneXus.SD.Store.Model.PurchaseResult)~GeneXus.SD.Store.Model.StorePurchase")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0067:Dispose objects before losing scope", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.SD.Store.Util.GetHash(System.String)~System.Byte[]")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.SD.Store.Util.GetHash(System.String)~System.Byte[]")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.SD.Store.Platforms.AppleStoreStoreManager.DoPost(System.String,System.String,System.String@)~System.Net.HttpStatusCode")]

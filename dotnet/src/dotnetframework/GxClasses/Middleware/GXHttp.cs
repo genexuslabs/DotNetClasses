@@ -34,7 +34,6 @@ namespace GeneXus.Http
 	using System.Linq;
 	using System.Reflection.PortableExecutable;
 	using System.Web;
-	using System.Threading.Tasks;
 #else
 	using System.Web;
 	using System.Web.UI;
@@ -244,17 +243,6 @@ namespace GeneXus.Http
 			else
 				EventsMetadata[EventName] = Metadata;
 		}
-		internal async Task webExecuteExAsync(HttpContext httpContext)
-		{
-			if (IsUploadRequest(httpContext))
-				new GXObjectUploadServices(context).webExecute();
-			else if (IsFullAjaxRequest(httpContext))
-				await webAjaxEventAsync();
-			else
-				webExecute();
-		}
-
-
 #else
 		protected void setEventMetadata(string EventName, string Metadata)
 		{
@@ -1060,40 +1048,6 @@ namespace GeneXus.Http
 				return response;
 			}
 		}
-#if NETCORE
-		internal virtual async Task webAjaxEventAsync()
-		{
-			bool isMultipartRequest = context.IsMultipartRequest;
-			if (isMultipartRequest)
-			{
-				localHttpContext.Response.ContentType = MediaTypesNames.TextHtml;
-			}
-			else
-			{
-				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-			}
-			setAjaxCallMode();
-			context.setFullAjaxMode();
-			DynAjaxEvent dynAjaxEvent = new DynAjaxEvent(context.httpAjaxContext.DynAjaxEventContext);
-			string jsonRequest;
-			if (context.IsMultipartRequest)
-				jsonRequest = cgiGet(GX_AJAX_MULTIPART_ID);
-			else
-			{
-				using (StreamReader reader = new StreamReader(localHttpContext.Request.GetInputStream()))
-				{
-					jsonRequest = await reader.ReadToEndAsync(); ;
-				}
-			}
-			string jsonResponse = dynAjaxEvent.Invoke(jsonRequest, this);
-
-
-			if (!redirect(context))
-			{
-				((GxContext)context).SendFinalJSONResponse(jsonResponse);
-			}
-		}
-#endif
 
 		public virtual void webAjaxEvent()
 		{
@@ -1971,71 +1925,6 @@ namespace GeneXus.Http
 			get { return _isMain; }
 		}
 #endif
-#if NETCORE
-		internal async Task ProcessRequestAsync(HttpContext httpContext)
-		{
-			localHttpContext = httpContext;
-
-			if (IsSpaRequest() && !IsSpaSupported())
-			{
-				this.SendResponseStatus(SPA_NOT_SUPPORTED_STATUS_CODE, "SPA not supported by the object");
-				context.CloseConnections();
-				await Task.CompletedTask;
-			}
-			ControlOutputWriter = new HtmlTextWriter(localHttpContext);
-			LoadParameters(localHttpContext.Request.QueryString.Value);
-			context.httpAjaxContext.GetAjaxEncryptionKey(); //Save encryption key in session
-			InitPrivates();
-			try
-			{
-				SetStreaming();
-				SendHeaders();
-				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
-
-				bool validSession = ValidWebSession();
-				if (validSession && IntegratedSecurityEnabled)
-					validSession = ValidSession();
-				if (validSession)
-				{
-					if (UseBigStack())
-					{
-						Thread ts = new Thread(new ParameterizedThreadStart(webExecuteWorker));
-						ts.Start(httpContext);
-						ts.Join();
-						if (workerException != null)
-							throw workerException;
-					}
-					else
-					{
-						await webExecuteExAsync(httpContext);
-					}
-				}
-				else
-				{
-					context.CloseConnections();
-					if (IsGxAjaxRequest() || context.isAjaxRequest())
-						context.DispatchAjaxCommands();
-				}
-				SetCompression(httpContext);
-				context.ResponseCommited = true;
-			}
-			catch (Exception e)
-			{
-				try
-				{
-					context.CloseConnections();
-				}
-				catch { }
-				{
-					Exception exceptionToHandle = e.InnerException ?? e;
-					handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
-					throw new Exception("GXApplication exception", e);
-				}
-			}
-		}
-
-#endif
-
 #if !NETCORE
 		[SecuritySafeCritical]
 #endif

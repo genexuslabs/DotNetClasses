@@ -69,10 +69,6 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <Compile Include="GlobalSuppressions.cs" />
-	</ItemGroup>
-	
-	<ItemGroup>
 		<PackageReference Include="Azure.Core" Version="1.36.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.15.1" OutputItemType="Analyzer" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
