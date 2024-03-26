@@ -143,7 +143,7 @@ namespace GeneXus.Http.Client
 		{
 			get
 			{
-				ReadResponseData().GetAwaiter().GetResult();
+				ReadResponseDataAsync().GetAwaiter().GetResult();
 				return _receiveData;
 			}
 		}
@@ -815,7 +815,7 @@ namespace GeneXus.Http.Client
 				req.Version = HttpVersion.Version11;
 		}
 #if NETCORE
-		async Task<HttpResponseMessage> ExecuteRequest(string method, string requestUrl, bool contextCookies)
+		async Task<HttpResponseMessage> ExecuteRequestAsync(string method, string requestUrl, bool contextCookies)
 #else
 		[SecuritySafeCritical]
 		HttpResponseMessage ExecuteRequest(string method, string requestUrl, bool contextCookies)
@@ -850,13 +850,22 @@ namespace GeneXus.Http.Client
 				{
 					SendVariables(reqStream);
 					SendStream.Seek(0, SeekOrigin.Begin);
+#if NETCORE
+					BytesRead = await SendStream.ReadAsync(Buffer, 0, 1024);
+#else
 					BytesRead = SendStream.Read(Buffer, 0, 1024);
+#endif
 					GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
 					while (BytesRead > 0)
 					{
 						GXLogging.Debug(log, "reqStream.Write: Buffer.length " + Buffer.Length + ",'" + Encoding.UTF8.GetString(Buffer, 0, Buffer.Length) + "'");
+#if NETCORE
+						await reqStream.WriteAsync(Buffer, 0, BytesRead);
+						BytesRead = await SendStream.ReadAsync(Buffer, 0, 1024);
+#else
 						reqStream.Write(Buffer, 0, BytesRead);
 						BytesRead = SendStream.Read(Buffer, 0, 1024);
+#endif
 					}
 					EndMultipartBoundary(reqStream);
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
@@ -864,7 +873,7 @@ namespace GeneXus.Http.Client
 					request.Content = new ByteArrayContent(reqStream.ToArray());
 					setContentHeaders(request, contentType);
 #if !NETCORE
-					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
+					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false).GetAwaiter().GetResult();
 #else
 					response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 					response.ExtractCookies(cookies);
@@ -880,7 +889,7 @@ namespace GeneXus.Http.Client
 			}
 			return response;
 		}
-		async Task ReadResponseData()
+		async Task ReadResponseDataAsync()
 		{
 			if (_receiveData == null && _response!=null)
 			{
@@ -891,7 +900,7 @@ namespace GeneXus.Http.Client
 
 					using (MemoryStream ms = new MemoryStream())
 					{
-						stream.CopyTo(ms);
+						await stream.CopyToAsync(ms);
 						_receiveData = ms.ToArray();
 					}
 					_eof = true;
@@ -938,7 +947,7 @@ namespace GeneXus.Http.Client
 			{
 				GXLogging.Debug(log, "Using legacy GxHttpClient");
 #if NETCORE
-				WebExecute(method, name).GetAwaiter().GetResult();
+				WebExecuteAsync(method, name).GetAwaiter().GetResult();
 #else
 				WebExecute(method, name);
 #endif
@@ -981,7 +990,7 @@ namespace GeneXus.Http.Client
 				string requestUrl = GetRequestURL(name);
 				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
 #if NETCORE
-				_response = await ExecuteRequest(method, requestUrl, contextCookies);
+				_response = await ExecuteRequestAsync(method, requestUrl, contextCookies);
 #else
 				_response = ExecuteRequest(method, requestUrl, contextCookies);
 #endif
@@ -1273,7 +1282,7 @@ namespace GeneXus.Http.Client
 #if !NETCORE
 		HttpWebRequest buildRequest(string method, string requestUrl, CookieContainer cookies)
 #else
-		async Task<HttpWebRequest> buildRequest(string method, string requestUrl, CookieContainer cookies)
+		async Task<HttpWebRequest> buildRequestAsync(string method, string requestUrl, CookieContainer cookies)
 #endif
 		{
 			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
@@ -1311,13 +1320,22 @@ namespace GeneXus.Http.Client
 				{
 					SendVariables(reqStream);
 					SendStream.Seek(0, SeekOrigin.Begin);
+#if NETCORE
+					BytesRead = await SendStream.ReadAsync(Buffer, 0, 1024);
+#else
 					BytesRead = SendStream.Read(Buffer, 0, 1024);
+#endif
 					GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
 					while (BytesRead > 0)
 					{
 						GXLogging.Debug(log, "reqStream.Write: Buffer.length " + Buffer.Length + ",'" + Encoding.UTF8.GetString(Buffer, 0, Buffer.Length) + "'");
-						reqStream.Write(Buffer, 0, BytesRead);
+#if NETCORE
+						await reqStream.ReadAsync(Buffer, 0, BytesRead);
+						BytesRead = await SendStream.ReadAsync(Buffer, 0, 1024);
+#else
+						reqStream.Read(Buffer, 0, BytesRead);
 						BytesRead = SendStream.Read(Buffer, 0, 1024);
+#endif
 					}
 					EndMultipartBoundary(reqStream);
 				}
@@ -1385,7 +1403,7 @@ namespace GeneXus.Http.Client
 			return cc;
 		}
 #if NETCORE
-		private async Task WebExecute(string method, string name)
+		private async Task WebExecuteAsync(string method, string name)
 #else
 		private void WebExecute(string method, string name)
 #endif
@@ -1404,8 +1422,8 @@ namespace GeneXus.Http.Client
 				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
 
 #if NETCORE
-				req = await buildRequest(method, requestUrl, cookies);
-				resp = req.GetResponse() as HttpWebResponse;
+				req = await buildRequestAsync(method, requestUrl, cookies);
+				resp = await req.GetResponseAsync() as HttpWebResponse;
 				if (contextCookies)
 					_context.UpdateSessionCookieContainer();
 #else
@@ -1473,7 +1491,11 @@ namespace GeneXus.Http.Client
 						}
 						using (MemoryStream ms = new MemoryStream())
 						{
+#if NETCORE
+							await rStream.CopyToAsync(ms);
+#else
 							rStream.CopyTo(ms);
+#endif
 							_receiveData = ms.ToArray();
 						}
 						int bytesRead = _receiveData.Length;
