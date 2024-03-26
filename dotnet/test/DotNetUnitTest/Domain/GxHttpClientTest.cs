@@ -55,11 +55,7 @@ namespace xUnitTesting
 		}
 
 		[Fact]
-#if NETCORE
-		public async Task HttpClientCookieHeader()
-#else
 		public void HttpClientCookieHeader()
-#endif
 		{
 			string headerValue = "CognitoIdentityServiceProvider.3tgmin25m9bkg6vgi7vpavu7a9.M00000936.refreshToken=eyJjdHkiOiJKV1QiLCJlbmMiSkRCAmMpYqndvORnWLTfHw; CognitoIdentityServiceProvider.3tgmin25m9bkg6vgi7vpavu7a9.LastAuthUser=M00000936";
 			string headerName = "Cookie";
@@ -69,11 +65,7 @@ namespace xUnitTesting
 				httpclient.Host = "localhost";
 				httpclient.Port = 80;
 				httpclient.BaseURL = @"NotFound/NotFound.php";
-#if NETCORE
-				await httpclient.HttpClientExecuteAsync("GET", string.Empty);
-#else
 				httpclient.HttpClientExecute("GET", string.Empty);
-#endif
 				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), httpclient.StatusCode);
 			}
 			using (GxHttpClient oldHttpclient = new GxHttpClient())
@@ -129,22 +121,22 @@ namespace xUnitTesting
 				pendingRequestsCount--;
 			}
 		}
-		private async Task<string> ExecuteGet(string url)
+		private string ExecuteGet(string url)
 		{
 			GxContext context = new GxContext();
 			using (GxHttpClient httpclient = new GxHttpClient(context))
 			{
 				IncrementPendingRequestsCount();
-				await httpclient.HttpClientExecuteAsync("GET", url);
+				httpclient.HttpClientExecute("GET", url);
 				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode); //When failed, turn on log.config to see server side error.
 				DecrementPendingRequestsCount();
 				return httpclient.ToString();
 			}
 		}
 
-
+#endif
 		[Fact(Skip = "For local testing only")]
-		public async Task HttpClientCookiesTest()
+		public void HttpClientCookiesTest()
 		{
 			GxContext context = new GxContext();
 			string baseUrl = "http://localhost:8082/HttpClientTestNETSQLServer/testcookies.aspx";
@@ -152,7 +144,7 @@ namespace xUnitTesting
 			using (GxHttpClient httpclient = new GxHttpClient(context))
 			{
 				string url = $"{baseUrl}?id=1";
-				await httpclient.HttpClientExecuteAsync("GET", url);
+				httpclient.HttpClientExecute("GET", url);
 				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
 				CookieContainer cookies = context.GetCookieContainer(url, true);
 				Assert.NotNull(cookies);
@@ -166,7 +158,7 @@ namespace xUnitTesting
 			{
 				string url = $"{baseUrl}?id=2";
 				httpclient.IncludeCookies = true;
-				await httpclient.HttpClientExecuteAsync("GET", url);
+				httpclient.HttpClientExecute("GET", url);
 				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
 				string result = httpclient.ToString();
 				Assert.StartsWith("Cookie found ", result, StringComparison.OrdinalIgnoreCase);
@@ -176,7 +168,7 @@ namespace xUnitTesting
 			{
 				string url = $"{baseUrl}?id=3";
 				httpclient.IncludeCookies = false;
-				await httpclient.HttpClientExecuteAsync("GET", url);
+				httpclient.HttpClientExecute("GET", url);
 				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
 				string result = httpclient.ToString();
 				Assert.StartsWith("Cookie not found", result, StringComparison.OrdinalIgnoreCase);
@@ -185,7 +177,7 @@ namespace xUnitTesting
 			using (GxHttpClient httpclient = new GxHttpClient(context))
 			{
 				string url = "https://www.google.com/";
-				await httpclient.HttpClientExecuteAsync("GET", url);
+				httpclient.HttpClientExecute("GET", url);
 				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
 				CookieContainer cookies = context.GetCookieContainer(url, true);
 				Assert.NotNull(cookies);
@@ -195,7 +187,7 @@ namespace xUnitTesting
 			}
 
 		}
-#endif
+
 #if !NETCORE
 		[Fact]
 		public void NoStoreHeader()

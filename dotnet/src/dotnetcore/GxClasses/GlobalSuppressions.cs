@@ -34,25 +34,3 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Maintainability", "CA1507:Use nameof to express symbol names", Justification = "<Pending>", Scope = "member", Target = "~M:TZ4Net.OlsonTimeZone.ToLocalTime(System.DateTime)~System.DateTime")]
 [assembly: SuppressMessage("Maintainability", "CA1507:Use nameof to express symbol names", Justification = "<Pending>", Scope = "member", Target = "~M:TZ4Net.OlsonTimeZone.ToUniversalTime(System.DateTime)~System.DateTime")]
 [assembly: SuppressMessage("Maintainability", "CA1507:Use nameof to express symbol names", Justification = "<Pending>", Scope = "member", Target = "~M:TZ4Net.OlsonTimeZone.UnicodeWin32MapValue.#ctor(System.String,System.String)")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Http.HttpContextExtensions.CommitSession(Microsoft.AspNetCore.Http.HttpContext)")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Http.HttpResponseExtensions.Write(Microsoft.AspNetCore.Http.HttpResponse,System.String)")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Http.HttpResponseExtensions.WriteFile(Microsoft.AspNetCore.Http.HttpResponse,System.String)")]
-
-/* Unmerged change from project 'GxClasses (net6.0)'
-Added:
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Application.GxContext.RespondFile(System.String)~System.Byte")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Application.GXRestAPIClient.RestExecute")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Utils.GxImageUtil.BitmapCreateFromStream(System.String)~System.Drawing.Bitmap")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Utils.GxImageUtil.ImageCreateFromStream(System.String)~System.Drawing.Image")]
-[assembly: SuppressMessage("Usage", "VSTHRD110:Observe result of async calls", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Utils.HtmlTextWriter.Flush")]
-*/
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Application.GxContext.RespondFile(System.String)~System.Byte")]
-[assembly: SuppressMessage("Usage", "VSTHRD110:Observe result of async calls", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Utils.HtmlTextWriter.Flush")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Application.GXRestAPIClient.RestExecute")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Http.Client.GxHttpClient.Execute(System.String,System.String)")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Http.Client.GxHttpClient.ReadChunk~System.String")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Http.Server.GxHttpResponse.AddFile(System.String)")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Http.Server.GxHttpResponse.AddString(System.String)")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Utils.GxImageUtil.BitmapCreateFromStream(System.String)~System.Drawing.Bitmap")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~M:GeneXus.Utils.GxImageUtil.ImageCreateFromStream(System.String)~System.Drawing.Image")]
-[assembly: SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits", Justification = "<Pending>", Scope = "member", Target = "~P:GeneXus.Http.Client.GxHttpClient.ReceiveData")]
