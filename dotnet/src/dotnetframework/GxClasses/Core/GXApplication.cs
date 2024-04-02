@@ -49,6 +49,8 @@ namespace GeneXus.Application
 	using System.Security.Claims;
 	using System.Security;
 	using Microsoft.Net.Http.Headers;
+	using System.Threading.Tasks;
+	using GeneXus.Data.ADO;
 
 	public interface IGxContext
 	{
@@ -1407,12 +1409,27 @@ namespace GeneXus.Application
 					return ds;
 			return null;
 		}
+#if NETCORE
+		internal async Task CloseConnectionsAsync()
+		{
+			GxUserInfo.RemoveHandle(this.handle);
+			foreach (GxDataStore ds in _DataStores)
+				await ds.CloseConnectionsAsync();
+
+			CloseConnectionsResources();
+		}
+#endif
 		public void CloseConnections()
 		{
 			GxUserInfo.RemoveHandle(this.handle);
 			foreach (IGxDataStore ds in _DataStores)
 				ds.CloseConnections();
 
+			CloseConnectionsResources();
+		}
+
+		private void CloseConnectionsResources()
+		{
 			if (_reportHandlerToClose != null)
 			{
 				for (int i = 0; i < _reportHandlerToClose.Count; i++)

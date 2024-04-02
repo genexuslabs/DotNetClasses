@@ -8,6 +8,7 @@ using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.Mime;
+using GeneXus.Procedure;
 using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
 
@@ -74,8 +75,16 @@ namespace GeneXus.HttpHandlerFactory
 						handler.sendAdditionalHeaders();
 						return Task.CompletedTask;
 					});
-					handler.ProcessRequest(context);
-					await Task.CompletedTask;
+					GXWebProcedure gxWebProc = handler as GXWebProcedure;
+					if (gxWebProc != null && gxWebProc.AsyncEnabled())
+					{
+						await gxWebProc.ProcessRequestAsync(context);
+					}
+					else
+					{
+						handler.ProcessRequest(context);
+						await Task.CompletedTask;
+					}
 					handler.ControlOutputWriter?.Flush();
 				}
 				else
