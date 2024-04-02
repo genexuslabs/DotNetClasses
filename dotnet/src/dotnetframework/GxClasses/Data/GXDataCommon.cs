@@ -1571,7 +1571,12 @@ namespace GeneXus.Data
 		private const int MILLISECONDS_BETWEEN_RETRY_ATTEMPTS=500;
 		private const string MULTIPLE_DATAREADERS = "MultipleActiveResultSets";
 		private bool multipleDatareadersEnabled;
+		private DateTime SqlServer_NullDateTime= SQLSERVER_NULL_DATETIME;
 
+		internal void UseSmallDateTime()
+		{
+			SqlServer_NullDateTime = SQLSERVER_NULL_SMALLDATETIME;
+		}
         public override int GetCommandTimeout()
         {
             return base.GetCommandTimeout();
@@ -2041,14 +2046,14 @@ namespace GeneXus.Data
 		public override DateTime Dbms2NetDateTime( DateTime dt, Boolean precision)
 		{
 			//DBMS MinDate => Genexus null Date
-			if (dt.Equals(SQLSERVER_NULL_DATE))
+			if (dt.Equals(SqlServer_NullDateTime))
 			{
 				return DateTimeUtil.NullDate();
 			}
 
-			if (dt.Year==SQLSERVER_NULL_DATE.Year &&
-				dt.Month==SQLSERVER_NULL_DATE.Month &&
-				dt.Day==SQLSERVER_NULL_DATE.Day)
+			if (dt.Year== SqlServer_NullDateTime.Year &&
+				dt.Month== SqlServer_NullDateTime.Month &&
+				dt.Day== SqlServer_NullDateTime.Day)
 			{
 				
 				return 	new DateTime(
@@ -2064,16 +2069,16 @@ namespace GeneXus.Data
 			//Genexus null => save DBMS MinDate
 			if(dt.Equals(DateTimeUtil.NullDate()))
 			{
-				return SQLSERVER_NULL_DATE;
+				return SqlServer_NullDateTime;
 			}
 
 			//Date < DBMS MinDate => save DBMS MinDate keeping the Time component
-			if (dt.CompareTo(SQLSERVER_NULL_DATE)<0)
+			if (dt.CompareTo(SqlServer_NullDateTime) <0)
 			{
 				DateTime aux = 
 					new DateTime(
-					SQLSERVER_NULL_DATE.Year,SQLSERVER_NULL_DATE.Month,
-					SQLSERVER_NULL_DATE.Day,dt.Hour,dt.Minute,dt.Second,dt.Millisecond);
+					SqlServer_NullDateTime.Year, SqlServer_NullDateTime.Month,
+					SqlServer_NullDateTime.Day,dt.Hour,dt.Minute,dt.Second,dt.Millisecond);
 				
 				return aux;
 			}
@@ -2088,8 +2093,8 @@ namespace GeneXus.Data
 		{
 			return ConcatOpValues[pos];
 		}
-
-		static DateTime SQLSERVER_NULL_DATE = new DateTime(1753,1,1) ;
+		static DateTime SQLSERVER_NULL_DATETIME = new DateTime(1753,1,1) ;
+		static DateTime SQLSERVER_NULL_SMALLDATETIME= new DateTime(1900, 1, 1);
 	}
 	
 	public class GxDataReader: IDataReader

@@ -2714,7 +2714,12 @@ namespace GeneXus.Data.ADO
 			switch (dbms)
 			{
                 case "sqlserver":
-                    return new GxSqlServer();
+					GxSqlServer gxSqlServer = new GxSqlServer();
+					if (Config.GetValueOf("Connection-" + id + "-UseSmallDateTime", out cfgBuf) && cfgBuf == "1")
+					{
+						gxSqlServer.UseSmallDateTime();
+					}
+					return gxSqlServer;
 				case "mysql":
 #if NETCORE
 					return new GxMySqlConnector(id);
