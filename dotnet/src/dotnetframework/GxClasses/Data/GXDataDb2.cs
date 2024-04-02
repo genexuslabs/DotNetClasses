@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Metadata;
@@ -655,7 +656,20 @@ namespace GeneXus.Data
 				throw new DataException(ex.Message, ex);
 			}
 		}
-
+#if NETCORE
+		internal override async Task CloseAsync()
+		{
+			try
+			{
+				CheckState(false);
+				await base.CloseAsync();
+			}
+			catch (Exception ex)
+			{
+				throw new DataException(ex.Message, ex);
+			}
+		}
+#endif
 		override public IDbCommand CreateCommand() 
 		{
             return InternalConnection.CreateCommand();

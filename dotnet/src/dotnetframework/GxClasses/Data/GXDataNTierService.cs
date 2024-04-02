@@ -363,7 +363,6 @@ namespace GeneXus.Data.NTier
 		{
 			try
 			{
-				CheckState(false);
 				InternalConnection.Close();
 			}
 			catch (Exception ex)

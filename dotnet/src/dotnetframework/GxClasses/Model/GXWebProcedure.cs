@@ -9,6 +9,7 @@ namespace GeneXus.Procedure
 	using System.Net.Mime;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
+	using System.Threading.Tasks;
 #else
 	using System.Web;
 #endif
@@ -37,7 +38,14 @@ namespace GeneXus.Procedure
 		protected virtual void printHeaders() { }
 		protected virtual void printFooters() { }
 
+#if NETCORE
+		public override void webExecute()
+		{
+			WebExecuteAsync().GetAwaiter().GetResult();
+		}
+#else
 		public override void webExecute() { }
+#endif
 		public override void initialize() { }
 		protected override void createObjects() { }
 		public override void skipLines(long nToSkip) { }

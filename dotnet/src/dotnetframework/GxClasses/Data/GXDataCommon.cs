@@ -25,6 +25,7 @@ using System.Globalization;
 using GeneXus.Metadata;
 using System.Data.Common;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GeneXus.Data
 {
@@ -4338,7 +4339,28 @@ namespace GeneXus.Data
 		{
 			InternalConnection.Close();
 		}
+#if NETCORE
+		internal virtual async Task CloseAsync()
+		{
+			try
+			{
 
+				DbConnection dbConnection = InternalConnection as DbConnection;
+				if (dbConnection != null)
+				{
+					await dbConnection.CloseAsync();
+				}
+				else
+				{
+					InternalConnection.Close();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new DataException(ex.Message, ex);
+			}
+		}
+#endif
 		public void ChangeDatabase(String database) 
 		{
             throw new NotSupportedException("NoChangeMsg00" + database);
