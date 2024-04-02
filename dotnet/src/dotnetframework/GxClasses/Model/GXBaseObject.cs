@@ -65,9 +65,11 @@ namespace GeneXus.Application
 			
 		}
 #if NETCORE
-		internal virtual bool AsyncEnabled()
+		protected virtual bool AsyncEnabled { get; }
+
+		internal bool GetAsyncEnabledInternal()
 		{
-			return false;
+			return AsyncEnabled;
 		}
 		protected async Task CloseConnectionsAsync()
 		{
@@ -111,7 +113,7 @@ namespace GeneXus.Application
 		protected virtual void ExecuteImpl()
 		{
 #if NETCORE
-			if (AsyncEnabled())
+			if (GetAsyncEnabledInternal())
 			{
 				ExecuteImplAsync().GetAwaiter().GetResult();
 			}
