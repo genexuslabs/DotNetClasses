@@ -76,7 +76,7 @@ namespace GeneXus.HttpHandlerFactory
 						return Task.CompletedTask;
 					});
 					GXWebProcedure gxWebProc = handler as GXWebProcedure;
-					if (gxWebProc != null && gxWebProc.AsyncEnabled())
+					if (gxWebProc != null && gxWebProc.GetAsyncEnabledInternal())
 					{
 						await gxWebProc.ProcessRequestAsync(context);
 					}
