@@ -189,17 +189,18 @@ namespace GeneXus.Http.Client
 
 		private static string HttpClientInstanceIdentifier(string proxyHost, int proxyPort, List<string> fileCertificateCollection, int timeout)
 		{
-			if (string.IsNullOrEmpty(proxyHost) && fileCertificateCollection.Count==0 && timeout== DEFAULT_TIMEOUT)
+			bool defaultSslOptions = ServicePointManager.ServerCertificateValidationCallback == null;
+			if (string.IsNullOrEmpty(proxyHost) && fileCertificateCollection.Count==0 && timeout== DEFAULT_TIMEOUT && defaultSslOptions)
 			{
 				return string.Empty;
 			}
 			else if (fileCertificateCollection.Count==0)
 			{
-				return $"{proxyHost}:{proxyPort}::{timeout}";
+				return $"{proxyHost}:{proxyPort}::{timeout}:{defaultSslOptions}";
 			}
 			else
 			{
-				return $"{proxyHost}:{proxyPort}:{string.Join(';', fileCertificateCollection)}:{timeout}";
+				return $"{proxyHost}:{proxyPort}:{string.Join(';', fileCertificateCollection)}:{timeout}:{defaultSslOptions}";
 			}
 		}
 
@@ -224,14 +225,9 @@ namespace GeneXus.Http.Client
 			{
 				handler.Credentials = getCredentialCache(URI, authCollection);
 			}
-			
-			if (ServicePointManager.ServerCertificateValidationCallback != null)
-			{
-				handler.SslOptions = new SslClientAuthenticationOptions
-				{
-					RemoteCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors))
-				};
-			}
+
+			SetSslOptions(handler);
+
 			if (GXUtil.CompressResponse())
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -247,6 +243,17 @@ namespace GeneXus.Http.Client
 			handler.UseCookies = false;
 			return handler;
 
+		}
+
+		private static void SetSslOptions(SocketsHttpHandler handler)
+		{
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.SslOptions = new SslClientAuthenticationOptions
+				{
+					RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback
+				};
+			}
 		}
 #else
 		[SecuritySafeCritical]
