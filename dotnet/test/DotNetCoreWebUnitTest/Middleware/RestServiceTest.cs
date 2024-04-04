@@ -46,7 +46,7 @@ namespace xUnitTesting
 			response.EnsureSuccessStatusCode();
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 			string responseBody = await response.Content.ReadAsStringAsync();
-			Assert.Equal("{}", responseBody);
+			Assert.Equal("{\"ImagePath\":\"\\/imageName\"}", responseBody);
 		}
 
 		[Fact(Skip = "Non deterministic")]
