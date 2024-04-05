@@ -1911,11 +1911,12 @@ namespace GeneXus.Http.Client
 #if NETCORE
 		public async Task<string> ToStringAsync()
 		{
-			if (await ReceiveDataAsync() == null)
+			byte[] bytes = await ReceiveDataAsync();
+			if (bytes == null)
 				return string.Empty;
 			if (_encoding == null)
 				_encoding = Encoding.UTF8;
-			string responseString = _encoding.GetString(ReceiveData);
+			string responseString = _encoding.GetString(bytes);
 			GXLogging.DebugSanitized(log, "_responseString " + responseString);
 			return responseString;
 		}
