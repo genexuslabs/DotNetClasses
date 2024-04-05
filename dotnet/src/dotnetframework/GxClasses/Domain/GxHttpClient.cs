@@ -1047,7 +1047,7 @@ namespace GeneXus.Http.Client
 			}
 		}
 #if NETCORE
-		internal async Task ExecuteAsync(string method, string name)
+		public async Task ExecuteAsync(string method, string name)
 		{
 			if (UseOldHttpClient(name))
 			{
