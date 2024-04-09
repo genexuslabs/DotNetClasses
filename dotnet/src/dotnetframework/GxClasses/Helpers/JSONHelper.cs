@@ -10,12 +10,12 @@ using Jayrock.Json;
 #endif
 using System.Runtime.Serialization;
 using GeneXus.Configuration;
+using System.Text.Encodings.Web;
+using System.Globalization;
 #if NETCORE
 using System.Buffers.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Encodings.Web;
-using System.Globalization;
 #endif
 
 namespace GeneXus.Utils

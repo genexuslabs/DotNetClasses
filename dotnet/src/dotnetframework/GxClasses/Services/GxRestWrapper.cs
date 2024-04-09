@@ -31,6 +31,7 @@ using System.Net.Http;
 using System.Diagnostics;
 using GeneXus.Diagnostics;
 using System.Xml.Linq;
+using System.Reflection;
 
 
 namespace GeneXus.Application
@@ -108,7 +109,8 @@ namespace GeneXus.Application
 				if (IsCoreEventReplicator(_procWorker))
 				{
 					bodyParameters = ReadBodyParameters();
-					string synchronizer = PreProcessReplicatorParameteres( _procWorker, innerMethod, bodyParameters);
+					MethodInfo mi = _procWorker.GetType().GetMethod(innerMethod);
+					string synchronizer = PreProcessReplicatorParameteres(mi, bodyParameters);
 					if (!IsAuthenticated(synchronizer))
 						return Task.CompletedTask;
 				}
