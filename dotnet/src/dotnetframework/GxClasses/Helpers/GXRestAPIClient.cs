@@ -393,7 +393,7 @@ namespace GeneXus.Application
 			}
 			else
 			{
-				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestParameters(httpClient.ToString());
+				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestParameters(httpClient.ToString(), false);
 			}
 		}
 	}

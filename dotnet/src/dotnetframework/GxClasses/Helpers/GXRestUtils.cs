@@ -99,19 +99,20 @@ namespace GeneXus.Utils
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<RestAPIHelpers>();
 
-		public static Dictionary<string, object> ReadRestParameters(string restData)
+		public static Dictionary<string, object> ReadRestParameters(string restData, bool caseSensitive)
 		{
 			var bodyParameters = new Dictionary<string, object>();
 			if (!String.IsNullOrEmpty(restData))
 			{
 				try
 				{
-					var data = JSONHelper.ReadJSON<dynamic>(restData);
+					var data = JSONHelper.ReadJSON<dynamic>(restData,null,true);
 					if (data is JObject jobj)
 					{
 						foreach (string name in jobj.Names)
-						{
-							bodyParameters.Add(name.ToLower(), jobj[name]);
+						{							
+							string kName= (caseSensitive) ? name : name.ToLower();
+							bodyParameters.Add(kName, jobj[name]);
 						}
 					}
 					else if (data is JArray jArray)
@@ -135,7 +136,7 @@ namespace GeneXus.Utils
 				if (!streamReader.EndOfStream)
 				{
 					string json = streamReader.ReadToEnd();
-					return ReadRestParameters(json);
+					return ReadRestParameters(json, true);
 				}
 			}
 			return bodyParameters;
