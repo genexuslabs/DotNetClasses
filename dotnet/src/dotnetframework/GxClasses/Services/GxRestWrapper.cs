@@ -191,7 +191,7 @@ namespace GeneXus.Application
 #endif
 		}
 
-		private Dictionary<string, object> SetAlias(Dictionary<string, object> bodyParameters, Dictionary<string, string> varAlias)
+		private Dictionary<string, object> SetAlias(Dictionary<string, object> bodyParameters, Dictionary<string, string> varAlias, bool caseSensitive)
 		{
 			Dictionary<string, object> parameters = new Dictionary<string, object>();
 			foreach (string k in bodyParameters.Keys)
@@ -200,17 +200,17 @@ namespace GeneXus.Application
 				{
 					string keyLowercase = k.ToLower();
 					if (varAlias == null)
-						parameters[keyLowercase] = bodyParameters[k];
+						parameters[k] = bodyParameters[k];
 					else
 					{
 						if (varAlias.ContainsKey(keyLowercase))
 						{
-							string alias = varAlias[keyLowercase].ToLower();
+							string alias = (caseSensitive)? varAlias[keyLowercase] :varAlias[keyLowercase].ToLower();
 							parameters[alias] = bodyParameters[k];
 						}
 						else if (!varAlias.ContainsValue(keyLowercase))
 						{
-							parameters[keyLowercase] = bodyParameters[k];
+							parameters[k] = bodyParameters[k];
 						}
 					}
 				}
@@ -221,13 +221,13 @@ namespace GeneXus.Application
 		private Dictionary<string, object> PreProcessApiSdtParameter(GXBaseObject procWorker, string innerMethod,
 				Dictionary<string,object> bodyParameters, Dictionary<string, string> varAlias)
 		{
-			Dictionary<string, object> bP = SetAlias(bodyParameters, varAlias);
-			return ReflectionHelper.GetWrappedParameter(procWorker, innerMethod, bP);
+			Dictionary<string, object> bP = SetAlias(bodyParameters, varAlias, true);
+			MethodInfo methodInfo = procWorker.GetType().GetMethod(innerMethod);
+			return ReflectionHelper.GetWrappedParameter(methodInfo, bP);
 		}
 
-		private string PreProcessReplicatorParameteres(GXBaseObject procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
+		private string PreProcessReplicatorParameteres(MethodInfo methodInfo, Dictionary<string, object> bodyParameters)
 		{
-			var methodInfo = procWorker.GetType().GetMethod(innerMethod);
 			object[] parametersForInvocation = ReflectionHelper.ProcessParametersForInvoke(methodInfo, bodyParameters);
 			object synchroInfo = parametersForInvocation[1];
 			return synchroInfo.GetType().GetProperty(Synchronizer.SYNCHRONIZER_INFO).GetValue(synchroInfo) as string;

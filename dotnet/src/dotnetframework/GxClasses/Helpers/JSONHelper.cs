@@ -91,6 +91,16 @@ namespace GeneXus.Utils
 			return jobject == null;
 		}
 		static JsonSerializerOptions DeserializationOptions = new JsonSerializerOptions() { Converters = { new GxJsonConverter() }, AllowTrailingCommas=true };
+		static JsonSerializerOptions DeserializationOptionsCase = new JsonSerializerOptions() { Converters = { new GxJsonConverter() }, AllowTrailingCommas = true , PropertyNameCaseInsensitive = true};
+
+		internal override T ReadJSON<T>(string json, bool caseSensitive)
+		{
+			if (caseSensitive)
+				return JsonSerializer.Deserialize<T>(json, DeserializationOptionsCase);
+			else
+				return JsonSerializer.Deserialize<T>(json, DeserializationOptions);
+		}
+
 		internal override T ReadJSON<T>(string json)
 		{
 			return JsonSerializer.Deserialize<T>(json, DeserializationOptions);
@@ -118,6 +128,12 @@ namespace GeneXus.Utils
 		internal override bool IsJsonNull(object jobject)
 		{
 			return jobject == Jayrock.Json.JNull.Value;
+		}
+		internal override T ReadJSON<T>(string json, bool caseSensitive)
+		{
+
+			return ReadJSON<T>(json);
+
 		}
 		internal override T ReadJSON<T>(string json)
 		{
@@ -169,6 +185,7 @@ namespace GeneXus.Utils
 
 		internal abstract bool IsJsonNull(object jobject);
 
+		internal abstract T ReadJSON<T>(string json, bool caseSensitive) where T : class;
 		internal abstract T ReadJSON<T>(string json) where T : class;
 
 		internal abstract string WriteJSON<T>(T kbObject) where T : class;
@@ -179,17 +196,18 @@ namespace GeneXus.Utils
 		
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<JSONHelper>();
 		static string WFCDateTimeFormat = Preferences.WFCDateTimeMillis ? DateTimeUtil.JsonDateFormatMillis : DateTimeUtil.JsonDateFormat;
+		
 		public static bool IsJsonNull(object jobject)
 		{
 			return GXJsonSerializer.Instance.IsJsonNull(jobject);
 		}
-		public static T ReadJSON<T>(string json, GXBaseCollection<SdtMessages_Message> Messages = null) where T : class
+		public static T ReadJSON<T>(string json, GXBaseCollection<SdtMessages_Message> Messages = null, bool caseSensitive=false) where T : class
 		{
 			try
 			{
 				if (!string.IsNullOrEmpty(json))
 				{
-					return GXJsonSerializer.Instance.ReadJSON<T>(json);
+					return GXJsonSerializer.Instance.ReadJSON<T>(json, caseSensitive);
 				}
 				else
 				{
