@@ -73,6 +73,48 @@ namespace GeneXus.Http
 		[DataMember(Name = "error")]
 		public HttpJsonError Error;
 	}
+#if NETCORE
+	internal static class CookiesHelper
+	{
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(CookiesHelper).FullName);
+
+		internal static void PopulateCookies(this HttpRequestMessage request, CookieContainer cookieContainer)
+		{
+			if (cookieContainer != null)
+			{
+				IEnumerable<Cookie> cookies = cookieContainer.GetCookies();
+				if (cookies.Any())
+				{
+					request.Headers.Add("Cookie", cookies.ToHeaderFormat());
+				}
+			}
+		}
+
+		private static string ToHeaderFormat(this IEnumerable<Cookie> cookies)
+		{
+			return string.Join(";", cookies); 
+		}
+		internal static void ExtractCookies(this HttpResponseMessage response, CookieContainer cookieContainer)
+		{
+			if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
+			{
+				Uri uri = response.RequestMessage.RequestUri;
+				foreach (string cookieValue in cookieValues)
+				{
+					try
+					{
+						cookieContainer.SetCookies(uri, cookieValue);
+					}
+					catch (CookieException ex)
+					{
+						GXLogging.Warn(log, $"Ignored cookie for container: {cookieValue} url:{uri}", ex);
+					}
+				}
+
+			}
+		}
+	}
+#endif
 	public class HttpHelper
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HttpHelper>();
