@@ -429,6 +429,15 @@ namespace GeneXus
 				log.Warn(msg, ex);
 			}
 		}
+		internal static void DebugSanitized(IGXLogger log, string startMsg, Func<string> buildMsg)
+		{
+			if (log.IsDebugEnabled)
+			{
+				string msg = buildMsg();
+				DebugSanitized(log, startMsg + msg);
+			}
+		}
+
 		public static void DebugSanitized(ILog log, Exception ex, params string[] list)
 		{
 			if (log.IsDebugEnabled)
