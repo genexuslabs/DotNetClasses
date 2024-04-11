@@ -250,7 +250,7 @@ namespace GeneXus.Utils
 							}
 							else
 							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, StringUtil.Sanitize(HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description), StringUtil.HttpHeaderWhiteList));
+								AddHeader(HttpHeader.AUTHENTICATE_HEADER, StringUtil.Sanitize(HttpHelper.OatuhUnauthorizedHeader(/*context.GetServerName()*/"SERVER", result.Code, result.Description), StringUtil.HttpHeaderWhiteList));
 								SetStatusCode(HttpStatusCode.Unauthorized);
 							}
 							return false;
