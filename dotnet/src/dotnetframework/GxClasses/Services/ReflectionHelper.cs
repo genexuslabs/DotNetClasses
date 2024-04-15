@@ -256,7 +256,7 @@ namespace GeneXus.Application
 			{
 				object value;
 
-				string gxParameterName = GxParameterName(methodParameter.Name).ToLower();
+				string gxParameterName = GxParameterName(methodParameter.Name);
 				Type parmType = methodParameter.ParameterType;
 				string jsontypename = "";
 				object[] attributes = parmType.GetCustomAttributes(true);
