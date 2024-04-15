@@ -256,7 +256,7 @@ namespace GeneXus.Application
 			{
 				object value;
 
-				string gxParameterName = GxParameterName(methodParameter.Name);
+				string gxParameterName = GxParameterName(methodParameter.Name).ToLower();
 				Type parmType = methodParameter.ParameterType;
 				if (IsByRefParameter(methodParameter))
 				{
