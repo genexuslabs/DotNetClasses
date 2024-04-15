@@ -685,29 +685,37 @@ namespace GeneXus.Http
 
 		public string GetAjaxEncryptionKey()
 		{
-			if (context.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY) == null)
+			string ajaxKey = context.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY);
+			if (ajaxKey == null)
 			{
-                if(!RecoverEncryptionKey())
-				    context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY,CryptoImpl.GetRijndaelKey());
-			}
-			return context.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY);
-		}
-		private bool RecoverEncryptionKey()
-		{
-			if ( (context.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY) == null))
-			{
-				if (context.HttpContext != null)
+				string sessionKey;
+				if (!RecoverEncryptionKey(out sessionKey))
 				{
-					String clientKey = context.HttpContext.Request.Headers[CryptoImpl.AJAX_SECURITY_TOKEN];
-					if (!string.IsNullOrEmpty(clientKey))
+					ajaxKey = CryptoImpl.GetRijndaelKey();
+					context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY, ajaxKey);
+				}
+				else
+				{
+					ajaxKey = sessionKey;
+				}
+			}
+			return ajaxKey;
+		}
+		private bool RecoverEncryptionKey(out string sessionKey)
+		{
+			sessionKey = null;
+			if (context.HttpContext != null)
+			{
+				String clientKey = context.HttpContext.Request.Headers[CryptoImpl.AJAX_SECURITY_TOKEN];
+				if (!string.IsNullOrEmpty(clientKey))
+				{
+					bool correctKey;
+					clientKey = CryptoImpl.DecryptRijndael(CryptoImpl.GX_AJAX_PRIVATE_IV + clientKey, CryptoImpl.GX_AJAX_PRIVATE_KEY, out correctKey);
+					if (correctKey)
 					{
-						bool correctKey = false;
-						clientKey = CryptoImpl.DecryptRijndael(CryptoImpl.GX_AJAX_PRIVATE_IV + clientKey, CryptoImpl.GX_AJAX_PRIVATE_KEY, out correctKey);
-						if (correctKey)
-						{
-							context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY, clientKey);
-							return true;
-						}
+						sessionKey = clientKey;
+						context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY, clientKey);
+						return true;
 					}
 				}
 			}
