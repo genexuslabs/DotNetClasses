@@ -14,6 +14,7 @@ namespace GeneXus.Utils
 	using System.Linq;
 	using System.Reflection;
 	using System.Runtime.Serialization;
+	using System.Runtime.Serialization.Json;
 	using System.Text;
 	using System.Xml;
 	using System.Xml.Serialization;
@@ -1563,13 +1564,25 @@ namespace GeneXus.Utils
 		public void AddObjectProperty(string name, object prop, bool includeState, bool includeNonInitialized)
 		{
 			IGxJSONAble ijsonProp = prop as IGxJSONAble;
+			IGxExternalObject extObj = prop as IGxExternalObject;
 			if (ijsonProp != null)
 			{
 				GxSilentTrnSdt silentTrn = prop as GxSilentTrnSdt;
 				if (silentTrn != null)
 					silentTrn.GetJSONObject(includeState, includeNonInitialized);
-				else
+				else if (extObj != null)
+				{
+					object extInstance = extObj.ExternalInstance;
+					IGxJSONAble gxJSONAble = extInstance as IGxJSONAble;
+					if (gxJSONAble != null)
+					{
+						JsonObj.Put(name, gxJSONAble.GetJSONObject(includeState));
+					}
+				}
+				else 
+				{
 					JsonObj.Put(name, ijsonProp.GetJSONObject(includeState));
+				}
 			}
 			else
 			{
@@ -1703,7 +1716,14 @@ namespace GeneXus.Utils
 							IGXBCCollection bcColl;
 							GxSimpleCollection<object> currSimpleColl;
 							IGxJSONAble currJsonProp;
+							IGxExternalObject currExtProp;
 							CollectionBase currObjColl = currObj as CollectionBase;
+
+							if ((currExtProp = currProp as IGxExternalObject) != null)
+							{
+								currProp = currExtProp.ExternalInstance;
+							}
+
 #if !NETCORE
 							GxObjectCollectionBase currColl;
 							if ((currColl = currProp as GxObjectCollectionBase) != null)
@@ -2460,7 +2480,6 @@ namespace GeneXus.Utils
 	{
 		T GetNumeric(int idx);
 	}
-
 	public interface IGxExternalObject
 	{
 		object ExternalInstance { get; set; }
@@ -2859,7 +2878,173 @@ namespace GeneXus.Utils
 		}
 
 	}
+	public class GxGenericDictionary<TKey,TValue> : Dictionary<TKey,TValue>, IGxJSONSerializable, IGxJSONAble
+	{
+		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(typeof(GxGenericDictionary<TKey, TValue>));
+		private readonly DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings() { UseSimpleDictionaryFormat = true };
+		public void SetDictionary(GxGenericDictionary<TKey, TValue> dictionary)
+		{
+			foreach (var entry in dictionary)
+			{
+				this[entry.Key] = entry.Value;
+			}
+		}
 
+		public bool Get(TKey key, out TValue value)
+		{
+			if (TryGetValue(key, out value))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		public TValue Get(TKey key)
+		{
+			if (TryGetValue(key, out TValue value))
+			{
+				return value;
+
+			}
+			else
+			{
+				return default;
+			}
+		}
+		public List<TValue> ValueList
+		{
+			get{
+				return base.Values.ToList();
+			}
+		}
+		public List<TKey> KeyList
+		{
+			get
+			{
+				return base.Keys.ToList();
+			}
+		}
+		public void Set(TKey key, TValue value)
+		{
+			base[key] = value;
+		}
+
+		public bool RemoveKey(TKey key)
+		{
+			return Remove(key);
+		}
+
+		public void RemoveKeys(List<TKey> keys)
+		{
+			foreach (var key in keys.ToList())
+			{
+				RemoveKey(key);
+			}
+		}
+
+		public void RemoveAll(GxGenericDictionary<TKey, TValue> dictionary)
+		{
+			foreach (var key in dictionary.Keys.ToList())
+			{
+				RemoveKey(key);
+			}
+		}
+		public string ToJson()
+		{
+			try
+			{
+				return JSONHelper.Serialize(this, settings);
+			}
+			catch (Exception e)
+			{
+				log.Error("Could not obtain JSON from Dictionary", e);
+				return "";
+			}
+		}
+
+		public void FromJson(string json)
+		{
+			try
+			{
+				Clear();
+				Dictionary<TKey, TValue> deserializedDictionary = JSONHelper.Deserialize<Dictionary<TKey, TValue>>(json, Encoding.Unicode, null, null, settings);
+				foreach (var entry in deserializedDictionary)
+				{
+					this[entry.Key] = entry.Value;
+				}
+			}
+			catch (Exception e)
+			{
+				log.Error("Could not set Dictionary from JSON", e);
+			}
+		}
+
+		public string ToJSonString()
+		{
+			return ToJson();
+		}
+
+		public bool FromJSonString(string s)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool FromJSonString(string s, GXBaseCollection<SdtMessages_Message> Messages)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool FromJSonFile(GxFile file)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool FromJSonFile(GxFile file, GXBaseCollection<SdtMessages_Message> Messages)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void AddObjectProperty(string name, object prop)
+		{
+			throw new NotImplementedException();
+		}
+
+		public object GetJSONObject()
+		{
+			JObject jObj = new JObject();
+			foreach (TKey item in Keys)
+			{
+				jObj.Accumulate(item.ToString(), this[item]);
+			}
+			return jObj;
+
+		}
+
+		public object GetJSONObject(bool includeState)
+		{
+			return GetJSONObject();
+		}
+
+		public void FromJSONObject(dynamic obj)
+		{
+			this.Clear();
+			JObject jObj = obj as JObject;
+			if (jObj != null)
+			{
+				foreach (DictionaryEntry item in jObj)
+				{
+					base[(TKey)item.Key]= (TValue)item.Value;
+				}
+			}
+		}
+
+		public string ToJavascriptSource()
+		{
+			throw new NotImplementedException();
+		}
+	}
 	public class GxDictionary : Dictionary<string, Object>
 	{
 		public bool HasKey(string key)
