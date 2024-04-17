@@ -9,8 +9,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 #endif
 using System.IO;
-
-
 #if !NETCORE
 using Jayrock.Json;
 #endif
@@ -101,20 +99,19 @@ namespace GeneXus.Utils
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<RestAPIHelpers>();
 
-		public static Dictionary<string, object> ReadRestParameters(string restData, bool caseSensitive)
+		public static Dictionary<string, object> ReadRestParameters(string restData)
 		{
 			var bodyParameters = new Dictionary<string, object>();
 			if (!String.IsNullOrEmpty(restData))
 			{
 				try
 				{
-					var data = JSONHelper.ReadJSON<dynamic>(restData,null,true);
+					var data = JSONHelper.ReadJSON<dynamic>(restData);
 					if (data is JObject jobj)
 					{
 						foreach (string name in jobj.Names)
-						{							
-							string kName= (caseSensitive) ? name : name.ToLower();
-							bodyParameters.Add(kName, jobj[name]);
+						{
+							bodyParameters.Add(name.ToLower(), jobj[name]);
 						}
 					}
 					else if (data is JArray jArray)
@@ -138,7 +135,7 @@ namespace GeneXus.Utils
 				if (!streamReader.EndOfStream)
 				{
 					string json = streamReader.ReadToEnd();
-					return ReadRestParameters(json, true);
+					return ReadRestParameters(json);
 				}
 			}
 			return bodyParameters;

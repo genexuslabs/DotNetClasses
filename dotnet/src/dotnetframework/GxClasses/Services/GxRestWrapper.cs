@@ -31,7 +31,6 @@ using System.Net.Http;
 using System.Diagnostics;
 using GeneXus.Diagnostics;
 using System.Xml.Linq;
-using System.Reflection;
 
 
 namespace GeneXus.Application
@@ -109,8 +108,7 @@ namespace GeneXus.Application
 				if (IsCoreEventReplicator(_procWorker))
 				{
 					bodyParameters = ReadBodyParameters();
-					MethodInfo mi = _procWorker.GetType().GetMethod(innerMethod);
-					string synchronizer = PreProcessReplicatorParameteres(mi, bodyParameters);
+					string synchronizer = PreProcessReplicatorParameteres( _procWorker, innerMethod, bodyParameters);
 					if (!IsAuthenticated(synchronizer))
 						return Task.CompletedTask;
 				}
@@ -193,7 +191,7 @@ namespace GeneXus.Application
 #endif
 		}
 
-		private Dictionary<string, object> SetAlias(Dictionary<string, object> bodyParameters, Dictionary<string, string> varAlias, bool caseSensitive)
+		private Dictionary<string, object> SetAlias(Dictionary<string, object> bodyParameters, Dictionary<string, string> varAlias)
 		{
 			Dictionary<string, object> parameters = new Dictionary<string, object>();
 			foreach (string k in bodyParameters.Keys)
@@ -202,17 +200,17 @@ namespace GeneXus.Application
 				{
 					string keyLowercase = k.ToLower();
 					if (varAlias == null)
-						parameters[k] = bodyParameters[k];
+						parameters[keyLowercase] = bodyParameters[k];
 					else
 					{
 						if (varAlias.ContainsKey(keyLowercase))
 						{
-							string alias = (caseSensitive)? varAlias[keyLowercase] :varAlias[keyLowercase].ToLower();
+							string alias = varAlias[keyLowercase].ToLower();
 							parameters[alias] = bodyParameters[k];
 						}
 						else if (!varAlias.ContainsValue(keyLowercase))
 						{
-							parameters[k] = bodyParameters[k];
+							parameters[keyLowercase] = bodyParameters[k];
 						}
 					}
 				}
@@ -223,13 +221,13 @@ namespace GeneXus.Application
 		private Dictionary<string, object> PreProcessApiSdtParameter(GXBaseObject procWorker, string innerMethod,
 				Dictionary<string,object> bodyParameters, Dictionary<string, string> varAlias)
 		{
-			Dictionary<string, object> bP = SetAlias(bodyParameters, varAlias, true);
-			MethodInfo methodInfo = procWorker.GetType().GetMethod(innerMethod);
-			return ReflectionHelper.GetWrappedParameter(methodInfo, bP);
+			Dictionary<string, object> bP = SetAlias(bodyParameters, varAlias);
+			return ReflectionHelper.GetWrappedParameter(procWorker, innerMethod, bP);
 		}
 
-		private string PreProcessReplicatorParameteres(MethodInfo methodInfo, Dictionary<string, object> bodyParameters)
+		private string PreProcessReplicatorParameteres(GXBaseObject procWorker, string innerMethod, Dictionary<string, object> bodyParameters)
 		{
+			var methodInfo = procWorker.GetType().GetMethod(innerMethod);
 			object[] parametersForInvocation = ReflectionHelper.ProcessParametersForInvoke(methodInfo, bodyParameters);
 			object synchroInfo = parametersForInvocation[1];
 			return synchroInfo.GetType().GetProperty(Synchronizer.SYNCHRONIZER_INFO).GetValue(synchroInfo) as string;
