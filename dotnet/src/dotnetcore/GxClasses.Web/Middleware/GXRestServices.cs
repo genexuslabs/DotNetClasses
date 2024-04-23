@@ -342,8 +342,11 @@ namespace GeneXus.Utils
 			return true;
 		}
 
-	
 
+		protected StatusCodeResult SendNotModified()
+		{
+			return StatusCode((int)HttpStatusCode.NotModified);
+		}
 		private void SendCacheHeaders()
 		{
 			if (string.IsNullOrEmpty(context.GetHeader(HttpHeader.CACHE_CONTROL)))
