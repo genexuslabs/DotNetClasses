@@ -156,18 +156,21 @@ namespace GeneXus.Utils
 		{
 			HttpHelper.SetError(HttpContext, code, message);
 		}
-		protected void WebException(Exception ex)
+		protected StatusCodeResult WebException(Exception ex)
 		{
             GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
 
             if (ex is FormatException)
 			{
 				HttpHelper.SetUnexpectedError(HttpContext, HttpStatusCode.BadRequest, ex);
+				return StatusCode((int)HttpStatusCode.BadRequest);
 			}
 			else
             {
 				HttpHelper.SetUnexpectedError(HttpContext, HttpStatusCode.InternalServerError, ex);
-            }
+				return StatusCode((int)HttpStatusCode.InternalServerError);
+
+			}
         }
 
 		protected bool IsAuthenticated(string synchronizer)
