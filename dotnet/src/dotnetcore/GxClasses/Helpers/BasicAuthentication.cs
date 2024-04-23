@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Text;
 
 namespace GxClasses.Helpers
 {
 	public class BasicAuthenticationHeaderValue
 	{
+		const char UserNamePasswordSeparator= ':';
 		public BasicAuthenticationHeaderValue(string authenticationHeaderValue)
 		{
 			if (!string.IsNullOrWhiteSpace(authenticationHeaderValue))
@@ -19,7 +19,7 @@ namespace GxClasses.Helpers
 		}
 
 		private readonly string _authenticationHeaderValue;
-		private string[] _splitDecodedCredentials;
+		private string _usernamePassword;
 
 		public bool IsValidBasicAuthenticationHeaderValue { get; private set; }
 		public string UserIdentifier { get; private set; }
@@ -32,11 +32,11 @@ namespace GxClasses.Helpers
 			{
 				return false;
 			}
-			var encodedCredentials = _authenticationHeaderValue.Substring(headerSchemeLength);
+			string encodedCredentials = _authenticationHeaderValue.Substring(headerSchemeLength);
 			try
 			{
-				var decodedCredentials = Convert.FromBase64String(encodedCredentials);
-				_splitDecodedCredentials = System.Text.Encoding.ASCII.GetString(decodedCredentials).Split(':');
+				byte[] decodedCredentials = Convert.FromBase64String(encodedCredentials);
+				_usernamePassword = Encoding.ASCII.GetString(decodedCredentials);
 				return true;
 			}
 			catch (FormatException)
@@ -47,13 +47,19 @@ namespace GxClasses.Helpers
 
 		private void ReadAuthenticationHeaderValue()
 		{
-			IsValidBasicAuthenticationHeaderValue = _splitDecodedCredentials!= null && _splitDecodedCredentials.Length == 2
-												   && !string.IsNullOrWhiteSpace(_splitDecodedCredentials[0])
-												   && !string.IsNullOrWhiteSpace(_splitDecodedCredentials[1]);
+			IsValidBasicAuthenticationHeaderValue = !string.IsNullOrEmpty(_usernamePassword) && _usernamePassword.Contains(UserNamePasswordSeparator);
 			if (IsValidBasicAuthenticationHeaderValue)
 			{
-				UserIdentifier = _splitDecodedCredentials[0];
-				UserPassword = _splitDecodedCredentials[1];
+				int separatorIndex = _usernamePassword.IndexOf(UserNamePasswordSeparator);
+				UserIdentifier = _usernamePassword.Substring(0, separatorIndex);
+				if (separatorIndex + 1 < _usernamePassword.Length)
+				{
+					UserPassword = _usernamePassword.Substring(separatorIndex + 1);
+				}
+				else
+				{
+					UserPassword = string.Empty;
+				}
 			}
 		}
 	}
