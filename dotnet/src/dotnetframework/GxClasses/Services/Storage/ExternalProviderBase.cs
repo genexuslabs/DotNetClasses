@@ -18,7 +18,7 @@ namespace GeneXus.Services
 		protected static String DEFAULT_ACL = "DEFAULT_ACL";
 		protected static String DEFAULT_EXPIRATION = "DEFAULT_EXPIRATION";
 		protected static String FOLDER = "FOLDER_NAME";
-		protected static String DEFAULT_ACL_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_ACL";
+		protected static String DEFAULT_ACL_DEPRECATED = "STORAGE_PROVIDER_PRIVACY";
 		protected static String DEFAULT_EXPIRATION_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_EXPIRATION";
 		protected TimeSpan defaultExpiration = new TimeSpan(24, 0, 0);
 		protected static string DEFAULT_TMP_CONTENT_TYPE = "image/jpeg";
