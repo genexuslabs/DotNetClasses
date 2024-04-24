@@ -1,0 +1,15 @@
+{
+"ObjectType":"ServiceGroup",
+"Name":"CasosDates",
+"BasePath":"CasosDates",
+"Mappings":
+[
+{
+"Bodystyle":"Wrapped",
+"Verb":"POST",
+"Name":"testdatedef__post",
+"Path":"testdatedef",
+"ServiceMethod":"gxep_testdatedef__post",
+"Implementation":"SampleProc"
+}
+]}
