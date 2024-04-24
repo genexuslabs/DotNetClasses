@@ -49,7 +49,7 @@ namespace com.genexus.reports
 		protected bool modal = false;
 		protected String docName = "PDFReport.pdf";
 		protected static NativeSharpFunctionsMS nativeCode = new NativeSharpFunctionsMS();
-		protected Hashtable fontSubstitutes = new Hashtable();
+		protected static Hashtable fontSubstitutes = new Hashtable();
 		protected static String configurationFile = null;
 		protected static String configurationTemplateFile = null;
 		protected static String defaultRelativePrepend = null;
