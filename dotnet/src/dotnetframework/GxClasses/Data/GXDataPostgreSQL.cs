@@ -585,6 +585,9 @@ namespace GeneXus.Data
 	sealed internal class PostgresqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<PostgresqlConnectionWrapper>();
+#if NETCORE
+		const string INFINITY_CONVERSIONS = "Npgsql.DisableDateTimeInfinityConversions";
+#endif
 		public PostgresqlConnectionWrapper()
 		{
 			_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection");
@@ -595,6 +598,9 @@ namespace GeneXus.Data
 			try
 			{
 				_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection", new object[] { connectionString });
+#if NETCORE
+				AppContext.SetSwitch(INFINITY_CONVERSIONS, true);
+#endif
 				m_isolationLevel = isolationLevel;
 				m_connectionCache = connCache;
 			}
