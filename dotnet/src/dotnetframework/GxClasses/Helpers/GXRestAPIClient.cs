@@ -44,7 +44,7 @@ namespace GeneXus.Application
 		public string ErrorMessage { get; set; }
 
 		public int StatusCode { get; set; }
-
+		public string StatusMessage { get ; set; }
 		public int ResponseCode { get => responseCode; set => responseCode = value; }
 		public string ResponseMessage { get => responseMessage; set => responseMessage = value; }
 		public string HttpMethod { get => httpMethod; set => httpMethod = value; }
