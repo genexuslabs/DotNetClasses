@@ -7,7 +7,11 @@ using Lucene.Net.Search;
 
 using GeneXus.Utils;
 
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using System.Globalization;
 using System.Security;
 
@@ -116,9 +120,8 @@ namespace GeneXus.Search
 
 		#endregion
 
-		internal LuceneSearchResultItem(Document document, float score)
+		internal LuceneSearchResultItem(Document document, float score):base()
 		{
-			_Properties = new JObject();
 			m_document = document;
 			m_score = score;
 		}

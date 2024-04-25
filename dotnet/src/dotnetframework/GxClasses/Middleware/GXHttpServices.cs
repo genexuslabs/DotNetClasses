@@ -13,7 +13,9 @@ namespace GeneXus.Http
 	using GeneXus.Mime;
 	using GeneXus.Security;
 	using GeneXus.Utils;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Web.SessionState;
 	using System.Web;
 #if NETCORE

@@ -216,9 +216,18 @@ namespace ProjectHealthTest
 			else
 			{
 				Version directVersion = GetVersion(directReference.Version);
-				return value.Any(k => GetVersion(k.Version) > directVersion);
+				return value.Any(k => DirectReferenceLessThanTransitiveVersion(directVersion, k) || DiferentDirectReferences(directVersion, k));
 			}
 		}
+		private bool DiferentDirectReferences(Version directVersion, PackageVersionItem k)
+		{
+			return (!k.Transitive && GetVersion(k.Version) != directVersion);
+		}
+		private bool DirectReferenceLessThanTransitiveVersion(Version directVersion, PackageVersionItem k)
+		{
+			return (k.Transitive && GetVersion(k.Version) > directVersion);
+		}
+		
 		private Version GetVersion(String versionString)
 		{
 			return Version.Parse(Regex.Match(versionString, VersionPattern).Value);

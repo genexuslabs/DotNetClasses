@@ -1,7 +1,7 @@
+using System;
 using GeneXus.Application;
 using GeneXus.Metadata;
 using GeneXus.Utils;
-using System;
 
 namespace GeneXus.Deploy.AzureFunctions.Handlers.Helpers
 {

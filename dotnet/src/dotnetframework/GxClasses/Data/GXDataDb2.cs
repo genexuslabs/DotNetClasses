@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Metadata;
@@ -115,7 +116,7 @@ namespace GeneXus.Data
 	public class GxDb2 : GxDataRecord
 	{
 
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDb2>();
 
 		public static string SQL_NULL_DATE_10="0000-00-00";
 		public static string SQL_NULL_DATE_8="00000000";
@@ -523,7 +524,7 @@ namespace GeneXus.Data
 		private static int changeConnState=-1;
 		private static int changeConnStateExecuting = -1;
 		private int openDataReaders;
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Db2ConnectionWrapper>();
 		public Db2ConnectionWrapper()
 		{
             try
@@ -655,7 +656,20 @@ namespace GeneXus.Data
 				throw new DataException(ex.Message, ex);
 			}
 		}
-
+#if NETCORE
+		internal override async Task CloseAsync()
+		{
+			try
+			{
+				CheckState(false);
+				await base.CloseAsync();
+			}
+			catch (Exception ex)
+			{
+				throw new DataException(ex.Message, ex);
+			}
+		}
+#endif
 		override public IDbCommand CreateCommand() 
 		{
             return InternalConnection.CreateCommand();

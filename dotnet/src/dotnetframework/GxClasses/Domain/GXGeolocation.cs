@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.IO;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using GeneXus.Utils;
 using System.Globalization;
 using GeneXus;

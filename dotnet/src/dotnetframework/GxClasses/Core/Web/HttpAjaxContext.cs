@@ -1,7 +1,10 @@
 namespace GeneXus.Http
 {
 	using System;
+	using System.IO;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Web;
 	using GeneXus.Application;
 	using GeneXus.Utils;
@@ -41,12 +44,6 @@ namespace GeneXus.Http
 		void AddStylesHidden();
 		void ajax_rsp_clear();
 
-		JArray AttValues { get;}
-		JObject HiddenValues { get;}
-		JArray PropValues { get; }
-		JObject WebComponents { get;}
-		JObject Messages { get;}
-		JArray Grids { get; }
 		void LoadFormVars(HttpContext localHttpContext);
 		void disableJsOutput();
 		void enableJsOutput();
@@ -88,7 +85,7 @@ namespace GeneXus.Http
 
 		public bool isInputParm(string key)
 		{
-			return inParmsMetadataHash.Contains(key);
+			return (inParmsMetadataHash!=null && inParmsMetadataHash.Contains(key));
 		}
 
 		public void Clear()
@@ -108,7 +105,7 @@ namespace GeneXus.Http
 			IGxJSONSerializable jsonValue = value as IGxJSONSerializable;
 			if (jsonValue!=null)
 			{
-				if (!inParmsHashValue.ContainsKey(fieldName))
+				if (inParmsHashValue!=null && !inParmsHashValue.ContainsKey(fieldName))
 					return true;
 				return GXUtil.GetHash(jsonValue.ToJSonString()) != inParmsHashValue[fieldName];
 			}
@@ -146,24 +143,24 @@ namespace GeneXus.Http
 
 		public string FormCaption { get; set; }
 
-		public JObject HiddenValues
+		internal JObject HiddenValues
 		{ get { return _HiddenValues; } }
-		public JArray AttValues
+		internal JArray AttValues
 		{ get { return _AttValues; } }
-		public JArray PropValues
+		internal JArray PropValues
 		{ get { return _PropValues; } }
-		public JObject WebComponents
+		internal JObject WebComponents
 		{ get { return _WebComponents; } }
-		public Hashtable LoadCommands
+		internal Hashtable LoadCommands
 		{ get { return _LoadCommands; } }
-		public JObject Messages
+		internal JObject Messages
 		{ get {
 				return _Messages;
 			}
 		}
-		public JArray Grids
+		internal JArray Grids
 		{ get { return _Grids; } }
-		public JObject ComponentObjects
+		internal JObject ComponentObjects
 		{ get { return _ComponentObjects; } }
 		public GXAjaxCommandCollection Commands
 		{ get { return commands; } }
@@ -210,7 +207,7 @@ namespace GeneXus.Http
 			commands.AppendCommand(new GXAjaxCommand(cmdType, cmdData));
 		}
 
-		public void appendLoadData(int SId, JObject Data)
+		internal void appendLoadData(int SId, JObject Data)
 		{
 			LoadCommands[SId] = Data;
 		}
@@ -349,7 +346,7 @@ namespace GeneXus.Http
 					try
 					{
 						JObject obj = GetGxObject(AttValues, CmpContext, IsMasterPage);
-						if (obj != null && (DynAjaxEventContext.isParmModified(AttName, SdtObj) || !isUndefinedOutParam( AttName, SdtObj)))
+						if (obj != null && (!isUndefinedOutParam(AttName, SdtObj) || DynAjaxEventContext.isParmModified(AttName, SdtObj)))
 						{
 							IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
 							if (SdtObjJson != null)
@@ -667,7 +664,7 @@ namespace GeneXus.Http
 			return jsonCmdWrapper.ToString();
 		}
 
-		public static JArray GetParmsJArray(Object[] parms)
+		internal static JArray GetParmsJArray(Object[] parms)
 		{
 			JArray inputs = new JArray();
 			for (int i = 0; i < parms.Length; i++)
@@ -688,29 +685,36 @@ namespace GeneXus.Http
 
 		public string GetAjaxEncryptionKey()
 		{
-			if (context.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY) == null)
+			string ajaxKey = context.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY);
+			if (ajaxKey == null)
 			{
-                if(!RecoverEncryptionKey())
-				    context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY,CryptoImpl.GetRijndaelKey());
-			}
-			return context.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY);
-		}
-		private bool RecoverEncryptionKey()
-		{
-			if ( (context.ReadSessionKey<string>(CryptoImpl.AJAX_ENCRYPTION_KEY) == null))
-			{
-				if (context.HttpContext != null)
+				string sessionKey;
+				if (!RecoverEncryptionKey(out sessionKey)) {
+					ajaxKey = CryptoImpl.GetRijndaelKey();
+					context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY, ajaxKey);
+				}
+				else
 				{
-					String clientKey = context.HttpContext.Request.Headers[CryptoImpl.AJAX_SECURITY_TOKEN];
-					if (!string.IsNullOrEmpty(clientKey))
+					ajaxKey = sessionKey;
+				}
+			}
+			return ajaxKey;
+		}
+		private bool RecoverEncryptionKey(out string sessionKey)
+		{
+			sessionKey = null;
+			if (context.HttpContext != null)
+			{
+				String clientKey = context.HttpContext.Request.Headers[CryptoImpl.AJAX_SECURITY_TOKEN];
+				if (!string.IsNullOrEmpty(clientKey))
+				{
+					bool correctKey;
+					clientKey = CryptoImpl.DecryptRijndael(CryptoImpl.GX_AJAX_PRIVATE_IV + clientKey, CryptoImpl.GX_AJAX_PRIVATE_KEY, out correctKey);
+					if (correctKey)
 					{
-						bool correctKey = false;
-						clientKey = CryptoImpl.DecryptRijndael(CryptoImpl.GX_AJAX_PRIVATE_IV + clientKey, CryptoImpl.GX_AJAX_PRIVATE_KEY, out correctKey);
-						if (correctKey)
-						{
-							context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY, clientKey);
-							return true;
-						}
+						sessionKey = clientKey;
+						context.WriteSessionKey(CryptoImpl.AJAX_ENCRYPTION_KEY, clientKey);
+						return true;
 					}
 				}
 			}
@@ -744,7 +748,7 @@ namespace GeneXus.Http
 
             }
         }
-		public void ParseGXState(JObject tokenValues)
+		internal void ParseGXState(JObject tokenValues)
 		{
 			if (tokenValues != null)
 			{
@@ -821,7 +825,7 @@ namespace GeneXus.Http
         }
     }
 
-    public class GXJObject : JObject
+    internal class GXJObject : JObject
     {
         private bool base64Encoded;
 
@@ -882,7 +886,7 @@ namespace GeneXus.Http
 			}
 		}
 
-		public JObject JSONObject
+		internal JObject JSONObject
 		{
 			get
 			{
@@ -1027,7 +1031,7 @@ namespace GeneXus.Http
 			return null;
 		}
 
-		public JArray JSONArray
+		internal JArray JSONArray
 		{
 			get
 			{

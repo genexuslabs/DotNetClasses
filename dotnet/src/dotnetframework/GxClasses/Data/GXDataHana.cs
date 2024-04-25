@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using GeneXus.Cache;
 using GeneXus.Metadata;
 using GeneXus.Utils;
@@ -13,7 +14,7 @@ namespace GeneXus.Data
 {
 	public class GxHana : GxDataRecord
     {
-        static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxHana>();
         static Assembly _hanaAssembly;
         const string HanaDbTypeEnum = "Sap.Data.Hana.HanaDbType";
 #if NETCORE
@@ -320,7 +321,7 @@ namespace GeneXus.Data
     {
         const string HanaIsolationEnum = "Sap.Data.Hana.HanaIsolationLevel";
 
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HanaConnectionWrapper>();
 		public HanaConnectionWrapper()
         {
             try
@@ -415,7 +416,6 @@ namespace GeneXus.Data
         {
             try
             {
-                CheckState(false);
                 InternalConnection.Close();
             }
             catch (Exception ex)
@@ -423,7 +423,20 @@ namespace GeneXus.Data
                 throw new DataException(ex.Message, ex);
             }
         }
-
+#if NETCORE
+		internal override async Task CloseAsync()
+		{
+			try
+			{
+				CheckState(false);
+				await base.CloseAsync();
+			}
+			catch (Exception ex)
+			{
+				throw new DataException(ex.Message, ex);
+			}
+		}
+#endif
         override public IDbCommand CreateCommand()
         {
             return InternalConnection.CreateCommand();

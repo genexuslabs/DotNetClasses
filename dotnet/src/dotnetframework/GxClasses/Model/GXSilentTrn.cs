@@ -6,7 +6,9 @@ namespace GeneXus.Utils
 	using GeneXus.Application;
 	using System.Xml.Serialization;
 	using System.Collections.Generic;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Text;
 	using System.Security.Cryptography;
 	using System.Reflection;
@@ -191,7 +193,8 @@ namespace GeneXus.Utils
 		{
 			if (GenOtelSpanEnabled())
 			{
-				return GXBaseObject.ActivitySource.StartActivity($"{this.GetType().FullName}.{methodName}");
+				string gxObjFullName = GXBaseObject.GetObjectNameWithoutNamespace(GetType().FullName);
+				return GXBaseObject.ActivitySource.StartActivity($"{gxObjFullName}.{methodName}");
 			}
 			return null;
 		}
@@ -580,6 +583,7 @@ namespace GeneXus.Utils
 	public interface IGxGenericCollectionWrapped
 	{
 		bool GetIsWrapped();
+		string GetWrappedStatus();
 		void SetIsWrapped(bool value);
 	}
 
@@ -605,6 +609,12 @@ namespace GeneXus.Utils
 			isWrapped = wrapped;			
 		}
 
+		public GxGenericCollection(IGxCollection x, bool wrapped, string wrappedstatus) : this(x)
+		{
+			isWrapped = wrapped;
+			wrappedStatus = wrappedstatus;
+		}
+
 		public void LoadCollection(IGxCollection x)
 		{
 			foreach (IGxGenericCollectionItem x1 in this)
@@ -625,12 +635,26 @@ namespace GeneXus.Utils
 
 		public bool GetIsWrapped()
 		{
+			if (wrappedStatus.Equals("unwrapped"))
+				isWrapped = false;
 			return isWrapped;
 		}
 
 		public void SetIsWrapped(bool value)
 		{
 			isWrapped = value;
+		}
+
+		private string wrappedStatus = "";
+
+		public string GetWrappedStatus()
+		{
+			return wrappedStatus;
+		}
+
+		internal void SetWrappedStatus(string value)
+		{
+			wrappedStatus = value;
 		}
 	}
 	public interface IGxGenericCollectionItem
@@ -646,6 +670,17 @@ namespace GeneXus.Utils
 		}
 	}
 
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxJsonSerialization : Attribute
+	{
+		string unwrapped = default;
+		public GxJsonSerialization(string jsonunwrapped)
+		{
+			unwrapped = jsonunwrapped;
+		}
+		public string JsonUnwrapped { get => unwrapped; set => unwrapped = value; }
+	}
+	
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class GxOmitEmptyCollection : Attribute
 	{
@@ -833,6 +868,7 @@ namespace GeneXus.Utils
 	[XmlRoot(ElementName = "Message")]
 	[XmlType(TypeName = "Message", Namespace = "GeneXus")]
 	[Serializable]
+	[GxJsonSerialization("wrapped")]
 	public class SdtMessages_Message : GxUserType
 	{
 		public SdtMessages_Message()
@@ -935,6 +971,7 @@ namespace GeneXus.Utils
 
 	[DataContract(Name = @"Messages.Message", Namespace = "GeneXus")]
 	[GxOmitEmptyCollection]
+	[GxJsonSerialization("wrapped")]
 	public class SdtMessages_Message_RESTInterface : GxGenericCollectionItem<SdtMessages_Message>, System.Web.SessionState.IRequiresSessionState
 	{
 		public SdtMessages_Message_RESTInterface()

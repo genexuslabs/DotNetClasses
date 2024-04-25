@@ -24,21 +24,19 @@ namespace xUnitTesting
 			server.AllowSynchronousIO = true;
 
 		}
-
-		public async Task TestSimpleRestPost()
+		[Fact]
+		public async Task InvalidPostToRestService()
 		{
 			server.AllowSynchronousIO = true;
 			HttpClient client = server.CreateClient();
 			StringContent body = new StringContent("{\"Image\":\"imageName\",\"ImageDescription\":\"imageDescription\"}");
 			HttpResponseMessage response = await client.PostAsync("rest/apps/saveimage", body);
-			Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+			Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 		}
-
-		public async Task RunController()
+		[Fact]
+		public async Task ValidPostToRestService()
 		{
-
-
-			CookieContainer cookies = new System.Net.CookieContainer();
+			CookieContainer cookies = new CookieContainer();
 			HttpClient client = server.CreateClient();
 			string requestUri = "rest/apps/append";
 			Uri requestUriObj = new Uri("http://localhost/" + requestUri);
@@ -51,43 +49,76 @@ namespace xUnitTesting
 			foreach (var item in SetCookieHeaderValue.ParseList(values.ToList()))
 				cookies.Add(requestUriObj, new Cookie(item.Name.Value, item.Value.Value, item.Path.Value));
 
-			var setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
+			SetCookieHeaderValue setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
+			Assert.NotNull(setCookie);
+			Assert.True(setCookie.Value.HasValue);
 			csrfToken = setCookie.Value.Value;
 
 			response.EnsureSuccessStatusCode();
-			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode); //When failed, turn on log.config to see server side error.
+			Assert.Equal(HttpStatusCode.OK, response.StatusCode); //When failed, turn on log.config to see server side error.
 
 			StringContent body = new StringContent("{\"Image\":\"imageName\",\"ImageDescription\":\"imageDescription\"}");
 			client.DefaultRequestHeaders.Add(HttpHeader.X_CSRF_TOKEN_HEADER, csrfToken);
 			client.DefaultRequestHeaders.Add("Cookie", values);// //cookies.GetCookieHeader(requestUriObj));
 
 			response = await client.PostAsync("rest/apps/saveimage", body);
-			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+			Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 		}
-		public async Task HttpFirstPost()
+		[Fact]
+		public async Task ValidPostToHttpService()
+		{
+			CookieContainer cookies = new CookieContainer();
+			HttpClient client = server.CreateClient();
+			string requestUri = "webhook.aspx";
+			Uri requestUriObj = new Uri("http://localhost/" + requestUri);
+			HttpResponseMessage response = await client.GetAsync(requestUri);
+			string csrfToken = string.Empty;
+
+			IEnumerable<string> values;
+			Assert.True(response.Headers.TryGetValues("Set-Cookie", out values));
+
+			foreach (var item in SetCookieHeaderValue.ParseList(values.ToList()))
+				cookies.Add(requestUriObj, new Cookie(item.Name.Value, item.Value.Value, item.Path.Value));
+
+			SetCookieHeaderValue setCookie = SetCookieHeaderValue.ParseList(values.ToList()).FirstOrDefault(t => t.Name.Equals(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
+			Assert.NotNull(setCookie);
+			Assert.True(setCookie.Value.HasValue);
+			csrfToken = setCookie.Value.Value;
+
+			response.EnsureSuccessStatusCode();
+			Assert.Equal(HttpStatusCode.OK, response.StatusCode); //When failed, turn on log.config to see server side error.
+
+			client.DefaultRequestHeaders.Add(HttpHeader.X_CSRF_TOKEN_HEADER, csrfToken);
+			client.DefaultRequestHeaders.Add("Cookie", values);// //cookies.GetCookieHeader(requestUriObj));
+
+			response = await client.PostAsync(requestUri, null);
+			Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+		}
+		[Fact]
+		public async Task InvalidPostToHttpService()
 		{
 			HttpClient client = server.CreateClient();
 			HttpResponseMessage response = await client.PostAsync("webhook.aspx", null);
 			IEnumerable<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
-			foreach (string cookie in cookies)
+			if (cookies != null)
 			{
-				Assert.False(cookie.StartsWith(HttpHeader.X_CSRF_TOKEN_COOKIE));
+				foreach (string cookie in cookies)
+				{
+					Assert.False(cookie.StartsWith(HttpHeader.X_CSRF_TOKEN_COOKIE));
+				}
 			}
-			response.EnsureSuccessStatusCode();
-			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+			Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+			Assert.Contains("InvalidCSRFToken", response.ReasonPhrase, StringComparison.OrdinalIgnoreCase);
 		}
-		public async Task HttpFirstGet()
+		[Fact]
+		public async Task GetToHttpService()
 		{
 			HttpClient client = server.CreateClient();
 			HttpResponseMessage response = await client.GetAsync("webhook.aspx");
 			IEnumerable<string> cookies = response.Headers.SingleOrDefault(header => header.Key == "Set-Cookie").Value;
-			foreach (string cookie in cookies)
-			{
-				Assert.False(cookie.StartsWith(HttpHeader.X_CSRF_TOKEN_COOKIE));
-			}
-
+			Assert.Contains(cookies, x => x.StartsWith(HttpHeader.X_CSRF_TOKEN_COOKIE, StringComparison.OrdinalIgnoreCase));
 			response.EnsureSuccessStatusCode();
-			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+			Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 		}
 	}
 }

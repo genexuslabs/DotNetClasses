@@ -12,8 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.2" />
-	<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.1" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
+	<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" />  
   </ItemGroup>
 
   <ItemGroup>

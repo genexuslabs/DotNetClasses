@@ -20,7 +20,9 @@ namespace GeneXus.Http
 	using GeneXus.Utils;
 	using GeneXus.XML;
 	using GeneXus.WebControls;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using Helpers;
 	using System.Collections.Concurrent;
 	using System.Net.Http;
@@ -36,17 +38,17 @@ namespace GeneXus.Http
 	using System.Web;
 	using System.Web.UI;
 	using System.Web.UI.WebControls;
-	using System.Web.Script.Serialization;
 	using System.Net;
 	using GeneXus.Notifications;
 	using Web.Security;
 	using System.Web.SessionState;
-	using GeneXus.Mock;
 	using GeneXus.Data.NTier;
+	using System.Security;
+
+
+
 #endif
-
-
-
+	using System.Threading.Tasks;
 #if NETCORE
 	public abstract class GXHttpHandler : GXBaseObject, IHttpHandler
 #else
@@ -229,16 +231,36 @@ namespace GeneXus.Http
 		int _currParameter;
 #if NETCORE
 		private GXWebRow _currentGridRow;
-#endif
+		private Dictionary<string,string> EventsMetadata = new Dictionary<string, string>();
+#else
 		private Hashtable EventsMetadata = new Hashtable();
+#endif
 
+#if NETCORE
+		protected void setEventMetadata(string EventName, string Metadata)
+		{
+			if (EventsMetadata.ContainsKey(EventName))
+				EventsMetadata[EventName] += Metadata;
+			else
+				EventsMetadata[EventName] = Metadata;
+		}
+		internal async Task WebExecuteExAsync(HttpContext httpContext)
+		{
+			if (IsUploadRequest(httpContext))
+				new GXObjectUploadServices(context).webExecute();
+			else if (IsFullAjaxRequest(httpContext))
+				await WebAjaxEventAsync();
+			else
+				await WebExecuteAsync();
+		}
+#else
 		protected void setEventMetadata(string EventName, string Metadata)
 		{
 			if (EventsMetadata[EventName] == null)
 				EventsMetadata[EventName] = string.Empty;
 			EventsMetadata[EventName] += Metadata;
 		}
-
+#endif
 		public void webExecuteEx(HttpContext httpContext)
 		{
 			if (IsUploadRequest(httpContext))
@@ -274,6 +296,13 @@ namespace GeneXus.Http
 		public virtual void InitializeDynEvents() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void initialize_properties() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void webExecute() { throw new Exception("The method or operation is not implemented."); }
+		protected virtual Task WebExecuteAsync()
+		{
+			GXLogging.Warn(log, this.GetType().FullName + " not generated as async service");
+			webExecute();
+			return Task.CompletedTask;
+		}
+
 #if !NETCORE
 		public virtual void initialize() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void cleanup() { }
@@ -442,7 +471,7 @@ namespace GeneXus.Http
 				}
 				if (objMessage.Contains("fullPost"))
 				{
-					this.targetObj._Context.httpAjaxContext.ParseGXState((Jayrock.Json.JObject)objMessage["fullPost"]);
+					this.targetObj._Context.httpAjaxContext.ParseGXState((JObject)objMessage["fullPost"]);
 				}
 			}
 			private void ParseGridsDataParms(JObject gxGrids)
@@ -522,7 +551,12 @@ namespace GeneXus.Http
 					int eventCount = 0;
 					foreach (string eventName in events)
 					{
+#if NETCORE
+
+						JObject eventMetadata = JSONHelper.ReadJSON<JObject>(targetObj.EventsMetadata[eventName.ToString()]);
+#else
 						JObject eventMetadata = JSONHelper.ReadJSON<JObject>((string)targetObj.EventsMetadata[eventName.ToString()]);
+#endif
 						eventHandlers[eventCount] = (string)eventMetadata["handler"];
 						JArray eventInputParms = (JArray)eventMetadata["iparms"];
 						foreach (JObject inputParm in eventInputParms)
@@ -531,9 +565,12 @@ namespace GeneXus.Http
 							eventUseInternalParms[eventCount] = eventUseInternalParms[eventCount] || IsInternalParm(inputParm);
 						}
 						JArray eventOutputParms = (JArray)eventMetadata["oparms"];
-						foreach (JObject outputParm in eventOutputParms)
+						if (eventOutputParms != null)
 						{
-							AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+							foreach (JObject outputParm in eventOutputParms)
+							{
+								AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+							}
 						}
 						eventCount++;
 					}
@@ -882,7 +919,7 @@ namespace GeneXus.Http
 										{
 											try
 											{
-												JObject hashObj = (JObject)(hash_i < inHashValues.Length ? inHashValues[hash_i] : new Jayrock.Json.JObject());
+												JObject hashObj = (JObject)(hash_i < inHashValues.Length ? inHashValues[hash_i] : new JObject());
 												string sRow = hashObj.Contains("row") ? (string)hashObj["row"] : string.Empty;
 												string hash = hashObj.Contains("hsh") ? (string)hashObj["hsh"] : string.Empty;
 												SetScalarOrCollectionValue((string)parm["av"], inParmsValues[parm_i], columnValues);
@@ -1028,6 +1065,40 @@ namespace GeneXus.Http
 				return response;
 			}
 		}
+#if NETCORE
+		internal virtual async Task WebAjaxEventAsync()
+		{
+			bool isMultipartRequest = context.IsMultipartRequest;
+			if (isMultipartRequest)
+			{
+				localHttpContext.Response.ContentType = MediaTypesNames.TextHtml;
+			}
+			else
+			{
+				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
+			}
+			setAjaxCallMode();
+			context.setFullAjaxMode();
+			DynAjaxEvent dynAjaxEvent = new DynAjaxEvent(context.httpAjaxContext.DynAjaxEventContext);
+			string jsonRequest;
+			if (context.IsMultipartRequest)
+				jsonRequest = cgiGet(GX_AJAX_MULTIPART_ID);
+			else
+			{
+				using (StreamReader reader = new StreamReader(localHttpContext.Request.GetInputStream()))
+				{
+					jsonRequest = await reader.ReadToEndAsync(); ;
+				}
+			}
+			string jsonResponse = dynAjaxEvent.Invoke(jsonRequest, this);
+
+
+			if (!redirect(context))
+			{
+				((GxContext)context).SendFinalJSONResponse(jsonResponse);
+			}
+		}
+#endif
 
 		public virtual void webAjaxEvent()
 		{
@@ -1905,8 +1976,73 @@ namespace GeneXus.Http
 			get { return _isMain; }
 		}
 #endif
+#if NETCORE
+		internal async Task ProcessRequestAsync(HttpContext httpContext)
+		{
+			localHttpContext = httpContext;
 
+			if (IsSpaRequest() && !IsSpaSupported())
+			{
+				this.SendResponseStatus(SPA_NOT_SUPPORTED_STATUS_CODE, "SPA not supported by the object");
+				context.CloseConnections();
+				await Task.CompletedTask;
+			}
+			ControlOutputWriter = new HtmlTextWriter(localHttpContext);
+			LoadParameters(localHttpContext.Request.QueryString.Value);
+			context.httpAjaxContext.GetAjaxEncryptionKey(); //Save encryption key in session
+			InitPrivates();
+			try
+			{
+				SetStreaming();
+				SendHeaders();
+				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
 
+				bool validSession = ValidWebSession();
+				if (validSession && IntegratedSecurityEnabled)
+					validSession = ValidSession();
+				if (validSession)
+				{
+					if (UseBigStack())
+					{
+						Thread ts = new Thread(new ParameterizedThreadStart(webExecuteWorker));
+						ts.Start(httpContext);
+						ts.Join();
+						if (workerException != null)
+							throw workerException;
+					}
+					else
+					{
+						await WebExecuteExAsync(httpContext);
+					}
+				}
+				else
+				{
+					context.CloseConnections();
+					if (IsGxAjaxRequest() || context.isAjaxRequest())
+						context.DispatchAjaxCommands();
+				}
+				SetCompression(httpContext);
+				context.ResponseCommited = true;
+			}
+			catch (Exception e)
+			{
+				try
+				{
+					context.CloseConnections();
+				}
+				catch { }
+				{
+					Exception exceptionToHandle = e.InnerException ?? e;
+					handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
+					throw new Exception("GXApplication exception", e);
+				}
+			}
+		}
+
+#endif
+#if !NETCORE
+		[SecuritySafeCritical]
+#endif
 		public void ProcessRequest(HttpContext httpContext)
 		{
 			localHttpContext = httpContext;
@@ -1934,6 +2070,9 @@ namespace GeneXus.Http
 				SetStreaming();
 				SendHeaders();
 				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
+#if !NETCORE
+				CSRFHelper.ValidateAntiforgery(httpContext);
+#endif
 
 				bool validSession = ValidWebSession();
 				if (validSession && IntegratedSecurityEnabled)
@@ -1978,9 +2117,18 @@ namespace GeneXus.Http
 					context.CloseConnections();
 				}
 				catch { }
-				Exception exceptionToHandle = e.InnerException ?? e;
-				handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
-				throw new Exception("GXApplication exception", e);
+#if !NETCORE
+				if (CSRFHelper.HandleException(e, httpContext))
+				{
+					GXLogging.Error(log, $"Validation of antiforgery failed", e);
+				}
+				else
+#endif
+				{
+					Exception exceptionToHandle = e.InnerException ?? e;
+					handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
+					throw new Exception("GXApplication exception", e);
+				}
 			}
 		}
 		protected virtual bool ChunkedStreaming() { return false; }
@@ -2191,7 +2339,7 @@ namespace GeneXus.Http
 		private void SendHeaders()
 		{
 			sendCacheHeaders();
-			GXLogging.DebugSanitized(log, "HttpHeaders: ", DumpHeaders(localHttpContext));
+			GXLogging.DebugSanitized(log, "HttpHeaders: ", () => DumpHeaders(localHttpContext));
 			sendAdditionalHeaders();
 			HttpHelper.CorsHeaders(localHttpContext);
 			HttpHelper.AllowHeader(localHttpContext, new List<string>() { $"{HttpMethod.Get.Method},{HttpMethod.Post.Method}" });
@@ -2248,6 +2396,9 @@ namespace GeneXus.Http
 		private void webExecuteWorker(object target)
 		{
 			HttpContext httpContext = (HttpContext)target;
+#if !NETCORE
+			HttpContext.Current = httpContext;
+#endif
 			try
 			{
 				webExecuteEx(httpContext);

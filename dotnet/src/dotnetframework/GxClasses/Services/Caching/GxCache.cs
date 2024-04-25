@@ -587,7 +587,13 @@ namespace GeneXus.Cache
 		public CacheItem()
 		{
 		}
-
+		internal CacheItem(List<object[]> data, bool hasnext, int blockSize, long sizeInBytes)
+		{
+			Data = new GxArrayList(data);
+			HasNext = hasnext;
+			BlockSize = blockSize;
+			SizeInBytes = sizeInBytes;
+		}
 		public CacheItem(GxArrayList data, bool hasnext, int blockSize, long sizeInBytes)
         {
             Data = data;

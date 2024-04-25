@@ -35,7 +35,7 @@ namespace GeneXus.Printer
 		public GxReportBuilderPdf8() { }
 		public GxReportBuilderPdf8(string appPath, Stream outputStream)
 		{
-
+			_appPath = appPath;
 			_pdfReport = new com.genexus.reports.PDFReportItext8(appPath);
 			if (outputStream != null)
 			{
@@ -49,7 +49,7 @@ namespace GeneXus.Printer
 namespace com.genexus.reports
 {
 
-	public class PDFReportItext8 : PDFReportItextBase
+	public class PDFReportItext8 : PDFReportBase
 	{
 		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportItext8>();
 

@@ -18,7 +18,7 @@ namespace GeneXus.Data
 {
 	public class GxInformix : GxDataRecord
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxInformix>();
 		static Assembly _ifxAssembly;
 #if NETCORE
 		internal static string InformixAssemblyName = "Informix.Net.Core";
@@ -584,7 +584,7 @@ namespace GeneXus.Data
 	{
 		private static int changeConnState = -1;
 		private int openDataReaders;
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<InformixConnectionWrapper>();
 		public InformixConnectionWrapper() 
 		{
 			try

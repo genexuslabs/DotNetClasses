@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Http;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
@@ -133,7 +135,7 @@ namespace GeneXus.Application
 		const string RESOURCES_FOLDER = "Resources";
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
-		const string REST_BASE_URL = "rest/";
+		internal const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
 		const string SWAGGER_DEFAULT_YAML = "default.yaml";
@@ -142,6 +144,7 @@ namespace GeneXus.Application
 		const string CORS_POLICY_NAME = "AllowSpecificOriginsPolicy";
 		const string CORS_ANY_ORIGIN = "*";
 		const double CORS_MAX_AGE_SECONDS = 86400;
+		internal const string GX_CONTROLLERS = "gxcontrollers";
 
 		public List<string> servicesBase = new List<string>();		
 
@@ -160,11 +163,33 @@ namespace GeneXus.Application
 		{
 			OpenTelemetryService.Setup(services);
 
-			services.AddMvc(option => option.EnableEndpointRouting = false);
+			services.AddControllers();
+			string controllers = Path.Combine(Startup.LocalPath, "bin", GX_CONTROLLERS);
+			IMvcBuilder mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
+			try
+			{
+				if (Directory.Exists(controllers))
+				{
+					foreach (string controller in Directory.GetFiles(controllers))
+					{
+						Console.WriteLine($"Loading controller {controller}");
+						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller)).AddControllersAsServices();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("Error loading gxcontrollers " + ex.Message);
+			}
 			services.Configure<KestrelServerOptions>(options =>
 			{
 				options.AllowSynchronousIO = true;
 				options.Limits.MaxRequestBodySize = null;
+				if (Config.GetValueOrEnvironmentVarOf("MinRequestBodyDataRate", out string MinRequestBodyDataRateStr) && double.TryParse(MinRequestBodyDataRateStr, out double MinRequestBodyDataRate))
+				{
+					GXLogging.Info(log, $"MinRequestBodyDataRate:{MinRequestBodyDataRate}");
+					options.Limits.MinRequestBodyDataRate = new MinDataRate(bytesPerSecond: MinRequestBodyDataRate, gracePeriod: TimeSpan.FromSeconds(10));
+				}
 			});
 			services.Configure<IISServerOptions>(options =>
 			{
@@ -196,6 +221,12 @@ namespace GeneXus.Application
 				options.Cookie.HttpOnly = true;
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
+				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
+				if (!string.IsNullOrEmpty(sessionCookieName))
+				{
+					options.Cookie.Name=sessionCookieName;
+					GxWebSession.SessionCookieName = sessionCookieName;
+				}
 				string sameSite;
 				SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
 				if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
@@ -209,7 +240,7 @@ namespace GeneXus.Application
 				services.AddAntiforgery(options =>
 				{
 					options.HeaderName = HttpHeader.X_CSRF_TOKEN_HEADER;
-					options.SuppressXFrameOptionsHeader = false;
+					options.SuppressXFrameOptionsHeader = true;
 				});
 			}
 			services.AddDirectoryBrowser();
@@ -236,7 +267,6 @@ namespace GeneXus.Application
 				});
 			}
 			DefineCorsPolicy(services);
-			services.AddMvc();
 		}
 
 		private void DefineCorsPolicy(IServiceCollection services)
@@ -317,10 +347,12 @@ namespace GeneXus.Application
 			provider.Mappings[".usdz"] = "model/vnd.pixar.usd";
 			provider.Mappings[".sfb"] = "model/sfb";
 			provider.Mappings[".gltf"] = "model/gltf+json";
+			provider.Mappings[".ini"] = "text/plain";
 			if (GXUtil.CompressResponse())
 			{
 				app.UseResponseCompression();
 			}
+			app.UseRouting();
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
@@ -343,6 +375,10 @@ namespace GeneXus.Application
 				app.UseHttpsRedirection();
 				app.UseHsts();
 			}
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapControllers();
+			});
 			if (log.IsDebugEnabled)
 			{
 				try
@@ -411,7 +447,7 @@ namespace GeneXus.Application
 			if (RestAPIHelpers.ValidateCsrfToken())
 			{
 				antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
-				app.UseAntiforgeryTokens(restBasePath);
+				app.UseAntiforgeryTokens(apiBasePath);
 			}
 			app.UseMvc(routes =>
 			{
@@ -430,7 +466,7 @@ namespace GeneXus.Application
 			
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
-			Config.ScriptPath = basePath;
+			Config.ScriptPath = string.IsNullOrEmpty(basePath) ? "/" : basePath;
 			app.MapWebSocketManager(basePath);
 
 			app.MapWhen(
@@ -501,7 +537,6 @@ namespace GeneXus.Application
 	}
 	public class CustomExceptionHandlerMiddleware
 	{
-		const string InvalidCSRFToken = "InvalidCSRFToken";
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
@@ -516,9 +551,8 @@ namespace GeneXus.Application
 				}
 				else if (ex is AntiforgeryValidationException)
 				{
-					//"The required antiforgery header value "X-GXCSRF-TOKEN" is not present.
 					httpStatusCode = HttpStatusCode.BadRequest;
-					httpReasonPhrase = InvalidCSRFToken;
+					httpReasonPhrase = HttpHelper.InvalidCSRFToken;
 					GXLogging.Error(log, $"Validation of antiforgery failed", ex);
 				}
 				else

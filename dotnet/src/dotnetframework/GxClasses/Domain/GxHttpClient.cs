@@ -2,6 +2,7 @@ namespace GeneXus.Http.Client
 {
 	using System;
 	using System.Collections;
+	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.Globalization;
@@ -9,6 +10,7 @@ namespace GeneXus.Http.Client
 	using System.Net;
 	using System.Net.Http;
 	using System.Net.Http.Headers;
+	using System.Net.Security;
 	using System.Security;
 	using System.Security.Cryptography.X509Certificates;
 	using System.Text;
@@ -51,7 +53,7 @@ namespace GeneXus.Http.Client
 			Boundary = "----------------------------" + DateTime.Now.Ticks.ToString("x");
 			ContentType = $"multipart/form-data; boundary={Boundary}";
 			FormdataSeparator = "\r\n";
-			FormdataTemplate = "--" + Boundary + "\r\nContent-Disposition: form-data; name=\"{0}\";\r\n\r\n{1}";
+			FormdataTemplate = "--" + Boundary + "\r\nContent-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
 			Boundarybytes = Encoding.ASCII.GetBytes($"\r\n--{Boundary}\r\n");
 			EndBoundaryBytes = Encoding.ASCII.GetBytes($"\r\n--{Boundary}--");
 			HeaderTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\n" + "Content-Type: {2}\r\n\r\n";
@@ -60,6 +62,7 @@ namespace GeneXus.Http.Client
 	public class GxHttpClient : IGxHttpClient, IDisposable
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxHttpClient>();
+		private const int DEFAULT_TIMEOUT = 30000;
 		public const int _Basic = 0;
 		public const int _Digest = 1;
 		public const int _NTLM = 2;
@@ -67,7 +70,7 @@ namespace GeneXus.Http.Client
 		const int StreamWriterDefaultBufferSize = 1024;
 		Stream _sendStream;
 		byte[] _receiveData;
-		int _timeout = 30000;
+		int _timeout = DEFAULT_TIMEOUT;
 		short _statusCode = 0;
 		string _proxyHost;
 		int _proxyPort;
@@ -93,18 +96,19 @@ namespace GeneXus.Http.Client
 		IGxContext _context;
 #if NETCORE
 
-		IWebProxy _proxyObject;
+		static IWebProxy _proxyObject;
+		static object syncRootHttpInstance = new Object();
 #else
 
-		WebProxy _proxyObject;
+		static WebProxy _proxyObject;
 #endif
 		ArrayList _authCollection;
 		ArrayList _authProxyCollection;
 		X509Certificate2Collection _certificateCollection;
+		List<string> _fileCertificateCollection;
 		Encoding _encoding;
 		Encoding _contentEncoding;
-
-
+		static object syncRoot = new Object();
 		public MultiPartTemplate MultiPart
 		{
 			get
@@ -144,17 +148,161 @@ namespace GeneXus.Http.Client
 			}
 		}
 
+
 #if NETCORE
-		[SecuritySafeCritical]
-		private HttpClientHandler GetHandler()
+		private async Task<byte[]> ReceiveDataAsync()
 		{
-			return new HttpClientHandler();
+			await ReadResponseDataAsync();
+			return _receiveData;
+		}
+
+		private const int POOLED_CONNECTION_LIFETIME_MINUTES = 2;
+		internal static ConcurrentDictionary<string, HttpClient> _httpClientInstances = new ConcurrentDictionary<string, HttpClient>();
+		private static HttpClient GetHttpClientInstance(Uri URI, int timeout, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, List<string> fileCertificateCollection, string proxyHost, int proxyPort, out bool disposableInstance)
+		{
+			if (CacheableInstance(authCollection, authProxyCollection))
+			{
+				HttpClient value;
+				disposableInstance = false;
+				string key = HttpClientInstanceIdentifier(proxyHost, proxyPort, fileCertificateCollection, timeout);
+				if (_httpClientInstances.TryGetValue(key, out value))
+				{
+					GXLogging.Debug(log, $"Getting httpClient cached instance");
+					return value;
+				}
+				else
+				{
+					lock (syncRootHttpInstance)
+					{
+						if (_httpClientInstances.TryGetValue(key, out value))
+						{
+							GXLogging.Debug(log, $"Getting httpClient cached instance");
+							return value;
+						}
+						value = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+						value.Timeout = TimeSpan.FromMilliseconds(timeout);
+						_httpClientInstances.TryAdd(key, value);
+						return value;
+					}
+				}
+			}
+			else
+			{
+				disposableInstance = true;
+				return new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+			}
+		}
+
+		private static string HttpClientInstanceIdentifier(string proxyHost, int proxyPort, List<string> fileCertificateCollection, int timeout)
+		{
+			bool defaultSslOptions = ServicePointManager.ServerCertificateValidationCallback == null;
+			if (string.IsNullOrEmpty(proxyHost) && fileCertificateCollection.Count==0 && timeout== DEFAULT_TIMEOUT && defaultSslOptions)
+			{
+				return string.Empty;
+			}
+			else if (fileCertificateCollection.Count==0)
+			{
+				return $"{proxyHost}:{proxyPort}::{timeout}:{defaultSslOptions}";
+			}
+			else
+			{
+				return $"{proxyHost}:{proxyPort}:{string.Join(';', fileCertificateCollection)}:{timeout}:{defaultSslOptions}";
+			}
+		}
+
+		private static bool CacheableInstance(ArrayList authCollection, ArrayList authProxyCollection)
+		{
+			return authCollection.Count == 0 && authProxyCollection.Count == 0 && Preferences.SingletonHttpClient();
+		}
+		private static SocketsHttpHandler GetHandler(Uri URI, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, string proxyHost, int proxyPort)
+		{
+			SocketsHttpHandler handler = new SocketsHttpHandler()
+			{
+				PooledConnectionLifetime = TimeSpan.FromMinutes(POOLED_CONNECTION_LIFETIME_MINUTES),
+			};
+			int maxConnections = Preferences.GetHttpClientMaxConnectionPerRoute();
+			if (maxConnections != Preferences.DEFAULT_HTTPCLIENT_MAX_PER_ROUTE)
+			{
+				handler.MaxConnectionsPerServer = maxConnections;
+			}
+			GXLogging.Debug(log, $"Creating SocketsHttpHandler MaxConnectionsPerServer:{handler.MaxConnectionsPerServer}");
+			ICredentials cc = getCredentialCache(URI, authCollection);
+			if (cc != null)
+			{
+				handler.Credentials = getCredentialCache(URI, authCollection);
+			}
+
+			SetSslOptions(handler);
+
+			if (GXUtil.CompressResponse())
+			{
+				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+			}
+			foreach (X509Certificate2 cert in certificateCollection)
+				handler.SslOptions.ClientCertificates.Add(cert);
+
+			WebProxy proxy = getProxy(proxyHost, proxyPort, authProxyCollection);
+			if (proxy != null)
+			{
+				handler.Proxy = proxy;
+			}
+			handler.UseCookies = false;
+			return handler;
+
+		}
+
+		private static void SetSslOptions(SocketsHttpHandler handler)
+		{
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.SslOptions = new SslClientAuthenticationOptions
+				{
+					RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback
+				};
+			}
 		}
 #else
 		[SecuritySafeCritical]
-		private WinHttpHandler GetHandler()
+
+		private static HttpClient GetHttpClientInstance(Uri URI, int timeout, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, string proxyHost, int proxyPort, CookieContainer cookies)
 		{
-			return new WinHttpHandler();
+			TimeSpan milliseconds = TimeSpan.FromMilliseconds(timeout);
+			HttpClient value = new HttpClient(GetHandler(URI, milliseconds, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort, cookies));
+			value.Timeout = milliseconds;
+			return value;
+		}
+		[SecuritySafeCritical]
+		private static WinHttpHandler GetHandler(Uri URI, TimeSpan milliseconds, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, string proxyHost, int proxyPort, CookieContainer cookies)
+		{
+			WinHttpHandler handler = new WinHttpHandler();
+			ICredentials cc = getCredentialCache(URI, authCollection);
+			if (cc != null)
+			{
+				handler.ServerCredentials = cc;
+			}
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+			{
+				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
+			}
+			handler.CookieUsePolicy = CookieUsePolicy.UseSpecifiedCookieContainer;
+			handler.CookieContainer = cookies;
+			if (GXUtil.CompressResponse())
+			{
+				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+			}
+			foreach (X509Certificate2 cert in certificateCollection)
+				handler.ClientCertificates.Add(cert);
+			WebProxy proxy = getProxy(proxyHost, proxyPort, authProxyCollection);
+			if (proxy != null)
+			{
+				handler.Proxy = proxy;
+				handler.WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy;
+			}
+			
+			handler.ReceiveDataTimeout = milliseconds;
+			handler.ReceiveHeadersTimeout = milliseconds;
+
+			return handler;
 		}
 #endif
 		public GxHttpClient(IGxContext context) : this()
@@ -172,21 +320,18 @@ namespace GeneXus.Http.Client
 			_authCollection = new ArrayList();
 			_authProxyCollection = new ArrayList();
 			_certificateCollection = new X509Certificate2Collection();
+			_fileCertificateCollection = new List<string>();
 			IncludeCookies = true;
 
 
 			_proxyHost = string.Empty;
 			try
 			{
-#if NETCORE
-				_proxyObject = WebRequest.GetSystemWebProxy();
-
-#else
-				_proxyObject = WebProxy.GetDefaultProxy();
-				if (_proxyObject != null && _proxyObject.Address != null)
+#if !NETCORE
+				if (ProxyObject != null && ProxyObject.Address != null)
 				{
-					_proxyHost = _proxyObject.Address.Host;
-					_proxyPort = _proxyObject.Address.Port;
+					_proxyHost = ProxyObject.Address.Host;
+					_proxyPort = ProxyObject.Address.Port;
 				}
 #endif
 			}
@@ -196,7 +341,36 @@ namespace GeneXus.Http.Client
 			}
 
 		}
+#if NETCORE
 
+		private IWebProxy ProxyObject
+#else
+
+		private static WebProxy ProxyObject
+#endif
+		{
+			get {
+				if (_proxyObject == null)
+				{
+					lock (syncRoot)
+					{
+						try
+						{
+#if NETCORE
+							_proxyObject = WebRequest.GetSystemWebProxy();
+#else
+							_proxyObject = WebProxy.GetDefaultProxy();
+#endif
+						}
+						catch (Exception e)
+						{
+							GXLogging.Warn(log, "Error getting ProxyObject", e);
+						}
+					}
+				}
+				return _proxyObject;
+			}
+		}
 		public short Digest
 		{
 			get { return _Digest; }
@@ -532,12 +706,19 @@ namespace GeneXus.Http.Client
 			if (IsMultipart)
 				reqStream.Write(MultiPart.EndBoundaryBytes, 0, MultiPart.EndBoundaryBytes.Length);
 		}
-
-		void setHeaders(HttpRequestMessage request, CookieContainer cookies)
+		void setContentHeaders(HttpRequestMessage request, string contentType)
 		{
-			HttpContentHeaders contentHeaders = request.Content.Headers;
+			if (contentType != null)
+			{
+				HttpContentHeaders contentHeaders = request.Content.Headers;
+				contentHeaders.ContentType = MediaTypeHeaderValue.Parse(contentType);
+			}
+			InferContentType(contentType, request);
+		}
+		void setHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
+		{
 			HttpRequestHeaders headers = request.Headers;
-			string contentType = null;
+			contentType = null;
 			for (int i = 0; i < _headers.Count; i++)
 			{
 				string currHeader = _headers.Keys[i];
@@ -550,7 +731,6 @@ namespace GeneXus.Http.Client
 						break;
 					case "CONTENT-TYPE":
 						contentType = _headers[i].ToString();
-						contentHeaders.ContentType = MediaTypeHeaderValue.Parse(_headers[i].ToString());
 						break;
 					case "ACCEPT":
 						AddHeader(headers, "Accept", _headers[i]);
@@ -584,7 +764,12 @@ namespace GeneXus.Http.Client
 						{
 							if (cookie.Contains("="))
 							{
-								cookies.Add(new Uri(request.RequestUri.Host), new Cookie(cookie.Split('=')[0], cookie.Split('=')[1]) { Domain = request.RequestUri.Host });
+								UriBuilder uriBuilder = new UriBuilder(request.RequestUri.Scheme, request.RequestUri.Host);
+								Cookie pCookie = ParseCookie(cookie, request.RequestUri.Host);
+								if (pCookie != null)
+								{
+									cookies.Add(uriBuilder.Uri, pCookie);
+								}
 							}
 						}
 						break;
@@ -606,7 +791,16 @@ namespace GeneXus.Http.Client
 				else
 					headers.ConnectionClose = false;
 			}
-			InferContentType(contentType, request);
+		}
+		Cookie ParseCookie(string cookie, string domain)
+		{
+			string[] values = cookie.TrimEnd(';').Split('=');
+			if (values.Length >= 2) {
+				string cookieName = values[0].Trim();
+				string cookieValue = values[1];
+				return new Cookie(cookieName, cookieValue) { Domain = domain };
+			}
+			return null;
 		}
 		void AddHeader(HttpRequestHeaders headers, string headerName, string headerValue)
 		{
@@ -634,63 +828,33 @@ namespace GeneXus.Http.Client
 				req.Version = HttpVersion.Version11;
 		}
 		[SecuritySafeCritical]
-		HttpResponseMessage ExecuteRequest(string method, string requestUrl, CookieContainer cookies)
+		HttpResponseMessage ExecuteRequest(string method, string requestUrl, bool contextCookies)
 		{
-			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
+			CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
+
+			GXLogging.Debug(log, string.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			HttpRequestMessage request;
-			HttpClient client;
+			HttpClient client = null;
 			int BytesRead;
-			Byte[] Buffer = new Byte[1024];
-
-			request = new HttpRequestMessage();
-			request.RequestUri = new Uri(requestUrl);
-#if NETCORE
-			HttpClientHandler handler = GetHandler();
-			handler.Credentials = getCredentialCache(request.RequestUri, _authCollection);
-			if (ServicePointManager.ServerCertificateValidationCallback != null)
-			{
-				handler.ServerCertificateCustomValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
-			}
-#else
-			WinHttpHandler handler = GetHandler();
-			handler.ServerCredentials = getCredentialCache(request.RequestUri, _authCollection);
-			if (ServicePointManager.ServerCertificateValidationCallback != null)
-			{
-				handler.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => ServicePointManager.ServerCertificateValidationCallback(sender, certificate, chain, sslPolicyErrors));
-			}
-			handler.CookieUsePolicy = CookieUsePolicy.UseSpecifiedCookieContainer;
-#endif
-			if (GXUtil.CompressResponse())
-			{
-				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-			}
-
-			handler.CookieContainer = cookies;
-
-			foreach (X509Certificate2 cert in _certificateCollection)
-				handler.ClientCertificates.Add(cert);
-
-			request.Method = new HttpMethod(method);
-			setHttpVersion(request);
-			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
-			if (proxy != null)
-			{
-				handler.Proxy = proxy;
-#if !NETCORE
-				handler.WindowsProxyUsePolicy = WindowsProxyUsePolicy.UseCustomProxy;
-#endif
-			}
+			byte[] Buffer = new byte[1024];
 			HttpResponseMessage response;
-			TimeSpan milliseconds = TimeSpan.FromMilliseconds(_timeout);
-#if !NETCORE
-			handler.ReceiveDataTimeout = milliseconds;
-			handler.ReceiveHeadersTimeout = milliseconds;
-#endif
-			using (client = new HttpClient(handler))
-			{
-				client.Timeout = milliseconds;
-				client.BaseAddress = request.RequestUri;
 
+			request = new HttpRequestMessage()
+			{
+				RequestUri = new Uri(requestUrl),
+				Method = new HttpMethod(method),
+			};
+			setHeaders(request, cookies, out string contentType);
+			setHttpVersion(request);
+			bool disposableInstance = true;
+			try
+			{
+#if NETCORE
+				request.PopulateCookies(cookies);
+				client = GetHttpClientInstance(request.RequestUri, _timeout, _authCollection, _authProxyCollection, _certificateCollection, _fileCertificateCollection, _proxyHost, _proxyPort, out disposableInstance);
+#else
+				client = GetHttpClientInstance(request.RequestUri, _timeout, _authCollection, _authProxyCollection, _certificateCollection, _proxyHost, _proxyPort, cookies);
+#endif
 				using (MemoryStream reqStream = new MemoryStream())
 				{
 					SendVariables(reqStream);
@@ -707,12 +871,80 @@ namespace GeneXus.Http.Client
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
 					reqStream.Seek(0, SeekOrigin.Begin);
 					request.Content = new ByteArrayContent(reqStream.ToArray());
-					setHeaders(request, handler.CookieContainer);
+					setContentHeaders(request, contentType);
+#if NETCORE
+					response = client.Send(request, HttpCompletionOption.ResponseHeadersRead);
+					response.ExtractCookies(cookies);
+#else
 					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
+#endif
+				}
+			}
+			finally
+			{
+				if (disposableInstance && client != null)
+				{
+					client.Dispose();
 				}
 			}
 			return response;
-		}		
+		}
+#if NETCORE
+		async Task<HttpResponseMessage> ExecuteRequestAsync(string method, string requestUrl, bool contextCookies)
+		{
+			CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
+
+			GXLogging.Debug(log, string.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
+			HttpRequestMessage request;
+			HttpClient client = null;
+			int BytesRead;
+			byte[] Buffer = new byte[1024];
+			HttpResponseMessage response;
+
+			request = new HttpRequestMessage()
+			{
+				RequestUri = new Uri(requestUrl),
+				Method = new HttpMethod(method),
+			};
+			setHeaders(request, cookies, out string contentType);
+			setHttpVersion(request);
+			bool disposableInstance = true;
+			try
+			{
+				request.PopulateCookies(cookies);
+				client = GetHttpClientInstance(request.RequestUri, _timeout, _authCollection, _authProxyCollection, _certificateCollection, _fileCertificateCollection, _proxyHost, _proxyPort, out disposableInstance);
+				using (MemoryStream reqStream = new MemoryStream())
+				{
+					SendVariables(reqStream);
+					SendStream.Seek(0, SeekOrigin.Begin);
+					BytesRead = await SendStream.ReadAsync(Buffer, 0, 1024);
+					GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
+					while (BytesRead > 0)
+					{
+						GXLogging.Debug(log, "reqStream.Write: Buffer.length " + Buffer.Length + ",'" + Encoding.UTF8.GetString(Buffer, 0, Buffer.Length) + "'");
+						await reqStream.WriteAsync(Buffer, 0, BytesRead);
+						BytesRead = await SendStream.ReadAsync(Buffer, 0, 1024);
+					}
+					EndMultipartBoundary(reqStream);
+					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
+					reqStream.Seek(0, SeekOrigin.Begin);
+					request.Content = new ByteArrayContent(reqStream.ToArray());
+					setContentHeaders(request, contentType);
+					response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+					response.ExtractCookies(cookies);
+				}
+			}
+			finally
+			{
+				if (disposableInstance && client != null)
+				{
+					client.Dispose();
+				}
+			}
+			return response;
+		}
+#endif
+
 		void ReadResponseData()
 		{
 			if (_receiveData == null && _response!=null)
@@ -720,7 +952,11 @@ namespace GeneXus.Http.Client
 				_receiveData = Array.Empty<byte>();
 				try
 				{
+#if NETCORE
+					Stream stream = _response.Content.ReadAsStream();
+#else
 					Stream stream = _response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+#endif
 
 					using (MemoryStream ms = new MemoryStream())
 					{
@@ -744,6 +980,39 @@ namespace GeneXus.Http.Client
 				}
 			}
 		}
+#if NETCORE
+		async Task ReadResponseDataAsync()
+		{
+			if (_receiveData == null && _response != null)
+			{
+				_receiveData = Array.Empty<byte>();
+				try
+				{
+					Stream stream = await _response.Content.ReadAsStreamAsync();
+
+					using (MemoryStream ms = new MemoryStream())
+					{
+						await stream.CopyToAsync(ms);
+						_receiveData = ms.ToArray();
+					}
+					_eof = true;
+					int bytesRead = _receiveData.Length;
+					GXLogging.Debug(log, "BytesRead " + _receiveData.Length);
+					if (bytesRead > 0 && !_encodingFound)
+					{
+						_encoding = DetectEncoding(_charset, out _encodingFound, _receiveData, bytesRead);
+					}
+				}
+				catch (IOException ioEx)
+				{
+					if (_errCode == 1)
+						GXLogging.Warn(log, "Could not read response", ioEx);
+					else
+						throw ioEx;
+				}
+			}
+		}
+		#endif
 		bool UseOldHttpClient(string name)
 		{
 			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
@@ -777,6 +1046,20 @@ namespace GeneXus.Http.Client
 				HttpClientExecute(method, name);
 			}
 		}
+#if NETCORE
+		public async Task ExecuteAsync(string method, string name)
+		{
+			if (UseOldHttpClient(name))
+			{
+				GXLogging.Debug(log, "Using legacy GxHttpClient");
+				await WebExecuteAsync(method, name);
+			}
+			else
+			{
+				await HttpClientExecuteAsync(method, name);
+			}
+		}
+#endif
 		internal void ProcessResponse(HttpResponseMessage httpResponse)
 		{
 			_response = httpResponse;
@@ -789,28 +1072,13 @@ namespace GeneXus.Http.Client
 				_errDescription = "The remote server returned an error: (" + _statusCode + ") " + _statusDescription + ".";
 			}
 		}
-		public void HttpClientExecute(string method, string name)
+		private void ProcessHttpClientException(Exception ex)
 		{
-			_receiveData = null;
-			_response = null;
-			Byte[] Buffer = new Byte[1024];
-			_errCode = 0;
-			_errDescription = string.Empty;
-			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
-			try
-			{
-				string requestUrl = GetRequestURL(name);
-				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
-				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
-				_response = ExecuteRequest(method, requestUrl, cookies);
-
-				if (contextCookies)
-					_context.UpdateSessionCookieContainer();
-
-
-			}
+			HttpRequestException httpex;
+			TaskCanceledException tcex;
 #if NETCORE
-			catch (AggregateException aex)
+			AggregateException aex;
+			if ((aex = ex as AggregateException) != null)
 			{
 				GXLogging.Warn(log, "Error Execute", aex);
 				_errCode = 1;
@@ -822,43 +1090,96 @@ namespace GeneXus.Http.Client
 				_response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 				_response.StatusCode = HttpStatusCode.InternalServerError;
 			}
+			else
 #endif
-			catch (HttpRequestException e)
+			if ((httpex = ex as HttpRequestException) != null)
 			{
-				GXLogging.Warn(log, "Error Execute", e);
+				GXLogging.Warn(log, "Error Execute", httpex);
 				_errCode = 1;
-				if (e.InnerException != null)
-					_errDescription = e.Message + " " + e.InnerException.Message;
+				if (httpex.InnerException != null)
+					_errDescription = httpex.Message + " " + httpex.InnerException.Message;
 				else
-					_errDescription = e.Message;
+					_errDescription = httpex.Message;
 				_response = new HttpResponseMessage();
 				_response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 #if NETCORE
-				_response.StatusCode = (HttpStatusCode)(e.StatusCode != null ? e.StatusCode : HttpStatusCode.InternalServerError);
+				_response.StatusCode = (HttpStatusCode)(httpex.StatusCode != null ? httpex.StatusCode : HttpStatusCode.InternalServerError);
 #else
 				_response.StatusCode = HttpStatusCode.InternalServerError;
 #endif
+
 			}
-			catch (TaskCanceledException e)
+			else if ((tcex = ex as TaskCanceledException) != null)
 			{
-				GXLogging.Warn(log, "Error Execute", e);
+				GXLogging.Warn(log, "Error Execute", tcex);
 				_errCode = 1;
-				_errDescription = "The request has timed out. " + e.Message;
+				_errDescription = "The request has timed out. " + tcex.Message;
 				_response = new HttpResponseMessage();
 				_response.StatusCode = 0;
 				_response.Content = new StringContent(String.Empty);
 			}
-			catch (Exception e)
+			else
 			{
-				GXLogging.Warn(log, "Error Execute", e);
+				GXLogging.Warn(log, "Error Execute", ex);
 				_errCode = 1;
-				if (e.InnerException != null)
-					_errDescription = e.Message + " " + e.InnerException.Message;
+				if (ex.InnerException != null)
+					_errDescription = ex.Message + " " + ex.InnerException.Message;
 				else
-					_errDescription = e.Message;
+					_errDescription = ex.Message;
 				_response = new HttpResponseMessage();
 				_response.Content = new StringContent(HttpHelper.StatusCodeToTitle(HttpStatusCode.InternalServerError));
 				_response.StatusCode = HttpStatusCode.InternalServerError;
+			}
+		}
+#if NETCORE
+		internal async Task HttpClientExecuteAsync(string method, string name)
+		{
+			_receiveData = null;
+			_response = null;
+			_errCode = 0;
+			_errDescription = string.Empty;
+			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
+			try
+			{
+				string requestUrl = GetRequestURL(name);
+				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
+				_response = await ExecuteRequestAsync(method, requestUrl, contextCookies);
+
+				if (contextCookies)
+					_context.UpdateSessionCookieContainer();
+
+			}
+			catch (Exception ex) {
+				ProcessHttpClientException(ex);
+			}
+
+			GXLogging.Debug(log, "Reading response...");
+			if (_response == null)
+				return;
+			ProcessResponse(_response);
+			ClearSendStream();
+		}
+#endif
+		public void HttpClientExecute(string method, string name)
+		{
+			_receiveData = null;
+			_response = null;
+			_errCode = 0;
+			_errDescription = string.Empty;
+			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
+			try
+			{
+				string requestUrl = GetRequestURL(name);
+				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
+				_response = ExecuteRequest(method, requestUrl, contextCookies);
+
+				if (contextCookies)
+					_context.UpdateSessionCookieContainer();
+
+			}
+			catch (Exception ex)
+			{
+				ProcessHttpClientException(ex);
 			}
 			GXLogging.Debug(log, "Reading response...");
 			if (_response == null)
@@ -872,11 +1193,13 @@ namespace GeneXus.Http.Client
 		internal void LoadResponseHeaders(HttpResponseMessage resp)
 		{
 			_respHeaders = new NameValueCollection();
-			foreach (KeyValuePair<string, IEnumerable<string>> header in resp.Headers)
+			HttpResponseHeaders headers = resp.Headers;
+			foreach (KeyValuePair<string, IEnumerable<string>> header in headers)
 			{
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}
-			foreach (KeyValuePair<string, IEnumerable<string>> header in resp.Content.Headers)
+			HttpContentHeaders contentHeaders = resp.Content.Headers;
+			foreach (KeyValuePair<string, IEnumerable<string>> header in contentHeaders)
 			{
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}
@@ -1020,7 +1343,7 @@ namespace GeneXus.Http.Client
 			}
 		}
 
-		WebProxy getProxy(string proxyHost, int proxyPort, ArrayList authenticationCollection)
+		static WebProxy getProxy(string proxyHost, int proxyPort, ArrayList authenticationCollection)
 		{
 			if (proxyHost.Length > 0)
 			{
@@ -1086,7 +1409,8 @@ namespace GeneXus.Http.Client
 			httpC.Timeout = _timeout;
 		}
 #endif
-		HttpWebRequest buildRequest(string method, string requestUrl, CookieContainer cookies)
+#if NETCORE
+		async Task<HttpWebRequest> buildRequestAsync(string method, string requestUrl, CookieContainer cookies)
 		{
 			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
 			int BytesRead;
@@ -1118,8 +1442,56 @@ namespace GeneXus.Http.Client
 #if !NETCORE
 				using (Stream reqStream = req.GetRequestStream())
 #else
-				using (Stream reqStream = req.GetRequestStreamAsync().GetAwaiter().GetResult())
+				using (Stream reqStream = await req.GetRequestStreamAsync())
 #endif
+				{
+					SendVariables(reqStream);
+					SendStream.Seek(0, SeekOrigin.Begin);
+					BytesRead = await SendStream.ReadAsync(Buffer, 0, 1024);
+					GXLogging.Debug(log, "Start SendStream.Read: BytesRead " + BytesRead);
+					while (BytesRead > 0)
+					{
+						GXLogging.Debug(log, "reqStream.Write: Buffer.length " + Buffer.Length + ",'" + Encoding.UTF8.GetString(Buffer, 0, Buffer.Length) + "'");
+						await reqStream.WriteAsync(Buffer, 0, BytesRead);
+						BytesRead = await SendStream.ReadAsync(Buffer, 0, 1024);
+					}
+					EndMultipartBoundary(reqStream);
+				}
+			}
+			return req;
+		}
+#endif
+
+		HttpWebRequest buildRequest(string method, string requestUrl, CookieContainer cookies)
+		{
+			GXLogging.Debug(log, String.Format("Start HTTPClient buildRequest: requestUrl:{0} method:{1}", requestUrl, method));
+			int BytesRead;
+			Byte[] Buffer = new Byte[1024];
+#pragma warning disable SYSLIB0014 // WebRequest
+			HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requestUrl);
+#pragma warning disable SYSLIB0014 // WebRequest
+
+			if (GXUtil.CompressResponse())
+			{
+				req.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+			}
+
+			req.Credentials = getCredentialCache(req.RequestUri, _authCollection);
+			req.CookieContainer = cookies;
+			foreach (X509Certificate2 cert in _certificateCollection)
+				req.ClientCertificates.Add(cert);
+			req.Method = method.Trim();
+			req.Timeout = _timeout;
+			setHttpVersion(req);
+			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
+			if (proxy != null)
+				req.Proxy = proxy;
+
+			setHeaders(req);
+
+			if (!method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) && !method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase))
+			{
+				using (Stream reqStream = req.GetRequestStream())
 				{
 					SendVariables(reqStream);
 					SendStream.Seek(0, SeekOrigin.Begin);
@@ -1141,11 +1513,11 @@ namespace GeneXus.Http.Client
 		{
 			return getCredentialCache(new Uri(url), _authCollection);
 		}
-		ICredentials getCredentialCache(Uri URI, ArrayList authenticationCollection)
+		static ICredentials getCredentialCache(Uri URI, ArrayList authenticationCollection)
 		{
 			string sScheme;
 			GxAuthScheme auth;
-			CredentialCache cc = new CredentialCache();
+			CredentialCache cc = null;
 
 			for (int i = 0; i < authenticationCollection.Count; i++)
 			{
@@ -1175,10 +1547,18 @@ namespace GeneXus.Http.Client
 					}
 					else if (sScheme != "Basic")
 					{
+						if (cc == null)
+						{
+							cc = new CredentialCache();
+						}
 						cc.Add(URI, sScheme, new NetworkCredential(auth.User, auth.Password, auth.Realm));
 					}
 					else
 					{
+						if (cc == null)
+						{
+							cc = new CredentialCache();
+						}
 						cc.Add(URI, sScheme, new NetworkCredential(auth.User, auth.Password));
 					}
 				}
@@ -1188,7 +1568,128 @@ namespace GeneXus.Http.Client
 			}
 			return cc;
 		}
+#if NETCORE
+		private async Task WebExecuteAsync(string method, string name)
+		{
+			HttpWebRequest req;
+			HttpWebResponse resp;
 
+			_errCode = 0;
+			_errDescription = string.Empty;
+
+			GXLogging.Debug(log, "Start Execute: method '" + method + "', name '" + name + "'");
+			try
+			{
+				string requestUrl = GetRequestURL(name);
+				bool contextCookies = _context != null && !String.IsNullOrEmpty(requestUrl);
+				CookieContainer cookies = contextCookies ? _context.GetCookieContainer(requestUrl, IncludeCookies) : new CookieContainer();
+				req = await buildRequestAsync(method, requestUrl, cookies);
+
+				resp = await req.GetResponseAsync() as HttpWebResponse;
+				if (contextCookies)
+					_context.UpdateSessionCookieContainer();
+			}
+			catch (Exception e)
+			{
+				resp = ProcessWebExecuteException(e);
+			}
+
+
+			_receiveData = Array.Empty<byte>();
+			if (resp != null)
+			{
+				GXLogging.Debug(log, "Reading response...");
+				loadResponseHeaders(resp);
+
+				String charset = resp.ContentType;
+				using (Stream rStream = resp.GetResponseStream())
+				{
+					try
+					{
+						bool encodingFound = false;
+						if (!string.IsNullOrEmpty(charset))
+						{
+							int idx = charset.IndexOf("charset=");
+							if (idx > 0)
+							{
+								idx += 8;
+								charset = charset.Substring(idx, charset.Length - idx);
+								_encoding = GetEncoding(charset);
+								if (_encoding != null)
+									encodingFound = true;
+							}
+							else
+							{
+								charset = String.Empty;
+							}
+						}
+						using (MemoryStream ms = new MemoryStream())
+						{
+							await rStream.CopyToAsync(ms);
+							_receiveData = ms.ToArray();
+						}
+						int bytesRead = _receiveData.Length;
+						GXLogging.Debug(log, "BytesRead " + bytesRead);
+
+						if (bytesRead > 0 && !encodingFound)
+						{
+							_encoding = DetectEncoding(charset, out encodingFound, _receiveData, bytesRead);
+						}
+					}
+					catch (IOException ioEx)
+					{
+						if (_errCode == 1)
+							GXLogging.Warn(log, "Could not read response", ioEx);
+						else
+							throw ioEx;
+					}
+				}
+				_statusCode = (short)resp.StatusCode;
+				_statusDescription = resp.StatusDescription;
+				resp.Close();
+
+				GXLogging.DebugSanitized(log, "_responseString " + ToString());
+			}
+			ClearSendStream();
+		}
+#endif
+		private HttpWebResponse ProcessWebExecuteException(Exception ex)
+		{
+			WebException we;
+			HttpWebResponse resp=null;
+#if NETCORE
+			AggregateException agge;
+			if ((agge = ex as AggregateException) != null)
+			{
+				GXLogging.Warn(log, "Error Execute", agge);
+				_errCode = 1;
+				_errDescription = agge.Message;
+
+				var baseEx = agge.GetBaseException() as WebException;
+				if (baseEx != null)
+				{
+					resp = baseEx.Response as HttpWebResponse;
+					_errDescription = baseEx.Message;
+				}
+			}
+			else
+#endif
+			if ((we = ex as WebException)!=null)
+			{
+				GXLogging.Warn(log, "Error Execute", we);
+				_errCode = 1;
+				_errDescription = we.Message;
+				resp = (HttpWebResponse)(we.Response);
+			}
+			else 
+			{
+				GXLogging.Warn(log, "Error Execute", ex);
+				_errCode = 1;
+				_errDescription = ex.Message;
+			}
+			return resp;
+
+		}
 		private void WebExecute(string method, string name)
 		{
 			HttpWebRequest req;
@@ -1213,33 +1714,9 @@ namespace GeneXus.Http.Client
 				resp = (HttpWebResponse)req.GetResponse();
 #endif
 			}
-			catch (WebException e)
-			{
-				GXLogging.Warn(log, "Error Execute", e);
-				_errCode = 1;
-				_errDescription = e.Message;
-				resp = (HttpWebResponse)(e.Response);
-			}
-#if NETCORE
-			catch (AggregateException aex)
-			{
-				GXLogging.Warn(log, "Error Execute", aex);
-				_errCode = 1;
-				_errDescription = aex.Message;
-
-				var baseEx = aex.GetBaseException() as WebException;
-				if (baseEx != null)
-				{
-					resp = baseEx.Response as HttpWebResponse;
-					_errDescription = baseEx.Message;
-				}
-			}
-#endif
 			catch (Exception e)
 			{
-				GXLogging.Warn(log, "Error Execute", e);
-				_errCode = 1;
-				_errDescription = e.Message;
+				resp = ProcessWebExecuteException(e);
 			}
 
 
@@ -1370,10 +1847,9 @@ namespace GeneXus.Http.Client
 			Encoding enc = null;
 
 			Match m = Regex.Match(responseText, regExpP);
-			string parsedEncoding = string.Empty;
 			if (m != null && m.Success)
 			{
-				parsedEncoding = m.Value;
+				string parsedEncoding = m.Value;
 				parsedEncoding = parsedEncoding.Substring(startAt, parsedEncoding.Length - (startAt + 1));
 				enc = GetEncoding(parsedEncoding);
 			}
@@ -1399,7 +1875,11 @@ namespace GeneXus.Http.Client
 			{
 				if (_receivedChunkedStream == null)
 				{
+#if NETCORE
+					_receivedChunkedStream = new StreamReader(_response.Content.ReadAsStream());
+#else
 					_receivedChunkedStream = new StreamReader(_response.Content.ReadAsStreamAsync().GetAwaiter().GetResult());
+#endif
 				}
 				_eof = _receivedChunkedStream.EndOfStream;
 				if (!_eof)
@@ -1428,6 +1908,20 @@ namespace GeneXus.Http.Client
 			GXLogging.DebugSanitized(log, "_responseString " + responseString);
 			return responseString;
 		}
+#if NETCORE
+		public async Task<string> ToStringAsync()
+		{
+			byte[] bytes = await ReceiveDataAsync();
+			if (bytes == null)
+				return string.Empty;
+			if (_encoding == null)
+				_encoding = Encoding.UTF8;
+			string responseString = _encoding.GetString(bytes);
+			GXLogging.DebugSanitized(log, "_responseString " + responseString);
+			return responseString;
+		}
+#endif
+
 		public void ToFile(string fileName)
 		{
 			string pathName = fileName;
@@ -1505,6 +1999,7 @@ namespace GeneXus.Http.Client
 			{
 				c = new X509Certificate2(file, pass);
 			}
+			_fileCertificateCollection.Add(file);
 			_certificateCollection.Add(c);
 		}
 

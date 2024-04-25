@@ -8,6 +8,7 @@ using System.Data.Common;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;
@@ -212,7 +213,22 @@ namespace GeneXus.Data.ADO
 				throw e;
 			}
 		}
+#if NETCORE
+		internal async Task RemoveConnectionAsync(int handle, string dataSource)
+		{
 
+			ServerUserInformation sui;
+			if (userConnections.TryGetValue(handle, out sui))
+			{
+				GXLogging.Debug(log, "RemoveConnection   handle " + handle + ",datasource:" + dataSource);
+				GxConnection con = sui[dataSource];
+				if (sui.TryRemove(dataSource, out con))
+					await con.DisposeAsync();
+				ServerUserInformation suiDeleted;
+				if (sui.Count == 0) userConnections.TryRemove(handle, out suiDeleted);
+			}
+		}
+#endif
 		public void RemoveConnection(int handle, string dataSource)
 		{
 			
@@ -411,7 +427,12 @@ namespace GeneXus.Data.ADO
 		{
 			Close();
 		}
-
+#if NETCORE
+		internal async Task DisposeAsync()
+		{
+			await CloseAsync();
+		}
+#endif
 		public IGxDataStore DataStore
 		{
 			get{ return dataStore;}
@@ -736,7 +757,61 @@ namespace GeneXus.Data.ADO
 				wmiconnection.CleanUp();
 			}
 		}
+#if NETCORE
+		internal async Task CloseAsync()
+		{
+			if (connection != null)
+			{
+				GXLogging.Debug(log, "GxConnection.Close Id " + " connection State '" + connection.State + "'" + " handle:" + handle + " datastore:" + DataStore.Id);
+			}
+			if (connection != null && ((connection.State & ConnectionState.Closed) == 0))
+			{
+				try
+				{
+					connectionCache.Clear();
+				}
+				catch (Exception e)
+				{
+					GXLogging.Warn(log, "GxConnection.Close can't close all prepared cursors", e);
+				}
 
+				GXLogging.Debug(log, "UncommitedChanges before Close:" + UncommitedChanges);
+				try
+				{
+					if (UncommitedChanges)
+					{
+						rollbackTransactionOnly();
+						UncommitedChanges = false;
+					}
+				}
+				catch (Exception e)
+				{
+					GXLogging.Warn(log, "GxConnection.Close can't rollback transaction", e);
+				}
+				try
+				{
+					await connection.CloseAsync();
+					if (transaction != null)
+					{
+						transaction.Dispose();
+						transaction = null;
+					}
+
+				}
+				catch (Exception e)
+				{
+					GXLogging.Warn(log, "GxConnection.Close can't close connection", e);
+				}
+				spid = 0;
+				GXLogging.Debug(log, "GxConnection.Close connection is closed ");
+			}
+			m_opened = false;
+			if (Preferences.Instrumented && wmiconnection != null)
+			{
+				wmiconnection.CleanUp();
+			}
+		}
+#endif
 		public int OpenHandles
 		{
 			get{return openHandles;}
@@ -2719,7 +2794,12 @@ namespace GeneXus.Data.ADO
 			switch (dbms)
 			{
                 case "sqlserver":
-                    return new GxSqlServer();
+					GxSqlServer gxSqlServer = new GxSqlServer();
+					if (Config.GetValueOf("Connection-" + id + "-UseSmallDateTime", out cfgBuf) && cfgBuf == "1")
+					{
+						gxSqlServer.UseSmallDateTime();
+					}
+					return gxSqlServer;
 				case "mysql":
 #if NETCORE
 					return new GxMySqlConnector(id);
@@ -2837,6 +2917,12 @@ namespace GeneXus.Data.ADO
 		{
 			GxConnectionManager.Instance.RemoveConnection(handle, id);
 		}
+#if NETCORE
+		internal async Task CloseConnectionsAsync()
+		{
+			await ((GxConnectionManager)GxConnectionManager.Instance).RemoveConnectionAsync(handle, id);
+		}
+#endif
 		public void Release()
 		{
 		}

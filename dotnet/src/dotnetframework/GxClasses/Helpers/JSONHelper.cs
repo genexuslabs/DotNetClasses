@@ -3,13 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Json;
 using System.Text;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using System.Runtime.Serialization;
 using GeneXus.Configuration;
 #if NETCORE
 using System.Buffers.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
+using System.Globalization;
 #endif
 
 namespace GeneXus.Utils
@@ -33,17 +39,49 @@ namespace GeneXus.Utils
 					return JsonSerializer.Deserialize<JArray>(ref reader, options);
 				case JsonTokenType.StartObject:
 					return JsonSerializer.Deserialize<JObject>(ref reader, options);
+				case JsonTokenType.Number:
+					if (reader.TryGetInt32(out int l))
+						return l;
+					else
+						if (reader.TryGetDecimal(out decimal d))
+						return d;
+					else
+						return reader.GetDouble();
+				case JsonTokenType.String:
+					return reader.GetString();
 				default:
 					using (JsonDocument document = JsonDocument.ParseValue(ref reader))
 					{
-						return document.RootElement.Clone().ToString();
+						return document.RootElement.Clone();
 					}
 			}
 		}
-
 		public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
 		{
 			throw new NotImplementedException();
+		}
+	}
+	internal class CustomGeospatialConverter : JsonConverter<Geospatial>
+	{
+		public override Geospatial Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+			throw new NotImplementedException("Deserialization is not supported.");
+
+		public override void Write(Utf8JsonWriter writer, Geospatial value, JsonSerializerOptions options)
+		{
+			string stringValue = value?.ToString();
+			JsonSerializer.Serialize(writer, stringValue, options);
+		}
+	}
+	internal class CustomDateTimeConverter : JsonConverter<DateTime>
+	{
+		public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			throw new NotImplementedException("Deserialization is not supported.");
+		}
+
+		public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+		{
+			writer.WriteStringValue(Convert.ToString(value, CultureInfo.InvariantCulture)); //"dd/MM/yyyy HH:mm:ss"
 		}
 	}
 	internal class TextJsonSerializer : GXJsonSerializer
@@ -52,18 +90,29 @@ namespace GeneXus.Utils
 		{
 			return jobject == null;
 		}
+		static JsonSerializerOptions DeserializationOptions = new JsonSerializerOptions() { Converters = { new GxJsonConverter() }, AllowTrailingCommas=true };
 		internal override T ReadJSON<T>(string json)
 		{
-			JsonSerializerOptions opts = new JsonSerializerOptions();
-			opts.Converters.Add(new GxJsonConverter());
-			return JsonSerializer.Deserialize<T>(json, opts);
+			return JsonSerializer.Deserialize<T>(json, DeserializationOptions);
 		}
 		internal override string WriteJSON<T>(T kbObject)
 		{
-			return JsonSerializer.Serialize<T>(kbObject);
+			if (kbObject != null)
+			{
+				return kbObject.ToString();
+			}
+			return null;
+		}
+		static JsonSerializerOptions JayrockCompatibleOptions = new JsonSerializerOptions() {
+			Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+			Converters = { new CustomDateTimeConverter() },
+			NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals };
+		internal static string SerializeToJayrockCompatibleJson<T>(T value) where T : IJayrockCompatible
+		{
+			return JsonSerializer.Serialize(value, JayrockCompatibleOptions);
 		}
 	}
-#endif
+#else
 	internal class JayRockJsonSerializer : GXJsonSerializer
 	{
 		internal override bool IsJsonNull(object jobject)
@@ -85,6 +134,7 @@ namespace GeneXus.Utils
 			return null;
 		}
 	}
+#endif
 	internal enum GXJsonSerializerType
 	{
 		Utf8,
@@ -94,8 +144,7 @@ namespace GeneXus.Utils
 	internal abstract class GXJsonSerializer
 	{
 		private static GXJsonSerializer s_instance = null;
-		private static object syncRoot = new Object();
-		static GXJsonSerializerType DefaultJSonSerializer= GXJsonSerializerType.Jayrock;
+		private static object syncRoot = new object();
 		internal static GXJsonSerializer Instance
 		{
 			get
@@ -106,17 +155,11 @@ namespace GeneXus.Utils
 					{
 						if (s_instance == null)
 						{
-							switch (DefaultJSonSerializer)
-							{
 #if NETCORE
-								case GXJsonSerializerType.TextJson:
-									s_instance = new TextJsonSerializer();
-									break;
+							s_instance = new TextJsonSerializer();
+#else
+							s_instance = new JayRockJsonSerializer();
 #endif
-								default:
-									s_instance = new JayRockJsonSerializer();
-									break;
-							}
 						}
 					}
 				}
@@ -156,7 +199,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				GXLogging.Error(log, "FromJsonError ", ex);
 				return default(T);
 			}
@@ -178,7 +221,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				GXLogging.Error(log, "FromJsonError ", ex);
 				return default(T);
 			}
@@ -214,9 +257,27 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				var settings = SerializationSettings(knownTypes);
+				DataContractJsonSerializerSettings settings = SerializationSettings(knownTypes);
 				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
 				
+				using (MemoryStream stream = new MemoryStream())
+				{
+					serializer.WriteObject(stream, kbObject);
+					return encoding.GetString(stream.ToArray());
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Serialize error ", ex);
+			}
+			return null;
+		}
+		internal static string Serialize<T>(T kbObject, DataContractJsonSerializerSettings settings) where T : class
+		{
+			try
+			{
+				Encoding encoding = Encoding.UTF8;
+				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
 				using (MemoryStream stream = new MemoryStream())
 				{
 					serializer.WriteObject(stream, kbObject);
@@ -277,11 +338,15 @@ namespace GeneXus.Utils
 		}
 		public static T Deserialize<T>(string kbObject, Encoding encoding, IEnumerable<Type> knownTypes, T defaultValue) where T : class
 		{
+			var settings = SerializationSettings(knownTypes);
+			return Deserialize<T>(kbObject, encoding, knownTypes, defaultValue, settings);
+		}
+		internal static T Deserialize<T>(string kbObject, Encoding encoding, IEnumerable<Type> knownTypes, T defaultValue, DataContractJsonSerializerSettings settings) where T : class
+		{
 			if (!string.IsNullOrEmpty(kbObject))
 			{
 				try
 				{
-					var settings = SerializationSettings(knownTypes);
 					using (MemoryStream stream = new MemoryStream(encoding.GetBytes(kbObject)))
 					{
 						DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
@@ -299,14 +364,13 @@ namespace GeneXus.Utils
 		}
 		public static T Deserialize<T>(string kbObject, Encoding encoding) where T : class, new()
 		{
-			return Deserialize<T>(kbObject, Encoding.Unicode, null, new T());
+			return Deserialize<T>(kbObject, encoding, null, new T());
 		}
 
 		public static T Deserialize<T>(string kbObject) where T : class, new()
 		{
 			return Deserialize<T>(kbObject, Encoding.Unicode);
 		}
-
 		public static T DeserializeNullDefaultValue<T>(string kbObject) where T : class
 		{
 			return Deserialize<T>(kbObject, Encoding.Unicode, null, null);

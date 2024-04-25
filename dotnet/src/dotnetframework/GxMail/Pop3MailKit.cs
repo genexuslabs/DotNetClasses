@@ -15,6 +15,7 @@ namespace GeneXus.Mail
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Pop3MailKit>();
 
 		private Pop3Client client;
+		const string INLINE_IMAGE_PREFIX = "cid:";
 
 		public override int GetMessageCount()
 		{
@@ -161,7 +162,7 @@ namespace GeneXus.Mail
 						}
 						gxmessage.DateReceived = Internals.Pop3.MailMessage.GetMessageDate(GetHeaderFromMimeMessage(msg,"Delivery-Date"));
 						AddHeader(gxmessage, "DispositionNotificationTo", GetHeaderFromMimeMessage(msg, "Disposition-Notification-To"));
-						ProcessMailAttachments(gxmessage, msg.Attachments);
+						ProcessMailAttachments(gxmessage, msg);
 					}
 				}
 			}
@@ -192,8 +193,9 @@ namespace GeneXus.Mail
 			return msg.Headers.Contains(headerValue) ? msg.Headers[msg.Headers.IndexOf(headerValue)].ToString() : null;
 		}
 
-		private void ProcessMailAttachments(GXMailMessage gxmessage, IEnumerable<MimeEntity> attachs)
+		private void ProcessMailAttachments(GXMailMessage gxmessage, MimeMessage msg)
 		{
+			IEnumerable<MimeEntity> attachs = msg.Attachments;
 			if (attachs == null)
 				return;
 
@@ -202,26 +204,47 @@ namespace GeneXus.Mail
 				if (!Directory.Exists(AttachDir))
 					Directory.CreateDirectory(AttachDir);
 
-				foreach (var attach in attachs)
+				foreach (MimeEntity attach in attachs)
 				{
 					string attachName = FixFileName(AttachDir, attach is MessagePart ? attach.ContentDisposition?.FileName : ((MimePart)attach).FileName);
-					if (!string.IsNullOrEmpty(attach.ContentId) && attach.ContentDisposition != null && !attach.ContentDisposition.IsAttachment)
+					ProcessMailAttachment(gxmessage, attach, attachName);
+				}
+				foreach (MimeEntity attach in msg.BodyParts)
+				{
+					if (IsEmbeddedImage(attach, msg))
 					{
-						string cid = "cid:" + attach.ContentId;
-						attachName = String.Format("{0}_{1}", attach.ContentId, attachName);
-						gxmessage.HTMLText = gxmessage.HTMLText.Replace(cid, attachName);
-					}
-					try
-					{
-						SaveAttachedFile(attach, attachName);
-						gxmessage.Attachments.Add(attachName);
-					}
-					catch (Exception e)
-					{
-						LogError("Could not add Attachment", "Failed to save attachment", MailConstants.MAIL_InvalidAttachment, e, log);
+						string attachName = FixFileName(AttachDir, attach.ContentDisposition!=null ? attach.ContentDisposition?.FileName : ((MimePart)attach).FileName);
+						ProcessMailAttachment(gxmessage, attach, attachName);
 					}
 				}
 			}
+		}
+
+		private bool IsEmbeddedImage(MimeEntity entity, MimeMessage msg)
+		{
+			MimePart attach = entity as MimePart;
+			return (attach!=null && attach.ContentId != null && attach.Content != null && attach.ContentType.MediaType == "image" &&
+				(msg.HtmlBody.IndexOf(INLINE_IMAGE_PREFIX + attach.ContentId) > -1));
+		}
+
+		private void ProcessMailAttachment(GXMailMessage gxmessage, MimeEntity attach, string attachName)
+		{
+			if (!string.IsNullOrEmpty(attach.ContentId) && attach.ContentDisposition != null && !attach.ContentDisposition.IsAttachment)
+			{
+				string cid = INLINE_IMAGE_PREFIX + attach.ContentId;
+				attachName = String.Format("{0}_{1}", attach.ContentId, attachName);
+				gxmessage.HTMLText = gxmessage.HTMLText.Replace(cid, attachName);
+			}
+			try
+			{
+				SaveAttachedFile(attach, attachName);
+				gxmessage.Attachments.Add(attachName);
+			}
+			catch (Exception e)
+			{
+				LogError("Could not add Attachment", "Failed to save attachment", MailConstants.MAIL_InvalidAttachment, e, log);
+			}
+
 		}
 
 		private void SaveAttachedFile(MimeEntity attach, string attachName)

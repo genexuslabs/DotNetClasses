@@ -1,3 +1,4 @@
+using GeneXus.Configuration;
 using GeneXus.Data.NTier;
 using GeneXus.Encryption;
 using GeneXus.Http;
@@ -6,7 +7,9 @@ using GeneXus.Mock;
 using GeneXus.Services.OpenTelemetry;
 #endif
 using GeneXus.Utils;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;
 #endif
@@ -15,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace GeneXus.Application
 {
@@ -34,6 +38,7 @@ namespace GeneXus.Application
 		protected IGxContext _Context;
 		bool _isMain;
 		protected bool _isApi;
+		protected bool _isDP;
 #if NETCORE
 		internal static ActivitySource ActivitySource {
 			get {
@@ -60,25 +65,79 @@ namespace GeneXus.Application
 			
 		}
 #if NETCORE
+		protected virtual bool AsyncEnabled { get; }
+
+		internal bool GetAsyncEnabledInternal()
+		{
+			return AsyncEnabled;
+		}
+		protected async Task CloseConnectionsAsync()
+		{
+			GxContext gxContext = context as GxContext;
+			if (gxContext != null)
+			{
+				await gxContext.CloseConnectionsAsync();
+			}
+		}
+
+		protected virtual Task ExecutePrivateAsync()
+		{
+			return Task.CompletedTask;
+		}
+#endif
+		internal static string GetObjectNameWithoutNamespace(string gxObjFullName)
+		{
+			string mainNamespace = Preferences.AppMainNamespace;
+			if (gxObjFullName.StartsWith(mainNamespace))
+				gxObjFullName = gxObjFullName.Remove(0, mainNamespace.Length + 1);
+			return gxObjFullName;
+		}
+#if NETCORE
 		private void ExecuteUsingSpanCode()
 		{
-			using (Activity activity = ActivitySource.StartActivity($"{this.GetType().FullName}.execute"))
+			string gxObjFullName = GetObjectNameWithoutNamespace(GetType().FullName);
+			using (Activity activity = ActivitySource.StartActivity($"{gxObjFullName}.execute"))
 			{
 				ExecutePrivate();
+			}
+		}
+		private async Task ExecuteUsingSpanCodeAsync()
+		{
+			string gxObjFullName = GetObjectNameWithoutNamespace(GetType().FullName);
+			using (Activity activity = ActivitySource.StartActivity($"{gxObjFullName}.execute"))
+			{
+				await ExecutePrivateAsync();
 			}
 		}
 #endif
 		protected virtual void ExecuteImpl()
 		{
 #if NETCORE
-			if (GenOtelSpanEnabled())
-				ExecuteUsingSpanCode();
+			if (GetAsyncEnabledInternal())
+			{
+				ExecuteImplAsync().GetAwaiter().GetResult();
+			}
 			else
-				ExecutePrivate();
+			{
+				if (GenOtelSpanEnabled())
+					ExecuteUsingSpanCode();
+				else
+					ExecutePrivate();
+			}
 #else
 			ExecutePrivate();
 #endif
 		}
+
+#if NETCORE
+		protected virtual async Task ExecuteImplAsync()
+		{
+			if (GenOtelSpanEnabled())
+				await ExecuteUsingSpanCodeAsync();
+			else
+				await ExecutePrivateAsync();
+		}
+#endif
 		protected virtual void ExecutePrivateCatch(object stateInfo)
 		{
 			try
@@ -165,6 +224,11 @@ namespace GeneXus.Application
 			set { _isApi = value; }
 			get { return _isApi; }
 		}
+#if NETCORE
+		protected virtual Task CleanupAsync() {
+			return Task.CompletedTask;// throw new NotImplementedException();
+		}
+#endif		
 		public virtual void cleanup() { }
 
 		virtual public bool UploadEnabled() { return false; }

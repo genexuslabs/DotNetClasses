@@ -15,6 +15,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestECDSASigning.cs" Link="Cryptography\Asymmetric\TestECDSASigning.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestRSAEncryption.cs" Link="Cryptography\Asymmetric\TestRSAEncryption.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestRSASigning.cs" Link="Cryptography\Asymmetric\TestRSASigning.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestRSAStandardSigning.cs" Link="Cryptography\Asymmetric\TestRSAStandardSigning.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Checksum\TestChecksum.cs" Link="Cryptography\Checksum\TestChecksum.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Hash\TestHashDomainSpaces.cs" Link="Cryptography\Hash\TestHashDomainSpaces.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Hash\TestHashing.cs" Link="Cryptography\Hash\TestHashing.cs" />

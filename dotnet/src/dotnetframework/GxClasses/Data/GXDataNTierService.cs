@@ -56,7 +56,7 @@ namespace GeneXus.Data.NTier
 
 	public class GxServiceFactory
 	{
-		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxServiceFactory>();
 
 		public static GxService Create(string id, string providerId, string serviceClass)		
 		{
@@ -66,7 +66,7 @@ namespace GeneXus.Data.NTier
 
 	public class GxService : GxDataRecord
 	{
-		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxService>();
 		private Type m_ServiceType;
 		private CursorDef m_CursorDef;
 
@@ -307,7 +307,7 @@ namespace GeneXus.Data.NTier
 
 	sealed public class ServiceConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ServiceConnectionWrapper>();
 		public ServiceConnectionWrapper(Type runtimeClassType, String connectionString, GxConnectionCache connCache, IsolationLevel isolationLevel, String dataSource)
 		{
 			try
@@ -363,7 +363,6 @@ namespace GeneXus.Data.NTier
 		{
 			try
 			{
-				CheckState(false);
 				InternalConnection.Close();
 			}
 			catch (Exception ex)

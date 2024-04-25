@@ -20,6 +20,7 @@ using SecurityAPICommons.Utils;
 using Org.BouncyCastle.Utilities.Encoders;
 using System.Security.AccessControl;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace SecurityAPICommons.Keys
 {
@@ -220,8 +221,27 @@ namespace SecurityAPICommons.Keys
 				byte[] serializedPrivateBytes = this.privateKeyInfo.ToAsn1Object().GetDerEncoded();
 				string serializedPrivate = Convert.ToBase64String(serializedPrivateBytes);
 				RsaPrivateCrtKeyParameters privateKey = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(serializedPrivate));
+
+
 #if NETCORE
-				return DotNetUtilities.ToRSA(privateKey);
+				if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+				{
+					return DotNetUtilities.ToRSA(privateKey);
+				}
+				else
+				{
+					try
+					{
+						RSA rsa = RSA.Create();
+						rsa.ImportPkcs8PrivateKey(serializedPrivateBytes, out int outthing);
+						return rsa;
+					}catch(Exception e )
+					{
+						this.error.setError("PK026", e.Message);
+						return null;
+					}
+				}
+				
 #else
 
 

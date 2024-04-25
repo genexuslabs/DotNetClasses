@@ -15,6 +15,7 @@
 	</ItemGroup>
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\ConfigMappings\ConfigTest.cs" Link="ConfigMappings\ConfigTest.cs" />		
+	    <Compile Include="..\DotNetUnitTest\Domain\GxGenericDictionaryTest.cs" Link="Domain\GxGenericDictionaryTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\GxHttpClientTest.cs" Link="Domain\GxHttpClientTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\ShellTest.cs" Link="Domain\ShellTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\TimeZoneTest.cs" Link="Domain\TimeZoneTest.cs" />		
@@ -36,7 +37,8 @@
 		<Compile Include="..\DotNetUnitTest\PDF\PDFTests.cs" Link="PDF\PDFTests.cs" />		
 	</ItemGroup>
 	<ItemGroup>		
-		<Compile Include="..\DotNetUnitTest\ImageUtils\ImageUtilTest.cs" Link="ImageUtils\ImageUtilTest.cs" />
+		<Compile Include="..\DotNetUnitTest\ImageUtils\ImageUtilTest.cs" Link="ImageUtils\ImageUtilTest.cs" />		
+		<Compile Include="..\DotNetUnitTest\StringUtil\StringUtilTests.cs" Link="StringUtil\StringUtilTests.cs" />
 		
 	</ItemGroup>
 	<ItemGroup>
@@ -55,14 +57,12 @@
 		</Content>
 	</ItemGroup>
 
-
-
 	<ItemGroup>
 		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.0" />
 		<PackageReference Include="iTextSharp" Version="5.5.13.2" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.2" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.8.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.7" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.34.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
 		<PackageReference Include="xunit" Version="2.4.1" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
@@ -74,7 +74,7 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
-		<PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454"/>
+		<PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454" />
 	</ItemGroup>
 
   <ItemGroup>
@@ -180,10 +180,4 @@
 	  </None>
 	</ItemGroup>
 
-
-	<ItemGroup>
-	  <Reference Include="Jayrock">
-	    <HintPath>..\..\src\dotnetcore\libs\Jayrock.dll</HintPath>
-	  </Reference>
-	</ItemGroup>
 </Project>

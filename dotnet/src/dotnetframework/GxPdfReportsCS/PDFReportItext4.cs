@@ -13,7 +13,7 @@ using iTextSharp.text.pdf;
 
 namespace com.genexus.reports
 {
-	public class PDFReportItextSharp : PDFReportItextBase
+	public class PDFReportItextSharp : PDFReportBase
 	{
 
 		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportItextSharp>();

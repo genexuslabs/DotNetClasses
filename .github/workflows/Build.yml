@@ -190,14 +190,14 @@ jobs:
             $PushToAzureArgs  += "--skip-duplicate"
           }
           
-          dotnet $PushToAzureArgs
+          dotnet $PushToAzureArgs  || exit 1
           $pushedToAzure += 1
 
           if (!$IsPrerelease) {
-            dotnet $PushToGitHubArgs
+            dotnet $PushToGitHubArgs || exit 1
             $pushedToGitHub += 1
 
-            dotnet $PushToNugetArgs
+            dotnet $PushToNugetArgs || exit 1
             $pushedToNuget += 1
           }
 

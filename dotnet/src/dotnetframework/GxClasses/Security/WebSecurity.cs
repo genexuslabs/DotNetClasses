@@ -16,9 +16,9 @@ namespace GeneXus.Web.Security
 	[SecuritySafeCritical]
 	public static class WebSecurityHelper
     {
-		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(typeof(WebSecurityHelper).FullName);
 
-		const int SecretKeyMinimumLength = 16;
+		const int SecretKeyMinimumLength = 32;
 
         public static string StripInvalidChars(string input)
         {
@@ -112,7 +112,7 @@ namespace GeneXus.Web.Security
 	public static class SecureTokenHelper
     {
         
-		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(typeof(SecureTokenHelper).FullName);
 
 		public enum SecurityMode
         {
@@ -129,6 +129,10 @@ namespace GeneXus.Web.Security
 			using (var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey))
 			{
 				var handler = new JwtSecurityTokenHandler();
+				if (signedToken.Length >= handler.MaximumTokenSizeInBytes)
+				{
+					handler.MaximumTokenSizeInBytes = signedToken.Length + 1;
+				}
 				var validationParameters = new TokenValidationParameters
 				{
 					ClockSkew = TimeSpan.FromMinutes(1),
