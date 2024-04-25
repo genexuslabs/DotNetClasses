@@ -21,7 +21,6 @@ namespace GeneXus.Application
 		public int ErrorCode { get => errorCode; set => errorCode = value; }
 		public int StatusCode { get => statusCode; set => statusCode = value; }
 		public string StatusMessage { get => statusMessage; set => statusMessage = value; }
-
 		public int Protocol { get => protocol; set => protocol = value; }
 	}
 
