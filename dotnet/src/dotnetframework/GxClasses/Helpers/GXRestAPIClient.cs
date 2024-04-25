@@ -29,7 +29,11 @@ namespace GeneXus.Application
 			Location.BaseUrl = "api";
 			Location.Host = "www.example.com";
 			Location.ResourceName = "service";
+#if NETCORE
+			Location.Port = 8082;
+#else
 			Location.Port = 80;
+#endif
 		}
 
 
