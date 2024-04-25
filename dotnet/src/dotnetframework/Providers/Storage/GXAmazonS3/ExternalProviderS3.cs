@@ -49,7 +49,9 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		bool forcePathStyle = false;
 		bool customEndpoint = false;
-		
+
+		bool objectOwnershipEnabled;
+
 		public string StorageUri
 		{
 			get {
@@ -103,6 +105,8 @@ namespace GeneXus.Storage.GXAmazonS3
 					Amazon.AWSConfigsS3.UseSignatureVersion4 = true;
 				}
 			}
+
+			objectOwnershipEnabled = !GetPropertyValue(DEFAULT_ACL, DEFAULT_ACL_DEPRECATED, "").Equals("Bucket owner enforced");
 
 #if NETCORE
 			if (credentials != null)
@@ -227,16 +231,19 @@ namespace GeneXus.Storage.GXAmazonS3
 			{
 				BucketName = Bucket,
 				Key = objectName,
-				FilePath = localFile,
-				CannedACL = GetCannedACL(fileType)
+				FilePath = localFile
 			};
+			if (objectOwnershipEnabled)
+			{
+				objectRequest.CannedACL = GetCannedACL(fileType);
+			}
 			PutObject(objectRequest);
 			return GetUrlImpl(objectName, fileType);
 		}
 
 		private bool IsPrivateUpload(GxFileType fileType)
 		{
-			return GetCannedACL(fileType) != S3CannedACL.PublicRead;
+			return (GetCannedACL(fileType) != S3CannedACL.PublicRead) && objectOwnershipEnabled;
 		}
 
 		public string Get(string objectName, GxFileType fileType, int urlMinutes = 0)
@@ -327,9 +334,13 @@ namespace GeneXus.Storage.GXAmazonS3
 				SourceKey = objectName,
 				DestinationBucket = Bucket,
 				DestinationKey = newName,
-				CannedACL = GetCannedACL(destFileType),
 				MetadataDirective = S3MetadataDirective.REPLACE
 			};
+
+			if (objectOwnershipEnabled)
+			{
+				request.CannedACL = GetCannedACL(destFileType);
+			}
 
 			if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
 			{
@@ -384,9 +395,13 @@ namespace GeneXus.Storage.GXAmazonS3
 				BucketName = Bucket,
 				Key = fileName,				
 				PartSize = MULITIPART_POST_PART_SIZE,
-				InputStream = stream,
-				CannedACL = GetCannedACL(destFileType)
+				InputStream = stream
 			};
+
+			if (objectOwnershipEnabled)
+			{
+				uploadRequest.CannedACL = GetCannedACL(destFileType);
+			}
 
 			if (TryGetContentType(fileName, out string mimeType))
 			{
@@ -404,9 +419,14 @@ namespace GeneXus.Storage.GXAmazonS3
 			{
 				BucketName = Bucket,
 				Key = fileName,
-				InputStream = stream,
-				CannedACL = GetCannedACL(destFileType)
+				InputStream = stream
 			};
+
+			if (objectOwnershipEnabled)
+			{
+				objectRequest.CannedACL = GetCannedACL(destFileType);
+			}
+
 			if (TryGetContentType(fileName, out string mimeType))
 			{
 				objectRequest.ContentType = mimeType;
@@ -430,9 +450,13 @@ namespace GeneXus.Storage.GXAmazonS3
 				SourceKey = url,
 				DestinationBucket = Bucket,
 				DestinationKey = resourceKey,
-				CannedACL = GetCannedACL(destFileType),
 				MetadataDirective = S3MetadataDirective.REPLACE
 			};
+
+			if (objectOwnershipEnabled)
+			{
+				request.CannedACL = GetCannedACL(destFileType);
+			}
 
 			if (TryGetContentType(newName, out string mimeType, DEFAULT_CONTENT_TYPE))
 			{
@@ -455,9 +479,12 @@ namespace GeneXus.Storage.GXAmazonS3
 				{
 					BucketName = Bucket,
 					Key = resourceKey,
-					InputStream = fileStream,
-					CannedACL = GetCannedACL(destFileType)
+					InputStream = fileStream
 				};
+				if (objectOwnershipEnabled)
+				{
+					objectRequest.CannedACL = GetCannedACL(destFileType);
+				}
 				if (TryGetContentType(fileName, out string mimeType))
 				{
 					objectRequest.ContentType = mimeType;
