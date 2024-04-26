@@ -351,19 +351,49 @@ namespace GxClasses.Web.Middleware
 		}
 		public bool ServiceInPath(String path, out String actualPath)
 		{
-			actualPath = string.Empty;
-			foreach (String subPath in servicesPathUrl.Keys)
+			string tmppath = path.Substring(0, 1).Equals("/") ? path.Substring(1) : path;
+			int pos = tmppath.IndexOf("/");
+			string innerPath = tmppath.Substring(pos, tmppath.Length - pos);
+			actualPath = FindPath( innerPath, servicesPathUrl, true);
+			if (String.IsNullOrEmpty(actualPath))
 			{
-				if (path.ToLower().Contains($"/{subPath.ToLower()}"))
+				// fallback
+				actualPath = FindPath(path, servicesPathUrl, false);
+				if (String.IsNullOrEmpty(actualPath))
 				{
-					actualPath = subPath.ToLower();
-					GXLogging.Debug(log, $"ServiceInPath actualPath:{actualPath}");
+					actualPath = String.Empty;
+					GXLogging.Debug(log, $"ServiceInPath path:{path} not found");
+					return false;
+				}
+				else
+				{
 					return true;
 				}
 			}
-			GXLogging.Debug(log, $"ServiceInPath path:{path} not found");
-			return false;
+			else {
+				return true;
+			}						
 		}
+
+		private String FindPath(string innerPath, Dictionary<string,string > servicesPathUrl, bool startTxt)
+		{
+			string actualPath = String.Empty;
+			foreach (var subPath in from String subPath in servicesPathUrl.Keys									
+									select subPath)
+			{
+				bool match = false;
+				innerPath = innerPath.ToLower();
+				match = (startTxt)? innerPath.StartsWith($"/{subPath.ToLower()}"): innerPath.Contains($"/{subPath.ToLower()}");
+				if (match)
+				{
+					actualPath = subPath.ToLower();
+					GXLogging.Debug(log, $"ServiceInPath actualPath:{actualPath}");
+					return subPath;
+				}
+			}
+			return null;
+		}
+
 		public GxRestWrapper GetController(HttpContext context, string controller, string methodName, Dictionary<string, string> variableAlias)
 		{
 			return GetController(context, new ControllerInfo() { Name = controller, MethodName = methodName, VariableAlias = variableAlias });
