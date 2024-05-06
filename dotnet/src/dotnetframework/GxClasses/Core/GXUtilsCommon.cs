@@ -2715,7 +2715,7 @@ namespace GeneXus.Utils
 			{
 				try
 				{
-					return new DateTime(fourDigitsYear, month, day, cultureInfo.Calendar);
+					return new DateTime(fourDigitsYear, month, day, cultureInfo.DateTimeFormat.Calendar);
 				}
 				catch
 				{
