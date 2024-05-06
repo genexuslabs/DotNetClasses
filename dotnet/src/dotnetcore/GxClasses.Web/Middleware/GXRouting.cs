@@ -351,10 +351,14 @@ namespace GxClasses.Web.Middleware
 		}
 		public bool ServiceInPath(String path, out String actualPath)
 		{
+			actualPath = null;
 			string tmppath = path.Substring(0, 1).Equals("/") ? path.Substring(1) : path;
 			int pos = tmppath.IndexOf("/");
-			string innerPath = tmppath.Substring(pos, tmppath.Length - pos);
-			actualPath = FindPath( innerPath, servicesPathUrl, true);
+			if (pos > 0)
+			{
+				string innerPath = tmppath.Substring(pos, tmppath.Length - pos);
+				actualPath = FindPath(innerPath, servicesPathUrl, true);
+			}
 			if (String.IsNullOrEmpty(actualPath))
 			{
 				// fallback
