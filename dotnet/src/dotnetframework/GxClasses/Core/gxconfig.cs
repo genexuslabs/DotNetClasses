@@ -505,6 +505,7 @@ namespace GeneXus.Configuration
 		};
 
 		static string GeoTypesAssembly = "Microsoft.SqlServer.Types";
+		static string DiagnosticSourceAssembly = "System.Diagnostics.DiagnosticSource";
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
@@ -518,7 +519,16 @@ namespace GeneXus.Configuration
 			{
 				return SQLGeographyWrapper.GeoAssembly;
 			}
-			else return null;
+			else if (requestedAssembly.Name == DiagnosticSourceAssembly)
+			{
+				//MySQLConnector requirement
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{DiagnosticSourceAssembly}.dll");
+				if (File.Exists(fileName))
+				{
+					return Assembly.LoadFrom(fileName);
+				}
+			}
+			return null;
 		}
 #endif
 		static object syncRoot = new Object();
