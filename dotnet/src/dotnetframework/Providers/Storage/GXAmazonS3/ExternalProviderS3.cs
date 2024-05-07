@@ -112,7 +112,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			objectOwnershipEnabled = !default_storage_privacy.Contains("Bucket owner enforced");
 			ownerEnforcedBucketPrivacy = (!objectOwnershipEnabled ?
 				(default_storage_privacy.Contains("private") ? BucketPrivacy.PRIVATE : BucketPrivacy.PUBLIC)
-				: null);
+				: (BucketPrivacy?)null);
 
 #if NETCORE
 			if (credentials != null)
