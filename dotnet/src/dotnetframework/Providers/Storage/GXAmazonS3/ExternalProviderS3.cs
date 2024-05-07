@@ -51,6 +51,8 @@ namespace GeneXus.Storage.GXAmazonS3
 		bool customEndpoint = false;
 
 		bool objectOwnershipEnabled;
+		private enum BucketPrivacy { PRIVATE, PUBLIC };
+		private BucketPrivacy ownerEnforcedBucketPrivacy;
 
 		public string StorageUri
 		{
@@ -106,7 +108,11 @@ namespace GeneXus.Storage.GXAmazonS3
 				}
 			}
 
-			objectOwnershipEnabled = !GetPropertyValue(DEFAULT_ACL, DEFAULT_ACL_DEPRECATED, "").Equals("Bucket owner enforced");
+			string default_storage_privacy = GetPropertyValue(DEFAULT_ACL, DEFAULT_STORAGE_PRIVACY, "");
+			objectOwnershipEnabled = !default_storage_privacy.Contains("Bucket owner enforced");
+			ownerEnforcedBucketPrivacy = (BucketPrivacy) (!objectOwnershipEnabled ?
+				(default_storage_privacy.Contains("private") ? BucketPrivacy.PRIVATE : BucketPrivacy.PUBLIC)
+				: (BucketPrivacy?) null);
 
 #if NETCORE
 			if (credentials != null)
@@ -243,7 +249,10 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private bool IsPrivateUpload(GxFileType fileType)
 		{
-			return (GetCannedACL(fileType) != S3CannedACL.PublicRead) && objectOwnershipEnabled;
+			if (objectOwnershipEnabled && GetCannedACL(fileType) != S3CannedACL.PublicRead)
+				return true;
+			else 
+				return ownerEnforcedBucketPrivacy == BucketPrivacy.PRIVATE;
 		}
 
 		public string Get(string objectName, GxFileType fileType, int urlMinutes = 0)
@@ -264,7 +273,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
-			return (isPrivate)? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes): StorageUri + StorageUtils.EncodeUrlPath(objectName);
+			return (isPrivate) ? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes): IsPrivateUpload(fileType) ? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes): StorageUri + StorageUtils.EncodeUrlPath(objectName);
 			
 		}
 
@@ -323,7 +332,9 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			Copy(objectName, fileType, newName, fileType);
 			Delete(objectName, fileType);
-			return StorageUri + StorageUtils.EncodeUrlPath(newName);
+			if (objectOwnershipEnabled)
+				return StorageUri + StorageUtils.EncodeUrlPath(newName);
+			return IsPrivateUpload(fileType) ? GetPreSignedUrl(objectName, defaultExpiration.Minutes) : StorageUri + StorageUtils.EncodeUrlPath(newName);
 		}
 
 		public string Copy(string objectName, GxFileType sourceFileType, string newName, GxFileType destFileType)
@@ -348,7 +359,9 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 
 			CopyObject(request);
-			return StorageUri + StorageUtils.EncodeUrlPath(newName);
+			if (objectOwnershipEnabled)
+				return StorageUri + StorageUtils.EncodeUrlPath(newName);
+			return IsPrivateUpload(sourceFileType) ? GetPreSignedUrl(objectName, defaultExpiration.Minutes) : StorageUri + StorageUtils.EncodeUrlPath(newName);
 		}
 
 		private S3CannedACL GetCannedACL(GxFileType acl)
@@ -467,7 +480,9 @@ namespace GeneXus.Storage.GXAmazonS3
 			AddObjectMetadata(request.Metadata, tableName, fieldName, resourceKey);
 			CopyObject(request);
 
-			return StorageUri + StorageUtils.EncodeUrlPath(resourceKey);
+			if (objectOwnershipEnabled)
+				return StorageUri + StorageUtils.EncodeUrlPath(resourceKey);
+			return IsPrivateUpload(destFileType) ? GetPreSignedUrl(resourceKey, defaultExpiration.Minutes) : StorageUri + StorageUtils.EncodeUrlPath(resourceKey);
 		}
 
 		public string Save(Stream fileStream, string fileName, string tableName, string fieldName, GxFileType destFileType)
@@ -494,7 +509,9 @@ namespace GeneXus.Storage.GXAmazonS3
 				AddObjectMetadata(objectRequest.Metadata, tableName, fieldName, resourceKey);
 				PutObjectResponse result = PutObject(objectRequest);
 
-				return StorageUri + resourceKey;
+				if (objectOwnershipEnabled) 
+					return StorageUri + resourceKey;
+				return IsPrivateUpload(destFileType) ? GetPreSignedUrl(resourceKey, defaultExpiration.Minutes) : StorageUri + StorageUtils.EncodeUrlPath(resourceKey);
 			}
 			catch (Exception ex)
 			{
