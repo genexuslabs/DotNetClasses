@@ -52,7 +52,7 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		bool objectOwnershipEnabled;
 		private enum BucketPrivacy { PRIVATE, PUBLIC };
-		private BucketPrivacy ownerEnforcedBucketPrivacy;
+		private BucketPrivacy? ownerEnforcedBucketPrivacy;
 
 		public string StorageUri
 		{
@@ -110,9 +110,9 @@ namespace GeneXus.Storage.GXAmazonS3
 
 			string default_storage_privacy = GetPropertyValue(DEFAULT_ACL, DEFAULT_STORAGE_PRIVACY, "");
 			objectOwnershipEnabled = !default_storage_privacy.Contains("Bucket owner enforced");
-			ownerEnforcedBucketPrivacy = (BucketPrivacy) (!objectOwnershipEnabled ?
+			ownerEnforcedBucketPrivacy = (!objectOwnershipEnabled ?
 				(default_storage_privacy.Contains("private") ? BucketPrivacy.PRIVATE : BucketPrivacy.PUBLIC)
-				: (BucketPrivacy?) null);
+				: null);
 
 #if NETCORE
 			if (credentials != null)
@@ -252,7 +252,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			if (objectOwnershipEnabled && GetCannedACL(fileType) != S3CannedACL.PublicRead)
 				return true;
 			else 
-				return ownerEnforcedBucketPrivacy == BucketPrivacy.PRIVATE;
+				return ownerEnforcedBucketPrivacy.HasValue && ownerEnforcedBucketPrivacy == BucketPrivacy.PRIVATE;
 		}
 
 		public string Get(string objectName, GxFileType fileType, int urlMinutes = 0)
