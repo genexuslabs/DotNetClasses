@@ -263,6 +263,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogTest", "test\benchmarks\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AccessTokenController_Test", "test\NativeAccessControllerTest\AccessTokenController_Test.csproj", "{A5589382-DB6F-4450-AE2B-6C6AA1643EF1}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApplicationTest", "test\WebApplication1\WebApplicationTest.csproj", "{99D99D7C-0E65-4BD3-BAD8-52432FFBB30A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -641,6 +643,10 @@ Global
 		{A5589382-DB6F-4450-AE2B-6C6AA1643EF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5589382-DB6F-4450-AE2B-6C6AA1643EF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5589382-DB6F-4450-AE2B-6C6AA1643EF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99D99D7C-0E65-4BD3-BAD8-52432FFBB30A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99D99D7C-0E65-4BD3-BAD8-52432FFBB30A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99D99D7C-0E65-4BD3-BAD8-52432FFBB30A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99D99D7C-0E65-4BD3-BAD8-52432FFBB30A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -767,6 +773,7 @@ Global
 		{46DAAFD1-FAF5-4904-8EC5-406BE04E5538} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 		{A1DBDCE0-4F09-445F-A202-9B260CDD46CF} = {46DAAFD1-FAF5-4904-8EC5-406BE04E5538}
 		{A5589382-DB6F-4450-AE2B-6C6AA1643EF1} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
+		{99D99D7C-0E65-4BD3-BAD8-52432FFBB30A} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
