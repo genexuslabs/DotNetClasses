@@ -189,7 +189,7 @@ namespace SecurityAPICommons.Commons
 			{
 				return;
 			}
-			string alg = this.subjectPublicKeyInfo.AlgorithmID.Algorithm.Id;
+			string alg = this.subjectPublicKeyInfo.Algorithm.Algorithm.Id;
 			switch (alg)
 			{
 				case "1.2.840.113549.1.1.1":
@@ -236,7 +236,7 @@ namespace SecurityAPICommons.Commons
 
 #if !NETCORE
 					ECPublicKeyParameters pubkeyparms = (ECPublicKeyParameters)this.getAsymmetricKeyParameter();
-					AlgorithmIdentifier algid = this.subjectPublicKeyInfo.AlgorithmID;
+					AlgorithmIdentifier algid = this.subjectPublicKeyInfo.Algorithm;
 					string oid = ((DerObjectIdentifier)algid.Parameters).Id;
 					ECParameters ecparams = new ECParameters();
 					ecparams.Curve = ECCurve.CreateFromOid(new Oid(oid));
