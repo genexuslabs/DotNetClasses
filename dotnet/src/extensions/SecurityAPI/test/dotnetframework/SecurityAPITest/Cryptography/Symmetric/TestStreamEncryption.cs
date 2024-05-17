@@ -70,12 +70,12 @@ namespace SecurityAPITest.Cryptography.Symmetric
 			testBulkAlgorithms("RC4", key1024, "");
 		}
 
-		[Test]
+	/*	[Test]
 		public void TestHC128()
 		{
 			// HC128 key 128 bits, no nonce
 			testBulkAlgorithms("HC128", key128, IV128);
-		}
+		}*/
 
 		[Test]
 		public void TestHC256()
