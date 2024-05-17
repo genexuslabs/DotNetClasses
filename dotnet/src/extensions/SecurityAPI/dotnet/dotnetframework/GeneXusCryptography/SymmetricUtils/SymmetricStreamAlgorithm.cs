@@ -15,7 +15,7 @@ namespace GeneXusCryptography.SymmetricUtils
 	public enum SymmetricStreamAlgorithm
 	{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-		NONE, RC4, HC128, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC
+		NONE, RC4, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 	}
 
@@ -44,8 +44,6 @@ namespace GeneXusCryptography.SymmetricUtils
 			{
 				case "RC4":
 					return SymmetricStreamAlgorithm.RC4;
-				case "HC128":
-					return SymmetricStreamAlgorithm.HC128;
 				case "HC256":
 					return SymmetricStreamAlgorithm.HC256;
 				case "CHACHA20":
@@ -74,8 +72,6 @@ namespace GeneXusCryptography.SymmetricUtils
 			{
 				case SymmetricStreamAlgorithm.RC4:
 					return "RC4";
-				case SymmetricStreamAlgorithm.HC128:
-					return "HC128";
 				case SymmetricStreamAlgorithm.HC256:
 					return "HC256";
 				case SymmetricStreamAlgorithm.CHACHA20:
@@ -108,10 +104,6 @@ namespace GeneXusCryptography.SymmetricUtils
 					keySize[0] = 0;
 					keySize[1] = 40;
 					keySize[2] = 2048;
-					break;
-				case SymmetricStreamAlgorithm.HC128:
-					keySize[0] = 1;
-					keySize[1] = 128;
 					break;
 				case SymmetricStreamAlgorithm.HC256:
 				case SymmetricStreamAlgorithm.XSALSA20:
@@ -148,7 +140,6 @@ namespace GeneXusCryptography.SymmetricUtils
 			switch (algorithm)
 			{
 				case SymmetricStreamAlgorithm.RC4:
-				case SymmetricStreamAlgorithm.HC128:
 				case SymmetricStreamAlgorithm.ISAAC:
 					return false;
 				case SymmetricStreamAlgorithm.HC256:
