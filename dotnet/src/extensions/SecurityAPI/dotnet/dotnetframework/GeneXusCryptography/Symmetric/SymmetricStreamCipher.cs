@@ -134,9 +134,6 @@ namespace GeneXusCryptography.Symmetric
 				case SymmetricStreamAlgorithm.RC4:
 					engine = new RC4Engine();
 					break;
-				case SymmetricStreamAlgorithm.HC128:
-					engine = new HC128Engine();
-					break;
 				case SymmetricStreamAlgorithm.HC256:
 					engine = new HC256Engine();
 					break;
