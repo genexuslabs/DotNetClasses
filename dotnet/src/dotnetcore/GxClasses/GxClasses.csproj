@@ -173,9 +173,9 @@
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.34.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
 		<PackageReference Include="System.Drawing.Common" Version="4.7.2" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.34.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.35.0" />
 		<PackageReference Include="NUglify" Version="1.16.4" />
 	</ItemGroup>
 
