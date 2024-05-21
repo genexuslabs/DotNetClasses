@@ -101,12 +101,21 @@ namespace ProjectHealthTest
 							XmlAttribute condition = packageNode.ParentNode.Attributes["Condition"];
 							if (condition != null) {
 								if (targetFramework == NET8 && condition.Value.Contains($"=='{NET_FRAMEWORK}'", StringComparison.OrdinalIgnoreCase))
+								{
 									continue;
+								}
+								else if (targetFramework == NET8 && condition.Value.Contains($"!='{NET8}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
 								else if (targetFramework == NET_FRAMEWORK && condition.Value.Contains($"=='{NET8}'", StringComparison.OrdinalIgnoreCase))
 								{
 									continue;
 								}
-
+								else if (targetFramework == NET_FRAMEWORK && condition.Value.Contains($"!='{NET_FRAMEWORK}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
 							}
 
 							if (packageNode.Attributes == null)
