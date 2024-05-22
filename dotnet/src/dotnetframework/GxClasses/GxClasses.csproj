@@ -16,7 +16,7 @@
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.34.0" />
 		<PackageReference Include="Microsoft.Net.Http.Headers" Version="2.2.0" />
 		<PackageReference Include="MySqlConnector" Version="2.2.3" />
-		<PackageReference Include="Npgsql" Version="4.0.14" />
+		<PackageReference Include="Npgsql" Version="4.0.16" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.34.0" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.3.0" />
 		<PackageReference Include="Nustache" Version="1.16.0.10" />
