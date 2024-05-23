@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -167,23 +168,14 @@ namespace GeneXus.Application
 			OpenTelemetryService.Setup(services);
 
 			services.AddControllers();
-			string controllers = Path.Combine(Startup.LocalPath, "bin", GX_CONTROLLERS);
 			IMvcBuilder mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
-			try
+			if (RestAPIHelpers.ServiceAsController())
 			{
-				if (Directory.Exists(controllers))
-				{
-					foreach (string controller in Directory.GetFiles(controllers))
-					{
-						Console.WriteLine($"Loading controller {controller}");
-						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller)).AddControllersAsServices();
-					}
-				}
+				RegisterRestServices(mvcBuilder);
+				RegisterApiServices(mvcBuilder, gxRouting);
 			}
-			catch (Exception ex)
-			{
-				Console.Error.WriteLine("Error loading gxcontrollers " + ex.Message);
-			}
+			RegisterNativeServices(mvcBuilder);
+
 			services.Configure<KestrelServerOptions>(options =>
 			{
 				options.AllowSynchronousIO = true;
@@ -270,6 +262,69 @@ namespace GeneXus.Application
 				});
 			}
 			DefineCorsPolicy(services);
+		}
+
+		private void RegisterNativeServices(IMvcBuilder mvcBuilder)
+		{
+			try
+			{
+				string controllers = Path.Combine(Startup.LocalPath, "bin", GX_CONTROLLERS);
+
+				if (Directory.Exists(controllers))
+				{
+					foreach (string controller in Directory.GetFiles(controllers))
+					{
+						Console.WriteLine($"Loading controller {controller}");
+						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller)).AddControllersAsServices();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("Error loading gxcontrollers " + ex.Message);
+			}
+
+		}
+
+		private void RegisterRestServices(IMvcBuilder mvcBuilder)
+		{
+			HashSet<string> appParts = new HashSet<string>();	
+			foreach (string svcFile in gxRouting.svcFiles)
+			{
+				try
+				{
+					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
+															   .Skip(1)
+															   .TakeWhile(c => c != '"')
+															   .ToArray()).Trim().Split(',');
+					string controllerAssemblyName = controllerAssemblyQualifiedName.Last();
+					string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{controllerAssemblyName}.dll");
+					if (File.Exists(controllerAssemblyFile) && !appParts.Contains(controllerAssemblyFile))
+					{
+						Console.WriteLine("Registering: " +  controllerAssemblyName);
+						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile)).AddControllersAsServices();
+						appParts.Add(controllerAssemblyFile);
+					}
+				}
+				catch (Exception ex)
+				{
+					Console.Error.WriteLine("Error registering rest service " + ex.Message);
+				}
+			}
+		}
+		private void RegisterApiServices(IMvcBuilder mvcBuilder, GXRouting gxRouting)
+		{
+			foreach (string grp in gxRouting.servicesPathUrl.Values)
+			{
+				string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{grp}.dll");
+				if (File.Exists(controllerAssemblyFile))
+				{
+					Console.WriteLine("Registering: " + grp);
+					mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile)).AddControllersAsServices();
+				}
+
+			}
+
 		}
 
 		private void DefineCorsPolicy(IServiceCollection services)
@@ -462,10 +517,6 @@ namespace GeneXus.Application
 				ContentTypeProvider = provider
 			});
 			
-			foreach( string p in gxRouting.servicesPathUrl.Keys)
-			{
-				 servicesBase.Add( string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
-			}
 			app.UseExceptionHandler(new ExceptionHandlerOptions
 			{
 				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
@@ -480,20 +531,27 @@ namespace GeneXus.Application
 				antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
 				app.UseAntiforgeryTokens(apiBasePath);
 			}
-			app.UseMvc(routes =>
+			if (!RestAPIHelpers.ServiceAsController())
 			{
-				foreach (string serviceBasePath in servicesBase)
-				{			
-					string tmpPath = string.IsNullOrEmpty(apiBasePath) ? serviceBasePath : serviceBasePath.Replace(apiBasePath, string.Empty);
-					foreach (string sPath in gxRouting.servicesValidPath[tmpPath])
-					{
-						string s = serviceBasePath + sPath;
-						routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
-					}
+				foreach (string p in gxRouting.servicesPathUrl.Keys)
+				{
+					servicesBase.Add(string.IsNullOrEmpty(VirtualPath) ? p : $"{VirtualPath}/{p}");
 				}
-				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
-				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
-			});
+				app.UseMvc(routes =>
+				{
+					foreach (string serviceBasePath in servicesBase)
+					{
+						string tmpPath = string.IsNullOrEmpty(apiBasePath) ? serviceBasePath : serviceBasePath.Replace(apiBasePath, string.Empty);
+						foreach (string sPath in gxRouting.servicesValidPath[tmpPath])
+						{
+							string s = serviceBasePath + sPath;
+							routes.MapRoute($"{s}", new RequestDelegate(gxRouting.ProcessRestRequest));
+						}
+					}
+					routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
+					routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
+				});
+			}
 			
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
