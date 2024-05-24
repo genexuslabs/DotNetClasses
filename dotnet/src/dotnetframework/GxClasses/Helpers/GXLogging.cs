@@ -825,7 +825,7 @@ namespace GeneXus
 			if (logger != null) { 
 				if (logger.IsInfoEnabled)
 				{
-					logger.LogInfo(msg.ToString(), list);
+					logger.LogInfo(msg, list);
 				}
 			}
 		}
