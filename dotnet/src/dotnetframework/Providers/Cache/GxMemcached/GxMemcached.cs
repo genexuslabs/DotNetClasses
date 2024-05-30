@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using Enyim.Caching;
 using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached;
+using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 
@@ -26,13 +27,21 @@ namespace GeneXus.Cache
 		MemcachedClient InitCache()
 		{
 			GXServices services = ServiceFactory.GetGXServices();
-			String address = string.Empty;
+			string address = string.Empty;
+			string password = string.Empty;
+			string username = string.Empty;
 			if (services != null)
 			{
 				GXService providerService = ServiceFactory.GetGXServices()?.Get(GXServices.CACHE_SERVICE);
 				if (providerService != null)
 				{
 					address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+					username = providerService.Properties.Get("CACHE_PROVIDER_USER");
+					password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
+					if (!string.IsNullOrEmpty(password))
+					{
+						password = CryptoImpl.Decrypt(password);
+					}
 				}
 			}
 
@@ -42,6 +51,12 @@ namespace GeneXus.Cache
 #else
 			MemcachedClientConfiguration config = new MemcachedClientConfiguration();
 #endif
+			if (!String.IsNullOrEmpty(username) || !String.IsNullOrEmpty(password))
+			{
+				config.Authentication.Type = typeof(PlainTextAuthenticator);
+				config.Authentication.Parameters["userName"] = username;
+				config.Authentication.Parameters["password"] = password;
+			}
 			if (!String.IsNullOrEmpty(address))
 			{
 				foreach (string host in address.Split(',', ';', ' ')) {
