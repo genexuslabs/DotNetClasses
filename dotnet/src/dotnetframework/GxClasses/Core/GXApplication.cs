@@ -4010,6 +4010,7 @@ namespace GeneXus.Application
 			GXLogging.Debug(Logger, "SetSubmitInitialConfig:", () => _handle.ToString() + " clientid:" + context.ClientID);
 			this._isSumbited = true;
 			this.SetDefaultTheme(context.GetTheme(), context.GetThemeisDSO());
+			this.SetTimeZone(context.GetTimeZone());
 			this.SetPhysicalPath(context.GetPhysicalPath());
 			this.SetLanguageWithoutSession(context.GetLanguage());
 			this.ClientID = context.ClientID;
