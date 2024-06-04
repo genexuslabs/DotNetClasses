@@ -56,6 +56,13 @@ namespace GeneXus.Cache
 #else
 
 			MemcachedClientConfiguration config = new MemcachedClientConfiguration();
+			if (!String.IsNullOrEmpty(username) || !String.IsNullOrEmpty(password))
+			{
+				config.Authentication.Type = typeof(PlainTextAuthenticator);
+				config.Authentication.Parameters["userName"] = username;
+				config.Authentication.Parameters["password"] = password;
+				config.Authentication.Parameters["zone"] = string.Empty;
+			}
 #endif
 			if (!String.IsNullOrEmpty(address))
 			{
