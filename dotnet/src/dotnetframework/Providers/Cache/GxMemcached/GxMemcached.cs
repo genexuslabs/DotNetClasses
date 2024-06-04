@@ -47,16 +47,16 @@ namespace GeneXus.Cache
 
 #if NETCORE
 			var loggerFactory = new Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory();
-			MemcachedClientConfiguration config = new MemcachedClientConfiguration(loggerFactory, new MemcachedClientOptions());
-#else
-			MemcachedClientConfiguration config = new MemcachedClientConfiguration();
-#endif
+			MemcachedClientOptions options = new MemcachedClientOptions();
 			if (!String.IsNullOrEmpty(username) || !String.IsNullOrEmpty(password))
 			{
-				config.Authentication.Type = typeof(PlainTextAuthenticator);
-				config.Authentication.Parameters["userName"] = username;
-				config.Authentication.Parameters["password"] = password;
+				options.AddPlainTextAuthenticator(string.Empty, username, password);
 			}
+			MemcachedClientConfiguration config = new MemcachedClientConfiguration(loggerFactory, options);
+#else
+
+			MemcachedClientConfiguration config = new MemcachedClientConfiguration();
+#endif
 			if (!String.IsNullOrEmpty(address))
 			{
 				foreach (string host in address.Split(',', ';', ' ')) {
