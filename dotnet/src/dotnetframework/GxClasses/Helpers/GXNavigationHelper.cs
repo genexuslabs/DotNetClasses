@@ -7,6 +7,8 @@ namespace GeneXus.Application
 	public class GXNavigationHelper
 	{
 		public static string POPUP_LEVEL = "gxPopupLevel";
+		public static string TAB_ID = "gxTabId";
+		public static string TAB_ID_HEADER = "X-Gx-Tabid";
 		public static string CALLED_AS_POPUP = "gxCalledAsPopup";
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]

@@ -187,6 +187,7 @@ namespace GeneXus.Http.Server
 		HttpRequest _httpReq;
         IGxContext _context;
         string _referrer = "";
+		string _tabid = "";
 
 		public GxHttpRequest(IGxContext context)
         {
@@ -323,6 +324,28 @@ namespace GeneXus.Http.Server
 				}
 			}
 		}
+
+		public string Tabid
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_tabid))
+				{
+#if NETCORE
+					_tabid = _httpReq.Query[GXNavigationHelper.TAB_ID];
+#else
+					_tabid = _httpReq.QueryString[GXNavigationHelper.TAB_ID];
+#endif
+				}
+				if (string.IsNullOrEmpty(_tabid))
+				{
+					_tabid = GetHeader(GXNavigationHelper.TAB_ID_HEADER);
+
+				}
+				return _tabid;
+			}
+		}
+
 		public string RemoteAddress
 		{
 			get 
