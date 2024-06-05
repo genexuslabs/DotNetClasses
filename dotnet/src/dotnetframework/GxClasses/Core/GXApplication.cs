@@ -1684,9 +1684,9 @@ namespace GeneXus.Application
 			query = RemoveInternalSuffixes(query);
 			return query;
 		}
-		internal static string RemoveInternalSuffixes(string query)
+		internal static string RemoveInternalSuffix(string query, string param)
 		{
-			int idx = query.IndexOf(GXNavigationHelper.POPUP_LEVEL);
+			int idx = query.IndexOf(param);
 			if (idx == 1)
 				return "";
 			if (idx > 1)
@@ -1697,6 +1697,13 @@ namespace GeneXus.Application
 				idx = (idx > 0) ? idx - 1 : idx;
 				query = query.Substring(0, idx);
 			}
+			return query;
+		}
+
+		internal static string RemoveInternalSuffixes(string query)
+		{
+			RemoveInternalSuffix(query, GXNavigationHelper.POPUP_LEVEL);
+			RemoveInternalSuffix(query, GXNavigationHelper.TAB_ID);			
 			return query;
 		}
 		private string RemoveEventPrefix(string query)
