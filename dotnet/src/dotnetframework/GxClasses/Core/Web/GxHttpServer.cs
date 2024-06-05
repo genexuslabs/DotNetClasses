@@ -187,7 +187,7 @@ namespace GeneXus.Http.Server
 		HttpRequest _httpReq;
         IGxContext _context;
         string _referrer = "";
-		string _tabid = "";
+		string _tabId = "";
 
 		public GxHttpRequest(IGxContext context)
         {
@@ -325,24 +325,27 @@ namespace GeneXus.Http.Server
 			}
 		}
 
-		public string Tabid
+		public string TabId
 		{
 			get
 			{
-				if (string.IsNullOrEmpty(_tabid))
-				{
+				string sUrl = "";
 #if NETCORE
-					_tabid = _httpReq.Query[GXNavigationHelper.TAB_ID];
+				sUrl = _httpReq.GetDisplayUrl();
 #else
-					_tabid = _httpReq.QueryString[GXNavigationHelper.TAB_ID];
+				sUrl = _httpReq.Url.ToString();
 #endif
-				}
-				if (string.IsNullOrEmpty(_tabid))
+
+				if (string.IsNullOrEmpty(_tabId))
 				{
-					_tabid = GetHeader(GXNavigationHelper.TAB_ID_HEADER);
+					_tabId = GXNavigationHelper.getUrlComponent(sUrl, GXNavigationHelper.TAB_ID);
+				}
+				if (string.IsNullOrEmpty(_tabId))
+				{
+					_tabId = GetHeader(GXNavigationHelper.TAB_ID_HEADER);
 
 				}
-				return _tabid;
+				return _tabId;
 			}
 		}
 
