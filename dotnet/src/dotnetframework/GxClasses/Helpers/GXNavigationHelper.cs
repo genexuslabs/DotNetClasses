@@ -167,7 +167,10 @@ namespace GeneXus.Application
 			string sPopUpLvl = getUrlComponent(url, POPUP_LEVEL);
 			try
 			{
-				popupLevel = int.Parse(sPopUpLvl);
+				if (!String.IsNullOrEmpty(sPopUpLvl))
+				{
+					popupLevel = int.Parse(sPopUpLvl);
+				}
 			}
 			catch
 			{
