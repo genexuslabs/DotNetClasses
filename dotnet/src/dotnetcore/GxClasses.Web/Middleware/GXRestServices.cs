@@ -28,12 +28,12 @@ namespace GeneXus.Utils
 		protected GxRestService()
         {
 			context = GxContext.CreateDefaultInstance();
+			ServiceHeaders();
 			if (GXUtil.CompressResponse())
                 GXUtil.SetGZip(HttpContext);
         }
 		protected void Cleanup()
         {
-			ServiceHeaders();
 			if (runAsMain)
                 context.CloseConnections();
         }

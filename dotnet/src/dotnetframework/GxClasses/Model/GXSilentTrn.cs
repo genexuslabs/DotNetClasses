@@ -20,6 +20,8 @@ namespace GeneXus.Utils
 	using System.Globalization;
 	using GeneXus.Http;
 	using System.Diagnostics;
+	using System.Text.Json.Serialization;
+	using Microsoft.AspNetCore.Mvc;
 
 	public interface IGxSilentTrn
 	{
@@ -713,11 +715,13 @@ namespace GeneXus.Utils
 		{
 			sdt1 = s;
 		}
+		[JsonIgnore]
 		public GxUserType Sdt
 		{
 			get { return sdt1; }
 			set { sdt1 = (T)value; }
 		}
+		[JsonIgnore]
 		public IGxContext context
 		{
 			get { return sdt1.context; }
