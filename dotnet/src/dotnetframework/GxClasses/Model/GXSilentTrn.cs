@@ -9,19 +9,19 @@ namespace GeneXus.Utils
 #if !NETCORE
 	using Jayrock.Json;
 #endif
-	using System.Text;
 	using System.Security.Cryptography;
 	using System.Reflection;
 	using System.Runtime.Serialization;
-#if !NETCORE
+#if NETCORE
+	using Microsoft.AspNetCore.Mvc;
+#else
 	using System.ServiceModel;
 #endif
 	using Configuration;
 	using System.Globalization;
-	using GeneXus.Http;
 	using System.Diagnostics;
+	using System.Text;
 	using System.Text.Json.Serialization;
-	using Microsoft.AspNetCore.Mvc;
 
 	public interface IGxSilentTrn
 	{
@@ -715,13 +715,17 @@ namespace GeneXus.Utils
 		{
 			sdt1 = s;
 		}
+#if NETCORE
 		[JsonIgnore]
+#endif
 		public GxUserType Sdt
 		{
 			get { return sdt1; }
 			set { sdt1 = (T)value; }
 		}
+#if NETCORE
 		[JsonIgnore]
+#endif
 		public IGxContext context
 		{
 			get { return sdt1.context; }
