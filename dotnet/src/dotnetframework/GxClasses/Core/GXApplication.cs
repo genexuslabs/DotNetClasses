@@ -1641,9 +1641,8 @@ namespace GeneXus.Application
 
 		internal static string RemoveInternalSuffixes(string query)
 		{
-			RemoveInternalSuffix(query, GXNavigationHelper.POPUP_LEVEL);
-			RemoveInternalSuffix(query, GXNavigationHelper.TAB_ID);			
-			return query;
+			query = RemoveInternalSuffix(query, GXNavigationHelper.POPUP_LEVEL);
+			return RemoveInternalSuffix(query, GXNavigationHelper.TAB_ID);
 		}
 		private string RemoveEventPrefix(string query)
 		{
