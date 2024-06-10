@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using GeneXus;
 
 namespace Genexus.Compression
 {
@@ -64,7 +65,7 @@ namespace Genexus.Compression
 			}
 			else
 			{
-				GXLogging.Error("Folder does not exist or is not a directory: {0}", folder.FullName);
+				GXLogging.Error(log, "Folder does not exist or is not a directory: {0}", folder.FullName);
 			}
 		}
 
@@ -72,7 +73,7 @@ namespace Genexus.Compression
 		{
 			if (filesToCompress.Count == 0)
 			{
-				GXLogging.Error("No files have been added for compression.");
+				GXLogging.Error(log, "No files have been added for compression.");
 				return -4;
 			}
 			List<string> paths = new List<string>();

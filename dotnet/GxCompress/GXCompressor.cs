@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Security;
+using GeneXus;
 using ICSharpCode.SharpZipLib.Tar;
 
 namespace Genexus.Compression
