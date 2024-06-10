@@ -152,11 +152,11 @@ namespace Genexus.Compression
 				DirectoryInfo[] directories = dir.GetDirectories();
 				foreach (DirectoryInfo childDir in directories)
 				{
-					AddFileToZip(zos, new FileInfo(childDir.FullName), entryName + "/");
+					AddFileToZip(zos, new FileInfo(childDir.FullName), entryName + Path.DirectorySeparatorChar.ToString());
 				}
 				foreach (FileInfo childFile in children)
 				{
-					AddFileToZip(zos, childFile, entryName + "/");
+					AddFileToZip(zos, childFile, entryName + Path.DirectorySeparatorChar.ToString());
 				}
 			}
 			else
@@ -284,7 +284,7 @@ namespace Genexus.Compression
 
 						string fullResolvedPath = Path.GetFullPath(resolvedPath);
 
-						if (entry.FullName.EndsWith("/"))
+						if (entry.FullName.EndsWith(Path.DirectorySeparatorChar.ToString()))
 						{
 							if (!Directory.Exists(fullResolvedPath))
 							{
