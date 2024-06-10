@@ -24,6 +24,7 @@ namespace xUnitTesting
 			ClassLoader.FindType("apps.append", "GeneXus.Programs.apps", "append", Assembly.GetExecutingAssembly(), true);//Force loading assembly for append procedure
 			ClassLoader.FindType("apps.saveimage", "GeneXus.Programs.apps", "saveimage", Assembly.GetExecutingAssembly(), true);//Force loading assembly for saveimage procedure
 			ClassLoader.FindType("apps.getcollection", "GeneXus.Programs.apps", "getcollection", Assembly.GetExecutingAssembly(), true);
+			ClassLoader.FindType("apps.getsdtcollection", "GeneXus.Programs.apps", "getsdtcollection", Assembly.GetExecutingAssembly(), true);
 			server.AllowSynchronousIO = true;
 		}
 		const string serviceBodyResponse = "OK";
@@ -152,6 +153,19 @@ namespace xUnitTesting
 			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 			string responseBody = await response.Content.ReadAsStringAsync();
 			Assert.Equal("{\"CliType\":1,\"CliCode\":[1,2]}", responseBody);
+		}
+		[Fact]
+		public async Task TestRestServiceWithSdtCollectionOutput()
+		{
+			server.AllowSynchronousIO = true;
+			HttpClient client = server.CreateClient();
+			HttpResponseMessage response = await client.PostAsync("rest/apps/getsdtcollection", null);
+			response.EnsureSuccessStatusCode();
+			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+			string responseBody = await response.Content.ReadAsStringAsync();
+
+			string expected = "{\"InvoiceDate\":\"2024-02-02\",\"uri\":\"\"}";
+			Assert.Contains(expected, responseBody, StringComparison.OrdinalIgnoreCase);
 		}
 
 	}
