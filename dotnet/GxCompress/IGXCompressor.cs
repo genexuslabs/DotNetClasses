@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Genexus.Compression
 {
 	public interface IGXCompressor

@@ -130,7 +130,7 @@ namespace Genexus.Compression
 					{
 						if (file.Exists)
 						{
-							AddFileToZip(zos, file, "");
+							AddFileToZip(zos, file, string.Empty);
 						}
 					}
 				}
@@ -182,7 +182,7 @@ namespace Genexus.Compression
 
 					foreach (FileInfo file in files)
 					{
-						AddFileToTar(taos, file, "");
+						AddFileToTar(taos, file, string.Empty);
 					}
 					taos.Close();
 				}
@@ -203,11 +203,11 @@ namespace Genexus.Compression
 				DirectoryInfo[] directories = dir.GetDirectories();
 				foreach (DirectoryInfo childDir in directories)
 				{
-					AddFileToTar(taos, new FileInfo(childDir.FullName), baseDir + file.Name + "/");
+					AddFileToTar(taos, new FileInfo(childDir.FullName), Path.Combine(baseDir, file.Name, Path.DirectorySeparatorChar.ToString()));
 				}
 				foreach (FileInfo childFile in children)
 				{
-					AddFileToTar(taos, childFile, baseDir + file.Name + "/");
+					AddFileToTar(taos, childFile, Path.Combine(baseDir, file.Name, Path.DirectorySeparatorChar.ToString()));
 				}
 			}
 			else
