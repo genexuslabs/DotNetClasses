@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<OutputType>Library</OutputType>
+		<DefineConstants>NETCORE;NODATIME</DefineConstants>
+		<PackageId>GeneXus.Compression</PackageId>
+		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+		<NoWarn>618;1607;1698;SYSLIB0021;SYSLIB0027;SYSLIB0028;SYSLIB0023</NoWarn>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\dotnetframework\GxClasses\Helpers\GXLogging.cs" Link="Helpers\GXLogging.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="log4net" Version="2.0.15" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" PrivateAssets="ALL" />
+	</ItemGroup>
+
+</Project>
