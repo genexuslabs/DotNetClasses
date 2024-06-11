@@ -875,7 +875,6 @@ namespace GeneXus.Application
 		
 		protected static object MakeRestType( object collectionValue, bool isApiObject)
 		{
-			System.Diagnostics.Debugger.Launch();
 			Type vType = collectionValue.GetType();
 			Type itemType;
 			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
