@@ -41,7 +41,11 @@ namespace GeneXus.Cache
 				password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
 				if (!string.IsNullOrEmpty(password))
 				{
-					password = CryptoImpl.Decrypt(password);
+					string ret = string.Empty;
+					if (CryptoImpl.Decrypt(ref ret, password))
+					{
+						password = ret;
+					}
 				}
 
 				if (string.IsNullOrEmpty(address))
