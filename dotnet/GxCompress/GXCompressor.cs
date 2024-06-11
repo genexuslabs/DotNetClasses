@@ -5,6 +5,10 @@ using System.IO.Compression;
 using System.Security;
 using GeneXus;
 using ICSharpCode.SharpZipLib.Tar;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.SevenZip;
+using SharpCompress.Common;
 
 namespace Genexus.Compression
 {
@@ -12,7 +16,8 @@ namespace Genexus.Compression
 	{
 		GZIP,
 		TAR,
-		ZIP
+		ZIP,
+		JAR
 	}
 
 	public class GXCompressor : IGXCompressor
@@ -47,6 +52,9 @@ namespace Genexus.Compression
 						return 0;
 					case CompressionFormat.GZIP:
 						CompressToGzip(toCompress, path);
+						return 0;
+					case CompressionFormat.JAR:
+						CompressToJar(toCompress, path);
 						return 0;
 				}
 			}
@@ -106,6 +114,15 @@ namespace Genexus.Compression
 						return 0;
 					case "gz":
 						DecompressGzip(toCompress, path);
+						return 0;
+					case "jar":
+						DecompressJar(toCompress, path);
+						return 0;
+					case "7z":
+						Decompress7z(toCompress, path);
+						return 0;
+					case "rar":
+						DecompressRar(toCompress, path);
 						return 0;
 					default:
 						GXLogging.Error(log, "Unsupported compression format for decompression: {0}", extension);
@@ -387,6 +404,124 @@ namespace Genexus.Compression
 				while ((bytesRead = gzis.Read(buffer, 0, buffer.Length)) != -1)
 				{
 					fos.Write(buffer, 0, bytesRead);
+				}
+			}
+		}
+
+		private static void Decompress7z(FileInfo file, string outputPath)
+		{
+			string targetDir = Path.GetFullPath(outputPath);
+			using (var sevenZFile = SevenZipArchive.Open(file.FullName))
+			{
+				foreach (var entry in sevenZFile.Entries)
+				{
+					if (!entry.IsDirectory)
+					{
+						string resolvedPath = Path.Combine(targetDir, entry.Key);
+						FileInfo outputFile = new FileInfo(resolvedPath);
+
+						if (!outputFile.FullName.StartsWith(targetDir, StringComparison.OrdinalIgnoreCase))
+						{
+							throw new IOException("Entry is outside of the target dir: " + entry.Key);
+						}
+
+						Directory.CreateDirectory(outputFile.DirectoryName);
+
+						using (var outStream = outputFile.Open(FileMode.Create, FileAccess.Write))
+						{
+							entry.WriteTo(outStream);
+						}
+					}
+					else
+					{
+						string dirPath = Path.Combine(targetDir, entry.Key);
+						if (!Directory.Exists(dirPath))
+						{
+							Directory.CreateDirectory(dirPath);
+						}
+					}
+				}
+			}
+		}
+
+		private static void CompressToJar(FileInfo[] files, string outputPath)
+		{
+			using (FileStream outputStream = new FileStream(outputPath, FileMode.Create))
+			using (ZipArchive jos = new ZipArchive(outputStream, ZipArchiveMode.Create))
+			{
+				byte[] buffer = new byte[1024];
+				foreach (FileInfo file in files)
+				{
+					using (FileStream fis = file.OpenRead())
+					{
+						ZipArchiveEntry entry = jos.CreateEntry(file.Name);
+						using (Stream entryStream = entry.Open())
+						{
+							int length;
+							while ((length = fis.Read(buffer, 0, buffer.Length)) > 0)
+							{
+								entryStream.Write(buffer, 0, length);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		public static void DecompressJar(FileInfo jarFile, string outputPath)
+		{
+			if (!jarFile.Exists)
+			{
+				throw new IOException("The jar file does not exist.");
+			}
+
+			DirectoryInfo outputDir = new DirectoryInfo(outputPath);
+			if (!outputDir.Exists)
+			{
+				outputDir.Create();
+			}
+
+			using (FileStream jarFileStream = jarFile.OpenRead())
+			using (ZipArchive jis = new ZipArchive(jarFileStream, ZipArchiveMode.Read))
+			{
+				foreach (ZipArchiveEntry entry in jis.Entries)
+				{
+					string entryPath = Path.Combine(outputPath, entry.FullName);
+					FileInfo outputFile = new FileInfo(entryPath);
+
+					if (entry.FullName.EndsWith(Path.DirectorySeparatorChar.ToString()))
+					{
+						if (!Directory.Exists(outputFile.FullName))
+						{
+							Directory.CreateDirectory(outputFile.FullName);
+						}
+					}
+					else
+					{
+						Directory.CreateDirectory(outputFile.DirectoryName);
+						using (FileStream fos = new FileStream(outputFile.FullName, FileMode.Create))
+						{
+							using (Stream entryStream = entry.Open())
+							{
+								entryStream.CopyTo(fos);
+							}
+						}
+					}
+				}
+			}
+		}
+
+
+		public static void DecompressRar(FileInfo rarFile, string destinationPath)
+		{
+			using (var archive = RarArchive.Open(rarFile.FullName))
+			{
+				foreach (var entry in archive.Entries)
+				{
+					if (!entry.IsDirectory)
+					{
+						entry.WriteToDirectory(destinationPath, new ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
+					}
 				}
 			}
 		}
