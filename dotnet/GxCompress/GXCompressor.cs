@@ -118,9 +118,6 @@ namespace Genexus.Compression
 					case "jar":
 						DecompressJar(toCompress, path);
 						return 0;
-					case "7z":
-						Decompress7z(toCompress, path);
-						return 0;
 					case "rar":
 						DecompressRar(toCompress, path);
 						return 0;
@@ -138,52 +135,37 @@ namespace Genexus.Compression
 
 		private static void CompressToZip(FileInfo[] files, string outputPath)
 		{
-			try
+			using (FileStream fos = new FileStream(outputPath, FileMode.Create))
+			using (ZipArchive zos = new ZipArchive(fos, ZipArchiveMode.Create))
 			{
-				using (FileStream fos = new FileStream(outputPath, FileMode.Create))
-				using (ZipArchive zos = new ZipArchive(fos, ZipArchiveMode.Create))
+				foreach (FileInfo file in files)
 				{
-					foreach (FileInfo file in files)
+					if (file.Exists)
 					{
-						if (file.Exists)
-						{
-							AddFileToZip(zos, file, string.Empty);
-						}
+						AddFileToZip(zos, file, string.Empty);
 					}
 				}
-			}
-			catch (IOException e)
-			{
-				GXLogging.Error(log, "Error while compressing to zip", e);
-				throw new Exception("Failed to compress files", e);
 			}
 		}
 
 		private static void AddFileToZip(ZipArchive zos, FileInfo file, string baseDir)
 		{
 			string entryName = baseDir + file.Name;
-			if (file.Attributes.HasFlag(FileAttributes.Directory))
+			if ((file.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
 			{
-				DirectoryInfo dir = new DirectoryInfo(file.FullName);
-				FileInfo[] children = dir.GetFiles();
-				DirectoryInfo[] directories = dir.GetDirectories();
-				foreach (DirectoryInfo childDir in directories)
+				DirectoryInfo dirInfo = file.Directory;
+				foreach (DirectoryInfo dir in dirInfo.GetDirectories())
 				{
-					AddFileToZip(zos, new FileInfo(childDir.FullName), entryName + Path.DirectorySeparatorChar.ToString());
+					AddFileToZip(zos, new FileInfo(dir.FullName), entryName + Path.DirectorySeparatorChar);
 				}
-				foreach (FileInfo childFile in children)
+				foreach (FileInfo childFile in dirInfo.GetFiles())
 				{
-					AddFileToZip(zos, childFile, entryName + Path.DirectorySeparatorChar.ToString());
+					AddFileToZip(zos, childFile, entryName + Path.DirectorySeparatorChar);
 				}
 			}
 			else
 			{
 				ZipArchiveEntry zipEntry = zos.CreateEntryFromFile(file.FullName, entryName);
-				using (Stream entryStream = zipEntry.Open())
-				using (FileStream fis = File.OpenRead(file.FullName))
-				{
-					fis.CopyTo(entryStream);
-				}
 			}
 		}
 
@@ -258,25 +240,17 @@ namespace Genexus.Compression
 			FileInfo inputFile = files[0];
 			FileInfo outputFile = new FileInfo(outputPath);
 
-			try
+			using (FileStream inStream = new FileStream(inputFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+			using (FileStream fout = new FileStream(outputFile.FullName, FileMode.Create, FileAccess.Write, FileShare.None))
+			using (BufferedStream outStream = new BufferedStream(fout))
+			using (GZipStream gzOut = new GZipStream(outStream, CompressionMode.Compress))
 			{
-				using (FileStream inStream = inputFile.OpenRead())
-				using (FileStream fout = outputFile.Create())
-				using (BufferedStream outStream = new BufferedStream(fout))
-				using (GZipStream gzOut = new GZipStream(outStream, CompressionMode.Compress))
+				byte[] buffer = new byte[4096];
+				int n;
+				while ((n = inStream.Read(buffer, 0, buffer.Length)) != -1)
 				{
-					byte[] buffer = new byte[4096];
-					int n;
-					while ((n = inStream.Read(buffer, 0, buffer.Length)) != -1)
-					{
-						gzOut.Write(buffer, 0, n);
-					}
+					gzOut.Write(buffer, 0, n);
 				}
-			}
-			catch (IOException e)
-			{
-				GXLogging.Error(log, "Error while compressing to gzip", e);
-				throw new Exception("Error compressing file with GZIP", e);
 			}
 		}
 
