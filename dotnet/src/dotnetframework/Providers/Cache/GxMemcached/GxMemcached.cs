@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Enyim.Caching;
 using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached;
@@ -40,7 +39,11 @@ namespace GeneXus.Cache
 					password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
 					if (!string.IsNullOrEmpty(password))
 					{
-						password = CryptoImpl.Decrypt(password);
+						string ret = string.Empty;
+						if (CryptoImpl.Decrypt(ref ret, password))
+						{
+							password = ret;
+						}
 					}
 				}
 			}
