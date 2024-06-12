@@ -1,1 +1,1 @@
-<%@ServiceHost Service= "GeneXus.Programs.apps.getsdtcollection,getsdtcollection" %>
+<%@ServiceHost Service= "GeneXus.Programs.apps.getsdtcollection,apps.getsdtcollection" %>
