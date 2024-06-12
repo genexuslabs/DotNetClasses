@@ -240,17 +240,11 @@ namespace Genexus.Compression
 			FileInfo inputFile = files[0];
 			FileInfo outputFile = new FileInfo(outputPath);
 
-			using (FileStream inStream = new FileStream(inputFile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-			using (FileStream fout = new FileStream(outputFile.FullName, FileMode.Create, FileAccess.Write, FileShare.None))
-			using (BufferedStream outStream = new BufferedStream(fout))
-			using (GZipStream gzOut = new GZipStream(outStream, CompressionMode.Compress))
+			using (FileStream inStream = inputFile.OpenRead())
+			using (FileStream fout = outputFile.Create())
+			using (GZipStream gzOut = new GZipStream(fout, CompressionMode.Compress))
 			{
-				byte[] buffer = new byte[4096];
-				int n;
-				while ((n = inStream.Read(buffer, 0, buffer.Length)) != -1)
-				{
-					gzOut.Write(buffer, 0, n);
-				}
+				inStream.CopyTo(gzOut);
 			}
 		}
 

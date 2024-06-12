@@ -53,6 +53,18 @@ namespace xUnitTesting
 		}
 
 		[Fact]
+		public void TestCompressToGzip()
+		{
+			string outputPath = Path.Combine(testDirectory.FullName, "output.gz");
+			string inputFilePath = Path.Combine(testDirectory.FullName, "test.txt");
+			File.WriteAllText(inputFilePath, "This is a sample text to test the compression functionality.");
+			List<string> singleFileCollection = new List<string> { inputFilePath };
+			int result = GXCompressor.CompressFiles(singleFileCollection, outputPath, "GZIP");
+			Assert.Equal(0, result);
+			Assert.True(File.Exists(outputPath));
+		}
+
+		[Fact]
 		public void TestCompressToJar()
 		{
 			string outputPath = Path.Combine(testDirectory.FullName, "output.jar");
