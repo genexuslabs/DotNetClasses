@@ -89,11 +89,11 @@ namespace GeneXus.Metadata
                 {
 					try
 					{
-						objType = ignoreCase? defaultAssembly.GetType(clss, false, ignoreCase): defaultAssembly.GetType(clss);
+						objType = ignoreCase? defaultAssembly.GetType(clss, false, ignoreCase): defaultAssembly.GetType(clss, false);
 					}
 					catch
 					{
-						GXLogging.Error(log, "Failed to load type: " + clss + ", assembly: " + defaultAssembly.FullName);
+						GXLogging.Warn(log, "Failed to load type: " + clss + ", assembly: " + defaultAssembly.FullName);
 					}
                 }
                 
@@ -104,36 +104,40 @@ namespace GeneXus.Metadata
 					{
 #if NETCORE
 						Assembly assem = AssemblyLoader.LoadAssembly(defaultAssemblyNameObj);
-						objType = ignoreCase ? assem.GetType(clss): assem.GetType(clss, false, ignoreCase);
+						objType = ignoreCase ? assem.GetType(clss, false): assem.GetType(clss, false, ignoreCase);
 #else
-						objType = Assembly.Load(defaultAssemblyNameObj).GetType(clss);
+						objType = Assembly.Load(defaultAssemblyNameObj).GetType(clss, false);
 #endif
 					}
 				}
+				catch(FileNotFoundException)
+				{
+					GXLogging.Warn(log, "Assembly: ", defaultAssemblyName, "not found");
+				}
 				catch(Exception ex)
 				{
-					GXLogging.Error(log, "Failed to load type: " + clss + ", assembly: " + defaultAssemblyName, ex);
+					GXLogging.Warn(log, "Failed to load type: " + clss + ", assembly: " + defaultAssemblyName, ex);
 				}
 				try
 				{
 					if (objType == null)
 						
 						if (Assembly.GetEntryAssembly() != null)
-							objType = ignoreCase ? Assembly.GetEntryAssembly().GetType(clss, false, ignoreCase) : Assembly.GetEntryAssembly().GetType(clss);
+							objType = ignoreCase ? Assembly.GetEntryAssembly().GetType(clss, false, ignoreCase) : Assembly.GetEntryAssembly().GetType(clss, false);
 				}
 				catch
 				{
-					GXLogging.Error(log, "Failed to load type: " + clss + " from entryAssembly");
+					GXLogging.Warn(log, "Failed to load type: " + clss + " from entryAssembly");
 				}
 				try
 				{
 					if (objType == null)
 						
-						objType = ignoreCase ? Assembly.GetCallingAssembly().GetType(clss, false, ignoreCase) : Assembly.GetCallingAssembly().GetType(clss);
+						objType = ignoreCase ? Assembly.GetCallingAssembly().GetType(clss, false, ignoreCase) : Assembly.GetCallingAssembly().GetType(clss, false);
 				}
 				catch
 				{
-					GXLogging.Error(log, "Failed to load type: " + clss + " from callingAssembly");
+					GXLogging.Warn(log, "Failed to load type: " + clss + " from callingAssembly");
 				}
 
 				if (objType == null && !string.IsNullOrEmpty(ns) && Config.GetValueOf("AppMainNamespace", out appNS))
@@ -149,7 +153,7 @@ namespace GeneXus.Metadata
                     
                     foreach (Assembly asby in AppDomain.CurrentDomain.GetAssemblies())
                     {
-                        objType = ignoreCase ? asby.GetType(clss, false, ignoreCase) : asby.GetType(clss);
+                        objType = ignoreCase ? asby.GetType(clss, false, ignoreCase) : asby.GetType(clss, false);
                         if (objType != null)
                             break;
                     }
@@ -184,10 +188,10 @@ namespace GeneXus.Metadata
                         try
                         {
 #if !NETCORE
-                            objType = Assembly.LoadFrom(file).GetType(clss);
+                            objType = Assembly.LoadFrom(file).GetType(clss, false);
 #else
 							Assembly assem = AssemblyLoader.LoadAssembly(new AssemblyName(Path.GetFileNameWithoutExtension(file)));
-							objType = ignoreCase ? assem.GetType(clss, false, ignoreCase) : assem.GetType(clss);
+							objType = ignoreCase ? assem.GetType(clss, false, ignoreCase) : assem.GetType(clss, false);
 #endif
 							if (objType != null)
                                 break;
