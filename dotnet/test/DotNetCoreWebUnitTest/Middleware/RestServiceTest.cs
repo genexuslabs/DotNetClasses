@@ -23,6 +23,9 @@ namespace xUnitTesting
 		{
 			ClassLoader.FindType("apps.append", "GeneXus.Programs.apps", "append", Assembly.GetExecutingAssembly(), true);//Force loading assembly for append procedure
 			ClassLoader.FindType("apps.saveimage", "GeneXus.Programs.apps", "saveimage", Assembly.GetExecutingAssembly(), true);//Force loading assembly for saveimage procedure
+			ClassLoader.FindType("apps.getcollection", "GeneXus.Programs.apps", "getcollection", Assembly.GetExecutingAssembly(), true);
+			ClassLoader.FindType("apps.getsdtcollection", "GeneXus.Programs.apps", "getsdtcollection", Assembly.GetExecutingAssembly(), true);
+			ClassLoader.FindType("apps.getbccollection", "GeneXus.Programs.apps", "getbccollection", Assembly.GetExecutingAssembly(), true);
 			server.AllowSynchronousIO = true;
 		}
 		const string serviceBodyResponse = "OK";
@@ -129,6 +132,7 @@ namespace xUnitTesting
 			return response;
 		}
 		string ACCESS_CONTROL_MAX_AGE_HEADER = "86400";
+
 		[Fact]
 		public async Task TestHttpResponseOnRestService()
 		{
@@ -138,6 +142,44 @@ namespace xUnitTesting
 			Assert.True(headerAllow, $"The {HeaderNames.AccessControlMaxAge} header was not configured by the REST service.");
 			if (headerAllow)
 				Assert.Equal(ACCESS_CONTROL_MAX_AGE_HEADER, values.FirstOrDefault());
+		}
+
+		[Fact]
+		public async Task TestRestServiceWithSimpleCollectionOutput()
+		{
+			server.AllowSynchronousIO = true;
+			HttpClient client = server.CreateClient();
+			HttpResponseMessage response = await client.PostAsync("rest/apps/getcollection", null);
+			response.EnsureSuccessStatusCode();
+			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+			string responseBody = await response.Content.ReadAsStringAsync();
+			Assert.Equal("{\"CliType\":1,\"CliCode\":[1,2]}", responseBody);
+		}
+		[Fact]
+		public async Task TestRestServiceWithBCCollectionOutput()
+		{
+			server.AllowSynchronousIO = true;
+			HttpClient client = server.CreateClient();
+			HttpResponseMessage response = await client.PostAsync("rest/apps/getbccollection", null);
+			response.EnsureSuccessStatusCode();
+			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+			string responseBody = await response.Content.ReadAsStringAsync();
+
+			string expected = "{\"InvoiceDate\":\"2024-02-02\",\"uri\":\"\"}";
+			Assert.Contains(expected, responseBody, StringComparison.OrdinalIgnoreCase);
+		}
+		[Fact]
+		public async Task TestRestServiceWithSdtCollectionOutput()
+		{
+			server.AllowSynchronousIO = true;
+			HttpClient client = server.CreateClient();
+			HttpResponseMessage response = await client.PostAsync("rest/apps/getsdtcollection", null);
+			response.EnsureSuccessStatusCode();
+			Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+			string responseBody = await response.Content.ReadAsStringAsync();
+
+			string expected = "{\"CustomerId\":1,";
+			Assert.Contains(expected, responseBody, StringComparison.OrdinalIgnoreCase);
 		}
 
 	}
