@@ -814,13 +814,17 @@ namespace GeneXus.Http.Client
 			}
 		}
 
-		void setHttpVersion(HttpRequestMessage req)
+		void SetHttpVersion(HttpRequestMessage req)
 		{
 			string httpVersion;
 			if (Config.GetValueOf("HttpClientHttpVersion", out httpVersion))
 			{
 				if (httpVersion == "1.0")
 					req.Version = HttpVersion.Version10;
+				else if (httpVersion == "2.0")
+					req.Version = HttpVersion.Version20;
+				else if (httpVersion == "3.0")
+					req.Version = HttpVersion.Version30;
 				else
 					req.Version = HttpVersion.Version11;
 			}
@@ -845,7 +849,7 @@ namespace GeneXus.Http.Client
 				Method = new HttpMethod(method),
 			};
 			setHeaders(request, cookies, out string contentType);
-			setHttpVersion(request);
+			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
 			{
@@ -907,7 +911,7 @@ namespace GeneXus.Http.Client
 				Method = new HttpMethod(method),
 			};
 			setHeaders(request, cookies, out string contentType);
-			setHttpVersion(request);
+			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
 			{
