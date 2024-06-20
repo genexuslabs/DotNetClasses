@@ -821,10 +821,12 @@ namespace GeneXus.Http.Client
 			{
 				if (httpVersion == "1.0")
 					req.Version = HttpVersion.Version10;
+#if NETCORE
 				else if (httpVersion == "2.0")
 					req.Version = HttpVersion.Version20;
 				else if (httpVersion == "3.0")
 					req.Version = HttpVersion.Version30;
+#endif
 				else
 					req.Version = HttpVersion.Version11;
 			}
