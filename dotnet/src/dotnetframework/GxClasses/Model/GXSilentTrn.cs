@@ -993,7 +993,10 @@ namespace GeneXus.Utils
 		{
 			isWrappedInCollection = true;
 		}
-
+#if NETCORE
+		[JsonPropertyName("Id")]
+		[JsonPropertyOrder(0)]
+#endif
 		[DataMember(Name = "Id", Order = 0)]
 		public String gxTpr_Id
 		{
@@ -1008,7 +1011,10 @@ namespace GeneXus.Utils
 			}
 
 		}
-
+#if NETCORE
+		[JsonPropertyName("Type")]
+		[JsonPropertyOrder(1)]
+#endif
 		[DataMember(Name = "Type", Order = 1)]
 		public Nullable<short> gxTpr_Type
 		{
@@ -1023,7 +1029,10 @@ namespace GeneXus.Utils
 			}
 
 		}
-
+#if NETCORE
+		[JsonPropertyName("Description")]
+		[JsonPropertyOrder(2)]
+#endif
 		[DataMember(Name = "Description", Order = 2)]
 		public String gxTpr_Description
 		{
@@ -1038,7 +1047,9 @@ namespace GeneXus.Utils
 			}
 
 		}
-
+#if NETCORE
+		[JsonIgnore]
+#endif
 		public SdtMessages_Message sdt
 		{
 			get
