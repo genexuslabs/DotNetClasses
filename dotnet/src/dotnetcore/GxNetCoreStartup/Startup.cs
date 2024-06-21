@@ -316,7 +316,7 @@ namespace GeneXus.Application
 		{
 			foreach (string grp in gxRouting.servicesPathUrl.Values)
 			{
-				string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{grp}.dll");
+				string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{grp.Replace('\\','.')}.dll");
 				if (File.Exists(controllerAssemblyFile))
 				{
 					Console.WriteLine("Registering: " + grp);
