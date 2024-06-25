@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 using StackExchange.Redis;
@@ -38,6 +39,14 @@ namespace GeneXus.Cache
 				string address, password;
 				address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
 				password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
+				if (!string.IsNullOrEmpty(password))
+				{
+					string ret = string.Empty;
+					if (CryptoImpl.Decrypt(ref ret, password))
+					{
+						password = ret;
+					}
+				}
 
 				if (string.IsNullOrEmpty(address))
 					address = String.Format("localhost:{0}", REDIS_DEFAULT_PORT);
