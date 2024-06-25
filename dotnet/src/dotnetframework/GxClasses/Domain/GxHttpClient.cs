@@ -642,8 +642,16 @@ namespace GeneXus.Http.Client
 			{
 				if (httpVersion == "1.0")
 					req.Version = HttpVersion.Version10;
+#if NETCORE
+				else if (httpVersion == "2.0")
+					req.Version = HttpVersion.Version20;
+				else if (httpVersion == "3.0")
+					req.Version = HttpVersion.Version30;
+#endif
 				else
 					req.Version = HttpVersion.Version11;
+
+				GXLogging.Debug(log, "Setting HTTPClient request version to ", req.Version.ToString());
 			}
 			else
 				req.Version = HttpVersion.Version11;
@@ -1061,8 +1069,16 @@ namespace GeneXus.Http.Client
 			{
 				if (httpVersion == "1.0")
 					req.ProtocolVersion = HttpVersion.Version10;
+#if NETCORE
+				else if (httpVersion == "2.0")
+					req.ProtocolVersion = HttpVersion.Version20;
+				else if (httpVersion == "3.0")
+					req.ProtocolVersion = HttpVersion.Version30;
+#endif
 				else
 					req.ProtocolVersion = HttpVersion.Version11;
+					
+				GXLogging.Debug(log, "Setting HTTPClient request version to ", req.ProtocolVersion.ToString());
 			}
 			else
 				req.ProtocolVersion = HttpVersion.Version11;
