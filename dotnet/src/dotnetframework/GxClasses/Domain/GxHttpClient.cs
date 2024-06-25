@@ -814,15 +814,23 @@ namespace GeneXus.Http.Client
 			}
 		}
 
-		void setHttpVersion(HttpRequestMessage req)
+		void SetHttpVersion(HttpRequestMessage req)
 		{
 			string httpVersion;
 			if (Config.GetValueOf("HttpClientHttpVersion", out httpVersion))
 			{
 				if (httpVersion == "1.0")
 					req.Version = HttpVersion.Version10;
+#if NETCORE
+				else if (httpVersion == "2.0")
+					req.Version = HttpVersion.Version20;
+				else if (httpVersion == "3.0")
+					req.Version = HttpVersion.Version30;
+#endif
 				else
 					req.Version = HttpVersion.Version11;
+
+				GXLogging.Debug(log, "Setting HTTPClient request version to ", req.Version.ToString());
 			}
 			else
 				req.Version = HttpVersion.Version11;
@@ -845,7 +853,7 @@ namespace GeneXus.Http.Client
 				Method = new HttpMethod(method),
 			};
 			setHeaders(request, cookies, out string contentType);
-			setHttpVersion(request);
+			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
 			{
@@ -873,7 +881,7 @@ namespace GeneXus.Http.Client
 					request.Content = new ByteArrayContent(reqStream.ToArray());
 					setContentHeaders(request, contentType);
 #if NETCORE
-					response = client.Send(request, HttpCompletionOption.ResponseHeadersRead);
+					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
 					response.ExtractCookies(cookies);
 #else
 					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
@@ -907,7 +915,7 @@ namespace GeneXus.Http.Client
 				Method = new HttpMethod(method),
 			};
 			setHeaders(request, cookies, out string contentType);
-			setHttpVersion(request);
+			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
 			{
@@ -1361,7 +1369,7 @@ namespace GeneXus.Http.Client
 			return null;
 		}
 
-		private void setHttpVersion(HttpWebRequest req)
+		private void SetHttpVersion(HttpWebRequest req)
 		{
 
 			string httpVersion;
@@ -1369,6 +1377,12 @@ namespace GeneXus.Http.Client
 			{
 				if (httpVersion == "1.0")
 					req.ProtocolVersion = HttpVersion.Version10;
+#if NETCORE
+				else if (httpVersion == "2.0")
+					req.ProtocolVersion = HttpVersion.Version20;
+				else if (httpVersion == "3.0")
+					req.ProtocolVersion = HttpVersion.Version30;
+#endif
 				else
 					req.ProtocolVersion = HttpVersion.Version11;
 			}
@@ -1430,7 +1444,7 @@ namespace GeneXus.Http.Client
 				req.ClientCertificates.Add(cert);
 			req.Method = method.Trim();
 			req.Timeout = _timeout;
-			setHttpVersion(req);
+			SetHttpVersion(req);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
 				req.Proxy = proxy;
@@ -1482,7 +1496,7 @@ namespace GeneXus.Http.Client
 				req.ClientCertificates.Add(cert);
 			req.Method = method.Trim();
 			req.Timeout = _timeout;
-			setHttpVersion(req);
+			SetHttpVersion(req);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
 				req.Proxy = proxy;
