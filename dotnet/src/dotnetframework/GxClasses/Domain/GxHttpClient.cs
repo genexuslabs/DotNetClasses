@@ -829,6 +829,8 @@ namespace GeneXus.Http.Client
 #endif
 				else
 					req.Version = HttpVersion.Version11;
+
+				GXLogging.Debug(log, "Setting HTTPClient request version to ", req.Version.ToString());
 			}
 			else
 				req.Version = HttpVersion.Version11;
