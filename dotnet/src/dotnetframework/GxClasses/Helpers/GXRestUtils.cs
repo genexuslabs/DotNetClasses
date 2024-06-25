@@ -145,5 +145,10 @@ namespace GeneXus.Utils
 		{
 			return Config.GetValueOf("CSRF_PROTECTION", Preferences.NO) == Preferences.YES;
 		}
+
+		internal static bool ServiceAsController()
+		{
+			return Config.GetValueOf("SERVICE_AS_CONTROLLER", Preferences.NO) == Preferences.YES;
+		}
 	}
 }
