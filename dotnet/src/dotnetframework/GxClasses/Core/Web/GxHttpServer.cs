@@ -189,8 +189,8 @@ namespace GeneXus.Http.Server
 	{
 		HttpRequest _httpReq;
         IGxContext _context;
-        string _referrer = "";
-		string _tabId = "";
+        string _referrer = string.Empty;
+		string _tabId = string.Empty;
 
 		public GxHttpRequest(IGxContext context)
         {
@@ -214,7 +214,7 @@ namespace GeneXus.Http.Server
 			get
 			{
 				if (_httpReq == null)
-					return "";
+					return string.Empty;
 				return _httpReq.GetMethod();
 			}
 		}
@@ -224,14 +224,14 @@ namespace GeneXus.Http.Server
 		}
 		public string ErrDescription
 		{
-			get {return "";}
+			get {return string.Empty; }
 		}
 		public string BaseURL
 		{
 			get 
 			{
 				if (_httpReq == null)
-					return "";
+					return string.Empty;
 #if NETCORE
 				string baseURL = _httpReq.GetDisplayUrl();
 #else
@@ -247,7 +247,7 @@ namespace GeneXus.Http.Server
 			get	
 			{
 				if (_httpReq == null)
-					return "";
+					return string.Empty;
 				string urlQuery;
 #if NETCORE
 				urlQuery = _httpReq.QueryString.HasValue ? _httpReq.QueryString.Value : string.Empty;
@@ -259,7 +259,7 @@ namespace GeneXus.Http.Server
 				string url = (_context != null && _context.isAjaxRequest()) ? 
 					((GxContext)_context).RemoveInternalParms(urlQuery) :
 					urlQuery.Substring(1, urlQuery.Length - 1);
-				return url.Replace("?","");
+				return url.Replace("?", string.Empty);
 			}
 		}
 		public string ServerHost
@@ -267,7 +267,7 @@ namespace GeneXus.Http.Server
 			get
 			{
 				if (_httpReq == null)
-					return "";
+					return string.Empty;
 				return _context.GetServerName();
 			}
 		}
@@ -294,7 +294,7 @@ namespace GeneXus.Http.Server
 			get
 			{
 				if (_httpReq == null)
-					return "";
+					return string.Empty;
 				return _httpReq.GetApplicationPath()+"/";
 			}
 		}
@@ -303,7 +303,7 @@ namespace GeneXus.Http.Server
 			get
 			{
 				if (_httpReq == null)
-					return "";
+					return string.Empty;
 				string virtualPath = _httpReq.GetFilePath();
 				return virtualPath.Remove(0, virtualPath.LastIndexOf('/')+1) ;
 			}
@@ -323,7 +323,7 @@ namespace GeneXus.Http.Server
 				}
 				catch 
 				{ 
-					return "";
+					return string.Empty;
 				}
 			}
 		}
@@ -332,7 +332,11 @@ namespace GeneXus.Http.Server
 		{
 			get
 			{
-				string sUrl = "";
+				if (_httpReq == null)
+					return string.Empty;
+
+				string sUrl = string.Empty;
+
 #if NETCORE
 				sUrl = _httpReq.GetDisplayUrl();
 #else
@@ -386,10 +390,10 @@ namespace GeneXus.Http.Server
 		public string GetHeader( string name)
 		{
 			if (_httpReq == null)
-				return "";
+				return string.Empty;
 			string hdr = _httpReq.Headers[name];
 			if (hdr == null)
-				return "";
+				return string.Empty;
 			return hdr;
 		}
 		public string GetValue( string name)
