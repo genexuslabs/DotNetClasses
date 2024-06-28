@@ -22,8 +22,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -169,7 +171,11 @@ namespace GeneXus.Application
 		{
 			OpenTelemetryService.Setup(services);
 
-			services.AddControllers();
+			if (RestAPIHelpers.ServiceAsController() && !string.IsNullOrEmpty(VirtualPath))
+				services.AddControllers(o => { o.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath))); });
+			else
+				services.AddControllers();
+
 			IMvcBuilder mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
 			if (RestAPIHelpers.ServiceAsController())
 			{
@@ -758,6 +764,31 @@ namespace GeneXus.Application
 			foreach (TypeInfo controller in controllersToRemove)
 			{
 				feature.Controllers.Remove(controller);
+			}
+		}
+	}
+	internal class SetRoutePrefix : IApplicationModelConvention
+	{
+		private readonly AttributeRouteModel _routePrefix ;
+		public SetRoutePrefix(IRouteTemplateProvider route)
+		{
+			_routePrefix = new AttributeRouteModel(route);
+		}
+		public void Apply(ApplicationModel application)
+		{
+			foreach (var controller in application.Controllers)
+			{
+				foreach (var selector in controller.Selectors)
+				{
+					if (selector.AttributeRouteModel != null)
+					{
+						selector.AttributeRouteModel = AttributeRouteModel.CombineAttributeRouteModel(_routePrefix, selector.AttributeRouteModel);
+					}
+					else
+					{
+						selector.AttributeRouteModel = _routePrefix;
+					}
+				}
 			}
 		}
 	}
