@@ -12,7 +12,7 @@ namespace GeneXus.SAP
     public class GXECSessionManager
     {
 
-        ISapConnection connection = null;
+		ISapPooledConnection pooledConnection = null;
 		//GxEnterpriseConnect GxConnect = null;		
 		IGxContext _context;
 		string _connectionString = null;
@@ -244,6 +244,7 @@ namespace GeneXus.SAP
 
 		public void TransactionBegin()
         {
+			
           //  connection.TransactionBegin();
         }
 
@@ -286,58 +287,50 @@ namespace GeneXus.SAP
 		public void Disconnect()
         {
 			//connection = FindConnection();
-			if (connection != null)
-			{
-				connection.Disconnect();
-			}
+			//if (connection != null)
+			//{
+			//	connection.Disconnect();
+			//}
         }
 
 		public bool IsConnected()
 		{
 			//connection = FindConnection();
-			if(connection != null)
-				return connection.IsValid;
+			
+			if (pooledConnection != null)
+				// return connection.IsValid;
+				return true;
 			else
 				return false;
 
 		}
-
+		
 		public void ConnectSession(string SessionName, string Scope)
 		{
 			Connect();
 		}
 
-		public ISapConnection GetCurrentConnection()
+		public ISapPooledConnection GetCurrentConnection()
 		{
 			if (errorCode == 0)
-				return connection;
+				return pooledConnection;
 			else
 				return null;
 		}
 
-
 		public void Connect()
-        {
+		{
 			try
 			{
-				if (connection == null)
+				if (pooledConnection == null)
 				{
-					if (_pool==null)
+					if (_pool == null)
 						_pool = new SapConnectionPool(ConnectionString);
 					_context.SetContextProperty("SAP-Session", this.SessionName);
 					_context.SetContextProperty("SAP-ConnStr", ConnectionString);
-					connection = _pool.GetConnection();
-					//GxConnect = new GxEnterpriseConnect(this);
-					bool result = connection.Ping();
-					if (result)
-					{
-						errorCode = 0;
-						errorMessage = "";
-					}
-					else
-					{
-						errorCode = 1;
-					}
+					//connection = _pool.GetConnection();
+					//bool result = connection.Ping();
+					pooledConnection = new SapPooledConnection(_pool);
 				}
 			}
 			catch (Exception e)
@@ -345,6 +338,6 @@ namespace GeneXus.SAP
 				errorCode = 2;
 				errorMessage = e.Message;
 			}
-        }
+		}			
     }
 }
