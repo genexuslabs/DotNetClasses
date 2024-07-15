@@ -2,8 +2,8 @@ namespace Genexus.Compression
 {
 	public class CompressionMessage
 	{
-		private bool successfulOperation;
-		private string message;
+		private readonly bool successfulOperation;
+		private readonly string message;
 
 		public CompressionMessage(bool successfulOperation, string message)
 		{
@@ -14,13 +14,11 @@ namespace Genexus.Compression
 		public bool IsSuccessfulOperation
 		{
 			get { return successfulOperation; }
-			set { successfulOperation = value; }
 		}
 
 		public string Message
 		{
 			get { return message; }
-			set { message = value; }
 		}
 	}
 }
