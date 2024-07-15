@@ -38,8 +38,8 @@ namespace xUnitTesting
 		public void TestCompressToZip()
 		{
 			string outputPath = Path.Combine(testDirectory.FullName, "output.zip");
-			int result = GXCompressor.CompressFiles(files, outputPath, "ZIP");
-			Assert.Equal(0, result);
+			CompressionMessage result = GXCompressor.CompressFiles(files, outputPath, "ZIP");
+			Assert.True(result.IsSuccessfulOperation);
 			Assert.True(File.Exists(outputPath));
 		}
 
@@ -47,8 +47,8 @@ namespace xUnitTesting
 		public void TestCompressToTar()
 		{
 			string outputPath = Path.Combine(testDirectory.FullName, "output.tar");
-			int result = GXCompressor.CompressFiles(files, outputPath, "TAR");
-			Assert.Equal(0, result);
+			CompressionMessage result = GXCompressor.CompressFiles(files, outputPath, "TAR");
+			Assert.True(result.IsSuccessfulOperation);
 			Assert.True(File.Exists(outputPath));
 		}
 
@@ -59,8 +59,8 @@ namespace xUnitTesting
 			string inputFilePath = Path.Combine(testDirectory.FullName, "test.txt");
 			File.WriteAllText(inputFilePath, "This is a sample text to test the compression functionality.");
 			List<string> singleFileCollection = new List<string> { inputFilePath };
-			int result = GXCompressor.CompressFiles(singleFileCollection, outputPath, "GZIP");
-			Assert.Equal(0, result);
+			CompressionMessage result = GXCompressor.CompressFiles(singleFileCollection, outputPath, "GZIP");
+			Assert.True(result.IsSuccessfulOperation);
 			Assert.True(File.Exists(outputPath));
 		}
 
@@ -68,8 +68,8 @@ namespace xUnitTesting
 		public void TestCompressToJar()
 		{
 			string outputPath = Path.Combine(testDirectory.FullName, "output.jar");
-			int result = GXCompressor.CompressFiles(files, outputPath, "JAR");
-			Assert.Equal(0, result);
+			CompressionMessage result = GXCompressor.CompressFiles(files, outputPath, "JAR");
+			Assert.True(result.IsSuccessfulOperation);
 			Assert.True(File.Exists(outputPath));
 		}
 
@@ -77,8 +77,57 @@ namespace xUnitTesting
 		public void TestUnsupportedFormat()
 		{
 			string outputPath = Path.Combine(testDirectory.FullName, "output.unknown");
-			int result = GXCompressor.CompressFiles(files, outputPath, "UNKNOWN");
-			Assert.Equal(-3, result);
+			CompressionMessage result = GXCompressor.CompressFiles(files, outputPath, "UNKNOWN");
+			Assert.False(result.IsSuccessfulOperation);
+		}
+
+		[Fact]
+		public void TestDecompressZip()
+		{
+			string compressedPath = Path.Combine(testDirectory.FullName, "output.zip");
+			GXCompressor.CompressFiles(files, compressedPath, "ZIP");
+			string decompressDirectory = Path.Combine(testDirectory.FullName, "decompressZip");
+			Directory.CreateDirectory(decompressDirectory);
+			CompressionMessage result = GXCompressor.Decompress(compressedPath, decompressDirectory);
+			Assert.True(result.IsSuccessfulOperation);
+			Assert.True(Directory.GetFiles(decompressDirectory).Length > 0);
+		}
+
+		[Fact]
+		public void TestDecompressTar()
+		{
+			string compressedPath = Path.Combine(testDirectory.FullName, "output.tar");
+			GXCompressor.CompressFiles(files, compressedPath, "TAR");
+			string decompressDirectory = Path.Combine(testDirectory.FullName, "decompressTar");
+			Directory.CreateDirectory(decompressDirectory);
+			CompressionMessage result = GXCompressor.Decompress(compressedPath, decompressDirectory);
+			Assert.True(result.IsSuccessfulOperation);
+			Assert.True(Directory.GetFiles(decompressDirectory).Length > 0);
+		}
+
+		[Fact]
+		public void TestDecompressGzip()
+		{
+			string compressedPath = Path.Combine(testDirectory.FullName, "output.gz");
+			List<string> singleFileCollection = new List<string> { files[0] };
+			GXCompressor.CompressFiles(singleFileCollection, compressedPath, "GZIP");
+			string decompressDirectory = Path.Combine(testDirectory.FullName, "decompressGzip");
+			Directory.CreateDirectory(decompressDirectory);
+			CompressionMessage result = GXCompressor.Decompress(compressedPath, decompressDirectory);
+			Assert.True(result.IsSuccessfulOperation);
+			Assert.True(Directory.GetFiles(decompressDirectory).Length > 0);
+		}
+
+		[Fact]
+		public void TestDecompressJar()
+		{
+			string compressedPath = Path.Combine(testDirectory.FullName, "output.jar");
+			GXCompressor.CompressFiles(files, compressedPath, "JAR");
+			string decompressDirectory = Path.Combine(testDirectory.FullName, "decompressJar");
+			Directory.CreateDirectory(decompressDirectory);
+			CompressionMessage result = GXCompressor.Decompress(compressedPath, decompressDirectory);
+			Assert.True(result.IsSuccessfulOperation);
+			Assert.True(Directory.GetFiles(decompressDirectory).Length > 0);
 		}
 	}
 }

@@ -4,10 +4,10 @@ namespace Genexus.Compression
 {
 	public interface IGXCompressor
 	{
-		static int CompressFiles(List<string> files, string path, string format) => 0;
-		static int CompressFolder(string folder, string path, string format) => 0;
+		static CompressionMessage CompressFiles(List<string> files, string path, string format) => null;
+		static CompressionMessage CompressFolder(string folder, string path, string format) => null;
 		static Compression NewCompression(string path, string format, int dictionarySize) => new Compression();
-		static int Decompress(string file, string path) => 0;
+		static CompressionMessage Decompress(string file, string path) => null;
 	}
 }
 

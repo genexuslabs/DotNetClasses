@@ -69,12 +69,12 @@ namespace Genexus.Compression
 			}
 		}
 
-		public int Save()
+		public CompressionMessage Save()
 		{
 			if (filesToCompress.Count == 0)
 			{
 				GXLogging.Error(log, "No files have been added for compression.");
-				return -4;
+				return new CompressionMessage(false, "No files have been added for compression.");
 			}
 			List<string> paths = new List<string>();
 			foreach (FileInfo file in filesToCompress)
