@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using GeneXus;
+using GeneXus.Utils;
 
 namespace Genexus.Compression
 {
@@ -10,6 +13,7 @@ namespace Genexus.Compression
 
 		private string path;
 		private string format;
+		private GXBaseCollection<SdtMessages_Message> messages;
 		private List<FileInfo> filesToCompress;
 
 		public Compression()
@@ -17,10 +21,11 @@ namespace Genexus.Compression
 			filesToCompress = new List<FileInfo>();
 		}
 
-		public Compression(string path, string format)
+		public Compression(string path, string format, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			this.path = path;
 			this.format = format;
+			this.messages = messages;
 			this.filesToCompress = new List<FileInfo>();
 		}
 
@@ -43,6 +48,7 @@ namespace Genexus.Compression
 			}
 			else
 			{
+				StorageMessages("File does not exist: " + file.FullName, messages);
 				GXLogging.Error(log, $"File does not exist: {0}", file.FullName);
 			}
 		}
@@ -65,23 +71,19 @@ namespace Genexus.Compression
 			}
 			else
 			{
+				StorageMessages("Folder does not exist or is not a directory: " +  folder.FullName, messages);
 				GXLogging.Error(log, "Folder does not exist or is not a directory: {0}", folder.FullName);
 			}
 		}
 
-		public CompressionMessage Save()
+		public bool Save()
 		{
-			if (filesToCompress.Count == 0)
-			{
-				GXLogging.Error(log, "No files have been added for compression.");
-				return new CompressionMessage(false, "No files have been added for compression.");
-			}
 			List<string> paths = new List<string>();
 			foreach (FileInfo file in filesToCompress)
 			{
 				paths.Add(file.FullName);
 			}
-			return GXCompressor.CompressFiles(paths, path, format);
+			return GXCompressor.CompressFiles(paths, path, format, ref this.messages);
 		}
 
 		public void Clear()
@@ -89,6 +91,19 @@ namespace Genexus.Compression
 			this.path = string.Empty;
 			this.format = string.Empty;
 			this.filesToCompress = new List<FileInfo>();
+		}
+
+		private void StorageMessages(string error, GXBaseCollection<SdtMessages_Message> messages)
+		{
+			if (messages != null && messages.Count > 0)
+			{
+				SdtMessages_Message msg = new()
+				{
+					gxTpr_Type = 1,
+					gxTpr_Description = error
+				};
+				messages.Add(msg);
+			}
 		}
 	}
 }

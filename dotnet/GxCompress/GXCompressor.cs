@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Security;
+using System.Text;
 using GeneXus;
+using GeneXus.Utils;
 using ICSharpCode.SharpZipLib.Tar;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -23,13 +25,40 @@ namespace Genexus.Compression
 	public class GXCompressor : IGXCompressor
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(GXCompressor).FullName);
+		private static void StorageMessages(Exception ex, string error, GXBaseCollection<SdtMessages_Message> messages)
+		{
+			if (messages != null && messages.Count > 0)
+			{
+				SdtMessages_Message msg = new()
+				{
+					gxTpr_Type = 1
+				};
+				if (ex != null)
+				{
+					StringBuilder str = new StringBuilder();
+					str.Append(ex.Message);
+					while (ex.InnerException != null)
+					{
+						str.Append(ex.InnerException.Message);
+						ex = ex.InnerException;
+					}
+					msg.gxTpr_Description = str.ToString();
+				}
+				else
+				{
+					msg.gxTpr_Description = error;
+				}
+				messages.Add(msg);
+			}
+		}
 
-		public static CompressionMessage CompressFiles(List<string> files, string path, string format)
+		public static bool CompressFiles(List<string> files, string path, string format, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			if (files.Count == 0)
 			{
 				GXLogging.Error(log, "No files have been added for compression.");
-				return new CompressionMessage(false, "No files have been added for compression.");
+				StorageMessages(null, "No files have been added for compression.", messages);
+				return false;
 			}
 
 			FileInfo[] toCompress = new FileInfo[files.Count];
@@ -46,60 +75,65 @@ namespace Genexus.Compression
 				{
 					case CompressionFormat.ZIP:
 						CompressToZip(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					case CompressionFormat.TAR:
 						CompressToTar(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					case CompressionFormat.GZIP:
 						CompressToGzip(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					case CompressionFormat.JAR:
 						CompressToJar(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 				}
 			}
 			catch (ArgumentException ae)
 			{
 				GXLogging.Error(log, "Unsupported compression format for compression: " + format, ae);
-				return new CompressionMessage(false, "Unsupported compression format for compression: " + format);
+				StorageMessages(ae, "", messages);
+				return false;
 			}
 			catch (Exception e)
 			{
 				GXLogging.Error(log, "An error occurred during the compression process: ", e);
-				return new CompressionMessage(false, "An error occurred during the compression process: " + e.Message);
+				StorageMessages(e, "", messages);
+				return false;
 			}
-			return new CompressionMessage(false, "An error occurred during the compression process");
+			return false;
 		}
 
-		public static CompressionMessage CompressFolder(string folder, string path, string format)
+		public static bool CompressFolder(string folder, string path, string format, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			DirectoryInfo toCompress = new DirectoryInfo(folder);
 			if (!toCompress.Exists)
 			{
 				GXLogging.Error(log, "The specified folder does not exist: {0}", toCompress.FullName);
-				return new CompressionMessage(false, "The specified folder does not exist: " + toCompress.FullName);
+				StorageMessages(null, "The specified folder does not exist: " + toCompress.FullName, messages);
+				return false;
 			}
 			List<string> list = new List<string> { folder };
-			return CompressFiles(list, path, format);
+			return CompressFiles(list, path, format, ref messages);
 		}
 
-		public static Compression NewCompression(string path, string format)
+		public static Compression NewCompression(string path, string format, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
-			return new Compression(path, format);
+			return new Compression(path, format, ref messages);
 		}
 
-		public static CompressionMessage Decompress(string file, string path)
+		public static bool Decompress(string file, string path, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			FileInfo toCompress = new FileInfo(file);
 			if (!toCompress.Exists)
 			{
 				GXLogging.Error(log, "The specified archive does not exist: " + toCompress.FullName);
-				return new CompressionMessage(false, "The specified archive does not exist: " + toCompress.FullName);
+				StorageMessages(null, "The specified folder does not exist: " + toCompress.FullName, messages);
+				return false;
 			}
 			if (toCompress.Length == 0)
 			{
 				GXLogging.Error(log, "The archive located at " + toCompress.FullName +  " is empty");
-				return new CompressionMessage(false, "The archive located at " + toCompress.FullName +  " is empty");
+				StorageMessages(null, "The archive located at " + toCompress.FullName + " is empty", messages);
+				return false;
 			}
 			string extension = Path.GetExtension(toCompress.Name).Substring(1);
 			try
@@ -108,37 +142,34 @@ namespace Genexus.Compression
 				{
 					case "zip":
 						DecompressZip(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					case "tar":
 						DecompressTar(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					case "gz":
 						DecompressGzip(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					case "jar":
 						DecompressJar(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					case "rar":
 						DecompressRar(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					case "7z":
 						Decompress7z(toCompress, path);
-						return GetSuccessfulCompressionMessage();
+						return true;
 					default:
 						GXLogging.Error(log, "Unsupported compression format for decompression: " + extension);
-						return new CompressionMessage(false, "Unsupported compression format for decompression: " + extension);
+						StorageMessages(null, "Unsupported compression format for decompression: " + extension, messages);
+						return false;
 				}
 			}
 			catch (Exception e)
 			{
 				GXLogging.Error(log, "Decompression failed: ", e);
-				return new CompressionMessage(false, "An error occurred during the decompression process: " + e.Message);
+				StorageMessages(e, "", messages);
+				return false;
 			}
-		}
-
-		private static CompressionMessage GetSuccessfulCompressionMessage()
-		{
-			return new CompressionMessage(true, "The operation was successful");
 		}
 
 		private static void CompressToZip(FileInfo[] files, string outputPath)
