@@ -9,6 +9,8 @@ namespace GeneXus.Application
 	public class GXNavigationHelper
 	{
 		public static string POPUP_LEVEL = "gxPopupLevel";
+		public static string TAB_ID = "gxTabId";
+		public static string TAB_ID_HEADER = "X-Gx-Tabid";
 		public static string CALLED_AS_POPUP = "gxCalledAsPopup";
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
@@ -122,42 +124,57 @@ namespace GeneXus.Application
 			return referers.Count;
 		}
 
-		public int GetUrlPopupLevel(string url)
+	internal static string getUrlComponent(string url, string key) {
+		Uri uri = null;
+		string result = "";
+		try
 		{
-			Uri uri = null;
-			try
+			uri = new Uri(url);
+		}
+		catch { }
+		if (uri != null)
+		{
+			url = uri.GetComponents(UriComponents.Query, UriFormat.Unescaped);
+		}
+		if (url != null)
+		{
+			int pIdx = url.IndexOf(key);
+			if (pIdx != -1)
 			{
-				uri = new Uri(url);
-			}
-			catch { }
-			if (uri != null)
-			{
-				url = uri.GetComponents(UriComponents.Query, UriFormat.Unescaped);
-			}
-			int popupLevel = -1;
-			if (url != null)
-			{
-				int pIdx = url.IndexOf(POPUP_LEVEL);
-				if (pIdx != -1)
+				int eqIdx = url.IndexOf("=", pIdx);
+				if (eqIdx != -1)
 				{
-					int eqIdx = url.IndexOf("=", pIdx);
-					if (eqIdx != -1)
+					int cIdx = url.IndexOf(";", eqIdx);
+					if (cIdx > eqIdx)
 					{
-						int cIdx = url.IndexOf(";", eqIdx);
-						if (cIdx > eqIdx)
+						try
 						{
-							try
-							{
-								string strLvl = url.Substring(eqIdx + 1, cIdx - eqIdx - 1);
-								popupLevel = int.Parse(strLvl);
-							}
-							catch
-							{
-								popupLevel = -1;
-							}
+							result = url.Substring(eqIdx + 1, cIdx - eqIdx - 1);
+						}
+						catch
+						{
 						}
 					}
 				}
+			}
+		}
+		return result;
+	}
+
+	public int GetUrlPopupLevel(string url)
+		{
+			int popupLevel = -1;
+			string sPopUpLvl = getUrlComponent(url, POPUP_LEVEL);
+			try
+			{
+				if (!String.IsNullOrEmpty(sPopUpLvl))
+				{
+					popupLevel = int.Parse(sPopUpLvl);
+				}
+			}
+			catch
+			{
+				popupLevel = -1;
 			}
 			return popupLevel;
 		}
