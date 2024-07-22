@@ -13,6 +13,7 @@
 	<ItemGroup>
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\Resources\CryptographicHash.cs" Link="Utils\Resources\CryptographicHash.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestHash.cs" Link="Utils\TestHash.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwks.cs" Link="Utils\TestJwks.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestRandom.cs" Link="Utils\TestRandom.cs" />
 	</ItemGroup>
 
@@ -27,6 +28,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\SecurityAPI\dotnet\dotnetcore\SecurityAPICommonsNetCore\SecurityAPICommonsNetCore.csproj" />
 	  <ProjectReference Include="..\..\..\src\DotNet\GamUtilsNet\GamUtilsNet.csproj" />
 	</ItemGroup>
 

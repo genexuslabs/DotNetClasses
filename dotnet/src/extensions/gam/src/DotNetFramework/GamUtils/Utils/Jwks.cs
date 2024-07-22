@@ -28,7 +28,11 @@ namespace GamUtils.Utils
 
 		private static RSA Create(int keySizeInBits)
 		{
+#if NETCORE
+			RSA rSA = RSA.Create();
+#else
 			RSA rSA = (RSA)CryptoConfig.CreateFromName("RSAPSS");
+#endif
 			rSA.KeySize = keySizeInBits;
 			if (rSA.KeySize != keySizeInBits)
 			{
