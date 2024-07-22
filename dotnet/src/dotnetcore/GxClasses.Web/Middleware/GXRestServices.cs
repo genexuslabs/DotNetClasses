@@ -13,6 +13,7 @@ using GeneXus.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace GeneXus.Utils
 {
 	public class GxRestService : ControllerBase
@@ -156,20 +157,32 @@ namespace GeneXus.Utils
 		{
 			HttpHelper.SetError(HttpContext, code, message);
 		}
-		protected StatusCodeResult WebException(Exception ex)
+		protected ObjectResult ApiException(Exception ex)
+		{
+			GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
+
+			if (ex is FormatException)
+			{
+				WrappedJsonError jsonError = HttpHelper.HandleUnexpectedError(HttpContext, HttpStatusCode.BadRequest, ex);
+				return BadRequest(jsonError);
+			}
+			else
+			{
+				WrappedJsonError jsonError = HttpHelper.HandleUnexpectedError(HttpContext, HttpStatusCode.InternalServerError, ex);
+				return StatusCode((int)HttpStatusCode.InternalServerError, jsonError);
+			}
+		}
+		protected void WebException(Exception ex)
 		{
             GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
 
             if (ex is FormatException)
 			{
 				HttpHelper.SetUnexpectedError(HttpContext, HttpStatusCode.BadRequest, ex);
-				return StatusCode((int)HttpStatusCode.BadRequest);
 			}
 			else
             {
 				HttpHelper.SetUnexpectedError(HttpContext, HttpStatusCode.InternalServerError, ex);
-				return StatusCode((int)HttpStatusCode.InternalServerError);
-
 			}
         }
 
