@@ -25,7 +25,29 @@ namespace Genexus.Compression
 	public class GXCompressor : IGXCompressor
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(GXCompressor).FullName);
-		private static void StorageMessages(Exception ex, string error, GXBaseCollection<SdtMessages_Message> messages)
+
+		private static readonly Dictionary<string, string> errorMessages = new Dictionary<string, string>();
+
+		static GXCompressor()
+		{
+			errorMessages.Add("GENERIC_ERROR", "An error occurred during the compression/decompression process: ");
+			errorMessages.Add("NO_FILES_ADDED", "No files have been added for compression.");
+			errorMessages.Add("FILE_NOT_EXISTS", "File does not exist: ");
+			errorMessages.Add("FOLDER_NOT_EXISTS", "The specified folder does not exist: ");
+			errorMessages.Add("UNSUPPORTED_FORMAT", "Unsupported compression/decompression format: ");
+			errorMessages.Add("EMPTY_FILE", "The selected file is empty: ");
+		}
+
+		public static string GetMessage(string key)
+		{
+			if (errorMessages.TryGetValue(key, out string value))
+			{
+				return value;
+			}
+			return "An error ocurred in the compression/decompression process: ";
+		}
+
+		private static void StorageMessages(string error, GXBaseCollection<SdtMessages_Message> messages)
 		{
 			if (messages != null && messages.Count > 0)
 			{
@@ -33,21 +55,7 @@ namespace Genexus.Compression
 				{
 					gxTpr_Type = 1
 				};
-				if (ex != null)
-				{
-					StringBuilder str = new StringBuilder();
-					str.Append(ex.Message);
-					while (ex.InnerException != null)
-					{
-						str.Append(ex.InnerException.Message);
-						ex = ex.InnerException;
-					}
-					msg.gxTpr_Description = str.ToString();
-				}
-				else
-				{
-					msg.gxTpr_Description = error;
-				}
+				msg.gxTpr_Description = error;
 				messages.Add(msg);
 			}
 		}
@@ -56,18 +64,23 @@ namespace Genexus.Compression
 		{
 			if (files.Count == 0)
 			{
-				GXLogging.Error(log, "No files have been added for compression.");
-				StorageMessages(null, "No files have been added for compression.", messages);
+				GXLogging.Error(log, $"{GetMessage("NO_FILES_ADDED")}");
+				StorageMessages($"{GetMessage("NO_FILES_ADDED")}", messages);
 				return false;
 			}
-
 			FileInfo[] toCompress = new FileInfo[files.Count];
 			int index = 0;
 			foreach (string filePath in files)
 			{
-				toCompress[index++] = new FileInfo(filePath);
+				FileInfo file = new FileInfo(filePath);
+				if (!file.Exists)
+				{
+					GXLogging.Error(log, $"{GetMessage("FILE_NOT_EXISTS")}{filePath}");
+					StorageMessages($"{GetMessage("FILE_NOT_EXISTS")}" + filePath, messages);
+					continue;
+				}
+				toCompress[index++] = file;
 			}
-
 			try
 			{
 				CompressionFormat compressionFormat = GetCompressionFormat(format);
@@ -75,31 +88,31 @@ namespace Genexus.Compression
 				{
 					case CompressionFormat.ZIP:
 						CompressToZip(toCompress, path);
-						return true;
+						break;
 					case CompressionFormat.TAR:
 						CompressToTar(toCompress, path);
-						return true;
+						break;
 					case CompressionFormat.GZIP:
 						CompressToGzip(toCompress, path);
-						return true;
+						break;
 					case CompressionFormat.JAR:
 						CompressToJar(toCompress, path);
-						return true;
+						break;
 				}
+				return true;
 			}
 			catch (ArgumentException ae)
 			{
-				GXLogging.Error(log, "Unsupported compression format for compression: " + format, ae);
-				StorageMessages(ae, "", messages);
+				GXLogging.Error(log, $"{GetMessage("UNSUPPORTED_FORMAT")}" + format, ae);
+				StorageMessages(ae.Message, messages);
 				return false;
 			}
 			catch (Exception e)
 			{
-				GXLogging.Error(log, "An error occurred during the compression process: ", e);
-				StorageMessages(e, "", messages);
+				GXLogging.Error(log, $"{GetMessage("GENERIC_ERROR")}", e);
+				StorageMessages(e.Message, messages);
 				return false;
 			}
-			return false;
 		}
 
 		public static bool CompressFolder(string folder, string path, string format, ref GXBaseCollection<SdtMessages_Message> messages)
@@ -107,8 +120,8 @@ namespace Genexus.Compression
 			DirectoryInfo toCompress = new DirectoryInfo(folder);
 			if (!toCompress.Exists)
 			{
-				GXLogging.Error(log, "The specified folder does not exist: {0}", toCompress.FullName);
-				StorageMessages(null, "The specified folder does not exist: " + toCompress.FullName, messages);
+				GXLogging.Error(log, $"{GetMessage("FOLDER_NOT_EXISTS")}", toCompress.FullName);
+				StorageMessages($"{GetMessage("FOLDER_NOT_EXISTS")}" + toCompress.FullName, messages);
 				return false;
 			}
 			List<string> list = new List<string> { folder };
@@ -125,14 +138,14 @@ namespace Genexus.Compression
 			FileInfo toCompress = new FileInfo(file);
 			if (!toCompress.Exists)
 			{
-				GXLogging.Error(log, "The specified archive does not exist: " + toCompress.FullName);
-				StorageMessages(null, "The specified folder does not exist: " + toCompress.FullName, messages);
+				GXLogging.Error(log, $"{GetMessage("FILE_NOT_EXISTS")}" + toCompress.FullName);
+				StorageMessages($"{GetMessage("FILE_NOT_EXISTS")}" + toCompress.FullName, messages);
 				return false;
 			}
 			if (toCompress.Length == 0)
 			{
-				GXLogging.Error(log, "The archive located at " + toCompress.FullName +  " is empty");
-				StorageMessages(null, "The archive located at " + toCompress.FullName + " is empty", messages);
+				GXLogging.Error(log, $"{GetMessage("EMPTY_FILE")}");
+				StorageMessages($"{GetMessage("EMPTY_FILE")}", messages);
 				return false;
 			}
 			string extension = Path.GetExtension(toCompress.Name).Substring(1);
@@ -142,32 +155,33 @@ namespace Genexus.Compression
 				{
 					case "zip":
 						DecompressZip(toCompress, path);
-						return true;
+						break;
 					case "tar":
 						DecompressTar(toCompress, path);
-						return true;
+						break;
 					case "gz":
 						DecompressGzip(toCompress, path);
-						return true;
+						break;
 					case "jar":
 						DecompressJar(toCompress, path);
-						return true;
+						break;
 					case "rar":
 						DecompressRar(toCompress, path);
-						return true;
+						break;
 					case "7z":
 						Decompress7z(toCompress, path);
-						return true;
+						break;
 					default:
-						GXLogging.Error(log, "Unsupported compression format for decompression: " + extension);
-						StorageMessages(null, "Unsupported compression format for decompression: " + extension, messages);
+						GXLogging.Error(log, $"{GetMessage("UNSUPPORTED_FORMAT")}" + extension);
+						StorageMessages($"{GetMessage("UNSUPPORTED_FORMAT")}" + extension, messages);
 						return false;
 				}
+				return true;
 			}
 			catch (Exception e)
 			{
-				GXLogging.Error(log, "Decompression failed: ", e);
-				StorageMessages(e, "", messages);
+				GXLogging.Error(log, $"{GetMessage("GENERIC_ERROR")}", e);
+				StorageMessages(e.Message, messages);
 				return false;
 			}
 		}

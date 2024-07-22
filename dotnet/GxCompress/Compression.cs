@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using GeneXus;
 using GeneXus.Utils;
 
@@ -26,7 +25,7 @@ namespace Genexus.Compression
 			this.path = path;
 			this.format = format;
 			this.messages = messages;
-			this.filesToCompress = new List<FileInfo>();
+			filesToCompress = new List<FileInfo>();
 		}
 
 		public void SetPath(string path)
@@ -48,31 +47,23 @@ namespace Genexus.Compression
 			}
 			else
 			{
-				StorageMessages("File does not exist: " + file.FullName, messages);
 				GXLogging.Error(log, $"File does not exist: {0}", file.FullName);
 			}
 		}
 
 		public void AddFolder(string folderPath)
 		{
-			DirectoryInfo folder = new DirectoryInfo(folderPath);
-			if (folder.Exists && folder.Attributes.HasFlag(FileAttributes.Directory))
+			try
 			{
-				FileInfo[] files = folder.GetFiles();
-				DirectoryInfo[] directories = folder.GetDirectories();
-				foreach (DirectoryInfo dir in directories)
+				var files = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories);
+				foreach (string file in files)
 				{
-					AddFolder(dir.FullName);
-				}
-				foreach (FileInfo file in files)
-				{
-					AddFile(file.FullName);
+					AddFile(Path.GetFullPath(file));
 				}
 			}
-			else
+			catch (Exception e)
 			{
-				StorageMessages("Folder does not exist or is not a directory: " +  folder.FullName, messages);
-				GXLogging.Error(log, "Folder does not exist or is not a directory: {0}", folder.FullName);
+				GXLogging.Error(log, $"Failed to add foler", e);
 			}
 		}
 
@@ -90,20 +81,7 @@ namespace Genexus.Compression
 		{
 			this.path = string.Empty;
 			this.format = string.Empty;
-			this.filesToCompress = new List<FileInfo>();
-		}
-
-		private void StorageMessages(string error, GXBaseCollection<SdtMessages_Message> messages)
-		{
-			if (messages != null && messages.Count > 0)
-			{
-				SdtMessages_Message msg = new()
-				{
-					gxTpr_Type = 1,
-					gxTpr_Description = error
-				};
-				messages.Add(msg);
-			}
+			filesToCompress = new List<FileInfo>();
 		}
 	}
 }
