@@ -312,7 +312,7 @@ namespace GeneXus.Http
 			else
 				return HttpStatusCode.Unauthorized;
 		}
-		private static HttpStatusCode GamCodeToHttpStatus(string code, HttpStatusCode defaultCode=HttpStatusCode.Unauthorized)
+		internal static HttpStatusCode GamCodeToHttpStatus(string code, HttpStatusCode defaultCode=HttpStatusCode.Unauthorized)
 		{
 			if (code == GAM_CODE_OTP_USER_ACCESS_CODE_SENT || code == GAM_CODE_TFA_USER_MUST_VALIDATE)
 			{
@@ -324,6 +324,11 @@ namespace GeneXus.Http
 			}
 			return defaultCode;
 		}
+		internal static WrappedJsonError GetJsonError(string statusCode, string statusDescription)
+		{
+			WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
+			return jsonError;
+		}
 		private static void SetJsonError(HttpContext httpContext, string statusCode, string statusDescription)
 		{
 			if (httpContext != null)//<serviceHostingEnvironment aspNetCompatibilityEnabled="false" /> web.config
@@ -331,8 +336,7 @@ namespace GeneXus.Http
 #if !NETCORE
 				httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 #endif
-				WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
-				httpContext.Response.Write(JSONHelper.Serialize(jsonError));
+				httpContext.Response.Write(JSONHelper.Serialize(GetJsonError(statusCode, statusDescription)));
 			}
 #if !NETCORE
 			else
