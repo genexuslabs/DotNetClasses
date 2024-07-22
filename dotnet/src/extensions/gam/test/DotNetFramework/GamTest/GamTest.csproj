@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net471</TargetFramework>
+		<IsPublishable>false</IsPublishable>
+		<RootNamespace>GamTest</RootNamespace>
+		<AssemblyName>GamTest</AssemblyName>
+		<NoWarn>CS0618,CA1707</NoWarn>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+	
+	 <ItemGroup>
+    <PackageReference Include="Microsoft.CodeCoverage" Version="16.10.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
+	 <PackageReference Include="NUnit" Version="3.13.2" />
+		<PackageReference Include="jose-jwt" Version="5.0.0" />
+	 <PackageReference Include="StrongNamer" Version="0.2.5" />
+		</ItemGroup>
+	
+	 <ItemGroup>
+	   <ProjectReference Include="..\..\..\..\SecurityAPI\dotnet\dotnetframework\SecurityAPICommons\SecurityAPICommons.csproj" />
+	   <ProjectReference Include="..\..\..\src\DotNetFramework\GamUtils\GamUtils.csproj" />
+	 </ItemGroup>
+</Project>
