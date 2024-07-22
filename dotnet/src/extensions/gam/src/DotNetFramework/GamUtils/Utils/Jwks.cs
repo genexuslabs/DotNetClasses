@@ -16,7 +16,7 @@ namespace GamUtils.Utils
 	[SecuritySafeCritical]
 	public class Jwks
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(Hash));
+		static readonly ILog logger = LogManager.GetLogger(typeof(Hash));
 
 		[SecuritySafeCritical]
 		internal static string GenerateKeyPair()

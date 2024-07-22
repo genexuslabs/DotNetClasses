@@ -29,4 +29,18 @@ namespace GamTest.Utils.Resources
 			return Convert.ToBase64String(alg.ComputeHash(bin));
 		}
 	}
+
+	internal class CryptoUtils
+	{
+		internal static HashAlgorithm CreateHashAlgorithm(string hashAlgorithmName)
+		{
+			switch (hashAlgorithmName)
+			{
+				case "SHA256": case "SHA-256": case "System.Security.Cryptography.SHA256": return SHA256.Create();
+				case "SHA384": case "SHA-384": case "System.Security.Cryptography.SHA384": return SHA384.Create();
+				case "SHA512": case "SHA-512": case "System.Security.Cryptography.SHA512": return SHA512.Create();
+				default: return null;
+			}
+		}
+	}
 }
