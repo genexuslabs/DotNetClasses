@@ -25,6 +25,7 @@ namespace GeneXus.Utils
         protected string permissionPrefix;
 		protected string permissionMethod;
         bool runAsMain = true;
+		HttpStatusCode restCode = HttpStatusCode.OK;
 
 		protected GxRestService()
         {
@@ -157,7 +158,15 @@ namespace GeneXus.Utils
 		{
 			HttpHelper.SetError(HttpContext, code, message);
 		}
-		protected ObjectResult ApiException(Exception ex)
+		protected ObjectResult GetOk(object data)
+		{
+			if (restCode != HttpStatusCode.OK)
+				return StatusCode((int)restCode, data);
+			else
+				return Ok(data);
+		}
+
+		protected ObjectResult HandleException(Exception ex)
 		{
 			GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
 
@@ -278,10 +287,7 @@ namespace GeneXus.Utils
 		}
 		protected void SetStatusCode(HttpStatusCode code)
         {
-			if (HttpContext != null)
-            {
-				HttpContext.Response.StatusCode = (int)code;
-            }
+			restCode = code;
         }
 		IHeaderDictionary GetHeaders()
 		{
@@ -354,9 +360,7 @@ namespace GeneXus.Utils
 			}
 			return true;
 		}
-
-
-		protected StatusCodeResult SendNotModified()
+		protected StatusCodeResult GetNotModified()
 		{
 			return StatusCode((int)HttpStatusCode.NotModified);
 		}
