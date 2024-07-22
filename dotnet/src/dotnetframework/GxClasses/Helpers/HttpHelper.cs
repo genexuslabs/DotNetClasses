@@ -284,11 +284,7 @@ namespace GeneXus.Http
 #else
 				httpContext.Response.StatusCode = (int)httpStatusCode;
 #endif
-				if (httpStatusCode == HttpStatusCode.Unauthorized)
-				{
-					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
-				}
-
+				HandleUnauthorized(httpStatusCode, httpContext);
 #if !NETCORE
 					if (!string.IsNullOrEmpty(statusDescription))
 						httpContext.Response.StatusDescription =  statusDescription.Replace(Environment.NewLine, string.Empty);
@@ -301,6 +297,13 @@ namespace GeneXus.Http
 			}
 
 #endif
+		}
+		internal static void HandleUnauthorized(HttpStatusCode statusCode, HttpContext httpContext)
+		{
+			if (statusCode == HttpStatusCode.Unauthorized)
+			{
+				httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), statusCode.ToString(HttpHelper.INT_FORMAT), string.Empty);
+			}
 		}
 		private static HttpStatusCode MapStatusCode(string statusCode)
 		{
@@ -363,6 +366,18 @@ namespace GeneXus.Http
 			SetResponseStatus(httpContext, statusCode, statusCodeDesc);
 			SetJsonError(httpContext, statusCodeStr, statusCodeDesc);
 		}
+#if NETCORE
+		internal static WrappedJsonError HandleUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, Exception ex)
+		{
+			string statusCodeDesc = StatusCodeToTitle(HttpStatusCode.BadRequest);
+			TraceUnexpectedError(ex);
+			string statusCodeStr = HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT);
+			HandleUnauthorized(statusCode, httpContext);
+			httpContext.SetReasonPhrase(statusCodeDesc);
+			GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusCodeDesc));
+			return new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCodeStr, Message = statusCodeDesc } };
+		}
+#endif
 		internal static string StatusCodeToTitle(HttpStatusCode statusCode)
 		{
 			return CapitalsToTitle.Replace(statusCode.ToString(), " ");
