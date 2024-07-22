@@ -26,6 +26,7 @@ namespace GeneXus.Utils
 		protected string permissionMethod;
         bool runAsMain = true;
 		HttpStatusCode restCode = HttpStatusCode.OK;
+		WrappedJsonError gamError;
 
 		protected GxRestService()
         {
@@ -158,7 +159,7 @@ namespace GeneXus.Utils
 		{
 			HttpHelper.SetError(HttpContext, code, message);
 		}
-		protected ObjectResult GetOk(object data)
+		protected ObjectResult GetResponse(object data)
 		{
 			if (restCode != HttpStatusCode.OK)
 				return StatusCode((int)restCode, data);
@@ -254,7 +255,7 @@ namespace GeneXus.Utils
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
 						if (!isOK)
 						{
-							HttpHelper.SetGamError(HttpContext, result.Code, result.Description);
+							HandleGamError(HttpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -268,7 +269,7 @@ namespace GeneXus.Utils
 						}
 						else
 						{
-							HttpHelper.SetGamError(HttpContext, result.Code, result.Description);
+							HandleGamError(HttpContext, result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);
@@ -285,6 +286,24 @@ namespace GeneXus.Utils
 				return true;
 			}
 		}
+		internal void HandleGamError(HttpContext httpContext, string code, string message, HttpStatusCode defaultCode = HttpStatusCode.Unauthorized)
+		{
+			HttpStatusCode httpStatusCode = HttpHelper.GamCodeToHttpStatus(code, defaultCode);
+
+			if (httpContext != null)
+			{
+				SetStatusCode(httpStatusCode);
+				HttpHelper.HandleUnauthorized(httpStatusCode, httpContext);
+				httpContext.SetReasonPhrase(message);
+				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", httpStatusCode, message));
+			}
+			gamError = HttpHelper.GetJsonError(code, message);
+		}
+		protected ObjectResult Unauthenticated(object data=null)
+		{
+			return StatusCode((int)restCode, gamError);
+		}
+
 		protected void SetStatusCode(HttpStatusCode code)
         {
 			restCode = code;
