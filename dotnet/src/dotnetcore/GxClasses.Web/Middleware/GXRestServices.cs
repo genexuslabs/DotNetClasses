@@ -325,7 +325,10 @@ namespace GeneXus.Utils
 
 		protected void SetStatusCode(HttpStatusCode code)
         {
-			_statusCode = code;
+			if (code != 0)
+			{
+				_statusCode = code;
+			}
         }
 		IHeaderDictionary GetHeaders()
 		{
