@@ -231,7 +231,16 @@ namespace GeneXus.Utils
 		}
 		protected bool IsAuthenticated()
 		{
-			return IsAuthenticated(IntegratedSecurityLevel, IntegratedSecurityEnabled, permissionPrefix);
+			if (!string.IsNullOrEmpty(permissionMethod))
+			{
+				GAMSecurityLevel securityLevel = ApiIntegratedSecurityLevel(permissionMethod);
+				bool integratedSecurityEnabled = IntegratedSecurityEnabled && securityLevel != GAMSecurityLevel.SecurityNone;
+				return IsAuthenticated(securityLevel, integratedSecurityEnabled, permissionPrefix);
+			}
+			else
+			{
+				return IsAuthenticated(IntegratedSecurityLevel, IntegratedSecurityEnabled, permissionPrefix);
+			}
 		}
 		private bool IsAuthenticated(GAMSecurityLevel objIntegratedSecurityLevel, bool objIntegratedSecurityEnabled, string objPermissionPrefix)
 		{
@@ -411,6 +420,7 @@ namespace GeneXus.Utils
         }
 		protected virtual bool IsSynchronizer { get { return false; } }
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
+		protected virtual GAMSecurityLevel ApiIntegratedSecurityLevel(string gxMethod) { return IntegratedSecurityLevel; }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
 		protected virtual string ExecutePermissionPrefix { get { return string.Empty; } }
 	}
