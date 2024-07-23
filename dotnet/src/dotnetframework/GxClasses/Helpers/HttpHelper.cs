@@ -63,16 +63,16 @@ namespace GeneXus.Http
 	public class HttpJsonError
 	{
 		[DataMember(Name = "code")]
-		public string Code;
+		public string Code { get; set; }
 		[DataMember(Name = "message")]
-		public string Message;
+		public string Message { get; set; }
 	}
 
 	[DataContract()]
 	public class WrappedJsonError
 	{
 		[DataMember(Name = "error")]
-		public HttpJsonError Error;
+		public HttpJsonError Error { get; set; }
 	}
 #if NETCORE
 	internal static class CookiesHelper
@@ -305,7 +305,7 @@ namespace GeneXus.Http
 				httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), statusCode.ToString(HttpHelper.INT_FORMAT), string.Empty);
 			}
 		}
-		private static HttpStatusCode MapStatusCode(string statusCode)
+		internal static HttpStatusCode MapStatusCode(string statusCode)
 		{
 			if (Enum.TryParse<HttpStatusCode>(statusCode, out HttpStatusCode result) && Enum.IsDefined(typeof(HttpStatusCode), result))
 				return result;
