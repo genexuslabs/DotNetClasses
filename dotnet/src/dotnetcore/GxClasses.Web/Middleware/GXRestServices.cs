@@ -25,8 +25,8 @@ namespace GeneXus.Utils
         protected string permissionPrefix;
 		protected string permissionMethod;
         bool runAsMain = true;
-		HttpStatusCode restCode = HttpStatusCode.OK;
-		WrappedJsonError gamError;
+		HttpStatusCode _statusCode = HttpStatusCode.OK;
+		WrappedJsonError _errorDetail;
 
 		protected GxRestService()
         {
@@ -113,11 +113,11 @@ namespace GeneXus.Utils
 				{
 					msglistItem msgItem = (msglistItem)msg[0];
 					if (msgItem.gxTpr_Id.Contains("NotFound"))
-						HttpHelper.SetError(HttpContext, HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
+						_errorDetail = HandleError(HttpContext, HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else if (msgItem.gxTpr_Id.Contains("WasChanged"))
-						HttpHelper.SetError(HttpContext, HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
+						_errorDetail = HandleError(HttpContext, HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else
-						HttpHelper.SetError(HttpContext, HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
+						_errorDetail = HandleError(HttpContext, HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 				}
 			}
 
@@ -161,8 +161,8 @@ namespace GeneXus.Utils
 		}
 		protected ObjectResult GetResponse(object data)
 		{
-			if (restCode != HttpStatusCode.OK)
-				return StatusCode((int)restCode, data);
+			if (_statusCode != HttpStatusCode.OK)
+				return StatusCode((int)_statusCode, data);
 			else
 				return Ok(data);
 		}
@@ -252,7 +252,7 @@ namespace GeneXus.Utils
 				String token = GetHeader("Authorization");
 				if (token == null)
 				{
-					HttpHelper.SetError(HttpContext, "0", "This service needs an Authorization Header");
+					_errorDetail = HandleError(HttpContext, "0", "This service needs an Authorization Header");
 					return false;
 				}
 				else
@@ -264,7 +264,7 @@ namespace GeneXus.Utils
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
 						if (!isOK)
 						{
-							HandleGamError(HttpContext, result.Code, result.Description);
+							_errorDetail = HandleGamError(HttpContext, result.Code, result.Description);
 							return false;
 						}
 					}
@@ -278,7 +278,7 @@ namespace GeneXus.Utils
 						}
 						else
 						{
-							HandleGamError(HttpContext, result.Code, result.Description);
+							_errorDetail = HandleGamError(HttpContext, result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);
@@ -295,10 +295,21 @@ namespace GeneXus.Utils
 				return true;
 			}
 		}
-		internal void HandleGamError(HttpContext httpContext, string code, string message, HttpStatusCode defaultCode = HttpStatusCode.Unauthorized)
+		internal WrappedJsonError HandleGamError(HttpContext httpContext, string code, string message, HttpStatusCode defaultCode = HttpStatusCode.Unauthorized)
 		{
 			HttpStatusCode httpStatusCode = HttpHelper.GamCodeToHttpStatus(code, defaultCode);
+			SetErrorHeaders(httpContext, httpStatusCode, message);
+			return HttpHelper.GetJsonError(code, message);
+		}
+		internal WrappedJsonError HandleError(HttpContext httpContext, string code, string message)
+		{
+			HttpStatusCode httpStatusCode = HttpHelper.MapStatusCode(code);
+			SetErrorHeaders(httpContext, httpStatusCode, message);
+			return HttpHelper.GetJsonError(code, message);
+		}
 
+		private void SetErrorHeaders(HttpContext httpContext, HttpStatusCode httpStatusCode, string message)
+		{
 			if (httpContext != null)
 			{
 				SetStatusCode(httpStatusCode);
@@ -306,16 +317,15 @@ namespace GeneXus.Utils
 				httpContext.SetReasonPhrase(message);
 				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", httpStatusCode, message));
 			}
-			gamError = HttpHelper.GetJsonError(code, message);
 		}
 		protected ObjectResult Unauthenticated(object data=null)
 		{
-			return StatusCode((int)restCode, gamError);
+			return StatusCode((int)_statusCode, _errorDetail);
 		}
 
 		protected void SetStatusCode(HttpStatusCode code)
         {
-			restCode = code;
+			_statusCode = code;
         }
 		IHeaderDictionary GetHeaders()
 		{
