@@ -78,10 +78,10 @@
 	</ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\GxCompress\GxCompress.csproj" />
     <ProjectReference Include="..\..\src\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
-    <ProjectReference Include="..\..\src\dotnetcore\GxCompress\GxCompress.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxExcel\GxExcel.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxOffice\GxOffice.csproj" />
