@@ -291,6 +291,7 @@ namespace GeneXus.Application
 
 		private void RegisterRestServices(IMvcBuilder mvcBuilder)
 		{
+			HashSet<string> serviceAssemblies = new HashSet<string>();
 			foreach (string svcFile in gxRouting.svcFiles)
 			{
 				try
@@ -300,12 +301,16 @@ namespace GeneXus.Application
 															   .TakeWhile(c => c != '"')
 															   .ToArray()).Trim().Split(',');
 					string controllerAssemblyName = controllerAssemblyQualifiedName.Last();
-					string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{controllerAssemblyName}.dll");
-
-					if (File.Exists(controllerAssemblyFile))
+					if (!serviceAssemblies.Contains(controllerAssemblyName))
 					{
-						GXLogging.Info(log, "Registering rest: " +  controllerAssemblyName);
-						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
+						serviceAssemblies.Add(controllerAssemblyName);
+						string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{controllerAssemblyName}.dll");
+
+						if (File.Exists(controllerAssemblyFile))
+						{
+							GXLogging.Info(log, "Registering rest: " + controllerAssemblyName);
+							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
+						}
 					}
 				}
 				catch (Exception ex)
@@ -316,17 +321,21 @@ namespace GeneXus.Application
 		}
 		private void RegisterApiServices(IMvcBuilder mvcBuilder, GXRouting gxRouting)
 		{
-			Dictionary<string, string> apiAssemblies = new Dictionary<string, string>();
+			HashSet<string> serviceAssemblies = new HashSet<string>();
 			foreach (string grp in gxRouting.servicesPathUrl.Values)
 			{
 				try
 				{
 					string assemblyName = grp.Replace('\\', '.');
-					string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{assemblyName}.dll");
-					if (File.Exists(controllerAssemblyFile))
+					if (!serviceAssemblies.Contains(assemblyName))
 					{
-						GXLogging.Info(log, "Registering api: " + grp);
-						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
+						serviceAssemblies.Add(assemblyName);
+						string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{assemblyName}.dll");
+						if (File.Exists(controllerAssemblyFile))
+						{
+							GXLogging.Info(log, "Registering api: " + grp);
+							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
+						}
 					}
 				}
 				catch (Exception ex)
@@ -529,10 +538,13 @@ namespace GeneXus.Application
 						}
 					}
 					routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
-					routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
 				});
 			}
-			
+			app.UseMvc(routes =>
+			{
+				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
+			});
+
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
 			Config.ScriptPath = string.IsNullOrEmpty(basePath) ? "/" : basePath;
