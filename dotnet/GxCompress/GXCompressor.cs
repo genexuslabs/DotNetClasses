@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Security;
-using System.Text;
 using GeneXus;
 using GeneXus.Utils;
 using ICSharpCode.SharpZipLib.Tar;
@@ -304,7 +303,7 @@ namespace Genexus.Compression
 		private static void DecompressZip(FileInfo zipFile, string directory)
 		{
 			string zipFilePath = zipFile.FullName;
-			string targetDir = Path.GetFullPath(directory);
+			string targetDir = Path.GetFullPath(directory) + Path.DirectorySeparatorChar;
 
 			try
 			{
@@ -313,30 +312,28 @@ namespace Genexus.Compression
 				{
 					foreach (ZipArchiveEntry entry in zipIn.Entries)
 					{
-						string resolvedPath = Path.Combine(targetDir, entry.FullName);
-
-						if (!resolvedPath.StartsWith(targetDir))
+						string rawOutputPath = Path.Combine(targetDir, entry.FullName);
+						string resolvedOutputPath = Path.GetFullPath(rawOutputPath);
+						if (!resolvedOutputPath.StartsWith(targetDir, StringComparison.Ordinal))
 						{
 							throw new SecurityException("Zip entry is outside of the target dir: " + entry.FullName);
 						}
 
-						string fullResolvedPath = Path.GetFullPath(resolvedPath);
-
-						if (entry.FullName.EndsWith(Path.DirectorySeparatorChar.ToString()))
+						if (entry.FullName.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
 						{
-							if (!Directory.Exists(fullResolvedPath))
+							if (!Directory.Exists(resolvedOutputPath))
 							{
-								Directory.CreateDirectory(fullResolvedPath);
+								Directory.CreateDirectory(resolvedOutputPath);
 							}
 						}
 						else
 						{
-							string parentDir = Path.GetDirectoryName(fullResolvedPath);
+							string parentDir = Path.GetDirectoryName(resolvedOutputPath);
 							if (!Directory.Exists(parentDir))
 							{
 								Directory.CreateDirectory(parentDir);
 							}
-							using (FileStream outFile = new FileStream(fullResolvedPath, FileMode.Create, FileAccess.Write))
+							using (FileStream outFile = new FileStream(resolvedOutputPath, FileMode.Create, FileAccess.Write))
 							{
 								entry.Open().CopyTo(outFile);
 							}
@@ -346,10 +343,9 @@ namespace Genexus.Compression
 			}
 			catch (IOException e)
 			{
-				GXLogging.Error(log, "Error while decompressing to zip", e);
+				GXLogging.Error(log, "Error while decompressing zip", e);
 				throw new Exception("Failed to decompress ZIP file: " + zipFilePath, e);
 			}
-
 		}
 
 		private static void DecompressTar(FileInfo file, string outputPath)
@@ -489,7 +485,7 @@ namespace Genexus.Compression
 			}
 		}
 
-		public static void DecompressJar(FileInfo jarFile, string outputPath)
+		private static void DecompressJar(FileInfo jarFile, string outputPath)
 		{
 			if (!jarFile.Exists)
 			{
@@ -502,14 +498,20 @@ namespace Genexus.Compression
 				outputDir.Create();
 			}
 
+			string resolvedOutputPath = Path.GetFullPath(outputPath) + Path.DirectorySeparatorChar;
+
 			using (FileStream jarFileStream = jarFile.OpenRead())
 			using (ZipArchive jis = new ZipArchive(jarFileStream, ZipArchiveMode.Read))
 			{
 				foreach (ZipArchiveEntry entry in jis.Entries)
 				{
 					string entryPath = Path.Combine(outputPath, entry.FullName);
-					FileInfo outputFile = new FileInfo(entryPath);
-
+					string resolvedEntryPath = Path.GetFullPath(entryPath);
+					if (!resolvedEntryPath.StartsWith(resolvedOutputPath, StringComparison.Ordinal))
+					{
+						throw new IOException("Entry is outside the target directory: " + entry.FullName);
+					}
+					FileInfo outputFile = new FileInfo(resolvedEntryPath);
 					if (entry.FullName.EndsWith(Path.DirectorySeparatorChar.ToString()))
 					{
 						if (!Directory.Exists(outputFile.FullName))
@@ -531,6 +533,7 @@ namespace Genexus.Compression
 				}
 			}
 		}
+
 		public static void DecompressRar(FileInfo rarFile, string destinationPath)
 		{
 			using (var archive = RarArchive.Open(rarFile.FullName))
