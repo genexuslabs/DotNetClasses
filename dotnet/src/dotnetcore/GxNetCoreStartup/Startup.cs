@@ -23,8 +23,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
@@ -177,15 +175,11 @@ namespace GeneXus.Application
 				services.AddControllers();
 
 			IMvcBuilder mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
+			
 			if (RestAPIHelpers.ServiceAsController())
 			{
-				Dictionary<string, string> appRestParts = RegisterRestServices(mvcBuilder);
-				Dictionary<string,string> apiAssemblies = RegisterApiServices(mvcBuilder, gxRouting);
-
-				mvcBuilder.ConfigureApplicationPartManager(apm =>
-				{
-					apm.FeatureProviders.Add(new CustomControllerFeatureProvider(apiAssemblies, appRestParts));
-				});
+				RegisterRestServices(mvcBuilder);
+				RegisterApiServices(mvcBuilder, gxRouting);
 			}
 			RegisterNativeServices(mvcBuilder);
 
@@ -299,9 +293,8 @@ namespace GeneXus.Application
 
 		}
 
-		private Dictionary<string, string> RegisterRestServices(IMvcBuilder mvcBuilder)
+		private void RegisterRestServices(IMvcBuilder mvcBuilder)
 		{
-			Dictionary<string, string> appParts = new Dictionary<string, string>();
 			foreach (string svcFile in gxRouting.svcFiles)
 			{
 				try
@@ -312,36 +305,39 @@ namespace GeneXus.Application
 															   .ToArray()).Trim().Split(',');
 					string controllerAssemblyName = controllerAssemblyQualifiedName.Last();
 					string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{controllerAssemblyName}.dll");
-					if (File.Exists(controllerAssemblyFile) && !appParts.ContainsKey(controllerAssemblyName))
+
+					if (File.Exists(controllerAssemblyFile))
 					{
-						Console.WriteLine("Registering rest: " +  controllerAssemblyName);
+						GXLogging.Info(log, "Registering rest: " +  controllerAssemblyName);
 						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
-						appParts.Add(controllerAssemblyName, $"{controllerAssemblyName}Controller");
 					}
 				}
 				catch (Exception ex)
 				{
-					Console.Error.WriteLine("Error registering rest service " + ex.Message);
+					GXLogging.Error(log, "Error registering rest service", ex);
 				}
 			}
-			return appParts;
 		}
-		private Dictionary<string, string> RegisterApiServices(IMvcBuilder mvcBuilder, GXRouting gxRouting)
+		private void RegisterApiServices(IMvcBuilder mvcBuilder, GXRouting gxRouting)
 		{
 			Dictionary<string, string> apiAssemblies = new Dictionary<string, string>();
 			foreach (string grp in gxRouting.servicesPathUrl.Values)
 			{
-				string assemblyName = grp.Replace('\\', '.');
-				apiAssemblies.Add(assemblyName, $"{assemblyName}Controller");
-				string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{assemblyName}.dll");
-				if (File.Exists(controllerAssemblyFile))
+				try
 				{
-					Console.WriteLine("Registering api: " + grp);
-					mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
+					string assemblyName = grp.Replace('\\', '.');
+					string controllerAssemblyFile = Path.Combine(Startup.LocalPath, "bin", $"{assemblyName}.dll");
+					if (File.Exists(controllerAssemblyFile))
+					{
+						GXLogging.Info(log, "Registering api: " + grp);
+						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
+					}
 				}
-
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, "Error registering api", ex);
+				}
 			}
-			return apiAssemblies;
 		}
 
 		private void DefineCorsPolicy(IServiceCollection services)
@@ -736,35 +732,6 @@ namespace GeneXus.Application
 				}
 			}
 			return Redirect(defaultFiles[0]);
-		}
-	}
-	public class CustomControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
-	{
-		private readonly Dictionary<string, string> _apiAssemblies;
-		private readonly Dictionary<string, string> _restParts;
-
-		public CustomControllerFeatureProvider(Dictionary<string, string> apiAssemblies, Dictionary<string, string> restAssemblies)
-		{
-			_apiAssemblies = apiAssemblies;
-			_restParts = restAssemblies;
-		}
-		public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
-		{
-			List<TypeInfo> controllersToRemove = new List<TypeInfo>();
-			foreach (var controller in feature.Controllers)
-			{
-				string assemblyName = controller.Assembly.GetName().Name;
-				if (_apiAssemblies.ContainsKey(assemblyName))
-					if (_restParts.ContainsValue(controller.Name))
-					{
-						controllersToRemove.Add(controller);
-						Console.WriteLine("Remove controller:" + controller.Name + " from assembly:" + assemblyName);
-					}
-			}
-			foreach (TypeInfo controller in controllersToRemove)
-			{
-				feature.Controllers.Remove(controller);
-			}
 		}
 	}
 	internal class SetRoutePrefix : IApplicationModelConvention
