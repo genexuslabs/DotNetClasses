@@ -7,7 +7,6 @@
 		<PackageId>GeneXus.Compression</PackageId>
 		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
 		<NoWarn>618;1607;1698;SYSLIB0021;SYSLIB0027;SYSLIB0028;SYSLIB0023</NoWarn>
-		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
 	<ItemGroup>
