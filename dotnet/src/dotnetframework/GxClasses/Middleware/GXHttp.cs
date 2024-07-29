@@ -557,20 +557,28 @@ namespace GeneXus.Http
 #else
 						JObject eventMetadata = JSONHelper.ReadJSON<JObject>((string)targetObj.EventsMetadata[eventName.ToString()]);
 #endif
-						eventHandlers[eventCount] = (string)eventMetadata["handler"];
-						JArray eventInputParms = (JArray)eventMetadata["iparms"];
-						foreach (JObject inputParm in eventInputParms)
+						if (eventMetadata != null)
 						{
-							AddParmsMetadata(inputParm, DynAjaxEventContext.inParmsMetadata, DynAjaxEventContext.inParmsMetadataHash);
-							eventUseInternalParms[eventCount] = eventUseInternalParms[eventCount] || IsInternalParm(inputParm);
-						}
-						JArray eventOutputParms = (JArray)eventMetadata["oparms"];
-						if (eventOutputParms != null)
-						{
-							foreach (JObject outputParm in eventOutputParms)
+							eventHandlers[eventCount] = (string)eventMetadata["handler"];
+							JArray eventInputParms = (JArray)eventMetadata["iparms"];
+							foreach (JObject inputParm in eventInputParms)
 							{
-								AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+								AddParmsMetadata(inputParm, DynAjaxEventContext.inParmsMetadata, DynAjaxEventContext.inParmsMetadataHash);
+								eventUseInternalParms[eventCount] = eventUseInternalParms[eventCount] || IsInternalParm(inputParm);
 							}
+							JArray eventOutputParms = (JArray)eventMetadata["oparms"];
+							if (eventOutputParms != null)
+							{
+								foreach (JObject outputParm in eventOutputParms)
+								{
+									AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+								}
+							}
+						}
+						else
+						{
+							GXLogging.Warn(log, "The event ", eventName, " is not implemented");
+							eventHandlers[eventCount] = string.Empty;
 						}
 						eventCount++;
 					}
@@ -1024,14 +1032,17 @@ namespace GeneXus.Http
 					for (int i = 0; i < eventHandlers.Length; i++)
 					{
 						string handler = eventHandlers[i];
-						if (i > 0)
+						if (!string.IsNullOrEmpty(handler))
 						{
-							targetObj.PrepareForReuse();
+							if (i > 0)
+							{
+								targetObj.PrepareForReuse();
+							}
+							_ = targetObj.GetType().InvokeMember(handler, BindingFlags.Public |
+							BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod,
+							Type.DefaultBinder,
+							targetObj, (eventUseInternalParms[i] ? MethodParms : null));
 						}
-						_ = targetObj.GetType().InvokeMember(handler, BindingFlags.Public |
-						BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod,
-						Type.DefaultBinder,
-						targetObj, (eventUseInternalParms[i] ? MethodParms : null));
 					}
 				}
 			}
