@@ -3781,7 +3781,7 @@ namespace GeneXus.Application
 						{
 							GXLogging.Debug(Logger, "Searching for txt files ..");
 							int srchIx = 0;
-							string[] paths = new string[] { ".\\", "..\\" };
+							string[] paths = { Directory.GetCurrentDirectory(), Directory.GetParent(Directory.GetCurrentDirectory()).FullName};
 							bool found = false;
 							while (!found && srchIx < paths.Length)
 							{
