@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net47</TargetFramework>
+		<AssemblyName>GamUtilsImpl</AssemblyName>
+		<NoWarn>CA1031, CA1801</NoWarn>
+		<PackageId>Genexus.Gam.Utils</PackageId>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <Optimize>True</Optimize>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.3.1" />
+    <PackageReference Include="jose-jwt" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="StrongNamer" Version="0.2.5" />
+    <PackageReference Include="System.Security.Cryptography.Cng" Version="4.7.0" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+	
+</Project>
