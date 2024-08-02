@@ -120,23 +120,23 @@ namespace GeneXus.Http
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HttpHelper>();
 
 		internal static Dictionary<string, string> GAMServices = new Dictionary<string, string>(){
-												{"oauth/access_token","gxoauthaccesstoken.aspx"},
-												{"oauth/logout","gxoauthlogout.aspx"},
-												{"oauth/userinfo","gxoauthuserinfo.aspx"},
-												{"oauth/gam/signin","agamextauthinput.aspx"},
-												{"oauth/gam/callback","agamextauthinput.aspx"},
-												{"oauth/gam/access_token","agamoauth20getaccesstoken.aspx"},
-												{"oauth/gam/userinfo","agamoauth20getuserinfo.aspx"},
-												{"oauth/gam/signout","agamextauthinput.aspx"},
+												{"oauth/access_token","gxoauthaccesstoken"},
+												{"oauth/logout","gxoauthlogout"},
+												{"oauth/userinfo","gxoauthuserinfo"},
+												{"oauth/gam/signin","agamextauthinput"},
+												{"oauth/gam/callback","agamextauthinput"},
+												{"oauth/gam/access_token","agamoauth20getaccesstoken"},
+												{"oauth/gam/userinfo","agamoauth20getuserinfo"},
+												{"oauth/gam/signout","agamextauthinput"},
 												{"saml/gam/signin","Saml2/SignIn"},
-												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws.aspx"},
+												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws"},
 												{"saml/gam/signout","Saml2/Logout"},
-												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken.aspx"},
-												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
-												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
-												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
-												{"oauth/gam/v2.0/requesttokenanduserinfo","agamssorequesttokenanduserinfo_v20.aspx"}};
-		internal static HashSet<string> GamServicesInternalName = new HashSet<string>(GAMServices.Values.Select(value => value.Replace(ASPX, string.Empty)));
+												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken"},
+												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken"},
+												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20"},
+												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20"},
+												{"oauth/gam/v2.0/requesttokenanduserinfo","agamssorequesttokenanduserinfo_v20"}};
+		internal static HashSet<string> GamServicesInternalName = new HashSet<string>(GAMServices.Values);
 		internal const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
 		internal const string GXFLOW_NSPACE = "GXflow.Programs";
 		internal const string GAM_NSPACE = "GeneXus.Security.API";
