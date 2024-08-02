@@ -49,6 +49,10 @@ namespace GeneXus.Mail.Smtp
 				{
 					throw new GXMailException(inner.Message, GXInternetConstants.MAIL_CantLogin);
 				}
+				else if (inner is ArgumentException)
+				{
+					GXLogging.Error(log, "SMTPConnection check method failed", e);
+				}
 				else
 				{
 					throw new GXMailException(inner.Message, GXInternetConstants.MAIL_AuthenticationError);
