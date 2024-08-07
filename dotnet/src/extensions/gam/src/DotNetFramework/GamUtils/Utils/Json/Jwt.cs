@@ -2,6 +2,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security;
 using System.Security.Cryptography;
+using GamUtils.Utils.Keys;
 using Jose;
 using log4net;
 using Microsoft.IdentityModel.Tokens;
@@ -21,23 +22,44 @@ namespace GamUtils.Utils
 			return Verify(CertificateUtil.GetCertificate(path, alias, password), token);
 		}
 
+		[SecuritySafeCritical]
+		public static string Create(string path, string alias, string password, string payload, string header)
+		{
+			return Create(PrivateKeyUtil.GetPrivateKey(path, alias, password), payload, header);
+		}
+
 		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 		[SecuritySafeCritical]
 		public static bool Verify(RSAParameters publicKey, string token)
 		{
+
+			Console.WriteLine("token: " + token);
+
 			try
 			{
 				using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
 				{
 					rsa.ImportParameters(publicKey);
 					string payload = JWT.Decode(token, rsa, JwsAlgorithm.RS256);
-					return payload.IsNullOrEmpty() ? false : true;
+					
+					if(payload.IsNullOrEmpty())
+					{
+						Console.WriteLine("payload null or empty");
+							return false;
+					}
+					else
+					{
+						return true;
+					}
+					//return payload.IsNullOrEmpty() ? false : true;
 				}
 			}
 			catch (Exception e)
 			{
 				logger.Error("verify", e);
+				Console.WriteLine("error verify");
+				Console.WriteLine(e.Message);
 				return false;
 			}
 		}
