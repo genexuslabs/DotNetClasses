@@ -10,13 +10,14 @@ using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
+using Org.BouncyCastle.Utilities.Encoders;
 
-namespace GamUtils.Utils
+namespace GamUtils.Utils.Keys
 {
 	[SecuritySafeCritical]
 	internal enum CertificateExt
 	{
-		NONE, crt, cer, pfx, jks, pkcs12, p12, pem, key
+		NONE, crt, cer, pfx, pkcs12, p12, pem, key, b64
 	}
 
 
@@ -24,7 +25,9 @@ namespace GamUtils.Utils
 	internal static class CertificateUtil
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(CertificateUtil));
-		public static CertificateExt Value(string ext)
+
+		[SecuritySafeCritical]
+		internal static CertificateExt Value(string ext)
 		{
 			switch (ext.ToLower().Trim())
 			{
@@ -34,8 +37,6 @@ namespace GamUtils.Utils
 					return CertificateExt.cer;
 				case "pfx":
 					return CertificateExt.pfx;
-				case "jks":
-					return CertificateExt.jks;
 				case "pkcs12":
 					return CertificateExt.pkcs12;
 				case "p12":
@@ -44,43 +45,61 @@ namespace GamUtils.Utils
 					return CertificateExt.pem;
 				case "key":
 					return CertificateExt.key;
+				case "b64":
+					return CertificateExt.b64;
 				default:
 					logger.Error("Invalid certificate file extension");
 					return CertificateExt.NONE;
 			}
 		}
 
-		public static RSAParameters GetCertificate(string path, string alias, string password)
+		[SecuritySafeCritical]
+		internal static RSAParameters GetCertificate(string path, string alias, string password)
 		{
-			CertificateExt ext = CertificateUtil.Value(Path.GetExtension(path).Replace(".", String.Empty).Trim());
-			if (ext == CertificateExt.NONE)
-			{
-				logger.Error("Error reading certificate path");
-				return new RSAParameters();
-			}
+			string extension = Path.GetExtension(path).Replace(".", string.Empty).Trim();
+			CertificateExt ext = extension.IsNullOrEmpty() ? Value("b64") : Value(extension);
 			switch (ext)
 			{
 				case CertificateExt.crt:
 				case CertificateExt.cer:
 					return GetPublicRSAParameters(LoadFromDer(path));
 				case CertificateExt.pfx:
-				case CertificateExt.jks:
 				case CertificateExt.pkcs12:
 				case CertificateExt.p12:
 					return GetPublicRSAParameters(LoadFromPkcs12(path, alias, password));
 				case CertificateExt.pem:
 				case CertificateExt.key:
 					return GetPublicRSAParameters(LoadFromPkcs8(path));
+				case CertificateExt.b64:
+					return GetPublicRSAParameters(LoadFromBase64(path));
 				default:
 					logger.Error("Invalid certificate file extension");
 					return new RSAParameters();
 			}
 		}
 
+		private static Org.BouncyCastle.X509.X509Certificate LoadFromBase64(string base64)
+		{
+			logger.Debug("LoadFromBase64");
+			Console.WriteLine("LoadFromBase64");
+			try
+			{
+				return new X509CertificateParser().ReadCertificate(Base64.Decode(base64));
+
+			}
+			catch (Exception e)
+			{
+				logger.Error("LoadFromBase64", e);
+				Console.WriteLine("error LoadFromBase64");
+				return null;
+			}
+		}
+
 		private static RSAParameters GetPublicRSAParameters(Org.BouncyCastle.X509.X509Certificate cert)
 		{
-				X509Certificate2 cert2 = new X509Certificate2(DotNetUtilities.ToX509Certificate(cert));
-				return cert2.GetRSAPublicKey().ExportParameters(false);
+			X509Certificate2 cert2 = new X509Certificate2(DotNetUtilities.ToX509Certificate(cert));
+			Console.WriteLine("GetPublicRSAParameters" + cert2.GetSerialNumberString());
+			return cert2.GetRSAPublicKey().ExportParameters(false);
 		}
 
 		private static Org.BouncyCastle.X509.X509Certificate LoadFromPkcs12(string path, string alias, string password)
@@ -128,7 +147,7 @@ namespace GamUtils.Utils
 				try
 				{
 					pemReader = new PemReader(streamReader);
-					Object obj = pemReader.ReadObject();
+					object obj = pemReader.ReadObject();
 
 					if (obj.GetType() == typeof(System.Security.Cryptography.X509Certificates.X509Certificate) || obj.GetType() == typeof(Org.BouncyCastle.X509.X509Certificate) || obj.GetType() == typeof(X509CertificateStructure))
 					{

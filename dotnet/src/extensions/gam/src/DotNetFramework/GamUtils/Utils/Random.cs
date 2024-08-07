@@ -2,13 +2,14 @@ using System;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
+using Org.BouncyCastle.Utilities.Encoders;
 
 namespace GamUtils.Utils
 {
 	[SecuritySafeCritical]
 	public class Random
 	{
-		internal static string RandomNumeric(int length)
+		internal static string Numeric(int length)
 		{
 			string s = "";
 			byte[] buffer = new byte[sizeof(uint)];
@@ -22,11 +23,11 @@ namespace GamUtils.Utils
 					s += BitConverter.ToUInt32(buffer, 0).ToString();
 				}
 			}
-			return s.Length >= length ? s.Substring(0, length) : RandomNumeric(length);
+			return s.Length >= length ? s.Substring(0, length) : Numeric(length);
 		}
 
 		[SecuritySafeCritical]
-		internal static string RandomAlphanumeric(int length)
+		internal static string Alphanumeric(int length)
 		{
 
 
@@ -45,6 +46,26 @@ namespace GamUtils.Utils
 				result.Append(chars[b % (chars.Length)]);
 			}
 			return result.ToString();
+		}
+
+		[SecuritySafeCritical]
+		internal static string HexaBits(int length)
+		{
+			Byte[] result = new Byte[length / 8];
+
+#if NETCORE
+			var arraySpan = new Span<byte>(result);
+			System.Security.Cryptography.RandomNumberGenerator.Fill(arraySpan);
+#else
+
+			using (System.Security.Cryptography.RNGCryptoServiceProvider rngCsp = new System.Security.Cryptography.RNGCryptoServiceProvider())
+			{
+
+				rngCsp.GetBytes(result);
+			}
+#endif
+			return Hex.ToHexString(result);
+
 		}
 
 	}

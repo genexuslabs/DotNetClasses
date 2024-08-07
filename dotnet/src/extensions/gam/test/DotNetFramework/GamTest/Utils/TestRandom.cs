@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using GamUtils;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GamTest.Utils
 {
@@ -55,6 +56,17 @@ namespace GamTest.Utils
 
 			string l256_string = GamUtilsEO.RandomAlphanumeric(l256);
 			Assert.AreEqual(l256, l256_string.Length, "l256 alphanumeric");
+		}
+
+		[Test]
+		public void TestHexaBits()
+		{
+			int[] lengths = new int[] { 32, 64, 128, 256, 512, 1024 };
+			foreach(int n in lengths)
+			{
+				string hexa = GamUtilsEO.RandomHexaBits(n);
+				Assert.IsFalse(hexa.IsNullOrEmpty(), "TestHexaBits");
+			}
 		}
 	}
 }

@@ -35,7 +35,7 @@ namespace GamUtils.Utils
 				{
 					if (jwk.KeyId.Equals(kid))
 					{
-						return Jwt.Verify(Jwk.GetPublicKey(jwk.ToJson()), token);
+						return Jwt.Verify(Json.Jwk.GetPublicKey(jwk.ToJson()), token);
 					}
 				}
 				logger.Error("Could not find indicated kid");
