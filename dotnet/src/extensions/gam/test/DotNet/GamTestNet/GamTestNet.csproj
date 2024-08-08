@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<IsPublishable>false</IsPublishable>
+		<NoWarn>CS0618,CA1707</NoWarn>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', '^net\d'))">
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\Resources\CryptographicHash.cs" Link="Utils\Resources\CryptographicHash.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestCertificate.cs" Link="Utils\TestCertificate.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestEncryption.cs" Link="Utils\TestEncryption.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestHash.cs" Link="Utils\TestHash.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwk.cs" Link="Utils\TestJwk.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwks.cs" Link="Utils\TestJwks.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwt.cs" Link="Utils\TestJwt.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestPrivateKey.cs" Link="Utils\TestPrivateKey.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestRandom.cs" Link="Utils\TestRandom.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+		<PackageReference Include="NUnit" Version="3.13.2" />
+		<PackageReference Include="NUnit.ConsoleRunner" Version="3.12.0" />
+		<PackageReference Include="NUnit.Engine" Version="3.12.0" />
+		<PackageReference Include="NUnit.Extension.NUnitProjectLoader" Version="3.6.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+		<PackageReference Include="jose-jwt" Version="5.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Resources\" />
+	  <Folder Include="Utils\Resources\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\src\DotNet\GamUtilsNet\GamUtilsNet.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.cer">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.key">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.pfx">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.pkcs12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256d_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256d_key.key">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+</Project>
