@@ -13,6 +13,7 @@ using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities.Encoders;
 using Microsoft.IdentityModel.Tokens;
+using System.Runtime.InteropServices;
 
 namespace GamUtils.Utils.Keys
 {
@@ -90,7 +91,8 @@ namespace GamUtils.Utils.Keys
 
 		private static RSAParameters GetPrivateRSAParameters(PrivateKeyInfo privateKeyInfo)
 		{
-			string serializedPrivate = Convert.ToBase64String(privateKeyInfo.ToAsn1Object().GetDerEncoded());
+			byte[] serializedPrivateBytes = privateKeyInfo.ToAsn1Object().GetDerEncoded();
+			string serializedPrivate = Convert.ToBase64String(serializedPrivateBytes);
 			RsaPrivateCrtKeyParameters privateKey = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(serializedPrivate));
 
 #if NETCORE
@@ -105,7 +107,7 @@ try
 					}catch(Exception e )
 					{
 						logger.Error("CastPrivateKeyInfo", e);
-						return null;
+						return new RSAParameters();
 					}
 }
 #endif

@@ -12,6 +12,7 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
+using System.Runtime.InteropServices;
 
 
 
@@ -197,7 +198,8 @@ namespace GamTest.Utils
 		
 		private static RSA CastPrivateKey(PrivateKeyInfo privateKeyInfo)
 		{
-				string serializedPrivate = Convert.ToBase64String(privateKeyInfo.ToAsn1Object().GetDerEncoded());
+				byte[] serializedPrivateBytes = privateKeyInfo.ToAsn1Object().GetDerEncoded();
+				string serializedPrivate = Convert.ToBase64String(serializedPrivateBytes);
 				RsaPrivateCrtKeyParameters privateKey = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(serializedPrivate));
 
 #if NETCORE
@@ -209,9 +211,8 @@ try
 						RSA rsa = RSA.Create();
 						rsa.ImportPkcs8PrivateKey(serializedPrivateBytes, out int outthing);
 						return rsa;
-					}catch(Exception e )
+					}catch(Exception)
 					{
-						this.error.setError("PK026", e.Message);
 						return null;
 					}
 }
