@@ -126,7 +126,15 @@ namespace GeneXus.Application
 					.Map($"{basePath}/gxwebsocket.svc", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>()); //Compatibility reasons. Remove in the future.
 		}
 	}
-  
+	public class CustomBadRequestObjectResult : ObjectResult
+	{
+		public CustomBadRequestObjectResult(ActionContext context)
+			: base(HttpHelper.GetJsonError(StatusCodes.Status400BadRequest.ToString(), HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest)))
+		{
+			StatusCode = StatusCodes.Status400BadRequest;
+		}
+	}
+
 	public class Startup
 	{
 		static IGXLogger log;
@@ -169,12 +177,26 @@ namespace GeneXus.Application
 		{
 			OpenTelemetryService.Setup(services);
 
+			IMvcBuilder mvcBuilder;
 			if (RestAPIHelpers.ServiceAsController() && !string.IsNullOrEmpty(VirtualPath))
-				services.AddControllers(o => { o.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath))); });
+				mvcBuilder = services.AddControllers(options =>
+				{
+					options.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath)));
+				});
 			else
-				services.AddControllers();
+				mvcBuilder=services.AddControllers();
 
-			IMvcBuilder mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
+
+			mvcBuilder.ConfigureApiBehaviorOptions(options =>
+			 {
+				 options.InvalidModelStateResponseFactory = context =>
+				 {
+					 return new CustomBadRequestObjectResult(context);
+				 };
+			 });
+
+
+			mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
 			
 			if (RestAPIHelpers.ServiceAsController())
 			{
