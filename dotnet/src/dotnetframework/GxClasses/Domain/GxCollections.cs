@@ -1106,6 +1106,8 @@ namespace GeneXus.Utils
 		{
 			dirties[fieldName] = 1;
 		}
+		public bool IsAnyDirty { get => !dirties.IsEmpty; }
+		
 		public virtual bool IsDirty(string fieldName)
 		{
 			if (dirties.ContainsKey(fieldName))
