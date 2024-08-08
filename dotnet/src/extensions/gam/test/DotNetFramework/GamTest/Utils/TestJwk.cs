@@ -1,8 +1,8 @@
 using Jose;
 using NUnit.Framework;
-using System.Web.Query.Dynamic;
 using GamUtils;
 using Microsoft.IdentityModel.Tokens;
+using System;
 
 namespace GamTest.Utils
 {
@@ -50,7 +50,7 @@ namespace GamTest.Utils
 				JwkSet jwks = JwkSet.FromJson(public_jwks);
 				Assert.NotNull(jwks, "To public JWK fail");
 			}
-			catch (ParseException e)
+			catch (Exception e)
 			{
 				Assert.Fail("Exception on testPublicJwk" + e.Message);
 			}
