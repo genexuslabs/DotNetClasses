@@ -610,7 +610,9 @@ namespace GeneXus.Utils
 		{
 			isWrapped = wrapped;			
 		}
-
+#if NETCORE
+		[JsonIgnore]
+#endif
 		public bool IsNull { get => Count== 0; }
 		public GxGenericCollection(IGxCollection x, bool wrapped, string wrappedstatus) : this(x)
 		{
@@ -721,6 +723,9 @@ namespace GeneXus.Utils
 #endif
 		public bool IsNull { get => sdt1.IsNull; }
 
+#if NETCORE
+		[JsonIgnore]
+#endif
 		public GxUserType Sdt
 		{
 			get { return sdt1; }
