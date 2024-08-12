@@ -166,7 +166,10 @@ namespace GeneXus.Utils
 			else
 				return Ok(data);
 		}
-
+		protected ObjectResult EmptyResponse()
+		{
+				return Ok(new { });
+		}
 		protected ObjectResult HandleException(Exception ex)
 		{
 			GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
