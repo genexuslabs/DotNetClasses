@@ -159,20 +159,20 @@ namespace GeneXus.Utils
 		{
 			HttpHelper.SetError(HttpContext, code, message);
 		}
-		protected ObjectResult GetResponse(object data)
+		protected ActionResult GetResponse(object data)
 		{
 			if (_statusCode != HttpStatusCode.OK)
 				return StatusCode((int)_statusCode, data);
 			else
 				return Ok(data);
 		}
-		protected ObjectResult EmptyResult()
+		protected ActionResult EmptyResult()
 		{
-				return Ok(new { });
+				return Ok();
 		}
-		protected ObjectResult NullResult()
+		protected ActionResult NullResult()
 		{
-			return Ok(null);
+			return Ok("null");
 		}
 		protected ObjectResult HandleException(Exception ex)
 		{
