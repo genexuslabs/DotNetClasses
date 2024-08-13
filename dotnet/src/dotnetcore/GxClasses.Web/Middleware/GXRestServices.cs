@@ -170,6 +170,10 @@ namespace GeneXus.Utils
 		{
 				return Ok();
 		}
+		protected ActionResult EmptyObjectResult()
+		{
+			return Ok(new { });
+		}
 		protected ActionResult NullResult()
 		{
 			return Ok("null");
