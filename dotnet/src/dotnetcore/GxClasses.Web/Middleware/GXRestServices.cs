@@ -166,9 +166,13 @@ namespace GeneXus.Utils
 			else
 				return Ok(data);
 		}
-		protected ObjectResult EmptyResponse()
+		protected ObjectResult EmptyResult()
 		{
 				return Ok(new { });
+		}
+		protected ObjectResult NullResult()
+		{
+			return Ok(null);
 		}
 		protected ObjectResult HandleException(Exception ex)
 		{
