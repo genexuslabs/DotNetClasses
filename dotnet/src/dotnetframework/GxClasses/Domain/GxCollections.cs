@@ -1107,30 +1107,8 @@ namespace GeneXus.Utils
 		{
 			dirties[fieldName] = 1;
 		}
-		public bool IsNull { get => dirties.IsEmpty && !AnyDirtySdt; }
+		public bool IsNull { get => dirties.IsEmpty; }
 
-		bool AnyDirtySdt
-		{
-			get
-			{
-				FieldInfo[] sdtFields = GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-				   .Where(f => f.FieldType.IsSubclassOf(typeof(GxUserType)) && f.IsFamily).ToArray();
-
-				if (sdtFields != null && sdtFields.Length > 0)
-				{
-					foreach (FieldInfo item in sdtFields)
-					{
-						GxUserType gxUserType = item.GetValue(this) as GxUserType;
-						if (gxUserType != null)
-						{
-							if (!gxUserType.IsNull)
-								return true;
-						}
-					}
-				}
-				return false;
-			}
-		}
 		public virtual bool IsDirty(string fieldName)
 		{
 			if (dirties.ContainsKey(fieldName))
