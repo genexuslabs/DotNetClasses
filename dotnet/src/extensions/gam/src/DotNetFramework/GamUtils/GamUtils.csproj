@@ -3,7 +3,7 @@
 		<TargetFramework>net47</TargetFramework>
 		<AssemblyName>GamUtilsImpl</AssemblyName>
 		<NoWarn>CA1031, CA1801</NoWarn>
-		<PackageId>Genexus.Gam.Utils</PackageId>
+		<PackageId>Gam.Utils</PackageId>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <Optimize>True</Optimize>
