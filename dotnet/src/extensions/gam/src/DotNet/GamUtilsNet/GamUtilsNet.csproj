@@ -17,9 +17,9 @@
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Cryprography\Encryption.cs" Link="Utils\Cryptography\Encryption.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Cryprography\Hash.cs" Link="Utils\Cryptography\Hash.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwk.cs" Link="Utils\Json\Jwk.cs" />
-	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwks.cs" Link="Utils\Json\Jwks.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwt.cs" Link="Utils\Json\Jwt.cs" />
-	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\CertificateExt.cs" Link="Utils\Keys\CertificateExt.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\UnixTimestamp.cs" Link="Utils\Json\UnixTimestamp.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\PublicKeyExt.cs" Link="Utils\Keys\PublicKeyExt.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\PrivateKeyExt.cs" Link="Utils\Keys\PrivateKeyExt.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Random.cs" Link="Utils\Random.cs" />
 	</ItemGroup>

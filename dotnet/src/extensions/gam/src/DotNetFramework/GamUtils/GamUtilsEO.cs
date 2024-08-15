@@ -1,3 +1,4 @@
+using System;
 using System.Security;
 using GamUtils.Utils;
 using GamUtils.Utils.Cryprography;
@@ -51,22 +52,20 @@ namespace GamUtils
 		[SecuritySafeCritical]
 		public static string GetPublicJwk(string jwkString) { return Jwk.GetPublic(jwkString); }
 
-		[SecuritySafeCritical]
-		public static string Jwk_createJwt(string jwkString, string payload, string header) { return Jwk.CreateJwt(jwkString, payload, header); }
-
-		[SecuritySafeCritical]
-		public static bool Jwk_verifyJWT(string jwkString, string token) { return Jwk.VerifyJWT(jwkString, token); }
-
-		//**JWKS**//
-
-		[SecuritySafeCritical]
-		public static bool Jwks_verifyJWT(string jwksString, string token, string kid) { return Jwks.VerifyJWT(jwksString, token, kid); }
-
 		//**JWT**//
 		[SecuritySafeCritical]
-		public static bool VerifyJWTWithFile(string path, string alias, string password, string token) { return Jwt.Verify(path, alias, password, token); }
+		public static bool VerifyJwt(string path, string alias, string password, string token) { return Jwt.Verify(path, alias, password, token); }
 
 		[SecuritySafeCritical]
-		public static string CreateJWTWithFile(string path, string alias, string password, string payload, string header) { return Jwt.Create(path, alias, password, payload, header); }
+		public static string CreateJwt(string path, string alias, string password, string payload, string header) { return Jwt.Create(path, alias, password, payload, header); }
+
+		[SecuritySafeCritical]
+		public static long CreateUnixTimestamp(DateTime date) { return UnixTimestamp.Create(date); }
+
+		[SecuritySafeCritical]
+		public static string GetJwtHeader(string token) { return Jwt.GetHeader(token); }
+
+		[SecuritySafeCritical]
+		public static string GetJwtPayload(string token) { return Jwt.GetPayload(token); }
 	}
 }

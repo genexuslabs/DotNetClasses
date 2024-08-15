@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Security;
-using Jose;
 using log4net;
 using Newtonsoft.Json;
-using Microsoft.IdentityModel.Tokens;
 
 namespace GamUtils.Utils.Json
 {
@@ -59,60 +57,6 @@ namespace GamUtils.Utils.Json
 			}
 		}
 
-		[SecuritySafeCritical]
-		internal static string CreateJwt(string jwkString, string payload, string header)
-		{
-			if (jwkString.IsNullOrEmpty())
-			{
-				logger.Error("createJwt jwkString parameter is empty");
-				return "";
-			}
-			if (payload.IsNullOrEmpty())
-			{
-				logger.Error("createJwt payload parameter is empty");
-				return "";
-			}
-			if (header.IsNullOrEmpty())
-			{
-				logger.Error("createJwt header parameter is empty");
-				return "";
-			}
-			try
-			{
-				return Jwt.Create(GetPrivateKey(jwkString), payload, header);
-			}
-			catch (Exception e)
-			{
-				logger.Error("createJwt", e);
-				return "";
-			}
-		}
-
-		[SecuritySafeCritical]
-		internal static bool VerifyJWT(string jwkString, string token)
-		{
-			if (jwkString.IsNullOrEmpty())
-			{
-				logger.Error("verifyJWT jwkString parameter is empty");
-				return false;
-			}
-			if (token.IsNullOrEmpty())
-			{
-				logger.Error("verifyJWT token parameter is empty");
-				return false;
-			}
-			try
-			{
-				return Jwt.Verify(GetPublicKey(jwkString), token);
-			}
-			catch (Exception e)
-			{
-				logger.Error("verifyJWT", e);
-				return false;
-			}
-
-		}
-
 		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 		[SecuritySafeCritical]
@@ -164,36 +108,6 @@ namespace GamUtils.Utils.Json
 			}
 
 			return rSA;
-		}
-
-		private static RSAParameters GetPrivateKey(string jwkString)
-		{
-			Jose.Jwk jwk = Jose.Jwk.FromJson(jwkString);
-
-			RSAParameters privateKey = new RSAParameters();
-
-			privateKey.Exponent = Base64Url.Decode(jwk.E);
-			privateKey.Modulus = Base64Url.Decode(jwk.N);
-			privateKey.D = Base64Url.Decode(jwk.D);
-			privateKey.DP = Base64Url.Decode(jwk.DP);
-			privateKey.DQ = Base64Url.Decode(jwk.DQ);
-			privateKey.P = Base64Url.Decode(jwk.P);
-			privateKey.Q = Base64Url.Decode(jwk.Q);
-			privateKey.InverseQ = Base64Url.Decode(jwk.QI);
-
-			return privateKey;
-		}
-
-		internal static RSAParameters GetPublicKey(string jwkString)
-		{
-			Jose.Jwk jwk = Jose.Jwk.FromJson(jwkString);
-
-			RSAParameters publicKey = new RSAParameters();
-
-			publicKey.Exponent = Base64Url.Decode(jwk.E);
-			publicKey.Modulus = Base64Url.Decode(jwk.N);
-
-			return publicKey;
 		}
 	}
 }

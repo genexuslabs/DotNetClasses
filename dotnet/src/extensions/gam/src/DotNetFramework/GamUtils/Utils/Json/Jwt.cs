@@ -19,54 +19,84 @@ namespace GamUtils.Utils
 		[SecuritySafeCritical]
 		public static bool Verify(string path, string alias, string password, string token)
 		{
-			return Verify(CertificateUtil.GetCertificate(path, alias, password), token);
+			logger.Debug("Verify");
+			try
+			{
+				return Verify(PublicKeyUtil.GetPublicKey(path, alias, password, token), token);
+			}catch(Exception e)
+			{
+				logger.Error("Verify", e);
+				return false;
+			}
 		}
 
 		[SecuritySafeCritical]
 		public static string Create(string path, string alias, string password, string payload, string header)
 		{
-			return Create(PrivateKeyUtil.GetPrivateKey(path, alias, password), payload, header);
+			logger.Debug("Create");
+			try
+			{
+				return Create(PrivateKeyUtil.GetPrivateKey(path, alias, password), payload, header);
+			}catch(Exception e)
+			{
+				logger.Error("Create", e);
+				return "";
+			}
+		}
+
+		[SecuritySafeCritical]
+		public static string GetHeader(string token)
+		{
+			logger.Debug("GetHeader");
+			return GetParts(token, 0);
+		}
+
+		[SecuritySafeCritical]
+		public static string GetPayload(string token)
+		{
+			logger.Debug("GetPayload");
+			return GetParts(token, 1);
 		}
 
 		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
-		[SecuritySafeCritical]
-		public static bool Verify(RSAParameters publicKey, string token)
+		private static string GetParts(string token, int part)
 		{
+			logger.Debug("GetParts");
+			try
+			{
+				string[] parts = token.Split('.');
+				return System.Text.Encoding.UTF8.GetString(Base64Url.Decode(parts[part]));
+			}
+			catch (Exception e)
+			{
+				logger.Error("GetParts", e);
+				return "";
+			}
+		}
 
-			Console.WriteLine("token: " + token);
-
+		[SecuritySafeCritical]
+		private static bool Verify(RSAParameters publicKey, string token)
+		{
 			try
 			{
 				using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
 				{
 					rsa.ImportParameters(publicKey);
 					string payload = JWT.Decode(token, rsa, JwsAlgorithm.RS256);
-					
-					if(payload.IsNullOrEmpty())
-					{
-						Console.WriteLine("payload null or empty");
-							return false;
-					}
-					else
-					{
-						return true;
-					}
-					//return payload.IsNullOrEmpty() ? false : true;
+					return payload.IsNullOrEmpty() ? false : true;
 				}
 			}
 			catch (Exception e)
 			{
 				logger.Error("verify", e);
-				Console.WriteLine("error verify");
-				Console.WriteLine(e.Message);
 				return false;
 			}
 		}
 
 
 		[SecuritySafeCritical]
-		public static string Create(RSAParameters privateKey, string payload, string header)
+		private static string Create(RSAParameters privateKey, string payload, string header)
 		{
 			try
 			{
