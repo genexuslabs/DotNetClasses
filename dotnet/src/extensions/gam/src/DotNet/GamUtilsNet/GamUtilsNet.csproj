@@ -16,6 +16,7 @@
 	  <Compile Include="..\..\DotNetFramework\GamUtils\GamUtilsEO.cs" Link="GamUtilsEO.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Cryprography\Encryption.cs" Link="Utils\Cryptography\Encryption.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Cryprography\Hash.cs" Link="Utils\Cryptography\Hash.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\DynamicCall.cs" Link="Utils\DynamicCall.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwk.cs" Link="Utils\Json\Jwk.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwt.cs" Link="Utils\Json\Jwt.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\UnixTimestamp.cs" Link="Utils\Json\UnixTimestamp.cs" />
