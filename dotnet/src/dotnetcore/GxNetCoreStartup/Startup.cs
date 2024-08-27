@@ -276,8 +276,10 @@ namespace GeneXus.Application
 			else
 				mvcBuilder = services.AddControllers();
 
-
-			mvcBuilder.AddJsonOptions(options => options.JsonSerializerOptions.PropertyNameCaseInsensitive = false);
+			if (RestAPIHelpers.JsonSerializerCaseSensitive())
+			{
+				mvcBuilder.AddJsonOptions(options => options.JsonSerializerOptions.PropertyNameCaseInsensitive = false);
+			}
 			mvcBuilder.ConfigureApiBehaviorOptions(options =>
 			{
 				options.InvalidModelStateResponseFactory = context =>
