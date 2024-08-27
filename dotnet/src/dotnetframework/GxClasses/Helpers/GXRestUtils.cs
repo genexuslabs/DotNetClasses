@@ -152,7 +152,7 @@ namespace GeneXus.Utils
 		}
 		internal static bool JsonSerializerCaseSensitive()
 		{
-			return Config.GetValueOf("ServiceJsonSerializerCaseSensitive", Preferences.NO) == Preferences.YES;
+			return Config.GetValueOf("RestJsonCaseSensitive", Preferences.NO) == Preferences.YES;
 		}
 	}
 }
