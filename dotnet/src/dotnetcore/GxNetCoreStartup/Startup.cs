@@ -173,34 +173,9 @@ namespace GeneXus.Application
 		{
 			OpenTelemetryService.Setup(services);
 
-			IMvcBuilder mvcBuilder;
-			if (RestAPIHelpers.ServiceAsController() && !string.IsNullOrEmpty(VirtualPath))
-				mvcBuilder = services.AddControllers(options =>
-				{
-					options.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath)));
-				});
-			else
-				mvcBuilder=services.AddControllers();
+			services.AddMvc(option => option.EnableEndpointRouting = false);
 
-
-			mvcBuilder.AddJsonOptions(options => options.JsonSerializerOptions.PropertyNameCaseInsensitive = false);
-			mvcBuilder.ConfigureApiBehaviorOptions(options =>
-			 {
-				 options.InvalidModelStateResponseFactory = context =>
-				 {
-					 return new CustomBadRequestObjectResult(context);
-				 };
-			 });
-
-
-			mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
-			
-			if (RestAPIHelpers.ServiceAsController())
-			{
-				RegisterRestServices(mvcBuilder);
-				RegisterApiServices(mvcBuilder, gxRouting);
-			}
-			RegisterNativeServices(mvcBuilder);
+			RegisterControllerAssemblies(services);
 
 			services.Configure<KestrelServerOptions>(options =>
 			{
@@ -288,6 +263,36 @@ namespace GeneXus.Application
 				});
 			}
 			DefineCorsPolicy(services);
+		}
+
+		private void RegisterControllerAssemblies(IServiceCollection services)
+		{
+			IMvcBuilder mvcBuilder;
+			if (RestAPIHelpers.ServiceAsController() && !string.IsNullOrEmpty(VirtualPath))
+				mvcBuilder = services.AddControllers(options =>
+				{
+					options.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath)));
+				});
+			else
+				mvcBuilder = services.AddControllers();
+
+
+			mvcBuilder.AddJsonOptions(options => options.JsonSerializerOptions.PropertyNameCaseInsensitive = false);
+			mvcBuilder.ConfigureApiBehaviorOptions(options =>
+			{
+				options.InvalidModelStateResponseFactory = context =>
+				{
+					return new CustomBadRequestObjectResult(context);
+				};
+			});
+
+			if (RestAPIHelpers.ServiceAsController())
+			{
+				RegisterRestServices(mvcBuilder);
+				RegisterApiServices(mvcBuilder, gxRouting);
+			}
+			RegisterNativeServices(mvcBuilder);
+
 		}
 
 		private void RegisterNativeServices(IMvcBuilder mvcBuilder)
