@@ -150,5 +150,9 @@ namespace GeneXus.Utils
 		{
 			return Config.GetValueOf("SERVICE_AS_CONTROLLER", Preferences.NO) == Preferences.YES;
 		}
+		internal static bool JsonSerializerCaseSensitive()
+		{
+			return Config.GetValueOf("ServiceJsonSerializerCaseSensitive", Preferences.NO) == Preferences.YES;
+		}
 	}
 }
