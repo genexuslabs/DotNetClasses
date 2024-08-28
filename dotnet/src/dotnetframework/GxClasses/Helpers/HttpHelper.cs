@@ -52,6 +52,7 @@ namespace GeneXus.Http
 		internal static string TRANSFER_ENCODING = "Transfer-Encoding";
 		internal static string X_CSRF_TOKEN_HEADER = "X-XSRF-TOKEN";
 		internal static string X_CSRF_TOKEN_COOKIE = "XSRF-TOKEN";
+		internal static string AUTHORIZATION = "Authorization";
 	}
 	internal class HttpHeaderValue
 	{

@@ -488,6 +488,10 @@ namespace GeneXus.Http.Client
 		{
 			if (scheme >= _Basic && scheme <= _Kerberos)
 				_authCollection.Add(new GxAuthScheme(scheme, realm, user, password));
+			if (scheme == _Basic) {
+				string authHeader = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{user}:{password}"));
+				AddHeader(HttpHeader.AUTHORIZATION, new AuthenticationHeaderValue("Basic", authHeader).ToString());
+			}
 		}
 
 		public void AddProxyAuthentication(int scheme, string realm, string user, string password)
@@ -727,7 +731,7 @@ namespace GeneXus.Http.Client
 			}
 			InferContentType(contentType, request);
 		}
-		void setHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
+		internal void SetHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
 		{
 			HttpRequestHeaders headers = request.Headers;
 			contentType = null;
@@ -864,7 +868,7 @@ namespace GeneXus.Http.Client
 				RequestUri = new Uri(requestUrl),
 				Method = new HttpMethod(method),
 			};
-			setHeaders(request, cookies, out string contentType);
+			SetHeaders(request, cookies, out string contentType);
 			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
@@ -926,7 +930,7 @@ namespace GeneXus.Http.Client
 				RequestUri = new Uri(requestUrl),
 				Method = new HttpMethod(method),
 			};
-			setHeaders(request, cookies, out string contentType);
+			SetHeaders(request, cookies, out string contentType);
 			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
@@ -1581,6 +1585,8 @@ namespace GeneXus.Http.Client
 					}
 					else
 					{
+						//return new NetworkCredential(auth.User, auth.Password);
+
 						if (cc == null)
 						{
 							cc = new CredentialCache();
