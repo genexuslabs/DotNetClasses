@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net47</TargetFramework>
+		<AssemblyName>GamTotpImpl</AssemblyName>
+		<NoWarn>CA1031, CA1801</NoWarn>
+		<PackageId>Gam.Totp</PackageId>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <Optimize>True</Optimize>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GoogleAuthenticator" Version="3.2.0" />
+    <PackageReference Include="StrongNamer" Version="0.2.5" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+	
+</Project>
