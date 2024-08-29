@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<AssemblyName>GamTotpNetImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<NoWarn>CA1031, CA1801, SYSLIB0027</NoWarn>
+		<PackageId>Gam.Totp.Net</PackageId>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\..\DotNetFramework\GamTotp\TOTPAuthenticator.cs" Link="TOTPAuthenticator.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GoogleAuthenticator" Version="3.2.0" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+	
+</Project>
