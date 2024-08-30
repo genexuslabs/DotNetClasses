@@ -23,6 +23,7 @@
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\PublicKeyExt.cs" Link="Utils\Keys\PublicKeyExt.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\PrivateKeyExt.cs" Link="Utils\Keys\PrivateKeyExt.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Random.cs" Link="Utils\Random.cs" />
+		<Compile Include="..\..\DotNetFramework\GamUtils\Utils\Encoding.cs" Link="Utils\Encoding.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

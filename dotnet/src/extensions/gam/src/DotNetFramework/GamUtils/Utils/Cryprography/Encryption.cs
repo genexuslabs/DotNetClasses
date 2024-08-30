@@ -18,7 +18,7 @@ namespace GamUtils.Utils.Cryprography
 		[SecuritySafeCritical]
 		public static string AesGcm(string input, string key, string nonce, int macSize, bool toEncrypt)
 		{
-			return toEncrypt ? Base64.ToBase64String(Internal_AesGcm(Encoding.UTF8.GetBytes(input), key, nonce, macSize, toEncrypt)) : Encoding.UTF8.GetString(Internal_AesGcm(Base64.Decode(input), key, nonce, macSize, toEncrypt));
+			return toEncrypt ? Base64.ToBase64String(Internal_AesGcm(System.Text.Encoding.UTF8.GetBytes(input), key, nonce, macSize, toEncrypt)) : System.Text.Encoding.UTF8.GetString(Internal_AesGcm(Base64.Decode(input), key, nonce, macSize, toEncrypt));
 		}
 
 		[SecuritySafeCritical]
