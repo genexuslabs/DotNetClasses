@@ -15,7 +15,13 @@ namespace GamUtils
 		[SecuritySafeCritical]
 		public static string Sha512(string plainText)
 		{
-			return Hash.Sha512(plainText);
+			return HashUtil.Hashing(plainText, Hash.SHA512);
+		}
+
+		[SecuritySafeCritical]
+		public static string Sha256(string plainText)
+		{
+			return HashUtil.Hashing(plainText, Hash.SHA256);
 		}
 
 		//**ENCRYPTION**//
@@ -67,5 +73,8 @@ namespace GamUtils
 
 		[SecuritySafeCritical]
 		public static string GetJwtPayload(string token) { return Jwt.GetPayload(token); }
+
+		//**ENCODING**//
+		public static string Base64ToBase64Url(string base64) { return Encoding.B64ToB64Url(base64); }
 	}
 }
