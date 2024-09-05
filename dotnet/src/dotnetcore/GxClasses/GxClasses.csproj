@@ -161,6 +161,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" PrivateAssets="ALL" />
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.1.0" PrivateAssets="All" />
+		<PackageReference Include="OpenAI-DotNet" Version="8.2.2" PrivateAssets="ALL"/>
 		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" PrivateAssets="All" />
 		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" PrivateAssets="All" />
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />

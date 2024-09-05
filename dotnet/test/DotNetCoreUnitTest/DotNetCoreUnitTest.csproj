@@ -75,6 +75,7 @@
 		</PackageReference>
 		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
 		<PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454" />
+		<PackageReference Include="OpenAI-DotNet" Version="8.2.2"/>
 	</ItemGroup>
 
   <ItemGroup>
@@ -164,7 +165,6 @@
 
 	<ItemGroup>
 	  <Folder Include="ConfigMappings\" />
-	  <Folder Include="Domain\" />
 	  <Folder Include="Log\" />
 	  <Folder Include="PDF\" />
 	  <Folder Include="resources\xml\" />
