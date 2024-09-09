@@ -7,7 +7,7 @@ using log4net;
 using Newtonsoft.Json;
 using Microsoft.IdentityModel.Tokens;
 
-namespace GamUtils.Utils
+namespace GamUtils.Utils.Json
 {
 	[SecuritySafeCritical]
 	public class Jwk
@@ -28,7 +28,7 @@ namespace GamUtils.Utils
 		[SecuritySafeCritical]
 		internal static string GetPublic(string jwkString)
 		{
-			if (String.IsNullOrEmpty(jwkString))
+			if (string.IsNullOrEmpty(jwkString))
 			{
 				logger.Error("GetPublicJwk jwkString parameter is empty");
 				return "";
@@ -60,7 +60,7 @@ namespace GamUtils.Utils
 		}
 
 		[SecuritySafeCritical]
-		public static string CreateJwt(string jwkString, string payload, string header)
+		internal static string CreateJwt(string jwkString, string payload, string header)
 		{
 			if (jwkString.IsNullOrEmpty())
 			{
@@ -89,7 +89,7 @@ namespace GamUtils.Utils
 		}
 
 		[SecuritySafeCritical]
-		public static bool VerifyJWT(string jwkString, string token)
+		internal static bool VerifyJWT(string jwkString, string token)
 		{
 			if (jwkString.IsNullOrEmpty())
 			{
