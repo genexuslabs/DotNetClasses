@@ -2724,6 +2724,8 @@ namespace GeneXus.Utils
 			{
 				o = convertFuncts[to].ConvertToList(i);
 			}
+			else if (to.IsInstanceOfType(i))
+				o = i;
 			else if (ienumerableType != null)
 			{
 				IList lst = (IList)Activator.CreateInstance((typeof(List<>).MakeGenericType(ienumerableType)));
@@ -2735,8 +2737,6 @@ namespace GeneXus.Utils
 				}
 				o = lst;
 			}
-			else if (to.IsInstanceOfType(i))
-				o = i;
 			else
 			{
 				IList l = (IList)Activator.CreateInstance(to);
@@ -2749,10 +2749,12 @@ namespace GeneXus.Utils
 
 		static Type GetEnumerableType(Type type)
 		{
-#if !NETCORE
-			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-				return type.GetGenericArguments()[0];
-#endif
+			if (type.IsGenericType)
+			{
+				return type.GetInterfaces()
+					.FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+					?.GetGenericArguments()[0];
+			}
 			return null;
 		}
 
