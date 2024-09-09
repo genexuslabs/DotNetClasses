@@ -29,7 +29,11 @@ namespace GeneXus.Application
 			Location.BaseUrl = "api";
 			Location.Host = "www.example.com";
 			Location.ResourceName = "service";
+#if NETCORE
+			Location.Port = 8082;
+#else
 			Location.Port = 80;
+#endif
 		}
 
 
@@ -383,7 +387,7 @@ namespace GeneXus.Application
 			serviceuri += "/" + this.Location.BaseUrl.TrimEnd('/').TrimStart('/') + "/" + this.Location.ResourceName;
 			serviceuri += _queryString;			
 			httpClient.HttpClientExecute( this.HttpMethod, serviceuri);
-			this.ErrorCode = (httpClient.ErrCode == 0)? 1: httpClient.ErrCode;
+			this.ErrorCode = httpClient.ErrCode;
 			this.ErrorMessage = httpClient.ErrDescription;
 			this.StatusCode = httpClient.StatusCode;
 			this.StatusMessage = httpClient.ReasonLine;
