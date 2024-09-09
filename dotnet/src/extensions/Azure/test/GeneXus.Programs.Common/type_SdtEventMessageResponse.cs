@@ -53,7 +53,7 @@ namespace GeneXus.Programs.genexusserverlessapi
 
 		public override void ToJSON(bool includeState)
 		{
-			AddObjectProperty("Handled", gxTpr_Handled, false);
+			AddObjectProperty("HandleFailure", gxTpr_Handlefailure, false);
 
 
 			AddObjectProperty("ErrorMessage", gxTpr_Errormessage, false);
@@ -64,18 +64,16 @@ namespace GeneXus.Programs.genexusserverlessapi
 
 		#region Properties
 
-		[SoapElement(ElementName = "Handled")]
-		[XmlElement(ElementName = "Handled")]
-		public bool gxTpr_Handled
+		[SoapElement(ElementName="HandleFailure")]
+		[XmlElement(ElementName="HandleFailure")]
+		public bool gxTpr_Handlefailure
 		{
-			get
-			{
-				return gxTv_SdtEventMessageResponse_Handled;
+			get {
+				return gxTv_SdtEventMessageResponse_Handlefailure; 
 			}
-			set
-			{
-				gxTv_SdtEventMessageResponse_Handled = value;
-				SetDirty("Handled");
+			set {
+				gxTv_SdtEventMessageResponse_Handlefailure = value;
+				SetDirty("Handlefailure");
 			}
 		}
 
@@ -122,8 +120,8 @@ namespace GeneXus.Programs.genexusserverlessapi
 
 		#region Declaration
 
-		protected bool gxTv_SdtEventMessageResponse_Handled;
-
+		protected bool gxTv_SdtEventMessageResponse_Handlefailure;
+		 
 
 		protected string gxTv_SdtEventMessageResponse_Errormessage;
 
@@ -133,6 +131,7 @@ namespace GeneXus.Programs.genexusserverlessapi
 	}
 	#region Rest interface
 	[GxUnWrappedJson()]
+	[GxJsonSerialization("default")]
 	[DataContract(Name = @"EventMessageResponse", Namespace = "GeneXus")]
 	public class SdtEventMessageResponse_RESTInterface : GxGenericCollectionItem<SdtEventMessageResponse>, System.Web.SessionState.IRequiresSessionState
 	{
@@ -145,17 +144,15 @@ namespace GeneXus.Programs.genexusserverlessapi
 		}
 
 		#region Rest Properties
-		[DataMember(Name = "Handled", Order = 0)]
-		public bool gxTpr_Handled
+		[DataMember(Name="HandleFailure", Order=0)]
+		public bool gxTpr_Handlefailure
 		{
-			get
-			{
-				return sdt.gxTpr_Handled;
+			get { 
+				return sdt.gxTpr_Handlefailure;
 
 			}
-			set
-			{
-				sdt.gxTpr_Handled = value;
+			set { 
+				sdt.gxTpr_Handlefailure = value;
 			}
 		}
 		[DataMember(Name = "ErrorMessage", Order = 0)]

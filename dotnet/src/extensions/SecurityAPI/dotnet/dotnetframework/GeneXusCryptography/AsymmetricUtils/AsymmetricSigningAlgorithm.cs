@@ -1,4 +1,5 @@
 
+using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Signers;
 using SecurityAPICommons.Commons;
@@ -95,6 +96,21 @@ namespace GeneXusCryptography.AsymmetricUtils
 					break;
 			}
 			return sig;
+		}
+
+		public static string GetCMSSigningAlgortithm(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, Error error)
+		{
+			if (error == null) return null;
+			switch (asymmetricSigningAlgorithm)
+			{
+				case AsymmetricSigningAlgorithm.RSA:
+					return CmsSignedDataGenerator.EncryptionRsa;
+				case AsymmetricSigningAlgorithm.ECDSA:
+					return CmsSignedDataGenerator.EncryptionECDsa;
+				default:
+					error.setError("AE008", "Not recogrnized AsymmetricSigningAlgorithm");
+					return "";
+			}
 		}
 
 		/// <summary>

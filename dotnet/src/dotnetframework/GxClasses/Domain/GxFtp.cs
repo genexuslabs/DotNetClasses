@@ -8,12 +8,14 @@ using System.Security;
 using System.Linq;
 using GeneXus.Encryption;
 using GeneXus.Configuration;
+using log4net;
 
 namespace GeneXus.Utils
 {
 	[SecuritySafeCritical]
 	public class FtpService
 	{
+		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(FtpService));
 
 		private Socket _DataSocket;
 		private Socket _ControlSocket;
@@ -511,8 +513,7 @@ namespace GeneXus.Utils
 			}
 			_DataSocket = new Socket( AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp );
 
-			IPHostEntry localHostEntry = Dns.GetHostEntry(Dns.GetHostName());
-			IPAddress hostAddress = localHostEntry.AddressList.First(a => (a.AddressFamily == _DataSocket.AddressFamily)); ;
+			IPAddress hostAddress = GetIpAddress(Dns.GetHostName());
 			IPEndPoint epListener = new IPEndPoint(hostAddress, 0);
 			_DataSocket.Bind(epListener);
 
@@ -565,8 +566,7 @@ namespace GeneXus.Utils
 			{
 				ProcessProtocolViolationError("Error in creating Data Socket");	
 			} 					
-			IPHostEntry serverHostEntry = Dns.GetHostEntry(_RequestUri.Host);
-			IPAddress hostAddress = serverHostEntry.AddressList.First(a => (a.AddressFamily == _DataSocket.AddressFamily)); ; ;
+			IPAddress hostAddress = GetIpAddress(_RequestUri.Host);
 			IPEndPoint serverEndPoint = new IPEndPoint(hostAddress, Port);
 
 			try
@@ -631,10 +631,8 @@ namespace GeneXus.Utils
 			clientEndPoint = _ControlSocket.LocalEndPoint;
 			try
 			{
-				IPHostEntry serverHostEntry = Dns.GetHostEntry(Host);
-				IPAddress ipAddresses = serverHostEntry.AddressList.First(a => (a.AddressFamily == _ControlSocket.AddressFamily));
+				IPAddress ipAddresses = GetIpAddress(Host);
 				IPEndPoint serverEndPoint = new IPEndPoint(ipAddresses, Port);
-
 				try
 				{
 					if (GXUtil.IsWindowsPlatform)
@@ -677,6 +675,21 @@ namespace GeneXus.Utils
 				ProcessApplicationError("", e);
 				return;
 			}
+		}
+
+		private IPAddress GetIpAddress(string host)
+		{
+			IPHostEntry serverHostEntry = Dns.GetHostEntry(host);
+			IPAddress ipAddresses = serverHostEntry.AddressList.FirstOrDefault();
+			GXLogging.Debug(log, $"GetHostEntry({host}) AddressList length: ", serverHostEntry.AddressList.Length.ToString());
+			if (ipAddresses == null)
+			{
+				serverHostEntry = Dns.GetHostByName(host);
+				ipAddresses = serverHostEntry.AddressList.FirstOrDefault();
+				GXLogging.Debug(log, $"GetHostByName({host}) AddressList length: ", serverHostEntry.AddressList.Length.ToString());
+			}
+			GXLogging.Debug(log, "HostAddress ", ipAddresses.ToString());
+			return ipAddresses;
 		}
 
 		void CloseDataConnection()
@@ -915,18 +928,23 @@ namespace GeneXus.Utils
 				throw new ArgumentNullException(nameof(Accept));			
 			}
             FtpStream ftpStream = requestStream as FtpStream;
-			ftpStream.InternalPosition=0;
+			if (ftpStream != null)
+			{
+				ftpStream.InternalPosition = 0;
 
-            int Length = (int)ftpStream.InternalLength;
+				int Length = (int)ftpStream.InternalLength;
 
-			Byte [] sendbuffer = new Byte[Length];
+				Byte[] sendbuffer = new Byte[Length];
 
-            ftpStream.InternalRead(sendbuffer, 0, Length);		
-			int cbReturn = Accept.Send( sendbuffer, Length, 0);
+				ftpStream.InternalRead(sendbuffer, 0, Length);
+				int cbReturn = Accept.Send(sendbuffer, Length, 0);
 
-            ftpStream.InternalClose();
-		
-			return cbReturn;
+				ftpStream.InternalClose();
+
+				return cbReturn;
+			}
+			else
+				return 0;
 		}
 		private String FormatAddress(byte[] Address, int Port )
 		{
@@ -971,19 +989,19 @@ namespace GeneXus.Utils
 		{
 			this._status = 1;
 			this._statusDescription = s;
-			
+			GXLogging.Error(log, "ProcessApplicationError " + s);
 		}
 		internal void ProcessApplicationError( string s, Exception e)
 		{
 			this._status = 1;
 			this._statusDescription = s + e.Message;
-			
+			GXLogging.Error(log, "ProcessApplicationError " + s, e);
 		}
 		internal void ProcessProtocolViolationError( string s)
 		{
 			this._status = 1;
 			this._statusDescription = new ProtocolViolationException(s).ToString();
-			
+			GXLogging.Warn(log, "ProcessProtocolViolationError ", this._statusDescription);
 		}
 		internal string ComposeExceptionMessage(ResponseDescription resp_desc, string log) 
 		{

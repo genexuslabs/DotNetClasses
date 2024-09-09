@@ -3,11 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using GeneXus.Services;
 using GeneXus.Utils;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Messaging.Common
 {
@@ -15,7 +13,7 @@ namespace GeneXus.Messaging.Common
 	{
 		internal IMessageBroker messageBroker = null;
 		public static Assembly assembly;
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(MessageQueue));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<MessageQueue>();
 		private const string SDT_MESSAGE_CLASS_NAME = @"SdtMessage";
 		private const string SDT_MESSAGEPROPERTY_CLASS_NAME = @"SdtMessageProperty";
 		private const string NAMESPACE = @"GeneXus.Programs.genexusmessagingmessagebroker";
@@ -257,12 +255,12 @@ namespace GeneXus.Messaging.Common
 		{
 			errorMessages = new GXBaseCollection<SdtMessages_Message>();
 			bool foundGeneralException = false;
-			if (errorMessages != null && ex != null)
+			if (ex != null)
 			{
 				SdtMessages_Message msg = new SdtMessages_Message();
-				if (messageBroker != null)
-				{		
-					while (ex.InnerException != null)
+				if (messageBroker != null && ex.InnerException != null)
+				{
+					do
 					{
 						if (messageBroker.GetMessageFromException(ex.InnerException, msg))
 						{
@@ -276,6 +274,7 @@ namespace GeneXus.Messaging.Common
 						}
 						ex = ex.InnerException;
 					}
+					while (ex.InnerException != null);
 					if (foundGeneralException)
 						GXUtil.ErrorToMessages("GXServiceBus1002", ex, errorMessages);
 				}
@@ -345,7 +344,7 @@ namespace GeneXus.Messaging.Common
 	internal class ServiceFactory
 	{
 		private static IMessageBroker messageBroker;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Services.ServiceFactory));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Services.ServiceFactory>();
 
 		public static GXServices GetGXServices()
 		{
@@ -366,7 +365,7 @@ namespace GeneXus.Messaging.Common
 			IMessageBroker messageBrokerImpl = null;
 			if (GetGXServices() != null)
 			{
-				GXService providerService = GetGXServices().Get(service);
+				GXService providerService = GetGXServices()?.Get(service);
 				if (providerService != null)
 				{
 					try

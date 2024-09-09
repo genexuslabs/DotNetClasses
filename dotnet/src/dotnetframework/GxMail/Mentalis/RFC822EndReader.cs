@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text;
-using log4net;
 
 namespace GeneXus.Mail.Internals.Pop3
 {
@@ -10,7 +9,7 @@ namespace GeneXus.Mail.Internals.Pop3
 	/// </summary>
 	internal class RFC822EndReader : StreamReader
 	{
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(RFC822EndReader));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<RFC822EndReader>();
 
 		private const int BUFFER_SIZE = 1024;
         private bool textPlain = false;
@@ -287,7 +286,7 @@ namespace GeneXus.Mail.Internals.Pop3
 					outStr = null;
 					lastLine = null;
 				}
-				else if((dotIdx == 0) && (outStr.Length > 1) && (outStr[1] != '.')) //Si no vienen dos '.' seguidos (uno escapeado)
+				else if((dotIdx == 0) && outStr!=null && (outStr.Length > 1) && (outStr[1] != '.')) //Si no vienen dos '.' seguidos (uno escapeado)
 				{
 					// El exchange no manda un LF antes del ".", asi que puede estar
 					// enseguida..

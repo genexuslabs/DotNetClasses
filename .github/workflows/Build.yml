@@ -45,6 +45,11 @@ jobs:
         dotnet-version: '6.0.x'
         include-prerelease: false
 
+    - name: Install .NET 8
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.100' 
+
     - name: Calculate environment variables
       id: buildVariables
       run: |
@@ -96,12 +101,13 @@ jobs:
         Write-Output "Packge version to be used: $NUGET_PACKAGE_VERSION"
 
         echo "NUGET_PACKAGE_VERSION=$NUGET_PACKAGE_VERSION" >> $env:GITHUB_ENV
+        echo "COMMIT_NUMBER=$COMMIT_NUMBER" >> $env:GITHUB_ENV
         echo "IsPrerelease=$IsPrerelease" >> $env:GITHUB_ENV
 
-        echo "::set-output name=NUGET_PACKAGE_VERSION::$NUGET_PACKAGE_VERSION"
-        echo "::set-output name=SHOULD_DEPLOY::$SHOULD_DEPLOY"
-        echo "::set-output name=LAST_COMMITTER::$LAST_COMMITTER"
-        echo "::set-output name=COMMIT_MESSAGE::$COMMIT_MESSAGE"
+        echo "NUGET_PACKAGE_VERSION=$NUGET_PACKAGE_VERSION" >> $env:GITHUB_OUTPUT
+        echo "SHOULD_DEPLOY=$SHOULD_DEPLOY" >> $env:GITHUB_OUTPUT
+        echo "LAST_COMMITTER=$LAST_COMMITTER" >> $env:GITHUB_OUTPUT
+        echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $env:GITHUB_OUTPUT
 
     - name: Write SNK
       if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
@@ -184,14 +190,14 @@ jobs:
             $PushToAzureArgs  += "--skip-duplicate"
           }
           
-          dotnet $PushToAzureArgs
+          dotnet $PushToAzureArgs  || exit 1
           $pushedToAzure += 1
 
           if (!$IsPrerelease) {
-            dotnet $PushToGitHubArgs
+            dotnet $PushToGitHubArgs || exit 1
             $pushedToGitHub += 1
 
-            dotnet $PushToNugetArgs
+            dotnet $PushToNugetArgs || exit 1
             $pushedToNuget += 1
           }
 

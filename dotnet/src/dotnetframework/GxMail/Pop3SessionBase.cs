@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using log4net;
 
 namespace GeneXus.Mail
 {
@@ -13,7 +12,7 @@ namespace GeneXus.Mail
 		protected int lastReadMessage;
 		protected int count;
 		protected List<string> uIds;
-		private static readonly ILog log = LogManager.GetLogger(typeof(Pop3SessionBase));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Pop3SessionBase>();
 
 		public bool DownloadAttachments { get; set; }
 
@@ -54,18 +53,20 @@ namespace GeneXus.Mail
 			if (lastReadMessage == count)
 			{
 				LogDebug("No messages to receive", "No messages to receive", MailConstants.MAIL_NoMessages, log);
-				return "";
+				return string.Empty;
 			}
-			return uIds[lastReadMessage + 1];
+			int nextMessage = lastReadMessage + 1;
+			int zeroBasedIndexForNextMessage = nextMessage - 1;
+			return uIds[zeroBasedIndexForNextMessage];
 		}
 
 		public abstract void Receive(GXPOP3Session sessionInfo, GXMailMessage gxmessage);
 
-		protected void LogError(string title, string message, int code, Exception e, ILog log)
+		protected void LogError(string title, string message, int code, Exception e, IGXLogger log)
 		{
 
 #if DEBUG
-			if (e != null && log.IsErrorEnabled) log.Error(message, e);
+			if (e != null && log.IsErrorEnabled) GXLogging.Error(log, message, e);
 #endif
 			if (_sessionInfo != null)
 			{
@@ -73,20 +74,20 @@ namespace GeneXus.Mail
 			}
 		}
 
-		protected void LogError(string title, string message, int code, ILog log)
+		protected void LogError(string title, string message, int code, IGXLogger log)
 		{
 			LogError(title, message, code, null,log);
 		}
 
-		protected void LogDebug(string title, string message, int code, ILog log)
+		protected void LogDebug(string title, string message, int code, IGXLogger log)
 		{
 			LogDebug(title, message, code, null, log);
 		}
 
-		protected void LogDebug(string title, string message, int code, Exception e, ILog log)
+		protected void LogDebug(string title, string message, int code, Exception e, IGXLogger log)
 		{
 #if DEBUG
-			if (e != null && log.IsDebugEnabled) log.Debug(message, e);
+			if (e != null && log.IsDebugEnabled) GXLogging.Debug(log, message, e);
 #endif
 			if (_sessionInfo != null)
 			{

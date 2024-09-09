@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Security.Cryptography;
-using System.IO;
-using log4net;
+using System;
 using GeneXus.Cryptography.CryptoException;
 using GeneXus.Cryptography.Encryption;
 
 namespace GeneXus.Cryptography
 {
-    public class GXSymmetricEncryption
+	public class GXSymmetricEncryption
     {
-        private static readonly ILog _log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private const string DEFAULT_SYM_ALGORITHM = "DES";
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXSymmetricEncryption>();
+		private const string DEFAULT_SYM_ALGORITHM = "DES";
         private int _lastError;
         private string _lastErrorDescription;
         private IGXSymmetricEncryption _symAlg;     // Algorithm instance  
@@ -81,7 +75,7 @@ namespace GeneXus.Cryptography
                 catch (EncryptionException e)
                 {
                     SetError(2, e.Message);
-                    _log.Error(e);
+					GXLogging.Error(log, e);
                 }
             }
             return encrypted;
@@ -100,7 +94,7 @@ namespace GeneXus.Cryptography
                 catch (EncryptionException e)
                 {
                     SetError(3, e.Message);
-                    _log.Error(e);
+                    GXLogging.Error(log, e);
                 }
             }
             return decrypted;

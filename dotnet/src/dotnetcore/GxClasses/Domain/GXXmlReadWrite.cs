@@ -1,19 +1,17 @@
 using System;
-using System.Xml;
 using System.Collections;
 using System.Collections.Specialized;
-using System.Text;
-using System.Net;
 using System.IO;
+using System.Net;
+using System.Text;
+using System.Xml;
 using System.Xml.Schema;
+using System.Xml.XPath;
+using System.Xml.Xsl;
 using GeneXus.Application;
 using GeneXus.Http.Client;
 using GeneXus.Http.Server;
 using GeneXus.Utils;
-using log4net;
-
-using System.Xml.Xsl;
-using System.Xml.XPath;
 
 namespace GeneXus.XML
 {
@@ -32,7 +30,6 @@ namespace GeneXus.XML
 	}
 	public class GXXMLReader : IDisposable
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Configuration.Config));
 		public const short ElementType					= 1;
 		public const short EndTagType					= 2;
 		public const short TextType						= 4;
@@ -277,14 +274,6 @@ namespace GeneXus.XML
 			Uri baseUri = new Uri( sBaseDirectory );
 			Resolver.Myself = baseUri;
 			CreateXMLSettings();
-			try
-			{
-				if (File.Exists(s))
-					XMLInput = new FileStream(s, FileMode.Open, FileAccess.Read);
-			}
-			catch(Exception ex) {
-				GXLogging.Warn(log, "OpenFromString file failed", ex);
-			}
 			if (XMLInput ==null)
 				XMLInput = new StringReader(s);
 		}
@@ -1145,7 +1134,7 @@ namespace GeneXus.XML
 
 			char[] trimChars = { '\t', ' ' };
 
-			if (node.NodeType != ElementType) return;
+			if (node==null || node.NodeType != ElementType) return;
 			switch (node.NodeType)
 			{
 				case ElementType:
@@ -1899,7 +1888,7 @@ namespace GeneXus.XML
 
 	public class GXXMLWriter: IDisposable
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXXMLWriter));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXXMLWriter>();
 		private XmlTextWriter writer;
 
 		private short errorCode;
@@ -2145,6 +2134,10 @@ namespace GeneXus.XML
 		public short WriteElement (string Name, string Value)
 		{
 			WriteStartElement(Name);
+			if (Value==null)
+			{
+				Value = string.Empty;
+			}
 			valueBuffer = Value;
 			return 0;
 		}

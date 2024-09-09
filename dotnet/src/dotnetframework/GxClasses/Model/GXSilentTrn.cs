@@ -6,11 +6,12 @@ namespace GeneXus.Utils
 	using GeneXus.Application;
 	using System.Xml.Serialization;
 	using System.Collections.Generic;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Text;
 	using System.Security.Cryptography;
 	using System.Reflection;
-	using log4net;
 	using System.Runtime.Serialization;
 #if !NETCORE
 	using System.ServiceModel;
@@ -18,6 +19,7 @@ namespace GeneXus.Utils
 	using Configuration;
 	using System.Globalization;
 	using GeneXus.Http;
+	using System.Diagnostics;
 
 	public interface IGxSilentTrn
 	{
@@ -121,7 +123,6 @@ namespace GeneXus.Utils
 		{
 		}
 
-		public virtual void initialize() {  }
 		public void flushBuffer(){	}
 
 		public virtual object getParm(object[] parms, int index)
@@ -139,7 +140,7 @@ namespace GeneXus.Utils
 	[Serializable]
 	public class GxSilentTrnSdt : GxUserType
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GxSilentTrnSdt));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxSilentTrnSdt>();
 		public GxSilentTrnSdt(IGxContext context){
             this.context = context;
             
@@ -161,6 +162,7 @@ namespace GeneXus.Utils
 			get	{return trn;}
 			set {trn = value;}
 		}
+
 		public IGxSilentTrn getTransaction()
 		{
 			return trn;
@@ -170,30 +172,106 @@ namespace GeneXus.Utils
 			dirties.Clear();
 			trn = t;
 		}
+#if NETCORE
+		protected virtual bool GenOtelSpanEnabled() { return false; }
+		private Activity StartSpan(string methodName)
+		{
+			if (GenOtelSpanEnabled())
+			{
+				return InitializeSpan(methodName);
+			}
+			return null;
+		}
+		private void EndSpan(Activity activity)
+		{
+			if (GenOtelSpanEnabled())
+			{
+				activity?.Stop();
+			}
+		}
+		private Activity InitializeSpan(string methodName)
+		{
+			if (GenOtelSpanEnabled())
+			{
+				string gxObjFullName = GXBaseObject.GetObjectNameWithoutNamespace(GetType().FullName);
+				return GXBaseObject.ActivitySource.StartActivity($"{gxObjFullName}.{methodName}");
+			}
+			return null;
+		}
+#endif
 		public virtual void Save()
 		{
-			if( Transaction != null) 
+			if (Transaction != null)
+			{
+#if NETCORE
+				Activity activity = StartSpan("Save");
+#endif
 				Transaction.Save();
+#if NETCORE
+				EndSpan(activity);
+#endif
+			}
 		}
   
         public virtual bool Insert()
         {
-            if (Transaction != null)
-                return Transaction.Insert();
-            return false;
+			if (Transaction != null)
+			{
+#if NETCORE
+				Activity activity = StartSpan("Insert");
+#endif
+				try
+				{
+					return Transaction.Insert();
+				}
+				finally
+				{
+#if NETCORE
+					EndSpan(activity);
+
+#endif
+				}
+			}
+			return false;
         }
 
         public virtual bool Update()
         {
             if (Transaction != null)
-                return Transaction.Update();
-            return false;
+			{
+#if NETCORE
+				Activity activity = StartSpan("Update");
+#endif
+				try
+				{ 
+					return Transaction.Update();
+				}
+				finally {
+#if NETCORE
+					EndSpan(activity);
+#endif
+				}
+			}
+			return false;
         }
 
-        public virtual bool InsertOrUpdate()
-        {
-            if (Transaction != null)
-                return Transaction.InsertOrUpdate();
+		public virtual bool InsertOrUpdate()
+		{
+			if (Transaction != null)
+			{
+#if NETCORE
+				Activity activity = StartSpan("InsertOrUpdate");
+#endif
+				try
+				{
+					return Transaction.InsertOrUpdate();
+				}
+				finally {
+#if NETCORE
+					EndSpan(activity);
+#endif
+				}
+			}	
             return false;
         }
 
@@ -206,8 +284,14 @@ namespace GeneXus.Utils
 		{
 			if( Transaction != null) 
 			{
+#if NETCORE
+				Activity activity = StartSpan("Delete");
+#endif
 				Transaction.SetMode("DLT") ;
 				Transaction.Save();
+#if NETCORE
+				EndSpan(activity);
+#endif
 			}
 		}
 		public virtual bool Success()
@@ -309,8 +393,8 @@ namespace GeneXus.Utils
 			{
 				object LoadKeyItem = Key.Item(i);
 				Type LoadKeyItemType = LoadKeyItem.GetType();
-				string Name = LoadKeyItemType.InvokeMember("gxTpr_Name", BindingFlags.GetProperty, null, LoadKeyItem, Array.Empty<object>()) as string;
-				string Value = LoadKeyItemType.InvokeMember("gxTpr_Value", BindingFlags.GetProperty, null, LoadKeyItem, Array.Empty<object>()) as string;
+				string Name = LoadKeyItemType.InvokeMember("gxTpr_Name", BindingFlags.GetProperty, null, LoadKeyItem, Array.Empty<object>()).ToString();
+				string Value = LoadKeyItemType.InvokeMember("gxTpr_Value", BindingFlags.GetProperty, null, LoadKeyItem, Array.Empty<object>()).ToString();
 
 				string FieldName = "gxTpr_" + Name.Substring(0, 1).ToUpper() + Name.Substring(1).ToLower();
 				Type MemberType = me.GetProperty(FieldName).PropertyType;
@@ -393,7 +477,10 @@ namespace GeneXus.Utils
 			{
 				Object levelInstance = me.InvokeMember(FieldName, BindingFlags.GetProperty, null, this, Array.Empty<object>());
 				IGxCollection Col = levelInstance as IGxCollection;
-				Col.FromJSonString(Value);
+				if (Col != null)
+				{
+					Col.FromJSonString(Value);
+				}
 			}
 			else
 				me.InvokeMember(FieldName, BindingFlags.SetProperty, null, this, new object[] { Convert.ChangeType(Value, MemberType, System.Globalization.CultureInfo.InvariantCulture) });
@@ -496,6 +583,7 @@ namespace GeneXus.Utils
 	public interface IGxGenericCollectionWrapped
 	{
 		bool GetIsWrapped();
+		string GetWrappedStatus();
 		void SetIsWrapped(bool value);
 	}
 
@@ -521,6 +609,12 @@ namespace GeneXus.Utils
 			isWrapped = wrapped;			
 		}
 
+		public GxGenericCollection(IGxCollection x, bool wrapped, string wrappedstatus) : this(x)
+		{
+			isWrapped = wrapped;
+			wrappedStatus = wrappedstatus;
+		}
+
 		public void LoadCollection(IGxCollection x)
 		{
 			foreach (IGxGenericCollectionItem x1 in this)
@@ -541,12 +635,26 @@ namespace GeneXus.Utils
 
 		public bool GetIsWrapped()
 		{
+			if (wrappedStatus.Equals("unwrapped"))
+				isWrapped = false;
 			return isWrapped;
 		}
 
 		public void SetIsWrapped(bool value)
 		{
 			isWrapped = value;
+		}
+
+		private string wrappedStatus = "";
+
+		public string GetWrappedStatus()
+		{
+			return wrappedStatus;
+		}
+
+		internal void SetWrappedStatus(string value)
+		{
+			wrappedStatus = value;
 		}
 	}
 	public interface IGxGenericCollectionItem
@@ -562,6 +670,17 @@ namespace GeneXus.Utils
 		}
 	}
 
+	[AttributeUsage(AttributeTargets.Class)]
+	public sealed class GxJsonSerialization : Attribute
+	{
+		string unwrapped = default;
+		public GxJsonSerialization(string jsonunwrapped)
+		{
+			unwrapped = jsonunwrapped;
+		}
+		public string JsonUnwrapped { get => unwrapped; set => unwrapped = value; }
+	}
+	
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class GxOmitEmptyCollection : Attribute
 	{
@@ -606,6 +725,7 @@ namespace GeneXus.Utils
 
 		public bool isWrappedInCollection = true;
 
+		const string DateFormat = "M/d/yyyy h:mm:ss tt";
 		public override string ToString()
 		{
 			string s = "";
@@ -626,14 +746,17 @@ namespace GeneXus.Utils
 					if (o != null)
 					{
 #if NETCORE
-					var fixedPoint = "F";
-					if (o is decimal)
-						s += ((decimal)o).ToString(fixedPoint, CultureInfo.InvariantCulture);
-					else
-						s += o.ToString();
+						string fixedPoint = "F";
+						if (o is decimal)
+							s += ((decimal)o).ToString(fixedPoint, CultureInfo.InvariantCulture);
 #else
-						s += o.ToString();
+						if (o is decimal)
+							s += ((decimal)o).ToString(CultureInfo.InvariantCulture);
 #endif
+						else if (o is DateTime)
+							s += ((DateTime)o).ToString(DateFormat, CultureInfo.InvariantCulture); 
+						else
+							s += o.ToString();
 					}
 				}
 			}
@@ -745,6 +868,7 @@ namespace GeneXus.Utils
 	[XmlRoot(ElementName = "Message")]
 	[XmlType(TypeName = "Message", Namespace = "GeneXus")]
 	[Serializable]
+	[GxJsonSerialization("wrapped")]
 	public class SdtMessages_Message : GxUserType
 	{
 		public SdtMessages_Message()
@@ -847,6 +971,7 @@ namespace GeneXus.Utils
 
 	[DataContract(Name = @"Messages.Message", Namespace = "GeneXus")]
 	[GxOmitEmptyCollection]
+	[GxJsonSerialization("wrapped")]
 	public class SdtMessages_Message_RESTInterface : GxGenericCollectionItem<SdtMessages_Message>, System.Web.SessionState.IRequiresSessionState
 	{
 		public SdtMessages_Message_RESTInterface()

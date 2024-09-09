@@ -1,14 +1,12 @@
 using System;
 using GeneXus.Http.WebSocket;
-using log4net;
 
 namespace GeneXus.Notifications.WebSocket
 {
 	public class GXWebSocketFactory
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXWebSocketFactory));
-
-        public static IGXWebSocketAsync GetWebSocketProvider()
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXWebSocketFactory>();
+		public static IGXWebSocketAsync GetWebSocketProvider()
         {
             IGXWebSocketAsync ws = null;
             try

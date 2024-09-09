@@ -31,7 +31,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 			string functionName = context.FunctionDefinition.Name;
 
 			Message message = SetupMessage(context, myQueueItem);
-			log.LogInformation($"GeneXus Service Bus trigger handler. Function processed: {functionName}. Queue item Id: {message.MessageId}");
+			log.LogInformation($"GeneXus Service Bus trigger handler. Function processed: {functionName}. Queue item Id: {StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList)}");
 
 			try
 			{
@@ -42,14 +42,6 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				log.LogError(ex.ToString());
 				throw;
 			}
-		}
-		private GxUserType CreateCustomPayloadItem(Type customPayloadItemType, string propertyId, object propertyValue, GxContext gxContext)
-		{
-			GxUserType CustomPayloadItem = (GxUserType)Activator.CreateInstance(customPayloadItemType, new object[] { gxContext });
-			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyid", propertyId);
-			ClassLoader.SetPropValue(CustomPayloadItem, "gxTpr_Propertyvalue", propertyValue);
-			return CustomPayloadItem;
-
 		}
 		private Message SetupMessage(FunctionContext context, string item)
 		{
@@ -102,7 +94,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 		private void ProcessMessage(FunctionContext context, ILogger log, Message message)
 		{
 			CallMappings callmap = (CallMappings)_callmappings;
-			GxAzMappings map = callmap.mappings is object ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+			GxAzMappings map = (callmap!=null && callmap.mappings is object) ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
 			string gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
 
 			string exMessage;
@@ -155,41 +147,41 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 							{
 								//Initialization
 
-								Type EventMessagesType = parameters[0].ParameterType; //SdtEventMessages
-								GxUserType EventMessages = (GxUserType)Activator.CreateInstance(EventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
+								Type eventMessagesType = parameters[0].ParameterType; //SdtEventMessages
+								GxUserType eventMessages = (GxUserType)Activator.CreateInstance(eventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
 
-								IList EventMessage = (IList)ClassLoader.GetPropValue(EventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
-								Type EventMessageItemType = EventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
+								IList eventMessage = (IList)ClassLoader.GetPropValue(eventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
+								Type eventMessageItemType = eventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
 
-								GxUserType EventMessageItem = (GxUserType)Activator.CreateInstance(EventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
-								IList CustomPayload = (IList)ClassLoader.GetPropValue(EventMessageItem, "gxTpr_Eventmessagecustompayload");//instance of GXBaseCollection<SdtEventCustomPayload_CustomPayloadItem>
+								GxUserType eventMessageItem = (GxUserType)Activator.CreateInstance(eventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
 
-								Type CustomPayloadItemType = CustomPayload.GetType().GetGenericArguments()[0];//SdtEventCustomPayload_CustomPayloadItem
+								IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
+								Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
 
 								//Payload
-								GxUserType CustomPayloadItem;
+								GxUserType eventMessageProperty;
 
 								foreach (var messageProp in message.MessageProperties)
 								{
 									if ((messageProp.key != "UserProperties") & (messageProp.key != "SystemProperties"))
 									{
-										CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, messageProp.key, Convert.ToString(messageProp.value), gxcontext);
-										CustomPayload.Add(CustomPayloadItem);
+										eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, messageProp.key, Convert.ToString(messageProp.value), gxcontext);
+										eventMessageProperties.Add(eventMessageProperty);
 									}
 								}
 
 								//Body
 
-								CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, "Body", message.Body, gxcontext);
-								CustomPayload.Add(CustomPayloadItem);
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Body", message.Body, gxcontext);
+								eventMessageProperties.Add(eventMessageProperty);
 
 								//user Properties
 								if (message.UserProperties.Count > 0)
 								{
 									foreach (string key in message.UserProperties.Keys)
 									{
-										CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, key, JSONHelper.Serialize(message.UserProperties[key]), gxcontext);
-										CustomPayload.Add(CustomPayloadItem);
+										eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, key, JSONHelper.Serialize(message.UserProperties[key]), gxcontext);
+										eventMessageProperties.Add(eventMessageProperty);
 									}
 								}
 
@@ -202,28 +194,28 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 									foreach (var prop in sysProps)
 										if (prop.GetIndexParameters().Length == 0)
 										{
-											CustomPayloadItem = CreateCustomPayloadItem(CustomPayloadItemType, prop.Name, Convert.ToString(prop.GetValue(message.SystemProperties)), gxcontext);
-											CustomPayload.Add(CustomPayloadItem);
+											eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, prop.Name, Convert.ToString(prop.GetValue(message.SystemProperties)), gxcontext);
+											eventMessageProperties.Add(eventMessageProperty);
 										}
 								}
 
 								//Event
 
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageid", message.MessageId);	
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", message.MessageId);	
 								Message.MessageProperty enqueuedTimeUtcProp = message.MessageProperties.Find(x => x.key == "EnqueuedTimeUtc");
 								if (enqueuedTimeUtcProp != null)
 								{
 									DateTime enqueuedTimeUtc;
 									if (DateTime.TryParse(enqueuedTimeUtcProp.value, out enqueuedTimeUtc))
-									ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagedate", enqueuedTimeUtc);
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", enqueuedTimeUtc);
 								}
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.ServiceBusMessage);
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
-								ClassLoader.SetPropValue(EventMessageItem, "gxTpr_Eventmessagecustompayload", CustomPayload);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.ServiceBusMessage);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
 
 								//List of Events
-								EventMessage.Add(EventMessageItem);
-								parametersdata = new object[] { EventMessages, null };
+								eventMessage.Add(eventMessageItem);
+								parametersdata = new object[] { eventMessages, null };
 							}
 							try
 							{
@@ -232,7 +224,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 
 								//Error handling
 
-								if ((bool)ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Handled") == false) //Must retry
+								if ((bool)ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Handlefailure") == true) //Must retry
 								{
 									exMessage = string.Format("{0} {1}", FunctionExceptionType.AppError, ClassLoader.GetPropValue(EventMessageResponse, "gxTpr_Errormessage"));
 									throw new Exception(exMessage);
@@ -244,7 +236,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 							}
 							catch (Exception)
 							{
-								exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
+								exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList));
 								log.LogError(exMessage);
 								throw; //Throw the exception so the runtime can Retry the operation.
 							}	
@@ -258,7 +250,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				}
 				catch (Exception)
 				{
-					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
+					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList));
 					throw; //Throw the exception so the runtime can Retry the operation.
 				}
 			}

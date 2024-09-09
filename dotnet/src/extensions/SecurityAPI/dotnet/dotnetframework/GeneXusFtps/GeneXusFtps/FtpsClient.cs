@@ -232,7 +232,45 @@ namespace GeneXusFtps.GeneXusFtps
             return true;
         }
 
-        [SecuritySafeCritical]
+		[SecuritySafeCritical]
+		public override bool Rm(string remoteFilePath)
+		{
+			if (this.client == null || !this.client.IsConnected)
+			{
+				this.error.setError("FS019", "The connection is invalid, reconect");
+				return false;
+			}
+			try
+			{
+				if (!IsSameDir(Path.GetDirectoryName(remoteFilePath), this.client.GetWorkingDirectory()))
+				{
+					this.client.SetWorkingDirectory(Path.GetDirectoryName(remoteFilePath));
+
+					this.pwd = Path.GetDirectoryName(remoteFilePath);
+				}
+			}
+			catch (Exception e)
+			{
+				this.error.setError("FS020", "Error changing directory " + e.Message);
+				return false;
+			}
+
+			try
+			{
+
+				this.client.DeleteFile(remoteFilePath);
+			}
+			catch (Exception e1)
+			{
+				this.error.setError("FS021", "Error retrieving file " + e1.Message);
+				return false;
+			}
+
+
+			return true;
+		}
+
+		[SecuritySafeCritical]
         public override void Disconnect()
         {
             try
@@ -315,6 +353,7 @@ namespace GeneXusFtps.GeneXusFtps
 
         private SslProtocols SetProtocol(FtpsOptions options)
         {
+#pragma warning disable SYSLIB0039 // Type or member is obsolete
 #pragma warning disable CA5397 // Do not use deprecated SslProtocols values
 			switch (options.GetFtpsProtocol())
             {
@@ -334,6 +373,7 @@ namespace GeneXusFtps.GeneXusFtps
 					return SslProtocols.Tls;
 			}
 #pragma warning restore CA5397 // Do not use deprecated SslProtocols values
+#pragma warning restore SYSLIB0039 // Type or member is obsolete
 		}
 
 		private bool IsSameDir(String path1, String path2)

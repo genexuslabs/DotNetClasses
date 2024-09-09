@@ -1,7 +1,6 @@
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Utils;
-using log4net;
 #if NETCORE
 using GxClasses.Helpers;
 using Microsoft.AspNetCore.Http;
@@ -27,6 +26,8 @@ using GeneXus.Mime;
 using System.Text.RegularExpressions;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http;
+using System.Globalization;
+using System.Linq;
 
 namespace GeneXus.Http
 {
@@ -46,6 +47,16 @@ namespace GeneXus.Http
 		public static string CACHE_CONTROL = "Cache-Control";
 		public static string LAST_MODIFIED = "Last-Modified";
 		public static string EXPIRES = "Expires";
+		public static string XGXFILENAME = "x-gx-filename";
+		internal static string ACCEPT = "Accept";
+		internal static string TRANSFER_ENCODING = "Transfer-Encoding";
+		internal static string X_CSRF_TOKEN_HEADER = "X-XSRF-TOKEN";
+		internal static string X_CSRF_TOKEN_COOKIE = "XSRF-TOKEN";
+	}
+	internal class HttpHeaderValue
+	{
+		internal static string ACCEPT_SERVER_SENT_EVENT = "text/event-stream";
+		internal static string TRANSFER_ENCODING_CHUNKED = "chunked";
 	}
 	[DataContract()]
 	public class HttpJsonError
@@ -62,10 +73,74 @@ namespace GeneXus.Http
 		[DataMember(Name = "error")]
 		public HttpJsonError Error;
 	}
+#if NETCORE
+	internal static class CookiesHelper
+	{
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(CookiesHelper).FullName);
 
+		internal static void PopulateCookies(this HttpRequestMessage request, CookieContainer cookieContainer)
+		{
+			if (cookieContainer != null)
+			{
+				IEnumerable<Cookie> cookies = cookieContainer.GetCookies();
+				if (cookies.Any())
+				{
+					request.Headers.Add("Cookie", cookies.ToHeaderFormat());
+				}
+			}
+		}
+
+		private static string ToHeaderFormat(this IEnumerable<Cookie> cookies)
+		{
+			return string.Join(";", cookies); 
+		}
+		internal static void ExtractCookies(this HttpResponseMessage response, CookieContainer cookieContainer)
+		{
+			if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
+			{
+				Uri uri = response.RequestMessage.RequestUri;
+				foreach (string cookieValue in cookieValues)
+				{
+					try
+					{
+						cookieContainer.SetCookies(uri, cookieValue);
+					}
+					catch (CookieException ex)
+					{
+						GXLogging.Warn(log, $"Ignored cookie for container: {cookieValue} url:{uri}", ex);
+					}
+				}
+
+			}
+		}
+	}
+#endif
 	public class HttpHelper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HttpHelper>();
+
+		internal static Dictionary<string, string> GAMServices = new Dictionary<string, string>(){
+												{"oauth/access_token","gxoauthaccesstoken.aspx"},
+												{"oauth/logout","gxoauthlogout.aspx"},
+												{"oauth/userinfo","gxoauthuserinfo.aspx"},
+												{"oauth/gam/signin","agamextauthinput.aspx"},
+												{"oauth/gam/callback","agamextauthinput.aspx"},
+												{"oauth/gam/access_token","agamoauth20getaccesstoken.aspx"},
+												{"oauth/gam/userinfo","agamoauth20getuserinfo.aspx"},
+												{"oauth/gam/signout","agamextauthinput.aspx"},
+												{"saml/gam/signin","Saml2/SignIn"},
+												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws.aspx"},
+												{"saml/gam/signout","Saml2/Logout"},
+												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken.aspx"},
+												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
+												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
+												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
+												{"oauth/gam/v2.0/requesttokenanduserinfo","agamssorequesttokenanduserinfo_v20.aspx"}};
+		internal static HashSet<string> GamServicesInternalName = new HashSet<string>(GAMServices.Values.Select(value => value.Replace(ASPX, string.Empty)));
+		internal const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
+		internal const string GXFLOW_NSPACE = "GXflow.Programs";
+		internal const string GAM_NSPACE = "GeneXus.Security.API";
+
 		/*
 		* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
 		* Specifying no-cache or max-age=0 indicates that 
@@ -83,7 +158,7 @@ namespace GeneXus.Http
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
-
+		internal const string InvalidCSRFToken = "InvalidCSRFToken";
 		const string CORS_MAX_AGE_SECONDS = "86400";
 		internal static void CorsHeaders(HttpContext httpContext)
 		{
@@ -131,10 +206,10 @@ namespace GeneXus.Http
 			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList);
 
 			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 
@@ -149,10 +224,10 @@ namespace GeneXus.Http
 			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = requestHeaders;
+				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = requestMethods;
+				httpResponse.Headers[HeaderNames.AccessControlAllowMethods] = StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList);
 
 			httpResponse.Headers[HeaderNames.AccessControlMaxAge] = CORS_MAX_AGE_SECONDS;
 		}
@@ -169,10 +244,10 @@ namespace GeneXus.Http
 			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, true.ToString());
 
 			if (!string.IsNullOrEmpty(requestHeaders))
-				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, requestHeaders);
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList));
 
 			if (!string.IsNullOrEmpty(requestMethods))
-				httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, requestMethods);
+				httpResponse.AppendHeader(HeaderNames.AccessControlAllowMethods, StringUtil.Sanitize(requestMethods, StringUtil.HttpHeaderWhiteList));
 
 			httpResponse.AppendHeader(HeaderNames.AccessControlMaxAge, CORS_MAX_AGE_SECONDS);
 		}
@@ -182,6 +257,8 @@ namespace GeneXus.Http
 			HttpStatusCode httpStatusCode = MapStatusCode(statusCode);
 			SetResponseStatus(httpContext, httpStatusCode, statusDescription);
 		}
+
+
 		public static void SetResponseStatus(HttpContext httpContext, HttpStatusCode httpStatusCode, string statusDescription)
 		{
 #if !NETCORE
@@ -190,7 +267,7 @@ namespace GeneXus.Http
 			{
 				wcfcontext.OutgoingResponse.StatusCode = httpStatusCode;
 				if (httpStatusCode==HttpStatusCode.Unauthorized){
-					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(wcfcontext.IncomingRequest.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty));
+					wcfcontext.OutgoingResponse.Headers.Add(HttpHeader.AUTHENTICATE_HEADER, OatuhUnauthorizedHeader(StringUtil.Sanitize(wcfcontext.IncomingRequest.Headers["Host"],StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty));
 				}
 				if (!string.IsNullOrEmpty(statusDescription))
 					wcfcontext.OutgoingResponse.StatusDescription = statusDescription.Replace(Environment.NewLine, string.Empty);
@@ -208,7 +285,7 @@ namespace GeneXus.Http
 #endif
 				if (httpStatusCode == HttpStatusCode.Unauthorized)
 				{
-					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(httpContext.Request.Headers["Host"], httpStatusCode.ToString(INT_FORMAT), string.Empty);
+					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
 				}
 
 #if !NETCORE
@@ -275,9 +352,13 @@ namespace GeneXus.Http
 
 		internal static void SetUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, Exception ex)
 		{
+			string statusCodeDesc = StatusCodeToTitle(statusCode);
+			SetUnexpectedError(httpContext, statusCode, statusCodeDesc, ex);
+		}
+		internal static void SetUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, string statusCodeDesc, Exception ex)
+		{
 			TraceUnexpectedError(ex);
 			string statusCodeStr = statusCode.ToString(INT_FORMAT);
-			string statusCodeDesc = StatusCodeToTitle(statusCode);
 			SetResponseStatus(httpContext, statusCode, statusCodeDesc);
 			SetJsonError(httpContext, statusCodeStr, statusCodeDesc);
 		}
@@ -341,11 +422,8 @@ namespace GeneXus.Http
 				var pf = GetFormFile(httpContext, varName);
 				if (pf != null)
 				{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-					FileInfo fi = new FileInfo(pf.FileName);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 					string tempDir = Preferences.getTMP_MEDIA_PATH();
-					string ext = fi.Extension;
+					string ext = Path.GetExtension(pf.FileName);
 					if (ext != null)
 						ext = ext.TrimStart('.');
 					filePath = FileUtil.getTempFileName(tempDir);
@@ -447,11 +525,87 @@ namespace GeneXus.Http
 				return query.Split(',');
 			}
 		}
-
 		internal static void AllowHeader(HttpContext httpContext, List<string> methods)
 		{
 			httpContext.Response.AppendHeader(HeaderNames.Allow, string.Join(",", methods));
 		}
+		internal static string HtmlEncodeJsonValue(string value)
+		{
+			return GXUtil.HtmlEncodeInputValue(JsonQuote(value));
+		}
+
+		static void AppendCharAsUnicodeJavaScript(StringBuilder builder, char c)
+		{
+			builder.Append("\\u");
+			int num = c;
+			builder.Append(num.ToString("x4", CultureInfo.InvariantCulture));
+		}
+		/**
+		 * Produce a string in double quotes with backslash sequences in all the
+		 * right places. A backslash will be inserted within </, allowing JSON
+		 * text to be delivered in HTML. In JSON text, a string cannot contain a
+		 * control character or an unescaped quote or backslash.
+		 * */
+		internal static string JsonQuote(string value, bool addDoubleQuotes=false)
+		{
+			string text = string.Empty;
+			if (!string.IsNullOrEmpty(value))
+			{
+				int i;
+				int len = value.Length;
+				StringBuilder sb = new StringBuilder(len + 4);
+
+				for (i = 0; i < len; i += 1)
+				{
+					char c = value[i];
+					switch (c)
+					{
+						case '\\':
+						case '"':
+							sb.Append('\\');
+							sb.Append(c);
+							break;
+						case '\b':
+							sb.Append("\\b");
+							break;
+						case '\t':
+							sb.Append("\\t");
+							break;
+						case '\n':
+							sb.Append("\\n");
+							break;
+						case '\f':
+							sb.Append("\\f");
+							break;
+						case '\r':
+							sb.Append("\\r");
+							break;
+						default:
+							{
+								if (c < ' ')
+								{
+									AppendCharAsUnicodeJavaScript(sb, c);
+								}
+								else
+								{
+									sb.Append(c);
+								}
+							}
+							break;
+					}
+				}
+				text = sb.ToString();
+			}
+			if (!addDoubleQuotes)
+			{
+				return text;
+			}
+			else
+			{
+				return "\"" + text + "\"";
+			}
+		}
+
 	}
 #if NETCORE
 	public class HttpCookieCollection : Dictionary<string, HttpCookie>
@@ -707,6 +861,45 @@ namespace GeneXus.Http
 			context.Response.StatusDescription = statusDescription;
 #endif
 		}
+#if NETCORE
+		internal static void CommitSession(this HttpContext context)
+		{
+			Dictionary<string, string> _contextSession;
+			if (context.Items.TryGetValue(HttpSyncSessionState.CTX_SESSION, out object ctxSession))
+			{
+				_contextSession = ctxSession as Dictionary<string, string>;
+				if (_contextSession != null && _contextSession.Count > 0)
+				{
+					ISession _httpSession = context.Session;
+					var locker = LockTracker.Get(_httpSession.Id);
+					using (locker)
+					{
+						lock (locker)
+						{
+							FieldInfo loaded = _httpSession.GetType().GetField("_loaded", BindingFlags.Instance | BindingFlags.NonPublic);
+							if (loaded != null)
+							{
+								loaded.SetValue(_httpSession, false);
+								_httpSession.LoadAsync().Wait();
+							}
+							foreach (string s in _contextSession.Keys)
+							{
+								if (_contextSession[s] == null)
+									_httpSession.Remove(s);
+								else
+								{
+									_httpSession.SetString(s, _contextSession[s]);
+								}
+							}
+							context.Items.Remove(HttpSyncSessionState.CTX_SESSION);
+							_httpSession.CommitAsync().Wait();
+						}
+					}
+				}
+			}
+		}
+#endif
+
 	}
 
 	public static class HttpRequestExtensions

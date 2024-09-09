@@ -1,4 +1,4 @@
-﻿using SecurityAPITest.SecurityAPICommons.commons;
+using SecurityAPITest.SecurityAPICommons.commons;
 using NUnit.Framework;
 using Sftp.GeneXusSftp;
 using System.IO;
@@ -61,6 +61,18 @@ namespace SecurityAPITest.Sftp
 			True(get, client);
 		}
 
+		private void TestRm(SftpClient client)
+		{
+			bool get = client.Rm(remoteFilePath);
+			True(get, client);
+		}
+
+		private void TestGetFalse(SftpClient client)
+		{
+			bool get = client.Get(remoteFilePath, localDir);
+			False(get, client);
+		}
+
 		[Test]
 		public void TestWithUserPassword()
 		{
@@ -72,6 +84,22 @@ namespace SecurityAPITest.Sftp
 			SftpClient client = TestConnection(options);
 			TestPut(client);
 			TestGet(client);
+			client.Disconnect();
+		}
+
+
+		[Test]
+		public void TestRemove()
+		{
+			SftpOptions options = new SftpOptions();
+			options.Host = host;
+			options.User = user;
+			options.Password = password;
+			options.AllowHostKeyChecking = false;
+			SftpClient client = TestConnection(options);
+			TestPut(client);
+			TestRm(client);
+			TestGetFalse(client);
 			client.Disconnect();
 		}
 

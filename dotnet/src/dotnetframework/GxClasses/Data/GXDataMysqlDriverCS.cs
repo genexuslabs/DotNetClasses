@@ -1,18 +1,19 @@
-using GeneXus.Application;
-using GeneXus.Cache;
-using GeneXus.Utils;
-using log4net;
-using MySQLDriverCS;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Text;
+using GeneXus.Application;
+using GeneXus.Cache;
+using GeneXus.Utils;
+using MySQLDriverCS;
 
 namespace GeneXus.Data
 {
 	public class GxMySql : GxDataRecord 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxMySql));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxMySql>();
+
 		private int MAX_TRIES;
 		private int m_FailedConnections;
 		private bool preparedStmts;
@@ -97,7 +98,6 @@ namespace GeneXus.Data
 			string maxpoolSize = GetParameterValue(connstr, "Max Pool Size");
 			if (String.IsNullOrEmpty(maxpoolSize)) MAX_TRIES = 100; 
 			else MAX_TRIES = Convert.ToInt32(maxpoolSize);
-			GXLogging.Debug(log, "MAX_TRIES=" + MAX_TRIES);
 			return connstr;
 		}
 		public override bool AllowsDuplicateParameters
@@ -404,7 +404,7 @@ namespace GeneXus.Data
 
 	sealed internal class MySqlDriverCSConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.MySqlDriverCSConnectionWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<MySqlDriverCSConnectionWrapper>();
 		public MySqlDriverCSConnectionWrapper() : base(new MySQLConnection())
 		{ }
 
@@ -498,7 +498,7 @@ namespace GeneXus.Data
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
-			block = new GxArrayList(fetchSize);
+			block = new List<object[]>(fetchSize);
 			pos = -1;
 			if (cached)
 			{
@@ -517,7 +517,7 @@ namespace GeneXus.Data
 	}
 	public class GxMySQLDriverCSCursorDataReader : GxDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDataReader>();
 
 		public GxMySQLDriverCSCursorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool hasNested, bool dynStmt)
@@ -543,7 +543,7 @@ namespace GeneXus.Data
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
-			block = new GxArrayList(fetchSize);
+			block = new List<object[]>(fetchSize);
 			pos = -1;
 			if (cached)
 			{

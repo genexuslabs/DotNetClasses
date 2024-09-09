@@ -1,29 +1,21 @@
 namespace GeneXus.Http
 {
 	using System;
-	using System.Collections;
-	using System.Collections.Specialized;
 	using System.Collections.Generic;
-	using System.Globalization;
 	using System.IO;
 	using System.Reflection;
 	using System.Text;
-	using System.Text.RegularExpressions;
-	using System.Threading;
 
 	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Data.NTier;
-	using GeneXus.Encryption;
 	using GeneXus.Metadata;
 	using GeneXus.Mime;
 	using GeneXus.Security;
 	using GeneXus.Utils;
-	using GeneXus.XML;
-	using GeneXus.WebControls;
-
-	using log4net;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using System.Web.SessionState;
 	using System.Web;
 #if NETCORE
@@ -34,6 +26,8 @@ namespace GeneXus.Http
 	using System.Linq;
 	using GeneXus.Procedure;
 	using GxClasses.Web.Middleware;
+	using Microsoft.AspNetCore.Hosting;
+
 
 #else
 	using System.Web.UI;
@@ -144,7 +138,8 @@ namespace GeneXus.Http
 
 	public class GXReorServices : GXHttpHandler
 	{
-		static readonly ILog log = LogManager.GetLogger(typeof(GXReorServices));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXReorServices>();
+
 		static Assembly _reorAssembly;
 		static Assembly _gxDataInitializationAssembly;
 		readonly string[] reorArgs = { "-force", "-ignoreresume", "-nogui", "-noverifydatabaseschema" };
@@ -334,9 +329,9 @@ namespace GeneXus.Http
 				else
 				{
 #if NETCORE
-					WcfExecute(localHttpContext.Request.Body, localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+					WcfExecute(localHttpContext.Request.Body, localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength, localHttpContext.Request.Headers[HttpHeader.XGXFILENAME]);
 #else
-					WcfExecute(localHttpContext.Request.GetBufferedInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength);
+					WcfExecute(localHttpContext.Request.GetBufferedInputStream(), localHttpContext.Request.ContentType, (long)localHttpContext.Request.ContentLength, localHttpContext.Request.Headers[HttpHeader.XGXFILENAME]);
 #endif
 				}
 			}
@@ -358,12 +353,28 @@ namespace GeneXus.Http
 
 		}
 
-		internal void WcfExecute(Stream istream, string contentType, long streamLength)
+		internal void WcfExecute(Stream istream, string contentType, long streamLength, string gxFileName)
 		{
-			string ext, fName;
-			ext = context.ExtensionForContentType(contentType);
+			string ext=null, fName=null;
+			if (!string.IsNullOrEmpty(gxFileName))
+			{
+				ext = Path.GetExtension(gxFileName);
+				if (!string.IsNullOrEmpty(ext))
+				{
+					ext = ext.TrimStart('.');
+				}
+				fName = Path.GetFileNameWithoutExtension(gxFileName);
+			}
+			if (string.IsNullOrEmpty(ext))
+			{
+				ext = context.ExtensionForContentType(contentType);
+			}
+			if (string.IsNullOrEmpty(fName))
+			{
+				fName = string.Empty;
+			}
 			string tempDir = Preferences.getTMP_MEDIA_PATH();			
-			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir), GxFileType.PrivateAttribute);			
+			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir, fName), GxFileType.PrivateAttribute);			
 			file.Create(new NetworkInputStream(istream, streamLength));
 
 			JObject obj = new JObject();
@@ -473,18 +484,35 @@ namespace GeneXus.Http
 
 		public override void webExecute()
 		{
+			string genexus_agent = localHttpContext.Request.Headers["Genexus-Agent"];
 			try
 			{
-				GxSecurityProvider.Provider.oauthlogout(context);
+				GxSecurityProvider.Provider.oauthlogout(context, out string URL, out short statusCode);
+
 				localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-				localHttpContext.Response.StatusCode = 200;
-				localHttpContext.Response.Write(new JObject().ToString());
+				JObject jObj = new JObject();
+				if (genexus_agent == "WebFrontend Application" && URL.Length > 0)
+				{
+					localHttpContext.Response.AddHeader("GXLocation", URL);					
+					jObj.Put("GXLocation", URL);
+				}
+				else
+				{
+					jObj.Put("code", statusCode.ToString());					
+				}
+
+				if (statusCode == (int)HttpStatusCode.SeeOther)
+					localHttpContext.Response.StatusCode = (int)HttpStatusCode.OK;
+				else
+					localHttpContext.Response.StatusCode = statusCode;
+
+				localHttpContext.Response.Write(jObj.ToString());
 				context.CloseConnections();
 			}
 			catch (Exception e)
 			{
-				localHttpContext.Response.Write(e.Message);
 				localHttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+				localHttpContext.Response.Write(e.Message);
 			}
 		}
 
@@ -537,7 +565,7 @@ namespace GeneXus.Http
 
 	internal class GXOAuthAccessToken : GXHttpHandler, IRequiresSessionState
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GXOAuthAccessToken));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXOAuthAccessToken>();
 
 		public GXOAuthAccessToken()
 		{

@@ -4,6 +4,7 @@ using GeneXus.Data.NTier;
 using GeneXus.Procedure;
 using System;
 using GX;
+using GeneXus.Http.Server;
 
 namespace GeneXus.Programs.apps
 {
@@ -49,6 +50,7 @@ namespace GeneXus.Programs.apps
 		{
 			/* GeneXus formulas */
 			/* Output device settings */
+			httpResponse.AddString("OK");
 			AV20character2 = StringUtil.Str((decimal)(AV18numeric1), 10, 0) + AV17Character + StringUtil.Str(AV19numeric2, 10, 0) + ClientInformation.Id.ToString();
 			AV8datetime = DateTimeUtil.ResetTime(context.localUtil.YMDToD(2022, 5, 24));
 			AV8rappo00B.gxTpr_Rapdaa = DateTimeUtil.ResetTime(context.localUtil.YMDToD(2022, 5, 24));
@@ -85,6 +87,7 @@ namespace GeneXus.Programs.apps
 			AV8datetime = (DateTime.MinValue);
 			/* GeneXus formulas. */
 			context.Gx_err = 0;
+			httpResponse = new GxHttpResponse(context);
 		}
 		private short AV18numeric1;
 		private decimal AV19numeric2;
@@ -92,6 +95,7 @@ namespace GeneXus.Programs.apps
 		private string AV20character2;
 		private DateTime AV8datetime;
 		private Sdtrappo00b AV8rappo00B;
+		private GxHttpResponse httpResponse;
 	}
 
 }

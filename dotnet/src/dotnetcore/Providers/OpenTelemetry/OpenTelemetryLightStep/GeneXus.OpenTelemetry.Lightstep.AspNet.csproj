@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<DefineConstants>NETCORE;</DefineConstants>
+		<AppDesignerFolder>Properties</AppDesignerFolder>
+		<SignAssembly>false</SignAssembly>
+		<AssemblyName>GeneXus.OpenTelemetry.Lightstep.AspNet</AssemblyName>
+		<PackageTags>Lightstep OpenTelemetry GeneXus DotNet </PackageTags>
+		<PackageId>GeneXus.OpenTelemetry.Lightstep.AspNet</PackageId>
+		<NoWarn>NU1605</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+	  <ProjectReference Include="..\OpenTelemetry\GeneXus.OpenTelemetry.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,8 +1,3 @@
-using GeneXus.Application;
-using GeneXus.Configuration;
-using GeneXus.Utils;
-using log4net;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -10,6 +5,10 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Claims;
 using System.Text;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Utils;
+using Microsoft.IdentityModel.Tokens;
 using static GeneXus.Web.Security.SecureTokenHelper;
 
 namespace GeneXus.Web.Security
@@ -17,14 +16,15 @@ namespace GeneXus.Web.Security
 	[SecuritySafeCritical]
 	public static class WebSecurityHelper
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(GeneXus.Web.Security.WebSecurityHelper));
-		const int SecretKeyMinimumLength = 16;
+		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(typeof(WebSecurityHelper).FullName);
+
+		const int SecretKeyMinimumLength = 32;
 
         public static string StripInvalidChars(string input)
         {
 			if (string.IsNullOrEmpty(input))
 				return input;
-            var output = new string(input.Where(c => !char.IsControl(c)).ToArray());
+			string output = new string(input.Where(c => !char.IsControl(c)).ToArray());
             return output.Trim();
         }
 
@@ -111,9 +111,10 @@ namespace GeneXus.Web.Security
 	[SecuritySafeCritical]
 	public static class SecureTokenHelper
     {
-        private static readonly ILog _log = LogManager.GetLogger(typeof(GeneXus.Web.Security.SecureTokenHelper));
+        
+		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(typeof(SecureTokenHelper).FullName);
 
-        public enum SecurityMode
+		public enum SecurityMode
         {
             Sign,
             SignEncrypt,           
@@ -128,6 +129,10 @@ namespace GeneXus.Web.Security
 			using (var hmac = new System.Security.Cryptography.HMACSHA256(bSecretKey))
 			{
 				var handler = new JwtSecurityTokenHandler();
+				if (signedToken.Length >= handler.MaximumTokenSizeInBytes)
+				{
+					handler.MaximumTokenSizeInBytes = signedToken.Length + 1;
+				}
 				var validationParameters = new TokenValidationParameters
 				{
 					ClockSkew = TimeSpan.FromMinutes(1),
@@ -190,7 +195,6 @@ namespace GeneXus.Web.Security
 							System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.InvokeMethod, null, handler,
 							new object[] { jwtToken, validationParameters });
 						Validators.ValidateIssuerSecurityKey(jwtSecurityToken.SigningKey, jwtSecurityToken, validationParameters);
-
 						outToken.Expiration = new DateTime(1970, 1, 1).AddSeconds(Double.Parse(jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXEXPIRATION).Value));
 						outToken.ProgramName = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXPROGRAM).Value;
 						outToken.Issuer = jwtSecurityToken.Claims.First(c => c.Type == WebSecureToken.GXISSUER).Value;
@@ -200,7 +204,7 @@ namespace GeneXus.Web.Security
                 }
                 catch (Exception e)
 				{
-					GXLogging.Error(_log, string.Format("Web Token verify failed for Token '{0}'", jwtToken), e);
+					GXLogging.ErrorSanitized(_log, string.Format("Web Token verify failed for Token '{0}'", jwtToken), e);
 				}
 			}
 			return ok;

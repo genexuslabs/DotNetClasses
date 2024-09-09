@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<DefineConstants>NETCORE;</DefineConstants>
 		<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
 		<PackageId>GeneXus.Classes.Web.Core</PackageId>
@@ -15,7 +15,6 @@
     <Compile Include="..\..\dotnetframework\GxClasses\Helpers\GxDynamicCall.cs" Link="Helpers\GxDynamicCall.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttp.cs" Link="Middleware\GXHttp.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Middleware\GXHttpServices.cs" Link="Middleware\GXHttpServices.cs" />
-    <Compile Include="..\..\dotnetframework\GxClasses\Domain\GXRuntime.cs" Link="Domain\GXRuntime.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\GxRestWrapper.cs" Link="Middleware\GxRestWrapper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\Services\ReflectionHelper.cs" Link="Helpers\ReflectionHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxClasses\View\GXGridStateHandler.cs" Link="View\GXGridStateHandler.cs" />
@@ -30,7 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+	<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,11 +45,5 @@
 		<Folder Include="Notifications\WebSocket\" />
 		<Folder Include="View\UserControls\" />
 	</ItemGroup>
-  <ItemGroup>
-	<Reference Include="Jayrock-JSON">
-		<SpecificVersion>False</SpecificVersion>
-		<HintPath>..\libs\Jayrock.dll</HintPath>
-	</Reference>  
-  </ItemGroup>	
   
 </Project>

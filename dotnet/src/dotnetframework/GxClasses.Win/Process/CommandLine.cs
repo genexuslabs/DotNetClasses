@@ -1,8 +1,7 @@
-using GeneXus.Application;
-using log4net;
 using System;
 using System.Diagnostics;
 using System.IO;
+using GeneXus.Application;
 
 namespace GeneXus.Utils
 {
@@ -19,8 +18,7 @@ namespace GeneXus.Utils
 	}
 	public class GxProcess : IProcessHelper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GxProcess));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxProcess>();
 		public short OpenPrintDocument(string commandString)
 		{
 			Process p = new Process();
@@ -129,11 +127,7 @@ namespace GeneXus.Utils
 					//If WorkingDirectory is an empty string, the current directory is understood to contain the executable.
 					try
 					{
-						if (Path.IsPathRooted(file))
-						{
-							p.StartInfo.WorkingDirectory = Path.GetDirectoryName(file);
-						}
-						else
+						if (!Path.IsPathRooted(file))
 						{
 							p.StartInfo.WorkingDirectory = GxContext.StaticPhysicalPath();
 						}

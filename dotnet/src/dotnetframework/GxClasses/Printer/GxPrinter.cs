@@ -1,24 +1,23 @@
 namespace GeneXus.Printer
 {
 	using System;
-	using System.Runtime.InteropServices;
-	using System.Runtime.CompilerServices;
-	using System.Drawing;
-	using System.Drawing.Printing;
-	using System.Drawing.Imaging;
-	using System.IO;
-	using System.Text.RegularExpressions;
+	using System.Collections;
+	using System.Collections.Generic;
 	using System.Collections.Specialized;
-    using System.Collections.Generic;
-    using System.Collections;
-	using System.Threading;
-    using System.Globalization;
+	using System.Drawing;
+	using System.Drawing.Imaging;
+	using System.Drawing.Printing;
+	using System.Globalization;
+	using System.IO;
+	using System.Runtime.CompilerServices;
+	using System.Runtime.InteropServices;
 	using System.Text;
-	using GeneXus.Configuration;
-    using GeneXus.XML;
-	using log4net;
-	using System.Runtime.Serialization;
+	using System.Text.RegularExpressions;
+	using System.Threading;
 	using System.Threading.Tasks;
+	using GeneXus.Configuration;
+	using GeneXus.Utils;
+	using GeneXus.XML;
 
 	public interface IPrintHandler
 	{
@@ -822,7 +821,7 @@ namespace GeneXus.Printer
 		{
 			PrintingPermission pp = new PrintingPermission(PrintingPermissionLevel.AllPrinting);
 			pp.Demand();
-			PrintDocument pd = new PrintDocument(); 
+			PrintDocument pd = new PrintDocument();
 			pd.PrintController = new StandardPrintController(); 
 			pd.PrintPage += new PrintPageEventHandler(evt_PrintPage);
 			if (configString.Length > 0)
@@ -834,9 +833,17 @@ namespace GeneXus.Printer
 				streamToRead.Close();
 				throw new Exception("Printer settins not valid");
 			}
+			pd.Dispose();
 		}
 		public void Close()
 		{
+			try
+			{
+				streamToRead.Close();
+			}catch(Exception)
+			{
+				//NOOP
+			}
 		}
 		void initPrnReport( string configString, PrinterSettings printerSettings, PageSettings pageSettings)
 		{
@@ -1108,7 +1115,7 @@ namespace GeneXus.Printer
 	}
 	public class GxTxtPrinter : IPrintHandler
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxTxtPrinter));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxTxtPrinter>();
 		StreamReader streamToRead;
 		StreamWriter streamToWrite;
 		List<string> pageContents;
@@ -1168,6 +1175,13 @@ namespace GeneXus.Printer
 		public void Close()
 		{
 			streamToWrite.Close();
+			try
+			{
+				streamToRead.Close();
+			}catch(Exception)
+			{
+				//NOOP
+			}
 		}
 		void processPrinterCommand( string line)
 		{
@@ -1330,6 +1344,19 @@ namespace GeneXus.Printer
 		public void Close()
 		{
 			streamToWrite.Close();
+			try
+			{
+				streamToRead.Close();
+				foreach (Font font in reportFonts.Values)
+				{
+					font.Dispose();
+				}
+			}
+			catch(Exception)
+			{
+				//NOOP
+			}
+
 		}
 		void processPrinterCommand(string line )
 		{
@@ -1526,8 +1553,10 @@ namespace GeneXus.Printer
 						"\\pichgoal"+(height * LOGICAL2TWIP).ToString()+
 						"\n";
 			streamToWrite.Write( sBuffer);
-			Bitmap bm = new Bitmap(bitmap);
-			bm.Save( streamToWrite.BaseStream, ImageFormat.Emf);
+			using (Bitmap bm = new Bitmap(bitmap))
+			{
+				bm.Save(streamToWrite.BaseStream, ImageFormat.Emf);
+			}
 			streamToWrite.Write( "}}\n");
 		}
 		void DrawText(string text, Point p1, Point p2, Font fnt, int align, Color foreColor, Color backColor)
@@ -2117,11 +2146,6 @@ namespace GeneXus.Printer
 	[Serializable()]
 	public class ProcessInterruptedException: Exception
 	{
-		public ProcessInterruptedException(SerializationInfo info, StreamingContext ctx)
-			: base(info, ctx)
-		{
-			
-		}
 		public ProcessInterruptedException()
 		{
 
@@ -2139,10 +2163,19 @@ namespace GeneXus.Printer
 	{
 		static public string AddPath(string name, string path)
 		{
-			if (Path.IsPathRooted(name) || name.IndexOf(":") != -1 ||
+			if (name.IndexOf(":") != -1 ||
 				(name.Length >=2 && (name.Substring( 0,2) == "//" || name.Substring( 0,2) == @"\\")) ||
 				(name.StartsWith("http:" ) || name.StartsWith("https:" )))
 				return name;
+#if NETCORE
+			if (Path.IsPathRooted (name))
+				return name;
+#else
+			if (PathUtil.IsValidFilePath(name) && Path.IsPathRooted(name))
+			{
+				return name;
+			}
+#endif
 			return Path.Combine(path, name);
 		}
 	}

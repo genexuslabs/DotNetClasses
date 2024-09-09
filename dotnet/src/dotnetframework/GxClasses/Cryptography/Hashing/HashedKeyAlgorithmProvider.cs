@@ -14,7 +14,10 @@ namespace GeneXus.Cryptography.Hashing
 		{
 			if (GXUtil.IsWindowsPlatform)
 			{
+#pragma warning disable SYSLIB0045 // Type or member is obsolete
 				_keyedHash = KeyedHashAlgorithm.Create(algorithm);
+#pragma warning restore SYSLIB0045 // Type or member is obsolete
+
 			}
 			if (_keyedHash == null)
 			{

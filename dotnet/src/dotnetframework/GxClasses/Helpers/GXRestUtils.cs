@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 #endif
-using log4net;
 using System.IO;
+#if !NETCORE
 using Jayrock.Json;
-
-
+#endif
+using GeneXus.Configuration;
 
 namespace GeneXus.Utils
 {
@@ -97,7 +97,7 @@ namespace GeneXus.Utils
 
 	internal class RestAPIHelpers
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.RestAPIHelpers));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<RestAPIHelpers>();
 
 		public static Dictionary<string, object> ReadRestParameters(string restData)
 		{
@@ -139,6 +139,11 @@ namespace GeneXus.Utils
 				}
 			}
 			return bodyParameters;
+		}
+
+		internal static bool ValidateCsrfToken()
+		{
+			return Config.GetValueOf("CSRF_PROTECTION", Preferences.NO) == Preferences.YES;
 		}
 	}
 }

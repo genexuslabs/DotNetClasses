@@ -1,6 +1,5 @@
 using System;
 using System.Text;
-using log4net;
 using System.Data;
 using System.Data.Common;
 using GeneXus.Utils;
@@ -20,7 +19,7 @@ namespace GeneXus.Data
 {
 	public class GxPostgreSql : GxDataRecord
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxPostgreSql>();
 		const string ConnectionStringEncoding = "encoding";
 		private byte[] _buffer;
 		static Assembly _npgsqlAssembly;
@@ -161,7 +160,7 @@ namespace GeneXus.Data
 				}
 			}
 			IDataReader reader = cmd.ExecuteReader();
-			if (reader.Read())
+			if (reader.Read() && values!=null)
 			{
 				if (reader.FieldCount > 0 && returnParms.Count>0)
 				{
@@ -313,7 +312,14 @@ namespace GeneXus.Data
 				return count;
 			}
 		}
-		//ByteArrayToByteaTextEscaped
+		public override void SetParameter(IDbDataParameter parameter, object value)
+		{
+			if (value is Guid)
+			{
+				value = value.ToString();
+			}
+			base.SetParameter(parameter, value);
+		}
 		public override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
 		{
 			if (_byteaOutputEscape)
@@ -447,7 +453,7 @@ namespace GeneXus.Data
 		}
 		public override object Net2DbmsDateTime(IDbDataParameter parm, DateTime dt)
 		{
-			if (dt.Equals(DateTimeUtil.NullDate()))
+			if (dt.Equals(DateTimeUtil.NullDate()) && NpgsqlAssembly.GetName().Version.Major <=3)
 			{
 				return DateTime.MinValue.AddTicks(1);//Avoid -infinity DateTimes (sac 20807)
 			}
@@ -580,7 +586,10 @@ namespace GeneXus.Data
 	}
 	sealed internal class PostgresqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<PostgresqlConnectionWrapper>();
+#if NETCORE
+		const string INFINITY_CONVERSIONS = "Npgsql.DisableDateTimeInfinityConversions";
+#endif
 		public PostgresqlConnectionWrapper()
 		{
 			_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection");
@@ -591,6 +600,9 @@ namespace GeneXus.Data
 			try
 			{
 				_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection", new object[] { connectionString });
+#if NETCORE
+				AppContext.SetSwitch(INFINITY_CONVERSIONS, true);
+#endif
 				m_isolationLevel = isolationLevel;
 				m_connectionCache = connCache;
 			}

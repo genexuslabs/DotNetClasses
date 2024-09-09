@@ -1,12 +1,11 @@
 using System;
 using GeneXus.Services;
-using log4net;
 
 namespace GeneXus.Messaging.Common
 {
 	public abstract class MessageBrokerBase
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(MessageBrokerBase));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<MessageBrokerBase>();
 		internal GXService service;
 		public MessageBrokerBase()
 		{
@@ -18,7 +17,7 @@ namespace GeneXus.Messaging.Common
 			{
 				try
 				{
-					s = ServiceFactory.GetGXServices().Get(GXServices.MESSAGEBROKER_SERVICE);
+					s = ServiceFactory.GetGXServices()?.Get(GXServices.MESSAGEBROKER_SERVICE);
 				}
 				catch (Exception)
 				{
@@ -28,6 +27,6 @@ namespace GeneXus.Messaging.Common
 
 			service = s;
 		}
-		public abstract String GetName();
+		public abstract string GetName();
 	}
 }

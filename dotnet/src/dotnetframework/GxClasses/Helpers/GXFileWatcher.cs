@@ -4,7 +4,6 @@ namespace GeneXus.Application
 	using System.Collections;
 	using System.IO;
 	using GeneXus.Configuration;
-	using log4net;
 	using System.Collections.Generic;
 	using System.Web;
 	using System.Threading;
@@ -14,12 +13,11 @@ namespace GeneXus.Application
 	using System.Web.Configuration;
 #endif
 	using System.Xml;
-	using GeneXus.Http;
 	using System.Collections.Concurrent;
 
 	public class GXFileWatcher : IDisposable
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXFileWatcher));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFileWatcher>();
 		private static volatile GXFileWatcher m_Instance;
 		private static object m_SyncRoot = new Object();
 		TimeSpan TIMEOUT;

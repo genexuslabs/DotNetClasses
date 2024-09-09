@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net.Mail;
+using System.Reflection;
+using GeneXus.Utils;
+using OpenPop.Mime;
 using OpenPop.Pop3;
 using OpenPop.Pop3.Exceptions;
-using log4net;
-using OpenPop.Mime;
-using System.Net.Mail;
-using System.IO;
-using GeneXus.Utils;
-using System.Reflection;
 
 namespace GeneXus.Mail
 {
-    internal class POP3SessionOpenPop : Pop3SessionBase
+	internal class POP3SessionOpenPop : Pop3SessionBase
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(POP3SessionOpenPop));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<POP3SessionOpenPop>();
 
-        private Pop3Client client;
+		private Pop3Client client;
 
         public override int GetMessageCount()
         {
@@ -35,7 +34,6 @@ namespace GeneXus.Mail
                 client.Authenticate(UserName, Password, OpenPop.Pop3.AuthenticationMethod.Auto);
                 count = client.GetMessageCount();
                 uIds = client.GetMessageUids();
-                uIds.Insert(0, string.Empty);
             }
             catch (PopServerNotAvailableException e)
             {

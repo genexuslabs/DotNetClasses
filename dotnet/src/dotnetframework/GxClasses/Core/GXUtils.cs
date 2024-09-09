@@ -3,16 +3,15 @@
 namespace GeneXus.Utils
 {
 	using System;
-	using GeneXus.Application;
-	using TZ4Net;
-	using Cache;
+	using System.Data.SqlTypes;
 	using System.Globalization;
 	using System.IO;
 	using System.Text;
-	using log4net;
 	using System.Text.RegularExpressions;
-	using System.Data.SqlTypes;
+	using Cache;
+	using GeneXus.Application;
 	using GeneXus.Services;
+	using TZ4Net;
 
 	public class GxMail
 	{
@@ -82,6 +81,7 @@ namespace GeneXus.Utils
 	
 	public class TimeZoneUtil
 	{
+		[Obsolete("GetInstanceFromWin32Id is deprecated.", false)]
 		public static OlsonTimeZone GetInstanceFromWin32Id(string sTZ)
 		{
 			lock (OlsonTimeZone.SyncRoot)
@@ -96,7 +96,7 @@ namespace GeneXus.Utils
 				}
 			}
 		}
-
+		[Obsolete("GetInstanceFromOlsonName is deprecated.", false)]
 		public static OlsonTimeZone GetInstanceFromOlsonName(string sTZ)
 		{
 			lock (OlsonTimeZone.SyncRoot)
@@ -266,7 +266,7 @@ namespace GeneXus.Utils
 
 	public class FileIO
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.FileIO));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GeneXus.Utils.FileIO>();
 		const short GX_ASCDEL_BADFMTSTR = -10;
 		const short GX_ASCDEL_WRITEERROR = -9;
 		const short GX_ASCDEL_INVALIDDATE = -7;
@@ -771,6 +771,7 @@ namespace GeneXus.Utils
 				return GX_ASCDEL_WRITEERROR;
 			}
 		}
+		const int MAX_DECIMAL_PRECISION = 29;
 		public short dfwpnum(decimal num, int dec)
 		{
 			if (_writeStatus == FileIOStatus.Closed)
@@ -778,7 +779,7 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Error ADF0004");
 				return GX_ASCDEL_INVALIDSEQUENCE;
 			}
-			appendFld(StringUtil.Str(num, 18, dec).TrimStart(null));
+			appendFld(StringUtil.Str(num, MAX_DECIMAL_PRECISION, dec).TrimStart(null));
 			return GX_ASCDEL_SUCCESS;
 		}
 		public short dfwptxt(string s, int len)
@@ -892,12 +893,33 @@ namespace GeneXus.Utils
 			lastErrCode = errCode;
 			lastErrDescription = errDescription;
 		}
-		static string normalizeText(string txt)
+		static string NormalizeEndOfString(string txt, string rex, out bool textModified)
 		{
-			
-			return txt.Replace(StringUtil.NewLine(), "\n");
+			textModified=false;
+			if (rex.IndexOf('$') == -1 && rex.IndexOf("\\Z", StringComparison.OrdinalIgnoreCase) == -1)
+				return txt;
+			if (txt.IndexOf(StringUtil.NewLine())==-1)
+				return txt;
+			int idx = 0;
+			foreach (char c in rex)
+			{
+				if (IsEndOfStringAnchor(c, idx, rex))
+				{
+					textModified=true;
+					return txt.Replace(StringUtil.NewLine(), "\n");
+				}
+				idx++;
+			}
+			return txt;
 		}
-
+		static bool IsEndOfStringAnchor(char c, int idx, string rex)
+		{
+			if (c == '$' && (idx == 0 || (idx > 0 && rex[idx - 1] != '\\')))
+				return true;
+			if (c == 'Z' || c=='z'  && idx > 0 && rex[idx-1]=='\\' && (idx==1 || rex[idx-2]!='\\'))
+				return true;
+			return false;
+		}
 		static public bool IsMatch(string txt, string rex)
 		{
 			return IsMatch(txt, rex, RegexOptions.Multiline);
@@ -909,7 +931,7 @@ namespace GeneXus.Utils
 			try
 			{
 				Regex r = new Regex(rex, options);
-				return r.Match(normalizeText(txt)).Success;
+				return r.Match(NormalizeEndOfString(txt, rex, out bool _)).Success;
 			}
 			catch (Exception e)
 			{
@@ -923,13 +945,51 @@ namespace GeneXus.Utils
 			try
 			{
 				Regex r = new Regex(rex, RegexOptions.Multiline);
-				return r.Replace(normalizeText(txt), repl);
+				string ntxt = NormalizeEndOfString(txt, rex, out bool textModified);
+				if (textModified)
+				{
+					return RestoreEndOfString(r.Replace(ntxt, repl));
+				}
+				else
+					return r.Replace(ntxt, repl);
 			}
 			catch (Exception e)
 			{
 				setError(1, e.Message);
 			}
 			return "";
+		}
+
+		private static string RestoreEndOfString(string v)
+		{
+			if (string.IsNullOrEmpty(v))
+				return v;
+			StringBuilder str = new StringBuilder();
+			int idx = 0;
+			foreach (char c in v)
+			{
+				if (c == '\n' && (idx == 0 || (idx > 0 && v[idx - 1] != '\r')))
+					str.Append(StringUtil.NewLine());
+				else
+					str.Append(c);
+				idx++;
+			}
+			return str.ToString();
+		}
+		private static string[] RestoreEndOfString(string[] values)
+		{
+			string[] ret = new string[values.Length];
+			for(int i=0; i<values.Length; i++)
+				ret[i] = RestoreEndOfString(values[i]);
+			return ret;
+		}
+		private static void RestoreEndOfString(GxRegexMatch values)
+		{
+			if (values != null)
+			{
+				for (int i=0; i < values.Groups.Count; i++)
+					values.Groups[i] = RestoreEndOfString(values.Groups[i]);
+			}
 		}
 		static public GxSimpleCollection<string> Split(string txt, string rex)
 		{
@@ -938,7 +998,15 @@ namespace GeneXus.Utils
 			{
 				Regex r = new Regex(rex, RegexOptions.ExplicitCapture | RegexOptions.Multiline);
 				GxSimpleCollection<string> c = new GxSimpleCollection<string>();
-				c.AddRange(r.Split(normalizeText(txt)));
+				string ntxt = NormalizeEndOfString(txt, rex, out bool textModified);
+				if (textModified)
+				{
+					c.AddRange(RestoreEndOfString(r.Split(ntxt)));
+				}
+				else
+				{
+					c.AddRange(r.Split(ntxt));
+				}
 				return c;
 			}
 			catch (Exception e)
@@ -959,10 +1027,18 @@ namespace GeneXus.Utils
 			try
 			{
 				Regex r = new Regex(rex, options);
-				MatchCollection mc = r.Matches(normalizeText(txt));
+				string ntxt = NormalizeEndOfString(txt, rex, out bool textModified);
+				MatchCollection mc = r.Matches(ntxt);
 				GxUnknownObjectCollection c = new GxUnknownObjectCollection();
 				foreach (Match m in mc)
+				{
+					GxRegexMatch rm = new GxRegexMatch(m);
+					if (textModified)
+					{
+						RestoreEndOfString(rm);
+					}
 					c.Add(new GxRegexMatch(m));
+				}
 				return c;
 			}
 			catch (Exception e)

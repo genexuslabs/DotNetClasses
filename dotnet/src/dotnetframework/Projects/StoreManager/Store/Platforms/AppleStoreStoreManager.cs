@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Net;
-using System.IO;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using GeneXus.SD.Store.Model;
 using System.Collections.Concurrent;
 using System.Net.Http;
@@ -168,7 +170,7 @@ namespace GeneXus.SD.Store.Platforms
 			{
 				throw new StoreResponsePurchaseException("Aplle Store validation servers seems to be unavailable.");
 			}
-			if (p.ProductType == (int)ProductType.Subscription)
+			if (p!=null && p.ProductType == (int)ProductType.Subscription)
 			{
 				p.Custom.OriginalPurchase = purchaseResult;
 			}

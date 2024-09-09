@@ -1,10 +1,8 @@
 using System;
-using GeneXus.Metadata;
+using System.Reflection;
 using GeneXus.Application;
 using GeneXus.Configuration;
-using System.Reflection;
-using log4net;
-using System.Collections;
+using GeneXus.Metadata;
 namespace GeneXus.Utils
 {
 
@@ -17,7 +15,7 @@ namespace GeneXus.Utils
 	/// </summary>
 	public class ExpressionEvaluator
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.ExpressionEvaluator));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExpressionEvaluator>();
 		internal IGxContext context;
 		internal bool throwExceptions;
 
@@ -949,6 +947,8 @@ namespace GeneXus.Utils
 		public override bool Equals(object obj)
 		{
 			EvalValue b = obj as EvalValue;
+			if (b == null)
+				return false;
 			if (stringValue == null)
 				return D == b.D;
 			else

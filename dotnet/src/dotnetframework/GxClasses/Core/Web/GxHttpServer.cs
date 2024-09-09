@@ -12,12 +12,6 @@ namespace GeneXus.Http.Server
 	using System.Linq;
 	using Microsoft.AspNetCore.Http.Features;
 	using System.Text;
-	using System.Threading.Tasks;
-	using Microsoft.AspNetCore.Mvc.Formatters;
-	using System.Net.Http;
-	using Stubble.Core.Contexts;
-	using System.Net.Mime;
-
 #endif
 
 	public class GxHttpCookie
@@ -154,7 +148,16 @@ namespace GeneXus.Http.Server
 			{
 				value = GXUtil.EncodeContentDispositionHeader(value, _context.GetBrowserType());
 			}
-            if (_context!=null) 
+#if !NETCORE
+			else if (string.Compare(name,"Content-Type", true) == 0)
+			{
+				if (string.Compare(value, "text/event-stream", true) == 0)
+				{
+					_context.HttpContext.Response.BufferOutput = false;
+				}
+			}
+#endif
+			if (_context!=null) 
                 _context.SetHeader(name, value);
 		}
 	
@@ -396,7 +399,7 @@ namespace GeneXus.Http.Server
 		public override string ToString()
 		{
 			if (_httpReq == null)
-				return String.Empty;
+				return string.Empty;
 #if NETCORE
 			return _httpReq.GetRawBodyString();
 #else

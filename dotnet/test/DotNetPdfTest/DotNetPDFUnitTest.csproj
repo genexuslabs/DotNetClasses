@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
+		<RollForward>Major</RollForward>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>TRACE;NETCORE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE;NETCORE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="log.console.config" />
+	</ItemGroup>
+	
+
+
+
+	<ItemGroup>
+		<PackageReference Include="PdfPig" Version="0.1.8"  PrivateAssets="All"/>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+		<PackageReference Include="itext7" Version="8.0.0" />
+		<PackageReference Include="itext7.font-asian" Version="8.0.0" />
+		<PackageReference Include="itext7.pdfhtml" Version="5.0.0" />
+		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.0" />
+		<PackageReference Include="iTextSharp-LGPL" Version="4.1.6" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+		<PackageReference Include="xunit" Version="2.4.1" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="3.0.2">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PDFReport.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

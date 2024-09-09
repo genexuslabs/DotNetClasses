@@ -19,7 +19,7 @@ namespace ProjectHealthTest
 		private const string PACKAGE_VERSION_ATTRIBUTE_NAME = "Version";
 		private const string TARGET_FRAMEWORK = "Project/PropertyGroup/TargetFramework";
 		private const string TARGET_FRAMEWORKS = "Project/PropertyGroup/TargetFrameworks";
-		private const string NET6 = "net6.0";
+		private const string NET8 = "net8.0";
 		private const string NET_FRAMEWORK = "net462";
 		private static HashSet<string> ExcludedFromTransitiveDependenciesControl = new HashSet<string> {"runtime"};
 		private static HashSet<string> ProjectTemporaryExcludedFromDependenciesControl = new HashSet<string> { "GeneXus.Deploy.AzureFunctions.Handlers.csproj", "AzureFunctionsTest.csproj" };
@@ -35,7 +35,7 @@ namespace ProjectHealthTest
 		[Fact]
 		public void TestPackageVersionConsistencyAcrossNETProjectsAndTransitives()
 		{
-			TestPackageVersionConsistencyAcrossProjects(NET6, true);
+			TestPackageVersionConsistencyAcrossProjects(NET8, true);
 		}
 		/// <summary>
 		/// Tests that all referenced packages have the same version by doing:
@@ -47,7 +47,7 @@ namespace ProjectHealthTest
 		[Fact]
 		public void TestPackageVersionConsistencyAcrossNETProjects()
 		{
-			TestPackageVersionConsistencyAcrossProjects(NET6, false);
+			TestPackageVersionConsistencyAcrossProjects(NET8, false);
 		}
 		[Fact]
 		public void TestPackageVersionConsistencyAcrossNETFrameworkProjects()
@@ -98,6 +98,26 @@ namespace ProjectHealthTest
 					{
 						foreach (XmlNode packageNode in packagesNodes)
 						{
+							XmlAttribute condition = packageNode.ParentNode.Attributes["Condition"];
+							if (condition != null) {
+								if (targetFramework == NET8 && condition.Value.Contains($"=='{NET_FRAMEWORK}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
+								else if (targetFramework == NET8 && condition.Value.Contains($"!='{NET8}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
+								else if (targetFramework == NET_FRAMEWORK && condition.Value.Contains($"=='{NET8}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
+								else if (targetFramework == NET_FRAMEWORK && condition.Value.Contains($"!='{NET_FRAMEWORK}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
+							}
+
 							if (packageNode.Attributes == null)
 							{
 								continue;
@@ -194,7 +214,7 @@ namespace ProjectHealthTest
 
 			Assert.True(packagesWithIncoherentVersions.Count == 0, errorMessage);
 		}
-
+		const string VersionPattern= @"[0-9]+(?:\.[0-9]+)+";
 		private bool AnyDirectReferenceLessThanTransitiveVersion(ICollection<PackageVersionItem> value)
 		{
 			if (!value.Any(k => !k.Transitive))
@@ -204,11 +224,23 @@ namespace ProjectHealthTest
 				return false;
 			else
 			{
-				Version directVersion = new Version(directReference.Version);
-				return value.Any(k => new Version(k.Version) > directVersion);
+				Version directVersion = GetVersion(directReference.Version);
+				return value.Any(k => DirectReferenceLessThanTransitiveVersion(directVersion, k) || DiferentDirectReferences(directVersion, k));
 			}
 		}
-
+		private bool DiferentDirectReferences(Version directVersion, PackageVersionItem k)
+		{
+			return (!k.Transitive && GetVersion(k.Version) != directVersion);
+		}
+		private bool DirectReferenceLessThanTransitiveVersion(Version directVersion, PackageVersionItem k)
+		{
+			return (k.Transitive && GetVersion(k.Version) > directVersion);
+		}
+		
+		private Version GetVersion(String versionString)
+		{
+			return Version.Parse(Regex.Match(versionString, VersionPattern).Value);
+		}
 		private bool IsTargetFramework(XmlDocument doc, string targetFramework)
 		{
 			XmlNode targetFrameworkNode = doc.SelectSingleNode(TARGET_FRAMEWORK);

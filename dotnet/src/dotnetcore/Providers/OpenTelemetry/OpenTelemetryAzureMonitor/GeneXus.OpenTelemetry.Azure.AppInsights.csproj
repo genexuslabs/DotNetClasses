@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<DefineConstants>NETCORE;</DefineConstants>
+		<AppDesignerFolder>Properties</AppDesignerFolder>
+		<SignAssembly>false</SignAssembly>
+		<AssemblyName>GeneXus.OpenTelemetry.Azure.AppInsights</AssemblyName>
+		<PackageTags>Azure Application Insights OpenTelemetry GeneXus</PackageTags>
+		<PackageId>GeneXus.OpenTelemetry.Azure.AppInsights</PackageId>
+		<NoWarn>NU1605</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+		
+		<PackageReference Include="Azure.Identity" Version="1.11.0" />
+		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.1.0" />
+		<PackageReference Include="log4net.Ext.Json" Version="2.0.10.1" />
+		<PackageReference Include="Microsoft.ApplicationInsights.Log4NetAppender" Version="2.22.0" />
+		
+		<PackageReference Include="OpenTelemetry" Version="1.7.0" />
+		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" />
+		
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\OpenTelemetry\GeneXus.OpenTelemetry.csproj" />
+	</ItemGroup>
+</Project>

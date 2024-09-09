@@ -1,16 +1,14 @@
 using System;
 using System.IO;
-using System.Collections;
-using log4net;
-using Outlook;
 using GeneXus.Utils;
+using Outlook;
 
 namespace GeneXus.Mail.Internals
 {
-	
+
 	internal class OutlookSession
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(OutlookSession));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<OutlookSession>();
 
 		private enum RecipientType
 		{

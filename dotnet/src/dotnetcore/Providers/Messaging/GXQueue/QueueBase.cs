@@ -1,16 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GeneXus.Services;
-using log4net;
 
 namespace GeneXus.Messaging.Common
 {
 	public abstract class QueueBase
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(QueueBase));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<QueueBase>();
 		internal GXService service;
 		public QueueBase()
 		{
@@ -22,7 +17,7 @@ namespace GeneXus.Messaging.Common
 			{
 				try
 				{
-					s = ServiceFactory.GetGXServices().Get(GXServices.QUEUE_SERVICE);
+					s = ServiceFactory.GetGXServices()?.Get(GXServices.QUEUE_SERVICE);
 				}
 				catch (Exception)
 				{

@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using GeneXus.Utils;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
-using GeneXus;
-using log4net;
+#endif
 using GeneXus.SD.Store.Model;
 using GeneXus.SD.Store.Platforms;
+using GeneXus.Utils;
 
 namespace GeneXus.SD.Store
 {
 	public class StoreManager
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(StoreManager));
-
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<StoreManager>();
 		public int ErrCode
 		{
 			get; set;
@@ -170,7 +169,7 @@ namespace GeneXus.SD.Store
 			return errCode;
 		}
 
-		public static bool GetConfigValue(string key, JObject storeConfig, out string value)
+		static bool GetConfigValue(string key, JObject storeConfig, out string value)
 		{
 			value = string.Empty;
 			if (storeConfig.Contains(key))

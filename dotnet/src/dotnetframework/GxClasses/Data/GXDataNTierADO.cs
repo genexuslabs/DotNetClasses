@@ -1,20 +1,19 @@
 using System;
-using System.Data;
 using System.Collections;
-using GeneXus.Data.ADO;
-using GeneXus.Configuration;
-using GeneXus.Utils;
-using System.IO;
-using log4net;
-using GeneXus.Application;
 using System.Collections.Generic;
-using GeneXus.Services;
+using System.Data;
+using System.IO;
 using System.Net;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Data.ADO;
+using GeneXus.Services;
 using GeneXus.Storage;
+using GeneXus.Utils;
 
 namespace GeneXus.Data.NTier.ADO
 {
-    public class GXFatErrorFieldGetter : IFieldGetter
+	public class GXFatErrorFieldGetter : IFieldGetter
     {
         GxCommand _gxDbCommand;
         public GXFatErrorFieldGetter(GxCommand gxDbCommand)
@@ -204,18 +203,18 @@ namespace GeneXus.Data.NTier.ADO
     }
     public class GXFatFieldGetter : IFieldGetter
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.NTier.ADO.GXFatFieldGetter));
+        static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFatFieldGetter>();
         IGxDbCommand _gxDbCommand;
         IDataReader _DR; 
         public GXFatFieldGetter(GxCommand gxDbCommand)
         {
             _gxDbCommand = gxDbCommand;
         }
-		void TraceRow(params string[] list)
+		void TraceRow(Func<string> buildMsg)
 		{
-			if (_gxDbCommand.HasMoreRows)
+			if (GXLogging.TraceEnabled(log) && _gxDbCommand.HasMoreRows)
 			{
-				GXLogging.Trace(log, list);
+				GXLogging.Trace(log, buildMsg);
 			}
 		}
         public IDataReader DataReader
@@ -226,57 +225,57 @@ namespace GeneXus.Data.NTier.ADO
         public short getShort(int id)
         {
 			short value = _gxDbCommand.Db.GetShort(_gxDbCommand, _DR, id - 1);
-			TraceRow("getShort - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(()=> $"getShort - index : {id}  value:{value}");
 			return value;
         }
         public int getInt(int id)
         {
             int value = _gxDbCommand.Db.GetInt(_gxDbCommand, _DR, id - 1);
-			TraceRow("getInt - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getInt - index : {id}  value:{value}");
 			return value;
 		}
 		public bool getBool(int id)
 		{
 			bool value = _gxDbCommand.Db.GetBoolean(_gxDbCommand, _DR, id - 1);
-			TraceRow("getBool - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getBool - index : {id}  value:{value}");
 			return value;
 		}
         public Guid getGuid(int id)
         {
             Guid value = _gxDbCommand.Db.GetGuid(_gxDbCommand, _DR, id - 1);
-			TraceRow("getGuid - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getGuid - index : {id}  value:{value}");
 			return value;
 		}
         public long getLong(int id)
         {
             long value = _gxDbCommand.Db.GetLong(_gxDbCommand, _DR, id - 1);
-			TraceRow("getLong - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getLong - index : {id}  value:{value}");
 			return value;
 
 		}
         public double getDouble(int id)
         {
             double value= _gxDbCommand.Db.GetDouble(_gxDbCommand, _DR, id - 1);
-			TraceRow("getDouble - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDouble - index : {id}  value:{value}");
 			return value;
 		}
         public Decimal getDecimal(int id)
         {
             Decimal value= _gxDbCommand.Db.GetDecimal(_gxDbCommand, _DR, id - 1);
-			TraceRow("getDecimal - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDecimal - index : {id}  value:{value}");
 			return value;
 
 		}
         public string getString(int id, int size)
         {
             String value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1, size);
-			TraceRow("getString - index : ", id.ToString(), " value:", (value!=null ? value.ToString(): string.Empty));
+			TraceRow(() => $"getString - index : {id} value:{(value!=null ? value.ToString(): string.Empty)}");
 			return value;
 		}
         public DateTime getDateTime(int id)
         {
             DateTime value = _gxDbCommand.Db.GetDateTime(_gxDbCommand, _DR, id - 1);
-			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDateTime - index : {id}  value:{value}");
 			return value;
 		}
         public DateTime getDateTime(int id, Boolean precision)
@@ -288,43 +287,51 @@ namespace GeneXus.Data.NTier.ADO
             else {
                 value = _gxDbCommand.Db.GetDateTime(_gxDbCommand, _DR, id - 1);
             }
-			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDateTime - index : {id}  value:{value}");
 			return value;
 		}
         public DateTime getDate(int id)
         {
             DateTime value = _gxDbCommand.Db.GetDate(_gxDbCommand, _DR, id - 1);
-			TraceRow("getDate - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getDate - index : {id}  value:{value}");
 			return value;
 		}
         public string getLongVarchar(int id)
         {
             string value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1);
-			TraceRow("getLongVarchar - index : ", id.ToString(), " value:", (value!=null ? value.ToString(): string.Empty));
+			TraceRow(() => $"getLongVarchar - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
         public DateTime getGXDateTime(int id, Boolean precision)
         {
-            DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.ClientTimeZone);
-			TraceRow("getDateTime - index : ", id.ToString(), " value:", value.ToString());
+#if NODATIME
+			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
+#else
+			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.ClientTimeZone);
+#endif
+			TraceRow(() => $"getDateTime - index : {id}  value:{value}");
 			return value;
 		}
         public DateTime getGXDateTime(int id)
         {
-			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id,false), _gxDbCommand.Conn.ClientTimeZone);
-			TraceRow("getGXDateTime - index : ", id.ToString(), " value:", value.ToString());
+#if NODATIME
+			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, false), _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
+#else
+			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, false), _gxDbCommand.Conn.ClientTimeZone);
+#endif
+			TraceRow(() => $"getGXDateTime - index : {id} value:{value.ToString()}");
 			return value;
 		}
 		public DateTime getGXDate(int id)
         {
             DateTime value = getDate(id);
-			TraceRow("getGXDate - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getGXDate - index : {id} value:{value.ToString()}");
 			return value;
 		}
         public string getBLOBFile(int id)
         {
             string value= getBLOBFile(id, "tmp", "");
-			TraceRow("getBLOBFile - index : ", id.ToString(), " value:", (value!=null ? value.ToString() : string.Empty));
+			TraceRow(() => $"getBLOBFile - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
 
@@ -332,7 +339,7 @@ namespace GeneXus.Data.NTier.ADO
         {
             string fileName = FileUtil.getTempFileName(_gxDbCommand.Conn.BlobPath, name, extension, GxFileType.Private);
             String value = getBLOBFile(id, extension, name, fileName, true);
-			TraceRow("getBLOBFile - index : ", id.ToString(), " value:", (value!=null ? value.ToString() : string.Empty));
+			TraceRow(() => $"getBLOBFile - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
 
@@ -382,7 +389,7 @@ namespace GeneXus.Data.NTier.ADO
 				}
 				streamClosed = true;
 
-				TraceRow("GetBlobFile fileName:" + fileName + ", retval bytes:" + retval);
+				TraceRow(() => $"GetBlobFile fileName:{fileName}, retval bytes:{retval}");
 
                 if (temporary)
                     GXFileWatcher.Instance.AddTemporaryFile(file, _gxDbCommand.Conn.DataStore.Context);
@@ -466,20 +473,20 @@ namespace GeneXus.Data.NTier.ADO
 		public string getVarchar(int id)
         {
             string value = _gxDbCommand.Db.GetString(_gxDbCommand, _DR, id - 1);
-			TraceRow("getVarchar - index : ", id.ToString(), " value:", (value != null ? value.ToString() : string.Empty));
+			TraceRow(() => $"getVarchar - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
         public decimal getBigDecimal(int id, int dec)
         {
 			decimal value =_gxDbCommand.Db.GetDecimal(_gxDbCommand, _DR, id - 1);
-			TraceRow("getBigDecimal - index : ", id.ToString(), " value:", value.ToString());
+			TraceRow(() => $"getBigDecimal - index : {id} value:{value.ToString()}");
 			return value;
 		}
 
         public IGeographicNative getGeospatial(int id)
         {
             IGeographicNative value = _gxDbCommand.Db.GetGeospatial(_gxDbCommand, _DR, id - 1);
-			TraceRow("getGeospatial - index : ", id.ToString(), " value:", (value != null ? value.ToString() : string.Empty));
+			TraceRow(() => $"getGeospatial - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
 
@@ -491,7 +498,7 @@ namespace GeneXus.Data.NTier.ADO
     }
     public class GXFatFieldSetter : IFieldSetter
     {
-		protected static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXFatFieldSetter));
+		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFatFieldSetter>();
 		GxCommand _gxDbCommand;
         public GXFatFieldSetter(GxCommand gxDbCommand)
         {
@@ -750,9 +757,13 @@ namespace GeneXus.Data.NTier.ADO
         }
         public void SetParameterDatetime(int id, DateTime parm, Boolean precision)
         {
-            DateTime shifted = parm;
-            shifted = DateTimeUtil.Local2DBserver(parm, _gxDbCommand.Conn.ClientTimeZone);
-            DateTime param2 = (precision) ? shifted : DateTimeUtil.ResetMilliseconds(shifted);
+			DateTime shifted = parm;
+#if NODATIME
+			shifted = DateTimeUtil.Local2DBserver(parm, _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
+#else
+			shifted = DateTimeUtil.Local2DBserver(parm, _gxDbCommand.Conn.ClientTimeZone);
+#endif
+			DateTime param2 = (precision) ? shifted : DateTimeUtil.ResetMilliseconds(shifted);
             _gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsDateTime((IDbDataParameter)_gxDbCommand.Parameters[id - 1], param2));
         }
         public void RegisterOutParameter(int id, Object type)
@@ -780,7 +791,7 @@ namespace GeneXus.Data.NTier.ADO
 	}
     public class Cursor : ICursor
     {
-        protected static readonly ILog log = log4net.LogManager.GetLogger(typeof(Cursor));
+        protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<Cursor>();
         protected int _state = 0;   
         protected string _name;
         protected string _stmt;
@@ -1145,22 +1156,25 @@ namespace GeneXus.Data.NTier.ADO
                 Object[] dynStmt = parent.getDynamicStatement(cursorNum, connectionProvider.context, connectionProvider.getDynConstraints());
                 if (dynStmt == null && parent is DataStoreHelperBase)
                     dynStmt = ((DataStoreHelperBase)parent).getDynamicStatement(cursorNum, connectionProvider.getDynConstraints());
-                _stmt = (string)dynStmt[0];
+				if (dynStmt != null)
+				{
+					_stmt = (string)dynStmt[0];
+					bindDynamicParms(_parmBinds);
+					List<object> newParmBinds = new List<object>();
+					parmHasValue = (short[])dynStmt[1];
+					for (int i = 0; i < _parmBinds.Length; i++)
+					{
+						if (parmHasValue[i] == 0)
+							newParmBinds.Add(_parmBinds[i]);
+					}
+					base.bindParms(newParmBinds.ToArray());
+					GXLogging.Debug(log, "ForEachCursor.preExecute, DynamicStatement: " + _stmt);
+					_gxDbCommand.CommandText = _stmt;
+					_gxDbCommand.AfterCreateCommand();
+				}
 
-				bindDynamicParms(_parmBinds);
-                List<object> newParmBinds = new List<object>();
-                parmHasValue = (short[])dynStmt[1];
-                for (int i = 0; i < _parmBinds.Length; i++)
-                {
-                    if (parmHasValue[i] == 0)
-                        newParmBinds.Add(_parmBinds[i]);
-                }
-                base.bindParms(newParmBinds.ToArray());
-                GXLogging.Debug(log, "ForEachCursor.preExecute, DynamicStatement: " + _stmt);
-                _gxDbCommand.CommandText = _stmt;
-				_gxDbCommand.AfterCreateCommand();
-            }
-            _gxDbCommand.DynamicStmt = dynamicStmt;
+			}
+			_gxDbCommand.DynamicStmt = dynamicStmt;
             _gxDbCommand.CursorDef = _cursorDef;
             return parmHasValue;
         }

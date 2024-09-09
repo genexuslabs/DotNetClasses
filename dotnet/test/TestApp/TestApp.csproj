@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<OutputPath>$(ProjectDir)..\DotNetCoreOpenTelemetryTest\bin\$(Configuration)</OutputPath>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\OpenTelemetry\OpenTelemetryAzureMonitor\GeneXus.OpenTelemetry.Azure.AppInsights.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="apps\testservice.svc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

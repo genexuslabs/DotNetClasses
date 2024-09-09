@@ -1,6 +1,5 @@
 using GeneXus.Application;
 using GeneXus.Configuration;
-using log4net;
 using System;
 using System.Collections;
 using System.Diagnostics;
@@ -19,6 +18,7 @@ using TZ4Net;
 using GxClasses.Helpers;
 using System.Net;
 #endif
+using NodaTime;
 using NUglify;
 using NUglify.Html;
 using GeneXus.Web.Security;
@@ -43,9 +43,10 @@ using GeneXus.Storage;
 using GeneXus.Services;
 using GeneXus.Http;
 using System.Security;
-using System.Threading.Tasks;
 using System.Drawing.Imaging;
 using System.Net.Http.Headers;
+using Image = System.Drawing.Image;
+using System.Net.Http;
 
 namespace GeneXus.Utils
 {
@@ -86,7 +87,7 @@ namespace GeneXus.Utils
 
 	public class NumberUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.NumberUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<NumberUtil>();
 
 		private NumberFormatInfo numberFormat;
 		public NumberUtil(NumberFormatInfo numFmt)
@@ -500,7 +501,7 @@ namespace GeneXus.Utils
 
 	public class StringUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.StringUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<StringUtil>();
 
 		private NumberFormatInfo numFmtInfo;
 		private const int STR_LEN_DEFAULT = 10;
@@ -509,7 +510,26 @@ namespace GeneXus.Utils
 		const char QMARK = '_';
 		static char[] numbersAndSep = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9', '-' };
 		static char[] numbers = new char[] { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+		internal static Dictionary<char, char> LogUserEntryWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890.;+-_=/[]{}\"':, @()?<>\\&".ToDictionary(item => item, item => item);
+		internal static Dictionary<char, char> HttpHeaderWhiteList = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890.;+-_=/[]{}\"':, @()?<>\\&".ToDictionary(item => item, item => item);
 
+		internal static string Sanitize(string input, Dictionary<char, char> WhiteList)
+		{
+			StringBuilder sanitizedInput = new StringBuilder();
+			if (!string.IsNullOrEmpty(input))
+			{
+				foreach (char c in input)
+				{
+					if (WhiteList.TryGetValue(c, out char wchar))
+						sanitizedInput.Append(wchar);
+				}
+				return sanitizedInput.ToString();
+			}
+			else
+			{
+				return String.Empty;
+			}
+		}
 		public StringUtil(NumberFormatInfo numFmt)
 		{
 			numFmtInfo = numFmt;
@@ -645,18 +665,83 @@ namespace GeneXus.Utils
 			NEGATIVE_VALUES = -1,
 			ZEROS = 0
 		}
-		private static string GxPictureToNetPicture(string gxpicture, bool separatorsAsLiterals, FORMAT_SECTION section)
+		const char ESCAPE_CHARACTER = '\\';
+		const char NUMBER_SIGN = '#';
+		const char QUESTION_MARK = '?';
+		const char BLANK = ' ';
+		static bool EscapedSymbol(string picture, int idx)
+		{
+			return (idx > 0 && picture[idx - 1] == ESCAPE_CHARACTER);
+		}
+		static int LeadingBlanks(string gxpicture)
+		{
+			int leadingBlanks = 0;
+			bool inBlanks = false;
+			if (gxpicture.Contains(QUESTION_MARK)) {
+				for (int i = 0; i < gxpicture.Length; i++)
+				{
+					if (gxpicture[i] == QUESTION_MARK && !EscapedSymbol(gxpicture, i))
+					{
+						inBlanks = true;
+					}
+					else if ((gxpicture[i] == '.') && !EscapedSymbol(gxpicture, i))
+					{
+						inBlanks = false;
+						break;
+					}
+
+					if (inBlanks)
+						leadingBlanks++;
+				}
+			}
+			return leadingBlanks;
+		}
+		static int TrailingBlanks(string gxpicture, out bool decimalsAsBlank)
+		{
+			int trailingBlanks = 0;
+			int sep = gxpicture.IndexOf('.');
+			decimalsAsBlank = false;
+			if (sep >= 0)
+			{
+				string rightPic = gxpicture.Substring(sep);
+				if (rightPic.Contains(QUESTION_MARK))
+				{
+					for (int i = gxpicture.Length-1; i >= 0; i--)
+					{
+						if (gxpicture[i] == QUESTION_MARK && !EscapedSymbol(gxpicture, i))
+							trailingBlanks++;
+						else if (gxpicture[i] == '.')
+						{
+							decimalsAsBlank = true;
+							break;
+						}
+						else if (gxpicture[i] == NUMBER_SIGN || gxpicture[i] == 'Z' || gxpicture[i] == '9')
+						{
+							decimalsAsBlank = false;
+							break;
+						}
+					}
+				}
+			}
+			return trailingBlanks;
+		}
+
+		private static string GxPictureToNetPicture(string gxpicture, bool separatorsAsLiterals, FORMAT_SECTION section, int digits, int decimals)
 		{
 			if (string.IsNullOrEmpty(gxpicture))
 				return string.Empty;
 
 			bool inDecimals = false;
 			StringBuilder strPicture = new StringBuilder("{0,");
-			strPicture.Append(gxpicture.Length);
+			strPicture.Append(PictureLength(gxpicture));
 			strPicture.Append(':');
 			bool blankwhenzero = true;
 			bool explicitSign = (gxpicture[0] == '+');
 			bool withoutMinusSign = (gxpicture[0] == '(' && gxpicture[gxpicture.Length - 1] == ')') || gxpicture.EndsWith("DB") || explicitSign;
+			int totalLeadingBlanks = LeadingBlanks(gxpicture);
+			int totalRighBlanks = TrailingBlanks(gxpicture, out bool decimalsAsBlank);
+			int lBlanks = 0;
+			int rDigits = 0;
 
 			if (section == FORMAT_SECTION.NEGATIVE_VALUES && withoutMinusSign)
 			//If it has a sign, then use the first section (which by default assigns only a negative sign).
@@ -668,9 +753,34 @@ namespace GeneXus.Utils
 				strPicture.Append(';');//Section Separator.
 				strPicture.Append(';');//Section Separator.
 			}
+			if (gxpicture.IndexOf(ESCAPE_CHARACTER) >= 0)
+			{
+				StringBuilder gxEscapedPicture = new StringBuilder();
+				for (int i = 0; i < gxpicture.Length; i++)
+				{
+
+					if (gxpicture[i] == ESCAPE_CHARACTER && i + 1 < gxpicture.Length && gxpicture[i + 1] == ESCAPE_CHARACTER)
+					{
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						gxEscapedPicture.Append(ESCAPE_CHARACTER);
+						i++;
+					}
+					else
+					{
+						gxEscapedPicture.Append(gxpicture[i]);
+					}
+				}
+				gxpicture = gxEscapedPicture.ToString();
+			}
 			for (int i = 0; i < gxpicture.Length; i++)
 			{
-				if (gxpicture[i] == 'Z')
+				bool inLiteral = EscapedSymbol(gxpicture, i);
+				if (inLiteral || gxpicture[i] == ESCAPE_CHARACTER)
+				{
+					strPicture.Append(gxpicture[i]);	
+				}
+				else if (gxpicture[i] == 'Z')
 				{
 					if (inDecimals)
 					{
@@ -681,7 +791,39 @@ namespace GeneXus.Utils
 						strPicture.Append('0');
 					}
 					else
-						strPicture.Append('#');
+						strPicture.Append(NUMBER_SIGN);
+				}
+				else if (gxpicture[i] == NUMBER_SIGN)
+				{
+					strPicture.Append(NUMBER_SIGN);
+				}
+				else if (gxpicture[i] == QUESTION_MARK)
+				{
+					if (inDecimals)
+					{
+						if (rDigits >= decimals && rDigits < totalRighBlanks)
+						{
+							strPicture.Append(BLANK);
+						}
+						else
+						{
+							strPicture.Append(NUMBER_SIGN);
+						}
+						rDigits++;
+					}
+					else
+					{
+						if (lBlanks < (totalLeadingBlanks - digits))
+						{
+							strPicture.Append(BLANK);
+							lBlanks++;
+						}
+						else
+						{
+							strPicture.Append(NUMBER_SIGN);
+						}
+					}
+
 				}
 				else if (gxpicture[i] == '9')
 				{
@@ -691,11 +833,20 @@ namespace GeneXus.Utils
 				else if (gxpicture[i] == '.')
 				{
 					inDecimals = true;
-					if (i > 0 && strPicture[strPicture.Length - 1] == '#') strPicture[strPicture.Length - 1] = '0';
+					if (i > 0 && strPicture[strPicture.Length - 1] == NUMBER_SIGN) strPicture[strPicture.Length - 1] = '0';
 					if (separatorsAsLiterals)
 						strPicture.Append("\".\"");
 					else
-						strPicture.Append(gxpicture[i]);
+					{
+						if (decimalsAsBlank && decimals == 0)
+						{
+							strPicture.Append(BLANK); //Replace decimal separator by blank
+						}
+						else
+						{
+							strPicture.Append(gxpicture[i]);
+						}
+					}
 				}
 				else if (gxpicture[i] == ',')
 				{
@@ -703,6 +854,10 @@ namespace GeneXus.Utils
 						strPicture.Append("\",\"");
 					else
 						strPicture.Append(gxpicture[i]);
+				}
+				else if (gxpicture[i] == BLANK)
+				{
+					strPicture.Append(BLANK);
 				}
 				else
 				{
@@ -720,7 +875,7 @@ namespace GeneXus.Utils
 							//Pictures (99.9) => 12.5    -12.5
 							if (section != FORMAT_SECTION.NEGATIVE_VALUES && withoutMinusSign && (i == 0 || i == gxpicture.Length - 1))
 							{
-								strPicture.Append(' ');
+								strPicture.Append(BLANK);
 							}
 							else
 							{
@@ -731,7 +886,7 @@ namespace GeneXus.Utils
 							//Pictures +99.9 =>  +12.5       -12.5
 							if (explicitSign && i == 0 && section == FORMAT_SECTION.ZEROS)
 							{
-								strPicture.Append(' ');
+								strPicture.Append(BLANK);
 							}
 							else if (explicitSign && i == 0 && section == FORMAT_SECTION.NEGATIVE_VALUES)
 							{
@@ -749,7 +904,7 @@ namespace GeneXus.Utils
 								if (section == FORMAT_SECTION.POSITIVE_VALUES)
 									strPicture.Append('C');
 								else
-									strPicture.Append(' ');
+									strPicture.Append(BLANK);
 							}
 							else
 							{
@@ -762,7 +917,7 @@ namespace GeneXus.Utils
 								if (section == FORMAT_SECTION.POSITIVE_VALUES)
 									strPicture.Append('R');
 								else
-									strPicture.Append(' ');
+									strPicture.Append(BLANK);
 							}
 							else
 							{
@@ -779,14 +934,29 @@ namespace GeneXus.Utils
 			}
 			if (blankwhenzero && section == FORMAT_SECTION.ZEROS)//Z,ZZZ,ZZZ.ZZ format 0.00 to "". sac.20145
 			{
-				return Replicate(' ', gxpicture.Length);
+				return Replicate(BLANK, gxpicture.Length);
 			}
 			else
 			{
 				return strPicture.Append('}').ToString();
 			}
 		}
-		static bool useLiteralSeparators(string gxpicture)
+
+		private static int PictureLength(string gxpicture)
+		{
+			int count = 0;
+			if (gxpicture.Contains(ESCAPE_CHARACTER))
+			{
+				foreach (char ch in gxpicture)
+				{
+					if (ch == ESCAPE_CHARACTER)
+						count++;
+				}
+			}
+			return gxpicture.Length - count;
+		}
+
+		static bool UseLiteralSeparators(string gxpicture)
 		{
 
 			// If it has non-numerical characters, then the separators are used as literals
@@ -841,7 +1011,7 @@ namespace GeneXus.Utils
 					}
 					else
 					{
-						str.Append('#');
+						str.Append(NUMBER_SIGN);
 					}
 				}
 			}
@@ -857,14 +1027,14 @@ namespace GeneXus.Utils
 		}
 		public static string Concat(string init, string last)
 		{
-			char[] trimChars = { ' ' };
+			char[] trimChars = { BLANK };
 			StringBuilder fmtString = new StringBuilder(init.TrimEnd(trimChars));
 			fmtString.Append(last);
 			return fmtString.ToString();
 		}
 		public static string Concat(string init, string last, string separator)
 		{
-			char[] trimChars = { ' ' };
+			char[] trimChars = { BLANK };
 			StringBuilder fmtString = new StringBuilder(init.TrimEnd(trimChars));
 			fmtString.Append(separator);
 			fmtString.Append(last);
@@ -991,7 +1161,7 @@ namespace GeneXus.Utils
 		static public string Trim(string s)
 		{
 			if (!string.IsNullOrEmpty(s))
-				return s.Trim(' ');
+				return s.Trim(BLANK);
 			else
 				return s;
 		}
@@ -1000,8 +1170,8 @@ namespace GeneXus.Utils
 			if (!string.IsNullOrEmpty(s))
 			{
 				int len = s.Length;
-				if (len > 0 && s[len - 1] == ' ')
-					return s.TrimEnd(' ');
+				if (len > 0 && s[len - 1] == BLANK)
+					return s.TrimEnd(BLANK);
 				else
 					return s;
 			}
@@ -1013,8 +1183,8 @@ namespace GeneXus.Utils
 			if (!string.IsNullOrEmpty(s))
 			{
 				int len = s.Length;
-				if (len > 0 && s[0] == ' ')
-					return s.TrimStart(' ');
+				if (len > 0 && s[0] == BLANK)
+					return s.TrimStart(BLANK);
 				else
 					return s;
 			}
@@ -1146,9 +1316,14 @@ namespace GeneXus.Utils
 			{
 				section = FORMAT_SECTION.ZEROS;
 			}
-			bool separatorsAsLiterals = useLiteralSeparators(gxpicture);
+			bool separatorsAsLiterals = UseLiteralSeparators(gxpicture);
+			string invariantStrValue = Math.Abs(value).ToString(CultureInfo.InvariantCulture.NumberFormat);
+			int decSeparatorIdx = invariantStrValue.IndexOf(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator);
 
-			string picture = GxPictureToNetPicture(gxpicture, separatorsAsLiterals, section);
+			int digits = WholeDigits(value, invariantStrValue, decSeparatorIdx);
+			int decimals = DecimalDigits(invariantStrValue, decSeparatorIdx);
+
+			string picture = GxPictureToNetPicture(gxpicture, separatorsAsLiterals, section, digits, decimals);
 			//It must consider format because it can have other types of characters that are not Z or 9 or. neither ,.
 			string res;
 			if (!string.IsNullOrEmpty(picture))
@@ -1157,7 +1332,7 @@ namespace GeneXus.Utils
 			}
 			else
 			{
-				res = value.ToString(CultureInfo.InvariantCulture.NumberFormat);
+				res = invariantStrValue;
 			}
 			if (separatorsAsLiterals)
 			{
@@ -1171,7 +1346,35 @@ namespace GeneXus.Utils
 			{
 				return ReplaceSeparators(res, numFmtInfo.NumberDecimalSeparator, numFmtInfo.NumberGroupSeparator);
 			}
+		}
+		int DecimalDigits(string invariantStrValue, int decSeparatorIdx)
+		{
+			int decimals;
+			if (decSeparatorIdx < 0)
+				decimals = 0;
+			else
+				decimals = invariantStrValue.Length - decSeparatorIdx - 1;
 
+			return decimals;
+		}
+		int WholeDigits(decimal value, string invariantStrValue, int decSeparatorIdx)
+		{
+			int digits;
+			if (value == 0)
+			{
+				digits = 1;
+			}
+			else if (value < 1 && value >= 0)
+				digits = 0;
+			else if (decSeparatorIdx < 0)
+			{
+				digits = invariantStrValue.Length;
+			}
+			else
+			{
+				digits = decSeparatorIdx;
+			}
+			return digits;
 		}
 		string FormatNumber(string s, string p)
 		{
@@ -1198,7 +1401,7 @@ namespace GeneXus.Utils
 				pStart = p.Length;
 			else
 				pDec = p.Length - pStart;               // decimal count (including point)
-			StringBuilder result = new StringBuilder(new string(' ', Math.Max(p.Length, s.Length)));
+			StringBuilder result = new StringBuilder(new string(BLANK, Math.Max(p.Length, s.Length)));
 			// Process the left of the decimal point
 			j = sStart - 1;
 			k = pStart - 1;
@@ -1209,7 +1412,7 @@ namespace GeneXus.Utils
 					case '9':
 						if (j < 0)
 							result[k--] = '0';
-						else if (s[j] == ' ')
+						else if (s[j] == BLANK)
 							result[k--] = '0';
 						else
 							result[k--] = s[j];
@@ -1217,10 +1420,10 @@ namespace GeneXus.Utils
 						break;
 					case 'Z':
 						if (j < 0)
-							result[k--] = ' ';
+							result[k--] = BLANK;
 						else if (leftZ || leftZero(s, j))
 						{
-							result[k--] = ' ';
+							result[k--] = BLANK;
 							leftZ = true;
 						}
 						else
@@ -1268,7 +1471,7 @@ namespace GeneXus.Utils
 						case 'Z':
 							if (rightZ || rightZero(s, j))
 							{
-								result[i] = ' ';
+								result[i] = BLANK;
 								rightZ = true;
 							}
 							else if (j < s.Length)
@@ -1372,7 +1575,7 @@ namespace GeneXus.Utils
 		}
 		public static string Space(int spaces)
 		{
-			return new string(' ', spaces);
+			return new string(BLANK, spaces);
 		}
 		public static string Right(string text, int size)
 		{
@@ -1398,7 +1601,7 @@ namespace GeneXus.Utils
 
 		static public bool Like(string str, string ptrn)
 		{
-			return Like(str, ptrn, ' ');
+			return Like(str, ptrn, BLANK);
 		}
 		static public bool Like(string str, string ptrn, char escape)
 		{
@@ -1423,10 +1626,10 @@ namespace GeneXus.Utils
 			srchPtr = 0;
 			scapeCount = 0;
 
-			wildChr = ' ';
-			srchChr = ' ';
+			wildChr = BLANK;
+			srchChr = BLANK;
 
-			bool useEscape = escape != ' ';
+			bool useEscape = escape != BLANK;
 			bool isEscape = false;
 			bool applyEscape = false;
 
@@ -1443,7 +1646,7 @@ namespace GeneXus.Utils
 					if (srchPtr <= srchLen)
 						srchChr = str[srchPtr - scapeCount];
 					else
-						srchChr = ' ';
+						srchChr = BLANK;
 				}
 
 				if (isEscape)
@@ -1604,7 +1807,7 @@ namespace GeneXus.Utils
 					sb.Append("\\r");
 				else
 				{
-					if (ch < ' ')
+					if (ch < BLANK)
 					{
 						sb.Append("\\u");
 						sb.Append(((int)ch).ToString("x4", CultureInfo.InvariantCulture));
@@ -1948,6 +2151,12 @@ namespace GeneXus.Utils
 			return dtu.ParseDateOrDTimeParm(valueString);
 		}
 	}
+	public enum EncryptionType
+	{
+		SESSION,
+		SITE,
+		NONE
+	}
 	public enum AMPMFmt
 	{
 		T24,
@@ -1966,7 +2175,8 @@ namespace GeneXus.Utils
 	}
 	public class DateTimeUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.DateTimeUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<DateTimeUtil>();
+
 		private CultureInfo cultureInfo;
 		public static bool useConfigForDates;
 		public static bool useConfigForTimes;
@@ -1993,6 +2203,11 @@ namespace GeneXus.Utils
 			YMD,
 			MDY,
 			DMY
+		}
+
+		internal static string LocalTimeZoneId
+		{
+			get { return DateTimeZoneProviders.Tzdb.GetSystemDefault().Id; }
 		}
 
 		public DateTimeUtil(CultureInfo culture, AMPMFmt amPmFormat)
@@ -2388,9 +2603,36 @@ namespace GeneXus.Utils
 		{
 			if (context == null)
 				context = GxContext.Current;
+#if NODATIME
+			TimeSpan ts = CurrentOffset(context.GetTimeZone());
+#else
 			TimeSpan ts = CurrentOffset(context.GetOlsonTimeZone());
+#endif
 			return (short)(ts.Hours * 60 + ts.Minutes);
 		}
+
+		static private TimeSpan CurrentOffset(string clientTimeZone)
+		{
+			DateTimeZone clientTimeZoneObj = DateTimeZoneProviders.Tzdb.GetZoneOrNull(clientTimeZone);
+			if (clientTimeZoneObj == null)
+				clientTimeZoneObj = DateTimeZoneProviders.Tzdb.GetZoneOrNull(LocalTimeZoneId);
+			Instant now = SystemClock.Instance.GetCurrentInstant();
+
+			try
+			{
+				Offset offset = clientTimeZoneObj.GetUtcOffset(now);
+				return offset.ToTimeSpan();
+			}
+			catch (ArgumentOutOfRangeException)
+			{
+				Duration oneHour = Duration.FromHours(1);
+				Instant oneHourAgo = now.Minus(oneHour);
+				//Avoid InSpringForwardGap/InFallBackRange condition
+				Offset offset = clientTimeZoneObj.GetUtcOffset(oneHourAgo);
+				return offset.ToTimeSpan();
+			}
+		}
+
 		static private TimeSpan CurrentOffset(OlsonTimeZone clientTimeZone)
 		{
 			DateTime currentDate = DateTime.Now;
@@ -2428,11 +2670,20 @@ namespace GeneXus.Utils
 			return TimeZone.CurrentTimeZone.ToUniversalTime(dt);
 #endif
 		}
-
+		static DateTime ConvertFromLocal(DateTime dt, IGxContext context)
+		{
+#if NODATIME
+			return ConvertDateTime(DateTime.Now, LocalTimeZoneId, context.GetTimeZone());
+#else
+			OlsonTimeZone fromTimezone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
+			OlsonTimeZone toTimezone = context.GetOlsonTimeZone();
+			return ConvertDateTime(dt, fromTimezone, toTimezone);
+#endif
+		}
 		static public DateTime Today(IGxContext context)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ResetTime(ConvertDateTime(DateTime.Now, TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone())));
+				return ResetMillisecondsTicks(ResetTime(ConvertFromLocal(DateTime.Now, context)));
 			return ResetMillisecondsTicks(DateTime.Today);
 		}
 		static public DateTime Now(IGxContext context)
@@ -2443,7 +2694,7 @@ namespace GeneXus.Utils
 		static public DateTime NowTicks(IGxContext context)
 		{
 			if (Preferences.useTimezoneFix())
-				return ConvertDateTime(DateTime.Now, TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone());
+				return ConvertFromLocal(DateTime.Now, context);
 			return DateTime.Now;
 		}
 
@@ -2464,7 +2715,7 @@ namespace GeneXus.Utils
 			{
 				try
 				{
-					return new DateTime(fourDigitsYear, month, day, cultureInfo.Calendar);
+					return new DateTime(fourDigitsYear, month, day, cultureInfo.DateTimeFormat.Calendar);
 				}
 				catch
 				{
@@ -2588,18 +2839,18 @@ namespace GeneXus.Utils
 			}
 			return nullDate;
 		}
-		internal static DateTime CToDT2(string jsonDate) {
+		internal static DateTime CToDT2(string jsonDate, IGxContext context) {
 
 			if (!string.IsNullOrEmpty(jsonDate) && (jsonDate.Contains(ISO_8601_TIME_SEPARATOR) || jsonDate.Contains(ISO_8601_TIME_SEPARATOR_1)))
 			{
-				return CToT2(jsonDate);
+				return CToT2(jsonDate, context);
 			}
 			else
 			{
 				return CToD2(jsonDate);
 			}
 		}
-		public static DateTime CToT2(string value)
+		public static DateTime CToT2(string value, IGxContext context)
 		{
 			if (isNullJsonDate(value))
 				return nullDate;
@@ -2616,38 +2867,76 @@ namespace GeneXus.Utils
 					}
 				}
 				if (Preferences.useTimezoneFix())
-					ret = fromUniversalTime(ret);
+				{
+					if (context==null)
+						ret = fromUniversalTime(ret);
+					else
+						ret = fromUniversalTime(ret, context);
+				}
 				return ret;
 			}
 		}
+		//[Obsolete("CToT2 is deprecated, use CToT2(string, IGxContext) instead", false)]
+		public static DateTime CToT2(string value)
+		{
+			return CToT2(value, null);
+		}
+		//[Obsolete("TToC2 is deprecated, use TToC2(DateTime, IGxContext) instead", false)]
 		public static string TToC2(DateTime dt)
 		{
 			return TToC2(dt, true);
 		}
+		public static string TToC2(DateTime dt, IGxContext context)
+		{
+			return TToC2(dt, true, context);
+		}
+		//[Obsolete("TToC2 is deprecated, use TToC2(DateTime, bool, IGxContext) instead", false)]
 		public static string TToC2(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, null, toUTC);
 		}
+		internal static string TToC2(DateTime dt, bool toUTC, IGxContext context)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00", JsonDateFormat, context, toUTC);
+		}
+		//[Obsolete("TToC3 is deprecated, use TToC3(DateTime, IGxContext) instead", false)]
 
 		public static string TToC3(DateTime dt)
 		{
 			return TToC3(dt, true);
 		}
+		public static string TToC3(DateTime dt, IGxContext context)
+		{
+			return TToC3(dt, true, context);
+		}
 		internal const string JsonDateFormatMillis = "yyyy-MM-ddTHH:mm:ss.fff";
 		internal const string JsonDateFormat = "yyyy-MM-ddTHH:mm:ss";
-		
+
+		//[Obsolete("TToC3 is deprecated, use TToC3(DateTime, bool, IGxContext) instead", false)]
 		public static string TToC3(DateTime dt, bool toUTC)
 		{
-			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, toUTC);
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, null, toUTC);
+		}
+		internal static string TToC3(DateTime dt, bool toUTC, IGxContext context)
+		{
+			return TToCRest(dt, "0000-00-00T00:00:00.000", JsonDateFormatMillis, context, toUTC);
 		}
 
-		static string TToCRest(DateTime dt, String nullString, String formatStr, bool toUTC=true)
+		static string TToCRest(DateTime dt, String nullString, String formatStr, IGxContext context, bool toUTC=true)
 		{
 			if (dt == nullDate)
 				return FormatEmptyDate(nullString);
 			else
 			{
-				DateTime ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt) : dt) : dt;
+				DateTime ret;
+				if (context != null)
+				{
+					ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt, context) : dt) : dt;
+				}
+				else
+				{
+					ret = Preferences.useTimezoneFix() ? (toUTC ? toUniversalTime(dt) : dt) : dt;
+				}
 				return ret.ToString(formatStr, CultureInfo.InvariantCulture);
 			}
 		}
@@ -2688,6 +2977,8 @@ namespace GeneXus.Utils
 
 		static public byte Dow(DateTime dt)
 		{
+			if (dt == nullDate)
+				return 0;
 			return (byte)(dt.DayOfWeek + 1);
 		}
 		static public string CDow(DateTime dt, string lang)
@@ -2886,7 +3177,7 @@ namespace GeneXus.Utils
 			if (dataStore == null)
 				return ServerNowMs(context, new DataStoreHelperBase().getDataStoreName());
 			if (Preferences.useTimezoneFix())
-				return ResetMicroseconds(ConvertDateTime(dataStore.serverNowMs(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMicroseconds(ConvertFromLocal(dataStore.serverNowMs(), context));
 			return ResetMicroseconds(dataStore.serverNowMs());
 		}
 		static public DateTime ServerNow(IGxContext context, IDataStoreProvider dataStore)
@@ -2894,7 +3185,7 @@ namespace GeneXus.Utils
 			if (dataStore == null)
 				return ServerNow(context, new DataStoreHelperBase().getDataStoreName());
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ConvertDateTime(dataStore.serverNow(), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMillisecondsTicks(ConvertFromLocal(dataStore.serverNow(), context));
 			return ResetMillisecondsTicks(dataStore.serverNow());
 		}
 #if !NETCORE
@@ -2903,13 +3194,13 @@ namespace GeneXus.Utils
 		static public DateTime ServerNowMs(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMicroseconds( ConvertDateTime(context.ServerNowMs(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMicroseconds( ConvertFromLocal(context.ServerNowMs(dataSource), context));
 			return ResetMicroseconds(context.ServerNowMs(dataSource));
 		}
 		static public DateTime ServerNow(IGxContext context, string dataSource)
 		{
 			if (Preferences.useTimezoneFix())
-				return ResetMillisecondsTicks(ConvertDateTime(context.ServerNow(dataSource), TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id), context.GetOlsonTimeZone()));
+				return ResetMillisecondsTicks(ConvertFromLocal(context.ServerNow(dataSource), context));
 			return ResetMillisecondsTicks(context.ServerNow(dataSource));
 		}
 		public static string ServerTime(IGxContext context, IDataStoreProvider dataStore)
@@ -3086,6 +3377,7 @@ namespace GeneXus.Utils
 			if (hasMilliseconds) sDate += StringUtil.PadL(StringUtil.Str(MilliSecond(date), 3, 0), 3, '0');
 			return (sDate);
 		}
+
 		private static DateTime ConvertDateTime(DateTime dt, OlsonTimeZone FromTimezone, OlsonTimeZone ToTimezone)
 		{
 			if (isNullDate(dt))
@@ -3126,7 +3418,7 @@ namespace GeneXus.Utils
 			}
 			return dtconverted.AddMilliseconds(milliSeconds);
 		}
-
+		[Obsolete("Local2DBserver is deprecated. Use Local2DBserver(DateTime dt, string clientTimezone) instead.", false)]
 		public static DateTime Local2DBserver(DateTime dt, OlsonTimeZone ClientTimezone)
 		{
 			try
@@ -3144,6 +3436,7 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		[Obsolete("DBserver2local is deprecated. Use DBserver2local(DateTime dt, string clientTimezone) instead.", false)]
 		public static DateTime DBserver2local(DateTime dt, OlsonTimeZone ClientTimezone)
 		{
 			try
@@ -3160,6 +3453,73 @@ namespace GeneXus.Utils
 				throw ex;
 			}
 		}
+		private static DateTime OlsonMinTime = new DateTime(1901, 12, 13, 20, 45, 52);
+		private static DateTime ConvertDateTime(DateTime dt, string fromTimezone, string toTimezone)
+		{
+			if (isNullDate(dt))
+				return dt;
+
+			TimeSpan offset;
+			DateTime dtconverted;
+			int milliSeconds = dt.Millisecond;
+			dt = ResetMilliseconds(dt);
+
+			DateTime ret = toUniversalTime(dt, fromTimezone);
+
+
+			if (!ValidTimeZone(toTimezone))
+				toTimezone = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+
+			if (ret < OlsonMinTime)
+			{
+				offset = CurrentOffset(toTimezone);
+				dtconverted = ret + offset; 
+			}
+			else
+			{
+				dtconverted = fromUniversalTime(ret, toTimezone);
+			}
+			return dtconverted.AddMilliseconds(milliSeconds);
+		}
+		internal static bool ValidTimeZone(string timeZone)
+		{
+			return !string.IsNullOrEmpty(timeZone) && DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZone) != null;
+		}
+
+		internal static DateTime Local2DBserver(DateTime dt, string clientTimezone)
+		{
+			try
+			{
+				Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+				if (clientTimezone == null || isNullDate(dt) || storagePty == Preferences.StorageTimeZonePty.Undefined)
+					return dt;
+				string toTimezone = (storagePty == Preferences.StorageTimeZonePty.Utc) ? DateTimeZone.Utc.Id : LocalTimeZoneId;
+				return ConvertDateTime(dt, clientTimezone, toTimezone);
+
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "Local2DBserver error");
+				throw ex;
+			}
+		}
+		public static DateTime DBserver2local(DateTime dt, string clientTimezone)
+		{
+			try
+			{
+				Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+				if (clientTimezone == null || isNullDate(dt) || storagePty == Preferences.StorageTimeZonePty.Undefined)
+					return dt;
+				string fromTimezone = (storagePty == Preferences.StorageTimeZonePty.Utc) ? DateTimeZone.Utc.Id : LocalTimeZoneId;
+				return ConvertDateTime(dt, fromTimezone, clientTimezone);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, ex, "DBserver2local error");
+				throw ex;
+			}
+		}
+
 		public static string FormatDateTimeParmMS(DateTime date)
 		{
 			if (date.Equals(nullDate))
@@ -3247,6 +3607,73 @@ namespace GeneXus.Utils
 		{
 			return new DateTime(datetTime1970.Ticks + ticks * timeConversionFactor);
 		}
+		static private DateTime fromUniversalTime(DateTime dt, string toTimezone)
+		{
+			int milliSeconds = 0;
+
+			if (!isNullDate(dt))
+			{
+				milliSeconds = dt.Millisecond;
+				dt = ResetMilliseconds(dt);
+			}
+			DateTime ret;
+			TimeSpan offset;
+			if (string.IsNullOrEmpty(toTimezone))
+				ret = CurrentTimeZoneToLocalTime(dt);
+			else
+			{
+				if (dt < OlsonMinTime)
+				{
+					offset = CurrentOffset(toTimezone);
+					ret = dt + offset; 
+				}
+				else
+				{
+					DateTimeZone toTimeZone = DateTimeZoneProviders.Tzdb[toTimezone];
+					DateTime dateTimeUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+					Instant instant = Instant.FromDateTimeUtc(dateTimeUtc);
+					ZonedDateTime zonedDateTime = instant.InZone(toTimeZone);
+					ret = zonedDateTime.ToDateTimeUnspecified();
+				}
+			}
+			return ret.AddMilliseconds(milliSeconds);
+		}
+		static private DateTime toUniversalTime(DateTime dt, string fromTimezone)
+		{
+			if (fromTimezone == DateTimeZone.Utc.Id)
+				return dt;
+
+			int milliSeconds = 0;
+
+			if (!isNullDate(dt))
+			{
+				milliSeconds = dt.Millisecond;
+				dt = DateTimeUtil.ResetMilliseconds(dt);
+			}
+
+			DateTime ret;
+			TimeSpan offset;
+			if (string.IsNullOrEmpty(fromTimezone))
+				ret = CurrentTimeZoneToUniversalTime(dt);
+			else
+			{
+				if (dt < OlsonMinTime)
+				{
+					offset = CurrentOffset(fromTimezone);
+					ret = dt - offset; 
+				}
+				else
+				{
+
+					DateTimeZone localZone = DateTimeZoneProviders.Tzdb[fromTimezone];
+					ZonedDateTime localDateTime = LocalDateTime.FromDateTime(dt).InZoneLeniently(localZone);
+					ZonedDateTime utcDateTime = localDateTime.ToInstant().InUtc();
+					ret = utcDateTime.ToDateTimeUtc();
+				}
+			}
+			return ret.AddMilliseconds(milliSeconds);
+		}
+
 		static private DateTime fromUniversalTime(DateTime dt, OlsonTimeZone ToTimezone)
 		{
 
@@ -3330,35 +3757,62 @@ namespace GeneXus.Utils
 			else
 				return isNullDate(dt);
 		}
-
+		//[Obsolete("fromUniversalTime is deprecated, use fromUniversalTime(DateTime, IGxContext) instead", false)]
 		static public DateTime fromUniversalTime(DateTime dt)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, GxContext.Current.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, GxContext.Current.GetOlsonTimeZone());
+#endif
 		}
-
+		static public DateTime fromUniversalTime(DateTime dt, IGxContext context)
+		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, context.GetTimeZone());
+#else
+			return isNullDateCompatible(dt) ? dt : fromUniversalTime(dt, context.GetOlsonTimeZone());
+#endif
+		}
+		//[Obsolete("toUniversalTime is deprecated, use toUniversalTime(DateTime, IGxContext) instead", false)]
 		static public DateTime toUniversalTime(DateTime dt)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, GxContext.Current.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, GxContext.Current.GetOlsonTimeZone());
+#endif
 		}
 
 		static public DateTime toUniversalTime(DateTime dt, IGxContext context)
 		{
+#if NODATIME
+			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, context.GetTimeZone());
+#else
 			return isNullDateCompatible(dt) ? dt : toUniversalTime(dt, context.GetOlsonTimeZone());
+#endif
 		}
 
 		static public DateTime FromTimeZone(DateTime dt, String sTZ, IGxContext context)
 		{
+#if NODATIME
+			if (ValidTimeZone(sTZ))
+				return ConvertDateTime(dt, sTZ, context.GetTimeZone());
+			else
+				return dt;
+#else
 			OlsonTimeZone fromTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
 			if (fromTimeZone != null)
 				return ConvertDateTime(dt, fromTimeZone, context.GetOlsonTimeZone());
 			return dt;
+#endif
 		}
 
 	}
 
 	public class FileUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.FileUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<FileUtil>();
 		public static byte DeleteFile(string fileName)
 		{
 			try
@@ -3433,7 +3887,9 @@ namespace GeneXus.Utils
 #endif
 		public static string GetStartupDirectory()
 		{
+#pragma warning disable SYSLIB0044
 			string dir = Assembly.GetCallingAssembly().GetName().CodeBase;
+#pragma warning restore SYSLIB0012
 			Uri uri = new Uri(dir);
 			return Path.GetDirectoryName(uri.LocalPath);
 		}
@@ -3509,8 +3965,7 @@ namespace GeneXus.Utils
 			}
 			catch
 			{
-				FileInfo fi = new FileInfo(FileName); //Local file that do not exist
-				extension = fi.Extension;
+				extension = Path.GetExtension(FileName); //Local file that do not exist
 			}
 			int extStart = extension.LastIndexOf('.');
 			if (extStart == -1)
@@ -3789,7 +4244,7 @@ namespace GeneXus.Utils
 
 	public class GXUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXUtil>();
 #if !NETCORE
 		static Hashtable domains;
 		static string DOMAINS_FILE;
@@ -4602,35 +5057,35 @@ namespace GeneXus.Utils
 			GxStringCollection usernames = new GxStringCollection();
 			try
 			{
-				DirectoryEntry Entry = GetAppPoolEntry();
-				if (Entry != null)
-				{
-					PropertyCollection Properties = Entry.Properties;
-					string AppPoolIdentityType = Properties["AppPoolIdentityType"][0].ToString().Trim();
-					switch (AppPoolIdentityType)
+				using (DirectoryEntry Entry = GetAppPoolEntry()) { 
+					if (Entry != null)
 					{
-						case APPPOOL_IDENTITY_TYPE_APPPOOL:
+						PropertyCollection Properties = Entry.Properties;
+						string AppPoolIdentityType = Properties["AppPoolIdentityType"][0].ToString().Trim();
+						switch (AppPoolIdentityType)
+						{
+							case APPPOOL_IDENTITY_TYPE_APPPOOL:
 #if NETCORE
-							usernames.Add(IDENTITY_NETCORE_APPPOOL);
+								usernames.Add(IDENTITY_NETCORE_APPPOOL);
 #else
 							usernames.Add(IDENTITY_CLASSIC_APPPOOL);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW35);
 							usernames.Add(IDENTITY_INTEGRATED_APPPOOL_FW40);
 #endif
-							break;
-						case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
-						case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
-							usernames.Add(IDENTITY_NETWORK_SERVICE);
-							break;
-						case APPPOOL_IDENTITY_TYPE_LOCALSERVICE:
-							usernames.Add(IDENTITY_LOCAL_SERVICE);
-							break;
-						case APPPOOL_IDENTITY_TYPE_SPECIFICUSER:
-							usernames.Add(Properties["WAMUserName"][0].ToString());
-							break;
+								break;
+							case APPPOOL_IDENTITY_TYPE_NETWORKSERVICE:
+							case APPPOOL_IDENTITY_TYPE_LOCALSYSTEM:
+								usernames.Add(IDENTITY_NETWORK_SERVICE);
+								break;
+							case APPPOOL_IDENTITY_TYPE_LOCALSERVICE:
+								usernames.Add(IDENTITY_LOCAL_SERVICE);
+								break;
+							case APPPOOL_IDENTITY_TYPE_SPECIFICUSER:
+								usernames.Add(Properties["WAMUserName"][0].ToString());
+								break;
+						}
 					}
 				}
-
 			}
 			catch (Exception ex)
 			{
@@ -5230,14 +5685,21 @@ namespace GeneXus.Utils
 		}
 		public static void ErrorToMessages(string errorId, Exception ex, GXBaseCollection<SdtMessages_Message> Messages)
 		{
+			ErrorToMessages(errorId, ex, Messages, true);
+		}
+		internal static void ErrorToMessages(string errorId, Exception ex, GXBaseCollection<SdtMessages_Message> Messages, bool parseInnerExceptions)
+		{
 			if (Messages != null && ex != null)
 			{
 				StringBuilder str = new StringBuilder();
 				str.Append(ex.Message);
-				while (ex.InnerException != null)
+				if (parseInnerExceptions)
 				{
-					str.Append(ex.InnerException.Message);
-					ex = ex.InnerException;
+					while (ex.InnerException != null)
+					{
+						str.Append(ex.InnerException.Message);
+						ex = ex.InnerException;
+					}
 				}
 				ErrorToMessages(errorId, str.ToString(), Messages);
 			}
@@ -5251,6 +5713,25 @@ namespace GeneXus.Utils
 				pagingSelect = pagingSelect.Substring(9);
 
 			pagingSelect = Regex.Replace(pagingSelect, @"T\d+\.", "GX_ICTE.");
+			try
+			{
+				IDictionary<string, string> maps = new Dictionary<string, string>();
+				foreach (Match match in Regex.Matches(pagingSelect, @"GX_ICTE\.(\[\w+]) AS \b(\w+)\b(?=,|$)", RegexOptions.Compiled | RegexOptions.CultureInvariant))
+				{
+					if (match.Groups.Count == 3)
+					{
+						maps[match.Groups[0].Value] = $"GX_ICTE.[{match.Groups[2].Value}]";
+						maps[match.Groups[1].Value] = $"[{match.Groups[2].Value}]";
+					}
+				}
+				foreach (KeyValuePair<string, string> map in maps)
+					pagingSelect = pagingSelect.Replace(map.Key, map.Value);
+			}
+			catch (RegexMatchTimeoutException ex)
+			{
+				GXLogging.Warn(log, ex, "Timeout parsing paging select");
+			}
+
 			return pagingSelect;
 		}
 
@@ -5306,7 +5787,7 @@ namespace GeneXus.Utils
 #endif
 	public static class GXDbFile
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXDbFile));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(GXDbFile).FullName);
 
 		private static Regex schemeRegex = new Regex("^" + Scheme + ":", RegexOptions.Compiled);
 
@@ -5527,24 +6008,68 @@ namespace GeneXus.Utils
 
 	public static class GxImageUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxImageUtil));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(GxImageUtil).FullName);
 		private static Bitmap BitmapCreateFromStream(string filePathOrUrl)
 		{
-			using (Stream s = ImageFile(filePathOrUrl).GetStream())
+			Uri uri;
+			if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
 			{
-				if (s != null)
-					return new Bitmap(s);
-				return null;
+				using (HttpClient httpClient = new HttpClient())
+				{
+					try
+					{
+						byte[] data = httpClient.GetByteArrayAsync(uri).Result;
+						using (MemoryStream mem = new MemoryStream(data))
+						{
+							return new Bitmap(mem);
+						}
+					}
+					catch
+					{
+						return null;
+					}
+				}
 			}
+			else
+			{
+				using (Stream s = ImageFile(filePathOrUrl).GetStream())
+				{
+					if (s != null)
+						return new Bitmap(s);
+					return null;
+				}
+			}
+
 		}
 		private static Image ImageCreateFromStream(string filePathOrUrl)
 		{
-			using (Stream s = ImageFile(filePathOrUrl).GetStream())
+			Uri uri;
+			if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
 			{
-				if (s != null)
-					return Image.FromStream(s);
-				return null;
+				using (HttpClient httpClient = new HttpClient())
+				{
+					try
+					{
+						byte[] data = httpClient.GetByteArrayAsync(uri).Result;
+						using (MemoryStream mem = new MemoryStream(data))
+						{
+							return Image.FromStream(mem);
+						}
+					}
+					catch
+					{
+						return null;
+					}
+				}
+			}
+			else
+			{
+				using (Stream s = ImageFile(filePathOrUrl).GetStream())
+				{
+					if (s != null)
+						return Image.FromStream(s);
+					return null;
+				}
 			}
 		}
 
@@ -5555,6 +6080,7 @@ namespace GeneXus.Utils
 
 		public static string Resize(string imageFile, int width, int height, bool keepAspectRatio)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{										
 				using (Image image = ImageCreateFromStream(imageFile))
@@ -5571,15 +6097,15 @@ namespace GeneXus.Utils
 						double resize = (double)image.Width / (double)width;//get the resize vector
 						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
 					}//return the image resized to the given heigth and width
-					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);					
-					Save(output, imageFile, ImageFormat.Bmp);
+					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);
+					modifiedImage = Save(output, imageFile, ImageFormat.Bmp);
 				}				
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Resize {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string Scale(string imageFile, int percent)
 		{
@@ -5602,6 +6128,7 @@ namespace GeneXus.Utils
 		}
 		public static string Crop(string imageFile, int X, int Y, int Width, int Height)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
@@ -5616,8 +6143,8 @@ namespace GeneXus.Utils
 								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
 								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
 								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
-								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);								
-								Save(bmp, imageFile, OriginalImage.RawFormat);
+								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
+								modifiedImage = Save(bmp, imageFile, OriginalImage.RawFormat);
 							}
 						}
 					}
@@ -5627,10 +6154,76 @@ namespace GeneXus.Utils
 			{
 				GXLogging.Error(log, $"Crop {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
+		}
+		public static string RoundBorders(string imageFile, int topLeftRadius, int topRightRadius, int bottomLeftRadius, int bottomRightRadius)
+		{
+			string modifiedImage = string.Empty;
+			try
+			{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					using (Image OriginalImage = ImageCreateFromStream(imageFile))
+					{
+						int w = OriginalImage.Width;
+						int h = OriginalImage.Height;
+
+						using (Bitmap roundedImage = new Bitmap(w, h))
+						{
+							roundedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+							using (Graphics g = Graphics.FromImage(roundedImage))
+							{
+								g.SmoothingMode = SmoothingMode.AntiAlias;
+								g.Clear(Color.Transparent);
+
+								using (GraphicsPath path = new GraphicsPath())
+								{
+									path.StartFigure();
+									if (topLeftRadius > 0)
+										path.AddArc(0, 0, 2 * topLeftRadius, 2 * topLeftRadius, (float) 180, (float) 90);
+									path.AddLine(topLeftRadius, 0, w - topRightRadius, 0);
+									if (topRightRadius > 0)
+										path.AddArc(w - 2 * topRightRadius, 0, 2 * topRightRadius, 2 * topRightRadius, (float) 270, (float) 90);
+									path.AddLine(w, topRightRadius, w, h - bottomRightRadius);
+									if (bottomRightRadius > 0)
+										path.AddArc(w - 2 * bottomRightRadius, h - 2 * bottomRightRadius, 2 * bottomRightRadius, 2 * bottomRightRadius, (float) 0, (float) 90);
+									path.AddLine(w - bottomLeftRadius, h, bottomLeftRadius, h);
+									if (bottomLeftRadius > 0)
+										path.AddArc(0, h - 2 * bottomLeftRadius, 2 * bottomLeftRadius, 2 * bottomLeftRadius, (float) 90, (float) 90);
+									path.CloseFigure();
+
+									g.FillPath(Brushes.White, path);
+
+									using (Bitmap bitmap = new Bitmap(OriginalImage))
+									{
+										using (TextureBrush br = new TextureBrush(bitmap, WrapMode.Clamp))
+										{
+											g.FillPath(br, path);
+										}
+									}
+								}
+							}
+							// Rounded images are basically images with transparent rounded borders and jpg and jpeg formats do not
+							// support transparency, so we have to create a new identical image but in png format
+							if (imageFile.IndexOf(".jpg") > 0)
+								modifiedImage = Save(roundedImage, imageFile.Replace(".jpg", ".png"), ImageFormat.Png);
+							else if (imageFile.IndexOf(".jpeg") > 0)
+								modifiedImage = Save(roundedImage, imageFile.Replace(".jpeg", ".png"), ImageFormat.Png);
+							else
+								modifiedImage = Save(roundedImage, imageFile, OriginalImage.RawFormat);
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"RoundBorders {imageFile} failed", ex);
+			}
+			return modifiedImage;
 		}
 		public static string Rotate(string imageFile, int angle)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (MemoryStream ms = new MemoryStream())
@@ -5649,7 +6242,7 @@ namespace GeneXus.Utils
 								g.DrawImage(OriginalImage, new Point(0, 0));
 							}
 							rotatedImage.Save(ms, OriginalImage.RawFormat);
-							Save(rotatedImage, imageFile, OriginalImage.RawFormat);
+							modifiedImage = Save(rotatedImage, imageFile, OriginalImage.RawFormat);
 						}
 					}					
 				}
@@ -5658,60 +6251,84 @@ namespace GeneXus.Utils
 			{
 				GXLogging.Error(log, $"Rotate {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string FlipHorizontally(string imageFile)
 		{
+			string modifiedImage = string.Empty;
 			try
 			{
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
-					return Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					return modifiedImage;
 				}
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Flip Horizontally {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 		public static string FlipVertically(string imageFile)
 		{
+			string modifiedImage = string.Empty;	
 			try
 			{
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-					return Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					return modifiedImage;
 				}
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Flip Vertically {imageFile} failed", ex);
 			}
-			return imageFile;
+			return modifiedImage;
 		}
 
 		public static string Save(Image bitmap, string imageFile, ImageFormat format)
-		{			
+		{
+			string destinationImagePath = string.Empty;
 			using (MemoryStream ms = new MemoryStream())
 			{
 				try
 				{
 					bitmap.Save(ms, format);
 				}
-				catch (Exception) {
+				catch (Exception)
+				{
 					//In some cases, copied memory image fails to save when ImageFormat MemoryBmp
 					//https://stackoverflow.com/questions/9073619/image-save-crashing-value-cannot-be-null-r-nparameter-name-encoder
 					bitmap.Save(ms, ImageFormat.Bmp);
 				}
 				ms.Position = 0;
-				GxFile file = new GxFile(GxContext.StaticPhysicalPath(), imageFile);
-				file.Create(ms);
-				file.Close();
+				try
+				{
+					if ((imageFile.StartsWith("http://") || imageFile.StartsWith("https://")) && ServiceFactory.GetExternalProvider() == null)
+					{
+						Uri uri = new Uri(imageFile);
+						imageFile = Path.GetFileName(uri.AbsolutePath);
+					}
+					string destinationImageName = FileUtil.getTempFileName(
+																"",
+																Path.GetFileNameWithoutExtension(imageFile),
+																Path.GetExtension(imageFile).TrimStart('.')
+															);
+					GxFile destinationImage = new GxFile(Preferences.getTMP_MEDIA_PATH(), destinationImageName, GxFileType.PrivateAttribute);
+					destinationImage.Create(ms);
+					destinationImage.Close();
+					destinationImagePath = destinationImage.GetURI();
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, $"Save modified image {imageFile} failed", ex);
+				}
 			}
-			return imageFile;
+			return destinationImagePath;
 		}
 
 		public static int GetImageWidth(string imageFile)
@@ -5821,7 +6438,7 @@ namespace GeneXus.Utils
 	}
 	internal class ThreadUtil
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(ThreadUtil));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ThreadUtil>();
 		private static ConcurrentDictionary<Guid, ManualResetEvent> events = new ConcurrentDictionary<Guid, ManualResetEvent>();
 		const int MAX_WAIT_HANDLES = 64;
 		internal static void Submit(WaitCallback callbak, object state)

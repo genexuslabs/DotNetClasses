@@ -1,11 +1,8 @@
+using System;
+using System.Collections.Generic;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Metadata;
-using log4net;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 namespace GeneXus.Security
 {
 	public class GxResult
@@ -31,11 +28,11 @@ namespace GeneXus.Security
 		GxResult oauthauthentication(IGxContext context, String grantType, String userName, String userPassword, String clientId, String clientSecret, String scope, String additionalParameters, out OutData outData, out String URL, out bool flag);
 		void oauthgetuser(IGxContext context, out String userJson, out bool isOK);
 		void oauthlogout(IGxContext context);
-
+		void oauthlogout(IGxContext context, out String URL, out short statusCode);
 	}
 	public class GxSecurityProvider 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Security.GxSecurityProvider));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxSecurityProvider>();
 
 		private static volatile ISecurityProvider provider;
 		private static object syncRoot = new Object();
@@ -160,6 +157,12 @@ namespace GeneXus.Security
 
 		public void oauthlogout(IGxContext context)
 		{
+		}
+
+		public void oauthlogout(IGxContext context, out string URL, out short statusCode)
+		{
+			URL = string.Empty;
+			statusCode = 0;		
 		}
 	}
 

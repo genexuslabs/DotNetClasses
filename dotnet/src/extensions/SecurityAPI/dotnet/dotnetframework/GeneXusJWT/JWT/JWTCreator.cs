@@ -134,7 +134,7 @@ namespace GeneXusJWT.GenexusJWT
 		{
 			if (options == null)
 			{
-				this.error.setError("JW000", "Options parameter is null");
+				this.error.setError("JW004", "Options parameter is null");
 				return "";
 			}
 			JWTAlgorithm alg = JWTAlgorithmUtils.getJWTAlgorithm(algorithm, this.error);
@@ -158,7 +158,7 @@ namespace GeneXusJWT.GenexusJWT
 			{
 				if (privateClaims == null)
 				{
-					this.error.setError("JW000", "PrivateClaims parameter is null");
+					this.error.setError("JW005", "PrivateClaims parameter is null");
 					return "";
 				}
 				payload = doBuildPayload(privateClaims, options);
@@ -182,49 +182,43 @@ namespace GeneXusJWT.GenexusJWT
 			{
 
 				PrivateKeyManager key = options.GetPrivateKey();
+				if(key == null)
+				{
+					this.error.setError("JW018", "Add the private key using JWTOptions.SetPrivateKey function");
+					return "";
+				}
 				if (key.HasError())
 				{
 					this.error = key.GetError();
 					return "";
 				}
-				if (SecurityUtils.compareStrings(key.getPrivateKeyAlgorithm(), "RSA"))
+				try
 				{
-					try
+					switch (key.getAlgorithm())
 					{
-						genericKey = new RsaSecurityKey((RSA)key.getPrivateKeyForJWT());
+						case "RSA":
+							genericKey = new RsaSecurityKey((RSA)key.getAsymmetricAlgorithm());
+							break;
+						case "ECDSA":
+							genericKey = new ECDsaSecurityKey((ECDsa)key.getAsymmetricAlgorithm());
+							break;
+						default:
+							this.error.setError("JW019", "Not recognized key algorithm");
+							return "";
 					}
-					catch (Exception)
-					{
-						this.error = key.GetError();
-						return "";
-					}
-
-				}
-				else if (SecurityUtils.compareStrings(key.getPrivateKeyAlgorithm(), "ECDSA"))
+				}catch(Exception e)
 				{
-					try
-					{
-						genericKey = new ECDsaSecurityKey((ECDsa)key.getPrivateKeyForJWT());
-					}
-					catch (Exception)
-					{
-						this.error = key.GetError();
-						return "";
-					}
-				}
-				else
-				{
-					this.error.setError("JW012", "Not recognized key algorithm");
-					return "";
-				}
-				if (genericKey == null)
-				{
-					this.error = key.GetError();
+					this.error = key.HasError() ? key.GetError() : new Error("JW020", e.Message);
 					return "";
 				}
 			}
 			else
 			{
+				if(options.getSecret() == null)
+				{
+					this.error.setError("JW021", "Set the secret using JWTOptions.SetSecret function");
+					return "";
+				}
 				SymmetricSecurityKey symKey = new SymmetricSecurityKey(options.getSecret());
 				genericKey = symKey;
 			}
@@ -253,7 +247,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 
-				this.error.setError("JW003", "key size: " +  /*genericKey.KeySize.ToString()*/e.Message + e.StackTrace);
+				this.error.setError("JW006", e.Message);
 
 				return "";
 			}
@@ -266,7 +260,7 @@ namespace GeneXusJWT.GenexusJWT
 		{
 			if (options == null)
 			{
-				this.error.setError("JW004", "Options parameter is null");
+				this.error.setError("JW007", "Options parameter is null");
 				return false;
 			}
 			JWTAlgorithm expectedJWTAlgorithm = JWTAlgorithmUtils.getJWTAlgorithm(expectedAlgorithm, this.error);
@@ -327,55 +321,50 @@ namespace GeneXusJWT.GenexusJWT
 			}
 			if (JWTAlgorithmUtils.getJWTAlgorithm(jwtToken.Header.Alg, this.error) != expectedJWTAlgorithm || this.HasError())
 			{
-				this.error.setError("JW008", "Expected algorithm does not match token algorithm");
+				this.error.setError("JW009", "Expected algorithm does not match token algorithm");
 				return false;
 			}
 			SecurityKey genericKey = null;
 			if (JWTAlgorithmUtils.isPrivate(alg))
 			{
-
-
-				CertificateX509 cert = options.GetCertificate();
+				PublicKey cert = options.GetPublicKey();
+				if(cert == null)
+				{
+					this.error.setError("JW022", "Public key or certificate not loaded for verification");
+					return false;
+				}
 				if (cert.HasError())
 				{
 					this.error = cert.GetError();
 					return false;
 				}
-				if (SecurityUtils.compareStrings(cert.getPublicKeyAlgorithm(), "RSA"))
+				try
 				{
-					try
+					switch (cert.getAlgorithm())
 					{
-						genericKey = new RsaSecurityKey((RSA)cert.getPublicKeyJWT());
+						case "RSA":
+							genericKey = new RsaSecurityKey((RSA)cert.getAsymmetricAlgorithm());
+							break;
+						case "ECDSA":
+							genericKey = new ECDsaSecurityKey((ECDsa)cert.getAsymmetricAlgorithm());
+							break;
+						default:
+							this.error.setError("JW019", "Not recognized key algorithm");
+							return false;
 					}
-					catch (Exception)
-					{
-						this.error = cert.GetError();
-						return false;
-					}
-
-				}
-				else if (SecurityUtils.compareStrings(cert.getPublicKeyAlgorithm(), "ECDSA"))
+				}catch(Exception e)
 				{
-					try
-					{
-						genericKey = new ECDsaSecurityKey((ECDsa)cert.getPublicKeyJWT());
-					}
-					catch (Exception)
-					{
-						this.error = cert.GetError();
-						return false;
-					}
-
-				}
-				else
-				{
-					this.error.setError("JW015", "Not recognized key algorithm");
+					this.error = cert.HasError() ? cert.GetError(): new Error("JW020", e.Message);
 					return false;
 				}
-
 			}
 			else
 			{
+				if(options.getSecret() == null)
+				{
+					this.error.setError("JW022", "Symmetric key not loaded for verification");
+					return false;
+				}	
 				SymmetricSecurityKey symKey = new SymmetricSecurityKey(options.getSecret());
 				genericKey = symKey;
 			}
@@ -390,7 +379,7 @@ namespace GeneXusJWT.GenexusJWT
 			}
 			catch (Exception e)
 			{
-				this.error.setError("JW009", e.Message);
+				this.error.setError("JW008", e.Message);
 
 				return false;
 			}
@@ -445,7 +434,7 @@ namespace GeneXusJWT.GenexusJWT
 					}
 					else
 					{
-						this.error.setError("JW016", "Unrecognized data type");
+						this.error.setError("JW014", "Unrecognized data type");
 					}
 
 					//System.Security.Claims.Claim netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), privateClaim.getValue());
@@ -533,7 +522,7 @@ namespace GeneXusJWT.GenexusJWT
 					}
 					else
 					{
-						error.setError("JW011", String.Format("{0} wrong registered claim key", registeredClaimKey));
+						error.setError("JW017", String.Format("{0} wrong registered claim key", registeredClaimKey));
 						return false;
 					}
 				}
@@ -559,7 +548,7 @@ namespace GeneXusJWT.GenexusJWT
 				case "id":
 					return jwtToken.Payload.Jti;
 				default:
-					error.setError("JW007", "Unknown token segment");
+					error.setError("JW012", "Unknown token segment");
 					return "";
 			}
 
@@ -581,7 +570,7 @@ namespace GeneXusJWT.GenexusJWT
 			}
 			catch (Exception e)
 			{
-				this.error.setError("JW012", e.Message);
+				this.error.setError("JW018", e.Message);
 				return false;
 			}
 			this.counter = 0;

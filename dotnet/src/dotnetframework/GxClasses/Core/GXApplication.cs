@@ -13,6 +13,7 @@ namespace GeneXus.Application
 	using System.Messaging;
 	using System.ServiceModel.Web;
 	using GeneXus.UserControls;
+	using System.Net.Http.Headers;
 #else
 	using Microsoft.AspNetCore.Http;
 	using GxClasses.Helpers;
@@ -20,8 +21,9 @@ namespace GeneXus.Application
 #endif
 	using GeneXus.Configuration;
 	using GeneXus.Metadata;
-	using log4net;
+#if !NETCORE
 	using Jayrock.Json;
+#endif
 	using GeneXus.Http;
 	using System.Collections.Specialized;
 	using System.Collections.Generic;
@@ -42,9 +44,13 @@ namespace GeneXus.Application
 #if NETCORE
 	using Microsoft.AspNetCore.Http.Features;
 #endif
+	using NodaTime;
 	using System.Threading;
 	using System.Security.Claims;
 	using System.Security;
+	using Microsoft.Net.Http.Headers;
+	using System.Threading.Tasks;
+	using GeneXus.Data.ADO;
 
 	public interface IGxContext
 	{
@@ -68,6 +74,7 @@ namespace GeneXus.Application
 		void DisableSpaRequest();
 		String AjaxCmpContent { get; set; }
 		bool isCloseCommand { get; }
+		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
 		OlsonTimeZone GetOlsonTimeZone();
 		String GetTimeZone();
 		Boolean SetTimeZone(String sTZ);
@@ -288,18 +295,18 @@ namespace GeneXus.Application
 
 		public override IFeatureCollection Features => ctxAccessor.HttpContext.Features;
 
-		public override IDictionary<object, object> Items { get => ctxAccessor.HttpContext.Items; set => ctxAccessor.HttpContext.Items=value; }
+		public override IDictionary<object, object> Items { get => ctxAccessor.HttpContext.Items; set => ctxAccessor.HttpContext.Items = value; }
 
 		public override HttpRequest Request => ctxAccessor.HttpContext.Request;
 
-		public override CancellationToken RequestAborted { get => ctxAccessor.HttpContext.RequestAborted; set => ctxAccessor.HttpContext.RequestAborted=value; }
-		public override IServiceProvider RequestServices { get => ctxAccessor.HttpContext.RequestServices; set => ctxAccessor.HttpContext.RequestServices=value; }
+		public override CancellationToken RequestAborted { get => ctxAccessor.HttpContext.RequestAborted; set => ctxAccessor.HttpContext.RequestAborted = value; }
+		public override IServiceProvider RequestServices { get => ctxAccessor.HttpContext.RequestServices; set => ctxAccessor.HttpContext.RequestServices = value; }
 
 		public override HttpResponse Response => ctxAccessor.HttpContext.Response;
 
-		public override ISession Session { get => ctxAccessor.HttpContext.Session; set => ctxAccessor.HttpContext.Session=value; }
-		public override string TraceIdentifier { get => ctxAccessor.HttpContext.TraceIdentifier; set => ctxAccessor.HttpContext.TraceIdentifier=value; }
-		public override ClaimsPrincipal User { get => ctxAccessor.HttpContext.User; set => ctxAccessor.HttpContext.User=value; }
+		public override ISession Session { get => ctxAccessor.HttpContext.Session; set => ctxAccessor.HttpContext.Session = value; }
+		public override string TraceIdentifier { get => ctxAccessor.HttpContext.TraceIdentifier; set => ctxAccessor.HttpContext.TraceIdentifier = value; }
+		public override ClaimsPrincipal User { get => ctxAccessor.HttpContext.User; set => ctxAccessor.HttpContext.User = value; }
 
 		public override WebSocketManager WebSockets => ctxAccessor.HttpContext.WebSockets;
 
@@ -316,7 +323,7 @@ namespace GeneXus.Application
 	[Serializable]
 	public class GxContext : IGxContext
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxContext));
+		private static IGXLogger log = null;
 		internal static string GX_SPA_REQUEST_HEADER = "X-SPA-REQUEST";
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
 		internal const string GXLanguage = "GXLanguage";
@@ -392,6 +399,8 @@ namespace GeneXus.Application
 		private bool _isSumbited;
 		[NonSerialized]
 		private OlsonTimeZone _currentTimeZone;
+		[NonSerialized]
+		private String _currentTimeZoneId;
 
 		[NonSerialized]
 		MessageQueueTransaction _mqTransaction;
@@ -447,6 +456,26 @@ namespace GeneXus.Application
 				context.SetDefaultTheme(theme);
 			return context;
 		}
+
+		static IGXLogger Logger
+		{
+			get
+			{
+				if (Config.configLoaded)
+				{
+					if (log == null)
+					{ 
+						log = GXLoggerFactory.GetLogger<GeneXus.Application.GxContext>();
+						return log;
+					}
+					return log;
+				}
+				else
+					return null;
+			}
+
+		}
+
 		public GxContext()
 		{
 			_DataStores = new ArrayList(2);
@@ -454,7 +483,9 @@ namespace GeneXus.Application
 			_errorHandlerInfo = new GxErrorHandlerInfo();
 			setContext(this);
 			httpContextVars = new GxHttpContextVars();
-			GXLogging.Debug(log, "GxContext.Ctr Default handle:", () => _handle.ToString());
+			
+			GXLogging.Debug(Logger, "GxContext.Ctr Default handle:", () => _handle.ToString());
+		
 			if (GxApplication.MainContext == null && !(IsHttpContext || GxContext.IsRestService))
 				GxApplication.MainContext = this;
 		}
@@ -469,12 +500,12 @@ namespace GeneXus.Application
 		}
 		public GxContext(String location)
 		{
-			GXLogging.Debug(log, "GxContext.Ctr, parameters location=", location);
+			GXLogging.Debug(Logger, "GxContext.Ctr, parameters location=", location);
 			_DataStores = new ArrayList(2);
 			_errorHandlerInfo = new GxErrorHandlerInfo();
 			setContext(this);
 			httpContextVars = new GxHttpContextVars();
-			GXLogging.Debug(log, "Return GxContext.Ctr");
+			GXLogging.Debug(Logger, "Return GxContext.Ctr");
 		}
 
 		public GxContext(int handle, ArrayList dataStores, HttpContext httpContext)
@@ -565,7 +596,7 @@ namespace GeneXus.Application
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Debug(log, ex, "GetCookieContainer error url:", url);
+				GXLogging.Debug(Logger, ex, "GetCookieContainer error url:", url);
 
 			}
 			return new CookieContainer();
@@ -702,7 +733,7 @@ namespace GeneXus.Application
 					if (ext != null)
 						ext = ext.TrimStart('.');
 					string filePath = FileUtil.getTempFileName(tempDir);
-					GXLogging.Debug(log, "cgiGet(" + varName + "), fileName:" + filePath);
+					GXLogging.Debug(Logger, "cgiGet(" + varName + "), fileName:" + filePath);
 					GxFile file = new GxFile(tempDir, filePath, GxFileType.PrivateAttribute);
 					filePath = file.Create(pf.InputStream);
 					string fileGuid = GxUploadHelper.GetUploadFileGuid();
@@ -973,12 +1004,12 @@ namespace GeneXus.Application
 			{
 				string path = Path.Combine(this.GetPhysicalPath(), fileName);
 				fileExists = File.Exists(path);
-				GXLogging.Info(log, $"Searching if file exists ({fileName}). Found: {fileExists}");
+				GXLogging.Debug(Logger, $"Searching if file exists ({fileName}). Found: {fileExists}");
 			}
 			catch (Exception e)
 			{
 				fileExists = false;
-				GXLogging.Error(log, e, $"Failed searching for a file ({fileName})");
+				GXLogging.Error(Logger, e, $"Failed searching for a file ({fileName})");
 			}
 			return fileExists;
 		}
@@ -986,11 +1017,7 @@ namespace GeneXus.Application
 		public void StatusMessage(string message)
 		{
 			StackFrame frame = new StackFrame(1);
-#if NETCORE
-			ILog statusLog = log4net.LogManager.GetLogger(frame.GetMethod().DeclaringType);
-#else
-			ILog statusLog = log4net.LogManager.GetLogger(frame.GetMethod().DeclaringType.FullName);
-#endif
+			IGXLogger statusLog = GXLoggerFactory.GetLogger(frame.GetMethod().DeclaringType.FullName);
 			GXLogging.Info(statusLog, message);
 			Console.WriteLine(message);
 		}
@@ -1382,12 +1409,27 @@ namespace GeneXus.Application
 					return ds;
 			return null;
 		}
+#if NETCORE
+		internal async Task CloseConnectionsAsync()
+		{
+			GxUserInfo.RemoveHandle(this.handle);
+			foreach (GxDataStore ds in _DataStores)
+				await ds.CloseConnectionsAsync();
+
+			CloseConnectionsResources();
+		}
+#endif
 		public void CloseConnections()
 		{
 			GxUserInfo.RemoveHandle(this.handle);
 			foreach (IGxDataStore ds in _DataStores)
 				ds.CloseConnections();
 
+			CloseConnectionsResources();
+		}
+
+		private void CloseConnectionsResources()
+		{
 			if (_reportHandlerToClose != null)
 			{
 				for (int i = 0; i < _reportHandlerToClose.Count; i++)
@@ -1398,7 +1440,7 @@ namespace GeneXus.Application
 					}
 					catch (Exception ex)
 					{
-						GXLogging.Error(log, "Error closing report", ex);
+						GXLogging.Error(Logger, "Error closing report", ex);
 					}
 				}
 				_reportHandlerToClose.Clear();
@@ -1425,7 +1467,8 @@ namespace GeneXus.Application
 			ExecuteBeforeCommit(callerName);
 			if (ds != null && (ds is DataStoreProvider dataStoreProvider))
 			{
-				dataStoreProvider.commitDataStores(callerName);
+				if (dataStoreProvider!=null)
+					dataStoreProvider.commitDataStores(callerName);
 			}
 			else
 			{
@@ -1462,7 +1505,7 @@ namespace GeneXus.Application
 		{
 			foreach (IGxDataStore ds in _DataStores)
 				ds.Disconnect();
-			GXLogging.Debug(log, "Local Disconnect");
+			GXLogging.Debug(Logger, "Local Disconnect");
 		}
 
 		public void RollbackDataStores()
@@ -1479,7 +1522,10 @@ namespace GeneXus.Application
 
 			if (ds != null && (ds is DataStoreProvider dataStoreProvider))
 			{
-				dataStoreProvider.rollbackDataStores(callerName);
+				if (dataStoreProvider != null)
+				{
+					dataStoreProvider.rollbackDataStores(callerName);
+				}
 			}
 			else
 			{
@@ -1515,7 +1561,15 @@ namespace GeneXus.Application
 		}
 		public bool isRemoteGXDB()
 		{
-			return Preferences.Remote ? !Preferences.RemoteLocation.Equals(_currentLocation) : false;
+			if (Preferences.Remote)
+			{
+				string remoteLocation = Preferences.RemoteLocation;
+				if (remoteLocation != null)
+				{
+					return !remoteLocation.Equals(_currentLocation);
+				}
+			}
+			return false;
 		}
 
 		public string getCurrentLocation()
@@ -1782,7 +1836,7 @@ namespace GeneXus.Application
 					{
 						absoluteUri = String.Format("{0}://{1}{2}", GetServerSchema(), _HttpContext.Request.Headers["Host"], _HttpContext.Request.GetRawUrl());
 					}
-					GXLogging.Debug(log, "AbsoluteUri dynamicport:", absoluteUri);
+					GXLogging.DebugSanitized(Logger, "AbsoluteUri dynamicport:", absoluteUri);
 					return absoluteUri;
 				}
 				else
@@ -2115,17 +2169,21 @@ namespace GeneXus.Application
 		}
 		public virtual short GetHttpSecure()
 		{
+			return GetHttpSecure(_HttpContext);
+		}
+		static internal short GetHttpSecure(HttpContext httpContext)
+		{
 			try
 			{
-				if (HttpContext == null)
+				if (httpContext == null)
 					return 0;
-				if (_HttpContext.Request.GetIsSecureFrontEnd())
+				if (httpContext.Request.GetIsSecureFrontEnd())
 				{
-					GXLogging.Debug(log, "Front-End-Https header activated");
+					GXLogging.Debug(Logger, "Front-End-Https header activated");
 					return 1;
 				}
 				else
-					return _HttpContext.Request.GetIsSecureConnection();
+					return httpContext.Request.GetIsSecureConnection();
 			}
 			catch
 			{
@@ -2300,6 +2358,20 @@ namespace GeneXus.Application
 			}
 			return cookieVal;
 		}
+		internal string GetUndecodedCookie(string name)
+		{
+			string cookieVal = string.Empty;
+			HttpCookie cookie = TryGetCookie(localCookies, name);
+			if (cookie == null && _HttpContext != null)
+			{
+				cookie = TryGetCookie(_HttpContext.Request.GetCookies(), name);
+			}
+			if (cookie != null && cookie.Value != null)
+			{
+				cookieVal = cookie.Value;
+			}
+			return cookieVal;
+		}
 
 		private HttpCookie TryGetCookie(HttpCookieCollection cookieColl, string name)
 		{
@@ -2342,8 +2414,8 @@ namespace GeneXus.Application
 				Secure = cookie.Secure
 			};
 			string sameSite;
-			SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
-			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
+            Microsoft.AspNetCore.Http.SameSiteMode sameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode.Unspecified;
+			if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<Microsoft.AspNetCore.Http.SameSiteMode>(sameSite, out sameSiteMode))
 			{
 				cookieOptions.SameSite = sameSiteMode;
 			}
@@ -2406,18 +2478,17 @@ namespace GeneXus.Application
 				_httpHeaders = new NameValueCollection();
 			}
 			_httpHeaders[name] = value;
-			SetCustomHttpHeader(name, value);
-			return 0;
+			return SetCustomHttpHeader(name, value);
 		}
 
-		private void SetCustomHttpHeader(string name, string value)
+		private byte SetCustomHttpHeader(string name, string value)
 		{
-			_HttpContext.Response.AppendHeader(name, value);
-
-#if !NETCORE
-			switch (name.ToUpper())
+			try
 			{
-				case "CACHE-CONTROL":
+#if !NETCORE
+
+				if (name.Equals(HeaderNames.CacheControl, StringComparison.OrdinalIgnoreCase))
+				{
 					var Cache = _HttpContext.Response.Cache;
 					string[] values = value.Split(',');
 					foreach (string v in values)
@@ -2437,30 +2508,65 @@ namespace GeneXus.Application
 								Cache.AppendCacheExtension("no-store, must-revalidate");
 								break;
 							default:
+								GXLogging.Warn(Logger, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
 								break;
 						}
 					}
-					break;
-			}
-#else
-			switch (name.ToUpper())
-			{
-				case "CACHE-CONTROL":
-					switch (value.ToUpper())
+				}
+				else if (name.Equals(HeaderNames.ContentType, StringComparison.OrdinalIgnoreCase))
+				{
+					_HttpContext.Response.ContentType = value;
+				}
+				else if (name.Equals(HeaderNames.Location, StringComparison.OrdinalIgnoreCase))
+				{
+					_HttpContext.Response.RedirectLocation = value;
+				}
+				else
+				{
+					try
 					{
-						case "PUBLIC":
-							_HttpContext.Response.AddHeader("Cache-Control", "public");
-							break;
-						case "PRIVATE":
-							_HttpContext.Response.AddHeader("Cache-Control", "private");
-							break;
-						default:
-							GXLogging.Warn(log, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
-							break;
+						_HttpContext.Response.Headers[name] = value;
+
+					}catch (PlatformNotSupportedException ex)
+					{
+						_HttpContext.Response.AppendHeader(name, value);
+						GXLogging.Warn(Logger, ex, "SetHeader ", name, value);
 					}
-					break;
-			}
+				}
+#else
+				if (name.Equals(HeaderNames.CacheControl, StringComparison.OrdinalIgnoreCase))
+				{
+					if (CacheControlHeaderValue.TryParse(value, out CacheControlHeaderValue parsedValue))
+					{
+						_HttpContext.Response.GetTypedHeaders().CacheControl = parsedValue;
+					}
+					else
+					{
+						switch (value.ToUpper())
+						{
+							case "PUBLIC":
+								_HttpContext.Response.AddHeader(HeaderNames.CacheControl, "public");
+								break;
+							case "PRIVATE":
+								_HttpContext.Response.AddHeader(HeaderNames.CacheControl, "private");
+								break;
+							default:
+								GXLogging.Warn(Logger, String.Format("Could not set Cache Control Http Header Value '{0}' to HttpResponse", value));
+								break;
+						}
+					}
+				}
+				else { 
+						_HttpContext.Response.AddHeader(name, value);
+				}
 #endif
+				return 0;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(Logger, ex, "Error adding header ", name, value);
+				return 1;
+			}
 		}
 
 		public string GetHeader(string name)
@@ -2812,7 +2918,7 @@ namespace GeneXus.Application
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(log, "GetServerPort error", ex);
+				GXLogging.Error(Logger, "GetServerPort error", ex);
 				return 0;
 			}
 
@@ -2854,7 +2960,7 @@ namespace GeneXus.Application
 		{
 			if (CheckHeaderValue("Front-End-Https", "on") || CheckHeaderValue("X-Forwarded-Proto", "https"))
 			{
-				GXLogging.Debug(log, "Front-End-Https header activated");
+				GXLogging.Debug(Logger, "Front-End-Https header activated");
 				return true;
 			}
 			else
@@ -2909,7 +3015,7 @@ namespace GeneXus.Application
 				}
 				catch (Exception ex)
 				{
-					GXLogging.Debug(log, "GetPhysicalPath error", ex);
+					GXLogging.Debug(Logger, "GetPhysicalPath error", ex);
 					_physicalPath = String.Empty;
 				}
 			}
@@ -3198,7 +3304,7 @@ namespace GeneXus.Application
 			if (!configuredEventHandling) configEventHandling();
 			if (beforeConnectObj != null)
 			{
-				GXLogging.Debug(log, "ExecuteBeforeConnect");
+				GXLogging.Debug(Logger, "ExecuteBeforeConnect");
 				ClassLoader.ExecuteVoidRef(beforeConnectObj, "execute", new Object[] { datastore });
 				return true;
 			}
@@ -3212,7 +3318,7 @@ namespace GeneXus.Application
 			if (!configuredEventHandling) configEventHandling();
 			if (afterConnectObj != null)
 			{
-				GXLogging.Debug(log, "ExecuteAfterConnect");
+				GXLogging.Debug(Logger, "ExecuteAfterConnect");
 				ClassLoader.ExecuteVoidRef(afterConnectObj, "execute", new Object[] { datastoreName });
 				return true;
 			}
@@ -3230,7 +3336,7 @@ namespace GeneXus.Application
 		{
 			if (HttpContext != null && HttpContext.Session != null)
 			{
-				GXLogging.Debug(log, "HttpContext.Session.setProperty(", key, ")=", value);
+				GXLogging.DebugSanitized(Logger, "HttpContext.Session.setProperty(", key, ")=", value);
 				WriteSessionKey(key, value);
 			}
 			else
@@ -3239,7 +3345,7 @@ namespace GeneXus.Application
 				{
 					_properties = new Hashtable();
 				}
-				GXLogging.Debug(log, "GxContext.Properties.getProperty(", key, ")=", value);
+				GXLogging.DebugSanitized(Logger, "GxContext.Properties.getProperty(", key, ")=", value);
 				_properties[key] = value;
 			}
 		}
@@ -3279,7 +3385,7 @@ namespace GeneXus.Application
 
 		public string PathToUrl(string path)
 		{
-			GXLogging.Debug(log, "PathToUrl:", () => GetContextPath() + " relativePath:" + PathToRelativeUrl(path));
+			GXLogging.Debug(Logger, "PathToUrl:", () => GetContextPath() + " relativePath:" + PathToRelativeUrl(path));
 #pragma warning disable SYSLIB0013 // EscapeUriString
 			return Uri.EscapeUriString(GetContextPath()) + PathToRelativeUrl(path, false);
 #pragma warning disable SYSLIB0013 // EscapeUriString
@@ -3442,7 +3548,7 @@ namespace GeneXus.Application
 
 		public int SetLanguage(string id)
 		{
-			if (Config.GetLanguageProperty(id, "code") != null)
+			if (Config.ValidLanguage(id))
 			{
 				SetProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
@@ -3456,7 +3562,7 @@ namespace GeneXus.Application
 		}
 		private int SetLanguageWithoutSession(string id)
 		{
-			if (Config.GetLanguageProperty(id, "code") != null)
+			if (Config.ValidLanguage(id))
 			{
 				SetContextProperty(GXLanguage, id);
 				_localUtil = GXResourceManager.GetLocalUtil(id);
@@ -3491,7 +3597,7 @@ namespace GeneXus.Application
 		}
 
 		internal static string GX_REQUEST_TIMEZONE = "GxTZOffset";
-
+		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead", false)]
 		public OlsonTimeZone ClientTimeZone
 		{
 			get
@@ -3499,11 +3605,11 @@ namespace GeneXus.Application
 				if (_currentTimeZone != null)
 					return _currentTimeZone;
 				string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
-				GXLogging.Debug(log, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
+				GXLogging.DebugSanitized(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
 				if (String.IsNullOrEmpty(sTZ))
 				{
 					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
-					GXLogging.Debug(log, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+					GXLogging.Debug(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
 				}
 				try
 				{
@@ -3511,14 +3617,14 @@ namespace GeneXus.Application
 				}
 				catch (Exception e1)
 				{
-					GXLogging.Warn(log, "ClientTimeZone _currentTimeZone error", e1);
+					GXLogging.Warn(Logger, "ClientTimeZone _currentTimeZone error", e1);
 					try
 					{
 						_currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
 					}
 					catch (Exception e2)
 					{
-						GXLogging.Warn(log, "ClientTimeZone GetInstanceFromWin32Id error", e2);
+						GXLogging.Warn(Logger, "ClientTimeZone GetInstanceFromWin32Id error", e2);
 						Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
 						if (storagePty == Preferences.StorageTimeZonePty.Undefined)
 							_currentTimeZone = null;
@@ -3529,7 +3635,57 @@ namespace GeneXus.Application
 				return _currentTimeZone;
 			}
 		}
+		internal string ClientTimeZoneId
+		{
+			get
+			{
+				if (_currentTimeZoneId != null)
+					return _currentTimeZoneId;
+				string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
+				GXLogging.DebugSanitized(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
+				if (String.IsNullOrEmpty(sTZ))
+				{
+					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
+				if (!DateTimeUtil.ValidTimeZone(sTZ))
+				{
+					sTZ = (string)GetUndecodedCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(Logger, "Try reading undecoded ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
+				try
+				{
+					if (!DateTimeUtil.ValidTimeZone(sTZ))
+					{
+						try
+						{
+							string invalidTimezone = DateTimeZoneProviders.Tzdb[sTZ].Id; 
+						}catch(Exception ex)//DateTimeZoneNotFound
+						{
+							GXLogging.Warn(Logger, $"Client timezone not found: {sTZ}", ex);
+						}
+						_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+						GXLogging.Warn(Logger, $"Setting Client timezone to System default: {_currentTimeZoneId}");
+					}
+					else
+					{
+						_currentTimeZoneId = sTZ;
+					}
+				}
+				catch (Exception e1)
+				{
+					GXLogging.Warn(Logger, "ClientTimeZone GetInstanceFromWin32Id error", e1);
+					Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+					if (storagePty == Preferences.StorageTimeZonePty.Undefined)
+						_currentTimeZoneId = null;
+					else
+						throw e1;
+				}
 
+				return _currentTimeZoneId;
+			}
+		}
+		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
 		public OlsonTimeZone GetOlsonTimeZone()
 		{
 			return TimeZoneUtil.GetInstanceFromOlsonName(GetTimeZone());
@@ -3542,15 +3698,46 @@ namespace GeneXus.Application
 			{
 				SetTimeZone(sTZ);
 			}
+
+#if NODATIME
+			if (_currentTimeZoneId == null)
+				_currentTimeZoneId = ClientTimeZoneId;
+			if (_currentTimeZoneId==null)
+				_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+			return _currentTimeZoneId;
+#else
 			if (_currentTimeZone == null)
 				_currentTimeZone = ClientTimeZone;
 			return _currentTimeZone == null ? TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id).Name : _currentTimeZone.Name;
+#endif
 		}
 
 		public Boolean SetTimeZone(String sTZ)
 		{
 			sTZ = StringUtil.RTrim(sTZ);
-			Boolean ret = false;
+			bool ret = false;
+#if NODATIME
+			string tzId;
+			try
+			{
+				DateTimeZone zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(sTZ);
+				if (zone != null)
+				{
+					tzId = zone.Id;
+				}
+				else
+				{
+					tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+				}
+				ret = true;
+			}
+			catch (Exception)
+			{
+				tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+			}
+			SetProperty("GXTimezone", tzId);
+			_currentTimeZoneId = tzId;
+#else
 			try
 			{
 				_currentTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
@@ -3569,6 +3756,7 @@ namespace GeneXus.Application
 				}
 			}
 			SetProperty("GXTimezone", _currentTimeZone.Name);
+#endif
 			return ret;
 		}
 		private static ConcurrentDictionary<string, HashSet<string>> m_imagesDensity = new ConcurrentDictionary<string, HashSet<string>>();
@@ -3591,9 +3779,9 @@ namespace GeneXus.Application
 						string imgDir = "";
 						if (String.IsNullOrEmpty(dir) && _HttpContext == null)
 						{
-							GXLogging.Debug(log, "Searching for txt files ..");
+							GXLogging.Debug(Logger, "Searching for txt files ..");
 							int srchIx = 0;
-							string[] paths = new string[] { ".\\", "..\\" };
+							string[] paths = { Directory.GetCurrentDirectory(), Directory.GetParent(Directory.GetCurrentDirectory()).FullName};
 							bool found = false;
 							while (!found && srchIx < paths.Length)
 							{
@@ -3607,12 +3795,12 @@ namespace GeneXus.Application
 									}
 							}
 							imgDir = dir;
-							GXLogging.Debug(log, $"{imgDir} txt file found");
+							GXLogging.Debug(Logger, $"{imgDir} txt file found");
 						}
 						else
 						{ 
 							imageFiles = Directory.GetFiles(dir, "*.txt");
-							GXLogging.Debug(log, "imageFiles found");
+							GXLogging.Debug(Logger, "imageFiles found");
 						}
 
 						string KBPrefix = String.Empty;
@@ -3676,7 +3864,7 @@ namespace GeneXus.Application
 								}
 								catch (FileNotFoundException)
 								{
-									GXLogging.Debug(log, $"{filename} file not found");
+									GXLogging.Debug(Logger, $"{filename} file not found");
 								}
 							}
 						}
@@ -3695,7 +3883,7 @@ namespace GeneXus.Application
 				return ret;
 			else
 			{
-				GXLogging.Debug(log, "Image not found at Images.txt. Image id:", () => KBId + id + " language:" + lang + " theme:" + theme);
+				GXLogging.Debug(Logger, "Image not found at Images.txt. Image id:", () => KBId + id + " language:" + lang + " theme:" + theme);
 				return id;
 			}
 		}
@@ -3819,7 +4007,7 @@ namespace GeneXus.Application
 
 		public void SetSubmitInitialConfig(IGxContext context)
 		{
-			GXLogging.Debug(log, "SetSubmitInitialConfig:", () => _handle.ToString() + " clientid:" + context.ClientID);
+			GXLogging.Debug(Logger, "SetSubmitInitialConfig:", () => _handle.ToString() + " clientid:" + context.ClientID);
 			this._isSumbited = true;
 			this.SetDefaultTheme(context.GetTheme(), context.GetThemeisDSO());
 			this.SetPhysicalPath(context.GetPhysicalPath());

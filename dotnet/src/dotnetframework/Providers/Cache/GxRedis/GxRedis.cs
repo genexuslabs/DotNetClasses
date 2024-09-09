@@ -1,23 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading.Tasks;
+using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
-using log4net;
 using StackExchange.Redis;
-using System.Reflection;
-using System.Security;
-using System.Threading.Tasks;
 
 namespace GeneXus.Cache
 {
 	public sealed class Redis : ICacheService2
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Redis));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Redis>();
+
 		ConnectionMultiplexer _redisConnection;
 		IDatabase _redisDatabase;
 		ConfigurationOptions _redisConnectionOptions;
@@ -37,28 +33,39 @@ namespace GeneXus.Cache
 		}
 		public Redis()
 		{
-			GXService providerService = ServiceFactory.GetGXServices().Get(GXServices.CACHE_SERVICE);
-			string address, password;
-			address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
-			password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
-
-			if (string.IsNullOrEmpty(address))
-				address = String.Format("localhost:{0}", REDIS_DEFAULT_PORT);
-
-			if (!string.IsNullOrEmpty(password))
+			GXService providerService = ServiceFactory.GetGXServices()?.Get(GXServices.CACHE_SERVICE);
+			if (providerService != null)
 			{
-				if (!address.Contains(':'))
+				string address, password;
+				address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+				password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
+				if (!string.IsNullOrEmpty(password))
 				{
-					address = $"{address}:{REDIS_DEFAULT_PORT}";
+					string ret = string.Empty;
+					if (CryptoImpl.Decrypt(ref ret, password))
+					{
+						password = ret;
+					}
 				}
-				address = string.Format("{0},password={1}", address.Trim(), password.Trim());
-				_redisConnectionOptions = ConfigurationOptions.Parse(address);
+
+				if (string.IsNullOrEmpty(address))
+					address = String.Format("localhost:{0}", REDIS_DEFAULT_PORT);
+
+				if (!string.IsNullOrEmpty(password))
+				{
+					if (!address.Contains(':'))
+					{
+						address = $"{address}:{REDIS_DEFAULT_PORT}";
+					}
+					address = string.Format("{0},password={1}", address.Trim(), password.Trim());
+					_redisConnectionOptions = ConfigurationOptions.Parse(address);
+				}
+				else
+				{
+					_redisConnectionOptions = ConfigurationOptions.Parse(address);
+				}
+				_redisConnectionOptions.AllowAdmin = true;
 			}
-			else
-			{
-				_redisConnectionOptions = ConfigurationOptions.Parse(address);
-			}
-			_redisConnectionOptions.AllowAdmin = true;
 		}
 		IDatabase RedisDatabase
 		{
@@ -209,7 +216,7 @@ namespace GeneXus.Cache
 		}
 		private IEnumerable<RedisKey> Key(string cacheid, IEnumerable<string> key)
 		{
-			var prefix = KeyPrefix(cacheid);
+			long? prefix = KeyPrefix(cacheid);
 			return key.Select(k => new RedisKey().Append(FormatKey(cacheid, k, prefix)));
 		}
 		private string FormatKey(string cacheid, string key, Nullable<long> prefix)

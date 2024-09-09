@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Xml;
-using log4net;
 using System.Threading;
 using System.Globalization;
 using GeneXus.Management;
@@ -21,7 +20,7 @@ using System.IO;
 #endif
 namespace GeneXus.Cache
 {
-    internal delegate void AddDataHandler(string key,
+	internal delegate void AddDataHandler(string key,
     ICacheItemExpiration expiration);
 
 	[Obsolete("Not for public use. Replaced by ICacheService2", false)]
@@ -95,8 +94,9 @@ namespace GeneXus.Cache
 
 	public class CacheFactory
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Cache.CacheFactory));
-        public static string CACHE_SD = "SD";
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<CacheFactory>();
+	
+		public static string CACHE_SD = "SD";
         public static string CACHE_DB = "DB";
         public static string CACHE_FILES = "FL";
 		public static string FORCE_HIGHEST_TIME_TO_LIVE = "FORCE_HIGHEST_TIME_TO_LIVE";
@@ -175,7 +175,7 @@ namespace GeneXus.Cache
     }
     public sealed class InProcessCache : ICacheService2
 	{
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Cache.InProcessCache));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<InProcessCache>();
         ICacheStorage cacheStorage;
         IScavengingAlgorithm storageScavengingImplementation;
 
@@ -587,7 +587,13 @@ namespace GeneXus.Cache
 		public CacheItem()
 		{
 		}
-
+		internal CacheItem(List<object[]> data, bool hasnext, int blockSize, long sizeInBytes)
+		{
+			Data = new GxArrayList(data);
+			HasNext = hasnext;
+			BlockSize = blockSize;
+			SizeInBytes = sizeInBytes;
+		}
 		public CacheItem(GxArrayList data, bool hasnext, int blockSize, long sizeInBytes)
         {
             Data = data;
@@ -644,7 +650,7 @@ namespace GeneXus.Cache
     public class SingletonCacheStorage : ICacheStorage
     {
 
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Cache.SingletonCacheStorage));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<SingletonCacheStorage>();
         private HybridDictionary cacheStorage = new HybridDictionary();
         private long size;
 
@@ -715,8 +721,9 @@ namespace GeneXus.Cache
 
     public class LruScavenging : IScavengingAlgorithm
     {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Cache.LruScavenging));
-        private HybridDictionary itemsLastUsed;
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<LruScavenging>();
+
+		private HybridDictionary itemsLastUsed;
         private ICacheService cachingService;
         private ICacheStorage cacheStorage;
         private ICacheMetadata cacheMetadata;

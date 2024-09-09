@@ -1,17 +1,18 @@
 
-name: Fortify on Demand Scan
+name: Fortify on Demand Scan (.NET)
 
-# TODO: Customize trigger events based on your DevSecOps processes and typical FoD SAST scan time
+# Run FoD SAST on each pull request and on merge to master, beta and release.
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - 'master'
+      - 'release-*'
   push:
     branches:
       - 'master'
       - 'beta'
       - 'release-*'
-  #Run at the end of every day
-  schedule:
-    - cron: '0 0 * * *'
   
 jobs:
   FoD-SAST-Scan:
@@ -26,17 +27,22 @@ jobs:
         with:
           repository: ''
 
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-prerelease: true
+
       # Java 8 required by ScanCentral Client and FoD Uploader(Univeral CI Tool)
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
+                
+      - name: Install .NET 8
+        uses: actions/setup-dotnet@v3
         with:
-          vs-version: 10.0
-          
+          dotnet-version: '8.0.100'
+
       - name: Create temporal solution
         run: |
           $fortifysolution = "FortifySolution"

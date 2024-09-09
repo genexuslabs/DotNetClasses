@@ -1,11 +1,11 @@
 # GeneXus Standard Classes for .NET and .NET Framework
 GeneXus Standard Classes for .NET and .NET Framework generators.
 
-## Build status
-| Branch | Status
-|---|---
-|master|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=master)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Amaster)
-|beta|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=beta)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Abeta)
+## Repo status
+| Branch | Build | Security
+|---|---|---
+|master|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=master)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Amaster)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
+|beta|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=beta)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Abeta)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg?branch=beta)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
 
 ## Modules
 
@@ -66,8 +66,8 @@ This repository contains projects for .NET and .NET Framework. It is organized a
 # How to build
 
 ## Requirements
-- Visual Studio 2022
-- .NET 6 
+- Visual Studio 2022 (17.8 or higher).
+- .NET 6 & .NET 8 
 - .NET Framework 4.7 DevPack
 
 # Instructions

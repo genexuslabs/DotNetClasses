@@ -1,11 +1,8 @@
-using GeneXus.Configuration;
-using GeneXus.Metadata;
-using GeneXus.Notifications.WebSocket;
-using GeneXus.Procedure;
-using GeneXus.Services;
-using GeneXus.Utils;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
-using log4net;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,12 +10,18 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using GeneXus.Configuration;
+using GeneXus.Metadata;
+using GeneXus.Notifications.WebSocket;
+using GeneXus.Procedure;
+using GeneXus.Services;
+using GeneXus.Utils;
 
 namespace GeneXus.Http.WebSocket
 {
 	public class WSHandler: WebSocketHandler, IGXWebSocketAsync
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WSHandler));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WSHandler>();
 		private const string GX_NOTIFICATIONINFO_NAME = "GeneXus.Core.genexus.server.SdtNotificationInfo";
 		protected static WebSocketConnectionManager WebSocketConnectionManager = new WebSocketConnectionManager();
 
@@ -120,8 +123,7 @@ namespace GeneXus.Http.WebSocket
 			{
 				try
 				{
-					string nSpace = string.Empty;
-					Config.GetValueOf("AppMainNamespace", out nSpace);
+					string nSpace = Preferences.AppMainNamespace;
 					GXProcedure obj = null;
 					try
 					{
@@ -155,7 +157,7 @@ namespace GeneXus.Http.WebSocket
 			if (!handlerCache.TryGetValue(hType, out handlerClassName))
 			{
 				String type = GetPtyTypeName(hType);
-				GXService service = GXServices.Instance.Get(GXServices.WEBNOTIFICATIONS_SERVICE);
+				GXService service = GXServices.Instance?.Get(GXServices.WEBNOTIFICATIONS_SERVICE);
 				if (service != null && service.Properties != null)
 				{
 					String className = service.Properties.Get(type);

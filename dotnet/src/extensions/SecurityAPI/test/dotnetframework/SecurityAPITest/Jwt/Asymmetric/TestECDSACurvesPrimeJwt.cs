@@ -3,6 +3,10 @@ using GeneXusJWT.GenexusJWT;
 using GeneXusJWT.GenexusJWTClaims;
 using GeneXusJWT.GenexusJWTUtils;
 using NUnit.Framework;
+using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+using SecurityAPICommons.Commons;
 using SecurityAPICommons.Keys;
 using SecurityAPITest.SecurityAPICommons.commons;
 using System.IO;
@@ -38,20 +42,34 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			ECDSA_path = Path.Combine(BASE_PATH, "dummycerts", "JWT_ECDSA");
 		}
 
-		private void bulkTest_shouldWork(PrivateKeyManager key, CertificateX509 cert, string alg, string curve)
+		private void bulkTest_shouldWork(PrivateKeyManager key, PublicKey cert, string alg, string curve, bool isPublicKey)
 		{
 			options.SetPrivateKey(key);
-			options.SetCertificate(cert);
+			if (isPublicKey)
+			{
+				options.SetPublicKey(cert);
+			}
+			else
+			{
+				options.SetCertificate((CertificateX509)cert);
+			}
 			string token = jwt.DoCreate(alg, claims, options);
 			Assert.IsFalse(jwt.HasError());
 			bool verification = jwt.DoVerify(token, alg, claims, options);
 			True(verification, jwt);
 		}
 
-		private void bulkTest_shouldntWork(PrivateKeyManager key, CertificateX509 cert, string alg, string curve)
+		private void bulkTest_shouldntWork(PrivateKeyManager key, PublicKey cert, string alg, string curve, bool isPublicKey)
 		{
 			options.SetPrivateKey(key);
-			options.SetCertificate(cert);
+			if (isPublicKey)
+			{
+				options.SetPublicKey(cert);
+			}
+			else
+			{
+				options.SetCertificate((CertificateX509)cert);
+			}
 			string token = jwt.DoCreate(alg, claims, options);
 			Assert.IsTrue(jwt.HasError());
 		}
@@ -81,9 +99,9 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			string alg = "ES256";
 			string curve = "prime192v1";
 #if NETCORE
-	bulkTest_shouldntWork(key, cert, alg, curve);
+	bulkTest_shouldntWork(key, cert, alg, curve, false);
 #else
-			bulkTest_shouldWork(key, cert, alg, curve);
+			bulkTest_shouldWork(key, cert, alg, curve, false);
 #endif
 
 
@@ -101,9 +119,27 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			string alg = "ES256";
 			string curve = "prime192v2";
 #if NETCORE
-	bulkTest_shouldntWork(key, cert, alg, curve);
+	bulkTest_shouldntWork(key, cert, alg, curve, false);
 #else
-			bulkTest_shouldWork(key, cert, alg, curve);
+			bulkTest_shouldWork(key, cert, alg, curve, false);
+#endif
+		}
+
+		[Test]
+		public void prime192v2_PublicKey()
+		{
+			string pathKey = Path.Combine(ECDSA_path, "prime192v2", "key.pem");
+			string pathCert = Path.Combine(ECDSA_path, "prime192v2", "pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.Load(pathKey);
+			cert.Load(pathCert);
+			string alg = "ES256";
+			string curve = "prime192v2";
+#if NETCORE
+			bulkTest_shouldntWork(key, cert, alg, curve, true);
+#else
+			bulkTest_shouldWork(key, cert, alg, curve, true);
 #endif
 		}
 
@@ -119,9 +155,27 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			string alg = "ES256";
 			string curve = "prime192v3";
 #if NETCORE
-	bulkTest_shouldntWork(key, cert, alg, curve);
+	bulkTest_shouldntWork(key, cert, alg, curve, false);
 #else
-			bulkTest_shouldWork(key, cert, alg, curve);
+			bulkTest_shouldWork(key, cert, alg, curve, false);
+#endif
+		}
+
+		[Test]
+		public void prime192v3_PublicKey()
+		{
+			string pathKey = Path.Combine(ECDSA_path, "prime192v3", "key.pem");
+			string pathCert = Path.Combine(ECDSA_path, "prime192v3", "pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.Load(pathKey);
+			cert.Load(pathCert);
+			string alg = "ES256";
+			string curve = "prime192v3";
+#if NETCORE
+			bulkTest_shouldntWork(key, cert, alg, curve, true);
+#else
+			bulkTest_shouldWork(key, cert, alg, curve, true);
 #endif
 		}
 
@@ -137,9 +191,27 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			string alg = "ES256";
 			string curve = "prime239v1";
 #if NETCORE
-	bulkTest_shouldntWork(key, cert, alg, curve);
+	bulkTest_shouldntWork(key, cert, alg, curve, false);
 #else
-			bulkTest_shouldWork(key, cert, alg, curve);
+			bulkTest_shouldWork(key, cert, alg, curve, false);
+#endif
+		}
+
+		[Test]
+		public void prime239v1_PublicKey()
+		{
+			string pathKey = Path.Combine(ECDSA_path, "prime239v1", "key.pem");
+			string pathCert = Path.Combine(ECDSA_path, "prime239v1", "pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.Load(pathKey);
+			cert.Load(pathCert);
+			string alg = "ES256";
+			string curve = "prime239v1";
+#if NETCORE
+			bulkTest_shouldntWork(key, cert, alg, curve, true);
+#else
+			bulkTest_shouldWork(key, cert, alg, curve, true);
 #endif
 		}
 
@@ -155,9 +227,27 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			string alg = "ES256";
 			string curve = "prime239v2";
 #if NETCORE
-	bulkTest_shouldntWork(key, cert, alg, curve);
+	bulkTest_shouldntWork(key, cert, alg, curve, false);
 #else
-			bulkTest_shouldWork(key, cert, alg, curve);
+			bulkTest_shouldWork(key, cert, alg, curve, false);
+#endif
+		}
+
+		[Test]
+		public void prime239v2_PublicKey()
+		{
+			string pathKey = Path.Combine(ECDSA_path, "prime239v2", "key.pem");
+			string pathCert = Path.Combine(ECDSA_path, "prime239v2", "pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.Load(pathKey);
+			cert.Load(pathCert);
+			string alg = "ES256";
+			string curve = "prime239v2";
+#if NETCORE
+			bulkTest_shouldntWork(key, cert, alg, curve, true);
+#else
+			bulkTest_shouldWork(key, cert, alg, curve, true);
 #endif
 		}
 
@@ -173,9 +263,27 @@ namespace SecurityAPITest.Jwt.Asymmetric
 			string alg = "ES256";
 			string curve = "prime239v3";
 #if NETCORE
-	bulkTest_shouldntWork(key, cert, alg, curve);
+	bulkTest_shouldntWork(key, cert, alg, curve, false);
 #else
-			bulkTest_shouldWork(key, cert, alg, curve);
+			bulkTest_shouldWork(key, cert, alg, curve, false);
+#endif
+		}
+
+		[Test]
+		public void prime239v3_PublicKey()
+		{
+			string pathKey = Path.Combine(ECDSA_path, "prime239v3", "key.pem");
+			string pathCert = Path.Combine(ECDSA_path, "prime239v3", "pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.Load(pathKey);
+			cert.Load(pathCert);
+			string alg = "ES256";
+			string curve = "prime239v3";
+#if NETCORE
+			bulkTest_shouldntWork(key, cert, alg, curve, true);
+#else
+			bulkTest_shouldWork(key, cert, alg, curve, true);
 #endif
 		}
 
@@ -193,14 +301,39 @@ namespace SecurityAPITest.Jwt.Asymmetric
 #if NETCORE
 			if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
 			{ 
-				bulkTest_shouldntWork(key, cert, alg, curve);
+				bulkTest_shouldntWork(key, cert, alg, curve, false);
 			}
 			else
 			{
-				bulkTest_shouldWork(key, cert, alg, curve);
+				bulkTest_shouldWork(key, cert, alg, curve, false);
 			}
 #else
-			bulkTest_shouldWork(key, cert, alg, curve);
+			bulkTest_shouldWork(key, cert, alg, curve, false);
+#endif
+		}
+
+		[Test]
+		public void prime256v1_PublicKey()
+		{
+			string pathKey = Path.Combine(ECDSA_path, "prime256v1", "key.pem");
+			string pathCert = Path.Combine(ECDSA_path, "prime256v1", "pubkey.pem");
+			PrivateKeyManager key = new PrivateKeyManager();
+			PublicKey cert = new PublicKey();
+			key.Load(pathKey);
+			cert.Load(pathCert);
+			string alg = "ES256";
+			string curve = "prime256v1";
+#if NETCORE
+			if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+			{
+				bulkTest_shouldntWork(key, cert, alg, curve, true);
+			}
+			else
+			{
+				bulkTest_shouldWork(key, cert, alg, curve, true);
+			}
+#else
+			bulkTest_shouldWork(key, cert, alg, curve, true);
 #endif
 		}
 

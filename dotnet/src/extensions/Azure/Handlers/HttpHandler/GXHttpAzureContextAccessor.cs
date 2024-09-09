@@ -1,19 +1,20 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Cache;
 using GeneXus.Utils;
-using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Primitives;
 
 namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 {
@@ -23,7 +24,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public HttpResponse httpResponseData;
 		private ICacheService2 _redis;
 		private string sessionId;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXHttpAzureContextAccessor));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXHttpAzureContextAccessor>();
 		internal const string AzureSessionId = "GX_AZURE_SESSIONID";
 		public GXHttpAzureContextAccessor(HttpRequestData requestData, HttpResponseData responseData, ICacheService2 redis)
 		{
@@ -45,7 +46,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 					isSecure = GetSecureConnection(header.Key, defaultHttpContext.Request.Headers[header.Key]);
 
 			}
-			if (requestData.FunctionContext.BindingContext!=null)
+			if (requestData.FunctionContext.BindingContext != null)
 			{
 				IReadOnlyDictionary<string, object> keyValuePairs = requestData.FunctionContext.BindingContext.BindingData;
 				object queryparamsJson = requestData.FunctionContext.BindingContext.BindingData.GetValueOrDefault("Query");
@@ -83,7 +84,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 					RedisHttpSession redisHttpSession = (RedisHttpSession)Session;
 					//Check if session is in cache
 					if (redisHttpSession.SessionKeyExists(sessionId))
-					{ 
+					{
 						bool success = redisHttpSession.RefreshSession(sessionId);
 						if (!success)
 							GXLogging.Debug(log, $"Azure Serverless: Session could not be refreshed :{sessionId}");
@@ -97,7 +98,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		{
 			if ((headerKey == "Front-End-Https") & (headerValue == "on"))
 				return true;
-			
+
 			if ((headerKey == "X-Forwarded-Proto") & (headerValue == "https"))
 				return true;
 
@@ -126,7 +127,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		{
 			string[] words = header.Split(';');
 
-			foreach (var word in words)
+			foreach (string word in words)
 			{
 				string[] parts = word.Split('=');
 				if (parts[0].Trim() == name)
@@ -164,6 +165,104 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			//throw new NotImplementedException();
 		}
 	}
+	internal class GxAzureResponseHeaders : IHeaderDictionary
+	{
+		HeaderDictionary m_headers;
+		HttpResponseData m_httpResponseData;
+		internal GxAzureResponseHeaders(HttpResponseData httpResponseData)
+		{
+			m_headers = new HeaderDictionary();
+			foreach (var header in httpResponseData.Headers)
+			{
+				string[] values = new Microsoft.Extensions.Primitives.StringValues(header.Value.Select(val => val).ToArray());
+				m_headers.Add(header.Key, values);
+			}
+			m_httpResponseData = httpResponseData;
+		}
+
+		public StringValues this[string key]
+		{
+			get
+			{
+				return m_headers[key];
+			}
+			set
+			{
+				m_httpResponseData.Headers.Add(key, value.AsEnumerable());
+				m_headers[key] = value;
+			}
+		}
+
+		public long? ContentLength { get { return m_headers.ContentLength; } set {; } }
+
+		public ICollection<string> Keys { get { return m_headers.Keys; } }
+		public ICollection<StringValues> Values { get { return m_headers.Values; } }
+
+		public int Count { get { return m_headers.Count; } }
+
+		public bool IsReadOnly { get { return m_headers.IsReadOnly; } }
+
+		public void Add(string key, StringValues value)
+		{
+			m_httpResponseData.Headers.Add(key, value.AsEnumerable());
+			m_headers.Add(key, value);
+		}
+
+		public void Add(KeyValuePair<string, StringValues> item)
+		{
+			m_httpResponseData.Headers.Add(item.Key, item.Value.AsEnumerable());
+			m_headers.Add(item.Key, item.Value);
+		}
+
+		public void Clear()
+		{
+			m_httpResponseData.Headers.Clear();
+			m_headers.Clear();
+		}
+
+		public bool Contains(KeyValuePair<string, StringValues> item)
+		{
+			return m_headers.Contains(item);
+		}
+
+		public bool ContainsKey(string key)
+		{
+			return m_headers.ContainsKey(key);
+		}
+
+		public void CopyTo(KeyValuePair<string, StringValues>[] array, int arrayIndex)
+		{
+			m_headers.CopyTo(array, arrayIndex);
+		}
+
+		public IEnumerator<KeyValuePair<string, StringValues>> GetEnumerator()
+		{
+			return m_headers.GetEnumerator();
+		}
+
+		public bool Remove(string key)
+		{
+			m_httpResponseData.Headers.Remove(key);
+			return m_headers.Remove(key);
+		}
+
+		public bool Remove(KeyValuePair<string, StringValues> item)
+		{
+			m_httpResponseData.Headers.Remove(item.Key);
+			return m_headers.Remove(item);
+		}
+
+		public bool TryGetValue(string key, [MaybeNullWhen(false)] out StringValues value)
+		{
+			return m_headers.TryGetValue(key, out value);
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return m_headers.GetEnumerator();
+		}
+	}
+
 	public class GxHttpAzureResponse : HttpResponse
 	{
 		HttpResponseData httpResponseData;
@@ -212,13 +311,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		{
 			get 
 			{
-				IHeaderDictionary headers = new HeaderDictionary();
-				foreach (var header in httpResponseData.Headers)
-				{
-					string[] values = new Microsoft.Extensions.Primitives.StringValues(header.Value.Select(val => val).ToArray());
-					headers.Add(header.Key, values);
-				}
-					return headers;
+				return new GxAzureResponseHeaders(httpResponseData);
 			}
 		}
 		public override Stream Body { get => httpResponseData.Body; set => httpResponseData.Body = value; }	

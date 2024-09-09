@@ -9,7 +9,6 @@ using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Metadata;
 using GeneXus.Utils;
-using log4net;
 using System.IO;
 #if NETCORE
 using GxClasses.Helpers;
@@ -19,7 +18,7 @@ namespace GeneXus.Data
 {
 	public class GxODPCacheDataReader : GxOracleCacheDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxODPCacheDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxODPCacheDataReader>();
 		public GxODPCacheDataReader(CacheItem cacheItem, bool computeSize, string keyCache)
 			: base(cacheItem, computeSize, keyCache)
 		{ }
@@ -116,7 +115,7 @@ namespace GeneXus.Data
 	}
 	public class GxODPManagedCacheDataReader : GxOracleCacheDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxODPManagedCacheDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxODPManagedCacheDataReader>();
 		public GxODPManagedCacheDataReader(CacheItem cacheItem, bool computeSize, string keyCache)
 			: base(cacheItem, computeSize, keyCache)
 		{ }
@@ -235,7 +234,7 @@ namespace GeneXus.Data
 	
 	public class GxODPOracle : GxOracle
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxODPOracle));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxODPOracle>();
 		static Assembly _odpAssembly;
 		const string OracleDbTypeEnum = "Oracle.DataAccess.Client.OracleDbType";
 
@@ -547,7 +546,8 @@ namespace GeneXus.Data
 	}
 	public class GxODPManagedOracle : GxOracle
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxODPManagedOracle));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxODPManagedOracle>();
+		
 		static Assembly _odpAssembly;
 		const string OracleDbTypeEnum = "Oracle.ManagedDataAccess.Client.OracleDbType";
 		const string OracleAssemblyName = "Oracle.ManagedDataAccess";
@@ -859,7 +859,7 @@ namespace GeneXus.Data
 	public class GxOracle : GxDataRecord
 {
 		const string BLANK_STRING = " ";
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxOracle));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxOracle>();
 #if !NETCORE
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
@@ -1304,7 +1304,7 @@ namespace GeneXus.Data
 	}
 	public class GxODPOracleDataReader : GxDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxODPOracleDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxODPOracleDataReader>();
 		public GxODPOracleDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt)
 			: base(connManager, dr, connection, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt)
@@ -1370,7 +1370,7 @@ namespace GeneXus.Data
 
 	public class GxODPManagedOracleDataReader : GxDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxODPManagedOracleDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxODPManagedOracleDataReader>();
 		public GxODPManagedOracleDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt)
 			: base(connManager, dr, connection, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt)
@@ -1436,7 +1436,7 @@ namespace GeneXus.Data
 #if !NETCORE
 	sealed internal class MSOracleConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<MSOracleConnectionWrapper>();
 		int oracle8 = -1;
 		public MSOracleConnectionWrapper() : base(new MSOracleProvider.OracleConnection())
 		{
@@ -1531,7 +1531,7 @@ namespace GeneXus.Data
 #endif
 	sealed internal class OracleConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(OracleConnectionWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<OracleConnectionWrapper>();
 		public OracleConnectionWrapper()
 		{
 			try
@@ -1625,7 +1625,7 @@ namespace GeneXus.Data
 
 	sealed internal class OracleManagedConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(OracleManagedConnectionWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<OracleManagedConnectionWrapper>();
 		public OracleManagedConnectionWrapper()
 		{
 			try

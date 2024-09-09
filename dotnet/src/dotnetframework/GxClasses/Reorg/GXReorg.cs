@@ -1,21 +1,20 @@
-namespace GeneXus.Reorg 
+namespace GeneXus.Reorg
 {
 	using System;
-	using System.IO;
 	using System.Collections;
-	using GeneXus.Application;
-	using log4net;
 	using System.Collections.Specialized;
-    using System.Runtime.CompilerServices;
-    using GeneXus.Metadata;
+	using System.IO;
+	using System.Reflection;
+	using System.Runtime.CompilerServices;
 	using System.Threading;
+	using GeneXus.Application;
 	using GeneXus.Configuration;
-	using GeneXus.Data.ADO;
 	using GeneXus.Data;
+	using GeneXus.Data.ADO;
+	using GeneXus.Data.NTier;
+	using GeneXus.Metadata;
 	using GeneXus.Resources;
 	using GeneXus.Utils;
-    using GeneXus.Data.NTier;
-	using System.Reflection;
 
 	public interface IReorgReader
 	{
@@ -31,7 +30,7 @@ namespace GeneXus.Reorg
 
     public class GXReorganization
     {
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Reorg.GXReorganization));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXReorganization>();
         public virtual void initialize() { }
 		public virtual void cleanup() { }
 		static ArrayList lstMsgs;
@@ -54,7 +53,15 @@ namespace GeneXus.Reorg
             GxContext.isReorganization = true;
            GXLogging.Debug(log, "GXReorganization.Ctr()");
         }
-        public IGxContext context
+		protected virtual void ExecutePrivate()
+		{
+
+		}
+		protected virtual void ExecuteImpl()
+		{
+			ExecutePrivate();
+		}
+		public IGxContext context
         {
             get { return _Context; }
             set { _Context = value; }
@@ -225,8 +232,6 @@ namespace GeneXus.Reorg
 
         public bool BeginResume()
         {
-			StreamReader input = null;
-				
             try
             {
                 if (createDataBase || ignoreResume)
@@ -235,27 +240,29 @@ namespace GeneXus.Reorg
                 }
                 else if (File.Exists(RESUME_REOR_FILE))
                 {
-					input = File.OpenText(RESUME_REOR_FILE);
-                    String statement = input.ReadLine();
-					if (!string.IsNullOrEmpty(statement))
-                    {
-                        string timeStamp;
-                        Config.GetValueOf("VER_STAMP", out timeStamp);
-                        if (statement!=timeStamp)
-                        {
-							AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed1"), null);
-							AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed2"), null);
-							AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed3"), null);
-							GXReorganization.Error = true;
-                            return false;
-                        }
-                    }
-                    while (statement != null)
-                    {
-                        executedStatements[statement] = null;
-                        statement = input.ReadLine();
-                    }
-					executingResume = true;
+					using (StreamReader input = File.OpenText(RESUME_REOR_FILE))
+					{
+						String statement = input.ReadLine();
+						if (!string.IsNullOrEmpty(statement))
+						{
+							string timeStamp;
+							Config.GetValueOf("VER_STAMP", out timeStamp);
+							if (statement != timeStamp)
+							{
+								AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed1"), null);
+								AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed2"), null);
+								AddMsg(GXResourceManager.GetMessage("GXM_lastreorg_failed3"), null);
+								GXReorganization.Error = true;
+								return false;
+							}
+						}
+						while (statement != null)
+						{
+							executedStatements[statement] = null;
+							statement = input.ReadLine();
+						}
+						executingResume = true;
+					}
                 }
 				return true;
             }
@@ -268,8 +275,6 @@ namespace GeneXus.Reorg
             finally
             {
 #if !NETCORE
-				if (input != null)
-					input.Close();
                 SerializeExecutedStatements();
 #endif
 			}
@@ -389,9 +394,14 @@ namespace GeneXus.Reorg
 			return false;
 #endif
 		}
+		protected virtual void CloseCursors()
+		{
+
+		}
+
 	}
 
-		public delegate void BlockEndCallback(string blockName, int errorCode);
+	public delegate void BlockEndCallback(string blockName, int errorCode);
 
 	public class ReorgExecute
 	{

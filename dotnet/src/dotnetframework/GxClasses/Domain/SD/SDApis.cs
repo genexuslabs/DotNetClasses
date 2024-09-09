@@ -1,19 +1,15 @@
+using System;
 using GeneXus;
 using GeneXus.Application;
 using GeneXus.Data;
-using GeneXus.Utils;
-using log4net;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace GX
 {
 	public class ClientInformation
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GX.ClientInformation));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GX.ClientInformation>();
 
-        public static string AppVersionCode
+		public static string AppVersionCode
         {
             get
             {

@@ -2,7 +2,8 @@ using System;
 using System.Collections;
 using System.DirectoryServices;
 using System.Text;
-using log4net;
+using GeneXus.Data;
+
 #if NETCORE
 using Novell.Directory.Ldap;
 #endif
@@ -11,7 +12,7 @@ namespace GeneXus.Utils
 {
 	public class GXLDAPClient
 	{
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXLDAPClient>();
 
 		string _server;
 		int _port;
@@ -245,14 +246,16 @@ namespace GeneXus.Utils
 						context1 = "/" + context;
 					AuthenticationTypes at = getAuthentication();
 					_entry = new DirectoryEntry("LDAP://" + getPath() + context1, _user, _password, at);
-					DirectorySearcher ds = new DirectorySearcher(_entry, filter, new string[] { name });
-					foreach (SearchResult result in ds.FindAll())
+					using (DirectorySearcher ds = new DirectorySearcher(_entry, filter, new string[] { name }))
 					{
-						PropertyValueCollection values = (PropertyValueCollection)(result.GetDirectoryEntry().Properties[name]);
-						StringBuilder sb = new StringBuilder();
-						for (int i = 0; i < values.Count; i++)
-							sb.Append(values[i].ToString() + " ");
-						sc.Add(sb.ToString());
+						foreach (SearchResult result in ds.FindAll())
+						{
+							PropertyValueCollection values = (PropertyValueCollection)(result.GetDirectoryEntry().Properties[name]);
+							StringBuilder sb = new StringBuilder();
+							for (int i = 0; i < values.Count; i++)
+								sb.Append(values[i].ToString() + " ");
+							sc.Add(sb.ToString());
+						}
 					}
 				}
 			}

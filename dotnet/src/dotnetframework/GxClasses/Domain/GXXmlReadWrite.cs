@@ -1,19 +1,15 @@
 using System;
-using System.Xml;
 using System.Collections;
 using System.Collections.Specialized;
-using System.Text;
-using System.Net;
 using System.IO;
+using System.Net;
+using System.Text;
+using System.Xml;
 using System.Xml.Schema;
 using GeneXus.Application;
 using GeneXus.Http.Client;
 using GeneXus.Http.Server;
 using GeneXus.Utils;
-using log4net;
-
-using System.Xml.Xsl;
-using System.Xml.XPath;
 
 namespace GeneXus.XML
 {
@@ -299,14 +295,7 @@ namespace GeneXus.XML
 			Resolver.Myself = baseUri;
 			treader = null;
 			mreader = null;
-			try
-			{
-				if (File.Exists(s))
-					treader = new XmlTextReader(s);
-			}
-			catch { }
-			if (treader==null)
-				treader = new XmlTextReader(new StringReader(s));
+			treader = new XmlTextReader(new StringReader(s));
 			SetDtdProcessing(treader, Resolver, validationType);
 			vreader = new XmlValidatingReader( treader );
 			vreader.XmlResolver = Resolver;
@@ -1906,7 +1895,7 @@ namespace GeneXus.XML
 
 	public class GXXMLWriter: IDisposable
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXXMLWriter));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXXMLWriter>();
 		private XmlTextWriter writer;
 
 		private short errorCode;
@@ -2149,6 +2138,10 @@ namespace GeneXus.XML
 		public short WriteElement (string Name, string Value)
 		{
 			WriteStartElement(Name);
+			if (Value==null)
+			{
+				Value = string.Empty;
+			}
 			valueBuffer = Value;
 			return 0;
 		}
@@ -2162,7 +2155,7 @@ namespace GeneXus.XML
 
 		public short WriteElement (string Name)
 		{
-			WriteElement (Name, "");
+			WriteElement (Name, string.Empty);
 			return 0;
 		}
 

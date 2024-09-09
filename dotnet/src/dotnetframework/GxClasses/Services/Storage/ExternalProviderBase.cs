@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using GeneXus.Encryption;
-using log4net;
 #if NETCORE
 using GeneXus.Mime;
 #else
@@ -12,14 +11,14 @@ namespace GeneXus.Services
 {
 	public abstract class ExternalProviderBase
 	{
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(ExternalProviderBase));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ExternalProviderBase>();
 
 		private GXService service;
 
 		protected static String DEFAULT_ACL = "DEFAULT_ACL";
 		protected static String DEFAULT_EXPIRATION = "DEFAULT_EXPIRATION";
 		protected static String FOLDER = "FOLDER_NAME";
-		protected static String DEFAULT_ACL_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_ACL";
+		protected static String DEFAULT_STORAGE_PRIVACY = "STORAGE_PROVIDER_DEFAULT_ACL";
 		protected static String DEFAULT_EXPIRATION_DEPRECATED = "STORAGE_PROVIDER_DEFAULT_EXPIRATION";
 		protected TimeSpan defaultExpiration = new TimeSpan(24, 0, 0);
 		protected static string DEFAULT_TMP_CONTENT_TYPE = "image/jpeg";
@@ -38,10 +37,10 @@ namespace GeneXus.Services
 			if (s == null) {
 				try
 				{
-					s = ServiceFactory.GetGXServices().Get(GXServices.STORAGE_SERVICE);
+					s = ServiceFactory.GetGXServices()?.Get(GXServices.STORAGE_SERVICE);
 				}
 				catch (Exception) {
-					logger.Warn("STORAGE_SERVICE is not activated in CloudServices.config");
+					GXLogging.Warn(logger, "STORAGE_SERVICE is not activated in CloudServices.config");
 				}
 			}
 			
@@ -53,7 +52,7 @@ namespace GeneXus.Services
 
 		private void Initialize()
 		{
-			String aclS = GetPropertyValue(DEFAULT_ACL, DEFAULT_ACL_DEPRECATED, "");
+			String aclS = GetPropertyValue(DEFAULT_ACL, DEFAULT_STORAGE_PRIVACY, "");
 			if (!String.IsNullOrEmpty(aclS))
 			{
 				this.defaultAcl = aclS.Equals("Private") ? GxFileType.Private : GxFileType.PublicRead;
@@ -82,7 +81,7 @@ namespace GeneXus.Services
 			if (value == null)
 			{
 				String errorMessage = String.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
-				logger.Fatal(errorMessage);
+				GXLogging.Critical(logger, errorMessage);	
 				throw new Exception(errorMessage);
 			}
 			return value;
@@ -102,7 +101,7 @@ namespace GeneXus.Services
 				}
 				catch (Exception)
 				{
-					logger.Warn($"Could not decrypt property name: {ResolvePropertyName(propertyName)}");
+					GXLogging.Warn(logger, $"Could not decrypt property name: {ResolvePropertyName(propertyName)}");
 				}
 			}
 			return value;
@@ -114,7 +113,7 @@ namespace GeneXus.Services
 			if (value == null)
 			{
 				String errorMessage = String.Format($"Service configuration error - Property name {ResolvePropertyName(propertyName)} must be defined");
-				logger.Fatal(errorMessage);
+				GXLogging.Critical(logger, errorMessage);
 				throw new Exception(errorMessage);
 			}
 			return value;
