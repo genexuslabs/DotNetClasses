@@ -45,7 +45,7 @@ namespace GeneXus.Application
 		public string ResponseMessage { get => responseMessage; set => responseMessage = value; }
 		public string HttpMethod { get => httpMethod; set => httpMethod = value; }
 
-		public string protocol = "REST";
+		public int protocol = 1;
 
 		private string httpMethod = "GET";
 
@@ -109,7 +109,7 @@ namespace GeneXus.Application
 
 		public void AddQueryVar(String varName, bool varValue)
 		{
-			_queryVars[varName] = varValue.ToString();
+			_queryVars[varName] = StringUtil.BoolToStr(varValue);
 		}
 
 		public void AddQueryVar(String varName, GxUserType varValue)
@@ -164,7 +164,7 @@ namespace GeneXus.Application
 		}
 		public void AddBodyVar(String varName, bool varValue)
 		{
-			_bodyVars[varName] = varValue.ToString();
+			_bodyVars[varName] = StringUtil.BoolToStr(varValue);
 		}
 		public void AddBodyVar(String varName, Guid varValue)
 		{

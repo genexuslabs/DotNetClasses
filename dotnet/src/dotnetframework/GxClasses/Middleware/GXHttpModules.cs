@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
-using GeneXus.Configuration;
-using System.Web;
 using System.IO;
-using GeneXus.Utils;
-using GeneXus.Application;
-using ManagedFusion.Rewriter;
-using System.Web.Hosting;
-using ManagedFusion.Rewriter.Rules;
-using ManagedFusion.Rewriter.Engines;
-using System.Reflection;
-using log4net;
-using System.Web.SessionState;
-using System.Web.Configuration;
-using System.Security;
 using System.Net.Http;
+using System.Reflection;
+using System.Security;
+using System.Web;
+using System.Web.Configuration;
+using System.Web.Hosting;
+using System.Web.SessionState;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Utils;
+using ManagedFusion.Rewriter;
+using ManagedFusion.Rewriter.Engines;
+using ManagedFusion.Rewriter.Rules;
 
 namespace GeneXus.Http.HttpModules
 {
@@ -54,7 +53,7 @@ namespace GeneXus.Http.HttpModules
 
 	public class GXAPIModule : IHttpModule
 	{
-
+		static private readonly object syncObject = new object();
 		public static List<String> servicesPathUrl;
 		public static Dictionary<String, String> servicesBase;
 		public static Dictionary<String, String> servicesClass;
@@ -136,69 +135,77 @@ namespace GeneXus.Http.HttpModules
 		public void ServicesGroupSetting(string webPath)
 		{
 			if (!String.IsNullOrEmpty(webPath) && servicesMap == null)
-			{				
-				servicesPathUrl = new List<string>();
-				servicesBase = new Dictionary<string, string>();				
-				servicesMap = new Dictionary<string, Dictionary<string, SingleMap>>();
-				//servicesVerbs = new Dictionary<string, Dictionary<string, string>>();
-				servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
-				servicesClass = new Dictionary<String, String>();
-
-				if (Directory.Exists(Path.Combine(webPath, PRIVATE_DIR))) 
+			{
+				lock (syncObject)
 				{
-					String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
-					foreach (String grp in grpFiles)
+					if (servicesMap == null)
 					{
-#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-						object p = JSONHelper.Deserialize<MapGroup>(File.ReadAllText(grp));
-#pragma warning restore SCS0018
-						MapGroup m = p as MapGroup;
-						if (m != null && m.Name != null && m.Mappings != null )
-						{
+						servicesPathUrl = new List<string>();
+						servicesBase = new Dictionary<string, string>();
+						servicesMap = new Dictionary<string, Dictionary<string, SingleMap>>();
+						//servicesVerbs = new Dictionary<string, Dictionary<string, string>>();
+						servicesMapData = new Dictionary<string, Dictionary<Tuple<string, string>, string>>();
+						servicesClass = new Dictionary<String, String>();
 
-							if (String.IsNullOrEmpty(m.BasePath))
+						if (Directory.Exists(Path.Combine(webPath, PRIVATE_DIR)))
+						{
+							String[] grpFiles = Directory.GetFiles(Path.Combine(webPath, PRIVATE_DIR), "*.grp.json");
+							foreach (String grp in grpFiles)
 							{
-								m.BasePath = REST_BASE_URL;
-							}
-							String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
-							String mapPathLower = mapPath.ToLower();
-							servicesPathUrl.Add(mapPathLower);
-							servicesBase.Add(mapPathLower, m.Name.ToLower());
-							servicesClass.Add(mapPathLower, m.Name.ToLower() + "_services");
-							foreach (SingleMap sm in m.Mappings)
-							{
-								if (String.IsNullOrEmpty(sm.Verb))
-									sm.Verb = "GET";
-								if (sm.VariableAlias == null)
-									sm.VariableAlias = new Dictionary<string, string>();
-								else
+								string content = File.ReadAllText(grp);
+								if (!string.IsNullOrEmpty(content))
 								{
-									Dictionary<string, string> vMap = new Dictionary<string, string>();
-									foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+#pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
+									object p = JSONHelper.Deserialize<MapGroup>(content);
+#pragma warning restore SCS0018
+									MapGroup m = p as MapGroup;
+									if (m != null && m.Name != null && m.Mappings != null)
 									{
-										vMap.Add(v.Key.ToLower(), v.Value.ToLower());
-									}
-									sm.VariableAlias = vMap;
-								}							
-								if (servicesMap.ContainsKey(mapPathLower))
-								{
-									if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
-									{										
-										servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
-										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+
+										if (String.IsNullOrEmpty(m.BasePath))
+										{
+											m.BasePath = REST_BASE_URL;
+										}
+										String mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
+										String mapPathLower = mapPath.ToLower();
+										servicesPathUrl.Add(mapPathLower);
+										servicesBase[mapPathLower]= m.Name.ToLower();
+										servicesClass[mapPathLower]= m.Name.ToLower() + "_services";
+										foreach (SingleMap sm in m.Mappings)
+										{
+											if (String.IsNullOrEmpty(sm.Verb))
+												sm.Verb = "GET";
+											if (sm.VariableAlias == null)
+												sm.VariableAlias = new Dictionary<string, string>();
+											else
+											{
+												Dictionary<string, string> vMap = new Dictionary<string, string>();
+												foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+												{
+													vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+												}
+												sm.VariableAlias = vMap;
+											}
+											if (servicesMap.ContainsKey(mapPathLower))
+											{
+												if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+												{
+													servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+													servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+												}
+											}
+											else
+											{
+												servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string, string>, string>());
+												servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
+												servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
+												servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+											}
+										}
 									}
 								}
-								else
-								{
-									servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string,string>, string>());
-									servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb), sm.Name.ToLower());
-									servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
-									servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
-								}							
-							
 							}
 						}
-
 					}
 				}
 			}

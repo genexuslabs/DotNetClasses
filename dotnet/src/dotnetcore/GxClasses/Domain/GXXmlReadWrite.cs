@@ -1132,7 +1132,7 @@ namespace GeneXus.XML
 
 			char[] trimChars = { '\t', ' ' };
 
-			if (node.NodeType != ElementType) return;
+			if (node==null || node.NodeType != ElementType) return;
 			switch (node.NodeType)
 			{
 				case ElementType:
@@ -2131,6 +2131,10 @@ namespace GeneXus.XML
 		public short WriteElement (string Name, string Value)
 		{
 			WriteStartElement(Name);
+			if (Value==null)
+			{
+				Value = string.Empty;
+			}
 			valueBuffer = Value;
 			return 0;
 		}

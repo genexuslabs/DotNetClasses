@@ -8,9 +8,10 @@ using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 #endif
-using log4net;
 using System.IO;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 using GeneXus.Configuration;
 
 namespace GeneXus.Utils
@@ -142,7 +143,7 @@ namespace GeneXus.Utils
 
 		internal static bool ValidateCsrfToken()
 		{
-			return Config.GetValueOf("ValidateCSRF", Preferences.NO) == Preferences.YES;
+			return Config.GetValueOf("CSRF_PROTECTION", Preferences.NO) == Preferences.YES;
 		}
 	}
 }

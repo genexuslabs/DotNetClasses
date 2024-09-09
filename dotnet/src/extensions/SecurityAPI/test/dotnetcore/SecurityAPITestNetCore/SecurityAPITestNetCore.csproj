@@ -15,6 +15,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestECDSASigning.cs" Link="Cryptography\Asymmetric\TestECDSASigning.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestRSAEncryption.cs" Link="Cryptography\Asymmetric\TestRSAEncryption.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestRSASigning.cs" Link="Cryptography\Asymmetric\TestRSASigning.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Asymmetric\TestRSAStandardSigning.cs" Link="Cryptography\Asymmetric\TestRSAStandardSigning.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Checksum\TestChecksum.cs" Link="Cryptography\Checksum\TestChecksum.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Hash\TestHashDomainSpaces.cs" Link="Cryptography\Hash\TestHashDomainSpaces.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Cryptography\Hash\TestHashing.cs" Link="Cryptography\Hash\TestHashing.cs" />
@@ -54,6 +55,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PrivateKey.cs" Link="SecurityAPICommons\keys\TestBase64PrivateKey.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64Certificate.cs" Link="SecurityAPICommons\keys\TestBase64Certificate.cs" />
 		<Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PublicKey.cs" Link="SecurityAPICommons\keys\TestBase64PublicKey.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestPublicKeyFromJwks.cs" Link="SecurityAPICommons\keys\TestPublicKeyFromJwks.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestSftp.cs" Link="Sftp\TestSftp.cs" />
 	<Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestLoginWithKeyWithoutPassword.cs" Link="Sftp\TestLoginWithKeyWithoutPassword.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestBase64Certificate.cs" Link="XmlSignature\DSig\TestBase64Certificate.cs" />

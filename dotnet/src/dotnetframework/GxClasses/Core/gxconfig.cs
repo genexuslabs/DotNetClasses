@@ -157,7 +157,25 @@ namespace GeneXus.Configuration
 				return false;
 			}
 		}
-
+		internal static bool GetValueOrEnvironmentVarOf(string sId, out string sString)
+		{
+			try
+			{
+				sString = config.Get(sId);
+				if (String.IsNullOrEmpty(sString))
+				{
+					sString = MappedValue(sId, sString);
+					if (string.IsNullOrEmpty(sString))
+						return false;
+				}
+				return true;
+			}
+			catch
+			{
+				sString = string.Empty;
+				return false;
+			}
+		}
 		public static bool GetValueOf(string sId)
 		{
 			string sString;
@@ -487,6 +505,7 @@ namespace GeneXus.Configuration
 		};
 
 		static string GeoTypesAssembly = "Microsoft.SqlServer.Types";
+		static string DiagnosticSourceAssembly = "System.Diagnostics.DiagnosticSource";
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
@@ -500,7 +519,16 @@ namespace GeneXus.Configuration
 			{
 				return SQLGeographyWrapper.GeoAssembly;
 			}
-			else return null;
+			else if (requestedAssembly.Name == DiagnosticSourceAssembly)
+			{
+				//MySQLConnector requirement
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{DiagnosticSourceAssembly}.dll");
+				if (File.Exists(fileName))
+				{
+					return Assembly.LoadFrom(fileName);
+				}
+			}
+			return null;
 		}
 #endif
 		static object syncRoot = new Object();
@@ -533,14 +561,15 @@ namespace GeneXus.Configuration
 							{
 								loadedConfigFile = configFileName;
 								_config = loadConfig(configFileName, out logConfigSource);
+								configLoaded = true;
 								if (!string.IsNullOrEmpty(logConfigSource))
 									logConfig(logConfigSource, out configuredFilename);
 								else
 									logConfig(configFileName, out configuredFilename);
 							}
+#if !NETCORE
 							else
 							{
-#if !NETCORE
 								if (GxContext.IsHttpContext &&
 									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
 								{
@@ -576,10 +605,13 @@ namespace GeneXus.Configuration
 									logConfig(logFile, out configuredFilename);
 									loadedConfigFile = Path.GetFullPath(file);
 									_config = loadConfig(file);
-
 								}
-
+								configLoaded = true;
+							}
 #else
+							else
+							{
+
 								string basePath = FileUtil.GetBasePath();
 								string currentDir = Directory.GetCurrentDirectory();
 								string startupDir = FileUtil.GetStartupDirectory();
@@ -635,8 +667,8 @@ namespace GeneXus.Configuration
 								{
 									//"Could not register encoding provider";
 								}
-#endif
 							}
+#endif
 						}
 					}
 					log = GXLoggerFactory.GetLogger<Config>();
@@ -826,6 +858,15 @@ namespace GeneXus.Configuration
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
 		static int sessionTimeout = -1;
+		static int singletonHttpClient = -1;
+		internal static string AppMainNamespace
+		{
+			get
+			{
+				Config.GetValueOf("AppMainNamespace", out string nameSpace);
+				return nameSpace;
+			}
+		}
 		internal static string DefaultDatastore
 		{
 			get
@@ -1413,6 +1454,18 @@ namespace GeneXus.Configuration
 					return DefaultWrapSingleApiOutput;
 			}
 		}
+
+		internal static bool SingletonHttpClient()
+		{
+			if (singletonHttpClient == -1)
+			{
+				if (Config.GetValueOrEnvironmentVarOf("HTTPCLIENT_SINGLETON", out string sValue) && int.TryParse(sValue, out int value))
+					singletonHttpClient = value;
+				else
+					singletonHttpClient = 1;
+			}
+			return singletonHttpClient==1;
+		}
 		internal static string CorsAllowedOrigins()
 		{
 			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
@@ -1454,27 +1507,27 @@ namespace GeneXus.Configuration
 			else
 				return "";
 		}
-
-		public static int GetHttpClientMaxConnectionPerRoute()
+		internal const int DEFAULT_HTTPCLIENT_MAX_PER_ROUTE= 1000;
+		internal static int GetHttpClientMaxConnectionPerRoute()
 		{
 			if (httpclient_max_per_route == -1)
 			{
 				try
 				{
 					string strmax;
-					if (Config.GetValueOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
+					if (Config.GetValueOrEnvironmentVarOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
 					{
 						httpclient_max_per_route = Convert.ToInt32(strmax);
 					}
 					else
 					{
-						httpclient_max_per_route = 1000;
+						httpclient_max_per_route = DEFAULT_HTTPCLIENT_MAX_PER_ROUTE;
 					}
 				}
 				catch (Exception ex)
 				{
 					GXLogging.Error(log, "HttpClientMaxPerRoute error", ex);
-					httpclient_max_per_route = 1000;
+					httpclient_max_per_route = DEFAULT_HTTPCLIENT_MAX_PER_ROUTE;
 				}
 			}
 			return httpclient_max_per_route;

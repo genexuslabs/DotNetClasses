@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Http.Client;
 using Xunit;
@@ -13,6 +18,10 @@ namespace xUnitTesting
 
 	public class GxHttpClientTest
 	{
+		const int MAX_CONNECTIONS= 5;
+		public GxHttpClientTest() {
+			Environment.SetEnvironmentVariable("GX_HTTPCLIENT_MAX_PER_ROUTE", MAX_CONNECTIONS.ToString(), EnvironmentVariableTarget.Process);
+		}
 		[Fact]
 		public void AddHeaderWithSpecialCharactersDoesNotThrowException()
 		{
@@ -27,7 +36,6 @@ namespace xUnitTesting
 				httpclient.Execute("GET", string.Empty);
 				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), httpclient.StatusCode);
 			}
-
 		}
 
 		[Fact]
@@ -45,6 +53,141 @@ namespace xUnitTesting
 				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), httpclient.StatusCode);
 			}
 		}
+
+		[Fact]
+		public void HttpClientCookieHeader()
+		{
+			string headerValue = "CognitoIdentityServiceProvider.3tgmin25m9bkg6vgi7vpavu7a9.M00000936.refreshToken=eyJjdHkiOiJKV1QiLCJlbmMiSkRCAmMpYqndvORnWLTfHw; CognitoIdentityServiceProvider.3tgmin25m9bkg6vgi7vpavu7a9.LastAuthUser=M00000936";
+			string headerName = "Cookie";
+			using (GxHttpClient httpclient = new GxHttpClient())
+			{
+				httpclient.AddHeader(headerName, headerValue);
+				httpclient.Host = "localhost";
+				httpclient.Port = 80;
+				httpclient.BaseURL = @"NotFound/NotFound.php";
+				httpclient.HttpClientExecute("GET", string.Empty);
+				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), httpclient.StatusCode);
+			}
+			using (GxHttpClient oldHttpclient = new GxHttpClient())
+			{
+				oldHttpclient.AddHeader(headerName, headerValue);
+				oldHttpclient.Host = "localhost";
+				oldHttpclient.Port = 80;
+				oldHttpclient.BaseURL = @"NotFound/NotFound.php";
+				oldHttpclient.Execute("GET", string.Empty);
+				Assert.NotEqual(((int)HttpStatusCode.InternalServerError), oldHttpclient.StatusCode);
+			}
+		}
+#if NETCORE
+		[Fact(Skip = "For local testing only")]
+		public void TestHttpClientMaxPoolSize()
+		{
+			HttpClientMaxPoolSize().Wait();
+		}
+		async Task HttpClientMaxPoolSize() {
+			GxContext context = new GxContext();
+			string baseUrl = "http://localhost:8082/HttpClientTestNETSQLServer/testcookies.aspx";
+
+			var tasks = new List<Task>();
+
+			for (int i = 0; i < MAX_CONNECTIONS * 10; i++)
+			{
+				string url = $"{baseUrl}?id=" + i;
+				tasks.Add(Task.Run(() => ExecuteGet(url)));
+			}
+			await Task.WhenAll(tasks);
+
+			Assert.Single(GxHttpClient._httpClientInstances);
+
+			HttpClient c = GxHttpClient._httpClientInstances.First().Value;
+			Assert.NotNull(c);
+
+			Assert.True(pendingRequestsCount <= MAX_CONNECTIONS, $"Active connections ({pendingRequestsCount}) exceed MaxConnectionsPerServer ({MAX_CONNECTIONS})");
+		}
+		static private int pendingRequestsCount = 0;
+		static private readonly object syncObject = new object();
+		static private void IncrementPendingRequestsCount()
+		{
+			lock (syncObject)
+			{
+				pendingRequestsCount++;
+			}
+		}
+
+		static private void DecrementPendingRequestsCount()
+		{
+			lock (syncObject)
+			{
+				pendingRequestsCount--;
+			}
+		}
+		private string ExecuteGet(string url)
+		{
+			GxContext context = new GxContext();
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				IncrementPendingRequestsCount();
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode); //When failed, turn on log.config to see server side error.
+				DecrementPendingRequestsCount();
+				return httpclient.ToString();
+			}
+		}
+
+#endif
+		[Fact(Skip = "For local testing only")]
+		public void HttpClientCookiesTest()
+		{
+			GxContext context = new GxContext();
+			string baseUrl = "http://localhost:8082/HttpClientTestNETSQLServer/testcookies.aspx";
+
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url = $"{baseUrl}?id=1";
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
+				CookieContainer cookies = context.GetCookieContainer(url, true);
+				Assert.NotNull(cookies);
+				CookieCollection responseCookies = cookies.GetCookies(new Uri(url));
+				Assert.NotEmpty(responseCookies);
+				string result = httpclient.ToString();
+				Assert.Contains("1", result, StringComparison.OrdinalIgnoreCase);
+
+			}
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url = $"{baseUrl}?id=2";
+				httpclient.IncludeCookies = true;
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
+				string result = httpclient.ToString();
+				Assert.StartsWith("Cookie found ", result, StringComparison.OrdinalIgnoreCase);
+				Assert.Contains("2", result, StringComparison.OrdinalIgnoreCase);
+			}
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url = $"{baseUrl}?id=3";
+				httpclient.IncludeCookies = false;
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
+				string result = httpclient.ToString();
+				Assert.StartsWith("Cookie not found", result, StringComparison.OrdinalIgnoreCase);
+				Assert.Contains("3", result, StringComparison.OrdinalIgnoreCase);
+			}
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url = "https://www.google.com/";
+				httpclient.HttpClientExecute("GET", url);
+				Assert.Equal((int)HttpStatusCode.OK, httpclient.StatusCode);
+				CookieContainer cookies = context.GetCookieContainer(url, true);
+				Assert.NotNull(cookies);
+				CookieCollection responseCookies = cookies.GetCookies(new Uri(url));
+				Assert.NotEmpty(responseCookies);
+				string result = httpclient.ToString();
+			}
+
+		}
+
 #if !NETCORE
 		[Fact]
 		public void NoStoreHeader()

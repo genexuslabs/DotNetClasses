@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using GeneXus.Utils;
+#if !NETCORE
 using Jayrock.Json;
+#endif
 using GeneXus.Application;
 using System.Reflection;
 using GeneXus.Metadata;
@@ -169,12 +171,16 @@ namespace GeneXus.Search
 	{
 #region Internal Data
 
-		protected JObject _Properties;
+		JObject _Properties;
 		protected float m_score;
 
 #endregion
+		public SearchResultItem()
+		{
+			_Properties = new JObject();
+		}
 
-#region ISearchResultItem Members
+		#region ISearchResultItem Members
 
 		public virtual string Id { get { return ""; } }
 		public virtual string Viewer { get { return ""; } }

@@ -15,8 +15,11 @@
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\AsymmetricUtils\AsymmetricEncryptionAlgorithm.cs" Link="AsymmetricUtils\AsymmetricEncryptionAlgorithm.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\AsymmetricUtils\AsymmetricEncryptionPadding.cs" Link="AsymmetricUtils\AsymmetricEncryptionPadding.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\AsymmetricUtils\AsymmetricSigningAlgorithm.cs" Link="AsymmetricUtils\AsymmetricSigningAlgorithm.cs" />
+		<Compile Include="..\..\dotnetframework\GeneXusCryptography\AsymmetricUtils\SignatureStandardUtils.cs" Link="AsymmetricUtils\SignatureStandardUtils.cs" />
+		<Compile Include="..\..\dotnetframework\GeneXusCryptography\AsymmetricUtils\SignatureStandardOptions.cs" Link="AsymmetricUtils\SignatureStandardOptions.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Asymmetric\AsymmetricCipher.cs" Link="Asymmetric\AsymmetricCipher.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Asymmetric\AsymmetricSigner.cs" Link="Asymmetric\AsymmetricSigner.cs" />
+		<Compile Include="..\..\dotnetframework\GeneXusCryptography\Asymmetric\StandardSigner.cs" Link="Asymmetric\StandardSigner.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\ChecksumUtils\ChecksumAlgorithm.cs" Link="ChecksumUtils\ChecksumAlgorithm.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\ChecksumUtils\ChecksumInputType.cs" Link="ChecksumUtils\ChecksumInputType.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\ChecksumUtils\CRCParameters.cs" Link="ChecksumUtils\CRCParameters.cs" />
@@ -30,6 +33,7 @@
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Commons\IPasswordDerivationObject.cs" Link="Commons\IPasswordDerivationObject.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Commons\ISymmectricStreamCipherObject.cs" Link="Commons\ISymmectricStreamCipherObject.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Commons\ISymmetricBlockCipherObject.cs" Link="Commons\ISymmetricBlockCipherObject.cs" />
+		<Compile Include="..\..\dotnetframework\GeneXusCryptography\Commons\IStandardSignerObject.cs" Link="Commons\IStandardSignerObject.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Config\CryptographyEncodingUtil.cs" Link="Config\CryptographyEncodingUtil.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\HashUtils\HashAlgorithm.cs" Link="HashUtils\HashAlgorithm.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Hash\Hashing.cs" Link="Hash\Hashing.cs" />
@@ -43,10 +47,6 @@
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\SymmetricUtils\SymmetricStreamAlgorithm.cs" Link="SymmetricUtils\SymmetricStreamAlgorithm.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Symmetric\SymmetricBlockCipher.cs" Link="Symmetric\SymmetricBlockCipher.cs" />
     <Compile Include="..\..\dotnetframework\GeneXusCryptography\Symmetric\SymmetricStreamCipher.cs" Link="Symmetric\SymmetricStreamCipher.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -65,6 +65,10 @@
     <Folder Include="ChecksumUtils\" />
     <Folder Include="SymmetricUtils\" />
     <Folder Include="Symmetric\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.3.1" />
   </ItemGroup>
 
 </Project>

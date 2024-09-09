@@ -1,5 +1,9 @@
 using GeneXus.Utils;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
+#endif
 using System;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,7 +18,7 @@ namespace GeneXus.SD.Store
 			return dt.AddMilliseconds(unixMillisecondsTime);
 		}
 
-		public static JObject FromJSonString(string s)
+		internal static JObject FromJSonString(string s)
 		{
 			JObject _jsonArr = null;
 			if (!string.IsNullOrEmpty(s))

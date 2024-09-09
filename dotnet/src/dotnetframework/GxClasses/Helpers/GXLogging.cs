@@ -190,11 +190,15 @@ namespace GeneXus
 		const string ThreadNameNet6 = ".NET ThreadPool Worker";
 		const string ThreadId = "threadid";
 #endif
+		private bool _traceEnabled = false;
+		private bool _debugEnabled = false;
 		internal ILog log { get; set; }
 
 		internal GXLoggerLog4Net(ILog logInstance)
 		{
 			log = logInstance;
+			_traceEnabled = log.Logger.IsEnabledFor(Level.Trace);
+			_debugEnabled = log.IsDebugEnabled;
 		}
 		void SetThreadIdForLogging()
 		{
@@ -221,15 +225,15 @@ namespace GeneXus
 			}
 #endif
 		}
-		public bool IsTraceEnabled { get => TraceEnabled(); }
+		public bool IsTraceEnabled { get => _traceEnabled; }
 		public bool IsErrorEnabled { get => ErrorEnabled(); }
 		public bool IsWarningEnabled { get => WarningEnabled(); }
-		public bool IsDebugEnabled { get => DebugEnabled(); }
+		public bool IsDebugEnabled { get => _debugEnabled; }
 		public bool IsInfoEnabled { get => InfoEnabled(); }
 		public bool IsCriticalEnabled { get => CriticalEnabled(); }
 		public bool TraceEnabled()
 		{
-			return log.Logger.IsEnabledFor(Level.Trace);
+			return _traceEnabled;
 		}
 		public bool ErrorEnabled()
 		{
@@ -241,7 +245,7 @@ namespace GeneXus
 		}
 		public bool DebugEnabled()
 		{
-			return log.IsDebugEnabled;
+			return _debugEnabled;
 		}
 		public bool InfoEnabled()
 		{
@@ -442,6 +446,15 @@ namespace GeneXus
 				log.Warn(msg, ex);
 			}
 		}
+		internal static void DebugSanitized(IGXLogger log, string startMsg, Func<string> buildMsg)
+		{
+			if (log.IsDebugEnabled)
+			{
+				string msg = buildMsg();
+				DebugSanitized(log, startMsg + msg);
+			}
+		}
+
 		public static void DebugSanitized(ILog log, Exception ex, params string[] list)
 		{
 			if (log.IsDebugEnabled)
@@ -523,14 +536,34 @@ namespace GeneXus
 					logger.LogTrace(string.Join(" ", list));
 			}
 		}
-		internal static void Trace(IGXLogger logger, string msg, params string[] list)
+		internal static void Trace(IGXLogger logger, params string[] list)
 		{
 			if (logger != null)
 			{
 				if (logger.IsTraceEnabled)
-					logger.LogTrace(msg, list);
+					logger.LogTrace(string.Join(" ", list));
 			}
 		}
+		internal static void Trace(IGXLogger logger, Func<string> buildMsg)
+		{
+			if (logger != null)
+			{
+				if (logger.IsTraceEnabled)
+				{
+					string msg = buildMsg();	
+					logger.LogTrace(msg);
+				}
+			}
+		}
+
+		internal static bool TraceEnabled(IGXLogger logger)
+		{
+			if (logger != null)
+				return logger.IsTraceEnabled;
+			else
+				return false;
+		}
+
 		public static void Critical(IGXLogger logger, params string[] list)
 		{
 			if (logger != null)
@@ -792,7 +825,7 @@ namespace GeneXus
 			if (logger != null) { 
 				if (logger.IsInfoEnabled)
 				{
-					logger.LogInfo(msg.ToString(), list);
+					logger.LogInfo(msg, list);
 				}
 			}
 		}

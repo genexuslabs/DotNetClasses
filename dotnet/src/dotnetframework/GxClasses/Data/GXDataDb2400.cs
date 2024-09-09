@@ -6,7 +6,6 @@ using System.Text;
 #if !NETCORE
 using Microsoft.HostIntegration.MsDb2Client;
 #endif
-using log4net;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;
@@ -45,7 +44,7 @@ namespace GeneXus.Data
 	}
 	sealed internal class Db2ISeriesConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Db2ISeriesConnectionWrapper>();
 		public Db2ISeriesConnectionWrapper()
 		{
 			try
@@ -121,7 +120,7 @@ namespace GeneXus.Data
 	public class GxDb2ISeries : GxDataRecord
 	{
 
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDb2ISeries>();
 		private bool m_UseCharInDate;
 		public static string SQL_NULL_DATE="00000000";
 		private string m_InitialCatalog;
@@ -653,7 +652,7 @@ namespace GeneXus.Data
             }
             catch (Exception ex)
             {
-                GXLogging.Error(log, "DisposeCommand error", ex);
+                GXLogging.Warn(log, "DisposeCommand error", ex);
 
             }
 		}
@@ -768,7 +767,7 @@ namespace GeneXus.Data
 	}
 	sealed internal class Db2ISeriesHISConnectionWrapper : GxAbstractConnectionWrapper 
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Db2ISeriesHISConnectionWrapper>();
 		public Db2ISeriesHISConnectionWrapper() : base(new MsDb2Connection()) 
 		{	}
 
@@ -827,7 +826,7 @@ namespace GeneXus.Data
 	public class GxISeriesHIS : GxDataRecord
 	{
 
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxISeriesHIS>();
 		private bool m_UseCharInDate;
 		private string m_InitialCatalog;
 		private string m_SqlPackage;

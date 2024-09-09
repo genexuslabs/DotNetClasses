@@ -14,7 +14,6 @@ namespace GeneXus.Procedure
 	using GeneXus.Printer;
 	using GeneXus.Utils;
 	using GeneXus.XML;
-	using log4net;
 
 	public abstract class GXProcedure: GXBaseObject
 	{
@@ -434,10 +433,11 @@ namespace GeneXus.Procedure
 		public static int OUTPUT_RVIEWER_DLL = 2;
 		public static int OUTPUT_PDF     = 3;
 
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxReportUtils>();
 
 #if NETCORE
 		const string PDF_LIBRARY_ITEXT8 = "ITEXT8";
+		const string PDF_LIBRARY_PDFPIG = "PDFPIG";
 #endif
 		static public IReportHandler GetPrinter( int outputType, string path, Stream reportOutputStream)
 		{
@@ -471,7 +471,13 @@ namespace GeneXus.Procedure
 					Type classType = assem.GetType( "GeneXus.Printer.GxReportBuilderPdf", false, true);
 					reportHandler = (IReportHandler) Activator.CreateInstance(classType,new Object[]{path, reportOutputStream});
 #else
-					string reportBuidler = Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_ITEXT8, StringComparison.OrdinalIgnoreCase) ? "GxReportBuilderPdf8" : "GxReportBuilderPdf";
+					string reportBuidler;
+					if (Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_ITEXT8, StringComparison.OrdinalIgnoreCase))
+						reportBuidler = "GxReportBuilderPdf8";
+					else if (Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_PDFPIG, StringComparison.OrdinalIgnoreCase))
+						reportBuidler = "GxReportBuilderPDFPig";
+					else
+						reportBuidler = "GxReportBuilderPdf";
 					reportHandler = (IReportHandler)(ClassLoader.FindInstance("GxPdfReportsCS", "GeneXus.Printer", reportBuidler, new Object[] { path, reportOutputStream }, null));
 #endif
 				}

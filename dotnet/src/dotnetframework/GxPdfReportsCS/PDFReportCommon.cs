@@ -1,25 +1,20 @@
 
 using System;
-
-using System.IO;
 using System.Collections;
-using System.Threading;
-using System.Text;
-using Microsoft.Win32;
-using System.Runtime.InteropServices;
-using System.Globalization;
-
-using System.util;
-using System.Diagnostics;
-using log4net;
-
-using GeneXus.Printer;
 using System.Collections.Generic;
-using System.Security;
-using GeneXus;
-using GeneXus.Utils;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
-using GeneXus.Metadata;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
+using System.Threading;
+using System.util;
+using GeneXus;
+using GeneXus.Printer;
+using GeneXus.Utils;
+using Microsoft.Win32;
 
 namespace com.genexus.reports
 {
@@ -31,11 +26,11 @@ namespace com.genexus.reports
 		BOTTOM = 2,
 	}
 
-	public abstract class PDFReportItextBase : IReportHandler
+	public abstract class PDFReportBase : IReportHandler
 	{
 		protected int lineHeight, pageLines;
 
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<PDFReportBase>();
 
 		protected bool fontUnderline;
 		protected bool fontStrikethru;
@@ -54,7 +49,7 @@ namespace com.genexus.reports
 		protected bool modal = false;
 		protected String docName = "PDFReport.pdf";
 		protected static NativeSharpFunctionsMS nativeCode = new NativeSharpFunctionsMS();
-		protected Hashtable fontSubstitutes = new Hashtable();
+		protected static Hashtable fontSubstitutes = new Hashtable();
 		protected static String configurationFile = null;
 		protected static String configurationTemplateFile = null;
 		protected static String defaultRelativePrepend = null;
@@ -232,7 +227,7 @@ namespace com.genexus.reports
 		}
 
 		private static char alternateSeparator = Path.DirectorySeparatorChar == '/' ? '\\' : '/';
-		public PDFReportItextBase(String appPath)
+		public PDFReportBase(String appPath)
 		{
 			try
 			{
@@ -729,7 +724,7 @@ namespace com.genexus.reports
 			this.docName = docName.Trim();
 			if(!Path.IsPathRooted(docName))
 			{ 
-				string outputDir = props.getGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, "").Replace(alternateSeparator, Path.DirectorySeparatorChar).Trim();
+				string outputDir = props.getGeneralProperty(Const.OUTPUT_FILE_DIRECTORY, string.Empty).Replace(alternateSeparator, Path.DirectorySeparatorChar).Trim();
 				if(!string.IsNullOrEmpty(outputDir) && outputDir!=".")
 				{
 					try
@@ -738,22 +733,22 @@ namespace com.genexus.reports
 						{
 							outputDir += Path.DirectorySeparatorChar;
 						}
-						string[] dirs = Directory.GetDirectories(outputDir);
-						foreach (string dir in dirs)
-						{
-							Directory.CreateDirectory(dir);
-						}
+						Directory.CreateDirectory(outputDir);
 					}catch (Exception ex)
 					{
 						Exception exDetailed = new Exception($"Error creating {Const.OUTPUT_FILE_DIRECTORY} of {Const.INI_FILE} ({outputDir})", ex);
 						GXLogging.Error(log, "GxSetDocName error", exDetailed);
 						throw exDetailed;
 					}
-					this.docName = outputDir + this.docName;
+					this.docName = Path.Combine(outputDir, this.docName);
 				}
 			}
-			if(this.docName.IndexOf('.') < 0)
+			this.docName = ReportUtils.AddPath(this.docName, defaultRelativePrepend);
+
+			if (string.IsNullOrEmpty(new FileInfo(this.docName).Extension))
+			{
 				this.docName += ".pdf";
+			}
 			GXLogging.Debug(log,"GxSetDocName: '" + this.docName + "'");
 		}
 
@@ -899,12 +894,17 @@ namespace com.genexus.reports
 			return result;
 		}
 
+		bool PageHeightExceeded(float bottomAux, float drawingPageHeight)
+		{
+			return bottomAux > drawingPageHeight;
+		}
+
 		internal abstract bool SetComplainceLevel(PdfConformanceLevel level);
 	}
 
 	public class ParseINI
 	{
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<ParseINI>();
 
 		private static int MAX_LINE_LENGTH=255; 
 		private static String GENERAL="&General&"; 
@@ -1431,7 +1431,7 @@ namespace com.genexus.reports
 
 	public class NativeSharpFunctionsMS 
 	{
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<NativeSharpFunctionsMS>();
 		public int shellExecute(String cmd, String fileName)
 		{
 			Process p = new Process();
@@ -1706,7 +1706,7 @@ namespace com.genexus.reports
 
 	public class MSPDFFontDescriptor 
 	{
-		static IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static IGXLogger log = GXLoggerFactory.GetLogger<MSPDFFontDescriptor>();
 
 		private static String TRUE_TYPE_REGISTRY_SIGNATURE = "(TrueType)"; 
 		private static String REGISTRY_FONTS_ENTRY = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Fonts"; // Fonts NT/2000

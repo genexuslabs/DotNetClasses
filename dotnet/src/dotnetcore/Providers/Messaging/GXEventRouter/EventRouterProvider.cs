@@ -4,7 +4,6 @@ using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Messaging.Common
 {

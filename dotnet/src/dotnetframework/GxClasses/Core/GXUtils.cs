@@ -11,7 +11,6 @@ namespace GeneXus.Utils
 	using Cache;
 	using GeneXus.Application;
 	using GeneXus.Services;
-	using log4net;
 	using TZ4Net;
 
 	public class GxMail
@@ -772,6 +771,7 @@ namespace GeneXus.Utils
 				return GX_ASCDEL_WRITEERROR;
 			}
 		}
+		const int MAX_DECIMAL_PRECISION = 29;
 		public short dfwpnum(decimal num, int dec)
 		{
 			if (_writeStatus == FileIOStatus.Closed)
@@ -779,7 +779,7 @@ namespace GeneXus.Utils
 				GXLogging.Error(log, "Error ADF0004");
 				return GX_ASCDEL_INVALIDSEQUENCE;
 			}
-			appendFld(StringUtil.Str(num, 18, dec).TrimStart(null));
+			appendFld(StringUtil.Str(num, MAX_DECIMAL_PRECISION, dec).TrimStart(null));
 			return GX_ASCDEL_SUCCESS;
 		}
 		public short dfwptxt(string s, int len)

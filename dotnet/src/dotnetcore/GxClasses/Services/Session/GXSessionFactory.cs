@@ -5,7 +5,6 @@ using GeneXus.Data;
 using GeneXus.Data.ADO;
 using GeneXus.Encryption;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Services
 {

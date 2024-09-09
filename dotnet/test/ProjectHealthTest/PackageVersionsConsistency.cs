@@ -101,12 +101,21 @@ namespace ProjectHealthTest
 							XmlAttribute condition = packageNode.ParentNode.Attributes["Condition"];
 							if (condition != null) {
 								if (targetFramework == NET8 && condition.Value.Contains($"=='{NET_FRAMEWORK}'", StringComparison.OrdinalIgnoreCase))
+								{
 									continue;
+								}
+								else if (targetFramework == NET8 && condition.Value.Contains($"!='{NET8}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
 								else if (targetFramework == NET_FRAMEWORK && condition.Value.Contains($"=='{NET8}'", StringComparison.OrdinalIgnoreCase))
 								{
 									continue;
 								}
-
+								else if (targetFramework == NET_FRAMEWORK && condition.Value.Contains($"!='{NET_FRAMEWORK}'", StringComparison.OrdinalIgnoreCase))
+								{
+									continue;
+								}
 							}
 
 							if (packageNode.Attributes == null)
@@ -216,9 +225,18 @@ namespace ProjectHealthTest
 			else
 			{
 				Version directVersion = GetVersion(directReference.Version);
-				return value.Any(k => GetVersion(k.Version) > directVersion);
+				return value.Any(k => DirectReferenceLessThanTransitiveVersion(directVersion, k) || DiferentDirectReferences(directVersion, k));
 			}
 		}
+		private bool DiferentDirectReferences(Version directVersion, PackageVersionItem k)
+		{
+			return (!k.Transitive && GetVersion(k.Version) != directVersion);
+		}
+		private bool DirectReferenceLessThanTransitiveVersion(Version directVersion, PackageVersionItem k)
+		{
+			return (k.Transitive && GetVersion(k.Version) > directVersion);
+		}
+		
 		private Version GetVersion(String versionString)
 		{
 			return Version.Parse(Regex.Match(versionString, VersionPattern).Value);

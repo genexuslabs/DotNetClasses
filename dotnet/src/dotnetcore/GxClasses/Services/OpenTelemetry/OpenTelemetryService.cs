@@ -1,6 +1,6 @@
 using System;
+using System.Text.RegularExpressions;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Services.OpenTelemetry
 {
@@ -11,11 +11,56 @@ namespace GeneXus.Services.OpenTelemetry
 
 	public static class OpenTelemetryService
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(OpenTelemetryService).FullName);
 
-		private static string OPENTELEMETRY_SERVICE = "Observability";
-		public static string GX_ACTIVITY_SOURCE_NAME = "GeneXus.Tracing";
-		
+		const string OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES";
+		const string OTEL_SERVICE_NAME = "OTEL_SERVICE_NAME";
+		const string OTEL_SERVICE_VERSION = "OTEL_SERVICE_VERSION";
+		const string OPENTELEMETRY_SERVICE = "Observability";
+
+		public static string GX_ACTIVITY_SOURCE_NAME= GetServiceNameValue(OTEL_RESOURCE_ATTRIBUTES);
+		public static string GX_ACTIVITY_SOURCE_VERSION= GetServiceVersionValue(OTEL_RESOURCE_ATTRIBUTES);
+	
+		private static string GetServiceNameValue(string input)
+		{
+			string otelServiceNameEnvVar = Environment.GetEnvironmentVariable(OTEL_SERVICE_NAME);
+			if (!string.IsNullOrEmpty(otelServiceNameEnvVar))
+				return otelServiceNameEnvVar;
+
+			string pattern = @"(?:\b\w+\b=\w+)(?:,(?:\b\w+\b=\w+))*";
+			MatchCollection matches = Regex.Matches(input, pattern);
+
+			foreach (Match match in matches)
+			{
+				string[] keyValue = match.Value.Split('=');
+
+				if (keyValue[0] == "service.name")
+				{
+					return keyValue[1];
+				}
+			}
+			return "GeneXus.Tracing";
+		}
+		private static string GetServiceVersionValue(string input)
+		{
+			string otelServiceNameEnvVar = Environment.GetEnvironmentVariable(OTEL_SERVICE_VERSION);
+			if (!string.IsNullOrEmpty(otelServiceNameEnvVar))
+				return otelServiceNameEnvVar;
+
+			string pattern = @"(?:\b\w+\b=\w+)(?:,(?:\b\w+\b=\w+))*";
+			MatchCollection matches = Regex.Matches(input, pattern);
+
+			foreach (Match match in matches)
+			{
+				string[] keyValue = match.Value.Split('=');
+
+				if (keyValue[0] == "service.version")
+				{
+					return keyValue[1];
+				}
+			}
+			return string.Empty;
+		}
 		private static IOpenTelemetryProvider GetOpenTelemetryProvider()
 		{
 			IOpenTelemetryProvider otelProvider = null;
@@ -35,7 +80,7 @@ namespace GeneXus.Services.OpenTelemetry
 				}
 				catch (Exception e)
 				{
-					GXLogging.Error(log, "Couldn´t create OpenTelemetry provider.", e.Message, e);
+					GXLogging.Error(log, "Couldn't create OpenTelemetry provider.", e.Message, e);
 					throw e;
 				}
 			}

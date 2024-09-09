@@ -9,7 +9,6 @@ using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Metadata;
 using GeneXus.Utils;
-using log4net;
 using System.IO;
 #if NETCORE
 using GxClasses.Helpers;
@@ -1437,7 +1436,7 @@ namespace GeneXus.Data
 #if !NETCORE
 	sealed internal class MSOracleConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<MSOracleConnectionWrapper>();
 		int oracle8 = -1;
 		public MSOracleConnectionWrapper() : base(new MSOracleProvider.OracleConnection())
 		{

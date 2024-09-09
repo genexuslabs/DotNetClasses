@@ -1,11 +1,8 @@
+using System;
+using System.Collections.Generic;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Metadata;
-using log4net;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 namespace GeneXus.Security
 {
 	public class GxResult

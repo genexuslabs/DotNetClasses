@@ -1,10 +1,9 @@
-using log4net;
-using Microsoft.Exchange.WebServices.Data;
-using Microsoft.Identity.Client;
 using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using Microsoft.Exchange.WebServices.Data;
+using Microsoft.Identity.Client;
 
 namespace GeneXus.Mail.Exchange
 {

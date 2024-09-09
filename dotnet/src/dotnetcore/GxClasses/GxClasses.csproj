@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
@@ -120,7 +120,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Diagnostics\" />
     <Folder Include="Helpers\Cryptography\Hashing\" />
     <Folder Include="Domain\SD\" />
     <Folder Include="Attributes\" />
@@ -152,31 +151,31 @@
 	<ItemGroup>
 		<PackageReference Include="Experimental.System.Messaging.Signed" Version="1.0.0" />
 		<PackageReference Include="log4net" Version="2.0.15" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.7" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.21.0" PrivateAssets="ALL" />
-		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.0.0-beta.13" NoWarn="NU5104" PrivateAssets="All" />
-		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.5.1" PrivateAssets="All" />
-		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" PrivateAssets="ALL" />
+		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.1.0" PrivateAssets="All" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" PrivateAssets="All" />
+		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" PrivateAssets="All" />
+		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 		<PackageReference Include="MySqlConnector" Version="2.2.3" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" />
-		<PackageReference Include="NetTopologySuite.Core" Version="1.15.3" />
 		<PackageReference Include="NodaTime" Version="3.1.9" />
 		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" />
-		<PackageReference Include="Npgsql" Version="3.2.7" />
+		<PackageReference Include="Npgsql" Version="8.0.3" />
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.8.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
 		<PackageReference Include="System.Drawing.Common" Version="4.7.2" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.8.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.35.0" />
 		<PackageReference Include="NUglify" Version="1.16.4" />
 	</ItemGroup>
 

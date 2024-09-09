@@ -1,18 +1,17 @@
 using System;
-using System.Web;
-using System.Reflection;
-using GeneXus.Configuration;
 using System.Collections.Generic;
-using log4net;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Web;
 using GeneXus.Application;
-using GeneXus.Utils;
+using GeneXus.Configuration;
+using GeneXus.Http;
 using GeneXus.Http.HttpModules;
 using GeneXus.Metadata;
-using System.Net;
-using System.Text.RegularExpressions;
-using System.Net.Http;
-using GeneXus.Http;
+using GeneXus.Utils;
 
 namespace GeneXus.HttpHandlerFactory
 {
@@ -59,7 +58,7 @@ namespace GeneXus.HttpHandlerFactory
 	}
 	class HandlerFactory : IHttpHandlerFactory
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName);
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<HandlerFactory>();
 		private static List<string> GxNamespaces;
 
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
@@ -68,88 +67,89 @@ namespace GeneXus.HttpHandlerFactory
 
 			string relativeURL = context.Request.AppRelativeCurrentExecutionFilePath;
 			string fname = relativeURL.Substring(relativeURL.LastIndexOf('~') + 2);
-			String cname1 = (fname.Contains(".")) ? fname.Substring(0, fname.LastIndexOf('.')) : fname;
+			string cname1 = (fname.Contains(".")) ? fname.Substring(0, fname.LastIndexOf('.')) : fname;
 			string cname0 = cname1.ToLower();
-			string actualPath = "";
-
+			string mainNamespace;
+			string assemblyName, cname;
+			string actualPath;
 			if (cname0 == "gxoauthlogout")
 			{
-				return new GeneXus.Http.GXOAuthLogout();
+				return new GXOAuthLogout();
 			}
 			else if (cname0 == "gxoauthuserinfo")
 			{
-				return new GeneXus.Http.GXOAuthUserInfo();
+				return new GXOAuthUserInfo();
 			}
 			else if (cname0 == "gxoauthaccesstoken")
 			{
-				return new GeneXus.Http.GXOAuthAccessToken();
+				return new GXOAuthAccessToken();
 			}
 			else if (cname0 == "gxmulticall")
 			{
-				return new GeneXus.Http.GXMultiCall();
+				return new GXMultiCall();
 			}
-			string assemblyName, cname;
-			if (GXAPIModule.serviceInPath(pathTranslated, actualPath: out actualPath))
+			else if (HttpHelper.GamServicesInternalName.Contains(cname0))
 			{
-				string nspace;
-				Config.GetValueOf("AppMainNamespace", out nspace);
-				String objClass = GXAPIModule.servicesBase[actualPath];
-				//
-				String objectName = GetObjFromPath(cname0, actualPath);
-				String objectNameUp = GetObjFromPath(cname1, actualPath);
-				//
-				Dictionary<string, object> routeParms;
-				if (GXAPIModule.servicesMapData.ContainsKey(actualPath))
+				mainNamespace = HttpHelper.GAM_NSPACE;
+			}
+			else
+			{
+				if (!Config.GetValueOf("AppMainNamespace", out mainNamespace))
+					mainNamespace = "GeneXus.Programs.";
+
+				if (GXAPIModule.serviceInPath(pathTranslated, actualPath: out actualPath))
 				{
-					bool IsServiceCall = GetSMap(actualPath, objectName, objectNameUp, requestType, out string mapName, out string mapRegExp, out routeParms);
-					if (IsServiceCall)
+					string nspace;
+					Config.GetValueOf("AppMainNamespace", out nspace);
+					string objClass = GXAPIModule.servicesBase[actualPath];
+					//
+					string objectName = GetObjFromPath(cname0, actualPath);
+					string objectNameUp = GetObjFromPath(cname1, actualPath);
+					//
+					Dictionary<string, object> routeParms;
+					if (GXAPIModule.servicesMapData.ContainsKey(actualPath))
 					{
-						if (!String.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
+						bool IsServiceCall = GetSMap(actualPath, objectName, objectNameUp, requestType, out string mapName, out string mapRegExp, out routeParms);
+						if (IsServiceCall)
 						{
-							String tmpController = objClass;
-							String asssemblycontroller = tmpController;
-							if (objClass.Contains("\\"))
+							if (!string.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
 							{
-								tmpController = objClass.Substring(objClass.LastIndexOf("\\") + 1);
-								String addNspace = objClass.Substring(0, objClass.LastIndexOf("\\")).Replace("\\", ".");
-								asssemblycontroller = addNspace + "." + tmpController;
-								nspace += "." + addNspace;
+								string tmpController = objClass;
+								string asssemblycontroller = tmpController;
+								if (objClass.Contains("\\"))
+								{
+									tmpController = objClass.Substring(objClass.LastIndexOf("\\") + 1);
+									string addNspace = objClass.Substring(0, objClass.LastIndexOf("\\")).Replace("\\", ".");
+									asssemblycontroller = addNspace + "." + tmpController;
+									nspace += "." + addNspace;
+								}
+								GxContext gxContext = GxContext.CreateDefaultInstance();
+								object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
+
+								gxContext.HttpContext = context;
+								GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias, routeParms);
+								return restWrapper;
 							}
-							GxContext gxContext = GxContext.CreateDefaultInstance();
-							object handler = ClassLoader.FindInstance(asssemblycontroller, nspace, tmpController, new Object[] { gxContext }, null);
-	
-							gxContext.HttpContext = context;
-							GxRestWrapper restWrapper = new Application.GxRestWrapper(handler as GXBaseObject, context, gxContext, value.ServiceMethod, value.VariableAlias, routeParms);
-							return restWrapper;
+						}
+						else
+						{
+							if (requestType.Equals(HttpMethod.Options.Method) && !string.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
+							{
+								return new OptionsApiObjectRequestHandler(actualPath, objectName, mapRegExp);
+							}
 						}
 					}
-					else
-					{
-						if (requestType.Equals(HttpMethod.Options.Method) && !String.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
-						{
-							return new OptionsApiObjectRequestHandler(actualPath, objectName, mapRegExp);
-						}
-					}					
+					return null;
 				}
-				return null;
 			}
-			else
+			assemblyName = cname0;
+			cname = cname0;
+			if (cname.EndsWith("_bc_ws"))
 			{
-				{
-					assemblyName = cname0;
-					cname = cname0;
-				}
-				if (cname.EndsWith("_bc_ws"))
-				{
-					cname = cname.Substring(0, cname.Length - 3);
-					assemblyName = cname;
-				}
+				cname = cname.Substring(0, cname.Length - 3);
+				assemblyName = cname;
 			}
-			string mainNamespace, className;
-			if (Config.GetValueOf("AppMainNamespace", out mainNamespace))
-				className = mainNamespace + "." + cname;
-			else
-				className = "GeneXus.Programs." + cname;
+			string className = mainNamespace + "." + cname;
 
 			Type objType = GetHandlerType(assemblyName, className);
 			if (objType == null)
@@ -191,7 +191,7 @@ namespace GeneXus.HttpHandlerFactory
 			}
 			else
             {
-                handlerToReturn = (IHttpHandler)System.Web.UI.PageParser.GetCompiledPageInstance(url, pathTranslated, context);
+                handlerToReturn = System.Web.UI.PageParser.GetCompiledPageInstance(url, pathTranslated, context);
             }
 			return handlerToReturn;
 		}
@@ -200,7 +200,7 @@ namespace GeneXus.HttpHandlerFactory
 		{
 			if (cname.LastIndexOf("/") == (cname.Length - 1))
 				cname = cname.Substring(0, cname.Length - 1);
-			String objectName = cname.Remove(0, apath.Length);
+			string objectName = cname.Remove(0, apath.Length);
 			return objectName;
 		}
 
@@ -303,7 +303,7 @@ namespace GeneXus.HttpHandlerFactory
 			try
 			{
 				
-                objType = GeneXus.Metadata.ClassLoader.FindType(assemblyName, className, null);
+                objType = ClassLoader.FindType(assemblyName, className, null);
 				if (objType == null)					
 					objType = Assembly.Load(assemblyName).GetType(className);
 			}

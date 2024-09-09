@@ -1,5 +1,3 @@
-using GeneXus.Metadata;
-using log4net;
 using System;
 using System.Net;
 using System.Net.Mail;
@@ -34,7 +32,7 @@ namespace GeneXus.Mail.Smtp
 				{
 					senderAddress = (string.IsNullOrEmpty(senderAddress)) ? "test@gmail.com" : senderAddress;
 					SmtpGetConnection(smtpTransportType, SmtpTransport, smtp);
-					var connection = SmtpConnectionField(SmtpTransport);
+					object connection = SmtpConnectionField(SmtpTransport);
 					if (checkUnicodeSupport)
 					{
 						Type mailCommandType = ass.GetType(SMTP_MAIL_COMMAND_TYPE);

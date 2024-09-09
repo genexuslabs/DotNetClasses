@@ -5,20 +5,18 @@ namespace GeneXus.Procedure
 	using GeneXus.Printer;
 	using System.Globalization;
 	using GeneXus.Http;
-	using System.Threading;
 	using GeneXus.Mime;
-	using GeneXus.Utils;
+	using System.Net.Mime;
 #if NETCORE
 	using Microsoft.AspNetCore.Http;
+	using System.Threading.Tasks;
 #else
 	using System.Web;
 #endif
-	using log4net;
-	using GeneXus.Application;
-	using GeneXus.Data.NTier;
 
 	public class GXWebProcedure : GXHttpHandler
 	{
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXWebProcedure>();
 		protected int handle;
 
 		protected GXReportMetadata reportMetadata;
@@ -40,7 +38,14 @@ namespace GeneXus.Procedure
 		protected virtual void printHeaders() { }
 		protected virtual void printFooters() { }
 
+#if NETCORE
+		public override void webExecute()
+		{
+			WebExecuteAsync().GetAwaiter().GetResult();
+		}
+#else
 		public override void webExecute() { }
+#endif
 		public override void initialize() { }
 		protected override void createObjects() { }
 		public override void skipLines(long nToSkip) { }
@@ -60,7 +65,7 @@ namespace GeneXus.Procedure
 			}
 		}
 		public void setContextReportHandler()
-		{
+		{	
 
 			oldReportHandler = null;
 			reportHandler = context.reportHandler;
@@ -142,8 +147,19 @@ namespace GeneXus.Procedure
 				{
 					fileType = outputType.ToLower();
 				}
-
-				context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, $"inline; filename={fileName}.{fileType}");
+				try
+				{
+					ContentDisposition contentDisposition = new ContentDisposition
+					{
+						Inline = true,
+						FileName = $"{fileName}.{fileType}"
+					};
+					context.HttpContext.Response.AddHeader(HttpHeader.CONTENT_DISPOSITION, contentDisposition.ToString());
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Warn(log, $"{HttpHeader.CONTENT_DISPOSITION} couldn't be set for {fileName}.{fileType}", ex);
+				}
 			}
 		}
 
@@ -157,9 +173,9 @@ namespace GeneXus.Procedure
 			if (!Config.GetValueOf("LANGUAGE", out idiom))
 				idiom = "eng";
 			fileContentInline = true;
-#if NETCORE
+
 			setOuputFileName();
-#endif
+
 			getPrinter().GxRVSetLanguage(idiom);
 			int xPage = gxXPage;
 			int yPage = gxYPage;

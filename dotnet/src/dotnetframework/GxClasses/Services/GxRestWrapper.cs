@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using log4net;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -25,11 +24,14 @@ using System.Web;
 using System.Collections.Specialized;
 using GeneXus.Security;
 using System.Collections;
+#if !NETCORE
 using Jayrock.Json;
-using Microsoft.Net.Http.Headers;
+#endif
 using System.Net.Http;
 using System.Diagnostics;
 using GeneXus.Diagnostics;
+using System.Xml.Linq;
+
 
 namespace GeneXus.Application
 
@@ -120,7 +122,7 @@ namespace GeneXus.Application
 					gxobject.webExecute();
 					return Task.CompletedTask;
 				}
-				if (!ProcessHeaders(_procWorker.GetType().Name))
+				if (!ProcessHeaders(GXBaseObject.GetObjectNameWithoutNamespace(_procWorker.GetType().FullName)))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
 				if (bodyParameters == null)
@@ -305,7 +307,7 @@ namespace GeneXus.Application
 				{
 					return Task.CompletedTask; 
 				}
-				if (!ProcessHeaders(_procWorker.GetType().Name))
+				if (!ProcessHeaders(GXBaseObject.GetObjectNameWithoutNamespace(_procWorker.GetType().FullName)))
 					return Task.CompletedTask;
 				_procWorker.IsMain = true;
 				IDictionary<string,object> queryParameters = ReadQueryParameters(this._variableAlias);
@@ -346,35 +348,59 @@ namespace GeneXus.Application
 				Cleanup();
 			}
 		}
-		bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
+		private bool GetWrappedStatus(GXBaseObject worker, bool defaultWrapped, Dictionary<string, object> outputParameters, int parCount, int originalParCount)
 		{
 			bool wrapped = defaultWrapped;
+
 			if (worker.IsApiObject)
 			{
 				if (outputParameters.Count == 1)
 				{
 					if ((originalParCount == 1) || (originalParCount > 1 && !Preferences.WrapSingleApiOutput))
 					{
-						wrapped = false;
-						Object v = outputParameters.First().Value;
-
-						if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
-						{
-							IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
-							if (icollwrapped != null)
-								wrapped = icollwrapped.GetIsWrapped();
-						}
-						if (v is IGxGenericCollectionItem item)
-						{
-							if (item.Sdt is GxSilentTrnSdt)
-							{
-								wrapped = (parCount > 1) ? true : false;
-							}
-						}
+						wrapped = GetCollectionWrappedStatus(outputParameters, parCount, false, true);
 					}
 					if (originalParCount > 1 && Preferences.WrapSingleApiOutput)
 					{
 						wrapped = true; //Ignore defaultWrapped parameter.
+					}
+				}
+			}
+			else
+			{
+					if (originalParCount == 1)
+						wrapped = GetCollectionWrappedStatus(outputParameters, parCount, wrapped, false);				
+			}
+			return wrapped;
+		}
+
+
+		private bool GetCollectionWrappedStatus(Dictionary<string, object> outputParameters , int parCount, bool defaultWrapped, bool isAPI)
+		{
+			bool wrapped = defaultWrapped;
+			if (outputParameters.Count > 0)
+			{
+				Object v = outputParameters.First().Value;				
+				if (v.GetType().GetInterfaces().Contains(typeof(IGxGenericCollectionWrapped)))
+				{
+					IGxGenericCollectionWrapped icollwrapped = v as IGxGenericCollectionWrapped;
+					if (icollwrapped != null)
+					{
+						if (icollwrapped.GetWrappedStatus().Equals("default"))
+							wrapped = defaultWrapped;
+						else
+							wrapped = icollwrapped.GetIsWrapped();
+					}
+				}
+
+				if (isAPI)
+				{
+					if (v is IGxGenericCollectionItem item)
+					{
+						if (item.Sdt is GxSilentTrnSdt)
+						{
+							wrapped = (parCount > 1) ? true : false;
+						}
 					}
 				}
 			}
@@ -806,8 +832,10 @@ namespace GeneXus.Application
 #else
 			var responseStream = _httpContext.Response.OutputStream;
 #endif
-			var knownTypes = new List<Type>();
-			knownTypes.Add(value.GetType());
+			var knownTypes = new List<Type>
+			{
+				value.GetType()
+			};
 		
 			JSONHelper.WCFSerialize(value, Encoding.UTF8, knownTypes, responseStream);
 			return Task.CompletedTask;
@@ -845,40 +873,70 @@ namespace GeneXus.Application
 			}			
 		}
 		
-		protected static object MakeRestType( object v, bool isApiObject)
+		protected static object MakeRestType( object collectionValue, bool isApiObject)
 		{
-			Type vType = v.GetType();
+			Type vType = collectionValue.GetType();
 			Type itemType;
 			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
-			{
+			{				
+				bool isWrapped = (isApiObject)?false:true;				
+				bool isEmpty = false;
+				object collectionObject = null;
+				string wrappedStatus = "";
 				Type restItemType=null;
-				itemType = v.GetType().GetGenericArguments()[0];
-				if ((typeof(IGXBCCollection).IsAssignableFrom(vType)) && !isApiObject)//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				itemType = collectionValue.GetType().GetGenericArguments()[0];
+				if (vType.GetGenericTypeDefinition() == typeof(GxSimpleCollection<>) && isApiObject)
 				{
-					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+					restItemType = itemType;
+					isEmpty = true;
+					isWrapped = false;
+					collectionObject = collectionValue;
 				}
-				if (restItemType == null)//Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+				else
 				{
-					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+					if ((typeof(IGXBCCollection).IsAssignableFrom(vType)) && !isApiObject)//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+					{
+						restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+					}
+					else //Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+					{
+						if (typeof(GxUserType).IsAssignableFrom(itemType)){
+							restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+						}
+						else
+						{
+							collectionObject = collectionValue;
+						}
+					}
+					if (restItemType != null)
+					{
+						object[] attributes = restItemType.GetCustomAttributes(typeof(GxJsonSerialization), false);
+						IEnumerable<object> serializationAttributes = attributes.Where(a => a.GetType() == typeof(GxJsonSerialization));
+						if (serializationAttributes != null && serializationAttributes.Any<object>())
+						{
+							GxJsonSerialization attFmt = (GxJsonSerialization)serializationAttributes.FirstOrDefault();
+							wrappedStatus = attFmt.JsonUnwrapped;
+							isWrapped = (isApiObject) ? ((wrappedStatus == "wrapped") ? true : false) : ((wrappedStatus == "unwrapped") ? false : true);
+						}
+						isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
+						Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
+						collectionObject = Activator.CreateInstance(genericListItemType, new object[] { collectionValue, isWrapped, wrappedStatus });
+					}
 				}
-				bool isWrapped = !restItemType.IsDefined(typeof(GxUnWrappedJson), false);
-				bool isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
-				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
-				object c = Activator.CreateInstance(genericListItemType, new object[] { v, isWrapped});
 				// Empty collection serialized w/ noproperty
-				if (c is IList restList)
+				if (collectionObject is IList restList)
 				{
 					if (restList.Count == 0 && !isEmpty)
 						return null;
 				}
-				return c;			
+				return collectionObject;			
 			}
 			else if (typeof(GxUserType).IsAssignableFrom(vType)) //SDTType convert to SDTType_RESTInterface
 			{
 				Type restItemType = ClassLoader.FindType(Config.CommonAssemblyName, vType.FullName + "_RESTInterface", null);
-				return Activator.CreateInstance(restItemType, new object[] { v });
+				return Activator.CreateInstance(restItemType, new object[] { collectionValue });
 			}
-			return v;
+			return collectionValue;
 		}
 
 #if !NETCORE
