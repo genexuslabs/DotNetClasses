@@ -13,6 +13,8 @@
     <PackageReference Include="Microsoft.CodeCoverage" Version="16.10.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
 	 <PackageReference Include="NUnit" Version="3.13.2" />
+		<PackageReference Include="jose-jwt" Version="5.0.0" />
+	 <PackageReference Include="StrongNamer" Version="0.2.5" />
 		</ItemGroup>
 	
   <ItemGroup>
@@ -369,7 +371,7 @@
     <None Update="dummycerts\RSA_sha256_2048\sha256e_cert.p12">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-		<None Update="dummycerts\RSA_sha256_2048\sha256_pubckey.pem">
+		<None Update="dummycerts\RSA_sha256_2048\sha256_pubkey.pem">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
     <None Update="dummycerts\RSA_sha256_2048\sha256_cert.crt">

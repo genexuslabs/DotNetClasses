@@ -45,6 +45,11 @@ jobs:
         dotnet-version: '6.0.x'
         include-prerelease: false
 
+    - name: Install .NET 8
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.100' 
+
     - name: Calculate environment variables
       id: buildVariables
       run: |
@@ -185,14 +190,14 @@ jobs:
             $PushToAzureArgs  += "--skip-duplicate"
           }
           
-          dotnet $PushToAzureArgs
+          dotnet $PushToAzureArgs  || exit 1
           $pushedToAzure += 1
 
           if (!$IsPrerelease) {
-            dotnet $PushToGitHubArgs
+            dotnet $PushToGitHubArgs || exit 1
             $pushedToGitHub += 1
 
-            dotnet $PushToNugetArgs
+            dotnet $PushToNugetArgs || exit 1
             $pushedToNuget += 1
           }
 

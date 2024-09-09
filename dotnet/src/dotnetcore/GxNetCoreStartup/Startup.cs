@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
 using GeneXus.Http;
@@ -10,14 +11,15 @@ using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
-using log4net;
 using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
@@ -29,13 +31,13 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
-
 namespace GeneXus.Application
 {
 	public class Program
 	{
 		const string DEFAULT_PORT = "80";
 		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
+
 		public static void Main(string[] args)
 		{
 			try
@@ -74,10 +76,9 @@ namespace GeneXus.Application
 
 		public static IWebHost BuildWebHost(string[] args) =>
 		   WebHost.CreateDefaultBuilder(args)
-			.ConfigureLogging(logging => logging.AddConsole())
-			.UseStartup<Startup>()
-			.UseContentRoot(Startup.LocalPath)
-			.Build();
+		   .UseStartup<Startup>()
+		   .UseContentRoot(Startup.LocalPath)
+		   .Build();
 
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
@@ -86,12 +87,13 @@ namespace GeneXus.Application
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				 .ConfigureLogging(logging => logging.AddConsole())
 				 .UseUrls($"{schema}://*:{port}")
 				.UseStartup<Startup>()
+				.UseWebRoot(Startup.LocalPath)
 				.UseContentRoot(Startup.LocalPath)
 				.Build();
 		}
+
 		private static void LocatePhysicalLocalPath()
 		{
 			string startup = FileUtil.GetStartupDirectory();
@@ -99,11 +101,14 @@ namespace GeneXus.Application
 			if (startup == Startup.LocalPath && !File.Exists(Path.Combine(startup, Startup.APP_SETTINGS)) && File.Exists(Path.Combine(startupParent, Startup.APP_SETTINGS)))
 				Startup.LocalPath = startupParent;
 		}
-
 	}
 
 	public static class GXHandlerExtensions
 	{
+		public static IApplicationBuilder UseAntiforgeryTokens(this IApplicationBuilder app, string basePath)
+		{
+			return app.UseMiddleware<ValidateAntiForgeryTokenMiddleware>(basePath);
+		}
 		public static IApplicationBuilder UseGXHandlerFactory(this IApplicationBuilder builder, string basePath)
 		{
 			return builder.UseMiddleware<HandlerFactory>(basePath);
@@ -117,9 +122,10 @@ namespace GeneXus.Application
 	}
   
 	public class Startup
-	{ 
+	{
+		static IGXLogger log;
+		internal static string APPLICATIONINSIGHTS_CONNECTION_STRING = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(Startup));
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
@@ -129,7 +135,7 @@ namespace GeneXus.Application
 		const string RESOURCES_FOLDER = "Resources";
 		const string TRACE_FOLDER = "logs";
 		const string TRACE_PATTERN = "trace.axd";
-		const string REST_BASE_URL = "rest/";
+		internal const string REST_BASE_URL = "rest/";
 		const string DATA_PROTECTION_KEYS = "DataProtection-Keys";
 		const string REWRITE_FILE = "rewrite.config";
 		const string SWAGGER_DEFAULT_YAML = "default.yaml";
@@ -138,35 +144,59 @@ namespace GeneXus.Application
 		const string CORS_POLICY_NAME = "AllowSpecificOriginsPolicy";
 		const string CORS_ANY_ORIGIN = "*";
 		const double CORS_MAX_AGE_SECONDS = 86400;
+		internal const string GX_CONTROLLERS = "gxcontrollers";
 
 		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
-
 		public Startup(IConfiguration configuration, IHostingEnvironment env)
 		{
 			Config.ConfigRoot = configuration;
+			GxContext.IsHttpContext = true;
+			Config.LoadConfiguration();
 			GXRouting.ContentRootPath = env.ContentRootPath;
 			GXRouting.UrlTemplateControllerWithParms = "controllerWithParms";
-			GxContext.IsHttpContext = true;
 			gxRouting = new GXRouting(REST_BASE_URL);
+			log = GXLoggerFactory.GetLogger<Startup>();
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
 			OpenTelemetryService.Setup(services);
 
-			services.AddMvc(option => option.EnableEndpointRouting = false);
+			services.AddControllers();
+			string controllers = Path.Combine(Startup.LocalPath, "bin", GX_CONTROLLERS);
+			IMvcBuilder mvcBuilder = services.AddMvc(option => option.EnableEndpointRouting = false);
+			try
+			{
+				if (Directory.Exists(controllers))
+				{
+					foreach (string controller in Directory.GetFiles(controllers))
+					{
+						Console.WriteLine($"Loading controller {controller}");
+						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller)).AddControllersAsServices();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("Error loading gxcontrollers " + ex.Message);
+			}
 			services.Configure<KestrelServerOptions>(options =>
 			{
 				options.AllowSynchronousIO = true;
 				options.Limits.MaxRequestBodySize = null;
+				if (Config.GetValueOrEnvironmentVarOf("MinRequestBodyDataRate", out string MinRequestBodyDataRateStr) && double.TryParse(MinRequestBodyDataRateStr, out double MinRequestBodyDataRate))
+				{
+					GXLogging.Info(log, $"MinRequestBodyDataRate:{MinRequestBodyDataRate}");
+					options.Limits.MinRequestBodyDataRate = new MinDataRate(bytesPerSecond: MinRequestBodyDataRate, gracePeriod: TimeSpan.FromSeconds(10));
+				}
 			});
 			services.Configure<IISServerOptions>(options =>
 			{
 				options.AllowSynchronousIO = true;
 			});
 			services.AddDistributedMemoryCache();
-
+			services.AddLogging(builder => builder.AddConsole());
 			services.Configure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
@@ -191,6 +221,12 @@ namespace GeneXus.Application
 				options.Cookie.HttpOnly = true;
 				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
+				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
+				if (!string.IsNullOrEmpty(sessionCookieName))
+				{
+					options.Cookie.Name=sessionCookieName;
+					GxWebSession.SessionCookieName = sessionCookieName;
+				}
 				string sameSite;
 				SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
 				if (Config.GetValueOf("SAMESITE_COOKIE", out sameSite) && Enum.TryParse<SameSiteMode>(sameSite, out sameSiteMode))
@@ -199,7 +235,14 @@ namespace GeneXus.Application
 				}
 			});
 
-
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+				services.AddAntiforgery(options =>
+				{
+					options.HeaderName = HttpHeader.X_CSRF_TOKEN_HEADER;
+					options.SuppressXFrameOptionsHeader = true;
+				});
+			}
 			services.AddDirectoryBrowser();
 			if (GXUtil.CompressResponse())
 			{
@@ -224,7 +267,6 @@ namespace GeneXus.Application
 				});
 			}
 			DefineCorsPolicy(services);
-			services.AddMvc();
 		}
 
 		private void DefineCorsPolicy(IServiceCollection services)
@@ -285,7 +327,8 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
-			LogConfiguration.SetupLog4Net();			
+			LogConfiguration.SetupLog4Net();
+			
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";
@@ -304,10 +347,12 @@ namespace GeneXus.Application
 			provider.Mappings[".usdz"] = "model/vnd.pixar.usd";
 			provider.Mappings[".sfb"] = "model/sfb";
 			provider.Mappings[".gltf"] = "model/gltf+json";
+			provider.Mappings[".ini"] = "text/plain";
 			if (GXUtil.CompressResponse())
 			{
 				app.UseResponseCompression();
 			}
+			app.UseRouting();
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
@@ -330,6 +375,10 @@ namespace GeneXus.Application
 				app.UseHttpsRedirection();
 				app.UseHsts();
 			}
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapControllers();
+			});
 			if (log.IsDebugEnabled)
 			{
 				try
@@ -357,14 +406,22 @@ namespace GeneXus.Application
 			if (File.Exists(rewriteFile))
 				AddRewrite(app, rewriteFile, baseVirtualPath);
 
+			string tempMediaDir = string.Empty;
+			if (Config.GetValueOf("TMPMEDIA_DIR", out string mediaPath) && !PathUtil.IsAbsoluteUrlOrAnyScheme(mediaPath))
+			{
+				tempMediaDir = mediaPath;
+			}
 			app.UseStaticFiles(new StaticFileOptions()
 			{
 				FileProvider = new PhysicalFileProvider(LocalPath),
 				RequestPath = new PathString($"{baseVirtualPath}"),
 				OnPrepareResponse = s =>
 				{
-					var path = s.Context.Request.Path;
-					if (path.HasValue &&  path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase)>=0)
+					PathString path = s.Context.Request.Path;
+					bool appSettingsPath = path.HasValue && path.Value.IndexOf($"/{APP_SETTINGS}", StringComparison.OrdinalIgnoreCase) >= 0;
+					bool tempMediaPath = path.StartsWithSegments($"{baseVirtualPath}/{tempMediaDir}", StringComparison.OrdinalIgnoreCase);
+					bool privatePath = path.StartsWithSegments($"{baseVirtualPath}/{GXRouting.PRIVATE_DIR}", StringComparison.OrdinalIgnoreCase);
+					if (appSettingsPath || tempMediaPath || privatePath)
 					{
 						s.Context.Response.StatusCode = 401;
 						s.Context.Response.Body = Stream.Null;
@@ -386,6 +443,12 @@ namespace GeneXus.Application
 
 			string restBasePath = string.IsNullOrEmpty(VirtualPath) ? REST_BASE_URL : $"{VirtualPath}/{REST_BASE_URL}";
 			string apiBasePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"{VirtualPath}/";
+			IAntiforgery antiforgery = null;
+			if (RestAPIHelpers.ValidateCsrfToken())
+			{
+				antiforgery = app.ApplicationServices.GetRequiredService<IAntiforgery>();
+				app.UseAntiforgeryTokens(apiBasePath);
+			}
 			app.UseMvc(routes =>
 			{
 				foreach (string serviceBasePath in servicesBase)
@@ -400,10 +463,10 @@ namespace GeneXus.Application
 				routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
 			});
-
+			
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
-			Config.ScriptPath = basePath;
+			Config.ScriptPath = string.IsNullOrEmpty(basePath) ? "/" : basePath;
 			app.MapWebSocketManager(basePath);
 
 			app.MapWhen(
@@ -474,9 +537,10 @@ namespace GeneXus.Application
 	}
 	public class CustomExceptionHandlerMiddleware
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(CustomExceptionHandlerMiddleware));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
+			string httpReasonPhrase=string.Empty;
 			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
 			HttpStatusCode httpStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
 			if (ex!=null)
@@ -484,6 +548,12 @@ namespace GeneXus.Application
 				if (ex is PageNotFoundException)
 				{
 					httpStatusCode = HttpStatusCode.NotFound;
+				}
+				else if (ex is AntiforgeryValidationException)
+				{
+					httpStatusCode = HttpStatusCode.BadRequest;
+					httpReasonPhrase = HttpHelper.InvalidCSRFToken;
+					GXLogging.Error(log, $"Validation of antiforgery failed", ex);
 				}
 				else
 				{
@@ -495,12 +565,18 @@ namespace GeneXus.Application
 			{
 				string redirectPage = Config.MapCustomError(httpStatusCode.ToString(HttpHelper.INT_FORMAT));
 				if (!string.IsNullOrEmpty(redirectPage))
-{
+				{
 					httpContext.Response.Redirect($"{httpContext.Request.GetApplicationPath()}/{redirectPage}");
 				}
 				else
 				{
 					httpContext.Response.StatusCode = (int)httpStatusCode;
+				}
+				if (!string.IsNullOrEmpty(httpReasonPhrase))
+				{
+					IHttpResponseFeature responseReason = httpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>();
+					if (responseReason!=null)
+						responseReason.ReasonPhrase = httpReasonPhrase;
 				}
 			}
 			await Task.CompletedTask;

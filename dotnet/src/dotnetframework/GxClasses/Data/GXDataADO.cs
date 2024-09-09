@@ -1,16 +1,4 @@
 
-using GeneXus.Application;
-using GeneXus.Cache;
-using GeneXus.Configuration;
-using GeneXus.Data.NTier.ADO;
-using GeneXus.Diagnostics;
-using GeneXus.Management;
-using GeneXus.Reorg;
-using GeneXus.Services;
-using GeneXus.Utils;
-using GeneXus.XML;
-using GxClasses.Helpers;
-using log4net;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -20,8 +8,18 @@ using System.Data.Common;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
+using GeneXus.Application;
+using GeneXus.Cache;
+using GeneXus.Configuration;
+using GeneXus.Data.NTier.ADO;
+using GeneXus.Management;
+using GeneXus.Reorg;
+using GeneXus.Services;
+using GeneXus.Utils;
+using GeneXus.XML;
+using GxClasses.Helpers;
 using TZ4Net;
-
 namespace GeneXus.Data.ADO
 {
 
@@ -64,7 +62,7 @@ namespace GeneXus.Data.ADO
 
 	public class GxConnectionManager :IGxConnectionManager
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxConnectionManager));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxConnectionManager>();
 
 		private static volatile GxConnectionManager instance;
         private static object instanceSync = new Object();
@@ -215,7 +213,22 @@ namespace GeneXus.Data.ADO
 				throw e;
 			}
 		}
+#if NETCORE
+		internal async Task RemoveConnectionAsync(int handle, string dataSource)
+		{
 
+			ServerUserInformation sui;
+			if (userConnections.TryGetValue(handle, out sui))
+			{
+				GXLogging.Debug(log, "RemoveConnection   handle " + handle + ",datasource:" + dataSource);
+				GxConnection con = sui[dataSource];
+				if (sui.TryRemove(dataSource, out con))
+					await con.DisposeAsync();
+				ServerUserInformation suiDeleted;
+				if (sui.Count == 0) userConnections.TryRemove(handle, out suiDeleted);
+			}
+		}
+#endif
 		public void RemoveConnection(int handle, string dataSource)
 		{
 			
@@ -345,7 +358,7 @@ namespace GeneXus.Data.ADO
     public class GxConnection: IGxConnection
 #endif
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxConnection));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxConnection>();
 		private IDbTransaction transaction;
 		private short lastErrorCode;
 		private string lastErrorMsg;
@@ -414,7 +427,12 @@ namespace GeneXus.Data.ADO
 		{
 			Close();
 		}
-
+#if NETCORE
+		internal async Task DisposeAsync()
+		{
+			await CloseAsync();
+		}
+#endif
 		public IGxDataStore DataStore
 		{
 			get{ return dataStore;}
@@ -739,7 +757,61 @@ namespace GeneXus.Data.ADO
 				wmiconnection.CleanUp();
 			}
 		}
+#if NETCORE
+		internal async Task CloseAsync()
+		{
+			if (connection != null)
+			{
+				GXLogging.Debug(log, "GxConnection.Close Id " + " connection State '" + connection.State + "'" + " handle:" + handle + " datastore:" + DataStore.Id);
+			}
+			if (connection != null && ((connection.State & ConnectionState.Closed) == 0))
+			{
+				try
+				{
+					connectionCache.Clear();
+				}
+				catch (Exception e)
+				{
+					GXLogging.Warn(log, "GxConnection.Close can't close all prepared cursors", e);
+				}
 
+				GXLogging.Debug(log, "UncommitedChanges before Close:" + UncommitedChanges);
+				try
+				{
+					if (UncommitedChanges)
+					{
+						rollbackTransactionOnly();
+						UncommitedChanges = false;
+					}
+				}
+				catch (Exception e)
+				{
+					GXLogging.Warn(log, "GxConnection.Close can't rollback transaction", e);
+				}
+				try
+				{
+					await connection.CloseAsync();
+					if (transaction != null)
+					{
+						transaction.Dispose();
+						transaction = null;
+					}
+
+				}
+				catch (Exception e)
+				{
+					GXLogging.Warn(log, "GxConnection.Close can't close connection", e);
+				}
+				spid = 0;
+				GXLogging.Debug(log, "GxConnection.Close connection is closed ");
+			}
+			m_opened = false;
+			if (Preferences.Instrumented && wmiconnection != null)
+			{
+				wmiconnection.CleanUp();
+			}
+		}
+#endif
 		public int OpenHandles
 		{
 			get{return openHandles;}
@@ -1155,7 +1227,13 @@ namespace GeneXus.Data.ADO
         }
 		public string BlobPath
 		{
-			get {return blobPath;}
+			get {
+				if (blobPath == null)
+				{
+					blobPath = Preferences.getBLOB_PATH();
+				}
+				return blobPath;
+			}
 			set {blobPath=value;}
 		}
 		public string MultimediaPath
@@ -1319,7 +1397,7 @@ namespace GeneXus.Data.ADO
 	public class GxCommand: IGxDbCommand
 	{
 		internal List<ParDef> ParmDefinition;
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.ADO.GxCommand));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxCommand>();
 		string stmt;
         String stmtId;
         GxParameterCollection parameters;
@@ -1728,7 +1806,10 @@ namespace GeneXus.Data.ADO
 			catch (Exception e)
 			{
 				GXLogging.Error(log, "Return GxCommand.ExecuteReader Error ", e);
-
+				if (e.InnerException != null)
+				{
+					GXLogging.Error(log, "Inner Error", e.InnerException);
+				}
 				throw (new GxADODataException(e));
 			}
 
@@ -2408,7 +2489,7 @@ namespace GeneXus.Data.ADO
 	
 	public class GxDataStore : IGxDataStore
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDataStore));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDataStore>();
 		string id;
 		IGxConnection connection;
 		int handle;		
@@ -2631,7 +2712,6 @@ namespace GeneXus.Data.ADO
 			if ( ! cfg)
 				connection.ConnectionString = connectionString;
 
-			connection.BlobPath = Preferences.getBLOB_PATH();
 			string strCache;
 			connection.Cache=((Config.GetValueOf("CACHING",out strCache) && strCache.Equals("1")) || CacheFactory.ForceHighestTimetoLive) && ! GxContext.isReorganization;
 			connection.DataStore = this;
@@ -2714,7 +2794,12 @@ namespace GeneXus.Data.ADO
 			switch (dbms)
 			{
                 case "sqlserver":
-                    return new GxSqlServer();
+					GxSqlServer gxSqlServer = new GxSqlServer();
+					if (Config.GetValueOf("Connection-" + id + "-UseSmallDateTime", out cfgBuf) && cfgBuf == "1")
+					{
+						gxSqlServer.UseSmallDateTime();
+					}
+					return gxSqlServer;
 				case "mysql":
 #if NETCORE
 					return new GxMySqlConnector(id);
@@ -2832,6 +2917,12 @@ namespace GeneXus.Data.ADO
 		{
 			GxConnectionManager.Instance.RemoveConnection(handle, id);
 		}
+#if NETCORE
+		internal async Task CloseConnectionsAsync()
+		{
+			await ((GxConnectionManager)GxConnectionManager.Instance).RemoveConnectionAsync(handle, id);
+		}
+#endif
 		public void Release()
 		{
 		}

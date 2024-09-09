@@ -1,30 +1,81 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
 		<IsPublishable>false</IsPublishable>
 		<AssemblyName>GeneXus.Deploy.AzureFunctions.Handlers</AssemblyName>
 		<NoWarn>1701;1702;NU1701</NoWarn>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 	</PropertyGroup>
+	
+	<PropertyGroup>	
+		<CosmosDBSupport>true</CosmosDBSupport>
+		<ServiceBusSupport>true</ServiceBusSupport>
+		<AzureQueueSupport>true</AzureQueueSupport>
+		<TimerSupport>true</TimerSupport>
+		<HttpSupport>true</HttpSupport>
+		<BlobSupport>true</BlobSupport>
+		<EventGridSupport>true</EventGridSupport>
+	</PropertyGroup>
+	
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 	  <DebugType>portable</DebugType>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 	  <DebugType>none</DebugType>
 	</PropertyGroup>
+	
 	<ItemGroup>
-		<PackageReference Include="log4net" Version="2.0.15" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="4.2.1" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.1" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.0.1" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.9.0" OutputItemType="Analyzer" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.2" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.CosmosDB" Version="4.0.1" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" />
-		<PackageReference Include="StackExchange.Redis" Version="2.0.593" />
+		<Compile Include="Helpers\*;Program.cs" />
 	</ItemGroup>
+
+	<ItemGroup Condition="'$(BlobSupport)' == 'true' OR '$(AzureQueueSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.1" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(BlobSupport)' == 'true'">
+		<Compile Include="BlobHandler\BlobTriggerHandler.cs;Dummies\BlobTriggerDummy.cs" /> 
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(CosmosDBSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.CosmosDB" Version="4.0.1" />
+		<Compile Include="CosmosDBHandler\CosmosDBTriggerHandler.cs;Dummies\CosmosDBTriggerDummy.cs" /> 
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(ServiceBusSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="4.2.1" />
+		<Compile Include="ServiceBusHandler\ServiceBusTriggerHandler.cs;Dummies\ServiceBusQueueDummy.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(AzureQueueSupport)' == 'true'">
+		<Compile Include="QueueHandler\QueueTriggerHandler.cs;Dummies\QueueTriggerDummy.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TimerSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.0.1" />
+		<Compile Include="TimerHandler\TimerTriggerHandler.cs;Dummies\TimerTriggerDummy.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(HttpSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
+		<Compile Include="HttpHandler\*;Dummies\HttpTriggerDummy.cs" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(EventGridSupport)' == 'true'">
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventGrid" Version="3.4.1" />
+		<Compile Include="EventGridHandler\EventGridTriggerHandlerCloud.cs;EventGridHandler\EventGridTriggerHandlerAzure.cs;Dummies\EventGridTriggerDummy.cs" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Azure.Core" Version="1.36.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.15.1" OutputItemType="Analyzer" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.6.122" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+	
 	<ItemGroup Condition="$(GenStdVersion)==''">
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses.Web\GxClasses.Web.csproj" />
 		<ProjectReference Include="..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
@@ -47,16 +98,19 @@
 			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</None>
 	</ItemGroup>
-	<ItemGroup Condition="$(GenStdVersion)==''">
-		<Content Include="$(OutputPath)net6.0\$(MSBuildProjectName).deps.json;$(MSBuildProjectName).runtimeconfig.json">
-			<Pack>true</Pack>
-			<PackagePath>./lib/net6.0/</PackagePath>
-		</Content>
-		<Content Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
-			<Pack>true</Pack>
-			<PackagePath>./src/</PackagePath>
-		</Content>
-	</ItemGroup>
+	<Target Name="CustomContentTarget">
+		<ItemGroup Condition="$(GenStdVersion)==''">
+			<TfmSpecificPackageFile Include="$(OutputPath)\$(MSBuildProjectName).deps.json;">
+				<PackagePath>./lib/$(TargetFramework)/</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+			<TfmSpecificPackageFile Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
+				<PackagePath>./src/</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
+
 	<Target Name="CopyFunctionsMetadata" AfterTargets="Build" Condition="Exists('functions.metadata')">
 		<Copy SourceFiles="functions.metadata" DestinationFolder="$(OutputPath)"></Copy>
 	</Target>

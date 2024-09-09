@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using GeneXus.MSOffice.Excel.Poi.Xssf;
-using log4net;
 
 namespace GeneXus.MSOffice.Excel
 {
 	public class ExcelSpreadsheetGXWrapper : IGXError
 	{
-		private static readonly ILog logger = LogManager.GetLogger(typeof(ExcelSpreadsheetGXWrapper));
+		private static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ExcelSpreadsheetGXWrapper>();
 		private int _errCode;
 		private string _errDescription = string.Empty;
 		private IExcelWorksheet _currentWorksheet;
@@ -58,7 +57,7 @@ namespace GeneXus.MSOffice.Excel
 		{
 			try
 			{
-				logger.Debug("Opening Excel file: " + filePath);
+				GXLogging.Debug(logger, "Opening Excel file: " + filePath);
 				_document = ExcelFactory.Create(this, filePath, template);
 				if (_autofit)
 				{
@@ -75,7 +74,7 @@ namespace GeneXus.MSOffice.Excel
 			}
 			catch (Exception e)//InvalidOpertaionException
 			{
-				logger.Error("Excel File could not be loaded", e);
+				GXLogging.Error(logger, "Excel File could not be loaded", e);
 				SetError(ErrorCodes.FILE_EXCEPTION, "Could not open file");
 			}
 			return _document != null;
@@ -150,13 +149,13 @@ namespace GeneXus.MSOffice.Excel
 		public void SetError(ExcelException e)
 		{
 			SetError(e.ErrorCode, e.ErrorDescription);
-			logger.Error(e.ErrorDescription, e);
+			GXLogging.Error(logger, e.ErrorDescription, e);
 		}
 
 		public void SetError(string errorMsg, ExcelException e)
 		{
 			SetError(e.ErrorCode, e.ErrorDescription);
-			logger.Error(errorMsg);
+			GXLogging.Error(logger, errorMsg);
 		}
 
 		public ExcelCells GetCells(int rowIdx, int colIdx, int rowCount, int colCount)

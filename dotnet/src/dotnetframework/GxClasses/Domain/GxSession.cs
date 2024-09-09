@@ -5,17 +5,16 @@ using System.Web;
 using System.Web.SessionState;
 #else
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Session;
 #endif
-using System.Threading;
 using GeneXus.Utils;
 using GeneXus.Encryption;
 using GeneXus.Application;
-using log4net;
-using System.Collections.Generic;
+using GeneXus.Configuration;
 
 namespace GeneXus.Http
 {
-    public interface IGxSession
+	public interface IGxSession
     {
         void Set(string key, string val);
 		void Set<T>(string key, T val) where T:class;
@@ -32,8 +31,13 @@ namespace GeneXus.Http
 	}
 
     public class GxWebSession : IGxSession
-    {
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.GxWebSession));
+	{
+#if NETCORE
+		const string SESSION_COOKIE_NAME = "SESSION_COOKIE_NAME";
+		const string ASPNETCORE_APPL_PATH = "ASPNETCORE_APPL_PATH";
+#endif
+
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxWebSession>();
         private HttpSessionState _httpSession;
 		#region InternalKeys
 		GXNavigationHelper InternalKeyNavigationHelper;
@@ -218,19 +222,61 @@ namespace GeneXus.Http
 				if (httpContext.IsNewSession())
                 {
                     string CookieHeaders = httpContext.Request.Headers["Cookie"];
-
-                    if ((null != CookieHeaders) && ((CookieHeaders.IndexOf("ASP.NET_SessionId") >= 0)|| CookieHeaders.IndexOf(".AspNetCore.Session") >= 0))
-                    {
-                        // IsNewSession is true, but session cookie exists,
-                        // so, ASP.NET session is expired
-                        return true;
+					if ((null != CookieHeaders) && (CookieHeaders.IndexOf(SessionCookieName) >= 0))
+					{
+						// IsNewSession is true, but session cookie exists,
+						// so, ASP.NET session is expired
+						return true;
                     }
                 }
             }
             return false;
         }
+#if NETCORE
+		internal static string GetSessionCookieName(string virtualPath)
+		{
+			string cookieName;
+			if (Config.GetValueOrEnvironmentVarOf(SESSION_COOKIE_NAME, out cookieName))
+				return cookieName;
+			else
+			{
+				if (!string.IsNullOrEmpty(virtualPath))
+				{
+					return $"{SessionDefaults.CookieName}.{virtualPath.ToLower()}";
+				}
+				else
+				{
+					string applPath = Config.ConfigRoot[ASPNETCORE_APPL_PATH];
 
-    }
+					if (!string.IsNullOrEmpty(applPath))
+					{
+						cookieName = ToCookieName(applPath).ToLower();
+						return $"{SessionDefaults.CookieName}.{cookieName}";
+					}
+				}
+				return SessionDefaults.CookieName;
+			}
+		}
+		static string ToCookieName(string name)
+		{
+			char[] cookieName = new char[name.Length];
+			int index = 0;
+
+			foreach (char character in name)
+			{
+				if (char.IsLetter(character) || char.IsNumber(character))
+				{
+					cookieName[index] = character;
+					index++;
+				}
+			}
+			return new string(cookieName, 0, index);
+		}
+		internal static string SessionCookieName { get; set; }
+#else
+		const string SessionCookieName="ASP.NET_SessionId";
+#endif
+	}
 
     public class GxSession : IGxSession
     {

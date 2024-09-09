@@ -1,18 +1,17 @@
 using System;
 using System.IO;
-using log4net;
+using GeneXus.Office.Excel;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using GeneXus.Office.Excel;
 
 namespace GeneXus.Office.ExcelGXEPPlus
 {
 
 	public class ExcelDocument : IGxError, IExcelDocument
     {
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExcelDocument>();
 
-        private ExcelPackage p;
+		private ExcelPackage p;
         public string dateFormat = "m/d/yy h:mm";
 		public bool OpenFromTemplate { get; set;}
 
@@ -357,9 +356,9 @@ namespace GeneXus.Office.ExcelGXEPPlus
     public class ExcelCells : IExcelCells
     {
 
-        static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExcelCells>();
 
-        private IGxError m_errAccess;
+		private IGxError m_errAccess;
         private int pWidth, pHeight;
         private int pColPos;
         private ExcelWorksheet pSelectedSheet;

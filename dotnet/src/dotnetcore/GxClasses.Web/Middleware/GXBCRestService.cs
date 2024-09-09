@@ -43,10 +43,10 @@ namespace GeneXus.Application
 				bool gxinsertorupdate = IsRestParameter(INSERT_OR_UPDATE_PARAMETER);
 
 				GxSilentTrnSdt entity = (GxSilentTrnSdt)Activator.CreateInstance(_worker.GetType(), new Object[] { _gxContext });
-				var entity_interface = MakeRestType(entity, false);
+				object entity_interface = MakeRestType(entity, false);
 				entity_interface = ReadRequestBodySDTObj(entity_interface.GetType());
 
-				var worker_interface = MakeRestType(_worker, false);
+				object worker_interface = MakeRestType(_worker, false);
 				
 				worker_interface.GetType().GetMethod("CopyFrom").Invoke(worker_interface, new object[] { entity_interface });
 				if (gxcheck)
@@ -191,12 +191,12 @@ namespace GeneXus.Application
 				{
 					bool gxcheck = IsRestParameter(CHECK_PARAMETER);
 					GxSilentTrnSdt entity = (GxSilentTrnSdt)Activator.CreateInstance(_worker.GetType(), new Object[] { _gxContext });
-					var entity_interface = MakeRestType(entity, false);
+					object entity_interface = MakeRestType(entity, false);
 					entity_interface = ReadRequestBodySDTObj(entity_interface.GetType());
 					string entityHash = entity_interface.GetType().GetProperty("Hash").GetValue(entity_interface) as string;
 
 					ReflectionHelper.CallBCMethod(_worker, LOAD_METHOD, key);
-					var worker_interface = MakeRestType(_worker, false);
+					object worker_interface = MakeRestType(_worker, false);
 					string currentHash = worker_interface.GetType().GetProperty("Hash").GetValue(worker_interface) as string;
 					if (entityHash == currentHash)
 					{
@@ -249,7 +249,7 @@ namespace GeneXus.Application
 		{
 			using (var reader = new StreamReader(_httpContext.Request.Body))
 			{
-				var sdtData = reader.ReadToEnd();
+				string sdtData = reader.ReadToEnd();
 				using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(sdtData)))
 				{
 					DataContractJsonSerializer serializer = new DataContractJsonSerializer(type);

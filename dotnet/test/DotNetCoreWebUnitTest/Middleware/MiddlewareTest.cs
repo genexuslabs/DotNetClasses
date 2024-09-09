@@ -17,10 +17,20 @@ namespace xUnitTesting
 		protected TestServer server;
 		public MiddlewareTest()
 		{
-			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
+			SetEnvironmentVars();
+			BeforeStartup();
 			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(DOTNET_ENVIRONMENT));
+			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
 			server.PreserveExecutionContext= true;
 			server.CreateClient();
+		}
+		protected virtual void SetEnvironmentVars()
+		{
+
+		}
+		protected virtual void BeforeStartup()
+		{
+
 		}
 		protected string GetHeader(HttpResponseMessage response, string headerName)
 		{

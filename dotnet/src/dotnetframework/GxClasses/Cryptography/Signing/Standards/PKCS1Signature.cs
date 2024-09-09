@@ -77,7 +77,9 @@ namespace GeneXus.Cryptography.Signing.Standards
 					throw new AlgorithmNotSupportedException("Private Key does not support RSA Sign Algorithm");
 				}
 
+#pragma warning disable SYSLIB0045 // Type or member is obsolete
 				HashAlgorithm ha = HashAlgorithm.Create(_hashAlgorithm);
+#pragma warning restore SYSLIB0045 // Type or member is obsolete
 				byte[] signature = null;
 				try
 				{
@@ -118,8 +120,9 @@ namespace GeneXus.Cryptography.Signing.Standards
 					throw new AlgorithmNotSupportedException("Private Key does not support DSA Sign Algorithm");
 				}
 
-
+#pragma warning disable SYSLIB0045 // Type or member is obsolete
 				HashAlgorithm ha = System.Security.Cryptography.HashAlgorithm.Create(_hashAlgorithm);
+#pragma warning restore SYSLIB0045 // Type or member is obsolete
 				byte[] hash = ha.ComputeHash(data);
 				byte[] signature = dsa.SignHash(hash, oid);
 
@@ -134,8 +137,10 @@ namespace GeneXus.Cryptography.Signing.Standards
             {
                 try
                 {
+#pragma warning disable SYSLIB0045 // Type or member is obsolete
 					HashAlgorithm ha = GXUtil.IsWindowsPlatform ? HashAlgorithm.Create(_hashAlgorithm) : null;
-                    string oid = CryptoConfig.MapNameToOID(_hashAlgorithm);
+#pragma warning restore SYSLIB0045 // Type or member is obsolete
+					string oid = CryptoConfig.MapNameToOID(_hashAlgorithm);
                     if (ha != null && !string.IsNullOrEmpty(oid))
                     {
                         byte[] textData = Constants.DEFAULT_ENCODING.GetBytes(text);

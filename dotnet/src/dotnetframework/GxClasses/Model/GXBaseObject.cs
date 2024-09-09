@@ -1,17 +1,24 @@
+using GeneXus.Configuration;
 using GeneXus.Data.NTier;
 using GeneXus.Encryption;
 using GeneXus.Http;
 using GeneXus.Mock;
+#if NETCORE
+using GeneXus.Services.OpenTelemetry;
+#endif
 using GeneXus.Utils;
+#if !NETCORE
 using Jayrock.Json;
-using log4net;
+#endif
 #if NETCORE
 using Microsoft.AspNetCore.Http.Extensions;
 #endif
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace GeneXus.Application
 {
@@ -22,11 +29,27 @@ namespace GeneXus.Application
 	}
 	public class GXBaseObject
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXBaseObject));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXBaseObject>();
+
+#if NETCORE
+		internal static ActivitySource activitySource;
+#endif
 		private Dictionary<string, string> callTargetsByObject = new Dictionary<string, string>();
 		protected IGxContext _Context;
 		bool _isMain;
 		protected bool _isApi;
+		protected bool _isDP;
+#if NETCORE
+		internal static ActivitySource ActivitySource {
+			get {
+				if (activitySource == null)
+					activitySource = new(OpenTelemetryService.GX_ACTIVITY_SOURCE_NAME);
+				return activitySource;
+			}
+		}
+#endif
+		protected virtual bool GenOtelSpanEnabled() { return false; }
+		
 		protected virtual void ExecuteEx()
 		{
 			if (GxMockProvider.Provider != null)
@@ -35,12 +58,86 @@ namespace GeneXus.Application
 				if (GxMockProvider.Provider.Handle(_Context, this, parmInfo))
 					return;
 			}
-			ExecutePrivate();
+			ExecuteImpl();
 		}
 		protected virtual void ExecutePrivate()
 		{
-
+			
 		}
+#if NETCORE
+		protected virtual bool AsyncEnabled { get; }
+
+		internal bool GetAsyncEnabledInternal()
+		{
+			return AsyncEnabled;
+		}
+		protected async Task CloseConnectionsAsync()
+		{
+			GxContext gxContext = context as GxContext;
+			if (gxContext != null)
+			{
+				await gxContext.CloseConnectionsAsync();
+			}
+		}
+
+		protected virtual Task ExecutePrivateAsync()
+		{
+			return Task.CompletedTask;
+		}
+#endif
+		internal static string GetObjectNameWithoutNamespace(string gxObjFullName)
+		{
+			string mainNamespace = Preferences.AppMainNamespace;
+			if (gxObjFullName.StartsWith(mainNamespace))
+				gxObjFullName = gxObjFullName.Remove(0, mainNamespace.Length + 1);
+			return gxObjFullName;
+		}
+#if NETCORE
+		private void ExecuteUsingSpanCode()
+		{
+			string gxObjFullName = GetObjectNameWithoutNamespace(GetType().FullName);
+			using (Activity activity = ActivitySource.StartActivity($"{gxObjFullName}.execute"))
+			{
+				ExecutePrivate();
+			}
+		}
+		private async Task ExecuteUsingSpanCodeAsync()
+		{
+			string gxObjFullName = GetObjectNameWithoutNamespace(GetType().FullName);
+			using (Activity activity = ActivitySource.StartActivity($"{gxObjFullName}.execute"))
+			{
+				await ExecutePrivateAsync();
+			}
+		}
+#endif
+		protected virtual void ExecuteImpl()
+		{
+#if NETCORE
+			if (GetAsyncEnabledInternal())
+			{
+				ExecuteImplAsync().GetAwaiter().GetResult();
+			}
+			else
+			{
+				if (GenOtelSpanEnabled())
+					ExecuteUsingSpanCode();
+				else
+					ExecutePrivate();
+			}
+#else
+			ExecutePrivate();
+#endif
+		}
+
+#if NETCORE
+		protected virtual async Task ExecuteImplAsync()
+		{
+			if (GenOtelSpanEnabled())
+				await ExecuteUsingSpanCodeAsync();
+			else
+				await ExecutePrivateAsync();
+		}
+#endif
 		protected virtual void ExecutePrivateCatch(object stateInfo)
 		{
 			try
@@ -127,14 +224,21 @@ namespace GeneXus.Application
 			set { _isApi = value; }
 			get { return _isApi; }
 		}
+#if NETCORE
+		protected virtual Task CleanupAsync() {
+			return Task.CompletedTask;// throw new NotImplementedException();
+		}
+#endif		
 		public virtual void cleanup() { }
 
 		virtual public bool UploadEnabled() { return false; }
 		public bool IntegratedSecurityEnabled2 { get { return IntegratedSecurityEnabled; } }
 		public GAMSecurityLevel IntegratedSecurityLevel2 { get { return IntegratedSecurityLevel; } }
+
 		public bool IsSynchronizer2 { get { return IsSynchronizer; } }
 		public string ExecutePermissionPrefix2 { get { return ExecutePermissionPrefix; } }
-
+		internal string ApiExecutePermissionPrefix2(string gxMethod) { return ApiExecutePermissionPrefix(gxMethod); }		
+		internal GAMSecurityLevel ApiIntegratedSecurityLevel2(string gxMethod) { return ApiIntegratedSecurityLevel(gxMethod); }
 		public virtual string ServiceExecutePermissionPrefix { get { return string.Empty; } }
 		public virtual string ServiceDeletePermissionPrefix { get { return string.Empty; } }
 		public virtual string ServiceInsertPermissionPrefix { get { return string.Empty; } }
@@ -144,12 +248,15 @@ namespace GeneXus.Application
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
 		protected virtual bool IsSynchronizer { get { return false; } }
 		protected virtual string ExecutePermissionPrefix { get { return String.Empty; } }
+
+		protected virtual string ApiExecutePermissionPrefix(string gxMethod) { return ExecutePermissionPrefix2; }
+		protected virtual GAMSecurityLevel ApiIntegratedSecurityLevel(string gxMethod) {  return IntegratedSecurityLevel2; }
 		public virtual void handleException(String gxExceptionType, String gxExceptionDetails, String gxExceptionStack) { }
 
 		public virtual void CallWebObject(string url)
 		{
 			string target = GetCallTargetFromUrl(url);
-			if (String.IsNullOrEmpty(target))
+			if (String.IsNullOrEmpty(target))                                                               
 			{
 				context.wjLoc = url;
 			}

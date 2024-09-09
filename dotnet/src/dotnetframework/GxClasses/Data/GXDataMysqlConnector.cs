@@ -1,29 +1,27 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Reflection;
+using System.Security;
+using System.Text;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Utils;
-using log4net;
-using MySQLCommand = MySqlConnector.MySqlCommand;
-using MySQLParameter = MySqlConnector.MySqlParameter;
-using MySQLConnection = MySqlConnector.MySqlConnection;
-using MySQLException = MySqlConnector.MySqlException;
-using MySQLDbType = MySqlConnector.MySqlDbType;
-using MySQLDataAdapter = MySqlConnector.MySqlDataAdapter;
-using System.IO;
 using GxClasses.Helpers;
-using System.Reflection;
-using System;
-using System.Data;
-using System.Data.Common;
-using System.Text;
-using System.Collections.Generic;
-using System.Security;
+using MySQLCommand = MySqlConnector.MySqlCommand;
+using MySQLConnection = MySqlConnector.MySqlConnection;
+using MySQLDataAdapter = MySqlConnector.MySqlDataAdapter;
+using MySQLDbType = MySqlConnector.MySqlDbType;
+using MySQLException = MySqlConnector.MySqlException;
+using MySQLParameter = MySqlConnector.MySqlParameter;
 
 namespace GeneXus.Data
 {
-	
+
 	public class GxMySqlConnector : GxDataRecord 
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxMySqlConnector));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxMySqlConnector>();
 		private int MAX_TRIES;
 		private int m_FailedConnections;
 #if NETCORE
@@ -49,27 +47,9 @@ namespace GeneXus.Data
 			return new MySqlConnectorConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
 		}
 
-		string convertToMySqlCall(string stmt, GxParameterCollection parameters)
-		{
-			if (parameters == null)
-				return "";
-			string pname;
-			StringBuilder sBld = new StringBuilder();
-			for (int i = 0; i < parameters.Count; i++)
-			{
-				if (i > 0)
-					sBld.Append(", ");
-				pname = "@" + parameters[i].ParameterName;  
-				sBld.Append(pname);
-				parameters[i].ParameterName = pname;
-			}
-			return "CALL " + stmt + "(" + sBld.ToString() + ")";    
-		}
 		[SecuritySafeCritical]
 		public override IDbCommand GetCommand(IGxConnection con, string stmt, GxParameterCollection parameters, bool isCursor, bool forFirst, bool isRpc)
 		{
-			if (isRpc)
-				stmt = convertToMySqlCall(stmt, parameters);
 			MySQLCommand mysqlcmd = (MySQLCommand)base.GetCommand(con, stmt, parameters.Distinct());
 			if (isCursor && !isRpc)        
 			{
@@ -498,7 +478,9 @@ namespace GeneXus.Data
 	[SecuritySafeCritical]
 	sealed internal class MySqlConnectorConnectionWrapper : GxAbstractConnectionWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.MySqlConnectorConnectionWrapper));
+	
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<MySqlConnectorConnectionWrapper>();
+
 		[SecuritySafeCritical]
 		public MySqlConnectorConnectionWrapper() : base(new MySQLConnection())
 		{ }
@@ -566,7 +548,7 @@ namespace GeneXus.Data
 	[SecuritySafeCritical]
 	public class GxMySQLConnectorDataReader : GxDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxMySQLConnectorDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxMySQLConnectorDataReader>();
 		public GxMySQLConnectorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt)
 		{
@@ -589,7 +571,7 @@ namespace GeneXus.Data
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
-			block = new GxArrayList(fetchSize);
+			block = new List<object[]>(fetchSize);
 			pos = -1;
 			if (cached)
 			{
@@ -618,8 +600,7 @@ namespace GeneXus.Data
 	[SecuritySafeCritical]
 	public class GxMySQLConnectorCursorDataReader : GxDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.GxDataReader));
-
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDataReader>();
 		public GxMySQLConnectorCursorDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool hasNested, bool dynStmt)
 		{
@@ -642,7 +623,7 @@ namespace GeneXus.Data
 			reader = cmd.ExecuteReader();
 			cache.SetAvailableCommand(stmt, false, dynStmt);
 			open = true;
-			block = new GxArrayList(fetchSize);
+			block = new List<object[]>(fetchSize);
 			pos = -1;
 			if (cached)
 			{

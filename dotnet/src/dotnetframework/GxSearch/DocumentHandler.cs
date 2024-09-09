@@ -1,31 +1,27 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
-
+using GeneXus.Search;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Search.Highlight;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
-
-using log4net;
-using GeneXus.Search;
-using System.Runtime.CompilerServices;
-using System.Reflection;
-using System.Collections.Concurrent;
-
+using Lucene.Net.Search.Highlight;
 using NUglify;
 using NUglify.Html;
-using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
 
 namespace GeneXus.Utils
 {
 	public class DocumentHandler
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.DocumentHandler));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<DocumentHandler>();
 
 		static IndexReader reader;
 		static ConcurrentDictionary<string, Query> queries = new ConcurrentDictionary<string, Query>();
@@ -152,10 +148,10 @@ namespace GeneXus.Utils
 	public class NTidyHTMLHandler : IDocumentHandler
 	{
 #if !NETCORE
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.DocumentHandler));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<DocumentHandler>();
 		Assembly ntidy;
 #endif
-        public NTidyHTMLHandler()
+		public NTidyHTMLHandler()
         {
 #if !NETCORE
 			try

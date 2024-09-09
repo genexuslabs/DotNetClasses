@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Enyim.Caching;
 using Enyim.Caching.Configuration;
 using Enyim.Caching.Memcached;
+using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 
@@ -15,7 +15,7 @@ namespace GeneXus.Cache
 	[SecuritySafeCritical]
 	public class Memcached : ICacheService2
 	{
-		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(typeof(Memcached));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Memcached>();
 
 		MemcachedClient _cache;
 		const int DEFAULT_MEMCACHED_PORT = 11211;
@@ -26,21 +26,46 @@ namespace GeneXus.Cache
 		MemcachedClient InitCache()
 		{
 			GXServices services = ServiceFactory.GetGXServices();
-			String address = string.Empty;
+			string address = string.Empty;
+			string password = string.Empty;
+			string username = string.Empty;
 			if (services != null)
 			{
 				GXService providerService = ServiceFactory.GetGXServices()?.Get(GXServices.CACHE_SERVICE);
 				if (providerService != null)
 				{
 					address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
+					username = providerService.Properties.Get("CACHE_PROVIDER_USER");
+					password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
+					if (!string.IsNullOrEmpty(password))
+					{
+						string ret = string.Empty;
+						if (CryptoImpl.Decrypt(ref ret, password))
+						{
+							password = ret;
+						}
+					}
 				}
 			}
 
 #if NETCORE
 			var loggerFactory = new Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory();
-			MemcachedClientConfiguration config = new MemcachedClientConfiguration(loggerFactory, new MemcachedClientOptions());
+			MemcachedClientOptions options = new MemcachedClientOptions();
+			if (!String.IsNullOrEmpty(username) || !String.IsNullOrEmpty(password))
+			{
+				options.AddPlainTextAuthenticator(string.Empty, username, password);
+			}
+			MemcachedClientConfiguration config = new MemcachedClientConfiguration(loggerFactory, options);
 #else
+
 			MemcachedClientConfiguration config = new MemcachedClientConfiguration();
+			if (!String.IsNullOrEmpty(username) || !String.IsNullOrEmpty(password))
+			{
+				config.Authentication.Type = typeof(PlainTextAuthenticator);
+				config.Authentication.Parameters["userName"] = username;
+				config.Authentication.Parameters["password"] = password;
+				config.Authentication.Parameters["zone"] = string.Empty;
+			}
 #endif
 			if (!String.IsNullOrEmpty(address))
 			{

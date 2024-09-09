@@ -31,7 +31,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 			string functionName = context.FunctionDefinition.Name;
 
 			Message message = SetupMessage(context, myQueueItem);
-			log.LogInformation($"GeneXus Service Bus trigger handler. Function processed: {functionName}. Queue item Id: {message.MessageId}");
+			log.LogInformation($"GeneXus Service Bus trigger handler. Function processed: {functionName}. Queue item Id: {StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList)}");
 
 			try
 			{
@@ -236,7 +236,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 							}
 							catch (Exception)
 							{
-								exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
+								exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList));
 								log.LogError(exMessage);
 								throw; //Throw the exception so the runtime can Retry the operation.
 							}	
@@ -250,7 +250,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				}
 				catch (Exception)
 				{
-					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
+					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList));
 					throw; //Throw the exception so the runtime can Retry the operation.
 				}
 			}

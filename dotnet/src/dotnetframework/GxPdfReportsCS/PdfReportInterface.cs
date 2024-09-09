@@ -1,23 +1,19 @@
-using System;
 using System.IO;
-using log4net;
 
 namespace GeneXus.Printer
 {
 
 	public class GxReportBuilderPdf : IReportHandler
 	{
-		static ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-		string _appPath;
-		IReportHandler _pdfReport;
+		static IGXLogger log = GXLoggerFactory.GetLogger<GxReportBuilderPdf>();
+		protected string _appPath;
+		protected IReportHandler _pdfReport;
 
 		public GxReportBuilderPdf(string appPath, Stream outputStream)
 		{
 			_appPath = appPath;
-		{
 			_pdfReport = new com.genexus.reports.PDFReportItextSharp(appPath);
-		}
+		
 			if (outputStream != null)
 			{
 				
@@ -25,7 +21,7 @@ namespace GeneXus.Printer
 				GXLogging.Debug(log,"GxReportBuilderPdf outputStream: binaryWriter");
 			}
 		} 
-		public GxReportBuilderPdf() : this( "", null)
+		public GxReportBuilderPdf() 
 		{
 		}
 		public bool GxPrintInit(string output, ref int gxXPage, ref int gxYPage, string iniFile, string form, string printer, int mode, int orientation, int pageSize, int pageLength, int pageWidth, int scale, int copies, int defSrc, int quality, int color, int duplex) 
@@ -120,7 +116,6 @@ namespace GeneXus.Printer
 		}
 		public virtual void GxSetDocName(string docName)
 		{
-			docName = ReportUtils.AddPath( docName, _appPath );
 			_pdfReport.GxSetDocName(docName);
 		}
 		public void GxSetDocFormat(string docFormat)

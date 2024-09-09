@@ -1,7 +1,6 @@
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Utils;
-using log4net;
 #if NETCORE
 using GxClasses.Helpers;
 using Microsoft.AspNetCore.Http;
@@ -28,6 +27,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Net.Http.Headers;
 using System.Net.Http;
 using System.Globalization;
+using System.Linq;
 
 namespace GeneXus.Http
 {
@@ -50,6 +50,8 @@ namespace GeneXus.Http
 		public static string XGXFILENAME = "x-gx-filename";
 		internal static string ACCEPT = "Accept";
 		internal static string TRANSFER_ENCODING = "Transfer-Encoding";
+		internal static string X_CSRF_TOKEN_HEADER = "X-XSRF-TOKEN";
+		internal static string X_CSRF_TOKEN_COOKIE = "XSRF-TOKEN";
 	}
 	internal class HttpHeaderValue
 	{
@@ -71,10 +73,74 @@ namespace GeneXus.Http
 		[DataMember(Name = "error")]
 		public HttpJsonError Error;
 	}
+#if NETCORE
+	internal static class CookiesHelper
+	{
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(CookiesHelper).FullName);
 
+		internal static void PopulateCookies(this HttpRequestMessage request, CookieContainer cookieContainer)
+		{
+			if (cookieContainer != null)
+			{
+				IEnumerable<Cookie> cookies = cookieContainer.GetCookies();
+				if (cookies.Any())
+				{
+					request.Headers.Add("Cookie", cookies.ToHeaderFormat());
+				}
+			}
+		}
+
+		private static string ToHeaderFormat(this IEnumerable<Cookie> cookies)
+		{
+			return string.Join(";", cookies); 
+		}
+		internal static void ExtractCookies(this HttpResponseMessage response, CookieContainer cookieContainer)
+		{
+			if (response.Headers.TryGetValues("Set-Cookie", out var cookieValues))
+			{
+				Uri uri = response.RequestMessage.RequestUri;
+				foreach (string cookieValue in cookieValues)
+				{
+					try
+					{
+						cookieContainer.SetCookies(uri, cookieValue);
+					}
+					catch (CookieException ex)
+					{
+						GXLogging.Warn(log, $"Ignored cookie for container: {cookieValue} url:{uri}", ex);
+					}
+				}
+
+			}
+		}
+	}
+#endif
 	public class HttpHelper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Http.HttpHelper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HttpHelper>();
+
+		internal static Dictionary<string, string> GAMServices = new Dictionary<string, string>(){
+												{"oauth/access_token","gxoauthaccesstoken.aspx"},
+												{"oauth/logout","gxoauthlogout.aspx"},
+												{"oauth/userinfo","gxoauthuserinfo.aspx"},
+												{"oauth/gam/signin","agamextauthinput.aspx"},
+												{"oauth/gam/callback","agamextauthinput.aspx"},
+												{"oauth/gam/access_token","agamoauth20getaccesstoken.aspx"},
+												{"oauth/gam/userinfo","agamoauth20getuserinfo.aspx"},
+												{"oauth/gam/signout","agamextauthinput.aspx"},
+												{"saml/gam/signin","Saml2/SignIn"},
+												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws.aspx"},
+												{"saml/gam/signout","Saml2/Logout"},
+												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken.aspx"},
+												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
+												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
+												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
+												{"oauth/gam/v2.0/requesttokenanduserinfo","agamssorequesttokenanduserinfo_v20.aspx"}};
+		internal static HashSet<string> GamServicesInternalName = new HashSet<string>(GAMServices.Values.Select(value => value.Replace(ASPX, string.Empty)));
+		internal const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
+		internal const string GXFLOW_NSPACE = "GXflow.Programs";
+		internal const string GAM_NSPACE = "GeneXus.Security.API";
+
 		/*
 		* https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
 		* Specifying no-cache or max-age=0 indicates that 
@@ -92,7 +158,7 @@ namespace GeneXus.Http
 		const string GAM_CODE_TFA_USER_MUST_VALIDATE = "410";
 		const string GAM_CODE_TOKEN_EXPIRED = "103";
 		static Regex CapitalsToTitle = new Regex(@"(?<=[A-Z])(?=[A-Z][a-z]) | (?<=[^A-Z])(?=[A-Z]) | (?<=[A-Za-z])(?=[^A-Za-z])", RegexOptions.IgnorePatternWhitespace);
-
+		internal const string InvalidCSRFToken = "InvalidCSRFToken";
 		const string CORS_MAX_AGE_SECONDS = "86400";
 		internal static void CorsHeaders(HttpContext httpContext)
 		{
@@ -286,9 +352,13 @@ namespace GeneXus.Http
 
 		internal static void SetUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, Exception ex)
 		{
+			string statusCodeDesc = StatusCodeToTitle(statusCode);
+			SetUnexpectedError(httpContext, statusCode, statusCodeDesc, ex);
+		}
+		internal static void SetUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, string statusCodeDesc, Exception ex)
+		{
 			TraceUnexpectedError(ex);
 			string statusCodeStr = statusCode.ToString(INT_FORMAT);
-			string statusCodeDesc = StatusCodeToTitle(statusCode);
 			SetResponseStatus(httpContext, statusCode, statusCodeDesc);
 			SetJsonError(httpContext, statusCodeStr, statusCodeDesc);
 		}

@@ -5,11 +5,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using GeneXus.Application;
-using log4net;
 
 namespace GeneXus.Diagnostics
 {
-	
+
 	public class GXDebugManager
 	{
 		public const short GXDEBUG_VERSION = 2;
@@ -20,7 +19,7 @@ namespace GeneXus.Diagnostics
 
 		private static bool initialized;
 		private static GXDebugManager m_Instance;
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Application.GxContext));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxContext>();
 		public static GXDebugManager Instance
 		{
 			get

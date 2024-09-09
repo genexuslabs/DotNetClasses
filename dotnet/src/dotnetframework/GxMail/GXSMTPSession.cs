@@ -1,17 +1,14 @@
 using System;
-using GeneXus.Mail.Internals;
-using GeneXus.Utils;
 using GeneXus.Configuration;
-using log4net;
+using GeneXus.Mail.Internals;
 
 namespace GeneXus.Mail
 {
-    
-    public class GXSMTPSession : GXMailSession
-    {
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXSMTPSession));
 
-        private ISMTPSession session;
+	public class GXSMTPSession : GXMailSession
+    {
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXSMTPSession>();
+		private ISMTPSession session;
         private string attachDir;
         private short authentication;
         private short secure;

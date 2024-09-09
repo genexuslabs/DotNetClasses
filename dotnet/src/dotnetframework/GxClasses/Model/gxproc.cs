@@ -14,7 +14,6 @@ namespace GeneXus.Procedure
 	using GeneXus.Printer;
 	using GeneXus.Utils;
 	using GeneXus.XML;
-	using log4net;
 
 	public abstract class GXProcedure: GXBaseObject
 	{
@@ -349,14 +348,97 @@ namespace GeneXus.Procedure
 		protected void trkrng(int lineNro, int lineNro2) => dbgInfo?.TrkRng(lineNro, 0, lineNro2, 0);
 		protected void trkrng(int lineNro, int colNro, int lineNro2, int colNro2) => dbgInfo?.TrkRng(lineNro, colNro, lineNro2, colNro2);
 	}
+	public class GXDataGridProcedure : GXProcedure
+	{
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXDataGridProcedure>();
+		const string HAS_NEXT_PAGE = "HasNextPage";
+		const string RECORD_COUNT = "RecordCount";
+		const string RECORD_COUNT_SUPPORTED = "RecordCountSupported";
+		long totalRecordCount = -1;
+		protected virtual long RecordCount()
+		{
+			return -1;
+		}
+		protected virtual bool RecordCountSupported()
+		{
+			return true;
+		}
+		protected void SetPaginationHeaders(bool hasNextPage)
+		{
+			try
+			{
+				SetHasNextPageHeader(hasNextPage);
+				SetRecordCountSupportedHeader();
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Warn(log, $"A processing error occurred while setting pagination headers", ex);
+			}
+		}
+		private void SetRecordCountSupportedHeader()
+		{
+			if (!RecordCountSupported())
+			{
+				GXLogging.Debug(log, $"Adding '{RECORD_COUNT_SUPPORTED}' header");
+				context.SetHeader(RECORD_COUNT_SUPPORTED, false.ToString());
+			}
+		}
 
+		private void SetHasNextPageHeader(bool hasNextPage)
+		{
+			context.SetHeader(HAS_NEXT_PAGE, StringUtil.BoolToStr(hasNextPage));
+		}
+
+		private void SetRecordCountHeader()
+		{
+			bool recordCountHeaderRequired = false;
+			bool setHeader = false;
+			if (context.HttpContext != null)
+			{
+				recordCountHeaderRequired = !string.IsNullOrEmpty(context.HttpContext.Request.Headers[RECORD_COUNT]);
+			}
+			if (totalRecordCount != -1)
+			{
+				setHeader = true;
+			}
+			else if (recordCountHeaderRequired)
+			{
+				totalRecordCount = RecordCount();
+				setHeader = true;
+			}
+			if (setHeader)
+			{
+				GXLogging.Debug(log, $"Adding '{RECORD_COUNT}' header:", totalRecordCount.ToString());
+				context.SetHeader(RECORD_COUNT, totalRecordCount.ToString());
+			}
+		}
+		protected long GetPaginationStart(long start, long count)
+		{
+			if (start < 0) //last page
+			{
+				totalRecordCount = RecordCount();
+				long lastPageRecords = totalRecordCount % count;
+				if (lastPageRecords == 0)
+					start = totalRecordCount - count;
+				else
+					start = totalRecordCount - lastPageRecords;
+			}
+			SetRecordCountHeader();
+			return start;
+		}
+	}
 	public class GxReportUtils
 	{
 		public static int OUTPUT_RVIEWER_NATIVE = 1;
 		public static int OUTPUT_RVIEWER_DLL = 2;
 		public static int OUTPUT_PDF     = 3;
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxReportUtils>();
+
+#if NETCORE
+		const string PDF_LIBRARY_ITEXT8 = "ITEXT8";
+		const string PDF_LIBRARY_PDFPIG = "PDFPIG";
+#endif
 		static public IReportHandler GetPrinter( int outputType, string path, Stream reportOutputStream)
 		{
 			IReportHandler reportHandler;
@@ -389,7 +471,14 @@ namespace GeneXus.Procedure
 					Type classType = assem.GetType( "GeneXus.Printer.GxReportBuilderPdf", false, true);
 					reportHandler = (IReportHandler) Activator.CreateInstance(classType,new Object[]{path, reportOutputStream});
 #else
-					reportHandler = (IReportHandler)(ClassLoader.FindInstance("GxPdfReportsCS", "GeneXus.Printer", "GxReportBuilderPdf", new Object[] { path, reportOutputStream }, null));
+					string reportBuidler;
+					if (Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_ITEXT8, StringComparison.OrdinalIgnoreCase))
+						reportBuidler = "GxReportBuilderPdf8";
+					else if (Preferences.PdfReportLibrary().Equals(PDF_LIBRARY_PDFPIG, StringComparison.OrdinalIgnoreCase))
+						reportBuidler = "GxReportBuilderPDFPig";
+					else
+						reportBuidler = "GxReportBuilderPdf";
+					reportHandler = (IReportHandler)(ClassLoader.FindInstance("GxPdfReportsCS", "GeneXus.Printer", reportBuidler, new Object[] { path, reportOutputStream }, null));
 #endif
 				}
 				catch (TargetInvocationException ex)

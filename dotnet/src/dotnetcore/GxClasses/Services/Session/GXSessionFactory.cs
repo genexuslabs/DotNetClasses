@@ -5,13 +5,13 @@ using GeneXus.Data;
 using GeneXus.Data.ADO;
 using GeneXus.Encryption;
 using GxClasses.Helpers;
-using log4net;
 
 namespace GeneXus.Services
 {
 	public class GXSessionServiceFactory
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXSessionServiceFactory));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXSessionServiceFactory>();
+
 		static string REDIS = "REDIS";
 		static string DATABASE = "DATABASE";
 		public static ISessionService GetProvider()
@@ -58,7 +58,7 @@ namespace GeneXus.Services
 	}
 	public class GxRedisSession : ISessionService
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxRedisSession));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxRedisSession>();
 		internal static string SESSION_ADDRESS = "SESSION_PROVIDER_ADDRESS";
 		internal static string SESSION_INSTANCE = "SESSION_PROVIDER_INSTANCE_NAME";
 		internal static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
@@ -108,7 +108,7 @@ namespace GeneXus.Services
 	}
 	public class GxDatabaseSession : ISessionService
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDatabaseSession));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDatabaseSession>();
 		internal static string SESSION_ADDRESS = "SESSION_PROVIDER_ADDRESS";
 		internal static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
 		internal static string SESSION_SCHEMA = "SESSION_PROVIDER_SCHEMA";

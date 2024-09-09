@@ -1,13 +1,14 @@
-using GeneXus.Application;
-using GeneXus.XML;
+#if !NETCORE
 using Jayrock.Json;
-using log4net;
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Serialization;
+using GeneXus.Application;
+using GeneXus.XML;
+
 
 namespace GeneXus.Utils
 {
@@ -44,13 +45,61 @@ namespace GeneXus.Utils
 			base.Insert(idx, TObject);
 			IsAssigned = true;
 		}
+		public bool AddRange(GXBaseList<T> value, int? index)
+		{
+			if (!index.HasValue)
+			{
+				base.AddRange(value);
+				return true;
+			}
+			else if (index == 0)
+			{
+				base.InsertRange(index.Value, value);
+				return true;
+			}
+			else if (index > 0 && index <= Count+1)
+			{
+				base.InsertRange(index.Value - 1, value);
+				return true;
+			}
+			return false;
+		}
+		public bool RemoveRange(int index, int? countItemsToRemove)
+		{
+			if (index > 0 && index <= Count)
+			{
+				if (countItemsToRemove == null)
+				{
+					int countToRemove = Count - (index-1);
+					base.RemoveRange(index - 1, countToRemove);
+					return true;
+				}
+				else if (countItemsToRemove.Value < Count - index)
+				{
+					base.RemoveRange(index - 1, countItemsToRemove.Value);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public bool Set(int index, T value)
+		{
+			if (index > 0 && index < Count)
+			{
+				this[index - 1] = value;
+				return true;
+			}
+			return false;
+		}
+
 	}
 
 	[Serializable]
 	public class GXBaseCollection<T> : GXBaseList<T>, IGxXMLSerializable, IGxJSONAble, IGxCollection<T>, IGxJSONSerializable where T : GxUserType, IGxXMLSerializable, IGxJSONAble, new()
 	{
 
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXBaseCollection<T>));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXBaseCollection<T>>();
 		public string _containedName;
 		public string _containedXmlNamespace;
 		public IGxContext context;
@@ -470,7 +519,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages);
+				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
 				return false;
 			}
 		}
@@ -619,7 +668,7 @@ namespace GeneXus.Utils
 	[Serializable]
 	public class GXBCCollection<T> : GXBaseCollection<T>, IGXBCCollection where T : GxSilentTrnSdt, new()
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.GXBCCollection<T>));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXBCCollection<T>>();
 
 		public GXBCCollection() : base() { }
 		public GXBCCollection(IGxContext context,

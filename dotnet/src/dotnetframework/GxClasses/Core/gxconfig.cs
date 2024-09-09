@@ -29,7 +29,8 @@ namespace GeneXus.Configuration
 
 	public class Config
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Configuration.Config));
+		private static IGXLogger log = null;
+
 		public const string GX_LANG_SPA = "spa";
 		public const string GX_LANG_POR = "por";
 		public const string GX_LANG_ITA = "ita";
@@ -42,7 +43,7 @@ namespace GeneXus.Configuration
 		private static string configFileName;
 		public static string loadedConfigFile;
 		private static bool configLog = true;
-		private static bool configLoaded;
+		internal static bool configLoaded;
 		static NameValueCollection _config;
 		static ConcurrentDictionary<string, string> s_confMapping;
 		const string CONFMAPPING_FILE = "confmapping.json";
@@ -156,7 +157,25 @@ namespace GeneXus.Configuration
 				return false;
 			}
 		}
-
+		internal static bool GetValueOrEnvironmentVarOf(string sId, out string sString)
+		{
+			try
+			{
+				sString = config.Get(sId);
+				if (String.IsNullOrEmpty(sString))
+				{
+					sString = MappedValue(sId, sString);
+					if (string.IsNullOrEmpty(sString))
+						return false;
+				}
+				return true;
+			}
+			catch
+			{
+				sString = string.Empty;
+				return false;
+			}
+		}
 		public static bool GetValueOf(string sId)
 		{
 			string sString;
@@ -429,7 +448,7 @@ namespace GeneXus.Configuration
 		}
 
 #if NETCORE
-		public static IConfiguration ConfigRoot { get; set; }
+		public static IConfiguration ConfigRoot { get ; set; }
 		const string Log4NetShortName = "log4net";
 		static Version Log4NetVersion = new Version(2, 0, 15);
 
@@ -439,13 +458,13 @@ namespace GeneXus.Configuration
 		const string ITextSharpFileName = "iTextSharp.dll";
 		const string ITextSharpAssemblyName = "itextsharp";
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-		{
+		{		
 			var requestedAssembly = new AssemblyName(args.Name);
 			if (requestedAssembly.Name == Log4NetShortName){
 				requestedAssembly.Version = Log4NetVersion;
 				return Assembly.Load(requestedAssembly);
 			}
-
+			
 			if (args.Name.StartsWith(ConfigurationManagerBak))
 			{
 				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), ConfigurationManagerFileName);
@@ -465,11 +484,12 @@ namespace GeneXus.Configuration
 			else
 			{
 				AssemblyName assName = new AssemblyName(args.Name);
-				bool strongNamedAssembly = assName.GetPublicKeyToken().Length > 0;
 				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{assName.Name}.dll");
-				if (!strongNamedAssembly && File.Exists(fileName))
+				if (File.Exists(fileName))
 				{
-					return Assembly.LoadFrom(fileName);
+					Assembly assm = Assembly.LoadFrom(fileName);
+					if (assm!=null && assm.GetName().Version == assName.Version)
+						return assm;
 				}
 			}
 			return null;
@@ -485,6 +505,7 @@ namespace GeneXus.Configuration
 		};
 
 		static string GeoTypesAssembly = "Microsoft.SqlServer.Types";
+		static string DiagnosticSourceAssembly = "System.Diagnostics.DiagnosticSource";
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
@@ -498,7 +519,16 @@ namespace GeneXus.Configuration
 			{
 				return SQLGeographyWrapper.GeoAssembly;
 			}
-			else return null;
+			else if (requestedAssembly.Name == DiagnosticSourceAssembly)
+			{
+				//MySQLConnector requirement
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{DiagnosticSourceAssembly}.dll");
+				if (File.Exists(fileName))
+				{
+					return Assembly.LoadFrom(fileName);
+				}
+			}
+			return null;
 		}
 #endif
 		static object syncRoot = new Object();
@@ -509,115 +539,144 @@ namespace GeneXus.Configuration
 			{
 				if (!configLoaded || _config == null)
 				{
+					bool isNetTrustException = false;
+					Exception netTrustedException = null;
+					string configuredFilename = null;
 					lock (syncRoot)
 					{
 						if (_config == null)
 						{
+
 							try
 							{
 								AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 							}
 							catch (Exception ex)
 							{
-								GXLogging.Info(log, ".NET trust level is lower than full", ex.Message);
+								isNetTrustException = true;
+								netTrustedException = ex;
 							}
 							string logConfigSource;
-							configLoaded = true;
 							if (configFileName != null)
 							{
-								if (log.IsDebugEnabled) loadedConfigFile = configFileName;
+								loadedConfigFile = configFileName;
 								_config = loadConfig(configFileName, out logConfigSource);
+								configLoaded = true;
 								if (!string.IsNullOrEmpty(logConfigSource))
-									logConfig(logConfigSource);
+									logConfig(logConfigSource, out configuredFilename);
 								else
-									logConfig(configFileName);
-								return _config;
+									logConfig(configFileName, out configuredFilename);
 							}
 #if !NETCORE
-					if (GxContext.IsHttpContext &&
-						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
-					{
-						logConfig(null);
-						if (log.IsDebugEnabled) loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
-						_config = ConfigurationSettings.AppSettings;
-						foreach (string key in _config.Keys)
-						{
-							string value = MappedValue(key, _config[key]);
-							if (value!=_config[key])
-								_config[key] = value;
-						}
-						languages = null;
-						return _config;
-					}
-					if (GxContext.IsHttpContext &&
-						File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config")))
-					
-					{
-
-						logConfig("bin/log.config");
-						if (log.IsDebugEnabled)
-							loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
-						_config = loadConfig("bin/client.exe.config");
-						return _config;
-					}
-					if (File.Exists("client.exe.config"))
-					{
-						logConfig("log.console.config");
-						if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath("client.exe.config");
-						_config = loadConfig("client.exe.config");
-					}
-					else
-					{
-						string file = FileUtil.GetStartupDirectory() + "/client.exe.config";
-						string logFile = FileUtil.GetStartupDirectory() + "/log.console.config";
-						logConfig(logFile);
-						if (log.IsDebugEnabled) loadedConfigFile = Path.GetFullPath(file);
-						_config = loadConfig(file);
-
-					}
-
-#else
-							string basePath = FileUtil.GetBasePath();
-							string currentDir = Directory.GetCurrentDirectory();
-							string startupDir = FileUtil.GetStartupDirectory();
-							string appSettings = "appsettings.json";
-							string clientConfig = "client.exe.config";
-							string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
-
-							if (File.Exists(Path.Combine(basePath, appSettings)))
+							else
 							{
-								_config = loadConfigJson(basePath, appSettings);
-								logConfig(Path.Combine(basePath, logConfigFile));
-							}
-							else if (File.Exists(appSettings))
-							{
-								_config = loadConfigJson(currentDir, appSettings);
-								logConfig(logConfigFile);
-							}
-							else if (File.Exists(Path.Combine(startupDir, appSettings)))
-							{
-								_config = loadConfigJson(startupDir, appSettings);
-								logConfig(Path.Combine(startupDir, logConfigFile));
-							}
-							else if (File.Exists(clientConfig))
-							{
-								_config = loadConfig(clientConfig, out logConfigSource);
-								if (!string.IsNullOrEmpty(logConfigSource))
-									logConfig(logConfigSource);
+								if (GxContext.IsHttpContext &&
+									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "web.config")))
+								{
+									logConfig(null, out configuredFilename);
+									loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
+									_config = ConfigurationSettings.AppSettings;
+									foreach (string key in _config.Keys)
+									{
+										string value = MappedValue(key, _config[key]);
+										if (value != _config[key])
+											_config[key] = value;
+									}
+									languages = null;
+								}
+								else if (GxContext.IsHttpContext &&
+									File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config")))
+								{
+
+									logConfig("bin/log.config", out configuredFilename);
+									loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "bin", "client.exe.config");
+									_config = loadConfig("bin/client.exe.config");
+								}
+								else if (File.Exists("client.exe.config"))
+								{
+									logConfig("log.console.config", out configuredFilename);
+									loadedConfigFile = Path.GetFullPath("client.exe.config");
+									_config = loadConfig("client.exe.config");
+								}
 								else
-									logConfig(logConfigFile);
+								{
+									string file = FileUtil.GetStartupDirectory() + "/client.exe.config";
+									string logFile = FileUtil.GetStartupDirectory() + "/log.console.config";
+									logConfig(logFile, out configuredFilename);
+									loadedConfigFile = Path.GetFullPath(file);
+									_config = loadConfig(file);
+								}
+								configLoaded = true;
 							}
-							try
+#else
+							else
 							{
-								Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-							}
-							catch (Exception ex)
-							{
-								GXLogging.Info(log, "Could not register encoding provider", ex.Message);
+
+								string basePath = FileUtil.GetBasePath();
+								string currentDir = Directory.GetCurrentDirectory();
+								string startupDir = FileUtil.GetStartupDirectory();
+								string appSettings = "appsettings.json";
+								string clientConfig = "client.exe.config";
+
+								string logConfigurationSource = string.Empty;
+
+								if (File.Exists(Path.Combine(basePath, appSettings)))
+								{
+									_config = loadConfigJson(basePath, appSettings);
+
+								}
+								else if (File.Exists(appSettings))
+								{
+									_config = loadConfigJson(currentDir, appSettings);
+
+								}
+								else if (File.Exists(Path.Combine(startupDir, appSettings)))
+								{
+									_config = loadConfigJson(startupDir, appSettings);
+
+								}
+								else if (File.Exists(clientConfig))
+								{
+									_config = loadConfig(clientConfig, out logConfigSource);
+									logConfigurationSource = logConfigSource;
+
+								}
+								configLoaded = true;
+
+								string logConfigFile = GxContext.IsHttpContext ? "log.config" : "log.console.config";
+								if (File.Exists(Path.Combine(basePath, appSettings)))
+									logConfig(Path.Combine(basePath, logConfigFile), out configuredFilename);
+
+								else if (File.Exists(appSettings))
+									logConfig(logConfigFile, out configuredFilename);
+
+								else if (File.Exists(Path.Combine(startupDir, appSettings)))
+									logConfig(Path.Combine(startupDir, logConfigFile), out configuredFilename);
+
+								else if (File.Exists(clientConfig))
+									if (!string.IsNullOrEmpty(logConfigurationSource))
+										logConfig(logConfigurationSource, out configuredFilename);
+									else
+										logConfig(logConfigFile, out configuredFilename);
+
+								try
+								{
+									Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+								}
+								catch (Exception)
+								{
+									//"Could not register encoding provider";
+								}
 							}
 #endif
 						}
 					}
+					log = GXLoggerFactory.GetLogger<Config>();
+					GXLogging.Debug(log, "GxClasses version:", GxContext.StdClassesVersion());
+					if (configuredFilename != null)
+						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", configuredFilename);
+					if (isNetTrustException)
+						GXLogging.Info(log, ".NET trust level is lower than full", netTrustedException.Message);
 				}
 				return _config;
 			}
@@ -661,9 +720,10 @@ namespace GeneXus.Configuration
 			return cfg;
 		}
 #endif
-		private static void logConfig(string filename)
+		private static void logConfig(string filename, out string configuredFilename)
 		{
-			if (configLog)
+			configuredFilename = null;
+			if (configLog) 
 			{
 				try
 				{
@@ -672,21 +732,20 @@ namespace GeneXus.Configuration
 					{
 						var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 						XmlConfigurator.ConfigureAndWatch(logRepository, new FileInfo(filename));
-						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", filename);
+						configuredFilename = filename;
 					}
 #else
 					if (filename != null)
 					{
 						XmlConfigurator.ConfigureAndWatch(new FileInfo(filename));
-						GXLogging.Debug(log, "DOMConfigurator log4net configured with ", filename);
+						configuredFilename = filename;
 					}
 					else
 					{
 						XmlConfigurator.Configure();
-						GXLogging.Debug(log, "DOMConfigurator log4net configured with web.config");
+						configuredFilename = "web.config";
 					}
 #endif
-					GXLogging.Debug(log, "GxClasses version:", GxContext.StdClassesVersion());
 				}
 				catch (Exception ex)
 				{
@@ -703,7 +762,6 @@ namespace GeneXus.Configuration
 		}
 		static NameValueCollection loadConfig(string filename, out string logConfigSource)
 		{
-			GXLogging.Debug(log, "Start loadConfig, filename '", filename, "'");
 			NameValueCollection cfg = new NameValueCollection(StringComparer.Ordinal); //Case sensitive
 			logConfigSource = null;
 			if (!File.Exists(filename))
@@ -752,7 +810,6 @@ namespace GeneXus.Configuration
 					}
 				}
 			}
-			GXLogging.Debug(log, "Return loadConfig");
 			return cfg;
 		}
 		private static string MappedValue(string key, string value)
@@ -767,7 +824,7 @@ namespace GeneXus.Configuration
 	}
 	public class Preferences
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Configuration.Preferences));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Preferences>();
 		static object syncRoot = new Object();
 		static Hashtable cachingTtl;
 		static string _applicationPath = "";
@@ -778,6 +835,7 @@ namespace GeneXus.Configuration
 		static int oldSTR = -1;
 		static int instrumented = -1;
 		static string mediaPath;
+		static string pdfLib;
 		static string blobPath;
 		static string blobPathFolderName;
 		static int blankEmptyDates = -1;
@@ -794,12 +852,21 @@ namespace GeneXus.Configuration
 		public static string DefaultRewriteFile = "rewrite.config";
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
 		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
-		const string YES = "1";
-		const string NO = "0";
+		internal const string YES = "1";
+		internal const string NO = "0";
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
 		static int sessionTimeout = -1;
+		static int singletonHttpClient = -1;
+		internal static string AppMainNamespace
+		{
+			get
+			{
+				Config.GetValueOf("AppMainNamespace", out string nameSpace);
+				return nameSpace;
+			}
+		}
 		internal static string DefaultDatastore
 		{
 			get
@@ -867,9 +934,9 @@ namespace GeneXus.Configuration
 				if (rewriteEnabled == -1)
 				{
 #if NETCORE
-					var basePath = FileUtil.GetBasePath();
+					string basePath = FileUtil.GetBasePath();
 #else
-					var basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
+					string basePath = Directory.GetParent(FileUtil.GetStartupDirectory()).FullName;
 #endif
 					string rewriteFile = Path.Combine(basePath, DefaultRewriteFile);
 					rewriteEnabled = File.Exists(rewriteFile)?1:0;
@@ -1192,6 +1259,28 @@ namespace GeneXus.Configuration
 			}
 			return mediaPath;
 		}
+		internal static string PdfReportLibrary()
+		{
+			if (pdfLib == null)
+			{
+				lock (syncRoot)
+				{
+					if (pdfLib == null)
+					{
+						if (Config.GetValueOf("PDF_RPT_LIBRARY", out pdfLib))
+						{
+							pdfLib = pdfLib.Trim();
+						}
+						else
+						{
+							pdfLib = string.Empty;
+						}
+						GXLogging.Debug(log, "PDF_RPT_LIBRARY:", pdfLib);
+					}
+				}
+			}
+			return pdfLib;
+		}
 		public enum StorageTimeZonePty { Undefined = 0, Utc = 1, Local = 2 };
 
 		public static Boolean useTimezoneFix()
@@ -1354,7 +1443,29 @@ namespace GeneXus.Configuration
 				return sessionTimeout;
 			}
 		}
+		const bool DefaultWrapSingleApiOutput = false;
+		internal static bool WrapSingleApiOutput
+		{
+			get
+			{
+				if (Config.GetValueOf("WRAP_SINGLE_API_OUTPUT", out string flatten))
+					return (int.TryParse(flatten, out int value) && value == 1);
+				else
+					return DefaultWrapSingleApiOutput;
+			}
+		}
 
+		internal static bool SingletonHttpClient()
+		{
+			if (singletonHttpClient == -1)
+			{
+				if (Config.GetValueOrEnvironmentVarOf("HTTPCLIENT_SINGLETON", out string sValue) && int.TryParse(sValue, out int value))
+					singletonHttpClient = value;
+				else
+					singletonHttpClient = 1;
+			}
+			return singletonHttpClient==1;
+		}
 		internal static string CorsAllowedOrigins()
 		{
 			if (Config.GetValueOf("CORS_ALLOW_ORIGIN", out string corsOrigin))
@@ -1396,27 +1507,27 @@ namespace GeneXus.Configuration
 			else
 				return "";
 		}
-
-		public static int GetHttpClientMaxConnectionPerRoute()
+		internal const int DEFAULT_HTTPCLIENT_MAX_PER_ROUTE= 1000;
+		internal static int GetHttpClientMaxConnectionPerRoute()
 		{
 			if (httpclient_max_per_route == -1)
 			{
 				try
 				{
 					string strmax;
-					if (Config.GetValueOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
+					if (Config.GetValueOrEnvironmentVarOf("HTTPCLIENT_MAX_PER_ROUTE", out strmax))
 					{
 						httpclient_max_per_route = Convert.ToInt32(strmax);
 					}
 					else
 					{
-						httpclient_max_per_route = 1000;
+						httpclient_max_per_route = DEFAULT_HTTPCLIENT_MAX_PER_ROUTE;
 					}
 				}
 				catch (Exception ex)
 				{
 					GXLogging.Error(log, "HttpClientMaxPerRoute error", ex);
-					httpclient_max_per_route = 1000;
+					httpclient_max_per_route = DEFAULT_HTTPCLIENT_MAX_PER_ROUTE;
 				}
 			}
 			return httpclient_max_per_route;

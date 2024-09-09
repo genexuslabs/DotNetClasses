@@ -1,17 +1,16 @@
 using System;
+using System.Linq;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
 using log4net.Repository;
 using log4net.Repository.Hierarchy;
-using System.Linq;
-using log4net.Layout;
 
 namespace GeneXus.Configuration
 {
 	internal class LogConfiguration
 	{
-		private static readonly ILog logger = log4net.LogManager.GetLogger(typeof(LogConfiguration));
+		//private static readonly IGXLogger logger = GXLoggerFactory.GetLogger<LogConfiguration>();
 
 		public  const string USER_LOG_TOPIC = "GeneXusUserLog";
 		private const string LOG_LEVEL_ENVVAR = "GX_LOG_LEVEL";
@@ -20,7 +19,11 @@ namespace GeneXus.Configuration
 
 		public static void SetupLog4Net()
 		{
-			SetupLog4NetFromEnvironmentVariables();
+			Config.GetValueOf("LOG_OUTPUT", out string logProvider);
+			if (logProvider == "ASPNetTraceAppender" || logProvider == "ConsoleAppender" || logProvider == "EventLogAppender" || logProvider == "RollingFile")
+			{
+				SetupLog4NetFromEnvironmentVariables();
+			}
 		}
 
 		private static void SetupLog4NetFromEnvironmentVariables()
@@ -53,10 +56,10 @@ namespace GeneXus.Configuration
 			if (!String.IsNullOrEmpty(appenderName))
 			{
 				Hierarchy h = (Hierarchy) LogManager.GetRepository();
-				IAppender appenderToAdd = h.GetAppenders().First(a => a.Name == appenderName);
+				IAppender appenderToAdd = h.GetAppenders().FirstOrDefault(a => a.Name == appenderName);
 				if (appenderToAdd == null)
 				{
-					LogConfiguration.logger.Error($"Appender '{appenderName}' was not found on Log4Net Config file");
+					//LogConfiguration.logger.Warn($"Appender '{appenderName}' was not found on Log4Net Config file");
 					return;
 				}
 				

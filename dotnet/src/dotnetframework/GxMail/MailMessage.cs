@@ -1,20 +1,19 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using log4net;
 using System.Threading;
 using GeneXus.Utils;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 namespace GeneXus.Mail.Internals.Pop3
 {
-	
+
 	internal class MailMessage
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(MailMessage));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<MailMessage>();
 		private const string CRLF = "\r\n";
 
 		private static Hashtable monthList = new Hashtable();        

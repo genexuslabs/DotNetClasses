@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+	<PackageId>GeneXus.Azure.EventGrid</PackageId>
+	<PackageTags>Azure EventGrid Messaging</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <PackageReference Include="Azure.Identity" Version="1.11.0" />
+    <PackageReference Include="Azure.Messaging.EventGrid" Version="4.20.0" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GXEventRouter\GXEventRouter.csproj" />
+  </ItemGroup>
+
+</Project>

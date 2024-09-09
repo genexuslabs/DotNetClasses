@@ -30,7 +30,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 			string functionName = context.FunctionDefinition.Name;
 
 			QueueMessage queueMessage = SetupMessage(context, myQueueItem);
-			log.LogInformation($"GeneXus Queue trigger handler. Function processed: {functionName} Invocation Id: {context.InvocationId}. Queue item : {queueMessage.Id}");
+			log.LogInformation($"GeneXus Queue trigger handler. Function processed: {functionName} Invocation Id: {context.InvocationId}. Queue item : {StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList)}");
 
 			try
 			{
@@ -197,20 +197,20 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 							}
 							catch (Exception)
 							{
-								log.LogError("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
+								log.LogError("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList));
 								throw; //Throw the exception so the runtime can Retry the operation.
 							}
 						}
 					}
 					else
 					{
-						exMessage = string.Format("{0} GeneXus procedure could not be executed for Message Id {1}.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
+						exMessage = string.Format("{0} GeneXus procedure could not be executed for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList));
 						throw new Exception(exMessage);
 					}
 				}
 				catch (Exception)
 				{
-					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
+					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList));
 					throw; //Throw the exception so the runtime can Retry the operation.
 				}
 			}

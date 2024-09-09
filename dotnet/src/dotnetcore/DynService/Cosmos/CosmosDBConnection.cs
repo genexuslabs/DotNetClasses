@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using GeneXus.Cache;
 using GeneXus.Data.Cosmos;
 using GeneXus.Data.NTier.CosmosDB;
-using log4net;
 using Microsoft.Azure.Cosmos;
 
 namespace GeneXus.Data.NTier
@@ -24,6 +23,24 @@ namespace GeneXus.Data.NTier
 		public override IDataReader GetCacheDataReader(CacheItem item, bool computeSize, string keyCache)
 		{
 			return new GxCosmosDBCacheDataReader(item, computeSize, keyCache);
+		}
+		protected override string BuildConnectionStringForLog(string datasourceName, string userId,
+			string userPassword, string databaseName, string port, string schema, string extra)
+		{
+			StringBuilder connectionString = new StringBuilder();
+			if (!string.IsNullOrEmpty(datasourceName))
+			{
+				connectionString.AppendFormat("Data Source={0};", NaV);
+			}
+			if (userId != null)
+			{
+				connectionString.AppendFormat(";User ID={0};Password={1}", userId, NaV);
+			}
+			if (!string.IsNullOrEmpty(extra))
+			{
+				connectionString.AppendFormat(";{0}", extra);
+			}
+			return connectionString.ToString();
 		}
 	}
 
@@ -47,7 +64,7 @@ namespace GeneXus.Data.NTier
 		//Options not supported by the spec yet
 		//private const string DISTINCT = "DISTINCT";
 		
-		static readonly ILog logger = log4net.LogManager.GetLogger(typeof(CosmosDBConnection));
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<CosmosDBConnection>();
 		public override string ConnectionString
 		{
 			get

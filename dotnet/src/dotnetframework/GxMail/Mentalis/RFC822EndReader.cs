@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text;
-using log4net;
 
 namespace GeneXus.Mail.Internals.Pop3
 {
@@ -10,7 +9,7 @@ namespace GeneXus.Mail.Internals.Pop3
 	/// </summary>
 	internal class RFC822EndReader : StreamReader
 	{
-        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(RFC822EndReader));
+        private static readonly IGXLogger log = GXLoggerFactory.GetLogger<RFC822EndReader>();
 
 		private const int BUFFER_SIZE = 1024;
         private bool textPlain = false;

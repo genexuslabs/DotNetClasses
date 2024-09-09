@@ -1,15 +1,14 @@
 using System;
-using GeneXus.Application;
-using System.Data;
-using GeneXus.Configuration;
-using GeneXus.Data.NTier.ADO;
-using GeneXus.Reorg;
-using GeneXus.Performance;
-using log4net;
 using System.Collections.Generic;
-using GeneXus.Data.ADO;
-using GeneXus.Utils;
+using System.Data;
 using System.Text;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Data.ADO;
+using GeneXus.Data.NTier.ADO;
+using GeneXus.Performance;
+using GeneXus.Reorg;
+using GeneXus.Utils;
 
 namespace GeneXus.Data.NTier
 {
@@ -142,7 +141,7 @@ namespace GeneXus.Data.NTier
 	public class DataStoreHelperBase
 	{
 		/*DO NOT ADD INSTANCE VARIABLES IN THIS CLASS, THIS IS REFERENCED BY THE STATIC CURSORDEF ARRAY IN THE XX___DEFAULT, ALL THE VARIABLES HERE LIVE FOREVER*/
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(DataStoreHelperBase));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<DataStoreHelperBase>();
 		private const string AND = " and ";
 		private const string WHERE = " WHERE ";
 
@@ -342,7 +341,8 @@ namespace GeneXus.Data.NTier
 
 	public class DataStoreProvider : IDataStoreProviderBase,IDataStoreProvider
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Data.NTier.DataStoreProvider));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<DataStoreProvider>();
+
 		ICursor[] _cursor;
 		Object[][] results;
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]

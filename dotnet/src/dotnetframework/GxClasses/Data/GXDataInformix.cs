@@ -2,25 +2,23 @@ using System;
 using System.Collections;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-
-using log4net;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;
-using GeneXus.Utils;
-using System.Globalization;
 using GeneXus.Metadata;
+using GeneXus.Utils;
 using GxClasses.Helpers;
-using System.IO;
 
 namespace GeneXus.Data
 {
 	public class GxInformix : GxDataRecord
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxInformix>();
 		static Assembly _ifxAssembly;
 #if NETCORE
 		internal static string InformixAssemblyName = "Informix.Net.Core";
@@ -459,7 +457,7 @@ namespace GeneXus.Data
 
 	public class GxInformixDataReader : GxDataReader
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxInformixDataReader));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxInformixDataReader>();
 		public GxInformixDataReader(IGxConnectionManager connManager, GxDataRecord dr, IGxConnection connection, GxParameterCollection parameters,
 			string stmt, int fetchSize, bool forFirst, int handle, bool cached, SlidingTime expiration, bool dynStmt)
 			: base(connManager, dr, connection, parameters, stmt, fetchSize, forFirst, handle, cached, expiration, dynStmt)
@@ -586,7 +584,7 @@ namespace GeneXus.Data
 	{
 		private static int changeConnState = -1;
 		private int openDataReaders;
-		static readonly ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<InformixConnectionWrapper>();
 		public InformixConnectionWrapper() 
 		{
 			try

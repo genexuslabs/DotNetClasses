@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using System.IO;
@@ -58,7 +58,9 @@ namespace GeneXus.Cryptography.Encryption
 					_symAlg = Aes.Create();
 					break;
 				default:
+#pragma warning disable SYSLIB0045 // Type or member is obsolete
 					_symAlg = SymmetricAlgorithm.Create(algorithm);
+#pragma warning restore SYSLIB0045 // Type or member is obsolete
 					break;
 			}
 			if (_symAlg != null)

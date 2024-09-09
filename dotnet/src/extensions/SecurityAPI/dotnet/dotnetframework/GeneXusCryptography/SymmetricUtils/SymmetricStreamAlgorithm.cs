@@ -15,7 +15,7 @@ namespace GeneXusCryptography.SymmetricUtils
 	public enum SymmetricStreamAlgorithm
 	{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-		NONE, RC4, HC128, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC, VMPC
+		NONE, RC4, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 	}
 
@@ -44,8 +44,6 @@ namespace GeneXusCryptography.SymmetricUtils
 			{
 				case "RC4":
 					return SymmetricStreamAlgorithm.RC4;
-				case "HC128":
-					return SymmetricStreamAlgorithm.HC128;
 				case "HC256":
 					return SymmetricStreamAlgorithm.HC256;
 				case "CHACHA20":
@@ -56,8 +54,6 @@ namespace GeneXusCryptography.SymmetricUtils
 					return SymmetricStreamAlgorithm.XSALSA20;
 				case "ISAAC":
 					return SymmetricStreamAlgorithm.ISAAC;
-				case "VMPC":
-					return SymmetricStreamAlgorithm.VMPC;
 				default:
 					error.setError("SSA01", "Unrecognized SymmetricStreamAlgorithm");
 					return SymmetricStreamAlgorithm.NONE;
@@ -76,8 +72,6 @@ namespace GeneXusCryptography.SymmetricUtils
 			{
 				case SymmetricStreamAlgorithm.RC4:
 					return "RC4";
-				case SymmetricStreamAlgorithm.HC128:
-					return "HC128";
 				case SymmetricStreamAlgorithm.HC256:
 					return "HC256";
 				case SymmetricStreamAlgorithm.CHACHA20:
@@ -88,8 +82,6 @@ namespace GeneXusCryptography.SymmetricUtils
 					return "XSALSA20";
 				case SymmetricStreamAlgorithm.ISAAC:
 					return "ISAAC";
-				case SymmetricStreamAlgorithm.VMPC:
-					return "VMPC";
 				default:
 					error.setError("SSA02", "Unrecognized SymmetricStreamAlgorithm");
 					return "Unrecognized algorithm";
@@ -113,10 +105,6 @@ namespace GeneXusCryptography.SymmetricUtils
 					keySize[1] = 40;
 					keySize[2] = 2048;
 					break;
-				case SymmetricStreamAlgorithm.HC128:
-					keySize[0] = 1;
-					keySize[1] = 128;
-					break;
 				case SymmetricStreamAlgorithm.HC256:
 				case SymmetricStreamAlgorithm.XSALSA20:
 					keySize[0] = 1;
@@ -132,11 +120,6 @@ namespace GeneXusCryptography.SymmetricUtils
 					keySize[0] = 0;
 					keySize[1] = 32;
 					keySize[2] = 8192;
-					break;
-				case SymmetricStreamAlgorithm.VMPC:
-					keySize[0] = 0;
-					keySize[1] = 8;
-					keySize[2] = 6144;
 					break;
 				default:
 					error.setError("SSA03", "Unrecognized SymmetricStreamAlgorithm");
@@ -157,14 +140,12 @@ namespace GeneXusCryptography.SymmetricUtils
 			switch (algorithm)
 			{
 				case SymmetricStreamAlgorithm.RC4:
-				case SymmetricStreamAlgorithm.HC128:
 				case SymmetricStreamAlgorithm.ISAAC:
 					return false;
 				case SymmetricStreamAlgorithm.HC256:
 				case SymmetricStreamAlgorithm.SALSA20:
 				case SymmetricStreamAlgorithm.CHACHA20:
 				case SymmetricStreamAlgorithm.XSALSA20:
-				case SymmetricStreamAlgorithm.VMPC:
 					return true;
 				default:
 					error.setError("SSA04", "Unrecognized SymmetricStreamAlgorithm");

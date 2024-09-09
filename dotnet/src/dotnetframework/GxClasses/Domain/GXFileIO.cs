@@ -3,7 +3,6 @@ using System.IO;
 using System.Collections;
 using GeneXus.Utils;
 using GeneXus.Application;
-using log4net;
 using System.Runtime.CompilerServices;
 using GeneXus.Services;
 using System.Collections.Generic;
@@ -223,8 +222,9 @@ public class GxExternalDirectoryInfo : IGxDirectoryInfo
 }
 public class GxFileInfo : IGxFileInfo
 {
-	private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFileInfo));
-    private FileInfo _file;
+	private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxFileInfo>();
+
+	private FileInfo _file;
     private string _baseDirectory;
 
 	public GxFileInfo(FileInfo file)
@@ -584,7 +584,12 @@ public class GxExternalFileInfo : IGxFileInfo
 	private string URL
 	{
 		get {
-			return _provider == null ? String.Empty : _provider.GetUrl(_name, _fileTypeAtt, 0);
+			if (_provider == null)
+				return string.Empty;
+			else if (!string.IsNullOrEmpty(_url))
+				return _url;
+			else
+				return _provider.GetUrl(_name, _fileTypeAtt, 0);
 		}
 	}
 
@@ -654,7 +659,7 @@ public enum GxFileType
 public class GxFile
 {
 
-    private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxFile));
+    private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxFile>();
 
     internal IGxFileInfo _file;
 	string _baseDirectory;
@@ -1574,7 +1579,7 @@ public class GxFile
 
 public class GxDirectory
 {
-    private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GxDirectory));
+    private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxDirectory>();
     IGxDirectoryInfo _directory;
     string _baseDirectory;
     int _lastError;

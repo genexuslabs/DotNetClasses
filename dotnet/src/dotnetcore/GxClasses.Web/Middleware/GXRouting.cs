@@ -15,20 +15,17 @@ using GeneXus.Configuration;
 using GeneXus.Http;
 using GeneXus.HttpHandlerFactory;
 using GeneXus.Metadata;
-using GeneXus.Procedure;
 using GeneXus.Utils;
-using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Net.Http.Headers;
 
 namespace GxClasses.Web.Middleware
 {
 	internal class GXRouting : IGXRouting
 	{
 
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(IGXRouting));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<IGXRouting>();
 
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
@@ -47,7 +44,7 @@ namespace GxClasses.Web.Middleware
 
 		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
 
-		const string PRIVATE_DIR = "private";
+		internal const string PRIVATE_DIR = "private";
 		public Dictionary<string, string> servicesPathUrl = new Dictionary<string, string>();
 		public Dictionary<String, Dictionary<string, SingleMap>> servicesMap = new Dictionary<String, Dictionary<string, SingleMap>>();
 		public Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
@@ -61,6 +58,7 @@ namespace GxClasses.Web.Middleware
 			ServicesGroupSetting();
 			ServicesFunctionsMetadata();
 			GetAzureDeploy();
+			SvcFiles();
 		}
 
 		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
@@ -353,19 +351,53 @@ namespace GxClasses.Web.Middleware
 		}
 		public bool ServiceInPath(String path, out String actualPath)
 		{
-			actualPath = string.Empty;
-			foreach (String subPath in servicesPathUrl.Keys)
+			actualPath = null;
+			string tmppath = path.Substring(0, 1).Equals("/") ? path.Substring(1) : path;
+			int pos = tmppath.IndexOf("/");
+			if (pos > 0)
 			{
-				if (path.ToLower().Contains($"/{subPath.ToLower()}"))
+				string innerPath = tmppath.Substring(pos, tmppath.Length - pos);
+				actualPath = FindPath(innerPath, servicesPathUrl, true);
+			}
+			if (String.IsNullOrEmpty(actualPath))
+			{
+				// fallback
+				actualPath = FindPath(path, servicesPathUrl, false);
+				if (String.IsNullOrEmpty(actualPath))
 				{
-					actualPath = subPath.ToLower();
-					GXLogging.Debug(log, $"ServiceInPath actualPath:{actualPath}");
+					actualPath = String.Empty;
+					GXLogging.Debug(log, $"ServiceInPath path:{path} not found");
+					return false;
+				}
+				else
+				{
 					return true;
 				}
 			}
-			GXLogging.Debug(log, $"ServiceInPath path:{path} not found");
-			return false;
+			else {
+				return true;
+			}						
 		}
+
+		private String FindPath(string innerPath, Dictionary<string,string > servicesPathUrl, bool startTxt)
+		{
+			string actualPath = String.Empty;
+			foreach (var subPath in from String subPath in servicesPathUrl.Keys									
+									select subPath)
+			{
+				bool match = false;
+				innerPath = innerPath.ToLower();
+				match = (startTxt)? innerPath.StartsWith($"/{subPath.ToLower()}"): innerPath.Contains($"/{subPath.ToLower()}");
+				if (match)
+				{
+					actualPath = subPath.ToLower();
+					GXLogging.Debug(log, $"ServiceInPath actualPath:{actualPath}");
+					return subPath;
+				}
+			}
+			return null;
+		}
+
 		public GxRestWrapper GetController(HttpContext context, string controller, string methodName, Dictionary<string, string> variableAlias)
 		{
 			return GetController(context, new ControllerInfo() { Name = controller, MethodName = methodName, VariableAlias = variableAlias });
@@ -380,8 +412,7 @@ namespace GxClasses.Web.Middleware
 			GxContext gxContext = GxContext.CreateDefaultInstance();
 			gxContext.HttpContext = context;
 			context.NewSessionCheck();
-			string nspace;
-			Config.GetValueOf("AppMainNamespace", out nspace);
+			string nspace = Preferences.AppMainNamespace;
 
 			String tmpController = controller;
 			String addNspace = string.Empty;
@@ -400,7 +431,7 @@ namespace GxClasses.Web.Middleware
 			bool privateDirExists = Directory.Exists(privateDir);
 
 			GXLogging.Debug(log, $"PrivateDir:{privateDir} asssemblycontroller:{asssemblycontroller}");
-
+			string svcFile=null;
 			if (privateDirExists && File.Exists(Path.Combine(privateDir, $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
@@ -415,9 +446,7 @@ namespace GxClasses.Web.Middleware
 			else
 			{
 				string controllerLower = controller.ToLower();
-				string svcFile = SvcFile($"{controller}{SvcExtension}");
-				if (svcFile==null)
-					svcFile = SvcFile($"{controllerLower}{SvcExtension}");
+				svcFile = SvcFile($"{controller}{SvcExtension}");
 				if (File.Exists(svcFile))
 				{
 					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
@@ -449,22 +478,26 @@ namespace GxClasses.Web.Middleware
 			GXLogging.Warn(log, $"Controller was not found");
 			return null;
 		}
+
+		private void SvcFiles()
+		{
+			svcFiles = new HashSet<string>(new CaseInsensitiveStringEqualityComparer());
+			foreach (string file in Directory.GetFiles(ContentRootPath, SvcExtensionPattern, SearchOption.AllDirectories))
+			{
+				svcFiles.Add(file);
+			}
+		}
 		string SvcFile(string controller)
 		{
-			if (svcFiles == null)
-			{
-				svcFiles = new HashSet<string>();
-				foreach (string file in Directory.GetFiles(ContentRootPath, SvcExtensionPattern, SearchOption.AllDirectories))
-				{
-					svcFiles.Add(file);
-				}
-			}
 			string fileName;
-			string controllerFullName = Path.Combine(ContentRootPath, controller);
-			if (svcFiles.TryGetValue(new FileInfo(controllerFullName).FullName, out fileName))
+			string controllerFullName = new FileInfo(Path.Combine(ContentRootPath, controller)).FullName;
+			if (svcFiles.TryGetValue(controllerFullName, out fileName))
 				return fileName;
 			else
+			{
+				GXLogging.Warn(log, "Service file not found:" + controllerFullName);
 				return null;
+			}
 			
 		}
 		public void ServicesGroupSetting()
@@ -604,7 +637,18 @@ namespace GxClasses.Web.Middleware
 
 
 	}
+	internal class CaseInsensitiveStringEqualityComparer : IEqualityComparer<string>
+	{
+		public bool Equals(string x, string y)
+		{
+			return string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
+		}
 
+		public int GetHashCode(string obj)
+		{
+			return obj.ToLower().GetHashCode();
+		}
+	}
 	public static class AzureFeature
 	{
 		public const string AzureServerless = "AzureServerless";

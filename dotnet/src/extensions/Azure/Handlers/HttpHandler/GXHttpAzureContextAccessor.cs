@@ -6,13 +6,11 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Cache;
 using GeneXus.Utils;
-using log4net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -26,7 +24,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public HttpResponse httpResponseData;
 		private ICacheService2 _redis;
 		private string sessionId;
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXHttpAzureContextAccessor));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXHttpAzureContextAccessor>();
 		internal const string AzureSessionId = "GX_AZURE_SESSIONID";
 		public GXHttpAzureContextAccessor(HttpRequestData requestData, HttpResponseData responseData, ICacheService2 redis)
 		{

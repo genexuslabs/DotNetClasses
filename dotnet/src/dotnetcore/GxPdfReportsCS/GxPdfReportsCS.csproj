@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<NoWarn>1701;1702;NU1701</NoWarn>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Itext PDF Report</PackageTags>
@@ -9,12 +9,23 @@
 
 	<ItemGroup>
 		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PdfReportInterface.cs" Link="PdfReportInterface.cs" />
-		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PDFReportItext.cs" Link="PDFReportItext.cs" />
+		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PDFReportCommon.cs" Link="PDFReportCommon.cs" />
+		<Compile Include="..\..\dotnetframework\GxPdfReportsCS\PDFReportItext4.cs" Link="PDFReportItext4.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="..\..\dotnetframework\GxPdfReportsCS\sRGB Color Space Profile.icm" Link="sRGB Color Space Profile.icm" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="PdfPig" Version="0.1.8"  PrivateAssets="All"/>
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="iTextSharp-LGPL" Version="4.1.6" />
-		<PackageReference Include="log4net" Version="2.0.15" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+		<PackageReference Include="itext7" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="itext7.font-asian" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="itext7.pdfhtml" Version="5.0.0" PrivateAssets="All" />
+
+		<PackageReference Include="iTextSharp-LGPL" Version="4.1.6" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

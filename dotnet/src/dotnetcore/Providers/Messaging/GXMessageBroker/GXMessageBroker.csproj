@@ -1,11 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 	<PackageId>GeneXus.Message.MessageBroker</PackageId>
 	<PackageTags>Broker Messaging</PackageTags>
 	<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
   </PropertyGroup>
+
+	
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />

@@ -1,15 +1,14 @@
-using System.Management.Instrumentation;
-using System.Collections;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Management.Instrumentation;
+using System.Security;
 using GeneXus.Data;
 using GeneXus.Data.ADO;
 using GeneXus.Data.NTier;
 using GeneXus.Data.NTier.ADO;
 using GeneXus.XML;
-using System.Diagnostics;
-using log4net;
-using System.Security;
-using System.Collections.Concurrent;
 
 namespace GeneXus.Performance
 {
@@ -661,7 +660,7 @@ namespace GeneXus.Performance
 	[SecuritySafeCritical]
 	public class WMIDataStoreProviders:WMIDataStoreProvidersBase
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMIDataStoreProviders));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMIDataStoreProviders>();
 
 		private WMIDataStoreProviders()
 		{
@@ -735,7 +734,7 @@ namespace GeneXus.Performance
 	[SecuritySafeCritical]
 	public class WMIDataStoreProviderBase
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(WMIDataStoreProviderBase));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<WMIDataStoreProviderBase>();
 
 		private long statementCount;
 		private long statementSelectCount;

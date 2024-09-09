@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net462;net6.0</TargetFrameworks>
+		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
 		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
 		<AssemblyName>GeneXus.Data.DynService.Core</AssemblyName>
 		<NoWarn>CA1812</NoWarn>
@@ -17,5 +17,9 @@
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
 		<ProjectReference Include="..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 	</ItemGroup>
 </Project>

@@ -1,16 +1,15 @@
-using GeneXus.Application;
-using GeneXus.Utils;
-using log4net;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.Serialization;
+using GeneXus.Application;
+using GeneXus.Utils;
 
 namespace GeneXus.Helpers
 {
 	public sealed class ThemeHelper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Helpers.ThemeHelper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ThemeHelper>();
 		private static ConcurrentDictionary<string, ThemeData> m_themes = new ConcurrentDictionary<string, ThemeData>();
 		private static ThemeData CreateDefaultThemeData(string themeName)
 		{

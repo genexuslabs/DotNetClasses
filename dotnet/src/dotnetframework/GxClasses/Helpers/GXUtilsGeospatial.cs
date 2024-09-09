@@ -1,19 +1,21 @@
 using System;
-using System.Globalization;
-using System.Runtime.Serialization;
 using System.Collections;
+#if NETCORE
+using GeneXus.Application;
+#else
 using Jayrock.Json;
-using log4net;
-using System.Reflection;
-using GeneXus.Metadata;
+#endif
 using System.Data.SqlTypes;
-using System.IO;
+using System.Globalization;
+using System.Reflection;
+using System.Runtime.Serialization;
+using GeneXus.Metadata;
 #if NETCORE
 using GxClasses.Helpers;
 #endif
 namespace GeneXus.Utils
 {
-    public interface IGeographicNative
+	public interface IGeographicNative
 	{
 
 	Object InnerValue
@@ -33,7 +35,7 @@ namespace GeneXus.Utils
 
 	class SQLGeographyWrapper
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.SQLGeographyWrapper));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<SQLGeographyWrapper>();
 		static Assembly _geoAssembly;
 		public const string SqlGeographyClass = "Microsoft.SqlServer.Types.SqlGeography";
 		public const string SqlGeometryClass = "Microsoft.SqlServer.Types.SqlGeometry";
@@ -152,7 +154,7 @@ namespace GeneXus.Utils
 	[DataContract]
 	public class Geospatial : IGeographicNative
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Utils.Geospatial));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<Geospatial>();
 
 		internal const string EMPTY_GEOMETRY = "GEOMETRYCOLLECTION EMPTY";
 		const string EMPTY_GEOGRAPHY = "GEOGRAPHY EMPTY";

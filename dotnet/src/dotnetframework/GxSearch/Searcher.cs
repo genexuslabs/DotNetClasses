@@ -1,24 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.QueryParsers;
-using Lucene.Net.Search;
-
-using log4net;
-
+using System.Security;
 using GeneXus.Application;
 using Lucene.Net.Analysis;
-using System.Security;
+using Lucene.Net.QueryParsers;
+using Lucene.Net.Search;
 
 namespace GeneXus.Search
 {
 	[SecuritySafeCritical]
 	public sealed class Searcher
 	{
-		private static readonly ILog log = log4net.LogManager.GetLogger(typeof(GeneXus.Search.Searcher));
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<Searcher>();
 		#region Singleton
 
 		private static Searcher m_instance = new Searcher();

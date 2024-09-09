@@ -1,18 +1,14 @@
-using GeneXus.Application;
-using GeneXus.Configuration;
-using GeneXus.Data.NTier;
-using GeneXus.Metadata;
-using GeneXus.Procedure;
-using GeneXus.Reorg;
-using GeneXus.Resources;
-using log4net;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Metadata;
+using GeneXus.Procedure;
+using GeneXus.Resources;
 
 namespace GeneXus.Utils
 {
@@ -26,7 +22,7 @@ namespace GeneXus.Utils
 
 	public class GXDataInitialization : GXProcedure
 	{
-		static readonly ILog log = log4net.LogManager.GetLogger(typeof(GXDataInitialization));
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXDataInitialization>();
 		public GXDataInitialization()
 		{
 			context = GxContext.CreateDefaultInstance();

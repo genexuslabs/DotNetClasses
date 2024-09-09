@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<DefineConstants>NETCORE;</DefineConstants>
 		<PackageTags>GXGeolocation GXHttpServices WebSocket</PackageTags>
 		<PackageId>GeneXus.Classes.Web.Core</PackageId>
@@ -29,7 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+	<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,11 +45,5 @@
 		<Folder Include="Notifications\WebSocket\" />
 		<Folder Include="View\UserControls\" />
 	</ItemGroup>
-  <ItemGroup>
-	<Reference Include="Jayrock-JSON">
-		<SpecificVersion>False</SpecificVersion>
-		<HintPath>..\libs\Jayrock.dll</HintPath>
-	</Reference>  
-  </ItemGroup>	
   
 </Project>

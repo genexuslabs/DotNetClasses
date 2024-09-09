@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Azure.Identity;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
 using GeneXus.Messaging.Common;
@@ -11,18 +12,17 @@ namespace GeneXus.Messaging.Queue
 {
 	public class AzureQueue : QueueBase, IQueue
 	{
+		public static string Name = "AZUREQUEUE";
 
-		public static String Name = "AZUREQUEUE";
-		const string QUEUE_NAME = "QUEUENAME";
-		const string QUEUE_CONNECTION_STRING = "CONNECTIONSTRING";
+		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<AzureQueue>();
 
 		QueueClient _queueClient { get; set; }
 		private string _queueName { get; set; }
 		private string _connectionString { get; set; }
+		private string _queueURI { get; set; }
 
 		public AzureQueue() : this(null)
-		{
-		}
+		{}
 
 		public AzureQueue(GXService providerService) : base(providerService)
 		{
@@ -31,16 +31,28 @@ namespace GeneXus.Messaging.Queue
 
 		private void Initialize(GXService providerService)
 		{
-			ServiceSettings serviceSettings = new("QUEUE", Name, providerService);	
-			_queueName = serviceSettings.GetEncryptedPropertyValue(QUEUE_NAME);
-			_connectionString = serviceSettings.GetEncryptedPropertyValue(QUEUE_CONNECTION_STRING);
+			ServiceSettings serviceSettings = new(PropertyConstants.QUEUE_SERVICE_NAME, Name, providerService);	
+			_queueName = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.QUEUENAME);
+			_connectionString = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.CONNECTIONSTRING);
+			_queueURI = serviceSettings.GetEncryptedPropertyValue(PropertyConstants.QUEUEURI);
+			string authenticationMethod = serviceSettings.GetPropertiesValue(PropertyConstants.AUTHENTICATION_METHOD);
 
 			QueueClientOptions queueClientOptions = new QueueClientOptions()
 			{
 				MessageEncoding = QueueMessageEncoding.Base64
 			};
 
-			_queueClient = new QueueClient(_connectionString, _queueName, queueClientOptions);
+			if (authenticationMethod.Equals(AuthenticationMethod.ActiveDirectory.ToString()))
+			{	
+				ChainedTokenCredential credential = new ChainedTokenCredential(new ManagedIdentityCredential(), new ManagedIdentityCredential(Environment.GetEnvironmentVariable("AZURE_CLIENT_ID")), new EnvironmentCredential(), new AzureCliCredential());
+				_queueClient = new QueueClient(new Uri(_queueURI), credential,queueClientOptions);
+				GXLogging.Debug(logger, "Authenticate to Azure Storage Queue using Active Directory authentication.");
+			}
+			else
+			{ 
+				_queueClient = new QueueClient(_connectionString, _queueName, queueClientOptions);
+				GXLogging.Debug(logger, "Authenticate to Azure Storage Queue using Access Keys.");
+			}
 		}
 
 		QueueClient QueueClient
@@ -58,11 +70,6 @@ namespace GeneXus.Messaging.Queue
 			_queueName = queueName;
 			_connectionString = connectionString;
 		}
-
-		//public AzureQueue(Uri uri, TokenCredential tokenCredential)
-		//{
-		//_queueClient = new QueueClient(uri, tokenCredential);
-		//}
 
 		public bool GetMessageFromException(Exception ex, SdtMessages_Message msg)
 		{

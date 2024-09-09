@@ -45,7 +45,7 @@ namespace GeneXus.Application
 		public string ResponseMessage { get => responseMessage; set => responseMessage = value; }
 		public string HttpMethod { get => httpMethod; set => httpMethod = value; }
 
-		public string protocol = "REST";
+		public int protocol = 1;
 
 		private string httpMethod = "GET";
 
@@ -109,7 +109,7 @@ namespace GeneXus.Application
 
 		public void AddQueryVar(String varName, bool varValue)
 		{
-			_queryVars[varName] = varValue.ToString();
+			_queryVars[varName] = StringUtil.BoolToStr(varValue);
 		}
 
 		public void AddQueryVar(String varName, GxUserType varValue)
@@ -164,7 +164,7 @@ namespace GeneXus.Application
 		}
 		public void AddBodyVar(String varName, bool varValue)
 		{
-			_bodyVars[varName] = varValue.ToString();
+			_bodyVars[varName] = StringUtil.BoolToStr(varValue);
 		}
 		public void AddBodyVar(String varName, Guid varValue)
 		{
@@ -280,6 +280,7 @@ namespace GeneXus.Application
 			}			
 			else if (_responseData.Count >= 1) // can contain the same key (recursive unwrapped)
 			{
+
 #if NETCORE
 				string rData = JsonSerializer.Serialize(_responseData);
 				if (sdt.FromJSonString(rData, null))
@@ -369,6 +370,10 @@ namespace GeneXus.Application
 					httpClient.AddString(_bodyString);
 					httpClient.AddHeader("Content-Type", _contentType);
 				}
+			}
+			if (this.Location.AuthenticationMethod == 4 && !String.IsNullOrEmpty(this.Location.AccessToken))
+			{
+				httpClient.AddHeader("Authorization", this.Location.AccessToken);
 			}
 			string serviceuri = ((this.Location.Secure > 0) ? "https" : "http") + "://" + this.Location.Host;
 			serviceuri += (this.Location.Port != 80) ? ":" + this.Location.Port.ToString() : String.Empty;

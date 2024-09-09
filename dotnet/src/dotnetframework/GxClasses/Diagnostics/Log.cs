@@ -1,7 +1,13 @@
-using System;
 using GeneXus.Attributes;
 using GeneXus.Configuration;
 using log4net;
+using System.Collections.Concurrent;
+
+
+#if NETCORE
+using GeneXus.Services.Log;
+using Microsoft.Extensions.Logging;
+#endif
 
 namespace GeneXus.Diagnostics
 {
@@ -18,91 +24,100 @@ namespace GeneXus.Diagnostics
 			Error = 20,
 			Fatal = 30
 		}
-#if NETCORE
-		static readonly string defaultRepository = LogManager.GetRepository(System.Reflection.Assembly.GetEntryAssembly()).Name;
-#else
-		static readonly string defaultRepository = LogManager.GetRepository().Name;
-#endif
-		public static string defaultUserLogNamespace = Configuration.Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
 
-		static readonly ILog globalLog = LogManager.GetLogger(defaultRepository, defaultUserLogNamespace);
-
-		private static ILog GetLogger(string topic)
+		private const string LoggerPrefix = "$";
+		private static readonly string DefaultUserLogNamespace = Config.GetValueOf("USER_LOG_NAMESPACE", LogConfiguration.USER_LOG_TOPIC);
+		private static ConcurrentDictionary<string, IGXLogger> LoggerDictionary = new ConcurrentDictionary<string, IGXLogger>() {};
+		internal static IGXLogger GetLogger(string topic)
 		{
-			if (!String.IsNullOrEmpty(topic))
+			if (LoggerDictionary.TryGetValue(topic, out IGXLogger logger))
 			{
-				string loggerName = topic.StartsWith("$") ? topic.Substring(1) : string.Format("{0}.{1}", defaultUserLogNamespace, topic.Trim());
-				return LogManager.GetLogger(defaultRepository, loggerName);
+				return logger;
 			}
-			return globalLog;
+			else
+			{
+				string loggerName;
+				if (!string.IsNullOrEmpty(topic))
+					loggerName = topic.StartsWith(LoggerPrefix) ? topic.Substring(1) : $"{DefaultUserLogNamespace}.{topic.Trim()}";
+				else
+					loggerName = DefaultUserLogNamespace;
+
+				logger = GXLoggerFactory.GetLogger(loggerName);
+				LoggerDictionary.TryAdd(topic, logger);
+				return logger;
+			}
 		}
 
 		public static void Write(int logLevel, string message, string topic)
 		{
 			Write(message, topic, logLevel);
 		}
-
 		public static void Write(string message, string topic, int logLevel)
 		{
-			ILog log = GetLogger(topic);
 			LogLevel logLvl = (LogLevel)logLevel;
-
-			switch (logLvl)
-			{
-				case LogLevel.Off: 
-					break;
-				case LogLevel.Trace:
-					log.Debug(message);
-					break;
-				case LogLevel.Debug:
-					log.Debug(message);
-					break;
-				case LogLevel.Info:
-					log.Info(message);
-					break;
-				case LogLevel.Warn:
-					log.Warn(message);
-					break;
-				case LogLevel.Error:
-					log.Error(message);
-					break;
-				case LogLevel.Fatal:
-					log.Fatal(message);
-					break;
-				default:
-					log.Debug(message);
-					break;
-			}			
+			WriteImp(message, topic, logLvl);
 		}
-		
+
+		private static void WriteImp(string message, string topic, LogLevel logLvl)
+		{
+			if (logLvl != LogLevel.Off)
+			{
+				IGXLogger log = GetLogger(topic);
+				switch (logLvl)
+				{
+					case LogLevel.Trace:
+						GXLogging.Trace(log, message);
+						break;
+					case LogLevel.Debug:
+						GXLogging.Debug(log, message);
+						break;
+					case LogLevel.Info:
+						GXLogging.Info(log, message);
+						break;
+					case LogLevel.Warn:
+						GXLogging.Warn(log, message);
+						break;
+					case LogLevel.Error:
+						GXLogging.Error(log, message);
+						break;
+					case LogLevel.Fatal:
+						GXLogging.Critical(log, message);
+						break;
+					default:
+						GXLogging.Debug(log, message);
+						break;
+				}
+			}
+		}
+
 		public static void Write(string message, string topic = "")
 		{
-			GetLogger(topic).Debug(message);
+			WriteImp(message, topic, LogLevel.Debug);
 		}
-		
+
 		public static void Fatal(string message, string topic = "")
 		{
-			GetLogger(topic).Fatal(message);
+			WriteImp(message, topic, LogLevel.Fatal);
 		}
 
 		public static void Error(string message, string topic = "")
 		{
-			GetLogger(topic).Error(message);
+			WriteImp(message, topic, LogLevel.Error);
 		}
 
 		public static void Warning(string message, string topic = "")
 		{
-			GetLogger(topic).Warn(message);
+			WriteImp(message, topic, LogLevel.Warn);
 		}
 
 		public static void Info(string message, string topic = "")
 		{
-			GetLogger(topic).Info(message);
+			WriteImp(message, topic, LogLevel.Info);
 		}
 
 		public static void Debug(string message, string topic = "")
 		{
-			GetLogger(topic).Debug(message);
+			WriteImp(message, topic, LogLevel.Debug);
 		}
 	}
 }
