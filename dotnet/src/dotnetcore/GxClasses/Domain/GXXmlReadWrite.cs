@@ -113,7 +113,7 @@ namespace GeneXus.XML
 			SimpleElements = 1;
 			RemoveWhiteNodes = 1;
 			RemoveWhiteSpaces = 1;
-			ReadExternalEntities = 1;
+			ReadExternalEntities = 0;
 			_basePath = "";
 
 		}
@@ -225,6 +225,8 @@ namespace GeneXus.XML
 		{
 			if (treaderSettings != null && !resolver.ReadExternalEntities && validationType == ValidationNone)
 				treaderSettings.DtdProcessing = DtdProcessing.Ignore;
+			else
+				treaderSettings.DtdProcessing = DtdProcessing.Parse;
 		}
 
 		public short OpenResponse(IGxHttpClient httpClient)
@@ -1187,7 +1189,7 @@ namespace GeneXus.XML
 		{
 
 			private Uri myself;
-			private bool readExternalEntities = true;
+			private bool readExternalEntities = false;
 			private GXXMLReader xmlreader;
 			private UnparsedEntitiesContainer entities;
 
@@ -1219,6 +1221,7 @@ namespace GeneXus.XML
 			{
 				xmlreader = reader;
 				entities = EntitiesContainer;
+				readExternalEntities = false;
 			}
 			
 			public override object GetEntity(Uri absoluteUri, string role, Type ofObjectToReturn)	
