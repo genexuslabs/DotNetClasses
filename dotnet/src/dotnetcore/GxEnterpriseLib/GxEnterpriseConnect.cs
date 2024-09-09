@@ -2,6 +2,7 @@ using System;
 using GeneXus.Utils;
 using GeneXus.Application;
 using SapNwRfc;
+using SapNwRfc.Pooling;
 
 namespace  GeneXus.SAP
 {
@@ -22,6 +23,8 @@ namespace  GeneXus.SAP
 				_connection = _sessionManager.GetCurrentConnection();
 			}
 		}
+
+		/*
 		public ISapFunction CreateFunction(string functionName)
 		{
 			if (_connection != null)
@@ -29,12 +32,13 @@ namespace  GeneXus.SAP
 			else
 				return null;
 		}
+		*/
 
-		ISapConnection _connection = null;
+		ISapPooledConnection _connection = null;
 		private GXECSessionManager _sessionManager = null;
 		public string ConnectionString { get => connectionString; set => connectionString = value; }
 		public GXECSessionManager SessionManager { get => _sessionManager; set => _sessionManager = value; }
-		public ISapConnection Connection { get => _connection; set => _connection = value; }
+		public ISapPooledConnection Connection { get => _connection; set => _connection = value; }
 
 		private string connectionString;
 	}
