@@ -476,7 +476,7 @@ namespace GeneXus.Data.NTier
 					}
 					catch (Exception ex)
 					{
-						GXLogging.Error(log, "Execute error", ex);
+						GXLogging.Error(log, "Execute error", ex.Message, ex);
 						_ds.CloseConnections();
 						throw ex;
 					}
@@ -520,7 +520,7 @@ namespace GeneXus.Data.NTier
 				if (oCur != null)
 				{
 					bool pe = oCur.Command.ProcessException(e, ref retry, retryCount, "FETCH");
-					GXLogging.Error(log, "readNext Error", e);
+					GXLogging.Error(log, "readNext Error", e.Message, e);
 					if (!pe)
 					{
 						throw;
@@ -579,7 +579,7 @@ namespace GeneXus.Data.NTier
 				GxADODataException e = new GxADODataException(dbEx);
 				bool retry = false;
 				int retryCount = 0;
-				GXLogging.Error(log, "Commit Transaction Error", e);
+				GXLogging.Error(log, "Commit Transaction Error", e.Message, e);
 				bool pe = cmd.ProcessException(e, ref retry, retryCount, "FETCH");
 				if (!pe)
 				{
@@ -590,7 +590,7 @@ namespace GeneXus.Data.NTier
 					}
 					catch (Exception ex)
 					{
-						GXLogging.Error(log, "beginTransaction in commit transaction failed", ex);
+						GXLogging.Error(log, "beginTransaction in commit transaction failed",ex.Message, ex);
 						throw (new GxADODataException(e.ToString(), e));
 					}
 				}
@@ -612,7 +612,7 @@ namespace GeneXus.Data.NTier
 				bool retry = false;
 				int retryCount = 0;
 				bool pe = cmd.ProcessException(e, ref retry, retryCount, "FETCH");
-				GXLogging.Error(log, "Rollback Transaction Error", e);
+				GXLogging.Error(log, "Rollback Transaction Error", e.Message, e);
 				if (!pe)
 				{
 					try
@@ -622,7 +622,7 @@ namespace GeneXus.Data.NTier
 					}
 					catch (Exception ex)
 					{
-						GXLogging.Error(log, "beginTransaction in Rollback transaction failed", ex);
+						GXLogging.Error(log, "beginTransaction in Rollback transaction failed", ex.Message, ex);
 						throw (new GxADODataException(e.ToString(), e));
 					}
 				}
