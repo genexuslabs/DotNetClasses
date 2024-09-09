@@ -1,6 +1,7 @@
 using GamTest.Utils.Resources;
 using NUnit.Framework;
 using GamUtils;
+using System;
 
 namespace GamTest.Utils
 {
@@ -45,6 +46,17 @@ namespace GamTest.Utils
 			{
 				string value = GamUtilsEO.RandomAlphanumeric(15);
 				Assert.AreEqual(cryptographicHash.ComputeHash(value), GamUtilsEO.Sha512(value), "random sha512 ");
+			}
+		}
+
+		[Test]
+		public void TestSha256()
+		{
+			string[] arrayInputs = { one, two, three, four, five };
+			string[] arrayRes = { "dpLDrTVAu4A8Ags67mbNiIcSMjTqDG5xQ8Ct1z/0Me0=", "P8TM/nRYcOLA2Z9x8w/wZWyN7dQcwdfT03aw2+aF4vM=", "i1udsME9skJWyCmqNkqpDG0uujGLkjKkq5MTuVTTVV8=", "BO+vCA9aPnThwp0cpqSFaTgsu80yTo1Z0rg+8hwDnwA=", "IisL1R/O9+ZcLmLbLtZUVwE7q1a+b6/rGe4R1FMVPIA=" };
+			for (int i = 0; i < arrayInputs.Length; i++)
+			{
+				Assert.AreEqual(GamUtilsEO.Sha256(arrayInputs[i]), arrayRes[i], "TestSha256 error");
 			}
 		}
 	}

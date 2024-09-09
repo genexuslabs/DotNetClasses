@@ -13,14 +13,13 @@
 
 	<ItemGroup>
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\Resources\CryptographicHash.cs" Link="Utils\Resources\CryptographicHash.cs" />
-	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestCertificate.cs" Link="Utils\TestCertificate.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestEncryption.cs" Link="Utils\TestEncryption.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestHash.cs" Link="Utils\TestHash.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwk.cs" Link="Utils\TestJwk.cs" />
-	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwks.cs" Link="Utils\TestJwks.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwt.cs" Link="Utils\TestJwt.cs" />
-	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestPrivateKey.cs" Link="Utils\TestPrivateKey.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestRandom.cs" Link="Utils\TestRandom.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestUnixTimestamp.cs" Link="Utils\TestUnixTimestamp.cs" />
+		<Compile Include="..\..\DotNetFramework\GamTest\Utils\TestEncoding.cs" Link="Utils\TestEncoding.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
