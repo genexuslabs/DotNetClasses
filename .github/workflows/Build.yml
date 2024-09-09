@@ -210,33 +210,15 @@ jobs:
         Write-Output "Number of packages pushed to GitHub: $pushedToGitHub"
         Write-Output "Number of packages pushed to Nuget.org: $pushedToNuget"
 
-  dispatch-build:
-    name: Dispatch build result
-    needs: build
-    if: github.repository_owner == 'GeneXusLabs' && needs.build.outputs.SHOULD_DEPLOY == 'true'
-    
-    runs-on: ubuntu-latest
-
+  update-genexus-dependency:
     concurrency: 
       group: build-${{ github.ref }}
       cancel-in-progress: true
-
-    steps:
-      - name: Checkout action
-        uses: actions/checkout@v3
-        with:
-            repository: genexuslabs/dispatch-build-result
-            ref: releases/v2
-            token: ${{ secrets.SECURE_TOKEN }}
-            path: ./tmp/.github/actions/dispatch-build-result
-
-      - name: Dispatch build result
-        uses: ./tmp/.github/actions/dispatch-build-result
-        with:
-          component-name: ${{ github.event.inputs.repository }}
-          branch-ref: ${{ env.GIT_REF }}
-          new-version: ${{ needs.build.outputs.NUGET_VERSION }}
-          committer: ${{ needs.build.outputs.LAST_COMMITTER }}
-          commit-message: ${{ needs.build.outputs.COMMIT_MESSAGE }}
-          token: ${{ secrets.SECURE_TOKEN }}
-
+    uses: genexuslabs/build-genexus-reusable-workflow/.github/workflows/update-genexus-dep-version.yml@main
+    needs: build
+    if: github.repository_owner == 'genexuslabs' && needs.build.outputs.SHOULD_DEPLOY == 'true'
+    with: 
+      VERSION: ${{ needs.build.outputs.NUGET_VERSION }}
+      COMMIT_MESSAGE: ${{ needs.build.outputs.COMMIT_MESSAGE }}
+      COMMITTER: ${{ needs.build.outputs.LAST_COMMITTER }}
+    secrets: inherit
