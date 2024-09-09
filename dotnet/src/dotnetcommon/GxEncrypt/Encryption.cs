@@ -319,10 +319,10 @@ namespace GeneXus.Encryption
 			string className = "KeyResolver";
 			string method = "GetKey";
 			string key = null;
+			string assemblyPath=null;
 			try
 			{
-				string assemblyPath = Path.Combine(CurrentDir, $"{className}.dll");
-
+				assemblyPath = Path.Combine(CurrentDir, $"{className}.dll");
 				if (File.Exists(assemblyPath))
 				{
 
@@ -341,7 +341,13 @@ namespace GeneXus.Encryption
 					}
 				}
 			}
-			catch (Exception)
+			catch(NotSupportedException nsex)
+			{
+				//An attempt was made to load an assembly from a network location
+				Console.Error.WriteLine($"Error loading {assemblyPath}: {nsex.Message}");
+				return null;
+			}
+			catch
 			{
 				return null;
 			}
