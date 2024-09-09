@@ -291,8 +291,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamTest", "src\extensions\g
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamUtils", "src\extensions\gam\src\DotNetFramework\GamUtils\GamUtils.csproj", "{68EFFCFE-3222-4422-B64E-36A5C0A62D96}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VersionConsistencyTest", "test\VersionConsistencyTest\VersionConsistencyTest.csproj", "{E6AA03BF-B935-4165-BD1F-8B5A6EAEEE7D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -699,10 +697,6 @@ Global
 		{68EFFCFE-3222-4422-B64E-36A5C0A62D96}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68EFFCFE-3222-4422-B64E-36A5C0A62D96}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68EFFCFE-3222-4422-B64E-36A5C0A62D96}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E6AA03BF-B935-4165-BD1F-8B5A6EAEEE7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E6AA03BF-B935-4165-BD1F-8B5A6EAEEE7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E6AA03BF-B935-4165-BD1F-8B5A6EAEEE7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E6AA03BF-B935-4165-BD1F-8B5A6EAEEE7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -843,7 +837,6 @@ Global
 		{C8D4FBCD-C745-4223-AD31-1ED1C7AC3841} = {AB89DFE2-7E36-4075-B1DB-2BC15A5E4119}
 		{9E24B91A-82E1-48EE-846F-09A503B61138} = {A70E9892-8223-483E-84B3-812578DA2B99}
 		{68EFFCFE-3222-4422-B64E-36A5C0A62D96} = {708A8C53-73A2-4D03-BC21-19EA58ACFA8B}
-		{E6AA03BF-B935-4165-BD1F-8B5A6EAEEE7D} = {1D6F1776-FF4B-46C2-9B3D-BC46CCF049DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
