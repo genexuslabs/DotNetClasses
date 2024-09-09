@@ -5,7 +5,7 @@
 		<AssemblyName>GamUtilsNetImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<NoWarn>CA1031, CA1801, SYSLIB0027</NoWarn>
-		<PackageId>GeneXxus.Gam.Utils.Net</PackageId>
+		<PackageId>Gam.Utils.Net</PackageId>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -16,12 +16,14 @@
 	  <Compile Include="..\..\DotNetFramework\GamUtils\GamUtilsEO.cs" Link="GamUtilsEO.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Cryprography\Encryption.cs" Link="Utils\Cryptography\Encryption.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Cryprography\Hash.cs" Link="Utils\Cryptography\Hash.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\DynamicCall.cs" Link="Utils\DynamicCall.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwk.cs" Link="Utils\Json\Jwk.cs" />
-	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwks.cs" Link="Utils\Json\Jwks.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwt.cs" Link="Utils\Json\Jwt.cs" />
-	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\CertificateExt.cs" Link="Utils\Keys\CertificateExt.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\UnixTimestamp.cs" Link="Utils\Json\UnixTimestamp.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\PublicKeyExt.cs" Link="Utils\Keys\PublicKeyExt.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\PrivateKeyExt.cs" Link="Utils\Keys\PrivateKeyExt.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Random.cs" Link="Utils\Random.cs" />
+		<Compile Include="..\..\DotNetFramework\GamUtils\Utils\Encoding.cs" Link="Utils\Encoding.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

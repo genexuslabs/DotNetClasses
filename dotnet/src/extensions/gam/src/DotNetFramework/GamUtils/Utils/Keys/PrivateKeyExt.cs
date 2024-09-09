@@ -14,13 +14,14 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities.Encoders;
 using Microsoft.IdentityModel.Tokens;
 using System.Runtime.InteropServices;
+using Jose;
 
 namespace GamUtils.Utils.Keys
 {
 	[SecuritySafeCritical]
 	internal enum PrivateKeyExt
 	{
-		NONE, pfx, pkcs12, p12, pem, key, b64
+		NONE, pfx, pkcs12, p12, pem, key, b64, json
 	}
 
 	[SecuritySafeCritical]
@@ -28,34 +29,11 @@ namespace GamUtils.Utils.Keys
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(PrivateKeyUtil));
 
-		[SecuritySafeCritical]
-		internal static PrivateKeyExt Value(string ext)
-		{
-			switch (ext.ToLower().Trim())
-			{
-				case "pfx":
-					return PrivateKeyExt.pfx;
-				case "pkcs12":
-					return PrivateKeyExt.pkcs12;
-				case "p12":
-					return PrivateKeyExt.p12;
-				case "pem":
-					return PrivateKeyExt.pem;
-				case "key":
-					return PrivateKeyExt.key;
-				case "b64":
-					return PrivateKeyExt.b64;
-				default:
-					logger.Error("Invalid certificate file extension");
-					return PrivateKeyExt.NONE;
-			}
-		}
 
 		[SecuritySafeCritical]
 		internal static RSAParameters GetPrivateKey(string path, string alias, string password)
 		{
-			string extension = Path.GetExtension(path).Replace(".", string.Empty).Trim();
-			PrivateKeyExt ext = extension.IsNullOrEmpty() ? Value("b64") : Value(extension);
+			PrivateKeyExt ext = PrivateKeyUtil.Value(FixType(path));
 			if (ext == PrivateKeyExt.NONE)
 			{
 				logger.Error("Error reading certificate path");
@@ -72,9 +50,93 @@ namespace GamUtils.Utils.Keys
 					return GetPrivateRSAParameters(LoadFromPkcs8(path));
 				case PrivateKeyExt.b64:
 					return GetPrivateRSAParameters(LoadFromBase64(path));
+				case PrivateKeyExt.json:
+					return LoadFromJson(path);
 				default:
 					logger.Error("Invalid certificate file extension");
 					return new RSAParameters();
+			}
+		}
+
+		[SecuritySafeCritical]
+		private static RSAParameters LoadFromJson(string json)
+		{
+			logger.Debug("LoadFromJson");
+			RSAParameters privateKey = new RSAParameters();
+			try
+			{
+					Jwk jwk = Jwk.FromJson(json);
+					privateKey.Exponent = Base64Url.Decode(jwk.E);
+					privateKey.Modulus = Base64Url.Decode(jwk.N);
+					privateKey.D = Base64Url.Decode(jwk.D);
+					privateKey.DP = Base64Url.Decode(jwk.DP);
+					privateKey.DQ = Base64Url.Decode(jwk.DQ);
+					privateKey.P = Base64Url.Decode(jwk.P);
+					privateKey.Q = Base64Url.Decode(jwk.Q);
+					privateKey.InverseQ = Base64Url.Decode(jwk.QI);		
+
+			}
+			catch (Exception e)
+			{
+				logger.Error("LoadFromJson", e); 
+			}
+			return privateKey;
+		}
+
+		private static string FixType(string input)
+		{
+			try
+			{
+				string extension = Path.GetExtension(input).Replace(".", string.Empty).Trim();
+#if !NETCORE
+				return extension.IsNullOrEmpty() ? "b64" : extension;
+#else
+				if (extension.IsNullOrEmpty())
+				{
+					try
+					{
+						Base64.Decode(input);
+						return "b64";
+					}
+					catch (Exception)
+					{
+						return "json";
+					}
+				}
+				else
+				{
+					return extension;
+				}
+#endif
+			}
+			catch (ArgumentException)
+			{
+				return "json";
+			}
+		}
+
+		[SecuritySafeCritical]
+		private static PrivateKeyExt Value(string ext)
+		{
+			switch (ext.ToLower().Trim())
+			{
+				case "pfx":
+					return PrivateKeyExt.pfx;
+				case "pkcs12":
+					return PrivateKeyExt.pkcs12;
+				case "p12":
+					return PrivateKeyExt.p12;
+				case "pem":
+					return PrivateKeyExt.pem;
+				case "key":
+					return PrivateKeyExt.key;
+				case "b64":
+					return PrivateKeyExt.b64;
+				case "json":
+					return PrivateKeyExt.json;
+				default:
+					logger.Error("Invalid certificate file extension");
+					return PrivateKeyExt.NONE;
 			}
 		}
 
@@ -91,6 +153,7 @@ namespace GamUtils.Utils.Keys
 
 		private static RSAParameters GetPrivateRSAParameters(PrivateKeyInfo privateKeyInfo)
 		{
+			logger.Debug("GetPrivateRSAParameters");
 			byte[] serializedPrivateBytes = privateKeyInfo.ToAsn1Object().GetDerEncoded();
 			string serializedPrivate = Convert.ToBase64String(serializedPrivateBytes);
 			RsaPrivateCrtKeyParameters privateKey = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(serializedPrivate));
@@ -117,6 +180,7 @@ try
 
 		private static PrivateKeyInfo LoadFromPkcs8(string path)
 		{
+			logger.Debug("LoadFromPkcs8");
 			using (StreamReader streamReader = new StreamReader(path))
 			{
 				Org.BouncyCastle.OpenSsl.PemReader pemReader = null;
@@ -181,6 +245,7 @@ try
 
 		private static PrivateKeyInfo CreatePrivateKeyInfo(AsymmetricKeyParameter key)
 		{
+			logger.Debug("CreatePrivateKeyInfo");
 			if (key is RsaKeyParameters)
 			{
 				AlgorithmIdentifier algID = new AlgorithmIdentifier(
