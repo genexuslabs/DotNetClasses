@@ -10,6 +10,9 @@ namespace GeneXus.Utils
 	public class GxEmbedding
 	{
 		IReadOnlyList<double> _embedding;
+		public GxEmbedding()
+		{
+		}
 		internal GxEmbedding(IReadOnlyList<double> embedding)
 		{
 			_embedding = embedding;
