@@ -141,6 +141,9 @@ namespace GeneXus.Data
 		void SetCursorDef(CursorDef cursorDef);
 		string ConcatOp(int pos);
 		string AfterCreateCommand(string stmt, GxParameterCollection parmBinds);
+#if NETCORE
+		GxEmbedding GetEmbedding(IGxDbCommand gxDbCommand, IDataReader dR, int v);
+#endif
 		int MaxNumberOfValuesInList { get; }
 	}
 
@@ -1158,7 +1161,12 @@ namespace GeneXus.Data
 		{
 			return stmt;
 		}
-
+#if NETCORE
+		public GxEmbedding GetEmbedding(IGxDbCommand gxDbCommand, IDataReader dR, int v)
+		{
+			throw new NotImplementedException();
+		}
+#endif
 	}
 
 	public class DbDataAdapterElem
