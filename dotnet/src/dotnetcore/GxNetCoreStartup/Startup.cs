@@ -336,7 +336,7 @@ namespace GeneXus.Application
 						if (File.Exists(controllerAssemblyFile))
 						{
 							GXLogging.Info(log, "Registering rest: " + controllerAssemblyName);
-							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
+							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile)).AddControllersAsServices();
 						}
 					}
 				}
@@ -361,7 +361,7 @@ namespace GeneXus.Application
 						if (File.Exists(controllerAssemblyFile))
 						{
 							GXLogging.Info(log, "Registering api: " + grp);
-							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
+							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile)).AddControllersAsServices();
 						}
 					}
 				}
