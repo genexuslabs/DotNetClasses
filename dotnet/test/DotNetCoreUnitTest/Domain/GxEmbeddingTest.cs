@@ -15,7 +15,7 @@ namespace DotNetCoreUnitTest.Domain
 		public async Task EmbeddingTest()
 		{
 			EmbeddingService embeddingService = EmbeddingService.Instance;
-			var embedding = await embeddingService.GenerateEmbeddingAsync("openai/text-embedding-3-small", "Hello World");
+			var embedding = await embeddingService.GenerateEmbeddingAsync("openai/text-embedding-3-small", 512, "Hello World");
 			Assert.NotNull(embedding);
 		}
 	}
