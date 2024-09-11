@@ -30,14 +30,14 @@ To enable dynamic credential modification, checkout this repo and create the GxS
 
 2. Build the assembly with one of the following commands:
 ```
-msbuild /t:restore;build /p:Configuration=Release dotnet\src\extensions\ws\GxSoapHandler\GxSoapHandler.csproj
+msbuild /t:restore;build /p:Configuration=Release dotnet\src\extensions\ws\src\GxSoapHandler\GxSoapHandler.csproj
 ```
 or
 ```
-dotnet build  -c Release dotnet\src\extensions\ws\GxSoapHandler\GxSoapHandler.csproj
+dotnet build  -c Release dotnet\src\extensions\ws\src\GxSoapHandler\GxSoapHandler.csproj
 ```
 
-3. Copy dotnet\src\extensions\ws\GxSoapHandler\bin\Release\net462\GxSoapHandler.dll to the web\bin folder.
+3. Copy dotnet\src\extensions\ws\src\GxSoapHandler\bin\Release\net462\GxSoapHandler.dll to the web\bin folder.
 
 
 ## Configuration
