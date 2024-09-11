@@ -267,7 +267,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ws", "ws", "{B5C28D81-BCD9-
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F8959289-4ED7-430C-97B7-FAAA29829708}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxSoapHandler", "src\extensions\ws\GxSoapHandler\GxSoapHandler.csproj", "{58C84EC7-A0B3-4C1B-BD78-989AEE87EA32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxSoapHandler", "src\extensions\ws\src\GxSoapHandler\GxSoapHandler.csproj", "{58C84EC7-A0B3-4C1B-BD78-989AEE87EA32}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
