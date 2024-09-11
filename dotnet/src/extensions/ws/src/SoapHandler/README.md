@@ -26,14 +26,14 @@ In GeneXus, you can configure and use the web service credentials as follows:
 ## Building the Assembly
 To enable dynamic credential modification, create the GxSoapHandler.dll assembly as follows:
 
-1. Add a Reference: Include GeneXus.Programs.Common.dll in your project and replace ISdtWS_eFacturaDummy in GxSoapHandler.cs by the correct web service name.
+1. Include a reference to <Namespace>.Programs.Common.dll in GxSoapHandler.csproj and replace ISdtWS_eFacturaDummy in GxSoapHandler.cs by the correct web service name.
 
-2. Build the Project: Run the following command to compile:
+2. Build the assembly with the following command:
 ```
 msbuild GxSoapHandler.csproj
 ```
 
-3. Deploy: Copy GxSoapHandler.dll to the web\bin folder.
+3. Copy GxSoapHandler.dll to the web\bin folder.
 
 
 ## Configuration
