@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
 		<Reference Include="System.ServiceModel">
 			<RequiredTargetFramework>3.0</RequiredTargetFramework>
 		</Reference>
