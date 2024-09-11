@@ -13,19 +13,27 @@ namespace GeneXus.Utils
 		public GxEmbedding()
 		{
 		}
+		public GxEmbedding(string model, int dimensions)
+		{
+			Model = model;
+			Dimensions = dimensions;
+		}
 		internal GxEmbedding(IReadOnlyList<double> embedding)
 		{
 			_embedding = embedding;
 		}
-		public GxEmbedding GenerateEmbedding(string text, string model, string dimensions)
+		public static GxEmbedding GenerateEmbedding(GxEmbedding embeddingInfo, string text)
 		{
-			IReadOnlyList<double> embedding = EmbeddingService.Instance.GenerateEmbeddingAsync(model, text).GetAwaiter().GetResult();
+			IReadOnlyList<double> embedding = EmbeddingService.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
 			return new GxEmbedding(embedding);
 		}
+
+		public string Model { get; set; }
+		public int Dimensions { get; set; }
 	}
 	internal interface IEmbeddingService
 	{
-		Task<IReadOnlyList<double>> GenerateEmbeddingAsync(string model, string input);
+		Task<IReadOnlyList<double>> GenerateEmbeddingAsync(string model, int dimensions, string input);
 	}
 
 	internal class EmbeddingService : IEmbeddingService
@@ -65,14 +73,14 @@ namespace GeneXus.Utils
 			}
 		}
 
-		public async Task<IReadOnlyList<double>> GenerateEmbeddingAsync(string model, string input)
+		public async Task<IReadOnlyList<double>> GenerateEmbeddingAsync(string model, int dimensions, string input)
 		{
-			IReadOnlyList<Datum> data = await GenerateEmbeddingAsync(model, new List<string> { input });
+			IReadOnlyList<Datum> data = await GenerateEmbeddingAsync(model, dimensions, new List<string> { input });
 			return data.First().Embedding;
 		}
-		public async Task<IReadOnlyList<Datum>> GenerateEmbeddingAsync(string model, IEnumerable<string> input)
+		public async Task<IReadOnlyList<Datum>> GenerateEmbeddingAsync(string model, int dimensions, IEnumerable<string> input)
 		{
-			EmbeddingsRequest embeddingRequest = new EmbeddingsRequest(input, model);
+			EmbeddingsRequest embeddingRequest = new EmbeddingsRequest(input, model, null, dimensions);
 			EmbeddingsResponse embeddingResponse = await _openAIClient.EmbeddingsEndpoint.CreateEmbeddingAsync(embeddingRequest);
 			return embeddingResponse.Data;
 		}
