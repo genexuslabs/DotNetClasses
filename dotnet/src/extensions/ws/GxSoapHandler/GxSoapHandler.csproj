@@ -10,11 +10,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+		<ProjectReference Include="..\..\..\dotnetframework\GxClasses\GxClasses.csproj"/>
 		<Reference Include="System.ServiceModel">
 			<RequiredTargetFramework>3.0</RequiredTargetFramework>
 		</Reference>
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.34.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.34.0"/>
 		<Reference Include="System.ServiecModel"/>
 		<Reference Include="System.IdentityModel" />
 		<!--Reference Include="GeneXus.Programs.Common">
