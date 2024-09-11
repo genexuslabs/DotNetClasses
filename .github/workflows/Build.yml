@@ -59,25 +59,21 @@ jobs:
           'master' { 
             $IsPrerelease   = $true
             $IsMaster       = $true
-
             $SHOULD_DEPLOY  = 'true'
            }
 
           'beta' { 
             $IsPrerelease   = $true
-
             $SHOULD_DEPLOY  = 'true'
            }
 
           'release-*' {
             $IsPrerelease   = $false
-
             $SHOULD_DEPLOY  = 'true'
           }
 
           default {
             $IsPrerelease   = $false
-
             $SHOULD_DEPLOY  = 'false'
           }
         }
@@ -93,7 +89,7 @@ jobs:
         $NUGET_PACKAGE_VERSION = $GetFileVersionOutput
         
         if ($IsPrerelease -eq $true) {
-          $VersionTag =  @("trunk", "stable")[$IsMaster]
+          $VersionTag =  @("beta", "preview")[$IsMaster]
           $Timestamp = (Get-Date -AsUTC).ToString("yyyyMMddHHmmss")
           $NUGET_PACKAGE_VERSION = $NUGET_PACKAGE_VERSION + "-" + $VersionTag + "." + $Timestamp
         }
