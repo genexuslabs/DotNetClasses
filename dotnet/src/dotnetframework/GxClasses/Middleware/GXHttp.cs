@@ -1200,7 +1200,7 @@ namespace GeneXus.Http
 			{
 				return true;
 			}
-			else if (newName.Trim().ToLower().StartsWith(oldName.Trim().ToLower() + ".aspx"))
+			else if (newName.Trim().ToLower().StartsWith(oldName.Trim().ToLower() + HttpHelper.ASPX))
 			{
 
 				return true;
@@ -2315,7 +2315,7 @@ namespace GeneXus.Http
 			{
 				string[] loginObjParts = loginObject.Split(',');
 				if (loginObjParts.Length > 0)
-					loginObject = loginObjParts[0] + ".aspx";
+					loginObject = AddExtension(loginObjParts[0]);
 			}
 			if (IsUploadRequest(this.localHttpContext))
 				return formatLink($"{context.GetScriptPath()}{loginObject}");
@@ -2329,13 +2329,22 @@ namespace GeneXus.Http
 			{
 				string[] loginObjParts = loginObject.Split(',');
 				if (loginObjParts.Length > 0)
-					loginObject = loginObjParts[0] + ".aspx";
+					loginObject = AddExtension(loginObjParts[0]);
 			}
 			if (IsUploadRequest(this.localHttpContext))
 				return formatLink($"{context.GetScriptPath()}{loginObject}");
 			else
 				return formatLink(loginObject);
 		}
+		private string AddExtension(string objectName)
+		{
+#if NETCORE
+			return objectName;
+#else
+			return $"{objectName}{HttpHelper.ASPX}";
+#endif
+		}
+
 		private void SendHeaders()
 		{
 			sendCacheHeaders();
@@ -2889,7 +2898,7 @@ namespace GeneXus.Http
 		}
 		private string RemoveExtensionFromUrlPath(string urlPath)
 		{
-			if (urlPath.EndsWith(".aspx"))
+			if (urlPath.EndsWith(HttpHelper.ASPX))
 				return urlPath.Substring(0, urlPath.Length - 5);
 			return urlPath;
 		}
