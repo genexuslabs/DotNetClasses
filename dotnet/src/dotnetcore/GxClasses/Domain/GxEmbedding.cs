@@ -30,7 +30,7 @@ namespace GeneXus.Utils
 				return new GxEmbedding(embedding);
 			} catch (Exception ex)
 			{
-				GXUtil.ErrorToMessages("FromJson Error", ex, Messages, false);
+				GXUtil.ErrorToMessages("GenerateEmbedding Error", ex, Messages, false);
 				return embeddingInfo;
 			}
 		}
