@@ -22,12 +22,18 @@ namespace GeneXus.Utils
 		{
 			_embedding = embedding;
 		}
-		public static GxEmbedding GenerateEmbedding(GxEmbedding embeddingInfo, string text)
+		public static GxEmbedding GenerateEmbedding(GxEmbedding embeddingInfo, string text, GXBaseCollection<SdtMessages_Message> Messages)
 		{
-			IReadOnlyList<double> embedding = EmbeddingService.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
-			return new GxEmbedding(embedding);
+			try
+			{
+				IReadOnlyList<double> embedding = EmbeddingService.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
+				return new GxEmbedding(embedding);
+			} catch (Exception ex)
+			{
+				GXUtil.ErrorToMessages("GenerateEmbedding Error", ex, Messages, false);
+				return embeddingInfo;
+			}
 		}
-
 		public string Model { get; set; }
 		public int Dimensions { get; set; }
 	}
