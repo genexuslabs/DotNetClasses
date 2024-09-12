@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -9,7 +10,9 @@ namespace GeneXus.Utils
 {
 	public class GxEmbedding
 	{
-		IReadOnlyList<double> _embedding;
+		public static readonly GxEmbedding Empty = new GxEmbedding() { Model=string.Empty, Dimensions=0};
+
+		IReadOnlyList<float> _embedding;
 		public GxEmbedding()
 		{
 		}
@@ -20,7 +23,16 @@ namespace GeneXus.Utils
 		}
 		internal GxEmbedding(IReadOnlyList<double> embedding)
 		{
+			_embedding = embedding.Select(f => (float)f).ToArray();
+		}
+		internal GxEmbedding(float[] embedding)
+		{
 			_embedding = embedding;
+		}
+
+		public override string ToString()
+		{
+			return $"[{string.Join(",", from v in _embedding select v.ToString(CultureInfo.InvariantCulture))}]";
 		}
 		public static GxEmbedding GenerateEmbedding(GxEmbedding embeddingInfo, string text, GXBaseCollection<SdtMessages_Message> Messages)
 		{
