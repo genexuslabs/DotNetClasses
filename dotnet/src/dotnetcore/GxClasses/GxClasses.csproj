@@ -164,13 +164,13 @@
 		<PackageReference Include="OpenAI-DotNet" Version="8.2.2"/>
 		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" PrivateAssets="All" />
 		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" PrivateAssets="All" />
+		<PackageReference Include="Pgvector" Version="0.3.0" />
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 		<PackageReference Include="MySqlConnector" Version="2.2.3" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" />
 		<PackageReference Include="NodaTime" Version="3.1.9" />
 		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" />
-		<PackageReference Include="Npgsql" Version="8.0.3" />
 		<PackageReference Include="Sandwych.GeographicLib" Version="1.49.3" />
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" />

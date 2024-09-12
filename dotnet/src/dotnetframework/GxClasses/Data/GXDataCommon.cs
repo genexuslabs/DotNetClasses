@@ -68,7 +68,8 @@ namespace GeneXus.Data
 		Geopoint=26,
 		Geoline=27,
 		Geopolygon=28,
-		DateAsChar=29
+		DateAsChar=29,
+		Embedding = 30
 	}
 
 	public interface IGxDataRecord
@@ -625,8 +626,15 @@ namespace GeneXus.Data
         public virtual IGeographicNative GetGeospatial(IGxDbCommand cmd, IDataRecord DR, int i)
         {
 			throw (new GxNotImplementedException());
-        }
-        public virtual decimal GetDecimal(IGxDbCommand cmd, IDataRecord DR, int i)
+		}
+#if NETCORE
+		public virtual GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i)
+		{
+			throw (new GxNotImplementedException());
+		}
+#endif
+
+		public virtual decimal GetDecimal(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
 			if ( !cmd.HasMoreRows || DR == null || DR.IsDBNull( i))
 				return 0;
@@ -1161,12 +1169,6 @@ namespace GeneXus.Data
 		{
 			return stmt;
 		}
-#if NETCORE
-		public GxEmbedding GetEmbedding(IGxDbCommand gxDbCommand, IDataReader dR, int v)
-		{
-			throw new NotImplementedException();
-		}
-#endif
 	}
 
 	public class DbDataAdapterElem
@@ -2542,7 +2544,7 @@ namespace GeneXus.Data
 		}
 		public int GetValues(object[] values)
 		{
-			throw (new GxNotImplementedException());
+			return reader.GetValues(values);
 		}
 		public int GetOrdinal(string name)
 		{

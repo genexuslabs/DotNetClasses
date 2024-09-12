@@ -11,6 +11,8 @@ using System.IO;
 using System.Collections.Generic;
 using GeneXus.Configuration;
 using System.Text.RegularExpressions;
+using Npgsql;
+
 #if NETCORE
 using GxClasses.Helpers;
 #endif
@@ -240,6 +242,7 @@ namespace GeneXus.Data
 				case GXType.Geoline:
 				case GXType.Geopoint:
 				case GXType.Geopolygon:
+				case GXType.Embedding:
 				case GXType.UniqueIdentifier:
 					return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Text");
 				default: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Unknown");
@@ -435,6 +438,18 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
+#if NETCORE
+		public override GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i)
+		{
+			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
+				return GxEmbedding.Empty;
+			else
+			{
+				Pgvector.Vector vector = (Pgvector.Vector)DR.GetValue(i);
+				return new GxEmbedding(vector.Memory.ToArray());
+			}
+		}
+#endif
 		public override IDataReader GetCacheDataReader(CacheItem item, bool computeSize, string keyCache)
 		{
 			return new GxCacheDataReader(item, computeSize, keyCache);
@@ -599,7 +614,13 @@ namespace GeneXus.Data
 		{
 			try
 			{
+#if NETCORE
+				NpgsqlDataSourceBuilder dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+				dataSourceBuilder.UseVector();
+				_connection = dataSourceBuilder.Build().CreateConnection();
+#else
 				_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection", new object[] { connectionString });
+#endif
 #if NETCORE
 				AppContext.SetSwitch(INFINITY_CONVERSIONS, true);
 #endif
