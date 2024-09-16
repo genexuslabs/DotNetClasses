@@ -98,7 +98,7 @@ namespace GeneXus.Data.NTier
         bool getBool(int id);
         Guid getGuid(int id);
 #if NETCORE
-		GxEmbedding getGxembedding(int id);
+		GxEmbedding getGxembedding(int id, string model, int dimensions);
 #endif
 	}
 	public interface IFieldSetter

@@ -200,7 +200,7 @@ namespace GeneXus.Data.NTier.ADO
             return new Utils.Geospatial((object)_gxDbCommand.ErrorRecord(id - 1));
 		}
 #if NETCORE
-		public GxEmbedding getGxembedding(int id)
+		public GxEmbedding getGxembedding(int id, string model, int dimensions)
 		{
 			return (GxEmbedding)_gxDbCommand.ErrorRecord(id - 1);
 		}
@@ -502,9 +502,9 @@ namespace GeneXus.Data.NTier.ADO
             return _gxDbCommand.Db.IsDBNull(_gxDbCommand, _DR, id - 1);
         }
 #if NETCORE
-		public GxEmbedding getGxembedding(int id)
+		public GxEmbedding getGxembedding(int id, string model, int dimensions)
 		{
-			GxEmbedding value = _gxDbCommand.Db.GetEmbedding(_gxDbCommand, _DR, id - 1);
+			GxEmbedding value = _gxDbCommand.Db.GetEmbedding(_gxDbCommand, _DR, id - 1, model, dimensions);
 			TraceRow(() => $"getGxembedding - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
