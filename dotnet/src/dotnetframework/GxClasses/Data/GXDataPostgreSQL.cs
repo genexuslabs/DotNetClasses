@@ -11,9 +11,12 @@ using System.IO;
 using System.Collections.Generic;
 using GeneXus.Configuration;
 using System.Text.RegularExpressions;
-using Npgsql;
+
 
 #if NETCORE
+using Npgsql;
+using Pgvector;
+using NpgsqlTypes;
 using GxClasses.Helpers;
 #endif
 
@@ -211,10 +214,13 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(NpgsqlAssembly, "Npgsql.NpgsqlParameter");
-			ClassLoader.SetPropValue(parm, "NpgsqlDbType", GXTypeToNpgsqlDbType(dbtype));
-			ClassLoader.SetPropValue(parm, "Size", gxlength);
-			ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);
-			ClassLoader.SetPropValue(parm, "Scale", (byte)gxdec);
+			if (!(dbtype is GXType.Embedding))
+			{
+				ClassLoader.SetPropValue(parm, "NpgsqlDbType", GXTypeToNpgsqlDbType(dbtype));
+				ClassLoader.SetPropValue(parm, "Size", gxlength);
+				ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);
+				ClassLoader.SetPropValue(parm, "Scale", (byte)gxdec);
+			}
 			ClassLoader.SetPropValue(parm, "ParameterName", name);
 			return parm;
 
@@ -242,7 +248,6 @@ namespace GeneXus.Data
 				case GXType.Geoline:
 				case GXType.Geopoint:
 				case GXType.Geopolygon:
-				case GXType.Embedding:
 				case GXType.UniqueIdentifier:
 					return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Text");
 				default: return ClassLoader.GetEnumValue(NpgsqlAssembly, NpgsqlDbTypeEnum, "Unknown");
@@ -321,6 +326,12 @@ namespace GeneXus.Data
 			{
 				value = value.ToString();
 			}
+#if NETCORE
+			else if (value is GxEmbedding embedding)
+			{
+				value = new Vector(embedding.Data);
+			}
+#endif
 			base.SetParameter(parameter, value);
 		}
 		public override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
@@ -439,14 +450,14 @@ namespace GeneXus.Data
 			}
 		}
 #if NETCORE
-		public override GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i)
+		public override GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i, string model, int dimensions)
 		{
 			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
 				return GxEmbedding.Empty;
 			else
 			{
 				Pgvector.Vector vector = (Pgvector.Vector)DR.GetValue(i);
-				return new GxEmbedding(vector.Memory.ToArray());
+				return new GxEmbedding(vector.Memory.ToArray()) { Model = model, Dimensions = dimensions };
 			}
 		}
 #endif

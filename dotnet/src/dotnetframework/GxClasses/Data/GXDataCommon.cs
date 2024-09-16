@@ -143,7 +143,7 @@ namespace GeneXus.Data
 		string ConcatOp(int pos);
 		string AfterCreateCommand(string stmt, GxParameterCollection parmBinds);
 #if NETCORE
-		GxEmbedding GetEmbedding(IGxDbCommand gxDbCommand, IDataReader dR, int v);
+		GxEmbedding GetEmbedding(IGxDbCommand gxDbCommand, IDataReader dR, int v, string model, int dimensions);
 #endif
 		int MaxNumberOfValuesInList { get; }
 	}
@@ -628,7 +628,7 @@ namespace GeneXus.Data
 			throw (new GxNotImplementedException());
 		}
 #if NETCORE
-		public virtual GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i)
+		public virtual GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i, string model, int dimensions)
 		{
 			throw (new GxNotImplementedException());
 		}
