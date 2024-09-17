@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using GeneXus.Configuration;
 using OpenAI;
 using OpenAI.Embeddings;
 namespace GeneXus.Utils
@@ -63,14 +64,31 @@ namespace GeneXus.Utils
 		private readonly HttpClient _httpClient;
 		private readonly OpenAIClient _openAIClient;
 		private string API_KEY = "apitokenfortest";
+		private const string DEFAULT_DOMAIN = "api.saia.ai";
+		private const string DEFAULT_VERSION = "chat";
+		private const string AI_PROVIDER = "AI_PROVIDER";
+		private const string AI_PROVIDER_API_KEY= "AI_PROVIDER_API_KEY";
 		EmbeddingService()
 		{
 			_httpClient = new HttpClient(new SocketsHttpHandler
 			{
 				PooledConnectionLifetime = TimeSpan.FromMinutes(15.0)
 			});
+
+			string val, domain= DEFAULT_DOMAIN;
+			string version = DEFAULT_VERSION;
+			if (Config.GetValueOf(AI_PROVIDER, out val))
+			{
+				Uri providerUri = new Uri(val);
+				domain = providerUri.GetLeftPart(UriPartial.Authority);
+				version = providerUri.AbsolutePath;
+			}
+			if (Config.GetValueOf(AI_PROVIDER_API_KEY, out val))
+			{
+				API_KEY = val;
+			}
+			OpenAIClientSettings openAIClientSettings = new OpenAIClientSettings(domain, version);
 			_httpClient.DefaultRequestHeaders.Add("X-Saia-Source", "Embedding");
-			OpenAIClientSettings openAIClientSettings = new OpenAIClientSettings(domain: "api.saia.ai", apiVersion: "chat");
 			OpenAIAuthentication openAIAuthentication = new OpenAIAuthentication(API_KEY);
 			_openAIClient = new OpenAIClient(openAIAuthentication, openAIClientSettings, _httpClient);
 
