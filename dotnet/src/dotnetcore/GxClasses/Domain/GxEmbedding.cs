@@ -10,7 +10,6 @@ namespace GeneXus.Utils
 {
 	public class GxEmbedding
 	{
-		public static readonly GxEmbedding Empty = new GxEmbedding() { Model=string.Empty, Dimensions=0};
 
 		ReadOnlyMemory<float> _embedding;
 		public GxEmbedding()
@@ -20,6 +19,7 @@ namespace GeneXus.Utils
 		{
 			Model = model;
 			Dimensions = dimensions;
+			_embedding = new ReadOnlyMemory<float>(new float[dimensions]);
 		}
 		internal GxEmbedding(IReadOnlyList<double> embedding)
 		{
@@ -30,6 +30,10 @@ namespace GeneXus.Utils
 			_embedding = embedding;
 		}
 
+		internal static GxEmbedding Empty(string model, int dimensions)
+		{
+			return new GxEmbedding(model, dimensions);
+		}
 		public override string ToString()
 		{
 			return $"[{string.Join(",", _embedding.Span.ToArray())}]";
