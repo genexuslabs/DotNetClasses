@@ -453,7 +453,7 @@ namespace GeneXus.Data
 		public override GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i, string model, int dimensions)
 		{
 			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
-				return GxEmbedding.Empty;
+				return GxEmbedding.Empty(model, dimensions);
 			else
 			{
 				Pgvector.Vector vector = (Pgvector.Vector)DR.GetValue(i);
