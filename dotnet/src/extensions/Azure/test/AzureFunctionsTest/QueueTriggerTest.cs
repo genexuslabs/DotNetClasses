@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using Azure.Storage.Queues.Models;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
 using GeneXus.Deploy.AzureFunctions.QueueHandler;
 using Microsoft.Azure.Functions.Worker;
@@ -30,7 +32,6 @@ namespace Extensions.AzureFunctions.Test
 				context.SetupGet(c => c.InvocationId).Returns("6a871dbc3cb74a9fa95f05ae63505c2c");
 
 				ICallMappings callMappings = new CallMappings(".");
-
 			
 				IReadOnlyDictionary<string, object> bindingData = new Dictionary<string, object>()
 				{ 
@@ -39,9 +40,16 @@ namespace Extensions.AzureFunctions.Test
 					},
 				};
 
+				bool encode = false;
 				string message = "This is a sample message";
+				QueueMessage queueMessage = QueuesModelFactory.QueueMessage(messageId: "id2",
+				popReceipt: "pr2",
+				body: BinaryData.FromString(encode ? Convert.ToBase64String(Encoding.UTF8.GetBytes(message)) : message),
+				dequeueCount: 1,
+				insertedOn: DateTimeOffset.UtcNow);
+				
 				context.SetupGet(c => c.BindingContext.BindingData).Returns(bindingData);
-				var ex = Record.Exception(() => new QueueTriggerHandler(callMappings).Run(message, context.Object));
+				var ex = Record.Exception(() => new QueueTriggerHandler(callMappings).Run(queueMessage, context.Object));
 				Assert.Null(ex);
 				
 			} catch(Exception ex)
