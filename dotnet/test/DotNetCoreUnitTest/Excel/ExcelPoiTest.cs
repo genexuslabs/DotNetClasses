@@ -23,7 +23,7 @@ namespace DotNetUnitTest.Excel
 		public void TestNumberFormat1()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testNumberFormat1");
-			excel.GetCells(1, 1, 1, 1).NumericValue=123.456M;
+			excel.GetCells(1, 1, 1, 1).NumericValue = 123.456M;
 			excel.GetCells(2, 1, 1, 1).NumericValue = 1;
 			excel.GetCells(3, 1, 1, 1).NumericValue = 100;
 
@@ -51,7 +51,7 @@ namespace DotNetUnitTest.Excel
 			excel.SetColumnWidth(1, 100);
 			excel.GetCells(2, 1, 5, 5).NumericValue = 123.456M;
 			ExcelStyle newCellStyle = new ExcelStyle();
-			newCellStyle.			CellFont.			Bold = true;
+			newCellStyle.CellFont.Bold = true;
 			excel.GetCells(2, 1, 3, 3).SetCellStyle(newCellStyle);
 
 			excel.Save();
@@ -122,7 +122,7 @@ namespace DotNetUnitTest.Excel
 			excel.InsertSheet("test2");
 			excel.InsertSheet("test3");
 			excel.SetCurrentWorksheetByName("test2");
-			excel.GetCells(2, 1, 5, 5).NumericValue=3;
+			excel.GetCells(2, 1, 5, 5).NumericValue = 3;
 			excel.Save();
 
 		}
@@ -266,8 +266,8 @@ namespace DotNetUnitTest.Excel
 			ExcelSpreadsheetGXWrapper excel = Create("testSetCellValues");
 			excel.Autofit = true;
 			excel.GetCells(1, 1, 1, 1).NumericValue = 100;
-			excel.GetCells(2, 1, 1, 1).Text="hola!";
-			excel.GetCells(3, 1, 1, 1).DateValue=new DateTime();
+			excel.GetCells(2, 1, 1, 1).Text = "hola!";
+			excel.GetCells(3, 1, 1, 1).DateValue = new DateTime();
 			excel.GetCells(4, 1, 1, 1).NumericValue = 66.78M;
 
 			excel.Save();
@@ -286,7 +286,7 @@ namespace DotNetUnitTest.Excel
 		public void TestFormulas()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testFormulas");
-			excel.Autofit=true;
+			excel.Autofit = true;
 			excel.GetCell(1, 1).NumericValue = 5;
 			excel.GetCell(2, 1).NumericValue = 6;
 			excel.GetCell(3, 1).Text = "=A1+A2";
@@ -388,14 +388,14 @@ namespace DotNetUnitTest.Excel
 
 			excel.InsertSheet("hoja1");
 			excel.SetCurrentWorksheetByName("hoja1");
-			excel.GetCells(1, 1, 3, 3).Text="test";
+			excel.GetCells(1, 1, 3, 3).Text = "test";
 			excel.InsertSheet("hoja2");
 			excel.InsertSheet("hoja3");
 			excel.Save();
 			excel.Close();
 			excel = Open("testCopySheet");
 			excel.SetCurrentWorksheetByName("hoja1");
-			excel.			CurrentWorksheet.Copy("hoja1Copia");
+			excel.CurrentWorksheet.Copy("hoja1Copia");
 			excel.Save();
 			excel.Close();
 			excel = Open("testCopySheet");
@@ -411,16 +411,16 @@ namespace DotNetUnitTest.Excel
 
 			excel.InsertSheet("hoja1");
 			excel.SetCurrentWorksheetByName("hoja1");
-			excel.GetCells(1, 1, 3, 3).Text="test";
+			excel.GetCells(1, 1, 3, 3).Text = "test";
 			excel.InsertSheet("hoja2");
 			excel.InsertSheet("hoja3");
 			excel.Save();
 			excel.Close();
 			excel = Open("testCopySheet");
 			excel.SetCurrentWorksheetByName("hoja1");
-			excel.			CurrentWorksheet.Copy("hoja1Copia");
-			excel.			CurrentWorksheet.Copy("hoja1Copia");
-			excel.			CurrentWorksheet.Copy("hoja1Copia");
+			excel.CurrentWorksheet.Copy("hoja1Copia");
+			excel.CurrentWorksheet.Copy("hoja1Copia");
+			excel.CurrentWorksheet.Copy("hoja1Copia");
 			excel.Save();
 			excel.Close();
 			excel = Open("testCopySheet");
@@ -459,17 +459,17 @@ namespace DotNetUnitTest.Excel
 			excel.Autofit = true;
 			excel.InsertSheet("hoja1");
 			excel.SetCurrentWorksheetByName("hoja1");
-			excel.			CurrentWorksheet.SetProtected("password");
+			excel.CurrentWorksheet.SetProtected("password");
 			excel.GetCells(1, 1, 3, 3).Text = "texto no se puede editar";
 			ExcelStyle style = new ExcelStyle();
-			style.Hidden=true;
+			style.Hidden = true;
 			excel.GetCells(1, 1, 3, 3).SetCellStyle(style);
 
 
 			ExcelCells cells = excel.GetCells(5, 1, 3, 3);
 			cells.Text = "texto SI se puede editar";
 			style = new ExcelStyle();
-			style.Locked=false;
+			style.Locked = false;
 			cells.SetCellStyle(style);
 			excel.Save();
 			excel.Close();
@@ -483,17 +483,17 @@ namespace DotNetUnitTest.Excel
 			excel.Autofit = true;
 			excel.InsertSheet("hoja1");
 			excel.SetCurrentWorksheetByName("hoja1");
-			excel.			CurrentWorksheet.SetProtected("password");
-			excel.GetCells(1, 1, 3, 3).Text="texto no se puede editar";
+			excel.CurrentWorksheet.SetProtected("password");
+			excel.GetCells(1, 1, 3, 3).Text = "texto no se puede editar";
 			ExcelStyle style = new ExcelStyle();
-			style.Locked=true;
+			style.Locked = true;
 			excel.GetCells(1, 1, 3, 3).SetCellStyle(style);
 
 
 			ExcelCells cells = excel.GetCells(5, 1, 3, 3);
-			cells.Text="texto SI se puede editar";
+			cells.Text = "texto SI se puede editar";
 			style = new ExcelStyle();
-			style.Locked=false;
+			style.Locked = false;
 			cells.SetCellStyle(style);
 			excel.Save();
 			excel.Close();
@@ -527,7 +527,7 @@ namespace DotNetUnitTest.Excel
 		public void TestHideSheet()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testHideSheet");
-			excel.Autofit=true;
+			excel.Autofit = true;
 			excel.InsertSheet("hoja1");
 			excel.InsertSheet("hoja2");
 			excel.InsertSheet("hoja3");
@@ -614,7 +614,7 @@ namespace DotNetUnitTest.Excel
 		public void TestWorksheetRename()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testWorksheetRename");
-			excel.			CurrentWorksheet.Rename("defaultsheetrenamed");
+			excel.CurrentWorksheet.Rename("defaultsheetrenamed");
 			excel.InsertSheet("hoja1");
 			excel.InsertSheet("hoja2");
 			excel.InsertSheet("hoja3");
@@ -641,7 +641,7 @@ namespace DotNetUnitTest.Excel
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testMergeCells");
 			excel.GetCells(2, 10, 10, 5).MergeCells();
-			excel.GetCells(2, 10, 10, 5).Text="merged cells";
+			excel.GetCells(2, 10, 10, 5).Text = "merged cells";
 			excel.Save();
 			excel.Close();
 		}
@@ -722,10 +722,10 @@ namespace DotNetUnitTest.Excel
 		public void TestAlignment()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testAlignment");
-			excel.GetCells(2, 2, 3, 3).Text = "a";	
+			excel.GetCells(2, 2, 3, 3).Text = "a";
 			ExcelStyle style = new ExcelStyle();
-			style.			CellAlignment.			HorizontalAlignment = ExcelAlignment.HORIZONTAL_ALIGN_RIGHT; //center
-			style.			CellAlignment.			VerticalAlignment = ExcelAlignment.VERTICAL_ALIGN_MIDDLE; //middle
+			style.CellAlignment.HorizontalAlignment = ExcelAlignment.HORIZONTAL_ALIGN_RIGHT; //center
+			style.CellAlignment.VerticalAlignment = ExcelAlignment.VERTICAL_ALIGN_MIDDLE; //middle
 			excel.GetCells(2, 2, 3, 3).SetCellStyle(style);
 			excel.Save();
 			excel.Close();
@@ -743,14 +743,14 @@ namespace DotNetUnitTest.Excel
 
 			ExcelStyle style = new ExcelStyle();
 
-			cells.Text="texto muy largo";
-			style.			CellAlignment.			HorizontalAlignment = 3;
-			style.			CellFont.			Bold = true;
-			style.			CellFont.			Italic = true;
-			style.			CellFont.			Size = 18;
-			style.			CellFont.			Color.SetColorRGB(1, 1, 1);
-			style.			CellFill.			CellBackColor.SetColorRGB(210, 180, 140);
-			style.			TextRotation = 5;
+			cells.Text = "texto muy largo";
+			style.CellAlignment.HorizontalAlignment = 3;
+			style.CellFont.Bold = true;
+			style.CellFont.Italic = true;
+			style.CellFont.Size = 18;
+			style.CellFont.Color.SetColorRGB(1, 1, 1);
+			style.CellFill.CellBackColor.SetColorRGB(210, 180, 140);
+			style.TextRotation = 5;
 
 			style.
 			WrapText = true;
@@ -763,10 +763,10 @@ namespace DotNetUnitTest.Excel
 
 			cells.Text = "texto2";
 			style = new ExcelStyle();
-			style.			Indentation = 5;
-			style.			CellFont.			Size = 10;
-			style.			CellFont.			Color.SetColorRGB(255, 255, 255);
-			style.			CellFill.			CellBackColor.SetColorRGB(90, 90, 90);
+			style.Indentation = 5;
+			style.CellFont.Size = 10;
+			style.CellFont.Color.SetColorRGB(255, 255, 255);
+			style.CellFill.CellBackColor.SetColorRGB(90, 90, 90);
 
 			cells.SetCellStyle(style);
 
@@ -774,11 +774,11 @@ namespace DotNetUnitTest.Excel
 			cells = excel.GetCells(10, 2, 2, 2);
 			cells.Text = "texto3";
 			style = new ExcelStyle();
-			style.			CellFont.			Bold = false;
-			style.			CellFont.			Size = 10;
-			style.			CellFont.			Color.SetColorRGB(180, 180, 180);
-			style.			CellFill.			CellBackColor.SetColorRGB(45, 45, 45);
-			style.			TextRotation = -90;
+			style.CellFont.Bold = false;
+			style.CellFont.Size = 10;
+			style.CellFont.Color.SetColorRGB(180, 180, 180);
+			style.CellFill.CellBackColor.SetColorRGB(45, 45, 45);
+			style.TextRotation = -90;
 			cells.SetCellStyle(style);
 
 
@@ -797,25 +797,16 @@ namespace DotNetUnitTest.Excel
 			cells.Text = "texto2";
 
 			ExcelStyle style = new ExcelStyle();
-			style.			CellFont.			Size = 10;
+			style.CellFont.Size = 10;
 
-			style.
-			Border.
-			BorderTop.
-			Border = "THICK";
-			style.			Border.			BorderTop.			BorderColor.SetColorRGB(220, 20, 60);
+			style.Border.BorderTop.Border = "THICK";
+			style.Border.BorderTop.BorderColor.SetColorRGB(220, 20, 60);
 
-			style.
-			Border.
-			BorderDiagonalUp.
-			Border = "THIN";
-			style.			Border.			BorderDiagonalUp.			BorderColor.SetColorRGB(220, 20, 60);
+			style.Border.BorderDiagonalUp.Border = "THIN";
+			style.Border.BorderDiagonalUp.BorderColor.SetColorRGB(220, 20, 60);
 
-			style.
-			Border.
-			BorderDiagonalDown.
-			Border = "THIN";
-			style.			Border.			BorderDiagonalDown.			BorderColor.SetColorRGB(220, 20, 60);
+			style.Border.BorderDiagonalDown.Border = "THIN";
+			style.Border.BorderDiagonalDown.BorderColor.SetColorRGB(220, 20, 60);
 
 			cells.SetCellStyle(style);
 
@@ -826,8 +817,8 @@ namespace DotNetUnitTest.Excel
 			style.
 			CellFont.
 			Bold = false;
-			style.			CellFont.			Size = 10;
-			style.			CellFont.			Color.SetColorRGB(180, 180, 180);
+			style.CellFont.Size = 10;
+			style.CellFont.Color.SetColorRGB(180, 180, 180);
 
 			cells.SetCellStyle(style);
 
@@ -843,11 +834,11 @@ namespace DotNetUnitTest.Excel
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testNumberFormat");
 			ExcelStyle style = new ExcelStyle();
-			style.			DataFormat = "#.##";
-			style.			CellFont.			Bold = true;
-			excel.GetCell(1, 1).NumericValue=1.123456789M;
+			style.DataFormat = "#.##";
+			style.CellFont.Bold = true;
+			excel.GetCell(1, 1).NumericValue = 1.123456789M;
 			excel.GetCell(1, 1).SetCellStyle(style);
-			excel.GetCell(2, 1).NumericValue=20000.123456789M;
+			excel.GetCell(2, 1).NumericValue = 20000.123456789M;
 
 			excel.Save();
 			excel.Close();
@@ -859,11 +850,11 @@ namespace DotNetUnitTest.Excel
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testInsertRow");
 
-			excel.GetCell(1, 1).NumericValue=1;
-			excel.GetCell(2, 1).NumericValue=2;
-			excel.GetCell(3, 1).NumericValue=3;
-			excel.GetCell(4, 1).NumericValue=4;
-			excel.GetCell(5, 1).NumericValue=5;
+			excel.GetCell(1, 1).NumericValue = 1;
+			excel.GetCell(2, 1).NumericValue = 2;
+			excel.GetCell(3, 1).NumericValue = 3;
+			excel.GetCell(4, 1).NumericValue = 4;
+			excel.GetCell(5, 1).NumericValue = 5;
 			excel.Save();
 			excel.Close();
 			// Verify previous Excel Document
@@ -882,8 +873,8 @@ namespace DotNetUnitTest.Excel
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testDeleteRow");
 
-			excel.GetCells(1, 1, 1, 5).NumericValue=1;
-			excel.GetCells(2, 1, 1, 5).NumericValue=2;
+			excel.GetCells(1, 1, 1, 5).NumericValue = 1;
+			excel.GetCells(2, 1, 1, 5).NumericValue = 2;
 			excel.GetCells(3, 1, 1, 5).NumericValue = 3;
 			excel.GetCells(4, 1, 1, 5).NumericValue = 4;
 			excel.Save();
@@ -906,7 +897,7 @@ namespace DotNetUnitTest.Excel
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testDeleteRow2");
 
-			excel.GetCell(2, 2).Text="hola";
+			excel.GetCell(2, 2).Text = "hola";
 			excel.Save();
 			excel.Close();
 			// Verify previous Excel Document
@@ -950,7 +941,7 @@ namespace DotNetUnitTest.Excel
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testHideRow2");
 			excel.ToggleRow(2, false);
-			excel.GetCell(1, 1).NumericValue=1;
+			excel.GetCell(1, 1).NumericValue = 1;
 			excel.GetCell(2, 1).NumericValue = 2;
 			excel.GetCell(3, 1).NumericValue = 3;
 			excel.Save();
@@ -1069,7 +1060,7 @@ namespace DotNetUnitTest.Excel
 		public void TestDeleteColumn3()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testDeleteColumn3");
-			excel.GetCells(1, 1, 5, 5).Text="cell";
+			excel.GetCells(1, 1, 5, 5).Text = "cell";
 			excel.InsertRow(3, 5);
 			excel.DeleteRow(3);
 			excel.DeleteColumn(2);
@@ -1081,7 +1072,7 @@ namespace DotNetUnitTest.Excel
 		public void TestSaveAs()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testSaveAs");
-			excel.GetCells(1, 1, 15, 15).NumericValue=100;
+			excel.GetCells(1, 1, 15, 15).NumericValue = 100;
 			string excelNew = Path.Combine(basePath, "testSaveAsCopy.xlsx");
 			excel.SaveAs(excelNew);
 			excel.Close();
@@ -1093,15 +1084,15 @@ namespace DotNetUnitTest.Excel
 		public void TestAutoFit()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testAutoFit");
-			excel.Autofit=true;
+			excel.Autofit = true;
 			excel.GetCells(1, 2, 1, 1).Text = "LONGTEXTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT";
 			excel.GetCells(1, 3, 1, 1).Text = "VERYLONGTEXTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT";
 			excel.GetCells(2, 4, 1, 1).Text = "hola!";
 			excel.GetCells(6, 6, 1, 1).Text = "VERYLONGTEXTINDIFFERENTROWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
 			ExcelCells cells = excel.GetCells(7, 7, 1, 1);
 			ExcelStyle style = new ExcelStyle();
-			style.			DataFormat = "#.##"; //change style, so it shows the full number not scientific notation
-			cells.NumericValue=123456789123456789123456789M;
+			style.DataFormat = "#.##"; //change style, so it shows the full number not scientific notation
+			cells.NumericValue = 123456789123456789123456789M;
 			cells.SetCellStyle(style);
 			excel.Save();
 			excel.Close();
@@ -1114,17 +1105,17 @@ namespace DotNetUnitTest.Excel
 			DateTime date = new DateTime();
 			//sets date with default format
 			ExcelCells cells = excel.GetCells(1, 1, 1, 1);
-			cells.DateValue=date;
+			cells.DateValue = date;
 			//sets date and apply format after
 			cells = excel.GetCells(2, 1, 1, 1);
 			ExcelStyle style = new ExcelStyle();
-			cells.DateValue=date;
-			style.			DataFormat = "YYYY/MM/DD hh:mm:ss";
+			cells.DateValue = date;
+			style.DataFormat = "YYYY/MM/DD hh:mm:ss";
 			cells.SetCellStyle(style);
 			//sets date and apply format before
 			cells = excel.GetCells(3, 1, 1, 1);
 			style = new ExcelStyle();
-			style.			DataFormat = "YYYY/MM/DD hh:mm:ss";
+			style.DataFormat = "YYYY/MM/DD hh:mm:ss";
 			cells.SetCellStyle(style);
 			cells.DateValue = date;
 
@@ -1136,12 +1127,12 @@ namespace DotNetUnitTest.Excel
 			cells = excel.GetCells(5, 1, 1, 1);
 			style = new ExcelStyle();
 			cells.DateValue = date;
-			style.			DataFormat = "YYYY/MM/DD hh:mm:ss";
+			style.DataFormat = "YYYY/MM/DD hh:mm:ss";
 			cells.SetCellStyle(style);
 			//sets date and apply format before
 			cells = excel.GetCells(6, 1, 1, 1);
 			style = new ExcelStyle();
-			style.			DataFormat = "YYYY/MM/DD hh:mm:ss";
+			style.DataFormat = "YYYY/MM/DD hh:mm:ss";
 			cells.SetCellStyle(style);
 			cells.DateValue = date;
 
