@@ -756,7 +756,7 @@ namespace GeneXus.Application
 			string[] defaultFiles = { "default.htm", "default.html", "index.htm", "index.html" };
 			foreach (string file in defaultFiles) {
 				if (System.IO.File.Exists(Path.Combine(Startup.LocalPath, file))){
-					return Redirect(file);
+					return Redirect(Url.Content($"~/{file}"));
 				}
 			}
 			return Redirect(defaultFiles[0]);
