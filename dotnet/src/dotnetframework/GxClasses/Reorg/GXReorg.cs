@@ -7,6 +7,7 @@ namespace GeneXus.Reorg
 	using System.Reflection;
 	using System.Runtime.CompilerServices;
 	using System.Threading;
+	using System.Threading.Tasks;
 	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Data;
@@ -47,12 +48,26 @@ namespace GeneXus.Reorg
 
 
 		public GXReorganization()
-        {
-            DataStoreUtil.LoadDataStores(new GxContext()); //force to load dbms library (p.e. libmysql.dll 32x)
-            _isMain = true;
-            GxContext.isReorganization = true;
-           GXLogging.Debug(log, "GXReorganization.Ctr()");
-        }
+		{
+			DataStoreUtil.LoadDataStores(new GxContext()); //force to load dbms library (p.e. libmysql.dll 32x)
+			_isMain = true;
+			GxContext.isReorganization = true;
+			GXLogging.Debug(log, "GXReorganization.Ctr()");
+		}
+#if NETCORE
+		protected virtual Task ExecutePrivateAsync()
+		{
+			return Task.CompletedTask;
+		}
+		protected virtual Task CleanupAsync() {
+			return Task.CompletedTask;
+		}
+		protected virtual async Task ExecuteImplAsync()
+		{
+			await ExecutePrivateAsync();
+		}
+#endif
+
 		protected virtual void ExecutePrivate()
 		{
 
