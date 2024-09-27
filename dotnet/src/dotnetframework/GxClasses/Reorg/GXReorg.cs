@@ -66,6 +66,11 @@ namespace GeneXus.Reorg
 		{
 			await ExecutePrivateAsync();
 		}
+		public virtual Task ExecFormAsync()
+		{
+			return Task.CompletedTask;
+		}
+
 #endif
 
 		protected virtual void ExecutePrivate()
