@@ -52,7 +52,8 @@ namespace GeneXus.Data.NTier
 
 	public interface ICursor
 	{
-		void createCursor( IGxDataStore ds, GxErrorHandler errorHandler );
+		void createCursor( IGxDataStore ds, GxErrorHandler errorHandler);
+		void createCursor(IGxDataStore ds, GxErrorHandler errorHandler, string objName);
 		void execute();
         short[] preExecute(int cursorNum, IDataStoreProviderBase connectionProvider, IGxDataStore ds);
         void readNext();
@@ -67,7 +68,7 @@ namespace GeneXus.Data.NTier
         void addRecord(Object[] parms);
         int BatchSize { get; set;}
         int RecordCount { get;}
-        void OnCommitEvent(object instance, string method);
+		void OnCommitEvent(object instance, string method);
         int readNextErrorRecord();
 		List<ParDef> DynamicParameters { get; }
     }
@@ -349,6 +350,7 @@ namespace GeneXus.Data.NTier
 		IDictionary<int, Object[]> errorBuffers;
 		IGxDataStore _ds;
 		IDataStoreHelper _dataStoreHelper;
+		string _dataStoreHelperType;
 		object [] _dynConstraints;
 		GxErrorHandler _errorHandler;
         IGxContext _context;
@@ -359,16 +361,17 @@ namespace GeneXus.Data.NTier
 
 		public DataStoreProvider( IGxContext context, IDataStoreHelper dataStoreHelper, Object[][] cursorParms)
 		{
-			GXLogging.Debug(log, "Start DataStoreProvider.Ctr, Parameters: handle '"+ context.handle + "', dataStoreHelper:" + dataStoreHelper.GetType());
+			_dataStoreHelperType = dataStoreHelper.GetType().ToString();
+			GXLogging.Debug(log, "Start DataStoreProvider.Ctr, Parameters: handle '"+ context.handle + "', dataStoreHelper:" + _dataStoreHelperType);
 			_dataStoreHelper = dataStoreHelper;
-            _context = context;
+			_context = context;
 			_ds = context.GetDataStore( dataStoreHelper.getDataStoreName());
 			if (_ds == null)
 			{
 				
                 _ds = new GxDataStore(new GxSqlServer(),dataStoreHelper.getDataStoreName(), context);
                 context.AddDataStore(_ds);
-                GXLogging.Error(log, dataStoreHelper.GetType() + " Datastore " + dataStoreHelper.getDataStoreName() + " not found in app config");
+                GXLogging.Error(log, _dataStoreHelperType + " Datastore " + dataStoreHelper.getDataStoreName() + " not found in app config");
 			}
 			_ds.Handle=context.handle; 
 			_cursor = dataStoreHelper.getCursors();
@@ -376,7 +379,7 @@ namespace GeneXus.Data.NTier
             errorBuffers = new Dictionary<int, Object[]>();
 			if (Preferences.Instrumented)
 			{
-				wmiDataStoreProvider = WMIDataStoreProviders.Instance().AddDataStoreProvider(dataStoreHelper.GetType().ToString());
+				wmiDataStoreProvider = WMIDataStoreProviders.Instance().AddDataStoreProvider(_dataStoreHelperType);
 			}
 			dataStoreRequestCount++;
 
@@ -420,8 +423,8 @@ namespace GeneXus.Data.NTier
             }			
             if (!batch)
             {
-                oCur.createCursor(_ds, _errorHandler);
-            }
+                oCur.createCursor(_ds, _errorHandler, _dataStoreHelperType);
+			}
 			short[] parmHasValue = oCur.preExecute(cursor, this, _ds);
 			if (Preferences.Instrumented && wmiDataStoreProvider != null)
 			{
@@ -679,7 +682,7 @@ namespace GeneXus.Data.NTier
             if (oCur.BatchSize == 0)
             {
                 oCur.BatchSize = batchSize;
-                oCur.createCursor(_ds, _errorHandler);
+                oCur.createCursor(_ds, _errorHandler, _dataStoreHelperType);
                 oCur.OnCommitEvent(instance, method);
             }
         }
