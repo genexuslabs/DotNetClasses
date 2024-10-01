@@ -1399,7 +1399,8 @@ namespace GeneXus.Data.ADO
 		internal List<ParDef> ParmDefinition;
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxCommand>();
 		string stmt;
-        String stmtId;
+        string stmtId;
+		string objName;
         GxParameterCollection parameters;
 		ushort fetchSize=256;
 		int timeOut;
@@ -1484,6 +1485,7 @@ namespace GeneXus.Data.ADO
 			IGxDataStore ds, string objName, string stmtId, int ttl, bool hasNested,bool isForFirst, GxErrorHandler errorHandler):this(db, statement,ds, ttl,hasNested, isForFirst, errorHandler)
 		{
             this.stmtId = stmtId;
+			this.objName = objName;
 		}
         public GxCommand(IGxDataRecord db, String statement, short updatable,
             IGxDataStore ds, string objName, string stmtId, int ttl, bool hasNested, bool isForFirst, GxErrorHandler errorHandler, int batchSize)
@@ -1593,7 +1595,7 @@ namespace GeneXus.Data.ADO
                     }
                     catch { }
 				}
-				GXLogging.Error(log, "Return GxCommand.ExecuteNonQuery Error ", e.Message, e); 
+				GXLogging.Error(log, () => "Return GxCommand.ExecuteNonQuery Error " + e.Message + StmtExceptionDetail, e); 
 				try
 				{
 				con.MonitorExit();
@@ -1689,7 +1691,7 @@ namespace GeneXus.Data.ADO
 			}
 			catch(Exception e)
 			{
-				GXLogging.Error(log,"Return GxCommand.ExecRpc Error ", e.Message, e); 
+				GXLogging.Error(log,() => "Return GxCommand.ExecRpc Error " + e.Message + StmtExceptionDetail, e); 
 				throw (new GxADODataException(e));
 			}
 			finally
@@ -1728,7 +1730,7 @@ namespace GeneXus.Data.ADO
 					}
 					catch(Exception e)
 					{
-						GXLogging.Error(log, "Return GxCommand.ExecuteDataSet Error ", e.Message, e); 
+						GXLogging.Error(log, () => "Return GxCommand.ExecuteDataSet Error " + e.Message + StmtExceptionDetail, e); 
 						throw (new GxADODataException(e));
 					}
 				}
@@ -1738,7 +1740,7 @@ namespace GeneXus.Data.ADO
 					retryCount++;
 					if (! pe)
 					{
-						GXLogging.Error(log, "GxCommand.ExecuteDataSet Error ", e.Message, e);
+						GXLogging.Error(log, () => "GxCommand.ExecuteDataSet Error " + e.Message + StmtExceptionDetail, e);
 						throw;
 					}
 				}
@@ -1805,7 +1807,7 @@ namespace GeneXus.Data.ADO
 			}
 			catch (Exception e)
 			{
-				GXLogging.Error(log, "Return GxCommand.ExecuteReader Error ", e.Message, e);
+				GXLogging.Error(log, () => "Return GxCommand.ExecuteReader Error " + e.Message + StmtExceptionDetail, e);
 				if (e.InnerException != null)
 				{
 					GXLogging.Error(log, "Inner Error", e.InnerException);
@@ -1813,6 +1815,13 @@ namespace GeneXus.Data.ADO
 				throw (new GxADODataException(e));
 			}
 
+		}
+		private string StmtExceptionDetail
+		{
+			get
+			{
+				return "\nObjectName:" + objName + "\nStmt:" + stmt;
+			}
 		}
 
 		public void FetchData(out IDataReader dr)
@@ -1839,7 +1848,7 @@ namespace GeneXus.Data.ADO
 					retryCount++;
 					if (! pe)
 					{
-						GXLogging.Error(log, "GxCommand.FetchData Error ", e.Message, e);
+						GXLogging.Error(log, () => "GxCommand.FetchData Error " + e.Message + StmtExceptionDetail, e);
 						throw;
 					}
 				}
@@ -1866,7 +1875,7 @@ namespace GeneXus.Data.ADO
 					retryCount++;
 					if (! pe)
 					{
-						GXLogging.Error(log, "GxCommand.FetchDataRPC Error ", e.Message, e);
+						GXLogging.Error(log, () => "GxCommand.FetchDataRPC Error " + e.Message + StmtExceptionDetail, e);
 						throw;
 					}
 				}
@@ -1923,7 +1932,7 @@ namespace GeneXus.Data.ADO
             }
             catch (Exception e)
             {
-				GXLogging.Error(log, "Return GxCommand.ExecuteNonQuery Error ", e.Message, e);
+				GXLogging.Error(log, ()=>"Return GxCommand.ExecuteNonQuery Error " + e.Message + StmtExceptionDetail, e);
 				con.InternalConnection.RollbackSavePoint(Transaction, stmtId);
 				con.MonitorExit();
                 throw (new GxADODataException(e));
@@ -1986,9 +1995,9 @@ namespace GeneXus.Data.ADO
                 {
 					bool pe = ProcessException(e, ref retry, retryCount, "EXECUTE");
                     retryCount++;
-                    if (!pe)
-                    {
-                        GXLogging.Error(log, "GxCommand.ExecuteStmt Error ", e.Message, e);
+					if (!pe)
+					{
+						GXLogging.Error(log, () => "GxCommand.ExecuteStmt Error " + e.Message + StmtExceptionDetail, e);
 						throw;
                     }
                 }
@@ -2017,7 +2026,7 @@ namespace GeneXus.Data.ADO
                     retryCount++;
                     if (!pe)
                     {
-                        GXLogging.Error(log, "GxCommand.ExecuteStmt Error ", e.Message, e);
+						GXLogging.Error(log, ()=> "GxCommand.ExecuteStmt Error " + e.Message + StmtExceptionDetail, e);
 						throw;
                     }
                 }

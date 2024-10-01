@@ -625,6 +625,18 @@ namespace GeneXus
 				}
 			}
 		}
+		internal static void Error(IGXLogger logger, Func<string> buildMsg, Exception ex)
+		{
+			if (logger != null)
+			{
+				if (logger.IsErrorEnabled)
+				{
+					string msg = buildMsg();
+					logger.LogError(msg, ex);
+				}
+			}
+		}
+
 
 		internal static void Error(IGXLogger logger, string msg1, string msg2, Exception ex)
 		{
