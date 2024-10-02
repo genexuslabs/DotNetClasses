@@ -158,7 +158,7 @@ namespace GeneXusCryptography.SymmetricUtils
 				case SymmetricStreamAlgorithm.XSALSA20:
 					return true;
 				default:
-					error.setError("SSA04", ?"Unrecognized SymmetricStreamAlgorithm");
+					error.setError("SSA04", "Unrecognized SymmetricStreamAlgorithm");
 					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					return true;
 			}
