@@ -1,4 +1,5 @@
-﻿using GeneXusFtps.GeneXusFtpsUtils;
+using GeneXusFtps.GeneXusFtpsUtils;
+using log4net;
 using SecurityAPICommons.Commons;
 using SecurityAPICommons.Utils;
 using System;
@@ -9,6 +10,9 @@ namespace GeneXusFtps.GeneXusFtps
 	[SecuritySafeCritical]
 	public class FtpsOptions : SecurityAPIObject
 	{
+
+		private static readonly ILog logger = LogManager.GetLogger(typeof(FtpsOptions));
+
 		private string _host;
 		public string Host
 		{
@@ -108,6 +112,7 @@ namespace GeneXusFtps.GeneXusFtps
 					|| SecurityUtils.extensionIs(value, ".jks") || SecurityUtils.extensionIs(value, ".crt")))
 			{
 				error.setError("FO001", "Unexpected extension for trust store); valid extensions: .p12 .jks .pfx");
+				logger.Error("Unexpected extension for trust store); valid extensions: .p12 .jks .pfx");
 			}
 			else
 			{

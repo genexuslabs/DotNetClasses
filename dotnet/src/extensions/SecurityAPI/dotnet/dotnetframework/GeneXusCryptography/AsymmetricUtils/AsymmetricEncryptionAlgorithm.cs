@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using log4net;
 
 
 namespace GeneXusCryptography.AsymmetricUtils
@@ -25,19 +26,21 @@ namespace GeneXusCryptography.AsymmetricUtils
     [SecuritySafeCritical]
     public static class AsymmetricEncryptionAlgorithmUtils
     {
-
-        /// <summary>
-        /// Mapping between string name and AsymmetricEncryptionAlgorithm enum representation
-        /// </summary>
-        /// <param name="asymmetricEncryptionAlgorithm">string asymmetricEncryptionAlgorithm</param>
-        /// <param name="error">Error type for error management</param>
-        /// <returns>AsymmetricEncryptionAlgorithm enum representation</returns>
-        public static AsymmetricEncryptionAlgorithm getAsymmetricEncryptionAlgorithm(string asymmetricEncryptionAlgorithm, Error error)
+		private static readonly ILog logger = LogManager.GetLogger(typeof(AsymmetricEncryptionAlgorithmUtils));
+		/// <summary>
+		/// Mapping between string name and AsymmetricEncryptionAlgorithm enum representation
+		/// </summary>
+		/// <param name="asymmetricEncryptionAlgorithm">string asymmetricEncryptionAlgorithm</param>
+		/// <param name="error">Error type for error management</param>
+		/// <returns>AsymmetricEncryptionAlgorithm enum representation</returns>
+		public static AsymmetricEncryptionAlgorithm getAsymmetricEncryptionAlgorithm(string asymmetricEncryptionAlgorithm, Error error)
         {
+			logger.Debug("getAsymmetricEncryptionAlgorithm");
 			if (error == null) return AsymmetricEncryptionAlgorithm.NONE;
 			if(asymmetricEncryptionAlgorithm == null)
 			{
 				error.setError("AE001", "Unrecognized AsymmetricEncryptionAlgorithm");
+				logger.Error("Unrecognized AsymmetricEncryptionAlgorithm");
 				return AsymmetricEncryptionAlgorithm.NONE;
 			}
             switch (asymmetricEncryptionAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -46,6 +49,7 @@ namespace GeneXusCryptography.AsymmetricUtils
                     return AsymmetricEncryptionAlgorithm.RSA;
                 default:
                     error.setError("AE001", "Unrecognized AsymmetricEncryptionAlgorithm");
+					logger.Error("Unrecognized AsymmetricEncryptionAlgorithm");
                     return AsymmetricEncryptionAlgorithm.NONE;
             }
         }
@@ -57,6 +61,7 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>string asymmetricEncryptionAlgorithm name</returns>
         public static string valueOf(AsymmetricEncryptionAlgorithm asymmetricEncryptionAlgorithm, Error error)
         {
+			logger.Debug("valueOf");
 			if (error == null) return "";
             switch (asymmetricEncryptionAlgorithm)
             {
@@ -64,6 +69,7 @@ namespace GeneXusCryptography.AsymmetricUtils
                     return "RSA";
                 default:
                     error.setError("AE002", "Unrecognized AsymmetricEncryptionAlgorithm");
+					logger.Error("Unrecognized AsymmetricEncryptionAlgorithm");
                     return "";
             }
 

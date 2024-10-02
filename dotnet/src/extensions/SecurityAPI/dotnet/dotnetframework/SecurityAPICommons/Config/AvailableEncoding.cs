@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security;
 using SecurityAPICommons.Commons;
+using log4net;
 
 namespace SecurityAPICommons.Config
 {
@@ -19,12 +20,15 @@ namespace SecurityAPICommons.Config
     [SecuritySafeCritical]
     public static class AvailableEncodingUtils
     {
-        public static AvailableEncoding getAvailableEncoding(string encoding, Error error)
+		private static readonly ILog logger = LogManager.GetLogger(typeof(AvailableEncodingUtils));
+		public static AvailableEncoding getAvailableEncoding(string encoding, Error error)
         {
+			logger.Debug("getAvailableEncoding");
 			if(error == null) return AvailableEncoding.NONE;
 			if (encoding == null)
 			{
 				error.setError("AE001", "Unknown encoding or not available");
+				logger.Error("Unknown encoding or not available");
 				return AvailableEncoding.NONE;
 			}
             encoding = encoding.Replace("-", "_");
@@ -51,6 +55,7 @@ namespace SecurityAPICommons.Config
                     return AvailableEncoding.GB2312;
                 default:
                     error.setError("AE001", "Unknown encoding or not available");
+					logger.Error("Unknown encoding or not available");
                     return AvailableEncoding.NONE;
             }
         }
@@ -106,6 +111,7 @@ namespace SecurityAPICommons.Config
 
         public static string encapsulateGetString(byte[] input, AvailableEncoding availableEncoding, Error error)
         {
+			logger.Debug("encapsulateGetString");
 			if (error == null) return "";
             const string strUniRepChr = "�"; //Unicode Character 'REPLACEMENT CHARACTER' (U+FFFD)
             switch (availableEncoding)
@@ -195,12 +201,14 @@ namespace SecurityAPICommons.Config
 
                 default:
                     error.setError("AE001", "Unknown encoding");
+					logger.Error("Unknown encoding");
                     return "";
             }
         }
 
         public static byte[] encapsulateeGetBytes(string input, AvailableEncoding availableEncoding, Error error)
         {
+			logger.Debug("encapsulateeGetBytes");
 			if (error == null) return null;
             const string strUniRepChr = "�"; //Unicode Character 'REPLACEMENT CHARACTER' (U+FFFD)
             switch (availableEncoding)
@@ -268,6 +276,7 @@ namespace SecurityAPICommons.Config
 
                 default:
                     error.setError("AE001", "Unknown encoding");
+					logger.Error("Unknown encoding");
                     return null;
             }
         }

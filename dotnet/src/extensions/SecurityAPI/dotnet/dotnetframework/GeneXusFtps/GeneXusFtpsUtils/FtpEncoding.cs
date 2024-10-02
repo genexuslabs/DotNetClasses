@@ -1,3 +1,4 @@
+using log4net;
 using SecurityAPICommons.Commons;
 using System;
 using System.Security;
@@ -13,13 +14,17 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 	[SecuritySafeCritical]
 	public static class FtpEncodingUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(FtpEncodingUtils));
+
 		[SecuritySafeCritical]
-		public static FtpEncoding getFtpEncoding(String ftpEncoding, Error error)
+		public static FtpEncoding getFtpEncoding(string ftpEncoding, Error error)
 		{
+			logger.Debug("getFtpEncoding");
 			if(error == null) return FtpEncoding.NONE;
 			if (ftpEncoding == null)
 			{
 				error.setError("FE001", "Unknown encoding");
+				logger.Error("Unknown encoding");
 				return FtpEncoding.NONE;
 			}
 			switch (ftpEncoding.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -30,13 +35,15 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 					return FtpEncoding.ASCII;
 				default:
 					error.setError("FE001", "Unknown encoding");
+					logger.Error("Unknown encoding");
 					return FtpEncoding.NONE;
 			}
 		}
 
 		[SecuritySafeCritical]
-		public static String valueOf(FtpEncoding ftpEncoding, Error error)
+		public static string valueOf(FtpEncoding ftpEncoding, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "";
 			switch (ftpEncoding)
 			{
@@ -46,6 +53,7 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 					return "ASCII";
 				default:
 					error.setError("FE002", "Unknown encoding");
+					logger.Error("Unknown encoding");
 					return "";
 			}
 		}

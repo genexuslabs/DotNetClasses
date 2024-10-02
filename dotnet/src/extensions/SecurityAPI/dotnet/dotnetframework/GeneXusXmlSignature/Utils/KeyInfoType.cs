@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using log4net;
 using SecurityAPICommons.Commons;
 
 namespace GeneXusXmlSignature.GeneXusUtils
@@ -15,12 +16,15 @@ namespace GeneXusXmlSignature.GeneXusUtils
 	[SecuritySafeCritical]
 	public static class KeyInfoTypeUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(KeyInfoTypeUtils));
 		public static KeyInfoType getKeyInfoType(string keyInfoType, Error error)
 		{
+			logger.Debug("getKeyInfoType");
 			if (error == null) return KeyInfoType.NONE;
 			if (keyInfoType == null)
 			{
 				error.setError("KIT03", "Unrecognized KeyInfoType");
+				logger.Error("Unrecognized KeyInfoType");
 				return KeyInfoType.NONE;
 			}
 			switch (keyInfoType.Trim())
@@ -33,6 +37,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return KeyInfoType.X509Certificate;
 				default:
 					error.setError("KIT01", "Unrecognized KeyInfoType");
+					logger.Error("Unrecognized KeyInfoType");
 					return KeyInfoType.NONE;
 			}
 
@@ -40,6 +45,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
 		public static string valueOf(KeyInfoType keyInfoType, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "";
 			switch (keyInfoType)
 			{
@@ -51,6 +57,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return "X509Certificate";
 				default:
 					error.setError("KIT02", "Unrecognized KeyInfoType");
+					logger.Error("Unrecognized KeyInfoType");
 					return "";
 			}
 		}
