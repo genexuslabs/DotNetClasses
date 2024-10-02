@@ -92,7 +92,7 @@ namespace GeneXusCryptography.SymmetricUtils
 				case SymmetricBlockPadding.WITHCTS:
 					return "WITHCTS";
 				default:
-					error.setError("SBP02", ?"Unrecognized SymmetricBlockPadding");
+					error.setError("SBP02", "Unrecognized SymmetricBlockPadding");
 					logger.Error("Unrecognized SymmetricBlockPadding");
 					return "Unrecognized block padding";
 			}
