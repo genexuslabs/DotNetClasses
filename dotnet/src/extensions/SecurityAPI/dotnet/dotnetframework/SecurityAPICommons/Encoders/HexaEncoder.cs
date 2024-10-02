@@ -3,6 +3,7 @@ using SecurityAPICommons.Config;
 using Org.BouncyCastle.Utilities.Encoders;
 using System;
 using System.Security;
+using log4net;
 
 
 namespace SecurityAPICommons.Encoders
@@ -13,6 +14,7 @@ namespace SecurityAPICommons.Encoders
 	[SecuritySafeCritical]
 	public class HexaEncoder : SecurityAPIObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(HexaEncoder));
 
 
 		/// <summary>
@@ -33,6 +35,7 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public string toHexa(string plainText)
 		{
+			logger.Debug("toHexa");
 			this.error.cleanError();
 			EncodingUtil eu = new EncodingUtil();
 			byte[] stringBytes = eu.getBytes(plainText);
@@ -49,6 +52,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("HE001", e.Message);
+				logger.Error("toHexa", e);
 				return "";
 			}
 			return hexa.ToUpper();
@@ -62,6 +66,7 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public string fromHexa(string stringHexa)
 		{
+			logger.Debug("fromHexa");
 			this.error.cleanError();
 			byte[] resBytes;
 			try
@@ -71,6 +76,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("HE002", e.Message);
+				logger.Error("fromHexa", e);
 				return "";
 			}
 			EncodingUtil eu = new EncodingUtil();
@@ -86,6 +92,7 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public bool isHexa(string input)
 		{
+			logger.Debug("isHexa");
 			this.error.cleanError();
 			try
 			{

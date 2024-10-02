@@ -15,12 +15,15 @@ using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using GeneXusJWT.JWTClaims;
+using log4net;
 
 namespace GeneXusJWT.GenexusJWT
 {
 	[SecuritySafeCritical]
 	public class JWTCreator : SecurityAPIObject, IJWTObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(JWTCreator));
+
 		private int counter;
 
 
@@ -41,6 +44,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public string DoCreate(string algorithm, PrivateClaims privateClaims, JWTOptions options)
 		{
+			logger.Debug("DoCreate");
 			this.error.cleanError();
 			return Create_Aux(algorithm, privateClaims, options, null, true);
 		}
@@ -48,6 +52,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public string DoCreateFromJSON(string algorithm, string json, JWTOptions options)
 		{
+			logger.Debug("DoCreateFromJSON");
 			this.error.cleanError();
 			return Create_Aux(algorithm, null, options, json, false);
 		}
@@ -55,6 +60,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public bool DoVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options)
 		{
+			logger.Debug("DoVerify");
 			this.error.cleanError();
 			return DoVerify(token, expectedAlgorithm, privateClaims, options, true, true);
 		}
@@ -62,6 +68,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public bool DoVerifyJustSignature(String token, String expectedAlgorithm, JWTOptions options)
 		{
+			logger.Debug("DoVerifyJustSignature");
 			this.error.cleanError();
 			return DoVerify(token, expectedAlgorithm, null, options, false, false);
 		}
@@ -69,6 +76,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public bool DoVerifySignature(String token, String expectedAlgorithm, JWTOptions options)
 		{
+			logger.Debug("DoVerifySignature");
 			this.error.cleanError();
 			return DoVerify(token, expectedAlgorithm, null, options, false, true);
 		}
@@ -76,6 +84,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public string GetPayload(string token)
 		{
+			logger.Debug("GetPayload");
 			this.error.cleanError();
 			string res = "";
 			try
@@ -85,6 +94,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW001", e.Message);
+				logger.Error("GetPayload", e);
 				return "";
 			}
 			return res;
@@ -94,6 +104,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public string GetHeader(string token)
 		{
+			logger.Debug("GetHeader");
 			this.error.cleanError();
 			string res = "";
 			try
@@ -103,6 +114,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW002", e.Message);
+				logger.Error("GetHeader", e);
 				return "";
 			}
 			return res;
@@ -111,6 +123,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public string GetTokenID(string token)
 		{
+			logger.Debug("GetTokenID");
 			this.error.cleanError();
 			string res = "";
 			try
@@ -121,6 +134,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW003", e.Message);
+				logger.Error("GetTokenID", e);
 				return "";
 			}
 			return res;
@@ -132,9 +146,11 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		private string Create_Aux(string algorithm, PrivateClaims privateClaims, JWTOptions options, string payloadString, bool hasClaims)
 		{
+			logger.Debug("Create_Aux");
 			if (options == null)
 			{
 				this.error.setError("JW004", "Options parameter is null");
+				logger.Error("Options parameter is null");
 				return "";
 			}
 			JWTAlgorithm alg = JWTAlgorithmUtils.getJWTAlgorithm(algorithm, this.error);
@@ -159,6 +175,7 @@ namespace GeneXusJWT.GenexusJWT
 				if (privateClaims == null)
 				{
 					this.error.setError("JW005", "PrivateClaims parameter is null");
+					logger.Error("PrivateClaims parameter is null");
 					return "";
 				}
 				payload = doBuildPayload(privateClaims, options);
@@ -172,6 +189,7 @@ namespace GeneXusJWT.GenexusJWT
 				catch (Exception ex)
 				{
 					this.error.setError("", ex.Message);
+					logger.Error("Create_Aux", ex);
 					return "";
 				}
 			}
@@ -204,6 +222,7 @@ namespace GeneXusJWT.GenexusJWT
 							break;
 						default:
 							this.error.setError("JW019", "Not recognized key algorithm");
+							logger.Error("Not recognized key algorithm");
 							return "";
 					}
 				}catch(Exception e)
@@ -217,6 +236,7 @@ namespace GeneXusJWT.GenexusJWT
 				if(options.getSecret() == null)
 				{
 					this.error.setError("JW021", "Set the secret using JWTOptions.SetSecret function");
+					logger.Error("Set the secret using JWTOptions.SetSecret function");
 					return "";
 				}
 				SymmetricSecurityKey symKey = new SymmetricSecurityKey(options.getSecret());
@@ -248,6 +268,7 @@ namespace GeneXusJWT.GenexusJWT
 			{
 
 				this.error.setError("JW006", e.Message);
+				logger.Error("Create_Aux", e);
 
 				return "";
 			}
@@ -258,9 +279,11 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		private bool DoVerify(string token, string expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options, bool verifyClaims, bool verifyRegClaims)
 		{
+			logger.Debug("DoVerify");
 			if (options == null)
 			{
 				this.error.setError("JW007", "Options parameter is null");
+				logger.Error("Options parameter is null");
 				return false;
 			}
 			JWTAlgorithm expectedJWTAlgorithm = JWTAlgorithmUtils.getJWTAlgorithm(expectedAlgorithm, this.error);
@@ -322,6 +345,7 @@ namespace GeneXusJWT.GenexusJWT
 			if (JWTAlgorithmUtils.getJWTAlgorithm(jwtToken.Header.Alg, this.error) != expectedJWTAlgorithm || this.HasError())
 			{
 				this.error.setError("JW009", "Expected algorithm does not match token algorithm");
+				logger.Error("Expected algorithm does not match token algorithm");
 				return false;
 			}
 			SecurityKey genericKey = null;
@@ -331,6 +355,7 @@ namespace GeneXusJWT.GenexusJWT
 				if(cert == null)
 				{
 					this.error.setError("JW022", "Public key or certificate not loaded for verification");
+					logger.Error("Public key or certificate not loaded for verification");
 					return false;
 				}
 				if (cert.HasError())
@@ -350,6 +375,7 @@ namespace GeneXusJWT.GenexusJWT
 							break;
 						default:
 							this.error.setError("JW019", "Not recognized key algorithm");
+							logger.Error("Not recognized key algorithm");
 							return false;
 					}
 				}catch(Exception e)
@@ -363,6 +389,7 @@ namespace GeneXusJWT.GenexusJWT
 				if(options.getSecret() == null)
 				{
 					this.error.setError("JW022", "Symmetric key not loaded for verification");
+					logger.Error("Symmetric key not loaded for verification");
 					return false;
 				}	
 				SymmetricSecurityKey symKey = new SymmetricSecurityKey(options.getSecret());
@@ -380,6 +407,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW008", e.Message);
+				logger.Error("DoVerify", e);
 
 				return false;
 			}
@@ -392,6 +420,7 @@ namespace GeneXusJWT.GenexusJWT
 
 		private JwtPayload doBuildPayload(PrivateClaims privateClaims, JWTOptions options)
 		{
+			logger.Debug("doBuildPayload");
 			JwtPayload payload = new JwtPayload();
 			// ****START BUILD PAYLOAD****//
 			// Adding private claims
@@ -435,6 +464,7 @@ namespace GeneXusJWT.GenexusJWT
 					else
 					{
 						this.error.setError("JW014", "Unrecognized data type");
+						logger.Error("Unrecognized data type");
 					}
 
 					//System.Security.Claims.Claim netPrivateClaim = new System.Security.Claims.Claim(privateClaim.getKey(), privateClaim.getValue());
@@ -485,7 +515,7 @@ namespace GeneXusJWT.GenexusJWT
 		private bool validateRegisteredClaims(JwtSecurityToken jwtToken, JWTOptions options)
 		{
 
-
+			logger.Debug("validateRegisteredClaims");
 			// Adding registered claims
 			if (options.hasRegisteredClaims())
 			{
@@ -523,6 +553,7 @@ namespace GeneXusJWT.GenexusJWT
 					else
 					{
 						error.setError("JW017", String.Format("{0} wrong registered claim key", registeredClaimKey));
+						logger.Error(String.Format("{0} wrong registered claim key", registeredClaimKey));
 						return false;
 					}
 				}
@@ -535,8 +566,9 @@ namespace GeneXusJWT.GenexusJWT
 			return rList.isInRevocationList(jwtToken.Payload.Jti);
 		}
 
-		private String getTokenPart(string token, String part)
+		private string getTokenPart(string token, String part)
 		{
+			logger.Debug("getTokenPart");
 			JwtSecurityToken jwtToken = new JwtSecurityToken(token);
 
 			switch (part)
@@ -549,6 +581,7 @@ namespace GeneXusJWT.GenexusJWT
 					return jwtToken.Payload.Jti;
 				default:
 					error.setError("JW012", "Unknown token segment");
+					logger.Error("Unknown token segment");
 					return "";
 			}
 
@@ -556,6 +589,7 @@ namespace GeneXusJWT.GenexusJWT
 
 		private bool verifyPrivateClaims(JwtSecurityToken jwtToken, PrivateClaims privateClaims, JWTOptions options)
 		{
+			logger.Debug("verifyPrivateClaims");
 			RegisteredClaims registeredClaims = options.getAllRegisteredClaims();
 			PublicClaims publicClaims = options.getAllPublicClaims();
 			if (privateClaims == null || privateClaims.isEmpty())
@@ -571,6 +605,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW018", e.Message);
+				logger.Error("verifyPrivateClaims", e);
 				return false;
 			}
 			this.counter = 0;
@@ -586,13 +621,14 @@ namespace GeneXusJWT.GenexusJWT
 		private bool verifyNestedClaims(Dictionary<string, object> pclaimMap, Dictionary<string, object> map,
 					RegisteredClaims registeredClaims, PublicClaims publicClaims)
 		{
+			logger.Debug("verifyNestedClaims");
 			List<string> mapClaimKeyList = new List<string>(map.Keys);
 			List<string> pClaimKeyList = new List<string>(pclaimMap.Keys);
 			if (pClaimKeyList.Count > pClaimKeyList.Count)
 			{
 				return false;
 			}
-			foreach (String mapKey in mapClaimKeyList)
+			foreach (string mapKey in mapClaimKeyList)
 			{
 
 				if (!isRegistered(mapKey, registeredClaims) && !isPublic(mapKey, publicClaims))
@@ -656,6 +692,7 @@ namespace GeneXusJWT.GenexusJWT
 
 		private void AddHeaderParameters(JwtHeader header, JWTOptions options)
 		{
+			logger.Debug("AddHeaderParameters");
 			HeaderParameters parameters = options.GetHeaderParameters();
 			List<string> list = parameters.GetAll();
 			Dictionary<string, object> map = parameters.GetMap();
@@ -667,6 +704,7 @@ namespace GeneXusJWT.GenexusJWT
 
 		private static bool VerifyHeader(JwtSecurityToken jwtToken, JWTOptions options)
 		{
+			logger.Debug("VerifyHeader");
 			int claimsNumber = jwtToken.Header.Count;
 			HeaderParameters parameters = options.GetHeaderParameters();
 			if (parameters.IsEmpty() && claimsNumber == 2)
@@ -678,12 +716,12 @@ namespace GeneXusJWT.GenexusJWT
 				return false;
 			}
 
-			List<String> allParms = parameters.GetAll();
+			List<string> allParms = parameters.GetAll();
 			if (claimsNumber != allParms.Count + 2)
 			{
 				return false;
 			}
-			Dictionary<String, Object> map = parameters.GetMap();
+			Dictionary<string, Object> map = parameters.GetMap();
 
 
 			foreach (string s in allParms)
@@ -704,7 +742,7 @@ namespace GeneXusJWT.GenexusJWT
 				{
 					return false;
 				}
-				String optionsValue = ((string)map[s]).Trim();
+				string optionsValue = ((string)map[s]).Trim();
 				if (!SecurityUtils.compareStrings(claimValue, optionsValue.Trim()))
 				{
 					return false;

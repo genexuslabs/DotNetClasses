@@ -3,6 +3,7 @@ using System.Security;
 using SecurityAPICommons.Commons;
 using SecurityAPICommons.Config;
 using Org.BouncyCastle.Utilities.Encoders;
+using log4net;
 
 namespace SecurityAPICommons.Encoders
 {
@@ -13,6 +14,7 @@ namespace SecurityAPICommons.Encoders
 	public class Base64Encoder : SecurityAPIObject
 	{
 
+		private static readonly ILog logger = LogManager.GetLogger(typeof(Base64Encoder));
 
 		/// <summary>
 		/// Base64Encoder constructor
@@ -31,6 +33,7 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public string toBase64(string text)
 		{
+			logger.Debug("toBase64");
 			this.error.cleanError();
 			EncodingUtil eu = new EncodingUtil();
 			byte[] textBytes = eu.getBytes(text);
@@ -47,6 +50,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("BS001", e.Message);
+				logger.Error("toBase64", e);
 				return "";
 			}
 			return result;
@@ -59,6 +63,7 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public string toPlainText(string base64Text)
 		{
+			logger.Debug("toPlainText");
 			this.error.cleanError();
 			byte[] bytes;
 			try
@@ -68,6 +73,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("BS002", e.Message);
+				logger.Error("toPlainText", e);
 				return "";
 			}
 			EncodingUtil eu = new EncodingUtil();
@@ -87,6 +93,7 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public string toStringHexa(string base64Text)
 		{
+			logger.Debug("toStringHexa");
 			this.error.cleanError();
 			byte[] bytes;
 			try
@@ -96,6 +103,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("BS003", e.Message);
+				logger.Error("toStringHexa", e);
 				return "";
 			}
 			string result = "";
@@ -106,6 +114,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("BS004", e.Message);
+				logger.Error("toStringHexa", e);
 				return "";
 			}
 			return result;
@@ -119,6 +128,7 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public string fromStringHexaToBase64(string stringHexa)
 		{
+			logger.Debug("fromStringHexaToBase64");
 			this.error.cleanError();
 			byte[] stringBytes;
 			try
@@ -128,6 +138,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("BS005", e.Message);
+				logger.Error("fromStringHexaToBase64", e);
 				return "";
 			}
 			string result = "";
@@ -138,6 +149,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("BS006", e.Message);
+				logger.Error("fromStringHexaToBase64", e);
 				return "";
 			}
 			return result;

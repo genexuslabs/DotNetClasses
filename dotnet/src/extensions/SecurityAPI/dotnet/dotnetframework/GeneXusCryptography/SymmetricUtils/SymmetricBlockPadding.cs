@@ -1,4 +1,5 @@
 
+using log4net;
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace GeneXusCryptography.SymmetricUtils
 	[SecuritySafeCritical]
 	public static class SymmetricBlockPaddingUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SymmetricBlockPaddingUtils));
 		/// <summary>
 		/// Mapping between string name and SymmetricBlockPadding enum representation
 		/// </summary>
@@ -33,10 +35,12 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>SymmetricBlockPadding enum representation</returns>
 		public static SymmetricBlockPadding getSymmetricBlockPadding(string symmetricBlockPadding, Error error)
 		{
+			logger.Debug("getSymmetricBlockPadding");
 			if (error == null) return SymmetricBlockPadding.NOPADDING;
 			if (symmetricBlockPadding == null)
 			{
 				error.setError("SBP03", "Unrecognized SymmetricBlockPadding");
+				logger.Error("Unrecognized SymmetricBlockPadding");
 				return SymmetricBlockPadding.NOPADDING;
 			}
 			switch (symmetricBlockPadding.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -57,6 +61,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return SymmetricBlockPadding.WITHCTS;
 				default:
 					error.setError("SBP01", "Unrecognized SymmetricBlockPadding");
+					logger.Error("Unrecognized SymmetricBlockPadding");
 					return SymmetricBlockPadding.NOPADDING;
 			}
 		}
@@ -68,6 +73,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>string name value of SymmetricBlockPadding</returns>
 		public static string valueOf(SymmetricBlockPadding symmetricBlockPadding, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "Unrecognized block padding";
 			switch (symmetricBlockPadding)
 			{
@@ -86,7 +92,8 @@ namespace GeneXusCryptography.SymmetricUtils
 				case SymmetricBlockPadding.WITHCTS:
 					return "WITHCTS";
 				default:
-					error.setError("SBP02", "Unrecognized SymmetricBlockPadding");
+					error.setError("SBP02", ?"Unrecognized SymmetricBlockPadding");
+					logger.Error("Unrecognized SymmetricBlockPadding");
 					return "Unrecognized block padding";
 			}
 		}
