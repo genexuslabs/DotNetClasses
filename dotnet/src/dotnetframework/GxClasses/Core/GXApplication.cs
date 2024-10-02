@@ -3840,7 +3840,7 @@ namespace GeneXus.Application
 												string imagePath = parts[4];
 												string intExt = parts[3];
 												if (intExt[0] != 'E' && intExt[0] != 'e' && !Path.IsPathRooted(imagePath) && !imagePath.ToLower().StartsWith("http:"))
-													imagePath = imgDir + KBPrefix + "Resources/" + imagePath;
+													imagePath = Path.Combine(imgDir, KBPrefix + "Resources", imagePath);
 												string parts12 = '_' + parts[1] + '_' + parts[2];
 
 												m_images[KBPrefix + parts[0] + parts12] = imagePath;
