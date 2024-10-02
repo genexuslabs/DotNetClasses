@@ -1,4 +1,5 @@
-﻿using SecurityAPICommons.Commons;
+using log4net;
+using SecurityAPICommons.Commons;
 using SecurityAPICommons.Utils;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace Sftp.GeneXusSftp
 	[SecuritySafeCritical]
 	public class SftpOptions : SecurityAPIObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SftpOptions));
+
 		private string host;
 		public string Host
 		{
@@ -83,6 +86,7 @@ namespace Sftp.GeneXusSftp
 
 		private void SetKeyPath(String value)
 		{
+			logger.Debug("SetKeyPath");
 			//C# apps allways runs on windows, shouldn't correct \\ on local paths
 			//string path = $"/{value.Replace(@"\", "/")}";
 			string path = value;
@@ -91,6 +95,7 @@ namespace Sftp.GeneXusSftp
 			{
 				this.error.setError("OP001",
 						"Private key must be base64 encoded file (Valid extensions: .pem, .key, empty)");
+				logger.Error("Private key must be base64 encoded file (Valid extensions: .pem, .key, empty)");
 			}
 			else
 			{
@@ -101,12 +106,14 @@ namespace Sftp.GeneXusSftp
 
 		private void SetKnownHostsPath(String value)
 		{
+			logger.Debug("SetKnownHostsPath");
 			//C# apps allways runs on windows, shouldn't correct \\ on local paths
 			//var path = $"/{value.Replace(@"\", "/")}";
 			string path = value;
 			if (!SecurityUtils.extensionIs(path, ""))
 			{
 				this.error.setError("OP002", "No extension is allowed for known_hosts file");
+				logger.Error("No extension is allowed for known_hosts file");
 			}
 			else
 			{

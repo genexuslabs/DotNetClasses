@@ -2,6 +2,7 @@ using SecurityAPICommons.Commons;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Security;
+using log4net;
 
 
 
@@ -16,8 +17,10 @@ namespace GeneXusJWT.GenexusJWTUtils
     [SecuritySafeCritical]
     public static class JWTAlgorithmUtils
     {
-        public static string valueOf(JWTAlgorithm jWTAlgorithm, Error error)
+		private static readonly ILog logger = LogManager.GetLogger(typeof(JWTAlgorithmUtils));
+		public static string valueOf(JWTAlgorithm jWTAlgorithm, Error error)
         {
+			logger.Debug("valueOf");
 			if(error == null) return "Unrecognized algorithm";
 			switch (jWTAlgorithm)
             {
@@ -38,16 +41,19 @@ namespace GeneXusJWT.GenexusJWTUtils
 
                 default:
                     error.setError("JWA01", "Unrecognized algorithm");
+					logger.Error("Unrecognized algorithm");
                     return "Unrecognized algorithm";
             }
         }
 
         public static JWTAlgorithm getJWTAlgorithm(string jWTAlgorithm, Error error)
         {
+			logger.Debug("getJWTAlgorithm");
 			if(error == null) return JWTAlgorithm.NONE;
 			if (jWTAlgorithm == null)
 			{
 				error.setError("JWA02", "Unrecognized algorithm");
+				logger.Error("Unrecognized algorithm");
 				return JWTAlgorithm.NONE;
 			}
             switch (jWTAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -69,7 +75,8 @@ namespace GeneXusJWT.GenexusJWTUtils
 
                 default:
                     error.setError("JWA02", "Unrecognized algorithm");
-                    return JWTAlgorithm.NONE;
+					logger.Error("Unrecognized algorithm");
+					return JWTAlgorithm.NONE;
             }
         }
 
@@ -77,7 +84,8 @@ namespace GeneXusJWT.GenexusJWTUtils
 		public static JWTAlgorithm getJWTAlgorithm_forVerification(string jWTAlgorithm, Error error)
 #pragma warning restore CA1707 // Identifiers should not contain underscores
 		{
-			if(error == null) return JWTAlgorithm.NONE;
+			logger.Debug("getJWTAlgorithm_forVerification");
+			if (error == null) return JWTAlgorithm.NONE;
 			switch (jWTAlgorithm)
             {
                 case SecurityAlgorithms.RsaSha256:
@@ -96,7 +104,8 @@ namespace GeneXusJWT.GenexusJWTUtils
                     return JWTAlgorithm.ES512;
                 default:
                     error.setError("JWA05", "Unrecognized algorithm");
-                    return JWTAlgorithm.NONE;
+					logger.Error("Unrecognized algorithm");
+					return JWTAlgorithm.NONE;
             }
         }
 
@@ -119,6 +128,7 @@ namespace GeneXusJWT.GenexusJWTUtils
 
         internal static SigningCredentials getSigningCredentials(JWTAlgorithm jWTAlgorithm, SecurityKey key, Error error)
         {
+			logger.Debug("getSigningCredentials");
             switch (jWTAlgorithm)
             {
                 case JWTAlgorithm.HS256:
@@ -138,7 +148,8 @@ namespace GeneXusJWT.GenexusJWTUtils
 
                 default:
                     error.setError("JWA06", "Unrecognized algorithm");
-                    return null;
+					logger.Error("Unrecognized algorithm");
+					return null;
             }
         }
 

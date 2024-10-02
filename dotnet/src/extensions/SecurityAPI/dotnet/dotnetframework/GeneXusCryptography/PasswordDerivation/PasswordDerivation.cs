@@ -7,6 +7,7 @@ using Org.BouncyCastle.Utilities.Encoders;
 using System;
 using System.Security;
 using SecurityAPICommons.Utils;
+using log4net;
 
 namespace GeneXusCryptography.PasswordDerivation
 {
@@ -16,6 +17,7 @@ namespace GeneXusCryptography.PasswordDerivation
 	[SecuritySafeCritical]
 	public class PasswordDerivation : SecurityAPIObject, IPasswordDerivationObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(PasswordDerivation));
 
 
 		/// <summary>
@@ -45,6 +47,7 @@ namespace GeneXusCryptography.PasswordDerivation
 		public string DoGenerateSCrypt(string password, string salt, int CPUCost, int blockSize, int parallelization,
 		int keyLenght)
 		{
+			logger.Debug("DoGenerateSCrypt");
 			this.error.cleanError();
 
 			EncodingUtil eu = new EncodingUtil();
@@ -63,6 +66,7 @@ namespace GeneXusCryptography.PasswordDerivation
 			catch (Exception e)
 			{
 				this.error.setError("PD001", e.Message);
+				logger.Error("DoGenerateSCrypt", e);
 				return "";
 			}
 			return Base64.ToBase64String(encryptedBytes);
@@ -77,6 +81,7 @@ namespace GeneXusCryptography.PasswordDerivation
 		[SecuritySafeCritical]
 		public string DoGenerateDefaultSCrypt(string password, string salt)
 		{
+			logger.Debug("DoGenerateDefaultSCrypt");
 			int N = 16384;
 			int r = 8;
 			int p = 1;
@@ -94,6 +99,7 @@ namespace GeneXusCryptography.PasswordDerivation
 		[SecuritySafeCritical]
 		public string DoGenerateBcrypt(string password, string salt, int cost)
 		{
+			logger.Debug("DoGenerateBcrypt");
 			this.error.cleanError();
 
 			EncodingUtil eu = new EncodingUtil();
@@ -112,6 +118,7 @@ namespace GeneXusCryptography.PasswordDerivation
 			catch (Exception e)
 			{
 				this.error.setError("PD002", e.Message);
+				logger.Error("DoGenerateBcrypt", e);
 				return "";
 			}
 
@@ -127,6 +134,7 @@ namespace GeneXusCryptography.PasswordDerivation
 		[SecuritySafeCritical]
 		public string DoGenerateDefaultBcrypt(string password, string salt)
 		{
+			logger.Debug("DoGenerateDefaultBcrypt");
 			int cost = 6;
 			return DoGenerateBcrypt(password, salt, cost);
 		}
@@ -135,7 +143,9 @@ namespace GeneXusCryptography.PasswordDerivation
 		public string DoGenerateArgon2(string argon2Version10, string argon2HashType, int iterations, int memory,
 		int parallelism, String password, string salt, int hashLength)
 		{
+			logger.Debug("DoGenerateArgon2");
 			this.error.setError("PD004", "Not implemented function for Net");
+			logger.Error("Not implemented function for Net");
 			return "";
 
 		}

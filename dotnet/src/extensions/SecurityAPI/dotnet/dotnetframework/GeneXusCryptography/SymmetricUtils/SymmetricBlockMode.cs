@@ -1,4 +1,5 @@
 
+using log4net;
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,7 @@ namespace GeneXusCryptography.SymmetricUtils
 	[SecuritySafeCritical]
 	public static class SymmetricBlockModeUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SymmetricBlockModeUtils));
 		/// <summary>
 		/// Mapping between string name and SymmetricBlockMode enum representation
 		/// </summary>
@@ -36,10 +38,12 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>SymmetricBlockMode enum representation</returns>
 		public static SymmetricBlockMode getSymmetricBlockMode(string symmetricBlockMode, Error error)
 		{
+			logger.Debug("getSymmetricBlockMode");
 			if (error == null) return SymmetricBlockMode.NONE;
 			if (symmetricBlockMode == null)
 			{
 				error.setError("SBM04", "Unrecognized SymmetricBlockMode");
+				logger.Error("Unrecognized SymmetricBlockMode");
 				return SymmetricBlockMode.NONE;
 			}
 
@@ -75,6 +79,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return SymmetricBlockMode.AEAD_CCM;
 				default:
 					error.setError("SBM01", "Unrecognized SymmetricBlockMode");
+					logger.Error("Unrecognized SymmetricBlockMode");
 					return SymmetricBlockMode.NONE;
 			}
 		}
@@ -88,6 +93,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>SymmetricBlockMode name value in string</returns>
 		public static string valueOf(SymmetricBlockMode symmetricBlockMode, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "Unrecognized operation mode";
 
 			switch (symmetricBlockMode)
@@ -124,6 +130,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return "AEAD_CCM";
 				default:
 					error.setError("SBM02", "Unrecognized SymmetricBlockMode");
+					logger.Error("Unrecognized SymmetricBlockMode");
 					return "Unrecognized operation mode";
 			}
 		}
@@ -136,6 +143,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>boolean true if operation mode is AEAD type</returns>
 		public static bool isAEAD(SymmetricBlockMode symmetricBlockMode, Error error)
 		{
+			logger.Debug("isAEAD");
 			if (error == null) return false;
 			switch (symmetricBlockMode)
 			{
@@ -146,6 +154,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return true;
 				default:
 					error.setError("SBM03", "Unrecognized Symmetric AEAD BlockMode");
+					logger.Error("Unrecognized Symmetric AEAD BlockMode");
 					return false;
 			}
 		}

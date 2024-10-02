@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security;
 using SecurityAPICommons.Commons;
 using SecurityAPICommons.Utils;
+using log4net;
 
 namespace GeneXusJWT.GenexusJWTClaims
 {
@@ -17,8 +18,11 @@ namespace GeneXusJWT.GenexusJWTClaims
     [SecuritySafeCritical]
     public static class RegisteredClaimUtils
     {
-        public static string valueOf(RegisteredClaim registeredClaim, Error error)
+
+		private static readonly ILog logger = LogManager.GetLogger(typeof(RegisteredClaimUtils));
+		public static string valueOf(RegisteredClaim registeredClaim, Error error)
         {
+			logger.Debug("valueOf");
 			if(error == null) return "Unknown registered claim";
 			switch (registeredClaim)
             {
@@ -38,6 +42,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                     return "jti";
                 default:
                     error.setError("RC001", "Unknown registered Claim");
+					logger.Error("Unknown registered claim");
                     return "Unknown registered claim";
 
             }
@@ -45,10 +50,12 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public static RegisteredClaim getRegisteredClaim(string registeredClaim, Error error)
         {
+			logger.Debug("getRegisteredClaim");
 			if(error == null) return RegisteredClaim.NONE;
 			if (registeredClaim == null)
 			{
 				error.setError("RCL01", "Unknown registered Claim");
+				logger.Error("Unknown registered claim");
 				return RegisteredClaim.NONE;
 			}
             switch (registeredClaim.Trim())
@@ -69,7 +76,8 @@ namespace GeneXusJWT.GenexusJWTClaims
                     return RegisteredClaim.jti;
                 default:
                     error.setError("RCL02", "Unknown registered Claim");
-                    return RegisteredClaim.NONE;
+					logger.Error("Unknown registered claim");
+					return RegisteredClaim.NONE;
             }
         }
 
@@ -107,7 +115,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public static bool validateClaim(string registeredClaimKey, string registeredClaimValue, long registeredClaimCustomTime, JwtSecurityToken token, Error error)
         {
-			
+			logger.Debug("validateClaim");
 			if (error == null) return false;
             RegisteredClaim claim = RegisteredClaimUtils.getRegisteredClaim(registeredClaimKey, error);
             if (error.existsError())
@@ -118,6 +126,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 			if(token == null)
 			{
 				error.setError("RCL13", "Token parameter is null");
+				logger.Error("Token parameter is null");
 				return false;
 			}
             Int32 newTime = 0;
@@ -173,7 +182,8 @@ namespace GeneXusJWT.GenexusJWTClaims
                     return SecurityUtils.compareStrings(token.Payload.Jti, registeredClaimValue);
                 default:
                     error.setError("RCL03", "Unknown registered Claim");
-                    return false;
+					logger.Error("Unknown registered claim");
+					return false;
             }
         }
     }

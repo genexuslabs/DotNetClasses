@@ -2,6 +2,7 @@ using GeneXusCryptography.ChecksumUtils;
 using GeneXusCryptography.Commons;
 using GeneXusCryptography.Hash;
 using GeneXusCryptography.HashUtils;
+using log4net;
 using Org.BouncyCastle.Utilities.Encoders;
 using SecurityAPICommons.Commons;
 using SecurityAPICommons.Utils;
@@ -13,6 +14,7 @@ namespace GeneXusCryptography.Checksum
 	[SecuritySafeCritical]
 	public class ChecksumCreator : SecurityAPIObject, IChecksumObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(ChecksumCreator));
 		public ChecksumCreator() : base()
 		{
 
@@ -22,12 +24,13 @@ namespace GeneXusCryptography.Checksum
 		[SecuritySafeCritical]
 		public string GenerateChecksum(string input, string inputType, string checksumAlgorithm)
 		{
+			logger.Debug("GenerateChecksum");
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("input", input, this.error);
-			SecurityUtils.validateStringInput("inputType", inputType, this.error);
-			SecurityUtils.validateStringInput("checksumAlgorithm", checksumAlgorithm, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "GenerateChecksum", "input", input, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "GenerateChecksum", "inputType", inputType, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "GenerateChecksum", "checksumAlgorithm", checksumAlgorithm, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -49,13 +52,14 @@ namespace GeneXusCryptography.Checksum
 		[SecuritySafeCritical]
 		public bool VerifyChecksum(string input, string inputType, string checksumAlgorithm, string digest)
 		{
+			logger.Debug("VerifyChecksum");
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("input", input, this.error);
-			SecurityUtils.validateStringInput("inputType", inputType, this.error);
-			SecurityUtils.validateStringInput("checksumAlgorithm", checksumAlgorithm, this.error);
-			SecurityUtils.validateStringInput("digest", digest, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "VerifyChecksum", "input", input, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "VerifyChecksum", "inputType", inputType, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "VerifyChecksum", "checksumAlgorithm", checksumAlgorithm, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "VerifyChecksum", "digest", digest, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -73,6 +77,7 @@ namespace GeneXusCryptography.Checksum
 
 		private string CalculateCRC(byte[] input, ChecksumAlgorithm checksumAlgorithm)
 		{
+			logger.Debug("CalculateCRC");
 			CRCParameters parms = ChecksumAlgorithmUtils.getParameters(checksumAlgorithm, this.error);
 			if (this.HasError())
 			{
@@ -98,6 +103,7 @@ namespace GeneXusCryptography.Checksum
 
 		private string CalculateHash(byte[] input, ChecksumAlgorithm checksumAlgorithm)
 		{
+			logger.Debug("CalculateHash");
 			HashAlgorithm alg = getHashAlgorithm(checksumAlgorithm);
 			if (this.HasError())
 			{
@@ -112,6 +118,7 @@ namespace GeneXusCryptography.Checksum
 			catch (Exception e)
 			{
 				error.setError("CH001", e.Message);
+				logger.Error("CalculateHash", e);
 				return "";
 			}
 			if (hash.HasError())

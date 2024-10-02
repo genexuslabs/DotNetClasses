@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using SecurityAPICommons.Commons;
+using log4net;
 
 namespace GeneXusXmlSignature.GeneXusUtils
 {
@@ -24,6 +25,8 @@ namespace GeneXusXmlSignature.GeneXusUtils
 	public static class AsymmetricSigningAlgorithmUtils
 	{
 
+		private static readonly ILog logger = LogManager.GetLogger(typeof(AsymmetricSigningAlgorithmUtils));
+
 		/// <summary>
 		/// Mapping between string name and AsymmetricSigningAlgorithm enum representation
 		/// </summary>
@@ -32,10 +35,12 @@ namespace GeneXusXmlSignature.GeneXusUtils
 		/// <returns>AsymmetricSigningAlgorithm enum representation</returns>
 		public static AsymmetricSigningAlgorithm getAsymmetricSigningAlgorithm(string asymmetricSigningAlgorithm, Error error)
 		{
+			logger.Debug("getAsymmetricSigningAlgorithm");
 			if (error == null) return AsymmetricSigningAlgorithm.NONE;
 			if (asymmetricSigningAlgorithm == null)
 			{
 				error.setError("ASA03", "Unrecognized AsymmetricSigningAlgorithm");
+				logger.Error("Unrecognized AsymmetricSigningAlgorithm");
 				return AsymmetricSigningAlgorithm.NONE;
 			}
 			switch (asymmetricSigningAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -46,6 +51,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return AsymmetricSigningAlgorithm.ECDSA;
 				default:
 					error.setError("ASA01", "Unrecognized AsymmetricSigningAlgorithm");
+					logger.Error("Unrecognized AsymmetricSigningAlgorithm");
 					return AsymmetricSigningAlgorithm.NONE;
 			}
 		}
@@ -57,6 +63,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 		/// <returns>string value of the algorithm</returns>
 		public static string valueOf(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "";
 			switch (asymmetricSigningAlgorithm)
 			{
@@ -66,6 +73,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return "ECDSA";
 				default:
 					error.setError("ASA02", "Unrecognized AsymmetricSigningAlgorithm");
+					logger.Error("Unrecognized AsymmetricSigningAlgorithm");
 					return "";
 			}
 		}
