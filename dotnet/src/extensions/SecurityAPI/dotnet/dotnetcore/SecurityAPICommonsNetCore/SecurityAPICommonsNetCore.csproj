@@ -51,4 +51,8 @@
     <ProjectReference Include="..\..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
 </Project>
