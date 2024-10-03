@@ -2402,7 +2402,8 @@ namespace GeneXus.Utils
 				{
 					lock (syncObj)
 					{
-						this.Set(item.Key.ToString(), item.Value.ToString());
+						if (item.Key != null && item.Value != null)
+							this.Set(item.Key.ToString(), item.Value.ToString());
 					}
 				}
 			}
