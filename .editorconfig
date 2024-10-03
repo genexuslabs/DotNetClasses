@@ -34,3 +34,5 @@ dotnet_diagnostic.CA1824.severity=error
 dotnet_diagnostic.CA1507.severity=error
 dotnet_diagnostic.CA1841.severity=error
 csharp_style_var_for_built_in_types=false:error
+
+dotnet_diagnostic.CA1825.severity = none
