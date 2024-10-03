@@ -21,16 +21,16 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 		{
 			_callmappings = callMappings;
 		}
-		public void Run(MyInfo TimerInfo, FunctionContext context) 
+		public void Run(TimerInfo timerInfo, FunctionContext context) 
 		{
 			var logger = context.GetLogger("TimerTriggerHandler");
 			string functionName = context.FunctionDefinition.Name;
 			Guid messageId = new Guid(context.InvocationId);
-			logger.LogInformation($"GeneXus Timer trigger handler. Function processed: {functionName}. Message Id: {messageId}. Function executed at: {DateTime.Now}. Next timer schedule at: {TimerInfo.ScheduleStatus.Next}");
+			logger.LogInformation($"GeneXus Timer trigger handler. Function processed: {functionName}. Message Id: {messageId}. Function executed at: {DateTime.Now}. Next timer schedule at: {timerInfo.ScheduleStatus.Next}");
 
 			try
 			{
-				ProcessMessage(context, logger, TimerInfo, messageId.ToString());
+				ProcessMessage(context, logger, timerInfo, messageId.ToString());
 			}
 			catch (Exception ex) //Catch System exception and retry
 			{
@@ -38,12 +38,20 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				throw;
 			}
 		}
-		private void ProcessMessage(FunctionContext context, ILogger log, MyInfo TimerInfo, string messageId)
+		private void ProcessMessage(FunctionContext context, ILogger log, TimerInfo TimerInfo, string messageId)
 		{
-			CallMappings callmap = (CallMappings)_callmappings;
+			string envVar = $"GX_AZURE_{context.FunctionDefinition.Name.ToUpper()}_CLASS";
+			string envVarValue = Environment.GetEnvironmentVariable(envVar);
+			string gxProcedure = string.Empty;
+			if (!string.IsNullOrEmpty(envVarValue))
+				gxProcedure = envVarValue;
+			else
+			{
+				CallMappings callmap = (CallMappings)_callmappings;
+				GxAzMappings map = callmap != null && callmap.mappings is object ? callmap.mappings.SingleOrDefault(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+				gxProcedure = (map != null && map is object) ? map.GXEntrypoint : string.Empty;
+			}
 
-			GxAzMappings map = callmap.mappings is object ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
-			string gxProcedure = (map != null && map is object) ? map.GXEntrypoint : string.Empty;
 			string exMessage;
 
 			if (!string.IsNullOrEmpty(gxProcedure))
@@ -175,20 +183,5 @@ namespace GeneXus.Deploy.AzureFunctions.TimerHandler
 				throw new Exception(exMessage);
 			}
 		}
-	}	
-	public class MyInfo
-	{
-		public MyScheduleStatus ScheduleStatus { get; set; }
-
-		public bool IsPastDue { get; set; }
-	}
-
-	public class MyScheduleStatus
-	{
-		public DateTime Last { get; set; }
-
-		public DateTime Next { get; set; }
-
-		public DateTime LastUpdated { get; set; }
 	}	
 }

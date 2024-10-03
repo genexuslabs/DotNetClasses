@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using GeneXus.Application;
 using GeneXus.Procedure;
 
@@ -29,6 +30,8 @@ namespace GeneXus.Programs
 		{
 			aP1_ExternalEventMessageResponse = new GeneXus.Programs.genexusserverlessapi.SdtEventMessageResponse(context);
 			aP1_ExternalEventMessageResponse.gxTpr_Handlefailure = false;
+			string serializedMessage = aP0_EventMessages.ToJSonString(false);
+			Debug.WriteLine(serializedMessage);
 		}
 
 		public override void initialize()

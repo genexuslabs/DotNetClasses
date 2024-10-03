@@ -22,7 +22,7 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 		{
 			_callmappings = callMappings;
 		}
-		public void Run(string myTriggerItem, FunctionContext context)
+		public void Run(Stream blobItem, FunctionContext context)
 		{
 			var logger = context.GetLogger("BlobTriggerHandler");
 			string functionName = context.FunctionDefinition.Name;
@@ -31,7 +31,7 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 
 			try
 			{
-				ProcessMessage(context, logger, myTriggerItem, messageId.ToString());
+				ProcessMessage(context, logger, blobItem, messageId.ToString());
 			}
 			catch (Exception ex) //Catch System exception and retry
 			{
@@ -39,12 +39,20 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 				throw;
 			}
 		}
-		private void ProcessMessage(FunctionContext context, ILogger log, string myTriggerItem, string messageId)
+		private void ProcessMessage(FunctionContext context, ILogger log, Stream blobItem, string messageId)
 		{
-			CallMappings callmap = (CallMappings)_callmappings;
+			string envVar = $"GX_AZURE_{context.FunctionDefinition.Name.ToUpper()}_CLASS";
+			string envVarValue = Environment.GetEnvironmentVariable(envVar);
+			string gxProcedure = string.Empty;
+			if (!string.IsNullOrEmpty(envVarValue))
+				gxProcedure = envVarValue;
+			else
+			{
+				CallMappings callmap = (CallMappings)_callmappings;
+				GxAzMappings map = callmap != null && callmap.mappings is object ? callmap.mappings.SingleOrDefault(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+				gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
+			}
 
-			GxAzMappings map = callmap.mappings is object ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
-			string gxProcedure = (map != null && map is object) ? map.GXEntrypoint : string.Empty;
 			string exMessage;
 
 			if (!string.IsNullOrEmpty(gxProcedure))
@@ -86,9 +94,13 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 							Object[] parametersdata;
 							parametersdata = new object[] { null };
 
+
 							if (parameters[0].ParameterType == typeof(string))
-								parametersdata = new object[] { myTriggerItem, null };
-							
+								if (context.BindingContext.BindingData.TryGetValue("Uri", out object urivalue))
+									parametersdata = new object[] { urivalue, null };
+								else
+									parametersdata = new object[] { string.Empty, null };
+
 							else
 							{
 								//Initialization
@@ -104,9 +116,9 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 								IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
 								Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
 
-								if (context.BindingContext.BindingData.TryGetValue("Uri", out object urivalue))
+								if (context.BindingContext.BindingData.TryGetValue("Uri", out object urivalue2))
 								{
-									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Uri", urivalue.ToString(), gxcontext);
+									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Uri", urivalue2.ToString(), gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
 								}
 
@@ -118,7 +130,7 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 
 								if (context.BindingContext.BindingData.TryGetValue("Metadata", out object metadatavalue))
 								{
-									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Metadata", namevalue.ToString(), gxcontext);
+									GxUserType eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Metadata", metadatavalue.ToString(), gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
 								}
 
@@ -138,11 +150,14 @@ namespace GeneXus.Deploy.AzureFunctions.BlobHandler
 
 								//Event
 
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", messageId.ToString());
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", messageId);
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.Blob);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", myTriggerItem);
+
+								string data = urivalue2 != null ? urivalue2.ToString() : string.Empty;
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", data);
+
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", DateTime.UtcNow);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", "1.0.0");
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
 
 								//List of Events

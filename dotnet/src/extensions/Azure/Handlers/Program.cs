@@ -10,7 +10,6 @@ using GxClasses.Web;
 using GxClasses.Web.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using StackExchange.Redis;
 
 namespace GeneXus.Deploy.AzureFunctions.Handlers
 {
@@ -18,13 +17,12 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
     {
 		static async Task Main()
         {
-
 			string roothPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			string routePrefix = GetRoutePrefix(roothPath);
 			GXRouting.ContentRootPath = roothPath;
 
 			var host = new HostBuilder()
-                .ConfigureFunctionsWorkerDefaults()
+				.ConfigureFunctionsWorkerDefaults()
 				.ConfigureServices(services =>
 				{
 					services.AddSingleton<ICallMappings, CallMappings>(x => new CallMappings(roothPath));

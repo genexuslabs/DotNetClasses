@@ -43,10 +43,12 @@ namespace Extensions.AzureFunctions.Test
 				};
 
 				Object data = "{\r\n        \"api\": \"PutBlockList\",\r\n        \"clientRequestId\": \"4c5dd7fb-2c48-4a27-bb30-5361b5de920a\",\r\n        \"requestId\": \"9aeb0fdf-c01e-0131-0922-9eb549000000\",\r\n        \"eTag\": \"0x8D76C39E4407333\",\r\n        \"contentType\": \"image/png\",\r\n        \"contentLength\": 30699,\r\n        \"blobType\": \"BlockBlob\",\r\n        \"url\": \"https://gridtesting.blob.core.windows.net/testcontainer/{new-file}\",\r\n        \"sequencer\": \"000000000000000000000000000099240000000000c41c18\",\r\n        \"storageDiagnostics\": {\r\n            \"batchId\": \"681fe319-3006-00a8-0022-9e7cde000000\"\r\n        }";
+				Object data2 = "{\r\n        \"api\": \"PutBlockList\",\r\n        \"clientRequestId\": \"4c5dd7fb-2c48-4a27-bb30-5361b5de920b\",\r\n        \"requestId\": \"9aeb0fdf-c01e-0131-0922-9eb549000001\",\r\n        \"eTag\": \"0x8D76C39E4407334\",\r\n        \"contentType\": \"image/png\",\r\n        \"contentLength\": 30699,\r\n        \"blobType\": \"BlockBlob\",\r\n        \"url\": \"https://gridtesting.blob.core.windows.net/testcontainer/{new-file}\",\r\n        \"sequencer\": \"000000000000000000000000000099240000000000c41c18\",\r\n        \"storageDiagnostics\": {\r\n            \"batchId\": \"681fe319-3006-00a8-0022-9e7cde000000\"\r\n        }";
 				context.SetupGet(c => c.BindingContext.BindingData).Returns(bindingData);
 
 				CloudEvent cloudEvent = new("\"/subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.Storage/storageAccounts/{storage-account}\"", "Microsoft.Storage.BlobCreated", data);
-				var ex = Record.Exception(() => new EventGridTriggerHandlerCloud(callMappings).Run(cloudEvent, context.Object));
+				CloudEvent cloudEvent2 = new("\"/subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.Storage/storageAccounts/{storage-account}\"", "Microsoft.Storage.BlobCreated", data2);
+				var ex = Record.Exception(() => new EventGridTriggerHandlerCloud(callMappings).Run(new CloudEvent[] { cloudEvent,cloudEvent2}, context.Object));
 				Assert.Null(ex);
 				
 			} catch(Exception ex)
@@ -86,9 +88,10 @@ namespace Extensions.AzureFunctions.Test
 				context.SetupGet(c => c.BindingContext.BindingData).Returns(bindingData);
 
 				Object data = "{\r\n        \"api\": \"PutBlockList\",\r\n        \"clientRequestId\": \"4c5dd7fb-2c48-4a27-bb30-5361b5de920a\",\r\n        \"requestId\": \"9aeb0fdf-c01e-0131-0922-9eb549000000\",\r\n        \"eTag\": \"0x8D76C39E4407333\",\r\n        \"contentType\": \"image/png\",\r\n        \"contentLength\": 30699,\r\n        \"blobType\": \"BlockBlob\",\r\n        \"url\": \"https://gridtesting.blob.core.windows.net/testcontainer/{new-file}\",\r\n        \"sequencer\": \"000000000000000000000000000099240000000000c41c18\",\r\n        \"storageDiagnostics\": {\r\n            \"batchId\": \"681fe319-3006-00a8-0022-9e7cde000000\"\r\n        }";
+				Object data2 = "{\r\n        \"api\": \"PutBlockList\",\r\n        \"clientRequestId\": \"4c5dd7fb-2c48-4a27-bb30-5361b5de920b\",\r\n        \"requestId\": \"9aeb0fdf-c01e-0131-0922-9eb549000001\",\r\n        \"eTag\": \"0x8D76C39E4407334\",\r\n        \"contentType\": \"image/png\",\r\n        \"contentLength\": 30699,\r\n        \"blobType\": \"BlockBlob\",\r\n        \"url\": \"https://gridtesting.blob.core.windows.net/testcontainer/{new-file}\",\r\n        \"sequencer\": \"000000000000000000000000000099240000000000c41c18\",\r\n        \"storageDiagnostics\": {\r\n            \"batchId\": \"681fe319-3006-00a8-0022-9e7cde000000\"\r\n        }";
 				EventGridEvent eventGridEvent = new EventGridEvent("TestEventAzureEventGridSchema", "GXTest", "1.0", data);
-
-				var ex = Record.Exception(() => new EventGridTriggerHandlerAzure(callMappings).Run(eventGridEvent, context.Object));
+				EventGridEvent eventGridEvent2 = new EventGridEvent("TestEventAzureEventGridSchema2", "GXTest", "1.0", data2);
+				var ex = Record.Exception(() => new EventGridTriggerHandlerAzure(callMappings).Run(new EventGridEvent[] { eventGridEvent,eventGridEvent2}, context.Object));
 				Assert.Null(ex);
 
 			}

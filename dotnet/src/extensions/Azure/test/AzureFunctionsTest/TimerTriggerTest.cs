@@ -29,9 +29,9 @@ namespace Extensions.AzureFunctions.Test
 
 				ICallMappings callMappings = new CallMappings(".");
 
-				MyScheduleStatus scheduleStatus = new MyScheduleStatus();
+				ScheduleStatus scheduleStatus = new ScheduleStatus();
 				scheduleStatus.Next = DateTime.Now.AddMinutes(10);
-				MyInfo myinfo = new();
+				TimerInfo myinfo = new();
 				myinfo.IsPastDue = false;
 				myinfo.ScheduleStatus = scheduleStatus;
 				
