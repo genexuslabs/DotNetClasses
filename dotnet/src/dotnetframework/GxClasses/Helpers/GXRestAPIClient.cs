@@ -29,7 +29,11 @@ namespace GeneXus.Application
 			Location.BaseUrl = "api";
 			Location.Host = "www.example.com";
 			Location.ResourceName = "service";
+#if NETCORE
+			Location.Port = 8082;
+#else
 			Location.Port = 80;
+#endif
 		}
 
 
@@ -40,7 +44,7 @@ namespace GeneXus.Application
 		public string ErrorMessage { get; set; }
 
 		public int StatusCode { get; set; }
-
+		public string StatusMessage { get ; set; }
 		public int ResponseCode { get => responseCode; set => responseCode = value; }
 		public string ResponseMessage { get => responseMessage; set => responseMessage = value; }
 		public string HttpMethod { get => httpMethod; set => httpMethod = value; }
@@ -336,6 +340,9 @@ namespace GeneXus.Application
 		public void RestExecute()
 		{
 			this.ErrorCode = 0;
+			this.ErrorMessage = "";
+			this.StatusCode = 0;
+			this.StatusMessage = "";
 			_queryString = String.Empty;
 			if (_queryVars.Count > 0)
 			{
@@ -380,16 +387,16 @@ namespace GeneXus.Application
 			serviceuri += "/" + this.Location.BaseUrl.TrimEnd('/').TrimStart('/') + "/" + this.Location.ResourceName;
 			serviceuri += _queryString;			
 			httpClient.HttpClientExecute( this.HttpMethod, serviceuri);
+			this.ErrorCode = httpClient.ErrCode;
+			this.ErrorMessage = httpClient.ErrDescription;
+			this.StatusCode = httpClient.StatusCode;
+			this.StatusMessage = httpClient.ReasonLine;
 			if (httpClient.StatusCode >= 300 || httpClient.ErrCode > 0)
 			{
-				this.ErrorCode = (httpClient.ErrCode == 0)? 1: httpClient.ErrCode;
-				this.ErrorMessage = httpClient.ErrDescription;
-				this.StatusCode = httpClient.StatusCode;
 				_responseData = new Dictionary<string, object>();
 			}
 			else
 			{
-				this.StatusCode = httpClient.StatusCode;
 				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestParameters(httpClient.ToString());
 			}
 		}
