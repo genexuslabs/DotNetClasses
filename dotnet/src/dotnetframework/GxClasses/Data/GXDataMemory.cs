@@ -862,10 +862,7 @@ namespace GeneXus.Data
 			else
 			{
 				Type type = value.GetType();
-
-				if (type.IsSubclassOf(typeof(ValueType)))
-					return value;
-				else if (type == typeof(string))
+				if (type.IsSubclassOf(typeof(ValueType)) || type == typeof(string))
 					return value;
 				else if (type == typeof(Stream))
 				{
@@ -874,6 +871,16 @@ namespace GeneXus.Data
 					oStream.CopyTo(memStream);
 					return memStream;
 				}
+#if NETCORE
+				else if (type == typeof(Pgvector.Vector))
+				{
+					Pgvector.Vector vector = (Pgvector.Vector)value;
+					float[] copyArray = new float[vector.Memory.Length];
+					vector.Memory.Span.CopyTo(copyArray);
+					Pgvector.Vector copyVector = new Pgvector.Vector(new ReadOnlyMemory<float>(copyArray));
+					return copyVector;
+				}
+#endif
                 else
 				{
                     byte[] valueByte = value as byte[];
