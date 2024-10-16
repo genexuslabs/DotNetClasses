@@ -21,7 +21,7 @@ namespace GeneXus.Utils
 			Dimensions = dimensions;
 			_embedding = new ReadOnlyMemory<float>(new float[dimensions]);
 		}
-		internal GxEmbedding(IReadOnlyList<double> embedding)
+		internal GxEmbedding(IReadOnlyList<double> embedding, string model, int dimensions): this(model, dimensions)
 		{
 			_embedding = embedding.Select(f => (float)f).ToArray();
 		}
@@ -43,7 +43,7 @@ namespace GeneXus.Utils
 			try
 			{
 				IReadOnlyList<double> embedding = EmbeddingService.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
-				return new GxEmbedding(embedding);
+				return new GxEmbedding(embedding, embeddingInfo.Model, embeddingInfo.Dimensions);
 			} catch (Exception ex)
 			{
 				GXUtil.ErrorToMessages("GenerateEmbedding Error", ex, Messages, false);
