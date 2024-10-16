@@ -1103,10 +1103,12 @@ namespace GeneXus.Utils
 			IsAssigned = true;
 		}
 
-	public virtual void SetDirty(string fieldName)
+		public virtual void SetDirty(string fieldName)
 		{
 			dirties[fieldName] = 1;
 		}
+		public bool IsNull { get => dirties.IsEmpty; }
+
 		public virtual bool IsDirty(string fieldName)
 		{
 			if (dirties.ContainsKey(fieldName))
