@@ -1048,6 +1048,7 @@ namespace GeneXus.Utils
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxUserType>();
 		protected ConcurrentDictionary<string,byte> dirties = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
 		private const string PROPERTY_PREFIX = "gxtpr_";
+		private const string FIELD_PREFIX = "gxTv_";
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
 		[XmlIgnore]
@@ -1117,9 +1118,10 @@ namespace GeneXus.Utils
 		}
 		public virtual void Copy(GxUserType source)
 		{
-			foreach (PropertyDescriptor item in TypeDescriptor.GetProperties(source))
+			foreach (FieldInfo item in GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
 			{
-				item.SetValue(this, item.GetValue(source));
+				if (item.Name.StartsWith(FIELD_PREFIX))
+					item.SetValue(this, item.GetValue(source));
 			}
 		}
 
@@ -1178,7 +1180,7 @@ namespace GeneXus.Utils
 					return false;
 				foreach (FieldInfo item in GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
 				{
-					if (item.Name.StartsWith("gxTv_"))
+					if (item.Name.StartsWith(FIELD_PREFIX))
 					{
 						GxUserType thisGxUserType = item.GetValue(this) as GxUserType;
 						GxUserType sourceGxUserType = item.GetValue(source) as GxUserType;
@@ -1669,7 +1671,7 @@ namespace GeneXus.Utils
 								{
 
 									string sVar = uploadPath.Replace(GXFormData.FORMDATA_REFERENCE, string.Empty);
-									MethodInfo setBlob = GetMethodInfo("gxtv_" + GetType().Name + "_" + name + "_setblob");
+									MethodInfo setBlob = GetMethodInfo(FIELD_PREFIX + GetType().Name + "_" + name + "_setblob");
 									if (setBlob != null)
 									{
 										if (HttpHelper.GetHttpRequestPostedFile(context, sVar, out uploadPath))
