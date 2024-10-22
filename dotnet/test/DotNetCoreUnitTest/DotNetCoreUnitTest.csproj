@@ -164,7 +164,6 @@
 
 	<ItemGroup>
 	  <Folder Include="ConfigMappings\" />
-	  <Folder Include="Domain\" />
 	  <Folder Include="Log\" />
 	  <Folder Include="PDF\" />
 	  <Folder Include="resources\xml\" />
