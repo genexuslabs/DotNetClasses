@@ -1,10 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net462</TargetFrameworks>
 		<OutputType>Library</OutputType>
-		<DefineConstants>NETCORE;NODATIME</DefineConstants>
-		<PackageId>GeneXus.Compression</PackageId>
+		<PackageId>GeneXus.Compression.Fmk</PackageId>
 		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
 		<NoWarn>618;1607;1698;SYSLIB0021;SYSLIB0027;SYSLIB0028;SYSLIB0023</NoWarn>
 	</PropertyGroup>
@@ -14,12 +13,12 @@
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" PrivateAssets="ALL" />
-		<PackageReference Include="SharpCompress" Version="0.37.2" />
+		<PackageReference Include="SharpCompress" Version="0.38.0" />
 		<PackageReference Include="SharpZipLib" Version="1.4.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\src\dotnetcore\GxClasses\GxClasses.csproj" />
+	  <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 
 </Project>
