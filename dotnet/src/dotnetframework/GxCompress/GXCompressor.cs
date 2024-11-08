@@ -1,20 +1,24 @@
 using System;
 using System.Collections.Generic;
-#if !NETCORE
+#if NETCORE
 using System.Formats.Tar;
 #endif
 using System.IO;
 using System.IO.Compression;
 using GeneXus;
 using GeneXus.Utils;
+using SharpCompress.Writers;
 using SharpCompress.Archives;
-using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
+#if !NETCORE
 using SharpCompress.Writers.Tar;
+#endif
+
+
 
 namespace Genexus.Compression
 {
-	public class GXCompressor : IGXCompressor
+	public class GXCompressor// : IGXCompressor
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(GXCompressor).FullName);
 
@@ -217,17 +221,22 @@ namespace Genexus.Compression
 			}
 		}
 
+#if !NETCORE
 		private static void CompressToTar(FileSystemInfo[] files, string outputPath)
 		{
-#if !NETCORE
+			TarWriterOptions tarOptions = new TarWriterOptions(CompressionType.LZip, false);//TarEntryFormat.Pax
 			using (FileStream tarStream = new FileStream(outputPath, FileMode.Create))
-			using (TarWriter tarWriter = new TarWriter(tarStream, TarEntryFormat.Pax, leaveOpen: false))
+
+			using (TarWriter tarWriter = new TarWriter(tarStream, tarOptions))
 			{
 				foreach (FileSystemInfo fsi in files)
 				{
 					if (fsi is FileInfo fileInfo)
 					{
-						tarWriter.WriteEntry(fileInfo.FullName, fileInfo.Name);
+						using (FileStream source = File.OpenRead(fsi.FullName))
+						{
+							tarWriter.Write(fileInfo.FullName, source);
+						}
 					}
 					else if (fsi is DirectoryInfo dirInfo)
 					{
@@ -235,20 +244,45 @@ namespace Genexus.Compression
 					}
 				}
 			}
+		}
 
-			void AddDirectoryToTar(TarWriter tarWriter, DirectoryInfo directory, string basePath)
+		static void AddDirectoryToTar(TarWriter tarWriter, DirectoryInfo directory, string basePath)
+		{
+			foreach (var file in directory.GetFiles())
 			{
-				foreach (var file in directory.GetFiles())
+				string entryName = file.FullName.Substring(basePath.Length + 1).Replace('\\', '/');
+				using (FileStream source = File.OpenRead(file.FullName))
 				{
-					string entryName = file.FullName.Substring(basePath.Length + 1).Replace('\\', '/');
-					tarWriter.WriteEntry(file.FullName, entryName);
-				}
-				foreach (var subDirectory in directory.GetDirectories())
-				{
-					AddDirectoryToTar(tarWriter, subDirectory, basePath);
+					tarWriter.Write(file.FullName, source);
 				}
 			}
+			foreach (var subDirectory in directory.GetDirectories())
+			{
+				AddDirectoryToTar(tarWriter, subDirectory, basePath);
+			}
+		}
+		static string GetRelativePath(string basePath, string fullPath)
+		{
+			Uri baseUri = new Uri(basePath);
+			Uri fullUri = new Uri(fullPath);
+
+			if (baseUri.Scheme != fullUri.Scheme)
+			{
+				throw new InvalidOperationException("Paths must have the same scheme");
+			}
+
+			Uri relativeUri = baseUri.MakeRelativeUri(fullUri);
+			return Uri.UnescapeDataString(relativeUri.ToString());
+		}
+
 #else
+		static string GetRelativePath(string basePath, string fullPath)
+		{
+			return Path.GetRelativePath(basePath, fullPath).Replace('\\', '/');
+		}
+
+		private static void CompressToTar(FileSystemInfo[] files, string outputPath)
+		{
 			using (FileStream tarStream = File.Create(outputPath))
 			using (var tarOutputStream = new ICSharpCode.SharpZipLib.Tar.TarOutputStream(tarStream))
 			{
@@ -264,8 +298,9 @@ namespace Genexus.Compression
 					}
 				}
 			}
+		}
 
-			void AddFileToTar(ICSharpCode.SharpZipLib.Tar.TarOutputStream tarOutputStream, string filePath, string entryName)
+		static void AddFileToTar(ICSharpCode.SharpZipLib.Tar.TarOutputStream tarOutputStream, string filePath, string entryName)
 			{
 				var entry = ICSharpCode.SharpZipLib.Tar.TarEntry.CreateEntryFromFile(filePath);
 				entry.Name = entryName.Replace('\\', '/');
@@ -278,7 +313,7 @@ namespace Genexus.Compression
 				tarOutputStream.CloseEntry();
 			}
 
-			void AddDirectoryFilesToTar(ICSharpCode.SharpZipLib.Tar.TarOutputStream tarOutputStream, DirectoryInfo directory, string basePath)
+		static void AddDirectoryFilesToTar(ICSharpCode.SharpZipLib.Tar.TarOutputStream tarOutputStream, DirectoryInfo directory, string basePath)
 			{
 				foreach (var file in directory.GetFiles())
 				{
@@ -291,11 +326,10 @@ namespace Genexus.Compression
 				}
 			}
 #endif
-		}
 
 		private static void CompressToGzip(FileSystemInfo[] files, string outputPath)
 		{
-#if !NETCORE
+#if NETCORE
 			string tempTarPath = Path.GetTempFileName();
 
 			using (FileStream tarStream = new FileStream(tempTarPath, FileMode.Create))
@@ -381,7 +415,7 @@ namespace Genexus.Compression
 			{
 				foreach (var file in directory.GetFiles())
 				{
-					string entryName = Path.GetRelativePath(basePath, file.FullName).Replace('\\', '/');
+					string entryName = GetRelativePath(basePath, file.FullName);
 					AddFileToTar(tarOutputStream, file.FullName, entryName);
 				}
 				foreach (var subDirectory in directory.GetDirectories())
@@ -432,7 +466,7 @@ namespace Genexus.Compression
 			{
 				foreach (var file in directory.GetFiles())
 				{
-					string entryName = Path.GetRelativePath(basePath, file.FullName).Replace('\\', '/');
+					string entryName = GetRelativePath(basePath, file.FullName);
 					AddFileToArchive(file.FullName, entryName, archive);
 				}
 				foreach (var subDirectory in directory.GetDirectories())
@@ -449,7 +483,7 @@ namespace Genexus.Compression
 
 		private static void DecompressTar(FileInfo file, string directory)
 		{
-#if !NETCORE
+#if NETCORE
 			TarFile.ExtractToDirectory(file.FullName, directory, overwriteFiles: true);
 #else
 			using (Stream inStream = File.OpenRead(file.FullName))
@@ -491,10 +525,10 @@ namespace Genexus.Compression
 
 		private static void Decompress7z(FileInfo file, string directory)
 		{
-			using (ArchiveFile archiveFile = new ArchiveFile(file.FullName))
+			/*using (ArchiveFile archiveFile = new ArchiveFile(file.FullName))
 			{
 				archiveFile.Extract(directory);
-			}
+			}*/
 		}
 
 		private static void DecompressJar(FileInfo file, string directory)
@@ -504,7 +538,7 @@ namespace Genexus.Compression
 
 		private static void DecompressRar(FileInfo file, string directory)
 		{
-			using (var archive = RarArchive.Open(file.FullName))
+			using (var archive = SharpCompress.Archives.Rar.RarArchive.Open(file.FullName))
 			{
 				foreach (var entry in archive.Entries)
 				{
