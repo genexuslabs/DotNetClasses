@@ -38,4 +38,21 @@
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
+	
+	<ItemGroup>
+		<Reference Include="iTextAsian" Condition="'$(TargetFramework)'=='net8.0'">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\net8.0\iTextAsian.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<Target Name="CustomContentTarget" Condition="'$(TargetFramework)'=='net8.0'">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(OutputPath)\iTextAsian.dll">
+				<PackagePath>lib/$(TargetFramework)</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
+
 </Project>
