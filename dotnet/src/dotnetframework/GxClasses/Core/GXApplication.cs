@@ -3764,6 +3764,7 @@ namespace GeneXus.Application
 		static Hashtable m_images = new Hashtable();
 
 		const string IMAGES_TXT = "Images.txt";
+		const string URL_SEPARATOR = "/";
 		Hashtable Images
 		{
 			get
@@ -3840,7 +3841,12 @@ namespace GeneXus.Application
 												string imagePath = parts[4];
 												string intExt = parts[3];
 												if (intExt[0] != 'E' && intExt[0] != 'e' && !Path.IsPathRooted(imagePath) && !imagePath.ToLower().StartsWith("http:"))
-													imagePath = Path.Combine(imgDir, KBPrefix + "Resources", imagePath);
+												{
+													if (!string.IsNullOrEmpty(imgDir))
+														imagePath = Path.Combine(imgDir, KBPrefix + "Resources", imagePath);
+													else
+														imagePath = KBPrefix + "Resources" + URL_SEPARATOR + imagePath;  
+												}
 												string parts12 = '_' + parts[1] + '_' + parts[2];
 
 												m_images[KBPrefix + parts[0] + parts12] = imagePath;
