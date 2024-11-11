@@ -5,6 +5,7 @@
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Itext PDF Report</PackageTags>
 		<PackageId>GeneXus.PdfReportsCS.Core</PackageId>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
 	<ItemGroup>
