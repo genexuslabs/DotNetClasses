@@ -190,24 +190,5 @@
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net8.0'">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\net8.0\Jayrock.dll</HintPath>
-		</Reference>
-		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net6.0'">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\Jayrock.dll</HintPath>
-			<Private>True</Private>
-		</Reference>
-	</ItemGroup>
-	<Target Name="CustomContentTarget" Condition="'$(TargetFramework)'=='net8.0'">
-		<ItemGroup>
-			<TfmSpecificPackageFile Include="$(OutputPath)\Jayrock.dll">
-				<PackagePath>lib/$(TargetFramework)</PackagePath>
-				<PackageCopyToOutput>true</PackageCopyToOutput>
-			</TfmSpecificPackageFile>
-		</ItemGroup>
-	</Target>
 
 </Project>
