@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<PackageTags>Genexus AI</PackageTags>
+		<PackageId>GeneXus.AI.Core</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+	  <PackageReference Include="OpenAI" Version="2.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+		  <ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+
+</Project>
