@@ -39,8 +39,6 @@ namespace GeneXus.AI
 			var handler = new SocketsHttpHandler
 			{
 				PooledConnectionLifetime = TimeSpan.FromMinutes(15.0),
-				//Proxy = new WebProxy("http://localhost:8888", false),
-				//UseProxy = true
 			};
 
 			var noAuthHandler = new NoAuthHeaderHandler
@@ -70,10 +68,12 @@ namespace GeneXus.AI
 			ChatCompletionOptions customOptions = new CustomChatCompletionOptions();
 			if (properties != null && properties.Count > 0)
 			{
-				PropertyInfo fieldInfo = customOptions.GetType().GetProperty("SerializedAdditionalRawData", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+				PropertyInfo fieldInfo = customOptions.GetType().GetProperty("SerializedAdditionalRawData", BindingFlags.Instance | BindingFlags.NonPublic);
 				IDictionary<string, BinaryData> SerializedAdditionalRawData = (IDictionary<string, BinaryData>)fieldInfo.GetValue(customOptions);
-				SerializedAdditionalRawData = new Dictionary<string, BinaryData>();
-				SerializedAdditionalRawData.Add("variables", BinaryData.FromString(properties.ToJSonString()));
+				SerializedAdditionalRawData = new Dictionary<string, BinaryData>
+				{
+					{ "variables", BinaryData.FromString(properties.ToJSonString()) }
+				};
 				fieldInfo.SetValue(customOptions, SerializedAdditionalRawData);
 			}
 			ChatClient client = _openAIClient.GetChatClient("saia:agent:e4e7a837-b8ad-4d25-b2db-431dda9af0af");

@@ -1,7 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using GeneXus.AI;
 using GeneXus.Utils;
-using NPOI.SS.Formula.Functions;
+using OpenAI.Chat;
 using Xunit;
 
 namespace DotNetCoreUnitTest.Domain
@@ -15,15 +16,15 @@ namespace DotNetCoreUnitTest.Domain
 			ReadOnlyMemory<float> embedding = await embeddingService.GenerateEmbeddingAsync("openai/text-embedding-3-small", 512, "Hello World");
 			Assert.False(embedding.IsEmpty);
 		}
-		/*[Fact]
+		[Fact(Skip ="Local test")]
 		public async Task AssistantTest()
 		{
-			EmbeddingService embeddingService = EmbeddingService.Instance;
+			AgentService agentService = AgentService.AgentHandlerInstance;
 			string userMessage =  "What's the weather like in Buenos Aires today?";
-			string context = "context for reference";
-			var embedding = await embeddingService.Assistant(userMessage, context);
-			Assert.NotNull(embedding);
+			GXProperties properties = new GXProperties();
+			properties.Set("$context", "context for reference");
+			ChatCompletion embedding = await agentService.Assistant(userMessage, properties);
+			Assert.NotNull(embedding.Content);
 		}
-		*/
 	}
 }
