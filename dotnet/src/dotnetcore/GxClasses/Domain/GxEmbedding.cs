@@ -37,7 +37,7 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				ReadOnlyMemory<float> embedding = AIEmbeddingactory.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
+				ReadOnlyMemory<float> embedding = AIEmbeddingFactory.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
 				return new GxEmbedding(embedding, embeddingInfo.Model, embeddingInfo.Dimensions);
 			}
 			catch (Exception ex)
@@ -55,9 +55,9 @@ namespace GeneXus.Utils
 	{
 		Task<ReadOnlyMemory<float>> GenerateEmbeddingAsync(string model, int dimensions, string input);
 	}
-	internal class AIEmbeddingactory
+	internal class AIEmbeddingFactory
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<AIEmbeddingactory>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<AIEmbeddingFactory>();
 
 		private static volatile IEmbeddingService instance;
 		private static object syncRoot = new object();
