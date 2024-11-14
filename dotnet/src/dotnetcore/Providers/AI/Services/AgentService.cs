@@ -16,6 +16,7 @@ namespace GeneXus.AI
 	{
 		const string SerializedAdditionalRawDataPty = "SerializedAdditionalRawData";
 		const string VARIABLES = "variables";
+		const string SAIA_AGENT = "saia:agent:";
 		private HttpClient _httpClient;
 		protected string API_KEY;
 		protected OpenAIClient _openAIClient;
@@ -59,7 +60,7 @@ namespace GeneXus.AI
 			_openAIClient = new OpenAIClient(new ApiKeyCredential(API_KEY), options);
 		}
 
-		internal async Task<ChatCompletion> Assistant(string modelId, string userMessage, GXProperties properties)
+		internal async Task<ChatCompletion> Assistant(string assistant, string userMessage, GXProperties properties)
 		{
 
 			List<ChatMessage> messages = new List<ChatMessage>
@@ -78,7 +79,7 @@ namespace GeneXus.AI
 				};
 				fieldInfo.SetValue(customOptions, SerializedAdditionalRawData);
 			}
-			ChatClient client = _openAIClient.GetChatClient(modelId);
+			ChatClient client = _openAIClient.GetChatClient($"{SAIA_AGENT}{assistant}");
 
 			ClientResult<ChatCompletion> response = await client.CompleteChatAsync(messages, customOptions);
 
