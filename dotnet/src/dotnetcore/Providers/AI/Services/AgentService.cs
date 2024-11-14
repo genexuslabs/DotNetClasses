@@ -2,7 +2,6 @@ using System;
 using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
@@ -10,52 +9,8 @@ using System.Threading.Tasks;
 using GeneXus.Configuration;
 using OpenAI;
 using OpenAI.Chat;
-using OpenAI.Embeddings;
-namespace GeneXus.Utils
+namespace GeneXus.AI
 {
-	internal class OpenAiService
-	{
-		protected OpenAIClient _openAIClient;
-		protected string API_KEY;
-		protected virtual string DEFAULT_PROVIDER => "https://api.saia.ai/embeddings";
-		protected virtual string DEFAULT_API_KEY => "apitokenfortest_";
-		protected const string AI_PROVIDER = "AI_PROVIDER";
-		protected const string AI_PROVIDER_API_KEY = "AI_PROVIDER_API_KEY";
-		internal OpenAiService()
-		{
-			string val;
-			Uri providerUri = new Uri(DEFAULT_PROVIDER);
-			API_KEY = DEFAULT_API_KEY;
-			if (Config.GetValueOf(AI_PROVIDER, out val))
-			{
-				providerUri = new Uri(val);
-			}
-			if (Config.GetValueOf(AI_PROVIDER_API_KEY, out val))
-			{
-				API_KEY = val;
-			}
-			OpenAIClientOptions options = new OpenAIClientOptions()
-			{
-				Endpoint = providerUri
-			};
-
-			_openAIClient = new OpenAIClient(new ApiKeyCredential(API_KEY), options);
-		}
-		public async Task<ReadOnlyMemory<float>> GenerateEmbeddingAsync(string model, int dimensions, string input)
-		{
-			OpenAIEmbeddingCollection data = await GenerateEmbeddingAsync(model, dimensions, new List<string> { input });
-			return data.First().ToFloats();
-		}
-		public async Task<OpenAIEmbeddingCollection> GenerateEmbeddingAsync(string model, int dimensions, IEnumerable<string> input)
-		{
-			EmbeddingClient client = _openAIClient.GetEmbeddingClient(model);
-			EmbeddingGenerationOptions options = new EmbeddingGenerationOptions() { Dimensions = dimensions };
-			ClientResult<OpenAIEmbeddingCollection> clientResult = await client.GenerateEmbeddingsAsync(input, options);
-
-			return clientResult.Value;
-		}
-
-	}
 	internal class AgentService
 	{
 		private HttpClient _httpClient;
@@ -132,56 +87,28 @@ namespace GeneXus.Utils
 			return response.Value;
 
 		}
-
-	}
-	internal class AIService : IAIService
-	{
-		//static readonly IGXLogger log = GXLoggerFactory.GetLogger<AIService>();
-		private static volatile OpenAiService m_EmbeddingInstance;
-		private static volatile AgentService m_AgentInstance;
+		private static volatile AgentService m_Instance;
 		private static object m_SyncRoot = new Object();
-
-		internal static OpenAiService EmbeddingHandlerInstance
-		{
-			get
-			{
-				if (m_EmbeddingInstance == null)
-				{
-					lock (m_SyncRoot)
-					{
-						if (m_EmbeddingInstance == null)
-							m_EmbeddingInstance = new OpenAiService();
-					}
-				}
-				return m_EmbeddingInstance;
-			}
-		}
 		internal static AgentService AgentHandlerInstance
 		{
 			get
 			{
-				if (m_AgentInstance == null)
+				if (m_Instance == null)
 				{
 					lock (m_SyncRoot)
 					{
-						if (m_AgentInstance == null)
-							m_AgentInstance = new AgentService();
+						if (m_Instance == null)
+							m_Instance = new AgentService();
 					}
 				}
-				return m_AgentInstance;
+				return m_Instance;
 			}
 		}
-		public async Task<OpenAIEmbeddingCollection> GenerateEmbeddingAsync(string model, int dimensions, IEnumerable<string> input)
-		{
-			return await EmbeddingHandlerInstance.GenerateEmbeddingAsync(model, dimensions, input);
-		}
 
-		public Task<ReadOnlyMemory<float>> GenerateEmbeddingAsync(string model, int dimensions, string input)
-		{
-			return EmbeddingHandlerInstance.GenerateEmbeddingAsync(model, dimensions, input);
-		}
+
 	}
-		public class Variable
+
+	public class Variable
 	{
 		public string Key { get; set; }
 		public string Value { get; set; }
