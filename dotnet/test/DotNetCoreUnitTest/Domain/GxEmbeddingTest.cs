@@ -11,7 +11,7 @@ namespace DotNetCoreUnitTest.Domain
 		[Fact(Skip ="Local test")]
 		public async Task EmbeddingTest()
 		{
-			IEmbeddingService embeddingService = AIEmbeddingactory.Instance;
+			IEmbeddingService embeddingService = AIEmbeddingFactory.Instance;
 			ReadOnlyMemory<float> embedding = await embeddingService.GenerateEmbeddingAsync("openai/text-embedding-3-small", 512, "Hello World");
 			Assert.False(embedding.IsEmpty);
 		}

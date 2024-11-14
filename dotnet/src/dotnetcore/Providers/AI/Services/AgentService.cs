@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Configuration;
+using GeneXus.Utils;
 using OpenAI;
 using OpenAI.Chat;
 namespace GeneXus.AI
@@ -58,27 +59,23 @@ namespace GeneXus.AI
 			_openAIClient = new OpenAIClient(new ApiKeyCredential(API_KEY), options);
 		}
 
-		internal async Task<ChatCompletion> Assistant(string userMessage, string context)
+		internal async Task<ChatCompletion> Assistant(string userMessage, GXProperties properties)
 		{
 
 			List<ChatMessage> messages = new List<ChatMessage>
 			{
-				new SystemChatMessage($"$context: {context}"),
 				new UserChatMessage(userMessage)
 			};
 
 			ChatCompletionOptions customOptions = new CustomChatCompletionOptions();
-			PropertyInfo fieldInfo = customOptions.GetType().GetProperty("SerializedAdditionalRawData", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-			IDictionary<string, BinaryData> SerializedAdditionalRawData = (IDictionary<string, BinaryData>)fieldInfo.GetValue(customOptions);
-			SerializedAdditionalRawData = new Dictionary<string, BinaryData>();
-			List<object> variables = new List<object>
+			if (properties != null && properties.Count > 0)
 			{
-				new { key = "$context", value = context },
-				new { key = "$location", value = "location" }
-			};
-			SerializedAdditionalRawData.Add("variables", BinaryData.FromString("{\"key\": \"$context\", \"value\": \"context string\"}"));
-			fieldInfo.SetValue(customOptions, SerializedAdditionalRawData);
-
+				PropertyInfo fieldInfo = customOptions.GetType().GetProperty("SerializedAdditionalRawData", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+				IDictionary<string, BinaryData> SerializedAdditionalRawData = (IDictionary<string, BinaryData>)fieldInfo.GetValue(customOptions);
+				SerializedAdditionalRawData = new Dictionary<string, BinaryData>();
+				SerializedAdditionalRawData.Add("variables", BinaryData.FromString(properties.ToJSonString()));
+				fieldInfo.SetValue(customOptions, SerializedAdditionalRawData);
+			}
 			ChatClient client = _openAIClient.GetChatClient("saia:agent:e4e7a837-b8ad-4d25-b2db-431dda9af0af");
 
 			ClientResult<ChatCompletion> response = await client.CompleteChatAsync(messages, customOptions);
