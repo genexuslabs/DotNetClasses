@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<OutputType>Library</OutputType>
 		<DefineConstants>NETCORE;NODATIME</DefineConstants>
 		<PackageTags>Data Access</PackageTags>
 		<PackageId>GeneXus.Classes.Core</PackageId>
 		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
 		<NoWarn>618;1607;1698;SYSLIB0021;SYSLIB0027;SYSLIB0028;SYSLIB0023</NoWarn>
-		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
    <ItemGroup>
@@ -166,7 +165,7 @@
 		<PackageReference Include="Pgvector" Version="0.3.0" PrivateAssets="All" />
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-		<PackageReference Include="MySqlConnector" Version="2.2.3" />
+		<PackageReference Include="MySqlConnector" Version="2.2.3" PrivateAssets="All"/>
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" />
 		<PackageReference Include="NodaTime" Version="3.1.9" />
 		<PackageReference Include="Novell.Directory.Ldap.NETStandard" Version="3.3.1" />
@@ -189,24 +188,5 @@
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net8.0'">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\net8.0\Jayrock.dll</HintPath>
-		</Reference>
-		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net6.0'">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\Jayrock.dll</HintPath>
-			<Private>True</Private>
-		</Reference>
-	</ItemGroup>
-	<Target Name="CustomContentTarget" Condition="'$(TargetFramework)'=='net8.0'">
-		<ItemGroup>
-			<TfmSpecificPackageFile Include="$(OutputPath)\Jayrock.dll">
-				<PackagePath>lib/$(TargetFramework)</PackagePath>
-				<PackageCopyToOutput>true</PackageCopyToOutput>
-			</TfmSpecificPackageFile>
-		</ItemGroup>
-	</Target>
 
 </Project>
