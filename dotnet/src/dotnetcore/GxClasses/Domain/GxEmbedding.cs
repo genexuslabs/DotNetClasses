@@ -37,7 +37,7 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				ReadOnlyMemory<float> embedding = AIServiceFactory.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
+				ReadOnlyMemory<float> embedding = AIEmbeddingactory.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
 				return new GxEmbedding(embedding, embeddingInfo.Model, embeddingInfo.Dimensions);
 			}
 			catch (Exception ex)
@@ -51,18 +51,18 @@ namespace GeneXus.Utils
 
 		internal ReadOnlyMemory<float> Data => _embedding;
 	}
-	internal interface IAIService
+	internal interface IEmbeddingService
 	{
 		Task<ReadOnlyMemory<float>> GenerateEmbeddingAsync(string model, int dimensions, string input);
 	}
-	internal class AIServiceFactory
+	internal class AIEmbeddingactory
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<AIServiceFactory>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<AIEmbeddingactory>();
 
-		private static volatile IAIService instance;
+		private static volatile IEmbeddingService instance;
 		private static object syncRoot = new object();
-		private const string AI_PROVIDER = "GeneXus.AI.Core, GxAI, Version=10.1.0.0, Culture=neutral, PublicKeyToken=null";
-		public static IAIService Instance
+		private const string AI_PROVIDER = "GeneXus.AI.EmbeddingService, GxAI, Version=10.1.0.0, Culture=neutral, PublicKeyToken=null";
+		public static IEmbeddingService Instance
 		{
 			get
 			{
@@ -76,7 +76,7 @@ namespace GeneXus.Utils
 							try
 							{
 								Type type = AssemblyLoader.GetType(AI_PROVIDER);
-								instance = (IAIService)Activator.CreateInstance(type);
+								instance = (IEmbeddingService)Activator.CreateInstance(type);
 							}
 							catch (Exception e)
 							{
