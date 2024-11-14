@@ -14,6 +14,8 @@ namespace GeneXus.AI
 {
 	internal class AgentService
 	{
+		const string SerializedAdditionalRawDataPty = "SerializedAdditionalRawData";
+		const string VARIABLES = "variables";
 		private HttpClient _httpClient;
 		protected string API_KEY;
 		protected OpenAIClient _openAIClient;
@@ -57,7 +59,7 @@ namespace GeneXus.AI
 			_openAIClient = new OpenAIClient(new ApiKeyCredential(API_KEY), options);
 		}
 
-		internal async Task<ChatCompletion> Assistant(string userMessage, GXProperties properties)
+		internal async Task<ChatCompletion> Assistant(string modelId, string userMessage, GXProperties properties)
 		{
 
 			List<ChatMessage> messages = new List<ChatMessage>
@@ -68,19 +70,19 @@ namespace GeneXus.AI
 			ChatCompletionOptions customOptions = new CustomChatCompletionOptions();
 			if (properties != null && properties.Count > 0)
 			{
-				PropertyInfo fieldInfo = customOptions.GetType().GetProperty("SerializedAdditionalRawData", BindingFlags.Instance | BindingFlags.NonPublic);
+				PropertyInfo fieldInfo = customOptions.GetType().GetProperty(SerializedAdditionalRawDataPty, BindingFlags.Instance | BindingFlags.NonPublic);
 				IDictionary<string, BinaryData> SerializedAdditionalRawData = (IDictionary<string, BinaryData>)fieldInfo.GetValue(customOptions);
 				SerializedAdditionalRawData = new Dictionary<string, BinaryData>
 				{
-					{ "variables", BinaryData.FromString(properties.ToJSonString()) }
+					{ VARIABLES, BinaryData.FromString(properties.ToJSonString()) }
 				};
 				fieldInfo.SetValue(customOptions, SerializedAdditionalRawData);
 			}
-			ChatClient client = _openAIClient.GetChatClient("saia:agent:e4e7a837-b8ad-4d25-b2db-431dda9af0af");
+			ChatClient client = _openAIClient.GetChatClient(modelId);
 
 			ClientResult<ChatCompletion> response = await client.CompleteChatAsync(messages, customOptions);
 
-			Console.Write(response.GetRawResponse().Content.ToString());
+			//Console.Write(response.GetRawResponse().Content.ToString());
 			return response.Value;
 
 		}
@@ -105,17 +107,17 @@ namespace GeneXus.AI
 
 	}
 
-	public class Variable
+	internal class Variable
 	{
 		public string Key { get; set; }
 		public string Value { get; set; }
 	}
 
-	public class CustomChatCompletionOptions : ChatCompletionOptions
+	internal class CustomChatCompletionOptions : ChatCompletionOptions
 	{
 		public List<Variable> Variables { get; set; }
 	}
-	public class NoAuthHeaderHandler : DelegatingHandler
+	internal class NoAuthHeaderHandler : DelegatingHandler
 	{
 		protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 		{

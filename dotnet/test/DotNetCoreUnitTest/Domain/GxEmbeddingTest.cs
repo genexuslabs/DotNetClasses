@@ -21,9 +21,10 @@ namespace DotNetCoreUnitTest.Domain
 		{
 			AgentService agentService = AgentService.AgentHandlerInstance;
 			string userMessage =  "What's the weather like in Buenos Aires today?";
+			string modelId = "saia:agent:e4e7a837-b8ad-4d25-b2db-431dda9af0af";
 			GXProperties properties = new GXProperties();
 			properties.Set("$context", "context for reference");
-			ChatCompletion embedding = await agentService.Assistant(userMessage, properties);
+			ChatCompletion embedding = await agentService.Assistant(modelId, userMessage, properties);
 			Assert.NotNull(embedding.Content);
 		}
 	}
