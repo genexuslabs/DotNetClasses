@@ -4,7 +4,13 @@ namespace GeneXus.Utils
 {
 	public class CallResult
 	{
-		public CallResult() { }
+		msglist m_Messages;
+		public CallResult()
+		{
+			m_Messages = new msglist(); 
+		}
+		internal bool IsFail { get; set; }
+
 		public bool Success()
 		{
 			return true;
@@ -15,11 +21,16 @@ namespace GeneXus.Utils
 		}
 		public msglist GetMessages()
 		{
-			return new msglist();
+			return m_Messages;
 		}
 		public string ToJson()
 		{
-			return "{}";
+			return m_Messages.ToJSonString();
+		}
+
+		internal void AddMessage(string v)
+		{
+			m_Messages.Add(v);
 		}
 	}
 }
