@@ -4,7 +4,7 @@ using OpenAI.Chat;
 
 namespace GeneXus.AI
 {
-	internal class GXAgent : GXProcedure
+	public class GXAgent : GXProcedure
 	{
 		protected string CallAssistant(string modelId, GXProperties properties, CallResult result)
 		{
