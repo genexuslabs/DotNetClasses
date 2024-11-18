@@ -56,7 +56,7 @@ namespace Genexus.Compression
 			}
 		}
 
-		public static bool Compress(List<string> files, string path, ref GXBaseCollection<SdtMessages_Message> messages)
+		public static bool Compress(List<string> files, string path, long maxCombinedFileSize, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			if (files.Count == 0)
 			{
@@ -65,17 +65,42 @@ namespace Genexus.Compression
 				return false;
 			}
 
+			long totalSize = 0;
 			List<FileInfo> toCompress = new List<FileInfo>();
 			foreach (string filePath in files)
 			{
-				FileInfo file = new FileInfo(filePath);
-				if (!file.Exists)
+				var file = new FileInfo(filePath);
+				try
 				{
-					GXLogging.Error(log, $"{GetMessage("FILE_NOT_EXISTS")}{filePath}");
-					StorageMessages($"{GetMessage("FILE_NOT_EXISTS")}" + filePath, messages);
-					continue;
+					string normalizedPath = Path.GetFullPath(filePath);
+					if (!file.Exists)
+					{
+						GXLogging.Error(log, $"{GetMessage("FILE_NOT_EXISTS")}{filePath}");
+						StorageMessages($"{GetMessage("FILE_NOT_EXISTS")}" + filePath, messages);
+						continue;
+					}
+					if (normalizedPath.Contains(Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar) ||
+						normalizedPath.EndsWith(Path.DirectorySeparatorChar + "..") ||
+						normalizedPath.StartsWith(".." + Path.DirectorySeparatorChar))
+					{
+						GXLogging.Error(log, "Potential directory traversal attack detected: " + normalizedPath);
+						StorageMessages("Potential directory traversal attack detected: " + normalizedPath, messages);
+						return false;
+					}
+					long fileSize = file.Length;
+					totalSize += fileSize;
+					if (totalSize > maxCombinedFileSize)
+					{
+						GXLogging.Error(log, "The files selected for compression exceed the maximum permitted file size of " + maxCombinedFileSize);
+						StorageMessages("The files selected for compression exceed the maximum permitted file size of " + maxCombinedFileSize, messages);
+						break;
+					}
+					toCompress.Add(file);
 				}
-				toCompress.Add(file);
+				catch (IOException e)
+				{
+					GXLogging.Error(log, "Error normalizing path for file " + filePath, e);
+				}
 			}
 
 			if (toCompress.Count == 0)
