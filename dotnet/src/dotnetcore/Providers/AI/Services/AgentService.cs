@@ -14,6 +14,7 @@ namespace GeneXus.AI
 {
 	internal class AgentService
 	{
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<AgentService>();
 		const string SerializedAdditionalRawDataPty = "SerializedAdditionalRawData";
 		const string VARIABLES = "variables";
 		const string SAIA_AGENT = "saia:agent:";
@@ -62,29 +63,35 @@ namespace GeneXus.AI
 
 		internal async Task<ChatCompletion> Assistant(string assistant, string userMessage, GXProperties properties)
 		{
-
-			List<ChatMessage> messages = new List<ChatMessage>
+			try
+			{
+				List<ChatMessage> messages = new List<ChatMessage>
 			{
 				new UserChatMessage(userMessage)
 			};
 
-			ChatCompletionOptions customOptions = new CustomChatCompletionOptions();
-			if (properties != null && properties.Count > 0)
-			{
-				PropertyInfo fieldInfo = customOptions.GetType().GetProperty(SerializedAdditionalRawDataPty, BindingFlags.Instance | BindingFlags.NonPublic);
-				IDictionary<string, BinaryData> SerializedAdditionalRawData = (IDictionary<string, BinaryData>)fieldInfo.GetValue(customOptions);
-				SerializedAdditionalRawData = new Dictionary<string, BinaryData>
+				ChatCompletionOptions customOptions = new CustomChatCompletionOptions();
+				if (properties != null && properties.Count > 0)
+				{
+					PropertyInfo fieldInfo = customOptions.GetType().GetProperty(SerializedAdditionalRawDataPty, BindingFlags.Instance | BindingFlags.NonPublic);
+					IDictionary<string, BinaryData> SerializedAdditionalRawData = (IDictionary<string, BinaryData>)fieldInfo.GetValue(customOptions);
+					SerializedAdditionalRawData = new Dictionary<string, BinaryData>
 				{
 					{ VARIABLES, BinaryData.FromString(properties.ToJSonString()) }
 				};
-				fieldInfo.SetValue(customOptions, SerializedAdditionalRawData);
+					fieldInfo.SetValue(customOptions, SerializedAdditionalRawData);
+				}
+				ChatClient client = _openAIClient.GetChatClient($"{SAIA_AGENT}{assistant}");
+
+				ClientResult<ChatCompletion> response = await client.CompleteChatAsync(messages, customOptions);
+				//Console.Write(response.GetRawResponse().Content.ToString());
+				return response.Value;
 			}
-			ChatClient client = _openAIClient.GetChatClient($"{SAIA_AGENT}{assistant}");
-
-			ClientResult<ChatCompletion> response = await client.CompleteChatAsync(messages, customOptions);
-
-			//Console.Write(response.GetRawResponse().Content.ToString());
-			return response.Value;
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Error calling Agent ",assistant, ex);
+				throw;
+			}
 
 		}
 		private static volatile AgentService m_Instance;
