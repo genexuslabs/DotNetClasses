@@ -29,7 +29,7 @@ namespace Genexus.Compression
 
 		public bool Save()
 		{
-			return GXCompressor.Compress(filesToCompress, path, ref this.messages);
+			return GXCompressor.Compress(filesToCompress, path, -1, ref this.messages);
 		}
 
 		public void Clear()

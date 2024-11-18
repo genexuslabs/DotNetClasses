@@ -89,7 +89,7 @@ namespace Genexus.Compression
 					}
 					long fileSize = file.Length;
 					totalSize += fileSize;
-					if (totalSize > maxCombinedFileSize)
+					if (totalSize > maxCombinedFileSize && maxCombinedFileSize > -1)
 					{
 						GXLogging.Error(log, "The files selected for compression exceed the maximum permitted file size of " + maxCombinedFileSize);
 						StorageMessages("The files selected for compression exceed the maximum permitted file size of " + maxCombinedFileSize, messages);
