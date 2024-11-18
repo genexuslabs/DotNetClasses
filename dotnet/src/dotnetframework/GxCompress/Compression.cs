@@ -7,6 +7,7 @@ namespace Genexus.Compression
 	{
 
 		private string path;
+		private long MaxCombinedFileSize;
 		private List<string> filesToCompress;
 		private GXBaseCollection<SdtMessages_Message> messages;
 
@@ -15,9 +16,10 @@ namespace Genexus.Compression
 			filesToCompress = new List<string>();
 		}
 
-		public Compression(string path, ref GXBaseCollection<SdtMessages_Message> messages)
+		public Compression(string path, long MaxCombinedFileSize, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			this.path = path;
+			this.MaxCombinedFileSize = MaxCombinedFileSize;
 			this.messages = messages;
 			filesToCompress = new List<string>();
 		}
@@ -29,7 +31,7 @@ namespace Genexus.Compression
 
 		public bool Save()
 		{
-			return GXCompressor.Compress(filesToCompress, path, -1, ref this.messages);
+			return GXCompressor.Compress(filesToCompress, path, MaxCombinedFileSize, ref this.messages);
 		}
 
 		public void Clear()

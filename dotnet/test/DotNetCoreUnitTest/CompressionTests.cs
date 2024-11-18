@@ -87,7 +87,7 @@ namespace xUnitTesting
 
 				string zipFilePath = Path.Combine(Path.GetTempPath(), "test.zip");
 
-				bool compressResult = GXCompressor.Compress(itemsToCompress, zipFilePath, 0, ref messages);
+				bool compressResult = GXCompressor.Compress(itemsToCompress, zipFilePath, -1, ref messages);
 				Assert.True(compressResult);
 
 				CleanupTestFiles(filePaths, dirPaths, rootPath);
@@ -141,7 +141,7 @@ namespace xUnitTesting
 
 				string tarFilePath = Path.Combine(Path.GetTempPath(), "test.tar");
 
-				bool compressResult = GXCompressor.Compress(itemsToCompress, tarFilePath, 0, ref messages);
+				bool compressResult = GXCompressor.Compress(itemsToCompress, tarFilePath, -1, ref messages);
 				Assert.True(compressResult);
 
 				CleanupTestFiles(filePaths, dirPaths, rootPath);
@@ -240,7 +240,7 @@ namespace xUnitTesting
 
 				string jarFilePath = Path.Combine(Path.GetTempPath(), "test.jar");
 
-				bool compressResult = GXCompressor.Compress(itemsToCompress, jarFilePath, 0, ref messages);
+				bool compressResult = GXCompressor.Compress(itemsToCompress, jarFilePath, -1, ref messages);
 				Assert.True(compressResult);
 
 				CleanupTestFiles(filePaths, dirPaths, rootPath);
@@ -294,7 +294,7 @@ namespace xUnitTesting
 
 				string unsupportedFilePath = Path.Combine(Path.GetTempPath(), "test.unsupported");
 
-				bool compressResult = GXCompressor.Compress(itemsToCompress, unsupportedFilePath, 0, ref messages);
+				bool compressResult = GXCompressor.Compress(itemsToCompress, unsupportedFilePath, -1, ref messages);
 				Assert.False(compressResult);
 			}
 			finally

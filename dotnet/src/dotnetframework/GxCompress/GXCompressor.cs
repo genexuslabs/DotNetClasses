@@ -18,7 +18,7 @@ using SharpCompress.Writers.Tar;
 
 namespace Genexus.Compression
 {
-	public class GXCompressor// : IGXCompressor
+	public class GXCompressor
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(GXCompressor).FullName);
 
@@ -56,7 +56,7 @@ namespace Genexus.Compression
 			}
 		}
 
-		public static bool Compress(List<string> files, string path, long maxCombinedFileSize, ref GXBaseCollection<SdtMessages_Message> messages)
+		public static bool Compress(List<string> files, string path, long MaxCombinedFileSize, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			if (files.Count == 0)
 			{
@@ -89,10 +89,10 @@ namespace Genexus.Compression
 					}
 					long fileSize = file.Length;
 					totalSize += fileSize;
-					if (totalSize > maxCombinedFileSize && maxCombinedFileSize > -1)
+					if (totalSize > MaxCombinedFileSize && MaxCombinedFileSize > -1)
 					{
-						GXLogging.Error(log, "The files selected for compression exceed the maximum permitted file size of " + maxCombinedFileSize);
-						StorageMessages("The files selected for compression exceed the maximum permitted file size of " + maxCombinedFileSize, messages);
+						GXLogging.Error(log, "The files selected for compression exceed the maximum permitted file size of " + MaxCombinedFileSize);
+						StorageMessages("The files selected for compression exceed the maximum permitted file size of " + MaxCombinedFileSize, messages);
 						break;
 					}
 					toCompress.Add(file);
@@ -143,9 +143,9 @@ namespace Genexus.Compression
 			}
 		}
 
-		public static Compression NewCompression(string path, string format, ref GXBaseCollection<SdtMessages_Message> messages)
+		public static Compression NewCompression(string path, long MaxCombinedFileSize, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
-			return new Compression(path, ref messages);
+			return new Compression(path, MaxCombinedFileSize, ref messages);
 		}
 
 		public static bool Decompress(string file, string path, ref GXBaseCollection<SdtMessages_Message> messages)
