@@ -834,9 +834,9 @@ namespace GeneXus.Utils
 			{
 				int StatusCode=-1;									
 				Byte[] ByteArray = new Byte[responselength];			
-				String statuscodestr;							
-				responseStream.Read(ByteArray,0,responselength);		
-				statuscodestr=Encoding.ASCII.GetString(ByteArray,0,responselength);			
+				String statuscodestr;
+				int bytesRead = responseStream.Read(ByteArray, 0, responselength);
+				statuscodestr = Encoding.ASCII.GetString(ByteArray,0, bytesRead);			
 				if (responselength==5 && ByteArray[responselength-1] == '\n')	
 				{
 					
