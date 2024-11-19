@@ -9,18 +9,18 @@ using OpenAI;
 using OpenAI.Embeddings;
 namespace GeneXus.AI
 {
-	internal class EmbeddingService : IEmbeddingService
+	public class EmbeddingService : IEmbeddingService
 	{
 		protected OpenAIClient _openAIClient;
 		protected string API_KEY;
-		protected virtual string DEFAULT_PROVIDER => "https://api.saia.ai/embeddings";
+		protected virtual string DEFAULT_PROVIDER => "https://api.saia.ai";
 		protected virtual string DEFAULT_API_KEY => "apitokenfortest_";
 		protected const string AI_PROVIDER = "AI_PROVIDER";
 		protected const string AI_PROVIDER_API_KEY = "AI_PROVIDER_API_KEY";
 		private static volatile EmbeddingService m_instance;
 		private static object m_SyncRoot = new Object();
 
-		internal EmbeddingService()
+		public EmbeddingService()
 		{
 			string val;
 			Uri providerUri = new Uri(DEFAULT_PROVIDER);
