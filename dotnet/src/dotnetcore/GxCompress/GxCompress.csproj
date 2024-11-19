@@ -12,7 +12,6 @@
 	<ItemGroup>
 	  <Compile Include="..\..\dotnetframework\GxCompress\Compression.cs" Link="Compression.cs" />
 	  <Compile Include="..\..\dotnetframework\GxCompress\GXCompressor.cs" Link="GXCompressor.cs" />
-	  <Compile Include="..\..\dotnetframework\GxCompress\IGXCompressor.cs" Link="IGXCompressor.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
