@@ -14,7 +14,7 @@
 	
 	<PropertyGroup>
 		<DumpSolutionName>TempSolution</DumpSolutionName>
-		<DumpSolutionTargetFrameworkDefault>net6</DumpSolutionTargetFrameworkDefault>
+		<DumpSolutionTargetFrameworkDefault>net8</DumpSolutionTargetFrameworkDefault>
 	</PropertyGroup>
 	
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND '$(TargetFramework)'=='$(TF)' AND '$(DeployDirectory)'!='' AND '$(IsPackable)'=='true'" AfterTargets="Build">
