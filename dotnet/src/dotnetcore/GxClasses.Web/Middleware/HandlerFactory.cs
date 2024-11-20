@@ -134,9 +134,12 @@ namespace GeneXus.HttpHandlerFactory
 			GXLogging.Debug(log, "GetHandler url:", url);
 
 			IHttpHandler handlerToReturn =null;
-
-			int idx = url.LastIndexOf('.');
+			int idx = -1;
 			string cname0;
+			if (url.EndsWith(HttpHelper.ASPX, StringComparison.OrdinalIgnoreCase))
+			{
+				idx = url.LastIndexOf('.');
+			}
 			if (idx >= 0)
 				cname0 = url.Substring(0, url.LastIndexOf('.')).ToLower();
 			else
