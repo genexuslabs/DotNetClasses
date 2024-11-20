@@ -70,13 +70,13 @@ namespace GeneXus.Metadata
 			}
 		}
         static ConcurrentDictionary<string, Type> loadedAssemblies = new ConcurrentDictionary<string, Type>();
-		static public Type FindType(string defaultAssemblyName, string clss, Assembly defaultAssembly, bool ignoreCase = false)
+		static public Type FindType(string defaultAssemblyName, string clss, Assembly defaultAssembly, bool ignoreCase = false, bool ignoreError=false)
 		{
-			return FindType(defaultAssemblyName, string.Empty, clss, defaultAssembly, ignoreCase);
+			return FindType(defaultAssemblyName, string.Empty, clss, defaultAssembly, ignoreCase, ignoreError);
 		}
 		//ns = kb Namespace
 		//clssWithoutNamespace = fullname genexus object (includes module), p.e. genexus.sd.synchronization.offlineeventreplicator
-		static public Type FindType(string defaultAssemblyName, string ns, string clssWithoutNamespace, Assembly defaultAssembly, bool ignoreCase = false)
+		static public Type FindType(string defaultAssemblyName, string ns, string clssWithoutNamespace, Assembly defaultAssembly, bool ignoreCase = false, bool ignoreError = false)
 		{
 
 			string clss = string.IsNullOrEmpty(ns) ? clssWithoutNamespace : string.Format("{0}.{1}", ns, clssWithoutNamespace);
@@ -143,7 +143,7 @@ namespace GeneXus.Metadata
 				{
 					if (ns != appNS) 
 					{
-						return FindType(defaultAssemblyName, appNS, clssWithoutNamespace, defaultAssembly);
+						return FindType(defaultAssemblyName, appNS, clssWithoutNamespace, defaultAssembly, ignoreCase, ignoreError);
 					}
 				}
 				if (objType == null)
@@ -168,7 +168,7 @@ namespace GeneXus.Metadata
 							defaultAssemblyName = parts[1];
 							clss = parts[0];
 						}
-						return FindType(defaultAssemblyName, string.Empty, clss, defaultAssembly);
+						return FindType(defaultAssemblyName, string.Empty, clss, defaultAssembly, ignoreCase, ignoreError);
 					}
 				}
 
@@ -207,8 +207,13 @@ namespace GeneXus.Metadata
             }
 			if (objType == null)
 			{
-				GXLogging.Error(log, "Failed to load type: " + clss + " from currentdomain");
-				throw new GxClassLoaderException("Failed to load type: " + clss);
+				if (ignoreError)
+					GXLogging.Warn(log, "Failed to load type: " + clss + " from currentdomain");
+				else
+				{
+					GXLogging.Error(log, "Failed to load type: " + clss + " from currentdomain");
+					throw new GxClassLoaderException("Failed to load type: " + clss);
+				}
 			}
 			return objType;
 
