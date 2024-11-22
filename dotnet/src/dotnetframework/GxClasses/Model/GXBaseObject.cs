@@ -294,7 +294,7 @@ namespace GeneXus.Application
 
 		private string RemoveExtensionFromUrlPath(string urlPath)
 		{
-			if (urlPath.EndsWith(".aspx"))
+			if (urlPath.EndsWith(HttpHelper.ASPX))
 				return urlPath.Substring(0, urlPath.Length - 5);
 			return urlPath;
 		}

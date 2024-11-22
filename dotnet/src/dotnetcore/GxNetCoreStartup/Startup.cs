@@ -469,12 +469,8 @@ namespace GeneXus.Application
 			Config.ScriptPath = string.IsNullOrEmpty(basePath) ? "/" : basePath;
 			app.MapWebSocketManager(basePath);
 
-			app.MapWhen(
-				context => IsAspx(context, basePath),
-						appBranch =>
-						{
-							appBranch.UseGXHandlerFactory(basePath);
-						});
+			app.UseGXHandlerFactory(basePath);
+
 			app.Run(async context => 
 			{
 				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
@@ -529,11 +525,6 @@ namespace GeneXus.Application
 				app.UseRewriter(options);
 			}
 		}
-
-		bool IsAspx(HttpContext context, string basePath)
-		{
-			return HandlerFactory.IsAspxHandler(context.Request.Path.Value, basePath);
-		}		
 	}
 	public class CustomExceptionHandlerMiddleware
 	{

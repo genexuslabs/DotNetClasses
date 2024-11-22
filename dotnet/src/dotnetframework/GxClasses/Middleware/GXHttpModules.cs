@@ -297,7 +297,7 @@ namespace GeneXus.Http.HttpModules
 			if (context.Request != null && context.Request.RequestType == "GET" && context.Response.StatusCode == 200)
 			{
 				string filePath = context.Request.FilePath;
-				if (filePath.IndexOf(".svc") < 0 && filePath.IndexOf(".aspx") < 0 && isCacheableMimeType(filePath))
+				if (filePath.IndexOf(".svc") < 0 && filePath.IndexOf(HttpHelper.ASPX) < 0 && isCacheableMimeType(filePath))
 				{
 					context.Response.Cache.SetCacheability(HttpCacheability.Public);
 					context.Response.Cache.SetMaxAge(new TimeSpan(GXStaticCacheModule.cacheExpirationHours, 0, 0));
