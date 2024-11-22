@@ -24,7 +24,7 @@
 		<PackageReference Include="log4net" Version="2.0.11" />
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Net.Http.WinHttpHandler" Version="5.0.0" />
-		<PackageReference Include="System.Text.Json" Version="5.0.2" />
+		<PackageReference Include="System.Text.Json" Version="8.0.4" />
 		<PackageReference Include="NUglify" Version="1.16.4" PrivateAssets="All" />
 		<Reference Include="Microsoft.HostIntegration.MsDb2Client">
 			<SpecificVersion>False</SpecificVersion>
