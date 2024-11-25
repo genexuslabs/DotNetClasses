@@ -61,14 +61,11 @@ namespace GeneXus.AI
 			_openAIClient = new OpenAIClient(new ApiKeyCredential(API_KEY), options);
 		}
 
-		internal async Task<ChatCompletion> Assistant(string assistant, string userMessage, GXProperties properties)
+		internal async Task<ChatCompletion> Assistant(string assistant, List<ChatMessage> messages, GXProperties properties)
 		{
 			try
 			{
-				List<ChatMessage> messages = new List<ChatMessage>
-			{
-				new UserChatMessage(userMessage)
-			};
+			
 
 				ChatCompletionOptions customOptions = new CustomChatCompletionOptions();
 				if (properties != null && properties.Count > 0)
