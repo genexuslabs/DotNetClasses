@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using GeneXus.Procedure;
 using GeneXus.Utils;
 using OpenAI.Chat;
@@ -35,5 +36,10 @@ namespace GeneXus.AI
 				return string.Empty;
 			}
 		}
+		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatHistory, object callResult)
+		{
+			return string.Empty;
+		}
+
 	}
 }
