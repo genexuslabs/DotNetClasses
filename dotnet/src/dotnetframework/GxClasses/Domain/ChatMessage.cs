@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GeneXus.AI
+namespace GeneXus.AI.Chat
 {
 	public class ChatMessage
 	{
