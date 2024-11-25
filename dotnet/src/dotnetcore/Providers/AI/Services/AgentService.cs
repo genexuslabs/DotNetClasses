@@ -25,7 +25,7 @@ namespace GeneXus.AI
 		protected const string AI_PROVIDER_API_KEY = "AI_PROVIDER_API_KEY";
 
 		protected string DEFAULT_API_KEY => "default_";
-		protected string DEFAULT_PROVIDER => "https://api.beta.saia.ai/chat";
+		protected string DEFAULT_PROVIDER => "https://api.beta.saia.ai"; 
 		internal AgentService()
 		{
 			string val;
