@@ -2235,16 +2235,19 @@ namespace GeneXus.Data
 
 		public void AddToCache(bool hasNext)
 		{
-			if (hasNext)
+			if (!(reader is MemoryDataReader))
 			{
-				object[] values = new object[reader.FieldCount];
-				m_dr.GetValues(reader, ref values);
-				block.Add(values);
-			}
-			else
-			{
-				SqlUtil.AddBlockToCache(key, new CacheItem(block, false, pos, readBytes), con, expiration != null ? (int)expiration.ItemSlidingExpiration.TotalMinutes : 0);
-				Close();
+				if (hasNext)
+				{
+					object[] values = new object[reader.FieldCount];
+					m_dr.GetValues(reader, ref values);
+					block.Add(values);
+				}
+				else
+				{
+					SqlUtil.AddBlockToCache(key, new CacheItem(block, false, pos, readBytes), con, expiration != null ? (int)expiration.ItemSlidingExpiration.TotalMinutes : 0);
+					Close();
+				}
 			}
 		}
 
