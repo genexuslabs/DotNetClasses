@@ -164,6 +164,23 @@ namespace GeneXus.DynamicCall
 			IsStatic = false;
 			MethodName = "execute";
 		}
-
+	}
+	public class GxDynCallProperties
+	{
+		public string ExternalName
+		{
+			get;
+			set;
+		}
+		public string AssemblyName
+		{
+			get;
+			set;
+		}
+		public string NameSpace
+		{
+			get;
+			set;
+		}
 	}
 }
