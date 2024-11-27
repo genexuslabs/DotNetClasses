@@ -32,7 +32,7 @@ namespace GeneXus.AI
 				return string.Empty;
 			}
 
-			if (chatCompletion != null && chatCompletion.Content.Count > 0)
+			if (chatCompletion != null && chatCompletion.Content!=null && chatCompletion.Content.Count > 0)
 			{
 				GXLogging.Debug(log, "Agent response:", chatCompletion.Content[0].Text);
 				return chatCompletion.Content[0].Text;
