@@ -19,33 +19,11 @@ namespace GeneXus.AI
 		{
 			ChatCompletion chatCompletion = null;
 			CallResult callResult = result as CallResult;
-			List<ChatMessage> messages = new List<ChatMessage>();
 			try
 			{
 				GXLogging.Debug(log, "Calling Agent: ", assistant);
-				if (chatMessages != null && chatMessages.Count > 0)
-				{
-					foreach (GeneXus.AI.Chat.ChatMessage chatMessage in chatMessages)
-					{
-						if (!string.IsNullOrEmpty(chatMessage.Role))
-						{
-							if (chatMessage.Role.Equals(ChatMessageRole.User.ToString(), StringComparison.OrdinalIgnoreCase)) {
-								UserChatMessage userChatMessage = new UserChatMessage(chatMessage.Content);
-								messages.Add(userChatMessage);
-							}
-							/*else if (chatMessage.Role.Equals(ChatMessageRole.Tool.ToString(), StringComparison.OrdinalIgnoreCase))
-							{
-								UserChatMessage userChatMessage = new ToolChatMessage(chatMessage.ToolCallId);
-
-							}*/
-						}
-					}
-				}
-				if (messages.Count==0)
-				{
-					messages.Add(new UserChatMessage(string.Empty));
-
-				}
+				List<ChatMessage> messages = ChatMessagesToOpenAiChatMessages(chatMessages);
+				chatCompletion = AgentService.AgentHandlerInstance.Assistant(assistant, messages, gxproperties).GetAwaiter().GetResult();
 			}
 			catch (Exception ex)
 			{
@@ -67,5 +45,35 @@ namespace GeneXus.AI
 
 		}
 
+		private List<ChatMessage> ChatMessagesToOpenAiChatMessages(IList chatMessages)
+		{
+			List<ChatMessage> messages = new List<ChatMessage>();
+
+			if (chatMessages != null && chatMessages.Count > 0)
+			{
+
+				foreach (Chat.ChatMessage chatMessage in chatMessages)
+				{
+					if (!string.IsNullOrEmpty(chatMessage.Role))
+					{
+						if (chatMessage.Role.Equals(ChatMessageRole.User.ToString(), StringComparison.OrdinalIgnoreCase))
+						{
+							UserChatMessage userChatMessage = new UserChatMessage(chatMessage.Content);
+							messages.Add(userChatMessage);
+						}
+						else if (chatMessage.Role.Equals(ChatMessageRole.Assistant.ToString(), StringComparison.OrdinalIgnoreCase))
+						{
+							AssistantChatMessage assistantChatMessage = new AssistantChatMessage(chatMessage.Content);
+							messages.Add(assistantChatMessage);
+						}
+					}
+				}
+			}
+			if (messages.Count == 0)
+			{
+				messages.Add(new UserChatMessage(string.Empty));
+			}
+			return messages;
+		}
 	}
 }
