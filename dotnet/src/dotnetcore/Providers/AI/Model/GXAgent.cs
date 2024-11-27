@@ -24,22 +24,21 @@ namespace GeneXus.AI
 				GXLogging.Debug(log, "Calling Agent: ", assistant);
 				List<ChatMessage> messages = ChatMessagesToOpenAiChatMessages(chatMessages);
 				chatCompletion = AgentService.AgentHandlerInstance.Assistant(assistant, messages, gxproperties).GetAwaiter().GetResult();
+				if (chatCompletion != null && chatCompletion.Content != null && chatCompletion.Content.Count > 0)
+				{
+					GXLogging.Debug(log, "Agent response:", chatCompletion.Content[0].Text);
+					return chatCompletion.Content[0].Text;
+				}
+				else
+				{
+					GXLogging.Debug(log, "Agent response is empty");
+					return string.Empty;
+				}
 			}
 			catch (Exception ex)
 			{
 				callResult.AddMessage($"Error calling Agent {assistant}:" + ex.Message);
 				callResult.IsFail = true;
-				return string.Empty;
-			}
-
-			if (chatCompletion != null && chatCompletion.Content!=null && chatCompletion.Content.Count > 0)
-			{
-				GXLogging.Debug(log, "Agent response:", chatCompletion.Content[0].Text);
-				return chatCompletion.Content[0].Text;
-			}
-			else
-			{
-				GXLogging.Debug(log, "Agent response is empty");
 				return string.Empty;
 			}
 
