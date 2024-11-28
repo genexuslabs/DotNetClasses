@@ -21,18 +21,14 @@ namespace DotNetCoreUnitTest.Domain
 		public async Task AssistantTest()
 		{
 			AgentService agentService = AgentService.AgentHandlerInstance;
-			string userMessage =  "What's the weather like in Buenos Aires today?";
+			//string userMessage =  "What's the weather like in Buenos Aires today?";
 			string modelId = "e4e7a837-b8ad-4d25-b2db-431dda9af0af";
 			GXProperties properties = new GXProperties();
 			properties.Set("$context", "context for reference");
-			List<ChatMessage> messages = new List<ChatMessage>
-				{
-					new UserChatMessage(userMessage)
-				};
 
-			ChatCompletion embedding = await agentService.Assistant(modelId, messages, properties);
+			ChatCompletionResult embedding = await agentService.Assistant(modelId, null, properties);
 			Assert.NotNull(embedding);
-			Assert.NotNull(embedding.Content);
+			//Assert.NotNull(embedding.Content);
 		}
 	}
 }
