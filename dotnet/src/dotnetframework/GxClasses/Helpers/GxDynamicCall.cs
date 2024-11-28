@@ -12,13 +12,16 @@ namespace GeneXus.DynamicCall
 		private const string defaultMethod = "execute";
 		private Assembly _assembly;
 		private readonly IGxContext _context;
-		private GXProperties _properties;
+		private GXProperties _extendedProperties;
+		private GxDynCallProperties _properties;
 		private object _object;
 
 		[Obsolete("ObjectName is deprecated. Use ExternalName instead", false)]
 		public string ObjectName { get; set; }
 		public string ExternalName { get; set; }
-		public GXProperties Properties
+
+		[Obsolete("Properties is deprecated. Use ExtendedProperties instead", false)]
+		public GxDynCallProperties Properties
 		{
 			get => _properties;
 			set
@@ -26,16 +29,27 @@ namespace GeneXus.DynamicCall
 				_properties = Properties;
 			}
 		}
+
+		public GXProperties ExtendedProperties
+		{
+			get => _extendedProperties;
+			set
+			{
+				_extendedProperties = ExtendedProperties;
+			}
+		}
 		public GxDynamicCall()
 		{
-			_properties = new GXProperties();
+			_extendedProperties = new GXProperties();
+			_properties = new GxDynCallProperties();
 		}
 
 		public GxDynamicCall(IGxContext context)
 		{
 			_context = context;
 			_assembly = null;
-			_properties = new GXProperties();
+			_extendedProperties = new GXProperties();
+			_properties = new GxDynCallProperties();
 			_object = null;
 		}
 
@@ -44,7 +58,7 @@ namespace GeneXus.DynamicCall
 
 			if (_assembly is null)
 			{
-				if (string.IsNullOrEmpty(_properties.Get("AssemblyName")))
+				if (string.IsNullOrEmpty(_extendedProperties.Get("AssemblyName")))
 				{
 					_assembly = Assembly.GetCallingAssembly();
 				}
@@ -52,7 +66,7 @@ namespace GeneXus.DynamicCall
 				{
 					try
 					{
-						_assembly = Assembly.LoadFrom(_properties.Get("AssemblyName"));
+						_assembly = Assembly.LoadFrom(_extendedProperties.Get("AssemblyName"));
 					}
 					catch
 					{
