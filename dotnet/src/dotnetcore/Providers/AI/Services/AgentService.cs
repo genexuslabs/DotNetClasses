@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -161,12 +160,6 @@ namespace GeneXus.AI
 		}
 
 
-	}
-
-	internal class Variable
-	{
-		public string Key { get; set; }
-		public string Value { get; set; }
 	}
 
 	internal class NoAuthHeaderHandler : DelegatingHandler
