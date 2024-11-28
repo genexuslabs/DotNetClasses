@@ -32,35 +32,4 @@ namespace GeneXus.AI
 
 		}
 
-		private List<ChatMessage> ChatMessagesToOpenAiChatMessages(IList chatMessages)
-		{
-			List<ChatMessage> messages = new List<ChatMessage>();
-
-			if (chatMessages != null && chatMessages.Count > 0)
-			{
-
-				foreach (Chat.ChatMessage chatMessage in chatMessages)
-				{
-					if (!string.IsNullOrEmpty(chatMessage.Role))
-					{
-						if (chatMessage.Role.Equals(ChatMessageRole.User.ToString(), StringComparison.OrdinalIgnoreCase))
-						{
-							UserChatMessage userChatMessage = new UserChatMessage(chatMessage.Content);
-							messages.Add(userChatMessage);
-						}
-						else if (chatMessage.Role.Equals(ChatMessageRole.Assistant.ToString(), StringComparison.OrdinalIgnoreCase))
-						{
-							AssistantChatMessage assistantChatMessage = new AssistantChatMessage(chatMessage.Content);
-							messages.Add(assistantChatMessage);
-						}
-					}
-				}
-			}
-			if (messages.Count == 0)
-			{
-				messages.Add(new UserChatMessage(string.Empty));
-			}
-			return messages;
-		}
-	}
 }
