@@ -14,6 +14,9 @@ namespace GeneXus.DynamicCall
 		private readonly IGxContext _context;
 		private GXProperties _properties;
 		private object _object;
+
+		[Obsolete("ObjectName is deprecated. Use ExternalName instead", false)]
+		public string ObjectName { get; set; }
 		public string ExternalName { get; set; }
 		public GXProperties Properties
 		{
@@ -22,6 +25,10 @@ namespace GeneXus.DynamicCall
 			{
 				_properties = Properties;
 			}
+		}
+		public GxDynamicCall()
+		{
+			_properties = new GXProperties();
 		}
 
 		public GxDynamicCall(IGxContext context)
