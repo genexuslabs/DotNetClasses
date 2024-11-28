@@ -21,7 +21,7 @@ namespace GeneXus.AI
 			try
 			{
 				GXLogging.Debug(log, "Calling Agent: ", assistant);
-				return AgentService.AgentHandlerInstance.Assistant(assistant, (List<Chat.ChatMessage>) chatMessages, gxproperties).GetAwaiter().GetResult();
+				return AgentService.AgentHandlerInstance.Assistant(assistant, (List<Chat.ChatMessage>)chatMessages, gxproperties).GetAwaiter().GetResult();
 			}
 			catch (Exception ex)
 			{
@@ -31,5 +31,5 @@ namespace GeneXus.AI
 			}
 
 		}
-
+	}
 }
