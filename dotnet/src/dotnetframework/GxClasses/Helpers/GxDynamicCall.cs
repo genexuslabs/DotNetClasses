@@ -16,11 +16,11 @@ namespace GeneXus.DynamicCall
 		private GxDynCallProperties _properties;
 		private object _object;
 
-		[Obsolete("ObjectName is deprecated. Use ExternalName instead", false)]
+		//[Obsolete("ObjectName is deprecated. Use ExternalName instead", false)]
 		public string ObjectName { get; set; }
 		public string ExternalName { get; set; }
 
-		[Obsolete("Properties is deprecated. Use ExtendedProperties instead", false)]
+		//[Obsolete("Properties is deprecated. Use ExtendedProperties instead", false)]
 		public GxDynCallProperties Properties
 		{
 			get => _properties;
