@@ -94,7 +94,7 @@ namespace GeneXus.AI
 				GXLogging.Debug(log, "Agent response:", responseJson);
 				ChatCompletionResult chatCompletion = JsonSerializer.Deserialize<ChatCompletionResult>(responseJson);
 
-				if (chatCompletion != null)
+				if (chatCompletion != null && chatCompletion.Choices!=null)
 				{
 					foreach (Choice choice in chatCompletion.Choices)
 					{
