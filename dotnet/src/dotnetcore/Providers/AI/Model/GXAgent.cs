@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using GeneXus.AI.Chat;
 using GeneXus.Procedure;
 using GeneXus.Utils;
-using OpenAI.Chat;
 
 namespace GeneXus.AI
 {
@@ -21,7 +22,9 @@ namespace GeneXus.AI
 			try
 			{
 				GXLogging.Debug(log, "Calling Agent: ", assistant);
-				return AgentService.AgentHandlerInstance.Assistant(assistant, (List<Chat.ChatMessage>)chatMessages, gxproperties).GetAwaiter().GetResult();
+
+				List<ChatMessage> chatMessagesList = chatMessages!=null ? chatMessages.Cast<ChatMessage>().ToList() :null;
+				return AgentService.AgentHandlerInstance.Assistant(assistant, chatMessagesList, gxproperties).GetAwaiter().GetResult();
 			}
 			catch (Exception ex)
 			{
