@@ -907,10 +907,7 @@ namespace GeneXus.Data
 			else
 			{
 				Type type = value.GetType();
-
-				if (type.IsSubclassOf(typeof(ValueType)))
-					return value;
-				else if (type == typeof(string))
+				if (type.IsSubclassOf(typeof(ValueType)) || type == typeof(string))
 					return value;
 				else if (type == typeof(Stream))
 				{
@@ -919,6 +916,12 @@ namespace GeneXus.Data
 					oStream.CopyTo(memStream);
 					return memStream;
 				}
+#if NETCORE
+				else if (type.FullName == PGVECTOR_VECTOR_TYPE_NAME) // Avoid referencing Pgvector type if datastore is not Npgsql; prevents loading Pgvector DLL unnecessarily
+				{
+					return CopyPgVectorValue(value);
+				}
+#endif
                 else
 				{
                     byte[] valueByte = value as byte[];
@@ -945,8 +948,19 @@ namespace GeneXus.Data
 				}
 			}
 		}
+#if NETCORE
+		const string PGVECTOR_VECTOR_TYPE_NAME = "Pgvector.Vector";
+		private static object CopyPgVectorValue(object value)
+		{
+			Pgvector.Vector vector = (Pgvector.Vector)value;
+			float[] copyArray = new float[vector.Memory.Length];
+			vector.Memory.Span.CopyTo(copyArray);
+			Pgvector.Vector copyVector = new Pgvector.Vector(new ReadOnlyMemory<float>(copyArray));
+			return copyVector;
 
-		#endregion
+		}
+#endif
+#endregion
 	}
 
 }
