@@ -1,3 +1,4 @@
+using log4net;
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -24,18 +25,21 @@ namespace GeneXusCryptography.AsymmetricUtils
     [SecuritySafeCritical]
     public static class AsymmetricEncryptionPaddingUtils
     {
-        /// <summary>
-        /// Mapping between string name and AsymmetricEncryptionPadding enum representation
-        /// </summary>
-        /// <param name="asymmetricEncryptionPadding">string asymmetricEncryptionPadding</param>
-        /// <param name="error">Error type for error management</param>
-        /// <returns>AsymmetricEncryptionPadding enum representation</returns>
-        public static AsymmetricEncryptionPadding getAsymmetricEncryptionPadding(string asymmetricEncryptionPadding, Error error)
+		private static readonly ILog logger = LogManager.GetLogger(typeof(AsymmetricEncryptionPaddingUtils));
+		/// <summary>
+		/// Mapping between string name and AsymmetricEncryptionPadding enum representation
+		/// </summary>
+		/// <param name="asymmetricEncryptionPadding">string asymmetricEncryptionPadding</param>
+		/// <param name="error">Error type for error management</param>
+		/// <returns>AsymmetricEncryptionPadding enum representation</returns>
+		public static AsymmetricEncryptionPadding getAsymmetricEncryptionPadding(string asymmetricEncryptionPadding, Error error)
         {
+			logger.Debug("getAsymmetricEncryptionPadding");
 			if (error == null) return AsymmetricEncryptionPadding.NOPADDING;
 			if( asymmetricEncryptionPadding == null)
 			{
 				error.setError("AE003", "Unrecognized AsymmetricEncryptionPadding");
+				logger.Error("Unrecognized AsymmetricEncryptionPadding");
 				return AsymmetricEncryptionPadding.NOPADDING;
 			}
 
@@ -51,6 +55,7 @@ namespace GeneXusCryptography.AsymmetricUtils
                     return AsymmetricEncryptionPadding.ISO97961PADDING;
                 default:
                     error.setError("AE003", "Unrecognized AsymmetricEncryptionPadding");
+					logger.Error("Unrecognized AsymmetricEncryptionPadding");
                     return AsymmetricEncryptionPadding.NOPADDING;
             }
         }
@@ -62,6 +67,7 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>string name of asymmetricEncryptionPadding</returns>
         public static string valueOf(AsymmetricEncryptionPadding asymmetricEncryptionPadding, Error error)
         {
+			logger.Debug("valueOf");
 			if (error == null) return "";
             switch (asymmetricEncryptionPadding)
             {
@@ -75,6 +81,7 @@ namespace GeneXusCryptography.AsymmetricUtils
                     return "ISO97961PADDING";
                 default:
                     error.setError("AE004", "Unrecognized AsymmetricEncryptionPadding");
+					logger.Error("Unrecognized AsymmetricEncryptionPadding");
                     return "";
             }
         }

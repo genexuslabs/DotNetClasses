@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Security;
+using log4net;
 using SecurityAPICommons.Commons;
 using SecurityAPICommons.Utils;
 
@@ -12,7 +13,9 @@ namespace GeneXusJWT.GenexusJWTClaims
     {
         private IDictionary<string, string> customTimeValidationClaims;
 
-        public RegisteredClaims()
+		private static readonly ILog logger = LogManager.GetLogger(typeof(RegisteredClaims));
+
+		public RegisteredClaims()
         {
 
             customTimeValidationClaims = new Dictionary<string, string>();
@@ -22,6 +25,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public bool setClaim(string key, string value, Error error)
         {
+			logger.Debug("setClaim");
 			if (error == null) return false;
             if (RegisteredClaimUtils.exists(key))
             {
@@ -30,12 +34,15 @@ namespace GeneXusJWT.GenexusJWTClaims
             else
             {
                 error.setError("RCS02", "Wrong registered key value");
-                return false;
+				logger.Error("Wrong registered key value");
+
+				return false;
             }
         }
 
         public bool setTimeValidatingClaim(string key, string value, string customValidationSeconds, Error error)
         {
+			logger.Debug("setTimeValidatingClaim");
 			if (error == null) return false;
             if (RegisteredClaimUtils.exists(key) && RegisteredClaimUtils.isTimeValidatingClaim(key))
             {
@@ -49,6 +56,7 @@ namespace GeneXusJWT.GenexusJWTClaims
                 catch (Exception)
                 {
                     error.setError("RCS04", "Date format error; expected yyyy/MM/dd HH:mm:ss");
+					logger.Error("Date format error; expected yyyy/MM/dd HH:mm:ss");
                     return false;
                 }
                 return setClaim(key, date.ToString(CultureInfo.InvariantCulture), error);
@@ -56,6 +64,7 @@ namespace GeneXusJWT.GenexusJWTClaims
             else
             {
                 error.setError("RCS02", "Wrong registered key value");
+				logger.Error("Wrong registered key value");
                 return false;
             }
         }
@@ -92,6 +101,7 @@ namespace GeneXusJWT.GenexusJWTClaims
 
         public override object getClaimValue(string key, Error error)
         {
+			logger.Debug("getClaimValue");
 			if (error == null) return "";
             if (RegisteredClaimUtils.exists(key))
             {
@@ -103,11 +113,13 @@ namespace GeneXusJWT.GenexusJWTClaims
                     }
                 }
                 error.setError("RCS03", String.Format("Could not find a claim with {0} key value", key));
+				logger.Error(String.Format("Could not find a claim with {0} key value", key));
                 return "";
             }
             else
             {
                 error.setError("RC002", "Wrong registered key value");
+				logger.Error("Wrong registered key value");
                 return "";
             }
         }

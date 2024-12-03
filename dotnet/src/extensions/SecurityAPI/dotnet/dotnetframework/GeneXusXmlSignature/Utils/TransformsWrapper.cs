@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using log4net;
 using SecurityAPICommons.Commons;
 
 namespace GeneXusXmlSignature.GeneXusUtils
@@ -15,12 +16,15 @@ namespace GeneXusXmlSignature.GeneXusUtils
 	[SecuritySafeCritical]
 	public static class TransformsWrapperUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(TransformsWrapperUtils));
 		public static TransformsWrapper getTransformsWrapper(string transformsWrapper, Error error)
 		{
+			logger.Debug("getTransformsWrapper");
 			if (error == null) return TransformsWrapper.NONE;
 			if (transformsWrapper == null)
 			{
 				error.setError("TRW04", "Unrecognized transformation");
+				logger.Error("Unrecognized transformation");
 				return TransformsWrapper.NONE;
 			}
 			switch (transformsWrapper.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -33,6 +37,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return TransformsWrapper.DETACHED;
 				default:
 					error.setError("TRW01", "Unrecognized transformation");
+					logger.Error("Unrecognized transformation");
 					return TransformsWrapper.NONE;
 			}
 		}
@@ -40,6 +45,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
 		public static string valueOf(TransformsWrapper transformsWrapper, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return null;
 			switch (transformsWrapper)
 			{
@@ -51,12 +57,14 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return "DETACHED";
 				default:
 					error.setError("TRW02", "Unrecognized transformation");
+					logger.Error("Unrecognized transformation");
 					return null;
 			}
 		}
 
 		public static string getSignatureTypeTransform(TransformsWrapper transformsWrapper, Error error)
 		{
+			logger.Debug("getSignatureTypeTransform");
 			if (error == null) return null;
 			switch (transformsWrapper)
 			{
@@ -68,6 +76,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return "http://www.w3.org/2000/09/xmldsig#detached-signature";
 				default:
 					error.setError("TRW03", "Unrecognized transformation");
+					logger.Error("Unrecognized transformation");
 					return null;
 
 			}

@@ -5,6 +5,7 @@ using SecurityAPICommons.Utils;
 using System;
 using System.Security;
 using System.Text;
+using log4net;
 
 namespace GeneXusCryptography.ChecksumUtils
 {
@@ -19,12 +20,15 @@ namespace GeneXusCryptography.ChecksumUtils
 	[SecuritySafeCritical]
 	public static class ChecksumInputTypeUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(ChecksumInputTypeUtils));
 		public static ChecksumInputType getChecksumInputType(string checksumInputType, Error error)
 		{
+			logger.Debug("getChecksumInputType");
 			if (error == null) return ChecksumInputType.NONE;
 			if (checksumInputType == null)
 			{
 				error.setError("CHI06", "Unrecognized checksum input type");
+				logger.Error("Unrecognized checksum input type");
 				return ChecksumInputType.NONE;
 			}
 			switch (checksumInputType.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -41,12 +45,14 @@ namespace GeneXusCryptography.ChecksumUtils
 					return ChecksumInputType.LOCAL_FILE;
 				default:
 					error.setError("CHI01", "Unrecognized checksum input type");
+					logger.Error("Unrecognized checksum input type");
 					return ChecksumInputType.NONE;
 			}
 		}
 
 		public static string valueOf(ChecksumInputType checksumInputType, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "";
 			switch (checksumInputType)
 			{
@@ -62,12 +68,14 @@ namespace GeneXusCryptography.ChecksumUtils
 					return "LOCAL_FILE";
 				default:
 					error.setError("CHI02", "Unrecognized checksum input type");
+					logger.Error("Unrecognized checksum input type");
 					return "";
 			}
 		}
 
 		public static byte[] getBytes(ChecksumInputType checksumInputType, string input, Error error)
 		{
+			logger.Debug("getBytes");
 			if (error == null) return null;
 			EncodingUtil eu = new EncodingUtil();
 			byte[] aux = null;
@@ -101,6 +109,7 @@ namespace GeneXusCryptography.ChecksumUtils
 					catch (Exception e)
 					{
 						error.setError("CHI04", e.Message);
+						logger.Error("getBytes", e);
 					}
 					break;
 				case ChecksumInputType.LOCAL_FILE:
@@ -108,6 +117,7 @@ namespace GeneXusCryptography.ChecksumUtils
 					break;
 				default:
 					error.setError("CHI05", "Unrecognized checksum input type");
+					logger.Error("Unrecognized checksum input type");
 					break;
 			}
 			return aux;
