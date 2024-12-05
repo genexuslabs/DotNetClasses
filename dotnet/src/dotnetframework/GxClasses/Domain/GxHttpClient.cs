@@ -578,6 +578,8 @@ namespace GeneXus.Http.Client
 		}
 		public void AddHeader(string name, string value)
 		{
+			GXLogging.Debug(log, "AddHeader ", name, "=", value);
+
 			if (name.Equals("content-type", StringComparison.OrdinalIgnoreCase))
 			{
 				if (value.StartsWith(MediaTypesNames.MultipartFormData, StringComparison.OrdinalIgnoreCase) &&
