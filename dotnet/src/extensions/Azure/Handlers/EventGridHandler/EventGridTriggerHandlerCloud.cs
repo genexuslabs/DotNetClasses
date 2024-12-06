@@ -1,10 +1,8 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using Azure.Messaging;
@@ -25,7 +23,7 @@ namespace GeneXus.Deploy.AzureFunctions.EventGridHandler
 		{
 			_callmappings = callMappings;
 		}
-		public void Run(CloudEvent input, FunctionContext context)
+		public void Run(CloudEvent[] events, FunctionContext context)
 		{
 			var logger = context.GetLogger("EventGridTriggerHandler");
 			string functionName = context.FunctionDefinition.Name;
@@ -34,7 +32,7 @@ namespace GeneXus.Deploy.AzureFunctions.EventGridHandler
 
 			try
 			{
-				ProcessEvent(context, logger, input, eventId.ToString());
+				ProcessEvent(context, logger, events, eventId.ToString());
 			}
 			catch (Exception ex) //Catch System exception and retry
 			{
@@ -42,12 +40,19 @@ namespace GeneXus.Deploy.AzureFunctions.EventGridHandler
 				throw;
 			}
 		}
-		private void ProcessEvent(FunctionContext context, ILogger log, CloudEvent input, string eventId)
+		private void ProcessEvent(FunctionContext context, ILogger log, CloudEvent[] events, string eventId)
 		{
-			CallMappings callmap = (CallMappings)_callmappings;
-
-			GxAzMappings map = callmap.mappings is object ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
-			string gxProcedure = (map != null && map is object) ? map.GXEntrypoint : string.Empty;
+			string envVar = $"GX_AZURE_{context.FunctionDefinition.Name.ToUpper()}_CLASS";
+			string envVarValue = Environment.GetEnvironmentVariable(envVar);
+			string gxProcedure = string.Empty;
+			if (!string.IsNullOrEmpty(envVarValue))
+				gxProcedure = envVarValue;
+			else
+			{
+				CallMappings callmap = (CallMappings)_callmappings;
+				GxAzMappings map = callmap != null && callmap.mappings is object ? callmap.mappings.SingleOrDefault(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+				gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
+			}
 			string exMessage;
 
 			if (!string.IsNullOrEmpty(gxProcedure))
@@ -91,7 +96,7 @@ namespace GeneXus.Deploy.AzureFunctions.EventGridHandler
 							if (parameters[0].ParameterType == typeof(string))
 							{
 								string eventMessageSerialized = string.Empty;
-								eventMessageSerialized = JsonSerializer.Serialize(input);
+								eventMessageSerialized = JsonSerializer.Serialize(events);
 								parametersdata = new object[] { eventMessageSerialized, null };
 							}
 							else
@@ -112,30 +117,35 @@ namespace GeneXus.Deploy.AzureFunctions.EventGridHandler
 
 								GxUserType eventMessageProperty;
 
-								if (input.Subject != null)
+								foreach (CloudEvent cloudEvent in events)
+								{ 
+
+								if (cloudEvent.Subject != null)
 								{
-									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Subject", input.Subject, gxcontext);
+									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Subject", cloudEvent.Subject, gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
 								}
 
-								if (input.Source != null)
+								if (cloudEvent.Source != null)
 								{
-									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Source", input.Source, gxcontext);
+									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Source", cloudEvent.Source, gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
 								}
 
 								//Event
 
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", input.Id);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", input.Type);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", cloudEvent.Id);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", cloudEvent.Type);
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", input.Time.Value.UtcDateTime);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", input.Data.ToString());
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", cloudEvent.Time.Value.UtcDateTime);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", cloudEvent.Data.ToString());
 
 
 								//List of Events
 								eventMessage.Add(eventMessageItem);
+								}
+
 								parametersdata = new object[] { eventMessages, null };
 							}
 
