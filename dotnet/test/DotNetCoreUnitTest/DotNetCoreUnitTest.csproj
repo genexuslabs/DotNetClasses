@@ -21,6 +21,7 @@
 	    <Compile Include="..\DotNetUnitTest\Domain\XmlReaderTest.cs" Link="Domain\XmlReaderTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\TimeZoneTest.cs" Link="Domain\TimeZoneTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+	    <Compile Include="..\DotNetUnitTest\FileIO\FileIOTests.cs" Link="FileIO\FileIOTests.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\FileSystemTest.cs" Link="FileIO\FileSystemTest.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\Xslt.cs" Link="FileIO\Xslt.cs" />
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
