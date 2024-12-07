@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -98,12 +99,19 @@ namespace GeneXus.Utils
 				return false;
 			}
 		}
-		/*public void UploadImpl(Stream stream)
+		protected ActionResult UploadImpl()
 		{
 			GXObjectUploadServices gxobject = new GXObjectUploadServices(context);
-			IncomingWebRequestContext request = WebOperationContext.Current.IncomingRequest;
-			gxobject.WcfExecute(stream, request.ContentType, request.ContentLength, request.Headers[HttpHeader.XGXFILENAME]);
-		}*/
+			string fileGuid;
+			string fileToken;
+			using (Stream stream = Request.Body)
+			{
+				fileToken = gxobject.ReadFileFromStream(stream, Request.ContentType, Request.ContentLength.GetValueOrDefault(), Request.Headers[HttpHeader.XGXFILENAME], out fileGuid);
+			}
+			Response.Headers.Append(HttpHeader.GX_OBJECT_ID, fileGuid);
+			SetStatusCode(HttpStatusCode.Created);
+			return GetResponse(new {object_id = fileToken});
+		}
 		protected void ErrorCheck(IGxSilentTrn trn)
 		{
 			if (trn.Errors() == 1)

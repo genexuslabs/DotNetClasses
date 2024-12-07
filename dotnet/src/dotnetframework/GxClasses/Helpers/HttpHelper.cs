@@ -48,6 +48,7 @@ namespace GeneXus.Http
 		public static string LAST_MODIFIED = "Last-Modified";
 		public static string EXPIRES = "Expires";
 		public static string XGXFILENAME = "x-gx-filename";
+		public static string GX_OBJECT_ID = "GeneXus-Object-Id";
 		internal static string ACCEPT = "Accept";
 		internal static string TRANSFER_ENCODING = "Transfer-Encoding";
 		internal static string X_CSRF_TOKEN_HEADER = "X-XSRF-TOKEN";
