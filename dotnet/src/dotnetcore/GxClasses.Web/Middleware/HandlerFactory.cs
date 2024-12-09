@@ -270,7 +270,7 @@ namespace GeneXus.HttpHandlerFactory
 			try
 			{
 				
-                objType = GeneXus.Metadata.ClassLoader.FindType(assemblyName, className, null);
+                objType = GeneXus.Metadata.ClassLoader.FindType(assemblyName, className, null, false, true);
 				if (objType == null)
 					
 					objType = Assembly.Load(new AssemblyName(assemblyName)).GetType(className);
