@@ -7,10 +7,10 @@
 		<PackageId>GeneXus.Encrypt</PackageId>
 	</PropertyGroup>
 	<ItemGroup Condition="'$(TargetFramework)'!='net462'">
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.2.0" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.34.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.2.0" />
 	</ItemGroup>
 
 </Project>
