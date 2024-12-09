@@ -14,5 +14,9 @@
 	{
 		"FunctionName": "eventgridTestAzureSchema",
 		"GXEntrypoint": "amyprochandler"
+	},
+	{
+		"FunctionName": "serviceBusTest",
+		"GXEntrypoint": "amyprochandler"
 	}
 ]
