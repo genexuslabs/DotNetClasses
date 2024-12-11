@@ -148,7 +148,7 @@ namespace GeneXus.Utils
 
 		internal static bool ServiceAsController()
 		{
-			return Config.GetValueOf("SERVICE_AS_CONTROLLER", Preferences.NO) == Preferences.YES;
+			return Config.GetValueOf("SERVICE_AS_CONTROLLER", Preferences.YES) == Preferences.YES;
 		}
 		internal static bool JsonSerializerCaseSensitive()
 		{
