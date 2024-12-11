@@ -2,8 +2,7 @@
 	<PropertyGroup>
 		<AssemblyVersion>11.0.0.0</AssemblyVersion>
 		<MajorFileVersion>1</MajorFileVersion>
-		<MajorFileVersion Condition="$(GIT_REF.EndsWith('beta'))">$([MSBuild]::Add($(MajorFileVersion), 100))</MajorFileVersion>
-		<MinorFileVersion>30</MinorFileVersion>
+		<MinorFileVersion>32</MinorFileVersion>
 		<PatchFileVersion Condition="'$(COMMIT_NUMBER)'!=''">$(COMMIT_NUMBER)</PatchFileVersion>
 		<PatchFileVersion Condition="'$(COMMIT_NUMBER)'==''">0</PatchFileVersion>
 		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).$(PatchFileVersion)</FileVersion>

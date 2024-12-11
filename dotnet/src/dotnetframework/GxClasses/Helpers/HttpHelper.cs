@@ -106,13 +106,63 @@ namespace GeneXus.Http
 					{
 						cookieContainer.SetCookies(uri, cookieValue);
 					}
-					catch (CookieException ex)
+					catch (CookieException)
 					{
-						GXLogging.Warn(log, $"Ignored cookie for container: {cookieValue} url:{uri}", ex);
+						try
+						{
+							cookieContainer.Add(ParseCookieHeader(cookieValue));
+						}
+						catch (Exception ex2)
+						{
+							GXLogging.Warn(log, $"Ignored cookie for container: {cookieValue} url:{uri}", ex2.Message);
+						}
 					}
 				}
 
 			}
+		}
+		static Cookie ParseCookieHeader(string cookieHeader)
+		{
+			string[] parts = cookieHeader.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+			if (parts.Length == 0)
+			{
+				throw new ArgumentException("Invalid cookie header.");
+			}
+			string[] nameValuePair = parts[0].Split('=', 2);
+			if (nameValuePair.Length != 2)
+			{
+				throw new ArgumentException("Invalid cookie header: missing name or value.");
+			}
+
+			string name = nameValuePair[0];
+			string value = nameValuePair[1];
+
+			var cookie = new Cookie(name, value);
+
+			foreach (string part in parts[1..])
+			{
+				string[] attribute = part.Split('=', 2);
+				string attributeName = attribute[0].ToLowerInvariant();
+
+				if (attributeName == "path" && attribute.Length == 2)
+				{
+					cookie.Path = attribute[1];
+				}
+				else if (attributeName == "domain" && attribute.Length == 2)
+				{
+					cookie.Domain = attribute[1];
+				}
+				else if (attributeName == "secure")
+				{
+					cookie.Secure = true;
+				}
+				else if (attributeName == "httponly")
+				{
+					cookie.HttpOnly = true;
+				}
+			}
+
+			return cookie;
 		}
 	}
 #endif

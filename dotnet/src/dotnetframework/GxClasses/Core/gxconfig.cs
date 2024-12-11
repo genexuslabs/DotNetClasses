@@ -505,6 +505,7 @@ namespace GeneXus.Configuration
 		};
 
 		static string GeoTypesAssembly = "Microsoft.SqlServer.Types";
+		static string DiagnosticSourceAssembly = "System.Diagnostics.DiagnosticSource";
 		[SecurityCritical]
 		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
@@ -518,7 +519,16 @@ namespace GeneXus.Configuration
 			{
 				return SQLGeographyWrapper.GeoAssembly;
 			}
-			else return null;
+			else if (requestedAssembly.Name == DiagnosticSourceAssembly)
+			{
+				//MySQLConnector requirement
+				string fileName = Path.Combine(FileUtil.GetStartupDirectory(), $"{DiagnosticSourceAssembly}.dll");
+				if (File.Exists(fileName))
+				{
+					return Assembly.LoadFrom(fileName);
+				}
+			}
+			return null;
 		}
 #endif
 		static object syncRoot = new Object();
@@ -825,6 +835,7 @@ namespace GeneXus.Configuration
 		static int oldSTR = -1;
 		static int instrumented = -1;
 		static string mediaPath;
+		static string layoutMetadataPath;
 		static string pdfLib;
 		static string blobPath;
 		static string blobPathFolderName;
@@ -1224,30 +1235,30 @@ namespace GeneXus.Configuration
 		}
 		public static string getPRINT_LAYOUT_METADATA_DIR()
 		{
-			if (mediaPath == null)
+			if (layoutMetadataPath == null)
 			{
 				lock (syncRoot)
 				{
-					if (mediaPath == null)
+					if (layoutMetadataPath == null)
 					{
-						if (Config.GetValueOf("PRINT_LAYOUT_METADATA_DIR", out mediaPath))
+						if (Config.GetValueOf("PRINT_LAYOUT_METADATA_DIR", out layoutMetadataPath))
 						{
-							mediaPath = mediaPath.Trim();
+							layoutMetadataPath = layoutMetadataPath.Trim();
 
-							if (!String.IsNullOrEmpty(mediaPath) && !mediaPath.EndsWith("\\") && !mediaPath.EndsWith("/"))
+							if (!String.IsNullOrEmpty(layoutMetadataPath) && !layoutMetadataPath.EndsWith("\\") && !layoutMetadataPath.EndsWith("/"))
 							{
-								mediaPath += Path.DirectorySeparatorChar;
+								layoutMetadataPath += Path.DirectorySeparatorChar;
 							}
 						}
 						else
 						{
-							mediaPath = "";
+							layoutMetadataPath = string.Empty;
 						}
-						GXLogging.Debug(log, "PRINT_LAYOUT_METADATA_DIR:", mediaPath);
+						GXLogging.Debug(log, "PRINT_LAYOUT_METADATA_DIR:", layoutMetadataPath);
 					}
 				}
 			}
-			return mediaPath;
+			return layoutMetadataPath;
 		}
 		internal static string PdfReportLibrary()
 		{

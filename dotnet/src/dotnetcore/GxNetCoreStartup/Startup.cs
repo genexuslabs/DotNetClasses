@@ -450,6 +450,7 @@ namespace GeneXus.Application
 			provider.Mappings[".usdz"] = "model/vnd.pixar.usd";
 			provider.Mappings[".sfb"] = "model/sfb";
 			provider.Mappings[".gltf"] = "model/gltf+json";
+			provider.Mappings[".ini"] = "text/plain";
 			if (GXUtil.CompressResponse())
 			{
 				app.UseResponseCompression();

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
@@ -15,6 +15,7 @@
 	</ItemGroup>
 	<ItemGroup>		
 	    <Compile Include="..\DotNetUnitTest\ConfigMappings\ConfigTest.cs" Link="ConfigMappings\ConfigTest.cs" />		
+	    <Compile Include="..\DotNetUnitTest\Domain\GxGenericDictionaryTest.cs" Link="Domain\GxGenericDictionaryTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\GxHttpClientTest.cs" Link="Domain\GxHttpClientTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\ShellTest.cs" Link="Domain\ShellTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\TimeZoneTest.cs" Link="Domain\TimeZoneTest.cs" />		
@@ -61,7 +62,7 @@
 		<PackageReference Include="iTextSharp" Version="5.5.13.2" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.7" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.34.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
 		<PackageReference Include="xunit" Version="2.4.1" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
@@ -73,7 +74,7 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
-		<PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454"/>
+		<PackageReference Include="GemBox.Spreadsheet" Version="49.0.1454" />
 	</ItemGroup>
 
   <ItemGroup>
@@ -163,7 +164,6 @@
 
 	<ItemGroup>
 	  <Folder Include="ConfigMappings\" />
-	  <Folder Include="Domain\" />
 	  <Folder Include="Log\" />
 	  <Folder Include="PDF\" />
 	  <Folder Include="resources\xml\" />

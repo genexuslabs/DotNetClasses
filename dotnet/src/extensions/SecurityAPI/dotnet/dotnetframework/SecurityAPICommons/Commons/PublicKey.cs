@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Security;
 using System.Security.Cryptography;
-using Microsoft.Win32.SafeHandles;
+using Jose;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
@@ -109,7 +109,66 @@ namespace SecurityAPICommons.Commons
 			return base64Encoded;
 		}
 
+		[SecuritySafeCritical]
+		public bool FromJwks(string jwks, string kid)
+		{
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput("jwks", jwks, this.error);
+			SecurityUtils.validateStringInput("kid", kid, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			/******* INPUT VERIFICATION - END *******/
+
+			bool flag = false;
+			string b64 = "";
+			try
+			{
+				b64 = FromJson(jwks, kid);
+			}
+			catch (Exception e)
+			{
+				this.error.setError("PU016", e.Message);
+				return false;
+			}
+			flag = this.FromBase64(b64);
+			return flag;
+
+		}
+
 		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
+
+
+		private string FromJson(string json, string id)
+		{
+			JwkSet set;
+			try
+			{
+				set = JwkSet.FromJson(json, JWT.DefaultSettings.JsonMapper);
+			}
+			catch (Exception e)
+			{
+				this.error.setError("PU015", e.Message);
+				return "";
+			}
+
+			foreach (Jwk key in set)
+			{
+				if (key.KeyId.CompareTo(id) == 0)
+				{
+					byte[] m = Base64Url.Decode(key.N);
+					byte[] e = Base64Url.Decode(key.E);
+
+					RsaKeyParameters parms = new RsaKeyParameters(false, new Org.BouncyCastle.Math.BigInteger(1, m), new Org.BouncyCastle.Math.BigInteger(1, e));
+					SubjectPublicKeyInfo subpubkey = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(parms);
+					return Convert.ToBase64String(subpubkey.GetEncoded());
+
+				}
+			}
+			return "";
+		}
 
 		private bool loadPublicKeyFromFile(string path, string alias, string password)
 		{
@@ -189,7 +248,7 @@ namespace SecurityAPICommons.Commons
 			{
 				return;
 			}
-			string alg = this.subjectPublicKeyInfo.AlgorithmID.Algorithm.Id;
+			string alg = this.subjectPublicKeyInfo.Algorithm.Algorithm.Id;
 			switch (alg)
 			{
 				case "1.2.840.113549.1.1.1":
@@ -236,7 +295,7 @@ namespace SecurityAPICommons.Commons
 
 #if !NETCORE
 					ECPublicKeyParameters pubkeyparms = (ECPublicKeyParameters)this.getAsymmetricKeyParameter();
-					AlgorithmIdentifier algid = this.subjectPublicKeyInfo.AlgorithmID;
+					AlgorithmIdentifier algid = this.subjectPublicKeyInfo.Algorithm;
 					string oid = ((DerObjectIdentifier)algid.Parameters).Id;
 					ECParameters ecparams = new ECParameters();
 					ecparams.Curve = ECCurve.CreateFromOid(new Oid(oid));

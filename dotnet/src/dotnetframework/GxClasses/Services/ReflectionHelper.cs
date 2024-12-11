@@ -259,11 +259,18 @@ namespace GeneXus.Application
 
 				string gxParameterName = GxParameterName(methodParameter.Name).ToLower();
 				Type parmType = methodParameter.ParameterType;
+				string jsontypename = "";
+				object[] attributes = parmType.GetCustomAttributes(true);
+				GxJsonName jsonName = (GxJsonName)attributes.Where(a => a.GetType() == typeof(GxJsonName)).FirstOrDefault();
+				if (jsonName != null)
+					jsontypename = jsonName.Name.ToLower();
+				else
+					jsontypename = gxParameterName;
 				if (IsByRefParameter(methodParameter))
 				{
 					parmType = parmType.GetElementType();
 				}
-				if (parameters != null && parameters.TryGetValue(gxParameterName, out value))
+				if (parameters != null && parameters.TryGetValue(jsontypename, out value))
 				{
 					if (value == null || JSONHelper.IsJsonNull(value))
 					{

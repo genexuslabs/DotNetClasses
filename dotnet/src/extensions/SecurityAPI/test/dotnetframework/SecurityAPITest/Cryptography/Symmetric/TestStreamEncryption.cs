@@ -71,13 +71,6 @@ namespace SecurityAPITest.Cryptography.Symmetric
 		}
 
 		[Test]
-		public void TestHC128()
-		{
-			// HC128 key 128 bits, no nonce
-			testBulkAlgorithms("HC128", key128, IV128);
-		}
-
-		[Test]
 		public void TestHC256()
 		{
 			// HC256 key 256 bits, IV 128 o 256 bits

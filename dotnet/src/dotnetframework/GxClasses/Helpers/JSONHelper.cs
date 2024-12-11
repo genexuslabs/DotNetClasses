@@ -257,9 +257,27 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				var settings = SerializationSettings(knownTypes);
+				DataContractJsonSerializerSettings settings = SerializationSettings(knownTypes);
 				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
 				
+				using (MemoryStream stream = new MemoryStream())
+				{
+					serializer.WriteObject(stream, kbObject);
+					return encoding.GetString(stream.ToArray());
+				}
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Serialize error ", ex);
+			}
+			return null;
+		}
+		internal static string Serialize<T>(T kbObject, DataContractJsonSerializerSettings settings) where T : class
+		{
+			try
+			{
+				Encoding encoding = Encoding.UTF8;
+				DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
 				using (MemoryStream stream = new MemoryStream())
 				{
 					serializer.WriteObject(stream, kbObject);
@@ -320,11 +338,15 @@ namespace GeneXus.Utils
 		}
 		public static T Deserialize<T>(string kbObject, Encoding encoding, IEnumerable<Type> knownTypes, T defaultValue) where T : class
 		{
+			var settings = SerializationSettings(knownTypes);
+			return Deserialize<T>(kbObject, encoding, knownTypes, defaultValue, settings);
+		}
+		internal static T Deserialize<T>(string kbObject, Encoding encoding, IEnumerable<Type> knownTypes, T defaultValue, DataContractJsonSerializerSettings settings) where T : class
+		{
 			if (!string.IsNullOrEmpty(kbObject))
 			{
 				try
 				{
-					var settings = SerializationSettings(knownTypes);
 					using (MemoryStream stream = new MemoryStream(encoding.GetBytes(kbObject)))
 					{
 						DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
@@ -342,14 +364,13 @@ namespace GeneXus.Utils
 		}
 		public static T Deserialize<T>(string kbObject, Encoding encoding) where T : class, new()
 		{
-			return Deserialize<T>(kbObject, Encoding.Unicode, null, new T());
+			return Deserialize<T>(kbObject, encoding, null, new T());
 		}
 
 		public static T Deserialize<T>(string kbObject) where T : class, new()
 		{
 			return Deserialize<T>(kbObject, Encoding.Unicode);
 		}
-
 		public static T DeserializeNullDefaultValue<T>(string kbObject) where T : class
 		{
 			return Deserialize<T>(kbObject, Encoding.Unicode, null, null);

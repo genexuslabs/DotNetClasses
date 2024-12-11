@@ -880,29 +880,49 @@ namespace GeneXus.Application
 			if (vType.IsConstructedGenericType && typeof(IGxCollection).IsAssignableFrom(vType)) 
 			{				
 				bool isWrapped = (isApiObject)?false:true;				
+				bool isEmpty = false;
 				object collectionObject = null;
 				string wrappedStatus = "";
 				Type restItemType=null;
 				itemType = collectionValue.GetType().GetGenericArguments()[0];
-				if ((typeof(IGXBCCollection).IsAssignableFrom(vType)) && !isApiObject)//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+				if (vType.GetGenericTypeDefinition() == typeof(GxSimpleCollection<>) && isApiObject)
 				{
-					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+					restItemType = itemType;
+					isEmpty = true;
+					isWrapped = false;
+					collectionObject = collectionValue;
 				}
-				if (restItemType == null)//Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+				else
 				{
-					restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+					if ((typeof(IGXBCCollection).IsAssignableFrom(vType)) && !isApiObject)//Collection<BCType> convert to GxGenericCollection<BCType_RESTLInterface>
+					{
+						restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTLInterface", null);
+					}
+					else //Collection<SDTType> convert to GxGenericCollection<SDTType_RESTInterface>
+					{
+						if (typeof(GxUserType).IsAssignableFrom(itemType)){
+							restItemType = ClassLoader.FindType(Config.CommonAssemblyName, itemType.FullName + "_RESTInterface", null);
+						}
+						else
+						{
+							collectionObject = collectionValue;
+						}
+					}
+					if (restItemType != null)
+					{
+						object[] attributes = restItemType.GetCustomAttributes(typeof(GxJsonSerialization), false);
+						IEnumerable<object> serializationAttributes = attributes.Where(a => a.GetType() == typeof(GxJsonSerialization));
+						if (serializationAttributes != null && serializationAttributes.Any<object>())
+						{
+							GxJsonSerialization attFmt = (GxJsonSerialization)serializationAttributes.FirstOrDefault();
+							wrappedStatus = attFmt.JsonUnwrapped;
+							isWrapped = (isApiObject) ? ((wrappedStatus == "wrapped") ? true : false) : ((wrappedStatus == "unwrapped") ? false : true);
+						}
+						isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
+						Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
+						collectionObject = Activator.CreateInstance(genericListItemType, new object[] { collectionValue, isWrapped, wrappedStatus });
+					}
 				}
-				object[] attributes = restItemType.GetCustomAttributes(typeof(GxJsonSerialization),  false);
-				IEnumerable<object>  serializationAttributes = attributes.Where(a => a.GetType() == typeof(GxJsonSerialization));
-				if (serializationAttributes != null && serializationAttributes.Any<object>())
-				{
-					GxJsonSerialization attFmt = (GxJsonSerialization)serializationAttributes.FirstOrDefault();
-					wrappedStatus = attFmt.JsonUnwrapped;
-					isWrapped = (isApiObject)? ((wrappedStatus == "wrapped")? true: false): ((wrappedStatus == "unwrapped") ? false : true);
-				}
-				bool isEmpty = !restItemType.IsDefined(typeof(GxOmitEmptyCollection), false);
-				Type genericListItemType = typeof(GxGenericCollection<>).MakeGenericType(restItemType);
-				collectionObject = Activator.CreateInstance(genericListItemType, new object[] { collectionValue, isWrapped , wrappedStatus});
 				// Empty collection serialized w/ noproperty
 				if (collectionObject is IList restList)
 				{
