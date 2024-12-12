@@ -19,8 +19,6 @@ namespace GeneXus.AI
 		protected string API_KEY;
 		protected const string AI_PROVIDER = "AI_PROVIDER";
 		protected const string AI_PROVIDER_API_KEY = "AI_PROVIDER_API_KEY";
-		const string FINISH_REASON_STOP = "stop";
-		const string FINISH_REASON_TOOL_CALLS = "toolcalls";
 
 		protected string DEFAULT_API_KEY => "default_";
 		protected string DEFAULT_PROVIDER => "https://api.qa.saia.ai";
@@ -63,7 +61,7 @@ namespace GeneXus.AI
 			uriBuilder.Path += "chat";
 			return uriBuilder.Uri.ToString();
 		}
-		internal async Task<string> Assistant(string assistant, List<Chat.ChatMessage> messages, GXProperties properties)
+		internal async Task<ChatCompletionResult> Assistant(string assistant, List<Chat.ChatMessage> messages, GXProperties properties)
 		{
 			try
 			{
@@ -93,24 +91,9 @@ namespace GeneXus.AI
 				string responseJson = await response.Content.ReadAsStringAsync();
 				GXLogging.Debug(log, "Agent response:", responseJson);
 				ChatCompletionResult chatCompletion = JsonSerializer.Deserialize<ChatCompletionResult>(responseJson);
+				return chatCompletion;
 
-				if (chatCompletion != null && chatCompletion.Choices!=null)
-				{
-					foreach (Choice choice in chatCompletion.Choices)
-					{
-						switch (choice.FinishReason.ToLower())
-						{
-							case FINISH_REASON_STOP:
-								return choice.Message.Content;
-							case FINISH_REASON_TOOL_CALLS:
-								messages.Add(choice.Message);
-								foreach (ToolCall toolCall in choice.Message.ToolCalls)
-									ProcessTollCall(toolCall, messages);
-								return await Assistant(assistant, messages, properties);
-						}
-					}
-				}
-				return string.Empty;
+
 			}
 			catch (Exception ex)
 			{
@@ -118,26 +101,6 @@ namespace GeneXus.AI
 				throw;
 			}
 
-		}
-
-		private void ProcessTollCall(ToolCall toolCall, List<ChatMessage> messages)
-		{
-			string result = string.Empty;
-			string functionName = toolCall.Function.Name;
-			/*try
-			{
-				result = CallTool(functionName, toolCall.Function.Arguments);
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, "Error calling tool ", functionName, ex);
-				result = $"Error calling tool {functionName}";
-			}*/
-			ChatMessage toolCallMessage = new ChatMessage();
-			toolCallMessage.Role = "tool";
-			toolCallMessage.Content = result;
-			toolCallMessage.ToolCallId = toolCall.Id;
-			messages.Add(toolCallMessage);
 		}
 
 
