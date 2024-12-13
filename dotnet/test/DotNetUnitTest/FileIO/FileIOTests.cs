@@ -11,7 +11,9 @@ namespace UnitTesting
 	{
 		public FileIOTests()
 		{
+#if !NETCORE
 			Config.ConfigFileName = Path.Combine(BaseDir, "client.exe.config");
+#endif
 		}
 		[Fact]
 		public void FileSharedToCopy()
@@ -61,7 +63,18 @@ namespace UnitTesting
 			PathUtil.AbsoluteUri(path, out uri);
 			Assert.True(uri.Scheme == Uri.UriSchemeFile);
 			Assert.True(uri.IsAbsoluteUri);
-			//Assert.True(new FileInfo(uri.LocalPath).FullName == new FileInfo("PublicTempStorage/multimedia/myimg_8e1604b16eda43e59694f9aeb0b33e77.jpg").FullName);
+			Assert.True(new FileInfo(uri.LocalPath).FullName == new FileInfo("PublicTempStorage/multimedia/myimg_8e1604b16eda43e59694f9aeb0b33e77.jpg").FullName);
+
+			path = "https://localhost/ImageType.NetEnvironment/PublicTempStorage/multimedia/myimg_8e1604b16eda43e59694f9aeb0b33e77.jpg";
+			PathUtil.AbsoluteUri(path, out uri);
+			Assert.True(uri.Scheme == Uri.UriSchemeHttps);
+			Assert.True(uri.IsAbsoluteUri);
+
+			path = "file:///app/test/files/xml/error.xml";
+			PathUtil.AbsoluteUri(path, out uri);
+			Assert.True(uri.Scheme == Uri.UriSchemeFile);
+			Assert.True(uri.IsAbsoluteUri);
+
 		}
 		[Fact]
 		public void GXDBFilePathTest()

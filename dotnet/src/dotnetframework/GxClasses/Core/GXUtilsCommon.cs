@@ -4062,6 +4062,7 @@ namespace GeneXus.Utils
 	{
 		const string schemeRegEx = @"^([a-z][a-z0-9+\-.]*):";
 		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<PathUtil>();
 
 		public static bool IsAbsoluteUrl(string url)
 		{
@@ -4101,35 +4102,34 @@ namespace GeneXus.Utils
 		public static bool AbsoluteUri(string fileName, out Uri result)
 		{
 			result = null;
-			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			Uri relative;
+			if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
 			{
-				return true;
-			}
-			else
-			{
-				Uri relative;
-				if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
+				if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
 				{
-					if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
+					int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
+					if (idx >= 0)
 					{
-						int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
-						if (idx >= 0)
-						{
-							fileName = fileName.Substring(idx);
-							Uri localRelative;
-							if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
-								relative = localRelative;
-						}
-					}
-
-					if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
-					{
-						return true;
+						fileName = fileName.Substring(idx);
+						Uri localRelative;
+						if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
+							relative = localRelative;
 					}
 				}
-				return false; ;
-			}
 
+				if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
+				{
+					GXLogging.Debug(log, "Relative uri:", fileName, " resolved to " + result);
+					return true;
+				}
+			}
+			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			{
+				GXLogging.Debug(log, "Absolute uri:", fileName, " resolved to " + result);
+				return true;
+			}
+			GXLogging.Info(log, "Uri ", fileName, " resolved to:" + result);
+			return false; ;
 		}
 
 		public static string RelativePath(string blobPath)
