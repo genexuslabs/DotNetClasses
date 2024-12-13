@@ -39,12 +39,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install .NET 6
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: '6.0.x'
-        include-prerelease: false
-
     - name: Install .NET 8
       uses: actions/setup-dotnet@v3
       with:
@@ -215,6 +209,5 @@ jobs:
     if: github.repository_owner == 'genexuslabs' && needs.build.outputs.SHOULD_DEPLOY == 'true'
     with: 
       VERSION: ${{ needs.build.outputs.NUGET_VERSION }}
-      COMMIT_MESSAGE: ${{ needs.build.outputs.COMMIT_MESSAGE }}
       COMMITTER: ${{ needs.build.outputs.LAST_COMMITTER }}
     secrets: inherit
