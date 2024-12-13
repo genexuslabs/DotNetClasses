@@ -11,7 +11,12 @@ using System.IO;
 using System.Collections.Generic;
 using GeneXus.Configuration;
 using System.Text.RegularExpressions;
+
+
 #if NETCORE
+using Npgsql;
+using Pgvector;
+using NpgsqlTypes;
 using GxClasses.Helpers;
 #endif
 
@@ -209,10 +214,13 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(NpgsqlAssembly, "Npgsql.NpgsqlParameter");
-			ClassLoader.SetPropValue(parm, "NpgsqlDbType", GXTypeToNpgsqlDbType(dbtype));
-			ClassLoader.SetPropValue(parm, "Size", gxlength);
-			ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);
-			ClassLoader.SetPropValue(parm, "Scale", (byte)gxdec);
+			if (!(dbtype is GXType.Embedding))
+			{
+				ClassLoader.SetPropValue(parm, "NpgsqlDbType", GXTypeToNpgsqlDbType(dbtype));
+				ClassLoader.SetPropValue(parm, "Size", gxlength);
+				ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);
+				ClassLoader.SetPropValue(parm, "Scale", (byte)gxdec);
+			}
 			ClassLoader.SetPropValue(parm, "ParameterName", name);
 			return parm;
 
@@ -318,6 +326,12 @@ namespace GeneXus.Data
 			{
 				value = value.ToString();
 			}
+#if NETCORE
+			else if (value is GxEmbedding embedding)
+			{
+				value = new Vector(embedding.Data);
+			}
+#endif
 			base.SetParameter(parameter, value);
 		}
 		public override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
@@ -435,6 +449,18 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
+#if NETCORE
+		public override GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i, string model, int dimensions)
+		{
+			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
+				return GxEmbedding.Empty(model, dimensions);
+			else
+			{
+				Pgvector.Vector vector = (Pgvector.Vector)DR.GetValue(i);
+				return new GxEmbedding(vector.Memory.ToArray()) { Model = model, Dimensions = dimensions };
+			}
+		}
+#endif
 		public override IDataReader GetCacheDataReader(CacheItem item, bool computeSize, string keyCache)
 		{
 			return new GxCacheDataReader(item, computeSize, keyCache);
@@ -599,7 +625,13 @@ namespace GeneXus.Data
 		{
 			try
 			{
+#if NETCORE
+				NpgsqlDataSourceBuilder dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+				dataSourceBuilder.UseVector();
+				_connection = dataSourceBuilder.Build().CreateConnection();
+#else
 				_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection", new object[] { connectionString });
+#endif
 #if NETCORE
 				AppContext.SetSwitch(INFINITY_CONVERSIONS, true);
 #endif
