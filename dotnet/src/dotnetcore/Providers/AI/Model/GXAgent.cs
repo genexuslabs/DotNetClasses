@@ -11,6 +11,8 @@ namespace GeneXus.AI
 	public class GXAgent : GXProcedure
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXAgent>();
+		const string FINISH_REASON_STOP = "stop";
+		const string FINISH_REASON_TOOL_CALLS = "toolcalls";
 
 		protected string CallAssistant(string assistant, GXProperties properties, object result)
 		{
@@ -24,7 +26,25 @@ namespace GeneXus.AI
 				GXLogging.Debug(log, "Calling Agent: ", assistant);
 
 				List<ChatMessage> chatMessagesList = chatMessages!=null ? chatMessages.Cast<ChatMessage>().ToList() :null;
-				return AgentService.AgentHandlerInstance.Assistant(assistant, chatMessagesList, gxproperties).GetAwaiter().GetResult();
+				ChatCompletionResult chatCompletion = AgentService.AgentHandlerInstance.Assistant(assistant, chatMessagesList, gxproperties).GetAwaiter().GetResult();
+
+				if (chatCompletion != null && chatCompletion.Choices != null)
+				{
+					foreach (Choice choice in chatCompletion.Choices)
+					{
+						switch (choice.FinishReason.ToLower())
+						{
+							case FINISH_REASON_STOP:
+								return choice.Message.Content;
+							case FINISH_REASON_TOOL_CALLS:
+								chatMessagesList.Add(choice.Message);
+								foreach (ToolCall toolCall in choice.Message.ToolCalls)
+									ProcessTollCall(toolCall, chatMessagesList);
+								return CallAgent(assistant, gxproperties, chatMessagesList, result);
+						}
+					}
+				}
+				return string.Empty;
 			}
 			catch (Exception ex)
 			{
@@ -34,5 +54,30 @@ namespace GeneXus.AI
 			}
 
 		}
+		private void ProcessTollCall(ToolCall toolCall, List<ChatMessage> messages)
+		{
+			string result = string.Empty;
+			string functionName = toolCall.Function.Name;
+			try
+			{
+				result = CallTool(functionName, toolCall.Function.Arguments);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Error calling tool ", functionName, ex);
+				result = $"Error calling tool {functionName}";
+			}
+			ChatMessage toolCallMessage = new ChatMessage();
+			toolCallMessage.Role = "tool";
+			toolCallMessage.Content = result;
+			toolCallMessage.ToolCallId = toolCall.Id;
+			messages.Add(toolCallMessage);
+		}
+		protected virtual string CallTool(string name, string arguments) 
+		{
+			return string.Empty;
+		}
+
+
 	}
 }

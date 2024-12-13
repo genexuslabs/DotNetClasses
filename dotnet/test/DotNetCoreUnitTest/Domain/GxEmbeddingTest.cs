@@ -24,7 +24,7 @@ namespace DotNetCoreUnitTest.Domain
 			GXProperties properties = new GXProperties();
 			properties.Set("$context", "context for reference");
 
-			string embedding = await agentService.Assistant(modelId, null, properties);
+			ChatCompletionResult embedding = await agentService.Assistant(modelId, null, properties);
 			Assert.NotNull(embedding);
 		}
 	}
