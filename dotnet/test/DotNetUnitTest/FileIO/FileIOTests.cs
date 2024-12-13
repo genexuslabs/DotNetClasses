@@ -11,7 +11,9 @@ namespace UnitTesting
 	{
 		public FileIOTests()
 		{
+#if !NETCORE
 			Config.ConfigFileName = Path.Combine(BaseDir, "client.exe.config");
+#endif
 		}
 		[Fact]
 		public void FileSharedToCopy()
