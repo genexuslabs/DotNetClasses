@@ -13,7 +13,6 @@ namespace GeneXus.AI
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXAgent>();
 		const string FINISH_REASON_STOP = "stop";
 		const string FINISH_REASON_TOOL_CALLS = "tool_calls";
-
 		protected string CallAssistant(string assistant, GXProperties properties, object result)
 		{
 			return CallAgent(assistant, properties, null, result);
