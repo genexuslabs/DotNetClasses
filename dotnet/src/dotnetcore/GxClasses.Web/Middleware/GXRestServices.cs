@@ -13,10 +13,23 @@ using GeneXus.Metadata;
 using GeneXus.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 
 namespace GeneXus.Utils
 {
+	public class CustomActionFilter : IActionFilter
+	{
+		public void OnActionExecuted(ActionExecutedContext context)
+		{
+		}
+
+		public void OnActionExecuting(ActionExecutingContext context)
+		{
+			(context.Controller as GxRestService).Initialize();
+		}
+	}
+	[TypeFilter(typeof(CustomActionFilter))]
 	public class GxRestService : ControllerBase
 	{
         static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxRestService>();
@@ -30,12 +43,17 @@ namespace GeneXus.Utils
 		WrappedJsonError _errorDetail;
 
 		protected GxRestService()
-        {
+		{
 			context = GxContext.CreateDefaultInstance();
+		}
+		[NonAction]
+		internal void Initialize()
+		{
+			context.HttpContext = HttpContext;
+			context.HttpContext.NewSessionCheck();
 			ServiceHeaders();
-			if (GXUtil.CompressResponse())
-                GXUtil.SetGZip(HttpContext);
-        }
+		}
+
 		protected void Cleanup()
         {
 			if (runAsMain)
