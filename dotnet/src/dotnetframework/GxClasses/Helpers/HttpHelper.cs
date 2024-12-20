@@ -185,7 +185,7 @@ namespace GeneXus.Http
 												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
 												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
 												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
-												{"oauth/gam/v2.0/requesttokenanduserinfo","agamssorequesttokenanduserinfo_v20.aspx"}};
+												{"oauth/gam/v2.0/requesttokenanduserinfo","agamssorestrequesttokenanduserinfo_v20.aspx"}};
 		internal static HashSet<string> GamServicesInternalName = new HashSet<string>(GAMServices.Values.Select(value => value.Replace(ASPX, string.Empty)));
 		internal const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
 		internal const string GXFLOW_NSPACE = "GXflow.Programs";
