@@ -423,9 +423,9 @@ namespace GeneXus.Http
 #if NETCORE
 		internal static WrappedJsonError HandleUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, Exception ex)
 		{
-			string statusCodeDesc = StatusCodeToTitle(HttpStatusCode.BadRequest);
+			string statusCodeDesc = StatusCodeToTitle(statusCode);
 			TraceUnexpectedError(ex);
-			string statusCodeStr = HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT);
+			string statusCodeStr = statusCode.ToString(HttpHelper.INT_FORMAT);
 			HandleUnauthorized(statusCode, httpContext);
 			httpContext.SetReasonPhrase(statusCodeDesc);
 			GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusCodeDesc));
