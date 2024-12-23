@@ -87,8 +87,15 @@ namespace UnitTesting
 			{
 				string newFileName = GXDbFile.ResolveUri($"{GXDbFile.Scheme}:{fileName}", false);
 				string baseDir = Preferences.getBLOB_PATH();
-				bool isOK = new Uri(newFileName).LocalPath.StartsWith(Path.GetFullPath(baseDir), StringComparison.OrdinalIgnoreCase);
-				Assert.True(isOK);
+				try
+				{
+					bool isOK = new Uri(newFileName).LocalPath.StartsWith(Path.GetFullPath(baseDir), StringComparison.OrdinalIgnoreCase);
+					Assert.True(isOK);
+				}
+				catch (Exception ex)
+				{
+					Assert.True(false,  $"FileName:{newFileName} Error:{ex.Message}");
+				}
 			}
 		}
 
