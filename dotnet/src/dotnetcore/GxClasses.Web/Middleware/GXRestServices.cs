@@ -208,7 +208,7 @@ namespace GeneXus.Utils
 		{
 			GXLogging.Error(log, "Failed to complete execution of Rest Service:", ex);
 
-			if (ex is FormatException)
+			if (ex is FormatException || ex is NullReferenceException)
 			{
 				WrappedJsonError jsonError = HttpHelper.HandleUnexpectedError(HttpContext, HttpStatusCode.BadRequest, ex);
 				return BadRequest(jsonError);
