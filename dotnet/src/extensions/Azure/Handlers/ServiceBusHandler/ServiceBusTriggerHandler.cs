@@ -41,6 +41,25 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				throw;
 			}
 		}
+
+		public async Task RunSingle(ServiceBusReceivedMessage myQueueItem, FunctionContext context)
+		{
+			var log = context.GetLogger("ServiceBusTriggerHandler");
+			string functionName = context.FunctionDefinition.Name;
+
+			log.LogInformation($"GeneXus Service Bus trigger handler. Function processed: {functionName}.");
+
+			try
+			{
+				ServiceBusReceivedMessage[] queueItems = new ServiceBusReceivedMessage[] { myQueueItem };
+				await ProcessMessages(context, log, queueItems);
+			}
+			catch (Exception ex) //Catch System exception and retry
+			{
+				log.LogError(ex.ToString());
+				throw;
+			}
+		}
 		private Task ProcessMessages(FunctionContext context, ILogger log, ServiceBusReceivedMessage[] messages)
 		{
 			string envVar = $"GX_AZURE_{context.FunctionDefinition.Name.ToUpper()}_CLASS";
