@@ -38,7 +38,7 @@ namespace GxClasses.Web.Middleware
 		public static string UrlTemplateControllerWithParms;
 
 		//Azure Functions
-		public bool AzureRuntime;
+		public static bool AzureRuntime;
 		public AzureDeployFeature AzureDeploy = new AzureDeployFeature();
 		public static string AzureFunctionName;
 
@@ -382,7 +382,7 @@ namespace GxClasses.Web.Middleware
 		private String FindPath(string innerPath, Dictionary<string,string > servicesPathUrl, bool startTxt)
 		{
 			string actualPath = String.Empty;
-			foreach (var subPath in from String subPath in servicesPathUrl.Keys									
+			foreach (string subPath in from String subPath in servicesPathUrl.Keys									
 									select subPath)
 			{
 				bool match = false;
