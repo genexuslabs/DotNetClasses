@@ -22,11 +22,17 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 			GXRouting.ContentRootPath = roothPath;
 
 			var host = new HostBuilder()
-				.ConfigureFunctionsWebApplication()
+				.ConfigureFunctionsWorkerDefaults()
 				.ConfigureServices(services =>
 				{
 					services.AddSingleton<ICallMappings, CallMappings>(x => new CallMappings(roothPath));
-					services.AddControllers();
+				})
+				.ConfigureServices(services =>
+				{
+					services.AddSingleton<IGXRouting, GXRouting>(x => new GXRouting(routePrefix));
+				})
+				.ConfigureServices(services =>
+				{
 					ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 					if (sessionService is GxRedisSession)
 					{ 
