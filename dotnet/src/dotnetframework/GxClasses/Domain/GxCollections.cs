@@ -8,7 +8,10 @@ namespace GeneXus.Utils
 	using System.ComponentModel;
 	using System.Data;
 	using System.Globalization;
-#if !NETCORE
+#if NETCORE
+	using System.Text.Json;
+	using System.Text.Json.Serialization;
+#else
 	using Jayrock.Json;
 #endif
 	using System.Linq;
@@ -3089,4 +3092,32 @@ namespace GeneXus.Utils
 
 	}
 
+#if NETCORE
+	public class BoolStringJsonConverter : JsonConverter<bool>
+	{
+		public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.String)
+			{
+				string stringValue = reader.GetString();
+				if (bool.TryParse(stringValue, out bool result))
+				{
+					return result;
+				}
+				throw new JsonException($"Invalid boolean value: {stringValue}");
+			}
+			else if (reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False)
+			{
+				return reader.GetBoolean();
+			}
+
+			throw new JsonException($"Unexpected token type: {reader.TokenType}");
+		}
+
+		public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options)
+		{
+			writer.WriteBooleanValue(value);
+		}
+	}
+#endif
 }
