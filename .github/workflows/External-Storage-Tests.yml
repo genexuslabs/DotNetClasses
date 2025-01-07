@@ -19,7 +19,7 @@ jobs:
       Configuration: Release
       SolutionFile: dotnet\DotNetStandardClasses.sln
     
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     environment: external-storage-tests
 
     steps:
@@ -27,6 +27,24 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
+
+    - name: Install Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Start LocalStack
+      run: |
+        docker run -d -p 4566:4566 -p 4572:4572 --name localstack localstack/localstack
+        sleep 10  # Wait for LocalStack to initialize
+
+    - name: Configure AWS CLI for LocalStack
+      run: |
+        aws configure set aws_access_key_id test
+        aws configure set aws_secret_access_key test
+        aws configure set default.region us-east-1
+        aws configure set endpoint_url http://localhost:4566
+
+    - name: Create S3 Bucket in LocalStack
+      run: aws s3api create-bucket --bucket test-bucket --endpoint-url http://localhost:4566
 
     - name: Install .NET 8
       uses: actions/setup-dotnet@v3
@@ -41,31 +59,30 @@ jobs:
       run: dotnet build $Env:SolutionFile --no-restore --configuration $Env:Configuration
        
     - name: Test External Storage
-      run: |
-        $Env:AWSS3_TEST_ENABLED="true"
-        $Env:STORAGE_AWSS3_ACCESS_KEY="${{ secrets.AWSS3_ACCESS_KEY }}"
-        $Env:STORAGE_AWSS3_SECRET_KEY="${{ secrets.AWSS3_SECRET_KEY }}"
-        $Env:STORAGE_AWSS3_BUCKET_NAME="genexus-s3-test"
-        $Env:STORAGE_AWSS3_FOLDER_NAME="gxclasses"
-        $Env:STORAGE_AWSS3_REGION="us-east-1"
-        $Env:IBMCOS_TEST_ENABLED="true"
-        $Env:STORAGE_IBMCOS_ACCESS_KEY="${{ secrets.IBMCOS_ACCESS_KEY }}"
-        $Env:STORAGE_IBMCOS_SECRET_KEY="${{ secrets.IBMCOS_SECRET_KEY }}"
-        $Env:STORAGE_IBMCOS_BUCKET_NAME="gxclasses-unit-tests"
-        $Env:STORAGE_IBMCOS_FOLDER_NAME="tests"
-        $Env:STORAGE_IBMCOS_REGION="us-south"
-        $Env:AZUREBS_TEST_ENABLED="true"
-        $Env:STORAGE_AZUREBS_ACCESS_KEY="${{ secrets.AZUREBS_ACCESS_KEY }}"
-        $Env:STORAGE_AZUREBS_ACCOUNT_NAME="${{ secrets.AZUREBS_ACCOUNT_NAME }}"
-        $Env:STORAGE_AZUREBS_FOLDER_NAME="tests"
-        $Env:STORAGE_AZUREBS_PUBLIC_CONTAINER_NAME="contluispublic"
-        $Env:STORAGE_AZUREBS_PRIVATE_CONTAINER_NAME="contluisprivate"
-        $Env:GOOGLECS_TEST_ENABLED="true"
-        $Env:STORAGE_GOOGLECS_KEY='${{ secrets.GOOGLECS_KEY }}'
-        $Env:STORAGE_GOOGLECS_PROJECT_ID="gxjavacloudstorageunittests"
-        $Env:STORAGE_GOOGLECS_BUCKET_NAME="javaclasses-unittests"
-        $Env:STORAGE_GOOGLECS_FOLDER_NAME="gxclasses"
-        $Env:STORAGE_GOOGLECS_APPLICATION_NAME="gxjavacloudstorageunittests"
-        
-        dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
-
+      env:
+        AWSS3_TEST_ENABLED: "true"
+        STORAGE_AWSS3_ACCESS_KEY: "test"
+        STORAGE_AWSS3_SECRET_KEY: "test"
+        STORAGE_AWSS3_BUCKET_NAME: "test-bucket"
+        STORAGE_AWSS3_FOLDER_NAME: "gxclasses"
+        STORAGE_AWSS3_REGION: "us-east-1"
+        STORAGE_AWSS3_CUSTOM_ENDPOINT: "http://localhost:4566"
+        IBMCOS_TEST_ENABLED: "true"
+        STORAGE_IBMCOS_ACCESS_KEY: "${{ secrets.IBMCOS_ACCESS_KEY }}"
+        STORAGE_IBMCOS_SECRET_KEY: "${{ secrets.IBMCOS_SECRET_KEY }}"
+        STORAGE_IBMCOS_BUCKET_NAME: "gxclasses-unit-tests"
+        STORAGE_IBMCOS_FOLDER_NAME: "tests"
+        STORAGE_IBMCOS_REGION: "us-south"
+        AZUREBS_TEST_ENABLED: "true"
+        STORAGE_AZUREBS_ACCESS_KEY: "${{ secrets.AZUREBS_ACCESS_KEY }}"
+        STORAGE_AZUREBS_ACCOUNT_NAME: "${{ secrets.AZUREBS_ACCOUNT_NAME }}"
+        STORAGE_AZUREBS_FOLDER_NAME: "tests"
+        STORAGE_AZUREBS_PUBLIC_CONTAINER_NAME: "contluispublic"
+        STORAGE_AZUREBS_PRIVATE_CONTAINER_NAME: "contluisprivate"
+        GOOGLECS_TEST_ENABLED: "true"
+        STORAGE_GOOGLECS_KEY: '${{ secrets.GOOGLECS_KEY }}'
+        STORAGE_GOOGLECS_PROJECT_ID: "gxjavacloudstorageunittests"
+        STORAGE_GOOGLECS_BUCKET_NAME: "javaclasses-unittests"
+        STORAGE_GOOGLECS_FOLDER_NAME: "gxclasses"
+        STORAGE_GOOGLECS_APPLICATION_NAME: "gxjavacloudstorageunittests"
+      run: dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
