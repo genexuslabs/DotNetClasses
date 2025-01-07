@@ -10,7 +10,6 @@ namespace GeneXus.Utils
 	using System.Globalization;
 #if NETCORE
 	using System.Text.Json;
-	using System.Text.Json.Serialization;
 #else
 	using Jayrock.Json;
 #endif
