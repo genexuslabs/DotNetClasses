@@ -19,7 +19,6 @@ namespace GeneXus.Utils
 	using System.Runtime.Serialization;
 	using System.Runtime.Serialization.Json;
 	using System.Text;
-	using System.Text.Json.Serialization;
 	using System.Xml;
 	using System.Xml.Serialization;
 	using GeneXus.Application;
