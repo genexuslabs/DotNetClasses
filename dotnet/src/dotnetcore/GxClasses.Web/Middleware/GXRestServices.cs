@@ -130,7 +130,7 @@ namespace GeneXus.Utils
 			SetStatusCode(HttpStatusCode.Created);
 			return GetResponse(new {object_id = fileToken});
 		}
-		protected void ErrorCheck(IGxSilentTrn trn)
+		protected ActionResult ErrorCheck(IGxSilentTrn trn)
 		{
 			if (trn.Errors() == 1)
 			{
@@ -146,6 +146,10 @@ namespace GeneXus.Utils
 						_errorDetail = HandleError(HttpContext, HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 				}
 			}
+			if (_errorDetail == null)
+				return NoContent();
+			else
+				return GetResponse(_errorDetail);
 
 		}
 		protected void SetMessages(msglist messages)
