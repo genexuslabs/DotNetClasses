@@ -17,7 +17,8 @@ jobs:
       GIT_REF: ${{ github.ref }}
       GIT_SHA: ${{ github.sha }}
       Configuration: Release
-      SolutionFile: dotnet\DotNetStandardClasses.sln
+      SolutionFile: dotnet\StorageTestSolution.sln
+      SolutionFileName: StorageTestSolution
     
     runs-on: ubuntu-latest
     environment: external-storage-tests
@@ -52,6 +53,11 @@ jobs:
         dotnet-version: '8.x'
         include-prerelease: true
    
+    - name: Create temporal solution with .NET 8 projects
+      run: |
+      dotnet new sln --name $SolutionFileName --output dotnet --force
+      dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjectsAndTests -p:DumpSolutionName=$SolutionFileName /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
+
     - name: Restore packages
       run: dotnet restore $SolutionFile
 
