@@ -85,4 +85,4 @@ jobs:
         STORAGE_GOOGLECS_BUCKET_NAME: "javaclasses-unittests"
         STORAGE_GOOGLECS_FOLDER_NAME: "gxclasses"
         STORAGE_GOOGLECS_APPLICATION_NAME: "gxjavacloudstorageunittests"
-      run: dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
+      run: dotnet test $SolutionFile --no-restore --no-build --configuration $Configuration
