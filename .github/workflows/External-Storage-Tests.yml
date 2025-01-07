@@ -53,10 +53,10 @@ jobs:
         include-prerelease: true
    
     - name: Restore packages
-      run: dotnet restore $Env:SolutionFile
+      run: dotnet restore $SolutionFile
 
     - name: Build
-      run: dotnet build $Env:SolutionFile --no-restore --configuration $Env:Configuration
+      run: dotnet build $SolutionFile --no-restore --configuration $Configuration
        
     - name: Test External Storage
       env:
