@@ -9,7 +9,7 @@
 		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\dotnetframework\GXDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
+    <Compile Include="..\..\dotnetframework\GxDataInitialization\GXDataInitialization.cs" Link="GXDataInitialization.cs" />
   </ItemGroup>
 
   <ItemGroup>
