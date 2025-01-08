@@ -59,7 +59,7 @@ namespace ProjectHealthTest
 		{
 			Process process = new Process();
 			List<string> outputLines = new List<string>();
-			process.StartInfo.FileName = "dotnet.exe";
+			process.StartInfo.FileName = "dotnet";
 			process.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
 			process.StartInfo.Arguments = $"list {projectPath} package --include-transitive --framework {targetFramework}";
 
