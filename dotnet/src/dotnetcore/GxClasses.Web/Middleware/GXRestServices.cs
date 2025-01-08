@@ -130,7 +130,7 @@ namespace GeneXus.Utils
 			SetStatusCode(HttpStatusCode.Created);
 			return GetResponse(new {object_id = fileToken});
 		}
-		protected ActionResult ErrorCheck(IGxSilentTrn trn)
+		protected void ErrorCheck(IGxSilentTrn trn)
 		{
 			if (trn.Errors() == 1)
 			{
@@ -146,12 +146,20 @@ namespace GeneXus.Utils
 						_errorDetail = HandleError(HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 				}
 			}
+		}
+		protected ActionResult GetErrorResponse(IGxSilentTrn trn)
+		{
+			ErrorCheck(trn);
 			if (_errorDetail == null)
 				return NoContent();
 			else
 				return GetResponse(_errorDetail);
-
 		}
+		protected ActionResult GetErrorResponse(string code, string message)
+		{
+			return GetResponse(HandleError(code, message));
+		}
+
 		protected void SetMessages(msglist messages)
 		{
 			StringBuilder header = new StringBuilder();
@@ -344,7 +352,6 @@ namespace GeneXus.Utils
 			SetErrorHeaders(HttpContext, httpStatusCode, message);
 			return HttpHelper.GetJsonError(code, message);
 		}
-
 		private void SetErrorHeaders(HttpContext httpContext, HttpStatusCode httpStatusCode, string message)
 		{
 			if (httpContext != null)
