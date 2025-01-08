@@ -78,7 +78,7 @@ namespace UnitTesting
 			Assert.True(uri.IsAbsoluteUri);
 
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void GXDBFilePathTest()
 		{
 			string[] filesName = { "content/../../../document.aspx","content%2f..%2f..%2f..%2fdocument.aspx","content%2f%2e%2e%2f%2e%2e%2f%2e%2e%2fdocument","content%5c%2e%2e%5c%2e%2e%5c%2e%2e%5cdocument",
