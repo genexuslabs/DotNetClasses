@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using GeneXus.Application;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -11,6 +12,10 @@ namespace xUnitTesting
 		[Fact]
 		public void PathToUrl()
 		{
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return;
+			}
 			DefaultHttpContext httpContext = new DefaultHttpContext();
 
 			httpContext.Features.Set<IHttpRequestFeature>(new HttpRequestFeature());
