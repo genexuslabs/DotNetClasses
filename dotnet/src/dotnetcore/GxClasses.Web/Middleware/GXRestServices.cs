@@ -271,7 +271,7 @@ namespace GeneXus.Utils
 			finally
 			{
 				if (!validSynchronizer)
-					HttpHelper.SetError(HttpContext, "0", "Invalid Synchronizer " + synchronizer);
+					_errorDetail = HandleError("0", "Invalid Synchronizer " + synchronizer);
 			}
 		}
 		protected bool IsAuthenticated()
