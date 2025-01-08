@@ -27,7 +27,7 @@
 		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName).sln add $(MSBuildProjectFullPath)"></Exec>
 	</Target>
 
-	<Target Name="DumpProjectsAndTests" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFrameworkDefault))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFrameworkDefault))) ) ">
+	<Target Name="DumpProjectsAndCoreTests" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFrameworkDefault))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFrameworkDefault))) ) AND !$(MSBuildProjectFullPath.Contains('\extensions\'))">
 		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName).sln add $(MSBuildProjectFullPath)"></Exec>
 	</Target>
 	
