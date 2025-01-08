@@ -75,6 +75,7 @@ jobs:
         STORAGE_AWSS3_BUCKET_NAME: "test-bucket"
         STORAGE_AWSS3_FOLDER_NAME: "gxclasses"
         STORAGE_AWSS3_REGION: "us-east-1"
+        STORAGE_AWSS3_ENDPOINT: "custom"
         STORAGE_AWSS3_CUSTOM_ENDPOINT: "http://localhost:4566"
         IBMCOS_TEST_ENABLED: "true"
         STORAGE_IBMCOS_ACCESS_KEY: "${{ secrets.IBMCOS_ACCESS_KEY }}"
