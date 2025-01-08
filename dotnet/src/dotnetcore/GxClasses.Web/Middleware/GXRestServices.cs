@@ -139,11 +139,11 @@ namespace GeneXus.Utils
 				{
 					msglistItem msgItem = (msglistItem)msg[0];
 					if (msgItem.gxTpr_Id.Contains("NotFound"))
-						_errorDetail = HandleError(HttpContext, HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
+						_errorDetail = HandleError(HttpStatusCode.NotFound.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else if (msgItem.gxTpr_Id.Contains("WasChanged"))
-						_errorDetail = HandleError(HttpContext, HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
+						_errorDetail = HandleError(HttpStatusCode.Conflict.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 					else
-						_errorDetail = HandleError(HttpContext, HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
+						_errorDetail = HandleError(HttpStatusCode.BadRequest.ToString(HttpHelper.INT_FORMAT), msgItem.gxTpr_Description);
 				}
 			}
 			if (_errorDetail == null)
@@ -184,10 +184,6 @@ namespace GeneXus.Utils
 			{
 				AddHeader(WARNING_HEADER, StringUtil.Sanitize(header.ToString(), StringUtil.HttpHeaderWhiteList));
 			}
-		}
-		protected void SetError(string code, string message)
-		{
-			HttpHelper.SetError(HttpContext, code, message);
 		}
 		protected ActionResult GetResponse(object data)
 		{
@@ -293,7 +289,7 @@ namespace GeneXus.Utils
 				String token = GetHeader("Authorization");
 				if (token == null)
 				{
-					_errorDetail = HandleError(HttpContext, "0", "This service needs an Authorization Header");
+					_errorDetail = HandleError("0", "This service needs an Authorization Header");
 					return false;
 				}
 				else
@@ -305,7 +301,7 @@ namespace GeneXus.Utils
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
 						if (!isOK)
 						{
-							_errorDetail = HandleGamError(HttpContext, result.Code, result.Description);
+							_errorDetail = HandleGamError(result.Code, result.Description);
 							return false;
 						}
 					}
@@ -319,7 +315,7 @@ namespace GeneXus.Utils
 						}
 						else
 						{
-							_errorDetail = HandleGamError(HttpContext, result.Code, result.Description);
+							_errorDetail = HandleGamError(result.Code, result.Description);
 							if (sessionOk)
 							{
 								SetStatusCode(HttpStatusCode.Forbidden);
@@ -336,16 +332,16 @@ namespace GeneXus.Utils
 				return true;
 			}
 		}
-		internal WrappedJsonError HandleGamError(HttpContext httpContext, string code, string message, HttpStatusCode defaultCode = HttpStatusCode.Unauthorized)
+		internal WrappedJsonError HandleGamError(string code, string message, HttpStatusCode defaultCode = HttpStatusCode.Unauthorized)
 		{
 			HttpStatusCode httpStatusCode = HttpHelper.GamCodeToHttpStatus(code, defaultCode);
-			SetErrorHeaders(httpContext, httpStatusCode, message);
+			SetErrorHeaders(HttpContext, httpStatusCode, message);
 			return HttpHelper.GetJsonError(code, message);
 		}
-		internal WrappedJsonError HandleError(HttpContext httpContext, string code, string message)
+		internal WrappedJsonError HandleError(string code, string message)
 		{
 			HttpStatusCode httpStatusCode = HttpHelper.MapStatusCode(code);
-			SetErrorHeaders(httpContext, httpStatusCode, message);
+			SetErrorHeaders(HttpContext, httpStatusCode, message);
 			return HttpHelper.GetJsonError(code, message);
 		}
 
