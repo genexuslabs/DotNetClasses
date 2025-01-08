@@ -23,11 +23,11 @@
 		<Copy SourceFiles="$(ProjectDir)$(OutDir)$(TargetName).pdb" DestinationFolder="$(DeployDirectory)" Condition="'$(Configuration)'=='Debug'" />
 	</Target>
 
-	<Target Name="DumpProjects" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFrameworkDefault))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFrameworkDefault))) ) AND !$(MSBuildProjectFullPath.Contains('\test\')) AND ('$(IsPublishable)'=='true' OR '$(IsPublishable)'=='')">
+	<Target Name="DumpProjects" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFrameworkDefault))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFrameworkDefault))) ) AND !$(MSBuildProjectFullPath..Replace('\', '/').Contains('/test/')) AND ('$(IsPublishable)'=='true' OR '$(IsPublishable)'=='')">
 		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName).sln add $(MSBuildProjectFullPath)"></Exec>
 	</Target>
 
-	<Target Name="DumpProjectsAndCoreTests" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFrameworkDefault))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFrameworkDefault))) ) AND !$(MSBuildProjectFullPath.Contains('\extensions\'))">
+	<Target Name="DumpProjectsAndCoreTests" Condition="($(TargetFramework.StartsWith($(DumpSolutionTargetFrameworkDefault))) OR $(TargetFrameworks.Contains($(DumpSolutionTargetFrameworkDefault))) ) AND !$(MSBuildProjectFullPath.Replace('\', '/').Contains('/extensions/'))">
 		<Exec Command="dotnet sln $(MSBuildThisFileDirectory)$(DumpSolutionName).sln add $(MSBuildProjectFullPath)"></Exec>
 	</Target>
 	
