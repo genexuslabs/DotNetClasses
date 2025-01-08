@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using GeneXus.Configuration;
 using GeneXus.Printer;
+using GeneXus.Services;
 using GeneXus.Utils;
 using Xunit;
 
@@ -94,7 +95,8 @@ namespace UnitTesting
 				}
 				catch (Exception ex)
 				{
-					Assert.True(false,  $"FileName:{newFileName} Error:{ex.Message}");
+
+					Assert.True(false,  $"FileName:{newFileName} Error:{ex.Message} ExternalProvider:{ServiceFactory.GetExternalProvider()?.GetType().FullName} fileName:{fileName}");
 				}
 			}
 		}
