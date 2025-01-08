@@ -52,6 +52,9 @@ jobs:
       with:
         dotnet-version: '8.x'
         include-prerelease: true
+
+    - name: Install libgdiplus
+      run: sudo apt-get install -y libgdiplus
    
     - name: Create temporary solution with .NET 8 projects
       run: |
