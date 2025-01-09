@@ -34,18 +34,25 @@ using TZ4Net;
 using GeneXus.Cryptography;
 using GeneXus.Data.NTier;
 using System.Collections.Generic;
-using System.Drawing;
 using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
-using System.Drawing.Drawing2D;
 using GeneXus.Storage;
 using GeneXus.Services;
 using GeneXus.Http;
 using System.Security;
-using System.Drawing.Imaging;
 using System.Net.Http.Headers;
+#if NETCORE
+using Image = GeneXus.Drawing.Image;
+using GeneXus.Drawing;
+using GeneXus.Drawing.Drawing2D;
+using GeneXus.Drawing.Imaging;
+#else
 using Image = System.Drawing.Image;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+#endif
 using System.Net.Http;
 
 namespace GeneXus.Utils
@@ -6104,7 +6111,11 @@ namespace GeneXus.Utils
 						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
 					}//return the image resized to the given heigth and width
 					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);
+#if NETCORE
+					modifiedImage = Save(output, imageFile,ImageFormat.Png);
+#else
 					modifiedImage = Save(output, imageFile, ImageFormat.Bmp);
+#endif
 				}				
 			}
 			catch (Exception ex)
@@ -6143,14 +6154,20 @@ namespace GeneXus.Utils
 					{
 						using (Bitmap bmp = new Bitmap(Width, Height))
 						{
+#if !NETCORE
 							bmp.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+#endif
 							using (Graphics Graphic = Graphics.FromImage(bmp))
 							{
 								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
 								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
 								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
 								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
-								modifiedImage = Save(bmp, imageFile, OriginalImage.RawFormat);
+#if NETCORE
+								modifiedImage = Save(bmp, imageFile, ImageFormat.Png);
+#else
+								modifiedImage = Save(bmp, imageFile, ImageFormat.Bmp);
+#endif
 							}
 						}
 					}
@@ -6309,7 +6326,11 @@ namespace GeneXus.Utils
 				{
 					//In some cases, copied memory image fails to save when ImageFormat MemoryBmp
 					//https://stackoverflow.com/questions/9073619/image-save-crashing-value-cannot-be-null-r-nparameter-name-encoder
+#if NETCORE
+					bitmap.Save(ms, ImageFormat.Png);
+#else
 					bitmap.Save(ms, ImageFormat.Bmp);
+#endif
 				}
 				ms.Position = 0;
 				try
@@ -6383,6 +6404,7 @@ namespace GeneXus.Utils
 			return 0;
 		}
 	}
+
 	public class StorageUtils
 	{
 		public const string DELIMITER = "/";
