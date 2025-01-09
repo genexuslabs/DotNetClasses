@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using com.genexus.reports;
+using DotNetUnitTest;
 using GeneXus.Programs;
 using GeneXus.Utils;
 using Xunit;
@@ -27,7 +28,7 @@ namespace UnitTesting
 			});
 
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void ExtractTextFromPDF()
 		{
 			string text = DocumentHandler.GetText("sample.pdf", "pdf");
