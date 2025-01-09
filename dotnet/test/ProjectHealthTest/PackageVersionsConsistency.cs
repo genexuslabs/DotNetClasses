@@ -15,7 +15,7 @@ namespace ProjectHealthTest
 
 		private const string PACKAGES_NODE_NAME = "Project/ItemGroup/PackageReference";
 		private const string PACKAGE_NAME = "Include";
-		private const string SRC_DIR = @"..\..\..\..\..\src";
+		private static readonly string SRC_DIR = Path.Combine("..", "..", "..", "..", "..", "src");
 		private const string PACKAGE_VERSION_ATTRIBUTE_NAME = "Version";
 		private const string TARGET_FRAMEWORK = "Project/PropertyGroup/TargetFramework";
 		private const string TARGET_FRAMEWORKS = "Project/PropertyGroup/TargetFrameworks";
@@ -59,7 +59,7 @@ namespace ProjectHealthTest
 		{
 			Process process = new Process();
 			List<string> outputLines = new List<string>();
-			process.StartInfo.FileName = "dotnet.exe";
+			process.StartInfo.FileName = "dotnet";
 			process.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
 			process.StartInfo.Arguments = $"list {projectPath} package --include-transitive --framework {targetFramework}";
 

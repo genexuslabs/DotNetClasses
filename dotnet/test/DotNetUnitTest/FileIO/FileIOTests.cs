@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using DotNetUnitTest;
 using GeneXus.Configuration;
 using GeneXus.Printer;
 using GeneXus.Services;
@@ -17,7 +18,7 @@ namespace UnitTesting
 			Config.ConfigFileName = Path.Combine(BaseDir, "client.exe.config");
 #endif
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void FileSharedToCopy()
 		{
 			string target = @"\\192.168.86.3\printer";
@@ -27,7 +28,7 @@ namespace UnitTesting
 			Assert.Equal(-1, f.ErrCode);
 			Assert.NotEqual(new NullReferenceException().Message, f.ErrDescription);
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void FileSourceTest()
 		{
 			GxFileInfo fi = new GxFileInfo(string.Empty);
@@ -95,7 +96,7 @@ namespace UnitTesting
 			}
 		}
 
-		[Fact]
+		[WindowsOnlyFact]
 		public void PathUtilGetValidFileName()
 		{
 			string path = "file:///C:/Models/Upload/CSharpModel/web/PublicTempStorage/multimedia/Screen%20Shot%202016-02-15%20at%2011.41.55%20AM_ff107a3ba9fb4564bb4e1bf7f74d5fbf.png";
