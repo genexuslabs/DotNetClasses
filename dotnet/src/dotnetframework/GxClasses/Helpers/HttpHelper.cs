@@ -48,6 +48,7 @@ namespace GeneXus.Http
 		public static string LAST_MODIFIED = "Last-Modified";
 		public static string EXPIRES = "Expires";
 		public static string XGXFILENAME = "x-gx-filename";
+		public static string GX_OBJECT_ID = "GeneXus-Object-Id";
 		internal static string ACCEPT = "Accept";
 		internal static string TRANSFER_ENCODING = "Transfer-Encoding";
 		internal static string X_CSRF_TOKEN_HEADER = "X-XSRF-TOKEN";
@@ -62,16 +63,16 @@ namespace GeneXus.Http
 	public class HttpJsonError
 	{
 		[DataMember(Name = "code")]
-		public string Code;
+		public string Code { get; set; }
 		[DataMember(Name = "message")]
-		public string Message;
+		public string Message { get; set; }
 	}
 
 	[DataContract()]
 	public class WrappedJsonError
 	{
 		[DataMember(Name = "error")]
-		public HttpJsonError Error;
+		public HttpJsonError Error { get; set; }
 	}
 #if NETCORE
 	internal static class CookiesHelper
@@ -333,11 +334,7 @@ namespace GeneXus.Http
 #else
 				httpContext.Response.StatusCode = (int)httpStatusCode;
 #endif
-				if (httpStatusCode == HttpStatusCode.Unauthorized)
-				{
-					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
-				}
-
+				HandleUnauthorized(httpStatusCode, httpContext);
 #if !NETCORE
 					if (!string.IsNullOrEmpty(statusDescription))
 						httpContext.Response.StatusDescription =  statusDescription.Replace(Environment.NewLine, string.Empty);
@@ -351,14 +348,21 @@ namespace GeneXus.Http
 
 #endif
 		}
-		private static HttpStatusCode MapStatusCode(string statusCode)
+		internal static void HandleUnauthorized(HttpStatusCode statusCode, HttpContext httpContext)
+		{
+			if (statusCode == HttpStatusCode.Unauthorized)
+			{
+				httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), statusCode.ToString(HttpHelper.INT_FORMAT), string.Empty);
+			}
+		}
+		internal static HttpStatusCode MapStatusCode(string statusCode)
 		{
 			if (Enum.TryParse<HttpStatusCode>(statusCode, out HttpStatusCode result) && Enum.IsDefined(typeof(HttpStatusCode), result))
 				return result;
 			else
 				return HttpStatusCode.Unauthorized;
 		}
-		private static HttpStatusCode GamCodeToHttpStatus(string code, HttpStatusCode defaultCode=HttpStatusCode.Unauthorized)
+		internal static HttpStatusCode GamCodeToHttpStatus(string code, HttpStatusCode defaultCode=HttpStatusCode.Unauthorized)
 		{
 			if (code == GAM_CODE_OTP_USER_ACCESS_CODE_SENT || code == GAM_CODE_TFA_USER_MUST_VALIDATE)
 			{
@@ -370,6 +374,11 @@ namespace GeneXus.Http
 			}
 			return defaultCode;
 		}
+		internal static WrappedJsonError GetJsonError(string statusCode, string statusDescription)
+		{
+			WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
+			return jsonError;
+		}
 		private static void SetJsonError(HttpContext httpContext, string statusCode, string statusDescription)
 		{
 			if (httpContext != null)//<serviceHostingEnvironment aspNetCompatibilityEnabled="false" /> web.config
@@ -377,8 +386,7 @@ namespace GeneXus.Http
 #if !NETCORE
 				httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 #endif
-				WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
-				httpContext.Response.Write(JSONHelper.Serialize(jsonError));
+				httpContext.Response.Write(JSONHelper.Serialize(GetJsonError(statusCode, statusDescription)));
 			}
 #if !NETCORE
 			else
@@ -412,6 +420,18 @@ namespace GeneXus.Http
 			SetResponseStatus(httpContext, statusCode, statusCodeDesc);
 			SetJsonError(httpContext, statusCodeStr, statusCodeDesc);
 		}
+#if NETCORE
+		internal static WrappedJsonError HandleUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, Exception ex)
+		{
+			string statusCodeDesc = StatusCodeToTitle(statusCode);
+			TraceUnexpectedError(ex);
+			string statusCodeStr = statusCode.ToString(HttpHelper.INT_FORMAT);
+			HandleUnauthorized(statusCode, httpContext);
+			httpContext.SetReasonPhrase(statusCodeDesc);
+			GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusCodeDesc));
+			return new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCodeStr, Message = statusCodeDesc } };
+		}
+#endif
 		internal static string StatusCodeToTitle(HttpStatusCode statusCode)
 		{
 			return CapitalsToTitle.Replace(statusCode.ToString(), " ");

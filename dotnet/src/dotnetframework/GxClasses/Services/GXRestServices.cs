@@ -633,6 +633,7 @@ namespace GeneXus.Utils
 		protected virtual bool IsSynchronizer { get { return false; } }
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel IntegratedSecurityLevel { get { return 0; } }
+		protected virtual GAMSecurityLevel ApiIntegratedSecurityLevel(string gxMethod) { return IntegratedSecurityLevel; }
 		protected virtual string ExecutePermissionPrefix { get { return string.Empty; } }
 	}
 }
