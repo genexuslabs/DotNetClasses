@@ -8,7 +8,9 @@ namespace GeneXus.Utils
 	using System.ComponentModel;
 	using System.Data;
 	using System.Globalization;
-#if !NETCORE
+#if NETCORE
+	using System.Text.Json;
+#else
 	using Jayrock.Json;
 #endif
 	using System.Linq;
@@ -16,6 +18,7 @@ namespace GeneXus.Utils
 	using System.Runtime.Serialization;
 	using System.Runtime.Serialization.Json;
 	using System.Text;
+	using System.Text.Json.Serialization;
 	using System.Xml;
 	using System.Xml.Serialization;
 	using GeneXus.Application;
@@ -1048,6 +1051,7 @@ namespace GeneXus.Utils
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxUserType>();
 		protected ConcurrentDictionary<string,byte> dirties = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
 		private const string PROPERTY_PREFIX = "gxtpr_";
+		private const string FIELD_PREFIX = "gxTv_";
 		static object setupChannelObject = null;
 		static bool setupChannelInitialized;
 		[XmlIgnore]
@@ -1103,10 +1107,12 @@ namespace GeneXus.Utils
 			IsAssigned = true;
 		}
 
-	public virtual void SetDirty(string fieldName)
+		public virtual void SetDirty(string fieldName)
 		{
 			dirties[fieldName] = 1;
 		}
+		public bool IsNull { get => dirties.IsEmpty; }
+
 		public virtual bool IsDirty(string fieldName)
 		{
 			if (dirties.ContainsKey(fieldName))
@@ -1115,9 +1121,10 @@ namespace GeneXus.Utils
 		}
 		public virtual void Copy(GxUserType source)
 		{
-			foreach (PropertyDescriptor item in TypeDescriptor.GetProperties(source))
+			foreach (FieldInfo item in GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
 			{
-				item.SetValue(this, item.GetValue(source));
+				if (item.Name.StartsWith(FIELD_PREFIX))
+					item.SetValue(this, item.GetValue(source));
 			}
 		}
 
@@ -1176,7 +1183,7 @@ namespace GeneXus.Utils
 					return false;
 				foreach (FieldInfo item in GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic))
 				{
-					if (item.Name.StartsWith("gxTv_"))
+					if (item.Name.StartsWith(FIELD_PREFIX))
 					{
 						GxUserType thisGxUserType = item.GetValue(this) as GxUserType;
 						GxUserType sourceGxUserType = item.GetValue(source) as GxUserType;
@@ -1667,7 +1674,7 @@ namespace GeneXus.Utils
 								{
 
 									string sVar = uploadPath.Replace(GXFormData.FORMDATA_REFERENCE, string.Empty);
-									MethodInfo setBlob = GetMethodInfo("gxtv_" + GetType().Name + "_" + name + "_setblob");
+									MethodInfo setBlob = GetMethodInfo(FIELD_PREFIX + GetType().Name + "_" + name + "_setblob");
 									if (setBlob != null)
 									{
 										if (HttpHelper.GetHttpRequestPostedFile(context, sVar, out uploadPath))
@@ -2400,7 +2407,8 @@ namespace GeneXus.Utils
 				{
 					lock (syncObj)
 					{
-						this.Set(item.Key.ToString(), item.Value.ToString());
+						if (item.Key != null && item.Value != null)
+							this.Set(item.Key.ToString(), item.Value.ToString());
 					}
 				}
 			}
@@ -3084,4 +3092,32 @@ namespace GeneXus.Utils
 
 	}
 
+#if NETCORE
+	public class BoolStringJsonConverter : JsonConverter<bool>
+	{
+		public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.String)
+			{
+				string stringValue = reader.GetString();
+				if (bool.TryParse(stringValue, out bool result))
+				{
+					return result;
+				}
+				throw new JsonException($"Invalid boolean value: {stringValue}");
+			}
+			else if (reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False)
+			{
+				return reader.GetBoolean();
+			}
+
+			throw new JsonException($"Unexpected token type: {reader.TokenType}");
+		}
+
+		public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options)
+		{
+			writer.WriteBooleanValue(value);
+		}
+	}
+#endif
 }

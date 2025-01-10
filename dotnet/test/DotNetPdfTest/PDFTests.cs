@@ -11,9 +11,11 @@ namespace UnitTesting
 		public void TestITextFormat()
 		{
 			string report = "PDFFormat.pdf";
-			string outputFileDirectory = @".\temp\";
+			string outputFileDirectory = "temp";
 
 			string reportFullPath = Path.Combine(Directory.GetCurrentDirectory(), outputFileDirectory, report);
+			Directory.CreateDirectory(Path.GetDirectoryName(reportFullPath));
+
 			if (File.Exists(reportFullPath))
 				File.Delete(reportFullPath);
 			try

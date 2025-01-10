@@ -238,8 +238,20 @@ namespace GeneXus.Http.Client
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 			}
-			foreach (X509Certificate2 cert in certificateCollection)
-				handler.SslOptions.ClientCertificates.Add(cert);
+			if (certificateCollection.Count > 0)
+			{
+				if (handler.SslOptions.ClientCertificates == null)
+				{
+					handler.SslOptions.ClientCertificates = new X509CertificateCollection(certificateCollection);
+				}
+				else
+				{
+					foreach (X509Certificate2 cert in certificateCollection)
+					{
+						handler.SslOptions.ClientCertificates.Add(cert);
+					}
+				}
+			}
 
 			WebProxy proxy = getProxy(proxyHost, proxyPort, authProxyCollection);
 			if (proxy != null)
@@ -562,6 +574,8 @@ namespace GeneXus.Http.Client
 		}
 		public void AddHeader(string name, string value)
 		{
+			GXLogging.Debug(log, "AddHeader ", name, "=", value);
+
 			if (name.Equals("content-type", StringComparison.OrdinalIgnoreCase))
 			{
 				if (value.StartsWith(MediaTypesNames.MultipartFormData, StringComparison.OrdinalIgnoreCase) &&

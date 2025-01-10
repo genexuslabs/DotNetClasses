@@ -10,7 +10,6 @@ using GxClasses.Web;
 using GxClasses.Web.Middleware;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using StackExchange.Redis;
 
 namespace GeneXus.Deploy.AzureFunctions.Handlers
 {
@@ -18,23 +17,16 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
     {
 		static async Task Main()
         {
-
 			string roothPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			string routePrefix = GetRoutePrefix(roothPath);
 			GXRouting.ContentRootPath = roothPath;
 
 			var host = new HostBuilder()
-                .ConfigureFunctionsWorkerDefaults()
+				.ConfigureFunctionsWebApplication()
 				.ConfigureServices(services =>
 				{
 					services.AddSingleton<ICallMappings, CallMappings>(x => new CallMappings(roothPath));
-				})
-				.ConfigureServices(services =>
-				{
-					services.AddSingleton<IGXRouting, GXRouting>(x => new GXRouting(routePrefix));
-				})
-				.ConfigureServices(services =>
-				{
+					services.AddControllers();
 					ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 					if (sessionService is GxRedisSession)
 					{ 

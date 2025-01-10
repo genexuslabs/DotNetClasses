@@ -79,7 +79,7 @@ namespace xUnitTesting
 			
 			app.Run(async context =>
 			{
-				context.Response.Headers.Add(HttpHeader.TRANSFER_ENCODING, "chunked");
+				context.Response.Headers.Append(HttpHeader.TRANSFER_ENCODING, "chunked");
 
 				var responseStream = context.Response.Body;
 

@@ -19,7 +19,7 @@
 		<BlobSupport>true</BlobSupport>
 		<EventGridSupport>true</EventGridSupport>
 	</PropertyGroup>
-	
+
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 	  <DebugType>portable</DebugType>
 	</PropertyGroup>
@@ -28,50 +28,50 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<Compile Include="Helpers\*;Program.cs" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(BlobSupport)' == 'true' OR '$(AzureQueueSupport)' == 'true'">
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="5.0.1" />
+		<Compile Include="Helpers\*;Functions\*;Program.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(BlobSupport)' == 'true'">
-		<Compile Include="BlobHandler\BlobTriggerHandler.cs;Dummies\BlobTriggerDummy.cs" /> 
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="6.6.0" />
+		<Compile Include="BlobHandler\BlobTriggerHandler.cs" /> 
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(CosmosDBSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.CosmosDB" Version="4.0.1" />
-		<Compile Include="CosmosDBHandler\CosmosDBTriggerHandler.cs;Dummies\CosmosDBTriggerDummy.cs" /> 
+		<Compile Include="CosmosDBHandler\CosmosDBTriggerHandler.cs" /> 
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(ServiceBusSupport)' == 'true'">
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="4.2.1" />
-		<Compile Include="ServiceBusHandler\ServiceBusTriggerHandler.cs;Dummies\ServiceBusQueueDummy.cs" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" Version="5.21.0" />
+		<Compile Include="ServiceBusHandler\ServiceBusTriggerHandler.cs" />
+		
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(AzureQueueSupport)' == 'true'">
-		<Compile Include="QueueHandler\QueueTriggerHandler.cs;Dummies\QueueTriggerDummy.cs" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage.Queues" Version="5.5.0" />
+		<Compile Include="QueueHandler\QueueTriggerHandler.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TimerSupport)' == 'true'">
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.0.1" />
-		<Compile Include="TimerHandler\TimerTriggerHandler.cs;Dummies\TimerTriggerDummy.cs" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.1" />
+		<Compile Include="TimerHandler\TimerTriggerHandler.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(HttpSupport)' == 'true'">
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
-		<Compile Include="HttpHandler\*;Dummies\HttpTriggerDummy.cs" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.2.0" />
+		<Compile Include="HttpHandler\*" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(EventGridSupport)' == 'true'">
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventGrid" Version="3.4.1" />
-		<Compile Include="EventGridHandler\EventGridTriggerHandlerCloud.cs;EventGridHandler\EventGridTriggerHandlerAzure.cs;Dummies\EventGridTriggerDummy.cs" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventGrid" Version="3.4.2" />
+		<Compile Include="EventGridHandler\EventGridTriggerHandlerCloud.cs;EventGridHandler\EventGridTriggerHandlerAzure.cs" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
-		<PackageReference Include="Azure.Core" Version="1.36.0" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.15.1" OutputItemType="Analyzer" />
-		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
+		<PackageReference Include="Azure.Core" Version="1.42.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="1.3.2" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.17.4" OutputItemType="Analyzer" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.23.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.6.122" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
@@ -97,6 +97,9 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</None>
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Functions\" />
 	</ItemGroup>
 	<Target Name="CustomContentTarget">
 		<ItemGroup Condition="$(GenStdVersion)==''">

@@ -355,7 +355,20 @@ namespace GeneXus.Http
 
 		internal void WcfExecute(Stream istream, string contentType, long streamLength, string gxFileName)
 		{
-			string ext=null, fName=null;
+
+			string fileToken = ReadFileFromStream(istream, contentType, streamLength, gxFileName, out string fileGuid);
+			JObject obj = new JObject();
+			obj.Put("object_id", fileToken);
+
+			localHttpContext.Response.AddHeader(HttpHeader.GX_OBJECT_ID, fileGuid);
+			localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
+			HttpHelper.SetResponseStatus(localHttpContext, HttpStatusCode.Created, string.Empty);
+			localHttpContext.Response.Write(obj.ToString());
+		}
+
+		internal string ReadFileFromStream(Stream istream, string contentType, long streamLength, string gxFileName, out string fileGuid)
+		{
+			string ext = null, fName = null;
 			if (!string.IsNullOrEmpty(gxFileName))
 			{
 				ext = Path.GetExtension(gxFileName);
@@ -373,23 +386,18 @@ namespace GeneXus.Http
 			{
 				fName = string.Empty;
 			}
-			string tempDir = Preferences.getTMP_MEDIA_PATH();			
-			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir, fName), GxFileType.PrivateAttribute);			
+			string tempDir = Preferences.getTMP_MEDIA_PATH();
+			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir, fName), GxFileType.PrivateAttribute);
 			file.Create(new NetworkInputStream(istream, streamLength));
 
-			JObject obj = new JObject();
 			fName = file.GetURI();
-			string fileGuid = GxUploadHelper.GetUploadFileGuid();
+			fileGuid = GxUploadHelper.GetUploadFileGuid();
 			string fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
 
-			obj.Put("object_id", fileToken);
-			localHttpContext.Response.AddHeader("GeneXus-Object-Id", fileGuid);
-			localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-			HttpHelper.SetResponseStatus(localHttpContext, HttpStatusCode.Created, string.Empty);
-			localHttpContext.Response.Write(obj.ToString());
-
 			GxUploadHelper.CacheUploadFile(fileGuid, $"{Path.GetFileNameWithoutExtension(fName)}.{ext}", ext, file, context);
+			return fileToken;
 		}
+
 		protected override bool IntegratedSecurityEnabled
 		{
 			get

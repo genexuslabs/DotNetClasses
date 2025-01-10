@@ -1,4 +1,5 @@
 using System.IO;
+using DotNetUnitTest;
 using GeneXus.Utils;
 using Xunit;
 
@@ -7,7 +8,7 @@ namespace xUnitTesting
 
 	public class ShellTest
 	{
-		[Fact]
+		[WindowsOnlyFact]
 		public void ExecutableTest()
 		{
 			string fileName = "hello.bat";
@@ -15,7 +16,7 @@ namespace xUnitTesting
 			int errorCode = GXUtil.Shell($"{fileName}  test", 1, 1);
 			Assert.Equal(0, errorCode);
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void ExecutableWithSpacesTest()
 		{
 			string fileName = "hello world.bat";
@@ -24,7 +25,7 @@ namespace xUnitTesting
 			Assert.Equal(0, errorCode);
 		}
 
-		[Fact]
+		[WindowsOnlyFact]
 		public void WorkingDirWithSpacesTest()
 		{
 			string fileName = Path.Combine(Directory.GetCurrentDirectory(), "my dir", "hello world.bat");
@@ -34,7 +35,7 @@ namespace xUnitTesting
 			int errorCode = GXUtil.Shell($"'{fileName}'  test", 1, 1);
 			Assert.Equal(0, errorCode);
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void WorkingDirForFullQualifiedBat()
 		{
 			string pathName = Directory.GetParent(Directory.GetCurrentDirectory()).FullName; //bat is in a different directory to the current dir
