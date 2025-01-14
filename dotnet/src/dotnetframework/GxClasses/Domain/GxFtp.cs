@@ -680,7 +680,7 @@ namespace GeneXus.Utils
 		private IPAddress GetIpAddress(string host)
 		{
 			IPHostEntry serverHostEntry = Dns.GetHostEntry(host);
-			IPAddress ipAddresses = serverHostEntry.AddressList.FirstOrDefault();
+			IPAddress ipAddresses = serverHostEntry.AddressList.FirstOrDefault(a => (a.AddressFamily == _DataSocket.AddressFamily));
 			GXLogging.Debug(log, $"GetHostEntry({host}) AddressList length: ", serverHostEntry.AddressList.Length.ToString());
 			if (ipAddresses == null)
 			{
