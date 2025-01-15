@@ -39,5 +39,13 @@ namespace GamTest.Utils
 				Assert.Fail("Exception on testPublicJwk" + e.Message);
 			}
 		}
+
+		[Test]
+		public void TestGetAlgorithm()
+		{
+			string jwk = GamUtilsEO.GenerateKeyPair();
+			string algorithm = GamUtilsEO.GetJwkAlgorithm(jwk);
+			Assert.AreEqual(algorithm, "RS256", "testGetAlgorithm");
+		}
 	}
 }

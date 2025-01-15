@@ -2,6 +2,7 @@ using System;
 using Org.BouncyCastle.Utilities.Encoders;
 using log4net;
 using System.Security;
+using log4net.Repository.Hierarchy;
 
 namespace GamUtils.Utils
 {
@@ -24,5 +25,21 @@ namespace GamUtils.Utils
 				return "";
 			}
 		}
+
+		[SecuritySafeCritical]
+		internal static string HexaToBase64(string hexa)
+		{
+			logger.Debug("HexaToBase64");
+			try
+			{
+				return Base64.ToBase64String(Hex.Decode(hexa));
+			}
+			catch (Exception e)
+			{
+				logger.Error("HexaToBase64", e);
+				return "";
+			}
+		}
+
 	}
 }
