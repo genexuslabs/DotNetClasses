@@ -85,12 +85,7 @@ namespace GeneXus.Http
 #if NETCORE
 				if (RestAPIHelpers.ServiceAsController())
 				{
-					GxRestService restService = (GxRestService)ClassLoader.FindInstance(gxobj, nspace, servicesType, null, null);
-					if (restService == null)
-					{
-						throw new GxClassLoaderException($"{servicesType} not found");
-					}
-					worker = (GXBaseObject)ClassLoader.FindInstance(gxobj, nspace, gxobj, null, null);
+					worker = CreateWorkerInstance(nspace, gxobj);
 					if (worker == null)
 					{
 						throw new GxClassLoaderException($"{gxobj} not found");
@@ -157,6 +152,31 @@ namespace GeneXus.Http
 #endif
 			}
 		}
+#if NETCORE
+		const string SERVICES_SUFFIX = "_services";
+
+		internal static GXBaseObject CreateWorkerInstance(string nspace, string gxobj)
+		{
+			string svcFile = new FileInfo(Path.Combine(GXRouting.ContentRootPath, $"{gxobj}.svc")).FullName;
+			if (File.Exists(svcFile))
+			{
+
+				string[] serviceAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
+						   .Skip(1)
+						   .TakeWhile(c => c != '"')
+						   .ToArray()).Trim().Split(',');
+				string serviceAssemblyName = serviceAssemblyQualifiedName.Last();
+				string serviceClassName = serviceAssemblyQualifiedName.First();
+				if (!string.IsNullOrEmpty(nspace) && serviceClassName.StartsWith(nspace))
+					serviceClassName = serviceClassName.Substring(nspace.Length + 1);
+				else
+					nspace = string.Empty;
+				string workerClassName = serviceClassName.Substring(0, serviceClassName.Length - SERVICES_SUFFIX.Length);
+				return (GXBaseObject)ClassLoader.FindInstance(serviceAssemblyName, nspace, workerClassName, null, null);
+			}
+			return null;
+		}
+#endif
 
 	}
 
