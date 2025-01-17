@@ -60,6 +60,7 @@ namespace GeneXus.Http
 		{
 #if NETCORE
 			GxRestWrapper handler = null;
+			GXBaseObject worker = null;
 #else
 			Utils.GxRestService handler = null;
 #endif
@@ -77,25 +78,40 @@ namespace GeneXus.Http
 						parmsColl.FromJSonString(jsonStr);
 					}
 				}
-#if NETCORE
-
-				handler = GetRouting().GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
-				if (handler ==null) {
-					throw new GxClassLoaderException($"{gxobj} not found");
-				}
-#else
+				string servicesType = gxobj + "_services";
 				string nspace;
 				if (!Config.GetValueOf("AppMainNamespace", out nspace))
 					nspace = "GeneXus.Programs";
-				handler = (GxRestService)ClassLoader.FindInstance(gxobj, nspace, gxobj + "_services", null, null);
-#endif
-				handler.RunAsMain = false;
-
 #if NETCORE
-				GXBaseObject worker = handler.Worker;
+				if (RestAPIHelpers.ServiceAsController())
+				{
+					GxRestService restService = (GxRestService)ClassLoader.FindInstance(gxobj, nspace, servicesType, null, null);
+					if (restService == null)
+					{
+						throw new GxClassLoaderException($"{servicesType} not found");
+					}
+					worker = (GXBaseObject)ClassLoader.FindInstance(gxobj, nspace, gxobj, null, null);
+					if (worker == null)
+					{
+						throw new GxClassLoaderException($"{gxobj} not found");
+					}
+				}
+				else
+				{
+					handler = GetRouting().GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.', Path.DirectorySeparatorChar) });
+					if (handler == null)
+					{
+						throw new GxClassLoaderException($"{gxobj} not found");
+					}
+					worker = handler.Worker;
+					worker.IsMain = false;
+				}
 #else
+				handler = (GxRestService)ClassLoader.FindInstance(gxobj, nspace, servicesType, null, null);
+				handler.RunAsMain = false;
 				GxRestService worker = handler;
 #endif
+
 				ParameterInfo[] pars = worker.GetType().GetMethod(EXECUTE_METHOD).GetParameters();
 
 				int ParmsCount = pars.Length;
@@ -126,11 +142,19 @@ namespace GeneXus.Http
 			}
 			finally
 			{
+#if NETCORE
+				if (worker != null)
+				{
+					worker.IsMain = true;
+					worker.cleanup();
+				}
+#else
 				if (handler != null)
 				{
 					handler.RunAsMain = true;
 					handler.Cleanup();
 				}
+#endif
 			}
 		}
 
