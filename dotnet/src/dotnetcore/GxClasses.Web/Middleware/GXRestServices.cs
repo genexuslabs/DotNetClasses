@@ -14,6 +14,9 @@ using GeneXus.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Threading.Tasks;
 
 
 namespace GeneXus.Utils
@@ -27,6 +30,36 @@ namespace GeneXus.Utils
 		public void OnActionExecuting(ActionExecutingContext context)
 		{
 			(context.Controller as GxRestService).Initialize();
+		}
+	}
+
+	public class QueryStringModelBinderProvider : IModelBinderProvider
+	{
+		public IModelBinder GetBinder(ModelBinderProviderContext context)
+		{
+			if (context.BindingInfo.BindingSource == BindingSource.Query &&
+				context.Metadata.ModelType == typeof(string))
+			{
+				return new BinderTypeModelBinder(typeof(CustomQueryStringBinder));
+			}
+			return null;
+		}
+	}
+	public class CustomQueryStringBinder : IModelBinder
+	{
+		public Task BindModelAsync(ModelBindingContext bindingContext)
+		{
+			if (!bindingContext.BindingSource.CanAcceptDataFrom(BindingSource.Query))
+			{
+				return Task.CompletedTask;
+			}
+			if (bindingContext.ModelType != typeof(string))
+			{
+				return Task.CompletedTask;
+			}
+			string value = bindingContext.ValueProvider.GetValue(bindingContext.ModelName).FirstValue;
+			bindingContext.Result = ModelBindingResult.Success(value ?? string.Empty);
+			return Task.CompletedTask;
 		}
 	}
 	[TypeFilter(typeof(CustomActionFilter))]
