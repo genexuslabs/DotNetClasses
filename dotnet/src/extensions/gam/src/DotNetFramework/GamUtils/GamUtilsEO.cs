@@ -63,16 +63,10 @@ namespace GamUtils
 
 		//**JWT**//
 		[SecuritySafeCritical]
-		public static bool VerifyJwtRsa(string path, string alias, string password, string token) { return Jwt.Verify(path, alias, password, token, "", false); }
+		public static bool VerifyJwt(string path, string alias, string password, string token) { return Jwt.Verify(path, alias, password, token); }
 
 		[SecuritySafeCritical]
-		public static string CreateJwtRsa(string path, string alias, string password, string payload, string header) { return Jwt.Create(path, alias, password, payload, header, "", false); }
-
-		[SecuritySafeCritical]
-		public static string CreateJwtSha(string secret, string payload, string header) { return Jwt.Create("", "", "", payload, header, secret, true); }
-
-		[SecuritySafeCritical]
-		public static bool VerifyJwtSha(string secret, string token) { return Jwt.Verify("", "", "", token, secret, true); }
+		public static string CreateJwt(string path, string alias, string password, string payload, string header) { return Jwt.Create(path, alias, password, payload, header); }
 
 		[SecuritySafeCritical]
 		public static long CreateUnixTimestamp(DateTime date) { return UnixTimestamp.Create(date); }
@@ -92,5 +86,11 @@ namespace GamUtils
 
 		[SecuritySafeCritical]
 		public static string HexaToBase64(string hexa) { return Encoding.HexaToBase64(hexa); }
+
+		[SecuritySafeCritical]
+		public static string ToBase64Url(string input) { return Encoding.ToBase64Url(input); }
+
+		[SecuritySafeCritical]
+		public static string FromBase64Url(string base64) { return Encoding.FromBase64Url(base64); }
 	}
 }
