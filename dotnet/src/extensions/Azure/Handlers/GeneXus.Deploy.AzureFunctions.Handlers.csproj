@@ -28,7 +28,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<Compile Include="Helpers\*;Functions\*;Program.cs" />
+		<Compile Include="Helpers\*;Functions\**\*.cs;Program.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(BlobSupport)' == 'true'">
