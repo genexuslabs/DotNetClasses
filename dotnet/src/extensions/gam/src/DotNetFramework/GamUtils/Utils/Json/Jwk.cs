@@ -57,6 +57,26 @@ namespace GamUtils.Utils.Json
 			}
 		}
 
+		[SecuritySafeCritical]
+		internal static string GetAlgorithm(string jwkString)
+		{
+			if (string.IsNullOrEmpty(jwkString))
+			{
+				logger.Error("GetAlgorithm jwkString parameter is empty");
+				return "";
+			}
+			try
+			{
+				Jose.Jwk jwk = Jose.Jwk.FromJson(jwkString);
+				return jwk.Alg;
+			}catch(Exception e)
+			{
+				logger.Error("GetAlgorithm", e);
+				return "";
+			}
+
+		}
+
 		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 		[SecuritySafeCritical]

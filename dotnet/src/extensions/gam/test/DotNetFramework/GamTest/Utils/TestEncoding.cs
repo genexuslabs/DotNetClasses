@@ -42,5 +42,45 @@ namespace GamTest.Utils
 			}
 		}
 
+		[Test]
+		public void TestHexaToBase64()
+		{
+			int i = 0;
+			do
+			{
+				string randomHexa = GamUtilsEO.RandomHexaBits(128);
+				string testing = B64ToHexa(GamUtilsEO.HexaToBase64(randomHexa));
+				Assert.AreEqual(randomHexa, testing, "TestHexaToBase64");
+				i++;
+			} while (i < 50);
+		}
+
+		[Test]
+		public void TestToBase64Url()
+		{
+			int i = 0;
+			do
+			{
+				string randomString = GamUtilsEO.RandomAlphanumeric(128);
+				string testing = GamUtilsEO.ToBase64Url(randomString);
+				Assert.AreEqual(randomString, GamUtilsEO.FromBase64Url(testing), "testB64ToB64Url");
+				i++;
+			} while (i < 50);
+		}
+
+		private static string B64ToHexa(string base64)
+		{
+			try
+			{
+				byte[] bytes = Base64.Decode(base64);
+				return Hex.ToHexString(bytes);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+				return "";
+			}
+		}
+
 	}
 }

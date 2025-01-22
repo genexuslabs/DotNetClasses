@@ -2,6 +2,7 @@ using System;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Primitives;
 using Org.BouncyCastle.Utilities.Encoders;
 
 namespace GamUtils.Utils

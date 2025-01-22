@@ -58,6 +58,9 @@ namespace GamUtils
 		[SecuritySafeCritical]
 		public static string GetPublicJwk(string jwkString) { return Jwk.GetPublic(jwkString); }
 
+		[SecuritySafeCritical]
+		public static string GetJwkAlgorithm(string jwkString) { return Jwk.GetAlgorithm(jwkString); }
+
 		//**JWT**//
 		[SecuritySafeCritical]
 		public static bool VerifyJwt(string path, string alias, string password, string token) { return Jwt.Verify(path, alias, password, token); }
@@ -74,7 +77,20 @@ namespace GamUtils
 		[SecuritySafeCritical]
 		public static string GetJwtPayload(string token) { return Jwt.GetPayload(token); }
 
+		[SecuritySafeCritical]
+		public static bool VerifyAlgorithm(string expectedAlgorithm, string token) { return Jwt.VerifyAlgorithm(expectedAlgorithm, token); }
+
 		//**ENCODING**//
+		[SecuritySafeCritical]
 		public static string Base64ToBase64Url(string base64) { return Encoding.B64ToB64Url(base64); }
+
+		[SecuritySafeCritical]
+		public static string HexaToBase64(string hexa) { return Encoding.HexaToBase64(hexa); }
+
+		[SecuritySafeCritical]
+		public static string ToBase64Url(string input) { return Encoding.ToBase64Url(input); }
+
+		[SecuritySafeCritical]
+		public static string FromBase64Url(string base64) { return Encoding.FromBase64Url(base64); }
 	}
 }

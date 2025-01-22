@@ -5,9 +5,6 @@ using NUnit.Framework;
 using GamUtils;
 using Microsoft.IdentityModel.Tokens;
 
-
-
-
 namespace GamTest.Utils
 {
 	[TestFixture]
@@ -153,7 +150,69 @@ namespace GamTest.Utils
 			Assert.IsTrue(result, "test_json_jwks verify");
 		}
 
-		
+
+		[Test]
+		public void Test_json_Sha256()
+		{
+			string header = "{\n" +
+				"  \"alg\": \"HS256\",\n" +
+				"  \"typ\": \"JWT\"\n" +
+				"}";
+			int[] lengths = new int[] { 32, 64, 128 };
+			foreach (int n in lengths)
+			{
+				string secret = GamUtilsEO.RandomAlphanumeric(n);
+				string token = GamUtilsEO.CreateJwt("", "", secret, payload, header);
+				Assert.IsNotEmpty(token, "test_json_Sha256 create");
+				bool result = GamUtilsEO.VerifyJwt("", "", secret, token);
+				Assert.True(result, "test_json_Sha256 verify");
+			}
+		}
+
+		[Test]
+		public void Test_json_Sha512()
+		{
+			string header = "{\n" +
+				"  \"alg\": \"HS512\",\n" +
+				"  \"typ\": \"JWT\"\n" +
+				"}";
+			int[] lengths = new int[] { 64, 128 };
+			foreach (int n in lengths)
+			{
+				string secret = GamUtilsEO.RandomAlphanumeric(n);
+				string token = GamUtilsEO.CreateJwt("", "", secret, payload, header);
+				Assert.IsNotEmpty(token, "test_json_Sha512 create");
+				bool result = GamUtilsEO.VerifyJwt("", "", secret, token);
+				Assert.True(result, "test_json_Sha512 verify");
+			}
+		}
+
+		[Test]
+		public void Test_VerifyAlgorithm_True()
+		{
+			string header = "{\n" +
+				"  \"alg\": \"HS512\",\n" +
+				"  \"typ\": \"JWT\"\n" +
+				"}";
+			string secret = GamUtilsEO.RandomAlphanumeric(128);
+			string token = GamUtilsEO.CreateJwt("", "", secret, payload, header);
+			bool resultSha512 = GamUtilsEO.VerifyAlgorithm("HS512", token);
+			Assert.True(resultSha512, "test_VerifyAlgorithm_True");
+		}
+
+		[Test]
+		public void Test_VerifyAlgorithm_False()
+		{
+			string header = "{\n" +
+				"  \"alg\": \"HS512\",\n" +
+				"  \"typ\": \"JWT\"\n" +
+				"}";
+			string secret = GamUtilsEO.RandomAlphanumeric(128);
+			string token = GamUtilsEO.CreateJwt("", "", secret, payload, header);
+			bool resultSha512 = GamUtilsEO.VerifyAlgorithm("RS256", token);
+			Assert.False(resultSha512, "test_VerifyAlgorithm_False");
+		}
+
 		private static string GetStartupDirectory()
 		{
 #pragma warning disable SYSLIB0044
