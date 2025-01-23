@@ -3040,7 +3040,7 @@ namespace GeneXus.Application
 		}
 #if NETCORE
 		static bool _isHttpContext;
-		internal static bool IsAzureContext
+		public static bool IsAzureContext
 		{ get; set; }
 #endif
 		public static bool IsHttpContext

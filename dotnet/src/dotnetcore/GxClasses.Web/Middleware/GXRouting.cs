@@ -22,7 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GxClasses.Web.Middleware
 {
-	internal class GXRouting : IGXRouting
+	public class GXRouting : IGXRouting
 	{
 
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<IGXRouting>();
