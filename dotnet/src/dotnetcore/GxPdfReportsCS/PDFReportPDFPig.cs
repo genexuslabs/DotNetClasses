@@ -1,20 +1,9 @@
 using System;
 using System.Collections.Generic;
-#if NETCORE
-using GeneXus.Drawing;
-using GeneXus.Drawing.Imaging;
-using GeneXus.Drawing.Text;
-using GeneXus.Drawing.Drawing2D;
-using Color = GeneXus.Drawing.Color;
-using Font = GeneXus.Drawing.Font;
-#else
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
-using Color = System.Drawing.Color;
-using Font = System.Drawing.Font;
-#endif
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -25,6 +14,8 @@ using UglyToad.PdfPig.Writer;
 using static GeneXus.Utils.StringUtil;
 using static UglyToad.PdfPig.Writer.PdfDocumentBuilder;
 using static UglyToad.PdfPig.Writer.PdfPageBuilder;
+using Color = System.Drawing.Color;
+using Font = System.Drawing.Font;
 using PageSize = UglyToad.PdfPig.Content.PageSize;
 using PdfRectangle = UglyToad.PdfPig.Core.PdfRectangle;
 
