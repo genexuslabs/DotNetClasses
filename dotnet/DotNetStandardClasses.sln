@@ -271,7 +271,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxSoapHandler", "src\extens
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Functions", "Functions", "{E59B3248-4C26-4DB0-96CB-67437319E22B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunctionsAbstractions", "src\extensions\Azure\Abstractions\AzureFunctionsAbstractions.csproj", "{B3DC39F8-39F0-4200-A971-77E26FFDB2CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunctionsLibraries", "src\extensions\Azure\Abstractions\AzureFunctionsLibraries.csproj", "{B3DC39F8-39F0-4200-A971-77E26FFDB2CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
