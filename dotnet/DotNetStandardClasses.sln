@@ -303,7 +303,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ai", "ai", "{F45B7F31-6F9B-
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxAI", "src\dotnetcore\Providers\AI\GxAI.csproj", "{AA9CD80B-5FDC-4194-BA55-D77FC82915C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunctionsAbstractions", "src\extensions\Azure\Abstractions\AzureFunctionsAbstractions.csproj", "{B3DC39F8-39F0-4200-A971-77E26FFDB2CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureFunctionsLibraries", "src\extensions\Azure\Abstractions\AzureFunctionsLibraries.csproj", "{B3DC39F8-39F0-4200-A971-77E26FFDB2CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
