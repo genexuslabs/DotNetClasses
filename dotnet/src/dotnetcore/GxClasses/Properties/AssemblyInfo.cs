@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("GxSearch")]
 [assembly: InternalsVisibleTo("GxNetCoreStartup")]
 [assembly: InternalsVisibleTo("GeneXus.Deploy.AzureFunctions.Handlers")]
-[assembly: InternalsVisibleTo("AzureFunctionsLibraries")]
+[assembly: InternalsVisibleTo("GeneXus.Deploy.AzureFunctionsLibraries")]
 [assembly: InternalsVisibleTo("AzureFunctionsTest")]
 [assembly: InternalsVisibleTo("GXQueue")]
 [assembly: InternalsVisibleTo("GXMessageBroker")]

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-	<AssemblyName>AzureFunctionsLibraries</AssemblyName>
+	<AssemblyName>GeneXus.Deploy.AzureFunctionsLibraries</AssemblyName>
   </PropertyGroup>
   
   <ItemGroup>
