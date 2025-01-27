@@ -54,6 +54,7 @@ namespace GeneXus.Application
 		private string httpMethod = "GET";
 
 		private Dictionary<string, string> _queryVars = new Dictionary<string, string>();
+		private Dictionary<string, string> _headerVars = new Dictionary<string, string>();
 		private Dictionary<string, string> _bodyVars = new Dictionary<string, string>();
 		//private Dictionary<string, string> _pathVars = new Dictionary<string, string>();
 		private Dictionary<string,object> _responseData = new Dictionary<string, object>();
@@ -65,6 +66,70 @@ namespace GeneXus.Application
 		private int responseCode = 0;
 		private string responseMessage = String.Empty;
 
+
+		#region "Header Vars"
+
+		public void AddHeaderVar(String varName, String varValue)
+		{
+			_headerVars[varName] = GXUtil.UrlEncode(varValue);
+		}
+		public void AddHeaderVar(String varName, int varValue)
+		{
+			_headerVars[varName] = varValue.ToString();
+		}
+		public void AddHeaderVar(String varName, long varValue)
+		{
+			_headerVars[varName] = varValue.ToString();
+		}
+
+		public void AddHeaderVar(String varName, short varValue)
+		{
+			_headerVars[varName] = varValue.ToString();
+		}
+		public void AddHeaderVar(String varName, Decimal varValue)
+		{
+			_headerVars[varName] = varValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+		}
+		public void AddHeaderVar(String varName, DateTime varValue)
+		{
+			_headerVars[varName] = varValue.ToString(DATE_FORMAT);
+		}
+		public void AddHeaderVar(String varName, DateTime varValue, bool hasMilliseconds)
+		{
+			string fmt = DATETIME_FORMAT;
+			if (hasMilliseconds)
+				fmt = DATETIME_MS_FORMAT;
+			_headerVars[varName] = varValue.ToString(fmt);
+		}
+		public void AddHeaderVar(String varName, Guid varValue)
+		{
+			_headerVars[varName] = varValue.ToString();
+		}
+		public void AddHeaderVar(String varName, Geospatial varValue)
+		{
+			_headerVars[varName] = GXUtil.UrlEncode(varValue.ToString());
+		}
+		public void AddHeaderVar(String varName, bool varValue)
+		{
+			_headerVars[varName] = StringUtil.BoolToStr(varValue);
+		}
+		public void AddHeaderVar(String varName, GxUserType varValue)
+		{
+			if (varValue != null)
+			{
+				_headerVars[varName] = varValue.ToJSonString();
+			}
+		}
+		public void AddHeaderVar(String varName, IGxCollection varValue)
+		{
+			if (varValue != null)
+			{
+				_headerVars[varName] = varValue.ToJSonString();
+			}
+		}
+		#endregion
+
+		#region "Query Vars"
 		public void AddQueryVar(String varName, String varValue)
 		{
 			_queryVars[varName] = GXUtil.UrlEncode(varValue);
@@ -131,6 +196,9 @@ namespace GeneXus.Application
 				_bodyVars[varName] = varValue.ToJSonString();
 			}
 		}
+		#endregion
+
+		#region "Body Vars"
 
 		public void AddBodyVar(String varName, DateTime varValue)
 		{
@@ -195,6 +263,79 @@ namespace GeneXus.Application
 				_bodyVars[varName] = varValue.ToJSonString();
 			}
 		}
+
+		#endregion
+
+		#region "Get Header Vars"
+		public string GetHeaderString(string varName)
+		{
+			return httpClient.GetHeader(varName);
+		}
+
+		public DateTime GetHeaderDate(string varName)
+		{
+			string val = GetHeaderString(varName);
+			if (val.StartsWith(DATE_NULL))
+				return DateTimeUtil.NullDate();
+			return DateTime.ParseExact(val, DATE_FORMAT, System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+		public DateTime GetHeaderDateTime(string varName, bool hasMilliseconds)
+		{
+			string val = GetHeaderString(varName);
+			if (val.StartsWith(DATETIME_NULL))
+				return DateTimeUtil.NullDate();
+			string fmt = DATETIME_FORMAT;
+			if (hasMilliseconds)
+				fmt = DATETIME_MS_FORMAT;
+			return DateTime.ParseExact(val, fmt, System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+		public bool GetHeaderBool(string varName)
+		{
+			httpClient.GetHeader(varName, out bool val);
+			return val;
+		}
+		public Guid GetHeaderGuid(string varName)
+		{
+			return Guid.Parse(GetHeaderString(varName));
+		}
+
+		public Decimal GetHeaderNum(string varName)
+		{
+			httpClient.GetHeader(varName, out Decimal val);
+			return val;
+		}
+		public long GetHeaderLong(string varName)
+		{
+			httpClient.GetHeader(varName, out long val);
+			return val;
+		}
+		public int GetHeaderInt(string varName)
+		{
+			httpClient.GetHeader(varName, out int val);
+			return val;
+		}
+
+		public short GetHeaderShort(string varName)
+		{
+			httpClient.GetHeader(varName, out short val);
+			return val;
+		}
+
+		public Geospatial GetHeaderGeospatial(string varName)
+		{
+			Geospatial g = new Geospatial(GetHeaderString(varName));
+			if (Geospatial.IsNullOrEmpty(g))
+			{
+				g.FromGeoJSON(GetJsonStr(varName));
+			}
+			return g;
+		}
+
+		#endregion
+
+		#region "Get Body Vars"
 
 		public string GetBodyString(string varName)
 		{
@@ -329,6 +470,7 @@ namespace GeneXus.Application
 			}
 			return collection;
 		}
+		#endregion
 
 		public void AddUploadFile(string FilePath, string name)
 		{
@@ -343,6 +485,13 @@ namespace GeneXus.Application
 			this.ErrorMessage = "";
 			this.StatusCode = 0;
 			this.StatusMessage = "";
+			if (_headerVars.Count > 0)
+			{
+				foreach (string key in _headerVars.Keys)
+				{
+					httpClient.AddHeader(key, _headerVars[key]);
+				}
+			}
 			_queryString = String.Empty;
 			if (_queryVars.Count > 0)
 			{

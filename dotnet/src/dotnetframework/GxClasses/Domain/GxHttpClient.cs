@@ -21,6 +21,7 @@ namespace GeneXus.Http.Client
 	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
+
 #if NETCORE
 	using Microsoft.AspNetCore.WebUtilities;
 #endif
@@ -2014,6 +2015,10 @@ namespace GeneXus.Http.Client
 		{
 			value = Convert.ToDouble(GetHeader(name));
 		}
+		public void GetHeader(string name, out Decimal value)
+		{
+			value = Convert.ToDecimal(GetHeader(name));
+		}
 		public void GetHeader(string name, out string value)
 		{
 			value = GetHeader(name);
@@ -2021,6 +2026,10 @@ namespace GeneXus.Http.Client
 		public void GetHeader(string name, out DateTime value)
 		{
 			value = Convert.ToDateTime(GetHeader(name));
+		}
+		public void GetHeader(string name, out bool value)
+		{
+			value = Convert.ToBoolean(GetHeader(name));
 		}
 		public void AddCertificate(string cert)
 		{
