@@ -542,10 +542,12 @@ namespace GeneXus.Application
 			this.StatusMessage = httpClient.ReasonLine;
 			if (httpClient.StatusCode >= 300 || httpClient.ErrCode > 0)
 			{
+
 				_responseData = new Dictionary<string, object>();
 			}
 			else
 			{
+
 				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestParameters(httpClient.ToString());
 			}
 		}
