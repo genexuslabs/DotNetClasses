@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -23,15 +24,17 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public GXHttpAzureContext( HttpRequest request, HttpResponse response, ICacheService2 redis)
 		{			
 			bool isSecure = IsSecureConnection(request);
-			sessionId = request.Cookies[AzureSessionId];
+
+			if (request != null && request.Cookies != null && request.Cookies[AzureSessionId] != null) 
+				sessionId = request.Cookies[AzureSessionId];
 			
 			if (redis != null && redis.GetType() == typeof(Redis))
 				_redis = redis;
 			
-			if (string.IsNullOrEmpty(sessionId))
+			if (string.IsNullOrEmpty(sessionId) && request != null)
 				CreateSessionId(isSecure, response, request);
 			
-			if ((_redis != null) & (sessionId != null))
+			if ((_redis != null) && (sessionId != null))
 				session = new RedisHttpSession(_redis, sessionId);
 			else
 				session = new MockHttpSession();
@@ -93,7 +96,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public class MockHttpSession : ISession
 		{
 			string _sessionId = Guid.NewGuid().ToString();
-			readonly Dictionary<string, object> _sessionStorage = new Dictionary<string, object>();
+			readonly ConcurrentDictionary<string, object> _sessionStorage = new ConcurrentDictionary<string, object>();
 			string ISession.Id => _sessionId;
 			bool ISession.IsAvailable => throw new NotImplementedException();
 			IEnumerable<string> ISession.Keys => _sessionStorage.Keys;
@@ -111,7 +114,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			}
 			void ISession.Remove(string key)
 			{
-				_sessionStorage.Remove(key);
+				_sessionStorage.TryRemove(key, out Object value);
 			}
 			void ISession.Set(string key, byte[] value)
 			{
@@ -119,14 +122,24 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			}
 			bool ISession.TryGetValue(string key, out byte[] value)
 			{
-
-				if (_sessionStorage.ContainsKey(key) && _sessionStorage[key] != null)
-				{
-					value = Encoding.ASCII.GetBytes(_sessionStorage[key].ToString());
-					return true;
+				value = Array.Empty<byte>();
+				try
+				{ 
+					if (_sessionStorage != null && _sessionStorage.ContainsKey(key) && _sessionStorage[key] != null)
+					{
+						value = Encoding.ASCII.GetBytes(_sessionStorage[key].ToString());
+						return true;
+					}
+					else
+					{ 
+						value = Array.Empty<byte>();
+						return false;
+					}
 				}
-				value = null;
-				return false;
+				catch (Exception ex)
+				{
+					throw ex;
+				}			
 			}
 		}
 		public class RedisHttpSession : ISession
@@ -211,7 +224,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 						}
 					}
 				}
-				value = null;
+				value = Array.Empty<byte>();
 				return false;
 			}
 			public bool SessionKeyExists(string sessionId)

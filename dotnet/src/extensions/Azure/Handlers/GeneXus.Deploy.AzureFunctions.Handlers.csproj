@@ -59,7 +59,6 @@
 
 	<ItemGroup Condition="'$(HttpSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.2.0" />
-		<Compile Include="HttpHandler\*" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(EventGridSupport)' == 'true'">
