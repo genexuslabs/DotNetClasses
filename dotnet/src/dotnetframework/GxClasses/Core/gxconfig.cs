@@ -501,7 +501,8 @@ namespace GeneXus.Configuration
 			{ "System.Threading.Tasks.Extensions", new Version(4, 2, 0, 1) },
 			{ "System.Runtime.CompilerServices.Unsafe", new Version(4, 0, 4, 1) },
 			{ "System.Buffers", new Version(4, 0, 3, 0)},
-			{ "System.Memory",new Version(4, 0, 1, 1) }
+			{ "System.Memory",new Version(4, 0, 1, 1) },
+			{ "Microsoft.Bcl.AsyncInterfaces",new Version(8, 0, 0, 0) }//redirection required for StackExchange.Redis
 		};
 
 		static string GeoTypesAssembly = "Microsoft.SqlServer.Types";
