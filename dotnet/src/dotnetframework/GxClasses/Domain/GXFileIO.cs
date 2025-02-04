@@ -1446,70 +1446,80 @@ public class GxFile
 
 	public void OpenWriteWithRetry(string encoding)
 	{
-		int attempts = 0;
-		bool opened = false;
-		while (!opened && attempts < 3)
+		_lastError = 0;
+		_lastErrorDescription = "";
+		if (validSource())
 		{
-			try
+			int attempts = 0;
+			bool opened = false;
+			while (!opened && attempts < 3)
 			{
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-				_fileStreamWriter = new FileStream(_file.FullName,
-					FileMode.Append | FileMode.OpenOrCreate,
-					FileAccess.Write,
-					FileShare.Read);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-				_fileWriter = new StreamWriter(_fileStreamWriter, GXUtil.GxIanaToNetEncoding(encoding, false));
-				opened = true;
-			}
-			catch (IOException ex)
-			{
-				attempts++;
-				if (attempts >= 3)
+				try
 				{
-					setError(ex);
+					_fileStreamWriter = new FileStream(_file.FullName,
+						FileMode.Append | FileMode.OpenOrCreate,
+						FileAccess.Write,
+						FileShare.Read);
+					_fileWriter = new StreamWriter(_fileStreamWriter, GXUtil.GxIanaToNetEncoding(encoding, false));
+					opened = true;
+				}
+				catch (IOException ex)
+				{
+					attempts++;
+					if (attempts >= 3)
+					{
+						setError(ex);
+						break;
+					}
+					System.Threading.Thread.Sleep(2000);
+				}
+				catch (Exception e)
+				{
+					setError(e);
 					break;
 				}
-				System.Threading.Thread.Sleep(2000);
-			}
-			catch (Exception e)
-			{
-				setError(e);
-				break;
+#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 			}
 		}
 	}
 
 	public void OpenReadWithRetry(string encoding)
 	{
-		int attempts = 0;
-		bool opened = false;
-		while (!opened && attempts < 3)
+		_lastError = 0;
+		_lastErrorDescription = "";
+		if (validSource())
 		{
-			try
+			int attempts = 0;
+			bool opened = false;
+			while (!opened && attempts < 3)
 			{
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-				_fileStreamReader = new FileStream(_file.FullName,
-					FileMode.Open,
-					FileAccess.Read,
-					FileShare.ReadWrite);
-#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
-				_fileReader = new StreamReader(_fileStreamReader, GXUtil.GxIanaToNetEncoding(encoding, false));
-				opened = true;
-			}
-			catch (IOException ex)
-			{
-				attempts++;
-				if (attempts >= 3)
+				try
 				{
-					setError(ex);
+					_fileStreamReader = new FileStream(_file.FullName,
+						FileMode.Open,
+						FileAccess.Read,
+						FileShare.ReadWrite);
+					_fileReader = new StreamReader(_fileStreamReader, GXUtil.GxIanaToNetEncoding(encoding, false));
+					opened = true;
+				}
+				catch (IOException ex)
+				{
+					attempts++;
+					if (attempts >= 3)
+					{
+						setError(ex);
+						break;
+					}
+					System.Threading.Thread.Sleep(2000);
+				}
+				catch (Exception e)
+				{
+					setError(e);
 					break;
 				}
-				System.Threading.Thread.Sleep(2000);
-			}
-			catch (Exception e)
-			{
-				setError(e);
-				break;
+#pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
 			}
 		}
 	}
