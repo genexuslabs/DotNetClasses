@@ -1684,9 +1684,9 @@ namespace GeneXus.Application
 			query = RemoveInternalSuffixes(query);
 			return query;
 		}
-		internal static string RemoveInternalSuffixes(string query)
+		internal static string RemoveInternalSuffix(string query, string param)
 		{
-			int idx = query.IndexOf(GXNavigationHelper.POPUP_LEVEL);
+			int idx = query.IndexOf(param);
 			if (idx == 1)
 				return "";
 			if (idx > 1)
@@ -1698,6 +1698,12 @@ namespace GeneXus.Application
 				query = query.Substring(0, idx);
 			}
 			return query;
+		}
+
+		internal static string RemoveInternalSuffixes(string query)
+		{
+			query = RemoveInternalSuffix(query, GXNavigationHelper.POPUP_LEVEL);
+			return RemoveInternalSuffix(query, GXNavigationHelper.TAB_ID);
 		}
 		private string RemoveEventPrefix(string query)
 		{
@@ -3764,6 +3770,7 @@ namespace GeneXus.Application
 		static Hashtable m_images = new Hashtable();
 
 		const string IMAGES_TXT = "Images.txt";
+		const string URL_SEPARATOR = "/";
 		Hashtable Images
 		{
 			get
@@ -3781,7 +3788,7 @@ namespace GeneXus.Application
 						{
 							GXLogging.Debug(Logger, "Searching for txt files ..");
 							int srchIx = 0;
-							string[] paths = new string[] { ".\\", "..\\" };
+							string[] paths = { Directory.GetCurrentDirectory(), Directory.GetParent(Directory.GetCurrentDirectory()).FullName};
 							bool found = false;
 							while (!found && srchIx < paths.Length)
 							{
@@ -3840,7 +3847,12 @@ namespace GeneXus.Application
 												string imagePath = parts[4];
 												string intExt = parts[3];
 												if (intExt[0] != 'E' && intExt[0] != 'e' && !Path.IsPathRooted(imagePath) && !imagePath.ToLower().StartsWith("http:"))
-													imagePath = imgDir + KBPrefix + "Resources/" + imagePath;
+												{
+													if (!string.IsNullOrEmpty(imgDir))
+														imagePath = Path.Combine(imgDir, KBPrefix + "Resources", imagePath);
+													else
+														imagePath = KBPrefix + "Resources" + URL_SEPARATOR + imagePath;  
+												}
 												string parts12 = '_' + parts[1] + '_' + parts[2];
 
 												m_images[KBPrefix + parts[0] + parts12] = imagePath;
@@ -4010,6 +4022,7 @@ namespace GeneXus.Application
 			GXLogging.Debug(Logger, "SetSubmitInitialConfig:", () => _handle.ToString() + " clientid:" + context.ClientID);
 			this._isSumbited = true;
 			this.SetDefaultTheme(context.GetTheme(), context.GetThemeisDSO());
+			this.SetTimeZone(context.GetTimeZone());
 			this.SetPhysicalPath(context.GetPhysicalPath());
 			this.SetLanguageWithoutSession(context.GetLanguage());
 			this.ClientID = context.ClientID;

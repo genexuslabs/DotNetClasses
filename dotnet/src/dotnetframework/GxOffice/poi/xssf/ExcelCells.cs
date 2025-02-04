@@ -1117,7 +1117,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 					CT_Xf _cellXf = cellStyle.GetCoreXf();
 					ExcelBorder border = (hasDiagonalUp) ? cellBorder.BorderDiagonalUp : cellBorder.BorderDiagonalDown;
 					XSSFColor diagonalColor = ToColor(border.BorderColor);
-					BorderStyle.TryParse(border.Border, out BorderStyle borderStyle);
+					BorderStyle borderStyle = ConvertToBorderStyle(border.Border);
 					SetBorderDiagonal(borderStyle, diagonalColor, this.pWorkbook.GetStylesSource(), _cellXf, hasDiagonalUp, hasDiagonalDown);
 				}
 			}

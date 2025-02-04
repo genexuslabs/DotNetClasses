@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<NoWarn>1701;1702;NU1701</NoWarn>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Itext PDF Report</PackageTags>
 		<PackageId>GeneXus.PdfReportsCS.Core</PackageId>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -38,4 +39,21 @@
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
+	
+	<ItemGroup>
+		<Reference Include="iTextAsian" Condition="'$(TargetFramework)'=='net8.0'">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\net8.0\iTextAsian.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<Target Name="CustomContentTarget" Condition="'$(TargetFramework)'=='net8.0'">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(OutputPath)\iTextAsian.dll">
+				<PackagePath>lib/$(TargetFramework)</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
+
 </Project>

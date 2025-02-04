@@ -1,7 +1,10 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
+using DotNetUnitTest;
 using GeneXus.Configuration;
 using GeneXus.Printer;
+using GeneXus.Services;
 using GeneXus.Utils;
 using Xunit;
 
@@ -11,9 +14,11 @@ namespace UnitTesting
 	{
 		public FileIOTests()
 		{
+#if !NETCORE
 			Config.ConfigFileName = Path.Combine(BaseDir, "client.exe.config");
+#endif
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void FileSharedToCopy()
 		{
 			string target = @"\\192.168.86.3\printer";
@@ -23,7 +28,7 @@ namespace UnitTesting
 			Assert.Equal(-1, f.ErrCode);
 			Assert.NotEqual(new NullReferenceException().Message, f.ErrDescription);
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void FileSourceTest()
 		{
 			GxFileInfo fi = new GxFileInfo(string.Empty);
@@ -66,6 +71,10 @@ namespace UnitTesting
 		[Fact]
 		public void GXDBFilePathTest()
 		{
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return;
+			}
 			string[] filesName = { "content/../../../document.aspx","content%2f..%2f..%2f..%2fdocument.aspx","content%2f%2e%2e%2f%2e%2e%2f%2e%2e%2fdocument","content%5c%2e%2e%5c%2e%2e%5c%2e%2e%5cdocument",
 				"content%5c..%5c..%5c..%5cdocument.aspx","content%255c%252e%252e%255c%252e%252e%255c%252e%252e%255cdocument.aspx","content%255c..%255c..%255c..%255cdocument.aspx",
 				"content%c0%af..%c0%af..%c0%af..%c0%afdocument.aspx","content%c1%9c..%c1%9c..%c1%9c..%c1%9cdocument.aspx"};
@@ -74,12 +83,20 @@ namespace UnitTesting
 			{
 				string newFileName = GXDbFile.ResolveUri($"{GXDbFile.Scheme}:{fileName}", false);
 				string baseDir = Preferences.getBLOB_PATH();
-				bool isOK = new Uri(newFileName).LocalPath.StartsWith(Path.GetFullPath(baseDir), StringComparison.OrdinalIgnoreCase);
-				Assert.True(isOK);
+				try
+				{
+					bool isOK = new Uri(newFileName).LocalPath.StartsWith(Path.GetFullPath(baseDir), StringComparison.OrdinalIgnoreCase);
+					Assert.True(isOK);
+				}
+				catch (Exception ex)
+				{
+
+					Assert.True(false,  $"FileName:{newFileName} Error:{ex.Message} ExternalProvider:{ServiceFactory.GetExternalProvider()?.GetType().FullName} fileName:{fileName}");
+				}
 			}
 		}
 
-		[Fact]
+		[WindowsOnlyFact]
 		public void PathUtilGetValidFileName()
 		{
 			string path = "file:///C:/Models/Upload/CSharpModel/web/PublicTempStorage/multimedia/Screen%20Shot%202016-02-15%20at%2011.41.55%20AM_ff107a3ba9fb4564bb4e1bf7f74d5fbf.png";

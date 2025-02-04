@@ -38,7 +38,6 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
 			FunctionContext executionContext)
 		{
-
 			var logger = executionContext.GetLogger("HttpTriggerHandler");
 			logger.LogInformation($"GeneXus Http trigger handler. Function processed: {executionContext.FunctionDefinition.Name}.");
 

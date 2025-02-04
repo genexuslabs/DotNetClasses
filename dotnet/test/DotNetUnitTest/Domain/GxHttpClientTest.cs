@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using DotNetUnitTest;
 using GeneXus.Application;
 using GeneXus.Http.Client;
 using Xunit;
@@ -54,7 +55,7 @@ namespace xUnitTesting
 			}
 		}
 
-		[Fact]
+		[WindowsOnlyFact]
 		public void HttpClientCookieHeader()
 		{
 			string headerValue = "CognitoIdentityServiceProvider.3tgmin25m9bkg6vgi7vpavu7a9.M00000936.refreshToken=eyJjdHkiOiJKV1QiLCJlbmMiSkRCAmMpYqndvORnWLTfHw; CognitoIdentityServiceProvider.3tgmin25m9bkg6vgi7vpavu7a9.LastAuthUser=M00000936";

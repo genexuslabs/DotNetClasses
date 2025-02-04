@@ -48,6 +48,7 @@ namespace GeneXus.Http
 		public static string LAST_MODIFIED = "Last-Modified";
 		public static string EXPIRES = "Expires";
 		public static string XGXFILENAME = "x-gx-filename";
+		public static string GX_OBJECT_ID = "GeneXus-Object-Id";
 		internal static string ACCEPT = "Accept";
 		internal static string TRANSFER_ENCODING = "Transfer-Encoding";
 		internal static string X_CSRF_TOKEN_HEADER = "X-XSRF-TOKEN";
@@ -62,16 +63,16 @@ namespace GeneXus.Http
 	public class HttpJsonError
 	{
 		[DataMember(Name = "code")]
-		public string Code;
+		public string Code { get; set; }
 		[DataMember(Name = "message")]
-		public string Message;
+		public string Message { get; set; }
 	}
 
 	[DataContract()]
 	public class WrappedJsonError
 	{
 		[DataMember(Name = "error")]
-		public HttpJsonError Error;
+		public HttpJsonError Error { get; set; }
 	}
 #if NETCORE
 	internal static class CookiesHelper
@@ -105,13 +106,63 @@ namespace GeneXus.Http
 					{
 						cookieContainer.SetCookies(uri, cookieValue);
 					}
-					catch (CookieException ex)
+					catch (CookieException)
 					{
-						GXLogging.Warn(log, $"Ignored cookie for container: {cookieValue} url:{uri}", ex);
+						try
+						{
+							cookieContainer.Add(ParseCookieHeader(cookieValue));
+						}
+						catch (Exception ex2)
+						{
+							GXLogging.Warn(log, $"Ignored cookie for container: {cookieValue} url:{uri}", ex2.Message);
+						}
 					}
 				}
 
 			}
+		}
+		static Cookie ParseCookieHeader(string cookieHeader)
+		{
+			string[] parts = cookieHeader.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+			if (parts.Length == 0)
+			{
+				throw new ArgumentException("Invalid cookie header.");
+			}
+			string[] nameValuePair = parts[0].Split('=', 2);
+			if (nameValuePair.Length != 2)
+			{
+				throw new ArgumentException("Invalid cookie header: missing name or value.");
+			}
+
+			string name = nameValuePair[0];
+			string value = nameValuePair[1];
+
+			var cookie = new Cookie(name, value);
+
+			foreach (string part in parts[1..])
+			{
+				string[] attribute = part.Split('=', 2);
+				string attributeName = attribute[0].ToLowerInvariant();
+
+				if (attributeName == "path" && attribute.Length == 2)
+				{
+					cookie.Path = attribute[1];
+				}
+				else if (attributeName == "domain" && attribute.Length == 2)
+				{
+					cookie.Domain = attribute[1];
+				}
+				else if (attributeName == "secure")
+				{
+					cookie.Secure = true;
+				}
+				else if (attributeName == "httponly")
+				{
+					cookie.HttpOnly = true;
+				}
+			}
+
+			return cookie;
 		}
 	}
 #endif
@@ -120,23 +171,23 @@ namespace GeneXus.Http
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<HttpHelper>();
 
 		internal static Dictionary<string, string> GAMServices = new Dictionary<string, string>(){
-												{"oauth/access_token","gxoauthaccesstoken.aspx"},
-												{"oauth/logout","gxoauthlogout.aspx"},
-												{"oauth/userinfo","gxoauthuserinfo.aspx"},
-												{"oauth/gam/signin","agamextauthinput.aspx"},
-												{"oauth/gam/callback","agamextauthinput.aspx"},
-												{"oauth/gam/access_token","agamoauth20getaccesstoken.aspx"},
-												{"oauth/gam/userinfo","agamoauth20getuserinfo.aspx"},
-												{"oauth/gam/signout","agamextauthinput.aspx"},
+												{"oauth/access_token","gxoauthaccesstoken"},
+												{"oauth/logout","gxoauthlogout"},
+												{"oauth/userinfo","gxoauthuserinfo"},
+												{"oauth/gam/signin","agamextauthinput"},
+												{"oauth/gam/callback","agamextauthinput"},
+												{"oauth/gam/access_token","agamoauth20getaccesstoken"},
+												{"oauth/gam/userinfo","agamoauth20getuserinfo"},
+												{"oauth/gam/signout","agamextauthinput"},
 												{"saml/gam/signin","Saml2/SignIn"},
-												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws.aspx"},
+												{"saml/gam/callback","gamexternalauthenticationinputsaml20_ws"},
 												{"saml/gam/signout","Saml2/Logout"},
-												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken.aspx"},
-												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken.aspx"},
-												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20.aspx"},
-												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20.aspx"},
-												{"oauth/gam/v2.0/requesttokenanduserinfo","agamssorequesttokenanduserinfo_v20.aspx"}};
-		internal static HashSet<string> GamServicesInternalName = new HashSet<string>(GAMServices.Values.Select(value => value.Replace(ASPX, string.Empty)));
+												{"oauth/requesttokenservice","agamstsauthappgetaccesstoken"},
+												{"oauth/queryaccesstoken","agamstsauthappvalidaccesstoken"},
+												{"oauth/gam/v2.0/access_token","agamoauth20getaccesstoken_v20"},
+												{"oauth/gam/v2.0/userinfo","agamoauth20getuserinfo_v20"},
+												{"oauth/gam/v2.0/requesttokenanduserinfo","agamssorestrequesttokenanduserinfo_v20"}};
+		internal static HashSet<string> GamServicesInternalName = new HashSet<string>(GAMServices.Values);
 		internal const string QUERYVIEWER_NAMESPACE = "QueryViewer.Services";
 		internal const string GXFLOW_NSPACE = "GXflow.Programs";
 		internal const string GAM_NSPACE = "GeneXus.Security.API";
@@ -283,11 +334,7 @@ namespace GeneXus.Http
 #else
 				httpContext.Response.StatusCode = (int)httpStatusCode;
 #endif
-				if (httpStatusCode == HttpStatusCode.Unauthorized)
-				{
-					httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), httpStatusCode.ToString(INT_FORMAT), string.Empty);
-				}
-
+				HandleUnauthorized(httpStatusCode, httpContext);
 #if !NETCORE
 					if (!string.IsNullOrEmpty(statusDescription))
 						httpContext.Response.StatusDescription =  statusDescription.Replace(Environment.NewLine, string.Empty);
@@ -301,14 +348,21 @@ namespace GeneXus.Http
 
 #endif
 		}
-		private static HttpStatusCode MapStatusCode(string statusCode)
+		internal static void HandleUnauthorized(HttpStatusCode statusCode, HttpContext httpContext)
+		{
+			if (statusCode == HttpStatusCode.Unauthorized)
+			{
+				httpContext.Response.Headers[HttpHeader.AUTHENTICATE_HEADER] = HttpHelper.OatuhUnauthorizedHeader(StringUtil.Sanitize(httpContext.Request.Headers["Host"], StringUtil.HttpHeaderWhiteList), statusCode.ToString(HttpHelper.INT_FORMAT), string.Empty);
+			}
+		}
+		internal static HttpStatusCode MapStatusCode(string statusCode)
 		{
 			if (Enum.TryParse<HttpStatusCode>(statusCode, out HttpStatusCode result) && Enum.IsDefined(typeof(HttpStatusCode), result))
 				return result;
 			else
 				return HttpStatusCode.Unauthorized;
 		}
-		private static HttpStatusCode GamCodeToHttpStatus(string code, HttpStatusCode defaultCode=HttpStatusCode.Unauthorized)
+		internal static HttpStatusCode GamCodeToHttpStatus(string code, HttpStatusCode defaultCode=HttpStatusCode.Unauthorized)
 		{
 			if (code == GAM_CODE_OTP_USER_ACCESS_CODE_SENT || code == GAM_CODE_TFA_USER_MUST_VALIDATE)
 			{
@@ -320,6 +374,11 @@ namespace GeneXus.Http
 			}
 			return defaultCode;
 		}
+		internal static WrappedJsonError GetJsonError(string statusCode, string statusDescription)
+		{
+			WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
+			return jsonError;
+		}
 		private static void SetJsonError(HttpContext httpContext, string statusCode, string statusDescription)
 		{
 			if (httpContext != null)//<serviceHostingEnvironment aspNetCompatibilityEnabled="false" /> web.config
@@ -327,8 +386,7 @@ namespace GeneXus.Http
 #if !NETCORE
 				httpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
 #endif
-				WrappedJsonError jsonError = new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCode, Message = statusDescription } };
-				httpContext.Response.Write(JSONHelper.Serialize(jsonError));
+				httpContext.Response.Write(JSONHelper.Serialize(GetJsonError(statusCode, statusDescription)));
 			}
 #if !NETCORE
 			else
@@ -362,6 +420,18 @@ namespace GeneXus.Http
 			SetResponseStatus(httpContext, statusCode, statusCodeDesc);
 			SetJsonError(httpContext, statusCodeStr, statusCodeDesc);
 		}
+#if NETCORE
+		internal static WrappedJsonError HandleUnexpectedError(HttpContext httpContext, HttpStatusCode statusCode, Exception ex)
+		{
+			string statusCodeDesc = StatusCodeToTitle(statusCode);
+			TraceUnexpectedError(ex);
+			string statusCodeStr = statusCode.ToString(HttpHelper.INT_FORMAT);
+			HandleUnauthorized(statusCode, httpContext);
+			httpContext.SetReasonPhrase(statusCodeDesc);
+			GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", statusCode, statusCodeDesc));
+			return new WrappedJsonError() { Error = new HttpJsonError() { Code = statusCodeStr, Message = statusCodeDesc } };
+		}
+#endif
 		internal static string StatusCodeToTitle(HttpStatusCode statusCode)
 		{
 			return CapitalsToTitle.Replace(statusCode.ToString(), " ");
