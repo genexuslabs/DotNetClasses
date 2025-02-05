@@ -1434,8 +1434,8 @@ public class GxFile
 
 	public void Open(string encoding)
 	{
-		OpenWriteWithRetry(encoding);
-		OpenReadWithRetry(encoding);
+		OpenWrite(encoding);
+		OpenRead(encoding);
 	}
 
 	private FileStream _fileStreamWriter;
@@ -1444,7 +1444,7 @@ public class GxFile
 	private FileStream _fileStreamReader;
 	private StreamReader _fileReader;
 
-	public void OpenWriteWithRetry(string encoding)
+	public void OpenWrite(string encoding)
 	{
 		_lastError = 0;
 		_lastErrorDescription = "";
@@ -1484,7 +1484,7 @@ public class GxFile
 		}
 	}
 
-	public void OpenReadWithRetry(string encoding)
+	public void OpenRead(string encoding)
 	{
 		_lastError = 0;
 		_lastErrorDescription = "";
