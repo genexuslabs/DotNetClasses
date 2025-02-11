@@ -133,11 +133,14 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			MySQLParameter parm = new MySQLParameter();
-			parm.DbType = GXTypeToDbType(dbtype);
-            parm.MySqlDbType = DbtoMysqlType(GXTypeToDbType(dbtype));
-            parm.Size = gxlength;
-			parm.Precision = (byte)gxlength;
-			parm.Scale = (byte)gxdec;
+			if (!(dbtype is GXType.Embedding))
+			{
+				parm.DbType = GXTypeToDbType(dbtype);
+				parm.MySqlDbType = DbtoMysqlType(GXTypeToDbType(dbtype));
+				parm.Size = gxlength;
+				parm.Precision = (byte)gxlength;
+				parm.Scale = (byte)gxdec;
+			}
 			parm.ParameterName = name;
 			return parm;
 		}
@@ -446,6 +449,18 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
+#if NETCORE
+		public override GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i, string model, int dimensions)
+		{
+			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
+				return GxEmbedding.Empty(model, dimensions);
+			else
+			{
+				float[] vector = ((MySqlConnector.MySqlDataReader)DR).GetFieldValue<float[]>(i);
+				return new GxEmbedding(vector) { Model = model, Dimensions = dimensions };
+			}
+		}
+#endif
 		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
 		{
 			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
@@ -466,6 +481,12 @@ namespace GeneXus.Data
 				parameter.Value = value.ToString();
 				
 			}
+#if NETCORE
+			else if (value is GxEmbedding embedding)
+			{
+				value = embedding.Data.ToArray();
+			}
+#endif
 			else if (value is bool && parameter.DbType == DbType.Byte ) {
 				bool boolValue = (bool)value;
 				parameter.Value = boolValue ? (byte)1 : (byte)0;
