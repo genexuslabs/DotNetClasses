@@ -268,9 +268,13 @@ namespace GeneXus.Application
 		private void RegisterControllerAssemblies(IMvcBuilder mvcBuilder)
 		{
 			
-			if (RestAPIHelpers.ServiceAsController() && !string.IsNullOrEmpty(VirtualPath))
+			if (RestAPIHelpers.ServiceAsController())
 			{
-				mvcBuilder.AddMvcOptions(options =>	options.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath))));
+				mvcBuilder.AddMvcOptions(options => options.ModelBinderProviders.Insert(0, new QueryStringModelBinderProvider()));
+				if (!string.IsNullOrEmpty(VirtualPath))
+				{
+					mvcBuilder.AddMvcOptions(options => options.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath))));
+				}
 			}
 
 			if (RestAPIHelpers.JsonSerializerCaseSensitive())
