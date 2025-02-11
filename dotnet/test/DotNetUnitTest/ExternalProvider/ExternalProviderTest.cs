@@ -393,8 +393,15 @@ namespace UnitTesting
 		private void EnsureUrl(String signedOrUnsignedUrl, GxFileType acl)
 		{
 			Assert.True(UrlExists(signedOrUnsignedUrl), "URL not found: " + signedOrUnsignedUrl);
-			if (IsPrivateFile(acl))
+			
+			bool skipUrlSignatureTests = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("S3_SKIP_URL_SIGNATURE_TEST"));
+			if (skipUrlSignatureTests)
 			{
+				return;
+			}
+
+			if (IsPrivateFile(acl))
+			{				
 				if (!(this is ExternalProviderMinioTest)) //Minio local installation not supported
 				{
 					Skip.If(this is ExternalProviderMinioTest);

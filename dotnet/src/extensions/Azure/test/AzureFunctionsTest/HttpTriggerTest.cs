@@ -52,7 +52,6 @@ namespace Extensions.AzureFunctions.Test
 			{
 				throw new Exception("Exception should not be thrown.", ex);
 			}
-
 		}
 		[Fact]
 		public void HttpTest()
@@ -90,7 +89,6 @@ namespace Extensions.AzureFunctions.Test
 			{
 				throw new Exception("Exception should not be thrown.", ex);
 			}
-				
 		}
 	}
 	public class MockHttpRequestData : HttpRequestData

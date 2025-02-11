@@ -38,7 +38,7 @@ namespace GxClasses.Web.Middleware
 		public static string UrlTemplateControllerWithParms;
 
 		//Azure Functions
-		public bool AzureRuntime;
+		public static bool AzureRuntime;
 		public AzureDeployFeature AzureDeploy = new AzureDeployFeature();
 		public static string AzureFunctionName;
 
@@ -311,7 +311,7 @@ namespace GxClasses.Web.Middleware
 			string pathWithNoBase = string.IsNullOrEmpty(basePath) ? path.Substring(1) : path.Substring(basePath.Length + 2);
 
 			//API Objects
-			string AzureFunctionShortName = AzureFunctionName.Substring(AzureFunctionName.LastIndexOf(".") + 1);
+			string AzureFunctionShortName = AzureFunctionName.Substring(AzureFunctionName.LastIndexOf("_") + 1);
 			string controllerWithParms = "";
 			foreach (var map in servicesMap)
 			{
@@ -382,7 +382,7 @@ namespace GxClasses.Web.Middleware
 		private String FindPath(string innerPath, Dictionary<string,string > servicesPathUrl, bool startTxt)
 		{
 			string actualPath = String.Empty;
-			foreach (var subPath in from String subPath in servicesPathUrl.Keys									
+			foreach (string subPath in from String subPath in servicesPathUrl.Keys									
 									select subPath)
 			{
 				bool match = false;
@@ -525,47 +525,50 @@ namespace GxClasses.Web.Middleware
 								string mapPathLower = mapPath.ToLower();
 								string mNameLower = m.Name.ToLower();
 								servicesPathUrl[mapPathLower]= mNameLower;
-								GXLogging.Debug(log, $"addServicesPathUrl key:{mapPathLower} value:{mNameLower}");
-								foreach (SingleMap sm in m.Mappings)
+								if (!RestAPIHelpers.ServiceAsController())
 								{
-									if (sm.Verb == null)
-										sm.Verb = "GET";
-									if (String.IsNullOrEmpty(sm.Path))
-										sm.Path = sm.Name;
-									else
+									GXLogging.Debug(log, $"addServicesPathUrl key:{mapPathLower} value:{mNameLower}");
+									foreach (SingleMap sm in m.Mappings)
 									{
-										sm.Path = Regex.Replace(sm.Path, "^/|/$", "");
-									}
-									if (sm.VariableAlias == null)
-										sm.VariableAlias = new Dictionary<string, string>();
-									else
-									{
-										Dictionary<string, string> vMap = new Dictionary<string, string>();
-										foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+										if (sm.Verb == null)
+											sm.Verb = "GET";
+										if (String.IsNullOrEmpty(sm.Path))
+											sm.Path = sm.Name;
+										else
 										{
-											vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+											sm.Path = Regex.Replace(sm.Path, "^/|/$", "");
 										}
-										sm.VariableAlias = vMap;
-									}
-									if (servicesMap.ContainsKey(mapPathLower))
-									{
-										if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+										if (sm.VariableAlias == null)
+											sm.VariableAlias = new Dictionary<string, string>();
+										else
 										{
+											Dictionary<string, string> vMap = new Dictionary<string, string>();
+											foreach (KeyValuePair<string, string> v in sm.VariableAlias)
+											{
+												vMap.Add(v.Key.ToLower(), v.Value.ToLower());
+											}
+											sm.VariableAlias = vMap;
+										}
+										if (servicesMap.ContainsKey(mapPathLower))
+										{
+											if (!servicesMap[mapPathLower].ContainsKey(sm.Name.ToLower()))
+											{
+												servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
+
+												servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+												servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
+											}
+										}
+										else
+										{
+											servicesValidPath.Add(mapPathLower, new List<string>());
 											servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
 
+											servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string, string>, string>());
 											servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
+											servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
 											servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
 										}
-									}
-									else
-									{
-										servicesValidPath.Add(mapPathLower, new List<string>());
-										servicesValidPath[mapPathLower].Add(sm.Path.ToLower());
-
-										servicesMapData.Add(mapPathLower, new Dictionary<Tuple<string, string>, string>());
-										servicesMapData[mapPathLower].Add(Tuple.Create(sm.Path.ToLower(), sm.Verb.ToUpper()), sm.Name.ToLower());
-										servicesMap.Add(mapPathLower, new Dictionary<string, SingleMap>());
-										servicesMap[mapPathLower].Add(sm.Name.ToLower(), sm);
 									}
 								}
 							}

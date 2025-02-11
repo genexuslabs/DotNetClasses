@@ -35,7 +35,7 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 				{
 					ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 					if (sessionService is GxRedisSession)
-					{ 
+					{
 						services.AddSingleton<ICacheService2>(x => new Redis(sessionService.ConnectionString, sessionService.SessionTimeout));
 					}
 					else
