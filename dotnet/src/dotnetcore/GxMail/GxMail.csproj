@@ -25,6 +25,7 @@
     <Compile Include="..\..\dotnetframework\GxMail\Exchange\UserData.cs" Link="Exchange\UserData.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\GXInternetConstants.cs" Link="GXInternetConstants.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\GXMailException.cs" Link="GXMailException.cs" />
+    <Compile Include="..\..\dotnetframework\GxMail\GXMailHelper.cs" Link="GXMailHelper.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\GXMailMessage.cs" Link="GXMailMessage.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\GXMailRecipient.cs" Link="GXMailRecipient.cs" />
     <Compile Include="..\..\dotnetframework\GxMail\GXMailRecipientCollection.cs" Link="GXMailRecipientCollection.cs" />
