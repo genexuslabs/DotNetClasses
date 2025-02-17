@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Authentication;
+using GeneXus.Mail.Util;
 using GeneXus.Utils;
 using MailKit;
 using MailKit.Net.Pop3;
@@ -206,14 +207,14 @@ namespace GeneXus.Mail
 
 				foreach (MimeEntity attach in attachs)
 				{
-					string attachName = FixFileName(AttachDir, attach is MessagePart ? attach.ContentDisposition?.FileName : ((MimePart)attach).FileName);
+					string attachName = GXMailHelper.FixAndEnsureUniqueFileName(AttachDir, attach is MessagePart ? attach.ContentDisposition?.FileName : ((MimePart)attach).FileName);
 					ProcessMailAttachment(gxmessage, attach, attachName);
 				}
 				foreach (MimeEntity attach in msg.BodyParts)
 				{
 					if (IsEmbeddedImage(attach, msg))
 					{
-						string attachName = FixFileName(AttachDir, attach.ContentDisposition!=null ? attach.ContentDisposition?.FileName : ((MimePart)attach).FileName);
+						string attachName = GXMailHelper.FixAndEnsureUniqueFileName(AttachDir, attach.ContentDisposition!=null ? attach.ContentDisposition?.FileName : ((MimePart)attach).FileName);
 						ProcessMailAttachment(gxmessage, attach, attachName);
 					}
 				}

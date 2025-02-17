@@ -6,7 +6,9 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GeneXus.Mail.Util;
 using GeneXus.Utils;
+using Org.Mentalis.Security.Certificates;
 
 namespace GeneXus.Mail.Internals.Pop3
 {
@@ -142,19 +144,6 @@ namespace GeneXus.Mail.Internals.Pop3
 			}
 		}
 
-		private string FixFileName(string AttachDir, string name)
-		{
-			if (string.IsNullOrEmpty(name))
-			{
-				name = Path.GetRandomFileName();
-			}
-			if (Path.Combine(AttachDir, name).Length > 200)
-			{
-				name = Path.GetRandomFileName().Replace(".", "") + "." + Path.GetExtension(name);
-			}
-			Regex validChars = new Regex(@"[\\\/\*\?\|:<>]");
-			return validChars.Replace(name, "_");
-		}
 
 		private static void FillMonthList()
 		{
@@ -319,15 +308,7 @@ namespace GeneXus.Mail.Internals.Pop3
 				extension = "." + ExtensionFromContentType(contentType);
 			}
 
-			int idx = 1;
-			string nameOri = "" + name;
-			while(File.Exists(path + name + extension))
-			{
-				name = nameOri + " (" + idx + ")";
-				idx = idx + 1;
-			}
-
-			return FixFileName(path, name + extension);
+			return GXMailHelper.FixAndEnsureUniqueFileName(path, name + extension);
 		}
 
 		private static string ExtensionFromContentType(string contentType)
