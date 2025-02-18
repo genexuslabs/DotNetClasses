@@ -168,6 +168,8 @@ namespace GeneXus.Data
 				case GXType.Geopoint:
 				case GXType.Geopolygon:
 					return DbType.String;
+				case GXType.Embedding:
+					return DbType.Binary;
 				default: return DbType.String;
 			}
 		}
@@ -456,7 +458,8 @@ namespace GeneXus.Data
 				return GxEmbedding.Empty(model, dimensions);
 			else
 			{
-				float[] vector = ((MySqlConnector.MySqlDataReader)DR).GetFieldValue<float[]>(i);
+				byte[] bytes = DR.GetValue(i) as byte[];
+				float[] vector = ByteArrayToFloatArray(bytes);
 				return new GxEmbedding(vector) { Model = model, Dimensions = dimensions };
 			}
 		}
@@ -479,24 +482,54 @@ namespace GeneXus.Data
 			if (value is Guid)
 			{
 				parameter.Value = value.ToString();
-				
+
 			}
 #if NETCORE
 			else if (value is GxEmbedding embedding)
 			{
-				value = embedding.Data.ToArray();
+				//string embeddingJson = JsonSerializer.Serialize(embedding.Data.ToArray()); //embedding.Data.ToArray();
+				parameter.Value = FloatArrayToByteArray(embedding.Data.ToArray());
 			}
 #endif
-			else if (value is bool && parameter.DbType == DbType.Byte ) {
+			else if (value is bool && parameter.DbType == DbType.Byte)
+			{
 				bool boolValue = (bool)value;
 				parameter.Value = boolValue ? (byte)1 : (byte)0;
 			}
 			else
 				base.SetParameter(parameter, value);
 		}
+
+		byte[] FloatArrayToByteArray(float[] values)
+		{
+			int length = values.Length;
+			byte[] result = new byte[length * 4];
+
+			for (int i = 0; i < length; i++)
+			{
+				byte[] bytes = BitConverter.GetBytes(values[i]);
+				Array.Copy(bytes, 0, result, i * 4, 4);
+			}
+
+			return result;
+		}
+
+		float[] ByteArrayToFloatArray(byte[] bytes)
+		{
+			int length = bytes.Length / 4;
+			float[] result = new float[length];
+
+			for (int i = 0; i < length; i++)
+			{
+				result[i] = BitConverter.ToSingle(bytes, i * 4);
+			}
+
+			return result;
+		}
+
 	}
 
-	[SecuritySafeCritical]
+		[SecuritySafeCritical]
 	sealed internal class MySqlConnectorConnectionWrapper : GxAbstractConnectionWrapper
 	{
 	

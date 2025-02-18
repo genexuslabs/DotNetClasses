@@ -426,9 +426,9 @@ namespace GeneXus.Data
 		}
 		protected object CheckDataLength(object value, IDbDataParameter parameter)
 		{
-			if (m_avoidDataTruncationError)
+			if (m_avoidDataTruncationError &&  (parameter.DbType == DbType.String || parameter.DbType == DbType.StringFixedLength) && value is string)
 			{
-				string svalue = value.ToString();
+				string svalue = value as string;
 				if (svalue != null && svalue.Length > parameter.Size)
 				{
 					return svalue.Substring(0, parameter.Size);
