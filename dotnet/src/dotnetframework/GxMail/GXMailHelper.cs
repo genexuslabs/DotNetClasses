@@ -23,7 +23,7 @@ namespace GeneXus.Mail.Util
 			{
 				name = Path.GetRandomFileName().Replace(".", "") + "." + Path.GetExtension(name);
 			}
-			return FileUtil.FixFileName(name, attachDir);
+			return FileUtil.FixFileName(name, string.Empty);
 		}
 
 	}
