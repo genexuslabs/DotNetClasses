@@ -297,6 +297,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0951B880-C3E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxSoapHandler", "src\extensions\ws\src\GxSoapHandler\GxSoapHandler.csproj", "{AEFB6EFF-1FFD-4353-9E56-49A24A73531F}"
 EndProject
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Functions", "Functions", "{E59B3248-4C26-4DB0-96CB-67437319E22B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ai", "ai", "{F45B7F31-6F9B-4A8E-8B82-34DBDF375000}"
@@ -304,6 +305,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxAI", "src\dotnetcore\Providers\AI\GxAI.csproj", "{AA9CD80B-5FDC-4194-BA55-D77FC82915C3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctionsLibraries", "src\extensions\Azure\Libraries\GeneXus.Deploy.AzureFunctionsLibraries.csproj", "{B3DC39F8-39F0-4200-A971-77E26FFDB2CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXCompress", "src\dotnetcore\GXCompress\GXCompress.csproj", "{593E3569-1F62-4601-821B-CC96B39022F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -723,6 +726,10 @@ Global
 		{B3DC39F8-39F0-4200-A971-77E26FFDB2CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3DC39F8-39F0-4200-A971-77E26FFDB2CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3DC39F8-39F0-4200-A971-77E26FFDB2CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{593E3569-1F62-4601-821B-CC96B39022F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{593E3569-1F62-4601-821B-CC96B39022F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{593E3569-1F62-4601-821B-CC96B39022F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{593E3569-1F62-4601-821B-CC96B39022F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -870,6 +877,7 @@ Global
 		{F45B7F31-6F9B-4A8E-8B82-34DBDF375000} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 		{AA9CD80B-5FDC-4194-BA55-D77FC82915C3} = {F45B7F31-6F9B-4A8E-8B82-34DBDF375000}
 		{B3DC39F8-39F0-4200-A971-77E26FFDB2CA} = {BD804A75-9F3F-416C-BF6B-D3DF6C4A8DC0}
+		{593E3569-1F62-4601-821B-CC96B39022F3} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
