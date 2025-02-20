@@ -133,11 +133,14 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			MySQLParameter parm = new MySQLParameter();
-			parm.DbType = GXTypeToDbType(dbtype);
-            parm.MySqlDbType = DbtoMysqlType(GXTypeToDbType(dbtype));
-            parm.Size = gxlength;
-			parm.Precision = (byte)gxlength;
-			parm.Scale = (byte)gxdec;
+			if (!(dbtype is GXType.Embedding))
+			{
+				parm.DbType = GXTypeToDbType(dbtype);
+				parm.MySqlDbType = DbtoMysqlType(GXTypeToDbType(dbtype));
+				parm.Size = gxlength;
+				parm.Precision = (byte)gxlength;
+				parm.Scale = (byte)gxdec;
+			}
 			parm.ParameterName = name;
 			return parm;
 		}
@@ -165,6 +168,8 @@ namespace GeneXus.Data
 				case GXType.Geopoint:
 				case GXType.Geopolygon:
 					return DbType.String;
+				case GXType.Embedding:
+					return DbType.Binary;
 				default: return DbType.String;
 			}
 		}
@@ -446,6 +451,19 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
+#if NETCORE
+		public override GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i, string model, int dimensions)
+		{
+			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
+				return GxEmbedding.Empty(model, dimensions);
+			else
+			{
+				byte[] bytes = DR.GetValue(i) as byte[];
+				float[] vector = ByteArrayToFloatArray(bytes);
+				return new GxEmbedding(vector) { Model = model, Dimensions = dimensions };
+			}
+		}
+#endif
 		public override string GetString(IGxDbCommand cmd, IDataRecord DR, int i, int size)
 		{
 			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
@@ -464,18 +482,54 @@ namespace GeneXus.Data
 			if (value is Guid)
 			{
 				parameter.Value = value.ToString();
-				
+
 			}
-			else if (value is bool && parameter.DbType == DbType.Byte ) {
+#if NETCORE
+			else if (value is GxEmbedding embedding)
+			{
+				//string embeddingJson = JsonSerializer.Serialize(embedding.Data.ToArray()); //embedding.Data.ToArray();
+				parameter.Value = FloatArrayToByteArray(embedding.Data.ToArray());
+			}
+#endif
+			else if (value is bool && parameter.DbType == DbType.Byte)
+			{
 				bool boolValue = (bool)value;
 				parameter.Value = boolValue ? (byte)1 : (byte)0;
 			}
 			else
 				base.SetParameter(parameter, value);
 		}
+
+		byte[] FloatArrayToByteArray(float[] values)
+		{
+			int length = values.Length;
+			byte[] result = new byte[length * 4];
+
+			for (int i = 0; i < length; i++)
+			{
+				byte[] bytes = BitConverter.GetBytes(values[i]);
+				Array.Copy(bytes, 0, result, i * 4, 4);
+			}
+
+			return result;
+		}
+
+		float[] ByteArrayToFloatArray(byte[] bytes)
+		{
+			int length = bytes.Length / 4;
+			float[] result = new float[length];
+
+			for (int i = 0; i < length; i++)
+			{
+				result[i] = BitConverter.ToSingle(bytes, i * 4);
+			}
+
+			return result;
+		}
+
 	}
 
-	[SecuritySafeCritical]
+		[SecuritySafeCritical]
 	sealed internal class MySqlConnectorConnectionWrapper : GxAbstractConnectionWrapper
 	{
 	

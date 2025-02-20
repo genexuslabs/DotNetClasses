@@ -2303,6 +2303,15 @@ namespace GeneXus.Utils
 			current++;
 			return getKeyValuePair(current);
 		}
+		internal List<GxKeyValuePair> ToList()
+		{
+			List<GxKeyValuePair> list = new List<GxKeyValuePair>();
+			for (int i = 0; i < this.Count; i++)
+			{
+				list.Add(getKeyValuePair(i));
+			}
+			return list;
+		}
 		public bool Eof()
 		{
 			return eof;
@@ -2443,11 +2452,13 @@ namespace GeneXus.Utils
 			_key = key;
 			_value = value;
 		}
+		[JsonPropertyName("key")]
 		public string Key
 		{
 			get { return _key; }
 			set { _key = value; }
 		}
+		[JsonPropertyName("value")]
 		public string Value
 		{
 			get { return _value; }
