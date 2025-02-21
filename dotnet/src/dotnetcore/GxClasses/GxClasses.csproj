@@ -176,7 +176,7 @@
 		<PackageReference Include="Stubble.Core" Version="1.8.4" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
-		<PackageReference Include="GeneXus.Drawing.Common" Version="2.0.0" />
+		<PackageReference Include="GeneXus.Drawing.Common" Version="2.0.1" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.35.0" />
 		<PackageReference Include="NUglify" Version="1.16.4" />
 	</ItemGroup>
