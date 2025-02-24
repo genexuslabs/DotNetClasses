@@ -106,7 +106,7 @@
 				<PackagePath>./lib/$(TargetFramework)/</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
-			<TfmSpecificPackageFile Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;local.settings.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
+			<TfmSpecificPackageFile Include="$(MSBuildProjectName).csproj;.\**\*.cs;host.json;" Exclude=".\obj\**\*.cs;.\bin\**\*">
 				<PackagePath>./src/</PackagePath>
 				<PackageCopyToOutput>true</PackageCopyToOutput>
 			</TfmSpecificPackageFile>
