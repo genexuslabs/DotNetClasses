@@ -283,6 +283,13 @@ namespace GeneXus.Application
 			{
 				mvcBuilder.AddJsonOptions(options => options.JsonSerializerOptions.PropertyNameCaseInsensitive = false);
 			}
+
+			mvcBuilder.AddJsonOptions(options =>
+			{
+				options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString;
+				options.JsonSerializerOptions.Converters.Add(new StringConverter());
+			});
+
 			mvcBuilder.ConfigureApiBehaviorOptions(options =>
 			{
 				options.InvalidModelStateResponseFactory = context =>
