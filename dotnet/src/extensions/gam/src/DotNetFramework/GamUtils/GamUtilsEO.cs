@@ -92,5 +92,8 @@ namespace GamUtils
 
 		[SecuritySafeCritical]
 		public static string FromBase64Url(string base64) { return Encoding.FromBase64Url(base64); }
+
+		[SecuritySafeCritical]
+		public static string Base64ToHexa(string base64) { return Encoding.Base64ToHexa(base64);  }
 	}
 }
