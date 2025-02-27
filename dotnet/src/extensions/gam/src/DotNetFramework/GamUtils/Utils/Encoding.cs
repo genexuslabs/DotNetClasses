@@ -71,5 +71,21 @@ namespace GamUtils.Utils
 			}
 		}
 
+		[SecuritySafeCritical]
+		internal static string Base64ToHexa(string base64)
+		{
+			logger.Debug("Base64ToHexa");
+			try
+			{
+				return Hex.ToHexString(Base64.Decode(base64));
+			}
+			catch (Exception e)
+			{
+				logger.Error("Base64ToHexa", e);
+				return "";
+			}
+		}
+
+
 	}
 }
