@@ -20,6 +20,7 @@
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestRandom.cs" Link="Utils\TestRandom.cs" />
 	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestUnixTimestamp.cs" Link="Utils\TestUnixTimestamp.cs" />
 		<Compile Include="..\..\DotNetFramework\GamTest\Utils\TestEncoding.cs" Link="Utils\TestEncoding.cs" />
+		<Compile Include="..\..\DotNetFramework\GamTest\Utils\TestPkce.cs" Link="Utils\TestPkce.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
