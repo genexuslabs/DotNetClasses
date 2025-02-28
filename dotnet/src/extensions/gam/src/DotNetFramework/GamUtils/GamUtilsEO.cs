@@ -95,5 +95,14 @@ namespace GamUtils
 
 		[SecuritySafeCritical]
 		public static string Base64ToHexa(string base64) { return Encoding.Base64ToHexa(base64);  }
+
+		//**PKCE**//
+
+		[SecuritySafeCritical]
+		public static string Pkce_Create(int len, string option) { return Pkce.Create(len, option);  }
+
+		[SecuritySafeCritical]
+		public static bool Pkce_Verify(string code_verifier, string code_challenge, string option) { return Pkce.Verify(code_verifier, code_challenge, option);  }
+
 	}
 }
