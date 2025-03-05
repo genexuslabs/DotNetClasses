@@ -4279,6 +4279,7 @@ namespace GeneXus.Data
 		protected IDbTransaction m_transaction;
 		protected GxConnectionCache m_connectionCache;
 		protected IsolationLevel m_isolationLevel;
+		const string DISTANCE_FUNCTION = "DISTANCE";
 
 		protected GxAbstractConnectionWrapper(IDbConnection conn, IsolationLevel isolationLevel) :this(conn)
 		{
@@ -4357,6 +4358,8 @@ namespace GeneXus.Data
 		{
 			get {	return InternalConnection.State;	}
 		}
+
+		internal virtual string DistanceFunction { get { return DISTANCE_FUNCTION; } }
 
 		public virtual void Open()
 		{
