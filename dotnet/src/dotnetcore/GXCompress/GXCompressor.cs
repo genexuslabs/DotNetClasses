@@ -1,7 +1,7 @@
 using GeneXus.Utils;
 using GeneXus;
 using System.IO.Compression;
-using SevenZip;
+using System.Formats.Tar;
 
 namespace Genexus.Compression
 {
@@ -204,6 +204,14 @@ namespace Genexus.Compression
 
 		private static void CompressToSevenZ(FileInfo[] files, string outputPath)
 		{
+			if (Environment.Is64BitProcess)
+			{
+				SevenZipExtractor.SetLibraryPath(Path.Combine(FileUtil.GetStartupDirectory(), @"7z64.dll"));
+			}
+			else
+			{
+				SevenZipExtractor.SetLibraryPath(Path.Combine(FileUtil.GetStartupDirectory(), @"7z.dll"));
+			}
 			if (files == null || outputPath == null)
 				throw new ArgumentException("Files and outputPath must not be null");
 			if (File.Exists(outputPath))
@@ -235,8 +243,6 @@ namespace Genexus.Compression
 
 			compressor.CompressFiles(outputPath, fileDictionary.Values.ToArray());
 		}
-
-
 
 		private static void CompressToTar(FileInfo[] files, string outputPath)
 		{

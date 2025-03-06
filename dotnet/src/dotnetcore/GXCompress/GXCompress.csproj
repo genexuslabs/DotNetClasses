@@ -11,8 +11,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
-		<PackageReference Include="SevenZipSharp-zg" Version="1.0.0" />
-		<PackageReference Include="SharpZipLib" Version="1.4.2" />
 	</ItemGroup>
 
 </Project>
