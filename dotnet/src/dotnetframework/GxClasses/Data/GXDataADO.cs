@@ -2147,7 +2147,13 @@ namespace GeneXus.Data.ADO
 				case "<=": break;
 				case "<>": break;
 				case "like": isLike = true;  break;
-				case "Distance": op = con.InternalConnection.DistanceFunction; break;
+				case "Distance":
+					if (!con.Opened)
+					{
+						con.Open();
+					}
+					op = con.InternalConnection.DistanceFunction;
+					break;
 				default: op = "="; break;
 			}
 			OriginalCmd = OriginalCmd ?? CommandText;

@@ -535,6 +535,8 @@ namespace GeneXus.Data
 	
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<MySqlConnectorConnectionWrapper>();
 		const string MariaDBDistanceFunction = "vec_distance_cosine";
+		const string MariaDBVersion = "MariaDB";
+		string _distanceFunction;
 
 		[SecuritySafeCritical]
 		public MySqlConnectorConnectionWrapper() : base(new MySQLConnection())
@@ -547,12 +549,15 @@ namespace GeneXus.Data
 		internal override string DistanceFunction
 		{
 			get {
-				MySQLConnection mysqlConnection = InternalConnection as MySQLConnection;
-				if (mysqlConnection.ServerVersion.Contains("MariaDB"))
+				if (string.IsNullOrEmpty(_distanceFunction))
 				{
-					return MariaDBDistanceFunction;
+					MySQLConnection mysqlConnection = InternalConnection as MySQLConnection;
+					if (mysqlConnection.ServerVersion.Contains(MariaDBVersion))
+						_distanceFunction = MariaDBDistanceFunction;
+					else
+						_distanceFunction = base.DistanceFunction;
 				}
-				return base.DistanceFunction;
+				return _distanceFunction;
 			}
 		}
 		[SecuritySafeCritical]
