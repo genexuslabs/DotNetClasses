@@ -1,7 +1,7 @@
 using GeneXus.Utils;
 using GeneXus;
 using System.IO.Compression;
-using SevenZip;
+using System.Formats.Tar;
 
 namespace Genexus.Compression
 {
@@ -204,75 +204,59 @@ namespace Genexus.Compression
 
 		private static void CompressToSevenZ(FileInfo[] files, string outputPath)
 		{
-			if (files == null || outputPath == null)
-				throw new ArgumentException("Files and outputPath must not be null");
-			if (File.Exists(outputPath))
-				throw new IOException("Output file already exists");
-
-			var compressor = new SevenZipCompressor();
-			compressor.CompressionMethod = CompressionMethod.Lzma2;
-			var fileDictionary = new Dictionary<string, string>();
-
-			void AddFile(FileSystemInfo fsi, string entryName)
-			{
-				if (fsi is DirectoryInfo di)
-				{
-					foreach (var child in di.GetFileSystemInfos())
-						AddFile(child, entryName + "/" + child.Name);
-				}
-				else if (fsi is FileInfo fi)
-				{
-					fileDictionary[entryName] = fi.FullName;
-				}
-			}
-
+			using var archiveStream = new FileStream(outputPath, FileMode.Create);
+			using var writer = new BinaryWriter(archiveStream);
+			writer.Write(System.Text.Encoding.ASCII.GetBytes("7ZARCHV"));
+			writer.Write(files.Length);
 			foreach (var file in files)
 			{
-				if (file == null || !file.Exists)
-					continue;
-				AddFile(file, file.Name);
+				byte[] fileNameBytes = System.Text.Encoding.UTF8.GetBytes(file.FullName);
+				writer.Write(fileNameBytes.Length);
+				writer.Write(fileNameBytes);
+				long uncompressedSize = file.Length;
+				byte[] compressedData;
+				using (var inputStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+				using (var ms = new MemoryStream())
+				{
+					var encoder = new SevenZip.Compression.LZMA.Encoder();
+					encoder.WriteCoderProperties(ms);
+					for (int i = 0; i < 8; i++)
+						ms.WriteByte((byte)(uncompressedSize >> (8 * i)));
+					encoder.Code(inputStream, ms, -1, -1, null);
+					compressedData = ms.ToArray();
+				}
+				writer.Write(uncompressedSize);
+				writer.Write(compressedData.Length);
+				writer.Write(compressedData);
 			}
-
-			compressor.CompressFiles(outputPath, fileDictionary.Values.ToArray());
 		}
-
-
 
 		private static void CompressToTar(FileInfo[] files, string outputPath)
 		{
-			if (string.IsNullOrEmpty(outputPath))
-				throw new ArgumentException("The output path must not be null or empty");
-			if (File.Exists(outputPath))
-				throw new IOException("Output file already exists");
-			using (var fs = File.Create(outputPath))
-			using (var tarOut = new ICSharpCode.SharpZipLib.Tar.TarOutputStream(fs))
+			if (string.IsNullOrEmpty(outputPath)) throw new ArgumentException("The output path must not be null or empty");
+			if (File.Exists(outputPath)) throw new IOException("Output file already exists");
+			using
+			var output = File.Create(outputPath);
+			using
+			var tarWriter = new TarWriter(output, TarEntryFormat.Pax);
+			void AddFileToTar(FileSystemInfo file, string entryName)
 			{
-				void AddFileToTar(FileSystemInfo file, string entryName)
+				if (file is DirectoryInfo di)
 				{
-					if (file is DirectoryInfo di)
+					foreach (var child in di.GetFileSystemInfos())
 					{
-						foreach (var child in di.GetFileSystemInfos())
-							AddFileToTar(child, entryName + "/" + child.Name);
-					}
-					else if (file is FileInfo fi)
-					{
-						var entry = ICSharpCode.SharpZipLib.Tar.TarEntry.CreateEntryFromFile(fi.FullName);
-						entry.Name = entryName;
-						tarOut.PutNextEntry(entry);
-						using (var stream = fi.OpenRead())
-						{
-							stream.CopyTo(tarOut);
-						}
-						tarOut.CloseEntry();
+						AddFileToTar(child, entryName + "/" + child.Name);
 					}
 				}
-
-				foreach (var file in files)
+				else if (file is FileInfo fi)
 				{
-					if (file == null || !file.Exists)
-						continue;
-					AddFileToTar(file, file.Name);
+					tarWriter.WriteEntry(entryName, fi.FullName);
 				}
+			}
+			foreach (var file in files)
+			{
+				if (file == null || !file.Exists) continue;
+				AddFileToTar(file, file.Name);
 			}
 		}
 
@@ -285,7 +269,7 @@ namespace Genexus.Compression
 				throw new ArgumentException("Output path is null or empty");
 			if (File.Exists(outputPath))
 			{
-				try { using (var fs = File.OpenWrite(outputPath)) { } } catch { throw new IOException("Cannot write to output file"); }
+				try { using (File.OpenWrite(outputPath)) { } } catch { throw new IOException("Cannot write to output file"); }
 			}
 			string parentDir = Path.GetDirectoryName(outputPath) ?? "";
 			if (!string.IsNullOrEmpty(parentDir) && !Directory.Exists(parentDir))
@@ -294,74 +278,37 @@ namespace Genexus.Compression
 			string tempFile = Path.Combine(string.IsNullOrEmpty(parentDir) ? "." : parentDir, Path.GetRandomFileName() + ".tmp");
 			if (singleFile)
 			{
-				using (var fis = files[0].OpenRead())
-				using (var fos = File.Create(tempFile))
-				using (var gzos = new GZipStream(fos, System.IO.Compression.CompressionLevel.Optimal))
-				{
-					byte[] buffer = new byte[8192];
-					int len;
-					while ((len = fis.Read(buffer, 0, buffer.Length)) > 0)
-						gzos.Write(buffer, 0, len);
-				}
+				using FileStream fis = files[0].OpenRead();
+				using FileStream fos = File.Create(tempFile);
+				using GZipStream gzos = new GZipStream(fos, CompressionLevel.Optimal);
+				fis.CopyTo(gzos);
 			}
 			else
 			{
-				using (var fos = File.Create(tempFile))
-				using (var gzos = new GZipStream(fos, System.IO.Compression.CompressionLevel.Optimal))
-				using (var tarOut = new ICSharpCode.SharpZipLib.Tar.TarOutputStream(gzos))
+				string tarTemp = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+				Directory.CreateDirectory(tarTemp);
+				foreach (var f in files)
 				{
-					tarOut.IsStreamOwner = false;
-					var fileStack = new Stack<FileSystemInfo>();
-					var pathStack = new Stack<string>();
-					foreach (var file in files)
+					if (f == null) continue;
+					string destPath = Path.Combine(tarTemp, f.Name);
+					if ((f.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
 					{
-						if (file != null)
-						{
-							fileStack.Push(file);
-							pathStack.Push("");
-						}
+						DirectoryInfo di = new DirectoryInfo(f.FullName);
+						CopyDirectory(di, new DirectoryInfo(destPath));
 					}
-					while (fileStack.Count > 0)
+					else
 					{
-						var current = fileStack.Pop();
-						string currentPath = pathStack.Pop();
-						string entryName = (string.IsNullOrEmpty(currentPath) ? "" : currentPath + "/") + current.Name;
-						if ((current.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-						{
-							DirectoryInfo di = (DirectoryInfo)current;
-							var children = di.GetFileSystemInfos();
-							if (children.Length > 0)
-							{
-								foreach (var child in children)
-								{
-									fileStack.Push(child);
-									pathStack.Push(entryName);
-								}
-							}
-							else
-							{
-								var entry = ICSharpCode.SharpZipLib.Tar.TarEntry.CreateEntryFromFile(current.FullName);
-								entry.Name = entryName.EndsWith("/") ? entryName : entryName + "/";
-								tarOut.PutNextEntry(entry);
-								tarOut.CloseEntry();
-							}
-						}
-						else
-						{
-							var entry = ICSharpCode.SharpZipLib.Tar.TarEntry.CreateEntryFromFile(current.FullName);
-							entry.Name = entryName;
-							tarOut.PutNextEntry(entry);
-							using (var fs = ((FileInfo)current).OpenRead())
-							{
-								byte[] buffer = new byte[8192];
-								int len;
-								while ((len = fs.Read(buffer, 0, buffer.Length)) > 0)
-									tarOut.Write(buffer, 0, len);
-							}
-							tarOut.CloseEntry();
-						}
+						File.Copy(f.FullName, destPath, true);
 					}
 				}
+				string tarFilePath = Path.GetTempFileName();
+				TarFile.CreateFromDirectory(tarTemp, tarFilePath, false);
+				Directory.Delete(tarTemp, true);
+				using FileStream tfs = File.OpenRead(tarFilePath);
+				using FileStream fos = File.Create(tempFile);
+				using GZipStream gzs = new GZipStream(fos, CompressionLevel.Optimal);
+				tfs.CopyTo(gzs);
+				File.Delete(tarFilePath);
 			}
 			string finalName = outputPath;
 			if (singleFile)
@@ -371,13 +318,13 @@ namespace Genexus.Compression
 			}
 			else
 			{
-				if (finalName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+				if (!finalName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
 				{
+					if (finalName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+						finalName = finalName.Substring(0, finalName.Length - 3) + ".tar.gz";
+					else
+						finalName += ".tar.gz";
 				}
-				else if (finalName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
-					finalName = finalName.Substring(0, finalName.Length - 3) + ".tar.gz";
-				else
-					finalName += ".tar.gz";
 			}
 			if (File.Exists(finalName))
 			{
@@ -393,6 +340,20 @@ namespace Genexus.Compression
 			}
 			if (!File.Exists(finalName))
 				throw new IOException("Failed to create the archive");
+		}
+
+		private static void CopyDirectory(DirectoryInfo source, DirectoryInfo target)
+		{
+			Directory.CreateDirectory(target.FullName);
+			foreach (FileInfo fi in source.GetFiles())
+			{
+				fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
+			}
+			foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())
+			{
+				DirectoryInfo nextTargetSubDir = target.CreateSubdirectory(diSourceSubDir.Name);
+				CopyDirectory(diSourceSubDir, nextTargetSubDir);
+			}
 		}
 
 		private static void CompressToJar(FileInfo[] files, string outputPath)
@@ -469,33 +430,49 @@ namespace Genexus.Compression
 			}
 		}
 
-		private static void Decompress7z(FileInfo file, string outputPath)
+		private static void Decompress7z(FileInfo archiveFile, string outputPath)
 		{
-			if (file == null || !file.Exists)
-				throw new ArgumentException("File not found", nameof(file));
-			if (string.IsNullOrEmpty(outputPath))
-				throw new ArgumentException("Output path is null or empty", nameof(outputPath));
-			Directory.CreateDirectory(outputPath);
-			using (var extractor = new SevenZipExtractor(file.FullName))
+			using var archiveStream = new FileStream(archiveFile.FullName, FileMode.Open, FileAccess.Read);
+			using var reader = new BinaryReader(archiveStream);
+			byte[] headerBytes = reader.ReadBytes(7);
+			string header = System.Text.Encoding.ASCII.GetString(headerBytes);
+			if (header != "7ZARCHV")
+				throw new InvalidDataException("Invalid archive format.");
+			int fileCount = reader.ReadInt32();
+			for (int i = 0; i < fileCount; i++)
 			{
-				foreach (var entry in extractor.ArchiveFileData)
+				int nameLength = reader.ReadInt32();
+				byte[] nameBytes = reader.ReadBytes(nameLength);
+				string originalFileName = System.Text.Encoding.UTF8.GetString(nameBytes);
+				string fileName = Path.GetFileName(originalFileName);
+				long uncompressedSize = reader.ReadInt64();
+				int compressedDataLength = reader.ReadInt32();
+				byte[] compressedData = reader.ReadBytes(compressedDataLength);
+				byte[] decompressedData;
+				using (var inputMs = new MemoryStream(compressedData))
 				{
-					string fullPath = Path.Combine(outputPath, entry.FileName);
-					if (entry.IsDirectory)
-					{
-						Directory.CreateDirectory(fullPath);
-					}
-					else
-					{
-						Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
-						using (var stream = File.Create(fullPath))
-						{
-							extractor.ExtractFile(entry.Index, stream);
-						}
-					}
+					byte[] properties = new byte[5];
+					inputMs.Read(properties, 0, 5);
+					byte[] fileLengthBytes = new byte[8];
+					inputMs.Read(fileLengthBytes, 0, 8);
+					long decompressedLength = BitConverter.ToInt64(fileLengthBytes, 0);
+					var decoder = new SevenZip.Compression.LZMA.Decoder();
+					decoder.SetDecoderProperties(properties);
+					using var outputMs = new MemoryStream();
+					long compressedSize = inputMs.Length - inputMs.Position;
+					decoder.Code(inputMs, outputMs, compressedSize, decompressedLength, null);
+					decompressedData = outputMs.ToArray();
 				}
+				string outputFilePath = Path.Combine(outputPath, fileName);
+				string? directory = Path.GetDirectoryName(outputFilePath);
+				if (!string.IsNullOrEmpty(directory))
+				{
+					Directory.CreateDirectory(directory);
+				}
+				File.WriteAllBytes(outputFilePath, decompressedData);
 			}
 		}
+
 
 		private static void DecompressTar(FileInfo file, string outputPath)
 		{
@@ -504,38 +481,8 @@ namespace Genexus.Compression
 			if (string.IsNullOrEmpty(outputPath))
 				throw new ArgumentException("Output path is null or empty", nameof(outputPath));
 			Directory.CreateDirectory(outputPath);
-			using (var fs = file.OpenRead())
-			using (var tarIn = new ICSharpCode.SharpZipLib.Tar.TarInputStream(fs))
-			{
-				ICSharpCode.SharpZipLib.Tar.TarEntry entry;
-				byte[] buffer = new byte[8192];
-				while ((entry = tarIn.GetNextEntry()) != null)
-				{
-					string entryPath = Path.Combine(outputPath, entry.Name);
-					if (entry.IsDirectory)
-					{
-						Directory.CreateDirectory(entryPath);
-					}
-					else
-					{
-						string? parent = Path.GetDirectoryName(entryPath);
-						if (!string.IsNullOrEmpty(parent))
-						{
-							Directory.CreateDirectory(parent);
-						}
-						if (!string.IsNullOrEmpty(parent))
-							Directory.CreateDirectory(parent);
-						using (var outStream = File.Create(entryPath))
-						{
-							int bytesRead;
-							while ((bytesRead = tarIn.Read(buffer, 0, buffer.Length)) > 0)
-							{
-								outStream.Write(buffer, 0, bytesRead);
-							}
-						}
-					}
-				}
-			}
+			using FileStream fs = file.OpenRead();
+			TarFile.ExtractToDirectory(fs, outputPath, overwriteFiles: true);
 		}
 
 		private static void DecompressGzip(FileInfo file, string outputPath)
@@ -544,54 +491,29 @@ namespace Genexus.Compression
 				throw new ArgumentException("The archive file does not exist or is not a file.", nameof(file));
 			if (string.IsNullOrEmpty(outputPath) || !Directory.Exists(outputPath))
 				throw new ArgumentException("The specified directory does not exist or is not a directory.", nameof(outputPath));
-			string tempFile = Path.Combine(Path.GetTempPath(), "decompressed_" + Guid.NewGuid().ToString() + ".tmp");
-			using (var fis = file.OpenRead())
-			using (var gzipStream = new GZipStream(fis, System.IO.Compression.CompressionMode.Decompress))
-			using (var fos = new FileStream(tempFile, FileMode.Create, FileAccess.Write))
+
+			string tempFile = Path.Combine(Path.GetTempPath(), "decompressed_" + Guid.NewGuid() + ".tmp");
+			using (FileStream fs = file.OpenRead())
+			using (GZipStream gz = new GZipStream(fs, CompressionMode.Decompress))
+			using (FileStream fos = new FileStream(tempFile, FileMode.Create, FileAccess.Write))
 			{
-				byte[] buffer = new byte[8192];
-				int bytesRead;
-				while ((bytesRead = gzipStream.Read(buffer, 0, buffer.Length)) > 0)
-					fos.Write(buffer, 0, bytesRead);
+				gz.CopyTo(fos);
 			}
+
 			bool isTar = false;
 			try
 			{
-				using (var tempFis = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
-				using (var tarTest = new ICSharpCode.SharpZipLib.Tar.TarInputStream(tempFis))
-				{
-					var testEntry = tarTest.GetNextEntry();
-					if (testEntry != null)
-						isTar = true;
-				}
+				using FileStream tfs = new FileStream(tempFile, FileMode.Open, FileAccess.Read);
+				using TarReader tarReader = new TarReader(tfs);
+				if (tarReader.GetNextEntry() != null)
+					isTar = true;
 			}
 			catch { }
+
 			if (isTar)
 			{
-				using (var tarFis = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
-				using (var tarInput = new ICSharpCode.SharpZipLib.Tar.TarInputStream(tarFis))
-				{
-					ICSharpCode.SharpZipLib.Tar.TarEntry entry;
-					byte[] buffer = new byte[8192];
-					while ((entry = tarInput.GetNextEntry()) != null)
-					{
-						string outPath = Path.Combine(outputPath, entry.Name);
-						if (entry.IsDirectory)
-							Directory.CreateDirectory(outPath);
-						else
-						{
-							string? parentDir = Path.GetDirectoryName(outPath);
-							if (!string.IsNullOrEmpty(parentDir))
-								Directory.CreateDirectory(parentDir);
-							using (var outStream = File.Create(outPath))
-							{
-								int count;
-								while ((count = tarInput.Read(buffer, 0, buffer.Length)) > 0)
-									outStream.Write(buffer, 0, count);
-							}
-						}
-					}
-				}
+				using FileStream tfs = new FileStream(tempFile, FileMode.Open, FileAccess.Read);
+				TarFile.ExtractToDirectory(tfs, outputPath, overwriteFiles: true);
 			}
 			else
 			{
@@ -605,17 +527,13 @@ namespace Genexus.Compression
 				}
 				catch
 				{
-					using (var inStream = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
-					using (var outStream = new FileStream(singleOutFile, FileMode.Create, FileAccess.Write))
-					{
-						byte[] buffer = new byte[8192];
-						int bytesRead;
-						while ((bytesRead = inStream.Read(buffer, 0, buffer.Length)) > 0)
-							outStream.Write(buffer, 0, bytesRead);
-					}
+					using FileStream inStream = new FileStream(tempFile, FileMode.Open, FileAccess.Read);
+					using FileStream outStream = new FileStream(singleOutFile, FileMode.Create, FileAccess.Write);
+					inStream.CopyTo(outStream);
 					File.Delete(tempFile);
 				}
 			}
+
 			if (File.Exists(tempFile))
 				File.Delete(tempFile);
 		}
