@@ -12,7 +12,7 @@ namespace Genexus.Compression
 		private const string GENERIC_ERROR = "An error occurred during the compression/decompression process: ";
 		private const string NO_FILES_ADDED = "No files have been added for compression.";
 		private const string FILE_NOT_EXISTS = "File does not exist: ";
-		private const string UNSUPPORTED_FORMAT = " is an unsupported format. Supported formats are zip, 7z, tar, gz and jar.";
+		private const string UNSUPPORTED_FORMAT = " is an unsupported format. Supported formats are zip, tar, gz and jar.";
 		private const string EMPTY_FILE = "The selected file is empty: ";
 		private const string DIRECTORY_ATTACK = "Potential directory traversal attack detected: ";
 		private const string MAX_FILESIZE_EXCEEDED = "The files selected for compression exceed the maximum permitted file size of ";
@@ -83,9 +83,6 @@ namespace Genexus.Compression
 					case "zip":
 						CompressToZip(toCompress, path);
 						break;
-					case "7z":
-						CompressToSevenZ(toCompress, path);
-						break;
 					case "tar":
 						CompressToTar(toCompress, path);
 						break;
@@ -137,9 +134,6 @@ namespace Genexus.Compression
 				{
 					case "zip":
 						DecompressZip(toDecompress, path);
-						break;
-					case "7z":
-						Decompress7z(toDecompress, path);
 						break;
 					case "tar":
 						DecompressTar(toDecompress, path);
@@ -199,35 +193,6 @@ namespace Genexus.Compression
 				{
 					fileStream.CopyTo(entryStream);
 				}
-			}
-		}
-
-		private static void CompressToSevenZ(FileInfo[] files, string outputPath)
-		{
-			using var archiveStream = new FileStream(outputPath, FileMode.Create);
-			using var writer = new BinaryWriter(archiveStream);
-			writer.Write(System.Text.Encoding.ASCII.GetBytes("7ZARCHV"));
-			writer.Write(files.Length);
-			foreach (var file in files)
-			{
-				byte[] fileNameBytes = System.Text.Encoding.UTF8.GetBytes(file.FullName);
-				writer.Write(fileNameBytes.Length);
-				writer.Write(fileNameBytes);
-				long uncompressedSize = file.Length;
-				byte[] compressedData;
-				using (var inputStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
-				using (var ms = new MemoryStream())
-				{
-					var encoder = new SevenZip.Compression.LZMA.Encoder();
-					encoder.WriteCoderProperties(ms);
-					for (int i = 0; i < 8; i++)
-						ms.WriteByte((byte)(uncompressedSize >> (8 * i)));
-					encoder.Code(inputStream, ms, -1, -1, null);
-					compressedData = ms.ToArray();
-				}
-				writer.Write(uncompressedSize);
-				writer.Write(compressedData.Length);
-				writer.Write(compressedData);
 			}
 		}
 
@@ -429,50 +394,6 @@ namespace Genexus.Compression
 				}
 			}
 		}
-
-		private static void Decompress7z(FileInfo archiveFile, string outputPath)
-		{
-			using var archiveStream = new FileStream(archiveFile.FullName, FileMode.Open, FileAccess.Read);
-			using var reader = new BinaryReader(archiveStream);
-			byte[] headerBytes = reader.ReadBytes(7);
-			string header = System.Text.Encoding.ASCII.GetString(headerBytes);
-			if (header != "7ZARCHV")
-				throw new InvalidDataException("Invalid archive format.");
-			int fileCount = reader.ReadInt32();
-			for (int i = 0; i < fileCount; i++)
-			{
-				int nameLength = reader.ReadInt32();
-				byte[] nameBytes = reader.ReadBytes(nameLength);
-				string originalFileName = System.Text.Encoding.UTF8.GetString(nameBytes);
-				string fileName = Path.GetFileName(originalFileName);
-				long uncompressedSize = reader.ReadInt64();
-				int compressedDataLength = reader.ReadInt32();
-				byte[] compressedData = reader.ReadBytes(compressedDataLength);
-				byte[] decompressedData;
-				using (var inputMs = new MemoryStream(compressedData))
-				{
-					byte[] properties = new byte[5];
-					inputMs.Read(properties, 0, 5);
-					byte[] fileLengthBytes = new byte[8];
-					inputMs.Read(fileLengthBytes, 0, 8);
-					long decompressedLength = BitConverter.ToInt64(fileLengthBytes, 0);
-					var decoder = new SevenZip.Compression.LZMA.Decoder();
-					decoder.SetDecoderProperties(properties);
-					using var outputMs = new MemoryStream();
-					long compressedSize = inputMs.Length - inputMs.Position;
-					decoder.Code(inputMs, outputMs, compressedSize, decompressedLength, null);
-					decompressedData = outputMs.ToArray();
-				}
-				string outputFilePath = Path.Combine(outputPath, fileName);
-				string? directory = Path.GetDirectoryName(outputFilePath);
-				if (!string.IsNullOrEmpty(directory))
-				{
-					Directory.CreateDirectory(directory);
-				}
-				File.WriteAllBytes(outputFilePath, decompressedData);
-			}
-		}
-
 
 		private static void DecompressTar(FileInfo file, string outputPath)
 		{
