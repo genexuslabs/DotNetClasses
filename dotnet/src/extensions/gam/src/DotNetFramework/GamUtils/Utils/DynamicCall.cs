@@ -5,6 +5,8 @@ using System.IO;
 using System.Globalization;
 using GeneXus.Application;
 using log4net;
+using System.Security;
+
 
 #if NETCORE
 using GxClasses.Helpers;
@@ -13,6 +15,7 @@ using GeneXus.Utils;
 
 namespace GamUtils.Utils
 {
+	[SecuritySafeCritical]
 	public class DynamicCall
 	{
 
@@ -21,17 +24,20 @@ namespace GamUtils.Utils
 
 		/********EXTERNAL OBJECT PUBLIC METHODS  - BEGIN ********/
 
+		[SecuritySafeCritical]
 		public DynamicCall(IGxContext context)
 		{
 			mGxContext = context;
 		}
 
+		[SecuritySafeCritical]
 		public bool Execute(string assembly, string typeName, bool useContext, string method, string jsonParms, out string jsonOutput)
 		{
 			logger.Debug("Execute");
 			return DoCall(assembly, typeName, useContext, method, false, "", jsonParms, out jsonOutput);
 		}
 
+		[SecuritySafeCritical]
 		public bool ExecuteEventHandler(string assembly, string typeName, bool useContext, string method, string eventType, string jsonInput, out string jsonOutput)
 		{
 			logger.Debug("ExecuteEventHandler");
