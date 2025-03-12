@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<AssemblyName>GamSaml20NetImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<NoWarn>CA1031, CA1801, SYSLIB0027</NoWarn>
+		<PackageId>Gam.Saml20.Net</PackageId>
+	</PropertyGroup>
+	
+	
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+</Project>
