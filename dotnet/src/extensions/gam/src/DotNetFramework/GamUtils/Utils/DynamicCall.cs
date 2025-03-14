@@ -1,16 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using System.IO;
 using System.Globalization;
 using GeneXus.Application;
-using log4net;
+using GeneXus.Utils;
+using GeneXus.Metadata;
 using System.Security;
-
+using log4net;
 
 #if NETCORE
 using GxClasses.Helpers;
-using GeneXus.Utils;
 #endif
 
 namespace GamUtils.Utils
@@ -19,7 +20,7 @@ namespace GamUtils.Utils
 	public class DynamicCall
 	{
 
-		private IGxContext mGxContext;
+		private GeneXus.Application.IGxContext mGxContext;
 		private static readonly ILog logger = LogManager.GetLogger(typeof(DynamicCall));
 
 		/********EXTERNAL OBJECT PUBLIC METHODS  - BEGIN ********/
