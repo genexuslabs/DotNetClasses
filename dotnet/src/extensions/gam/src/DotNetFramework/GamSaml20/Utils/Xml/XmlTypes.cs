@@ -1,6 +1,6 @@
 using System.Xml;
 
-namespace GamSaml20Net.Utils.Xml
+namespace GamSaml20.Utils.Xml
 {
 	internal abstract class XmlTypes
 	{

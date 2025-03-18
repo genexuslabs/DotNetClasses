@@ -14,8 +14,9 @@ using Org.BouncyCastle.X509;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Utilities.Encoders;
 using GeneXus;
+using System.Security.AccessControl;
 
-namespace GamSaml20Net.Utils
+namespace GamSaml20.Utils
 {
 	internal class Keys
 	{
@@ -148,12 +149,14 @@ namespace GamSaml20Net.Utils
 			string serializedPrivate = Convert.ToBase64String(serializedPrivateBytes);
 			RsaPrivateCrtKeyParameters privateKey = (RsaPrivateCrtKeyParameters)PrivateKeyFactory.CreateKey(Convert.FromBase64String(serializedPrivate));
 
+#if NETCORE
 			if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
 			{
 				return DotNetUtilities.ToRSA(privateKey);
 			}
 			else
 			{
+				//if platform isn't Windows then isn't Net Framework
 				try
 				{
 					RSA rsa = RSA.Create();
@@ -166,6 +169,24 @@ namespace GamSaml20Net.Utils
 					return null;
 				}
 			}
+#else
+			/****System.Security.Cryptography.CryptographicException: The system cannot find the file specified.****/
+			/****HACK****/
+			//https://social.msdn.microsoft.com/Forums/vstudio/en-US/7ea48fd0-8d6b-43ed-b272-1a0249ae490f/systemsecuritycryptographycryptographicexception-the-system-cannot-find-the-file-specified?forum=clr#37d4d83d-0eb3-497a-af31-030f5278781a
+			CspParameters cspParameters = new CspParameters();
+			cspParameters.Flags = CspProviderFlags.UseMachineKeyStore;
+
+			string uid = Guid.NewGuid().ToString();
+			cspParameters.KeyContainerName = uid;
+			System.Security.Principal.SecurityIdentifier userId = new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WindowsIdentity.GetCurrent().User.ToString());
+			CryptoKeyAccessRule rule = new CryptoKeyAccessRule(userId, CryptoKeyRights.FullControl, AccessControlType.Allow);
+			cspParameters.CryptoKeySecurity = new CryptoKeySecurity();
+			cspParameters.CryptoKeySecurity.SetAccessRule(rule);
+			
+			/****System.Security.Cryptography.CryptographicException: The system cannot find the file specified.****/
+			/****HACK****/
+			return DotNetUtilities.ToRSA(privateKey, cspParameters);
+#endif
 
 		}
 

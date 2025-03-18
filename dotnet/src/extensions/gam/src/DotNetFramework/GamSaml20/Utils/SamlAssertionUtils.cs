@@ -4,10 +4,10 @@ using System.IO;
 using System.Security.Cryptography.Xml;
 using System.Xml;
 using System.Xml.Linq;
-using GamSaml20Net.Utils.Xml;
+using GamSaml20.Utils.Xml;
 using GeneXus;
 using log4net;
-namespace GamSaml20Net.Utils
+namespace GamSaml20.Utils
 {
 	internal class SamlAssertionUtils
 	{
