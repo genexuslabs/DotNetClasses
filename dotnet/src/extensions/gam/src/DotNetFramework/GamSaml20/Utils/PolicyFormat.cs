@@ -1,7 +1,7 @@
 using GeneXus;
 using log4net;
 
-namespace GamSaml20Net.Utils
+namespace GamSaml20.Utils
 {
 	internal enum PolicyFormat
 	{

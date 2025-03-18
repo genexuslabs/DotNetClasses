@@ -8,10 +8,14 @@
   </PropertyGroup>
  <ItemGroup>
    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+   <PackageReference Include="StrongNamer" Version="0.2.5" />
  </ItemGroup>
  <ItemGroup>
    <ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="System.Security" />
+	</ItemGroup>
 
 
 </Project>

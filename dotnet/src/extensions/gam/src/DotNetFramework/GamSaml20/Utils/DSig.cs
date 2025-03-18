@@ -5,7 +5,7 @@ using System.Xml;
 using log4net;
 using GeneXus;
 
-namespace GamSaml20Net.Utils
+namespace GamSaml20.Utils
 {
 	internal class DSig
 	{

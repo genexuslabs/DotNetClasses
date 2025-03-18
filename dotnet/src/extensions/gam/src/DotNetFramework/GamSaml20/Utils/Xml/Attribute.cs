@@ -3,8 +3,9 @@ using log4net;
 using System.Xml;
 using GeneXus;
 using System.Collections.Generic;
+using GamSaml20.Utils.Xml;
 
-namespace GamSaml20Net.Utils.Xml
+namespace GamSaml20.Utils.Xml
 {
 	internal class Attribute : XmlTypes
 	{
