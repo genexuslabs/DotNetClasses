@@ -8,14 +8,19 @@ namespace GamSaml20
 	{
 		[SecuritySafeCritical]  private string _id;
 		public string Id { get { return _id; } set { _id = value; } }
-		
-		[SecuritySafeCritical] private string _destination;
-		public string Destination { get { return _destination; } set { _destination = value; } }
+
+		[SecuritySafeCritical] private string _endPointLocation;
+		public string EndPointLocation { get { return _endPointLocation; } set { _endPointLocation = value; } }
+
+		[SecuritySafeCritical] private string _singleLogoutEndpoint;
+		public string SingleLogoutEndpoint { get { return _singleLogoutEndpoint; } set { _singleLogoutEndpoint = value; } }
+
 		[SecuritySafeCritical] private string _acs;
 		public string Acs { get { return _acs; } set { _acs = value; } }
 
-		[SecuritySafeCritical] private string _issuer;
-		public string Issuer { get { return _issuer; } set { _issuer = value; } }
+		[SecuritySafeCritical] private string _identityProviderEntityID;
+		public string IdentityProviderEntityID { get { return _identityProviderEntityID; } set { _identityProviderEntityID = value; } }
+
 		[SecuritySafeCritical] private string _certPath;
 		public string CertPath { get { return _certPath; } set { _certPath = value; } }
 		[SecuritySafeCritical] private string _certPass;
@@ -29,8 +34,8 @@ namespace GamSaml20
 
 		[SecuritySafeCritical] private string _authContext;
 		public string AuthContext { get { return _authContext; } set { _authContext = value; } }
-		[SecuritySafeCritical] private string _spname;
-		public string SPname { get { return _spname; } set { _spname = value; } }
+		[SecuritySafeCritical] private string _serviceProviderEntityID;
+		public string ServiceProviderEntityID { get { return _serviceProviderEntityID; } set { _serviceProviderEntityID = value; } }
 
 		[SecuritySafeCritical] private bool _forceAuthn;
 		public bool ForceAuthn { get { return _forceAuthn; } set { _forceAuthn = value; } }
@@ -55,14 +60,14 @@ namespace GamSaml20
 		public SamlParms()
 		{
 			_id = string.Empty;
-			_destination = string.Empty;
-			_issuer = string.Empty;
+			_endPointLocation = string.Empty;
+			_singleLogoutEndpoint = string.Empty;
+			_identityProviderEntityID = string.Empty;
 			_acs = string.Empty;
 			_policyFormat = string.Empty;
 			_authContext = string.Empty;
-			_spname = string.Empty;
+			_serviceProviderEntityID = string.Empty;
 			_forceAuthn = false;
-			_spname = string.Empty;
 			_authContext = string.Empty;
 			_certAlias = string.Empty;
 			_certPass = string.Empty;
