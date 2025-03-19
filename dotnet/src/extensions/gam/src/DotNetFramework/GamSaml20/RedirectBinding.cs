@@ -44,16 +44,16 @@ namespace GamSaml20
 		public static string Login(SamlParms parms, string relayState)
 		{
 			logger.Trace("Login_RedirectBinding");
-			XElement request = GamSaml20.Utils.SamlAssertionUtils.CreateLoginRequest(parms.Id, parms.Destination, parms.Acs, parms.Issuer, parms.PolicyFormat, parms.AuthContext, parms.SPname, parms.ForceAuthn);
-			return GenerateQuery(request, parms.Destination, parms.CertPath, parms.CertPass, relayState);
+			XElement request = GamSaml20.Utils.SamlAssertionUtils.CreateLoginRequest(parms.Id, parms.EndPointLocation, parms.Acs, parms.IdentityProviderEntityID, parms.PolicyFormat, parms.AuthContext, parms.ServiceProviderEntityID, parms.ForceAuthn);
+			return GenerateQuery(request, parms.EndPointLocation, parms.CertPath, parms.CertPass, relayState);
 		}
 
 		[SecuritySafeCritical]
 		public static string Logout(SamlParms parms, string relayState)
 		{
 			logger.Trace("Logout_RedirectBinding");
-			XElement request = GamSaml20.Utils.SamlAssertionUtils.CreateLogoutRequest(parms.Id, parms.Issuer, parms.NameID, parms.SessionIndex, parms.Destination);
-			return GenerateQuery(request, parms.Destination, parms.CertPath, parms.CertPass, relayState);
+			XElement request = GamSaml20.Utils.SamlAssertionUtils.CreateLogoutRequest(parms.Id, parms.ServiceProviderEntityID, parms.NameID, parms.SessionIndex, parms.SingleLogoutEndpoint);
+			return GenerateQuery(request, parms.SingleLogoutEndpoint, parms.CertPath, parms.CertPass, relayState);
 		}
 
 		[SecuritySafeCritical]
