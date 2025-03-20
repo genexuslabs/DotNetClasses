@@ -185,8 +185,8 @@ namespace GamSaml20.Utils
 			CspParameters cspParameters = new CspParameters();
 			cspParameters.Flags = CspProviderFlags.UseMachineKeyStore;
 
-			string uid = Guid.NewGuid().ToString();
-			cspParameters.KeyContainerName = uid;
+			
+			cspParameters.KeyContainerName = $"GX6f92fadf-6146-4a36-bd1a-c7ed69bac702";
 			System.Security.Principal.SecurityIdentifier userId = new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WindowsIdentity.GetCurrent().User.ToString());
 			CryptoKeyAccessRule rule = new CryptoKeyAccessRule(userId, CryptoKeyRights.FullControl, AccessControlType.Allow);
 			cspParameters.CryptoKeySecurity = new CryptoKeySecurity();
