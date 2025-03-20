@@ -15,12 +15,16 @@ using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Utilities.Encoders;
 using GeneXus;
 using System.Security.AccessControl;
+using System.Security;
 
 namespace GamSaml20.Utils
 {
+	[SecuritySafeCritical]
 	internal class Keys
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(Keys));
+
+		[SecuritySafeCritical]
 		internal static AsymmetricAlgorithm LoadPrivateKey(string path, string password)
 		{
 			if (IsBase64(path))
@@ -99,11 +103,16 @@ namespace GamSaml20.Utils
 
 		private static string GetCertPath(string path)
 		{
+#if NETCORE
 			string currentDir = System.IO.Directory.GetParent(System.AppDomain.CurrentDomain.BaseDirectory).Parent.ToString();
+#else
+			string currentDir = System.AppDomain.CurrentDomain.BaseDirectory;
+#endif
 			logger.Debug($"GetCertPath - Certificate directory: {currentDir} Path: {path}");
 			return Path.IsPathRooted(path) ? path : System.IO.Path.Combine(currentDir, path);
 		}
 
+		[SecuritySafeCritical]
 		private static string LoadPublicKeyHash(string path, string password)
 		{
 			logger.Trace("LoadPublicKeyHash");
