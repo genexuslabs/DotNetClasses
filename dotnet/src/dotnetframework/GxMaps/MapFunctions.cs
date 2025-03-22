@@ -142,22 +142,19 @@ namespace GeneXus.MapServices
 		public static GxSimpleCollection<String> ReverseGeocode(Geospatial coordinate) {
 
 			GxSimpleCollection<String> addresses = new GxSimpleCollection<string>();
-#if !NETCORE
+
 			String LatLong = coordinate.Latitude.ToString(CultureInfo.InvariantCulture) + "," + coordinate.Longitude.ToString(CultureInfo.InvariantCulture);
 			List<String> locationAddresses = GXGeolocation.GetAddress(LatLong);
 			addresses.AddRange(locationAddresses);
-
-#endif
 			return addresses;
 		}
 		public static GxSimpleCollection<Geospatial> GeocodeAddress(String address)
 		{
 			GxSimpleCollection<Geospatial> loclist = new GxSimpleCollection<Geospatial>();
-#if !NETCORE
+
 			List<Geospatial> locations = GXGeolocation.GetLocationGeography(address);
 			loclist.AddRange(locations);
 
-#endif
 			return loclist;
 		}
 	}	

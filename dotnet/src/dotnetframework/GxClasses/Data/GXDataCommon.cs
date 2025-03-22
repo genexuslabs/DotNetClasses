@@ -829,7 +829,7 @@ namespace GeneXus.Data
 								}
 								catch (Exception ex)
 								{
-									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex);
+									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex.Message, ex);
 								}
 							}
 						}
@@ -1963,7 +1963,7 @@ namespace GeneXus.Data
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(log, "GetValues error", ex);
+				GXLogging.Error(log, "GetValues error", ex.Message, ex);
 			}
 		}
 		static internal decimal ReadSQLDecimal(SqlDataReader sqlReader, int idx) {
@@ -2264,7 +2264,7 @@ namespace GeneXus.Data
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(log, "ReadError", ex);
+				GXLogging.Error(log, "ReadError", ex.Message, ex);
 				throw (new GxADODataException(ex));
 			}
 		}
@@ -3165,7 +3165,7 @@ namespace GeneXus.Data
 			}
 			catch (Exception e)
 			{
-				GXLogging.Error(log, "GxCommand.unprepare Error ", e);
+				GXLogging.Error(log, "GxCommand.unprepare Error ", e.Message, e);
 			}
 		}
 		public void UnprepareClear()
@@ -3327,7 +3327,7 @@ namespace GeneXus.Data
             {
 				if (reader != null) reader.Close();
                 GXLogging.Error(log, "stmt:" + this.stmt);
-                GXLogging.Error(log, "LoadBlock error ", e);
+                GXLogging.Error(log, "LoadBlock error ", e.Message, e);
                 
                 Dispose();
                 hasnext = false;

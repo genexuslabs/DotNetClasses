@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Mail;
 using System.Reflection;
+using GeneXus.Mail.Util;
 using GeneXus.Utils;
 using OpenPop.Mime;
 using OpenPop.Pop3;
@@ -180,7 +181,7 @@ namespace GeneXus.Mail
 				
 				foreach (var attach in attachs)
                 {
-                    string attachName = FixFileName(AttachDir, attach.FileName);
+                    string attachName = GXMailHelper.FixAndEnsureUniqueFileName(AttachDir, attach.FileName);
                     if (!string.IsNullOrEmpty(attach.ContentId) && attach.ContentDisposition != null && attach.ContentDisposition.Inline)
                     {
                         string cid = "cid:" + attach.ContentId;

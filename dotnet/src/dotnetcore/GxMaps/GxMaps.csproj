@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 
