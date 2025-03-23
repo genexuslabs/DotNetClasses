@@ -136,9 +136,9 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 						return false;
 					}
 				}
-				catch (Exception ex)
+				catch (Exception)
 				{
-					throw ex;
+					throw;
 				}			
 			}
 		}
