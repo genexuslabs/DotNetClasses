@@ -145,5 +145,14 @@ namespace GeneXus.Utils
 		{
 			return Config.GetValueOf("CSRF_PROTECTION", Preferences.NO) == Preferences.YES;
 		}
+
+		internal static bool ServiceAsController()
+		{
+			return Config.GetValueOf("SERVICE_AS_CONTROLLER", Preferences.YES) == Preferences.YES;
+		}
+		internal static bool JsonSerializerCaseSensitive()
+		{
+			return Config.GetValueOf("RestJsonCaseSensitive", Preferences.NO) == Preferences.YES;
+		}
 	}
 }

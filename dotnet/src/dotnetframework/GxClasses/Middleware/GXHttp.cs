@@ -557,20 +557,28 @@ namespace GeneXus.Http
 #else
 						JObject eventMetadata = JSONHelper.ReadJSON<JObject>((string)targetObj.EventsMetadata[eventName.ToString()]);
 #endif
-						eventHandlers[eventCount] = (string)eventMetadata["handler"];
-						JArray eventInputParms = (JArray)eventMetadata["iparms"];
-						foreach (JObject inputParm in eventInputParms)
+						if (eventMetadata != null)
 						{
-							AddParmsMetadata(inputParm, DynAjaxEventContext.inParmsMetadata, DynAjaxEventContext.inParmsMetadataHash);
-							eventUseInternalParms[eventCount] = eventUseInternalParms[eventCount] || IsInternalParm(inputParm);
-						}
-						JArray eventOutputParms = (JArray)eventMetadata["oparms"];
-						if (eventOutputParms != null)
-						{
-							foreach (JObject outputParm in eventOutputParms)
+							eventHandlers[eventCount] = (string)eventMetadata["handler"];
+							JArray eventInputParms = (JArray)eventMetadata["iparms"];
+							foreach (JObject inputParm in eventInputParms)
 							{
-								AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+								AddParmsMetadata(inputParm, DynAjaxEventContext.inParmsMetadata, DynAjaxEventContext.inParmsMetadataHash);
+								eventUseInternalParms[eventCount] = eventUseInternalParms[eventCount] || IsInternalParm(inputParm);
 							}
+							JArray eventOutputParms = (JArray)eventMetadata["oparms"];
+							if (eventOutputParms != null)
+							{
+								foreach (JObject outputParm in eventOutputParms)
+								{
+									AddParmsMetadata(outputParm, DynAjaxEventContext.outParmsMetadata, DynAjaxEventContext.outParmsMetadataHash);
+								}
+							}
+						}
+						else
+						{
+							GXLogging.Warn(log, "The event ", eventName, " is not implemented");
+							eventHandlers[eventCount] = string.Empty;
 						}
 						eventCount++;
 					}
@@ -1024,14 +1032,17 @@ namespace GeneXus.Http
 					for (int i = 0; i < eventHandlers.Length; i++)
 					{
 						string handler = eventHandlers[i];
-						if (i > 0)
+						if (!string.IsNullOrEmpty(handler))
 						{
-							targetObj.PrepareForReuse();
+							if (i > 0)
+							{
+								targetObj.PrepareForReuse();
+							}
+							_ = targetObj.GetType().InvokeMember(handler, BindingFlags.Public |
+							BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod,
+							Type.DefaultBinder,
+							targetObj, (eventUseInternalParms[i] ? MethodParms : null));
 						}
-						_ = targetObj.GetType().InvokeMember(handler, BindingFlags.Public |
-						BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod,
-						Type.DefaultBinder,
-						targetObj, (eventUseInternalParms[i] ? MethodParms : null));
 					}
 				}
 			}
@@ -1200,7 +1211,7 @@ namespace GeneXus.Http
 			{
 				return true;
 			}
-			else if (newName.Trim().ToLower().StartsWith(oldName.Trim().ToLower() + ".aspx"))
+			else if (newName.Trim().ToLower().StartsWith(oldName.Trim().ToLower() + HttpHelper.ASPX))
 			{
 
 				return true;
@@ -2315,7 +2326,7 @@ namespace GeneXus.Http
 			{
 				string[] loginObjParts = loginObject.Split(',');
 				if (loginObjParts.Length > 0)
-					loginObject = loginObjParts[0] + ".aspx";
+					loginObject = AddExtension(loginObjParts[0]);
 			}
 			if (IsUploadRequest(this.localHttpContext))
 				return formatLink($"{context.GetScriptPath()}{loginObject}");
@@ -2329,13 +2340,22 @@ namespace GeneXus.Http
 			{
 				string[] loginObjParts = loginObject.Split(',');
 				if (loginObjParts.Length > 0)
-					loginObject = loginObjParts[0] + ".aspx";
+					loginObject = AddExtension(loginObjParts[0]);
 			}
 			if (IsUploadRequest(this.localHttpContext))
 				return formatLink($"{context.GetScriptPath()}{loginObject}");
 			else
 				return formatLink(loginObject);
 		}
+		private string AddExtension(string objectName)
+		{
+#if NETCORE
+			return objectName;
+#else
+			return $"{objectName}{HttpHelper.ASPX}";
+#endif
+		}
+
 		private void SendHeaders()
 		{
 			sendCacheHeaders();
@@ -2889,7 +2909,7 @@ namespace GeneXus.Http
 		}
 		private string RemoveExtensionFromUrlPath(string urlPath)
 		{
-			if (urlPath.EndsWith(".aspx"))
+			if (urlPath.EndsWith(HttpHelper.ASPX))
 				return urlPath.Substring(0, urlPath.Length - 5);
 			return urlPath;
 		}

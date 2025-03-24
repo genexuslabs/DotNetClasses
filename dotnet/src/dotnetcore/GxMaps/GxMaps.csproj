@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <NoWarn>1701;1702;NU1701</NoWarn>
     <DefineConstants>NETCORE</DefineConstants>
 	<PackageTags>Maps</PackageTags>
@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 

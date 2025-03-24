@@ -103,18 +103,6 @@ namespace GeneXus.Mail
 			}
 		}
 
-		protected string FixFileName(string attachDir, string name)
-		{
-			if (string.IsNullOrEmpty(name))
-			{
-				name = Path.GetRandomFileName();
-			}
-			if (Path.Combine(AttachDir, name).Length > 200)
-			{
-				name = Path.GetRandomFileName().Replace(".", "") + "." + Path.GetExtension(name);
-			}
-			Regex validChars = new Regex(@"[\\\/\*\?\|:<>]");
-			return validChars.Replace(name, "_");
-		}
+
 	}
 }

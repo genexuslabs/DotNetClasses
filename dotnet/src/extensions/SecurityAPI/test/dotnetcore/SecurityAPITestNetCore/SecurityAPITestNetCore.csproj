@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<IsPublishable>false</IsPublishable>
 		<NoWarn>CS0618,CA1707</NoWarn>
 		<IsPackable>false</IsPackable>
@@ -55,6 +55,7 @@
     <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PrivateKey.cs" Link="SecurityAPICommons\keys\TestBase64PrivateKey.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64Certificate.cs" Link="SecurityAPICommons\keys\TestBase64Certificate.cs" />
 		<Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestBase64PublicKey.cs" Link="SecurityAPICommons\keys\TestBase64PublicKey.cs" />
+		<Compile Include="..\..\dotnetframework\SecurityAPITest\SecurityAPICommons\keys\TestPublicKeyFromJwks.cs" Link="SecurityAPICommons\keys\TestPublicKeyFromJwks.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestSftp.cs" Link="Sftp\TestSftp.cs" />
 	<Compile Include="..\..\dotnetframework\SecurityAPITest\Sftp\TestLoginWithKeyWithoutPassword.cs" Link="Sftp\TestLoginWithKeyWithoutPassword.cs" />
     <Compile Include="..\..\dotnetframework\SecurityAPITest\XmlSignature\DSig\TestBase64Certificate.cs" Link="XmlSignature\DSig\TestBase64Certificate.cs" />
