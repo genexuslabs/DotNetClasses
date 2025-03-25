@@ -731,11 +731,14 @@ namespace GeneXus.Utils
 			get { return sdt1; }
 			set { sdt1 = (T)value; }
 		}
+#if NETCORE
+		[JsonIgnore]
 		public T InternalSdt
 		{
 			get { return sdt1; }
 			set { sdt1 = value; }
 		}
+#endif
 
 #if NETCORE
 		[JsonIgnore]
