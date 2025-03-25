@@ -4,8 +4,8 @@ GeneXus Standard Classes for .NET and .NET Framework generators.
 ## Repo status
 | Branch | Build | Security
 |---|---|---
-|master|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=master)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Amaster)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
-|beta|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=beta)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Abeta)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg?branch=beta)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
+|master|[![Build](https://github.com/genexuslabs/DotNetClasses/actions/workflows/Build.yml/badge.svg)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/Build.yml)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
+|beta|[![Build](https://github.com/genexuslabs/DotNetClasses/actions/workflows/Build.yml/badge.svg?branch=beta)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/Build.yml)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg?branch=beta)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
 
 ## Modules
 
