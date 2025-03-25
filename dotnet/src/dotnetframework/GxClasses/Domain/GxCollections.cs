@@ -809,7 +809,7 @@ namespace GeneXus.Utils
 				}
 			}
 		}
-		public void FromStringCollection(GxSimpleCollection<string> value, GxContext context)
+		public void FromStringCollection(GxSimpleCollection<string> value, IGxContext context)
 		{
 			if (typeof(T) == typeof(DateTime))
 			{
