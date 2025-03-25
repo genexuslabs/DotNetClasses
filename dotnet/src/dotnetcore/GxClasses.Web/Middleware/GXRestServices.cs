@@ -97,7 +97,9 @@ namespace GeneXus.Utils
 			}
 			else
 			{
-				return null;
+				T internalSDT = new T();
+				internalSDT.context = context;
+				return internalSDT;
 			}
 		}
 		protected void LoadCollection<X, T>(GxGenericCollection<X> restModel, GXBaseCollection<T> internalModel) where T : GxUserType, new()
