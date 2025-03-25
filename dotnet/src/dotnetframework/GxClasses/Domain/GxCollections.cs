@@ -2051,6 +2051,10 @@ namespace GeneXus.Utils
 		{
 			GetType().GetProperty($"gxTpr_{propertyName}").SetValue(this, propertyValue);
 		}
+
+		public virtual void Localize(IGxContext context)
+		{
+		}
 	}
 	public class GXTypeInfo
 	{

@@ -122,7 +122,13 @@ namespace GeneXus.Utils
 				Add(item);
 			}
 		}
-
+		public void Localize(IGxContext context)
+		{
+			foreach (T item in this)
+			{
+				item.Localize(context);
+			}
+		}
 		protected CollectionBase jsonArr
 		{
 			get
