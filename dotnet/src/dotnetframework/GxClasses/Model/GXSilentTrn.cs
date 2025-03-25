@@ -731,6 +731,12 @@ namespace GeneXus.Utils
 			get { return sdt1; }
 			set { sdt1 = (T)value; }
 		}
+		public T InternalSdt
+		{
+			get { return sdt1; }
+			set { sdt1 = value; }
+		}
+
 #if NETCORE
 		[JsonIgnore]
 #endif

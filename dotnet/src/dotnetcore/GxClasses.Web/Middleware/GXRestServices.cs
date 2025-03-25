@@ -87,6 +87,18 @@ namespace GeneXus.Utils
 			ServiceHeaders();
 		}
 
+		protected T ToInternalModel<T>(GxGenericCollectionItem<T> restSDT) where T : GxUserType, new()
+		{
+			if (restSDT != null)
+			{
+				restSDT.Sdt.Localize(context);
+				return restSDT.InternalSdt;
+			}
+			else
+			{
+				return null;
+			}
+		}
 		protected void Cleanup()
         {
 			if (runAsMain)
