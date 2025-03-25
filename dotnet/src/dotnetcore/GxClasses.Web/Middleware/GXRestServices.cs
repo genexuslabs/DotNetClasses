@@ -99,6 +99,17 @@ namespace GeneXus.Utils
 				return null;
 			}
 		}
+		protected void LoadCollection<T>(GxGenericCollection<GxGenericCollectionItem<T>> restModel, GXBaseCollection<T> internalModel) where T : GxUserType, new()
+		{
+			if (restModel != null)
+			{
+				restModel.LoadCollection(internalModel);
+				foreach(var item in internalModel)
+				{
+					item.Localize(context);
+				}
+			}
+		}
 		protected void Cleanup()
         {
 			if (runAsMain)
