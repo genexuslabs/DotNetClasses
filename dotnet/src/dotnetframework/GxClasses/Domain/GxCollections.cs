@@ -796,11 +796,32 @@ namespace GeneXus.Utils
 		}
 		public void FromStringCollection(GxSimpleCollection<string> value)
 		{
-			foreach (string item in value)
+			if (typeof(T) == typeof(string))
 			{
-				Add(Convert.ChangeType(NumberUtil.Val(item.ToString()), typeof(T)));
+				foreach (string item in value)
+				{
+					Add(item);
+				}
+			}else {
+				foreach (string item in value)
+				{
+					Add(Convert.ChangeType(NumberUtil.Val(item.ToString()), typeof(T)));
+				}
 			}
 		}
+		public void FromStringCollection(GxSimpleCollection<string> value, GxContext context)
+		{
+			if (typeof(T) == typeof(DateTime))
+			{
+				foreach (string item in value)
+				{
+					Add(DateTimeUtil.CToT2(item, context));
+				}
+			}
+			else
+				FromStringCollection(value);
+		}
+
 
 	}
 #if !NETCORE
