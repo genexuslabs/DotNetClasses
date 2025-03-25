@@ -100,12 +100,13 @@ namespace GeneXus.Utils
 				return null;
 			}
 		}
-		protected void LoadCollection<T>(GxGenericCollection<GxGenericCollectionItem<T>> restModel, GXBaseCollection<T> internalModel) where T : GxUserType, new()
+		protected void LoadCollection<X, T>(GxGenericCollection<X> restModel, GXBaseCollection<T> internalModel) where T : GxUserType, new()
+			where X : new()
 		{
 			if (restModel != null)
 			{
 				restModel.LoadCollection(internalModel);
-				foreach(GxUserType item in internalModel)
+				foreach (GxUserType item in internalModel)
 				{
 					item.Localize(context);
 					item.context = context;
