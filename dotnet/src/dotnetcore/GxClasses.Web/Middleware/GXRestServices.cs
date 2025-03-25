@@ -92,6 +92,7 @@ namespace GeneXus.Utils
 			if (restSDT != null)
 			{
 				restSDT.Sdt.Localize(context);
+				restSDT.Sdt.context = context;
 				return restSDT.InternalSdt;
 			}
 			else
@@ -104,9 +105,10 @@ namespace GeneXus.Utils
 			if (restModel != null)
 			{
 				restModel.LoadCollection(internalModel);
-				foreach(var item in internalModel)
+				foreach(GxUserType item in internalModel)
 				{
 					item.Localize(context);
+					item.context = context;
 				}
 			}
 		}
