@@ -483,11 +483,12 @@ namespace GeneXus.Application
 				}
 			}
 		}
-		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
+		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
 			LogConfiguration.SetupLog4Net();
-			
+			AppContext.Configure(contextAccessor);
+
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";

@@ -284,6 +284,16 @@ namespace GeneXus.Application
 		string GetURLBuildNumber(string resourcePath, string urlBuildNumber);
 	}
 #if NETCORE
+	internal static class AppContext
+	{
+		static IHttpContextAccessor _httpContextAccessor { get; set; }
+		internal static HttpContext Current => _httpContextAccessor != null ? new GxHttpContextAccesor(_httpContextAccessor) : null;
+		internal static void Configure(IHttpContextAccessor accessor)
+		{
+			_httpContextAccessor = accessor;
+		}
+
+	}
 	public class GxHttpContextAccesor : HttpContext
 	{
 		IHttpContextAccessor ctxAccessor;
@@ -603,28 +613,22 @@ namespace GeneXus.Application
 		}
 
 		[NonSerialized]
-		static GxContext _currentGxContext;
+		static GxContext _currentBatchGxContext;
 		static public GxContext Current
 		{
 			get
 			{
 #if !NETCORE
-				if (HttpContext.Current != null)
-				{
-
-					GxContext currCtx = (GxContext)HttpContext.Current.Items["CURRENT_GX_CONTEXT"];
-					if (currCtx != null)
-						return currCtx;
-				}
-				else
-				{
-
-					return _currentGxContext;
-				}
-				return null;
+				if (HttpContext.Current?.Items["CURRENT_GX_CONTEXT"] is GxContext currCtx)
+				    return currCtx;
 #else
-				return _currentGxContext;
+				if (AppContext.Current?.Items["CURRENT_GX_CONTEXT"] is GxContext currCtx)
+					return currCtx;
 #endif
+				if (IsHttpContext)
+					return new GxNullContext(new ArrayList());
+				else
+					return _currentBatchGxContext;
 			}
 		}
 		static void setContext(GxContext ctx)
@@ -632,9 +636,14 @@ namespace GeneXus.Application
 #if !NETCORE
 			if (HttpContext.Current != null)
 				HttpContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
-			else
+			
+#else
+			if (AppContext.Current != null)
+				AppContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
 #endif
-				_currentGxContext = ctx;
+
+			else if (!IsHttpContext)
+				_currentBatchGxContext = ctx; 
 		}
 
 		public LocalUtil localUtil
