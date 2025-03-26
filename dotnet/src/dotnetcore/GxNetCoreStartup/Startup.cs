@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
@@ -124,10 +125,28 @@ namespace GeneXus.Application
 	}
 	public class CustomBadRequestObjectResult : ObjectResult
 	{
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(CustomBadRequestObjectResult).FullName);
 		public CustomBadRequestObjectResult(ActionContext context)
 			: base(HttpHelper.GetJsonError(StatusCodes.Status400BadRequest.ToString(), HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest)))
 		{
+			LogErrorResponse(context);
 			StatusCode = StatusCodes.Status400BadRequest;
+		}
+		static void LogErrorResponse(ActionContext context)
+		{
+			if (log.IsErrorEnabled)
+			{
+				foreach (KeyValuePair<string, ModelStateEntry> entry in context.ModelState)
+				{
+					if (entry.Value.Errors.Count > 0)
+					{
+						foreach (ModelError error in entry.Value.Errors)
+						{
+							GXLogging.Error(log, "Field ", entry.Key, "Errors:", error.ErrorMessage);
+						}
+					}
+				}
+			}
 		}
 	}
 

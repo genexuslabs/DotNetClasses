@@ -787,20 +787,51 @@ namespace GeneXus.Utils
 		public GxSimpleCollection<string> ToStringCollection(int digits, int decimals)
 		{
 			GxSimpleCollection<string> result = new GxSimpleCollection<string>();
-			foreach (T item in this)
+			if (typeof(T) == typeof(string))
 			{
-				decimal value = (decimal)Convert.ChangeType(item, typeof(decimal));
-				result.Add(StringUtil.LTrim(StringUtil.Str(value, digits, decimals)));
+				foreach (T item in this)
+				{
+					result.Add(item as string);
+				}
+			}
+			else
+			{
+				foreach (T item in this)
+				{
+					decimal value = (decimal)Convert.ChangeType(item, typeof(decimal));
+					result.Add(StringUtil.LTrim(StringUtil.Str(value, digits, decimals)));
+				}
 			}
 			return result;
 		}
 		public void FromStringCollection(GxSimpleCollection<string> value)
 		{
-			foreach (string item in value)
+			if (typeof(T) == typeof(string))
 			{
-				Add(Convert.ChangeType(NumberUtil.Val(item.ToString()), typeof(T)));
+				foreach (string item in value)
+				{
+					Add(item);
+				}
+			}else {
+				foreach (string item in value)
+				{
+					Add(Convert.ChangeType(NumberUtil.Val(item.ToString()), typeof(T)));
+				}
 			}
 		}
+		public void FromStringCollection(GxSimpleCollection<string> value, IGxContext context)
+		{
+			if (typeof(T) == typeof(DateTime))
+			{
+				foreach (string item in value)
+				{
+					Add(DateTimeUtil.CToT2(item, context));
+				}
+			}
+			else
+				FromStringCollection(value);
+		}
+
 
 	}
 #if !NETCORE
@@ -2050,6 +2081,10 @@ namespace GeneXus.Utils
 		public void SetPropertyValue(string propertyName, object propertyValue)
 		{
 			GetType().GetProperty($"gxTpr_{propertyName}").SetValue(this, propertyValue);
+		}
+
+		public virtual void Localize(IGxContext context)
+		{
 		}
 	}
 	public class GXTypeInfo
