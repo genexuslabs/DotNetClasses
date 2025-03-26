@@ -102,9 +102,10 @@ namespace GeneXus.Utils
 				return internalSDT;
 			}
 		}
-		protected void LoadCollection<X, T>(GxGenericCollection<X> restModel, GXBaseCollection<T> internalModel) where T : GxUserType, new()
+		protected GXBaseCollection<T> ToInternalModel<X, T>(GxGenericCollection<X> restModel) where T : GxUserType, new()
 			where X : new()
 		{
+			GXBaseCollection<T> internalModel = new GXBaseCollection<T>();
 			if (restModel != null)
 			{
 				restModel.LoadCollection(internalModel);
@@ -114,7 +115,9 @@ namespace GeneXus.Utils
 					item.context = context;
 				}
 			}
+			return internalModel;
 		}
+
 		protected void Cleanup()
         {
 			if (runAsMain)
