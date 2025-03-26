@@ -1,4 +1,8 @@
+using System;
 using System.Security;
+using System.Security.Cryptography;
+using System.Text;
+using System.Web;
 using GeneXus;
 using log4net;
 using Org.BouncyCastle.Crypto;
@@ -16,14 +20,15 @@ namespace GamUtils.Utils
 		internal static string Create(int len, string option)
 		{
 			logger.Trace("Create");
-			string code_verifier = Random.Alphanumeric(len);
+			byte[] code_verifier_bytes = GetRandomBytes(len);
+			string code_verifier = System.Text.Encoding.UTF8.GetString(UrlBase64.Encode(code_verifier_bytes));
 			switch (option.ToUpper().Trim())
 			{
 				case "S256":
-					byte[] digest = Hash(new Sha256Digest(), System.Text.Encoding.UTF8.GetBytes(code_verifier.Trim()));
-					return $"{code_verifier.Trim()},{System.Text.Encoding.UTF8.GetString(UrlBase64.Encode(digest))}";
+					byte[] digest = Hash(new Sha256Digest(), System.Text.Encoding.ASCII.GetBytes(code_verifier));
+					return $"{code_verifier},{Jose.Base64Url.Encode(digest)}";
 				case "PLAIN":
-					return $"{code_verifier.Trim()},{Encoding.ToBase64Url(code_verifier.Trim())}";
+					return $"{code_verifier},{code_verifier}";
 				default:
 					logger.Error("Unknown PKCE option");
 					return "";
@@ -37,11 +42,10 @@ namespace GamUtils.Utils
 			switch (option.ToUpper().Trim())
 			{
 				case "S256":
-					byte[] digest = Hash(new Sha256Digest(), System.Text.Encoding.UTF8.GetBytes(code_verifier.Trim()));
-					return System.Text.Encoding.UTF8.GetString(UrlBase64.Encode(digest)).Equals(code_challenge.Trim());
+					byte[] digest = Hash(new Sha256Digest(), System.Text.Encoding.ASCII.GetBytes(code_verifier));
+					return Jose.Base64Url.Encode(digest).Equals(code_challenge.Trim());
 				case "PLAIN":
-					byte[] bytes_plain = UrlBase64.Decode(System.Text.Encoding.UTF8.GetBytes(code_challenge.Trim()));
-					return System.Text.Encoding.UTF8.GetString(bytes_plain).Equals(code_verifier.Trim());
+					return code_challenge.Trim().Equals(code_verifier.Trim());
 				default:
 					logger.Error("Unknown PKCE option");
 					return false;
@@ -54,6 +58,19 @@ namespace GamUtils.Utils
 			digest.BlockUpdate(inputBytes, 0, inputBytes.Length);
 			digest.DoFinal(retValue, 0);
 			return retValue;
+		}
+
+		private static byte[] GetRandomBytes(int len)
+		{
+			byte[] data = new byte[len];
+#if NETCORE
+			var arraySpan = new Span<byte>(data);
+			System.Security.Cryptography.RandomNumberGenerator.Fill(arraySpan);
+#else
+			RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider();
+			crypto.GetBytes(data);
+#endif
+			return data;
 		}
 	}
 }
