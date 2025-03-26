@@ -787,10 +787,20 @@ namespace GeneXus.Utils
 		public GxSimpleCollection<string> ToStringCollection(int digits, int decimals)
 		{
 			GxSimpleCollection<string> result = new GxSimpleCollection<string>();
-			foreach (T item in this)
+			if (typeof(T) == typeof(string))
 			{
-				decimal value = (decimal)Convert.ChangeType(item, typeof(decimal));
-				result.Add(StringUtil.LTrim(StringUtil.Str(value, digits, decimals)));
+				foreach (T item in this)
+				{
+					result.Add(item as string);
+				}
+			}
+			else
+			{
+				foreach (T item in this)
+				{
+					decimal value = (decimal)Convert.ChangeType(item, typeof(decimal));
+					result.Add(StringUtil.LTrim(StringUtil.Str(value, digits, decimals)));
+				}
 			}
 			return result;
 		}
