@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,35 +22,35 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 	public class GXHttpAzureContextAccessor : HttpContext
 	{
 		DefaultHttpContext defaultHttpContext = new DefaultHttpContext();
-		public HttpResponse httpResponseData;
+		public HttpResponse gxHttpAzureResponse;
 		private ICacheService2 _redis;
 		private string sessionId;
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXHttpAzureContextAccessor>();
-		internal const string AzureSessionId = "GX_AZURE_SESSIONID";
-		public GXHttpAzureContextAccessor(HttpRequestData requestData, HttpResponseData responseData, ICacheService2 redis)
+		internal const string AZURE_SESSIONID = "GX_AZURE_SESSIONID";
+		public GXHttpAzureContextAccessor(HttpRequestData httpRequestData, HttpResponseData httpResponseData, ICacheService2 redis)
 		{
 			if (redis != null)
 				_redis = redis;
 
 			bool isSecure = false;
-			foreach (var header in requestData.Headers)
+			foreach (var header in httpRequestData.Headers)
 			{
 				string[] values = new Microsoft.Extensions.Primitives.StringValues(header.Value.Select(val => val).ToArray());
 				defaultHttpContext.Request.Headers[header.Key] = new Microsoft.Extensions.Primitives.StringValues(values);
 
 				if (header.Key == "Cookie")
 				{
-					sessionId = CookieValue(defaultHttpContext.Request.Headers[header.Key], AzureSessionId);
+					sessionId = CookieValue(defaultHttpContext.Request.Headers[header.Key], AZURE_SESSIONID);
 				}
 
 				if (!isSecure)
 					isSecure = GetSecureConnection(header.Key, defaultHttpContext.Request.Headers[header.Key]);
 
 			}
-			if (requestData.FunctionContext.BindingContext != null)
+			if (httpRequestData.FunctionContext.BindingContext != null)
 			{
-				IReadOnlyDictionary<string, object> keyValuePairs = requestData.FunctionContext.BindingContext.BindingData;
-				object queryparamsJson = requestData.FunctionContext.BindingContext.BindingData.GetValueOrDefault("Query");
+				IReadOnlyDictionary<string, object> keyValuePairs = httpRequestData.FunctionContext.BindingContext.BindingData;
+				object queryparamsJson = httpRequestData.FunctionContext.BindingContext.BindingData.GetValueOrDefault("Query");
 				JsonNode queryparams = JsonNode.Parse((string)queryparamsJson);
 
 				foreach (var keyValuePair in keyValuePairs)
@@ -63,10 +64,10 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				}
 			}
 
-			defaultHttpContext.Request.Method = requestData.Method;
-			defaultHttpContext.Request.Body = requestData.Body;
-			defaultHttpContext.Request.Path = PathString.FromUriComponent(requestData.Url);
-			defaultHttpContext.Request.QueryString = QueryString.FromUriComponent(requestData.Url);
+			defaultHttpContext.Request.Method = httpRequestData.Method;
+			defaultHttpContext.Request.Body = httpRequestData.Body;
+			defaultHttpContext.Request.Path = PathString.FromUriComponent(httpRequestData.Url);
+			defaultHttpContext.Request.QueryString = QueryString.FromUriComponent(httpRequestData.Url);
 
 
 			IHttpRequestFeature requestFeature = defaultHttpContext.Features.Get<IHttpRequestFeature>();
@@ -75,7 +76,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 			if (string.IsNullOrEmpty(sessionId))
 			{
-				CreateSessionId(isSecure, responseData, requestData);
+				CreateSessionId(isSecure, httpResponseData, httpRequestData);
 			}
 			else //Refresh the session timestamp
 			{
@@ -92,7 +93,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				}
 			}
 
-			httpResponseData = new GxHttpAzureResponse(defaultHttpContext, responseData);
+			gxHttpAzureResponse = new GxHttpAzureResponse(defaultHttpContext, httpResponseData);
 		}
 		private bool GetSecureConnection(string headerKey, string headerValue)
 		{
@@ -107,7 +108,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		private void CreateSessionId(bool isSecure, HttpResponseData responseData, HttpRequestData requestData)
 		{
 			sessionId = Guid.NewGuid().ToString();
-			HttpCookie sessionCookie = new HttpCookie(AzureSessionId, sessionId);
+			HttpCookie sessionCookie = new HttpCookie(AZURE_SESSIONID, sessionId);
 
 			if (!isSecure)
 				isSecure = requestData.Url.Scheme == "https";
@@ -139,7 +140,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 		public override HttpRequest Request => defaultHttpContext.Request;
 
-		public override HttpResponse Response => httpResponseData;
+		public override HttpResponse Response => gxHttpAzureResponse;
 
 		public override ConnectionInfo Connection => defaultHttpContext.Connection;
 
@@ -150,7 +151,8 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public override IServiceProvider RequestServices { get => defaultHttpContext.RequestServices; set => defaultHttpContext.RequestServices = value; }
 		public override CancellationToken RequestAborted { get => defaultHttpContext.RequestAborted; set => defaultHttpContext.RequestAborted = value; }
 		public override string TraceIdentifier { get => defaultHttpContext.TraceIdentifier; set => defaultHttpContext.TraceIdentifier = value; }
-		public override ISession Session {
+		public override ISession Session
+		{
 
 			get
 			{
@@ -159,7 +161,8 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				else return new MockHttpSession();
 			}
 
-			set => defaultHttpContext.Session = value; }
+			set => defaultHttpContext.Session = value;
+		}
 		public override void Abort()
 		{
 			//throw new NotImplementedException();
@@ -265,8 +268,8 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 	public class GxHttpAzureResponse : HttpResponse
 	{
-		HttpResponseData httpResponseData;
-		HttpContext httpContext;
+		HttpResponseData gxHttpAzureResponseData;
+		HttpContext gxHttpAzureContext;
 
 		private FeatureReferences<FeatureInterfaces> _features;
 
@@ -280,15 +283,22 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			public IHttpResponseBodyFeature ResponseBody;
 			public IResponseCookiesFeature Cookies;
 		}
+
+		public GxHttpAzureResponse(HttpContext context, HttpResponseData httpResponseData)
+		{
+			gxHttpAzureResponseData = httpResponseData;
+			gxHttpAzureContext = context;
+			_features.Initalize(context.Features);
+		}
 		public void Initialize()
 		{
-			_features.Initalize(httpContext.Features);
+			_features.Initalize(gxHttpAzureContext.Features);
 		}
 		public void Initialize(int revision)
 		{
-			_features.Initalize(httpContext.Features, revision);
+			_features.Initalize(gxHttpAzureContext.Features, revision);
 		}
-		
+
 		private IHttpResponseBodyFeature HttpResponseBodyFeature =>
 		   _features.Fetch(ref _features.Cache.ResponseBody, _nullResponseBodyFeature);
 
@@ -297,32 +307,26 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		private IHttpResponseFeature HttpResponseFeature =>
 		   _features.Fetch(ref _features.Cache.Response, _nullResponseFeature);
 
-		public GxHttpAzureResponse(HttpContext context, HttpResponseData responseData)
-		{
-			httpResponseData = responseData;
-			httpContext = context;
-			_features.Initalize(context.Features);
-		}
-		public override HttpContext HttpContext => httpContext;
+		public override HttpContext HttpContext => gxHttpAzureContext;
 
-		public override int StatusCode { get => (int)httpResponseData.StatusCode; set => httpResponseData.StatusCode = (System.Net.HttpStatusCode)value; }
+		public override int StatusCode { get => (int)gxHttpAzureResponseData.StatusCode; set => gxHttpAzureResponseData.StatusCode = (System.Net.HttpStatusCode)value; }
 
 		public override IHeaderDictionary Headers
 		{
-			get 
+			get
 			{
-				return new GxAzureResponseHeaders(httpResponseData);
+				return new GxAzureResponseHeaders(gxHttpAzureResponseData);
 			}
 		}
-		public override Stream Body { get => httpResponseData.Body; set => httpResponseData.Body = value; }	
-		public override long? ContentLength {get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+		public override Stream Body { get => gxHttpAzureResponseData.Body; set => gxHttpAzureResponseData.Body = value; }
+		public override long? ContentLength { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 		public override string ContentType
 		{
 			get
 			{
-				var headers = from head in httpResponseData.Headers
-							 where head.Key == "Content-Type"
-							 select head;				
+				var headers = from head in gxHttpAzureResponseData.Headers
+							  where head.Key == "Content-Type"
+							  select head;
 				foreach (var header in headers)
 				{
 					string[] values = new Microsoft.Extensions.Primitives.StringValues(header.Value.Select(val => val).ToArray());
@@ -334,15 +338,15 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			set
 			{
 				if (!string.IsNullOrEmpty(ContentType))
-					httpResponseData.Headers.Remove("Content-Type");
-				httpResponseData.Headers.Add("Content-Type", value);
+					gxHttpAzureResponseData.Headers.Remove("Content-Type");
+				gxHttpAzureResponseData.Headers.Add("Content-Type", value);
 			}
 		}
 		public override IResponseCookies Cookies
 		{
 			get { return ResponseCookiesFeature.Cookies; }
 
-		} 
+		}
 
 		public override bool HasStarted
 		{
@@ -366,8 +370,17 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		{
 			get
 			{
-				return (PipeWriter.Create(Body));		
+				return (PipeWriter.Create(Body));
 			}
+		}
+		public override Task StartAsync(CancellationToken cancellationToken = default)
+		{
+			return Task.CompletedTask;
+		}
+		public async Task WriteAsync(string content)
+		{
+			byte[] contentBytes = Encoding.UTF8.GetBytes(content);
+			await gxHttpAzureResponseData.Body.WriteAsync(contentBytes, 0, contentBytes.Length);
 		}
 	}
 }
