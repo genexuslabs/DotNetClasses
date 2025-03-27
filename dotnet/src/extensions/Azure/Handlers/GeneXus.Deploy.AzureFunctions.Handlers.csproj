@@ -69,7 +69,7 @@
 	<ItemGroup>
 	  <Compile Include="GAMAzureFunctions\GAMFunctions.cs" />
 	  <Compile Include="HttpHandler\GXHttpAzureContextAccessor.cs" />
-	  <Compile Include="HttpHandler\HttpTriggerHandler.cs" />
+	  <Compile Include="HttpHandler\RedisHttpSession.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
