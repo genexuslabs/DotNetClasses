@@ -183,7 +183,7 @@ namespace GxClasses.Web.Middleware
 		{
 			try
 			{
-				if (context.GetType()==typeof(DefaultHttpContext))
+				if (!AzureRuntime && context.GetType() == typeof(DefaultHttpContext))
 				{
 					IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
 					context = new GxHttpContextAccesor(contextAccessor);

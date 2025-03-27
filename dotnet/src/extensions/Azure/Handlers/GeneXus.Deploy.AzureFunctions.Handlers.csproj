@@ -67,6 +67,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Include="GAMAzureFunctions\GAMFunctions.cs" />
+	  <Compile Include="HttpHandler\GXHttpAzureContextAccessor.cs" />
+	  <Compile Include="HttpHandler\HttpTriggerHandler.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Azure.Core" Version="1.42.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.17.4" OutputItemType="Analyzer" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.23.0" />
