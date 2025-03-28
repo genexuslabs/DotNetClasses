@@ -82,6 +82,18 @@ namespace DotNetCoreUnitTest.ImageUtils
 			int imageWidth = GxImageUtil.GetImageWidth(imagePath);
 			Assert.Equal(300, imageWidth);
 		}
+		[Fact]
+		public void TestImageRotate()
+		{
+			string fileName = Initialize("rotated");
+			string imagePath = GxImageUtil.Rotate(fileName, 90);
+
+			int imageHeight = GxImageUtil.GetImageHeight(imagePath);
+			Assert.Equal(900, imageHeight);
+
+			int imageWidth = GxImageUtil.GetImageWidth(imagePath);
+			Assert.Equal(720, imageWidth);
+		}
 
 
 		[Fact]
