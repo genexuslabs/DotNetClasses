@@ -6218,16 +6218,16 @@ namespace GeneXus.Utils
 											g.FillPath(br, path);
 										}
 									}
+									// Rounded images are basically images with transparent rounded borders and jpg and jpeg formats do not
+									// support transparency, so we have to create a new identical image but in png format
+									if (imageFile.IndexOf(".jpg") > 0)
+										modifiedImage = Save(roundedImage, imageFile.Replace(".jpg", ".png"), ImageFormat.Png);
+									else if (imageFile.IndexOf(".jpeg") > 0)
+										modifiedImage = Save(roundedImage, imageFile.Replace(".jpeg", ".png"), ImageFormat.Png);
+									else
+										modifiedImage = Save(roundedImage, imageFile, GetImageFormat(OriginalImage));
 								}
 							}
-							// Rounded images are basically images with transparent rounded borders and jpg and jpeg formats do not
-							// support transparency, so we have to create a new identical image but in png format
-							if (imageFile.IndexOf(".jpg") > 0)
-								modifiedImage = Save(roundedImage, imageFile.Replace(".jpg", ".png"), ImageFormat.Png);
-							else if (imageFile.IndexOf(".jpeg") > 0)
-								modifiedImage = Save(roundedImage, imageFile.Replace(".jpeg", ".png"), ImageFormat.Png);
-							else
-								modifiedImage = Save(roundedImage, imageFile, OriginalImage.RawFormat);
 						}
 					}
 				}
@@ -6243,25 +6243,21 @@ namespace GeneXus.Utils
 			string modifiedImage = string.Empty;
 			try
 			{
-				using (MemoryStream ms = new MemoryStream())
-				{					
-					using (Image OriginalImage = ImageCreateFromStream(imageFile))
+				using (Image OriginalImage = ImageCreateFromStream(imageFile))
+				{
+					using (Bitmap rotatedImage = new Bitmap(OriginalImage.Width, OriginalImage.Height))
 					{
-						using (Bitmap rotatedImage = new Bitmap(OriginalImage.Width, OriginalImage.Height))
-						{
-							rotatedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+						rotatedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
 
-							using (Graphics g = Graphics.FromImage(rotatedImage))
-							{
-								g.TranslateTransform(OriginalImage.Width / 2, OriginalImage.Height / 2);
-								g.RotateTransform(angle);
-								g.TranslateTransform(-OriginalImage.Width / 2, -OriginalImage.Height / 2);
-								g.DrawImage(OriginalImage, new Point(0, 0));
-							}
-							rotatedImage.Save(ms, OriginalImage.RawFormat);
-							modifiedImage = Save(rotatedImage, imageFile, OriginalImage.RawFormat);
+						using (Graphics g = Graphics.FromImage(rotatedImage))
+						{
+							g.TranslateTransform(OriginalImage.Width / 2, OriginalImage.Height / 2);
+							g.RotateTransform(angle);
+							g.TranslateTransform(-OriginalImage.Width / 2, -OriginalImage.Height / 2);
+							g.DrawImage(OriginalImage, new Point(0, 0));
+							modifiedImage = Save(rotatedImage, imageFile, GetImageFormat(OriginalImage));
 						}
-					}					
+					}
 				}
 			}
 			catch (Exception ex)
@@ -6270,6 +6266,24 @@ namespace GeneXus.Utils
 			}
 			return modifiedImage;
 		}
+#if NETCORE
+		static ImageFormat GetImageFormat(Image bitmap)
+		{
+			ImageFormat format = bitmap.RawFormat;
+
+			if (format.Equals(ImageFormat.Jpeg)) return ImageFormat.Jpeg;
+			if (format.Equals(ImageFormat.Png)) return ImageFormat.Png;
+			if (format.Equals(ImageFormat.Bmp)) return ImageFormat.Bmp;
+			if (format.Equals(ImageFormat.Gif)) return ImageFormat.Gif;
+
+			return ImageFormat.Png;
+		}
+#else
+		static ImageFormat GetImageFormat(Image bitmap)
+		{
+			return bitmap.RawFormat;
+		}
+#endif
 		public static string FlipHorizontally(string imageFile)
 		{
 			string modifiedImage = string.Empty;
@@ -6278,7 +6292,7 @@ namespace GeneXus.Utils
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
-					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, GetImageFormat(bmp));
 					return modifiedImage;
 				}
 			}
@@ -6296,7 +6310,7 @@ namespace GeneXus.Utils
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, GetImageFormat(bmp));
 					return modifiedImage;
 				}
 			}
