@@ -3119,5 +3119,26 @@ namespace GeneXus.Utils
 			writer.WriteBooleanValue(value);
 		}
 	}
+	public class StringConverter : JsonConverter<string>
+	{
+		public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.Number)
+			{
+				if (reader.TryGetInt32(out int l))
+					return l.ToString();
+				else if (reader.TryGetDecimal(out decimal d))
+					return d.ToString();
+				else
+					return reader.GetDouble().ToString();
+			}
+			return reader.GetString();
+		}
+
+		public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+		{
+			writer.WriteStringValue(value);
+		}
+	}
 #endif
 }
