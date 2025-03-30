@@ -11,12 +11,14 @@ using SecurityAPICommons.Config;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Macs;
 using System.IO;
+using log4net;
 
 namespace GeneXusCryptography.Mac
 {
 	[SecuritySafeCritical]
 	public class Cmac : SecurityAPIObject, ICmacObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(Cmac));
 		public Cmac() : base()
 		{
 
@@ -28,12 +30,13 @@ namespace GeneXusCryptography.Mac
 		[SecuritySafeCritical]
 		public string calculate(string plainText, string key, string algorithm, int macSize)
 		{
+			logger.Debug("calculate");
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("plainText", plainText, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("algorithm", algorithm, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "calculate", "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "calculate", "key", key, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "calculate", "algorithm", algorithm, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -59,12 +62,14 @@ namespace GeneXusCryptography.Mac
 			if (macSize > blockSize)
 			{
 				this.error.setError("CM001", "The mac length must be less or equal than the algorithm block size.");
+				logger.Error("The mac length must be less or equal than the algorithm block size.");
 				return "";
 			}
 
 			if (blockSize != 64 && blockSize != 128)
 			{
 				this.error.setError("CM002", "The block size must be 64 or 128 bits for CMAC. Wrong symmetric algorithm");
+				logger.Error("The block size must be 64 or 128 bits for CMAC. Wrong symmetric algorithm");
 				return "";
 			}
 			EncodingUtil eu = new EncodingUtil();
@@ -89,13 +94,14 @@ namespace GeneXusCryptography.Mac
 		[SecuritySafeCritical]
 		public bool verify(string plainText, string key, string mac, string algorithm, int macSize)
 		{
+			logger.Debug("verify");
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("plainText", plainText, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("mac", mac, this.error);
-			SecurityUtils.validateStringInput("algorithm", algorithm, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "verify", "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "verify", "key", key, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "verify", "mac", mac, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "verify", "algorithm", algorithm, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -109,6 +115,7 @@ namespace GeneXusCryptography.Mac
 
 		private byte[] calculate(Stream input, byte[] key, int macSize, IBlockCipher blockCipher)
 		{
+			logger.Debug("calculate");
 			ICipherParameters parms = new KeyParameter(key);
 
 			CMac mac = macSize != 0 ? new CMac(blockCipher, macSize) : new CMac(blockCipher);
@@ -120,6 +127,7 @@ namespace GeneXusCryptography.Mac
 			catch (Exception e)
 			{
 				this.error.setError("CM003", e.Message);
+				logger.Error("calculate", e);
 				return null;
 			}
 
@@ -138,6 +146,7 @@ namespace GeneXusCryptography.Mac
 			{
 
 				this.error.setError("CM004", e.Message);
+				logger.Error("calculate", e);
 				return null;
 			}
 

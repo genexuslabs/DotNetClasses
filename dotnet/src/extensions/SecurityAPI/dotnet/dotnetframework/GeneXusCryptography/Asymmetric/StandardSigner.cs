@@ -11,6 +11,7 @@ using SecurityAPICommons.Config;
 using SecurityAPICommons.Keys;
 using SecurityAPICommons.Utils;
 using Org.BouncyCastle.Utilities.Collections;
+using log4net;
 
 
 namespace GeneXusCryptography.Asymmetric
@@ -18,6 +19,7 @@ namespace GeneXusCryptography.Asymmetric
 	[SecuritySafeCritical]
 	public class StandardSigner : SecurityAPIObject, IStandardSignerObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(StandardSigner));
 
 		public StandardSigner() : base()
 		{
@@ -29,13 +31,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string Sign(string plainText, SignatureStandardOptions options)
 		{
+			logger.Debug("Sign");
 			this.error.cleanError();
 
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput("signatureStandardOptions", options, this.error);
-			SecurityUtils.validateObjectInput("private key", options.GetPrivateKey(), this.error);
-			SecurityUtils.validateObjectInput("certificate", options.GetCertificate(), this.error);
-			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "Sign", "signatureStandardOptions", options, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "Sign", "private key", options.GetPrivateKey(), this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "Sign", "certificate", options.GetCertificate(), this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "Sign", "plainText", plainText, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -59,6 +62,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("SS002", e.Message);
+				logger.Error("Sign", e);
 				result = "";
 			}
 
@@ -69,12 +73,13 @@ namespace GeneXusCryptography.Asymmetric
 
 		public bool Verify(string signed, string plainText, SignatureStandardOptions options)
 		{
+			logger.Debug("Verify");
 			this.error.cleanError();
 
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput("signatureStandardOptions", options, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "Verify", "signatureStandardOptions", options, this.error);
 			//SecurityUtils.validateStringInput("plainText", plainText, this.error);
-			SecurityUtils.validateStringInput("signed", signed, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "Verify", "signed", signed, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -99,6 +104,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("SS002", e.Message);
+				logger.Error("Verify", e);
 				result = false;
 			}
 
@@ -109,6 +115,7 @@ namespace GeneXusCryptography.Asymmetric
 
 		private string Sign_internal(byte[] input, PrivateKeyManager key, CertificateX509 cert, SignatureStandard signatureStandard, bool encapsulated)
 		{
+			logger.Debug("Sign_internal");
 
 			PrivateKeyManager keyMan = (PrivateKeyManager)key;
 			if (keyMan.HasError())
@@ -152,6 +159,7 @@ namespace GeneXusCryptography.Asymmetric
 
 		private bool Verify_internal(byte[] cmsSignedData, byte[] data, bool encapsulated)
 		{
+			logger.Debug("Verify_internal");
 			CmsSignedData cms = encapsulated ? new CmsSignedData(cmsSignedData) : new CmsSignedData(new CmsProcessableByteArray(data), cmsSignedData);
 
 			SignerInformationStore signers = cms.GetSignerInfos();
@@ -182,6 +190,7 @@ namespace GeneXusCryptography.Asymmetric
 
 		private string DigestCalculator(CertificateX509 cert)
 		{
+			logger.Debug("DigestCalculator");
 			string value = cert.getPublicKeyHash();
 			switch (value)
 			{
@@ -193,6 +202,7 @@ namespace GeneXusCryptography.Asymmetric
 					return CmsSignedGenerator.DigestSha512;
 				default:
 					this.error.setError("SS003", "Unrecognizable certificate hash algorithm");
+					logger.Error("Unrecognizable certificate hash algorithm");
 					return "";
 			}
 

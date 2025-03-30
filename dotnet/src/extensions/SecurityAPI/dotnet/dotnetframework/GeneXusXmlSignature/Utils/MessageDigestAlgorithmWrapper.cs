@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using log4net;
 using SecurityAPICommons.Commons;
 
 namespace GeneXusXmlSignature.GeneXusUtils
@@ -15,13 +16,16 @@ namespace GeneXusXmlSignature.GeneXusUtils
 	[SecuritySafeCritical]
 	public static class MessageDigestAlgorithmWrapperUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(MessageDigestAlgorithmWrapperUtils));
 		public static MessageDigestAlgorithmWrapper getMessageDigestAlgorithmWrapper(string messageDigestAlgorithmWrapper,
 		Error error)
 		{
+			logger.Debug("getMessageDigestAlgorithmWrapper");
 			if (error == null) return MessageDigestAlgorithmWrapper.NONE;
 			if (messageDigestAlgorithmWrapper == null)
 			{
 				error.setError("MDA04", "Not recognized digest algorithm");
+				logger.Error("Not recognized digest algorithm");
 				return MessageDigestAlgorithmWrapper.NONE;
 			}
 			switch (messageDigestAlgorithmWrapper.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -34,6 +38,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return MessageDigestAlgorithmWrapper.SHA512;
 				default:
 					error.setError("MDA01", "Not recognized digest algorithm");
+					logger.Error("Not recognized digest algorithm");
 
 					return MessageDigestAlgorithmWrapper.NONE;
 			}
@@ -41,6 +46,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 
 		public static string valueOf(MessageDigestAlgorithmWrapper messageDigestAlgorithmWrapper, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return null;
 			switch (messageDigestAlgorithmWrapper)
 			{
@@ -52,12 +58,14 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return "SHA512";
 				default:
 					error.setError("MDA02", "Not recognized digest algorithm");
+					logger.Error("Not recognized digest algorithm");
 					return null;
 			}
 		}
 
 		public static string getDigestMethod(MessageDigestAlgorithmWrapper messageDigestAlgorithmWrapper, Error error)
 		{
+			logger.Debug("getDigestMethod");
 			if (error == null) return null;
 			switch (messageDigestAlgorithmWrapper)
 			{
@@ -69,6 +77,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return Constants.ALGO_ID_DIGEST_SHA512;
 				default:
 					error.setError("MDA03", "Not recognized digest algorithm");
+					logger.Error("Not recognized digest algorithm");
 					return null;
 			}
 		}

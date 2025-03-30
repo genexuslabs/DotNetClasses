@@ -10,6 +10,7 @@
    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
  </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />
   </ItemGroup>
 </Project>
