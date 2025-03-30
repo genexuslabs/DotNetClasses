@@ -4,11 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using DotNetUnitTest;
 using GeneXus.Application;
 using GeneXus.Http.Client;
 using Xunit;
+
+
+
 #if !NETCORE
 using System.Web.SessionState;
 using System.Web;
@@ -19,8 +23,10 @@ namespace xUnitTesting
 
 	public class GxHttpClientTest
 	{
-		const int MAX_CONNECTIONS= 5;
-		public GxHttpClientTest() {
+		const int MAX_CONNECTIONS = 5;
+
+		public GxHttpClientTest()
+		{
 			Environment.SetEnvironmentVariable("GX_HTTPCLIENT_MAX_PER_ROUTE", MAX_CONNECTIONS.ToString(), EnvironmentVariableTarget.Process);
 		}
 		[Fact]
@@ -204,5 +210,31 @@ namespace xUnitTesting
 			Assert.Equal(0, result);
 		}
 #endif
+
+#if NETCORE
+		[Fact]
+		public void BasicAuthenticationIncludesHeader()
+		{
+			GxContext context = new GxContext();
+			using (GxHttpClient httpclient = new GxHttpClient(context))
+			{
+				string url= "https://www.google.com/";
+				string username = "user";
+				string password = "pass";
+				string credentialsBase64 = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{username}:{password}"));
+				httpclient.AddAuthentication(0, string.Empty, username, password);
+
+				HttpRequestMessage request = new HttpRequestMessage()
+				{
+					RequestUri = new Uri(url),
+					Method = HttpMethod.Post,
+				};
+				httpclient.SetHeaders(request, null, out string contentType);
+				string headerValue = request.Headers.GetValues("Authorization").FirstOrDefault();
+				Assert.Equal(headerValue, $"Basic {credentialsBase64}");
+			}
+		}
+#endif
 	}
+
 }
