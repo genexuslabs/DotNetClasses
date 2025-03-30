@@ -14,6 +14,7 @@ namespace GeneXus.Metadata
 #endif
 	using GeneXus.Application;
 	using System.Collections.Concurrent;
+	using System.Text;
 
 	public class ClassLoader
 	{
@@ -238,8 +239,11 @@ namespace GeneXus.Metadata
 			}
 			return argsConstr;
 		}
-
 		static public void ExecuteVoidRef(object o, string mthd, Object[] args)
+		{
+			ExecuteVoidRef(o, mthd, args, null);
+		}
+		internal static void ExecuteVoidRef(object o, string mthd, Object[] args, string propertyName)
 		{
 			try
 			{
@@ -274,7 +278,10 @@ namespace GeneXus.Metadata
 							pm[0] = ((pi.Attributes & ParameterAttributes.In) != ParameterAttributes.None);
 							pm[1] = ((pi.Attributes & ParameterAttributes.Out) != ParameterAttributes.None);
 							pm[2] = pi.ParameterType.IsByRef;
-							pms[i] = pm;
+							if (i < pms.Length)
+							{
+								pms[i] = pm;
+							}
 						}
 						try
 						{
@@ -282,7 +289,7 @@ namespace GeneXus.Metadata
 
 						}catch(MissingMethodException)
 						{
-							throw new GxClassLoaderException("Method " + mi.DeclaringType.FullName + "." + mi.Name + " for " + args.Length + " parameters ("+ String.Join(",", args) + ") not found");
+							throw new GxClassLoaderException(BuildParameterMismatchErrorMessage(mi.DeclaringType.FullName, pis, args, propertyName));
 						}
 					}
 					else
@@ -297,6 +304,110 @@ namespace GeneXus.Metadata
 			{
 				GXLogging.Error(log, "Error in invoke ", e);
 				throw GxClassLoaderException.ProcessException(e);
+			}
+		}
+		static string BuildParameterMismatchErrorMessage(string objectName, ParameterInfo[] methodParameters, object[] runtimeMethodParameters, string propertyName)
+		{
+			string parmInfo = GetParameterTypesString(methodParameters);
+			string runtimeParms = GetParameterValuesString(runtimeMethodParameters);
+			StringBuilder errorMessage = new StringBuilder();
+
+			errorMessage.Append($"Program {objectName} ");
+			if (!string.IsNullOrEmpty(propertyName))
+			{
+				errorMessage.Append($"referenced in {propertyName} property ");
+			}
+			errorMessage.Append($"does not have the expected parameter definition.");
+			if (methodParameters.Length == 0)
+			{
+				errorMessage.Append($"It does not have any parameters.");
+			}
+			else 
+			{
+				errorMessage.Append($"Program parameter definition: {parmInfo}.");
+			}
+
+			if (runtimeMethodParameters.Length == 0)
+			{
+				errorMessage.Append($"No parameter values were provided at runtime. ");
+			}
+			else if (runtimeMethodParameters.Length == 1)
+			{
+				errorMessage.Append($"Parameter value provided at runtime: {runtimeParms}. ");
+			}
+			else
+			{
+				errorMessage.Append($"Parameter values provided at runtime: {runtimeParms}. ");
+			}
+			errorMessage.Append($"Please check the parm rule of the {objectName}.");
+
+			return errorMessage.ToString();
+		}
+
+		static string GetParameterValuesString(object[] runtimeMethodParameters)
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.Append('(');
+
+			for (int i = 0; i < runtimeMethodParameters.Length; i++)
+			{
+				object parmValue = runtimeMethodParameters[i];
+				string parmStringValue =  (parmValue is string) ? $"\"{parmValue}\"" : parmValue.ToString();
+				sb.Append(parmStringValue);
+				if (i < runtimeMethodParameters.Length - 1)
+				{
+					sb.Append(", ");
+				}
+			}
+			sb.Append(')');
+			return sb.ToString();
+		}
+
+		static string GetParameterTypesString(ParameterInfo[] parameters)
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.Append('(');
+
+			for (int i = 0; i < parameters.Length; i++)
+			{
+				string parmTypeName = ParameterTypeName(parameters[i].ParameterType);
+				sb.Append(parmTypeName);
+				if (i < parameters.Length - 1)
+				{
+					sb.Append(", ");
+				}
+			}
+			sb.Append(')');
+			return sb.ToString();
+		}
+
+		static string ParameterTypeName(Type parameterType)
+		{
+			Type innerType = (parameterType.IsByRef && parameterType.GetElementType()!=null) ? parameterType.GetElementType() : parameterType;
+			if (IsNumericType(innerType))
+				return "Numeric";
+			return innerType.Name;			
+		}
+
+		static bool IsNumericType(Type type)
+		{
+			if (type == typeof(byte) ||
+				type == typeof(sbyte) ||
+				type == typeof(short) ||
+				type == typeof(ushort) ||
+				type == typeof(int) ||
+				type == typeof(uint) ||
+				type == typeof(long) ||
+				type == typeof(ulong) ||
+				type == typeof(float) ||
+				type == typeof(double) ||
+				type == typeof(decimal))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
 			}
 		}
 		static public void ExecuteRef(object o, string mthd, Object[] args)
