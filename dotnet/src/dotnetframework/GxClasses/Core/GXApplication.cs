@@ -3391,10 +3391,14 @@ namespace GeneXus.Application
 
 		public string PathToUrl(string path)
 		{
-			GXLogging.Debug(Logger, "PathToUrl:", () => GetContextPath() + " relativePath:" + PathToRelativeUrl(path));
-#pragma warning disable SYSLIB0013 // EscapeUriString
-			return Uri.EscapeUriString(GetContextPath()) + PathToRelativeUrl(path, false);
-#pragma warning disable SYSLIB0013 // EscapeUriString
+			string relativeUrl = PathToRelativeUrl(path, false);
+			GXLogging.Debug(Logger, "PathToUrl:", () => GetContextPath() + " relativePath:" + relativeUrl);
+			if (Uri.IsWellFormedUriString(relativeUrl, UriKind.Absolute))
+				return relativeUrl;
+			else if (Uri.TryCreate(GetContextPath() + relativeUrl, UriKind.Absolute, out Uri uri))
+				return uri.AbsoluteUri;
+			else
+				return relativeUrl;
 		}
 
 		public string PathToRelativeUrl(string path)
