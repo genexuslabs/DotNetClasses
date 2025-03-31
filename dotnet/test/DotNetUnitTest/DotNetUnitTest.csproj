@@ -122,6 +122,9 @@
     <None Update="resources\bird-thumbnail.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="resources\Minions-PNG-Photo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="resources\text.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
