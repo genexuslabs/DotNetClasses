@@ -311,6 +311,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamSaml20", "src\extensions
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctionsLibraries", "src\extensions\Azure\Libraries\GeneXus.Deploy.AzureFunctionsLibraries.csproj", "{EF17D458-A2BA-44B7-939D-CE381C4F80E9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXCompress", "src\dotnetframework\GXCompress\GXCompress.csproj", "{D741F1DC-1CD1-4AD9-9465-99B4C70F6BBB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -741,6 +743,10 @@ Global
 		{EF17D458-A2BA-44B7-939D-CE381C4F80E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF17D458-A2BA-44B7-939D-CE381C4F80E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF17D458-A2BA-44B7-939D-CE381C4F80E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D741F1DC-1CD1-4AD9-9465-99B4C70F6BBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D741F1DC-1CD1-4AD9-9465-99B4C70F6BBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D741F1DC-1CD1-4AD9-9465-99B4C70F6BBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D741F1DC-1CD1-4AD9-9465-99B4C70F6BBB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -891,6 +897,7 @@ Global
 		{8F5EABFB-5728-4E4E-B0A4-B36C3E73FEAD} = {8CD470A6-D8A9-4BE8-95AB-9A2A0B0861B8}
 		{4D324439-BFD4-4181-A1EE-32E213B0D7BA} = {708A8C53-73A2-4D03-BC21-19EA58ACFA8B}
 		{EF17D458-A2BA-44B7-939D-CE381C4F80E9} = {E59B3248-4C26-4DB0-96CB-67437319E22B}
+		{D741F1DC-1CD1-4AD9-9465-99B4C70F6BBB} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
