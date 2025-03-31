@@ -1,7 +1,19 @@
 using GeneXus.Utils;
 using GeneXus;
 using System.IO.Compression;
+using System.Collections.Generic;
+using System.IO;
+using System;
+using System.Linq;
+#if NETCORE
 using System.Formats.Tar;
+# else
+using SharpCompress.Writers.Tar;
+using SharpCompress.Readers.Tar;
+using SharpCompress.Common;
+using SharpCompress.Readers;
+using SharpCompress.Writers;
+#endif
 
 namespace Genexus.Compression
 {
@@ -196,35 +208,79 @@ namespace Genexus.Compression
 			}
 		}
 
+
+
+#if NETCORE
 		private static void CompressToTar(FileInfo[] files, string outputPath)
 		{
 			if (string.IsNullOrEmpty(outputPath)) throw new ArgumentException("The output path must not be null or empty");
 			if (File.Exists(outputPath)) throw new IOException("Output file already exists");
-			using
-			var output = File.Create(outputPath);
-			using
-			var tarWriter = new TarWriter(output, TarEntryFormat.Pax);
-			void AddFileToTar(FileSystemInfo file, string entryName)
+
+			using (var output = File.Create(outputPath))
 			{
-				if (file is DirectoryInfo di)
+				using (var tarWriter = new TarWriter(output, TarEntryFormat.Pax))
 				{
-					foreach (var child in di.GetFileSystemInfos())
+					void AddFileToTar(FileSystemInfo file, string entryName)
 					{
-						AddFileToTar(child, entryName + "/" + child.Name);
+						if (file is DirectoryInfo di)
+						{
+							foreach (var child in di.GetFileSystemInfos())
+							{
+								AddFileToTar(child, entryName + "/" + child.Name);
+							}
+						}
+						else if (file is FileInfo fi)
+						{
+							tarWriter.WriteEntry(entryName, fi.FullName);
+							
+						}
+					}
+					foreach (var file in files)
+					{
+						if (file == null || !file.Exists) continue;
+						AddFileToTar(file, file.Name);
 					}
 				}
-				else if (file is FileInfo fi)
-				{
-					tarWriter.WriteEntry(entryName, fi.FullName);
-				}
 			}
-			foreach (var file in files)
+		}
+#else
+
+		private static void CompressToTar(FileInfo[] files, string outputPath)
+		{
+			if (string.IsNullOrEmpty(outputPath))
+				throw new ArgumentException("The output path must not be null or empty");
+
+			if (File.Exists(outputPath))
+				throw new IOException("Output file already exists");
+
+			using (var output = File.Create(outputPath))
+			using (var tarWriter = WriterFactory.Open(output, ArchiveType.Tar, CompressionType.None))
 			{
-				if (file == null || !file.Exists) continue;
-				AddFileToTar(file, file.Name);
+				foreach (var file in files)
+				{
+					if (file == null || !file.Exists) continue;
+					AddFileToTar(tarWriter, file, file.Name);
+				}
 			}
 		}
 
+		private static void AddFileToTar(IWriter writer, FileSystemInfo file, string entryName)
+		{
+			if (file is DirectoryInfo dir)
+			{
+				foreach (var child in dir.GetFileSystemInfos())
+				{
+					string childEntryName = Path.Combine(entryName, child.Name).Replace("\\", "/"); // Normalizar nombres en TAR
+					AddFileToTar(writer, child, childEntryName);
+				}
+			}
+			else if (file is FileInfo fileInfo)
+			{
+				writer.Write(entryName, fileInfo.FullName);
+			}
+		}
+
+#endif
 
 		private static void CompressToGzip(FileInfo[] files, string outputPath)
 		{
@@ -243,10 +299,16 @@ namespace Genexus.Compression
 			string tempFile = Path.Combine(string.IsNullOrEmpty(parentDir) ? "." : parentDir, Path.GetRandomFileName() + ".tmp");
 			if (singleFile)
 			{
-				using FileStream fis = files[0].OpenRead();
-				using FileStream fos = File.Create(tempFile);
-				using GZipStream gzos = new GZipStream(fos, CompressionLevel.Optimal);
-				fis.CopyTo(gzos);
+				using (FileStream fis = files[0].OpenRead())
+				{
+					using (FileStream fos = File.Create(tempFile))
+					{
+						using (GZipStream gzos = new GZipStream(fos, CompressionLevel.Optimal))
+						{
+							fis.CopyTo(gzos);
+						}
+					}
+				}
 			}
 			else
 			{
@@ -267,13 +329,25 @@ namespace Genexus.Compression
 					}
 				}
 				string tarFilePath = Path.GetTempFileName();
+#if NETCORE
 				TarFile.CreateFromDirectory(tarTemp, tarFilePath, false);
+#else
+
+				CreateTarFromDirectory(tarTemp, tarFilePath);
+#endif
+
 				Directory.Delete(tarTemp, true);
-				using FileStream tfs = File.OpenRead(tarFilePath);
-				using FileStream fos = File.Create(tempFile);
-				using GZipStream gzs = new GZipStream(fos, CompressionLevel.Optimal);
-				tfs.CopyTo(gzs);
-				File.Delete(tarFilePath);
+				using (FileStream tfs = File.OpenRead(tarFilePath))
+				{
+					using (FileStream fos = File.Create(tempFile))
+					{
+						using (GZipStream gzs = new GZipStream(fos, CompressionLevel.Optimal))
+						{
+							tfs.CopyTo(gzs);
+							File.Delete(tarFilePath);
+						}
+					}
+				}
 			}
 			string finalName = outputPath;
 			if (singleFile)
@@ -305,7 +379,21 @@ namespace Genexus.Compression
 			}
 			if (!File.Exists(finalName))
 				throw new IOException("Failed to create the archive");
+}
+#if !NETCORE
+		private static void CreateTarFromDirectory(string sourceDirectory, string tarFilePath)
+		{
+			using (var stream = File.Create(tarFilePath))
+			using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+			{
+				foreach (string filePath in Directory.GetFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+				{
+					string entryName = filePath.Substring(sourceDirectory.Length).TrimStart(Path.DirectorySeparatorChar);
+					writer.Write(entryName, filePath);
+				}
+			}
 		}
+#endif
 
 		private static void CopyDirectory(DirectoryInfo source, DirectoryInfo target)
 		{
@@ -361,8 +449,11 @@ namespace Genexus.Compression
 						{
 							var entry = archive.CreateEntry(entryName);
 							using (var entryStream = entry.Open())
-							using (var fileStream = new FileStream(current.FullName!, FileMode.Open, FileAccess.Read))
-								fileStream.CopyTo(entryStream);
+							{
+								string filePath = current.FullName ?? throw new ArgumentNullException(nameof(current.FullName));
+								using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+									fileStream.CopyTo(entryStream);
+							}
 						}
 					}
 				}
@@ -388,7 +479,16 @@ namespace Genexus.Compression
 					}
 					else
 					{
-						Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
+#if NETCORE
+						string directoryPath = Path.GetDirectoryName(fullPath)!;
+#else
+						string directoryPath = Path.GetDirectoryName(fullPath);
+						if (directoryPath != null)
+						{
+							Directory.CreateDirectory(directoryPath);
+						}
+#endif
+
 						entry.ExtractToFile(fullPath, true);
 					}
 				}
@@ -402,12 +502,31 @@ namespace Genexus.Compression
 			if (string.IsNullOrEmpty(outputPath))
 				throw new ArgumentException("Output path is null or empty", nameof(outputPath));
 			Directory.CreateDirectory(outputPath);
-			using FileStream fs = file.OpenRead();
-			TarFile.ExtractToDirectory(fs, outputPath, overwriteFiles: true);
+			using (FileStream fs = file.OpenRead())
+			{
+#if NETCORE
+				TarFile.ExtractToDirectory(fs, outputPath, overwriteFiles: true);
+#else
+				var reader = ReaderFactory.Open(fs);
+				while (reader.MoveToNextEntry())
+				{
+					if (!reader.Entry.IsDirectory)
+					{
+						ExtractionOptions opt = new ExtractionOptions
+						{
+							ExtractFullPath = true,
+							Overwrite = true
+						};
+						reader.WriteEntryToDirectory(outputPath, opt);
+					}
+				}
+#endif
+			}
 		}
 
 		private static void DecompressGzip(FileInfo file, string outputPath)
 		{
+
 			if (file == null || !file.Exists)
 				throw new ArgumentException("The archive file does not exist or is not a file.", nameof(file));
 			if (string.IsNullOrEmpty(outputPath) || !Directory.Exists(outputPath))
@@ -421,20 +540,45 @@ namespace Genexus.Compression
 				gz.CopyTo(fos);
 			}
 
-			bool isTar = false;
+			bool isTar = true;
 			try
 			{
-				using FileStream tfs = new FileStream(tempFile, FileMode.Open, FileAccess.Read);
-				using TarReader tarReader = new TarReader(tfs);
-				if (tarReader.GetNextEntry() != null)
-					isTar = true;
+#if NETCORE
+				using (FileStream tfs = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
+				{
+					using (TarReader tarReader = new TarReader(tfs))
+					{
+
+						if (tarReader.GetNextEntry() == null)
+							isTar = false;
+					}
+				}
+#endif
 			}
 			catch { }
 
 			if (isTar)
 			{
-				using FileStream tfs = new FileStream(tempFile, FileMode.Open, FileAccess.Read);
-				TarFile.ExtractToDirectory(tfs, outputPath, overwriteFiles: true);
+				using (FileStream tfs = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
+				{
+#if NETCORE
+					TarFile.ExtractToDirectory(tfs, outputPath, overwriteFiles: true);
+#else
+					var reader = ReaderFactory.Open(tfs);
+					while (reader.MoveToNextEntry())
+					{
+						if (!reader.Entry.IsDirectory)
+						{
+							ExtractionOptions opt = new ExtractionOptions
+							{
+								ExtractFullPath = true,
+								Overwrite = true
+							};
+							reader.WriteEntryToDirectory(outputPath, opt);
+						}
+					}
+#endif
+				}
 			}
 			else
 			{
@@ -448,10 +592,15 @@ namespace Genexus.Compression
 				}
 				catch
 				{
-					using FileStream inStream = new FileStream(tempFile, FileMode.Open, FileAccess.Read);
-					using FileStream outStream = new FileStream(singleOutFile, FileMode.Create, FileAccess.Write);
-					inStream.CopyTo(outStream);
-					File.Delete(tempFile);
+					using (FileStream inStream = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
+					{
+						using (FileStream outStream = new FileStream(singleOutFile, FileMode.Create, FileAccess.Write))
+						{
+							inStream.CopyTo(outStream);
+							File.Delete(tempFile);
+						}
+					}
+
 				}
 			}
 
@@ -479,9 +628,13 @@ namespace Genexus.Compression
 					}
 					else
 					{
-						string? destinationDir = Path.GetDirectoryName(destinationPath);
+#if NETCORE
+						string destinationDir = Path.GetDirectoryName(destinationPath)!;
+#else
+						string destinationDir = Path.GetDirectoryName(destinationPath);
 						if (!string.IsNullOrEmpty(destinationDir))
 							Directory.CreateDirectory(destinationDir);
+#endif
 						entry.ExtractToFile(destinationPath, true);
 					}
 				}

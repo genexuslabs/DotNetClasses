@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GeneXus.Utils;
 
 namespace Genexus.Compression
