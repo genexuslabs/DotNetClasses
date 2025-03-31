@@ -6277,7 +6277,11 @@ namespace GeneXus.Utils
 						using (Graphics g = Graphics.FromImage(rotatedImage))
 						{
 							g.TranslateTransform(OriginalImage.Width / 2, OriginalImage.Height / 2);
-							g.RotateTransform(angle);
+#if NETCORE
+							g.RotateTransform(-angle); //TO DO bug reported to GeneXus.Commond.Drawing, it should be angle instead of -angle
+#else
+							g.RotateTransform(angle); //TO DO bug reported to GeneXus.Commond.Drawing, it should be angle instead of -angle
+#endif
 							g.TranslateTransform(-OriginalImage.Width / 2, -OriginalImage.Height / 2);
 							g.DrawImage(OriginalImage, new Point(0, 0));
 							modifiedImage = Save(rotatedImage, imageFile, GetImageFormat(OriginalImage));
