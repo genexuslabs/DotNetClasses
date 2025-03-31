@@ -13,8 +13,8 @@ namespace DotNetCoreUnitTest.ImageUtils
 {
 	public class ImageUtilTest : FileSystemTest
 	{
-		private readonly string IMAGE_FILE_PATH = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail.jpg");
-		private readonly string IMAGE_FILE_PATH_OUTPUT = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail-{0}-{1}.jpg");
+		private readonly string IMAGE_FILE_PATH = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail.jpg");//Minions-PNG-Photo.png
+		private readonly string IMAGE_FILE_PATH_OUTPUT = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail-{0}-{1}.jpg");//Minions-PNG-Photo
 		private readonly int IMAGE_HEIGHT = 900;
 		private readonly int IMAGE_WIDTH = 720;
 

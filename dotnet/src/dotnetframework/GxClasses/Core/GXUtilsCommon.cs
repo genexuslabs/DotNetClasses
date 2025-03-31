@@ -6130,11 +6130,7 @@ namespace GeneXus.Utils
 						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
 					}//return the image resized to the given heigth and width
 					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);
-#if NETCORE
-					modifiedImage = Save(output, imageFile,ImageFormat.Png);
-#else
-					modifiedImage = Save(output, imageFile, ImageFormat.Bmp);
-#endif
+					modifiedImage = Save(output, imageFile, GetImageFormat(image));
 				}				
 			}
 			catch (Exception ex)
@@ -6182,11 +6178,7 @@ namespace GeneXus.Utils
 								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
 								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
 								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
-#if NETCORE
-								modifiedImage = Save(bmp, imageFile, ImageFormat.Png);
-#else
-								modifiedImage = Save(bmp, imageFile, ImageFormat.Bmp);
-#endif
+								modifiedImage = Save(bmp, imageFile, GetImageFormat(OriginalImage));
 							}
 						}
 					}
@@ -6302,7 +6294,7 @@ namespace GeneXus.Utils
 
 			if (format.Equals(ImageFormat.Jpeg)) return ImageFormat.Jpeg;
 			if (format.Equals(ImageFormat.Png)) return ImageFormat.Png;
-			if (format.Equals(ImageFormat.Bmp)) return ImageFormat.Bmp;
+			if (format.Equals(ImageFormat.Bmp)) return ImageFormat.Png; //Unsupported Bmp
 			if (format.Equals(ImageFormat.Gif)) return ImageFormat.Gif;
 
 			return ImageFormat.Png;
@@ -6363,11 +6355,7 @@ namespace GeneXus.Utils
 				{
 					//In some cases, copied memory image fails to save when ImageFormat MemoryBmp
 					//https://stackoverflow.com/questions/9073619/image-save-crashing-value-cannot-be-null-r-nparameter-name-encoder
-#if NETCORE
 					bitmap.Save(ms, ImageFormat.Png);
-#else
-					bitmap.Save(ms, ImageFormat.Bmp);
-#endif
 				}
 				ms.Position = 0;
 				try
