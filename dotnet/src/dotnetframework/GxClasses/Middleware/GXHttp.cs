@@ -3410,7 +3410,7 @@ namespace GeneXus.Http
 		public static void AddResponsiveMetaHeaders(GXRadio meta)
 		{
 			TryAddMetaHeader(meta, "viewport", "width=device-width, initial-scale=1, maximum-scale=4");
-			TryAddMetaHeader(meta, "apple-mobile-web-app-capable", "yes");
+			TryAddMetaHeader(meta, "mobile-web-app-capable", "yes");
 		}
 
 		private static void TryAddMetaHeader(GXRadio meta, string key, string value)
