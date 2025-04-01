@@ -75,7 +75,6 @@ namespace GeneXus.Application
 			{
 				Console.Error.WriteLine("ERROR:");
 				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
-				Console.Read();
 			}			
 		}
 
