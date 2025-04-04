@@ -618,17 +618,37 @@ namespace GeneXus.Application
 		{
 			get
 			{
+
 #if !NETCORE
-				if (HttpContext.Current?.Items["CURRENT_GX_CONTEXT"] is GxContext currCtx)
-				    return currCtx;
-#else
-				if (AppContext.Current?.Items["CURRENT_GX_CONTEXT"] is GxContext currCtx)
-					return currCtx;
-#endif
-				if (IsHttpContext)
-					return new GxNullContext(new ArrayList());
+				if (HttpContext.Current != null)
+				{
+
+					GxContext currCtx = (GxContext)HttpContext.Current.Items["CURRENT_GX_CONTEXT"];
+					if (currCtx != null)
+						return currCtx;
+				}
 				else
+				{
+
 					return _currentBatchGxContext;
+				}
+				return null;
+#else
+				if (AppContext.Current != null)
+				{
+					GxContext currCtx = (GxContext)AppContext.Current.Items["CURRENT_GX_CONTEXT"];
+					if (currCtx != null)
+						return currCtx;
+				}
+				else
+				{
+					if (IsHttpContext)
+						return new GxNullContext(new ArrayList());
+					else
+						return _currentBatchGxContext;
+				}
+				return _currentBatchGxContext;
+#endif
 			}
 		}
 		static void setContext(GxContext ctx)
