@@ -14,6 +14,8 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\..\dotnetframework\GXCompress\Compression.cs" Link="Compression.cs" />
+	  <Compile Include="..\..\dotnetframework\GxCompress\CompressionConfiguration.cs" Link="CompressionConfiguration.cs" />
+	  <Compile Include="..\..\dotnetframework\GxCompress\CompressionUtils.cs" Link="CompressionUtils.cs" />
 	  <Compile Include="..\..\dotnetframework\GXCompress\GXCompressor.cs" Link="GXCompressor.cs" />
 	</ItemGroup>
 	<ItemGroup>

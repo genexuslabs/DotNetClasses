@@ -1,5 +1,11 @@
-
+#if NETCORE
 using System.Formats.Tar;
+#else
+using System;
+using System.IO;
+using SharpCompress.Common.Tar;
+using SharpCompress.Readers.Tar;
+#endif
 using System.IO.Compression;
 
 namespace Genexus.Compression
@@ -27,6 +33,7 @@ namespace Genexus.Compression
 				case "tar":
 					int count = 0;
 					using (FileStream stream = archiveFile.OpenRead())
+#if NETCORE
 					using (TarReader reader = new TarReader(stream))
 					{
 						while (reader.GetNextEntry() != null)
@@ -34,6 +41,15 @@ namespace Genexus.Compression
 							count++;
 						}
 					}
+#else
+					using (TarReader reader = TarReader.Open(stream))
+					{
+						while (reader.MoveToNextEntry())
+						{
+							count++;
+						}
+					}
+#endif
 					return count;
 				case "gz":
 					return 1;
@@ -72,6 +88,7 @@ namespace Genexus.Compression
 					return true;
 				case "tar":
 					using (FileStream stream = archiveFile.OpenRead())
+#if NETCORE
 					using (TarReader reader = new TarReader(stream))
 					{
 						TarEntry? entry;
@@ -84,6 +101,19 @@ namespace Genexus.Compression
 							}
 						}
 					}
+#else
+					using (TarReader reader = TarReader.Open(stream))
+					{
+						while (reader.MoveToNextEntry())
+						{
+							string destinationPath = Path.GetFullPath(Path.Combine(normalizedTarget, reader.Entry.Key));
+							if (!destinationPath.StartsWith(normalizedTarget + Path.DirectorySeparatorChar, StringComparison.Ordinal) && destinationPath != normalizedTarget)
+							{
+								return false;
+							}
+						}
+					}
+#endif
 					return true;
 				case "gz":
 					string fileName = archiveFile.Name;
@@ -127,6 +157,7 @@ namespace Genexus.Compression
 					break;
 				case "tar":
 					using (FileStream stream = archiveFile.OpenRead())
+#if NETCORE
 					using (TarReader reader = new TarReader(stream))
 					{
 						TarEntry? entry;
@@ -138,6 +169,20 @@ namespace Genexus.Compression
 							}
 						}
 					}
+#else
+					using (TarReader reader = TarReader.Open(stream))
+					{
+						while (reader.MoveToNextEntry())
+						{
+
+							var entry = reader.Entry;
+							if (entry.Size > 0 && !IsDirectory(entry) && entry.Size > maxSize)
+							{
+								maxSize = entry.Size;
+							}
+						}
+					}
+#endif
 					break;
 				case "gz":
 					long size = 0;
@@ -187,6 +232,7 @@ namespace Genexus.Compression
 					break;
 				case "tar":
 					using (FileStream stream = archiveFile.OpenRead())
+#if NETCORE
 					using (TarReader reader = new TarReader(stream))
 					{
 						TarEntry? entry;
@@ -198,6 +244,19 @@ namespace Genexus.Compression
 							}
 						}
 					}
+#else
+					using (TarReader reader = TarReader.Open(stream))
+					{
+						while (reader.MoveToNextEntry())
+						{
+							var entry = reader.Entry;
+							if (entry.Size > 0 && !IsDirectory(entry))
+							{
+								totalSize += entry.Size;
+							}
+						}
+					}
+#endif
 					break;
 				case "gz":
 					try
@@ -240,5 +299,11 @@ namespace Genexus.Compression
 		{
 			return entry.FullName.EndsWith("/");
 		}
+#if !NETCORE
+		private static bool IsDirectory(TarEntry entry)
+		{
+			return entry.Key.EndsWith("/");
+		}
+#endif
 	}
 }
