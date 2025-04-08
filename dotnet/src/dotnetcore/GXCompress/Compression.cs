@@ -2,33 +2,35 @@ using GeneXus.Utils;
 
 namespace Genexus.Compression
 {
+	/**
+     * Compresses files interactively; files can be added until the Save method is executed.
+     */
 	public class Compression
 	{
-
-		private string absolutePath;
-		private long maxCombinedFileSize;
+		private string destinationPath;
+		private CompressionConfiguration compressionConfiguration;
 		private GXBaseCollection<SdtMessages_Message> messages;
 		private List<string> filesToCompress;
 
 		public Compression()
 		{
-			absolutePath = string.Empty;
-			maxCombinedFileSize = 0;
+			destinationPath = string.Empty;
+			compressionConfiguration = new CompressionConfiguration();
 			messages = new GXBaseCollection<SdtMessages_Message>();
 			filesToCompress = new List<string>();
 		}
 
-		public Compression(string absolutePath, long maxCombinedFileSize, GXBaseCollection<SdtMessages_Message> messages)
+		public Compression(string destinationPath, CompressionConfiguration configuration, GXBaseCollection<SdtMessages_Message> messages)
 		{
-			this.absolutePath = absolutePath;
-			this.maxCombinedFileSize = maxCombinedFileSize;
+			this.destinationPath = destinationPath;
+			this.compressionConfiguration = configuration;
 			this.messages = messages;
-			this.filesToCompress = new List<string>();
+			filesToCompress = new List<string>();
 		}
 
-		public void SetAbsolutePath(string path)
+		public void SetDestinationPath(string path)
 		{
-			this.absolutePath = path;
+			destinationPath = path;
 		}
 
 		public void AddElement(string filePath)
@@ -38,12 +40,12 @@ namespace Genexus.Compression
 
 		public bool Save()
 		{
-			return GXCompressor.Compress(filesToCompress, absolutePath, maxCombinedFileSize, ref messages);
+			return GXCompressor.Compress(filesToCompress, destinationPath, compressionConfiguration, ref messages);
 		}
 
 		public void Clear()
 		{
-			absolutePath = "";
+			destinationPath = "";
 			filesToCompress = new List<string>();
 		}
 	}
