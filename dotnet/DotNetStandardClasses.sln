@@ -273,6 +273,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Functions", "Functions", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXCompress", "src\dotnetcore\GXCompress\GXCompress.csproj", "{593E3569-1F62-4601-821B-CC96B39022F3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXCompress", "src\dotnetframework\GXCompress\GXCompress.csproj", "{BB15EBF6-778A-4A6A-AF82-C110DC326E29}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -659,6 +661,10 @@ Global
 		{593E3569-1F62-4601-821B-CC96B39022F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{593E3569-1F62-4601-821B-CC96B39022F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{593E3569-1F62-4601-821B-CC96B39022F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB15EBF6-778A-4A6A-AF82-C110DC326E29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB15EBF6-778A-4A6A-AF82-C110DC326E29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB15EBF6-778A-4A6A-AF82-C110DC326E29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB15EBF6-778A-4A6A-AF82-C110DC326E29}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -790,6 +796,7 @@ Global
 		{58C84EC7-A0B3-4C1B-BD78-989AEE87EA32} = {F8959289-4ED7-430C-97B7-FAAA29829708}
 		{E59B3248-4C26-4DB0-96CB-67437319E22B} = {41E1D031-799F-484F-85DE-7A30AF1A6FBA}
 		{593E3569-1F62-4601-821B-CC96B39022F3} = {2261B65E-3757-4E5B-9DCD-EAE8D1E236A3}
+		{BB15EBF6-778A-4A6A-AF82-C110DC326E29} = {F900A4AD-7249-41B4-B918-CB9E8C73747C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
