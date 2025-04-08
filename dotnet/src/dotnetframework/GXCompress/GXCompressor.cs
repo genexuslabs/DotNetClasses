@@ -24,10 +24,15 @@ namespace Genexus.Compression
 		private const string GENERIC_ERROR = "An error occurred during the compression/decompression process: ";
 		private const string NO_FILES_ADDED = "No files have been added for compression.";
 		private const string FILE_NOT_EXISTS = "File does not exist: ";
-		private const string UNSUPPORTED_FORMAT = " is an unsupported format. Supported formats are zip, tar, gz and jar.";
+		private const string UNSUPPORTED_FORMAT = " is an unsupported format. Supported formats are zip, 7z, tar, gz and jar.";
 		private const string EMPTY_FILE = "The selected file is empty: ";
+		private const string PURGED_ARCHIVE = "After performing security checks, no valid files where left to compress";
 		private const string DIRECTORY_ATTACK = "Potential directory traversal attack detected: ";
-		private const string MAX_FILESIZE_EXCEEDED = "The files selected for compression exceed the maximum permitted file size of ";
+		private const string MAX_FILESIZE_EXCEEDED = "The file(s) selected for (de)compression exceed the maximum permitted file size of ";
+		private const string TOO_MANY_FILES = "Too many files have been added for (de)compression. Maximum allowed is ";
+		private const string BIG_SINGLE_FILE = "Individual file exceeds maximum allowed size: ";
+		private const string PROCESSING_ERROR = "Error checking archive safety for file: ";
+		private const string ZIP_SLIP_DETECTED = "Zip slip or path traversal attack detected in archive: ";
 		private static void StorageMessages(string error, GXBaseCollection<SdtMessages_Message> messages)
 		{
 			if (messages != null)
@@ -41,7 +46,16 @@ namespace Genexus.Compression
 			}
 		}
 
-		public static bool Compress(List<string> files, string path, long maxCombinedFileSize, ref GXBaseCollection<SdtMessages_Message> messages)
+		/**
+     * Compresses specified files into an archive at the given path based on configuration parameters.
+     *
+     * @param files List of file paths to compress
+     * @param path Target path for the compressed archive
+     * @param configuration Configuration parameters for compression
+     * @param messages Collection to store output messages
+     * @return Boolean indicating success or failure of compression operation
+     */
+		public static bool Compress(List<string> files, string path, CompressionConfiguration configuration, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			if (files.Count == 0)
 			{
@@ -49,9 +63,8 @@ namespace Genexus.Compression
 				StorageMessages(NO_FILES_ADDED, messages);
 				return false;
 			}
+			List<FileInfo> validFiles = new List<FileInfo>();
 			long totalSize = 0;
-			FileInfo[] toCompress = new FileInfo[files.Count];
-			int index = 0;
 			foreach (string filePath in files)
 			{
 				FileInfo file = new FileInfo(filePath);
@@ -64,29 +77,78 @@ namespace Genexus.Compression
 						StorageMessages(FILE_NOT_EXISTS + filePath, messages);
 						continue;
 					}
-					if (normalizedPath.Contains(Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar) ||
-						normalizedPath.EndsWith(Path.DirectorySeparatorChar + "..") ||
-						normalizedPath.StartsWith(".." + Path.DirectorySeparatorChar))
+					string parentPath = file.DirectoryName != null ? Path.GetFullPath(file.DirectoryName) : normalizedPath;
+					if (!normalizedPath.StartsWith(parentPath, StringComparison.Ordinal))
 					{
 						GXLogging.Error(log, DIRECTORY_ATTACK + filePath);
 						StorageMessages(DIRECTORY_ATTACK + filePath, messages);
 						return false;
 					}
 					long fileSize = file.Length;
-					totalSize += fileSize;
-					if (maxCombinedFileSize > -1 && totalSize > maxCombinedFileSize)
+					if (configuration.maxIndividualFileSize > -1 && fileSize > configuration.maxIndividualFileSize)
 					{
-						GXLogging.Error(log, MAX_FILESIZE_EXCEEDED + maxCombinedFileSize);
-						StorageMessages(MAX_FILESIZE_EXCEEDED + maxCombinedFileSize, messages);
-						return false;
+						GXLogging.Error(log, BIG_SINGLE_FILE + filePath);
+						StorageMessages(BIG_SINGLE_FILE + filePath, messages);
+						continue;
 					}
-					toCompress[index++] = file;
+					totalSize += fileSize;
+					validFiles.Add(file);
 				}
 				catch (Exception e)
 				{
-					GXLogging.Error(log, "Error normalizing path for file " + filePath, e);
+					GXLogging.Error(log, "Error normalizing path for file: " + filePath, e);
+					StorageMessages("Error normalizing path for file: " + filePath, messages);
+					return false;
 				}
 			}
+			if (validFiles.Count == 0)
+			{
+				GXLogging.Error(log, PURGED_ARCHIVE);
+				StorageMessages(PURGED_ARCHIVE, messages);
+				return false;
+			}
+			if (configuration.maxCombinedFileSize > -1 && totalSize > configuration.maxCombinedFileSize)
+			{
+				GXLogging.Error(log, MAX_FILESIZE_EXCEEDED + configuration.maxCombinedFileSize);
+				StorageMessages(MAX_FILESIZE_EXCEEDED + configuration.maxCombinedFileSize, messages);
+				return false;
+			}
+			if (configuration.maxFileCount > -1 && validFiles.Count > configuration.maxFileCount)
+			{
+				GXLogging.Error(log, TOO_MANY_FILES + configuration.maxFileCount);
+				StorageMessages(TOO_MANY_FILES + configuration.maxFileCount, messages);
+				return false;
+			}
+			try
+			{
+				FileInfo targetFile = new FileInfo(path);
+				DirectoryInfo targetDir = targetFile.Directory ?? new DirectoryInfo(Path.GetDirectoryName(targetFile.FullName) ?? "");
+				if (path.Contains("/../") || path.Contains("../") || path.Contains("/.."))
+				{
+					GXLogging.Error(log, DIRECTORY_ATTACK + path);
+					StorageMessages(DIRECTORY_ATTACK + path, messages);
+					return false;
+				}
+				if (!string.IsNullOrEmpty(configuration.targetDirectory))
+				{
+					DirectoryInfo configTargetDir = new DirectoryInfo(configuration.targetDirectory);
+					string normalizedTargetPath = Path.GetFullPath(targetDir.FullName);
+					string normalizedConfigPath = Path.GetFullPath(configTargetDir.FullName);
+					if (!normalizedTargetPath.StartsWith(normalizedConfigPath, StringComparison.Ordinal))
+					{
+						GXLogging.Error(log, DIRECTORY_ATTACK + path);
+						StorageMessages(DIRECTORY_ATTACK + path, messages);
+						return false;
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				GXLogging.Error(log, "Error validating target path: " + path, e);
+				StorageMessages("Error validating target path: " + path, messages);
+				return false;
+			}
+			FileInfo[] toCompress = validFiles.ToArray();
 			string format = (Path.GetExtension(path)?.TrimStart('.').ToLowerInvariant()) ?? "";
 			try
 			{
@@ -119,46 +181,158 @@ namespace Genexus.Compression
 			}
 		}
 
-		public static Compression NewCompression(string path, long maxCombinedFileSize, ref GXBaseCollection<SdtMessages_Message> messages)
+		/**
+		 * Compresses files interactively, add files to a collection until the GXCompressor.compress method is executed
+		 *
+		 * @param path Target path for the compressed archive
+		 * @param configuration Configuration parameters for decompression
+		 * @param messages Collection to store output messages
+		 * @return Compression object
+		*/
+		public static Compression NewCompression(string path, CompressionConfiguration configuration, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
-			return new Compression(path, maxCombinedFileSize, messages);
+			return new Compression(path, configuration, messages);
 		}
 
-		public static bool Decompress(string file, string path, ref GXBaseCollection<SdtMessages_Message> messages)
+		/**
+		 * Decompresses an archive file to the specified path based on configuration parameters.
+		 *
+		 * @param file Path to the archive file to decompress
+		 * @param path Target path for the decompressed files
+		 * @param configuration Configuration parameters for decompression
+		 * @param messages Collection to store output messages
+		 * @return Boolean indicating success or failure of decompression operation
+		 */
+		public static bool Decompress(string file, string path, CompressionConfiguration configuration, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
-			FileInfo toDecompress = new FileInfo(file);
-			if (!toDecompress.Exists)
+			FileInfo archiveFile = new FileInfo(file);
+			if (!archiveFile.Exists)
 			{
-				GXLogging.Error(log, FILE_NOT_EXISTS + toDecompress.FullName);
-				StorageMessages(FILE_NOT_EXISTS + toDecompress.FullName, messages);
+				GXLogging.Error(log, FILE_NOT_EXISTS + archiveFile.FullName);
+				StorageMessages(FILE_NOT_EXISTS + archiveFile.FullName, messages);
 				return false;
 			}
-			if (toDecompress.Length == 0L)
+			if (archiveFile.Length == 0L)
 			{
 				GXLogging.Error(log, EMPTY_FILE + file);
 				StorageMessages(EMPTY_FILE + file, messages);
 				return false;
 			}
-			string extension = (Path.GetExtension(toDecompress.Name)?.TrimStart('.').ToLowerInvariant()) ?? "";
+			int fileCount;
 			try
 			{
-				switch (extension)
+				fileCount = CompressionUtils.CountArchiveEntries(archiveFile);
+				if (fileCount <= 0)
+				{
+					GXLogging.Error(log, EMPTY_FILE + file);
+					StorageMessages(EMPTY_FILE + file, messages);
+					return false;
+				}
+			}
+			catch (Exception e)
+			{
+				GXLogging.Error(log, PROCESSING_ERROR + file, e);
+				StorageMessages(PROCESSING_ERROR + file, messages);
+				return false;
+			}
+			try
+			{
+				DirectoryInfo targetDir = new DirectoryInfo(path);
+				if (path.Contains("/../") || path.Contains("../") || path.Contains("/.."))
+				{
+					GXLogging.Error(log, DIRECTORY_ATTACK + path);
+					StorageMessages(DIRECTORY_ATTACK + path, messages);
+					return false;
+				}
+				if (!string.IsNullOrEmpty(configuration.targetDirectory))
+				{
+					DirectoryInfo configTargetDir = new DirectoryInfo(configuration.targetDirectory);
+					string normalizedTargetPath = Path.GetFullPath(targetDir.FullName);
+					string normalizedConfigPath = Path.GetFullPath(configTargetDir.FullName);
+					if (!normalizedTargetPath.StartsWith(normalizedConfigPath, StringComparison.Ordinal))
+					{
+						GXLogging.Error(log, DIRECTORY_ATTACK + path);
+						StorageMessages(DIRECTORY_ATTACK + path, messages);
+						return false;
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				GXLogging.Error(log, "Error validating target path: " + path, e);
+				StorageMessages("Error validating target path: " + path, messages);
+				return false;
+			}
+			try
+			{
+				if (!CompressionUtils.IsArchiveSafe(archiveFile, path))
+				{
+					GXLogging.Error(log, ZIP_SLIP_DETECTED + file);
+					StorageMessages(ZIP_SLIP_DETECTED + file, messages);
+					return false;
+				}
+			}
+			catch (Exception e)
+			{
+				GXLogging.Error(log, PROCESSING_ERROR + file, e);
+				StorageMessages(PROCESSING_ERROR + file, messages);
+				return false;
+			}
+			try
+			{
+				if (configuration.maxIndividualFileSize > -1)
+				{
+					long maxFileSize = CompressionUtils.GetMaxFileSize(archiveFile);
+					if (maxFileSize > configuration.maxIndividualFileSize)
+					{
+						GXLogging.Error(log, BIG_SINGLE_FILE + maxFileSize + " bytes");
+						StorageMessages(BIG_SINGLE_FILE + maxFileSize + " bytes", messages);
+						return false;
+					}
+				}
+				if (configuration.maxCombinedFileSize > -1)
+				{
+					long totalSizeEstimate = CompressionUtils.EstimateDecompressedSize(archiveFile);
+					if (totalSizeEstimate > configuration.maxCombinedFileSize)
+					{
+						GXLogging.Error(log, MAX_FILESIZE_EXCEEDED + configuration.maxCombinedFileSize);
+						StorageMessages(MAX_FILESIZE_EXCEEDED + configuration.maxCombinedFileSize, messages);
+						return false;
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				GXLogging.Error(log, "Error estimating archive size: " + file, e);
+				StorageMessages("Error estimating archive size: " + file, messages);
+				return false;
+			}
+			if (configuration.maxFileCount > -1 && fileCount > configuration.maxFileCount)
+			{
+				GXLogging.Error(log, TOO_MANY_FILES + configuration.maxFileCount);
+				StorageMessages(TOO_MANY_FILES + configuration.maxFileCount, messages);
+				return false;
+			}
+			string ext = (Path.GetExtension(archiveFile.Name)?.TrimStart('.').ToLowerInvariant()) ?? "";
+			try
+			{
+				switch (ext)
 				{
 					case "zip":
-						DecompressZip(toDecompress, path);
+						DecompressZip(archiveFile, path);
 						break;
 					case "tar":
-						DecompressTar(toDecompress, path);
+						DecompressTar(archiveFile, path);
 						break;
 					case "gz":
-						DecompressGzip(toDecompress, path);
+						DecompressGzip(archiveFile, path);
 						break;
 					case "jar":
-						DecompressJar(toDecompress, path);
+						DecompressJar(archiveFile, path);
 						break;
 					default:
-						GXLogging.Error(log, extension + UNSUPPORTED_FORMAT);
-						StorageMessages(extension + UNSUPPORTED_FORMAT, messages);
+						GXLogging.Error(log, ext + UNSUPPORTED_FORMAT);
+						StorageMessages(ext + UNSUPPORTED_FORMAT, messages);
 						return false;
 				}
 				return true;
