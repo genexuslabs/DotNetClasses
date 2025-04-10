@@ -37,6 +37,12 @@ namespace GamSaml20.Utils
 			return request;
 		}
 
+		internal static bool IsLogout(XmlDocument xmlDoc)
+		{
+			string localName = xmlDoc.DocumentElement.LocalName;
+			return localName.Equals("LogoutRequest");
+		}
+
 		internal static XmlDocument CanonicalizeXml(string xmlString)
 		{
 			//delete comments from the xml - security meassure
