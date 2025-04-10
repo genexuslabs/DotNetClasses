@@ -48,6 +48,7 @@ namespace Genexus.Compression
 		{
 			destinationPath = "";
 			filesToCompress = new List<string>();
+			compressionConfiguration = new CompressionConfiguration();
 		}
 	}
 }

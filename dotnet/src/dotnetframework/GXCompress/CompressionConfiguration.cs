@@ -9,13 +9,5 @@ namespace Genexus.Compression
 		public string targetDirectory = "";
 
 		public CompressionConfiguration() { }
-
-		public CompressionConfiguration(long maxCombinedFileSize, long maxIndividualFileSize, int maxFileCount, string targetDirectory)
-		{
-			this.maxCombinedFileSize = maxCombinedFileSize;
-			this.maxIndividualFileSize = maxIndividualFileSize;
-			this.maxFileCount = maxFileCount;
-			this.targetDirectory = (!string.IsNullOrEmpty(targetDirectory)) ? targetDirectory : "";
-		}
 	}
 }
