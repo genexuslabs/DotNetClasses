@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net462</TargetFramework>
+		<AssemblyName>GXCompress</AssemblyName>
+		<NoWarn>CA1031, CA1801</NoWarn>
+		<PackageId>GeneXus.Compress</PackageId>
+		<AssemblyName>GxCompressImpl</AssemblyName>
+	</PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="SharpCompress" Version="0.39.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+</Project>
