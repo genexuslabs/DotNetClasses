@@ -82,6 +82,12 @@ namespace GamSaml20
 			return GamSaml20.Utils.SamlAssertionUtils.GetRoles(this.xmlDoc, name);
 		}
 
+		[SecuritySafeCritical]
+		public bool IsLogout()
+		{
+			return GamSaml20.Utils.SamlAssertionUtils.IsLogout(this.xmlDoc);
+		}
+
 		/********EXTERNAL OBJECT PUBLIC METHODS  - END ********/
 	}
 }

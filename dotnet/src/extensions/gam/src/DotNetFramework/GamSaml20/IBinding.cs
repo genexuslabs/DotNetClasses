@@ -29,5 +29,7 @@ namespace GamSaml20
 		[SecuritySafeCritical]
 		string GetLogoutAssertions();
 
+		[SecuritySafeCritical]
+		bool IsLogout();
 	}
 }

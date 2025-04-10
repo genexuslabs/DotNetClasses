@@ -113,6 +113,12 @@ namespace GamSaml20
 			return string.Empty;
 		}
 
+		[SecuritySafeCritical]
+		public bool IsLogout()
+		{
+			return GamSaml20.Utils.SamlAssertionUtils.IsLogout(this.xmlDoc);
+		}
+
 		/********EXTERNAL OBJECT PUBLIC METHODS  - END ********/
 
 		private bool VerifySignature_internal(string certPath)
