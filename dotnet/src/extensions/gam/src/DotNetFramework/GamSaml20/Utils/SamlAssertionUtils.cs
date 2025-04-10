@@ -39,10 +39,7 @@ namespace GamSaml20.Utils
 
 		internal static bool IsLogout(XmlDocument xmlDoc)
 		{
-			logger.Trace("IsLogout");
-			string localName = xmlDoc.DocumentElement.LocalName;
-			logger.Debug("localName: " + localName);
-			return localName.Equals("LogoutResponse");
+			return xmlDoc.DocumentElement.LocalName.Equals("LogoutResponse");
 		}
 
 		internal static XmlDocument CanonicalizeXml(string xmlString)
