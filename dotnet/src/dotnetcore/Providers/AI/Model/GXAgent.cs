@@ -11,13 +11,11 @@ namespace GeneXus.AI
 	public class GXAgent : GXProcedure
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXAgent>();
-		const string FINISH_REASON_STOP = "stop";
-		const string FINISH_REASON_TOOL_CALLS = "tool_calls";
 		protected string CallAssistant(string assistant, GXProperties properties, object result)
 		{
-			return CallAgent(assistant, properties, null, result);
+			return CallAgent(assistant, properties, null, result, false);
 		}
-		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatMessages, object result)
+		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatMessages, object result, bool stream)
 		{
 			CallResult callResult = result as CallResult;
 			try
@@ -25,7 +23,7 @@ namespace GeneXus.AI
 				GXLogging.Debug(log, "Calling Agent: ", assistant);
 
 				List<ChatMessage> chatMessagesList = chatMessages!=null ? chatMessages.Cast<ChatMessage>().ToList() :null;
-				ChatCompletionResult chatCompletion = AgentService.AgentHandlerInstance.Assistant(assistant, chatMessagesList, gxproperties).GetAwaiter().GetResult();
+				ChatCompletionResult chatCompletion = AgentService.AgentHandlerInstance.Assistant(assistant, chatMessagesList, gxproperties, stream).GetAwaiter().GetResult();
 
 				if (chatCompletion != null && chatCompletion.Choices != null)
 				{
@@ -33,13 +31,11 @@ namespace GeneXus.AI
 					{
 						switch (choice.FinishReason.ToLower())
 						{
-							case FINISH_REASON_STOP:
+							case ChatCompletionResult.FINISH_REASON_STOP:
 								return choice.Message.Content;
-							case FINISH_REASON_TOOL_CALLS:
+							case ChatCompletionResult.FINISH_REASON_TOOL_CALLS:
 								chatMessagesList.Add(choice.Message);
-								foreach (ToolCall toolCall in choice.Message.ToolCalls)
-									ProcessTollCall(toolCall, chatMessagesList);
-								return CallAgent(assistant, gxproperties, chatMessagesList, result);
+								return ProcessChatResponse(choice, stream, assistant, gxproperties, chatMessagesList, result);	
 						}
 					}
 				}
@@ -53,7 +49,13 @@ namespace GeneXus.AI
 			}
 
 		}
-		private void ProcessTollCall(ToolCall toolCall, List<ChatMessage> messages)
+		internal override string ProcessChatResponse(Choice choice, bool stream, string assistant, GXProperties gxproperties, List<ChatMessage> chatMessagesList, object result)
+		{
+			foreach (ToolCall toolCall in choice.Message.ToolCalls)
+				ProcessToolCall(toolCall, chatMessagesList);
+			return CallAgent(assistant, gxproperties, chatMessagesList, result, stream);
+		}
+		private void ProcessToolCall(ToolCall toolCall, List<ChatMessage> messages)
 		{
 			string result = string.Empty;
 			string functionName = toolCall.Function.Name;
@@ -66,10 +68,12 @@ namespace GeneXus.AI
 				GXLogging.Error(log, "Error calling tool ", functionName, ex);
 				result = $"Error calling tool {functionName}";
 			}
-			ChatMessage toolCallMessage = new ChatMessage();
-			toolCallMessage.Role = "tool";
-			toolCallMessage.Content = result;
-			toolCallMessage.ToolCallId = toolCall.Id;
+			ChatMessage toolCallMessage = new ChatMessage
+			{
+				Role = "tool",
+				Content = result,
+				ToolCallId = toolCall.Id
+			};
 			messages.Add(toolCallMessage);
 		}
 		protected virtual string CallTool(string name, string arguments) 
