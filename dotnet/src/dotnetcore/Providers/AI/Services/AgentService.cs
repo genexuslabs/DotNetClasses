@@ -61,7 +61,7 @@ namespace GeneXus.AI
 			uriBuilder.Path += "chat";
 			return uriBuilder.Uri.ToString();
 		}
-		internal async Task<ChatCompletionResult> Assistant(string assistant, List<Chat.ChatMessage> messages, GXProperties properties)
+		internal async Task<ChatCompletionResult> Assistant(string assistant, List<Chat.ChatMessage> messages, GXProperties properties, bool stream)
 		{
 			try
 			{
@@ -69,7 +69,7 @@ namespace GeneXus.AI
 				requestBody.Model = $"{SAIA_AGENT}{assistant}";
 				requestBody.Messages = messages;
 				requestBody.Variables = properties.ToList();
-				requestBody.Stream = false;
+				requestBody.Stream = stream;
 
 				JsonSerializerOptions options = new JsonSerializerOptions
 				{
@@ -134,79 +134,4 @@ namespace GeneXus.AI
 		}
 	}
 
-	internal class ChatRequestPayload
-	{
-		[JsonPropertyName("model")]
-		public string Model { get; set; }
-
-		[JsonPropertyName("messages")]
-		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-		public List<Chat.ChatMessage> Messages { get; set; }
-
-		[JsonPropertyName("stream")]
-		public bool? Stream { get; set; }
-
-		[JsonPropertyName("variables")]
-		public List<GxKeyValuePair> Variables { get; set; }
-	}
-
-	internal class ChatCompletionResult
-	{
-		[JsonPropertyName("id")]
-		public string Id { get; set; }
-
-		[JsonPropertyName("object")]
-		public string Object { get; set; }
-
-		[JsonPropertyName("created")]
-		public long Created { get; set; }
-
-		[JsonPropertyName("choices")]
-		public List<Choice> Choices { get; set; }
-
-		[JsonPropertyName("usage")]
-		public Usage Usage { get; set; }
-
-		[JsonPropertyName("tool_calls")]
-		public List<ChatMessage> ToolCalls { get; set; }
-
-		[JsonPropertyName("data")]
-		public List<DataItem> Data { get; set; }
-	}
-	public class Choice
-	{
-		[JsonPropertyName("index")]
-		public int Index { get; set; }
-
-		[JsonPropertyName("message")]
-		public ChatMessage Message { get; set; }
-
-		[JsonPropertyName("finish_reason")]
-		public string FinishReason { get; set; }
-	}
-
-
-	public class Usage
-	{
-		[JsonPropertyName("prompt_tokens")]
-		public int PromptTokens { get; set; }
-
-		[JsonPropertyName("completion_tokens")]
-		public int CompletionTokens { get; set; }
-
-		[JsonPropertyName("total_tokens")]
-		public int TotalTokens { get; set; }
-	}
-
-	public class DataItem
-	{
-		[JsonPropertyName("id")]
-		public string Id { get; set; }
-
-		[JsonPropertyName("object")]
-		public string Object { get; set; }
-
-		[JsonPropertyName("embedding")]
-		public List<double> Embedding { get; set; }
-	}
 }
