@@ -2850,6 +2850,32 @@ namespace GeneXus.Utils
 				return CToD2(jsonDate);
 			}
 		}
+		public static DateTime CToT3(string value)
+		{
+			if (isNullJsonDate(value))
+				return nullDate;
+			else
+			{
+				DateTime timeOnlyDateTime = nullDate;
+				TimeSpan timeSpan;
+				if (TimeSpan.TryParse(value, out timeSpan))
+				{
+					timeOnlyDateTime = DateTime.MinValue.Add(timeSpan);
+				}
+				else if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out timeOnlyDateTime))
+				{
+					timeOnlyDateTime = ResetDate(timeOnlyDateTime);
+				}
+				else if (value.StartsWith(GxDateString.NullValue))
+				{
+					value = value.Substring(GxDateString.NullValue.Length);
+					DateTime.TryParse(GxDateString.GregorianDate + value, CultureInfo.InvariantCulture, DateTimeStyles.None, out timeOnlyDateTime);
+
+				}
+
+				return timeOnlyDateTime;
+			}
+		}
 		public static DateTime CToT2(string value, IGxContext context)
 		{
 			if (isNullJsonDate(value))
