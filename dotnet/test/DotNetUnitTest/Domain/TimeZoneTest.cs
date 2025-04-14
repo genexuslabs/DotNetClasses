@@ -290,23 +290,23 @@ namespace xUnitTesting
 		[Fact]
 		public void TimeZoneInJsonTime()
 		{
-			DateTime value = DateTimeUtil.CToT3("19:00:00");
+			DateTime value = DateTimeUtil.CToH2("19:00:00");
 			DateTime expected = DateTime.MinValue.AddHours(19);
 			Assert.Equal(expected, value);
 
-			value = DateTimeUtil.CToT3("19:00:00.000");
+			value = DateTimeUtil.CToH2("19:00:00.000");
 			Assert.Equal(expected, value);
 
-			value = DateTimeUtil.CToT3("1899-12-31T19:00:00.000");
+			value = DateTimeUtil.CToH2("1899-12-31T19:00:00.000");
 			Assert.Equal(expected, value);
 
-			value = DateTimeUtil.CToT3("0000-00-00T19:00:00.000");
+			value = DateTimeUtil.CToH2("0000-00-00T19:00:00.000");
 			Assert.Equal(expected, value);
 
-			value = DateTimeUtil.CToT3("0001-01-01T19:00:00.000");
+			value = DateTimeUtil.CToH2("0001-01-01T19:00:00.000");
 			Assert.Equal(expected, value);
 
-			value = DateTimeUtil.CToT3("2025-04-14T19:00:00.000");
+			value = DateTimeUtil.CToH2("2025-04-14T19:00:00.000");
 			Assert.Equal(expected, value);
 		}
 	}

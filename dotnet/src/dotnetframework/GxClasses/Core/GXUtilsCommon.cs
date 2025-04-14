@@ -2850,7 +2850,7 @@ namespace GeneXus.Utils
 				return CToD2(jsonDate);
 			}
 		}
-		public static DateTime CToT3(string value)
+		public static DateTime CToH2(string value)
 		{
 			if (isNullJsonDate(value))
 				return nullDate;
