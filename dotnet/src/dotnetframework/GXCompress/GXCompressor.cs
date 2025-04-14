@@ -5,9 +5,11 @@ using System.Collections.Generic;
 using System.IO;
 using System;
 using System.Linq;
+using System.Security;
+
 #if NETCORE
 using System.Formats.Tar;
-# else
+#else
 using SharpCompress.Writers.Tar;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Common;
@@ -46,7 +48,7 @@ namespace Genexus.Compression
 			}
 		}
 
-		/**
+	/**
      * Compresses specified files into an archive at the given path based on configuration parameters.
      *
      * @param files List of file paths to compress
@@ -55,6 +57,7 @@ namespace Genexus.Compression
      * @param messages Collection to store output messages
      * @return Boolean indicating success or failure of compression operation
      */
+		[SecurityCritical]
 		public static bool Compress(List<string> files, string path, CompressionConfiguration configuration, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			if (files.Count == 0)
@@ -203,6 +206,7 @@ namespace Genexus.Compression
 		 * @param messages Collection to store output messages
 		 * @return Boolean indicating success or failure of decompression operation
 		 */
+		[SecurityCritical]
 		public static bool Decompress(string file, string path, CompressionConfiguration configuration, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			FileInfo archiveFile = new FileInfo(file);
@@ -418,7 +422,7 @@ namespace Genexus.Compression
 			}
 		}
 #else
-
+		[SecurityCritical]
 		private static void CompressToTar(FileInfo[] files, string outputPath)
 		{
 			if (string.IsNullOrEmpty(outputPath))
@@ -437,7 +441,7 @@ namespace Genexus.Compression
 				}
 			}
 		}
-
+		[SecurityCritical]
 		private static void AddFileToTar(IWriter writer, FileSystemInfo file, string entryName)
 		{
 			if (file is DirectoryInfo dir)
@@ -455,7 +459,7 @@ namespace Genexus.Compression
 		}
 
 #endif
-
+		[SecurityCritical]
 		private static void CompressToGzip(FileInfo[] files, string outputPath)
 		{
 			if (files == null || files.Length == 0)
@@ -471,90 +475,83 @@ namespace Genexus.Compression
 				Directory.CreateDirectory(parentDir);
 			bool singleFile = files.Length == 1 && files[0].Exists && (files[0].Attributes & FileAttributes.Directory) == 0;
 			string tempFile = Path.Combine(string.IsNullOrEmpty(parentDir) ? "." : parentDir, Path.GetRandomFileName() + ".tmp");
-			if (singleFile)
-			{
-				using (FileStream fis = files[0].OpenRead())
-				{
-					using (FileStream fos = File.Create(tempFile))
-					{
-						using (GZipStream gzos = new GZipStream(fos, CompressionLevel.Optimal))
-						{
-							fis.CopyTo(gzos);
-						}
-					}
-				}
-			}
-			else
-			{
-				string tarTemp = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-				Directory.CreateDirectory(tarTemp);
-				foreach (var f in files)
-				{
-					if (f == null) continue;
-					string destPath = Path.Combine(tarTemp, f.Name);
-					if ((f.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
-					{
-						DirectoryInfo di = new DirectoryInfo(f.FullName);
-						CopyDirectory(di, new DirectoryInfo(destPath));
-					}
-					else
-					{
-						File.Copy(f.FullName, destPath, true);
-					}
-				}
-				string tarFilePath = Path.GetTempFileName();
-#if NETCORE
-				TarFile.CreateFromDirectory(tarTemp, tarFilePath, false);
-#else
-
-				CreateTarFromDirectory(tarTemp, tarFilePath);
-#endif
-
-				Directory.Delete(tarTemp, true);
-				using (FileStream tfs = File.OpenRead(tarFilePath))
-				{
-					using (FileStream fos = File.Create(tempFile))
-					{
-						using (GZipStream gzs = new GZipStream(fos, CompressionLevel.Optimal))
-						{
-							tfs.CopyTo(gzs);
-							File.Delete(tarFilePath);
-						}
-					}
-				}
-			}
-			string finalName = outputPath;
-			if (singleFile)
-			{
-				if (!finalName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
-					finalName += ".gz";
-			}
-			else
-			{
-				if (!finalName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
-				{
-					if (finalName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
-						finalName = finalName.Substring(0, finalName.Length - 3) + ".tar.gz";
-					else
-						finalName += ".tar.gz";
-				}
-			}
-			if (File.Exists(finalName))
-			{
-				try { File.Delete(finalName); } catch { throw new IOException("Failed to delete existing file with desired name"); }
-			}
 			try
 			{
+				if (singleFile)
+				{
+					using (FileStream fis = files[0].OpenRead())
+					using (FileStream fos = File.Create(tempFile))
+					using (GZipStream gzos = new GZipStream(fos, CompressionLevel.Optimal))
+					{
+						fis.CopyTo(gzos);
+					}
+				}
+				else
+				{
+					string tarTemp = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+					Directory.CreateDirectory(tarTemp);
+					foreach (var f in files)
+					{
+						if (f == null) continue;
+						string destPath = Path.Combine(tarTemp, f.Name);
+						if ((f.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+						{
+							DirectoryInfo di = new DirectoryInfo(f.FullName);
+							CopyDirectory(di, new DirectoryInfo(destPath));
+						}
+						else
+						{
+							File.Copy(f.FullName, destPath, true);
+						}
+					}
+					string tarFilePath = Path.GetTempFileName();
+#if NETCORE
+            TarFile.CreateFromDirectory(tarTemp, tarFilePath, false);
+#else
+					CreateTarFromDirectory(tarTemp, tarFilePath);
+#endif
+					Directory.Delete(tarTemp, true);
+					using (FileStream tfs = File.OpenRead(tarFilePath))
+					using (FileStream fos = File.Create(tempFile))
+					using (GZipStream gzs = new GZipStream(fos, CompressionLevel.Optimal))
+					{
+						tfs.CopyTo(gzs);
+					}
+					File.Delete(tarFilePath);
+				}
+				string finalName = outputPath;
+				if (singleFile)
+				{
+					if (!finalName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+						finalName += ".gz";
+				}
+				else
+				{
+					if (!finalName.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
+					{
+						if (finalName.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+							finalName = finalName.Substring(0, finalName.Length - 3) + ".tar.gz";
+						else
+							finalName += ".tar.gz";
+					}
+				}
+				if (File.Exists(finalName))
+				{
+					try { File.Delete(finalName); } catch { throw new IOException("Failed to delete existing file with desired name"); }
+				}
 				File.Move(tempFile, finalName);
+				if (!File.Exists(finalName))
+					throw new IOException("Failed to create the archive");
 			}
-			catch (Exception ex)
+			finally
 			{
-				throw new IOException("Failed to rename archive to desired name", ex);
+				if (File.Exists(tempFile))
+					File.Delete(tempFile);
 			}
-			if (!File.Exists(finalName))
-				throw new IOException("Failed to create the archive");
-}
+		}
+
 #if !NETCORE
+		[SecurityCritical]
 		private static void CreateTarFromDirectory(string sourceDirectory, string tarFilePath)
 		{
 			using (var stream = File.Create(tarFilePath))
@@ -697,7 +694,7 @@ namespace Genexus.Compression
 #endif
 			}
 		}
-
+		[SecurityCritical]
 		private static void DecompressGzip(FileInfo file, string outputPath)
 		{
 

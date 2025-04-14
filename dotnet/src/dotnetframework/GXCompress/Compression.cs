@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security;
 using GeneXus.Utils;
 
 namespace Genexus.Compression
@@ -39,6 +40,7 @@ namespace Genexus.Compression
 			filesToCompress.Add(filePath);
 		}
 
+		[SecurityCritical]
 		public bool Save()
 		{
 			return GXCompressor.Compress(filesToCompress, destinationPath, compressionConfiguration, ref messages);
