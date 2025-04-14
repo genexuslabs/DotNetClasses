@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
@@ -6,8 +6,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackageTags>Compression</PackageTags>
-		<PackageId>GeneXus.Compress.Net</PackageId>
-		<AssemblyName>GxCompressNetImpl</AssemblyName>
+		<PackageId>GeneXus.Compress.Core</PackageId>
+		<AssemblyName>GxCompress</AssemblyName>
 	</PropertyGroup>
 	<PropertyGroup>
 		<DefineConstants>NETCORE</DefineConstants>
