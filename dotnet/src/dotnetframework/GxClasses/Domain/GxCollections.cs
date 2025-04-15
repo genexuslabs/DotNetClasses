@@ -806,7 +806,14 @@ namespace GeneXus.Utils
 		}
 		public void FromStringCollection(GxSimpleCollection<string> value)
 		{
-			if (typeof(T) == typeof(string))
+			if (typeof(T) == typeof(DateTime))
+			{
+				foreach (string item in value)
+				{
+					Add(DateTimeUtil.CToT2(item));
+				}
+			}
+			else if(typeof(T) == typeof(string))
 			{
 				foreach (string item in value)
 				{
@@ -819,17 +826,10 @@ namespace GeneXus.Utils
 				}
 			}
 		}
+		//To delete
 		public void FromStringCollection(GxSimpleCollection<string> value, IGxContext context)
 		{
-			if (typeof(T) == typeof(DateTime))
-			{
-				foreach (string item in value)
-				{
-					Add(DateTimeUtil.CToT2(item, context));
-				}
-			}
-			else
-				FromStringCollection(value);
+			FromStringCollection(value);
 		}
 
 
