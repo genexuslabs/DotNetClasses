@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using GeneXus.AI.Chat;
+using GeneXus.Http.Client;
 using GeneXus.Procedure;
 using GeneXus.Utils;
 
@@ -12,11 +14,24 @@ namespace GeneXus.AI
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXAgent>();
 
-		protected ChatResult ChatAgent(String agent, GXProperties properties, IList messages, CallResult result)
+		protected ChatResult ChatAgent(String agent, GXProperties properties, IList chatMessages, object result)
 		{
-			//callAgent(agent, true, properties, messages, result);
-			return new ChatResult(this, agent, properties, (List<ChatMessage>)messages, result, null);
-			
+			CallResult callResult = result as CallResult;
+			List<ChatMessage> chatMessagesList = chatMessages != null ? chatMessages.Cast<ChatMessage>().ToList() : null;
+			try
+			{
+				GXLogging.Debug(log, "Chatting Agent: ", agent);
+
+				GxHttpClient httpClient = AgentService.AgentHandlerInstance.ChatAgent(agent, chatMessagesList, properties, context);
+
+				return new ChatResult(this, agent, properties, chatMessagesList, callResult, httpClient);
+			}
+			catch (Exception ex)
+			{
+				callResult.AddMessage($"Error chatting Agent {agent}:" + ex.Message);
+				callResult.IsFail = true;
+				return new ChatResult(this, agent, properties, chatMessagesList, callResult, null); 
+			}
 		}
 		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatMessages, object result)
 		{
@@ -30,7 +45,7 @@ namespace GeneXus.AI
 				GXLogging.Debug(log, "Calling Agent: ", assistant);
 
 				List<ChatMessage> chatMessagesList = chatMessages!=null ? chatMessages.Cast<ChatMessage>().ToList() :null;
-				ChatCompletionResult chatCompletion = AgentService.AgentHandlerInstance.Assistant(assistant, chatMessagesList, gxproperties, stream).GetAwaiter().GetResult();
+				ChatCompletionResult chatCompletion = AgentService.AgentHandlerInstance.CallAgent(assistant, chatMessagesList, gxproperties, context).GetAwaiter().GetResult();
 
 				if (chatCompletion != null && chatCompletion.Choices != null)
 				{

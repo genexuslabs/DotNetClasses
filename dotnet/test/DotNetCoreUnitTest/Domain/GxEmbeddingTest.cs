@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using GeneXus.AI;
 using GeneXus.AI.Chat;
+using GeneXus.Application;
 using GeneXus.Utils;
 using Xunit;
 
@@ -24,8 +25,8 @@ namespace DotNetCoreUnitTest.Domain
 			string modelId = "e4e7a837-b8ad-4d25-b2db-431dda9af0af";
 			GXProperties properties = new GXProperties();
 			properties.Set("$context", "context for reference");
-
-			ChatCompletionResult embedding = await agentService.Assistant(modelId, null, properties, false);
+			GxContext context = new GxContext();
+			ChatCompletionResult embedding = await agentService.CallAgent(modelId, null, properties, context);
 			Assert.NotNull(embedding);
 		}
 	}
