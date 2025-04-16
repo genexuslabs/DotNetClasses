@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -15,6 +16,36 @@ using GeneXus.Utils;
 
 namespace GeneXus.HttpHandlerFactory
 {
+
+	internal class ErrorRequestHandler : IHttpHandler
+	{
+		string message;
+		HttpStatusCode httpCode;
+
+		internal ErrorRequestHandler(string message, HttpStatusCode httpCode)
+		{
+			this.message = message;
+			this.httpCode = httpCode;
+		}
+
+		public void ProcessRequest(HttpContext context)
+		{
+			context.Response.StatusCode = (int)httpCode;
+			context.Response.StatusDescription = message;
+			if (context.Request.AcceptTypes.Contains("application/json")) 
+			{
+				context.Response.ContentType = "application/json";
+				HttpHelper.SetError(context, "0", "Method not Allowed");
+			}
+		}
+
+		public bool IsReusable
+		{
+			get { return false; }
+		}
+	}
+
+
 	internal class OptionsApiObjectRequestHandler : IHttpHandler
 	{
 		string actualPath;
@@ -56,7 +87,8 @@ namespace GeneXus.HttpHandlerFactory
 			get { return false; }
 		}
 	}
-	class HandlerFactory : IHttpHandlerFactory
+
+	class HandlerFactory  : IHttpHandlerFactory
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<HandlerFactory>();
 		private static List<string> GxNamespaces;
@@ -100,6 +132,7 @@ namespace GeneXus.HttpHandlerFactory
 				if (GXAPIModule.serviceInPath(pathTranslated, actualPath: out actualPath))
 				{
 					string nspace;
+					bool methodMismatch = false;
 					Config.GetValueOf("AppMainNamespace", out nspace);
 					string objClass = GXAPIModule.servicesBase[actualPath];
 					//
@@ -109,7 +142,7 @@ namespace GeneXus.HttpHandlerFactory
 					Dictionary<string, object> routeParms;
 					if (GXAPIModule.servicesMapData.ContainsKey(actualPath))
 					{
-						bool IsServiceCall = GetSMap(actualPath, objectName, objectNameUp, requestType, out string mapName, out string mapRegExp, out routeParms);
+						bool IsServiceCall = GetSMap(actualPath, objectName, objectNameUp, requestType, out string mapName, out string mapRegExp, out routeParms, out methodMismatch);
 						if (IsServiceCall)
 						{
 							if (!string.IsNullOrEmpty(mapName) && GXAPIModule.servicesMap[actualPath].TryGetValue(mapName, out SingleMap value))
@@ -136,6 +169,14 @@ namespace GeneXus.HttpHandlerFactory
 							if (requestType.Equals(HttpMethod.Options.Method) && !string.IsNullOrEmpty(actualPath) && GXAPIModule.servicesMapData.ContainsKey(actualPath))
 							{
 								return new OptionsApiObjectRequestHandler(actualPath, objectName, mapRegExp);
+							}
+							else
+							{
+								if (methodMismatch)
+								{
+									return new ErrorRequestHandler("Method not allowed", HttpStatusCode.MethodNotAllowed);
+								}
+
 							}
 						}
 					}
@@ -204,12 +245,15 @@ namespace GeneXus.HttpHandlerFactory
 			return objectName;
 		}
 
-		public bool  GetSMap(string actualPath, string objectName, string objectNameUp, string requestType, out string mapName, out string mapRegexp, out Dictionary<string, object> routeParms)
+		public bool  GetSMap(string actualPath, string objectName, string objectNameUp, string requestType, out string mapName, out string mapRegexp, out Dictionary<string, object> routeParms, out bool methodMismatch)
 		{
 			routeParms = null;
+			methodMismatch = false;
 			if (GXAPIModule.servicesMapData[actualPath].TryGetValue(Tuple.Create(objectName, requestType), out mapName))
 			{
+				// Url exact match
 				mapRegexp = mapName;
+				methodMismatch = false;
 				return true;
 			}
 			else
@@ -219,6 +263,8 @@ namespace GeneXus.HttpHandlerFactory
 				{
 					if (!m.Path.Equals(m.PathRegexp) && GxRegex.IsMatch(objectName, m.PathRegexp))
 					{
+						methodMismatch = false;
+						// regexp URL match
 						mapName = m.Name;
 						mapRegexp = m.PathRegexp;
 						if (m.Verb.Equals(requestType))
@@ -232,7 +278,16 @@ namespace GeneXus.HttpHandlerFactory
 								routeParms.Add(var, smatch);
 								i++;
 							}
+							methodMismatch = false;
 							return true;
+						}
+						else
+						{
+							mapName = null;
+							mapRegexp = null;
+							routeParms = null;
+							methodMismatch = true;
+							return false;
 						}
 					}
 				}
