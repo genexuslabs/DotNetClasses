@@ -8,7 +8,7 @@ using GeneXus.Utils;
 
 namespace GeneXus.AI.Chat
 {
-	public class ChatResult
+	public class ChatResult: IDisposable
 	{
 #if NETCORE
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<ChatResult>();
@@ -20,7 +20,7 @@ namespace GeneXus.AI.Chat
 		private List<ChatMessage> Messages { get; set; }
 		private CallResult Result { get; set; }
 		private GXProcedure AgentProcedure { get; set; }
-
+		private bool disposed = false;
 		public ChatResult()
 		{
 		}
@@ -69,6 +69,30 @@ namespace GeneXus.AI.Chat
 			}
 #endif
 			return string.Empty;
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposed)
+				return;
+
+			if (disposing)
+			{
+				Client?.Dispose();
+			}
+
+			disposed = true;
+		}
+
+		~ChatResult()
+		{
+			Dispose(false);
 		}
 	}
 #if NETCORE

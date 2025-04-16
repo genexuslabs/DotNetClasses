@@ -1,21 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.AI.Chat;
+using GeneXus.Application;
 using GeneXus.Configuration;
+using GeneXus.Http;
+using GeneXus.Http.Client;
 using GeneXus.Utils;
+using Microsoft.AspNetCore.Http;
 namespace GeneXus.AI
 {
 	internal class AgentService
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<AgentService>();
 		const string SAIA_AGENT = "saia:agent:";
-		private HttpClient _httpClient;
 		protected string API_KEY;
 		protected const string AI_PROVIDER = "AI_PROVIDER";
 		protected const string AI_PROVIDER_API_KEY = "AI_PROVIDER_API_KEY";
@@ -37,19 +37,6 @@ namespace GeneXus.AI
 			{
 				API_KEY = val;
 			}
-
-			var handler = new SocketsHttpHandler
-			{
-				PooledConnectionLifetime = TimeSpan.FromMinutes(15.0),
-			};
-
-			var noAuthHandler = new NoAuthHeaderHandler
-			{
-				InnerHandler = handler
-			};
-			_httpClient = new HttpClient(noAuthHandler);
-			_httpClient.DefaultRequestHeaders.Add("Saia-Auth", API_KEY);
-
 		}
 		static string AddChatToUrl(string url)
 		{
@@ -61,39 +48,24 @@ namespace GeneXus.AI
 			uriBuilder.Path += "chat";
 			return uriBuilder.Uri.ToString();
 		}
-		internal async Task<ChatCompletionResult> Assistant(string assistant, List<Chat.ChatMessage> messages, GXProperties properties, bool stream)
+		internal async Task<ChatCompletionResult> CallAgent(string assistant, List<Chat.ChatMessage> messages, GXProperties properties, IGxContext context)
 		{
 			try
 			{
-				ChatRequestPayload requestBody = new ChatRequestPayload();
-				requestBody.Model = $"{SAIA_AGENT}{assistant}";
-				requestBody.Messages = messages;
-				requestBody.Variables = properties.ToList();
-				requestBody.Stream = stream;
+				using (GxHttpClient httpClient = AgentHttpClient(context, assistant, messages, properties, false))
+				{ 
+					await httpClient.ExecuteAsync(HttpMethod.Post.Method, string.Empty);
 
-				JsonSerializerOptions options = new JsonSerializerOptions
-				{
-					WriteIndented = true
-				};
-				string requestJson = JsonSerializer.Serialize(requestBody, options);
+					if (httpClient.StatusCode != (short)StatusCodes.Status200OK)
+					{
+						throw new Exception($"Request failed with status code: {httpClient.StatusCode}");
+					}
 
-				GXLogging.Debug(log, "Agent payload:", requestJson);
-
-				var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
-
-				HttpResponseMessage response = await _httpClient.PostAsync(_providerUri, content);
-
-				if (!response.IsSuccessStatusCode)
-				{
-					throw new Exception($"Request failed with status code: {response.StatusCode}");
+					string responseJson = await httpClient.ToStringAsync();
+					GXLogging.Debug(log, "Agent response:", responseJson);
+					ChatCompletionResult chatCompletion = JsonSerializer.Deserialize<ChatCompletionResult>(responseJson);
+					return chatCompletion;
 				}
-
-				string responseJson = await response.Content.ReadAsStringAsync();
-				GXLogging.Debug(log, "Agent response:", responseJson);
-				ChatCompletionResult chatCompletion = JsonSerializer.Deserialize<ChatCompletionResult>(responseJson);
-				return chatCompletion;
-
-
 			}
 			catch (Exception ex)
 			{
@@ -102,7 +74,57 @@ namespace GeneXus.AI
 			}
 
 		}
+		internal GxHttpClient ChatAgent(string assistant, List<Chat.ChatMessage> messages, GXProperties properties, IGxContext context)
+		{
+			try
+			{
+				GxHttpClient httpClient = AgentHttpClient(context, assistant, messages, properties, true);
 
+				httpClient.Execute(HttpMethod.Post.Method, string.Empty);
+
+				if (httpClient.StatusCode != (short)StatusCodes.Status200OK)
+				{
+					throw new Exception($"Request failed with status code: {httpClient.StatusCode}");
+				}
+
+				return httpClient;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Error calling Agent ", assistant, ex);
+				throw;
+			}
+
+		}
+		internal GxHttpClient AgentHttpClient(IGxContext context, string assistant, List<Chat.ChatMessage> messages, GXProperties properties, bool stream)
+		{
+			GxHttpClient httpClient = new GxHttpClient(context);
+			httpClient.Secure = 1;
+			httpClient.AddHeader(HttpHeader.CONTENT_TYPE, "application/json");
+			httpClient.AddHeader(HttpHeader.AUTHORIZATION, "Bearer " + API_KEY);
+			string requestJson = AgentPaylod(assistant, messages, properties, stream);
+			GXLogging.Debug(log, "Agent payload:", requestJson);
+
+			httpClient.AddString(requestJson);
+			httpClient.Url = _providerUri;
+			return httpClient;
+		}
+
+		private string AgentPaylod(string assistant, List<ChatMessage> messages, GXProperties properties, bool stream)
+		{
+			ChatRequestPayload requestBody = new ChatRequestPayload();
+			requestBody.Model = $"{SAIA_AGENT}{assistant}";
+			requestBody.Messages = messages;
+			requestBody.Variables = properties.ToList();
+			requestBody.Stream = stream;
+
+			JsonSerializerOptions options = new JsonSerializerOptions
+			{
+				WriteIndented = true
+			};
+			return JsonSerializer.Serialize(requestBody, options);
+
+		}
 
 		private static volatile AgentService m_Instance;
 		private static object m_SyncRoot = new Object();
@@ -121,17 +143,5 @@ namespace GeneXus.AI
 				return m_Instance;
 			}
 		}
-
-
 	}
-
-	internal class NoAuthHeaderHandler : DelegatingHandler
-	{
-		protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-		{
-			request.Headers.Authorization = null;
-			return await base.SendAsync(request, cancellationToken);
-		}
-	}
-
 }
