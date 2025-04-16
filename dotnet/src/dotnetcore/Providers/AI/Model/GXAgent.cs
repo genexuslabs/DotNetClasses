@@ -11,9 +11,12 @@ namespace GeneXus.AI
 	public class GXAgent : GXProcedure
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXAgent>();
-		protected string CallAssistant(string assistant, GXProperties properties, object result)
+
+		protected ChatResult ChatAgent(String agent, GXProperties properties, IList messages, CallResult result)
 		{
-			return CallAgent(assistant, properties, null, result, false);
+			//callAgent(agent, true, properties, messages, result);
+			return new ChatResult(this, agent, properties, (List<ChatMessage>)messages, result, null);
+			
 		}
 		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatMessages, object result, bool stream)
 		{
