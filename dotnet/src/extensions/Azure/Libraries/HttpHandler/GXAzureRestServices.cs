@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using GeneXus;
 using GeneXus.Application;
 using GeneXus.Cache;
@@ -12,6 +13,20 @@ namespace GxClasses.Web.Middleware
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXAzureRestService>();
 		private readonly ICacheService2 _cacheService;
+		private HttpContext _httpContext;
+
+		protected override HttpContext GetHttpContext()
+		{
+			return _httpContext;
+		}
+
+		protected void setInitialization(HttpContext httpContext) 
+		{
+			_httpContext = httpContext;
+			context = GxContext.CreateDefaultInstance();
+			SetServiceSession(httpContext.Request, httpContext.Response, httpContext);
+
+		}
 		public GXAzureRestService(ICacheService2 redis) : base()
 		{
 			if (GxContext.IsAzureContext)
@@ -29,29 +44,17 @@ namespace GxClasses.Web.Middleware
 				throw new Exception("Operation Cancelled. Not an Azure context.");
 			}
 		}
-		public void SetServiceSession(HttpRequest request, HttpResponse response, HttpContext httpContext)
+		private void SetServiceSession(HttpRequest request, HttpResponse response, HttpContext httpContext)
 		{
 			if (GxContext.IsAzureContext)
 			{
-				if ((context != null && context.HttpContext != null) && (Request != null && Response != null))
+				if (_httpContext != null)
 				{
-					GXHttpAzureContext httpAzureContext = new GXHttpAzureContext(Request, Response, _cacheService);
-					if (httpAzureContext != null && httpAzureContext.Session != null && context != null && context.HttpContext != null)
-						context.HttpContext.Session = httpAzureContext.Session;
+					GXHttpAzureContext httpAzureContext = new GXHttpAzureContext(_httpContext.Request, _httpContext.Response, _cacheService);
+					if (httpAzureContext != null && httpAzureContext.Session != null)
+						_httpContext.Session = httpAzureContext.Session;
 					else
 						GXLogging.Debug(log, $"Error : Azure Serverless session could not be created.");
-				}
-				else
-				{
-					if (context != null)
-					{
-						context.HttpContext = httpContext;
-						GXHttpAzureContext httpAzureContext = new GXHttpAzureContext(request, response, _cacheService);
-						if (httpAzureContext != null && httpAzureContext.Session != null && context != null && context.HttpContext != null)
-							context.HttpContext.Session = httpAzureContext.Session;
-						else
-							GXLogging.Debug(log, $"Error : Azure Serverless session could not be created.");
-					}
 				}
 			}
 			else
