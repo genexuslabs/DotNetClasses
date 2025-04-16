@@ -18,6 +18,10 @@ namespace GeneXus.AI
 			return new ChatResult(this, agent, properties, (List<ChatMessage>)messages, result, null);
 			
 		}
+		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatMessages, object result)
+		{
+			return CallAgent(assistant, gxproperties, chatMessages, result, false);
+		}
 		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatMessages, object result, bool stream)
 		{
 			CallResult callResult = result as CallResult;
