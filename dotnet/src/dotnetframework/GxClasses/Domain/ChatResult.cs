@@ -52,14 +52,14 @@ namespace GeneXus.AI.Chat
 				if (chatCompletion?.Choices != null && chatCompletion.Choices.Count > 0)
 				{
 					Choice choice = chatCompletion.Choices[0];
-					if (choice.FinishReason.ToLower() == ChatCompletionResult.FINISH_REASON_TOOL_CALLS && Agent != null)
+					if (!string.IsNullOrEmpty(choice.FinishReason) && choice.FinishReason.ToLower() == ChatCompletionResult.FINISH_REASON_TOOL_CALLS && Agent != null)
 					{
 						Messages.Add(choice.Message);
 						return AgentProcedure.ProcessChatResponse(choice, true, Agent, Properties, Messages, Result);
 					}
 					else
 					{
-						return choice.Message.Content ?? string.Empty;
+						return choice.Delta?.Content ?? string.Empty;
 					}
 				}
 			}
@@ -144,6 +144,9 @@ namespace GeneXus.AI.Chat
 	{
 		[JsonPropertyName("index")]
 		public int Index { get; set; }
+
+		[JsonPropertyName("delta")]
+		public ChatMessage Delta { get; set; }
 
 		[JsonPropertyName("message")]
 		public ChatMessage Message { get; set; }

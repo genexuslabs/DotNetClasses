@@ -1211,7 +1211,17 @@ namespace GeneXus.Http.Client
 		}
 		NameValueCollection _respHeaders;
 		private bool disposedValue;
+		static bool IsChunkedOrEventStream(HttpResponseMessage response)
+		{
+			if (response == null)
+				return false;
+			bool isEventStream = response.Content?.Headers.ContentType?.MediaType == "text/event-stream";
+			if (isEventStream)
+				return true;
 
+			bool isChunked = response.Headers.TransferEncodingChunked.HasValue && response.Headers.TransferEncodingChunked.Value;
+			return isChunked;
+		}
 		internal void LoadResponseHeaders(HttpResponseMessage resp)
 		{
 			_respHeaders = new NameValueCollection();
@@ -1225,7 +1235,7 @@ namespace GeneXus.Http.Client
 			{
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}
-			_isChunkedResponse = resp.Headers.TransferEncodingChunked.HasValue && resp.Headers.TransferEncodingChunked.Value;
+			_isChunkedResponse = IsChunkedOrEventStream(resp) ;
 
 			if (_response.Content.Headers.ContentType == null)
 				_charset = null;
