@@ -259,7 +259,7 @@ namespace DotNetUnitTest.Excel
 
 		}
 
-		[Fact]
+		[WindowsOnlyFact]
 
 		public void TestSetCellValues()
 		{
@@ -281,7 +281,7 @@ namespace DotNetUnitTest.Excel
 			excel.Save();
 		}
 
-		[Fact]
+		[WindowsOnlyFact]
 
 		public void TestFormulas()
 		{
@@ -450,7 +450,7 @@ namespace DotNetUnitTest.Excel
 			excel.Close();
 		}
 
-		[Fact]
+		[WindowsOnlyFact]
 
 		public void TestHiddenCells()
 		{
@@ -475,8 +475,7 @@ namespace DotNetUnitTest.Excel
 			excel.Close();
 		}
 
-		[Fact]
-
+		[WindowsOnlyFact]
 		public void TestProtectSheet()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testProtectSheet");
@@ -1080,7 +1079,7 @@ namespace DotNetUnitTest.Excel
 
 		}
 
-		[Fact]
+		[WindowsOnlyFact]
 		public void TestAutoFit()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testAutoFit");
@@ -1097,7 +1096,7 @@ namespace DotNetUnitTest.Excel
 			excel.Save();
 			excel.Close();
 		}
-		[Fact]
+		[WindowsOnlyFact]
 		public void TestDateFormat()
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testDateFormat");
