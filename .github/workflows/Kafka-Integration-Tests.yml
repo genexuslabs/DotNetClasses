@@ -17,7 +17,7 @@ jobs:
       GIT_REF: ${{ github.ref }}
       GIT_SHA: ${{ github.sha }}
       Configuration: Release
-      SolutionFile: dotnet\KafkaTestSolution.sln
+      SolutionFile: dotnet/KafkaTestSolution.sln
       SolutionFileName: KafkaTestSolution
     
     runs-on: ubuntu-latest
