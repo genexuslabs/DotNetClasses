@@ -17,9 +17,10 @@ jobs:
       GIT_REF: ${{ github.ref }}
       GIT_SHA: ${{ github.sha }}
       Configuration: Release
-      SolutionFile: dotnet\DotNetStandardClasses.sln
+      SolutionFile: dotnet\KafkaTestSolution.sln
+      SolutionFileName: KafkaTestSolution
     
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     environment: kafka-integration-tests
 
     steps:
@@ -28,19 +29,12 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Start Docker service
-      run: |
-        net start com.docker.service
-      shell: powershell
-
-    - name: Wait for Docker to be ready
-      run: |
-        timeout 15
-      shell: cmd    
+    - name: Install Docker
+      uses: docker/setup-buildx-action@v2
  
-    - name: Set up Docker Compose
+    - name: Start kafka
       run: |
-        docker-compose -f dotnet\src\extensions\kafka\test\docker-compose.yml up -d
+        docker-compose -f dotnet/src/extensions/kafka/test/docker-compose.yml up -d
       env:
         COMPOSE_DOCKER_CLI_BUILD: 1
         DOCKER_BUILDKIT: 1
@@ -51,13 +45,21 @@ jobs:
         dotnet-version: '8.x'
         include-prerelease: true
 
+    - name: Install libgdiplus
+      run: sudo apt-get install -y libgdiplus
+   
+    - name: Create temporary solution with .NET 8 projects
+      run: |
+        dotnet new sln --name $SolutionFileName --output dotnet --force
+        dotnet msbuild dotnet/DotNetStandardClasses.sln /t:DumpProjectsAndCoreTests -p:DumpSolutionName=$SolutionFileName /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
+
     - name: Restore packages
       run: dotnet restore $SolutionFile
 
     - name: Build
       run: dotnet build $SolutionFile --no-restore --configuration $Configuration
        
-    - name: Test External Storage
+    - name: Test Kafka
       env:
         KAFKA_TEST_ENABLED: "true"
       run: dotnet test $SolutionFile --no-restore --no-build --configuration $Configuration --filter FullyQualifiedName~KafkaIntegrationTest
