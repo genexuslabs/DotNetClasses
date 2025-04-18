@@ -48,18 +48,13 @@ jobs:
     - name: Install libgdiplus
       run: sudo apt-get install -y libgdiplus
    
-    - name: Create temporary solution with .NET 8 projects
+    - name: Create temporary solution with Kafka projects
       run: |
         dotnet new sln --name $SolutionFileName --output dotnet --force
-        dotnet msbuild dotnet/DotNetStandardClasses.sln /t:DumpProjectsAndCoreTests -p:DumpSolutionName=$SolutionFileName /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
-
-    - name: Restore packages
-      run: dotnet restore $SolutionFile
-
-    - name: Build
-      run: dotnet build $SolutionFile --no-restore --configuration $Configuration
-       
+        dotnet sln $SolutionFile add dotnet/src/extensions/kafka/src/Core.Messaging.csproj
+        dotnet sln $SolutionFile add dotnet/src/extensions/kafka/test/DotNetCoreKafkaTest/DotNetCoreKafkaTest.csproj 
+      
     - name: Test Kafka
       env:
         KAFKA_TEST_ENABLED: "true"
-      run: dotnet test $SolutionFile --no-restore --no-build --configuration $Configuration --filter FullyQualifiedName~KafkaIntegrationTest
+      run: dotnet test $SolutionFile --configuration $Configuration
