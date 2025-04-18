@@ -16,7 +16,7 @@ namespace KafkaIntegrationTest
 
 			_topic = $"gxtopic_{Guid.NewGuid()}";
 		}
-		[Fact]
+		[SkippableFact]
 		public void Test_Producer_And_Consumer_With_Kafka()
 		{
 			GXMessaging producer = new GXMessaging();
