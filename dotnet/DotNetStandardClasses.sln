@@ -303,7 +303,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ai", "ai", "{F45B7F31-6F9B-
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxAI", "src\dotnetcore\Providers\AI\GxAI.csproj", "{AA9CD80B-5FDC-4194-BA55-D77FC82915C3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXCompress", "src\dotnetcore\GXCompress\GXCompress.csproj", "{593E3569-1F62-4601-821B-CC96B39022F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXCompress", "src\dotnetcore\GxCompress\GXCompress.csproj", "{593E3569-1F62-4601-821B-CC96B39022F3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamSaml20Net", "src\extensions\gam\src\DotNet\GamSaml20Net\GamSaml20Net.csproj", "{8F5EABFB-5728-4E4E-B0A4-B36C3E73FEAD}"
 EndProject
@@ -311,7 +311,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamSaml20", "src\extensions
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneXus.Deploy.AzureFunctionsLibraries", "src\extensions\Azure\Libraries\GeneXus.Deploy.AzureFunctionsLibraries.csproj", "{EF17D458-A2BA-44B7-939D-CE381C4F80E9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXCompress", "src\dotnetframework\GXCompress\GXCompress.csproj", "{D741F1DC-1CD1-4AD9-9465-99B4C70F6BBB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GXCompress", "src\dotnetframework\GxCompress\GXCompress.csproj", "{D741F1DC-1CD1-4AD9-9465-99B4C70F6BBB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "kafka", "kafka", "{53823A8D-D8EF-4F51-BE5C-3569FAE6CF65}"
 EndProject
