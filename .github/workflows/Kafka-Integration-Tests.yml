@@ -27,10 +27,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-
-    - name: Install Docker
-      uses: docker/setup-buildx-action@v2
-
+ 
     - name: Set up Docker Compose
       run: |
         docker-compose -f dotnet\src\extensions\kafka\test\docker-compose.yml up -d
