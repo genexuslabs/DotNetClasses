@@ -271,9 +271,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GxSoapHandler", "src\extens
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Functions", "Functions", "{E59B3248-4C26-4DB0-96CB-67437319E22B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXCompress", "src\dotnetcore\GXCompress\GXCompress.csproj", "{593E3569-1F62-4601-821B-CC96B39022F3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXCompress", "src\dotnetcore\GxCompress\GXCompress.csproj", "{593E3569-1F62-4601-821B-CC96B39022F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXCompress", "src\dotnetframework\GXCompress\GXCompress.csproj", "{BB15EBF6-778A-4A6A-AF82-C110DC326E29}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXCompress", "src\dotnetframework\GxCompress\GXCompress.csproj", "{BB15EBF6-778A-4A6A-AF82-C110DC326E29}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
