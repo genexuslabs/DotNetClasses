@@ -34,7 +34,7 @@ jobs:
  
     - name: Start kafka
       run: |
-        docker-compose -f dotnet/src/extensions/kafka/test/docker-compose.yml up -d
+        docker compose -f dotnet/src/extensions/kafka/test/docker-compose.yml up -d
       env:
         COMPOSE_DOCKER_CLI_BUILD: 1
         DOCKER_BUILDKIT: 1
