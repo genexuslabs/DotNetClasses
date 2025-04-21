@@ -2,14 +2,14 @@
 
 GeneXus Messaging EXO for Apache Kafka provides a Producer and Consumer API to integrate GeneXus applications with Apache Kafka, enabling publish-subscribe and stream processing capabilities.
 
-###Features###
+## Features ##
 -	Producer API: Publish messages to Kafka topics.
 -	Consumer API: Subscribe to Kafka topics and process messages.
 
-###Prerequisites###
+## Prerequisites ##
 -	Apache Kafka: Ensure you have a running Kafka instance. You can use Confluent Kafka or set up Kafka locally using Docker.
 
-###Setting up Kafka with Docker###
+## Setting up Kafka with Docker ##
 
 You can use the docker-compose.yml file included in this repository to quickly set up a Kafka environment. The file is located at:
 dotnet/src/extensions/kafka/test/docker-compose.yml
@@ -26,5 +26,5 @@ dotnet/src/extensions/kafka/test/docker-compose.yml
   
 4.	Once the containers are running, you can use the Producer and Consumer APIs to interact with Kafka.
 
-###Documentation###
-For detailed documentation, visit https://iwiki.genexus.com/wiki.aspx?25021,API+GX+para+Integraci%C3%B3n+con+Apache+Kafka+(Publish-Suscribe+Stream),
+## Documentation ##
+For detailed documentation, visit https://wiki.genexus.com/commwiki/wiki?40593,Kafka+Producer+and+Consumer+External+Objects
