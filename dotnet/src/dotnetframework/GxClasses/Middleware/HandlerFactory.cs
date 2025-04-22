@@ -258,11 +258,13 @@ namespace GeneXus.HttpHandlerFactory
 			}
 			else
 			{
+				bool pathFound = false;
 				mapRegexp = mapName;
 				foreach (SingleMap m in GXAPIModule.servicesMap[actualPath].Values)
-				{
+				{					
 					if (!m.Path.Equals(m.PathRegexp) && GxRegex.IsMatch(objectName, m.PathRegexp))
 					{
+						pathFound = true;
 						methodMismatch = false;
 						// regexp URL match
 						mapName = m.Name;
@@ -280,16 +282,16 @@ namespace GeneXus.HttpHandlerFactory
 							}
 							methodMismatch = false;
 							return true;
-						}
-						else
-						{
-							mapName = null;
-							mapRegexp = null;
-							routeParms = null;
-							methodMismatch = true;
-							return false;
-						}
+						}						
 					}
+				}
+				if (pathFound)
+				{
+					mapName = null;
+					mapRegexp = null;
+					routeParms = null;
+					methodMismatch = true;
+					return false;
 				}
 			}
 			return false;
