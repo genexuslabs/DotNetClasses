@@ -6,9 +6,6 @@
 		<AssemblyName>GxCompress</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
-	  <PackageReference Include="SharpCompress" Version="0.39.0" />
-	</ItemGroup>
-	<ItemGroup>
 	  <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
 
