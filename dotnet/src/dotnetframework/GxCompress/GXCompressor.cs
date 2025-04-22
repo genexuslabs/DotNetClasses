@@ -1,20 +1,13 @@
-using GeneXus.Utils;
-using GeneXus;
-using System.IO.Compression;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System;
-using System.Linq;
+using System.IO.Compression;
 using System.Security;
+using GeneXus;
+using GeneXus.Utils;
 
 #if NETCORE
 using System.Formats.Tar;
-#else
-using SharpCompress.Writers.Tar;
-using SharpCompress.Readers.Tar;
-using SharpCompress.Common;
-using SharpCompress.Readers;
-using SharpCompress.Writers;
 #endif
 
 namespace Genexus.Compression
@@ -160,12 +153,14 @@ namespace Genexus.Compression
 					case "zip":
 						CompressToZip(toCompress, path);
 						break;
+#if NETCORE
 					case "tar":
 						CompressToTar(toCompress, path);
 						break;
 					case "gz":
 						CompressToGzip(toCompress, path);
 						break;
+#endif
 					case "jar":
 						CompressToJar(toCompress, path);
 						break;
@@ -325,12 +320,14 @@ namespace Genexus.Compression
 					case "zip":
 						DecompressZip(archiveFile, path);
 						break;
+#if NETCORE
 					case "tar":
 						DecompressTar(archiveFile, path);
 						break;
 					case "gz":
 						DecompressGzip(archiveFile, path);
 						break;
+#endif
 					case "jar":
 						DecompressJar(archiveFile, path);
 						break;
@@ -421,45 +418,8 @@ namespace Genexus.Compression
 				}
 			}
 		}
-#else
-		[SecurityCritical]
-		private static void CompressToTar(FileInfo[] files, string outputPath)
-		{
-			if (string.IsNullOrEmpty(outputPath))
-				throw new ArgumentException("The output path must not be null or empty");
 
-			if (File.Exists(outputPath))
-				throw new IOException("Output file already exists");
 
-			using (var output = File.Create(outputPath))
-			using (var tarWriter = WriterFactory.Open(output, ArchiveType.Tar, CompressionType.None))
-			{
-				foreach (var file in files)
-				{
-					if (file == null || !file.Exists) continue;
-					AddFileToTar(tarWriter, file, file.Name);
-				}
-			}
-		}
-		[SecurityCritical]
-		private static void AddFileToTar(IWriter writer, FileSystemInfo file, string entryName)
-		{
-			if (file is DirectoryInfo dir)
-			{
-				foreach (var child in dir.GetFileSystemInfos())
-				{
-					string childEntryName = Path.Combine(entryName, child.Name).Replace("\\", "/"); // Normalizar nombres en TAR
-					AddFileToTar(writer, child, childEntryName);
-				}
-			}
-			else if (file is FileInfo fileInfo)
-			{
-				writer.Write(entryName, fileInfo.FullName);
-			}
-		}
-
-#endif
-		[SecurityCritical]
 		private static void CompressToGzip(FileInfo[] files, string outputPath)
 		{
 			if (files == null || files.Length == 0)
@@ -505,11 +465,7 @@ namespace Genexus.Compression
 						}
 					}
 					string tarFilePath = Path.GetTempFileName();
-#if NETCORE
-            TarFile.CreateFromDirectory(tarTemp, tarFilePath, false);
-#else
-					CreateTarFromDirectory(tarTemp, tarFilePath);
-#endif
+					TarFile.CreateFromDirectory(tarTemp, tarFilePath, false);
 					Directory.Delete(tarTemp, true);
 					using (FileStream tfs = File.OpenRead(tarFilePath))
 					using (FileStream fos = File.Create(tempFile))
@@ -547,21 +503,6 @@ namespace Genexus.Compression
 			{
 				if (File.Exists(tempFile))
 					File.Delete(tempFile);
-			}
-		}
-
-#if !NETCORE
-		[SecurityCritical]
-		private static void CreateTarFromDirectory(string sourceDirectory, string tarFilePath)
-		{
-			using (var stream = File.Create(tarFilePath))
-			using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
-			{
-				foreach (string filePath in Directory.GetFiles(sourceDirectory, "*", SearchOption.AllDirectories))
-				{
-					string entryName = filePath.Substring(sourceDirectory.Length).TrimStart(Path.DirectorySeparatorChar);
-					writer.Write(entryName, filePath);
-				}
 			}
 		}
 #endif
@@ -665,6 +606,7 @@ namespace Genexus.Compression
 				}
 			}
 		}
+#if NETCORE
 
 		private static void DecompressTar(FileInfo file, string outputPath)
 		{
@@ -675,26 +617,10 @@ namespace Genexus.Compression
 			Directory.CreateDirectory(outputPath);
 			using (FileStream fs = file.OpenRead())
 			{
-#if NETCORE
 				TarFile.ExtractToDirectory(fs, outputPath, overwriteFiles: true);
-#else
-				var reader = ReaderFactory.Open(fs);
-				while (reader.MoveToNextEntry())
-				{
-					if (!reader.Entry.IsDirectory)
-					{
-						ExtractionOptions opt = new ExtractionOptions
-						{
-							ExtractFullPath = true,
-							Overwrite = true
-						};
-						reader.WriteEntryToDirectory(outputPath, opt);
-					}
-				}
-#endif
 			}
 		}
-		[SecurityCritical]
+
 		private static void DecompressGzip(FileInfo file, string outputPath)
 		{
 
@@ -714,7 +640,6 @@ namespace Genexus.Compression
 			bool isTar = true;
 			try
 			{
-#if NETCORE
 				using (FileStream tfs = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
 				{
 					using (TarReader tarReader = new TarReader(tfs))
@@ -724,7 +649,6 @@ namespace Genexus.Compression
 							isTar = false;
 					}
 				}
-#endif
 			}
 			catch { }
 
@@ -732,23 +656,7 @@ namespace Genexus.Compression
 			{
 				using (FileStream tfs = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
 				{
-#if NETCORE
 					TarFile.ExtractToDirectory(tfs, outputPath, overwriteFiles: true);
-#else
-					var reader = ReaderFactory.Open(tfs);
-					while (reader.MoveToNextEntry())
-					{
-						if (!reader.Entry.IsDirectory)
-						{
-							ExtractionOptions opt = new ExtractionOptions
-							{
-								ExtractFullPath = true,
-								Overwrite = true
-							};
-							reader.WriteEntryToDirectory(outputPath, opt);
-						}
-					}
-#endif
 				}
 			}
 			else
@@ -779,7 +687,7 @@ namespace Genexus.Compression
 				File.Delete(tempFile);
 		}
 
-
+#endif
 		private static void DecompressJar(FileInfo file, string outputPath)
 		{
 			if (file == null || !file.Exists)
