@@ -285,8 +285,8 @@ namespace GeneXus.HttpHandlerFactory
 						}						
 					}
 				}
-				if (pathFound)
-				{
+				if (pathFound && !requestType.Equals( HttpMethod.Options.Method))
+				{					
 					mapName = null;
 					mapRegexp = null;
 					routeParms = null;
