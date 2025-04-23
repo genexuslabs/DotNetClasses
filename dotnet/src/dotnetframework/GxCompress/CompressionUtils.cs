@@ -59,6 +59,11 @@ namespace Genexus.Compression
 		{
 			string ext = (Path.GetExtension(archiveFile.Name)?.TrimStart('.').ToLowerInvariant()) ?? "";
 			string normalizedTarget = Path.GetFullPath(targetDir);
+			if (!normalizedTarget.EndsWith(Path.DirectorySeparatorChar.ToString()))
+			{
+				normalizedTarget += Path.DirectorySeparatorChar;
+			}
+
 			switch (ext)
 			{
 				case "zip":
@@ -69,13 +74,14 @@ namespace Genexus.Compression
 						foreach (ZipArchiveEntry entry in zip.Entries)
 						{
 							string destinationPath = Path.GetFullPath(Path.Combine(normalizedTarget, entry.FullName));
-							if (!destinationPath.StartsWith(normalizedTarget + Path.DirectorySeparatorChar, StringComparison.Ordinal) && destinationPath != normalizedTarget)
+							if (!destinationPath.StartsWith(normalizedTarget, StringComparison.Ordinal))
 							{
 								return false;
 							}
 						}
 					}
 					return true;
+
 #if NETCORE
 				case "tar":
 					using (FileStream stream = archiveFile.OpenRead())
@@ -84,8 +90,8 @@ namespace Genexus.Compression
 						TarEntry? entry;
 						while ((entry = reader.GetNextEntry()) != null)
 						{
-							string destinationPath = Path.GetFullPath(Path.Combine(normalizedTarget, entry.Name));
-							if (!destinationPath.StartsWith(normalizedTarget + Path.DirectorySeparatorChar, StringComparison.Ordinal) && destinationPath != normalizedTarget)
+							string destinationPath = Path.GetFullPath(Path.Combine(normalizedTarget, entry.Name.Replace('/', Path.DirectorySeparatorChar)));
+							if (!destinationPath.StartsWith(normalizedTarget, StringComparison.Ordinal))
 							{
 								return false;
 							}
@@ -93,19 +99,22 @@ namespace Genexus.Compression
 					}
 					return true;
 #endif
+
 				case "gz":
 					string fileName = archiveFile.Name;
 					if (fileName.EndsWith(".gz") && fileName.Length > 3)
 					{
 						string extractedName = fileName.Substring(0, fileName.Length - 3);
 						string destinationPath = Path.GetFullPath(Path.Combine(normalizedTarget, extractedName));
-						return destinationPath.StartsWith(normalizedTarget + Path.DirectorySeparatorChar, StringComparison.Ordinal) || destinationPath == normalizedTarget;
+						return destinationPath.StartsWith(normalizedTarget, StringComparison.Ordinal);
 					}
 					return true;
+
 				default:
 					throw new ArgumentException("Unsupported archive format: " + ext);
 			}
 		}
+
 
 		/**
 		 * Gets the maximum file size of any entry in the archive.
