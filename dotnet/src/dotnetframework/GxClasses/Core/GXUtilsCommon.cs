@@ -2850,6 +2850,32 @@ namespace GeneXus.Utils
 				return CToD2(jsonDate);
 			}
 		}
+		public static DateTime CToH2(string value)
+		{
+			if (isNullJsonDate(value))
+				return nullDate;
+			else
+			{
+				DateTime timeOnlyDateTime = nullDate;
+				TimeSpan timeSpan;
+				if (TimeSpan.TryParse(value, out timeSpan))
+				{
+					timeOnlyDateTime = DateTime.MinValue.Add(timeSpan);
+				}
+				else if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out timeOnlyDateTime))
+				{
+					timeOnlyDateTime = ResetDate(timeOnlyDateTime);
+				}
+				else if (value.StartsWith(GxDateString.NullValue))
+				{
+					value = value.Substring(GxDateString.NullValue.Length);
+					DateTime.TryParse(GxDateString.GregorianDate + value, CultureInfo.InvariantCulture, DateTimeStyles.None, out timeOnlyDateTime);
+
+				}
+
+				return timeOnlyDateTime;
+			}
+		}
 		public static DateTime CToT2(string value, IGxContext context)
 		{
 			if (isNullJsonDate(value))
@@ -2889,6 +2915,10 @@ namespace GeneXus.Utils
 		public static string TToC2(DateTime dt, IGxContext context)
 		{
 			return TToC2(dt, true, context);
+		}
+		public static string HToC2(DateTime dt)
+		{
+			return TToC2(dt, false);
 		}
 		//[Obsolete("TToC2 is deprecated, use TToC2(DateTime, bool, IGxContext) instead", false)]
 		public static string TToC2(DateTime dt, bool toUTC)
