@@ -642,12 +642,9 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					if (IsHttpContext)
-						return new GxNullContext(new ArrayList());
-					else
-						return _currentBatchGxContext;
+					return _currentBatchGxContext;
 				}
-				return _currentBatchGxContext;
+				return null;
 #endif
 			}
 		}
