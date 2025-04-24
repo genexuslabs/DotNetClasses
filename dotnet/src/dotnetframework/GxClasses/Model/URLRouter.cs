@@ -131,7 +131,12 @@ namespace GeneXus.Application
 						string objectName = map[0];
 						string url = map[1];
 						url = url.Replace(@"\=", "=").Replace(@"\\", @"\");
-						routerList[$"{NormalizedUrlObjectName(objectName)}.aspx"] = url;
+#if NETCORE
+						routerList[$"{NormalizedUrlObjectName(objectName)}"] = url;
+						routerList[$"{NormalizedUrlObjectName(objectName)}{HttpHelper.ASPX}"] = url;
+#else
+						routerList[$"{NormalizedUrlObjectName(objectName)}{HttpHelper.ASPX}"] = url;
+#endif
 					}
 				}
 			}

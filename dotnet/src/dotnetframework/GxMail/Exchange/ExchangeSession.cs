@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
+using GeneXus.Mail.Util;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Identity.Client;
 
@@ -383,8 +384,8 @@ namespace GeneXus.Mail.Exchange
 						if (attach is FileAttachment)
 						{
 							FileAttachment fileAttachment = attach as FileAttachment;
-							string attachFileName = fileAttachment.Name;
-							string filePath = System.IO.Path.Combine(_attachDir, attachFileName);
+							string attachFileName = GXMailHelper.FixAndEnsureUniqueFileName(_attachDir, fileAttachment.Name);
+							string filePath = Path.Combine(_attachDir, attachFileName);
 							fileAttachment.Load(filePath);
 							gxmessage.Attachments.addNew(attachFileName);
 						}
