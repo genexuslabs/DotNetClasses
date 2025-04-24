@@ -86,12 +86,15 @@ namespace GeneXus.Utils
 			context.HttpContext.NewSessionCheck();
 			ServiceHeaders();
 		}
-
+		//Renamed to LoadSdt
 		protected T ToInternalModel<T>(GxGenericCollectionItem<T> restSDT) where T : GxUserType, new()
+		{
+			return LoadSdt<T>(restSDT);
+		}
+		protected T LoadSdt<T>(GxGenericCollectionItem<T> restSDT) where T : GxUserType, new()
 		{
 			if (restSDT != null)
 			{
-				restSDT.Sdt.Localize(context);
 				restSDT.Sdt.context = context;
 				return restSDT.InternalSdt;
 			}
@@ -111,7 +114,6 @@ namespace GeneXus.Utils
 				restModel.LoadCollection(internalModel);
 				foreach (GxUserType item in internalModel)
 				{
-					item.Localize(context);
 					item.context = context;
 				}
 			}
