@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using Azure.Storage.Queues.Models;
 using GeneXus.Application;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
@@ -11,6 +13,7 @@ using GeneXus.Metadata;
 using GeneXus.Utils;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using static GeneXus.Deploy.AzureFunctions.QueueHandler.QueueTriggerHandler.CustomQueueMessage;
 
 namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 {
@@ -96,7 +99,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 
 							if (parameters[0].ParameterType == typeof(string))
 							{
-								string queueMessageSerialized = JSONHelper.Serialize(queueMessage);
+								string queueMessageSerialized = JsonSerializer.Serialize(GetSerializableMessage(queueMessage));
 								parametersdata = new object[] { queueMessageSerialized, null };
 							}
 							else
@@ -211,6 +214,45 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 			{
 				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Message Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, queueMessage.MessageId);
 				throw new Exception(exMessage);
+			}
+		}
+
+		private CustomQueueMessage GetSerializableMessage(QueueMessage queueMessage)
+		{
+			CustomQueueMessage message = new CustomQueueMessage();
+			message.Id = queueMessage.MessageId;
+			message.Body = queueMessage.Body.ToString();
+			List<MessageProperty> messageProperties = new List<MessageProperty>();
+			
+			messageProperties.Add(new MessageProperty("QueueTrigger",queueMessage.Body.ToString()));
+			messageProperties.Add(new MessageProperty("DequeueCount", queueMessage.DequeueCount.ToString()));
+			messageProperties.Add(new MessageProperty("ExpiresOn", queueMessage.ExpiresOn.HasValue ? queueMessage.ExpiresOn.Value.ToString("o") : string.Empty));
+			messageProperties.Add(new MessageProperty("Id", queueMessage.MessageId));
+			messageProperties.Add(new MessageProperty("InsertedOn", queueMessage.InsertedOn.HasValue ? queueMessage.InsertedOn.Value.ToString("o") : string.Empty));
+			messageProperties.Add(new MessageProperty("NextVisibleOn", queueMessage.NextVisibleOn.HasValue ? queueMessage.NextVisibleOn.Value.ToString("o") : string.Empty));
+			messageProperties.Add(new MessageProperty("PopReceipt", queueMessage.PopReceipt));
+
+			message.MessageProperties = messageProperties;
+			return message;
+		}
+
+		[Serializable]
+		internal class CustomQueueMessage
+		{
+			public CustomQueueMessage()
+			{ }
+
+			internal List<MessageProperty> MessageProperties;
+			public string Id { get; set; }
+			public string Body { get; set; }
+			internal class MessageProperty
+			{
+				public string key { get; set; }
+				public string value { get; set; }
+				internal MessageProperty(string k,string v)
+				{
+					key = k; value = v;
+				}
 			}
 		}
 	}
