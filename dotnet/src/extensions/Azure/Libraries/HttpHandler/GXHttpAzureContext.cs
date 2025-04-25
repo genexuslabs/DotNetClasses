@@ -8,7 +8,6 @@ using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Azure.Functions.Worker.Http;
 using StackExchange.Redis;
 
 namespace GeneXus.Deploy.AzureFunctions.HttpHandler
@@ -17,12 +16,19 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 	{
 		private ICacheService2 _redis;
 		private string sessionId;
-		private ISession session;
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXHttpAzureContext>();
 		internal const string AZURE_SESSIONID = "GX_AZURE_SESSIONID";
 
-		public ISession Session => session;
-		
+		public ISession Session
+		{
+			get
+			{
+				if ((_redis != null) & (sessionId != null))
+					return new RedisHttpSession(_redis, sessionId);
+				else return new MockHttpSession();
+			}
+		}
+
 		public GXHttpAzureContext( HttpRequest request, HttpResponse response, ICacheService2 redis)
 		{			
 			bool isSecure = IsSecureConnection(request);
@@ -35,17 +41,12 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			
 			if (string.IsNullOrEmpty(sessionId) && request != null)
 				CreateSessionId(isSecure, response, request);
-			
-			if ((_redis != null) && (sessionId != null))
-				session = new RedisHttpSession(_redis, sessionId);
-			else
-				session = new MockHttpSession();
 
 			if (!string.IsNullOrEmpty(sessionId))
 			{//Refresh the session timestamp
-				if (session is RedisHttpSession)
+				if (Session is RedisHttpSession)
 				{
-					RedisHttpSession redisHttpSession = (RedisHttpSession)session;
+					RedisHttpSession redisHttpSession = (RedisHttpSession)Session;
 					//Check if session is in cache
 					if (redisHttpSession.SessionKeyExists(sessionId))
 					{
@@ -55,7 +56,6 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 					}
 				}
 			}
-
 		}
 		private bool GetSecureConnection(string headerKey, string headerValue)
 		{
