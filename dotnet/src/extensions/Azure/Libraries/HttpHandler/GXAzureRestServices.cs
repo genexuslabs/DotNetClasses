@@ -4,6 +4,7 @@ using GeneXus;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Deploy.AzureFunctions.HttpHandler;
+using GeneXus.Http;
 using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
 
@@ -24,6 +25,7 @@ namespace GxClasses.Web.Middleware
 		{
 			_httpContext = httpContext;
 			context = GxContext.CreateDefaultInstance();
+			context.HttpContext = GetHttpContext();
 			SetServiceSession(httpContext.Request, httpContext.Response, httpContext);
 
 		}
@@ -52,7 +54,11 @@ namespace GxClasses.Web.Middleware
 				{
 					GXHttpAzureContext httpAzureContext = new GXHttpAzureContext(_httpContext.Request, _httpContext.Response, _cacheService);
 					if (httpAzureContext != null && httpAzureContext.Session != null)
+					{
 						_httpContext.Session = httpAzureContext.Session;
+						context.HttpContext.NewSessionCheck();
+					}
+
 					else
 						GXLogging.Debug(log, $"Error : Azure Serverless session could not be created.");
 				}
