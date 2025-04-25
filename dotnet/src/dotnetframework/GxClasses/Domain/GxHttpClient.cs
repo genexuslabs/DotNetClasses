@@ -903,8 +903,13 @@ namespace GeneXus.Http.Client
 					EndMultipartBoundary(reqStream);
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
 					reqStream.Seek(0, SeekOrigin.Begin);
-					request.Content = new ByteArrayContent(reqStream.ToArray());
-					setContentHeaders(request, contentType);
+					if (reqStream.Length > 0)
+					{
+						request.Content = new ByteArrayContent(reqStream.ToArray());
+						setContentHeaders(request, contentType);
+					}
+					else
+						GXLogging.Debug(log, "No content to send, skipping request.Content assignment.");
 #if NETCORE
 					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
 					response.ExtractCookies(cookies);
@@ -961,8 +966,15 @@ namespace GeneXus.Http.Client
 					EndMultipartBoundary(reqStream);
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
 					reqStream.Seek(0, SeekOrigin.Begin);
-					request.Content = new ByteArrayContent(reqStream.ToArray());
-					setContentHeaders(request, contentType);
+
+					if (reqStream.Length > 0)
+					{
+						request.Content = new ByteArrayContent(reqStream.ToArray());
+						setContentHeaders(request, contentType);
+					}
+					else
+						GXLogging.Debug(log, "No content to send, skipping request.Content assignment.");
+
 					response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 					response.ExtractCookies(cookies);
 				}
