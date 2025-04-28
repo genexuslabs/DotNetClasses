@@ -2853,11 +2853,12 @@ namespace GeneXus.Utils
 		public static GxSimpleCollection<DateTime> CToT2(GxSimpleCollection<string> stCollection, IGxContext context)
 		{
 			GxSimpleCollection<DateTime> dtCollection = new GxSimpleCollection<DateTime>();
-			foreach(string st in stCollection)
+			foreach (string st in stCollection)
 			{
 				dtCollection.Add(CToT2(st, context));
 			}
 			return dtCollection;
+		}
 		public static DateTime CToH2(string value)
 		{
 			if (isNullJsonDate(value))
