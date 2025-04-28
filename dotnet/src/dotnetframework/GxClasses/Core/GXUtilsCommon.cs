@@ -2850,6 +2850,15 @@ namespace GeneXus.Utils
 				return CToD2(jsonDate);
 			}
 		}
+		public static GxSimpleCollection<DateTime> CToT2(GxSimpleCollection<string> stCollection, IGxContext context)
+		{
+			GxSimpleCollection<DateTime> dtCollection = new GxSimpleCollection<DateTime>();
+			foreach (string st in stCollection)
+			{
+				dtCollection.Add(CToT2(st, context));
+			}
+			return dtCollection;
+		}
 		public static DateTime CToH2(string value)
 		{
 			if (isNullJsonDate(value))
@@ -2916,10 +2925,21 @@ namespace GeneXus.Utils
 		{
 			return TToC2(dt, true, context);
 		}
+		public static GxSimpleCollection<string> TToC2(GxSimpleCollection<DateTime> dtCollection, IGxContext context)
+		{
+			GxSimpleCollection<string> stCollection = new GxSimpleCollection<string>();
+			foreach(DateTime dt in dtCollection)
+			{
+				stCollection.Add(TToC2(dt, true, context));
+			}
+			return stCollection;
+		}
+		
 		public static string HToC2(DateTime dt)
 		{
 			return TToC2(dt, false);
 		}
+
 		//[Obsolete("TToC2 is deprecated, use TToC2(DateTime, bool, IGxContext) instead", false)]
 		public static string TToC2(DateTime dt, bool toUTC)
 		{
