@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
@@ -124,10 +125,28 @@ namespace GeneXus.Application
 	}
 	public class CustomBadRequestObjectResult : ObjectResult
 	{
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(CustomBadRequestObjectResult).FullName);
 		public CustomBadRequestObjectResult(ActionContext context)
 			: base(HttpHelper.GetJsonError(StatusCodes.Status400BadRequest.ToString(), HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest)))
 		{
+			LogErrorResponse(context);
 			StatusCode = StatusCodes.Status400BadRequest;
+		}
+		static void LogErrorResponse(ActionContext context)
+		{
+			if (log.IsErrorEnabled)
+			{
+				foreach (KeyValuePair<string, ModelStateEntry> entry in context.ModelState)
+				{
+					if (entry.Value.Errors.Count > 0)
+					{
+						foreach (ModelError error in entry.Value.Errors)
+						{
+							GXLogging.Error(log, "Field ", entry.Key, "Errors:", error.ErrorMessage);
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -268,15 +287,26 @@ namespace GeneXus.Application
 		private void RegisterControllerAssemblies(IMvcBuilder mvcBuilder)
 		{
 			
-			if (RestAPIHelpers.ServiceAsController() && !string.IsNullOrEmpty(VirtualPath))
+			if (RestAPIHelpers.ServiceAsController())
 			{
-				mvcBuilder.AddMvcOptions(options =>	options.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath))));
+				mvcBuilder.AddMvcOptions(options => options.ModelBinderProviders.Insert(0, new QueryStringModelBinderProvider()));
+				if (!string.IsNullOrEmpty(VirtualPath))
+				{
+					mvcBuilder.AddMvcOptions(options => options.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath))));
+				}
 			}
 
 			if (RestAPIHelpers.JsonSerializerCaseSensitive())
 			{
 				mvcBuilder.AddJsonOptions(options => options.JsonSerializerOptions.PropertyNameCaseInsensitive = false);
 			}
+
+			mvcBuilder.AddJsonOptions(options =>
+			{
+				options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString;
+				options.JsonSerializerOptions.Converters.Add(new StringConverter());
+			});
+
 			mvcBuilder.ConfigureApiBehaviorOptions(options =>
 			{
 				options.InvalidModelStateResponseFactory = context =>
@@ -427,11 +457,12 @@ namespace GeneXus.Application
 				});
 			}
 		}
-		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory)
+		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
 			LogConfiguration.SetupLog4Net();
-			
+			AppContext.Configure(contextAccessor);
+
 			var provider = new FileExtensionContentTypeProvider();
 			//mappings
 			provider.Mappings[".json"] = "application/json";

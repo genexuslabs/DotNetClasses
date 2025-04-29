@@ -18,6 +18,7 @@
 		<HttpSupport>true</HttpSupport>
 		<BlobSupport>true</BlobSupport>
 		<EventGridSupport>true</EventGridSupport>
+		<IntegratedSecuritySupport>true</IntegratedSecuritySupport>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -59,12 +60,17 @@
 
 	<ItemGroup Condition="'$(HttpSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.2.0" />
-		<Compile Include="HttpHandler\*" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(EventGridSupport)' == 'true'">
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.EventGrid" Version="3.4.2" />
 		<Compile Include="EventGridHandler\EventGridTriggerHandlerCloud.cs;EventGridHandler\EventGridTriggerHandlerAzure.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Include="GAMAzureFunctions\GAMFunctions.cs" Condition="'$(IntegratedSecuritySupport)' == 'true'" />
+	  <Compile Include="HttpHandler\GXHttpAzureContextAccessor.cs" />
+	  <Compile Include="HttpHandler\RedisHttpSession.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

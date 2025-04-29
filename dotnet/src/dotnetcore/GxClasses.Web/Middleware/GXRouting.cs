@@ -183,7 +183,7 @@ namespace GxClasses.Web.Middleware
 		{
 			try
 			{
-				if (context.GetType()==typeof(DefaultHttpContext))
+				if (!AzureRuntime && context.GetType() == typeof(DefaultHttpContext))
 				{
 					IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
 					context = new GxHttpContextAccesor(contextAccessor);
@@ -311,7 +311,7 @@ namespace GxClasses.Web.Middleware
 			string pathWithNoBase = string.IsNullOrEmpty(basePath) ? path.Substring(1) : path.Substring(basePath.Length + 2);
 
 			//API Objects
-			string AzureFunctionShortName = AzureFunctionName.Substring(AzureFunctionName.LastIndexOf(".") + 1);
+			string AzureFunctionShortName = AzureFunctionName.Substring(AzureFunctionName.LastIndexOf("_") + 1);
 			string controllerWithParms = "";
 			foreach (var map in servicesMap)
 			{
