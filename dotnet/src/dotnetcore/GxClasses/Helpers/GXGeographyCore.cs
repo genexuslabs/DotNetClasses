@@ -28,15 +28,15 @@ namespace GeneXus.Utils
 			get;
 			set;
 		}
-		void FromString(String s);
-		String ToStringSQL();
-		String ToStringSQL(String defaultString);
+		void FromString(string s);
+		string ToStringSQL();
+		string ToStringSQL(string defaultString);
 	}
 
 	class NTSGeographyWrapper
 	{
 
-		internal static object Parse(String geoText)
+		internal static object Parse(string geoText)
 		{
 			WKTReader reader = new WKTReader();
 			var geodata = reader.Read(geoText);
@@ -48,7 +48,7 @@ namespace GeneXus.Utils
 				return null;
 		}
 
-		internal static object GeometryParse(String geoText)
+		internal static object GeometryParse(string geoText)
 		{
 			return NTSGeographyWrapper.Parse(geoText);
 		}
@@ -223,37 +223,36 @@ namespace GeneXus.Utils
 		
 		public enum GeoGraphicTypeValue { Point, MultiPoint, Line, MultiLine, Polygon, MultiPolygon, Other };
 
-		public static explicit operator Geospatial(String s)
+		public static explicit operator Geospatial(string s)
 		{
 			return new Geospatial(s);
 		}
 
-		public static explicit operator String(Geospatial g)
+		public static explicit operator string(Geospatial g)
 		{
 			return g.ToString();
 		}
 
-		public Geospatial(String value)
+		public Geospatial(string value)
 		{
-			String s = value.ToString();
-			InitGeo(s);
+			InitGeo(value);
 		}
 
 		public Geospatial(Decimal latitude, Decimal longitude)
 		{			
-			String wktBuffer = "POINT";
+			string wktBuffer = "POINT";
 			wktBuffer += "(" + longitude.ToString("G17", CultureInfo.InvariantCulture) + " " + latitude.ToString("G17", CultureInfo.InvariantCulture) + ")";
 			InitGeo(wktBuffer);
 		}
 
 		public Geospatial(Double latitude, Double longitude)
 		{			
-			String wktBuffer = "POINT";
+			string wktBuffer = "POINT";
 			wktBuffer += "(" + ((Double)longitude).ToString("G17", CultureInfo.InvariantCulture) + " " + ((Double)latitude).ToString("G17", CultureInfo.InvariantCulture) + ")";
 			InitGeo(wktBuffer);
 		}
 
-		public Geospatial(String value, String format)
+		public Geospatial(string value, string format)
 		{
 			if (format == "wkt")
 			{
@@ -262,7 +261,7 @@ namespace GeneXus.Utils
 			else
 			{
 				initInstanceVars();
-				this.FromJSON(value.ToString());
+				this.FromJSON(value);
 			}
 		}
 
@@ -279,7 +278,9 @@ namespace GeneXus.Utils
 			}
 			else
 			{
-				String s = value.ToString();
+				string s = null;
+				if (value!=null)
+					s = value.ToString();
 				InitGeo(s);
 			}
 		}
@@ -346,7 +347,7 @@ namespace GeneXus.Utils
 
 		}
 
-		void setGXGeoType(String GeographicTypeString)
+		void setGXGeoType(string GeographicTypeString)
 		{
 			switch (GeographicTypeString)
 			{
@@ -411,14 +412,14 @@ namespace GeneXus.Utils
 			}
 		}
 
-		internal String JSONPointToWKT(JArray coords)
+		internal string JSONPointToWKT(JArray coords)
 		{
-			String[] jbuffer = new String[] { "", "" };
+			string[] jbuffer = new string[] { "", "" };
 			jbuffer[0] = "";
 			jbuffer[1] = "";
-			if (coords[0].GetType().Equals(typeof(String)))
+			if (coords[0].GetType().Equals(typeof(string)))
 			{
-				jbuffer[0] = (String)coords[0];
+				jbuffer[0] = (string)coords[0];
 				jbuffer[0] = jbuffer[0].Replace(',', '.');
 			}
 			else if (coords[0].GetType().Equals(typeof(int)) || coords[0].GetType().Equals(typeof(long)))
@@ -428,9 +429,9 @@ namespace GeneXus.Utils
 			else
 				jbuffer[0] = Convert.ToDouble(coords[0]).ToString("G17", CultureInfo.InvariantCulture);
 
-			if (coords[1].GetType().Equals(typeof(String)))
+			if (coords[1].GetType().Equals(typeof(string)))
 			{
-				jbuffer[1] = (String)coords[1];
+				jbuffer[1] = (string)coords[1];
 				jbuffer[1] = jbuffer[1].Replace(',', '.');
 			}
 			else if (coords[1].GetType().Equals(typeof(int)) || coords[1].GetType().Equals(typeof(long)))
@@ -442,37 +443,37 @@ namespace GeneXus.Utils
 			return (jbuffer[0] + " " + jbuffer[1]);
 		}
 
-		public void FromJSON(String s)
+		public void FromJSON(string s)
 		{
 			JObject geoObject = JSONHelper.ReadJSON<JObject>(s);
 			if (geoObject != null)
 			{
 				JObject geometry = (JObject)geoObject["geometry"];
-				String featuretype = "";
+				string featuretype = "";
 				JArray coords;
-				String wktBuffer = "";
+				string wktBuffer = "";
 				if (geometry == null)
 				{
-					featuretype = (String)geoObject["type"];
+					featuretype = (string)geoObject["type"];
 					coords = (JArray)geoObject["coordinates"];
 				}
 				else
 				{
-					featuretype = (String)geometry["type"];
+					featuretype = (string)geometry["type"];
 					coords = (JArray)geometry["coordinates"];
 				}
 				if (featuretype == null)
 				{
-					String locationString = (String)geoObject["Location"];
-					String[] coordinates = locationString.Split(new String[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+					string locationString = (string)geoObject["Location"];
+					string[] coordinates = locationString.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
 					wktBuffer = "POINT(" + coordinates[1].ToString() + " " + coordinates[0].ToString() + ")";
 				}
 				else
 				{
 					setGXGeoType(featuretype);
-					String sep = "";
-					String sep1 = "";
-					String sep2 = "";
+					string sep = "";
+					string sep1 = "";
+					string sep2 = "";
 					switch (GeographicType)
 					{
 						case GeoGraphicTypeValue.Point:
@@ -498,10 +499,10 @@ namespace GeneXus.Utils
 							{
 								wktBuffer += sep1 + "(";
 								sep = "";
-								String firstPoint = JSONPointToWKT(jl.GetArray(0));								
+								string firstPoint = JSONPointToWKT(jl.GetArray(0));								
 								foreach (JArray jp in jl)
 								{
-									String jpS = JSONPointToWKT(jp);
+									string jpS = JSONPointToWKT(jp);
 									wktBuffer += sep + " " + jpS;
 									sep = ",";
 								}
@@ -552,7 +553,7 @@ namespace GeneXus.Utils
 								{
 									wktBuffer += sep1 + "(";
 									sep = "";
-									String firstPoint = JSONPointToWKT(jl.GetArray(0));
+									string firstPoint = JSONPointToWKT(jl.GetArray(0));
 									foreach (JArray jp in jl)
 									{
 										wktBuffer += sep + "" + JSONPointToWKT(jp);
@@ -592,10 +593,10 @@ namespace GeneXus.Utils
 		}
 
 
-		public static Geospatial FromGXLocation(String geoText)
+		public static Geospatial FromGXLocation(string geoText)
 		{
 			Geospatial geo = new Geospatial();
-			if (!String.IsNullOrEmpty(geoText))
+			if (!string.IsNullOrEmpty(geoText))
 			{
 				if (geoText.Contains("."))
 				{
@@ -609,14 +610,14 @@ namespace GeneXus.Utils
 				}
 				try
 				{
-					String[] coord = geoText.Split(new char[] { ' ' }, 2);
+					string[] coord = geoText.Split(new char[] { ' ' }, 2);
 
 					geo.Point.Longitude = Convert.ToDouble(coord[1].Trim(), CultureInfo.InvariantCulture.NumberFormat);
 					geo.Point.Latitude = Convert.ToDouble(coord[0].Trim(), CultureInfo.InvariantCulture.NumberFormat);
 					geo.srid = 4326;
 					// Latitude and Longitud parameters are reversed in the 'Point' constructor:
 					// construct a point object
-					String wkt = $"POINT({geo.Point.Longitude.ToString("F6")} {geo.Point.Latitude.ToString("F6")})";
+					string wkt = $"POINT({geo.Point.Longitude.ToString("F6")} {geo.Point.Latitude.ToString("F6")})";
 					geo.InnerValue = NTSGeographyWrapper.STGeomFromText(wkt, geo.Srid);
 
 				}
@@ -634,9 +635,9 @@ namespace GeneXus.Utils
 			return geo;
 		}
 
-		private bool IsGeoNull(String s)
+		private bool IsGeoNull(string s)
 		{
-			if (String.IsNullOrEmpty(s) || s.Equals(ALT_EMPTY_POINT) || s.Equals(ALT_EMPTY_LINE)
+			if (string.IsNullOrEmpty(s) || s.Equals(ALT_EMPTY_POINT) || s.Equals(ALT_EMPTY_LINE)
 				|| s.Equals(ALT_EMPTY_POLY) || s.Equals(EMPTY_GEOMETRY) || s.Equals(EMPTY_GEOGRAPHY) ||
 				s.Equals(EMPTY_POINT) || s.Equals(EMPTY_LINE) || s.Equals(EMPTY_POLY))
 			{
@@ -648,7 +649,7 @@ namespace GeneXus.Utils
 			}
 		}
 
-		public void FromString(String s)
+		public void FromString(string s)
 		{
 			if (IsGeoNull(s))
 			{
@@ -684,9 +685,9 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				if (!String.IsNullOrEmpty(ex.ToString()) && ex.HResult == -2146232832 && ex.Message.Contains("Unknown Type"))
+				if (!string.IsNullOrEmpty(ex.ToString()) && ex.HResult == -2146232832 && ex.Message.Contains("Unknown Type"))
 				{ 
-					if (GeographicType == GeoGraphicTypeValue.Point && !String.IsNullOrEmpty(geoText))
+					if (GeographicType == GeoGraphicTypeValue.Point && !string.IsNullOrEmpty(geoText))
 					{
 						_innerValue = Geospatial.FromGXLocation(geoText);
 					}
@@ -712,14 +713,14 @@ namespace GeneXus.Utils
 			this.Point.Latitude = 0;
 		}
 
-		override public String ToString()
+		override public string ToString()
 		{
 			return this.ToStringSQL("");
 		}
 
-		public String ToStringESQL()
+		public string ToStringESQL()
 		{
-			String wktText = this.ToStringSQL(EMPTY_GEOMETRY);
+			string wktText = this.ToStringSQL(EMPTY_GEOMETRY);
 			if (!wktText.Equals(EMPTY_GEOMETRY))
 			{
 				wktText = "SRID=" + this.Srid.ToString() + ";" + wktText;
@@ -727,7 +728,7 @@ namespace GeneXus.Utils
 			return wktText;
 		}
 
-		public String ToStringSQL(String defaultValue)
+		public string ToStringSQL(string defaultValue)
 		{
 			// serialize to wkt ?
 			if (this.InnerValue != null && this.InnerValue != NTSGeographyWrapper.NullSQLGeography && (!IsGeoNull(this.InnerValue.ToString())))
@@ -740,27 +741,27 @@ namespace GeneXus.Utils
 			}
 		}
 
-		public String ToStringSQL()
+		public string ToStringSQL()
 		{
 			return this.ToStringSQL(EMPTY_GEOGRAPHY);
 		}
 
-		public String ToGeoJSON()
+		public string ToGeoJSON()
 		{
 			return JSONHelper.Serialize<GeneXus.Utils.Geospatial>(this);
 
 		}
-		public void FromGeoJSON(String s)
+		public void FromGeoJSON(string s)
 		{
 			FromJSON(s);
 		}
 
 		public static int IsEqual(Geospatial geoA, Geospatial geoB)
 		{
-			return String.Equals(geoA.ToString(), geoB.ToString()) ? 0 : 1;
+			return string.Equals(geoA.ToString(), geoB.ToString()) ? 0 : 1;
 		}
 
-		String geoText = "";
+		string geoText = "";
 
 		public double STDistance(Geospatial x)
 		{
@@ -845,7 +846,7 @@ namespace GeneXus.Utils
 		}
 
 		[DataMember(Name = "type", Order = 0)]
-		public String SJ_GeoType
+		public string SJ_GeoType
 		{
 			get
 			{
@@ -872,7 +873,7 @@ namespace GeneXus.Utils
 				if (_innerValue != null)
 				{
 					// get type
-					String geoType = NTSGeographyWrapper.STGeometryType(_innerValue).ToString();
+					string geoType = NTSGeographyWrapper.STGeometryType(_innerValue).ToString();
 					return geoToArray(geoType, _innerValue);
 				}
 				else
@@ -886,7 +887,7 @@ namespace GeneXus.Utils
 			}
 		}
 
-		ArrayList geoToArray(String geoType, Object geoInstance)
+		ArrayList geoToArray(string geoType, Object geoInstance)
 		{
 
 			ArrayList ArrayOfPoints = new ArrayList();
