@@ -513,7 +513,8 @@ namespace GeneXus.Application
 			{
 				endpoints.MapControllers();
 			});
-			if (log.IsDebugEnabled)
+			
+			if (log.IsCriticalEnabled && env.IsDevelopment())
 			{
 				try
 				{
