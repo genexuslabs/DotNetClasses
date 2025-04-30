@@ -295,6 +295,7 @@ namespace GeneXus.Application
 				{
 					mvcBuilder.AddMvcOptions(options => options.Conventions.Add(new SetRoutePrefix(new RouteAttribute(VirtualPath))));
 				}
+				mvcBuilder.AddMvcOptions(options => options.AllowEmptyInputInBodyModelBinding = true);
 			}
 
 			if (RestAPIHelpers.JsonSerializerCaseSensitive())
