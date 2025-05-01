@@ -1,9 +1,6 @@
-using System;
-using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Cache;
@@ -39,7 +36,7 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 					{
 
 						options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString;
-						options.JsonSerializerOptions.Converters.Add(new StringConverter());
+						options.JsonSerializerOptions.Converters.Add(new GeneXus.Utils.StringConverter());
 
 					});
 					ISessionService sessionService = GXSessionServiceFactory.GetProvider();
@@ -54,28 +51,6 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 			GxContext.IsAzureContext = true;
 			GxContext.IsHttpContext = true;
 			await host.RunAsync();
-		}
-
-		public class StringConverter : JsonConverter<string>
-		{
-			public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType == JsonTokenType.Number)
-				{
-					if (reader.TryGetInt32(out int l))
-						return l.ToString();
-					else if (reader.TryGetDecimal(out decimal d))
-						return d.ToString();
-					else
-						return reader.GetDouble().ToString();
-				}
-				return reader.GetString();
-			}
-
-			public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
-			{
-				writer.WriteStringValue(value);
-			}
 		}
 		private static string GetRoutePrefix(string ContentRootPath)
 		{
