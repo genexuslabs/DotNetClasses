@@ -542,6 +542,8 @@ namespace GeneXus.Utils
 
 		protected virtual HttpContext GetHttpContext()
 		{
+			//This method must be virtual so it can be implemented by Azure Functions classes.
+			//In the case of Azure, the base HttpContext isn't the ControllerBase class HttpContext, but rather the Azure Request HttpContext itself.
 			return base.HttpContext;
 		}
 		protected virtual bool IsSynchronizer { get { return false; } }
