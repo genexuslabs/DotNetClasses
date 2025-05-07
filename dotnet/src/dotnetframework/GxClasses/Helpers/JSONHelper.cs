@@ -63,13 +63,27 @@ namespace GeneXus.Utils
 	}
 	internal class CustomGeospatialConverter : JsonConverter<Geospatial>
 	{
-		public override Geospatial Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-			throw new NotImplementedException("Deserialization is not supported.");
+		public override Geospatial Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.Null)
+			{
+				return null;
+			}
+			string jsonString = JsonDocument.ParseValue(ref reader).RootElement.GetRawText();
 
+			Geospatial geospatial = new Geospatial();
+			geospatial.FromGeoJSON(jsonString);
+			return geospatial;
+		}
 		public override void Write(Utf8JsonWriter writer, Geospatial value, JsonSerializerOptions options)
 		{
-			string stringValue = value?.ToString();
-			JsonSerializer.Serialize(writer, stringValue, options);
+			if (value == null)
+			{
+				writer.WriteNullValue();
+				return;
+			}
+			string stringValue = value.ToGeoJSON();
+			writer.WriteRawValue(stringValue);
 		}
 	}
 	internal class CustomDateTimeConverter : JsonConverter<DateTime>
