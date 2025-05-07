@@ -73,7 +73,6 @@ namespace GamSaml20.Utils
 			XNamespace samlp = "urn:oasis:names:tc:SAML:2.0:protocol";
 			XNamespace saml = "urn:oasis:names:tc:SAML:2.0:assertion";
 
-			PolicyFormat pf = PolicyFormatUtil.GetPolicyFormat(policyFormat);
 
 			XElement authnRequest = new XElement(samlp + "AuthnRequest",
 				new XAttribute("ID", id),
@@ -88,7 +87,7 @@ namespace GamSaml20.Utils
 
 
 				new XElement(samlp + "NameIDPolicy",
-					new XAttribute("Format", PolicyFormatUtil.GetPolicyFormatXmlValue(pf)),
+					new XAttribute("Format", policyFormat.Trim()),
 					new XAttribute("AllowCreate", "true"),
 					new XAttribute("SPNameQualifier", spname)
 					),

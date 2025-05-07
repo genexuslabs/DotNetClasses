@@ -18,7 +18,6 @@
 			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Encoding.cs" Link="Utils\Encoding.cs" />
 			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Hash.cs" Link="Utils\Hash.cs" />
 			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Keys.cs" Link="Utils\Keys.cs" />
-			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\PolicyFormat.cs" Link="Utils\PolicyFormat.cs" />
 			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\SamlAssertionUtils.cs" Link="Utils\SamlAssertionUtils.cs" />
 			<Compile Include="..\..\DotNetFramework\GamSaml20\IBinding.cs" Link="IBinding.cs" />
 			<Compile Include="..\..\DotNetFramework\GamSaml20\PostBinding.cs" Link="PostBinding.cs" />
