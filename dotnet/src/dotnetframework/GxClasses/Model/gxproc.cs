@@ -6,6 +6,7 @@ namespace GeneXus.Procedure
 	using System.Collections.Generic;
 	using System.IO;
 	using System.Reflection;
+	using GeneXus.AI.Chat;
 	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Data;
@@ -52,6 +53,11 @@ namespace GeneXus.Procedure
 			}
 #endif
 		}
+		internal virtual string ProcessChatResponse(Choice choice, bool stream, string assistant, GXProperties gxproperties, List<ChatMessage> chatMessagesList, object result)
+		{
+			return string.Empty;
+		}
+
 		protected int MainImplEx(string[] args)
 		{
 			try

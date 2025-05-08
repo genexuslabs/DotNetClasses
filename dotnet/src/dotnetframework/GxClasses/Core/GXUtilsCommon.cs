@@ -612,6 +612,12 @@ namespace GeneXus.Utils
 		{
 			return (value ? "true" : "false");
 		}
+#if NETCORE
+		public static string EmbeddingToStr(GxEmbedding value)
+		{
+			return value!=null ? value.ToString() : string.Empty;
+		}
+#endif
 		public static string BoolToStr(short value)
 		{
 			return (value == 1 ? "true" : "false");
