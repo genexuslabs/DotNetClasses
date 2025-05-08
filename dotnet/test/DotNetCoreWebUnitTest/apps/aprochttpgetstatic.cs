@@ -9,7 +9,7 @@ namespace GeneXus.Programs
 {
 	public class aprochttpgetstatic : GXWebProcedure
    {
-      protected override async Task WebExecuteAsync( )
+      public override async Task WebExecuteAsync( )
       {
          context.SetDefaultTheme("HttpClientTest", true);
          initialize();
