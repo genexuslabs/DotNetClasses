@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using log4net;
 using SecurityAPICommons.Commons;
 
 namespace GeneXusXmlSignature.GeneXusUtils
@@ -17,12 +18,15 @@ namespace GeneXusXmlSignature.GeneXusUtils
 	[SecuritySafeCritical]
 	public static class XMLSignatureWrapperUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(XMLSignatureWrapperUtils));
 		public static XmlSignatureWrapper getXMLSignatureWrapper(string xMLSignatureWrapper, Error error)
 		{
+			logger.Debug("getXMLSignatureWrapper");
 			if (error == null) return XmlSignatureWrapper.NONE;
 			if (xMLSignatureWrapper == null)
 			{
 				error.setError("XSW04", "Unrecognized algorithm");
+				logger.Error("Unrecognized algorithm");
 				return XmlSignatureWrapper.NONE;
 			}
 			switch (xMLSignatureWrapper.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -39,12 +43,14 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return XmlSignatureWrapper.ECDSA_SHA256;
 				default:
 					error.setError("XSW01", "Unrecognized algorithm");
+					logger.Error("Unrecognized algorithm");
 					return XmlSignatureWrapper.NONE;
 			}
 		}
 
 		public static string valueOf(XmlSignatureWrapper xMLSignatureWrapper, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return null;
 			switch (xMLSignatureWrapper)
 			{
@@ -60,12 +66,14 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return "ECDSA_SHA256";
 				default:
 					error.setError("XSW02", "Unrecognized algorithm");
+					logger.Error("Unrecognized algorithm");
 					return null;
 			}
 		}
 
 		public static string getSignatureMethodAlgorithm(XmlSignatureWrapper xMLSignatureWrapper, Error error)
 		{
+			logger.Debug("getSignatureMethodAlgorithm");
 			if (error == null) return null;
 			switch (xMLSignatureWrapper)
 			{
@@ -81,6 +89,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return Constants.ALGO_ID_SIGNATURE_ECDSA_SHA256;
 				default:
 					error.setError("XSW03", "Unrecognized algorithm");
+					logger.Error("Unrecognized algorithm");
 					return null;
 			}
 		}

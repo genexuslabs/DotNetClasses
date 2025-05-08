@@ -1,4 +1,5 @@
 
+using log4net;
 using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Signers;
@@ -28,19 +29,21 @@ namespace GeneXusCryptography.AsymmetricUtils
     [SecuritySafeCritical]
     public static class AsymmetricSigningAlgorithmUtils
     {
-
-        /// <summary>
-        /// Mapping between string name and AsymmetricSigningAlgorithm enum representation
-        /// </summary>
-        /// <param name="asymmetricSigningAlgorithm">string asymmetricSigningAlgorithm</param>
-        /// <param name="error">Error type for error management</param>
-        /// <returns>AsymmetricSigningAlgorithm enum representation</returns>
-        public static AsymmetricSigningAlgorithm GetAsymmetricSigningAlgorithm(string asymmetricSigningAlgorithm, Error error)
+		private static readonly ILog logger = LogManager.GetLogger(typeof(AsymmetricSigningAlgorithmUtils));
+		/// <summary>
+		/// Mapping between string name and AsymmetricSigningAlgorithm enum representation
+		/// </summary>
+		/// <param name="asymmetricSigningAlgorithm">string asymmetricSigningAlgorithm</param>
+		/// <param name="error">Error type for error management</param>
+		/// <returns>AsymmetricSigningAlgorithm enum representation</returns>
+		public static AsymmetricSigningAlgorithm GetAsymmetricSigningAlgorithm(string asymmetricSigningAlgorithm, Error error)
         {
+			logger.Debug("GetAsymmetricSigningAlgorithm");
 			if (error == null) return AsymmetricSigningAlgorithm.NONE;
 			if (asymmetricSigningAlgorithm == null)
 			{
 				error.setError("AE005", "Unrecognized AsymmetricSigningAlgorithm");
+				logger.Error("Unrecognized AsymmetricSigningAlgorithm");
 				return AsymmetricSigningAlgorithm.NONE;
 			}
 
@@ -52,6 +55,7 @@ namespace GeneXusCryptography.AsymmetricUtils
                     return AsymmetricSigningAlgorithm.ECDSA;
                 default:
                     error.setError("AE005", "Unrecognized AsymmetricSigningAlgorithm");
+					logger.Error("Unrecognized AsymmetricSigningAlgorithm");
                     return AsymmetricSigningAlgorithm.NONE;
             }
         }
@@ -63,6 +67,7 @@ namespace GeneXusCryptography.AsymmetricUtils
         /// <returns>string value of the algorithm</returns>
         public static string ValueOf(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, Error error)
         {
+			logger.Debug("ValueOf");
 			if (error == null) return "";
             switch (asymmetricSigningAlgorithm)
             {
@@ -72,16 +77,19 @@ namespace GeneXusCryptography.AsymmetricUtils
                     return "ECDSA";
                 default:
                     error.setError("AE005", "Unrecognized AsymmetricSigningAlgorithm");
+					logger.Error("Unrecognized AsymmetricSigningAlgorithm");
                     return "";
             }
         }
 
 		public static ISigner GetSigner(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, IDigest hash, Error error)
 		{
+			logger.Debug("GetSigner");
 			if(error == null) return null;
 			if (hash == null)
 			{
 				error.setError("AE008", "Hash digest is null");
+				logger.Error("Hash digest is null");
 				return null;
 			}
 			ISigner sig = null;
@@ -100,6 +108,7 @@ namespace GeneXusCryptography.AsymmetricUtils
 
 		public static string GetCMSSigningAlgortithm(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, Error error)
 		{
+			logger.Debug("GetCMSSigningAlgortithm");
 			if (error == null) return null;
 			switch (asymmetricSigningAlgorithm)
 			{
@@ -109,6 +118,7 @@ namespace GeneXusCryptography.AsymmetricUtils
 					return CmsSignedDataGenerator.EncryptionECDsa;
 				default:
 					error.setError("AE008", "Not recogrnized AsymmetricSigningAlgorithm");
+					logger.Error("Unrecognized AsymmetricSigningAlgorithm");
 					return "";
 			}
 		}

@@ -47,4 +47,8 @@
 		<Folder Include="Utils\" />
 	</ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,6 +1,7 @@
 using SecurityAPICommons.Commons;
 using System;
 using System.Security;
+using log4net;
 
 namespace GeneXusFtps.GeneXusFtpsUtils
 {
@@ -16,14 +17,17 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 	[SecuritySafeCritical]
 	public static class FtpsProtocolUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(FtpsProtocolUtils));
 
 		[SecuritySafeCritical]
-		public static FtpsProtocol getFtpsProtocol(String ftpsProtocol, Error error)
+		public static FtpsProtocol getFtpsProtocol(string ftpsProtocol, Error error)
 		{
+			logger.Debug("getFtpsProtocol");
 			if(error == null) return FtpsProtocol.NONE;
 			if (ftpsProtocol == null)
 			{
 				error.setError("FP001", "Unknown protocol");
+				logger.Error("Unknown protocol");
 				return FtpsProtocol.NONE;
 			}
 			switch (ftpsProtocol.Trim())
@@ -40,6 +44,7 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 					return FtpsProtocol.SSLv3;
 				default:
 					error.setError("FP001", "Unknown protocol");
+					logger.Error("Unknown protocol");
 					return FtpsProtocol.NONE;
 
 			}
@@ -47,8 +52,9 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 		}
 
 		[SecuritySafeCritical]
-		public static String valueOf(FtpsProtocol ftpsProtocol, Error error)
+		public static string valueOf(FtpsProtocol ftpsProtocol, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "";
 			switch (ftpsProtocol)
 			{
@@ -64,6 +70,7 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 					return "SSLv3";
 				default:
 					error.setError("FP002", "Unknown protocol");
+					logger.Error("Unknown protocol");
 					return "";
 			}
 		}

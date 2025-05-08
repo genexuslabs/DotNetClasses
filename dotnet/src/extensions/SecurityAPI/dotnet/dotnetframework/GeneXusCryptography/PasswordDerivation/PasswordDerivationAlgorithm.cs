@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
-
+using log4net;
 
 namespace GeneXusCryptography.PasswordDerivation
 {
@@ -24,6 +24,7 @@ namespace GeneXusCryptography.PasswordDerivation
 	[SecuritySafeCritical]
 	public static class PasswordDerivationAlgorithmUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(PasswordDerivationAlgorithmUtils));
 		/// <summary>
 		/// Mapping between string name and PasswordDerivationAlgorithm enum representation
 		/// </summary>
@@ -32,10 +33,12 @@ namespace GeneXusCryptography.PasswordDerivation
 		/// <returns>PasswordDerivationAlgorithm enum representation</returns>
 		public static PasswordDerivationAlgorithm getPasswordDerivationAlgorithm(string passwordDerivationAlgorithm, Error error)
 		{
+			logger.Debug("getPasswordDerivationAlgorithm");
 			if (error == null) return PasswordDerivationAlgorithm.NONE;
 			if (passwordDerivationAlgorithm == null)
 			{
 				error.setError("PDA03", "Unrecognized PasswordDerivationAlgorithm");
+				logger.Error("Unrecognized PasswordDerivationAlgorithm");
 				return PasswordDerivationAlgorithm.NONE;
 			}
 			switch (passwordDerivationAlgorithm.Trim())
@@ -48,6 +51,7 @@ namespace GeneXusCryptography.PasswordDerivation
 					return PasswordDerivationAlgorithm.Argon2;
 				default:
 					error.setError("PDA01", "Unrecognized PasswordDerivationAlgorithm");
+					logger.Error("Unrecognized PasswordDerivationAlgorithm");
 					return PasswordDerivationAlgorithm.NONE;
 			}
 		}
@@ -59,6 +63,7 @@ namespace GeneXusCryptography.PasswordDerivation
 		/// <returns>PasswordDerivationAlgorithm value in string</returns>
 		public static string valueOf(PasswordDerivationAlgorithm passwordDerivationAlgorithm, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "Unrecognized algorithm";
 			switch (passwordDerivationAlgorithm)
 			{
@@ -70,6 +75,7 @@ namespace GeneXusCryptography.PasswordDerivation
 					return "Argon2";
 				default:
 					error.setError("PDA02", "Unrecognized PasswordDerivationAlgorithm");
+					logger.Error("Unrecognized PasswordDerivationAlgorithm");
 					return "Unrecognized algorithm";
 			}
 		}

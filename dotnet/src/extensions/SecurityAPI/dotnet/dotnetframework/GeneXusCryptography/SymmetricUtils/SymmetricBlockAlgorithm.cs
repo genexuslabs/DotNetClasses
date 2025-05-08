@@ -1,4 +1,5 @@
 
+using log4net;
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ namespace GeneXusCryptography.SymmetricUtils
 	[SecuritySafeCritical]
 	public static class SymmetricBlockAlgorithmUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SymmetricBlockAlgorithmUtils));
 		/// <summary>
 		/// Mapping between string name and SymmetricBlockAlgorithm enum representation
 		/// </summary>
@@ -35,10 +37,12 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>SymmetricBlockAlgorithm enum representaton</returns>
 		public static SymmetricBlockAlgorithm getSymmetricBlockAlgorithm(string symmetricBlockAlgorithm, Error error)
 		{
+			logger.Debug("getSymmetricBlockAlgorithm");
 			if (error == null) return SymmetricBlockAlgorithm.NONE;
 			if (symmetricBlockAlgorithm == null)
 			{
 				error.setError("SBA05", "Unrecognized SymmetricBlockAlgorithm");
+				logger.Error("Unrecognized SymmetricBlockAlgorithm");
 				return SymmetricBlockAlgorithm.NONE;
 			}
 			switch (symmetricBlockAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -107,6 +111,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return SymmetricBlockAlgorithm.TEA;
 				default:
 					error.setError("SBA01", "Unrecognized SymmetricBlockAlgorithm");
+					logger.Error("Unrecognized SymmetricBlockAlgorithm");
 					return SymmetricBlockAlgorithm.NONE;
 			}
 
@@ -121,6 +126,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>value of SymmetricBlockAlgorithm in string</returns>
 		public static string valueOf(SymmetricBlockAlgorithm symmetricBlockAlgorithm, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "SymmetricBlockAlgorithm";
 
 
@@ -190,6 +196,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return "TEA";
 				default:
 					error.setError("SBA02", "Unrecognized SymmetricBlockAlgorithm");
+					logger.Error("Unrecognized SymmetricBlockAlgorithm");
 					return "SymmetricBlockAlgorithm";
 			}
 		}
@@ -202,6 +209,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>the specific block size for the algorithm, algorithm unknown if 0</returns>
 		public static int getBlockSize(SymmetricBlockAlgorithm algorithm, Error error)
 		{
+			logger.Debug("getBlockSize");
 			if (error == null) return 0;
 			switch (algorithm)
 			{
@@ -247,6 +255,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return 1024;
 				default:
 					error.setError("SBA03", "Unrecognized SymmetricBlockAlgorithm");
+					logger.Error("Unrecognized SymmetricBlockAlgorithm");
 					return 0;
 			}
 		}
