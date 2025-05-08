@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFrameworks>net8.0</TargetFrameworks>
+	<OutputType>Library</OutputType>
+	<DefineConstants>NETCORE;NODATIME</DefineConstants>
+	<PackageId>GeneXus.EnterpriseLib.SAP</PackageId>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SapNwRfc" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+</Project>
