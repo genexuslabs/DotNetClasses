@@ -1,20 +1,27 @@
-using GeneXus.Application;
-using GeneXus.Metadata;
-using GeneXus.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using GeneXus.Application;
+using GeneXus.Metadata;
+using GeneXus.Utils;
 
 namespace GeneXus.DynamicCall
 {
-    public class GxDynamicCall
-    {
+	public class GxDynamicCall
+	{
 		private const string defaultMethod = "execute";
 		private Assembly _assembly;
+		private readonly IGxContext _context;
+		private GXProperties _extendedProperties;
 		private GxDynCallProperties _properties;
 		private object _object;
+
+		//[Obsolete("ObjectName is deprecated. Use ExternalName instead", false)]
 		public string ObjectName { get; set; }
-		public GxDynCallProperties Properties     
+		public string ExternalName { get; set; }
+
+		//[Obsolete("Properties is deprecated. Use ExtendedProperties instead", false)]
+		public GxDynCallProperties Properties
 		{
 			get => _properties;
 			set
@@ -23,19 +30,35 @@ namespace GeneXus.DynamicCall
 			}
 		}
 
+		public GXProperties ExtendedProperties
+		{
+			get => _extendedProperties;
+			set
+			{
+				_extendedProperties = ExtendedProperties;
+			}
+		}
 		public GxDynamicCall()
 		{
-			_assembly= null;
+			_extendedProperties = new GXProperties();
+			_properties = new GxDynCallProperties();
+		}
+
+		public GxDynamicCall(IGxContext context)
+		{
+			_context = context;
+			_assembly = null;
+			_extendedProperties = new GXProperties();
 			_properties = new GxDynCallProperties();
 			_object = null;
 		}
 
-		private void VerifyDefaultProperties() {
-			_properties.NameSpace = string.IsNullOrEmpty(_properties.NameSpace) ? "GeneXus.Programs" : _properties.NameSpace;
-			
+		private void VerifyDefaultProperties()
+		{
+
 			if (_assembly is null)
 			{
-				if (string.IsNullOrEmpty(_properties.AssemblyName))
+				if (string.IsNullOrEmpty(_extendedProperties.Get("AssemblyName")))
 				{
 					_assembly = Assembly.GetCallingAssembly();
 				}
@@ -43,7 +66,7 @@ namespace GeneXus.DynamicCall
 				{
 					try
 					{
-						_assembly = Assembly.LoadFrom(_properties.AssemblyName);
+						_assembly = Assembly.LoadFrom(_extendedProperties.Get("AssemblyName"));
 					}
 					catch
 					{
@@ -63,24 +86,19 @@ namespace GeneXus.DynamicCall
 			}
 		}
 
-		public void Create( IList<object> constructParms, out IList<SdtMessages_Message> errors)
+		public void Create(IList<object> constructParms, out IList<SdtMessages_Message> errors)
 		{
 			errors = new GXBaseCollection<SdtMessages_Message>();
 			string objectNameToInvoke;
 			try
 			{
 				VerifyDefaultProperties();
-				if (constructParms is null)
-				{
-					objectNameToInvoke = ObjectName;
-				}
-				else
-				{
-					objectNameToInvoke = _properties.ExternalName;
-				}
+
+				objectNameToInvoke = ExternalName;
+
 				try
 				{
-					Type objType = ClassLoader.FindType(objectNameToInvoke, _properties.NameSpace, objectNameToInvoke.ToLower().Trim(), _assembly);
+					Type objType = ClassLoader.FindType(objectNameToInvoke, objectNameToInvoke.ToLower().Trim(), _assembly);
 					object[] constructorParameters;
 					if (constructParms != null && constructParms.Count > 0)
 					{
@@ -89,13 +107,13 @@ namespace GeneXus.DynamicCall
 					}
 					else
 					{
-						constructorParameters = new object[] { new GxContext() };
+						constructorParameters = new object[] { _context };
 					}
 					_object = Activator.CreateInstance(objType, constructorParameters);
 				}
 				catch (Exception e)
 				{
-					GXUtil.ErrorToMessages("CreateInstance Error", e.Message, (GXBaseCollection<SdtMessages_Message>) errors);
+					GXUtil.ErrorToMessages("CreateInstance Error", e.Message, (GXBaseCollection<SdtMessages_Message>)errors);
 				}
 			}
 			catch (Exception e)
@@ -103,13 +121,13 @@ namespace GeneXus.DynamicCall
 				GXUtil.ErrorToMessages("VerifyProperties Error", e.Message, (GXBaseCollection<SdtMessages_Message>)errors);
 			}
 		}
-		public object Execute(ref IList<object> parameters, GxDynCallMethodConf methodconfiguration , out IList<SdtMessages_Message> errors)
+		public object Execute(ref IList<object> parameters, GxDynCallMethodConf methodconfiguration, out IList<SdtMessages_Message> errors)
 		{
 			object result;
 			errors = new GXBaseCollection<SdtMessages_Message>();
-			IList<object> outParms= new List<object>();
+			IList<object> outParms = new List<object>();
 
-			string methodName = methodconfiguration.MethodName; 
+			string methodName = methodconfiguration.MethodName;
 			bool isStatic = methodconfiguration.IsStatic;
 
 			if (!isStatic)
@@ -118,7 +136,7 @@ namespace GeneXus.DynamicCall
 				{
 					try
 					{
-						outParms = ReflectionHelper.CallMethod(_object, (string.IsNullOrEmpty(methodName) ? defaultMethod : methodName), parameters);
+						outParms = ReflectionHelper.CallMethod(_object, string.IsNullOrEmpty(methodName) ? defaultMethod : methodName, parameters);
 					}
 					catch (Exception e)
 					{
@@ -133,7 +151,7 @@ namespace GeneXus.DynamicCall
 			else
 			{
 				VerifyDefaultProperties();
-				Type objType = ClassLoader.FindType(_properties.ExternalName, _properties.NameSpace, _properties.ExternalName.ToLower().Trim(), _assembly);
+				Type objType = ClassLoader.FindType(ExternalName, ExternalName.ToLower().Trim(), _assembly);
 				outParms = ReflectionHelper.CallMethod(objType, (string.IsNullOrEmpty(methodName) ? defaultMethod : methodName), parameters, isStatic);
 			}
 			if (outParms.Count > parameters.Count)
@@ -167,9 +185,7 @@ namespace GeneXus.DynamicCall
 			IsStatic = false;
 			MethodName = "execute";
 		}
-
 	}
-
 	public class GxDynCallProperties
 	{
 		public string ExternalName
@@ -187,7 +203,5 @@ namespace GeneXus.DynamicCall
 			get;
 			set;
 		}
-
 	}
 }
-
