@@ -13,8 +13,8 @@ namespace DotNetCoreUnitTest.ImageUtils
 {
 	public class ImageUtilTest : FileSystemTest
 	{
-		private readonly string IMAGE_FILE_PATH = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail.jpg");
-		private readonly string IMAGE_FILE_PATH_OUTPUT = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail-{0}-{1}.jpg");
+		private readonly string IMAGE_FILE_PATH = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail.jpg");//Minions-PNG-Photo.png
+		private readonly string IMAGE_FILE_PATH_OUTPUT = System.IO.Path.Combine(BaseDir, "resources", "bird-thumbnail-{0}-{1}.jpg");//Minions-PNG-Photo
 		private readonly int IMAGE_HEIGHT = 900;
 		private readonly int IMAGE_WIDTH = 720;
 
@@ -81,6 +81,18 @@ namespace DotNetCoreUnitTest.ImageUtils
 
 			int imageWidth = GxImageUtil.GetImageWidth(imagePath);
 			Assert.Equal(300, imageWidth);
+		}
+		[Fact]
+		public void TestImageRotate()
+		{
+			string fileName = Initialize("rotated");
+			string imagePath = GxImageUtil.Rotate(fileName, 45);
+
+			int imageHeight = GxImageUtil.GetImageHeight(imagePath);
+			Assert.Equal(900, imageHeight);
+
+			int imageWidth = GxImageUtil.GetImageWidth(imagePath);
+			Assert.Equal(720, imageWidth);
 		}
 
 
