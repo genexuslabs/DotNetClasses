@@ -485,10 +485,20 @@ namespace GeneXus.Http.Client
 		{
 			return _proxyHost;
 		}
+#if NETCORE
+		private static Encoding ISO_8859_1 = Encoding.Latin1;
+#else
+		private static Encoding ISO_8859_1 = Encoding.GetEncoding("ISO-8859-1");
+#endif
+		private const string AuthenticationSchemeBasic = "Basic";
 		public void AddAuthentication(int scheme, string realm, string user, string password)
 		{
 			if (scheme >= _Basic && scheme <= _Kerberos)
 				_authCollection.Add(new GxAuthScheme(scheme, realm, user, password));
+			if (scheme == _Basic) {
+				string authHeader = Convert.ToBase64String(ISO_8859_1.GetBytes($"{user}:{password}"));
+				AddHeader(HttpHeader.AUTHORIZATION, new AuthenticationHeaderValue(AuthenticationSchemeBasic, authHeader).ToString());
+			}
 		}
 
 		public void AddProxyAuthentication(int scheme, string realm, string user, string password)
@@ -730,7 +740,7 @@ namespace GeneXus.Http.Client
 			}
 			InferContentType(contentType, request);
 		}
-		void setHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
+		internal void SetHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
 		{
 			HttpRequestHeaders headers = request.Headers;
 			contentType = null;
@@ -867,7 +877,7 @@ namespace GeneXus.Http.Client
 				RequestUri = new Uri(requestUrl),
 				Method = new HttpMethod(method),
 			};
-			setHeaders(request, cookies, out string contentType);
+			SetHeaders(request, cookies, out string contentType);
 			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
@@ -934,7 +944,7 @@ namespace GeneXus.Http.Client
 				RequestUri = new Uri(requestUrl),
 				Method = new HttpMethod(method),
 			};
-			setHeaders(request, cookies, out string contentType);
+			SetHeaders(request, cookies, out string contentType);
 			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
@@ -1047,7 +1057,7 @@ namespace GeneXus.Http.Client
 				}
 			}
 		}
-		#endif
+#endif
 		bool UseOldHttpClient(string name)
 		{
 			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
@@ -1596,6 +1606,8 @@ namespace GeneXus.Http.Client
 					}
 					else
 					{
+						//return new NetworkCredential(auth.User, auth.Password);
+
 						if (cc == null)
 						{
 							cc = new CredentialCache();
