@@ -1202,7 +1202,7 @@ namespace GeneXus.Application
 			get
 			{
 #if NETCORE
-				if (_HttpContext == null && AppContext.Current != null)
+				if (_HttpContext == null && !IsSubmited && AppContext.Current != null)
 				{
 					HttpContext = AppContext.Current;
 				}
