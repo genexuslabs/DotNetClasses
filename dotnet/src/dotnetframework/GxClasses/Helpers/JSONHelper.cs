@@ -77,12 +77,7 @@ namespace GeneXus.Utils
 		}
 		public override void Write(Utf8JsonWriter writer, Geospatial value, JsonSerializerOptions options)
 		{
-			if (value == null)
-			{
-				writer.WriteNullValue();
-				return;
-			}
-			string stringValue = value.ToGeoJSON();
+			string stringValue = value?.ToString();
 			writer.WriteRawValue(stringValue);
 		}
 	}
