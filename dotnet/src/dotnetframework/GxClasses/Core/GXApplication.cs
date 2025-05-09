@@ -284,6 +284,16 @@ namespace GeneXus.Application
 		string GetURLBuildNumber(string resourcePath, string urlBuildNumber);
 	}
 #if NETCORE
+	internal static class AppContext
+	{
+		static IHttpContextAccessor _httpContextAccessor { get; set; }
+		internal static HttpContext Current => _httpContextAccessor != null ? new GxHttpContextAccesor(_httpContextAccessor) : null;
+		internal static void Configure(IHttpContextAccessor accessor)
+		{
+			_httpContextAccessor = accessor;
+		}
+
+	}
 	public class GxHttpContextAccesor : HttpContext
 	{
 		IHttpContextAccessor ctxAccessor;
@@ -603,11 +613,12 @@ namespace GeneXus.Application
 		}
 
 		[NonSerialized]
-		static GxContext _currentGxContext;
+		static GxContext _currentBatchGxContext;
 		static public GxContext Current
 		{
 			get
 			{
+
 #if !NETCORE
 				if (HttpContext.Current != null)
 				{
@@ -619,11 +630,21 @@ namespace GeneXus.Application
 				else
 				{
 
-					return _currentGxContext;
+					return _currentBatchGxContext;
 				}
 				return null;
 #else
-				return _currentGxContext;
+				if (AppContext.Current != null)
+				{
+					GxContext currCtx = (GxContext)AppContext.Current.Items["CURRENT_GX_CONTEXT"];
+					if (currCtx != null)
+						return currCtx;
+				}
+				else
+				{
+					return _currentBatchGxContext;
+				}
+				return null;
 #endif
 			}
 		}
@@ -632,9 +653,14 @@ namespace GeneXus.Application
 #if !NETCORE
 			if (HttpContext.Current != null)
 				HttpContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
-			else
+			
+#else
+			if (AppContext.Current != null)
+				AppContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
 #endif
-				_currentGxContext = ctx;
+
+			else if (!IsHttpContext)
+				_currentBatchGxContext = ctx; 
 		}
 
 		public LocalUtil localUtil
@@ -1175,7 +1201,12 @@ namespace GeneXus.Application
 		{
 			get
 			{
-#if !NETCORE
+#if NETCORE
+				if (_HttpContext == null && AppContext.Current != null)
+				{
+					HttpContext = AppContext.Current;
+				}
+#else
 				if (_HttpContext == null && HttpContext.Current != null)
 				{
 					HttpContext = HttpContext.Current;
