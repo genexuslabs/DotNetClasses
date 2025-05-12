@@ -72,13 +72,13 @@ namespace GeneXus.Utils
 			string jsonString = JsonDocument.ParseValue(ref reader).RootElement.GetRawText();
 
 			Geospatial geospatial = new Geospatial();
-			geospatial.FromGeoJSON(jsonString);
+			geospatial.FromString(jsonString);
 			return geospatial;
 		}
 		public override void Write(Utf8JsonWriter writer, Geospatial value, JsonSerializerOptions options)
 		{
 			string stringValue = value?.ToString();
-			writer.WriteRawValue(stringValue);
+			JsonSerializer.Serialize(writer, stringValue, options);
 		}
 	}
 	internal class CustomDateTimeConverter : JsonConverter<DateTime>
