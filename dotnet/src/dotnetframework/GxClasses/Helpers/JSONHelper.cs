@@ -63,9 +63,18 @@ namespace GeneXus.Utils
 	}
 	internal class CustomGeospatialConverter : JsonConverter<Geospatial>
 	{
-		public override Geospatial Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-			throw new NotImplementedException("Deserialization is not supported.");
+		public override Geospatial Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.Null)
+			{
+				return null;
+			}
+			string jsonString = JsonDocument.ParseValue(ref reader).RootElement.GetRawText();
 
+			Geospatial geospatial = new Geospatial();
+			geospatial.FromString(jsonString);
+			return geospatial;
+		}
 		public override void Write(Utf8JsonWriter writer, Geospatial value, JsonSerializerOptions options)
 		{
 			string stringValue = value?.ToString();
