@@ -103,6 +103,13 @@ namespace GeneXus.Deploy.AzureFunctions.GAM
 			return await ExecuteHttpFunction(req, executionContext);
 		}
 
+		[Function("saml_gam_callback")]
+		public async Task<HttpResponseData> SAMLGAMCallback([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "saml/gam/callback")] HttpRequestData req,
+			FunctionContext executionContext)
+		{
+			return await ExecuteHttpFunction(req, executionContext);
+		}
+
 		private async Task<HttpResponseData> ExecuteHttpFunction(HttpRequestData req, FunctionContext executionContext)
 		{
 
