@@ -26,7 +26,7 @@ namespace GeneXus.DynamicCall
 			get => _properties;
 			set
 			{
-				_properties = Properties;
+				_properties = value;
 			}
 		}
 
@@ -35,7 +35,7 @@ namespace GeneXus.DynamicCall
 			get => _extendedProperties;
 			set
 			{
-				_extendedProperties = ExtendedProperties;
+				_extendedProperties = value;
 			}
 		}
 		public GxDynamicCall()
