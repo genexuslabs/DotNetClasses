@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Configuration;
@@ -130,18 +131,22 @@ namespace GeneXus.Utils
         }
 		//Convert GxUnknownObjectCollection of Object[] to GxUnknownObjectCollection of GxSimpleCollections
 		protected GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
-        {
+		{
 			GxUnknownObjectCollection result = new GxUnknownObjectCollection();
 			if (tableHashList != null && tableHashList.Count > 0)
 			{
-				foreach (object[] list in tableHashList)
+				foreach (JsonElement element in tableHashList)
 				{
-					GxStringCollection tableHash = new GxStringCollection();
-					foreach (string data in list)
+					if (element.ValueKind == JsonValueKind.Array)
 					{
-						tableHash.Add(data);
+						GxStringCollection tableHash = new GxStringCollection();
+						foreach (var item in element.EnumerateArray())
+						{
+							string value = JsonSerializer.Deserialize<string>(item.GetRawText());
+							tableHash.Add(value);
+						}
+						result.Add(tableHash);
 					}
-					result.Add(tableHash);
 				}
 			}
 			return result;
