@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -409,15 +410,27 @@ namespace GeneXus.Application
 
 		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
 		{
+			
 			if (sessionService is GxRedisSession)
 			{
-				services.AddStackExchangeRedisCache(options =>
+				GxRedisSession gxRedisSession = (GxRedisSession)sessionService;
+				if (gxRedisSession.IsMultitenant)
 				{
-					GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
-					options.Configuration = sessionService.ConnectionString;
-					options.InstanceName = sessionService.InstanceName;
-				});
-				services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
+					GXLogging.Info(log, $"Using multi-tenant Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
+
+					services.AddSingleton<IDistributedCache, TenantRedisCache>();
+					services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName("default");
+				}
+				else
+				{
+					services.AddStackExchangeRedisCache(options =>
+					{
+						GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
+						options.Configuration = sessionService.ConnectionString;
+						options.InstanceName = sessionService.InstanceName;
+					});
+					services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
+				}
 			}
 			else if (sessionService is GxDatabaseSession)
 			{
@@ -463,6 +476,14 @@ namespace GeneXus.Application
 			app.UseCookiePolicy();
 			app.UseSession();
 			app.UseStaticFiles();
+
+			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
+			GxRedisSession gxRedisSession = sessionService as GxRedisSession;
+			if (gxRedisSession != null && gxRedisSession.IsMultitenant)
+			{
+				app.UseMiddleware<TenantMiddleware>();
+			}
+
 			ConfigureCors(app);
 			ConfigureSwaggerUI(app, baseVirtualPath);
 
