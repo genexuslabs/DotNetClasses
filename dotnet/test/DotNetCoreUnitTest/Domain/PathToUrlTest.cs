@@ -57,7 +57,7 @@ namespace xUnitTesting
 
 			string imagePath = @"C:/Models/MyKB/NETModel/web/PublicTempStorage/dog6bf667c1-f15b-4af1-9ece-893381a470a0.jpg";
 			string imageUrl = context.PathToUrl(imagePath);
-			string expectedImagePath = "file:///" + imagePath;
+			string expectedImagePath = string.Empty;
 			Assert.Equal(expectedImagePath, imageUrl, true, true, false);
 
 		}

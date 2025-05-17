@@ -3423,9 +3423,7 @@ namespace GeneXus.Application
 #else
 			else if (Path.IsPathRooted(relativeUrl) && !relativeUrl.Contains("://"))
 #endif
-				if (Uri.TryCreate(relativeUrl, UriKind.Absolute, out uri))
-					return uri.AbsoluteUri;
-				else return relativeUrl;
+				return string.Empty;
 			else if (Uri.TryCreate(GetContextPath() + relativeUrl, UriKind.Absolute, out uri))
 				return uri.AbsoluteUri;
 			else
