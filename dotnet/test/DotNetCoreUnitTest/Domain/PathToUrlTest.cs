@@ -46,6 +46,21 @@ namespace xUnitTesting
 			Assert.Equal(expectedImagePath, imageUrl, true, true, false);
 
 		}
+		[Fact]
+		public void PathToUrlCmdLine()
+		{
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return;
+			}
+			GxContext context = new GxContext();
+
+			string imagePath = @"C:/Models/MyKB/NETModel/web/PublicTempStorage/dog6bf667c1-f15b-4af1-9ece-893381a470a0.jpg";
+			string imageUrl = context.PathToUrl(imagePath);
+			string expectedImagePath = "file:///" + imagePath;
+			Assert.Equal(expectedImagePath, imageUrl, true, true, false);
+
+		}
 
 	}
 }
