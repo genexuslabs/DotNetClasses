@@ -14,6 +14,10 @@ namespace GamSaml20
 
 		private XmlDocument xmlDoc;
 
+#if !NETCORE
+		private XmlDocument nonCanonicalizedDoc;
+#endif
+
 
 		/********EXTERNAL OBJECT PUBLIC METHODS  - BEGIN ********/
 
@@ -29,6 +33,13 @@ namespace GamSaml20
 		{
 			logger.Trace("init");
 			this.xmlDoc = GamSaml20.Utils.SamlAssertionUtils.CanonicalizeXml(xml);
+#if !NETCORE
+			XmlDocument nonDoc = new XmlDocument();
+			nonDoc.XmlResolver = null; //disable parser's DTD reading - security meassure
+			nonDoc.PreserveWhitespace = true;
+			nonDoc.LoadXml(xml);
+			this.nonCanonicalizedDoc = nonDoc;
+#endif
 			logger.Debug($"Init - XML IdP response: {this.xmlDoc.OuterXml}");
 		}
 
@@ -52,7 +63,11 @@ namespace GamSaml20
 		[SecuritySafeCritical]
 		public bool VerifySignatures(SamlParms parms)
 		{
+#if NETCORE
 			return DSig.ValidateSignatures(this.xmlDoc, parms.TrustedCertPath);
+#else
+			return DSig.ValidateSignatures(this.nonCanonicalizedDoc, parms.TrustedCertPath);
+#endif
 		}
 
 		[SecuritySafeCritical]

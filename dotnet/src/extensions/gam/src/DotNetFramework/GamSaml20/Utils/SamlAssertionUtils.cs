@@ -220,5 +220,28 @@ namespace GamSaml20.Utils
 			logger.Debug($"PrintJson -- json: {json}");
 			return json;
 		}
+
+#if !NETCORE
+		internal static XmlElement FindNodeById(XmlDocument doc, string name, string value)
+		{
+			logger.Trace("FindNodeById");
+			XmlNodeList nodeList = doc.SelectNodes($"//*[@{name}]");
+			if (nodeList == null)
+			{
+
+				return null;
+			}
+
+			foreach (XmlNode node in nodeList)
+			{
+				if (node.Attributes[name].Value.Equals(value))
+				{
+					return node as XmlElement;
+				}
+			}
+
+			return null;
+		}
+#endif
 	}
 }
