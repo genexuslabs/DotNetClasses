@@ -11,9 +11,6 @@ namespace GamSaml20.Utils
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(DSig));
 
-		internal static string NFE_ID_ATT_NAME = "ID";
-		internal static string REFERENCE_URI = "URI";
-
 		internal static bool ValidateSignatures(XmlDocument doc, string certPath)
 		{
 			logger.Trace("ValidateSignatures");
@@ -33,12 +30,30 @@ namespace GamSaml20.Utils
 				try
 				{
 					XmlElement signature = node as XmlElement;
+					if (!IsValidAlgorithm(signature)) //securty measure
+					{
+						logger.Error($"ValidateSignatures - Unsupported algorithm: {GetAlgorithm(signature)}");
+						return false;
+					}
+
+#if NETCORE
 					SignedXml signedXml = new SignedXml(signature.OwnerDocument);
 					signedXml.LoadXml(signature);
 					if (!signedXml.CheckSignature(certificate, true))
 					{
 						return false;
 					}
+#else
+					string uri = GetReference(signature).Attributes.GetNamedItem("URI").Value.Replace("#", "").Trim();
+					XmlElement signedElement = SamlAssertionUtils.FindNodeById(doc, "ID", uri);
+					logger.Debug($"ValidateSignatures - signedElement: {signedElement.LocalName} uri: {uri}");
+					signedElement.RemoveChild(signature);
+					if (!VerifySignature(signature, certificate, signedElement))
+					{
+						logger.Debug("ValidateSignatures - false");
+						return false;
+					}
+#endif
 				}
 				catch (Exception ex)
 				{
@@ -50,26 +65,73 @@ namespace GamSaml20.Utils
 
 		}
 
-		private static XmlElement FindNodeById(XmlDocument doc, string name, string value)
+		private static string GetAlgorithm(XmlElement signature)
 		{
-			logger.Trace("FindNodeById");
-			XmlNodeList nodeList = doc.SelectNodes($"//*[@{name}]");
-			if (nodeList == null)
+			logger.Trace("GetAlgorithm");
+			XmlNodeList nodeList = signature.GetElementsByTagName("SignatureMethod");
+			if (nodeList.Count == 0)
 			{
-				logger.Error("FindNodeById -could not find node by id");
-				return null;
+				nodeList = signature.GetElementsByTagName("ds:SignatureMethod");
 			}
-
-			foreach (XmlNode node in nodeList)
-			{
-				if (node.Attributes[name].Value.Equals(value))
-				{
-					return node as XmlElement;
-				}
-			}
-			logger.Error("FindNodeById - could not find node");
-			return null;
+			return nodeList[0].Attributes["Algorithm"].Value;
 		}
+
+		private static bool IsValidAlgorithm(XmlElement signature)
+		{
+			logger.Trace("IsValidAlgorithm");
+			switch (GetAlgorithm(signature).Trim())
+			{
+				case "http://www.w3.org/2001/04/xmldsig-more#rsa-sha1":
+				case "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256":
+				case "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512":
+					return true;
+				default:
+					return false;
+			}
+		}
+
+#if !NETCORE
+		private static bool VerifySignature(XmlElement signature, X509Certificate2 certificate, XmlElement signedElement)
+		{
+			XmlDocument doc = new XmlDocument();
+			doc.PreserveWhitespace = true;
+			doc.XmlResolver = null; //disable parser's DTD reading - security meassure
+
+			doc.LoadXml(signedElement.OuterXml);
+
+			SamlSignedXml signedXml = new SamlSignedXml(doc);
+			signedXml.LoadXml(signature);
+			return signedXml.CheckSignature(certificate, true);
+		}
+
+		private static XmlElement GetReference(XmlElement signature)
+		{
+			 XmlNodeList nodeList = signature.GetElementsByTagName("Reference");
+             if(nodeList.Count == 0)
+             {
+                 nodeList = signature.GetElementsByTagName("ds:Reference");
+             }
+             return nodeList[0] as XmlElement;
+		}
+#endif
 	}
+
+#if !NETCORE
+	internal class SamlSignedXml : SignedXml
+	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SamlSignedXml));
+		public SamlSignedXml(XmlDocument doc) : base(doc) { }
+
+		public override XmlElement GetIdElement(XmlDocument doc, string id)
+		{
+			logger.Trace("GetIdElement");
+			XmlElement element = SamlAssertionUtils.FindNodeById(doc, "ID", id);
+			logger.Debug($"GetIdElement - Node name: {element.LocalName} id: {id}");
+			logger.Debug($"GetIdElement - Node value: {element.OuterXml}");
+			return element;
+		}
+		
+	}
+#endif
 
 }
