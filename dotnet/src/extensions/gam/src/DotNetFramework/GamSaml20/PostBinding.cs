@@ -1,3 +1,4 @@
+using System;
 using System.Security;
 using System.Xml;
 using GamSaml20.Utils;
