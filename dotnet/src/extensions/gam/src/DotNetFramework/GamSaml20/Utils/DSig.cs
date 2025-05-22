@@ -24,31 +24,16 @@ namespace GamSaml20.Utils
 				return false;
 			}
 
-			XmlNodeList signatureNodeList = doc.GetElementsByTagName("Signature");
-			if (signatureNodeList.Count == 0)
-			{
-				signatureNodeList = doc.GetElementsByTagName("ds:Signature");
-			}
-
-			if (signatureNodeList.Count == 0)
-			{
-				logger.Error("ValidateSignatures - Could not find signatures");
-				return false;
-			}
+			XmlNamespaceManager nsManager = new XmlNamespaceManager(doc.NameTable);
+			nsManager.AddNamespace("ds", "http://www.w3.org/2000/09/xmldsig#");
+			XmlNodeList signatureNodeList = doc.SelectNodes("//ds:Signature", nsManager);
 
 			foreach (XmlNode node in signatureNodeList)
 			{
 				try
 				{
 					XmlElement signature = node as XmlElement;
-					string uri = signature.SelectNodes($"//*[@{REFERENCE_URI}]").Item(0).Attributes[REFERENCE_URI].Value.Replace("#", "").Trim();
-					XmlElement element = FindNodeById(doc, NFE_ID_ATT_NAME, uri);
-					if (element == null)
-					{
-						logger.Error("ValidateSignatures - Could not find signatures");
-						return false;
-					}
-					SignedXml signedXml = new SignedXml(element);
+					SignedXml signedXml = new SignedXml(signature.OwnerDocument);
 					signedXml.LoadXml(signature);
 					if (!signedXml.CheckSignature(certificate, true))
 					{

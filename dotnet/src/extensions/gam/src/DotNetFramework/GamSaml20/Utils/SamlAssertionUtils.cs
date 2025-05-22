@@ -50,7 +50,7 @@ namespace GamSaml20.Utils
 			XmlDocument doc = new XmlDocument();
 			doc.XmlResolver = null; //disable parser's DTD reading - security meassure
 			doc.LoadXml(xmlString);
-			XmlDsigExcC14NTransform c14nTransform = new XmlDsigExcC14NTransform();
+			XmlDsigC14NTransform c14nTransform = new XmlDsigC14NTransform();
 			c14nTransform.LoadInput(doc);
 			Stream outputStream = (Stream)c14nTransform.GetOutput();
 			using (MemoryStream memoryStream = new MemoryStream())
