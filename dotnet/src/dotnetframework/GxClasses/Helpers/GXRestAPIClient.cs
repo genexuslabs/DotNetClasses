@@ -19,6 +19,7 @@ namespace GeneXus.Application
 	{
 		private const string DATE_NULL = "0000-00-00";
 		private const string DATETIME_NULL = "0000-00-00'T'00:00:00";
+		private const string DATETIME_EMPTY = "0000-00-00T00:00:00";
 		private const string DATE_FORMAT = "yyyy-MM-dd";
 		private const string DATETIME_FORMAT = "yyyy-MM-ddTHH:mm:ss";
 		private const string DATETIME_MS_FORMAT = "yyyy-MM-ddTHH:mm:ss.fff";
@@ -283,7 +284,7 @@ namespace GeneXus.Application
 		public DateTime GetHeaderDateTime(string varName, bool hasMilliseconds)
 		{
 			string val = GetHeaderString(varName);
-			if (val.StartsWith(DATETIME_NULL))
+			if (val.StartsWith(DATETIME_EMPTY))
 				return DateTimeUtil.NullDate();
 			string fmt = DATETIME_FORMAT;
 			if (hasMilliseconds)
@@ -353,7 +354,7 @@ namespace GeneXus.Application
 		public DateTime GetBodyDateTime(string varName, bool hasMilliseconds)
 		{
 			string val = GetJsonStr(varName);
-			if (val.StartsWith(DATETIME_NULL))
+			if (val.StartsWith(DATETIME_EMPTY))
 				return DateTimeUtil.NullDate();
 			string fmt = DATETIME_FORMAT;
 			if (hasMilliseconds)
