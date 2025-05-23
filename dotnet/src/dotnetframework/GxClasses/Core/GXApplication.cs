@@ -2897,7 +2897,10 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				return _HttpContext.GetUserHostAddress();
+				if (_HttpContext != null)
+					return _HttpContext.GetUserHostAddress();
+				else
+					return string.Empty;
 			}
 			catch
 			{
@@ -2913,19 +2916,25 @@ namespace GeneXus.Application
 				string serverName;
 				if (Config.GetValueOf("SERVER_NAME", out serverName))
 					return serverName;
+
+				if (_HttpContext != null)
+				{
 #if !NETCORE
 				serverName = _HttpContext.Request.ServerVariables[SERVER_VAR_HTTP_HOST];
 #else
-				serverName = _HttpContext.GetServerVariable(SERVER_VAR_HTTP_HOST);
+					serverName = _HttpContext.GetServerVariable(SERVER_VAR_HTTP_HOST);
 #endif
-				if (String.IsNullOrEmpty(serverName))
-				{
-					serverName = _HttpContext.Request.GetHost();
+					if (String.IsNullOrEmpty(serverName))
+					{
+						serverName = _HttpContext.Request.GetHost();
+					}
+					int pos = serverName.IndexOf(':');
+					if (pos > 0)
+						return serverName.Substring(0, pos);
+					return serverName;
 				}
-				int pos = serverName.IndexOf(':');
-				if (pos > 0)
-					return serverName.Substring(0, pos);
-				return serverName;
+				else
+					return string.Empty;
 			}
 			catch
 			{
@@ -2970,7 +2979,10 @@ namespace GeneXus.Application
 			{
 				try
 				{
-					return _HttpContext.Request.IsDefaultPort();
+					if (_HttpContext != null)
+						return _HttpContext.Request.IsDefaultPort();
+					else
+						return false;
 				}
 				catch
 				{
@@ -2986,7 +2998,15 @@ namespace GeneXus.Application
 				{
 					return GXUri.UriSchemeHttps;
 				}
-				return _HttpContext.Request.GetScheme();
+				if (_HttpContext != null)
+				{
+
+					return _HttpContext.Request.GetScheme();
+				}
+				else
+				{
+					return GXUri.UriSchemeHttp;
+				}
 			}
 			catch
 			{
@@ -3007,10 +3027,13 @@ namespace GeneXus.Application
 		}
 		private bool CheckHeaderValue(String headerName, String headerValue)
 		{
-			string httpsHeader = _HttpContext.Request.Headers[headerName];
-			if (!string.IsNullOrEmpty(httpsHeader) && httpsHeader.Equals(headerValue, StringComparison.OrdinalIgnoreCase))
+			if (_HttpContext != null)
 			{
-				return true;
+				string httpsHeader = _HttpContext.Request.Headers[headerName];
+				if (!string.IsNullOrEmpty(httpsHeader) && httpsHeader.Equals(headerValue, StringComparison.OrdinalIgnoreCase))
+				{
+					return true;
+				}
 			}
 			return false;
 		}
@@ -3018,11 +3041,17 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				string appPath = _HttpContext.Request.GetApplicationPath();
-				if (appPath.EndsWith("/"))
-					return appPath;
+				if (_HttpContext != null)
+				{
+					string appPath = _HttpContext.Request.GetApplicationPath();
+					if (appPath.EndsWith("/"))
+						return appPath;
+					else
+						return appPath + "/";
+				}
 				else
-					return appPath + "/";
+					return string.Empty;
+
 			}
 			catch
 			{
@@ -3419,13 +3448,23 @@ namespace GeneXus.Application
 			}
 			return property;
 		}
-
 		public string PathToUrl(string path)
 		{
-			GXLogging.Debug(Logger, "PathToUrl:", () => GetContextPath() + " relativePath:" + PathToRelativeUrl(path));
-#pragma warning disable SYSLIB0013 // EscapeUriString
-			return Uri.EscapeUriString(GetContextPath()) + PathToRelativeUrl(path, false);
-#pragma warning disable SYSLIB0013 // EscapeUriString
+			Uri uri;
+			string relativeUrl = PathToRelativeUrl(path, false);
+			GXLogging.Debug(Logger, "PathToUrl:", () => GetContextPath() + " relativePath:" + relativeUrl);
+			if (Uri.IsWellFormedUriString(relativeUrl, UriKind.Absolute))
+				return relativeUrl;
+#if NETCORE
+			else if (Path.IsPathFullyQualified(relativeUrl) && !relativeUrl.Contains("://"))
+#else
+			else if (Path.IsPathRooted(relativeUrl) && !relativeUrl.Contains("://"))
+#endif
+				return string.Empty;
+			else if (Uri.TryCreate(GetContextPath() + relativeUrl, UriKind.Absolute, out uri))
+				return uri.AbsoluteUri;
+			else
+				return relativeUrl;
 		}
 
 		public string PathToRelativeUrl(string path)
