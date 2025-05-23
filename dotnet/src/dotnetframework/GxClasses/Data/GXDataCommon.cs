@@ -1816,6 +1816,7 @@ namespace GeneXus.Data
 				case 40613: /*Database '%.*ls' on server '%.*ls' is not currently available. Please retry the connection later.*/
 				case 53:/*A network-related or instance-specific error occurred while establishing a connection to SQL Server*/
 				case 11:
+				case 35: /*A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 35 - An internal exception was caught*/
 				case 121: /*A transport-level error has occurred when receiving results from the server. (provider: TCP Provider, error: 0 - The semaphore timeout period has expired.*/
 				case 10054://A transport-level error has occurred when sending the request to the server. (provider: TCP Provider, error: 0 - An existing connection was forcibly closed by the remote host.)
 				case 6404: //The connection is broken and recovery is not possible.  The connection is marked by the server as unrecoverable.  No attempt was made to restore the connection.
