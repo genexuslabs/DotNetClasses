@@ -864,8 +864,7 @@ namespace GeneXus.Data.NTier.ADO
 		{
 			get { return _gxDbCommand; }
 		}
-
-		public void createCursor(IGxDataStore ds, GxErrorHandler errorHandler)
+		public void createCursor(IGxDataStore ds, GxErrorHandler errorHandler, string objectName)
         {
 
             if (_state >= 2)
@@ -874,7 +873,7 @@ namespace GeneXus.Data.NTier.ADO
                 return;
             }
             _stmt = (_staticParameters == null)? _stmt : String.Format(_stmt, _staticParameters);
-            _gxDbCommand = new GxCommand(ds.Db, _stmt, _updatable, ds, "", _name, TTL, hasNested, isForFirst, errorHandler, _batchSize);
+            _gxDbCommand = new GxCommand(ds.Db, _stmt, _updatable, ds, objectName, _name, TTL, hasNested, isForFirst, errorHandler, _batchSize);
             _gxDbCommand.IsCursor = true;
             if (_blockSize > 0)
                 _gxDbCommand.FetchSize = Convert.ToUInt16(_blockSize);
@@ -886,7 +885,12 @@ namespace GeneXus.Data.NTier.ADO
             _gxDbCommand.ErrorMask = _errMask;
 
         }
-        protected virtual void bindParms(Object[] ptb)
+		public void createCursor(IGxDataStore ds, GxErrorHandler errorHandler)
+		{
+			createCursor(ds, errorHandler, string.Empty);
+		}
+
+		protected virtual void bindParms(Object[] ptb)
         {
             int pos = 1;
 			if (ptb != null)

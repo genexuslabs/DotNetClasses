@@ -755,16 +755,19 @@ namespace GeneXus.Http
 				foreach (string name in tokenValues.Names)
 				{
 					object value = tokenValues[name];
-					if (value is string)
-						_formVars.Add(name, value.ToString());
-					else if (value is double)
-						_formVars.Add(name, ((double)value).ToString(CultureInfo.InvariantCulture.NumberFormat));
-					else if (value is decimal)
-						_formVars.Add(name, ((decimal)value).ToString(CultureInfo.InvariantCulture.NumberFormat));
-					else if (value is float)
-						_formVars.Add(name, ((float)value).ToString(CultureInfo.InvariantCulture.NumberFormat));
-					else
-						_formVars.Add(name, value.ToString());
+					if (value != null)
+					{
+						if (value is string)
+							_formVars.Add(name, value.ToString());
+						else if (value is double)
+							_formVars.Add(name, ((double)value).ToString(CultureInfo.InvariantCulture.NumberFormat));
+						else if (value is decimal)
+							_formVars.Add(name, ((decimal)value).ToString(CultureInfo.InvariantCulture.NumberFormat));
+						else if (value is float)
+							_formVars.Add(name, ((float)value).ToString(CultureInfo.InvariantCulture.NumberFormat));
+						else
+							_formVars.Add(name, value.ToString());
+					}
 				}
 			}
 		}

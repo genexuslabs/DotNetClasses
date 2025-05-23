@@ -787,20 +787,51 @@ namespace GeneXus.Utils
 		public GxSimpleCollection<string> ToStringCollection(int digits, int decimals)
 		{
 			GxSimpleCollection<string> result = new GxSimpleCollection<string>();
-			foreach (T item in this)
+			if (typeof(T) == typeof(string))
 			{
-				decimal value = (decimal)Convert.ChangeType(item, typeof(decimal));
-				result.Add(StringUtil.LTrim(StringUtil.Str(value, digits, decimals)));
+				foreach (T item in this)
+				{
+					result.Add(item as string);
+				}
+			}
+			else
+			{
+				foreach (T item in this)
+				{
+					decimal value = (decimal)Convert.ChangeType(item, typeof(decimal));
+					result.Add(StringUtil.LTrim(StringUtil.Str(value, digits, decimals)));
+				}
 			}
 			return result;
 		}
 		public void FromStringCollection(GxSimpleCollection<string> value)
 		{
-			foreach (string item in value)
+			if (typeof(T) == typeof(DateTime))
 			{
-				Add(Convert.ChangeType(NumberUtil.Val(item.ToString()), typeof(T)));
+				foreach (string item in value)
+				{
+					Add(DateTimeUtil.CToT2(item));
+				}
+			}
+			else if(typeof(T) == typeof(string))
+			{
+				foreach (string item in value)
+				{
+					Add(item);
+				}
+			}else {
+				foreach (string item in value)
+				{
+					Add(Convert.ChangeType(NumberUtil.Val(item.ToString()), typeof(T)));
+				}
 			}
 		}
+		//To delete
+		public void FromStringCollection(GxSimpleCollection<string> value, IGxContext context)
+		{
+			FromStringCollection(value);
+		}
+
 
 	}
 #if !NETCORE
@@ -3128,6 +3159,27 @@ namespace GeneXus.Utils
 		public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options)
 		{
 			writer.WriteBooleanValue(value);
+		}
+	}
+	public class StringConverter : JsonConverter<string>
+	{
+		public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.Number)
+			{
+				if (reader.TryGetInt32(out int l))
+					return l.ToString();
+				else if (reader.TryGetDecimal(out decimal d))
+					return d.ToString();
+				else
+					return reader.GetDouble().ToString();
+			}
+			return reader.GetString();
+		}
+
+		public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+		{
+			writer.WriteStringValue(value);
 		}
 	}
 #endif
