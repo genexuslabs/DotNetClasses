@@ -685,7 +685,11 @@ namespace GeneXus.Utils
 			{
 				ipAddresses = serverHostEntry.AddressList.FirstOrDefault(a => a != null && a.AddressFamily == _DataSocket.AddressFamily);
 			}
-			else
+			else if (_ControlSocket != null)
+			{
+				ipAddresses = serverHostEntry.AddressList.FirstOrDefault(a => a != null && a.AddressFamily == _ControlSocket.AddressFamily);
+			}
+			else 
 			{
 				ipAddresses = serverHostEntry.AddressList.FirstOrDefault();
 			}
