@@ -31,6 +31,7 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+		<PackageReference Include="OpenAI-DotNet" Version="8.2.2"/>
 	</ItemGroup>
 
   <ItemGroup>
