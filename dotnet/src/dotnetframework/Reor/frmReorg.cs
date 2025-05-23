@@ -27,7 +27,7 @@ namespace GeneXus.Forms
 		public static bool force = false;
 		public static GXReorganization gxReorganization;
 
-		const string REORGPGM_GEN = "reorgpgm.gen";
+		const string REORGPGM_GEN = "REORGPGM.GEN";
 		const string CLIENT_EXE_CONFIG = "client.exe.config";
 
 		[STAThread]
