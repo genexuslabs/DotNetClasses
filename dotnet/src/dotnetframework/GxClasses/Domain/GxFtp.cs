@@ -96,6 +96,12 @@ namespace GeneXus.Utils
 			{
 				if (! sUrl.StartsWith( "//"))
 					sUrl = "//" + sUrl;
+
+				if (Uri.CheckHostName(sUrl.TrimStart('/')) == UriHostNameType.IPv6)
+				{
+					sUrl = "//[" + sUrl.TrimStart('/') + "]";
+				}
+
 				sUrl = "ftp:" + sUrl;
 			}
 			Uri Url= new Uri( sUrl);

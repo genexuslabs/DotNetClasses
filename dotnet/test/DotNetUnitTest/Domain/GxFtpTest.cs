@@ -9,6 +9,7 @@ namespace xUnitTesting
 	{
 		[Theory]
 		[InlineData("127.0.0.1", AddressFamily.InterNetwork)] // IPv4
+		[InlineData("::1", AddressFamily.InterNetworkV6)]     // IPv6
 		[InlineData("localhost", AddressFamily.InterNetwork)] // Hostname resolving to IPv4
 		public void FtpAddressFamilyTest(string host, AddressFamily addressFamily)
 		{
@@ -22,6 +23,6 @@ namespace xUnitTesting
 			context.FtpInstance.GetStatusText(out msg);
 			Assert.Equal("Login Failed.", msg);
 		}
-	
+		
 	}
 }
