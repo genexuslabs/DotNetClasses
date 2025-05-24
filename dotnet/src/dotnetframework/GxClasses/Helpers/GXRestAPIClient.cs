@@ -17,8 +17,7 @@ namespace GeneXus.Application
 {
 	public class GXRestAPIClient
 	{
-		private const string DATE_NULL = "0000-00-00";
-		private const string DATETIME_NULL = "0000-00-00'T'00:00:00";
+		private const string DATE_EMPTY = "0000-00-00";
 		private const string DATETIME_EMPTY = "0000-00-00T00:00:00";
 		private const string DATE_FORMAT = "yyyy-MM-dd";
 		private const string DATETIME_FORMAT = "yyyy-MM-ddTHH:mm:ss";
@@ -276,7 +275,7 @@ namespace GeneXus.Application
 		public DateTime GetHeaderDate(string varName)
 		{
 			string val = GetHeaderString(varName);
-			if (val.StartsWith(DATE_NULL))
+			if (val.StartsWith(DATE_EMPTY))
 				return DateTimeUtil.NullDate();
 			return DateTime.ParseExact(val, DATE_FORMAT, System.Globalization.CultureInfo.InvariantCulture);
 		}
@@ -346,7 +345,7 @@ namespace GeneXus.Application
 		public DateTime GetBodyDate(string varName)
 		{
 			string val = GetJsonStr(varName);
-			if (val.StartsWith(DATE_NULL))
+			if (val.StartsWith(DATE_EMPTY))
 				return DateTimeUtil.NullDate();
 			return DateTime.ParseExact(val, DATE_FORMAT, System.Globalization.CultureInfo.InvariantCulture);
 		}
