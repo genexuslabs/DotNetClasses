@@ -17,8 +17,8 @@ namespace GeneXus.Application
 {
 	public class GXRestAPIClient
 	{
-		private const string DATE_NULL = "0000-00-00";
-		private const string DATETIME_NULL = "0000-00-00'T'00:00:00";
+		private const string DATE_EMPTY = "0000-00-00";
+		private const string DATETIME_EMPTY = "0000-00-00T00:00:00";
 		private const string DATE_FORMAT = "yyyy-MM-dd";
 		private const string DATETIME_FORMAT = "yyyy-MM-ddTHH:mm:ss";
 		private const string DATETIME_MS_FORMAT = "yyyy-MM-ddTHH:mm:ss.fff";
@@ -275,7 +275,7 @@ namespace GeneXus.Application
 		public DateTime GetHeaderDate(string varName)
 		{
 			string val = GetHeaderString(varName);
-			if (val.StartsWith(DATE_NULL))
+			if (val.StartsWith(DATE_EMPTY))
 				return DateTimeUtil.NullDate();
 			return DateTime.ParseExact(val, DATE_FORMAT, System.Globalization.CultureInfo.InvariantCulture);
 		}
@@ -283,7 +283,7 @@ namespace GeneXus.Application
 		public DateTime GetHeaderDateTime(string varName, bool hasMilliseconds)
 		{
 			string val = GetHeaderString(varName);
-			if (val.StartsWith(DATETIME_NULL))
+			if (val.StartsWith(DATETIME_EMPTY))
 				return DateTimeUtil.NullDate();
 			string fmt = DATETIME_FORMAT;
 			if (hasMilliseconds)
@@ -345,7 +345,7 @@ namespace GeneXus.Application
 		public DateTime GetBodyDate(string varName)
 		{
 			string val = GetJsonStr(varName);
-			if (val.StartsWith(DATE_NULL))
+			if (val.StartsWith(DATE_EMPTY))
 				return DateTimeUtil.NullDate();
 			return DateTime.ParseExact(val, DATE_FORMAT, System.Globalization.CultureInfo.InvariantCulture);
 		}
@@ -353,7 +353,7 @@ namespace GeneXus.Application
 		public DateTime GetBodyDateTime(string varName, bool hasMilliseconds)
 		{
 			string val = GetJsonStr(varName);
-			if (val.StartsWith(DATETIME_NULL))
+			if (val.StartsWith(DATETIME_EMPTY))
 				return DateTimeUtil.NullDate();
 			string fmt = DATETIME_FORMAT;
 			if (hasMilliseconds)
@@ -482,10 +482,9 @@ namespace GeneXus.Application
 		public void RestExecute()
 		{
 			this.ErrorCode = 0;
-      this.ErrorMessage = "";
+			this.ErrorMessage = "";
 			this.StatusCode = 0;
 			this.StatusMessage = "";
-
 			if (_headerVars.Count > 0)
 			{
 				foreach (string key in _headerVars.Keys)
@@ -543,10 +542,12 @@ namespace GeneXus.Application
 			this.StatusMessage = httpClient.ReasonLine;
 			if (httpClient.StatusCode >= 300 || httpClient.ErrCode > 0)
 			{
+
 				_responseData = new Dictionary<string, object>();
 			}
 			else
 			{
+
 				_responseData = GeneXus.Utils.RestAPIHelpers.ReadRestParameters(httpClient.ToString());
 			}
 		}
