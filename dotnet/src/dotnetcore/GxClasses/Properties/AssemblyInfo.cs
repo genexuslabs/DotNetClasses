@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("GxSearch")]
 [assembly: InternalsVisibleTo("GxNetCoreStartup")]
 [assembly: InternalsVisibleTo("GeneXus.Deploy.AzureFunctions.Handlers")]
+[assembly: InternalsVisibleTo("GeneXus.Deploy.AzureFunctionsLibraries")]
 [assembly: InternalsVisibleTo("AzureFunctionsTest")]
 [assembly: InternalsVisibleTo("GXQueue")]
 [assembly: InternalsVisibleTo("GXMessageBroker")]
@@ -18,3 +19,6 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("DotNetCoreChunkedTest")]
 [assembly: InternalsVisibleTo("DotNetCoreChunkedTest")]
 [assembly: InternalsVisibleTo("GeneXus.OpenTelemetry.Diagnostics")]
+[assembly: InternalsVisibleTo("ConsoleApp2")]
+[assembly: InternalsVisibleTo("GxAI")]
+

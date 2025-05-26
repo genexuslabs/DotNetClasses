@@ -37,7 +37,7 @@
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
 		<PackageReference Include="jose-jwt" Version="5.0.0" />
 		<PackageReference Include="System.Security.Cryptography.Cng" Version="4.7.0" />
-		<PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -98,7 +98,10 @@ namespace GeneXus.Data.NTier
 		decimal getBigDecimal(int id, int dec);
         bool getBool(int id);
         Guid getGuid(int id);
-    }
+#if NETCORE
+		GxEmbedding getGxembedding(int id, string model, int dimensions);
+#endif
+	}
 	public interface IFieldSetter
 	{
         void SetParameter(int id, Utils.IGeographicNative parm);
