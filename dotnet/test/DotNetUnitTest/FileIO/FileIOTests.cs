@@ -154,6 +154,17 @@ namespace UnitTesting
 
 			Assert.Equal(name, fullPath);
 		}
-
+		[Fact]
+		public void Length_ShouldUpdate_WhenFileChanges()
+		{
+			string tempFilePath = Path.Combine(BaseDir, "FileChanges.txt"); 
+			File.WriteAllText(tempFilePath, "Initial content");
+			GxFileInfo gxFileInfo = new GxFileInfo(tempFilePath);
+			long initialLength = gxFileInfo.Length;
+			File.AppendAllText(tempFilePath, "\nAdditional content");
+			long updatedLength = gxFileInfo.Length;
+			Assert.NotEqual(initialLength, updatedLength);
+			File.Delete(tempFilePath);
+		}
 	}
 }
