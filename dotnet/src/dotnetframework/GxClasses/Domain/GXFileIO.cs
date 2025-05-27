@@ -260,6 +260,7 @@ public class GxFileInfo : IGxFileInfo
     {
         get
         {
+			_file.Refresh();
             return _file.LastWriteTime;
         }
     }
@@ -268,7 +269,8 @@ public class GxFileInfo : IGxFileInfo
     {
         get
         {
-            return _file.Length;
+			_file.Refresh();
+			return _file.Length;
         }
     }
 
