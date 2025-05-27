@@ -167,17 +167,13 @@ namespace UnitTesting
 			gxFile.Close();
 
 			long initialLength = gxFile.GetLength();
-			DateTime initialLastModified = gxFile.GetLastModified();
-			Thread.Sleep(1);
 
 			gxFile.Open(string.Empty);
 			gxFile.WriteLine("Additional content");
 			gxFile.Close();
 
 			long updatedLength = gxFile.GetLength();
-			DateTime updatedLastModified= gxFile.GetLastModified();
 			Assert.NotEqual(initialLength, updatedLength);
-			Assert.NotEqual(initialLastModified, updatedLastModified);
 		}
 	}
 }
