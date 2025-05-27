@@ -159,11 +159,15 @@ namespace UnitTesting
 		{
 			string tempFilePath = Path.Combine(BaseDir, "FileChanges.txt"); 
 			File.WriteAllText(tempFilePath, "Initial content");
-			GxFileInfo gxFileInfo = new GxFileInfo(tempFilePath);
-			long initialLength = gxFileInfo.Length;
+			GxFile gxFile = new GxFile();
+			gxFile.Source = tempFilePath;
+			long initialLength = gxFile.GetLength();
+			DateTime initialLastModified = gxFile.GetLastModified();
 			File.AppendAllText(tempFilePath, "\nAdditional content");
-			long updatedLength = gxFileInfo.Length;
+			long updatedLength = gxFile.GetLength();
+			DateTime updatedLastModified= gxFile.GetLastModified();
 			Assert.NotEqual(initialLength, updatedLength);
+			Assert.NotEqual(initialLastModified, updatedLastModified);
 			File.Delete(tempFilePath);
 		}
 	}
