@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using DotNetUnitTest;
 using GeneXus.Configuration;
 using GeneXus.Printer;
@@ -157,18 +158,26 @@ namespace UnitTesting
 		[Fact]
 		public void Length_ShouldUpdate_WhenFileChanges()
 		{
-			string tempFilePath = Path.Combine(BaseDir, "FileChanges.txt"); 
-			File.WriteAllText(tempFilePath, "Initial content");
-			GxFile gxFile = new GxFile();
-			gxFile.Source = tempFilePath;
+			GxFile gxFile = new GxFile(BaseDir);
+			gxFile.Source = "FileChanges.txt";
+			gxFile.Delete();
+
+			gxFile.Open(string.Empty);
+			gxFile.WriteLine("Initial content");
+			gxFile.Close();
+
 			long initialLength = gxFile.GetLength();
 			DateTime initialLastModified = gxFile.GetLastModified();
-			File.AppendAllText(tempFilePath, "\nAdditional content");
+			Thread.Sleep(1);
+
+			gxFile.Open(string.Empty);
+			gxFile.WriteLine("Additional content");
+			gxFile.Close();
+
 			long updatedLength = gxFile.GetLength();
 			DateTime updatedLastModified= gxFile.GetLastModified();
 			Assert.NotEqual(initialLength, updatedLength);
 			Assert.NotEqual(initialLastModified, updatedLastModified);
-			File.Delete(tempFilePath);
 		}
 	}
 }
