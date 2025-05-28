@@ -198,10 +198,17 @@ namespace GeneXus.Data.NTier.ADO
         public IGeographicNative getGeospatial(int id)
         {
             return new Utils.Geospatial((object)_gxDbCommand.ErrorRecord(id - 1));
-        }
-        #endregion
-    }
-    public class GXFatFieldGetter : IFieldGetter
+		}
+#if NETCORE
+		public GxEmbedding getGxembedding(int id, string model, int dimensions)
+		{
+			return (GxEmbedding)_gxDbCommand.ErrorRecord(id - 1);
+		}
+#endif
+
+#endregion
+	}
+	public class GXFatFieldGetter : IFieldGetter
     {
         static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFatFieldGetter>();
         IGxDbCommand _gxDbCommand;
@@ -476,7 +483,7 @@ namespace GeneXus.Data.NTier.ADO
 			TraceRow(() => $"getVarchar - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
-        public decimal getBigDecimal(int id, int dec)
+		public decimal getBigDecimal(int id, int dec)
         {
 			decimal value =_gxDbCommand.Db.GetDecimal(_gxDbCommand, _DR, id - 1);
 			TraceRow(() => $"getBigDecimal - index : {id} value:{value.ToString()}");
@@ -494,9 +501,17 @@ namespace GeneXus.Data.NTier.ADO
         {
             return _gxDbCommand.Db.IsDBNull(_gxDbCommand, _DR, id - 1);
         }
+#if NETCORE
+		public GxEmbedding getGxembedding(int id, string model, int dimensions)
+		{
+			GxEmbedding value = _gxDbCommand.Db.GetEmbedding(_gxDbCommand, _DR, id - 1, model, dimensions);
+			TraceRow(() => $"getGxembedding - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
+			return value;
+		}
+#endif
 
-    }
-    public class GXFatFieldSetter : IFieldSetter
+	}
+	public class GXFatFieldSetter : IFieldSetter
     {
 		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFatFieldSetter>();
 		GxCommand _gxDbCommand;

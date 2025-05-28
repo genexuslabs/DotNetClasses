@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Cache;
+using GeneXus.Configuration;
 using GeneXus.Utils;
 using Microsoft.AspNetCore.Http;
 using StackExchange.Redis;
@@ -14,33 +16,37 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 	{
 		private ICacheService2 _redis;
 		private string sessionId;
-		private ISession session;
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXHttpAzureContext>();
-		internal const string AzureSessionId = "GX_AZURE_SESSIONID";
+		internal const string AZURE_SESSIONID = "GX_AZURE_SESSIONID";
 
-		public ISession Session => session;
-		
+		public ISession Session
+		{
+			get
+			{
+				if ((_redis != null) & (sessionId != null))
+					return new RedisHttpSession(_redis, sessionId);
+				else return new MockHttpSession();
+			}
+		}
+
 		public GXHttpAzureContext( HttpRequest request, HttpResponse response, ICacheService2 redis)
 		{			
 			bool isSecure = IsSecureConnection(request);
-			sessionId = request.Cookies[AzureSessionId];
+
+			if (request != null && request.Cookies != null && request.Cookies[AZURE_SESSIONID] != null) 
+				sessionId = request.Cookies[AZURE_SESSIONID];
 			
 			if (redis != null && redis.GetType() == typeof(Redis))
 				_redis = redis;
 			
-			if (string.IsNullOrEmpty(sessionId))
+			if (string.IsNullOrEmpty(sessionId) && request != null)
 				CreateSessionId(isSecure, response, request);
-			
-			if ((_redis != null) & (sessionId != null))
-				session = new RedisHttpSession(_redis, sessionId);
-			else
-				session = new MockHttpSession();
 
 			if (!string.IsNullOrEmpty(sessionId))
 			{//Refresh the session timestamp
-				if (session is RedisHttpSession)
+				if (Session is RedisHttpSession)
 				{
-					RedisHttpSession redisHttpSession = (RedisHttpSession)session;
+					RedisHttpSession redisHttpSession = (RedisHttpSession)Session;
 					//Check if session is in cache
 					if (redisHttpSession.SessionKeyExists(sessionId))
 					{
@@ -50,7 +56,6 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 					}
 				}
 			}
-
 		}
 		private bool GetSecureConnection(string headerKey, string headerValue)
 		{
@@ -79,6 +84,12 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 			CookieOptions cookieOptions = new CookieOptions();
 
+			SameSiteMode sameSiteMode = SameSiteMode.Unspecified;
+			if (Config.GetValueOf("SAMESITE_COOKIE", out string sameSite) && Enum.TryParse(sameSite, out sameSiteMode))
+			{
+				cookieOptions.SameSite = sameSiteMode;
+
+			}
 			if (!DateTime.MinValue.Equals(DateTimeUtil.NullDate()))
 				cookieOptions.Expires = DateTime.MinValue;
 			cookieOptions.Path = "";
@@ -87,13 +98,13 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			cookieOptions.Secure = isSecure;
 			
 			if (response.Cookies != null)
-				response.Cookies.Append(AzureSessionId,sessionId,cookieOptions);
+				response.Cookies.Append(AZURE_SESSIONID,sessionId,cookieOptions);
 			GXLogging.Debug(log, $"Create new Azure Session Id :{sessionId}");
 		}
 		public class MockHttpSession : ISession
 		{
 			string _sessionId = Guid.NewGuid().ToString();
-			readonly Dictionary<string, object> _sessionStorage = new Dictionary<string, object>();
+			readonly ConcurrentDictionary<string, object> _sessionStorage = new ConcurrentDictionary<string, object>();
 			string ISession.Id => _sessionId;
 			bool ISession.IsAvailable => throw new NotImplementedException();
 			IEnumerable<string> ISession.Keys => _sessionStorage.Keys;
@@ -111,7 +122,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			}
 			void ISession.Remove(string key)
 			{
-				_sessionStorage.Remove(key);
+				_sessionStorage.TryRemove(key, out Object value);
 			}
 			void ISession.Set(string key, byte[] value)
 			{
@@ -119,20 +130,30 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			}
 			bool ISession.TryGetValue(string key, out byte[] value)
 			{
-
-				if (_sessionStorage.ContainsKey(key) && _sessionStorage[key] != null)
-				{
-					value = Encoding.ASCII.GetBytes(_sessionStorage[key].ToString());
-					return true;
+				value = Array.Empty<byte>();
+				try
+				{ 
+					if (_sessionStorage != null && _sessionStorage.ContainsKey(key) && _sessionStorage[key] != null)
+					{
+						value = Encoding.ASCII.GetBytes(_sessionStorage[key].ToString());
+						return true;
+					}
+					else
+					{ 
+						value = Array.Empty<byte>();
+						return false;
+					}
 				}
-				value = null;
-				return false;
+				catch (Exception)
+				{
+					throw;
+				}			
 			}
 		}
 		public class RedisHttpSession : ISession
 		{
 			const int SESSION_TIMEOUT_IN_MINUTES = 5;
-			const string AzureRedisCacheId = "REDIS_CACHE_SESSION_ID";
+			const string AZURE_REDIS_CACHE_ID = "REDIS_CACHE_SESSION_ID";
 			string _sessionId;
 			private Redis _redis;
 			public Dictionary<string, byte[]> data;
@@ -155,17 +176,17 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			}
 			public void Clear()
 			{
-				_redis.ClearCache(AzureRedisCacheId);
+				_redis.ClearCache(AZURE_REDIS_CACHE_ID);
 			}
 
 			public bool RefreshSession(string sessionId)
 			{
-				if (_redis.Get(AzureRedisCacheId, sessionId, out Dictionary<string, byte[]> value))
+				if (_redis.Get(AZURE_REDIS_CACHE_ID, sessionId, out Dictionary<string, byte[]> value))
 				{
 					int refreshTimeout = (_redis.redisSessionTimeout == 0) ? SESSION_TIMEOUT_IN_MINUTES : _redis.redisSessionTimeout;
 					if (value != null)
 					{
-						return (_redis.KeyExpire(AzureRedisCacheId, sessionId, TimeSpan.FromMinutes(refreshTimeout), CommandFlags.None));
+						return (_redis.KeyExpire(AZURE_REDIS_CACHE_ID, sessionId, TimeSpan.FromMinutes(refreshTimeout), CommandFlags.None));
 					}
 				}
 				return false;
@@ -188,19 +209,19 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 
 			public void Set(string key, byte[] value)
 			{
-				if (!_redis.Get(AzureRedisCacheId, Id, out Dictionary<string, byte[]> data))
+				if (!_redis.Get(AZURE_REDIS_CACHE_ID, Id, out Dictionary<string, byte[]> data))
 					data = new Dictionary<string, byte[]>();
 				data[key] = value;
 
 				if (_redis.redisSessionTimeout != 0)
-					_redis.Set(AzureRedisCacheId, Id, data, _redis.redisSessionTimeout);
+					_redis.Set(AZURE_REDIS_CACHE_ID, Id, data, _redis.redisSessionTimeout);
 				else
-					_redis.Set(AzureRedisCacheId, Id, data, SESSION_TIMEOUT_IN_MINUTES);
+					_redis.Set(AZURE_REDIS_CACHE_ID, Id, data, SESSION_TIMEOUT_IN_MINUTES);
 			}
 
 			public bool TryGetValue(string key, out byte[] value)
 			{
-				if (_redis.Get(AzureRedisCacheId, Id, out Dictionary<string, byte[]> data))
+				if (_redis.Get(AZURE_REDIS_CACHE_ID, Id, out Dictionary<string, byte[]> data))
 				{
 					if (data != null)
 					{
@@ -211,12 +232,12 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 						}
 					}
 				}
-				value = null;
+				value = Array.Empty<byte>();
 				return false;
 			}
 			public bool SessionKeyExists(string sessionId)
 			{
-				return (_redis.KeyExists(AzureRedisCacheId, sessionId));
+				return (_redis.KeyExists(AZURE_REDIS_CACHE_ID, sessionId));
 			}
 
 		}
