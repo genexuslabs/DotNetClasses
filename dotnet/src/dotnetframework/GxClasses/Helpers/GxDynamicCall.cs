@@ -10,6 +10,7 @@ namespace GeneXus.DynamicCall
 	public class GxDynamicCall
 	{
 		private const string defaultMethod = "execute";
+		public const string AssemblyName = "AssemblyName";
 		private Assembly _assembly;
 		private readonly IGxContext _context;
 		private GXProperties _extendedProperties;
@@ -58,7 +59,7 @@ namespace GeneXus.DynamicCall
 
 			if (_assembly is null)
 			{
-				if (string.IsNullOrEmpty(_extendedProperties.Get("AssemblyName")))
+				if (string.IsNullOrEmpty(_extendedProperties.Get(AssemblyName)))
 				{
 					_assembly = Assembly.GetCallingAssembly();
 				}
@@ -66,11 +67,11 @@ namespace GeneXus.DynamicCall
 				{
 					try
 					{
-						_assembly = Assembly.LoadFrom(_extendedProperties.Get("AssemblyName"));
+						_assembly = Assembly.LoadFrom(_extendedProperties.Get(AssemblyName));
 					}
-					catch
+					catch (Exception e)
 					{
-						throw;
+						throw new InvalidOperationException("Error loading assembly: " + _extendedProperties.Get(AssemblyName), e);
 					}
 				}
 			}
