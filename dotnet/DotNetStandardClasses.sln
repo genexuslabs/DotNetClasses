@@ -324,6 +324,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetCoreKafkaTest", "src\extensions\kafka\test\DotNetCoreKafkaTest\DotNetCoreKafkaTest.csproj", "{25C0E663-239A-4C1D-A0FB-E794BCC08964}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetKafkaTest", "src\extensions\kafka\test\DotNetKafkaTest\DotNetKafkaTest.csproj", "{62F2239A-115C-4848-8479-F4121219CD7B}"
+
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
