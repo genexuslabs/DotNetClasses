@@ -19,6 +19,7 @@
 	
 	 <ItemGroup>
 	   <ProjectReference Include="..\..\..\src\DotNetFramework\GamUtils\GamUtils.csproj" />
+	   <ProjectReference Include="..\..\..\src\DotNetFramework\GamSaml20\GamSaml20.csproj" />
 	 </ItemGroup>
 	
 	 <ItemGroup>
