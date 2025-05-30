@@ -376,23 +376,23 @@ namespace GeneXus.Application
 			return Guid.Parse(GetJsonStr(varName));
 		}
 
-        public Decimal GetBodyNum(string varName)
-        {
-            try
-            {
-                return Decimal.Parse(GetJsonStr(varName), NumberStyles.Float, CultureInfo.InvariantCulture);
-            }
-            catch (FormatException)
-            {
-                Console.WriteLine("Failed to parse number due to format exception.");
-            }
-            catch (OverflowException)
-            {
-                Console.WriteLine("Failed to parse number due to overflow exception.");
-            }
-            // Return a default value in case of an exception
-            return 0m;
-        }
+		public Decimal GetBodyNum(string varName)
+		{
+            	try
+			{
+				return Decimal.Parse(GetJsonStr(varName), NumberStyles.Float, CultureInfo.InvariantCulture);
+			}
+			catch (FormatException)
+			{
+				Console.WriteLine("Failed to parse number due to format exception.");
+			}
+			catch (OverflowException)
+			{
+				Console.WriteLine("Failed to parse number due to overflow exception.");
+			}
+			// Return a empty value in case of an exception
+			return 0m;
+		}
 		public long GetBodyLong(string varName)
 		{
 			return long.Parse(GetJsonStr(varName));
