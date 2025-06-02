@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using GeneXus.Application;
 using GeneXus.Metadata;
 using GeneXus.Utils;
+using GxClasses.Helpers;
 
 namespace GeneXus.DynamicCall
 {
@@ -61,13 +63,25 @@ namespace GeneXus.DynamicCall
 			{
 				if (string.IsNullOrEmpty(_extendedProperties.Get(AssemblyName)))
 				{
+#if NETCORE
+					var stackTrace = new StackTrace();
+					var frame = stackTrace.GetFrame(2);
+					var method = frame.GetMethod();
+					var assembly = method.DeclaringType.Assembly;
+					_assembly = assembly;
+#else
 					_assembly = Assembly.GetCallingAssembly();
+#endif
 				}
 				else
 				{
 					try
 					{
-						_assembly = Assembly.LoadFrom(_extendedProperties.Get(AssemblyName));
+#if NETCORE
+					_assembly = AssemblyLoader.LoadAssembly(new AssemblyName(_extendedProperties.Get(AssemblyName)));
+#else
+					_assembly = Assembly.LoadFrom(_extendedProperties.Get(AssemblyName) + ".dll" );
+#endif
 					}
 					catch (Exception e)
 					{
@@ -76,7 +90,6 @@ namespace GeneXus.DynamicCall
 				}
 			}
 		}
-
 		public void Execute(ref IList<object> parameters, out IList<SdtMessages_Message> errors)
 		{
 			Create(null, out errors);
