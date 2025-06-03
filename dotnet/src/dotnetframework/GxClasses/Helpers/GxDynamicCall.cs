@@ -65,7 +65,7 @@ namespace GeneXus.DynamicCall
 				{
 #if NETCORE
 					var stackTrace = new StackTrace();
-					var frame = stackTrace.GetFrame(2);
+					var frame = stackTrace.GetFrame(5);
 					var method = frame.GetMethod();
 					var assembly = method.DeclaringType.Assembly;
 					_assembly = assembly;
