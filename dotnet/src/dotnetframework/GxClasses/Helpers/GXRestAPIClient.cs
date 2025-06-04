@@ -378,7 +378,7 @@ namespace GeneXus.Application
 
 		public Decimal GetBodyNum(string varName)
 		{
-            	try
+            try
 			{
 				return Decimal.Parse(GetJsonStr(varName), NumberStyles.Float, CultureInfo.InvariantCulture);
 			}
@@ -390,7 +390,7 @@ namespace GeneXus.Application
 			{
 				Console.WriteLine("Failed to parse number due to overflow exception.");
 			}
-			// Return a empty value in case of an exception
+			// Return an empty value in case of an exception
 			return 0m;
 		}
 		public long GetBodyLong(string varName)
