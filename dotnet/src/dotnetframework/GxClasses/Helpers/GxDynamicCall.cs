@@ -6,13 +6,16 @@ using GeneXus.Application;
 using GeneXus.Metadata;
 using GeneXus.Utils;
 using GxClasses.Helpers;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GeneXus.DynamicCall
 {
 	public class GxDynamicCall
 	{
 		private const string defaultMethod = "execute";
-		public const string AssemblyName = "AssemblyName";
+		private const string AssemblyNameProperty = "AssemblyName";
+		private const string NamespaceProperty = "Namespace";
+		private const string DefaultNamespace = "GeneXus.Programs";
 		private Assembly _assembly;
 		private readonly IGxContext _context;
 		private GXProperties _extendedProperties;
@@ -61,7 +64,7 @@ namespace GeneXus.DynamicCall
 
 			if (_assembly is null)
 			{
-				if (string.IsNullOrEmpty(_extendedProperties.Get(AssemblyName)))
+				if (string.IsNullOrEmpty(_extendedProperties.Get(AssemblyNameProperty)))
 				{
 #if NETCORE
 					var stackTrace = new StackTrace();
@@ -78,14 +81,14 @@ namespace GeneXus.DynamicCall
 					try
 					{
 #if NETCORE
-					_assembly = AssemblyLoader.LoadAssembly(new AssemblyName(_extendedProperties.Get(AssemblyName)));
+					_assembly = AssemblyLoader.LoadAssembly(new AssemblyName(_extendedProperties.Get(AssemblyNameProperty)));
 #else
-					_assembly = Assembly.LoadFrom(_extendedProperties.Get(AssemblyName) + ".dll" );
+					_assembly = Assembly.LoadFrom(_extendedProperties.Get(AssemblyNameProperty) + ".dll" );
 #endif
 					}
 					catch (Exception e)
 					{
-						throw new InvalidOperationException("Error loading assembly: " + _extendedProperties.Get(AssemblyName), e);
+						throw new InvalidOperationException("Error loading assembly: " + _extendedProperties.Get(AssemblyNameProperty), e);
 					}
 				}
 			}
@@ -108,11 +111,11 @@ namespace GeneXus.DynamicCall
 			{
 				VerifyDefaultProperties();
 
-				objectNameToInvoke = ExternalName;
+				objectNameToInvoke = string.IsNullOrEmpty(_extendedProperties.Get(NamespaceProperty)) ? DefaultNamespace + "." + ExternalName.ToLower().Trim() : _extendedProperties.Get(NamespaceProperty) + "." + ExternalName.ToLower().Trim();
 
 				try
 				{
-					Type objType = ClassLoader.FindType(objectNameToInvoke, objectNameToInvoke.ToLower().Trim(), _assembly);
+					Type objType = ClassLoader.FindType(_assembly.GetName().Name, string.IsNullOrEmpty(_extendedProperties.Get(NamespaceProperty))? DefaultNamespace : _extendedProperties.Get(NamespaceProperty), ExternalName.ToLower().Trim(), _assembly);
 					object[] constructorParameters;
 					if (constructParms != null && constructParms.Count > 0)
 					{
