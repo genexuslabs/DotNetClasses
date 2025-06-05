@@ -3156,12 +3156,13 @@ namespace GeneXus.Utils
 		{
 			if (reader.TokenType == JsonTokenType.Number)
 			{
+				var numberFmt = CultureInfo.InvariantCulture.NumberFormat;
+
 				if (reader.TryGetInt32(out int l))
-					return l.ToString();
-				else if (reader.TryGetDecimal(out decimal d))
-					return d.ToString();
-				else
-					return reader.GetDouble().ToString();
+					return l.ToString(numberFmt);
+				if (reader.TryGetDecimal(out decimal d))
+					return d.ToString(numberFmt);
+				return reader.GetDouble().ToString(numberFmt);
 			}
 			return reader.GetString();
 		}
