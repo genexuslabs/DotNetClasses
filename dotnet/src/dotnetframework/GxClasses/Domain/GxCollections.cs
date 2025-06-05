@@ -3161,18 +3161,20 @@ namespace GeneXus.Utils
 			writer.WriteBooleanValue(value);
 		}
 	}
+	
 	public class StringConverter : JsonConverter<string>
 	{
 		public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
 			if (reader.TokenType == JsonTokenType.Number)
 			{
+				var numberFmt = CultureInfo.InvariantCulture.NumberFormat;
+
 				if (reader.TryGetInt32(out int l))
-					return l.ToString();
-				else if (reader.TryGetDecimal(out decimal d))
-					return d.ToString();
-				else
-					return reader.GetDouble().ToString();
+					return l.ToString(numberFmt);
+				if (reader.TryGetDecimal(out decimal d))
+					return d.ToString(numberFmt);
+				return reader.GetDouble().ToString(numberFmt);
 			}
 			return reader.GetString();
 		}
