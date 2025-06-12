@@ -1,5 +1,6 @@
 using System.IO;
 using GeneXus.Application;
+using GeneXus.MSOffice.Excel.Poi.Xssf;
 
 namespace GeneXus.MSOffice.Excel
 {
@@ -16,13 +17,9 @@ namespace GeneXus.MSOffice.Excel
 				template = Path.IsPathRooted(template) ? template : Path.Combine(GxContext.StaticPhysicalPath(), template);
 			}
 
-			if (filePath.EndsWith(GeneXus.MSOffice.Excel.Poi.Xssf.ExcelSpreadsheet.DefaultExtension) || string.IsNullOrEmpty(Path.GetExtension(filePath)))
+			if (filePath.EndsWith(ExcelSpreadsheet.DefaultExtension) || string.IsNullOrEmpty(Path.GetExtension(filePath)))
 			{
-				return new GeneXus.MSOffice.Excel.Poi.Xssf.ExcelSpreadsheet(handler, filePath, template);
-			}
-			else if (filePath.EndsWith(GeneXus.MSOffice.Excel.Poi.Hssf.ExcelSpreadsheet.DefaultExtension))
-			{
-				return new GeneXus.MSOffice.Excel.Poi.Hssf.ExcelSpreadsheet(handler, filePath, template);
+				return new ExcelSpreadsheet(handler, filePath, template);
 			}
 			throw new ExcelDocumentNotSupported();
 		}

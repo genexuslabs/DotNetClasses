@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using GeneXus.Application;
 using GeneXus.MSOffice.Excel;
+using GeneXus.MSOffice.Excel.Poi.Xssf;
 using GeneXus.MSOffice.Excel.Style;
 using GeneXus.Utils;
+using NPOI.HPSF;
 using Xunit;
 
 namespace DotNetUnitTest.Excel
 {
 	public class ExcelPoiTest
 	{
-		const string EXCEL_EXTENSION = ".xlsx";
 		string basePath;
 		public ExcelPoiTest()
 		{
@@ -132,7 +133,7 @@ namespace DotNetUnitTest.Excel
 			ExcelSpreadsheetGXWrapper excel = Create("testActive");
 			try
 			{
-				excel.GetCells(2, 1, 5, 5).DateValue=new DateTime();
+				excel.GetCells(2, 1, 5, 5).SetDate(new DateTime());
 			}
 			catch (Exception e)
 			{
@@ -143,7 +144,7 @@ namespace DotNetUnitTest.Excel
 		[Fact]
 		public void TestOpenAndSaveLocked()
 		{
-			string filePath = Path.Combine(basePath, "testLocked" + EXCEL_EXTENSION);
+			string filePath = Path.Combine(basePath, "testLocked.xlsx");
 			ExcelSpreadsheetGXWrapper newFile = Create("testLocked");
 			newFile.Save();
 			newFile.Close();
@@ -158,7 +159,7 @@ namespace DotNetUnitTest.Excel
 					Assert.Equal(7, excel.ErrCode);//"File is locked"
 					try
 					{
-						excel.GetCells(2, 1, 5, 5).DateValue = new DateTime();
+						excel.GetCells(2, 1, 5, 5).SetDate(new DateTime());
 					}
 					catch (Exception e)
 					{
@@ -180,7 +181,7 @@ namespace DotNetUnitTest.Excel
 
 			try
 			{
-				excel.GetCells(2, 1, 5, 5).DateValue = new DateTime();
+				excel.GetCells(2, 1, 5, 5).SetDate(new DateTime());
 			}
 			catch (Exception e)
 			{
@@ -198,14 +199,14 @@ namespace DotNetUnitTest.Excel
 		public void TestWithoutExtensions()
 		{
 			string excel1 = Path.Combine(basePath, "testWithoutExtensions");
-			EnsureFileDoesNotExists(excel1 + EXCEL_EXTENSION);
+			EnsureFileDoesNotExists(excel1 + ".xlsx");
 			ExcelSpreadsheetGXWrapper excel = new ExcelSpreadsheetGXWrapper();
 			excel.Open(excel1);
 			excel.InsertSheet("genexus0");
 			excel.InsertSheet("genexus1");
 			excel.InsertSheet("genexus2");
 
-			List<IExcelWorksheet> wSheets = excel.GetWorksheets();
+			List<ExcelWorksheet> wSheets = excel.GetWorksheets();
 			Assert.True(wSheets.Count == 3);
 			Assert.True(wSheets[0].Name == "genexus0");
 			Assert.True(wSheets[1].Name == "genexus1");
@@ -224,7 +225,7 @@ namespace DotNetUnitTest.Excel
 			excel.InsertSheet("genexus1");
 			excel.InsertSheet("genexus2");
 
-			List<IExcelWorksheet> wSheets = excel.GetWorksheets();
+			List<ExcelWorksheet> wSheets = excel.GetWorksheets();
 			Assert.True(wSheets.Count == 3);
 			Assert.True(wSheets[0].Name == "genexus0");
 			Assert.True(wSheets[1].Name == "genexus1");
@@ -245,7 +246,7 @@ namespace DotNetUnitTest.Excel
 			excel.InsertSheet("gx3");
 			excel.InsertSheet("gx4");
 
-			List<IExcelWorksheet> wSheets = excel.GetWorksheets();
+			List<ExcelWorksheet> wSheets = excel.GetWorksheets();
 			Assert.True(wSheets.Count == 4);
 			Assert.True(wSheets[0].Name == "gx1");
 			Assert.True(wSheets[1].Name == "gx2");
@@ -441,7 +442,7 @@ namespace DotNetUnitTest.Excel
 			excel.Save();
 			excel.Close();
 			excel = Open("testGetWorksheets");
-			List<IExcelWorksheet> sheets = excel.GetWorksheets();
+			List<ExcelWorksheet> sheets = excel.GetWorksheets();
 			Assert.Equal("hoja1", sheets[0].Name);
 			Assert.Equal("hoja2", sheets[1].Name);
 			Assert.Equal("hoja3", sheets[2].Name);
@@ -465,7 +466,7 @@ namespace DotNetUnitTest.Excel
 			excel.GetCells(1, 1, 3, 3).SetCellStyle(style);
 
 
-			ExcelCellGXWrapper cells = excel.GetCells(5, 1, 3, 3);
+			ExcelCells cells = excel.GetCells(5, 1, 3, 3);
 			cells.Text = "texto SI se puede editar";
 			style = new ExcelStyle();
 			style.Locked = false;
@@ -488,7 +489,7 @@ namespace DotNetUnitTest.Excel
 			excel.GetCells(1, 1, 3, 3).SetCellStyle(style);
 
 
-			ExcelCellGXWrapper cells = excel.GetCells(5, 1, 3, 3);
+			ExcelCells cells = excel.GetCells(5, 1, 3, 3);
 			cells.Text = "texto SI se puede editar";
 			style = new ExcelStyle();
 			style.Locked = false;
@@ -499,7 +500,7 @@ namespace DotNetUnitTest.Excel
 
 		private ExcelSpreadsheetGXWrapper Create(string fileName)
 		{
-			string excelPath = Path.Combine(basePath, fileName + EXCEL_EXTENSION);
+			string excelPath = Path.Combine(basePath, fileName + ".xlsx");
 			EnsureFileDoesNotExists(excelPath);
 			FileInfo theDir = new FileInfo(basePath);
 			if (!theDir.Exists)
@@ -514,7 +515,7 @@ namespace DotNetUnitTest.Excel
 
 		private ExcelSpreadsheetGXWrapper Open(string fileName)
 		{
-			string excelPath = Path.Combine(basePath, fileName + EXCEL_EXTENSION);
+			string excelPath = Path.Combine(basePath, fileName + ".xlsx");
 			ExcelSpreadsheetGXWrapper excel = new ExcelSpreadsheetGXWrapper();
 			excel.Open(excelPath);
 			return excel;
@@ -561,7 +562,7 @@ namespace DotNetUnitTest.Excel
 			excel.Save();
 			excel.Close();
 			excel = Open("testCloneSheet");
-			List<IExcelWorksheet> sheets = excel.GetWorksheets();
+			List<ExcelWorksheet> sheets = excel.GetWorksheets();
 			Assert.Equal(4, sheets.Count);
 			excel.Close();
 		}
@@ -577,7 +578,7 @@ namespace DotNetUnitTest.Excel
 			excel.Save();
 			excel.Close();
 			excel = Open("testCloneSheet2");
-			List<IExcelWorksheet> sheets = excel.GetWorksheets();
+			List<ExcelWorksheet> sheets = excel.GetWorksheets();
 			Assert.Equal(2, sheets.Count);
 			excel.Close();
 		}
@@ -602,7 +603,7 @@ namespace DotNetUnitTest.Excel
 			excel.Save();
 			excel.Close();
 			excel = Open("testCloneSheetError");
-			List<IExcelWorksheet> sheets = excel.GetWorksheets();
+			List<ExcelWorksheet> sheets = excel.GetWorksheets();
 			Assert.Equal(4, sheets.Count);
 			excel.Close();
 		}
@@ -625,7 +626,7 @@ namespace DotNetUnitTest.Excel
 			excel.Save();
 			excel.Close();
 			excel = Open("testWorksheetRename");
-			List<IExcelWorksheet> sheets = excel.GetWorksheets();
+			List<ExcelWorksheet> sheets = excel.GetWorksheets();
 			Assert.Equal("hoja1", sheets[1].Name);
 			Assert.Equal("hoja2", sheets[2].Name);
 			Assert.Equal("modificada", sheets[3].Name);
@@ -1071,7 +1072,7 @@ namespace DotNetUnitTest.Excel
 		{
 			ExcelSpreadsheetGXWrapper excel = Create("testSaveAs");
 			excel.GetCells(1, 1, 15, 15).NumericValue = 100;
-			string excelNew = Path.Combine(basePath, "testSaveAsCopy" + EXCEL_EXTENSION);
+			string excelNew = Path.Combine(basePath, "testSaveAsCopy.xlsx");
 			excel.SaveAs(excelNew);
 			excel.Close();
 			Assert.True(new FileInfo(excelNew).Exists);
@@ -1087,7 +1088,7 @@ namespace DotNetUnitTest.Excel
 			excel.GetCells(1, 3, 1, 1).Text = "VERYLONGTEXTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT";
 			excel.GetCells(2, 4, 1, 1).Text = "hola!";
 			excel.GetCells(6, 6, 1, 1).Text = "VERYLONGTEXTINDIFFERENTROWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
-			ExcelCellGXWrapper cells = excel.GetCells(7, 7, 1, 1);
+			ExcelCells cells = excel.GetCells(7, 7, 1, 1);
 			ExcelStyle style = new ExcelStyle();
 			style.DataFormat = "#.##"; //change style, so it shows the full number not scientific notation
 			cells.NumericValue = 123456789123456789123456789M;
@@ -1102,7 +1103,7 @@ namespace DotNetUnitTest.Excel
 			excel.Autofit = true;
 			DateTime date = new DateTime();
 			//sets date with default format
-			ExcelCellGXWrapper cells = excel.GetCells(1, 1, 1, 1);
+			ExcelCells cells = excel.GetCells(1, 1, 1, 1);
 			cells.DateValue = date;
 			//sets date and apply format after
 			cells = excel.GetCells(2, 1, 1, 1);
@@ -1140,8 +1141,8 @@ namespace DotNetUnitTest.Excel
 		[Fact]
 		public void TestTemplate()
 		{
-			string excelPath = Path.Combine(basePath, "testTemplate" + EXCEL_EXTENSION);
-			string excelTemplatePath = Path.Combine(basePath, "template" + EXCEL_EXTENSION);
+			string excelPath = Path.Combine(basePath, "testTemplate.xlsx");
+			string excelTemplatePath = Path.Combine(basePath, "template.xlsx");
 			EnsureFileDoesNotExists(excelPath);
 			EnsureFileDoesNotExists(excelTemplatePath);
 			FileInfo theDir = new FileInfo(basePath);

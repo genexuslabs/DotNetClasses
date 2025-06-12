@@ -4,7 +4,7 @@ namespace GeneXus.MSOffice.Excel
 	{
 		string Name { get; }
 
-		bool Hidden { get; set; }
+		bool Hidden { get; }
 
 		bool Rename(string newName);
 		bool Copy(string newName);
