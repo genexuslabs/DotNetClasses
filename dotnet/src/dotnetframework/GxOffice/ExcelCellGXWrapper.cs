@@ -26,9 +26,11 @@ namespace GeneXus.MSOffice.Excel
 
 		public string ValueType => _value.ValueType;
 
+		
 		public string Text { get => _value.Text; set => _value.Text=value; }
 		public decimal NumericValue { get => _value.NumericValue; set => _value.NumericValue=value; }
 		public DateTime DateValue { get => _value.DateValue; set => _value.DateValue=value; }
+		public string HyperlinkValue { get => _value.HyperlinkValue; set => _value.HyperlinkValue=value; }
 
 		public bool Empty()
 		{

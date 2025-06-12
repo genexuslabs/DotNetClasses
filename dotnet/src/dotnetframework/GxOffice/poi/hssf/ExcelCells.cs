@@ -4,7 +4,7 @@ using GeneXus.Utils;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
-using NPOI.XSSF.UserModel;
+
 
 namespace GeneXus.MSOffice.Excel.Poi.Hssf
 {
@@ -175,6 +175,37 @@ namespace GeneXus.MSOffice.Excel.Poi.Hssf
 				throw new ExcelException(7, "Invalid cell value");
 			}
 			return false;
+		}
+		public bool SetHyperlink(string value)
+		{
+			CheckReadonlyDocument();
+
+			try
+			{
+				for (int i = 1; i <= cellCount; i++)
+				{
+					pCells[i].Hyperlink.Address = value;
+				}
+				return true;
+			}
+			catch (Exception)
+			{
+				throw new ExcelException(7, "Invalid cell value");
+			}
+		}
+		public string GetHyperlink()
+		{
+			string returnValue = string.Empty;
+			try
+			{
+				if (pCells[1].Hyperlink!=null)
+					returnValue = pCells[1].Hyperlink.Address;
+			}
+			catch (Exception)
+			{
+				throw new ExcelException(7, "Invalid cell value");
+			}
+			return returnValue;
 		}
 
 		public DateTime GetDate()
@@ -861,7 +892,34 @@ namespace GeneXus.MSOffice.Excel.Poi.Hssf
 				}
 			}
 		}
-
+		public string HyperlinkValue
+		{
+			get
+			{
+				try
+				{
+					return GetHyperlink();
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
+				return string.Empty;
+			}
+			set
+			{
+				try
+				{
+					SetHyperlink(value);
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
+			}
+		}
 		public DateTime DateValue
 		{
 			get
