@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using GeneXus.MSOffice.Excel.Poi.Xssf;
 
 namespace GeneXus.MSOffice.Excel
 {
@@ -130,13 +129,13 @@ namespace GeneXus.MSOffice.Excel
 			return ok;
 		}
 
-		public ExcelCells GetCell(int rowIdx, int colIdx)
+		public ExcelCellGXWrapper GetCell(int rowIdx, int colIdx)
 		{
 			if (Initialize())
 			{
 				try
 				{
-					return (ExcelCells)_document.GetCell(_currentWorksheet, rowIdx, colIdx);
+					return new ExcelCellGXWrapper((IExcelCellRange)_document.GetCell(_currentWorksheet, rowIdx, colIdx));
 				}
 				catch (ExcelException e)
 				{
@@ -158,13 +157,13 @@ namespace GeneXus.MSOffice.Excel
 			GXLogging.Error(logger, errorMsg);
 		}
 
-		public ExcelCells GetCells(int rowIdx, int colIdx, int rowCount, int colCount)
+		public ExcelCellGXWrapper GetCells(int rowIdx, int colIdx, int rowCount, int colCount)
 		{
 			if (Initialize())
 			{
 				try
 				{
-					return (ExcelCells)_document.GetCells(_currentWorksheet, rowIdx, colIdx, rowCount, colCount);
+					return new ExcelCellGXWrapper((IExcelCellRange)_document.GetCells(_currentWorksheet, rowIdx, colIdx, rowCount, colCount));
 				}
 				catch (ExcelException e)
 				{
@@ -193,7 +192,7 @@ namespace GeneXus.MSOffice.Excel
 		{
 			if (Initialize())
 			{
-				ExcelWorksheet ws = _document.GetWorkSheet(sheetName);
+				IExcelWorksheet ws = _document.GetWorkSheet(sheetName);
 				if (ws != null)
 				{
 					_currentWorksheet = ws;
@@ -292,7 +291,7 @@ namespace GeneXus.MSOffice.Excel
 		{
 			if (Initialize())
 			{
-				ExcelWorksheet ws = _document.GetWorkSheet(sheetName);
+				IExcelWorksheet ws = _document.GetWorkSheet(sheetName);
 				if (ws != null)
 					return _document.DeleteSheet(sheetName);
 			}
@@ -340,24 +339,24 @@ namespace GeneXus.MSOffice.Excel
 
 		public string ErrDescription => _errDescription;
 
-		public ExcelWorksheet CurrentWorksheet
+		public ExcelWorksheetGXWrapper CurrentWorksheet
 		{
 			get
 			{
 				if (Initialize())
 				{
-					return (ExcelWorksheet)_currentWorksheet;
+					return new ExcelWorksheetGXWrapper(_currentWorksheet);
 				}
 				return null;
 			}
 		}
 
-		public List<ExcelWorksheet> GetWorksheets()
+		public List<IExcelWorksheet> GetWorksheets()
 		{
 			if (Initialize())
 				return _document.GetWorksheets();
 			else
-				return new List<ExcelWorksheet>();
+				return new List<IExcelWorksheet>();
 		}
 
 		private bool SelectFirstDefaultSheet(string sheetName)

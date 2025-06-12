@@ -9,11 +9,11 @@ using Xunit;
 
 namespace DotNetUnitTest.Excel
 {
-	public class ExcelPoiTest
+	public class ExcelPoi2003Test
 	{
-		const string EXCEL_EXTENSION = ".xlsx";
+		const string EXCEL_EXTENSION = ".xls";
 		string basePath;
-		public ExcelPoiTest()
+		public ExcelPoi2003Test()
 		{
 			basePath = GxContext.StaticPhysicalPath();
 
@@ -496,7 +496,6 @@ namespace DotNetUnitTest.Excel
 			excel.Save();
 			excel.Close();
 		}
-
 		private ExcelSpreadsheetGXWrapper Create(string fileName)
 		{
 			string excelPath = Path.Combine(basePath, fileName + EXCEL_EXTENSION);
