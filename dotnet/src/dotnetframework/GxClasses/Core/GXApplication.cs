@@ -227,6 +227,7 @@ namespace GeneXus.Application
 
 		void AddJavascriptSource(string jsSrc, string urlBuildNumber);
 		void AddJavascriptSource(string jsSrc, string urlBuildNumber, bool userDefined, bool inlined);
+		void AddJavascriptSource(string jsSrc, string urlBuildNumber, bool userDefined, bool inlined, bool isModule);
 		void AddDeferredJavascriptSource(string jsSrc, string urlBuildNumber);
 		void AddStyleSheetFile(string styleSheet);
 		void AddWebAppManifest();
@@ -922,7 +923,11 @@ namespace GeneXus.Application
 			}
 		}
 
-		public void AddJavascriptSource(string jsSrc, string urlBuildNumber, bool userDefined, bool isInlined)
+		public void AddJavascriptSource(string jsSrc, string urlBuildNumber, bool userDefined, bool isInlined) {
+			AddJavascriptSource(jsSrc, urlBuildNumber, userDefined, isInlined, false);
+		}
+
+		public void AddJavascriptSource(string jsSrc, string urlBuildNumber, bool userDefined, bool isInlined, bool isModule)
 		{
 			if (!string.IsNullOrWhiteSpace(jsSrc) && !JavascriptSourceAdded(jsSrc))
 			{
@@ -934,7 +939,7 @@ namespace GeneXus.Application
 					queryString = "";
 					attributes = "data-gx-external-script";
 				}
-				string fragment = "<script type=\"text/javascript\" src=\"" + GetCompleteURL(jsSrc) + queryString + "\" " + attributes + "></script>";
+				string fragment = "<script type=\""+ (isModule ? "module" : "text/javascript") + "\" src=\"" + GetCompleteURL(jsSrc) + queryString + "\" " + attributes + "></script>";
 				if (isAjaxRequest() || isInlined || jsSrc == "jquery.js" || jsSrc == "gxcore.js")
 				{
 					WriteHtmlText(fragment);
