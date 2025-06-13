@@ -28,6 +28,8 @@ namespace GeneXus.MSOffice.Excel
 
 		decimal NumericValue { get; set; }
 
+		string HyperlinkValue { get; set; }
+
 		DateTime DateValue { get; set; }
 
 		bool Empty();

@@ -2,23 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using GeneXus.Application;
+using GeneXus.MSOffice.Excel;
+using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.Util;
-using NPOI.XSSF.UserModel;
 
-namespace GeneXus.MSOffice.Excel.Poi.Xssf
+
+namespace GeneXus.MSOffice.Excel.Poi.Hssf
 {
 	public class ExcelSpreadsheet : IExcelSpreadsheet
 	{
-
 		static readonly IGXLogger logger = GXLoggerFactory.GetLogger<ExcelSpreadsheet>();
 
-		private XSSFWorkbook _workbook;
+		private HSSFWorkbook _workbook;
 		private string _documentFileName;
 		private bool _autoFitColumnsOnSave = false;
 		private IGXError _errorHandler;
 		private StylesCache _stylesCache;
-		internal static string DefaultExtension = ".xlsx";
+		internal static string DefaultExtension = ".xls";
+		
 		public ExcelSpreadsheet(IGXError errHandler, string fileName, string template)
 		{
 			_errorHandler = errHandler;
@@ -32,7 +34,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				GxFile templateFile = new GxFile(GxContext.StaticPhysicalPath(), template, GxFileType.Private);
 				if (templateFile.Exists())
 				{
-					_workbook = new XSSFWorkbook(templateFile.GetStream());
+					_workbook = new HSSFWorkbook(templateFile.GetStream());
 				}
 				else
 				{
@@ -44,11 +46,11 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				GxFile file = new GxFile(GxContext.StaticPhysicalPath(), fileName, GxFileType.Private);
 				if (file.Exists())
 				{
-					_workbook = new XSSFWorkbook(file.GetStream());
+					_workbook = new HSSFWorkbook(file.GetStream());
 				}
 				else
 				{
-					_workbook = new XSSFWorkbook();
+					_workbook = new HSSFWorkbook();
 				}
 			}
 
@@ -115,7 +117,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public IExcelCellRange GetCells(IExcelWorksheet worksheet, int startRow, int startCol, int rowCount, int colCount)
 		{
-			return new ExcelCells(_errorHandler, this, _workbook, (XSSFSheet)_workbook.GetSheet(worksheet.Name), startRow - 1, startCol - 1, rowCount, colCount, false, _stylesCache);
+			return new ExcelCellGXWrapper((IExcelCellRange)new ExcelCells(_errorHandler, this, _workbook, (HSSFSheet)_workbook.GetSheet(worksheet.Name), startRow - 1, startCol - 1, rowCount, colCount, false, _stylesCache));
 		}
 
 		public IExcelCellRange GetCell(IExcelWorksheet worksheet, int startRow, int startCol)
@@ -126,7 +128,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public bool InsertRow(IExcelWorksheet worksheet, int rowIdx, int rowCount)
 		{
-			XSSFSheet sheet = (XSSFSheet)GetSheet(worksheet);
+			HSSFSheet sheet = (HSSFSheet)GetSheet(worksheet);
 
 			int createNewRowAt = rowIdx; // Add the new row between row 9 and 10
 
@@ -159,13 +161,13 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		public bool InsertColumn(IExcelWorksheet worksheet, int colIdx, int colCount)
 		{
 			/*
-			 * XSSFSheet sheet = GetSheet(worksheet); int createNewColumnAt = colIdx; //Add
+			 * HSSFSheet sheet = GetSheet(worksheet); int createNewColumnAt = colIdx; //Add
 			 * the new row between row 9 and 10
 			 *
 			 * if (sheet != null) { for (int i = 1; i<= colCount; i++) {
 			 *
 			 * int lastRow = sheet.getLastRowNum(); sheet.shi(createNewColumnAt, lastRow, 1,
-			 * true, false); XSSFRow newRow = sheet.createRow(createNewColumnAt); } return
+			 * true, false); HSSFRow newRow = sheet.createRow(createNewColumnAt); } return
 			 * true; } return false;
 			 */
 			return false; // POI not supported
@@ -173,10 +175,10 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public bool DeleteRow(IExcelWorksheet worksheet, int rowIdx)
 		{
-			XSSFSheet sheet = GetSheet(worksheet);
+			HSSFSheet sheet = GetSheet(worksheet);
 			if (sheet != null)
 			{
-				XSSFRow row = (XSSFRow)sheet.GetRow(rowIdx);
+				HSSFRow row = (HSSFRow)sheet.GetRow(rowIdx);
 				if (row != null)
 				{
 					sheet.RemoveRow(row);
@@ -196,7 +198,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			List<IExcelWorksheet> list = new List<IExcelWorksheet>();
 			for (int i = 0; i < _workbook.NumberOfSheets; i++)
 			{
-				XSSFSheet sheet = (XSSFSheet)_workbook.GetSheetAt(i);
+				HSSFSheet sheet = (HSSFSheet)_workbook.GetSheetAt(i);
 				if (sheet != null)
 				{
 					list.Add(new ExcelWorksheet(sheet));
@@ -207,10 +209,10 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public bool InsertWorksheet(string newSheetName, int idx)
 		{
-			XSSFSheet newSheet;
+			HSSFSheet newSheet;
 			if (_workbook.GetSheet(newSheetName) == null)
 			{
-				newSheet = (XSSFSheet)_workbook.CreateSheet(newSheetName);
+				newSheet = (HSSFSheet)_workbook.CreateSheet(newSheetName);
 			}
 			else
 			{
@@ -230,13 +232,15 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				throw new ExcelException(14, "The workbook does not contain a sheet named:" + sheetName);
 			}
-			_workbook.CloneSheet(idx, newSheetName);
+			_workbook.CloneSheet(idx);
+			int newIdx = _workbook.NumberOfSheets - 1;
+			_workbook.SetSheetName(newIdx, newSheetName);
 			return true;
 		}
 
-		private XSSFSheet GetSheet(IExcelWorksheet sheet)
+		private HSSFSheet GetSheet(IExcelWorksheet sheet)
 		{
-			return (XSSFSheet)_workbook.GetSheet(sheet.Name);
+			return (HSSFSheet)_workbook.GetSheet(sheet.Name);
 		}
 
 		private void RecalculateFormulas()
@@ -244,7 +248,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			try
 			{
 				_workbook.GetCreationHelper().CreateFormulaEvaluator().EvaluateAll();
-				_workbook.SetForceFormulaRecalculation(true);
+				// HSSFWorkbook doesn't have SetForceFormulaRecalculation method
 			}
 			catch (Exception e)
 			{
@@ -284,14 +288,13 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				_workbook.GetSheetAt(idx).IsSelected = true;
 				_workbook.SetActiveSheet(idx);
-				_workbook.SetSelectedTab(idx);
 			}
 			return idx >= 0;
 		}
 
 		public IExcelWorksheet GetWorkSheet(string name)
 		{
-			XSSFSheet sheet = (XSSFSheet)_workbook.GetSheet(name);
+			HSSFSheet sheet = (HSSFSheet)_workbook.GetSheet(name);
 			if (sheet != null)
 				return new ExcelWorksheet(sheet);
 			return null;
@@ -299,7 +302,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public void SetColumnWidth(IExcelWorksheet worksheet, int colIdx, int width)
 		{
-			XSSFSheet sheet = (XSSFSheet)_workbook.GetSheet(worksheet.Name);
+			HSSFSheet sheet = (HSSFSheet)_workbook.GetSheet(worksheet.Name);
 			if (colIdx >= 1 && sheet != null && width <= 255)
 			{
 				sheet.SetColumnWidth(colIdx - 1, 256 * width);
@@ -308,7 +311,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public void SetRowHeight(IExcelWorksheet worksheet, int rowIdx, int height)
 		{
-			XSSFSheet sheet = (XSSFSheet)_workbook.GetSheet(worksheet.Name);
+			HSSFSheet sheet = (HSSFSheet)_workbook.GetSheet(worksheet.Name);
 			if (rowIdx >= 1 && sheet != null)
 			{
 				rowIdx = rowIdx - 1;
@@ -322,7 +325,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public bool DeleteColumn(IExcelWorksheet worksheet, int colIdx)
 		{
-			XSSFSheet sheet = (XSSFSheet)_workbook.GetSheet(worksheet.Name);
+			HSSFSheet sheet = (HSSFSheet)_workbook.GetSheet(worksheet.Name);
 			if (colIdx >= 0)
 			{
 				return DeleteColumnImpl(sheet, colIdx);
@@ -330,7 +333,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			return false;
 		}
 
-		private bool DeleteColumnImpl(XSSFSheet sheet, int columnToDelete)
+		private bool DeleteColumnImpl(HSSFSheet sheet, int columnToDelete)
 		{
 			for (int rId = 0; rId <= sheet.LastRowNum; rId++)
 			{
@@ -359,19 +362,19 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			return true;
 		}
 
-		private int GetNumberOfRows(XSSFSheet sheet)
+		private int GetNumberOfRows(HSSFSheet sheet)
 		{
 			int rowNum = sheet.LastRowNum + 1;
 			return rowNum;
 		}
 
-		public int GetNrColumns(XSSFSheet sheet)
+		public int GetNrColumns(HSSFSheet sheet)
 		{
 			IRow headerRow = sheet.GetRow(0);
 			return headerRow.LastCellNum;
 		}
 
-		public void InsertNewColumnBefore(XSSFSheet sheet, int columnIndex)
+		public void InsertNewColumnBefore(HSSFSheet sheet, int columnIndex)
 		{
 			IFormulaEvaluator evaluator = _workbook.GetCreationHelper().CreateFormulaEvaluator();
 			evaluator.ClearAllCachedResultValues();
@@ -489,7 +492,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public bool ToggleColumn(IExcelWorksheet worksheet, int colIdx, bool visible)
 		{
-			XSSFSheet sheet = _workbook.GetSheet(worksheet.Name) as XSSFSheet;
+			HSSFSheet sheet = _workbook.GetSheet(worksheet.Name) as HSSFSheet;
 			if (sheet != null)
 			{
 				sheet.SetColumnHidden(colIdx, !visible);
@@ -500,14 +503,14 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		public bool ToggleRow(IExcelWorksheet worksheet, int i, bool visible)
 		{
-			XSSFSheet sheet = _workbook.GetSheet(worksheet.Name) as XSSFSheet;
+			HSSFSheet sheet = _workbook.GetSheet(worksheet.Name) as HSSFSheet;
 			if (sheet != null)
 			{
-				IRow row = sheet.GetRow(i) as XSSFRow;
+				IRow row = sheet.GetRow(i) as HSSFRow;
 				if (row == null)
 				{
 					InsertRow(worksheet, i, 1);
-					row = sheet.GetRow(i) as XSSFRow;
+					row = sheet.GetRow(i) as HSSFRow;
 				}
 				if (row != null)
 				{
