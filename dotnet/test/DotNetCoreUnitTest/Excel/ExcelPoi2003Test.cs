@@ -279,6 +279,25 @@ namespace DotNetUnitTest.Excel
 			Assert.Equal("hola!", excel.GetCells(2, 1, 1, 1).Text);
 			excel.Save();
 		}
+		[WindowsOnlyFact]
+
+		public void TestSetCellHyperlink()
+		{
+			ExcelSpreadsheetGXWrapper excel = Create("testSetCellHyperLink");
+			excel.Autofit = true;
+			excel.GetCells(1, 1, 1, 1).HyperlinkValue = "genexus.com";
+			excel.GetCells(1, 1, 1, 1).Text = "GeneXus";
+
+			excel.Save();
+			excel.Close();
+			// Verify previous Excel Document
+			excel = Open("testSetCellHyperLink");
+
+			Assert.Equal("genexus.com", excel.GetCells(1, 1, 1, 1).HyperlinkValue);
+
+			Assert.Equal("GeneXus", excel.GetCells(1, 1, 1, 1).Text);
+			excel.Save();
+		}
 
 		[WindowsOnlyFact]
 
