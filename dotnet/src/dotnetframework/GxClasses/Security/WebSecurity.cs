@@ -1,8 +1,3 @@
-using GeneXus.Application;
-using GeneXus.Configuration;
-using GeneXus.Utils;
-using log4net;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -10,6 +5,10 @@ using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Claims;
 using System.Text;
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Utils;
+using Microsoft.IdentityModel.Tokens;
 using static GeneXus.Web.Security.SecureTokenHelper;
 
 namespace GeneXus.Web.Security
@@ -24,7 +23,7 @@ namespace GeneXus.Web.Security
         {
 			if (string.IsNullOrEmpty(input))
 				return input;
-            var output = new string(input.Where(c => !char.IsControl(c)).ToArray());
+			string output = new string(input.Where(c => !char.IsControl(c)).ToArray());
             return output.Trim();
         }
 
@@ -32,6 +31,15 @@ namespace GeneXus.Web.Security
         {            
             return SecureTokenHelper.Sign(new WebSecureToken { ProgramName = pgmName, Issuer = issuer, Value = string.IsNullOrEmpty(value) ? string.Empty: StripInvalidChars(value) }, mode, GetSecretKey(context));
         }
+		internal static string Sign(string pgmName, string issuer, TokenValue tokenValue, SecurityMode mode, IGxContext context)
+		{
+			return SecureTokenHelper.Sign(new WebSecureToken {
+				ProgramName = pgmName,
+				Issuer = issuer,
+				ValueType = tokenValue.ValueType,
+				Value = string.IsNullOrEmpty(tokenValue.Value) ? string.Empty : StripInvalidChars(tokenValue.Value) },
+				mode, GetSecretKey(context));
+		}
 
         private static string GetSecretKey(IGxContext context)
         {
@@ -88,30 +96,63 @@ namespace GeneXus.Web.Security
 
 		internal static bool VerifySecureSignedSDTToken(string cmpCtx, IGxCollection value, string signedToken, IGxContext context)
 		{
-			WebSecureToken Token = SecureTokenHelper.getWebSecureToken(signedToken, GetSecretKey(context));
-			if (Token == null)
+			WebSecureToken token = SecureTokenHelper.getWebSecureToken(signedToken, GetSecretKey(context));
+			if (token == null)
 				return false;
-			IGxCollection PayloadObject = (IGxCollection)value.Clone();
-			PayloadObject.FromJSonString(Token.Value);
-			return GxUserType.IsEqual(value, PayloadObject);
+			if (token.ValueType == SecureTokenHelper.ValueTypeHash) 
+			{
+				return VerifyTokenHash(value.ToJSonString(), token);
+			}
+			else
+			{
+				IGxCollection PayloadObject = (IGxCollection)value.Clone();
+				PayloadObject.FromJSonString(token.Value);
+				return GxUserType.IsEqual(value, PayloadObject);
+			}
 		}
 
 		internal static bool VerifySecureSignedSDTToken(string cmpCtx, GxUserType value, string signedToken, IGxContext context)
 		{
-			WebSecureToken Token = SecureTokenHelper.getWebSecureToken(signedToken, GetSecretKey(context));
-			if (Token == null)
+			WebSecureToken token = SecureTokenHelper.getWebSecureToken(signedToken, GetSecretKey(context));
+			if (token == null)
 				return false;
-			GxUserType PayloadObject = (GxUserType)value.Clone();
-			PayloadObject.FromJSonString(Token.Value);
-			return GxUserType.IsEqual(value, PayloadObject);
+			if (token.ValueType == ValueTypeHash) 
+			{
+				return VerifyTokenHash(value.ToJSonString(), token); 
+			}
+			else
+			{
+				GxUserType PayloadObject = (GxUserType)value.Clone();
+				PayloadObject.FromJSonString(token.Value);
+				return GxUserType.IsEqual(value, PayloadObject);
+			}
+
 		}
 
-
+		private static bool VerifyTokenHash(string payloadJsonString, WebSecureToken token)
+		{
+			string hash = GetHash(payloadJsonString);
+			if (hash != token.Value)
+			{
+				GXLogging.Error(_log, $"WebSecurity Token Verification error - Hash mismatch '{hash}' <> '{token.Value}'");
+				GXLogging.Debug(_log, "Payload TokenOriginalValue: " + payloadJsonString);
+				return false;
+			}
+			return true;
+		}
 	}
+	internal class TokenValue
+	{
+		internal string Value { get; set; }
+		internal string ValueType { get; set; }
+	}
+
 	[SecuritySafeCritical]
 	public static class SecureTokenHelper
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(GeneXus.Web.Security.SecureTokenHelper));
+		internal const string ValueTypeHash = "hash";
+		const int MaxTokenValueLength = 1024;
 
         public enum SecurityMode
         {
@@ -143,6 +184,7 @@ namespace GeneXus.Web.Security
 				WebSecureToken outToken = new WebSecureToken();
 				var claims = handler.ValidateToken(signedToken, validationParameters, out securityToken);
 				outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+				outToken.ValueType = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE_TYPE)?.Value ?? string.Empty;
 				return outToken;
 			}
 		}
@@ -160,7 +202,8 @@ namespace GeneXus.Web.Security
 							new Claim(WebSecureToken.GXISSUER, token.Issuer),
 							new Claim(WebSecureToken.GXPROGRAM, token.ProgramName),
 							new Claim(WebSecureToken.GXVALUE, token.Value),
-							new Claim(WebSecureToken.GXEXPIRATION, token.Expiration.Subtract(new DateTime(1970, 1, 1)).TotalSeconds.ToString())
+							new Claim(WebSecureToken.GXEXPIRATION, token.Expiration.Subtract(new DateTime(1970, 1, 1)).TotalSeconds.ToString()),
+							new Claim(WebSecureToken.GXVALUE_TYPE, token.ValueType ?? string.Empty)
 							}),
 						notBefore: DateTime.UtcNow,
 						expires: token.Expiration,
@@ -208,10 +251,38 @@ namespace GeneXus.Web.Security
 				}
 			}
 			return ok;
-		}          
-    }
+		}
+		internal static TokenValue GetTokenValue(IGxJSONSerializable obj)
+		{
+	
+			string jsonString = obj.ToJSonString();
 
-    [DataContract]
+			if (jsonString.Length > MaxTokenValueLength)
+			{
+				string hash = GetHash(jsonString);
+				GXLogging.Debug(_log, $"GetTokenValue: TokenValue is too long, using hash: {hash} instead of original value.");
+				GXLogging.Debug(_log, $"Server TokenOriginalValue:" + jsonString);
+				return new TokenValue() { Value = hash, ValueType = ValueTypeHash };
+			}
+			else
+			{
+				GXLogging.Debug(_log, $"GetTokenValue:" + jsonString);
+				return new TokenValue() { Value = jsonString };
+			}
+		}
+		internal static string GetHash(string jsonString)
+		{
+			using (var sha256 = System.Security.Cryptography.SHA256.Create())
+			{
+				byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(jsonString));
+				jsonString = Convert.ToBase64String(hashBytes);
+				return jsonString;
+			}
+		}
+
+	}
+
+	[DataContract]
     public abstract class SecureToken : IGxJSONSerializable
     {
         public abstract string ToJSonString();
@@ -241,8 +312,9 @@ namespace GeneXus.Web.Security
         internal const string GXPROGRAM = "gx-pgm";
         internal const string GXVALUE = "gx-val";
         internal const string GXEXPIRATION = "gx-exp";
+		internal const string GXVALUE_TYPE = "gx-val-type";
 
-        [DataMember(Name = GXISSUER, IsRequired = true, EmitDefaultValue = false)]
+		[DataMember(Name = GXISSUER, IsRequired = true, EmitDefaultValue = false)]
         public string Issuer { get; set; }
 
 		[DataMember(Name = GXPROGRAM, IsRequired = true, EmitDefaultValue = false)]
@@ -254,7 +326,9 @@ namespace GeneXus.Web.Security
         [DataMember(Name = GXEXPIRATION, EmitDefaultValue = false)]
         public DateTime Expiration { get; set; }
 
-        public WebSecureToken()
+		[DataMember(Name = GXVALUE_TYPE, EmitDefaultValue = false)]
+		public string ValueType { get; set; }
+		public WebSecureToken()
         {
             Expiration = DateTime.Now.AddDays(15);			
 		}
@@ -267,6 +341,7 @@ namespace GeneXus.Web.Security
                 this.Value = wt.Value;
                 this.ProgramName = wt.ProgramName;
                 this.Issuer = wt.Issuer;
+				this.ValueType = wt.ValueType;
                 return true;
             }
             catch (Exception)

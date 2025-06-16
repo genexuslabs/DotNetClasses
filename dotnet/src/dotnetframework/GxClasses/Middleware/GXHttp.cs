@@ -1689,14 +1689,17 @@ namespace GeneXus.Http
 			return GetSecureSignedToken(cmpCtx, string.Empty, this.context);
 		}
 
-		protected string GetSecureSignedToken(String cmpCtx, object Value, IGxContext context)
+		protected string GetSecureSignedToken(String cmpCtx, object value, IGxContext context)
 		{
-			return GetSecureSignedToken(cmpCtx, Serialize(Value), context);
+			if (value is IGxJSONSerializable)
+				return GetSecureSignedHashedToken(cmpCtx, SecureTokenHelper.GetTokenValue(value as IGxJSONSerializable), context);
+			else
+				return GetSecureSignedToken(cmpCtx, Serialize(value), context);
 		}
 
 		protected string GetSecureSignedToken(String cmpCtx, GxUserType Value, IGxContext context)
 		{
-			return GetSecureSignedToken(cmpCtx, Serialize(Value), context);
+			return GetSecureSignedHashedToken(cmpCtx, SecureTokenHelper.GetTokenValue(Value), context);
 		}
 
 
@@ -1704,6 +1707,11 @@ namespace GeneXus.Http
 		{
 			return WebSecurityHelper.Sign(PgmInstanceId(cmpCtx), string.Empty, value, SecureTokenHelper.SecurityMode.Sign, context);
 		}
+		private string GetSecureSignedHashedToken(string cmpCtx, TokenValue tokenValue, IGxContext context)
+		{
+			return WebSecurityHelper.Sign(PgmInstanceId(cmpCtx), string.Empty, tokenValue, SecureTokenHelper.SecurityMode.Sign, context);
+		}
+		
 		protected bool VerifySecureSignedToken(string cmpCtx, Object value, string pic, string signedToken, IGxContext context)
 		{
 			GxUserType SDT = value as GxUserType;
