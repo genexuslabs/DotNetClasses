@@ -185,8 +185,12 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				for (int i = 1; i <= cellCount; i++)
 				{
-					pCells[i].Hyperlink.Address = value;
+					var hyperlink = pWorkbook.GetCreationHelper().CreateHyperlink(HyperlinkType.Url);
+					hyperlink.Address = value;
+
+					pCells[i].Hyperlink = hyperlink;
 				}
+
 				return true;
 			}
 			catch (Exception)
