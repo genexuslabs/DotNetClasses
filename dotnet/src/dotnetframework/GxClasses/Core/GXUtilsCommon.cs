@@ -3214,7 +3214,16 @@ namespace GeneXus.Utils
 		{
 			if (dataStore == null)
 				return ServerDate(context, new DataStoreHelperBase().getDataStoreName());
-			return ResetTime(dataStore.serverNow());
+			return ResetTimeAndKind(dataStore.serverNow());
+		}
+
+		private static DateTime ResetTimeAndKind(DateTime dateTime)
+		{
+			if (dateTime.Kind != DateTimeKind.Unspecified)
+			{
+				return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, 0, 0, 0, 0);
+			}
+			else return ResetTime(dateTime);
 		}
 #if !NETCORE
 		[Obsolete("ServerTime with string dataSource is deprecated, use ServerTime(IGxContext context, Data.NTier.IDataStoreProvider dataStore) instead", false)]
