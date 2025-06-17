@@ -150,8 +150,8 @@ namespace GeneXus.Web.Security
 
 	[SecuritySafeCritical]
 	public static class SecureTokenHelper
-    {
-		static readonly IGXLogger _log = GXLoggerFactory.GetLogger(typeof(SecureTokenHelper).FullName);
+	{
+		private static readonly ILog _log = LogManager.GetLogger(typeof(SecureTokenHelper));
 		internal const string ValueTypeHash = "hash";
 		const int MaxTokenValueLength = 1024;
 
