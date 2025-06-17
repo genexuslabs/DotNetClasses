@@ -79,7 +79,6 @@ namespace GeneXus.Data
 #if NETCORE
 		static NpgsqlDataSource GetOrCreateDataSource(string connectionString)
 		{
-			System.Diagnostics.Debugger.Launch();
 			return _dataSources.GetOrAdd(connectionString, cs =>
 			{
 				NpgsqlDataSourceBuilder ds = new NpgsqlDataSourceBuilder(connectionString);
