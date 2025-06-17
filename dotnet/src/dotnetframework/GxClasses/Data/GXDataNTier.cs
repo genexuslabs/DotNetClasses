@@ -775,7 +775,6 @@ namespace GeneXus.Data.NTier
                 if (reader != null)
                 {
                     d = reader.GetDateTime(0);
-					d = gxDataRecord.NormalizeDbmsDateTime(d);
 					if (hasMilliseconds)
 						d = DateTimeUtil.ResetMicroseconds(d);
 					else
