@@ -68,7 +68,8 @@ namespace GeneXus.Data
 		Geopoint=26,
 		Geoline=27,
 		Geopolygon=28,
-		DateAsChar=29
+		DateAsChar=29,
+		Embedding = 30
 	}
 
 	public interface IGxDataRecord
@@ -141,6 +142,9 @@ namespace GeneXus.Data
 		void SetCursorDef(CursorDef cursorDef);
 		string ConcatOp(int pos);
 		string AfterCreateCommand(string stmt, GxParameterCollection parmBinds);
+#if NETCORE
+		GxEmbedding GetEmbedding(IGxDbCommand gxDbCommand, IDataReader dR, int v, string model, int dimensions);
+#endif
 		int MaxNumberOfValuesInList { get; }
 	}
 
@@ -422,9 +426,9 @@ namespace GeneXus.Data
 		}
 		protected object CheckDataLength(object value, IDbDataParameter parameter)
 		{
-			if (m_avoidDataTruncationError)
+			if (m_avoidDataTruncationError &&  (parameter.DbType == DbType.String || parameter.DbType == DbType.StringFixedLength) && value is string)
 			{
-				string svalue = value.ToString();
+				string svalue = value as string;
 				if (svalue != null && svalue.Length > parameter.Size)
 				{
 					return svalue.Substring(0, parameter.Size);
@@ -622,8 +626,15 @@ namespace GeneXus.Data
         public virtual IGeographicNative GetGeospatial(IGxDbCommand cmd, IDataRecord DR, int i)
         {
 			throw (new GxNotImplementedException());
-        }
-        public virtual decimal GetDecimal(IGxDbCommand cmd, IDataRecord DR, int i)
+		}
+#if NETCORE
+		public virtual GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i, string model, int dimensions)
+		{
+			throw (new GxNotImplementedException());
+		}
+#endif
+
+		public virtual decimal GetDecimal(IGxDbCommand cmd, IDataRecord DR, int i)
 		{
 			if ( !cmd.HasMoreRows || DR == null || DR.IsDBNull( i))
 				return 0;
@@ -829,7 +840,7 @@ namespace GeneXus.Data
 								}
 								catch (Exception ex)
 								{
-									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex);
+									GXLogging.Error(log, "Set Binary parameter length in cached command error", ex.Message, ex);
 								}
 							}
 						}
@@ -1159,6 +1170,10 @@ namespace GeneXus.Data
 			return stmt;
 		}
 
+		internal virtual DateTime NormalizeDbmsDateTime(DateTime d)
+		{
+			return d;
+		}
 	}
 
 	public class DbDataAdapterElem
@@ -1596,6 +1611,8 @@ namespace GeneXus.Data
 		private const int MILLISECONDS_BETWEEN_RETRY_ATTEMPTS = 500;
 		private const string MULTIPLE_DATAREADERS = "MultipleActiveResultSets";
 #if NETCORE
+		private const string TRUST_SERVER_CERTIFICATE = "TrustServerCertificate";
+		private const bool TRUST_CERT_DEFAULT = true;
 		private const string INTEGRATED_SECURITY = "Integrated Security";
 		private const string INTEGRATED_SECURITY_NO = "no";
 #endif
@@ -1963,7 +1980,7 @@ namespace GeneXus.Data
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(log, "GetValues error", ex);
+				GXLogging.Error(log, "GetValues error", ex.Message, ex);
 			}
 		}
 		static internal decimal ReadSQLDecimal(SqlDataReader sqlReader, int idx) {
@@ -2062,6 +2079,14 @@ namespace GeneXus.Data
 				connectionString.AppendFormat(";Password={0}", userPassword);
 			}
 			extra = ResolveConnectionStringAuthentication(extra, additionalConnectionString);
+
+			string tSrvCertificate = GetParameterValue(extra, TRUST_SERVER_CERTIFICATE);
+			if (string.IsNullOrEmpty(tSrvCertificate))
+			{
+				//TODO:Remove Temporary compatibility setting to bypass certificate validation
+				connectionString.AppendFormat(";{0}={1}", TRUST_SERVER_CERTIFICATE, TRUST_CERT_DEFAULT); 
+			}
+
 #else
 			if (userId!=null)
 			{
@@ -2264,7 +2289,7 @@ namespace GeneXus.Data
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(log, "ReadError", ex);
+				GXLogging.Error(log, "ReadError", ex.Message, ex);
 				throw (new GxADODataException(ex));
 			}
 		}
@@ -2537,7 +2562,7 @@ namespace GeneXus.Data
 		}
 		public int GetValues(object[] values)
 		{
-			throw (new GxNotImplementedException());
+			return reader.GetValues(values);
 		}
 		public int GetOrdinal(string name)
 		{
@@ -3165,7 +3190,7 @@ namespace GeneXus.Data
 			}
 			catch (Exception e)
 			{
-				GXLogging.Error(log, "GxCommand.unprepare Error ", e);
+				GXLogging.Error(log, "GxCommand.unprepare Error ", e.Message, e);
 			}
 		}
 		public void UnprepareClear()
@@ -3327,7 +3352,7 @@ namespace GeneXus.Data
             {
 				if (reader != null) reader.Close();
                 GXLogging.Error(log, "stmt:" + this.stmt);
-                GXLogging.Error(log, "LoadBlock error ", e);
+                GXLogging.Error(log, "LoadBlock error ", e.Message, e);
                 
                 Dispose();
                 hasnext = false;
@@ -4259,6 +4284,7 @@ namespace GeneXus.Data
 		protected IDbTransaction m_transaction;
 		protected GxConnectionCache m_connectionCache;
 		protected IsolationLevel m_isolationLevel;
+		const string DISTANCE_FUNCTION = "DISTANCE";
 
 		protected GxAbstractConnectionWrapper(IDbConnection conn, IsolationLevel isolationLevel) :this(conn)
 		{
@@ -4337,6 +4363,8 @@ namespace GeneXus.Data
 		{
 			get {	return InternalConnection.State;	}
 		}
+
+		internal virtual string DistanceFunction { get { return DISTANCE_FUNCTION; } }
 
 		public virtual void Open()
 		{

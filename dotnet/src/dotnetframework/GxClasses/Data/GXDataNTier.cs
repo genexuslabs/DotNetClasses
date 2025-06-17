@@ -746,10 +746,11 @@ namespace GeneXus.Data.NTier
 		public DateTime serverNowIn(bool hasMilliseconds )
         {
 			string stmt = "";
+			GxDataRecord gxDataRecord = (GxDataRecord)_ds.Db;
 			if (hasMilliseconds)
-				stmt = ((GxDataRecord)_ds.Db).GetServerDateTimeStmtMs(_ds.Connection); 
+				stmt = gxDataRecord.GetServerDateTimeStmtMs(_ds.Connection); 
 			else
-				stmt = ((GxDataRecord)_ds.Db).GetServerDateTimeStmt(_ds.Connection);
+				stmt = gxDataRecord.GetServerDateTimeStmt(_ds.Connection);
 
             if (string.IsNullOrEmpty(stmt))
             {
@@ -768,6 +769,7 @@ namespace GeneXus.Data.NTier
                 if (reader != null)
                 {
                     d = reader.GetDateTime(0);
+					d = gxDataRecord.NormalizeDbmsDateTime(d);
 					if (hasMilliseconds)
 						d = DateTimeUtil.ResetMicroseconds(d);
 					else
