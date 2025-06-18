@@ -1,57 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using GeneXus.Cache;
-using GxClasses.Web;
-using GxClasses.Web.Middleware;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
 namespace GeneXus.Deploy.AzureFunctions.HttpHandler
-
 {
-	public class HttpTriggerHandler
-	{
-		
-		public static Dictionary<string, string> servicesPathUrl = new Dictionary<string, string>();
-		public List<string> servicesBase = new List<string>();
-		public static Dictionary<String, Dictionary<string, string>> servicesMap = new Dictionary<String, Dictionary<string, string>>();
-		public static Dictionary<String, Dictionary<Tuple<string, string>, String>> servicesMapData = new Dictionary<String, Dictionary<Tuple<string, string>, string>>();
-		public static Dictionary<string, List<string>> servicesValidPath = new Dictionary<string, List<string>>();
-
-		private IGXRouting _gxRouting;
-		private ICacheService2 _redis;
-
-		public HttpTriggerHandler(IGXRouting gxRouting, ICacheService2 redis)
-		{
-			_gxRouting = gxRouting;
-			if (redis != null && redis.GetType() == typeof(Redis))
-				_redis = redis;
-		}
-		public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
-			FunctionContext executionContext)
-		{
-			var logger = executionContext.GetLogger("HttpTriggerHandler");
-			logger.LogInformation($"GeneXus Http trigger handler. Function processed: {executionContext.FunctionDefinition.Name}.");
-
-			var httpResponseData = req.CreateResponse();
-			HttpContext httpAzureContextAccessor = new GXHttpAzureContextAccessor(req, httpResponseData, _redis);
-
-			GXRouting.ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			GXRouting.AzureFunctionName = executionContext.FunctionDefinition.Name;
-
-			_gxRouting.ProcessRestRequest(httpAzureContextAccessor);
-			return httpResponseData;
-		}
-	}
-
 	public class RedisHttpSession : ISession
 	{
 		const int SESSION_TIMEOUT_IN_MINUTES = 5;
@@ -62,7 +19,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public RedisHttpSession(ICacheService2 redis, string sessionId)
 		{
 			_redis = (Redis)redis;
-			_sessionId = sessionId; 
+			_sessionId = sessionId;
 		}
 
 		public bool IsAvailable => throw new NotImplementedException();
@@ -70,7 +27,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		public string Id => _sessionId;
 
 		public IEnumerable<string> Keys => throw new NotImplementedException();
-		
+
 		private IEnumerable<string> convert<String>(IEnumerable<RedisKey> enumerable)
 		{
 			foreach (RedisKey key in enumerable)
@@ -85,13 +42,13 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		{
 			if (_redis.Get(AzureRedisCacheId, sessionId, out Dictionary<string, byte[]> value))
 			{
-				int refreshTimeout = (_redis.redisSessionTimeout == 0 )? SESSION_TIMEOUT_IN_MINUTES : _redis.redisSessionTimeout;
+				int refreshTimeout = (_redis.redisSessionTimeout == 0) ? SESSION_TIMEOUT_IN_MINUTES : _redis.redisSessionTimeout;
 				if (value != null)
 				{
 					return (_redis.KeyExpire(AzureRedisCacheId, sessionId, TimeSpan.FromMinutes(refreshTimeout), CommandFlags.None));
 				}
 			}
-			return false;	
+			return false;
 		}
 
 		public Task CommitAsync(CancellationToken cancellationToken = default)
@@ -118,7 +75,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 			if (_redis.redisSessionTimeout != 0)
 				_redis.Set(AzureRedisCacheId, Id, data, _redis.redisSessionTimeout);
 			else
-				_redis.Set(AzureRedisCacheId, Id, data, SESSION_TIMEOUT_IN_MINUTES);			
+				_redis.Set(AzureRedisCacheId, Id, data, SESSION_TIMEOUT_IN_MINUTES);
 		}
 
 		public bool TryGetValue(string key, out byte[] value)
@@ -128,7 +85,7 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 				if (data != null)
 				{
 					if (data.TryGetValue(key, out byte[] keyvalue))
-					{ 
+					{
 						value = keyvalue;
 						return true;
 					}
@@ -183,6 +140,4 @@ namespace GeneXus.Deploy.AzureFunctions.HttpHandler
 		}
 	}
 }
-
-
 

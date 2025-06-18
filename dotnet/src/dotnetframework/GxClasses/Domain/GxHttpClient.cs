@@ -21,6 +21,7 @@ namespace GeneXus.Http.Client
 	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
+
 #if NETCORE
 	using Microsoft.AspNetCore.WebUtilities;
 #endif
@@ -892,8 +893,13 @@ namespace GeneXus.Http.Client
 					EndMultipartBoundary(reqStream);
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
 					reqStream.Seek(0, SeekOrigin.Begin);
-					request.Content = new ByteArrayContent(reqStream.ToArray());
-					setContentHeaders(request, contentType);
+					if (reqStream.Length > 0)
+					{
+						request.Content = new ByteArrayContent(reqStream.ToArray());
+						setContentHeaders(request, contentType);
+					}
+					else
+						GXLogging.Debug(log, "No content to send, skipping request.Content assignment.");
 #if NETCORE
 					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
 					response.ExtractCookies(cookies);
@@ -950,8 +956,15 @@ namespace GeneXus.Http.Client
 					EndMultipartBoundary(reqStream);
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
 					reqStream.Seek(0, SeekOrigin.Begin);
-					request.Content = new ByteArrayContent(reqStream.ToArray());
-					setContentHeaders(request, contentType);
+
+					if (reqStream.Length > 0)
+					{
+						request.Content = new ByteArrayContent(reqStream.ToArray());
+						setContentHeaders(request, contentType);
+					}
+					else
+						GXLogging.Debug(log, "No content to send, skipping request.Content assignment.");
+
 					response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 					response.ExtractCookies(cookies);
 				}
@@ -1211,7 +1224,17 @@ namespace GeneXus.Http.Client
 		}
 		NameValueCollection _respHeaders;
 		private bool disposedValue;
+		static bool IsChunkedOrEventStream(HttpResponseMessage response)
+		{
+			if (response == null)
+				return false;
+			bool isEventStream = response.Content?.Headers.ContentType?.MediaType == "text/event-stream";
+			if (isEventStream)
+				return true;
 
+			bool isChunked = response.Headers.TransferEncodingChunked.HasValue && response.Headers.TransferEncodingChunked.Value;
+			return isChunked;
+		}
 		internal void LoadResponseHeaders(HttpResponseMessage resp)
 		{
 			_respHeaders = new NameValueCollection();
@@ -1225,7 +1248,7 @@ namespace GeneXus.Http.Client
 			{
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}
-			_isChunkedResponse = resp.Headers.TransferEncodingChunked.HasValue && resp.Headers.TransferEncodingChunked.Value;
+			_isChunkedResponse = IsChunkedOrEventStream(resp) ;
 
 			if (_response.Content.Headers.ContentType == null)
 				_charset = null;
@@ -2002,6 +2025,10 @@ namespace GeneXus.Http.Client
 		{
 			value = Convert.ToDouble(GetHeader(name));
 		}
+		public void GetHeader(string name, out Decimal value)
+		{
+			value = Convert.ToDecimal(GetHeader(name));
+		}
 		public void GetHeader(string name, out string value)
 		{
 			value = GetHeader(name);
@@ -2009,6 +2036,10 @@ namespace GeneXus.Http.Client
 		public void GetHeader(string name, out DateTime value)
 		{
 			value = Convert.ToDateTime(GetHeader(name));
+		}
+		public void GetHeader(string name, out bool value)
+		{
+			value = Convert.ToBoolean(GetHeader(name));
 		}
 		public void AddCertificate(string cert)
 		{

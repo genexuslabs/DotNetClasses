@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Configuration;
 using GeneXus.Data;
@@ -14,6 +16,8 @@ using GeneXus.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 
 
 namespace GeneXus.Utils
@@ -27,6 +31,36 @@ namespace GeneXus.Utils
 		public void OnActionExecuting(ActionExecutingContext context)
 		{
 			(context.Controller as GxRestService).Initialize();
+		}
+	}
+
+	public class QueryStringModelBinderProvider : IModelBinderProvider
+	{
+		public IModelBinder GetBinder(ModelBinderProviderContext context)
+		{
+			if (context.BindingInfo.BindingSource == BindingSource.Query &&
+				context.Metadata.ModelType == typeof(string))
+			{
+				return new BinderTypeModelBinder(typeof(CustomQueryStringBinder));
+			}
+			return null;
+		}
+	}
+	public class CustomQueryStringBinder : IModelBinder
+	{
+		public Task BindModelAsync(ModelBindingContext bindingContext)
+		{
+			if (!bindingContext.BindingSource.CanAcceptDataFrom(BindingSource.Query))
+			{
+				return Task.CompletedTask;
+			}
+			if (bindingContext.ModelType != typeof(string))
+			{
+				return Task.CompletedTask;
+			}
+			string value = bindingContext.ValueProvider.GetValue(bindingContext.ModelName).FirstValue;
+			bindingContext.Result = ModelBindingResult.Success(value ?? string.Empty);
+			return Task.CompletedTask;
 		}
 	}
 	[TypeFilter(typeof(CustomActionFilter))]
@@ -49,11 +83,42 @@ namespace GeneXus.Utils
 		[NonAction]
 		internal void Initialize()
 		{
-			context.HttpContext = HttpContext;
+			context.HttpContext = GetHttpContext();
 			context.HttpContext.NewSessionCheck();
 			ServiceHeaders();
 		}
+		//Renamed to LoadSdt
+		protected T ToInternalModel<T>(GxGenericCollectionItem<T> restSDT) where T : GxUserType, new()
+		{
+			return LoadSdt<T>(restSDT);
+		}
+		protected T LoadSdt<T>(GxGenericCollectionItem<T> restSDT) where T : GxUserType, new()
+		{
+			if (restSDT != null)
+			{
+				restSDT.Sdt.context = context;
+				return restSDT.InternalSdt;
+			}
+			else
+			{
+				T internalSDT = new T();
+				internalSDT.context = context;
+				return internalSDT;
+			}
+		}
 
+		protected void LoadCollection<X, T>(GxGenericCollection<X> restModel, GXBaseCollection<T> internalModel) where T : GxUserType, new()
+			where X : new()
+		{
+			if (restModel != null)
+			{
+				restModel.LoadCollection(internalModel);
+				foreach (GxUserType item in internalModel)
+				{
+					item.context = context;
+				}
+			}
+		}
 		protected void Cleanup()
         {
 			if (runAsMain)
@@ -66,18 +131,22 @@ namespace GeneXus.Utils
         }
 		//Convert GxUnknownObjectCollection of Object[] to GxUnknownObjectCollection of GxSimpleCollections
 		protected GxUnknownObjectCollection TableHashList(GxUnknownObjectCollection tableHashList)
-        {
+		{
 			GxUnknownObjectCollection result = new GxUnknownObjectCollection();
 			if (tableHashList != null && tableHashList.Count > 0)
 			{
-				foreach (object[] list in tableHashList)
+				foreach (JsonElement element in tableHashList)
 				{
-					GxStringCollection tableHash = new GxStringCollection();
-					foreach (string data in list)
+					if (element.ValueKind == JsonValueKind.Array)
 					{
-						tableHash.Add(data);
+						GxStringCollection tableHash = new GxStringCollection();
+						foreach (var item in element.EnumerateArray())
+						{
+							string value = JsonSerializer.Deserialize<string>(item.GetRawText());
+							tableHash.Add(value);
+						}
+						result.Add(tableHash);
 					}
-					result.Add(tableHash);
 				}
 			}
 			return result;
@@ -94,7 +163,7 @@ namespace GeneXus.Utils
         {
             try
 			{
-				if (HttpContext.Request.Query.TryGetValue(parameterName, out var value))
+				if (GetHttpContext().Request.Query.TryGetValue(parameterName, out var value))
 					return value.FirstOrDefault();
 				else
 					return parameterValue;
@@ -108,7 +177,7 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				if (HttpContext.Request.Query.TryGetValue(parameterName, out var value))
+				if (GetHttpContext().Request.Query.TryGetValue(parameterName, out var value))
 					return value.FirstOrDefault().Equals(parameterValue, StringComparison.OrdinalIgnoreCase);
 				return false;
 			}
@@ -124,9 +193,9 @@ namespace GeneXus.Utils
 			string fileToken;
 			using (Stream stream = Request.Body)
 			{
-				fileToken = gxobject.ReadFileFromStream(stream, Request.ContentType, Request.ContentLength.GetValueOrDefault(), Request.Headers[HttpHeader.XGXFILENAME], out fileGuid);
+				fileToken = gxobject.ReadFileFromStream(stream, GetHttpContext().Request.ContentType, GetHttpContext().Request.ContentLength.GetValueOrDefault(), GetHttpContext().Request.Headers[HttpHeader.XGXFILENAME], out fileGuid);
 			}
-			Response.Headers.Append(HttpHeader.GX_OBJECT_ID, fileGuid);
+			GetHttpContext().Response.Headers.Append(HttpHeader.GX_OBJECT_ID, fileGuid);
 			SetStatusCode(HttpStatusCode.Created);
 			return GetResponse(new {object_id = fileToken});
 		}
@@ -218,12 +287,12 @@ namespace GeneXus.Utils
 
 			if (ex is FormatException || ex is NullReferenceException)
 			{
-				WrappedJsonError jsonError = HttpHelper.HandleUnexpectedError(HttpContext, HttpStatusCode.BadRequest, ex);
+				WrappedJsonError jsonError = HttpHelper.HandleUnexpectedError(GetHttpContext(), HttpStatusCode.BadRequest, ex);
 				return BadRequest(jsonError);
 			}
 			else
 			{
-				WrappedJsonError jsonError = HttpHelper.HandleUnexpectedError(HttpContext, HttpStatusCode.InternalServerError, ex);
+				WrappedJsonError jsonError = HttpHelper.HandleUnexpectedError(GetHttpContext(), HttpStatusCode.InternalServerError, ex);
 				return StatusCode((int)HttpStatusCode.InternalServerError, jsonError);
 			}
 		}
@@ -233,11 +302,11 @@ namespace GeneXus.Utils
 
             if (ex is FormatException)
 			{
-				HttpHelper.SetUnexpectedError(HttpContext, HttpStatusCode.BadRequest, ex);
+				HttpHelper.SetUnexpectedError(GetHttpContext(), HttpStatusCode.BadRequest, ex);
 			}
 			else
             {
-				HttpHelper.SetUnexpectedError(HttpContext, HttpStatusCode.InternalServerError, ex);
+				HttpHelper.SetUnexpectedError(GetHttpContext(), HttpStatusCode.InternalServerError, ex);
 			}
         }
 
@@ -343,21 +412,21 @@ namespace GeneXus.Utils
 		internal WrappedJsonError HandleGamError(string code, string message, HttpStatusCode defaultCode = HttpStatusCode.Unauthorized)
 		{
 			HttpStatusCode httpStatusCode = HttpHelper.GamCodeToHttpStatus(code, defaultCode);
-			SetErrorHeaders(HttpContext, httpStatusCode, message);
+			SetErrorHeaders(GetHttpContext(), httpStatusCode, message);
 			return HttpHelper.GetJsonError(code, message);
 		}
 		internal WrappedJsonError HandleError(string code, string message)
 		{
 			HttpStatusCode httpStatusCode = HttpHelper.MapStatusCode(code);
-			SetErrorHeaders(HttpContext, httpStatusCode, message);
+			SetErrorHeaders(GetHttpContext(), httpStatusCode, message);
 			return HttpHelper.GetJsonError(code, message);
 		}
 		private void SetErrorHeaders(HttpContext httpContext, HttpStatusCode httpStatusCode, string message)
 		{
-			if (httpContext != null)
+			if (GetHttpContext() != null)
 			{
 				SetStatusCode(httpStatusCode);
-				HttpHelper.HandleUnauthorized(httpStatusCode, httpContext);
+				HttpHelper.HandleUnauthorized(httpStatusCode, GetHttpContext());
 				httpContext.SetReasonPhrase(message);
 				GXLogging.Error(log, String.Format("ErrCode {0}, ErrDsc {1}", httpStatusCode, message));
 			}
@@ -376,33 +445,33 @@ namespace GeneXus.Utils
         }
 		IHeaderDictionary GetHeaders()
 		{
-			if (HttpContext != null)
+			if (GetHttpContext() != null)
 			{
-				return HttpContext.Request.Headers;
+				return GetHttpContext().Request.Headers;
 			}
 			else return null;
 		}
         string GetHeader(string header)
         {
-            if (HttpContext != null)
+            if (GetHttpContext() != null)
             {
-                return HttpContext.Request.Headers[header];
+                return GetHttpContext().Request.Headers[header];
             }
             else return null;
         }
 		bool IsPost()
 		{
-			if (HttpContext != null)
+			if (GetHttpContext() != null)
 			{
-				return HttpMethod.Post.Method == HttpContext.Request.GetMethod();
+				return HttpMethod.Post.Method == GetHttpContext().Request.GetMethod();
 			}
 			else return false;
 		}
 		void AddHeader(string header, string value)
         {
-            if (HttpContext != null)
+            if (GetHttpContext() != null)
             {
-                HttpContext.Response.Headers[header]= value;
+				GetHttpContext().Response.Headers[header]= value;
             }
         }
 		protected bool ProcessHeaders(string queryId)
@@ -457,9 +526,9 @@ namespace GeneXus.Utils
 		private void ServiceHeaders()
 		{
 			SendCacheHeaders();
-			if (HttpContext != null)
+			if (GetHttpContext() != null)
 			{
-				HttpHelper.CorsHeaders(HttpContext);
+				HttpHelper.CorsHeaders(GetHttpContext());
 			}
 			
 		}
@@ -475,6 +544,13 @@ namespace GeneXus.Utils
         {
             return dt.ToUniversalTime().ToString(DateTimeFormatInfo.InvariantInfo.RFC1123Pattern, DateTimeFormatInfo.InvariantInfo);
         }
+
+		protected virtual HttpContext GetHttpContext()
+		{
+			//This method must be virtual so it can be implemented by Azure Functions classes.
+			//In the case of Azure, the base HttpContext isn't the ControllerBase class HttpContext, but rather the Azure Request HttpContext itself.
+			return base.HttpContext;
+		}
 		protected virtual bool IsSynchronizer { get { return false; } }
 		protected virtual bool IntegratedSecurityEnabled { get { return false; } }
 		protected virtual GAMSecurityLevel ApiIntegratedSecurityLevel(string gxMethod) { return IntegratedSecurityLevel; }

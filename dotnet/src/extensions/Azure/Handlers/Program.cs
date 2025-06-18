@@ -8,31 +8,37 @@ using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
 using GeneXus.Services;
 using GxClasses.Web;
 using GxClasses.Web.Middleware;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace GeneXus.Deploy.AzureFunctions.Handlers
 {
 	public class Program
-    {
+	{
 		static async Task Main()
-        {
+		{
 			string roothPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			string routePrefix = GetRoutePrefix(roothPath);
 			GXRouting.ContentRootPath = roothPath;
 
 			var host = new HostBuilder()
-				.ConfigureFunctionsWorkerDefaults()
+				.ConfigureFunctionsWebApplication()
 				.ConfigureServices(services =>
 				{
+					services.AddMvc();
+					// Only needed if using HttpRequestData/HttpResponseData and a serializer that doesn't support asynchronous IO
+					services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
 					services.AddSingleton<ICallMappings, CallMappings>(x => new CallMappings(roothPath));
-				})
-				.ConfigureServices(services =>
-				{
 					services.AddSingleton<IGXRouting, GXRouting>(x => new GXRouting(routePrefix));
-				})
-				.ConfigureServices(services =>
-				{
+					services.AddControllers();
+					services.AddMvc().AddJsonOptions(options =>
+					{
+
+						options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString;
+						options.JsonSerializerOptions.Converters.Add(new GeneXus.Utils.StringConverter());
+
+					});
 					ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 					if (sessionService is GxRedisSession)
 					{
@@ -45,7 +51,7 @@ namespace GeneXus.Deploy.AzureFunctions.Handlers
 			GxContext.IsAzureContext = true;
 			GxContext.IsHttpContext = true;
 			await host.RunAsync();
-        }
+		}
 		private static string GetRoutePrefix(string ContentRootPath)
 		{
 			//Read host.json file to get Route prefix
