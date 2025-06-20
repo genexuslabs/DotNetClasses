@@ -1,15 +1,12 @@
-
 using System;
 using GeneXus.MSOffice.Excel.Style;
 using GeneXus.Utils;
-using NPOI.OpenXmlFormats.Spreadsheet;
+using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
-using NPOI.XSSF.Model;
-using NPOI.XSSF.UserModel;
-using NPOI.XSSF.UserModel.Extensions;
 
-namespace GeneXus.MSOffice.Excel.Poi.Xssf
+
+namespace GeneXus.MSOffice.Excel.Poi.Hssf
 {
 	public class ExcelCells : IExcelCellRange
 	{
@@ -24,14 +21,15 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		protected int colEndIdx;
 		protected int rowStartIdx;
 		protected int rowEndIdx;
-		protected XSSFWorkbook pWorkbook;
+		protected HSSFWorkbook pWorkbook;
 		protected ISheet pSelectedSheet;
 		protected bool fitColumnWidth;
 		protected bool readonlyFlag;
 		protected StylesCache stylesCache;
-		protected XSSFCell[] pCells;
+		protected HSSFCell[] pCells;
 		protected ExcelStyle cellStyle;
-		public ExcelCells(IGXError errAccess, ExcelSpreadsheet document, XSSFWorkbook workBook, XSSFSheet selectedSheet,
+
+		public ExcelCells(IGXError errAccess, ExcelSpreadsheet document, HSSFWorkbook workBook, HSSFSheet selectedSheet,
 			int rowPos, int colPos, int height, int width, StylesCache stylesCache) : this(errAccess, document, workBook, selectedSheet, rowPos, colPos, height, width, false, stylesCache)
 		{ }
 
@@ -39,7 +37,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		{
 		}
 
-		public ExcelCells(IGXError errAccess, ExcelSpreadsheet document, XSSFWorkbook workBook, XSSFSheet selectedSheet,
+		public ExcelCells(IGXError errAccess, ExcelSpreadsheet document, HSSFWorkbook workBook, HSSFSheet selectedSheet,
 			int rowPos, int colPos, int height, int width, bool isReadonly, StylesCache stylesCache)
 		{
 			_errorHandler = errAccess;
@@ -56,13 +54,13 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			fitColumnWidth = true;
 			readonlyFlag = isReadonly;
 			this.stylesCache = stylesCache;
-			pCells = new XSSFCell[(width * height) + 1];
+			pCells = new HSSFCell[(width * height) + 1];
 
 			try
 			{
 				for (int y = rowPos; y < (rowPos + pHeight); y++)
 				{
-					XSSFRow pRow = GetExcelRow(selectedSheet, y);
+					HSSFRow pRow = GetExcelRow(selectedSheet, y);
 					if (pRow != null)
 					{
 						for (int x = colPos; x < (colPos + pWidth); x++)
@@ -71,7 +69,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 							if (pCell != null)
 							{
 								cellCount++;
-								pCells[cellCount] = (XSSFCell)pCell;
+								pCells[cellCount] = (HSSFCell)pCell;
 							}
 						}
 					}
@@ -83,25 +81,25 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			}
 		}
 
-		protected XSSFRow GetExcelRow(XSSFSheet sheet, int rowPos)
+		protected HSSFRow GetExcelRow(HSSFSheet sheet, int rowPos)
 		{
-			XSSFRow row = (XSSFRow)sheet.GetRow(rowPos);
+			HSSFRow row = (HSSFRow)sheet.GetRow(rowPos);
 
 			if (row == null)
 			{
-				row = (XSSFRow)sheet.CreateRow(rowPos);
+				row = (HSSFRow)sheet.CreateRow(rowPos);
 			}
 
 			return row;
 		}
 
-		protected XSSFCell GetExcelCell(XSSFRow row, int colPos)
+		protected HSSFCell GetExcelCell(HSSFRow row, int colPos)
 		{
-			XSSFCell cell = (XSSFCell)row.GetCell(colPos);
+			HSSFCell cell = (HSSFCell)row.GetCell(colPos);
 
 			if (cell == null)
 			{
-				cell = (XSSFCell)row.CreateCell(colPos);
+				cell = (HSSFCell)row.CreateCell(colPos);
 			}
 
 			return cell;
@@ -134,6 +132,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				throw new ExcelException(7, "Invalid cell value");
 			}
 		}
+
 		public bool SetDate(DateTime value)
 		{
 			CheckReadonlyDocument();
@@ -149,14 +148,14 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 					if (value.Minute == 0 && value.Hour == 0 && value.Second == 0 && value.Millisecond == 0 && dformat.IndexOf(' ') > 0)
 						dformat = dformat.Substring(0, dformat.IndexOf(' '));
 
-					XSSFDataFormat df = (XSSFDataFormat)pWorkbook.CreateDataFormat();
+					HSSFDataFormat df = (HSSFDataFormat)pWorkbook.CreateDataFormat();
 
 					for (int i = 1; i <= cellCount; i++)
 					{
-						XSSFCellStyle cellStyle = (XSSFCellStyle)pCells[i].CellStyle;
+						HSSFCellStyle cellStyle = (HSSFCellStyle)pCells[i].CellStyle;
 						if (!DateUtil.IsCellDateFormatted(pCells[i]))
 						{
-							XSSFCellStyle newStyle = (XSSFCellStyle)pWorkbook.CreateCellStyle();
+							HSSFCellStyle newStyle = (HSSFCellStyle)pWorkbook.CreateCellStyle();
 							CopyPropertiesStyle(newStyle, cellStyle);
 							newStyle.DataFormat = df.GetFormat(dformat);
 							pCells[i].CellStyle = newStyle;
@@ -190,7 +189,6 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 					pCells[i].Hyperlink = hyperlink;
 				}
-
 				return true;
 			}
 			catch (Exception)
@@ -395,7 +393,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				try
 				{
-					DateTime dVal = pCells[1].DateCellValue ?? DateTime.MinValue;
+					DateTime dVal = pCells[1].DateCellValue ?? DateTime.MinValue; 
 					if (dVal != DateTime.MinValue)
 					{
 						return "D";
@@ -437,9 +435,9 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				for (int i = 1; i <= cellCount; i++)
 				{
 					ICellStyle cellStyle = pCells[1].CellStyle;
-					XSSFFont fontCell = (XSSFFont)pWorkbook.GetFontAt(cellStyle.FontIndex);
-					XSSFCellStyle newStyle = null;
-					XSSFFont newFont = null;
+					HSSFFont fontCell = (HSSFFont)pWorkbook.GetFontAt(cellStyle.FontIndex);
+					HSSFCellStyle newStyle = null;
+					HSSFFont newFont = null;
 
 					if (fontCell.FontHeightInPoints != value)
 					{
@@ -469,7 +467,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			return pWorkbook.GetFontAt(pCells[1].CellStyle.FontIndex).FontName;
 		}
 
-		protected XSSFFont GetInternalFont(bool bold, short color, double fontHeight, string name, bool italic,
+		protected HSSFFont GetInternalFont(bool bold, short color, double fontHeight, string name, bool italic,
 			bool strikeout, FontSuperScript typeOffset, FontUnderlineType underline)
 		{
 			IFont font = pWorkbook.FindFont(bold, color, (short)fontHeight, name, italic, strikeout, typeOffset, underline);
@@ -477,7 +475,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				font = pWorkbook.CreateFont();
 			}
-			return (XSSFFont)font;
+			return (HSSFFont)font;
 		}
 
 		public void SetFont(string value)
@@ -490,8 +488,8 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				{
 					ICellStyle cellStyle = pCells[i].CellStyle;
 					IFont fontCell = pWorkbook.GetFontAt(cellStyle.FontIndex);
-					XSSFCellStyle newStyle = null;
-					XSSFFont newFont = null;
+					HSSFCellStyle newStyle = null;
+					HSSFFont newFont = null;
 
 					if (!fontCell.FontName.Equals(value))
 					{
@@ -534,8 +532,8 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				{
 					ICellStyle cellStyle = pCells[i].CellStyle;
 					IFont fontCell = pWorkbook.GetFontAt(cellStyle.FontIndex);
-					XSSFCellStyle newStyle = null;
-					XSSFFont newFont = null;
+					HSSFCellStyle newStyle = null;
+					HSSFFont newFont = null;
 
 					switch (value)
 					{
@@ -601,8 +599,8 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				{
 					ICellStyle cellStyle = pCells[i].CellStyle;
 					IFont fontCell = pWorkbook.GetFontAt(cellStyle.FontIndex);
-					XSSFCellStyle newStyle = null;
-					XSSFFont newFont = null;
+					HSSFCellStyle newStyle = null;
+					HSSFFont newFont = null;
 
 					switch (value)
 					{
@@ -667,8 +665,8 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				{
 					ICellStyle cellStyle = pCells[i].CellStyle;
 					IFont fontCell = pWorkbook.GetFontAt(cellStyle.FontIndex);
-					XSSFCellStyle newStyle = null;
-					XSSFFont newFont = null;
+					HSSFCellStyle newStyle = null;
+					HSSFFont newFont = null;
 
 					switch (value)
 					{
@@ -732,9 +730,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			SetColor((long)value);
 		}
 
-		// This version optimizes the existing color palette in the spreadsheet.
-		// It searches for similar colors and if found, it uses them to avoid reloading
-		// the color palette, which has a maximum of 40h-10h positions.
+		// HSSF uses a more limited color palette compared to XSSF
 		public void SetColor(long value)
 		{
 			CheckReadonlyDocument();
@@ -743,101 +739,29 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				for (int i = 1; i <= cellCount; i++)
 				{
-					XSSFCellStyle cellStyle = (XSSFCellStyle)pCells[i].CellStyle;
-					XSSFFont fontCell = (XSSFFont)pWorkbook.GetFontAt(cellStyle.FontIndex);
-					XSSFCellStyle newStyle = null;
-					XSSFFont newFont = null;
-					XSSFColor newColor = null;
+					HSSFCellStyle cellStyle = (HSSFCellStyle)pCells[i].CellStyle;
+					HSSFFont fontCell = (HSSFFont)pWorkbook.GetFontAt(cellStyle.FontIndex);
+					HSSFCellStyle newStyle = null;
+					HSSFFont newFont = null;
 
-					XSSFColor fontColor = fontCell.GetXSSFColor();
+					// For HSSF, we can only use the predefined color palette
+					// We need to find the closest matching color
+					short colorIndex = GetClosestColorIndex(value);
 
-					int val = (int)value;
-					int red = val >> 16 & 0xff;
-					int green = val >> 8 & 0xff;
-					int blue = val & 0xff;
-
-					if (red != 0 || green != 0 || blue > 56)
+					if (fontCell.Color != colorIndex)
 					{
-						if ((fontColor != null && (fontColor.GetRgb() == null || (fontColor.GetRgb()[0] == 0
-								&& fontColor.GetRgb()[1] == 0 && fontColor.GetRgb()[2] == 0))))
-						{
-							if ((red + green + blue) != 0)
-							{
-								newColor = new XSSFColor(new byte[] { (byte)red, (byte)green, (byte)blue });
+						newFont = GetInternalFont(fontCell.IsBold, colorIndex,
+							fontCell.FontHeight, fontCell.FontName, fontCell.IsItalic,
+							fontCell.IsStrikeout, fontCell.TypeOffset, fontCell.Underline);
+						CopyPropertiesFont(newFont, fontCell);
 
-								newFont = (XSSFFont)pWorkbook.CreateFont();
-								CopyPropertiesFont(newFont, fontCell);
+						newFont.Color = colorIndex;
 
-								newFont.SetColor(newColor);
+						newStyle = stylesCache.GetCellStyle(newFont);
+						CopyPropertiesStyle(newStyle, cellStyle);
 
-								newStyle = (XSSFCellStyle)pWorkbook.CreateCellStyle();
-								CopyPropertiesStyle(newStyle, cellStyle);
-
-								newStyle.SetFont(newFont);
-								pCells[i].CellStyle = newStyle;
-							}
-						}
-						else
-						{
-							if (fontColor != null)
-							{
-								byte[] triplet = fontColor.GetRgb();
-
-								if (triplet[0] != red || triplet[1] != green || triplet[2] != blue)
-								{
-
-									newColor = new XSSFColor(new byte[] { (byte)red, (byte)green, (byte)blue });
-
-									newFont = (XSSFFont)pWorkbook.CreateFont();
-									CopyPropertiesFont(newFont, fontCell);
-
-									newFont.SetColor(newColor);
-
-									newStyle = (XSSFCellStyle)pWorkbook.CreateCellStyle();
-									CopyPropertiesStyle(newStyle, cellStyle);
-
-									newStyle.SetFont(newFont);
-									pCells[i].CellStyle = newStyle;
-								}
-							}
-						}
-					}
-					else
-					{
-						value = value + 7;
-						if (fontColor != null)
-						{
-							if (fontColor.Indexed != value)
-							{
-								newFont = GetInternalFont(fontCell.IsBold, (short)value,
-									fontCell.FontHeight, fontCell.FontName, fontCell.IsItalic,
-									fontCell.IsStrikeout, fontCell.TypeOffset, fontCell.Underline);
-								CopyPropertiesFont(newFont, fontCell);
-
-								newFont.Color = (short)value;
-
-								newStyle = stylesCache.GetCellStyle(newFont);
-								CopyPropertiesStyle(newStyle, cellStyle);
-
-								newStyle.SetFont(newFont);
-								pCells[i].CellStyle = newStyle;
-							}
-						}
-						else
-						{
-							newFont = GetInternalFont(fontCell.IsBold, (short)value,
-								fontCell.FontHeight, fontCell.FontName, fontCell.IsItalic,
-								fontCell.IsStrikeout, fontCell.TypeOffset, fontCell.Underline);
-							CopyPropertiesFont(newFont, fontCell);
-
-							newFont.Color = (short)value;
-
-							newStyle = stylesCache.GetCellStyle(newFont);
-							CopyPropertiesStyle(newStyle, cellStyle);
-
-							newStyle.SetFont(newFont);
-							pCells[i].CellStyle = newStyle;
-						}
+						newStyle.SetFont(newFont);
+						pCells[i].CellStyle = newStyle;
 					}
 				}
 			}
@@ -847,12 +771,52 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			}
 		}
 
-		protected void CopyPropertiesStyle(XSSFCellStyle dest, ICellStyle source)
+		// Helper method to find the closest color in the HSSFPalette
+		private short GetClosestColorIndex(long rgbColor)
+		{
+			// Extract RGB components
+			int red = (int)(rgbColor >> 16) & 0xFF;
+			int green = (int)(rgbColor >> 8) & 0xFF;
+			int blue = (int)rgbColor & 0xFF;
+			return GetClosestColorIndex(red, green, blue);
+		}
+		private short GetClosestColorIndex(int? redValue, int? greenValue, int? blueValue)
+		{
+			// Extract RGB components
+			int red = redValue ?? 0;
+			int green = greenValue ?? 0;
+			int blue = blueValue ?? 0;
+
+			// If it's black, use standard black index
+			if (red == 0 && green == 0 && blue == 0)
+				return 8; // Black
+
+			// For standard colors, try to match to common indices
+			if (red == 255 && green == 0 && blue == 0)
+				return 10; // Red
+			if (red == 0 && green == 255 && blue == 0)
+				return 11; // Green
+			if (red == 0 && green == 0 && blue == 255)
+				return 12; // Blue
+			if (red == 255 && green == 255 && blue == 0)
+				return 13; // Yellow
+			if (red == 255 && green == 0 && blue == 255)
+				return 14; // Magenta
+			if (red == 0 && green == 255 && blue == 255)
+				return 15; // Cyan
+			if (red == 255 && green == 255 && blue == 255)
+				return 9;  // White
+
+			// For other colors, just use a reasonable default
+			return 32; // Default to a standard color index
+		}
+
+		protected void CopyPropertiesStyle(HSSFCellStyle dest, ICellStyle source)
 		{
 			dest.CloneStyleFrom(source);
 		}
 
-		protected void CopyPropertiesFont(XSSFFont dest, IFont source)
+		protected void CopyPropertiesFont(HSSFFont dest, IFont source)
 		{
 			dest.FontHeightInPoints = source.FontHeightInPoints;
 			dest.FontName = source.FontName;
@@ -1018,7 +982,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		{
 			if (cellCount > 0)
 			{
-				XSSFCellStyle style = (XSSFCellStyle)pWorkbook.CreateCellStyle();
+				HSSFCellStyle style = (HSSFCellStyle)pWorkbook.CreateCellStyle();
 
 				ApplyNewCellStyle(style, newCellStyle);
 				for (int i = 1; i <= cellCount; i++)
@@ -1029,16 +993,12 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			return cellCount > 0;
 		}
 
-		private XSSFColor ToColor(ExcelColor color)
-		{
-			return new XSSFColor(new byte[] { (byte)color.Red, (byte)color.Green, (byte)color.Blue });
-		}
-		private XSSFCellStyle ApplyNewCellStyle(XSSFCellStyle cellStyle, ExcelStyle newCellStyle)
+		private HSSFCellStyle ApplyNewCellStyle(HSSFCellStyle cellStyle, ExcelStyle newCellStyle)
 		{
 			ExcelFont cellFont = newCellStyle.CellFont;
 			if (cellFont != null && cellFont.IsDirty())
 			{
-				XSSFFont cellStyleFont = (XSSFFont)pWorkbook.CreateFont();
+				HSSFFont cellStyleFont = (HSSFFont)pWorkbook.CreateFont();
 				cellStyle.SetFont(cellStyleFont);
 				ExcelFont font = newCellStyle.CellFont;
 				if (font != null)
@@ -1070,14 +1030,16 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 					}
 					if (font.Color != null && font.Color.IsDirty())
 					{
-						cellStyleFont.SetColor(ToColor(font.Color));
+						// For HSSF, use the closest color in the palette
+						cellStyleFont.Color = GetClosestColorIndex(font.Color.Red, font.Color.Green, font.Color.Blue);
 					}
 				}
 			}
 			ExcelFill cellfill = newCellStyle.CellFill;
 			if (cellfill != null && cellfill.CellBackColor != null && cellfill.CellBackColor.IsDirty())
 			{
-				cellStyle.SetFillForegroundColor(ToColor(cellfill.CellBackColor));
+				// For HSSF, use a closest color from the palette for fill
+				cellStyle.FillForegroundColor = GetClosestColorIndex(cellfill.CellBackColor.Red, cellfill.CellBackColor.Green, cellfill.CellBackColor.Blue);
 				cellStyle.FillPattern = FillPattern.SolidForeground;
 			}
 
@@ -1164,140 +1126,15 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			if (newCellStyle.Border != null)
 			{
 				ExcelCellBorder cellBorder = newCellStyle.Border;
-				ApplyBorderSide(cellStyle, BorderCellSide.TOP, cellBorder.BorderTop);
 				ApplyBorderSide(cellStyle, BorderCellSide.BOTTOM, cellBorder.BorderBottom);
+				ApplyBorderSide(cellStyle, BorderCellSide.TOP, cellBorder.BorderTop);
 				ApplyBorderSide(cellStyle, BorderCellSide.LEFT, cellBorder.BorderLeft);
 				ApplyBorderSide(cellStyle, BorderCellSide.RIGHT, cellBorder.BorderRight);
-
-				bool hasDiagonalUp = cellBorder.BorderDiagonalUp != null && cellBorder.BorderDiagonalUp.IsDirty();
-				bool hasDiagonalDown = cellBorder.BorderDiagonalDown != null && cellBorder.BorderDiagonalDown.IsDirty();
-				if (hasDiagonalUp || hasDiagonalDown)
-				{
-					CT_Xf _cellXf = cellStyle.GetCoreXf();
-					ExcelBorder border = (hasDiagonalUp) ? cellBorder.BorderDiagonalUp : cellBorder.BorderDiagonalDown;
-					XSSFColor diagonalColor = ToColor(border.BorderColor);
-					BorderStyle borderStyle = ConvertToBorderStyle(border.Border);
-					SetBorderDiagonal(borderStyle, diagonalColor, this.pWorkbook.GetStylesSource(), _cellXf, hasDiagonalUp, hasDiagonalDown);
-				}
 			}
+
 			return cellStyle;
 		}
-
-		private static CT_Border GetCTBorder(StylesTable _stylesSource, CT_Xf _cellXf)
-		{
-			CT_Border ct;
-			if (_cellXf.applyBorder)
-			{
-				int idx = (int)_cellXf.borderId;
-				XSSFCellBorder cf = _stylesSource.GetBorderAt(idx);
-				ct = (CT_Border)cf.GetCTBorder().Copy();
-			}
-			else
-			{
-				ct = new CT_Border();
-			}
-			return ct;
-		}
-
-		public static void SetBorderDiagonal(BorderStyle border, XSSFColor color, StylesTable _stylesSource, CT_Xf _cellXf, bool up, bool down)
-		{
-			CT_Border ct = GetCTBorder(_stylesSource, _cellXf);
-			CT_BorderPr pr = ct.IsSetDiagonal() ? ct.diagonal : ct.AddNewDiagonal();
-
-			ct.diagonalDown = down;
-			ct.diagonalUp = up;
-			pr.style = ToStBorderStyle(border);
-			pr.color = ConvertToCTColor(color);
-
-			int idx = _stylesSource.PutBorder(new XSSFCellBorder(ct));
-			_cellXf.borderId = (uint)idx;
-			_cellXf.applyBorder = true;
-		}
-		static CT_Color ConvertToCTColor(XSSFColor xssfColor)
-		{
-			CT_Color ctColor = new CT_Color();
-
-			if (xssfColor != null)
-			{
-				ctColor = new CT_Color();
-
-				if (xssfColor.IsRGB)
-				{
-					byte[] rgb = xssfColor.RGB;
-					ctColor.rgb = rgb;
-				}
-				else if (xssfColor.IsIndexed)
-				{
-					ctColor.indexed = (uint)xssfColor.Indexed;
-				}
-				else if (xssfColor.IsThemed)
-				{
-					ctColor.theme = (uint)xssfColor.Theme;
-				}
-				else if (xssfColor.IsAuto)
-				{
-					ctColor.auto = true;
-				}
-			}
-
-			return ctColor;
-		}
-		private static ST_BorderStyle ToStBorderStyle(BorderStyle borderStyle)
-		{
-			ST_BorderStyle stBorderStyle;
-
-			switch (borderStyle)
-			{
-				case BorderStyle.None:
-					stBorderStyle = ST_BorderStyle.none;
-					break;
-				case BorderStyle.Thin:
-					stBorderStyle = ST_BorderStyle.thin;
-					break;
-				case BorderStyle.Medium:
-					stBorderStyle = ST_BorderStyle.medium;
-					break;
-				case BorderStyle.Dashed:
-					stBorderStyle = ST_BorderStyle.dashed;
-					break;
-				case BorderStyle.Dotted:
-					stBorderStyle = ST_BorderStyle.dotted;
-					break;
-				case BorderStyle.Thick:
-					stBorderStyle = ST_BorderStyle.thick;
-					break;
-				case BorderStyle.Double:
-					stBorderStyle = ST_BorderStyle.@double;
-					break;
-				case BorderStyle.Hair:
-					stBorderStyle = ST_BorderStyle.hair;
-					break;
-				case BorderStyle.MediumDashed:
-					stBorderStyle = ST_BorderStyle.mediumDashed;
-					break;
-				case BorderStyle.DashDot:
-					stBorderStyle = ST_BorderStyle.dashDot;
-					break;
-				case BorderStyle.MediumDashDot:
-					stBorderStyle = ST_BorderStyle.mediumDashDot;
-					break;
-				case BorderStyle.DashDotDot:
-					stBorderStyle = ST_BorderStyle.dashDotDot;
-					break;
-				case BorderStyle.MediumDashDotDot:
-					stBorderStyle = ST_BorderStyle.mediumDashDotDot;
-					break;
-				case BorderStyle.SlantedDashDot:
-					stBorderStyle = ST_BorderStyle.slantDashDot;
-					break;
-				default:
-					stBorderStyle = ST_BorderStyle.none; //Default value
-					break;
-			}
-			return stBorderStyle;
-
-		}
-		private void ApplyBorderSide(XSSFCellStyle cellStyle, BorderCellSide bSide, ExcelBorder border)
+		private void ApplyBorderSide(HSSFCellStyle cellStyle, BorderCellSide bSide, ExcelBorder border)
 		{
 			if (border != null && border.IsDirty())
 			{
@@ -1305,8 +1142,25 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				{
 					try
 					{
-						BorderSide borderSide = (BorderSide)Enum.Parse(typeof(BorderSide), bSide.ToString());
-						cellStyle.SetBorderColor(borderSide, ToColor(border.BorderColor));
+						// For HSSF, use closest color from palette for borders
+						short colorIndex = GetClosestColorIndex(border.BorderColor.Red, border.BorderColor.Green, border.BorderColor.Blue);
+						
+						if (bSide == BorderCellSide.BOTTOM)
+						{
+							cellStyle.BottomBorderColor = colorIndex;
+						}
+						else if (bSide == BorderCellSide.TOP)
+						{
+							cellStyle.TopBorderColor = colorIndex;
+						}
+						else if (bSide == BorderCellSide.LEFT)
+						{
+							cellStyle.LeftBorderColor = colorIndex;
+						}
+						else if (bSide == BorderCellSide.RIGHT)
+						{
+							cellStyle.RightBorderColor = colorIndex;
+						}
 					}
 					catch (ArgumentException) { }
 				}
@@ -1332,6 +1186,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				}
 			}
 		}
+		
 		internal BorderStyle ConvertToBorderStyle(string style)
 		{
 			style = style.ToUpper();
@@ -1356,7 +1211,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		}
 		internal enum BorderCellSide
 		{
-			RIGHT, LEFT, TOP, BOTTOM, DIAGONALUP, DIAGONALDOWN
+			RIGHT, LEFT, TOP, BOTTOM
 		}
 
 	}
