@@ -23,3 +23,4 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_PROCESS_ROLES: broker
       CLUSTER_ID: test-cluster
+      controller.quorum.bootstrap.servers: localhost:9092
