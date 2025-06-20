@@ -1,6 +1,4 @@
 using System;
-using System.Threading.Tasks;
-using Confluent.Kafka;
 using GeneXus.Messaging.Core;
 using Xunit;
 namespace KafkaIntegrationTest
@@ -13,11 +11,7 @@ namespace KafkaIntegrationTest
 		{
 			bool testEnabled = Environment.GetEnvironmentVariable("KAFKA_TEST_ENABLED") == "true";
 			Skip.IfNot(testEnabled, "Environment variables not set");
-#if NETCORE
-			_topic = $"gxtopic_netcore_{Guid.NewGuid()}";
-#else
-			_topic = $"gxtopic_netfw_{Guid.NewGuid()}";
-#endif
+			_topic = $"gxtopic_netcore_test";
 
 		}
 		[SkippableFact]
