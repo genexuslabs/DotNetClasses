@@ -13,17 +13,21 @@ namespace KafkaIntegrationTest
 		{
 			bool testEnabled = Environment.GetEnvironmentVariable("KAFKA_TEST_ENABLED") == "true";
 			Skip.IfNot(testEnabled, "Environment variables not set");
+#if NETCORE
+			_topic = $"gxtopic_netcore_{Guid.NewGuid()}";
+#else
+			_topic = $"gxtopic_netfw_{Guid.NewGuid()}";
+#endif
 
-			_topic = $"gxtopic_{Guid.NewGuid()}";
 		}
 		[SkippableFact]
 		public void Test_Producer_And_Consumer_With_Kafka()
 		{
 			GXMessaging producer = new GXMessaging();
-			producer.Configuration = "{'bootstrap.servers': 'kafka:9092', 'default.topic.config': {'message.timeout.ms': 30000}}";
+			producer.Configuration = "{'bootstrap.servers': 'localhost:9092', 'default.topic.config': {'message.timeout.ms': 10000}}";
 
 			GXMessaging consumer = new GXMessaging();
-			consumer.Configuration = "{'bootstrap.servers': 'kafka:9092', 'group.id': 'test-group', 'auto.offset.reset': 'earliest', 'session.timeout.ms': 30000}";
+			consumer.Configuration = "{'bootstrap.servers': 'localhost:9092', 'group.id': 'test-group', 'auto.offset.reset': 'earliest', 'session.timeout.ms': 10000}";
 
 			string key = "msgkey_1";
 			string message = "Integration test message";
@@ -44,17 +48,8 @@ namespace KafkaIntegrationTest
 		}
 		public void Dispose()
 		{
-			// Clean topic after test
-			CleanTopicAsync(_topic).Wait();
 		}
 
-		private async Task CleanTopicAsync(string topic)
-		{
-			var adminClientConfig = new AdminClientConfig { BootstrapServers = "localhost:9092" };
-			IAdminClient adminClient = new AdminClientBuilder(adminClientConfig).Build();
-
-			await adminClient.DeleteTopicsAsync(new[] { topic });
-		}
 	}
 
 }
