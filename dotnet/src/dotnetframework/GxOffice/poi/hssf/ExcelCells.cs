@@ -213,16 +213,14 @@ namespace GeneXus.MSOffice.Excel.Poi.Hssf
 
 		public DateTime GetDate()
 		{
-			DateTime returnValue = DateTimeUtil.NullDate();
 			try
 			{
-				returnValue = pCells[1].DateCellValue;
+				return pCells[1].DateCellValue ?? DateTimeUtil.NullDate();
 			}
 			catch (Exception)
 			{
 				throw new ExcelException(7, "Invalid cell value");
 			}
-			return returnValue;
 		}
 
 		public bool SetTextImpl(string value)
@@ -395,7 +393,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Hssf
 			{
 				try
 				{
-					DateTime dVal = pCells[1].DateCellValue;
+					DateTime dVal = pCells[1].DateCellValue ?? DateTime.MinValue; 
 					if (dVal != DateTime.MinValue)
 					{
 						return "D";
@@ -832,7 +830,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Hssf
 		{
 			if (fitColumnWidth)
 			{
-				int colW = pSelectedSheet.GetColumnWidth((int)(i + colStartIdx - 1));
+				double colW = pSelectedSheet.GetColumnWidth((int)(i + colStartIdx - 1));
 				if ((256 * data) > colW)
 				{
 					colW = (short)(256 * data);
