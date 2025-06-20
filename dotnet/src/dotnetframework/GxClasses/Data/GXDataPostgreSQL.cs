@@ -630,14 +630,6 @@ namespace GeneXus.Data
 		{
 			return ConcatOpValues[pos];
 		}
-		internal override DateTime NormalizeDbmsDateTime(DateTime d)
-		{
-			if (d.Kind != DateTimeKind.Unspecified)
-			{
-				d = new DateTime(d.Year, d.Month, d.Day, d.Hour, d.Minute, d.Second, d.Millisecond);
-			}
-			return d;
-		}
 	}
 	sealed internal class PostgresqlConnectionWrapper : GxAbstractConnectionWrapper
 	{
