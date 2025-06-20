@@ -61,5 +61,4 @@ jobs:
       continue-on-error: true
 
     - name: Inspect Kafka logs
-      if: failure()
       run: docker logs kafka
