@@ -39,6 +39,10 @@ jobs:
         COMPOSE_DOCKER_CLI_BUILD: 1
         DOCKER_BUILDKIT: 1
 
+    - name: Create Kafka topic
+      run: |
+        docker exec kafka kafka-topics --create --topic gxtopic_netcore_test --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
     - name: Install .NET 8
       uses: actions/setup-dotnet@v3
       with:
@@ -58,3 +62,6 @@ jobs:
       env:
         KAFKA_TEST_ENABLED: "true"
       run: dotnet test $SolutionFile --configuration $Configuration
+
+    - name: Inspect Kafka logs
+      run: docker logs kafka
