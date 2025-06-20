@@ -54,6 +54,17 @@ jobs:
         dotnet sln $SolutionFile add dotnet/src/extensions/kafka/src/Core.Messaging.csproj
         dotnet sln $SolutionFile add dotnet/src/extensions/kafka/test/DotNetCoreKafkaTest/DotNetCoreKafkaTest.csproj 
       
+    - name: Wait for Kafka to be ready
+      run: |
+        for i in {1..30}; do
+          if nc -z localhost 9092; then
+            echo "Kafka is ready!";
+            break;
+          fi;
+          echo "Waiting for Kafka...";
+          sleep 5;
+        done
+        
     - name: Test Kafka
       env:
         KAFKA_TEST_ENABLED: "true"
