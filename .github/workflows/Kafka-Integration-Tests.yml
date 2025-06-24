@@ -58,3 +58,6 @@ jobs:
       env:
         KAFKA_TEST_ENABLED: "true"
       run: dotnet test $SolutionFile --configuration $Configuration
+
+    - name: Inspect Kafka logs
+      run: docker logs kafka

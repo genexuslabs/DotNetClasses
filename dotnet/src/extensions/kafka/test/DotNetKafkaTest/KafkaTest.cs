@@ -1,6 +1,4 @@
 using System;
-using System.Threading.Tasks;
-using Confluent.Kafka;
 using GeneXus.Messaging.Core;
 using Xunit;
 namespace KafkaIntegrationTest
@@ -13,8 +11,8 @@ namespace KafkaIntegrationTest
 		{
 			bool testEnabled = Environment.GetEnvironmentVariable("KAFKA_TEST_ENABLED") == "true";
 			Skip.IfNot(testEnabled, "Environment variables not set");
+			_topic = $"gxtopic_netcore_test";
 
-			_topic = $"gxtopic_{Guid.NewGuid()}";
 		}
 		[SkippableFact]
 		public void Test_Producer_And_Consumer_With_Kafka()
@@ -27,12 +25,15 @@ namespace KafkaIntegrationTest
 
 			string key = "msgkey_1";
 			string message = "Integration test message";
-
+			Console.WriteLine($"Producing message with key: {key}");
 			//Produce a message
 			producer.ProduceAsync(_topic, key, message);
+			Console.WriteLine($"Message produced: {message}");
 			producer.Finish(10000);
 
+			Console.WriteLine($"Consuming message from topic: {_topic}");
 			var messages = consumer.Consume(_topic, 10000);
+			Console.WriteLine($"Messages consumed: {messages.Count}");
 
 			//Verify the message was consumed
 			Assert.Single(messages);
@@ -41,17 +42,8 @@ namespace KafkaIntegrationTest
 		}
 		public void Dispose()
 		{
-			// Clean topic after test
-			CleanTopicAsync(_topic).Wait();
 		}
 
-		private async Task CleanTopicAsync(string topic)
-		{
-			var adminClientConfig = new AdminClientConfig { BootstrapServers = "localhost:9092" };
-			IAdminClient adminClient = new AdminClientBuilder(adminClientConfig).Build();
-
-			await adminClient.DeleteTopicsAsync(new[] { topic });
-		}
 	}
 
 }
