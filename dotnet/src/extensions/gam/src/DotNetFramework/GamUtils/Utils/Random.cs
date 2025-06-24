@@ -50,6 +50,28 @@ namespace GamUtils.Utils
 		}
 
 		[SecuritySafeCritical]
+		internal static string UrlSafe(int length)
+		{
+
+
+			char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_.~".ToCharArray();
+			byte[] data = new byte[length];
+#if NETCORE
+			var arraySpan = new Span<byte>(data);
+			System.Security.Cryptography.RandomNumberGenerator.Fill(arraySpan);
+#else
+			RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider();
+			crypto.GetBytes(data);
+#endif
+			StringBuilder result = new StringBuilder(length);
+			foreach (byte b in data)
+			{
+				result.Append(chars[b % (chars.Length)]);
+			}
+			return result.ToString();
+		}
+
+		[SecuritySafeCritical]
 		internal static string HexaBits(int length)
 		{
 			Byte[] result = new Byte[length / 8];

@@ -51,6 +51,12 @@ namespace GamUtils
 			return Utils.Random.HexaBits(bits);
 		}
 
+		[SecuritySafeCritical]
+		public static string RandomUrlSafeCharacters(int length)
+		{
+			return Utils.Random.UrlSafe(length);
+		}
+
 		//**JWK**//
 		[SecuritySafeCritical]
 		public static string GenerateKeyPair() { return Jwk.GenerateKeyPair(); }
