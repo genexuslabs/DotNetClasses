@@ -7,6 +7,15 @@ using System.Threading;
 using log4net.Util;
 using System.Globalization;
 using System.Security;
+using GeneXus.Diagnostics;
+using log4net.Appender;
+using log4net.Repository.Hierarchy;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Collections;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 #if NETCORE
 using GeneXus.Services.Log;
 using Microsoft.Extensions.Logging;
@@ -17,7 +26,7 @@ namespace GeneXus
 	public class GXLoggerFactory
 	{
 #if NETCORE
-		static ILoggerFactory _instance = GXLogService.GetLogFactory();
+		static Microsoft.Extensions.Logging.ILoggerFactory _instance = GXLogService.GetLogFactory();
 #endif
 		public static IGXLogger GetLogger(string categoryName)
 		{
@@ -50,6 +59,7 @@ namespace GeneXus
 		bool IsInfoEnabled { get; }
 		bool IsCriticalEnabled { get; }
 
+		bool LogLevelEnabled(int logLevel);
 		bool TraceEnabled();
 		bool CriticalEnabled();
 		bool ErrorEnabled();
@@ -57,7 +67,7 @@ namespace GeneXus
 		bool DebugEnabled();
 		bool InfoEnabled();
 
-	
+
 		void LogTrace(string value);
 		void LogError(string msg, Exception ex);
 
@@ -72,8 +82,10 @@ namespace GeneXus
 		void LogInfo(string msg);
 		void LogInfo(string msg, params string[] list);
 		void LogCritical(string msg);
-		void LogCritical(Exception ex , string msg);
+		void LogCritical(Exception ex, string msg);
 		void LogCritical(string msg, params string[] list);
+		void SetContext(string key, object value);
+		void Write(string message, int logLevel, object data, bool stackTrace);
 	}
 #if NETCORE
 	internal class GXLoggerMsExtensions : IGXLogger
@@ -91,6 +103,20 @@ namespace GeneXus
 		public bool IsDebugEnabled { get => DebugEnabled(); }
 		public bool IsInfoEnabled { get => InfoEnabled(); }
 		public bool IsCriticalEnabled { get => CriticalEnabled(); }
+
+		public bool LogLevelEnabled(int logLevel)
+		{
+			LogLevel level = LogLevel.None;
+			switch ((Log.LogLevel)logLevel)
+			{
+				case Log.LogLevel.Fatal: level = LogLevel.Critical; break;
+				case Log.LogLevel.Error: level = LogLevel.Error; break;
+				case Log.LogLevel.Info: level = LogLevel.Information; break;
+				case Log.LogLevel.Trace: level = LogLevel.Trace; break;
+				default: level = LogLevel.Debug; break;
+			}
+			return log.IsEnabled(level);
+		}
 		public bool TraceEnabled()
 		{
 			return log.IsEnabled(LogLevel.Trace);
@@ -176,6 +202,14 @@ namespace GeneXus
 		{
 			log.LogCritical(msg, list);
 		}
+		public void SetContext(string key, object value)
+		{
+			// Not supported, only for log4net
+		}
+		public void Write(string message, int logLevel, object data, bool stackTrace)
+		{
+			// Not supported, only for log4net
+		}
 	}
 #endif
 	internal class GXLoggerLog4Net : IGXLogger
@@ -226,6 +260,11 @@ namespace GeneXus
 		public bool IsDebugEnabled { get => _debugEnabled; }
 		public bool IsInfoEnabled { get => InfoEnabled(); }
 		public bool IsCriticalEnabled { get => CriticalEnabled(); }
+
+		public bool LogLevelEnabled(int logLevel)
+		{
+			return log.Logger.IsEnabledFor(GetLogLevel(logLevel));
+		}
 		public bool TraceEnabled()
 		{
 			return _traceEnabled;
@@ -359,6 +398,153 @@ namespace GeneXus
 
 			LogCritical(message.ToString());
 		}
+
+		public void SetContext(string key, object value)
+		{
+			ThreadContext.Properties[key] = value.ToString();
+		}
+
+		private const string STACKTRACE_KEY = "stackTrace";
+		private const string MESSAGE_KEY = "message";
+		private const string DATA_KEY = "data";
+
+		public void Write(string message, int logLevel, object data, bool stackTrace)
+		{
+			WriteTextFormat(message, logLevel, data, stackTrace);
+
+			// Json format is not currently implemented in GeneXus
+			//if (IsJsonLogFormat())
+			//	WriteJsonFormat(message, logLevel, data, stackTrace);
+			//else
+			//	WriteTextFormat(message, logLevel, data, stackTrace);
+		}
+
+		private void WriteTextFormat(string message, int logLevel, object data, bool stackTrace)
+		{
+			var mapMessage = new Dictionary<string, object>
+			{
+				[DATA_KEY] = NormalizeData(data)
+			};
+
+			if (stackTrace)
+				mapMessage[STACKTRACE_KEY] = GetStackTraceAsList();
+
+			string json = JsonConvert.SerializeObject(mapMessage, Formatting.None,
+				new JsonSerializerSettings { NullValueHandling = NullValueHandling.Include });
+
+			log.Logger.Log(typeof(GXLoggerLog4Net), GetLogLevel(logLevel), $"{message} - {json}", null);
+		}
+
+		private void WriteJsonFormat(string message, int logLevel, object data, bool stackTrace)
+		{
+			var mapMessage = new JObject
+			{
+				[MESSAGE_KEY] = message,
+				[DATA_KEY] = (JToken)NormalizeData(data)
+			};
+
+			if (stackTrace)
+				mapMessage[STACKTRACE_KEY] = JArray.FromObject(GetStackTraceAsList());
+
+			log.Logger.Log(typeof(GXLoggerLog4Net), GetLogLevel(logLevel), mapMessage.ToString(Formatting.None), null);
+		}
+
+		private object NormalizeData(object value)
+		{
+			if (value == null || (value is string s && s == "null"))
+				return null;
+
+			if (value is string jsonStr && IsJson(jsonStr))
+				return JsonConvert.DeserializeObject(jsonStr);
+
+			if (value is IDictionary || value is IEnumerable || IsPrimitive(value))
+				return value;
+
+			// SDT (future implementation)
+			//if (value is GxUserType)
+			//	return JsonConvert.DeserializeObject(((GxUserType)value).ToJSonString());
+
+			return JObject.FromObject(value);
+		}
+
+		private bool IsPrimitive(object value)
+		{
+			return	value is string || value is int || value is bool || value is float ||
+					value is double || value is decimal;
+		}
+
+		private bool IsJson(string input)
+		{
+			try
+			{
+				var token = JToken.Parse(input);
+				return token.Type == JTokenType.Object || token.Type == JTokenType.Array;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		private static List<string> GetStackTraceAsList()
+		{
+			var result = new List<string>();
+			var stackTrace = new StackTrace();
+
+			foreach (var frame in stackTrace.GetFrames())
+			{
+				var method = frame.GetMethod();
+				if (method == null) continue;
+
+				Type declaringType = method.DeclaringType;
+				string className = declaringType != null ? declaringType.FullName : "<unknown class>";
+				string methodName = method.Name;
+
+				// Get method parameters
+				var parameters = method.GetParameters();
+				var paramList = new List<string>();
+				foreach (var param in parameters)
+				{
+					paramList.Add(param.ParameterType.Name);
+				}
+
+				string methodSignature = $"{className}.{methodName}({string.Join(",", paramList)})";
+				result.Add($"{methodSignature}");
+			}
+
+			return result;
+		}
+
+		private bool IsJsonLogFormat()
+		{
+			var repo = LogManager.GetRepository() as Hierarchy;
+			if (repo == null) return false;
+
+			foreach (var appender in repo.Root.Appenders)
+			{
+				if (appender is AppenderSkeleton skeleton && skeleton.Layout != null &&
+					skeleton.Layout.GetType().Name.Contains("Json"))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+		
+		private Level GetLogLevel(int logLevel)
+		{
+			switch ((Log.LogLevel)logLevel)
+			{
+				case Log.LogLevel.Off: return Level.Off;
+				case Log.LogLevel.Fatal: return Level.Fatal;
+				case Log.LogLevel.Error: return Level.Error;
+				case Log.LogLevel.Info: return Level.Info;
+				case Log.LogLevel.Trace: return Level.Trace;
+				default: return Level.Debug;
+			}
+		}
+
 	}
 	public static class GXLogging
 	{
@@ -525,7 +711,7 @@ namespace GeneXus
 			{
 				if (logger.IsTraceEnabled)
 				{
-					string msg = buildMsg();	
+					string msg = buildMsg();
 					logger.LogTrace(msg);
 				}
 			}
@@ -579,7 +765,7 @@ namespace GeneXus
 				}
 			}
 		}
-		public static void Error(IGXLogger logger, string msg, params string[] list )
+		public static void Error(IGXLogger logger, string msg, params string[] list)
 		{
 			if (logger != null)
 			{
@@ -617,7 +803,7 @@ namespace GeneXus
 		{
 			Error(logger, msg1 + msg2, ex);
 		}
-		
+
 		internal static void Error(IGXLogger logger, Exception ex, params string[] list)
 		{
 			if (logger != null)
@@ -702,7 +888,7 @@ namespace GeneXus
 		internal static void DebugSanitized(IGXLogger logger, Exception ex, params string[] list)
 		{
 			if (logger != null)
-			{ 
+			{
 				if (logger.IsDebugEnabled)
 				{
 					StringBuilder msg = new StringBuilder();
@@ -750,12 +936,12 @@ namespace GeneXus
 					{
 						msg.Append(parm);
 					}
-				
+
 					logger.LogDebug(msg.ToString());
 				}
 			}
 		}
-		
+
 		public static void Debug(IGXLogger logger, string startMsg, Func<string> buildMsg)
 		{
 			if (logger != null)
@@ -808,7 +994,8 @@ namespace GeneXus
 		}
 		public static void Info(IGXLogger logger, string msg, params string[] list)
 		{
-			if (logger != null) { 
+			if (logger != null)
+			{
 				if (logger.IsInfoEnabled)
 				{
 					logger.LogInfo(msg, list);
