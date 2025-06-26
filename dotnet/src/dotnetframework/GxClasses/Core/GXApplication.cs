@@ -3738,13 +3738,8 @@ namespace GeneXus.Application
 				{
 					if (!DateTimeUtil.ValidTimeZone(sTZ))
 					{
-						try
-						{
-							string invalidTimezone = DateTimeZoneProviders.Tzdb[sTZ].Id; 
-						}catch(Exception ex)//DateTimeZoneNotFound
-						{
-							GXLogging.Warn(Logger, $"Client timezone not found: {sTZ}", ex);
-						}
+
+						GXLogging.Warn(Logger, $"Time zone '{sTZ}' is unknown to source TZDB: {DateTimeZoneProviders.Tzdb.VersionId}.");
 						_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
 						GXLogging.Warn(Logger, $"Setting Client timezone to System default: {_currentTimeZoneId}");
 					}
