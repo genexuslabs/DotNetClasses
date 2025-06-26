@@ -14,7 +14,7 @@ namespace GeneXus.Diagnostics
 	[GXApi]
 	public class Log
 	{
-		private enum LogLevel
+		public enum LogLevel
 		{
 			Off = 0,
 			Trace = 1,
@@ -171,6 +171,60 @@ namespace GeneXus.Diagnostics
 		public static void Debug(string message, string topic = "")
 		{
 			WriteImp(message, topic, LogLevel.Debug);
+		}
+
+		public static bool IsFatalEnabled()
+		{
+			return GetLogger(LoggerPrefix).IsCriticalEnabled;
+		}
+		public static bool IsErrorEnabled()
+		{
+			return GetLogger(LoggerPrefix).IsErrorEnabled;
+		}
+
+		public static bool IsWarnEnabled()
+		{
+			return GetLogger(LoggerPrefix).IsWarningEnabled;
+		}
+
+		public static bool IsInfoEnabled()
+		{
+			return GetLogger(LoggerPrefix).IsInfoEnabled;
+		}
+
+		public static bool IsDebugEnabled()
+		{
+			return GetLogger(LoggerPrefix).IsDebugEnabled;
+		}
+
+		public static bool IsTraceEnabled()
+		{
+			return GetLogger(LoggerPrefix).IsTraceEnabled;
+		}
+
+		public static bool IsEnabled(int logLevel)
+		{
+			return GetLogger(LoggerPrefix).LogLevelEnabled(logLevel);
+		}
+
+		public static bool IsEnabled(int logLevel, string topic = "")
+		{
+			return GetLogger(topic).LogLevelEnabled(logLevel);
+		}
+
+		public static void SetContext(string key, object value)
+		{
+			GetLogger(LoggerPrefix).SetContext(key, value);
+		}
+
+		public static void Write(string message, string topic, int logLevel, object data)
+		{
+			GetLogger(topic).Write(message, logLevel, data, false);
+		}
+
+		public static void Write(string message, string topic, int logLevel, object data, bool stackTrace)
+		{
+			GetLogger(topic).Write(message, logLevel, data, stackTrace);
 		}
 	}
 }
