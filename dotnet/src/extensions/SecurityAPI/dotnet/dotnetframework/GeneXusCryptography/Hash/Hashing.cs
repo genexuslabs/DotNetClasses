@@ -21,6 +21,8 @@ namespace GeneXusCryptography.Hash
 	public class Hashing : SecurityAPIObject, IHashObject
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(Hashing));
+
+		private readonly string className = typeof(Hashing).Name;
 		/// <summary>
 		/// Hashing constructor
 		/// </summary>
@@ -42,12 +44,13 @@ namespace GeneXusCryptography.Hash
 		[SecuritySafeCritical]
 		public string DoHash(string hashAlgorithm, string txtToHash)
 		{
-			logger.Debug("DoHash");
+			string method = "DoHash";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoHash", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoHash", "txtToHash", txtToHash, this.error);
+			SecurityUtils.validateStringInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "txtToHash", txtToHash, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -72,7 +75,8 @@ namespace GeneXusCryptography.Hash
 		[SecuritySafeCritical]
 		public byte[] CalculateHash(HashAlgorithm hashAlgorithm, byte[] input)
 		{
-			logger.Debug("CalculateHash");
+			string method = "CalculateHash";
+			logger.Debug(method);
 			IDigest alg = createHash(hashAlgorithm);
 			byte[] buffer = new byte[8192];
 			int n;
@@ -92,7 +96,7 @@ namespace GeneXusCryptography.Hash
 			catch (Exception e)
 			{
 				error.setError("HA001", e.Message);
-				logger.Error("CalculateHash", e);
+				logger.Error(method, e);
 				return null;
 			}
 			return retValue;

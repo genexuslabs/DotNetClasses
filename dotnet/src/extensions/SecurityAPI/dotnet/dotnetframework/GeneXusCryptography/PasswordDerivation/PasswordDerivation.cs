@@ -47,7 +47,8 @@ namespace GeneXusCryptography.PasswordDerivation
 		public string DoGenerateSCrypt(string password, string salt, int CPUCost, int blockSize, int parallelization,
 		int keyLenght)
 		{
-			logger.Debug("DoGenerateSCrypt");
+			string method = "DoGenerateSCrypt";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			EncodingUtil eu = new EncodingUtil();
@@ -66,7 +67,7 @@ namespace GeneXusCryptography.PasswordDerivation
 			catch (Exception e)
 			{
 				this.error.setError("PD001", e.Message);
-				logger.Error("DoGenerateSCrypt", e);
+				logger.Error(method, e);
 				return "";
 			}
 			return Base64.ToBase64String(encryptedBytes);
@@ -99,7 +100,8 @@ namespace GeneXusCryptography.PasswordDerivation
 		[SecuritySafeCritical]
 		public string DoGenerateBcrypt(string password, string salt, int cost)
 		{
-			logger.Debug("DoGenerateBcrypt");
+			string method = "DoGenerateBcrypt";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			EncodingUtil eu = new EncodingUtil();
@@ -118,7 +120,7 @@ namespace GeneXusCryptography.PasswordDerivation
 			catch (Exception e)
 			{
 				this.error.setError("PD002", e.Message);
-				logger.Error("DoGenerateBcrypt", e);
+				logger.Error(method, e);
 				return "";
 			}
 

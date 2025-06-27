@@ -35,7 +35,8 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public string toHexa(string plainText)
 		{
-			logger.Debug("toHexa");
+			string method = "toHexa";
+			logger.Debug(method);
 			this.error.cleanError();
 			EncodingUtil eu = new EncodingUtil();
 			byte[] stringBytes = eu.getBytes(plainText);
@@ -52,7 +53,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("HE001", e.Message);
-				logger.Error("toHexa", e);
+				logger.Error(method, e);
 				return "";
 			}
 			return hexa.ToUpper();
@@ -66,7 +67,8 @@ namespace SecurityAPICommons.Encoders
 		[SecuritySafeCritical]
 		public string fromHexa(string stringHexa)
 		{
-			logger.Debug("fromHexa");
+			string method = "fromHexa";
+			logger.Debug(method);
 			this.error.cleanError();
 			byte[] resBytes;
 			try
@@ -76,7 +78,7 @@ namespace SecurityAPICommons.Encoders
 			catch (Exception e)
 			{
 				this.error.setError("HE002", e.Message);
-				logger.Error("fromHexa", e);
+				logger.Error(method, e);
 				return "";
 			}
 			EncodingUtil eu = new EncodingUtil();

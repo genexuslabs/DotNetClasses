@@ -23,6 +23,8 @@ namespace SecurityAPICommons.Commons
 
 		public SubjectPublicKeyInfo subjectPublicKeyInfo;
 
+		private readonly string className = typeof(PublicKey).Name;	
+
 		[SecuritySafeCritical]
 		public PublicKey() : base()
 		{
@@ -33,9 +35,10 @@ namespace SecurityAPICommons.Commons
 		override
 		public bool Load(string path)
 		{
-			logger.Debug("Load");
+			string method = "Load";
+			logger.Debug(method);
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(this.GetType().Name, "Load", "path", path, this.error);
+			SecurityUtils.validateStringInput(className, method, "path", path, this.error);
 			if (!(SecurityUtils.extensionIs(path, ".pem") || SecurityUtils.extensionIs(path, "key")))
 			{
 				this.error.setError("PU001", "Public key should be loaded from a .pem or .key file");
@@ -51,7 +54,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU002", e.Message);
-				logger.Error("Load", e);
+				logger.Error(method, e);
 				return false;
 			}
 			return loaded;
@@ -61,9 +64,10 @@ namespace SecurityAPICommons.Commons
 		override
 		public bool FromBase64(string base64Data)
 		{
-			logger.Debug("FromBase64");
+			string method = "FromBase64";
+			logger.Debug(method);
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(this.GetType().Name, "FromBase64", "base64Data", base64Data, this.error);
+			SecurityUtils.validateStringInput(className, method, "base64Data", base64Data, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -83,7 +87,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU003", e.Message);
-				logger.Error("FromBase64", e);
+				logger.Error(method, e);
 				flag = false;
 			}
 			setAlgorithm();
@@ -95,7 +99,8 @@ namespace SecurityAPICommons.Commons
 		override
 		public string ToBase64()
 		{
-			logger.Debug("ToBase64");
+			string method = "ToBase64";
+			logger.Debug(method);
 			if (this.subjectPublicKeyInfo == null)
 			{
 				this.error.setError("PU004", "Not loaded key");
@@ -112,7 +117,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU005", e.Message);
-				logger.Error("ToBase64", e);
+				logger.Error(method, e);
 			}
 
 			return base64Encoded;
@@ -121,10 +126,11 @@ namespace SecurityAPICommons.Commons
 		[SecuritySafeCritical]
 		public bool FromJwks(string jwks, string kid)
 		{
-			logger.Debug("FromJwks");
+			string method = "FromJwks";
+			logger.Debug(method);
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(this.GetType().Name, "FromJwks", "jwks", jwks, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "FromJwks", "kid", kid, this.error);
+			SecurityUtils.validateStringInput(className, method, "jwks", jwks, this.error);
+			SecurityUtils.validateStringInput(className, method, "kid", kid, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -141,7 +147,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU016", e.Message);
-				logger.Error("FromJwks", e);
+				logger.Error(method, e);
 				return false;
 			}
 			flag = this.FromBase64(b64);
@@ -154,7 +160,8 @@ namespace SecurityAPICommons.Commons
 
 		private string FromJson(string json, string id)
 		{
-			logger.Debug("FromJson");
+			string method = "FromJson";
+			logger.Debug(method);
 			JwkSet set;
 			try
 			{
@@ -163,7 +170,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU015", e.Message);
-				logger.Error("FromJson", e);
+				logger.Error(method, e);
 				return "";
 			}
 
@@ -185,7 +192,8 @@ namespace SecurityAPICommons.Commons
 
 		private bool loadPublicKeyFromFile(string path, string alias, string password)
 		{
-			logger.Debug("loadPublicKeyFromFile");
+			string method = "loadPublicKeyFromFile";
+			logger.Debug(method);
 			bool loaded = false;
 			try
 			{
@@ -194,7 +202,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU006", e.Message);
-				logger.Error("loadPublicKeyFromFile", e);
+				logger.Error(method, e);
 				return false;
 			}
 			return loaded;
@@ -203,7 +211,8 @@ namespace SecurityAPICommons.Commons
 
 		private bool loadPublicKeyFromFile(string path)
 		{
-			logger.Debug("loadPublicKeyFromFile");
+			string method = "loadPublicKeyFromFile";
+			logger.Debug(method);
 			bool flag = false;
 			using (StreamReader streamReader = new StreamReader(path))
 			{
@@ -284,7 +293,8 @@ namespace SecurityAPICommons.Commons
 		override
 		public AsymmetricKeyParameter getAsymmetricKeyParameter()
 		{
-			logger.Debug("getAsymmetricKeyParameter");
+			string method = "getAsymmetricKeyParameter";
+			logger.Debug(method);
 			AsymmetricKeyParameter akp = null;
 			try
 			{
@@ -293,7 +303,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU006", e.Message);
-				logger.Error("getAsymmetricKeyParameter", e);
+				logger.Error(method, e);
 				return null;
 			}
 			return akp;
@@ -303,7 +313,8 @@ namespace SecurityAPICommons.Commons
 		override
 		public AsymmetricAlgorithm getAsymmetricAlgorithm()
 		{
-			logger.Debug("getAsymmetricAlgorithm");
+			string method = "getAsymmetricAlgorithm";
+			logger.Debug(method);
 			AsymmetricAlgorithm alg = null;
 			switch (this.getAlgorithm())
 			{
