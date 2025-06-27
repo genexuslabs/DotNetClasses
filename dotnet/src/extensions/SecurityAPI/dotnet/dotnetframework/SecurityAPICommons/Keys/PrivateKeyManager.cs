@@ -29,7 +29,6 @@ namespace SecurityAPICommons.Keys
 	public class PrivateKeyManager : PrivateKey
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(PrivateKeyManager));
-		private readonly string className = typeof(PrivateKeyManager).Name;
 
 		private PrivateKeyInfo privateKeyInfo;
 		private bool hasPrivateKey;
@@ -53,11 +52,10 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool Load(string privateKeyPath)
 		{
-			string method = "Load";
-			logger.Debug(method);
+			logger.Debug("Load");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "path", privateKeyPath, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "Load", "path", privateKeyPath, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -71,12 +69,11 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool LoadEncrypted(string privateKeyPath, string encryptionPassword)
 		{
-			string method = "LoadEncrypted";
-			logger.Debug(method);
+			logger.Debug("LoadEncrypted");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "path", privateKeyPath, this.error);
-			SecurityUtils.validateStringInput(className, method, "password", encryptionPassword, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "LoadEncrypted", "path", privateKeyPath, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "LoadEncrypted", "password", encryptionPassword, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -94,11 +91,10 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool LoadPKCS12(string privateKeyPath, string alias, string password)
 		{
-			string method = "LoadPKCS12";
-			logger.Debug(method);
+			logger.Debug("LoadPKCS12");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "path", privateKeyPath, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "LoadPKCS12", "path", privateKeyPath, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -114,7 +110,7 @@ namespace SecurityAPICommons.Keys
 #pragma warning restore CA1031 // Do not catch general exception types
 			{
 				this.error.setError("PK001", e.Message);
-				logger.Error(method, e);
+				logger.Error("LoadPKCS12", e);
 				return false;
 			}
 			if (this.HasError())
@@ -128,11 +124,10 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool FromBase64(string base64)
 		{
-			string method = "FromBase64";
-			logger.Debug(method);
+			logger.Debug("FromBase64");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "base64", base64, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "FromBase64", "base64", base64, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -147,7 +142,7 @@ namespace SecurityAPICommons.Keys
 			catch (Exception e)
 			{
 				this.error.setError("PK002", e.Message);
-				logger.Error(method, e);
+				logger.Error("FromBase64", e);
 				return false;
 			}
 			this.hasPrivateKey = res;
@@ -158,8 +153,7 @@ namespace SecurityAPICommons.Keys
 		override
 		public string ToBase64()
 		{
-			string method = "ToBase64";
-			logger.Debug(method);
+			logger.Debug("ToBase64");
 			if (this.hasPrivateKey)
 			{
 				string encoded = "";
@@ -170,7 +164,7 @@ namespace SecurityAPICommons.Keys
 				catch (Exception e)
 				{
 					this.error.setError("PK003", e.Message);
-					logger.Error(method, e);
+					logger.Error("ToBase64", e);
 					return "";
 				}
 				return encoded;
@@ -310,8 +304,7 @@ namespace SecurityAPICommons.Keys
 		override
 		public AsymmetricKeyParameter getAsymmetricKeyParameter()
 		{
-			string method = "getAsymmetricKeyParameter";
-			logger.Debug(method);
+			logger.Debug("getAsymmetricKeyParameter");
 			AsymmetricKeyParameter akp = null;
 			//string alg = this.privateKeyInfo.PrivateKeyAlgorithm.Algorithm.Id;
 			try
@@ -321,7 +314,7 @@ namespace SecurityAPICommons.Keys
 			catch (Exception e)
 			{
 				this.error.setError("PK013", e.Message);
-				logger.Error(method, e);
+				logger.Error("getAsymmetricKeyParameter", e);
 			}
 			return akp;
 		}
@@ -369,8 +362,7 @@ namespace SecurityAPICommons.Keys
 		/// <returns></returns>
 		private bool loadPrivateKeyFromPKCS12File(string path, string password)
 		{
-			string method = "loadPrivateKeyFromPKCS12File";
-			logger.Debug(method);
+			logger.Debug("loadPrivateKeyFromPKCS12File");
 			bool flag = false;
 			if (password == null)
 			{
@@ -392,7 +384,7 @@ namespace SecurityAPICommons.Keys
 			catch(Exception e)
 			{
 				this.error.setError("PK015", e.Message);
-				logger.Error(method, e);
+				logger.Error("loadPrivateKeyFromPKCS12File", e);
 				//throw new FileLoadException(path + "not found or wrong password.");
 			}
 
@@ -427,8 +419,7 @@ namespace SecurityAPICommons.Keys
 		/// <returns>boolean true if loaded correctly</returns>
 		private bool loadPrivateKeyFromPEMFile(string path)
 		{
-			string method = "loadPrivateKeyFromPEMFile";
-			logger.Debug(method);
+			logger.Debug("loadPrivateKeyFromPEMFile");
 			bool flag = false;
 			using (StreamReader streamReader = new StreamReader(path))
 			{
@@ -453,7 +444,7 @@ namespace SecurityAPICommons.Keys
 					catch (Exception ex)
 					{
 						this.error.setError("PK017", ex.Message);
-						logger.Error(method, ex);
+						logger.Error("loadPrivateKeyFromPEMFile", ex);
 						return false;
 					}
 				}
@@ -578,8 +569,7 @@ namespace SecurityAPICommons.Keys
 		override
 		public AsymmetricAlgorithm getAsymmetricAlgorithm()
 		{
-			string method = "getAsymmetricAlgorithm";
-			logger.Debug(method);
+			logger.Debug("getAsymmetricAlgorithm");
 			if (!this.hasPrivateKey)
 			{
 				this.error.setError("PK011", "No private key loaded");
@@ -655,7 +645,7 @@ namespace SecurityAPICommons.Keys
 					catch (Exception e)
 					{
 						this.error.setError("PK020", e.Message);
-						logger.Error(method, e);
+						logger.Error("getAsymmetricAlgorithm", e);
 						return null;
 					}
 					break;

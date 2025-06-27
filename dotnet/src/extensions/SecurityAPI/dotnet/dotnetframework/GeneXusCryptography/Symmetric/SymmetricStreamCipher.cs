@@ -23,9 +23,6 @@ namespace GeneXusCryptography.Symmetric
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(SymmetricStreamCipher));
 
-
-		private readonly string className = typeof(SymmetricStreamCipher).Name;
-
 		public SymmetricStreamCipher() : base()
 		{
 
@@ -48,14 +45,13 @@ namespace GeneXusCryptography.Symmetric
 		public string DoEncrypt(string symmetricStreamAlgorithm, string key, string IV,
 		string plainText)
 		{
-			string method = "DoEncrypt";
-			logger.Debug(method);
+			logger.Debug("DoEncrypt");
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput(className, method, "symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
-			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
-			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt", "symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt", "key", key, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt", "plainText", plainText, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -87,14 +83,13 @@ namespace GeneXusCryptography.Symmetric
 		public string DoDecrypt(string symmetricStreamAlgorithm, string key, string IV,
 			string encryptedInput)
 		{
-			string method = "DoDecrypt";
-			logger.Debug(method);
+			logger.Debug("DoDecrypt");
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput(className, method, "symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
-			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
-			SecurityUtils.validateStringInput(className, method, "encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt", "symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt", "key", key, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt", "encryptedInput", encryptedInput, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -106,7 +101,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SS001", e.Message);
-				logger.Error(method, e);
+				logger.Error("DoDecrypt", e);
 				return "";
 			}
 
@@ -181,8 +176,7 @@ namespace GeneXusCryptography.Symmetric
 
 		private byte[] encrypt(SymmetricStreamAlgorithm algorithm, byte[] key, byte[] IV, byte[] input, bool toEncrypt)
 		{
-			string method = "encrypt";
-			logger.Debug(method);
+			logger.Debug("encrypt");
 			IStreamCipher engine = getCipherEngine(algorithm);
 			if (this.HasError()) { return null; }
 
@@ -204,7 +198,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SS003", e.Message);
-				logger.Error(method, e);
+				logger.Error("encrypt", e);
 				return null;
 			}
 
@@ -217,7 +211,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SS004", e.Message);
-				logger.Error(method, e);
+				logger.Error("encrypt", e);
 				return null;
 			}
 			return output;

@@ -20,7 +20,7 @@ namespace GeneXusCryptography.Asymmetric
 	public class StandardSigner : SecurityAPIObject, IStandardSignerObject
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(StandardSigner));
-		private readonly string className = typeof(StandardSigner).Name;
+
 		public StandardSigner() : base()
 		{
 
@@ -31,15 +31,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string Sign(string plainText, SignatureStandardOptions options)
 		{
-			string method = "Sign";
-			logger.Debug(method);
+			logger.Debug("Sign");
 			this.error.cleanError();
 
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(className, method, "signatureStandardOptions", options, this.error);
-			SecurityUtils.validateObjectInput(className, method, "private key", options.GetPrivateKey(), this.error);
-			SecurityUtils.validateObjectInput(className, method, "certificate", options.GetCertificate(), this.error);
-			SecurityUtils.validateStringInput(className, method,"plainText",  plainText, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "Sign", "signatureStandardOptions", options, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "Sign", "private key", options.GetPrivateKey(), this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "Sign", "certificate", options.GetCertificate(), this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "Sign", "plainText", plainText, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -63,7 +62,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("SS002", e.Message);
-				logger.Error(method, e);
+				logger.Error("Sign", e);
 				result = "";
 			}
 
@@ -74,14 +73,13 @@ namespace GeneXusCryptography.Asymmetric
 
 		public bool Verify(string signed, string plainText, SignatureStandardOptions options)
 		{
-			string method = "Verify";
-			logger.Debug(method);
+			logger.Debug("Verify");
 			this.error.cleanError();
 
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(className, method, "signatureStandardOptions", options, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "Verify", "signatureStandardOptions", options, this.error);
 			//SecurityUtils.validateStringInput("plainText", plainText, this.error);
-			SecurityUtils.validateStringInput(className, method, "signed", signed, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "Verify", "signed", signed, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -106,7 +104,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("SS002", e.Message);
-				logger.Error(method, e);
+				logger.Error("Verify", e);
 				result = false;
 			}
 

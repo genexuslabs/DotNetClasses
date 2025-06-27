@@ -21,7 +21,6 @@ namespace SecurityAPICommons.Keys
     public sealed class CertificateX509 : Certificate, IDisposable
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(CertificateX509));
-		private readonly string className = typeof(CertificateX509).Name;
 
 		private string publicKeyAlgorithm;
         private X509Certificate2 cert;
@@ -91,11 +90,10 @@ namespace SecurityAPICommons.Keys
 		override
         public bool Load(string path)
         {
-			string method = "Load";
 			this.error.cleanError();
-			logger.Debug(method);
+			logger.Debug("Load");
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "path", path, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "Load", "path", path, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -109,11 +107,10 @@ namespace SecurityAPICommons.Keys
 		override
         public bool LoadPKCS12(string path, string alias, string password)
         {
-			string method = "LoadPKCS12";
 			this.error.cleanError();
-			logger.Debug(method);
+			logger.Debug("LoadPKCS12");
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method,  "path", path, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "LoadPKCS12",  "path", path, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -129,7 +126,7 @@ namespace SecurityAPICommons.Keys
 #pragma warning restore CA1031 // Do not catch general exception types
 			{
                 this.error.setError("CE001", e.Message);
-				logger.Error(method, e);
+				logger.Error("LoadPKCS12", e);
                 return false;
             }
             if (result)
@@ -144,11 +141,10 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool FromBase64(string base64Data)
 		{
-			string method = "FromBase64";
 			this.error.cleanError();
-			logger.Debug(method);
+			logger.Debug("FromBase64");
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "base64Data", base64Data, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "FromBase64", "base64Data", base64Data, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -168,7 +164,7 @@ namespace SecurityAPICommons.Keys
             catch (Exception e)
             {
                 this.error.setError("CE002", e.Message);
-				logger.Error(method, e);
+				logger.Error("FromBase64", e);
                 flag = false;
             }
             return flag;
@@ -178,8 +174,7 @@ namespace SecurityAPICommons.Keys
 		override
         public string ToBase64()
         {
-			string method = "ToBase64";
-			logger.Debug(method);
+			logger.Debug("ToBase64");
             if (!this.inicialized)
             {
                 this.error.setError("CE003", "Not loaded certificate");
@@ -193,7 +188,7 @@ namespace SecurityAPICommons.Keys
             catch (Exception e)
             {
                 this.error.setError("CE004", e.Message);
-				logger.Error(method, e);
+				logger.Error("ToBase64", e);
                 return "";
             }
 
@@ -329,8 +324,7 @@ namespace SecurityAPICommons.Keys
         /// <returns>boolean true if loaded correctly</returns>
         private bool loadPublicKeyFromDERFile(string path)
         {
-			string method = "loadPublicKeyFromDERFile";
-			logger.Debug(method);
+			logger.Debug("loadPublicKeyFromDERFile");
             bool flag = false;
             FileStream fs = null;
             Org.BouncyCastle.X509.X509Certificate cert = null;
@@ -347,7 +341,7 @@ namespace SecurityAPICommons.Keys
 			catch(Exception e)
 			{
                 this.error.setError("CE011",e.Message);
-				logger.Error(method, e);
+				logger.Error("loadPublicKeyFromDERFile", e);
                 return false;
                 // throw new FileLoadException(path + " certificate coud not be loaded");
             }
@@ -402,8 +396,7 @@ namespace SecurityAPICommons.Keys
         /// <returns>boolean true if loaded correctly</returns>
         private bool loadPublicKeyFromPKCS12File(string path, string password)
         {
-			string method = "loadPublicKeyFromPKCS12File";
-			logger.Debug(method);
+			logger.Debug("loadPublicKeyFromPKCS12File");
             bool flag = false;
             if (password == null)
             {
@@ -428,7 +421,7 @@ namespace SecurityAPICommons.Keys
 			catch (Exception e)
 			{
                 this.error.setError("CE015", e.Message);
-				logger.Error(method, e);
+				logger.Error("loadPublicKeyFromPKCS12File", e);
             }
 
             if (pkcs12 != null)

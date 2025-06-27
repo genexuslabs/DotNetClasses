@@ -84,8 +84,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public string GetPayload(string token)
 		{
-			string method = "GetPayload";
-			logger.Debug(method);
+			logger.Debug("GetPayload");
 			this.error.cleanError();
 			string res = "";
 			try
@@ -95,7 +94,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW001", e.Message);
-				logger.Error(method, e);
+				logger.Error("GetPayload", e);
 				return "";
 			}
 			return res;
@@ -105,8 +104,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public string GetHeader(string token)
 		{
-			string method = "GetHeader";
-			logger.Debug(method);
+			logger.Debug("GetHeader");
 			this.error.cleanError();
 			string res = "";
 			try
@@ -116,7 +114,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW002", e.Message);
-				logger.Error(method, e);
+				logger.Error("GetHeader", e);
 				return "";
 			}
 			return res;
@@ -125,8 +123,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		public string GetTokenID(string token)
 		{
-			string method = "GetTokenID";
-			logger.Debug(method);
+			logger.Debug("GetTokenID");
 			this.error.cleanError();
 			string res = "";
 			try
@@ -137,7 +134,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW003", e.Message);
-				logger.Error(method, e);
+				logger.Error("GetTokenID", e);
 				return "";
 			}
 			return res;
@@ -149,8 +146,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		private string Create_Aux(string algorithm, PrivateClaims privateClaims, JWTOptions options, string payloadString, bool hasClaims)
 		{
-			string method = "Create_Aux";
-			logger.Debug(method);
+			logger.Debug("Create_Aux");
 			if (options == null)
 			{
 				this.error.setError("JW004", "Options parameter is null");
@@ -193,7 +189,7 @@ namespace GeneXusJWT.GenexusJWT
 				catch (Exception ex)
 				{
 					this.error.setError("", ex.Message);
-					logger.Error(method, ex);
+					logger.Error("Create_Aux", ex);
 					return "";
 				}
 			}
@@ -272,7 +268,7 @@ namespace GeneXusJWT.GenexusJWT
 			{
 
 				this.error.setError("JW006", e.Message);
-				logger.Error(method, e);
+				logger.Error("Create_Aux", e);
 
 				return "";
 			}
@@ -283,8 +279,7 @@ namespace GeneXusJWT.GenexusJWT
 		[SecuritySafeCritical]
 		private bool DoVerify(string token, string expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options, bool verifyClaims, bool verifyRegClaims)
 		{
-			string method = "DoVerify";
-			logger.Debug(method);
+			logger.Debug("DoVerify");
 			if (options == null)
 			{
 				this.error.setError("JW007", "Options parameter is null");
@@ -412,7 +407,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW008", e.Message);
-				logger.Error(method, e);
+				logger.Error("DoVerify", e);
 
 				return false;
 			}
@@ -594,8 +589,7 @@ namespace GeneXusJWT.GenexusJWT
 
 		private bool verifyPrivateClaims(JwtSecurityToken jwtToken, PrivateClaims privateClaims, JWTOptions options)
 		{
-			string method = "verifyPrivateClaims";
-			logger.Debug(method);
+			logger.Debug("verifyPrivateClaims");
 			RegisteredClaims registeredClaims = options.getAllRegisteredClaims();
 			PublicClaims publicClaims = options.getAllPublicClaims();
 			if (privateClaims == null || privateClaims.isEmpty())
@@ -611,7 +605,7 @@ namespace GeneXusJWT.GenexusJWT
 			catch (Exception e)
 			{
 				this.error.setError("JW018", e.Message);
-				logger.Error(method, e);
+				logger.Error("verifyPrivateClaims", e);
 				return false;
 			}
 			this.counter = 0;

@@ -18,8 +18,6 @@ namespace GeneXusXmlSignature.GeneXusDSig
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(XmlDSigSigner));
 
-		private readonly string className = typeof(XmlDSigSigner).Name;
-
 		private AsymmetricAlgorithm privateKey;
 		private AsymmetricAlgorithm publicKey;
 		private string digest;
@@ -36,15 +34,14 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		public bool DoSignFile(string xmlFilePath, PrivateKeyManager privateKey,
 				CertificateX509 certificate, string outputPath, DSigOptions options)
 		{
-			string method = "DoSignFile";
-			logger.Debug(method);
+			logger.Debug("DoSignFile");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlFilePath", xmlFilePath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "privateKey", privateKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "certificate", certificate, this.error);
-			SecurityUtils.validateStringInput(className, method, "outputPath", outputPath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFile", "xmlFilePath", xmlFilePath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFile", "privateKey", privateKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFile", "certificate", certificate, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFile", "outputPath", outputPath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFile", "options", options, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -58,14 +55,13 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		public string DoSign(string xmlInput, PrivateKeyManager privateKey,
 				CertificateX509 certificate, DSigOptions options)
 		{
-			string method = "DoSign";
-			logger.Debug(method);
+			logger.Debug("DoSign");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlInput", xmlInput, this.error);
-			SecurityUtils.validateObjectInput(className, method, "privateKey", privateKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "certificate", certificate, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSign", "xmlInput", xmlInput, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSign", "privateKey", privateKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSign", "certificate", certificate, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSign", "options", options, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -80,15 +76,14 @@ namespace GeneXusXmlSignature.GeneXusDSig
 				PrivateKeyManager privateKey, CertificateX509 certificate, string outputPath,
 				DSigOptions options)
 		{
-			string method = "DoSignFileElement";
-			logger.Debug(method);
+			logger.Debug("DoSignFileElement");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlFilePath", xmlFilePath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "privateKey", privateKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "certificate", certificate, this.error);
-			SecurityUtils.validateStringInput(className, method, "outputPath", outputPath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileElement", "xmlFilePath", xmlFilePath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileElement", "privateKey", privateKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileElement", "certificate", certificate, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileElement", "outputPath", outputPath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileElement", "options", options, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -102,15 +97,14 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		public string DoSignElement(string xmlInput, string xPath, PrivateKeyManager privateKey,
 				CertificateX509 certificate, DSigOptions options)
 		{
-			string method = "DoSignElement";
-			logger.Debug(method);
+			logger.Debug("DoSignElement");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlInput", xmlInput, this.error);
-			SecurityUtils.validateStringInput(className, method, "xPath", xPath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "privateKey", privateKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "certificate", certificate, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignElement", "xmlInput", xmlInput, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignElement", "xPath", xPath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignElement", "privateKey", privateKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignElement", "certificate", certificate, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignElement", "options", options, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -123,12 +117,11 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		[SecuritySafeCritical]
 		public bool DoVerify(string xmlSigned, DSigOptions options)
 		{
-			string method = "DoVerify";
-			logger.Debug(method);
+			logger.Debug("DoVerify");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlSigned", xmlSigned, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerify", "xmlSigned", xmlSigned, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerify", "options", options, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -141,12 +134,11 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		[SecuritySafeCritical]
 		public bool DoVerifyFile(string xmlFilePath, DSigOptions options)
 		{
-			string method = "DoVerifyFile";
-			logger.Debug(method);
+			logger.Debug("DoVerifyFile");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlFilePath", xmlFilePath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyFile", "xmlFilePath", xmlFilePath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyFile", "options", options, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -158,13 +150,12 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		[SecuritySafeCritical]
 		public bool DoVerifyWithCert(string xmlSigned, CertificateX509 certificate, DSigOptions options)
 		{
-			string method = "DoVerifyWithCert";
-			logger.Debug(method);
+			logger.Debug("DoVerifyWithCert");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlSigned", xmlSigned, this.error);
-			SecurityUtils.validateObjectInput(className, method, "certificate", certificate, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyWithCert", "xmlSigned", xmlSigned, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyWithCert", "certificate", certificate, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyWithCert", "options", options, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -176,13 +167,12 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		[SecuritySafeCritical]
 		public bool DoVerifyFileWithCert(string xmlFilePath, CertificateX509 certificate, DSigOptions options)
 		{
-			string method = "DoVerifyFileWithCert";
-			logger.Debug(method);
+			logger.Debug("DoVerifyFileWithCert");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlFilePath", xmlFilePath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "certificate", certificate, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyFileWithCert", "xmlFilePath", xmlFilePath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyFileWithCert", "certificate", certificate, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyFileWithCert", "options", options, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -194,16 +184,15 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		[SecuritySafeCritical]
 		public bool DoSignFileWithPublicKey(string xmlFilePath, PrivateKey privateKey, SecurityAPICommons.Commons.PublicKey publicKey, string outputPath, DSigOptions options, string hash)
 		{
-			string method = "DoSignFileWithPublicKey";
-			logger.Debug(method);
+			logger.Debug("DoSignFileWithPublicKey");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlFilePath", xmlFilePath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "privateKey", privateKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "publicKey", publicKey, this.error);
-			SecurityUtils.validateStringInput(className, method, "outputPath", outputPath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
-			SecurityUtils.validateStringInput(className, method, "hash", hash, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileWithPublicKey", "xmlFilePath", xmlFilePath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileWithPublicKey", "privateKey", privateKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileWithPublicKey", "publicKey", publicKey, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileWithPublicKey", "outputPath", outputPath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileWithPublicKey", "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileWithPublicKey", "hash", hash, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -217,15 +206,14 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		[SecuritySafeCritical]
 		public string DoSignWithPublicKey(string xmlInput, PrivateKey privateKey, SecurityAPICommons.Commons.PublicKey publicKey, DSigOptions options, string hash)
 		{
-			string method = "DoSignWithPublicKey";
-			logger.Debug(method);
+			logger.Debug("DoSignWithPublicKey");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlInput", xmlInput, this.error);
-			SecurityUtils.validateObjectInput(className, method, "privateKey", privateKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "publicKey", publicKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
-			SecurityUtils.validateStringInput(className, method, "hash", hash, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignWithPublicKey", "xmlInput", xmlInput, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignWithPublicKey", "privateKey", privateKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignWithPublicKey", "publicKey", publicKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignWithPublicKey", "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignWithPublicKey", "hash", hash, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -241,17 +229,16 @@ namespace GeneXusXmlSignature.GeneXusDSig
 			PrivateKey privateKey, SecurityAPICommons.Commons.PublicKey publicKey, string outputPath,
 			DSigOptions options, string hash)
 		{
-			string method = "DoSignFileElementWithPublicKey";
-			logger.Debug(method);
+			logger.Debug("DoSignFileElementWithPublicKey");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlFilePath", xmlFilePath, this.error);
-			SecurityUtils.validateStringInput(className, method, "xPath", xPath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "privateKey", privateKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "publicKey", publicKey, this.error);
-			SecurityUtils.validateStringInput(className, method, "outputPath", outputPath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
-			SecurityUtils.validateStringInput(className, method, "hash", hash, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileElementWithPublicKey", "xmlFilePath", xmlFilePath, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileElementWithPublicKey", "xPath", xPath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileElementWithPublicKey", "privateKey", privateKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileElementWithPublicKey", "publicKey", publicKey, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileElementWithPublicKey", "outputPath", outputPath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFileElementWithPublicKey", "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFileElementWithPublicKey", "hash", hash, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -266,16 +253,15 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		public string DoSignElementWithPublicKey(string xmlInput, string xPath, PrivateKey privateKey, SecurityAPICommons.Commons.PublicKey publicKey
 			, DSigOptions options, string hash)
 		{
-			string method = "DoSignElementWithPublicKey";
-			logger.Debug(method);
+			logger.Debug("DoSignElementWithPublicKey");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlInput", xmlInput, this.error);
-			SecurityUtils.validateStringInput(className, method, "xPath", xPath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "privateKey", privateKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "publicKey", publicKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
-			SecurityUtils.validateStringInput(className, method, "hash", hash, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignElementWithPublicKey", "xmlInput", xmlInput, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignElementWithPublicKey", "xPath", xPath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignElementWithPublicKey", "privateKey", privateKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignElementWithPublicKey", "publicKey", publicKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignElementWithPublicKey", "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignElementWithPublicKey", "hash", hash, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -289,13 +275,12 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		[SecuritySafeCritical]
 		public bool DoVerifyWithPublicKey(string xmlSigned, SecurityAPICommons.Commons.PublicKey publicKey, DSigOptions options)
 		{
-			string method = "DoVerifyWithPublicKey";
-			logger.Debug(method);
+			logger.Debug("DoVerifyWithPublicKey");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlSigned", xmlSigned, this.error);
-			SecurityUtils.validateObjectInput(className, method, "publicKey", publicKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyWithPublicKey", "xmlSigned", xmlSigned, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyWithPublicKey", "publicKey", publicKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyWithPublicKey", "options", options, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -308,13 +293,12 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		[SecuritySafeCritical]
 		public bool DoVerifyFileWithPublicKey(string xmlFilePath, SecurityAPICommons.Commons.PublicKey publicKey, DSigOptions options)
 		{
-			string method = "DoVerifyFileWithPublicKey";
-			logger.Debug(method);
+			logger.Debug("DoVerifyFileWithPublicKey");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput(className, method, "xmlFilePath", xmlFilePath, this.error);
-			SecurityUtils.validateObjectInput(className, method, "publicKey", publicKey, this.error);
-			SecurityUtils.validateObjectInput(className, method, "options", options, this.error);
+			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyFileWithPublicKey", "xmlFilePath", xmlFilePath, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyFileWithPublicKey", "publicKey", publicKey, this.error);
+			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyFileWithPublicKey", "options", options, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -408,8 +392,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
 		private string Sign(XmlDocument xmlInput, PrivateKeyManager key, SecurityAPICommons.Commons.PublicKey certificate,
 				string dSigType, string canonicalizationType, string keyInfoType, string xpath, string id, string hash)
 		{
-			string method = "Sign";
-			logger.Debug(method);
+			logger.Debug("Sign");
 			inicializeInstanceVariables(key, certificate, hash);
 
 			SignatureElementType signatureElementType;
@@ -517,7 +500,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
 			catch (Exception e)
 			{
 				this.error.setError("XD004", e.Message);
-				logger.Error(method, e);
+				logger.Error("Sign", e);
 				return "";
 			}
 			XmlElement xmlDigitalSignature = null;
@@ -528,7 +511,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
 			catch (Exception ex)
 			{
 				this.error.setError("XD005", ex.Message);
-				logger.Error(method, ex);
+				logger.Error("Sign", ex);
 				return "";
 			}
 
@@ -545,8 +528,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
 
 		private bool Verify(XmlDocument doc, bool withCert, Key certificate, DSigOptions options)
 		{
-			string method = "Verify";
-			logger.Debug(method);
+			logger.Debug("Verify");
 			doc.PreserveWhitespace = true;
 			XmlNodeList nodeList = null;
 			SignedXml signedXML = null;
@@ -625,7 +607,7 @@ namespace GeneXusXmlSignature.GeneXusDSig
 			catch (Exception e)
 			{
 				this.error.setError("XD006", e.Message);
-				logger.Error(method, e);
+				logger.Error("Verify", e);
 				return false;
 			}
 
