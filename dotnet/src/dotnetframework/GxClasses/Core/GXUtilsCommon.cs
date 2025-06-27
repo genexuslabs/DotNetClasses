@@ -34,18 +34,25 @@ using TZ4Net;
 using GeneXus.Cryptography;
 using GeneXus.Data.NTier;
 using System.Collections.Generic;
-using System.Drawing;
 using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
-using System.Drawing.Drawing2D;
 using GeneXus.Storage;
 using GeneXus.Services;
 using GeneXus.Http;
 using System.Security;
-using System.Drawing.Imaging;
 using System.Net.Http.Headers;
+#if NETCORE
+using Image = GeneXus.Drawing.Image;
+using GeneXus.Drawing;
+using GeneXus.Drawing.Drawing2D;
+using GeneXus.Drawing.Imaging;
+#else
 using Image = System.Drawing.Image;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+#endif
 using System.Net.Http;
 
 namespace GeneXus.Utils
@@ -612,6 +619,12 @@ namespace GeneXus.Utils
 		{
 			return (value ? "true" : "false");
 		}
+#if NETCORE
+		public static string EmbeddingToStr(GxEmbedding value)
+		{
+			return value!=null ? value.ToString() : string.Empty;
+		}
+#endif
 		public static string BoolToStr(short value)
 		{
 			return (value == 1 ? "true" : "false");
@@ -3264,7 +3277,16 @@ namespace GeneXus.Utils
 		{
 			if (dataStore == null)
 				return ServerDate(context, new DataStoreHelperBase().getDataStoreName());
-			return ResetTime(dataStore.serverNow());
+			return ResetTimeAndKind(dataStore.serverNow());
+		}
+
+		private static DateTime ResetTimeAndKind(DateTime dateTime)
+		{
+			if (dateTime.Kind != DateTimeKind.Unspecified)
+			{
+				return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, 0, 0, 0, 0);
+			}
+			else return ResetTime(dateTime);
 		}
 #if !NETCORE
 		[Obsolete("ServerTime with string dataSource is deprecated, use ServerTime(IGxContext context, Data.NTier.IDataStoreProvider dataStore) instead", false)]
@@ -4112,6 +4134,7 @@ namespace GeneXus.Utils
 	{
 		const string schemeRegEx = @"^([a-z][a-z0-9+\-.]*):";
 		static Regex scheme = new Regex(schemeRegEx, RegexOptions.IgnoreCase);
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger<PathUtil>();
 
 		public static bool IsAbsoluteUrl(string url)
 		{
@@ -4151,35 +4174,34 @@ namespace GeneXus.Utils
 		public static bool AbsoluteUri(string fileName, out Uri result)
 		{
 			result = null;
-			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			Uri relative;
+			if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
 			{
-				return true;
-			}
-			else
-			{
-				Uri relative;
-				if (Uri.TryCreate(fileName, UriKind.Relative, out relative))
+				if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
 				{
-					if (!string.IsNullOrEmpty(Preferences.getBLOB_PATH_SHORT_NAME()))
+					int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
+					if (idx >= 0)
 					{
-						int idx = Math.Max(fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '/', StringComparison.OrdinalIgnoreCase), fileName.IndexOf(Preferences.getBLOB_PATH_SHORT_NAME() + '\\', StringComparison.OrdinalIgnoreCase));
-						if (idx >= 0)
-						{
-							fileName = fileName.Substring(idx);
-							Uri localRelative;
-							if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
-								relative = localRelative;
-						}
-					}
-
-					if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
-					{
-						return true;
+						fileName = fileName.Substring(idx);
+						Uri localRelative;
+						if (Uri.TryCreate(fileName, UriKind.Relative, out localRelative))
+							relative = localRelative;
 					}
 				}
-				return false; ;
-			}
 
+				if (Uri.TryCreate(PathUtil.GetBaseUri(), relative, out result))
+				{
+					GXLogging.Debug(log, "Relative uri:", fileName, " resolved to " + result);
+					return true;
+				}
+			}
+			if (Uri.TryCreate(fileName, UriKind.Absolute, out result) && (result.IsAbsoluteUri))
+			{
+				GXLogging.Debug(log, "Absolute uri:", fileName, " resolved to " + result);
+				return true;
+			}
+			GXLogging.Info(log, "Uri ", fileName, " resolved to:" + result);
+			return false; ;
 		}
 
 		public static string RelativePath(string blobPath)
@@ -6148,7 +6170,7 @@ namespace GeneXus.Utils
 						newheight = (int)(image.Height / resize);//  set the new heigth of the current image
 					}//return the image resized to the given heigth and width
 					Image output = image.GetThumbnailImage(width, newheight, null, IntPtr.Zero);
-					modifiedImage = Save(output, imageFile, ImageFormat.Bmp);
+					modifiedImage = Save(output, imageFile, GetImageFormat(image));
 				}				
 			}
 			catch (Exception ex)
@@ -6187,14 +6209,16 @@ namespace GeneXus.Utils
 					{
 						using (Bitmap bmp = new Bitmap(Width, Height))
 						{
+#if !NETCORE
 							bmp.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+#endif
 							using (Graphics Graphic = Graphics.FromImage(bmp))
 							{
 								Graphic.SmoothingMode = SmoothingMode.AntiAlias;
 								Graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
 								Graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
 								Graphic.DrawImage(OriginalImage, new Rectangle(0, 0, Width, Height), X, Y, Width, Height, GraphicsUnit.Pixel);
-								modifiedImage = Save(bmp, imageFile, OriginalImage.RawFormat);
+								modifiedImage = Save(bmp, imageFile, GetImageFormat(OriginalImage));
 							}
 						}
 					}
@@ -6251,16 +6275,16 @@ namespace GeneXus.Utils
 											g.FillPath(br, path);
 										}
 									}
+									// Rounded images are basically images with transparent rounded borders and jpg and jpeg formats do not
+									// support transparency, so we have to create a new identical image but in png format
+									if (imageFile.IndexOf(".jpg") > 0)
+										modifiedImage = Save(roundedImage, imageFile.Replace(".jpg", ".png"), ImageFormat.Png);
+									else if (imageFile.IndexOf(".jpeg") > 0)
+										modifiedImage = Save(roundedImage, imageFile.Replace(".jpeg", ".png"), ImageFormat.Png);
+									else
+										modifiedImage = Save(roundedImage, imageFile, GetImageFormat(OriginalImage));
 								}
 							}
-							// Rounded images are basically images with transparent rounded borders and jpg and jpeg formats do not
-							// support transparency, so we have to create a new identical image but in png format
-							if (imageFile.IndexOf(".jpg") > 0)
-								modifiedImage = Save(roundedImage, imageFile.Replace(".jpg", ".png"), ImageFormat.Png);
-							else if (imageFile.IndexOf(".jpeg") > 0)
-								modifiedImage = Save(roundedImage, imageFile.Replace(".jpeg", ".png"), ImageFormat.Png);
-							else
-								modifiedImage = Save(roundedImage, imageFile, OriginalImage.RawFormat);
 						}
 					}
 				}
@@ -6276,25 +6300,21 @@ namespace GeneXus.Utils
 			string modifiedImage = string.Empty;
 			try
 			{
-				using (MemoryStream ms = new MemoryStream())
-				{					
-					using (Image OriginalImage = ImageCreateFromStream(imageFile))
+				using (Image OriginalImage = ImageCreateFromStream(imageFile))
+				{
+					using (Bitmap rotatedImage = new Bitmap(OriginalImage.Width, OriginalImage.Height))
 					{
-						using (Bitmap rotatedImage = new Bitmap(OriginalImage.Width, OriginalImage.Height))
-						{
-							rotatedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
+						rotatedImage.SetResolution(OriginalImage.HorizontalResolution, OriginalImage.VerticalResolution);
 
-							using (Graphics g = Graphics.FromImage(rotatedImage))
-							{
-								g.TranslateTransform(OriginalImage.Width / 2, OriginalImage.Height / 2);
-								g.RotateTransform(angle);
-								g.TranslateTransform(-OriginalImage.Width / 2, -OriginalImage.Height / 2);
-								g.DrawImage(OriginalImage, new Point(0, 0));
-							}
-							rotatedImage.Save(ms, OriginalImage.RawFormat);
-							modifiedImage = Save(rotatedImage, imageFile, OriginalImage.RawFormat);
+						using (Graphics g = Graphics.FromImage(rotatedImage))
+						{
+							g.TranslateTransform(OriginalImage.Width / 2, OriginalImage.Height / 2);
+							g.RotateTransform(angle);
+							g.TranslateTransform(-OriginalImage.Width / 2, -OriginalImage.Height / 2);
+							g.DrawImage(OriginalImage, new Point(0, 0));
+							modifiedImage = Save(rotatedImage, imageFile, GetImageFormat(OriginalImage));
 						}
-					}					
+					}
 				}
 			}
 			catch (Exception ex)
@@ -6303,6 +6323,24 @@ namespace GeneXus.Utils
 			}
 			return modifiedImage;
 		}
+#if NETCORE
+		static ImageFormat GetImageFormat(Image bitmap)
+		{
+			ImageFormat format = bitmap.RawFormat;
+
+			if (format.Equals(ImageFormat.Jpeg)) return ImageFormat.Jpeg;
+			if (format.Equals(ImageFormat.Png)) return ImageFormat.Png;
+			if (format.Equals(ImageFormat.Bmp)) return ImageFormat.Png; //Unsupported Bmp
+			if (format.Equals(ImageFormat.Gif)) return ImageFormat.Gif;
+
+			return ImageFormat.Png;
+		}
+#else
+		static ImageFormat GetImageFormat(Image bitmap)
+		{
+			return bitmap.RawFormat;
+		}
+#endif
 		public static string FlipHorizontally(string imageFile)
 		{
 			string modifiedImage = string.Empty;
@@ -6311,7 +6349,7 @@ namespace GeneXus.Utils
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipX);
-					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, GetImageFormat(bmp));
 					return modifiedImage;
 				}
 			}
@@ -6329,7 +6367,7 @@ namespace GeneXus.Utils
 				using (Bitmap bmp = BitmapCreateFromStream(imageFile))
 				{
 					bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-					modifiedImage = Save(bmp, imageFile, bmp.RawFormat);
+					modifiedImage = Save(bmp, imageFile, GetImageFormat(bmp));
 					return modifiedImage;
 				}
 			}
@@ -6353,7 +6391,7 @@ namespace GeneXus.Utils
 				{
 					//In some cases, copied memory image fails to save when ImageFormat MemoryBmp
 					//https://stackoverflow.com/questions/9073619/image-save-crashing-value-cannot-be-null-r-nparameter-name-encoder
-					bitmap.Save(ms, ImageFormat.Bmp);
+					bitmap.Save(ms, ImageFormat.Png);
 				}
 				ms.Position = 0;
 				try
@@ -6427,6 +6465,7 @@ namespace GeneXus.Utils
 			return 0;
 		}
 	}
+
 	public class StorageUtils
 	{
 		public const string DELIMITER = "/";

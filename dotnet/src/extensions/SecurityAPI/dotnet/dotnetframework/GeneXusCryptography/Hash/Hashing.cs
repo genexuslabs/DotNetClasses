@@ -10,6 +10,7 @@ using System.Security;
 using SecurityAPICommons.Utils;
 using Org.BouncyCastle.Utilities.Encoders;
 using System.IO;
+using log4net;
 
 namespace GeneXusCryptography.Hash
 {
@@ -19,7 +20,9 @@ namespace GeneXusCryptography.Hash
 	[SecuritySafeCritical]
 	public class Hashing : SecurityAPIObject, IHashObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(Hashing));
 
+		private readonly string className = typeof(Hashing).Name;
 		/// <summary>
 		/// Hashing constructor
 		/// </summary>
@@ -41,11 +44,13 @@ namespace GeneXusCryptography.Hash
 		[SecuritySafeCritical]
 		public string DoHash(string hashAlgorithm, string txtToHash)
 		{
+			string method = "DoHash";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput("txtToHash", txtToHash, this.error);
+			SecurityUtils.validateStringInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "txtToHash", txtToHash, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -70,6 +75,8 @@ namespace GeneXusCryptography.Hash
 		[SecuritySafeCritical]
 		public byte[] CalculateHash(HashAlgorithm hashAlgorithm, byte[] input)
 		{
+			string method = "CalculateHash";
+			logger.Debug(method);
 			IDigest alg = createHash(hashAlgorithm);
 			byte[] buffer = new byte[8192];
 			int n;
@@ -89,6 +96,7 @@ namespace GeneXusCryptography.Hash
 			catch (Exception e)
 			{
 				error.setError("HA001", e.Message);
+				logger.Error(method, e);
 				return null;
 			}
 			return retValue;
@@ -105,6 +113,7 @@ namespace GeneXusCryptography.Hash
 		/// <returns>IDigest algorithm instantiated class</returns>
 		internal IDigest createHash(HashAlgorithm hashAlgorithm)
 		{
+			logger.Debug("createHash");
 			switch (hashAlgorithm)
 			{
 				case HashAlgorithm.MD5:
@@ -179,6 +188,7 @@ namespace GeneXusCryptography.Hash
 					return new WhirlpoolDigest();
 				default:
 					this.error.setError("HA002", "Unrecognized HashAlgorithm");
+					logger.Error("Unrecognized HashAlgorithm");
 					return null;
 			}
 		}

@@ -627,9 +627,14 @@ namespace GeneXus.Office.ExcelGXEPPlus
 		
 		private void fitColumnWidth()
         {
-            if (_fitColumnWith)
-                pCellsRange.AutoFitColumns();
-        }
+			if (_fitColumnWith)
+			{
+				for (int columnIndex = pCellsRange.Start.Column; columnIndex <= pCellsRange.End.Column; columnIndex++)
+				{
+					pSelectedSheet.Column(columnIndex).AutoFit();
+				}
+			}
+		}
 
         public string Type
         {

@@ -16,13 +16,14 @@
 		<PackageReference Include="jose-jwt" Version="5.0.0" />
 		<PackageReference Include="StrongNamer" Version="0.2.5" />
 	</ItemGroup>
-	
+  
 	 <ItemGroup>
-	   <Folder Include="Resources\" />
+	   <ProjectReference Include="..\..\..\src\DotNetFramework\GamUtils\GamUtils.csproj" />
+     <ProjectReference Include="..\..\..\src\DotNetFramework\GamSaml20\GamSaml20.csproj" />
 	 </ItemGroup>
 	
 	 <ItemGroup>
-	   <ProjectReference Include="..\..\..\src\DotNetFramework\GamSaml20\GamSaml20.csproj" />
+	   <Folder Include="Resources\" />
 	 </ItemGroup>
 
 	<ItemGroup>

@@ -11,6 +11,17 @@
 		<DefineConstants>NETCORE</DefineConstants>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\Resources\CryptographicHash.cs" Link="Utils\Resources\CryptographicHash.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestEncryption.cs" Link="Utils\TestEncryption.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestHash.cs" Link="Utils\TestHash.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwk.cs" Link="Utils\TestJwk.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestJwt.cs" Link="Utils\TestJwt.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestRandom.cs" Link="Utils\TestRandom.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamTest\Utils\TestUnixTimestamp.cs" Link="Utils\TestUnixTimestamp.cs" />
+		<Compile Include="..\..\DotNetFramework\GamTest\Utils\TestEncoding.cs" Link="Utils\TestEncoding.cs" />
+		<Compile Include="..\..\DotNetFramework\GamTest\Utils\TestPkce.cs" Link="Utils\TestPkce.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
@@ -23,12 +34,44 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Saml20\" />
+
 	  <Folder Include="Resources\" />
+	  <Folder Include="Utils\Resources\" />
+    <Folder Include="Saml20\" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\..\src\DotNet\GamSaml20Net\GamSaml20Net.csproj" />
+	  <ProjectReference Include="..\..\..\src\DotNet\GamUtilsNet\GamUtilsNet.csproj" />
+    <ProjectReference Include="..\..\..\src\DotNet\GamSaml20Net\GamSaml20Net.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.cer">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.key">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.p12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.pfx">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256_cert.pkcs12">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256d_key.pem">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256d_key.key">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>

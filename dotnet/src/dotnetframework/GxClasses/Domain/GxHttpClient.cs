@@ -721,16 +721,37 @@ namespace GeneXus.Http.Client
 			if (IsMultipart)
 				reqStream.Write(MultiPart.EndBoundaryBytes, 0, MultiPart.EndBoundaryBytes.Length);
 		}
-		void setContentHeaders(HttpRequestMessage request, string contentType)
+		void SetContentHeaders(HttpRequestMessage request, string contentType)
 		{
-			if (contentType != null)
+			if (request.Content != null)
 			{
-				HttpContentHeaders contentHeaders = request.Content.Headers;
-				contentHeaders.ContentType = MediaTypeHeaderValue.Parse(contentType);
+				if (contentType != null)
+				{
+					HttpContentHeaders contentHeaders = request.Content.Headers;
+					contentHeaders.ContentType = MediaTypeHeaderValue.Parse(contentType);
+				}
+#if NETCORE
+				for (int i = 0; i < _headers.Count; i++)
+				{
+					string currHeader = _headers.Keys[i];
+					string upperHeader = currHeader.ToUpper();
+
+					if (upperHeader == "CONTENT-DISPOSITION")
+					{
+						GXLogging.Debug(log, "Adding Content-Disposition header: " + _headers[i]);
+						request.Content.Headers.Add("Content-Disposition", _headers[i]);
+					}
+					else if (upperHeader == "CONTENT-RANGE")
+					{
+						GXLogging.Debug(log, "Adding Content-Range header: " + _headers[i]);
+						request.Content.Headers.Add("Content-Range", _headers[i]);
+					}
+				}
+#endif
 			}
 			InferContentType(contentType, request);
 		}
-		void setHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
+		internal void SetHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
 		{
 			HttpRequestHeaders headers = request.Headers;
 			contentType = null;
@@ -867,7 +888,7 @@ namespace GeneXus.Http.Client
 				RequestUri = new Uri(requestUrl),
 				Method = new HttpMethod(method),
 			};
-			setHeaders(request, cookies, out string contentType);
+			SetHeaders(request, cookies, out string contentType);
 			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
@@ -896,7 +917,7 @@ namespace GeneXus.Http.Client
 					if (reqStream.Length > 0)
 					{
 						request.Content = new ByteArrayContent(reqStream.ToArray());
-						setContentHeaders(request, contentType);
+						SetContentHeaders(request, contentType);
 					}
 					else
 						GXLogging.Debug(log, "No content to send, skipping request.Content assignment.");
@@ -934,7 +955,7 @@ namespace GeneXus.Http.Client
 				RequestUri = new Uri(requestUrl),
 				Method = new HttpMethod(method),
 			};
-			setHeaders(request, cookies, out string contentType);
+			SetHeaders(request, cookies, out string contentType);
 			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
@@ -960,7 +981,7 @@ namespace GeneXus.Http.Client
 					if (reqStream.Length > 0)
 					{
 						request.Content = new ByteArrayContent(reqStream.ToArray());
-						setContentHeaders(request, contentType);
+						SetContentHeaders(request, contentType);
 					}
 					else
 						GXLogging.Debug(log, "No content to send, skipping request.Content assignment.");
@@ -1224,7 +1245,17 @@ namespace GeneXus.Http.Client
 		}
 		NameValueCollection _respHeaders;
 		private bool disposedValue;
+		static bool IsChunkedOrEventStream(HttpResponseMessage response)
+		{
+			if (response == null)
+				return false;
+			bool isEventStream = response.Content?.Headers.ContentType?.MediaType == "text/event-stream";
+			if (isEventStream)
+				return true;
 
+			bool isChunked = response.Headers.TransferEncodingChunked.HasValue && response.Headers.TransferEncodingChunked.Value;
+			return isChunked;
+		}
 		internal void LoadResponseHeaders(HttpResponseMessage resp)
 		{
 			_respHeaders = new NameValueCollection();
@@ -1238,7 +1269,7 @@ namespace GeneXus.Http.Client
 			{
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}
-			_isChunkedResponse = resp.Headers.TransferEncodingChunked.HasValue && resp.Headers.TransferEncodingChunked.Value;
+			_isChunkedResponse = IsChunkedOrEventStream(resp) ;
 
 			if (_response.Content.Headers.ContentType == null)
 				_charset = null;
@@ -1282,7 +1313,7 @@ namespace GeneXus.Http.Client
 			}
 		}
 
-		private void setHeaders(HttpWebRequest req)
+		private void SetHeaders(HttpWebRequest req)
 		{
 			string contentType = null;
 			for (int i = 0; i < _headers.Count; i++)
@@ -1476,12 +1507,12 @@ namespace GeneXus.Http.Client
 			if (proxy != null)
 				req.Proxy = proxy;
 
-			setHeaders(req);
+			SetHeaders(req);
 
 			if (!method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) && !method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase))
 			{
 #if !NETCORE
-				using (Stream reqStream = req.GetRequestStream())
+                                using (Stream reqStream = req.GetRequestStream())
 #else
 				using (Stream reqStream = await req.GetRequestStreamAsync())
 #endif
@@ -1528,7 +1559,7 @@ namespace GeneXus.Http.Client
 			if (proxy != null)
 				req.Proxy = proxy;
 
-			setHeaders(req);
+			SetHeaders(req);
 
 			if (!method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) && !method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase))
 			{

@@ -18,7 +18,7 @@
 		<PackageReference Include="Codeuctivity.PdfAValidator" Version="2.3.104" />
 		<PackageReference Include="FreeSpire.PDF" Version="8.6.0" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.7" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.6" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
 		<PackageReference Include="xunit" Version="2.4.1" />
@@ -31,6 +31,7 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+		<PackageReference Include="OpenAI-DotNet" Version="8.2.2"/>
 	</ItemGroup>
 
   <ItemGroup>

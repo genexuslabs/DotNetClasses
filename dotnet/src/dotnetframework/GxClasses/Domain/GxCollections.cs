@@ -2334,6 +2334,15 @@ namespace GeneXus.Utils
 			current++;
 			return getKeyValuePair(current);
 		}
+		internal List<GxKeyValuePair> ToList()
+		{
+			List<GxKeyValuePair> list = new List<GxKeyValuePair>();
+			for (int i = 0; i < this.Count; i++)
+			{
+				list.Add(getKeyValuePair(i));
+			}
+			return list;
+		}
 		public bool Eof()
 		{
 			return eof;
@@ -2474,11 +2483,13 @@ namespace GeneXus.Utils
 			_key = key;
 			_value = value;
 		}
+		[JsonPropertyName("key")]
 		public string Key
 		{
 			get { return _key; }
 			set { _key = value; }
 		}
+		[JsonPropertyName("value")]
 		public string Value
 		{
 			get { return _value; }
@@ -3150,18 +3161,20 @@ namespace GeneXus.Utils
 			writer.WriteBooleanValue(value);
 		}
 	}
+	
 	public class StringConverter : JsonConverter<string>
 	{
 		public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
 			if (reader.TokenType == JsonTokenType.Number)
 			{
+				var numberFmt = CultureInfo.InvariantCulture.NumberFormat;
+
 				if (reader.TryGetInt32(out int l))
-					return l.ToString();
-				else if (reader.TryGetDecimal(out decimal d))
-					return d.ToString();
-				else
-					return reader.GetDouble().ToString();
+					return l.ToString(numberFmt);
+				if (reader.TryGetDecimal(out decimal d))
+					return d.ToString(numberFmt);
+				return reader.GetDouble().ToString(numberFmt);
 			}
 			return reader.GetString();
 		}
