@@ -126,7 +126,8 @@ namespace GeneXusFtps.GeneXusFtps
         [SecuritySafeCritical]
         public override bool Put(string localPath, string remoteDir)
         {
-			logger.Debug("Put");
+			string method = "Put";
+			logger.Debug(method);
             if (this.whiteList != null)
             {
                 if (!this.whiteList.IsValid(localPath))
@@ -160,7 +161,7 @@ namespace GeneXusFtps.GeneXusFtps
             catch (Exception e)
             {
                 this.error.setError("FS013", String.Format("Error changing directory {0}", e.Message));
-				logger.Error("Put", e);
+				logger.Error(method, e);
                 return false;
             }
             bool isStored = false;
@@ -182,7 +183,7 @@ namespace GeneXusFtps.GeneXusFtps
             catch (Exception e1)
             {
                 this.error.setError("FS004", String.Format("Erorr uploading file to server {0}", e1.Message));
-				logger.Error("Put", e1);
+				logger.Error(method, e1);
                 return false;
             }
             return isStored;
@@ -191,7 +192,8 @@ namespace GeneXusFtps.GeneXusFtps
         [SecuritySafeCritical]
         public override bool Get(string remoteFilePath, string localDir)
         {
-			logger.Debug("Get");
+			string method = "Get";	
+			logger.Debug(method);
             if (this.whiteList != null)
             {
                 if (!this.whiteList.IsValid(remoteFilePath))
@@ -225,7 +227,7 @@ namespace GeneXusFtps.GeneXusFtps
             catch (Exception e)
             {
                 this.error.setError("FS013", String.Format("Error changing directory {0}", e.Message));
-				logger.Error("Get", e);
+				logger.Error(method, e);
                 return false;
             }
 
@@ -240,7 +242,7 @@ namespace GeneXusFtps.GeneXusFtps
 				catch (Exception e1)
 				{
 					this.error.setError("FS005", String.Format("Error retrieving file {0}", e1.Message));
-					logger.Error("Get", e1);
+					logger.Error(method, e1);
 					fileStream.Close();
 					return false;
 				}
@@ -258,7 +260,8 @@ namespace GeneXusFtps.GeneXusFtps
 		[SecuritySafeCritical]
 		public override bool Rm(string remoteFilePath)
 		{
-			logger.Debug("Rm");
+			string method = "Rm";
+			logger.Debug(method);
 			if (this.client == null || !this.client.IsConnected)
 			{
 				this.error.setError("FS019", "The connection is invalid, reconect");
@@ -277,7 +280,7 @@ namespace GeneXusFtps.GeneXusFtps
 			catch (Exception e)
 			{
 				this.error.setError("FS020", String.Format("Error changing directory {0}", e.Message));
-				logger.Error("Rm", e);
+				logger.Error(method, e);
 				return false;
 			}
 
@@ -289,7 +292,7 @@ namespace GeneXusFtps.GeneXusFtps
 			catch (Exception e1)
 			{
 				this.error.setError("FS021", String.Format("Error retrieving file {0}", e1.Message));
-				logger.Error("Rm", e1);
+				logger.Error(method, e1);
 				return false;
 			}
 

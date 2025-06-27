@@ -23,7 +23,7 @@ namespace GeneXusCryptography.Asymmetric
 	public class AsymmetricSigner : SecurityAPIObject, IAsymmetricSignerObject
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(AsymmetricSigner));
-
+		private readonly string className = typeof(AsymmetricSigner).Name;
 		/// <summary>
 		/// AsymmetricSigner class constructor
 		/// </summary>
@@ -37,12 +37,13 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string DoSign(PrivateKeyManager key, string hashAlgorithm, string plainText)
 		{
-			logger.Debug("DoSign");
+			string method = "DoSign";
+			logger.Debug(method);
 			this.error.cleanError();
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSign", "key", key, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoSign", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoSign", "plainText", plainText, this.error);
+			SecurityUtils.validateObjectInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -65,14 +66,15 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string DoSignFile(PrivateKeyManager key, string hashAlgorithm, string path)
 		{
-			logger.Debug("DoSignFile");
+			string method = "DoSignFile";
+			logger.Debug(method);
 			this.error.cleanError();
 
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoSignFile", "key", key, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFile", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoSignFile", "path", path, this.error);
+			SecurityUtils.validateObjectInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "path", path, this.error);
 			if (this.HasError()) { return ""; }
 			/*******INPUT VERIFICATION - END*******/
 
@@ -92,13 +94,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public bool DoVerify(CertificateX509 cert, string plainText, string signature)
 		{
-			logger.Debug("DoVerify");
+			string method = "DoVerify";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerify", "cert", cert, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerify", "plainText", plainText, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerify", "signature", signature, this.error);
+			SecurityUtils.validateObjectInput(className, method, "cert", cert, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "signature", signature, this.error);
 			if (this.HasError()) { return false; }
 			/*******INPUT VERIFICATION - END*******/
 
@@ -121,14 +124,15 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public bool DoVerifyWithPublicKey(PublicKey key, string plainText, string signature, string hash)
 		{
-			logger.Debug("DoVerifyWithPublicKey");
+			string method = "DoVerifyWithPublicKey";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyWithPublicKey", "key", key, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyWithPublicKey", "plainText", plainText, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyWithPublicKey", "signature", signature, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyWithPublicKey", "hashAlgorithm", hash, this.error);
+			SecurityUtils.validateObjectInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "signature", signature, this.error);
+			SecurityUtils.validateStringInput(className, method, "hashAlgorithm", hash, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -153,13 +157,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public bool DoVerifyFile(CertificateX509 cert, string path, string signature)
 		{
-			logger.Debug("DoVerifyFile");
+			string method = "DoVerifyFile";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyFile", "cert", cert, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyFile", "path", path, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyFile", "signature", signature, this.error);
+			SecurityUtils.validateObjectInput(className, method, "cert", cert, this.error);
+			SecurityUtils.validateStringInput(className, method, "path", path, this.error);
+			SecurityUtils.validateStringInput(className, method, "signature", signature, this.error);
 			if (this.HasError()) { return false; }
 			/*******INPUT VERIFICATION - END*******/
 
@@ -178,14 +183,15 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public bool DoVerifyFileWithPublicKey(PublicKey key, string path, string signature, string hash)
 		{
-			logger.Debug("DoVerifyFileWithPublicKey");
+			string method = "DoVerifyFileWithPublicKey";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoVerifyFileWithPublicKey", "key", key, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyFileWithPublicKey", "path", path, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyFileWithPublicKey", "signature", signature, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoVerifyFileWithPublicKey", "hashAlgorithm", hash, this.error);
+			SecurityUtils.validateObjectInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "path", path, this.error);
+			SecurityUtils.validateStringInput(className, method, "signature", signature, this.error);
+			SecurityUtils.validateStringInput(className, method, "hashAlgorithm", hash, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -208,7 +214,8 @@ namespace GeneXusCryptography.Asymmetric
 
 		private string Sign(PrivateKey key, string hashAlgorithm, Stream input)
 		{
-			logger.Debug("Sign");
+			string method = "Sign";
+			logger.Debug(method);
 			PrivateKeyManager keyMan = (PrivateKeyManager)key;
 			if (keyMan.HasError())
 			{
@@ -231,7 +238,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("AE01", e.Message);
-				logger.Error("Sign", e);
+				logger.Error(method, e);
 				return "";
 			}
 			String result = "";
@@ -243,7 +250,7 @@ namespace GeneXusCryptography.Asymmetric
 			{
 				error.setError("AE018", e.Message);
 				logger.
-					Error("Sign", e);
+					Error(method, e);
 				return "";
 			}
 			return result;
@@ -251,7 +258,8 @@ namespace GeneXusCryptography.Asymmetric
 
 		private bool Verify(Key key, Stream input, string signature, string hash)
 		{
-			logger.Debug("Verify");
+			string method = "Verify";
+			logger.Debug(method);
 			PublicKey cert = null;
 			bool isKey = false;
 			if (hash == null)
@@ -300,7 +308,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("AE019", e.Message);
-				logger.Error("Verify", e);
+				logger.Error(method, e);
 				return false;
 			}
 
@@ -318,7 +326,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("AE021", e.Message);
-				logger.Error("Verify", e);
+				logger.Error(method, e);
 				return false;
 			}
 			return result;
@@ -328,7 +336,8 @@ namespace GeneXusCryptography.Asymmetric
 		private void SetUpSigner(ISigner signer, Stream input, AsymmetricKeyParameter asymmetricKeyParameter,
 			bool toSign)
 		{
-			logger.Debug("SetUpSigner");
+			string method = "SetUpSigner";
+			logger.Debug(method);
 			try
 			{
 				signer.Init(toSign, asymmetricKeyParameter);
@@ -336,7 +345,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("AE022", e.Message);
-				logger.Error("SetUpSigner", e);
+				logger.Error(method, e);
 				return;
 			}
 			byte[] buffer = new byte[8192];
@@ -351,7 +360,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (Exception e)
 			{
 				error.setError("AE023", e.Message);
-				logger.Error("SetUpSigner", e);
+				logger.Error(method, e);
 				return;
 			}
 		}
