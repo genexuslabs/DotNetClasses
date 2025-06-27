@@ -36,10 +36,12 @@
 	<ItemGroup>
 	  <Folder Include="Resources\" />
 	  <Folder Include="Utils\Resources\" />
+	  <Folder Include="Saml20\" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\src\DotNet\GamUtilsNet\GamUtilsNet.csproj" />
+	  <ProjectReference Include="..\..\..\src\DotNet\GamSaml20Net\GamSaml20Net.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -71,4 +73,5 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+
 </Project>
