@@ -19,6 +19,7 @@ namespace GeneXusCryptography.Mac
 	public class Cmac : SecurityAPIObject, ICmacObject
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(Cmac));
+		private readonly string className = typeof(Cmac).Name;
 		public Cmac() : base()
 		{
 
@@ -30,13 +31,14 @@ namespace GeneXusCryptography.Mac
 		[SecuritySafeCritical]
 		public string calculate(string plainText, string key, string algorithm, int macSize)
 		{
-			logger.Debug("calculate");
+			string method = "calculate";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput(this.GetType().Name, "calculate", "plainText", plainText, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "calculate", "key", key, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "calculate", "algorithm", algorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "algorithm", algorithm, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -94,14 +96,15 @@ namespace GeneXusCryptography.Mac
 		[SecuritySafeCritical]
 		public bool verify(string plainText, string key, string mac, string algorithm, int macSize)
 		{
-			logger.Debug("verify");
+			string method = "verify";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput(this.GetType().Name, "verify", "plainText", plainText, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "verify", "key", key, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "verify", "mac", mac, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "verify", "algorithm", algorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "mac", mac, this.error);
+			SecurityUtils.validateStringInput(className, method, "algorithm", algorithm, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -115,7 +118,8 @@ namespace GeneXusCryptography.Mac
 
 		private byte[] calculate(Stream input, byte[] key, int macSize, IBlockCipher blockCipher)
 		{
-			logger.Debug("calculate");
+			string method = "calculate";
+			logger.Debug(method);
 			ICipherParameters parms = new KeyParameter(key);
 
 			CMac mac = macSize != 0 ? new CMac(blockCipher, macSize) : new CMac(blockCipher);
@@ -127,7 +131,7 @@ namespace GeneXusCryptography.Mac
 			catch (Exception e)
 			{
 				this.error.setError("CM003", e.Message);
-				logger.Error("calculate", e);
+				logger.Error(method, e);
 				return null;
 			}
 
@@ -146,7 +150,7 @@ namespace GeneXusCryptography.Mac
 			{
 
 				this.error.setError("CM004", e.Message);
-				logger.Error("calculate", e);
+				logger.Error(method, e);
 				return null;
 			}
 

@@ -43,7 +43,8 @@ namespace Sftp.GeneXusSftp
         [SecuritySafeCritical]
         public override bool Connect(SftpOptions options)
         {
-			logger.Debug("Connect");
+			string method = "Connect";
+			logger.Debug(method);
 			if(options == null)
 			{
 				this.error.setError("SF000", "Options parameter is null");
@@ -97,7 +98,7 @@ namespace Sftp.GeneXusSftp
             catch (Exception e)
             {
                 this.error.setError("SF004", e.Message);
-				logger.Error("Connect", e);
+				logger.Error(method, e);
                 return false;
             }
 
@@ -110,7 +111,8 @@ namespace Sftp.GeneXusSftp
         [SecuritySafeCritical]
         public override bool Put(string localPath, string remoteDir)
         {
-			logger.Debug("Put");
+			string method = "Put";
+			logger.Debug(method);
             if (this.whiteList != null)
             {
                 if (!this.whiteList.IsValid(localPath))
@@ -199,14 +201,14 @@ namespace Sftp.GeneXusSftp
                             catch (Exception s)
                             {
                                 this.error.setError("SF012", s.Message);
-								logger.Error("Put", s);
+								logger.Error(method, s);
                                 return false;
                             }
                         }
                         else
                         {
                             this.error.setError("SF013", e.Message);
-							logger.Error("Put", e);
+							logger.Error(method, e);
                             return false;
                         }
 
@@ -220,7 +222,7 @@ namespace Sftp.GeneXusSftp
             catch (Exception e)
             {
                 this.error.setError("SF011", e.Message);
-				logger.Error("Put", e);
+				logger.Error(method, e);
                 return false;
             }
 
@@ -229,7 +231,8 @@ namespace Sftp.GeneXusSftp
         [SecuritySafeCritical]
         public override bool Get(string remoteFilePath, string localDir)
         {
-			logger.Debug("Get");
+			string method = "Get";
+			logger.Debug(method);
             if (this.whiteList != null)
             {
                 if (!this.whiteList.IsValid(remoteFilePath))
@@ -283,7 +286,7 @@ namespace Sftp.GeneXusSftp
             catch (Exception e)
             {
                 this.error.setError("SF008", e.Message);
-				logger.Error("Get", e);
+				logger.Error(method, e);
                 return false;
             }
             return true;
@@ -292,7 +295,8 @@ namespace Sftp.GeneXusSftp
 		[SecuritySafeCritical]
 		public override bool Rm(string remoteFilePath)
 		{
-			logger.Debug("Rm");
+			string method = "Rm";
+			logger.Debug(method);
 			if (SecurityUtils.compareStrings("", remoteFilePath) || remoteFilePath == null || remoteFilePath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
 			{
 				this.error.setError("SF018", "remoteFilePath cannot be empty");
@@ -325,7 +329,7 @@ namespace Sftp.GeneXusSftp
 			catch (Exception e)
 			{
 				this.error.setError("SF008", e.Message);
-				logger.Error("Rm", e);
+				logger.Error(method, e);
 				return false;
 			}
 			return true;

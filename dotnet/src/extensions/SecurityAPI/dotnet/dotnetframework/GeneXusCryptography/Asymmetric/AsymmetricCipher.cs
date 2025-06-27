@@ -23,6 +23,8 @@ namespace GeneXusCryptography.Asymmetric
 	public class AsymmetricCipher : SecurityAPIObject, IAsymmetricCipherObject
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(AsymmetricCipher));
+		private readonly string className = typeof(AsymmetricCipher).Name;
+
 		/// <summary>
 		/// AsymmetricCipher class constructor
 		/// </summary>
@@ -36,13 +38,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string DoEncrypt_WithPrivateKey(string hashAlgorithm, string asymmetricEncryptionPadding, PrivateKeyManager key, string plainText)
 		{
-			logger.Debug("DoEncrypt_WithPrivateKey");
+			string method = "DoEncrypt_WithPrivateKey";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoEncrypt_WithPrivateKey", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt_WithPrivateKey", "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt_WithPrivateKey", "plainText", plainText, this.error);
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoEncrypt_WithPrivateKey", "key", key, this.error);
+			SecurityUtils.validateObjectInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateObjectInput(className, method, "key", key, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -57,13 +60,14 @@ namespace GeneXusCryptography.Asymmetric
 		public string DoEncrypt_WithPublicKey(string hashAlgorithm, string asymmetricEncryptionPadding, PublicKey key, string plainText)
 #pragma warning restore CA1707 // Identifiers should not contain underscores
 		{
-			logger.Debug("DoEncrypt_WithPublicKey");
+			string method = "DoEncrypt_WithPublicKey";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoEncrypt_WithPublicKey", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt_WithPublicKey", "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt_WithPublicKey", "plainText", plainText, this.error);
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoEncrypt_WithPublicKey", "key", key, this.error);
+			SecurityUtils.validateObjectInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateObjectInput(className, method, "key", key, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -77,13 +81,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string DoEncrypt_WithCertificate(string hashAlgorithm, string asymmetricEncryptionPadding, CertificateX509 certificate, string plainText)
 		{
+			string method = "DoEncrypt_WithCertificate";
 			logger.Debug("DoEncrypt_WithCertificate");
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoEncrypt_WithCertificate", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt_WithCertificate", "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoEncrypt_WithCertificate", "plainText", plainText, this.error);
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoEncrypt_WithCertificate", "certificate", certificate, this.error);
+			SecurityUtils.validateObjectInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateObjectInput(className, method, "certificate", certificate, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -97,13 +102,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string DoDecrypt_WithPrivateKey(string hashAlgorithm, string asymmetricEncryptionPadding, PrivateKeyManager key, string encryptedInput)
 		{
-			logger.Debug("DoDecrypt_WithPrivateKey");
+			string method = "DoDecrypt_WithPrivateKey";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoDecrypt_WithPrivateKey", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt_WithPrivateKey", "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt_WithPrivateKey", "encryptedInput", encryptedInput, this.error);
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoDecrypt_WithPrivateKey", "key", key, this.error);
+			SecurityUtils.validateObjectInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateObjectInput(className, method, "key", key, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -117,13 +123,14 @@ namespace GeneXusCryptography.Asymmetric
 		[SecuritySafeCritical]
 		public string DoDecrypt_WithCertificate(string hashAlgorithm, string asymmetricEncryptionPadding, CertificateX509 certificate, string encryptedInput)
 		{
-			logger.Debug("DoDecrypt_WithCertificate");
+			string method = "DoDecrypt_WithCertificate";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoDecrypt_WithCertificate", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt_WithCertificate", "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt_WithCertificate", "encryptedInput", encryptedInput, this.error);
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoDecrypt_WithCertificate", "certificate", certificate, this.error);
+			SecurityUtils.validateObjectInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateObjectInput(className, method, "certificate", certificate, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -139,13 +146,14 @@ namespace GeneXusCryptography.Asymmetric
 		public string DoDecrypt_WithPublicKey(string hashAlgorithm, string asymmetricEncryptionPadding, PublicKey key, string encryptedInput)
 #pragma warning restore CA1707 // Identifiers should not contain underscores
 		{
-			logger.Debug("DoDecrypt_WithPublicKey");
+			string method = "DoDecrypt_WithPublicKey";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoDecrypt_WithPublicKey", "hashAlgorithm", hashAlgorithm, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt_WithPublicKey", "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
-			SecurityUtils.validateStringInput(this.GetType().Name, "DoDecrypt_WithPublicKey", "encryptedInput", encryptedInput, this.error);
-			SecurityUtils.validateObjectInput(this.GetType().Name, "DoDecrypt_WithPublicKey", "key", key, this.error);
+			SecurityUtils.validateObjectInput(className, method, "hashAlgorithm", hashAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateObjectInput(className, method, "key", key, this.error);
 			if (this.HasError())
 			{
 				return "";
@@ -174,7 +182,8 @@ namespace GeneXusCryptography.Asymmetric
 		/// <returns>string Base64 encrypted plainText text</returns>
 		private string DoEncryptInternal(string hashAlgorithm, string asymmetricEncryptionPadding, Key key, bool isPrivate, string plainText, bool isPublicKey)
 		{
-			logger.Debug("DoEncryptInternal");
+			string method = "DoEncryptInternal";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			HashAlgorithm hash = HashAlgorithmUtils.getHashAlgorithm(hashAlgorithm, this.error);
@@ -234,7 +243,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (InvalidCipherTextException e)
 			{
 				this.error.setError("AE036", string.Format("Algoritmo inválido {0}", algorithm));
-				logger.Error("DoEncryptInternal", e);
+				logger.Error(method, e);
 
 				return "";
 			}
@@ -255,7 +264,8 @@ namespace GeneXusCryptography.Asymmetric
 		/// <returns>string decypted encryptedInput text</returns>
 		private string DoDecryptInternal(string hashAlgorithm, string asymmetricEncryptionPadding, Key key, bool isPrivate, string encryptedInput, bool isPublicKey)
 		{
-			logger.Debug("DoDecryptInternal");
+			string method = "DoDecryptInternal";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			HashAlgorithm hash = HashAlgorithmUtils.getHashAlgorithm(hashAlgorithm, this.error);
@@ -313,7 +323,7 @@ namespace GeneXusCryptography.Asymmetric
 			catch (InvalidCipherTextException e)
 			{
 				this.error.setError("AE039", string.Format("Algoritmo inválido {0} ", algorithm));
-				logger.Error("DoDecryptInternal", e);
+				logger.Error(method, e);
 				throw new InvalidCipherTextException(string.Format("Algoritmo inválido {0} ", algorithm), e);
 			}
 		}
