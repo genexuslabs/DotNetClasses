@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using log4net;
 
 
 namespace GeneXusCryptography.SymmetricUtils
@@ -25,6 +26,7 @@ namespace GeneXusCryptography.SymmetricUtils
 	[SecuritySafeCritical]
 	public static class SymmetricStreamAlgorithmUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SymmetricStreamAlgorithmUtils));
 		/// <summary>
 		/// Mapping between String name and SymmetricStreamAlgorithm enum representation
 		/// </summary>
@@ -33,10 +35,12 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>SymmetricStreamAlgorithm enum representation</returns>
 		public static SymmetricStreamAlgorithm getSymmetricStreamAlgorithm(String symmetricStreamAlgorithm, Error error)
 		{
+			logger.Debug("getSymmetricStreamAlgorithm");
 			if (error == null) return SymmetricStreamAlgorithm.NONE;
 			if (symmetricStreamAlgorithm == null)
 			{
 				error.setError("SSA05", "Unrecognized SymmetricStreamAlgorithm");
+				logger.Error("Unrecognized SymmetricStreamAlgorithm");
 				return SymmetricStreamAlgorithm.NONE;
 			}
 
@@ -56,6 +60,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return SymmetricStreamAlgorithm.ISAAC;
 				default:
 					error.setError("SSA01", "Unrecognized SymmetricStreamAlgorithm");
+					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					return SymmetricStreamAlgorithm.NONE;
 			}
 		}
@@ -67,6 +72,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>String SymmetrcStreamAlgorithm name value</returns>
 		public static String valueOf(SymmetricStreamAlgorithm symmetrcStreamAlgorithm, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "Unrecognized algorithm";
 			switch (symmetrcStreamAlgorithm)
 			{
@@ -84,6 +90,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return "ISAAC";
 				default:
 					error.setError("SSA02", "Unrecognized SymmetricStreamAlgorithm");
+					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					return "Unrecognized algorithm";
 			}
 		}
@@ -96,6 +103,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>array int with fixed length 3 with key, if array[0]=0 is range, else fixed values</returns>
 		public static int[] getKeySize(SymmetricStreamAlgorithm algorithm, Error error)
 		{
+			logger.Debug("getKeySize");
 			if (error == null) return null;
 			int[] keySize = new int[3];
 			switch (algorithm)
@@ -123,6 +131,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					break;
 				default:
 					error.setError("SSA03", "Unrecognized SymmetricStreamAlgorithm");
+					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					break;
 			}
 			return keySize;
@@ -137,6 +146,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>true if the algorithm uses an IV or nonce, false if it do not</returns>
 		internal static bool usesIV(SymmetricStreamAlgorithm algorithm, Error error)
 		{
+			logger.Debug("usesIV");
 			switch (algorithm)
 			{
 				case SymmetricStreamAlgorithm.RC4:
@@ -149,6 +159,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return true;
 				default:
 					error.setError("SSA04", "Unrecognized SymmetricStreamAlgorithm");
+					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					return true;
 			}
 

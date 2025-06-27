@@ -11,12 +11,16 @@ using Org.BouncyCastle.Crypto.Macs;
 using GeneXusCryptography.HashUtils;
 using SecurityAPICommons.Utils;
 using System.IO;
+using log4net;
 
 namespace GeneXusCryptography.Mac
 {
 	[SecuritySafeCritical]
 	public class Hmac : SecurityAPIObject, IHmacObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(Hmac));
+
+		private readonly string className = typeof(Hmac).Name;
 
 		public Hmac() : base()
 		{
@@ -27,12 +31,14 @@ namespace GeneXusCryptography.Mac
 		[SecuritySafeCritical]
 		public string calculate(string plainText, string password, string algorithm)
 		{
+			string method = "calculate";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("plainText", plainText, this.error);
-			SecurityUtils.validateStringInput("password", password, this.error);
-			SecurityUtils.validateStringInput("algorithm", algorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "password", password, this.error);
+			SecurityUtils.validateStringInput(className, method, "algorithm", algorithm, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -60,13 +66,15 @@ namespace GeneXusCryptography.Mac
 		[SecuritySafeCritical]
 		public bool verify(string plainText, string password, string mac, string algorithm)
 		{
+			string method = "verify";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("plainText", plainText, this.error);
-			SecurityUtils.validateStringInput("password", password, this.error);
-			SecurityUtils.validateStringInput("algorithm", algorithm, this.error);
-			SecurityUtils.validateStringInput("mac", mac, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "password", password, this.error);
+			SecurityUtils.validateStringInput(className, method, "algorithm", algorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "mac", mac, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -77,7 +85,8 @@ namespace GeneXusCryptography.Mac
 
 		private byte[] calculate(Stream input, byte[] password, HashUtils.HashAlgorithm algorithm)
 		{
-
+			string method = "calculate";	
+			logger.Debug(method);
 			IDigest digest = new Hashing().createHash(algorithm);
 			if (this.HasError()) { return null; }
 
@@ -89,6 +98,7 @@ namespace GeneXusCryptography.Mac
 			catch (Exception e)
 			{
 				this.error.setError("HM001", e.Message);
+				logger.Error("calculate", e);
 				return null;
 			}
 
@@ -106,6 +116,7 @@ namespace GeneXusCryptography.Mac
 			catch (Exception e)
 			{
 				this.error.setError("HM002", e.Message);
+				logger.Error(method, e);
 				return null;
 			}
 			return retValue;

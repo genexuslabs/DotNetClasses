@@ -1,6 +1,7 @@
 using FluentFTP;
 using GeneXusFtps.GeneXusCommons;
 using GeneXusFtps.GeneXusFtpsUtils;
+using log4net;
 using SecurityAPICommons.Utils;
 using System;
 using System.IO;
@@ -16,7 +17,9 @@ namespace GeneXusFtps.GeneXusFtps
     [SecuritySafeCritical]
     public sealed class FtpsClient : IFtpsClientObject, IDisposable
 	{
-        private FtpClient client;
+		private static readonly ILog logger = LogManager.GetLogger(typeof(FtpsClient));
+
+		private FtpClient client;
         private string pwd;
         private ExtensionsWhiteList whiteList;
 
@@ -31,9 +34,11 @@ namespace GeneXusFtps.GeneXusFtps
         [SecuritySafeCritical]
         public override bool Connect(FtpsOptions options)
         {
-			if(options == null)
+			logger.Debug("Connect");
+			if (options == null)
 			{
 				this.error.setError("FS000", "Options parameter is null");
+				logger.Error("Options parameter is null");
 				return false;
 			}
             if (options.HasError())
@@ -45,6 +50,7 @@ namespace GeneXusFtps.GeneXusFtps
                     || SecurityUtils.compareStrings("", options.Password))
             {
                 this.error.setError("FS001", "Empty connection data");
+				logger.Error("Empty connection data");
                 return false;
             }
 
@@ -96,18 +102,21 @@ namespace GeneXusFtps.GeneXusFtps
                 {
                     this.client.Disconnect();
                     this.error.setError("FS008", "Connection error");
+					logger.Error("Connection error");
                     return false;
                 }
             }
             catch (Exception e)
             {
-                this.error.setError("FS002", "Connection error " + e.Message);
+                this.error.setError("FS002", String.Format("Connection error {0}", e.Message));
+				logger.Error("Connect", e);
                 this.client = null;
                 return false;
             }
             if (!this.client.IsConnected)
             {
                 this.error.setError("FS009", "Connection error");
+				logger.Error("Connection error");
                 return false;
             }
             this.whiteList = options.WhiteList;
@@ -117,22 +126,27 @@ namespace GeneXusFtps.GeneXusFtps
         [SecuritySafeCritical]
         public override bool Put(string localPath, string remoteDir)
         {
+			string method = "Put";
+			logger.Debug(method);
             if (this.whiteList != null)
             {
                 if (!this.whiteList.IsValid(localPath))
                 {
                     this.error.setError("WL001", "Invalid file extension");
+					logger.Error("Invalid file extension");
                     return false;
                 }
             }
 			if(remoteDir == null)
 			{
 				this.error.setError("FS000", "RemoteDir parameter is null");
+				logger.Error("RemoteDir parameter is null");
 				return false;
 			}
             if (this.client == null || !this.client.IsConnected)
             {
                 this.error.setError("FS003", "The connection is invalid, reconect");
+				logger.Error("The connection is invalid, reconect");
                 return false;
             }
             try
@@ -146,7 +160,8 @@ namespace GeneXusFtps.GeneXusFtps
             }
             catch (Exception e)
             {
-                this.error.setError("FS013", "Error changing directory " + e.Message);
+                this.error.setError("FS013", String.Format("Error changing directory {0}", e.Message));
+				logger.Error(method, e);
                 return false;
             }
             bool isStored = false;
@@ -160,13 +175,15 @@ namespace GeneXusFtps.GeneXusFtps
 
 				if (!isStored)
 				{
-					this.error.setError("FS012", " Reply String: " + this.client.LastReply.ErrorMessage);
+					this.error.setError("FS012", String.Format(" Reply String: {0} ", this.client.LastReply.ErrorMessage));
+					logger.Error(String.Format(" Reply String: {0} ", this.client.LastReply.ErrorMessage));
 				}
 				
             }
             catch (Exception e1)
             {
-                this.error.setError("FS004", "Erorr uploading file to server " + e1.Message);
+                this.error.setError("FS004", String.Format("Erorr uploading file to server {0}", e1.Message));
+				logger.Error(method, e1);
                 return false;
             }
             return isStored;
@@ -175,22 +192,27 @@ namespace GeneXusFtps.GeneXusFtps
         [SecuritySafeCritical]
         public override bool Get(string remoteFilePath, string localDir)
         {
+			string method = "Get";	
+			logger.Debug(method);
             if (this.whiteList != null)
             {
                 if (!this.whiteList.IsValid(remoteFilePath))
                 {
                     this.error.setError("WL002", "Invalid file extension");
+					logger.Error("Invalid file extension");
                     return false;
                 }
             }
 			if(localDir == null)
 			{
 				this.error.setError("FS000", "LocalDir parameter is null");
+				logger.Error("LocalDir parameter is null");
 				return false;
 			}
             if (this.client == null || !this.client.IsConnected)
             {
                 this.error.setError("FS010", "The connection is invalid, reconect");
+				logger.Error("The connection is invalid, reconect");
                 return false;
             }
             try
@@ -204,7 +226,8 @@ namespace GeneXusFtps.GeneXusFtps
             }
             catch (Exception e)
             {
-                this.error.setError("FS013", "Error changing directory " + e.Message);
+                this.error.setError("FS013", String.Format("Error changing directory {0}", e.Message));
+				logger.Error(method, e);
                 return false;
             }
 
@@ -218,7 +241,8 @@ namespace GeneXusFtps.GeneXusFtps
 				}
 				catch (Exception e1)
 				{
-					this.error.setError("FS005", "Error retrieving file " + e1.Message);
+					this.error.setError("FS005", String.Format("Error retrieving file {0}", e1.Message));
+					logger.Error(method, e1);
 					fileStream.Close();
 					return false;
 				}
@@ -226,6 +250,7 @@ namespace GeneXusFtps.GeneXusFtps
 				if (fileStream == null || !isDownloaded)
 				{
 					this.error.setError("FS007", "Could not retrieve file");
+					logger.Error("Could not retrieve file");
 					return false;
 				}
 			}
@@ -235,9 +260,12 @@ namespace GeneXusFtps.GeneXusFtps
 		[SecuritySafeCritical]
 		public override bool Rm(string remoteFilePath)
 		{
+			string method = "Rm";
+			logger.Debug(method);
 			if (this.client == null || !this.client.IsConnected)
 			{
 				this.error.setError("FS019", "The connection is invalid, reconect");
+				logger.Error("The connection is invalid, reconect");
 				return false;
 			}
 			try
@@ -251,7 +279,8 @@ namespace GeneXusFtps.GeneXusFtps
 			}
 			catch (Exception e)
 			{
-				this.error.setError("FS020", "Error changing directory " + e.Message);
+				this.error.setError("FS020", String.Format("Error changing directory {0}", e.Message));
+				logger.Error(method, e);
 				return false;
 			}
 
@@ -262,7 +291,8 @@ namespace GeneXusFtps.GeneXusFtps
 			}
 			catch (Exception e1)
 			{
-				this.error.setError("FS021", "Error retrieving file " + e1.Message);
+				this.error.setError("FS021", String.Format("Error retrieving file {0}", e1.Message));
+				logger.Error(method, e1);
 				return false;
 			}
 
@@ -273,6 +303,7 @@ namespace GeneXusFtps.GeneXusFtps
 		[SecuritySafeCritical]
         public override void Disconnect()
         {
+			logger.Debug("Disconnect");
             try
             {
                 this.client.Disconnect();
@@ -285,9 +316,11 @@ namespace GeneXusFtps.GeneXusFtps
         [SecuritySafeCritical]
         public override string GetWorkingDirectory()
         {
+			logger.Debug("GetWorkingDirectory");
             if (this.client == null || !this.client.IsConnected)
             {
                 this.error.setError("FS007", "The connection is invalid, reconect");
+				logger.Error("The connection is invalid, reconect");
                 return "";
             }
             String pwd = "";
@@ -298,6 +331,7 @@ namespace GeneXusFtps.GeneXusFtps
             catch (IOException)
             {
                 this.error.setError("FS006", "Could not obtain working directory, try reconnect");
+				logger.Error("Could not obtain working directory, try reconnect");
                 return "";
             }
             if (pwd == null)
@@ -353,6 +387,7 @@ namespace GeneXusFtps.GeneXusFtps
 
         private SslProtocols SetProtocol(FtpsOptions options)
         {
+			logger.Debug("SetProtocol");
 #pragma warning disable SYSLIB0039 // Type or member is obsolete
 #pragma warning disable CA5397 // Do not use deprecated SslProtocols values
 			switch (options.GetFtpsProtocol())
@@ -365,10 +400,12 @@ namespace GeneXusFtps.GeneXusFtps
                     return SslProtocols.Tls12;
                 case FtpsProtocol.SSLv2:
                     this.error.setError("FS0014", "Deprecated protocol, not implemented for .Net");
+					logger.Error("Deprecated protocol, not implemented for .Net");
                     return SslProtocols.None;
                 case FtpsProtocol.SSLv3:
                     this.error.setError("FS0015", "Deprecated protocol, not implemented for .Net");
-                    return SslProtocols.None;
+					logger.Error("Deprecated protocol, not implemented for .Net");
+					return SslProtocols.None;
                 default:
 					return SslProtocols.Tls;
 			}

@@ -2,18 +2,21 @@ using System;
 using System.Globalization;
 using System.Security;
 using SecurityAPICommons.Commons;
+using log4net;
 
 namespace GeneXusJWT.Utils
 {
 	[SecuritySafeCritical]
 	public class UnixTimeStampCreator: SecurityAPIObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(UnixTimeStampCreator));
 		[SecuritySafeCritical]
 		public UnixTimeStampCreator() : base() { }
 
 		[SecuritySafeCritical]
 		public string Create(string date)
 		{
+			logger.Debug("Create");
 			long newdate;
 			try
 			{
@@ -23,6 +26,7 @@ namespace GeneXusJWT.Utils
 			catch (Exception)
 			{
 				error.setError("UTS01", "Date format error; expected yyyy/MM/dd HH:mm:ss");
+				logger.Error("Date format error; expected yyyy/MM/dd HH:mm:ss");
 				return "";
 			}
 			return newdate.ToString(CultureInfo.InvariantCulture);

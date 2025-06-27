@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using log4net;
 using SecurityAPICommons.Commons;
 
 namespace GeneXusXmlSignature.GeneXusUtils
@@ -17,12 +18,15 @@ namespace GeneXusXmlSignature.GeneXusUtils
 	[SecuritySafeCritical]
 	public static class CanonicalizerWrapperUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(CanonicalizerWrapperUtils));
 		public static CanonicalizerWrapper getCanonicalizerWrapper(string canonicalizerWrapper, Error error)
 		{
+			logger.Debug("getCanonicalizerWrapper");
 			if (error == null) return CanonicalizerWrapper.NONE;
 			if (canonicalizerWrapper == null)
 			{
 				error.setError("CAW05", "Unrecognized CanonicalizationMethod");
+				logger.Error("Unrecognized CanonicalizationMethod");
 				return CanonicalizerWrapper.NONE;
 			}
 			switch (canonicalizerWrapper.Trim())
@@ -37,12 +41,14 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return CanonicalizerWrapper.ALGO_ID_C14N_EXCL_WITH_COMMENTS;
 				default:
 					error.setError("CAW01", "Unrecognized CanonicalizationMethod");
+					logger.Error("Unrecognized CanonicalizationMethod");
 					return CanonicalizerWrapper.NONE;
 			}
 		}
 
 		public static string valueOf(CanonicalizerWrapper canonicalizerWrapper, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "";
 			switch (canonicalizerWrapper)
 			{
@@ -56,12 +62,14 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return "exc_C14N_WITH_COMMENTS";
 				default:
 					error.setError("CAW02", "Unrecognized CanonicalizationMethod");
+					logger.Error("Unrecognized CanonicalizationMethod");
 					return "";
 			}
 		}
 
 		public static string valueOfInternal(CanonicalizerWrapper canonicalizerWrapper, Error error)
 		{
+			logger.Debug("valueOfInternal");
 			if (error == null) return "";
 			switch (canonicalizerWrapper)
 			{
@@ -75,12 +83,14 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return "ALGO_ID_C14N_EXCL_WITH_COMMENTS";
 				default:
 					error.setError("CAW03", "Unrecognized CanonicalizationMethod");
+					logger.Error("Unrecognized CanonicalizationMethod");
 					return "";
 			}
 		}
 
 		public static string getCanonicalizationMethodAlorithm(CanonicalizerWrapper canonicalizerWrapper, Error error)
 		{
+			logger.Debug("getCanonicalizationMethodAlorithm");
 			if (error == null) return null;
 			switch (canonicalizerWrapper)
 			{
@@ -94,6 +104,7 @@ namespace GeneXusXmlSignature.GeneXusUtils
 					return Constants.ALGO_ID_C14N_EXCL_WITH_COMMENTS;
 				default:
 					error.setError("CAW04", "Unrecognized CanonicalizationMethod");
+					logger.Error("Unrecognized CanonicalizationMethod");
 					return null;
 
 			}

@@ -12,6 +12,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj"/>
+    <ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />
   </ItemGroup>
 </Project>

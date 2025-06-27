@@ -7,7 +7,8 @@
 	  <PackageId>GeneXus.SecurityApi.Ftps</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj"/>
+    <ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
+    <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />
   </ItemGroup>
 	<ItemGroup>
     <PackageReference Include="FluentFTP" Version="31.3.2" />
