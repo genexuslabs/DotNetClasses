@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<AssemblyName>GamSaml20NetImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<NoWarn>CA1031, CA1801, SYSLIB0027</NoWarn>
+		<PackageId>Gam.Saml20.Net</PackageId>
+	</PropertyGroup>
+		<PropertyGroup>
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+		<ItemGroup>
+		  <Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Xml\XmlTypes.cs" Link="Utils\Xml\XmlTypes.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Xml\Element.cs" Link="Utils\Xml\Element.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Xml\Attribute.cs" Link="Utils\Xml\Attribute.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\DSig.cs" Link="Utils\DSig.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Encoding.cs" Link="Utils\Encoding.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Hash.cs" Link="Utils\Hash.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\Keys.cs" Link="Utils\Keys.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\Utils\SamlAssertionUtils.cs" Link="Utils\SamlAssertionUtils.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\IBinding.cs" Link="IBinding.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\PostBinding.cs" Link="PostBinding.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\RedirectBinding.cs" Link="RedirectBinding.cs" />
+			<Compile Include="..\..\DotNetFramework\GamSaml20\SamlParms.cs" Link="SamlParms.cs" />
+		</ItemGroup>
+
+	
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utils\Xml\" />
+  </ItemGroup>
+
+</Project>
