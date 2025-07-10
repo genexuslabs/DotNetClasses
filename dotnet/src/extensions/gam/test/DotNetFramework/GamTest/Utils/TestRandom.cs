@@ -61,6 +61,22 @@ namespace GamTest.Utils
 		}
 
 		[Test]
+		public void TestRandomUrlSafeCharacters()
+		{
+			string l5_string = GamUtilsEO.RandomUrlSafeCharacters(l5);
+			Assert.AreEqual(l5, l5_string.Length, "l5 urlSafeCharacters");
+
+			string l10_string = GamUtilsEO.RandomUrlSafeCharacters(l10);
+			Assert.AreEqual(l10, l10_string.Length, "l10 urlSafeCharacters");
+
+			string l128_string = GamUtilsEO.RandomUrlSafeCharacters(l128);
+			Assert.AreEqual(l128, l128_string.Length, "l128 urlSafeCharacters");
+
+			string l256_string = GamUtilsEO.RandomUrlSafeCharacters(l256);
+			Assert.AreEqual(l256, l256_string.Length, "l256 urlSafeCharacters");
+		}
+
+		[Test]
 		public void TestHexaBits()
 		{
 			int[] lengths = new int[] { 32, 64, 128, 256, 512, 1024 };
