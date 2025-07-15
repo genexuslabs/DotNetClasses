@@ -11,7 +11,6 @@ using Jayrock.Json;
 using System.Runtime.Serialization;
 using GeneXus.Configuration;
 #if NETCORE
-using System.Buffers.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
@@ -120,6 +119,27 @@ namespace GeneXus.Utils
 		{
 			return JsonSerializer.Serialize(value, JayrockCompatibleOptions);
 		}
+
+		internal override string WriteNullableJSON(Dictionary<string, object> kbObject)
+		{
+			return JsonSerializer.Serialize(kbObject, new System.Text.Json.JsonSerializerOptions()
+			{
+				DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+			});
+		}
+
+		internal override bool IsJsonString(string jobject)
+		{
+			try
+			{
+				var jsonElement = JsonDocument.Parse(jobject).RootElement;
+				return jsonElement.ValueKind == JsonValueKind.Object || jsonElement.ValueKind == JsonValueKind.Array;
+			}
+			catch
+			{
+				return false;
+			}
+		}
 	}
 #else
 	internal class JayRockJsonSerializer : GXJsonSerializer
@@ -128,6 +148,20 @@ namespace GeneXus.Utils
 		{
 			return jobject == Jayrock.Json.JNull.Value;
 		}
+
+		internal override bool IsJsonString(string jobject)
+		{
+			try
+			{
+				ReadJSON<JObject>(jobject);
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
 		internal override T ReadJSON<T>(string json)
 		{
 			Jayrock.Json.JsonTextReader reader = new JsonTextReader(new StringReader(json));
@@ -141,6 +175,16 @@ namespace GeneXus.Utils
 				return kbObject.ToString();
 			}
 			return null;
+		}
+
+		internal override string WriteNullableJSON(Dictionary<string, object> kbObject)
+		{
+			JObject jsonObject = new JObject();
+			foreach (var kvp in kbObject)
+			{
+				jsonObject[kvp.Key] = kvp.Value;
+			}
+			return jsonObject.ToString();
 		}
 	}
 #endif
@@ -178,9 +222,13 @@ namespace GeneXus.Utils
 
 		internal abstract bool IsJsonNull(object jobject);
 
+		internal abstract bool IsJsonString(string jobject);
+
 		internal abstract T ReadJSON<T>(string json) where T : class;
 
 		internal abstract string WriteJSON<T>(T kbObject) where T : class;
+
+		internal abstract string WriteNullableJSON(Dictionary<string, object> kbObject);
 	}
 	
 	public class JSONHelper
@@ -192,6 +240,12 @@ namespace GeneXus.Utils
 		{
 			return GXJsonSerializer.Instance.IsJsonNull(jobject);
 		}
+
+		public static bool IsJsonString(string jobject)
+		{
+			return GXJsonSerializer.Instance.IsJsonString(jobject);
+		}
+
 		public static T ReadJSON<T>(string json, GXBaseCollection<SdtMessages_Message> Messages = null) where T : class
 		{
 			try
@@ -252,6 +306,24 @@ namespace GeneXus.Utils
 			}
 			return null;
 		}
+
+		internal static string WriteNullableJSON(Dictionary<string, object> kbObject)
+		{
+			try
+			{
+				if (kbObject != null)
+				{
+					return GXJsonSerializer.Instance.WriteNullableJSON(kbObject);
+				}
+				return null;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Serialize error ", ex);
+			}
+			return null;
+		}
+
 		public static string Serialize<T>(T kbObject) where T : class
 		{
 			return Serialize<T>(kbObject, Encoding.UTF8);

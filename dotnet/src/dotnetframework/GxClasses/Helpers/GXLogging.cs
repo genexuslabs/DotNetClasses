@@ -13,12 +13,14 @@ using log4net.Repository.Hierarchy;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Collections;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using GeneXus.Utils;
 
 #if NETCORE
 using GeneXus.Services.Log;
 using Microsoft.Extensions.Logging;
+using GeneXus.Application;
+#else
+using Jayrock.Json;
 #endif
 
 namespace GeneXus
@@ -422,18 +424,11 @@ namespace GeneXus
 		}
 
 		private const string STACKTRACE_KEY = "stackTrace";
-		private const string MESSAGE_KEY = "message";
 		private const string DATA_KEY = "data";
 
 		public void Write(string message, int logLevel, object data, bool stackTrace)
 		{
 			WriteTextFormat(message, logLevel, data, stackTrace);
-
-			// Json format is not currently implemented in GeneXus
-			//if (IsJsonLogFormat())
-			//	WriteJsonFormat(message, logLevel, data, stackTrace);
-			//else
-			//	WriteTextFormat(message, logLevel, data, stackTrace);
 		}
 
 		private void WriteTextFormat(string message, int logLevel, object data, bool stackTrace)
@@ -446,42 +441,22 @@ namespace GeneXus
 			if (stackTrace)
 				mapMessage[STACKTRACE_KEY] = GetStackTraceAsList();
 
-			string json = JsonConvert.SerializeObject(mapMessage, Formatting.None,
-				new JsonSerializerSettings { NullValueHandling = NullValueHandling.Include });
-
+			string json = JSONHelper.WriteNullableJSON(mapMessage);
 			log.Logger.Log(typeof(GXLoggerLog4Net), GetLogLevel(logLevel), $"{message} - {json}", null);
-		}
-
-		private void WriteJsonFormat(string message, int logLevel, object data, bool stackTrace)
-		{
-			var mapMessage = new JObject
-			{
-				[MESSAGE_KEY] = message,
-				[DATA_KEY] = (JToken)NormalizeData(data)
-			};
-
-			if (stackTrace)
-				mapMessage[STACKTRACE_KEY] = JArray.FromObject(GetStackTraceAsList());
-
-			log.Logger.Log(typeof(GXLoggerLog4Net), GetLogLevel(logLevel), mapMessage.ToString(Formatting.None), null);
 		}
 
 		private object NormalizeData(object value)
 		{
-			if (value == null || (value is string s && s == "null"))
+			if (value == null)
 				return null;
 
 			if (value is string jsonStr && IsJson(jsonStr))
-				return JsonConvert.DeserializeObject(jsonStr);
+				return JSONHelper.ReadJSON<JObject>(jsonStr);
 
 			if (value is IDictionary || value is IEnumerable || IsPrimitive(value))
 				return value;
 
-			// SDT (future implementation)
-			//if (value is GxUserType)
-			//	return JsonConvert.DeserializeObject(((GxUserType)value).ToJSonString());
-
-			return JObject.FromObject(value);
+			return value;
 		}
 
 		private bool IsPrimitive(object value)
@@ -492,15 +467,7 @@ namespace GeneXus
 
 		private bool IsJson(string input)
 		{
-			try
-			{
-				var token = JToken.Parse(input);
-				return token.Type == JTokenType.Object || token.Type == JTokenType.Array;
-			}
-			catch
-			{
-				return false;
-			}
+			return JSONHelper.IsJsonString(input);
 		}
 
 		private static List<string> GetStackTraceAsList()
