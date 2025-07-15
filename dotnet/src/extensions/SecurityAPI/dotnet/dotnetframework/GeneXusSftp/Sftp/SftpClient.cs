@@ -11,6 +11,7 @@ using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
 
 
 namespace Sftp.GeneXusSftp
@@ -19,7 +20,9 @@ namespace Sftp.GeneXusSftp
     public sealed class SftpClient : ISftpClientObject, IDisposable
 	{
 
-        private Renci.SshNet.SftpClient channel;
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SftpClient));
+
+		private Renci.SshNet.SftpClient channel;
         private static KnownHostStore _knownHosts;
         private bool fingerprint;
         private ExtensionsWhiteList whiteList;
@@ -40,9 +43,12 @@ namespace Sftp.GeneXusSftp
         [SecuritySafeCritical]
         public override bool Connect(SftpOptions options)
         {
+			string method = "Connect";
+			logger.Debug(method);
 			if(options == null)
 			{
 				this.error.setError("SF000", "Options parameter is null");
+				logger.Error("Options parameter is null");
 				return false;
 			}
             if (options.HasError())
@@ -61,6 +67,7 @@ namespace Sftp.GeneXusSftp
 					{
 
 						this.error.setError("SF001", "Authentication misconfiguration. Missing user or password");
+						logger.Error("Authentication misconfiguration. Missing user or password");
 						return false;
 					}
 				}
@@ -68,6 +75,7 @@ namespace Sftp.GeneXusSftp
             if (SecurityUtils.compareStrings("", options.Host))
             {
                 this.error.setError("SF003", "Empty host");
+				logger.Error("Empty host");
                 return false;
             }
             try
@@ -90,6 +98,7 @@ namespace Sftp.GeneXusSftp
             catch (Exception e)
             {
                 this.error.setError("SF004", e.Message);
+				logger.Error(method, e);
                 return false;
             }
 
@@ -100,24 +109,29 @@ namespace Sftp.GeneXusSftp
         }
 
         [SecuritySafeCritical]
-        public override bool Put(String localPath, String remoteDir)
+        public override bool Put(string localPath, string remoteDir)
         {
+			string method = "Put";
+			logger.Debug(method);
             if (this.whiteList != null)
             {
                 if (!this.whiteList.IsValid(localPath))
                 {
                     this.error.setError("WL001", "Invalid file extension");
+					logger.Error("Invalid file extension");
                     return false;
                 }
             }
             if (SecurityUtils.compareStrings("", localPath) || localPath == null || localPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
             {
                 this.error.setError("SF0012", "localPath cannot be empty");
+				logger.Error("localPath cannot be empty");
                 return false;
             }
             if (remoteDir.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
             {
                 this.error.setError("SF015", "Invalid remoteDir");
+				logger.Error("Invalid remoteDir");
                 return false;
             }
             string local_path = localPath;
@@ -125,6 +139,7 @@ namespace Sftp.GeneXusSftp
             if (this.channel == null || !this.channel.IsConnected)
             {
                 this.error.setError("SF005", "The channel is invalid, reconect");
+				logger.Error("The channel is invalid, reconect");
                 return false;
             }
             if (remoteDir.Length > 1)
@@ -186,12 +201,14 @@ namespace Sftp.GeneXusSftp
                             catch (Exception s)
                             {
                                 this.error.setError("SF012", s.Message);
+								logger.Error(method, s);
                                 return false;
                             }
                         }
                         else
                         {
                             this.error.setError("SF013", e.Message);
+							logger.Error(method, e);
                             return false;
                         }
 
@@ -205,36 +222,43 @@ namespace Sftp.GeneXusSftp
             catch (Exception e)
             {
                 this.error.setError("SF011", e.Message);
+				logger.Error(method, e);
                 return false;
             }
 
         }
 
         [SecuritySafeCritical]
-        public override bool Get(String remoteFilePath, String localDir)
+        public override bool Get(string remoteFilePath, string localDir)
         {
+			string method = "Get";
+			logger.Debug(method);
             if (this.whiteList != null)
             {
                 if (!this.whiteList.IsValid(remoteFilePath))
                 {
                     this.error.setError("WL002", "Invalid file extension");
+					logger.Error("Invalid file extension");
                     return false;
                 }
             }
             if (SecurityUtils.compareStrings("", remoteFilePath) || remoteFilePath == null || remoteFilePath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
             {
                 this.error.setError("SF013", "remoteFilePath cannot be empty");
+				logger.Error("remoteFilePath cannot be empty");
                 return false;
             }
             if (localDir.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
             {
                 this.error.setError("SF014", "Invalid localDir");
+				logger.Error("Invalid localDir");
                 return false;
             }
 
             if (this.channel == null || !this.channel.IsConnected)
             {
                 this.error.setError("SF007", "The channel is invalid, reconect");
+				logger.Error("The channel is invalid, reconect");
                 return false;
             }
             string rDir = "";
@@ -262,23 +286,28 @@ namespace Sftp.GeneXusSftp
             catch (Exception e)
             {
                 this.error.setError("SF008", e.Message);
+				logger.Error(method, e);
                 return false;
             }
             return true;
         }
 
 		[SecuritySafeCritical]
-		public override bool Rm(String remoteFilePath)
+		public override bool Rm(string remoteFilePath)
 		{
+			string method = "Rm";
+			logger.Debug(method);
 			if (SecurityUtils.compareStrings("", remoteFilePath) || remoteFilePath == null || remoteFilePath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
 			{
 				this.error.setError("SF018", "remoteFilePath cannot be empty");
+				logger.Error("remoteFilePath cannot be empty");
 				return false;
 			}
 
 			if (this.channel == null || !this.channel.IsConnected)
 			{
 				this.error.setError("SF019", "The channel is invalid, reconect");
+				logger.Error("The channel is invalid, reconect");
 				return false;
 			}
 			string rDir = "";
@@ -300,6 +329,7 @@ namespace Sftp.GeneXusSftp
 			catch (Exception e)
 			{
 				this.error.setError("SF008", e.Message);
+				logger.Error(method, e);
 				return false;
 			}
 			return true;
@@ -308,6 +338,7 @@ namespace Sftp.GeneXusSftp
 		[SecuritySafeCritical]
         public override void Disconnect()
         {
+			logger.Debug("Disconnect");
             if (this.channel != null && this.channel.IsConnected)
             {
                 this.channel.Disconnect();
@@ -317,6 +348,7 @@ namespace Sftp.GeneXusSftp
         [SecuritySafeCritical]
         public override string GetWorkingDirectory()
         {
+			logger.Debug("GetWorkingDirectory");
             if (this.channel != null && this.channel.IsConnected)
             {
                 try
@@ -326,6 +358,7 @@ namespace Sftp.GeneXusSftp
                 catch (Exception)
                 {
                     this.error.setError("SF017", "Could not get working directory, try reconnect");
+					logger.Error("Could not get working directory, try reconnect");
                     return "";
                 }
             }
@@ -337,10 +370,7 @@ namespace Sftp.GeneXusSftp
 
         private void SetupChannelSftp(SftpOptions options, bool useKey)
         {
-
-
-
-
+			logger.Debug("SetupChannelSftp");
             List<AuthenticationMethod> method = new List<AuthenticationMethod>();
 
             if (useKey)
@@ -364,6 +394,7 @@ namespace Sftp.GeneXusSftp
                 if (SecurityUtils.compareStrings("", options.KnownHostsPath))
                 {
                     this.error.setError("SF009", "Options misconfiguration, known_hosts path is empty but host key checking is true");
+					logger.Error("Options misconfiguration, known_hosts path is empty but host key checking is true");
                     return;
                 }
 
@@ -388,6 +419,7 @@ namespace Sftp.GeneXusSftp
 
         private string GetFileNamne(string path)
         {
+			logger.Debug("GetFileNamne");
             string[] pathArr = null;
             if (path.Contains("/"))
             {
@@ -403,18 +435,22 @@ namespace Sftp.GeneXusSftp
 
         private static bool CanTrustHost(string hostname, HostKeyEventArgs e)
         {
+			logger.Debug("CanTrustHost");
             if (_knownHosts.Knows(hostname, e.HostKeyName, e.HostKey, 22))
             {
+				logger.Debug("CanTrustHost - true");
                 return true;
             }
             else
             {
+				logger.Debug("CanTrustHost - false");
                 return false;
             }
         }
 
         private void checkFingerpint(ConnectionInfo con, string knownHostsPath)
         {
+			logger.Debug("checkFingerpint");
             _knownHosts = new KnownHostStore(knownHostsPath);
             using (Renci.SshNet.SftpClient client1 = new Renci.SshNet.SftpClient(con))
             {
@@ -433,6 +469,7 @@ namespace Sftp.GeneXusSftp
                 {
 
                     this.error.setError("SF012", "unknown host");
+					logger.Error("unknown host");
                     this.channel = null;
                     this.fingerprint = false;
                 }

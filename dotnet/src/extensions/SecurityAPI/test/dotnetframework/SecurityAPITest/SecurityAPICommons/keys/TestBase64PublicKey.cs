@@ -17,7 +17,7 @@ namespace SecurityAPITest.SecurityAPICommons.keys
 		{
 			path = BASE_PATH + "dummycerts\\RSA_sha256_1024\\sha256_pubkey.pem";
 			base64Wrong = "--BEGINKEY--sdssf--ENDKEY—";
-			base64string = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDGfJuH7SIX63boIuZBLM0Wa+SEbqhgy03sfgn1Z4ZwWF8kICV3giNHskWFAGzc8P/TD3RTf/6VdugF3h/2ozkVbtSVaDgAmXTTiDxZ8F14fKAcTcSwGJaqCtqwC/v7Z7PKyqqkuKfB0mrfbY9O01F57GCZpm1yTP3gfeBMeug9WQIDAQAB";
+			base64string = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDA67LJvTXTrvpvPuJFLDhosKQRuLWqcvxVJGdclEtNkvjU2jwpf4ulckhUDio5xA1qXmSpCMPXpGJNLv4sEjkdRt0r14PBEy52SSWVTIrBukyxcAkt3mAFSnpgm7fUngJkE5CMb8D6nKbaFQ9pKeXiAjd8eXwK3BcRFzB59lvpSQIDAQAB";
 
 		}
 

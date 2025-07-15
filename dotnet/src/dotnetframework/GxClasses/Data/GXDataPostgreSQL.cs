@@ -79,7 +79,6 @@ namespace GeneXus.Data
 #if NETCORE
 		static NpgsqlDataSource GetOrCreateDataSource(string connectionString)
 		{
-			System.Diagnostics.Debugger.Launch();
 			return _dataSources.GetOrAdd(connectionString, cs =>
 			{
 				NpgsqlDataSourceBuilder ds = new NpgsqlDataSourceBuilder(connectionString);
@@ -630,6 +629,14 @@ namespace GeneXus.Data
 		public override string ConcatOp(int pos)
 		{
 			return ConcatOpValues[pos];
+		}
+		internal override DateTime NormalizeDbmsDateTime(DateTime d)
+		{
+			if (d.Kind != DateTimeKind.Unspecified)
+			{
+				d = new DateTime(d.Year, d.Month, d.Day, d.Hour, d.Minute, d.Second, d.Millisecond);
+			}
+			return d;
 		}
 	}
 	sealed internal class PostgresqlConnectionWrapper : GxAbstractConnectionWrapper
