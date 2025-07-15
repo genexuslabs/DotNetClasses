@@ -25,7 +25,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		const string BUCKET = "BUCKET_NAME";
 		const string REGION = "REGION";
 		const string STORAGE_CUSTOM_ENDPOINT_VALUE = "custom";
-
+		const string SIGNATURE_VERSION = "SIGNATURE_VERSION";
 		const string DEFAULT_ENDPOINT = "s3.amazonaws.com";
 		const string DEFAULT_REGION = "us-east-1";
 		
@@ -78,6 +78,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		private void Initialize() { 
 			string keyId = GetEncryptedPropertyValue(ACCESS_KEY, ACCESS_KEY_ID_DEPRECATED);
 			string keySecret = GetEncryptedPropertyValue(SECRET_ACCESS_KEY, SECRET_ACCESS_KEY_DEPRECATED);
+			string signatureVersion = GetPropertyValue(SIGNATURE_VERSION, SIGNATURE_VERSION, "");
 			AWSCredentials credentials = null;
 			if (!string.IsNullOrEmpty(keyId) && !string.IsNullOrEmpty(keySecret))
 			{
@@ -99,6 +100,10 @@ namespace GeneXus.Storage.GXAmazonS3
 				config.ForcePathStyle = forcePathStyle;
 				config.ServiceURL = Endpoint;
 				customEndpoint = true;
+				if (!string.IsNullOrEmpty(signatureVersion))
+				{
+					config.SignatureVersion = signatureVersion;
+				}
 			}
 			else
 			{
