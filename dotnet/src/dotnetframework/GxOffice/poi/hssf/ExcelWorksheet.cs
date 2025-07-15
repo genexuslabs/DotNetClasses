@@ -1,17 +1,17 @@
-using NPOI.XSSF.UserModel;
+using NPOI.HSSF.UserModel;
 
-namespace GeneXus.MSOffice.Excel.Poi.Xssf
+namespace GeneXus.MSOffice.Excel.Poi.Hssf
 {
 	public class ExcelWorksheet : IExcelWorksheet
 	{
-		private XSSFSheet _sheet;
+		private HSSFSheet _sheet;
 
 		public ExcelWorksheet()
 		{
 
 		}
 
-		public ExcelWorksheet(XSSFSheet sheet)
+		public ExcelWorksheet(HSSFSheet sheet)
 		{
 			_sheet = sheet;
 		}
@@ -24,7 +24,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				if (_sheet != null)
 				{
-					XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
+					HSSFWorkbook wb = (HSSFWorkbook)_sheet.Workbook;
 					return wb.IsSheetHidden(SheetIndex(wb));
 				}
 				return false;
@@ -34,8 +34,8 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				if (_sheet != null)
 				{
-					XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
-					wb.SetSheetVisibility(SheetIndex(wb), value ? NPOI.SS.UserModel.SheetVisibility.Hidden: NPOI.SS.UserModel.SheetVisibility.Visible);
+					HSSFWorkbook wb = (HSSFWorkbook)_sheet.Workbook;
+					wb.SetSheetVisibility(SheetIndex(wb), value ? NPOI.SS.UserModel.SheetVisibility.Hidden : NPOI.SS.UserModel.SheetVisibility.Visible);
 				}
 			}
 		}
@@ -44,7 +44,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		{
 			if (_sheet != null)
 			{
-				XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
+				HSSFWorkbook wb = (HSSFWorkbook)_sheet.Workbook;
 				int sheetIndex = wb.GetSheetIndex(Name);
 				wb.SetSheetName(sheetIndex, newName);
 				return Name == newName;
@@ -56,10 +56,13 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		{
 			if (_sheet != null)
 			{
-				XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
+				HSSFWorkbook wb = (HSSFWorkbook)_sheet.Workbook;
 				if (wb.GetSheet(newName) == null)
 				{
-					wb.CloneSheet(wb.GetSheetIndex(Name), newName);
+					int srcIndex = wb.GetSheetIndex(Name);
+					wb.CloneSheet(srcIndex);
+					int newIndex = wb.NumberOfSheets - 1;
+					wb.SetSheetName(newIndex, newName);
 					return true;
 				}
 			}
@@ -77,7 +80,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			}
 		}
 
-		private int SheetIndex(XSSFWorkbook wb)
+		private int SheetIndex(HSSFWorkbook wb)
 		{
 			return wb.GetSheetIndex(Name);
 		}
