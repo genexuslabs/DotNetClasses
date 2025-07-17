@@ -14,7 +14,6 @@ using System.Data.SqlClient;
 #else
 using Microsoft.Data.SqlClient;
 #endif
-using TZ4Net;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using GeneXus.Services;
@@ -180,7 +179,6 @@ namespace GeneXus.Data
 		[Obsolete("IGxDataStore.SmartCacheProvider is deprecated, use IDataStoreProvider.SmartCacheProvider instead", false)]
         GxSmartCacheProvider SmartCacheProvider {get;}
 		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead.", false)]
-		OlsonTimeZone ClientTimeZone { get; }
         void CloseConnections();
 		void Release();
 		IDbTransaction BeginTransaction();
@@ -216,8 +214,6 @@ namespace GeneXus.Data
 		short Method { get;}
         new string Database { get; set; }
 		string DatabaseName { get;}
-		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead.", false)]
-		OlsonTimeZone ClientTimeZone { get;}
 		string DataSourceName {get ;set ;}
 		string DriverName {get ;set ;}
 		string FileDataSourceName {get ;set ;}
