@@ -311,21 +311,13 @@ namespace GeneXus.Data.NTier.ADO
 		}
         public DateTime getGXDateTime(int id, Boolean precision)
         {
-#if NODATIME
 			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
-#else
-			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.ClientTimeZone);
-#endif
 			TraceRow(() => $"getDateTime - index : {id}  value:{value}");
 			return value;
 		}
         public DateTime getGXDateTime(int id)
         {
-#if NODATIME
 			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, false), _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
-#else
-			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, false), _gxDbCommand.Conn.ClientTimeZone);
-#endif
 			TraceRow(() => $"getGXDateTime - index : {id} value:{value.ToString()}");
 			return value;
 		}
@@ -773,11 +765,7 @@ namespace GeneXus.Data.NTier.ADO
         public void SetParameterDatetime(int id, DateTime parm, Boolean precision)
         {
 			DateTime shifted = parm;
-#if NODATIME
 			shifted = DateTimeUtil.Local2DBserver(parm, _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
-#else
-			shifted = DateTimeUtil.Local2DBserver(parm, _gxDbCommand.Conn.ClientTimeZone);
-#endif
 			DateTime param2 = (precision) ? shifted : DateTimeUtil.ResetMilliseconds(shifted);
             _gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsDateTime((IDbDataParameter)_gxDbCommand.Parameters[id - 1], param2));
         }
