@@ -31,7 +31,6 @@ namespace GeneXus.Application
 	using GeneXus.Data.NTier;
 	using GeneXus.Resources;
 	using System.Net;
-	using TZ4Net;
 	using System.Globalization;
 	using System.Diagnostics;
 	using System.Text.RegularExpressions;
@@ -74,8 +73,6 @@ namespace GeneXus.Application
 		void DisableSpaRequest();
 		String AjaxCmpContent { get; set; }
 		bool isCloseCommand { get; }
-		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
-		OlsonTimeZone GetOlsonTimeZone();
 		String GetTimeZone();
 		Boolean SetTimeZone(String sTZ);
 		HttpAjaxContext httpAjaxContext { get; }
@@ -408,8 +405,6 @@ namespace GeneXus.Application
 		[NonSerialized]
 		private IGxSession _session;
 		private bool _isSumbited;
-		[NonSerialized]
-		private OlsonTimeZone _currentTimeZone;
 		[NonSerialized]
 		private String _currentTimeZoneId;
 
@@ -3678,44 +3673,6 @@ namespace GeneXus.Application
 		}
 
 		internal static string GX_REQUEST_TIMEZONE = "GxTZOffset";
-		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead", false)]
-		public OlsonTimeZone ClientTimeZone
-		{
-			get
-			{
-				if (_currentTimeZone != null)
-					return _currentTimeZone;
-				string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
-				GXLogging.DebugSanitized(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
-				if (String.IsNullOrEmpty(sTZ))
-				{
-					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
-					GXLogging.Debug(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
-				}
-				try
-				{
-					_currentTimeZone = String.IsNullOrEmpty(sTZ) ? TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id) : _currentTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
-				}
-				catch (Exception e1)
-				{
-					GXLogging.Warn(Logger, "ClientTimeZone _currentTimeZone error", e1);
-					try
-					{
-						_currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
-					}
-					catch (Exception e2)
-					{
-						GXLogging.Warn(Logger, "ClientTimeZone GetInstanceFromWin32Id error", e2);
-						Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
-						if (storagePty == Preferences.StorageTimeZonePty.Undefined)
-							_currentTimeZone = null;
-						else
-							throw e2;
-					}
-				}
-				return _currentTimeZone;
-			}
-		}
 		internal string ClientTimeZoneId
 		{
 			get
@@ -3761,11 +3718,6 @@ namespace GeneXus.Application
 				return _currentTimeZoneId;
 			}
 		}
-		[Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
-		public OlsonTimeZone GetOlsonTimeZone()
-		{
-			return TimeZoneUtil.GetInstanceFromOlsonName(GetTimeZone());
-		}
 
 		public String GetTimeZone()
 		{
@@ -3775,24 +3727,17 @@ namespace GeneXus.Application
 				SetTimeZone(sTZ);
 			}
 
-#if NODATIME
 			if (_currentTimeZoneId == null)
 				_currentTimeZoneId = ClientTimeZoneId;
 			if (_currentTimeZoneId==null)
 				_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
 			return _currentTimeZoneId;
-#else
-			if (_currentTimeZone == null)
-				_currentTimeZone = ClientTimeZone;
-			return _currentTimeZone == null ? TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id).Name : _currentTimeZone.Name;
-#endif
 		}
 
 		public Boolean SetTimeZone(String sTZ)
 		{
 			sTZ = StringUtil.RTrim(sTZ);
 			bool ret = false;
-#if NODATIME
 			string tzId;
 			try
 			{
@@ -3813,26 +3758,6 @@ namespace GeneXus.Application
 			}
 			SetProperty("GXTimezone", tzId);
 			_currentTimeZoneId = tzId;
-#else
-			try
-			{
-				_currentTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
-				ret = true;
-			}
-			catch (Exception)
-			{
-				try
-				{
-					_currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(sTZ);
-					ret = true;
-				}
-				catch (Exception)
-				{
-					_currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
-				}
-			}
-			SetProperty("GXTimezone", _currentTimeZone.Name);
-#endif
 			return ret;
 		}
 		private static ConcurrentDictionary<string, HashSet<string>> m_imagesDensity = new ConcurrentDictionary<string, HashSet<string>>();
