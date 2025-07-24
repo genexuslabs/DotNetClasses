@@ -6,11 +6,9 @@
 	 <NoWarn>CA1031</NoWarn>
 	 <PackageId>GeneXus.SecurityApi.Sftp</PackageId>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Neon.SSH.NET">
-      <HintPath>..\..\resources\Neon.SSH.NET.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+ <ItemGroup>
+   <PackageReference Include="SSH.NET" Version="2025.0.0" />
+ </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />
