@@ -94,7 +94,7 @@ namespace Sftp.GeneXusSftpUtils
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
-				HMACSHA1 hmac = new HMACSHA1(salt);
+				System.Security.Cryptography.HMACSHA1 hmac = new System.Security.Cryptography.HMACSHA1(salt);
 #pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
 #pragma warning restore CA2000 // Dispose objects before losing scope
 				byte[] hash = hmac.ComputeHash(Encoding.ASCII.GetBytes(hostNameWithPort));

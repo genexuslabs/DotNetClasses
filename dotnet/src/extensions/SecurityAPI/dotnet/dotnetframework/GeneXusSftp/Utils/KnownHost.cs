@@ -255,16 +255,16 @@ namespace Sftp.GeneXusSftpUtils
 #else
 #pragma warning disable CA2000 // Dispose objects before losing scope
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
-			HMACSHA1 hmac = new HMACSHA1(_hashSalt);
+			System.Security.Cryptography.HMACSHA1 hmac = new System.Security.Cryptography.HMACSHA1(_hashSalt);
 #pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
 #pragma warning restore CA2000 // Dispose objects before losing scope
 			byte[] hashToCompare = hmac.ComputeHash(Encoding.ASCII.GetBytes(hostAndPort));
 
             return _hashedHostName.SequenceEqual(hashToCompare);
 #endif
-        }
+		}
 
-        private bool ValidatePlaintextHostName(string hostAndPort)
+		private bool ValidatePlaintextHostName(string hostAndPort)
         {
             bool foundAtLeastOneMatch = false;
             foreach (Tuple<string, Regex> possibleMatch in _plaintextHostPatterns)
