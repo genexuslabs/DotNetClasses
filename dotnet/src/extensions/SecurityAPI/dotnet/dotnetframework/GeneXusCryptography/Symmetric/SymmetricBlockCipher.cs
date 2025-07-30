@@ -13,6 +13,7 @@ using GeneXusCryptography.SymmetricUtils;
 using SecurityAPICommons.Config;
 using SecurityAPICommons.Utils;
 using System.IO;
+using log4net;
 
 namespace GeneXusCryptography.Symmetric
 {
@@ -22,9 +23,9 @@ namespace GeneXusCryptography.Symmetric
 	[SecuritySafeCritical]
 	public class SymmetricBlockCipher : SecurityAPIObject, ISymmetricBlockCipherObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SymmetricBlockCipher));
 
-
-
+		private readonly string className = typeof(SymmetricBlockCipher).Name;
 
 		/// <summary>
 		/// SymmetricBlockCipher class constructor
@@ -52,14 +53,16 @@ namespace GeneXusCryptography.Symmetric
 		public string DoAEADEncrypt(string symmetricBlockAlgorithm, string symmetricBlockMode,
 		 string key, int macSize, string nonce, string plainText)
 		{
+			string method = "DoAEADEncrypt";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("nonce", nonce, this.error);
-			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "nonce", nonce, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -87,14 +90,16 @@ namespace GeneXusCryptography.Symmetric
 		public string DoAEADDecrypt(string symmetricBlockAlgorithm, string symmetricBlockMode,
 		string key, int macSize, string nonce, string encryptedInput)
 		{
+			string method = "DoAEADDecrypt";	
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("nonce", nonce, this.error);
-			SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "nonce", nonce, this.error);
+			SecurityUtils.validateStringInput(className, method, "encryptedInput", encryptedInput, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -106,6 +111,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SB001", e.Message);
+				logger.Error(method, e);
 				return "";
 			}
 
@@ -136,15 +142,17 @@ namespace GeneXusCryptography.Symmetric
 		public string DoEncrypt(string symmetricBlockAlgorithm, string symmetricBlockMode,
 		string symmetricBlockPadding, string key, string IV, string plainText)
 		{
+			string method = "DoEncrypt";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("IV", IV, this.error);
-			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockPadding", symmetricBlockPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "IV", IV, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -175,15 +183,17 @@ namespace GeneXusCryptography.Symmetric
 		public string DoDecrypt(string symmetricBlockAlgorithm, string symmetricBlockMode,
 		string symmetricBlockPadding, string key, string IV, string encryptedInput)
 		{
+			string method = "DoDecrypt";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("IV", IV, this.error);
-			SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockPadding", symmetricBlockPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "IV", IV, this.error);
+			SecurityUtils.validateStringInput(className, method, "encryptedInput", encryptedInput, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -195,6 +205,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SB002", e.Message);
+				logger.Error(method, e);
 				return "";
 			}
 
@@ -212,16 +223,18 @@ namespace GeneXusCryptography.Symmetric
 		}
 
 		[SecuritySafeCritical]
-		public bool DoAEADEncryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
-			String nonce, String pathInputFile, String pathOutputFile)
+		public bool DoAEADEncryptFile(string symmetricBlockAlgorithm, string symmetricBlockMode, string key, int macSize,
+			string nonce, string pathInputFile, string pathOutputFile)
 		{
+			string method = "DoAEADEncryptFile";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("nonce", nonce, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "nonce", nonce, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -229,16 +242,18 @@ namespace GeneXusCryptography.Symmetric
 		}
 
 		[SecuritySafeCritical]
-		public bool DoAEADDecryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
-			String nonce, String pathInputFile, String pathOutputFile)
+		public bool DoAEADDecryptFile(string symmetricBlockAlgorithm, string symmetricBlockMode, string key, int macSize,
+			string nonce, string pathInputFile, string pathOutputFile)
 		{
+			string method = "DoAEADDecryptFile";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("nonce", nonce, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "nonce", nonce, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -246,17 +261,19 @@ namespace GeneXusCryptography.Symmetric
 		}
 
 		[SecuritySafeCritical]
-		public bool DoEncryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
-			String key, String IV, String pathInputFile, String pathOutputFile)
+		public bool DoEncryptFile(string symmetricBlockAlgorithm, string symmetricBlockMode, string symmetricBlockPadding,
+			string key, string IV, string pathInputFile, string pathOutputFile)
 		{
+			string method = "DoEncryptFile";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("IV", IV, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockPadding", symmetricBlockPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "IV", IV, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -264,16 +281,18 @@ namespace GeneXusCryptography.Symmetric
 		}
 
 		[SecuritySafeCritical]
-		public bool DoDecryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
-				String key, String IV, String pathInputFile, String pathOutputFile)
+		public bool DoDecryptFile(string symmetricBlockAlgorithm, string symmetricBlockMode, string symmetricBlockPadding,
+				string key, string IV, string pathInputFile, string pathOutputFile)
 		{
+			string method = "DoDecryptFile";
+			logger.Debug(method);
 			this.error.cleanError();
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
-			SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("IV", IV, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockMode", symmetricBlockMode, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricBlockPadding", symmetricBlockPadding, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "IV", IV, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -294,6 +313,7 @@ namespace GeneXusCryptography.Symmetric
 		private BufferedBlockCipher getCipher(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode,
 		SymmetricBlockPadding padding)
 		{
+			logger.Debug("getCipher");
 			IBlockCipher engine = getCipherEngine(algorithm);
 			IBlockCipherPadding paddingCipher = getPadding(padding);
 			IBlockCipher bc;
@@ -337,7 +357,7 @@ namespace GeneXusCryptography.Symmetric
 		/// <returns>IBlockCipher with the algorithm Engine</returns>
 		internal IBlockCipher getCipherEngine(SymmetricBlockAlgorithm algorithm)
 		{
-
+			logger.Debug("getCipherEngine");
 			IBlockCipher engine = null;
 
 			switch (algorithm)
@@ -437,6 +457,7 @@ namespace GeneXusCryptography.Symmetric
 					break;
 				default:
 					this.error.setError("SB003", "Unrecognized symmetric block algoritm");
+					logger.Error("Unrecognized symmetric block algoritm");
 					break;
 			}
 			return engine;
@@ -449,7 +470,7 @@ namespace GeneXusCryptography.Symmetric
 		/// <returns>IBlockCipherPadding with loaded padding type, if padding is WITHCTS returns null</returns>
 		private IBlockCipherPadding getPadding(SymmetricBlockPadding padding)
 		{
-
+			logger.Debug("getPadding");
 			IBlockCipherPadding paddingCipher = null;
 
 			switch (padding)
@@ -476,6 +497,7 @@ namespace GeneXusCryptography.Symmetric
 					break;
 				default:
 					this.error.setError("SB004", "Unrecognized symmetric block padding.");
+					logger.Error("Unrecognized symmetric block padding.");
 					break;
 			}
 			return paddingCipher;
@@ -488,7 +510,7 @@ namespace GeneXusCryptography.Symmetric
 		/// <returns>AEADBlockCipher loaded with a given BlockCipher</returns>
 		private IAeadBlockCipher getAEADCipherMode(IBlockCipher blockCipher, SymmetricBlockMode mode)
 		{
-
+			logger.Debug("getAEADCipherMode");
 			IAeadBlockCipher bc = null;
 
 			switch (mode)
@@ -507,6 +529,7 @@ namespace GeneXusCryptography.Symmetric
 					break;
 				default:
 					this.error.setError("SB005", "Unrecognized symmetric AEAD mode");
+					logger.Error("Unrecognized symmetric AEAD mode");
 					break;
 			}
 			return bc;
@@ -520,7 +543,7 @@ namespace GeneXusCryptography.Symmetric
 		/// <returns>BlockCipher with mode loaded</returns>
 		private IBlockCipher getCipherMode(IBlockCipher blockCipher, SymmetricBlockMode mode)
 		{
-
+			logger.Debug("getCipherMode");
 			IBlockCipher bc = null;
 
 			switch (mode)
@@ -556,6 +579,7 @@ namespace GeneXusCryptography.Symmetric
 
 				default:
 					this.error.setError("SB006", "Unrecognized symmetric block mode");
+					logger.Error("Unrecognized symmetric block mode");
 					break;
 			}
 			return bc;
@@ -585,6 +609,8 @@ namespace GeneXusCryptography.Symmetric
 
 		private byte[] encryptAEAD(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, byte[] key, byte[] nonce, byte[] txt, int macSize, bool toEncrypt, bool isFile, string pathInput, string pathOutput)
 		{
+			string method = "encryptAEAD";
+			logger.Debug(method);
 			IBlockCipher engine = getCipherEngine(algorithm);
 			IAeadBlockCipher bbc = getAEADCipherMode(engine, mode);
 			if (this.HasError()) { return null; }
@@ -599,6 +625,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SB007", e.Message);
+				logger.Error(method, e);
 				return null;
 			}
 			byte[] outputBytes = null;
@@ -629,6 +656,7 @@ namespace GeneXusCryptography.Symmetric
 				catch (Exception e)
 				{
 					this.error.setError("SB011", e.Message);
+					logger.Error(method, e);
 					return null;
 				}
 				outputBytes = new byte[1];
@@ -645,6 +673,7 @@ namespace GeneXusCryptography.Symmetric
 				catch (Exception e)
 				{
 					this.error.setError("SB008", e.Message);
+					logger.Error(method, e);
 					return null;
 				}
 
@@ -657,7 +686,8 @@ namespace GeneXusCryptography.Symmetric
 
 		private byte[] encrypt(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, SymmetricBlockPadding padding, byte[] key, byte[] iv, byte[] input, bool toEncrypt, bool isFile, string pathInput, string pathOutput)
 		{
-
+			string method = "encrypt";
+			logger.Debug(method);
 			BufferedBlockCipher bbc = getCipher(algorithm, mode, padding);
 			KeyParameter keyParam = new KeyParameter(key);
 			if (this.HasError()) { return null; }
@@ -677,6 +707,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SB009", e.Message);
+				logger.Error(method, e);
 				return null;
 			}
 			byte[] outputBytes = null;
@@ -707,6 +738,7 @@ namespace GeneXusCryptography.Symmetric
 				catch (Exception e)
 				{
 					this.error.setError("SB012", e.Message);
+					logger.Error(method, e);
 					return null;
 				}
 				outputBytes = new byte[1];
@@ -725,6 +757,7 @@ namespace GeneXusCryptography.Symmetric
 				catch (Exception e)
 				{
 					this.error.setError("SB010", e.Message);
+					logger.Error(method, e);
 					return null;
 				}
 			}
@@ -735,9 +768,11 @@ namespace GeneXusCryptography.Symmetric
 
 		private bool SetUpFile(string symmetricBlockAlgorithm, string symmetricBlockMode, string symmetricBlockPadding, string nonce, string key, string pathInput, string pathOutput, int macSize, bool toEncrypt, bool isAEAD)
 		{
+			string method = "SetUpFile";
+			logger.Debug(method);
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("pathInputFile", pathInput, this.error);
-			SecurityUtils.validateStringInput("pathOutputFile", pathOutput, this.error);
+			SecurityUtils.validateStringInput(className, method, "pathInputFile", pathInput, this.error);
+			SecurityUtils.validateStringInput(className, method, "pathOutputFile", pathOutput, this.error);
 			if (this.HasError()) { return false; };
 			/*******INPUT VERIFICATION - END*******/
 			byte[] output = SetUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, nonce, key, null, macSize, toEncrypt, isAEAD, true, pathInput, pathOutput);

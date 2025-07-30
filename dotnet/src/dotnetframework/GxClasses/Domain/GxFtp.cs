@@ -96,6 +96,12 @@ namespace GeneXus.Utils
 			{
 				if (! sUrl.StartsWith( "//"))
 					sUrl = "//" + sUrl;
+
+				if (Uri.CheckHostName(sUrl.TrimStart('/')) == UriHostNameType.IPv6)
+				{
+					sUrl = "//[" + sUrl.TrimStart('/') + "]";
+				}
+
 				sUrl = "ftp:" + sUrl;
 			}
 			Uri Url= new Uri( sUrl);
@@ -680,7 +686,19 @@ namespace GeneXus.Utils
 		private IPAddress GetIpAddress(string host)
 		{
 			IPHostEntry serverHostEntry = Dns.GetHostEntry(host);
-			IPAddress ipAddresses = serverHostEntry.AddressList.FirstOrDefault();
+			IPAddress ipAddresses;
+			if (_DataSocket != null)
+			{
+				ipAddresses = serverHostEntry.AddressList.FirstOrDefault(a => a != null && a.AddressFamily == _DataSocket.AddressFamily);
+			}
+			else if (_ControlSocket != null)
+			{
+				ipAddresses = serverHostEntry.AddressList.FirstOrDefault(a => a != null && a.AddressFamily == _ControlSocket.AddressFamily);
+			}
+			else 
+			{
+				ipAddresses = serverHostEntry.AddressList.FirstOrDefault();
+			}
 			GXLogging.Debug(log, $"GetHostEntry({host}) AddressList length: ", serverHostEntry.AddressList.Length.ToString());
 			if (ipAddresses == null)
 			{
@@ -847,9 +865,9 @@ namespace GeneXus.Utils
 			{
 				int StatusCode=-1;									
 				Byte[] ByteArray = new Byte[responselength];			
-				String statuscodestr;							
-				responseStream.Read(ByteArray,0,responselength);		
-				statuscodestr=Encoding.ASCII.GetString(ByteArray,0,responselength);			
+				String statuscodestr;
+				int bytesRead = responseStream.Read(ByteArray, 0, responselength);
+				statuscodestr = Encoding.ASCII.GetString(ByteArray,0, bytesRead);			
 				if (responselength==5 && ByteArray[responselength-1] == '\n')	
 				{
 					

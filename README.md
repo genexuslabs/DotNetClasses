@@ -4,8 +4,8 @@ GeneXus Standard Classes for .NET and .NET Framework generators.
 ## Repo status
 | Branch | Build | Security
 |---|---|---
-|master|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=master)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Amaster)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
-|beta|[![](https://github.com/genexuslabs/dotnetclasses/workflows/Build/badge.svg?branch=beta)](https://github.com/genexuslabs/dotnetclasses/actions?query=workflow%3ABuild+branch%3Abeta)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg?branch=beta)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
+|master|[![Build](https://github.com/genexuslabs/DotNetClasses/actions/workflows/Build.yml/badge.svg)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/Build.yml)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
+|beta|[![Build](https://github.com/genexuslabs/DotNetClasses/actions/workflows/Build.yml/badge.svg?branch=beta)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/Build.yml)|[![CodeQL](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml/badge.svg?branch=beta)](https://github.com/genexuslabs/DotNetClasses/actions/workflows/codeql-analysis.yml)
 
 ## Modules
 
@@ -85,11 +85,11 @@ For the following steps must be executed from inside ```dotnet``` directory:
 
 It compiles the solution and copies all the .NET Framework assemblies to the folder C:\KB\CSharpModel\web\bin.
 
-- ```dotnet msbuild /p:TF=net6.0 /p:DeployDirectory=C:\KB\NetModel\web\bin DotNetStandardClasses.sln```
+- ```dotnet msbuild /p:TF=net8.0 /p:DeployDirectory=C:\KB\NetModel\web\bin DotNetStandardClasses.sln```
 
-It compiles the solution and copies all the .NET 6 assemblies to the folder C:\KB\NetModel\web\bin.
+It compiles the solution and copies all the .NET 8 assemblies to the folder C:\KB\NetModel\web\bin.
 
-- TF: target framework that will be deployed. Valid values are: `net462` (for GeneXus NET Framework generator) and `net6.0` (for GeneXus NET generator).
+- TF: target framework that will be deployed. Valid values are: `net462` (for GeneXus NET Framework generator) and `net8.0` (for GeneXus NET generator).
 - DeployDirectory: specifies the target directory to copy assemblies.
 
 

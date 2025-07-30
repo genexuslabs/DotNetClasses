@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<DefineConstants>NETCORE</DefineConstants>
 		<AssemblyName>Genexus.Office</AssemblyName>
 		<RootNamespace>GxOffice</RootNamespace>
@@ -9,8 +9,10 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Include="..\..\dotnetframework\GxOffice\Constants.cs" Link="Constants.cs" />
+		<Compile Include="..\..\dotnetframework\GxOffice\ExcelCellGXWrapper.cs" Link="ExcelCellGXWrapper.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\ExcelFactory.cs" Link="ExcelFactory.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\ExcelSpreadsheetGXWrapper.cs" Link="ExcelSpreadsheetGXWrapper.cs" />
+		<Compile Include="..\..\dotnetframework\GxOffice\ExcelWorksheetGXWrapper.cs" Link="ExcelWorksheetGXWrapper.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\exception\ExcelDocumentNotSupported.cs" Link="exception\ExcelDocumentNotSupported.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\exception\ExcelException.cs" Link="exception\ExcelException.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\exception\ExcelReadonlyException.cs" Link="exception\ExcelReadonlyException.cs" />
@@ -19,6 +21,10 @@
 		<Compile Include="..\..\dotnetframework\GxOffice\IExcelSpreadsheet.cs" Link="IExcelSpreadsheet.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\IExcelWorksheet.cs" Link="IExcelWorksheet.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\IGXError.cs" Link="IGXError.cs" />
+		<Compile Include="..\..\dotnetframework\GxOffice\poi\hssf\ExcelCells.cs" Link="poi\hssf\ExcelCells.cs" />
+		<Compile Include="..\..\dotnetframework\GxOffice\poi\hssf\ExcelSpreadsheet.cs" Link="poi\hssf\ExcelSpreadsheet.cs" />
+		<Compile Include="..\..\dotnetframework\GxOffice\poi\hssf\ExcelWorksheet.cs" Link="poi\hssf\ExcelWorksheet.cs" />
+		<Compile Include="..\..\dotnetframework\GxOffice\poi\hssf\StylesCache.cs" Link="poi\hssf\StylesCache.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\poi\xssf\ExcelCells.cs" Link="poi\xssf\ExcelCells.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\poi\xssf\ExcelSpreadsheet.cs" Link="poi\xssf\ExcelSpreadsheet.cs" />
 		<Compile Include="..\..\dotnetframework\GxOffice\poi\xssf\ExcelWorksheet.cs" Link="poi\xssf\ExcelWorksheet.cs" />
@@ -35,7 +41,7 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="NPOI" Version="2.5.6" />
+		<PackageReference Include="NPOI" Version="2.7.3" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 	</ItemGroup>
 
@@ -45,6 +51,7 @@
 
 	<ItemGroup>
 		<Folder Include="exception\" />
+		<Folder Include="poi\hssf\" />
 		<Folder Include="poi\xssf\" />
 		<Folder Include="style\" />
 	</ItemGroup>

@@ -11,6 +11,7 @@ using System;
 
 using System.Security;
 using SecurityAPICommons.Utils;
+using log4net;
 
 namespace GeneXusCryptography.Symmetric
 {
@@ -20,7 +21,10 @@ namespace GeneXusCryptography.Symmetric
 	[SecuritySafeCritical]
 	public class SymmetricStreamCipher : SecurityAPIObject, ISymmectricStreamCipherObject
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SymmetricStreamCipher));
 
+
+		private readonly string className = typeof(SymmetricStreamCipher).Name;
 
 		public SymmetricStreamCipher() : base()
 		{
@@ -44,12 +48,14 @@ namespace GeneXusCryptography.Symmetric
 		public string DoEncrypt(string symmetricStreamAlgorithm, string key, string IV,
 		string plainText)
 		{
+			string method = "DoEncrypt";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("plainText", plainText, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "plainText", plainText, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -81,12 +87,14 @@ namespace GeneXusCryptography.Symmetric
 		public string DoDecrypt(string symmetricStreamAlgorithm, string key, string IV,
 			string encryptedInput)
 		{
+			string method = "DoDecrypt";
+			logger.Debug(method);
 			this.error.cleanError();
 
 			/*******INPUT VERIFICATION - BEGIN*******/
-			SecurityUtils.validateStringInput("symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
-			SecurityUtils.validateStringInput("key", key, this.error);
-			SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+			SecurityUtils.validateStringInput(className, method, "symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
+			SecurityUtils.validateStringInput(className, method, "key", key, this.error);
+			SecurityUtils.validateStringInput(className, method, "encryptedInput", encryptedInput, this.error);
 			if (this.HasError()) { return ""; };
 			/*******INPUT VERIFICATION - END*******/
 
@@ -98,6 +106,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SS001", e.Message);
+				logger.Error(method, e);
 				return "";
 			}
 
@@ -126,7 +135,7 @@ namespace GeneXusCryptography.Symmetric
 		/// <returns>IStreamCipher with the algorithm Stream Engine</returns>
 		private IStreamCipher getCipherEngine(SymmetricStreamAlgorithm algorithm)
 		{
-
+			logger.Debug("getCipherEngine");
 			IStreamCipher engine = null;
 
 			switch (algorithm)
@@ -150,7 +159,8 @@ namespace GeneXusCryptography.Symmetric
 					engine = new IsaacEngine();
 					break;
 				default:
-					this.GetError().setError("SS005", "Cipher " + algorithm + " not recognised.");
+					this.GetError().setError("SS005", String.Format("Cipher {0} not recognised.", algorithm));
+					logger.Error(String.Format("Cipher {0} not recognised.", algorithm));
 					break;
 			}
 			return engine;
@@ -171,6 +181,8 @@ namespace GeneXusCryptography.Symmetric
 
 		private byte[] encrypt(SymmetricStreamAlgorithm algorithm, byte[] key, byte[] IV, byte[] input, bool toEncrypt)
 		{
+			string method = "encrypt";
+			logger.Debug(method);
 			IStreamCipher engine = getCipherEngine(algorithm);
 			if (this.HasError()) { return null; }
 
@@ -192,6 +204,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SS003", e.Message);
+				logger.Error(method, e);
 				return null;
 			}
 
@@ -204,6 +217,7 @@ namespace GeneXusCryptography.Symmetric
 			catch (Exception e)
 			{
 				this.error.setError("SS004", e.Message);
+				logger.Error(method, e);
 				return null;
 			}
 			return output;

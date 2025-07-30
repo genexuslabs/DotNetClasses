@@ -20,7 +20,7 @@ namespace GeneXus.Application
 		internal static string GetURLRoute(string key, object[] objectParms, string[] parmsName, string scriptPath)
 		{
 			string[] parms = objectParms.Select(p => StringizeParm(p)).ToArray();
-			if (PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/") || string.IsNullOrEmpty(key) || scheme.IsMatch(key))
+			if (string.IsNullOrEmpty(key) || PathUtil.IsAbsoluteUrl(key) || key.StartsWith("/")  || scheme.IsMatch(key))
 			{
 				if (parms.Length > 0)
 				{
@@ -131,7 +131,12 @@ namespace GeneXus.Application
 						string objectName = map[0];
 						string url = map[1];
 						url = url.Replace(@"\=", "=").Replace(@"\\", @"\");
-						routerList[$"{NormalizedUrlObjectName(objectName)}.aspx"] = url;
+#if NETCORE
+						routerList[$"{NormalizedUrlObjectName(objectName)}"] = url;
+						routerList[$"{NormalizedUrlObjectName(objectName)}{HttpHelper.ASPX}"] = url;
+#else
+						routerList[$"{NormalizedUrlObjectName(objectName)}{HttpHelper.ASPX}"] = url;
+#endif
 					}
 				}
 			}

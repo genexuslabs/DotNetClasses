@@ -134,7 +134,6 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				throw new ExcelException(7, "Invalid cell value");
 			}
 		}
-
 		public bool SetDate(DateTime value)
 		{
 			CheckReadonlyDocument();
@@ -178,19 +177,52 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			}
 			return false;
 		}
-
-		public DateTime GetDate()
+		public bool SetHyperlink(string value)
 		{
-			DateTime returnValue = DateTimeUtil.NullDate();
+			CheckReadonlyDocument();
+
 			try
 			{
-				returnValue = pCells[1].DateCellValue;
+				for (int i = 1; i <= cellCount; i++)
+				{
+					var hyperlink = pWorkbook.GetCreationHelper().CreateHyperlink(HyperlinkType.Url);
+					hyperlink.Address = value;
+
+					pCells[i].Hyperlink = hyperlink;
+				}
+
+				return true;
+			}
+			catch (Exception)
+			{
+				throw new ExcelException(7, "Invalid cell value");
+			}
+		}
+		public string GetHyperlink()
+		{
+			string returnValue = string.Empty;
+			try
+			{
+				if (pCells[1].Hyperlink!=null)
+					returnValue = pCells[1].Hyperlink.Address;
 			}
 			catch (Exception)
 			{
 				throw new ExcelException(7, "Invalid cell value");
 			}
 			return returnValue;
+		}
+
+		public DateTime GetDate()
+		{
+			try
+			{
+				return pCells[1].DateCellValue ?? DateTimeUtil.NullDate();
+			}
+			catch (Exception)
+			{
+				throw new ExcelException(7, "Invalid cell value");
+			}
 		}
 
 		public bool SetTextImpl(string value)
@@ -363,7 +395,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			{
 				try
 				{
-					DateTime dVal = pCells[1].DateCellValue;
+					DateTime dVal = pCells[1].DateCellValue ?? DateTime.MinValue;
 					if (dVal != DateTime.MinValue)
 					{
 						return "D";
@@ -834,7 +866,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 		{
 			if (fitColumnWidth)
 			{
-				int colW = pSelectedSheet.GetColumnWidth((int)(i + colStartIdx - 1));
+				double colW = pSelectedSheet.GetColumnWidth((int)(i + colStartIdx - 1));
 				if ((256 * data) > colW)
 				{
 					colW = (short)(256 * data);
@@ -897,7 +929,34 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				}
 			}
 		}
-
+		public string HyperlinkValue
+		{
+			get
+			{
+				try
+				{
+					return GetHyperlink();
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
+				return string.Empty;
+			}
+			set
+			{
+				try
+				{
+					SetHyperlink(value);
+				}
+				catch (ExcelException e)
+				{
+					_errorHandler.SetErrCod((short)e.ErrorCode);
+					_errorHandler.SetErrDes(e.ErrorDescription);
+				}
+			}
+		}
 		public DateTime DateValue
 		{
 			get
@@ -1117,7 +1176,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 					CT_Xf _cellXf = cellStyle.GetCoreXf();
 					ExcelBorder border = (hasDiagonalUp) ? cellBorder.BorderDiagonalUp : cellBorder.BorderDiagonalDown;
 					XSSFColor diagonalColor = ToColor(border.BorderColor);
-					BorderStyle.TryParse(border.Border, out BorderStyle borderStyle);
+					BorderStyle borderStyle = ConvertToBorderStyle(border.Border);
 					SetBorderDiagonal(borderStyle, diagonalColor, this.pWorkbook.GetStylesSource(), _cellXf, hasDiagonalUp, hasDiagonalDown);
 				}
 			}

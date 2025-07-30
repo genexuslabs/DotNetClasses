@@ -1,3 +1,4 @@
+using log4net;
 using SecurityAPICommons.Commons;
 using System.Security;
 
@@ -20,13 +21,15 @@ namespace GeneXusCryptography.ChecksumUtils
 	[SecuritySafeCritical]
 	public static class ChecksumAlgorithmUtils
 	{
-
+		private static readonly ILog logger = LogManager.GetLogger(typeof(ChecksumAlgorithmUtils));
 		public static ChecksumAlgorithm getChecksumAlgorithm(string checksumAlgorithm, Error error)
 		{
+			logger.Debug("getChecksumAlgorithm");
 			if (error == null) return ChecksumAlgorithm.NONE;
 			if (checksumAlgorithm == null)
 			{
 				error.setError("CHA04", "Unrecognized checksum algorithm");
+				logger.Error("Unrecognized checksum algorithm");
 				return ChecksumAlgorithm.NONE;
 			}
 			switch (checksumAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -125,12 +128,14 @@ namespace GeneXusCryptography.ChecksumUtils
 					return ChecksumAlgorithm.SHA512;
 				default:
 					error.setError("CHA01", "Unrecognized checksum algorithm");
+					logger.Error("Unrecognized checksum algorithm");
 					return ChecksumAlgorithm.NONE;
 			}
 		}
 
 		public static string valueOf(ChecksumAlgorithm checksumAlgorithm, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return null;
 
 			switch (checksumAlgorithm)
@@ -229,6 +234,7 @@ namespace GeneXusCryptography.ChecksumUtils
 					return "SHA512";
 				default:
 					error.setError("CHA02", "Unrecognized checksum algorithm");
+					logger.Error("Unrecognized checksum algorithm");
 					return null;
 			}
 		}
@@ -249,6 +255,7 @@ namespace GeneXusCryptography.ChecksumUtils
 
 		public static CRCParameters getParameters(ChecksumAlgorithm checksumAlgorithm, Error error)
 		{
+			logger.Debug("getParameters");
 			if (error == null) return new CRCParameters(0, 0x00, 0x00, false, false, 0x00);
 			switch (checksumAlgorithm)
 			{
@@ -338,6 +345,7 @@ namespace GeneXusCryptography.ChecksumUtils
 					return new CRCParameters(32, 0x000000AF, 0x00000000, false, false, 0x0000000);
 				default:
 					error.setError("CHA03", "Unrecognized checksum algorithm");
+					logger.Error("Unrecognized checksum algorithm");
 					return new CRCParameters(0, 0x00, 0x00, false, false, 0x00);
 			}
 		}

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
@@ -20,6 +20,7 @@
 	    <Compile Include="..\DotNetUnitTest\Domain\ShellTest.cs" Link="Domain\ShellTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\Domain\TimeZoneTest.cs" Link="Domain\TimeZoneTest.cs" />		
 	    <Compile Include="..\DotNetUnitTest\FileIO\DfrgFunctions.cs" Link="FileIO\DfrgFunctions.cs" />
+	    <Compile Include="..\DotNetUnitTest\FileIO\FileIOTests.cs" Link="FileIO\FileIOTests.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\FileSystemTest.cs" Link="FileIO\FileSystemTest.cs" />
 		<Compile Include="..\DotNetUnitTest\FileIO\Xslt.cs" Link="FileIO\Xslt.cs" />
 		<Compile Include="..\DotNetUnitTest\ExternalProvider\ExternalProviderS3Test.cs" Link="ExternalProvider\ExternalProviderS3Test.cs" />		
@@ -39,6 +40,7 @@
 	<ItemGroup>		
 		<Compile Include="..\DotNetUnitTest\ImageUtils\ImageUtilTest.cs" Link="ImageUtils\ImageUtilTest.cs" />		
 		<Compile Include="..\DotNetUnitTest\StringUtil\StringUtilTests.cs" Link="StringUtil\StringUtilTests.cs" />
+		<Compile Include="..\DotNetUnitTest\WindowOnlyFact.cs" Link="WindowOnlyFact.cs" />
 		
 	</ItemGroup>
 	<ItemGroup>
@@ -61,7 +63,7 @@
 		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.0" />
 		<PackageReference Include="iTextSharp" Version="5.5.13.2" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.7" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.6" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
 		<PackageReference Include="xunit" Version="2.4.1" />
@@ -85,6 +87,7 @@
     <ProjectReference Include="..\..\src\dotnetcore\GxMail\GxMail.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxOffice\GxOffice.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxPdfReportsCS\GxPdfReportsCS.csproj" />
+    <ProjectReference Include="..\..\src\dotnetcore\Providers\AI\GxAI.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Cache\GxMemcached\GxMemcached.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\GxSearch\GxSearch.csproj" />
     <ProjectReference Include="..\..\src\dotnetcore\Providers\Messaging\GXAzureQueue\GXAzureQueue.csproj" />
@@ -153,6 +156,9 @@
 		<None Update="resources\bird-thumbnail.jpg">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="resources\Minions-PNG-Photo.png">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 		<None Update="resources\text.txt">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
@@ -164,7 +170,6 @@
 
 	<ItemGroup>
 	  <Folder Include="ConfigMappings\" />
-	  <Folder Include="Domain\" />
 	  <Folder Include="Log\" />
 	  <Folder Include="PDF\" />
 	  <Folder Include="resources\xml\" />

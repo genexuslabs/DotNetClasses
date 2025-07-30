@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using GeneXus.MSOffice.Excel.Poi.Xssf;
 
 namespace GeneXus.MSOffice.Excel
 {
@@ -18,8 +17,8 @@ namespace GeneXus.MSOffice.Excel
 		bool DeleteColumn(IExcelWorksheet worksheet, int colIdx);
 
 		// Worksheets
-		List<ExcelWorksheet> GetWorksheets();
-		ExcelWorksheet GetWorkSheet(string name);
+		List<IExcelWorksheet> GetWorksheets();
+		IExcelWorksheet GetWorkSheet(string name);
 		bool InsertWorksheet(string newSheetName, int idx);
 		bool Autofit { set; }
 		void SetColumnWidth(IExcelWorksheet worksheet, int colIdx, int width);

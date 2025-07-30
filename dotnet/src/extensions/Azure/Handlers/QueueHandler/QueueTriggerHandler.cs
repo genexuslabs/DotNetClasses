@@ -4,14 +4,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json;
+using Azure.Storage.Queues.Models;
 using GeneXus.Application;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
 using GeneXus.Metadata;
 using GeneXus.Utils;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using static GeneXus.Deploy.AzureFunctions.QueueHandler.QueueTriggerHandler.CustomQueueMessage;
 
 namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 {
@@ -24,13 +26,12 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 			_callmappings = callMappings;
 		}
 
-		public void Run(string myQueueItem, FunctionContext context)
+		public void Run(QueueMessage queueMessage, FunctionContext context)
 		{
 			var log = context.GetLogger("QueueTriggerHandler");
 			string functionName = context.FunctionDefinition.Name;
 
-			QueueMessage queueMessage = SetupMessage(context, myQueueItem);
-			log.LogInformation($"GeneXus Queue trigger handler. Function processed: {functionName} Invocation Id: {context.InvocationId}. Queue item : {StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList)}");
+			log.LogInformation($"GeneXus Queue trigger handler. Function processed: {functionName} Invocation Id: {context.InvocationId}. Queue item : {StringUtil.Sanitize(queueMessage.MessageId, StringUtil.LogUserEntryWhiteList)}");
 
 			try
 			{
@@ -42,44 +43,19 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 				throw;
 			}		
 		}
-		private QueueMessage SetupMessage(FunctionContext context, string item)
-		{
-			QueueMessage message = new QueueMessage();
-			message.MessageProperties = new List<QueueMessage.MessageProperty>();
-			message.Body = item;
-
-			if (context.BindingContext.BindingData.TryGetValue("Id", out var messageIdObj) && messageIdObj != null)
-			{
-				message.Id = messageIdObj.ToString();
-		
-				foreach (string key in context.BindingContext.BindingData.Keys)
-				{
-					QueueMessage.MessageProperty messageProperty = new QueueMessage.MessageProperty();
-					messageProperty.key = key;
-
-					string valueStr = context.BindingContext.BindingData[key].ToString().Trim('\"');
-					DateTime valueDateTime;
-					if (DateTime.TryParse(valueStr, out valueDateTime))
-					{
-						messageProperty.value = valueDateTime.ToUniversalTime().ToString(); 
-					}
-					else
-						messageProperty.value = context.BindingContext.BindingData[key].ToString();
-
-					message.MessageProperties.Add(messageProperty);
-				}
-			}
-			else
-			{
-				throw new InvalidOperationException();
-			}
-			return message;
-		}
 		private void ProcessMessage(FunctionContext context, ILogger log, QueueMessage queueMessage)
 		{
-			CallMappings callmap = (CallMappings)_callmappings;
-			GxAzMappings map = (callmap!=null && callmap.mappings is object) ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
-			string gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
+			string envVar = $"GX_AZURE_{context.FunctionDefinition.Name.ToUpper()}_CLASS";
+			string envVarValue = Environment.GetEnvironmentVariable(envVar);
+			string gxProcedure = string.Empty;
+			if (!string.IsNullOrEmpty(envVarValue))
+				gxProcedure = envVarValue;
+			else
+			{
+				CallMappings callmap = (CallMappings)_callmappings;
+				GxAzMappings map = callmap != null && callmap.mappings is object ? callmap.mappings.SingleOrDefault(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+				gxProcedure = (map != null && map is object) ? map.GXEntrypoint : string.Empty;
+			}
 
 			string exMessage;
 			if (!string.IsNullOrEmpty(gxProcedure))
@@ -108,7 +84,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 						{
 							//Thrown to the Azure monitor
 
-							exMessage = string.Format("{0} Error for Message Id {1}: the number of parameters in GeneXus procedure is not correct.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
+							exMessage = string.Format("{0} Error for Message Id {1}: the number of parameters in GeneXus procedure is not correct.", FunctionExceptionType.SysRuntimeError, queueMessage.MessageId);
 							throw new Exception(exMessage); //Send to retry if possible.
 						}
 						else
@@ -123,7 +99,7 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 
 							if (parameters[0].ParameterType == typeof(string))
 							{
-								string queueMessageSerialized = JSONHelper.Serialize(queueMessage);
+								string queueMessageSerialized = JsonSerializer.Serialize(GetSerializableMessage(queueMessage));
 								parametersdata = new object[] { queueMessageSerialized, null };
 							}
 							else
@@ -145,31 +121,51 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 
 								GxUserType eventMessageProperty;
 
-								foreach (var messageProp in queueMessage.MessageProperties)
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType,"Id", queueMessage.MessageId, gxcontext);
+								eventMessageProperties.Add(eventMessageProperty);
+
+								if (queueMessage.InsertedOn != null)
 								{
-									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, messageProp.key, messageProp.value, gxcontext);
+									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "InsertionTime", queueMessage.InsertedOn.Value.UtcDateTime.ToString(), gxcontext);
 									eventMessageProperties.Add(eventMessageProperty);
+								}
+
+								if (queueMessage.ExpiresOn != null)
+								{
+									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ExpirationTime", queueMessage.ExpiresOn.Value.UtcDateTime.ToString(), gxcontext);
+									eventMessageProperties.Add(eventMessageProperty);
+								}
+
+								if (queueMessage.NextVisibleOn != null)
+								{
+									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "NextVisibleTime", queueMessage.NextVisibleOn.Value.UtcDateTime.ToString(), gxcontext);
+									eventMessageProperties.Add(eventMessageProperty);
+								}
+
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "DequeueCount", queueMessage.DequeueCount.ToString(), gxcontext);
+								eventMessageProperties.Add(eventMessageProperty);
+
+								if (queueMessage.PopReceipt != null)
+								{ 
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "PopReceipt", queueMessage.PopReceipt, gxcontext);
+								eventMessageProperties.Add(eventMessageProperty);
 								}
 
 								//Body
 
-								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Body", queueMessage.Body, gxcontext);
+								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Body", queueMessage.Body.ToString(), gxcontext);
 								eventMessageProperties.Add(eventMessageProperty);
 
 								//Event
 
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", queueMessage.Id);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", queueMessage.Body);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", queueMessage.MessageId);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", queueMessage.Body.ToString());
 
-								QueueMessage.MessageProperty InsertionTimeProp = queueMessage.MessageProperties.Find(x => x.key == "InsertionTime");
-								if (InsertionTimeProp != null)
-								{
-									DateTime InsertionTime;
-									if (DateTime.TryParse(InsertionTimeProp.value, out InsertionTime))
-									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", InsertionTime.ToUniversalTime());
-								}
+								if (queueMessage.InsertedOn != null	)
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", queueMessage.InsertedOn.Value.UtcDateTime);
+
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.QueueMessage);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
+								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", "0.1.0");
 								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
 
 								//List of Events
@@ -197,54 +193,66 @@ namespace GeneXus.Deploy.AzureFunctions.QueueHandler
 							}
 							catch (Exception)
 							{
-								log.LogError("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList));
+								log.LogError("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.MessageId, StringUtil.LogUserEntryWhiteList));
 								throw; //Throw the exception so the runtime can Retry the operation.
 							}
 						}
 					}
 					else
 					{
-						exMessage = string.Format("{0} GeneXus procedure could not be executed for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList));
+						exMessage = string.Format("{0} GeneXus procedure could not be executed for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.MessageId, StringUtil.LogUserEntryWhiteList));
 						throw new Exception(exMessage);
 					}
 				}
 				catch (Exception)
 				{
-					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.Id, StringUtil.LogUserEntryWhiteList));
+					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(queueMessage.MessageId, StringUtil.LogUserEntryWhiteList));
 					throw; //Throw the exception so the runtime can Retry the operation.
 				}
 			}
 			else
 			{
-				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Message Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, queueMessage.Id);
+				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Message Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, queueMessage.MessageId);
 				throw new Exception(exMessage);
 			}
 		}
 
-		[DataContract]
-		internal class QueueMessage
+		private CustomQueueMessage GetSerializableMessage(QueueMessage queueMessage)
 		{
-			public QueueMessage()
+			CustomQueueMessage message = new CustomQueueMessage();
+			message.Id = queueMessage.MessageId;
+			message.Body = queueMessage.Body.ToString();
+			List<MessageProperty> messageProperties = new List<MessageProperty>();
+			
+			messageProperties.Add(new MessageProperty("QueueTrigger",queueMessage.Body.ToString()));
+			messageProperties.Add(new MessageProperty("DequeueCount", queueMessage.DequeueCount.ToString()));
+			messageProperties.Add(new MessageProperty("ExpiresOn", queueMessage.ExpiresOn.HasValue ? queueMessage.ExpiresOn.Value.ToString("o") : string.Empty));
+			messageProperties.Add(new MessageProperty("Id", queueMessage.MessageId));
+			messageProperties.Add(new MessageProperty("InsertedOn", queueMessage.InsertedOn.HasValue ? queueMessage.InsertedOn.Value.ToString("o") : string.Empty));
+			messageProperties.Add(new MessageProperty("NextVisibleOn", queueMessage.NextVisibleOn.HasValue ? queueMessage.NextVisibleOn.Value.ToString("o") : string.Empty));
+			messageProperties.Add(new MessageProperty("PopReceipt", queueMessage.PopReceipt));
+
+			message.MessageProperties = messageProperties;
+			return message;
+		}
+
+		[Serializable]
+		internal class CustomQueueMessage
+		{
+			public CustomQueueMessage()
 			{ }
-			[DataMember]
-			public List<MessageProperty> MessageProperties;
 
-			[DataMember]
+			internal List<MessageProperty> MessageProperties;
 			public string Id { get; set; }
-
-			[DataMember]
 			public string Body { get; set; }
-
-			[DataContract]
 			internal class MessageProperty
 			{
-				[DataMember]
 				public string key { get; set; }
-
-				[DataMember]
 				public string value { get; set; }
-				public MessageProperty()
-				{ }
+				internal MessageProperty(string k,string v)
+				{
+					key = k; value = v;
+				}
 			}
 		}
 	}

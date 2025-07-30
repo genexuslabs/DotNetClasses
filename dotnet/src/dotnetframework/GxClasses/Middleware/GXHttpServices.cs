@@ -60,6 +60,7 @@ namespace GeneXus.Http
 		{
 #if NETCORE
 			GxRestWrapper handler = null;
+			GXBaseObject worker = null;
 #else
 			Utils.GxRestService handler = null;
 #endif
@@ -77,25 +78,35 @@ namespace GeneXus.Http
 						parmsColl.FromJSonString(jsonStr);
 					}
 				}
-#if NETCORE
-
-				handler = GetRouting().GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.',Path.DirectorySeparatorChar)});
-				if (handler ==null) {
-					throw new GxClassLoaderException($"{gxobj} not found");
-				}
-#else
+				string servicesType = gxobj + "_services";
 				string nspace;
 				if (!Config.GetValueOf("AppMainNamespace", out nspace))
 					nspace = "GeneXus.Programs";
-				handler = (GxRestService)ClassLoader.FindInstance(gxobj, nspace, gxobj + "_services", null, null);
-#endif
-				handler.RunAsMain = false;
-
 #if NETCORE
-				GXBaseObject worker = handler.Worker;
+				if (RestAPIHelpers.ServiceAsController())
+				{
+					worker = CreateWorkerInstance(nspace, gxobj);
+					if (worker == null)
+					{
+						throw new GxClassLoaderException($"{gxobj} not found");
+					}
+				}
+				else
+				{
+					handler = GetRouting().GetController(context.HttpContext, new ControllerInfo() { Name = gxobj.Replace('.', Path.DirectorySeparatorChar) });
+					if (handler == null)
+					{
+						throw new GxClassLoaderException($"{gxobj} not found");
+					}
+					worker = handler.Worker;
+					worker.IsMain = false;
+				}
 #else
+				handler = (GxRestService)ClassLoader.FindInstance(gxobj, nspace, servicesType, null, null);
+				handler.RunAsMain = false;
 				GxRestService worker = handler;
 #endif
+
 				ParameterInfo[] pars = worker.GetType().GetMethod(EXECUTE_METHOD).GetParameters();
 
 				int ParmsCount = pars.Length;
@@ -126,13 +137,46 @@ namespace GeneXus.Http
 			}
 			finally
 			{
+#if NETCORE
+				if (worker != null)
+				{
+					worker.IsMain = true;
+					worker.cleanup();
+				}
+#else
 				if (handler != null)
 				{
 					handler.RunAsMain = true;
 					handler.Cleanup();
 				}
+#endif
 			}
 		}
+#if NETCORE
+		const string SERVICES_SUFFIX = "_services";
+
+		internal static GXBaseObject CreateWorkerInstance(string nspace, string gxobj)
+		{
+			string svcFile = new FileInfo(Path.Combine(GXRouting.ContentRootPath, $"{gxobj}.svc")).FullName;
+			if (File.Exists(svcFile))
+			{
+
+				string[] serviceAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
+						   .Skip(1)
+						   .TakeWhile(c => c != '"')
+						   .ToArray()).Trim().Split(',');
+				string serviceAssemblyName = serviceAssemblyQualifiedName.Last();
+				string serviceClassName = serviceAssemblyQualifiedName.First();
+				if (!string.IsNullOrEmpty(nspace) && serviceClassName.StartsWith(nspace))
+					serviceClassName = serviceClassName.Substring(nspace.Length + 1);
+				else
+					nspace = string.Empty;
+				string workerClassName = serviceClassName.Substring(0, serviceClassName.Length - SERVICES_SUFFIX.Length);
+				return (GXBaseObject)ClassLoader.FindInstance(serviceAssemblyName, nspace, workerClassName, null, null);
+			}
+			return null;
+		}
+#endif
 
 	}
 
@@ -355,7 +399,20 @@ namespace GeneXus.Http
 
 		internal void WcfExecute(Stream istream, string contentType, long streamLength, string gxFileName)
 		{
-			string ext=null, fName=null;
+
+			string fileToken = ReadFileFromStream(istream, contentType, streamLength, gxFileName, out string fileGuid);
+			JObject obj = new JObject();
+			obj.Put("object_id", fileToken);
+
+			localHttpContext.Response.AddHeader(HttpHeader.GX_OBJECT_ID, fileGuid);
+			localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
+			HttpHelper.SetResponseStatus(localHttpContext, HttpStatusCode.Created, string.Empty);
+			localHttpContext.Response.Write(obj.ToString());
+		}
+
+		internal string ReadFileFromStream(Stream istream, string contentType, long streamLength, string gxFileName, out string fileGuid)
+		{
+			string ext = null, fName = null;
 			if (!string.IsNullOrEmpty(gxFileName))
 			{
 				ext = Path.GetExtension(gxFileName);
@@ -373,23 +430,18 @@ namespace GeneXus.Http
 			{
 				fName = string.Empty;
 			}
-			string tempDir = Preferences.getTMP_MEDIA_PATH();			
-			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir, fName), GxFileType.PrivateAttribute);			
+			string tempDir = Preferences.getTMP_MEDIA_PATH();
+			GxFile file = new GxFile(tempDir, FileUtil.getTempFileName(tempDir, fName), GxFileType.PrivateAttribute);
 			file.Create(new NetworkInputStream(istream, streamLength));
 
-			JObject obj = new JObject();
 			fName = file.GetURI();
-			string fileGuid = GxUploadHelper.GetUploadFileGuid();
+			fileGuid = GxUploadHelper.GetUploadFileGuid();
 			string fileToken = GxUploadHelper.GetUploadFileId(fileGuid);
 
-			obj.Put("object_id", fileToken);
-			localHttpContext.Response.AddHeader("GeneXus-Object-Id", fileGuid);
-			localHttpContext.Response.ContentType = MediaTypesNames.ApplicationJson;
-			HttpHelper.SetResponseStatus(localHttpContext, HttpStatusCode.Created, string.Empty);
-			localHttpContext.Response.Write(obj.ToString());
-
 			GxUploadHelper.CacheUploadFile(fileGuid, $"{Path.GetFileNameWithoutExtension(fName)}.{ext}", ext, file, context);
+			return fileToken;
 		}
+
 		protected override bool IntegratedSecurityEnabled
 		{
 			get

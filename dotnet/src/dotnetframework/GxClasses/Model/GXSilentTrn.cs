@@ -9,17 +9,19 @@ namespace GeneXus.Utils
 #if !NETCORE
 	using Jayrock.Json;
 #endif
-	using System.Text;
 	using System.Security.Cryptography;
 	using System.Reflection;
 	using System.Runtime.Serialization;
-#if !NETCORE
+#if NETCORE
+	using Microsoft.AspNetCore.Mvc;
+#else
 	using System.ServiceModel;
 #endif
 	using Configuration;
 	using System.Globalization;
-	using GeneXus.Http;
 	using System.Diagnostics;
+	using System.Text;
+	using System.Text.Json.Serialization;
 
 	public interface IGxSilentTrn
 	{
@@ -608,7 +610,10 @@ namespace GeneXus.Utils
 		{
 			isWrapped = wrapped;			
 		}
-
+#if NETCORE
+		[JsonIgnore]
+#endif
+		public bool IsNull { get => Count== 0; }
 		public GxGenericCollection(IGxCollection x, bool wrapped, string wrappedstatus) : this(x)
 		{
 			isWrapped = wrapped;
@@ -713,11 +718,31 @@ namespace GeneXus.Utils
 		{
 			sdt1 = s;
 		}
+#if NETCORE
+		[JsonIgnore]
+#endif
+		public bool IsNull { get => sdt1.IsNull; }
+
+#if NETCORE
+		[JsonIgnore]
+#endif
 		public GxUserType Sdt
 		{
 			get { return sdt1; }
 			set { sdt1 = (T)value; }
 		}
+#if NETCORE
+		[JsonIgnore]
+		public T InternalSdt
+		{
+			get { return sdt1; }
+			set { sdt1 = value; }
+		}
+#endif
+
+#if NETCORE
+		[JsonIgnore]
+#endif
 		public IGxContext context
 		{
 			get { return sdt1.context; }
@@ -985,7 +1010,10 @@ namespace GeneXus.Utils
 		{
 			isWrappedInCollection = true;
 		}
-
+#if NETCORE
+		[JsonPropertyName("Id")]
+		[JsonPropertyOrder(0)]
+#endif
 		[DataMember(Name = "Id", Order = 0)]
 		public String gxTpr_Id
 		{
@@ -1000,7 +1028,10 @@ namespace GeneXus.Utils
 			}
 
 		}
-
+#if NETCORE
+		[JsonPropertyName("Type")]
+		[JsonPropertyOrder(1)]
+#endif
 		[DataMember(Name = "Type", Order = 1)]
 		public Nullable<short> gxTpr_Type
 		{
@@ -1015,7 +1046,10 @@ namespace GeneXus.Utils
 			}
 
 		}
-
+#if NETCORE
+		[JsonPropertyName("Description")]
+		[JsonPropertyOrder(2)]
+#endif
 		[DataMember(Name = "Description", Order = 2)]
 		public String gxTpr_Description
 		{
@@ -1030,7 +1064,9 @@ namespace GeneXus.Utils
 			}
 
 		}
-
+#if NETCORE
+		[JsonIgnore]
+#endif
 		public SdtMessages_Message sdt
 		{
 			get
