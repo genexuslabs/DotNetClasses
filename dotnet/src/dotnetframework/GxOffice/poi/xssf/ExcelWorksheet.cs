@@ -35,7 +35,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				if (_sheet != null)
 				{
 					XSSFWorkbook wb = (XSSFWorkbook)_sheet.Workbook;
-					wb.SetSheetHidden(SheetIndex(wb), value ? NPOI.SS.UserModel.SheetState.Hidden : NPOI.SS.UserModel.SheetState.Visible);
+					wb.SetSheetVisibility(SheetIndex(wb), value ? NPOI.SS.UserModel.SheetVisibility.Hidden: NPOI.SS.UserModel.SheetVisibility.Visible);
 				}
 			}
 		}
