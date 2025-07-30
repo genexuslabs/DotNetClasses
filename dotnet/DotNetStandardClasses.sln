@@ -320,6 +320,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamSaml20Net", "src\extensions\gam\src\DotNet\GamSaml20Net\GamSaml20Net.csproj", "{33F1827B-456E-4517-9290-28D5CC104B17}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamSaml20", "src\extensions\gam\src\DotNetFramework\GamSaml20\GamSaml20.csproj", "{269C6833-827F-4304-B19D-4174828187CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamTotpNet", "src\extensions\gam\src\DotNet\GamTotpNet\GamTotpNet.csproj", "{58452B58-5274-4CA1-B818-C1CD9F30FE61}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GamTotp", "src\extensions\gam\src\DotNetFramework\GamTotp\GamTotp.csproj", "{35C19D32-9FF1-48E6-8B41-C65267E8B4E5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -759,6 +762,14 @@ Global
 		{269C6833-827F-4304-B19D-4174828187CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{269C6833-827F-4304-B19D-4174828187CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{269C6833-827F-4304-B19D-4174828187CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58452B58-5274-4CA1-B818-C1CD9F30FE61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58452B58-5274-4CA1-B818-C1CD9F30FE61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58452B58-5274-4CA1-B818-C1CD9F30FE61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58452B58-5274-4CA1-B818-C1CD9F30FE61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35C19D32-9FF1-48E6-8B41-C65267E8B4E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35C19D32-9FF1-48E6-8B41-C65267E8B4E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35C19D32-9FF1-48E6-8B41-C65267E8B4E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35C19D32-9FF1-48E6-8B41-C65267E8B4E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -914,6 +925,8 @@ Global
 		{07B7EDAE-2A2A-43DE-B5E5-0D5904B323EE} = {57F168E9-6A77-4263-BF61-E1FF7BCE855E}
 		{33F1827B-456E-4517-9290-28D5CC104B17} = {56429994-8A51-48AB-8105-737B77840D18}
 		{269C6833-827F-4304-B19D-4174828187CF} = {B3B988A2-AFF1-41E6-82DC-578D332A5CB8}
+		{58452B58-5274-4CA1-B818-C1CD9F30FE61} = {56429994-8A51-48AB-8105-737B77840D18}
+		{35C19D32-9FF1-48E6-8B41-C65267E8B4E5} = {B3B988A2-AFF1-41E6-82DC-578D332A5CB8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E18684C9-7D76-45CD-BF24-E3944B7F174C}
