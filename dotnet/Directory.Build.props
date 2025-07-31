@@ -30,6 +30,7 @@
 		<DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
 		<!--keep low and moderate vulnerabilities (NU1901;NU1902;NU1903;NU1904), high and critical vulnerabilities (NU1903 and NU1904) as warnings-->
 		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+		<DefineConstants Condition="'$(ARTECH_SNK_FILE)'!=''">GX_SIGNED_ASSEMBLY</DefineConstants>
 	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">
