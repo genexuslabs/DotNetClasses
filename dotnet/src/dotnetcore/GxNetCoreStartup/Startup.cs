@@ -492,14 +492,15 @@ namespace GeneXus.Application
 				}
 				else
 				{
-				services.AddDistributedSqlServerCache(options =>
-				{
-					GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
-					options.ConnectionString = sessionService.ConnectionString;
-					options.SchemaName = sessionService.Schema;
-					options.TableName = sessionService.TableName;
-					options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
-				});
+					services.AddDistributedSqlServerCache(options =>
+					{
+						GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
+						options.ConnectionString = sessionService.ConnectionString;
+						options.SchemaName = sessionService.Schema;
+						options.TableName = sessionService.TableName;
+						options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
+					});
+				}
 			}
 		}
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor, Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime)
