@@ -6,6 +6,7 @@
 		<AssemblyName>GamTest</AssemblyName>
 		<NoWarn>CS0618,CA1707</NoWarn>
 		<IsPackable>false</IsPackable>
+		<SignAssembly Condition="'$(AssemblyOriginatorKeyFile)'!=''">true</SignAssembly>
 	</PropertyGroup>
 	
 	 <ItemGroup>
@@ -14,11 +15,13 @@
 		<PackageReference Include="NUnit" Version="3.13.2" />
 		<PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
 		<PackageReference Include="jose-jwt" Version="5.0.0" />
-		<PackageReference Include="StrongNamer" Version="0.2.5" />
-	</ItemGroup>
-	
+		<PackageReference Include="StrongNamer" Version="0.2.5" Condition="'$(AssemblyOriginatorKeyFile)'!=''" />
+
+	 </ItemGroup>
+  
 	 <ItemGroup>
 	   <ProjectReference Include="..\..\..\src\DotNetFramework\GamUtils\GamUtils.csproj" />
+     <ProjectReference Include="..\..\..\src\DotNetFramework\GamSaml20\GamSaml20.csproj" />
 	 </ItemGroup>
 	
 	 <ItemGroup>
@@ -51,6 +54,15 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Resources\dummycerts\RSA_sha256_2048\sha256d_key.key">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\saml20\javacert.crt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\saml20\mykeystore.pfx">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Resources\dummycerts\saml20\sha512_cert.crt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

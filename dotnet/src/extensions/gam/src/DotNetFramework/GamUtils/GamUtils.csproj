@@ -4,8 +4,6 @@
 		<AssemblyName>GamUtilsImpl</AssemblyName>
 		<NoWarn>CA1031, CA1801</NoWarn>
 		<PackageId>Gam.Utils</PackageId>
-		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>..\..\..\gamkey.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <Optimize>True</Optimize>
@@ -15,7 +13,7 @@
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
     <PackageReference Include="jose-jwt" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="StrongNamer" Version="0.2.5" />
+    <PackageReference Include="StrongNamer" Version="0.2.5" Condition="'$(AssemblyOriginatorKeyFile)'!=''"/>
   </ItemGroup>
 
 	<ItemGroup>
