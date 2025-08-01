@@ -1583,7 +1583,7 @@ namespace GeneXus.Utils
 			if (GetDecimalScale(dec) > 0)
 			{
 				string strdec = dec.ToString(CultureInfo.InvariantCulture);
-				return decimal.Parse(strdec.Contains(".") ? strdec.TrimEnd('0').TrimEnd('.') : strdec);
+				return decimal.Parse(strdec.Contains(".") ? strdec.TrimEnd('0').TrimEnd('.') : strdec, CultureInfo.InvariantCulture);
 			}
 			else
 				return dec;
