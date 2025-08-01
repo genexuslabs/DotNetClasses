@@ -12,7 +12,6 @@ namespace GeneXus.MSOffice.Excel
 		}
 		public ExcelCellGXWrapper()
 		{
-			System.Diagnostics.Debugger.Launch();
 		}
 
 		public int RowStart => _value.RowStart;
