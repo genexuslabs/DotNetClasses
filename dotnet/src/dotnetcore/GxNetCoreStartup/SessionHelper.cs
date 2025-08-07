@@ -24,7 +24,7 @@ namespace GeneXus.Application
 
 		private IDistributedCache GetTenantCache()
 		{
-			string tenantId = _httpContextAccessor.HttpContext?.Items[TenantMiddleware.TENANT_ID]?.ToString() ?? "default";
+			string tenantId = _httpContextAccessor.HttpContext?.Items[AppContext.TENANT_ID]?.ToString() ?? "default";
 
 			return _redisCaches.GetOrAdd(tenantId, id =>
 			{
@@ -51,7 +51,6 @@ namespace GeneXus.Application
 
 	public class TenantMiddleware
 	{
-		internal const string TENANT_ID = "TenantId";
 		private readonly RequestDelegate _next;
 
 		public TenantMiddleware(RequestDelegate next)
@@ -63,7 +62,7 @@ namespace GeneXus.Application
 		{
 			string host = context.Request.Host.Host;
 			string subdomain = host.Split('.').FirstOrDefault();
-			context.Items[TENANT_ID] = subdomain; 
+			context.Items[AppContext.TENANT_ID] = subdomain; 
 
 			await _next(context);
 		}

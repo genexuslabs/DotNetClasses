@@ -95,7 +95,7 @@ namespace GeneXus.Cache
 	public class CacheFactory
     {
         private static readonly IGXLogger log = GXLoggerFactory.GetLogger<CacheFactory>();
-	
+		internal const string SUBDOMAIN = "%SUBDOMAIN%";
 		public static string CACHE_SD = "SD";
         public static string CACHE_DB = "DB";
         public static string CACHE_FILES = "FL";

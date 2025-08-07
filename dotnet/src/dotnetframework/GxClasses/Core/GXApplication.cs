@@ -284,6 +284,12 @@ namespace GeneXus.Application
 #if NETCORE
 	internal static class AppContext
 	{
+		internal const string TENANT_ID = "TenantId";
+		internal static string TenantId
+		{
+			get => Current?.Items[TENANT_ID]?.ToString() ?? "default";
+		}
+		
 		static IHttpContextAccessor _httpContextAccessor { get; set; }
 		internal static HttpContext Current => _httpContextAccessor != null ? new GxHttpContextAccesor(_httpContextAccessor) : null;
 		internal static void Configure(IHttpContextAccessor accessor)
