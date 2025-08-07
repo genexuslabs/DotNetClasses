@@ -1,5 +1,6 @@
 using System;
 using GeneXus.Application;
+using GeneXus.Cache;
 using GeneXus.Configuration;
 using GeneXus.Data;
 using GeneXus.Data.ADO;
@@ -65,7 +66,6 @@ namespace GeneXus.Services
 		internal static string SESSION_INSTANCE = "SESSION_PROVIDER_INSTANCE_NAME";
 		internal static string SESSION_PASSWORD = "SESSION_PROVIDER_PASSWORD";
 		static string SESSION_TIMEOUT = "SESSION_PROVIDER_SESSION_TIMEOUT";
-		const string SUBDOMAIN = "%SUBDOMAIN%";
 		public GxRedisSession(GXService serviceProvider)
 		{
 			string password = serviceProvider.Properties.Get(SESSION_PASSWORD);
@@ -105,7 +105,7 @@ namespace GeneXus.Services
 		}
 		internal bool IsMultitenant
 		{
-			get { return InstanceName == SUBDOMAIN; }
+			get { return InstanceName == CacheFactory.SUBDOMAIN; }
 		}
 		public string ConnectionString { get; }
 		public string InstanceName { get; }

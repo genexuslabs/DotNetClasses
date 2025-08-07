@@ -7,6 +7,7 @@ using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 using StackExchange.Redis;
+using StackExchange.Redis.KeyspaceIsolation;
 
 namespace GeneXus.Cache
 {
@@ -16,9 +17,14 @@ namespace GeneXus.Cache
 
 		ConnectionMultiplexer _redisConnection;
 		IDatabase _redisDatabase;
+#if NETCORE
+		bool _multitenant;
+#endif
 		ConfigurationOptions _redisConnectionOptions;
 		private const int REDIS_DEFAULT_PORT = 6379;
 		public int redisSessionTimeout;
+		private string _instanceName;
+
 		public Redis(string connectionString)
 		{
 			_redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
@@ -39,6 +45,8 @@ namespace GeneXus.Cache
 				string address, password;
 				address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
 				password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
+				_instanceName = providerService.Properties.Get("CACHE_PROVIDER_INSTANCE_NAME");
+
 				if (!string.IsNullOrEmpty(password))
 				{
 					string ret = string.Empty;
@@ -74,7 +82,29 @@ namespace GeneXus.Cache
 				if (_redisDatabase == null)
 				{
 					_redisConnection = ConnectionMultiplexer.Connect(_redisConnectionOptions);
-					_redisDatabase = _redisConnection.GetDatabase();
+					IDatabase db = _redisConnection.GetDatabase();
+
+					if (!string.IsNullOrEmpty(_instanceName))
+					{
+#if NETCORE
+						if (_instanceName == CacheFactory.SUBDOMAIN)
+						{
+							_multitenant = true;
+							GXLogging.Debug(log, "Using Redis multitenant (key prefix):" + CacheFactory.SUBDOMAIN);
+							_redisDatabase = db;
+						}
+						else
+#endif
+						{
+							string prefixKey = _instanceName.EndsWith(":") ? _instanceName : _instanceName + ":";
+							_redisDatabase = db.WithKeyPrefix(_instanceName);
+							GXLogging.Debug(log, "Using Redis instance name (key prefix): " + prefixKey);
+						}
+					}
+					else
+					{
+						_redisDatabase = db;
+					}
 				}
 				return _redisDatabase;
 			}
@@ -221,6 +251,12 @@ namespace GeneXus.Cache
 		}
 		private string FormatKey(string cacheid, string key, Nullable<long> prefix)
 		{
+#if NETCORE
+			if (_multitenant)
+			{
+				return String.Format("{0}:{1}_{2}_{3}", Application.AppContext.TenantId, cacheid, prefix, GXUtil.GetHash(key));
+			}
+#endif
 			return String.Format("{0}_{1}_{2}", cacheid, prefix, GXUtil.GetHash(key));
 		}
 		private Nullable<long> KeyPrefix(string cacheid)

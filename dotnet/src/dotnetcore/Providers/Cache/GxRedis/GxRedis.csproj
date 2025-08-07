@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
+	<PropertyGroup>
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<PackageTags>Redis</PackageTags>
 		<PackageId>GeneXus.Redis.Core</PackageId>
+		<DefineConstants>NETCORE</DefineConstants>
 	</PropertyGroup>
   <PropertyGroup>
 	<AppDesignerFolder>Properties</AppDesignerFolder>
