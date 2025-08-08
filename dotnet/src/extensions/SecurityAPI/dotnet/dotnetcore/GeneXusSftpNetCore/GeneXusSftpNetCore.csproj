@@ -21,10 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neon.SSH.NET" Version="1.0.4" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\SecurityAPICommonsNetCore\SecurityAPICommonsNetCore.csproj" />
   </ItemGroup>
@@ -33,6 +29,10 @@
     <Folder Include="Commons\" />
     <Folder Include="Sftp\" />
     <Folder Include="Utils\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SSH.NET" Version="2025.0.0" />
   </ItemGroup>
 
 </Project>

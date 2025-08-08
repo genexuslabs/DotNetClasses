@@ -1165,11 +1165,6 @@ namespace GeneXus.Data
 		{
 			return stmt;
 		}
-
-		internal virtual DateTime NormalizeDbmsDateTime(DateTime d)
-		{
-			return d;
-		}
 	}
 
 	public class DbDataAdapterElem

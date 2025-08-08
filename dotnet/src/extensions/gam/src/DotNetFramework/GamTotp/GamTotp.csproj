@@ -1,18 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net462</TargetFramework>
-		<AssemblyName>GamUtilsImpl</AssemblyName>
+		<AssemblyName>GamTotpImpl</AssemblyName>
 		<NoWarn>CA1031, CA1801</NoWarn>
-		<PackageId>Gam.Utils</PackageId>
+		<PackageId>Gam.Totp</PackageId>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <Optimize>True</Optimize>
 	</PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
-    <PackageReference Include="jose-jwt" Version="5.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="GoogleAuthenticator" Version="3.2.0" />
     <PackageReference Include="StrongNamer" Version="0.2.5" Condition="'$(AssemblyOriginatorKeyFile)'!=''"/>
   </ItemGroup>
 
