@@ -60,9 +60,15 @@ namespace GeneXus.Application
 
 		public async Task Invoke(HttpContext context)
 		{
-			string host = context.Request.Host.Host;
-			string subdomain = host.Split('.').FirstOrDefault();
-			context.Items[AppContext.TENANT_ID] = subdomain; 
+			string host = context?.Request?.Host.Host ?? string.Empty;
+			string subdomain;
+
+			if (!string.IsNullOrEmpty(host) && host.Contains('.'))
+			{
+				subdomain = host.Split('.').FirstOrDefault();
+				if (!string.IsNullOrEmpty(subdomain))
+					context.Items[AppContext.TENANT_ID] = subdomain;
+			}
 
 			await _next(context);
 		}

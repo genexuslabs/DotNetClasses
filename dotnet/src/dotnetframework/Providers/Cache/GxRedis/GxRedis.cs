@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+#if NETCORE
+using GeneXus.Application;
+#endif
 using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
@@ -254,7 +257,7 @@ namespace GeneXus.Cache
 #if NETCORE
 			if (_multitenant)
 			{
-				return String.Format("{0}:{1}_{2}_{3}", Application.AppContext.TenantId, cacheid, prefix, GXUtil.GetHash(key));
+				return String.Format("{0}:{1}_{2}_{3}", GxContext.Current.TenantId, cacheid, prefix, GXUtil.GetHash(key));
 			}
 #endif
 			return String.Format("{0}_{1}_{2}", cacheid, prefix, GXUtil.GetHash(key));
