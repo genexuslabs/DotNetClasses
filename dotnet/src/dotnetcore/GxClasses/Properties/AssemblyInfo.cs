@@ -21,4 +21,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("GeneXus.OpenTelemetry.Diagnostics")]
 [assembly: InternalsVisibleTo("ConsoleApp2")]
 [assembly: InternalsVisibleTo("GxAI")]
+[assembly: InternalsVisibleTo("GxRedis")]
 
