@@ -24,193 +24,191 @@ namespace GeneXus.Application
 #if !NETCORE
         using Jayrock.Json;
 #endif
-        using GeneXus.Http;
-        using System.Collections.Specialized;
-        using System.Collections.Generic;
-        using System.Text;
-        using GeneXus.Data.NTier;
-        using GeneXus.Resources;
-        using System.Net;
-        using TZ4Net;
-        using System.Globalization;
-        using System.Diagnostics;
-        using System.Text.RegularExpressions;
-        using System.Web;
-        using GeneXus.Http.Server;
-        using GeneXus.Mime;
-        using GeneXus.Printer;
-        using System.Drawing;
-        using System.Collections.Concurrent;
+	using GeneXus.Http;
+	using System.Collections.Specialized;
+	using System.Collections.Generic;
+	using System.Text;
+	using GeneXus.Data.NTier;
+	using GeneXus.Resources;
+	using System.Net;
+	using System.Globalization;
+	using System.Diagnostics;
+	using System.Text.RegularExpressions;
+	using System.Web;
+	using GeneXus.Http.Server;
+	using GeneXus.Mime;
+	using GeneXus.Printer;
+	using System.Drawing;
+	using System.Collections.Concurrent;
 #if NETCORE
         using Microsoft.AspNetCore.Http.Features;
 #endif
-        using NodaTime;
-        using System.Threading;
-        using System.Security.Claims;
-        using System.Security;
-        using Microsoft.Net.Http.Headers;
-        using System.Threading.Tasks;
-        using GeneXus.Data.ADO;
+	using NodaTime;
+	using System.Threading;
+	using System.Security.Claims;
+	using System.Security;
+	using Microsoft.Net.Http.Headers;
+	using System.Threading.Tasks;
+	using GeneXus.Data.ADO;
 
-        public interface IGxContext
-        {
-                void disableOutput();
-                void enableOutput();
-                bool isOutputEnabled();
-                void setPortletMode();
-                void setAjaxCallMode();
-                void setAjaxEventMode();
-                void setFullAjaxMode();
-                void AddDeferredFrags();
-                bool isPortletMode();
-                bool isAjaxCallMode();
-                bool isAjaxRequest();
-                bool isSpaRequest();
-                bool isSpaRequest(bool ignoreFlag);
-                bool isAjaxEventMode();
-                bool isPopUpObject();
-                bool isFullAjaxMode();
-                bool isMultipartRequest();
-                void DisableSpaRequest();
-                String AjaxCmpContent { get; set; }
-                bool isCloseCommand { get; }
-                [Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
-                OlsonTimeZone GetOlsonTimeZone();
-                String GetTimeZone();
-                Boolean SetTimeZone(String sTZ);
-                HttpAjaxContext httpAjaxContext { get; }
-                GxHttpContextVars httpContextVars { get; set; }
-                T ReadSessionKey<T>(string key) where T : class;
-                bool WriteSessionKey<T>(string key, T value) where T : class;
-                List<string[]> userStyleSheetFiles { get; }
-                void DoAfterInit();
-                void PushCurrentUrl();
-                bool isSmartDevice();
+	public interface IGxContext
+	{
+		void disableOutput();
+		void enableOutput();
+		bool isOutputEnabled();
+		void setPortletMode();
+		void setAjaxCallMode();
+		void setAjaxEventMode();
+		void setFullAjaxMode();
+		void AddDeferredFrags();
+		bool isPortletMode();
+		bool isAjaxCallMode();
+		bool isAjaxRequest();
+		bool isSpaRequest();
+		bool isSpaRequest(bool ignoreFlag);
+		bool isAjaxEventMode();
+		bool isPopUpObject();
+		bool isFullAjaxMode();
+		bool isMultipartRequest();
+		void DisableSpaRequest();
+		String AjaxCmpContent { get; set; }
+		bool isCloseCommand { get; }
+		String GetTimeZone();
+		Boolean SetTimeZone(String sTZ);
+		HttpAjaxContext httpAjaxContext { get; }
+		GxHttpContextVars httpContextVars { get; set; }
+		T ReadSessionKey<T>(string key) where T : class;
+		bool WriteSessionKey<T>(string key, T value) where T : class;
+		List<string[]> userStyleSheetFiles { get; }
+		void DoAfterInit();
+		void PushCurrentUrl();
+		bool isSmartDevice();
 
-                bool IsMultipartRequest { get; }
+		bool IsMultipartRequest { get; }
 
-                void PushAjaxCmpContent(String Content);
-                int CmpDrawLvl { get; set; }
-                bool isEnabled { get; set; }
-                HttpContext HttpContext { get; set; }
-                HtmlTextWriter OutputWriter { get; set; }
-                ArrayList DataStores { get; }
-                string Gx_ope { get; set; }
-                int Gx_dbe { get; set; }
-                string Gx_dbt { get; set; }
-                string Gx_etb { get; set; }
-                short Gx_eop { get; set; }
-                short Gx_err { get; set; }
-                string Gx_dbsqlstate { get; set; }
+		void PushAjaxCmpContent(String Content);
+		int CmpDrawLvl { get; set; }
+		bool isEnabled { get; set; }
+		HttpContext HttpContext { get; set; }
+		HtmlTextWriter OutputWriter { get; set; }
+		ArrayList DataStores { get; }
+		string Gx_ope { get; set; }
+		int Gx_dbe { get; set; }
+		string Gx_dbt { get; set; }
+		string Gx_etb { get; set; }
+		short Gx_eop { get; set; }
+		short Gx_err { get; set; }
+		string Gx_dbsqlstate { get; set; }
 
-                string ClientID { get; set; }
-                GxErrorHandlerInfo ErrorHandlerInfo { get; }
-                string Gxuserid { get; set; }
-                string Gxpasswrd { get; set; }
-                string Gxdbname { get; set; }
-                string Gxdbsrv { get; set; }
-                string wjLoc { get; set; }
-                int wjLocDisableFrm { get; set; }
-                short wbHandled { get; set; }
-                short wbGlbDoneStart { get; set; }
-                msglist GX_msglist { get; set; }
-                short nUserReturn { get; set; }
-                string sCallerURL { get; set; }
-                GXXMLWriter GX_xmlwrt { get; }
-                FileIO FileIOInstance { get; }
-                FtpService FtpInstance { get; }
-                short nLocRead { get; set; }
-                GxLocationCollection colLocations { get; set; }
-                int nSOAPErr { get; set; }
-                string sSOAPErrMsg { get; set; }
-                string CleanAbsoluteUri { get; }
-                string BaseUrl { get; set; }
-                string ConfigSection { get; set; }
-                IReportHandler reportHandler { get; set; }
-                int handle { get; set; }
-                bool isRedirected { get; }
-                bool ResponseCommited { get; set; }
-                bool DrawingGrid { get; set; }
-                bool HtmlHeaderClosed { get; }
-                bool DrawGridsAtServer { get; set; }
+		string ClientID { get; set; }
+		GxErrorHandlerInfo ErrorHandlerInfo { get; }
+		string Gxuserid { get; set; }
+		string Gxpasswrd { get; set; }
+		string Gxdbname { get; set; }
+		string Gxdbsrv { get; set; }
+		string wjLoc { get; set; }
+		int wjLocDisableFrm { get; set; }
+		short wbHandled { get; set; }
+		short wbGlbDoneStart { get; set; }
+		msglist GX_msglist { get; set; }
+		short nUserReturn { get; set; }
+		string sCallerURL { get; set; }
+		GXXMLWriter GX_xmlwrt { get; }
+		FileIO FileIOInstance { get; }
+		FtpService FtpInstance { get; }
+		short nLocRead { get; set; }
+		GxLocationCollection colLocations { get; set; }
+		int nSOAPErr { get; set; }
+		string sSOAPErrMsg { get; set; }
+		string CleanAbsoluteUri { get; }
+		string BaseUrl { get; set; }
+		string ConfigSection { get; set; }
+		IReportHandler reportHandler { get; set; }
+		int handle { get; set; }
+		bool isRedirected { get; }
+		bool ResponseCommited { get; set; }
+		bool DrawingGrid { get; set; }
+		bool HtmlHeaderClosed { get; }
+		bool DrawGridsAtServer { get; set; }
 
-                void AddDataStore(IGxDataStore datastore);
-                IGxDataStore GetDataStore(string id);
-                void CloseConnections();
-                void CommitDataStores();
-                void Disconnect();
-                void RollbackDataStores();
-                void CommitDataStores(string callerName);
-                void RollbackDataStores(string callerName);
-                void CommitDataStores(string callerName, IDataStoreProvider dataStore);
-                void RollbackDataStores(string callerName, IDataStoreProvider dataStore);
-                string getCurrentLocation();
-                string GetRemoteAddress();
-                string GetServerName();
-                int GetServerPort();
-                string GetScriptPath();
-                string GetPhysicalPath();
-                string GetContextPath();
-                string GetBuildNumber(int buildN);
-                byte DeleteFile(string fileName);
-                byte FileExists(string fileName);
-                string GetDynUrl();
+		void AddDataStore(IGxDataStore datastore);
+		IGxDataStore GetDataStore(string id);
+		void CloseConnections();
+		void CommitDataStores();
+		void Disconnect();
+		void RollbackDataStores();
+		void CommitDataStores(string callerName);
+		void RollbackDataStores(string callerName);
+		void CommitDataStores(string callerName, IDataStoreProvider dataStore);
+		void RollbackDataStores(string callerName, IDataStoreProvider dataStore);
+		string getCurrentLocation();
+		string GetRemoteAddress();
+		string GetServerName();
+		int GetServerPort();
+		string GetScriptPath();
+		string GetPhysicalPath();
+		string GetContextPath();
+		string GetBuildNumber(int buildN);
+		byte DeleteFile(string fileName);
+		byte FileExists(string fileName);
+		string GetDynUrl();
 
-                int GetSoapErr();
-                string GetSoapErrMsg();
-                bool isRemoteGXDB();
-                DateTime ServerNow(string dataSource);
-                DateTime ServerNowMs(string dataSource);
-                string ServerVersion(string dataSource);
-                string DataBaseName(string dataSource);
-                void SetProperty(string key, string value);
-                string GetProperty(string key);
-                void SetContextProperty(string key, object value);
-                object GetContextProperty(string key);
-                string PathToRelativeUrl(string name);
-                string PathToRelativeUrl(string name, bool relativeToServer);
-                string PathToUrl(string name);
-                string GetContentType(string name);
-                bool ExecuteBeforeConnect(IGxDataStore datastore);
-                bool ExecuteAfterConnect(String datastoreName);
-                int GetButtonType();
-                string GetCssProperty(string propName, string propValue);
-                string GetLanguage();
-                string GetLanguageProperty(String propName);
-                string FileToBase64(string filePath);
-                string FileFromBase64(string b64);
-                byte[] FileToByteArray(string filePath);
-                string FileFromByteArray(byte[] bArray);
-                IGxContext UtlClone();
-                string GetRequestMethod();
-                string GetRequestQueryString();
-                void DeleteReferer(int popupLevel);
-                void DeleteReferer();
-                void PopReferer();
-                string GetReferer();
-                int GetBrowserType();
-                bool IsLocalStorageSupported();
-                bool ExposeMetadata();
-                string GetBrowserVersion();
-                short GetHttpSecure();
-                string GetCookie(string name);
-                short SetCookie(string name, string value, string path, DateTime expires, string domain, int secure, bool httponly);
-                short SetCookie(string name, string value, string path, DateTime expires, string domain, int secure);
-                byte ResponseContentType(string sContentType);
-                byte RespondFile(string name);
-                byte SetHeader(string name, string value);
-                string GetHeader(string name);
-                bool IsForward();
-                void Redirect(String jumpUrl);
-                void Redirect(String jumpUrl, bool bSkipPushUrl);
-                void PopUp(String url);
-                void PopUp(String url, Object[] returnParms);
-                void WindowClosed();
-                void NewWindow(GXWindow win);
-                void DispatchAjaxCommands();
-                void DoAjaxRefresh();
-                void DoAjaxRefreshForm();
-                void DoAjaxRefreshCmp(String sPrefix);
+		int GetSoapErr();
+		string GetSoapErrMsg();
+		bool isRemoteGXDB();
+		DateTime ServerNow(string dataSource);
+		DateTime ServerNowMs(string dataSource);
+		string ServerVersion(string dataSource);
+		string DataBaseName(string dataSource);
+		void SetProperty(string key, string value);
+		string GetProperty(string key);
+		void SetContextProperty(string key, object value);
+		object GetContextProperty(string key);
+		string PathToRelativeUrl(string name);
+		string PathToRelativeUrl(string name, bool relativeToServer);
+		string PathToUrl(string name);
+		string GetContentType(string name);
+		bool ExecuteBeforeConnect(IGxDataStore datastore);
+		bool ExecuteAfterConnect(String datastoreName);
+		int GetButtonType();
+		string GetCssProperty(string propName, string propValue);
+		string GetLanguage();
+		string GetLanguageProperty(String propName);
+		string FileToBase64(string filePath);
+		string FileFromBase64(string b64);
+		byte[] FileToByteArray(string filePath);
+		string FileFromByteArray(byte[] bArray);
+		IGxContext UtlClone();
+		string GetRequestMethod();
+		string GetRequestQueryString();
+		void DeleteReferer(int popupLevel);
+		void DeleteReferer();
+		void PopReferer();
+		string GetReferer();
+		int GetBrowserType();
+		bool IsLocalStorageSupported();
+		bool ExposeMetadata();
+		string GetBrowserVersion();
+		short GetHttpSecure();
+		string GetCookie(string name);
+		short SetCookie(string name, string value, string path, DateTime expires, string domain, int secure, bool httponly);
+		short SetCookie(string name, string value, string path, DateTime expires, string domain, int secure);
+		byte ResponseContentType(string sContentType);
+		byte RespondFile(string name);
+		byte SetHeader(string name, string value);
+		string GetHeader(string name);
+		bool IsForward();
+		void Redirect(String jumpUrl);
+		void Redirect(String jumpUrl, bool bSkipPushUrl);
+		void PopUp(String url);
+		void PopUp(String url, Object[] returnParms);
+		void WindowClosed();
+		void NewWindow(GXWindow win);
+		void DispatchAjaxCommands();
+		void DoAjaxRefresh();
+		void DoAjaxRefreshForm();
+		void DoAjaxRefreshCmp(String sPrefix);
+
 #if !NETCORE
                 void DoAjaxLoad(int SId, GXWebRow row);
 #endif
@@ -354,208 +352,206 @@ namespace GeneXus.Application
                 }
         }
 #endif
-        internal class GxApplication
-        {
-                internal static GxContext MainContext { get; set; }
-        }
-        [Serializable]
-        public class GxContext : IGxContext
-        {
-                private static IGXLogger log = null;
-                internal static string GX_SPA_REQUEST_HEADER = "X-SPA-REQUEST";
-                internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
-                internal const string GXLanguage = "GXLanguage";
-                internal const string GXTheme = "GXTheme";
-                internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
-                [NonSerialized]
-                HttpContext _HttpContext;
-                [NonSerialized]
-                HtmlTextWriter _outputWriter;
-                [NonSerialized]
-                NameValueCollection _httpHeaders;
-                ArrayList _DataStores;
-                [NonSerialized]
-                GxXmlContext _XMLContext;
-                [NonSerialized]
-                GxErrorHandlerInfo _errorHandlerInfo;
-                [NonSerialized]
-                private List<string[]> _userStyleSheetFiles = new List<string[]>();
-                public List<string[]> userStyleSheetFiles {
-                        get { return _userStyleSheetFiles; }
-                }
-                string _gxUserId;
-                string _clientId = string.Empty;
-                string _gxPasswrd;
-                string _gxDbName;
-                string _gxDbSrv;
-                short _wbHandled;
-                short _wbGlbDoneStart;
-                [NonSerialized]
-                msglist _gxMsgList;
-                short _nUserReturn;
-                string _sCallerURL;
-                [NonSerialized]
-                FileIO _fileIoInstance;
-                [NonSerialized]
-                FtpService _ftpInstance;
-                short _nLocRead;
-                [NonSerialized]
-                GxLocationCollection _colLocations;
-                int _nSOAPErr;
-                string _sSOAPErrMsg;
-                string _currentLocation = "";
-                string _configSection = "";
-                int _handle = -1;
-                object beforeCommitObj, afterCommitObj, beforeRollbackObj, afterRollbackObj, beforeConnectObj, afterConnectObj;
-                bool inBeforeCommit;
-                bool inAfterCommit;
-                bool inBeforeRollback;
-                bool inAfterRollback;
-                bool SkipPushUrl;
-                [NonSerialized]
-                Hashtable _properties;
-                [NonSerialized]
-                IReportHandler _reportHandler;
-                string _theme = "";
-                bool _theme_isDSO = false;
-                [NonSerialized]
-                ArrayList _reportHandlerToClose;
-                private bool configuredEventHandling;
-                private static string _physicalPath;
-                [NonSerialized]
-                private LocalUtil _localUtil;
-                private bool _responseCommited;
-                private bool _refreshAsGET;
-                private bool wrapped;
-                public bool IsCrawlerRequest { get; set; }
-                private int drawGridsAtServer = -1;
-                public bool HtmlHeaderClosed { private set; get; }
-                public bool DrawingGrid { set; get; }
-                public GxHttpContextVars httpContextVars { set; get; }
-                [NonSerialized]
-                private IGxSession _session;
-                private bool _isSumbited;
-                [NonSerialized]
-                private OlsonTimeZone _currentTimeZone;
-                [NonSerialized]
-                private String _currentTimeZoneId;
+	internal class GxApplication
+	{
+		internal static GxContext MainContext { get; set; }
+	}
+	[Serializable]
+	public class GxContext : IGxContext
+	{
+		private static IGXLogger log = null;
+		internal static string GX_SPA_REQUEST_HEADER = "X-SPA-REQUEST";
+		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
+		internal const string GXLanguage = "GXLanguage";
+		internal const string GXTheme = "GXTheme";
+		internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
+		[NonSerialized]
+		HttpContext _HttpContext;
+		[NonSerialized]
+		HtmlTextWriter _outputWriter;
+		[NonSerialized]
+		NameValueCollection _httpHeaders;
+		ArrayList _DataStores;
+		[NonSerialized]
+		GxXmlContext _XMLContext;
+		[NonSerialized]
+		GxErrorHandlerInfo _errorHandlerInfo;
+		[NonSerialized]
+		private List<string[]> _userStyleSheetFiles = new List<string[]>();
+		public List<string[]> userStyleSheetFiles {
+			get { return _userStyleSheetFiles; }
+		}
+		string _gxUserId;
+		string _clientId = string.Empty;
+		string _gxPasswrd;
+		string _gxDbName;
+		string _gxDbSrv;
+		short _wbHandled;
+		short _wbGlbDoneStart;
+		[NonSerialized]
+		msglist _gxMsgList;
+		short _nUserReturn;
+		string _sCallerURL;
+		[NonSerialized]
+		FileIO _fileIoInstance;
+		[NonSerialized]
+		FtpService _ftpInstance;
+		short _nLocRead;
+		[NonSerialized]
+		GxLocationCollection _colLocations;
+		int _nSOAPErr;
+		string _sSOAPErrMsg;
+		string _currentLocation = "";
+		string _configSection = "";
+		int _handle = -1;
+		object beforeCommitObj, afterCommitObj, beforeRollbackObj, afterRollbackObj, beforeConnectObj, afterConnectObj;
+		bool inBeforeCommit;
+		bool inAfterCommit;
+		bool inBeforeRollback;
+		bool inAfterRollback;
+		bool SkipPushUrl;
+		[NonSerialized]
+		Hashtable _properties;
+		[NonSerialized]
+		IReportHandler _reportHandler;
+		string _theme = "";
+		bool _theme_isDSO = false;
+		[NonSerialized]
+		ArrayList _reportHandlerToClose;
+		private bool configuredEventHandling;
+		private static string _physicalPath;
+		[NonSerialized]
+		private LocalUtil _localUtil;
+		private bool _responseCommited;
+		private bool _refreshAsGET;
+		private bool wrapped;
+		public bool IsCrawlerRequest { get; set; }
+		private int drawGridsAtServer = -1;
+		public bool HtmlHeaderClosed { private set; get; }
+		public bool DrawingGrid { set; get; }
+		public GxHttpContextVars httpContextVars { set; get; }
+		[NonSerialized]
+		private IGxSession _session;
+		private bool _isSumbited;
+		[NonSerialized]
+		private String _currentTimeZoneId;
 
-                [NonSerialized]
-                MessageQueueTransaction _mqTransaction;
-                bool _mqTransactionNull = true;
+		[NonSerialized]
+		MessageQueueTransaction _mqTransaction;
+		bool _mqTransactionNull = true;
 
-                [NonSerialized]
-                HttpCookieCollection _localCookies;
-                string _HttpRequestMethod;
+		[NonSerialized]
+		HttpCookieCollection _localCookies;
+		string _HttpRequestMethod;
 
-                [System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
-                [NonSerialized]
-                Dictionary<string, CookieContainer> cookieContainers;
-                static string COOKIE_CONTAINER = "GX_COOKIECONTAINER";
-                private bool _ignoreSpa;
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
+		[NonSerialized]
+		Dictionary<string, CookieContainer> cookieContainers;
+		static string COOKIE_CONTAINER = "GX_COOKIECONTAINER";
+		private bool _ignoreSpa;
 
-                private const string _serviceWorkerFileName = "service-worker.js";
-                private bool? _isServiceWorkerDefined = null;
+		private const string _serviceWorkerFileName = "service-worker.js";
+		private bool? _isServiceWorkerDefined = null;
 
-                private const string _webAppManifestFileName = "manifest.json";
-                private bool? _isWebAppManifestDefined = null;
+		private const string _webAppManifestFileName = "manifest.json";
+		private bool? _isWebAppManifestDefined = null;
 
-                private static string CACHE_INVALIDATION_TOKEN;
+		private static string CACHE_INVALIDATION_TOKEN;
 
-                private bool IsServiceWorkerDefined
-                {
-                        get
-                        {
-                                if (_isServiceWorkerDefined == null)
-                                {
-                                        _isServiceWorkerDefined = CheckFileExists(_serviceWorkerFileName);
-                                }
-                                return _isServiceWorkerDefined == true;
-                        }
-                }
+		private bool IsServiceWorkerDefined
+		{
+			get
+			{
+				if (_isServiceWorkerDefined == null)
+				{
+					_isServiceWorkerDefined = CheckFileExists(_serviceWorkerFileName);
+				}
+				return _isServiceWorkerDefined == true;
+			}
+		}
 
-                private bool IsWebAppManifestDefined
-                {
-                        get
-                        {
-                                if (_isWebAppManifestDefined == null)
-                                {
-                                        _isWebAppManifestDefined = CheckFileExists(_webAppManifestFileName);
-                                }
-                                return _isWebAppManifestDefined == true;
-                        }
-                }
-                public static GxContext CreateDefaultInstance()
-                {
-                        GxContext context = new GxContext();
-                        DataStoreUtil.LoadDataStores(context);
-                        string theme = Preferences.GetDefaultTheme();
-                        if (!string.IsNullOrEmpty(theme))
-                                context.SetDefaultTheme(theme);
-                        return context;
-                }
+		private bool IsWebAppManifestDefined
+		{
+			get
+			{
+				if (_isWebAppManifestDefined == null)
+				{
+					_isWebAppManifestDefined = CheckFileExists(_webAppManifestFileName);
+				}
+				return _isWebAppManifestDefined == true;
+			}
+		}
+		public static GxContext CreateDefaultInstance()
+		{
+			GxContext context = new GxContext();
+			DataStoreUtil.LoadDataStores(context);
+			string theme = Preferences.GetDefaultTheme();
+			if (!string.IsNullOrEmpty(theme))
+				context.SetDefaultTheme(theme);
+			return context;
+		}
 
-                static IGXLogger Logger
-                {
-                        get
-                        {
-                                if (Config.configLoaded)
-                                {
-                                        if (log == null)
-                                        { 
-                                                log = GXLoggerFactory.GetLogger<GeneXus.Application.GxContext>();
-                                                return log;
-                                        }
-                                        return log;
-                                }
-                                else
-                                        return null;
-                        }
+		static IGXLogger Logger
+		{
+			get
+			{
+				if (Config.configLoaded)
+				{
+					if (log == null)
+					{ 
+						log = GXLoggerFactory.GetLogger<GeneXus.Application.GxContext>();
+						return log;
+					}
+					return log;
+				}
+				else
+					return null;
+			}
 
-                }
+		}
 
-                public GxContext()
-                {
-                        _DataStores = new ArrayList(2);
-                        LocalInitialize();
-                        _errorHandlerInfo = new GxErrorHandlerInfo();
-                        setContext(this);
-                        httpContextVars = new GxHttpContextVars();
-                        
-                        GXLogging.Debug(Logger, "GxContext.Ctr Default handle:", () => _handle.ToString());
-                
-                        if (GxApplication.MainContext == null && !(IsHttpContext || GxContext.IsRestService))
-                                GxApplication.MainContext = this;
-                }
-                public GxContext(int handle, string location)
-                {
-                        _DataStores = new ArrayList(2);
-                        _currentLocation = location;
-                        _handle = handle;
-                        _errorHandlerInfo = new GxErrorHandlerInfo();
-                        setContext(this);
-                        httpContextVars = new GxHttpContextVars();
-                }
-                public GxContext(String location)
-                {
-                        GXLogging.Debug(Logger, "GxContext.Ctr, parameters location=", location);
-                        _DataStores = new ArrayList(2);
-                        _errorHandlerInfo = new GxErrorHandlerInfo();
-                        setContext(this);
-                        httpContextVars = new GxHttpContextVars();
-                        GXLogging.Debug(Logger, "Return GxContext.Ctr");
-                }
+		public GxContext()
+		{
+			_DataStores = new ArrayList(2);
+			LocalInitialize();
+			_errorHandlerInfo = new GxErrorHandlerInfo();
+			setContext(this);
+			httpContextVars = new GxHttpContextVars();
+			
+			GXLogging.Debug(Logger, "GxContext.Ctr Default handle:", () => _handle.ToString());
+		
+			if (GxApplication.MainContext == null && !(IsHttpContext || GxContext.IsRestService))
+				GxApplication.MainContext = this;
+		}
+		public GxContext(int handle, string location)
+		{
+			_DataStores = new ArrayList(2);
+			_currentLocation = location;
+			_handle = handle;
+			_errorHandlerInfo = new GxErrorHandlerInfo();
+			setContext(this);
+			httpContextVars = new GxHttpContextVars();
+		}
+		public GxContext(String location)
+		{
+			GXLogging.Debug(Logger, "GxContext.Ctr, parameters location=", location);
+			_DataStores = new ArrayList(2);
+			_errorHandlerInfo = new GxErrorHandlerInfo();
+			setContext(this);
+			httpContextVars = new GxHttpContextVars();
+			GXLogging.Debug(Logger, "Return GxContext.Ctr");
+		}
 
-                public GxContext(int handle, ArrayList dataStores, HttpContext httpContext)
-                {
-                        _DataStores = dataStores;
-                        _HttpContext = httpContext;
-                        _HttpRequestMethod = "";
-                        _handle = handle;
-                        _errorHandlerInfo = new GxErrorHandlerInfo();
-                        setContext(this);
-                        httpContextVars = new GxHttpContextVars();
-                }
+		public GxContext(int handle, ArrayList dataStores, HttpContext httpContext)
+		{
+			_DataStores = dataStores;
+			_HttpContext = httpContext;
+			_HttpRequestMethod = "";
+			_handle = handle;
+			_errorHandlerInfo = new GxErrorHandlerInfo();
+			setContext(this);
+			httpContextVars = new GxHttpContextVars();
+		}
 #if NETCORE
                 private Dictionary<string, IEnumerable<Cookie>> ToSerializableCookieContainer(Dictionary<string, CookieContainer> cookies)
                 {
@@ -3532,393 +3528,328 @@ namespace GeneXus.Application
 #pragma warning disable SYSLIB0013 // EscapeUriString
                         Resource = StringUtil.ReplaceLast(Resource, fileName, Uri.EscapeUriString(fileName));
 #pragma warning disable SYSLIB0013 // EscapeUriString
-                        if (relativeToServer)
-                                return scriptPath + Resource;
-                        return Resource;
-                }
+			if (relativeToServer)
+				return scriptPath + Resource;
+			return Resource;
+		}
 
-                public string GetContextPath()
-                {
-                        string serverName = GetServerName();
-                        int serverPort = GetServerPort();
-                        if (serverName.IndexOf(':') >= 0 || RequestDefaultPort || serverPort == 0)
-                        {
-                                return String.Format("{0}://{1}{2}", GetServerSchema(), serverName, GetScriptPath());
-                        }
-                        else
-                        {
-                                return String.Format("{0}://{1}:{2}{3}", GetServerSchema(), serverName, serverPort, GetScriptPath());
-                        }
-                }
+		public string GetContextPath()
+		{
+			string serverName = GetServerName();
+			int serverPort = GetServerPort();
+			if (serverName.IndexOf(':') >= 0 || RequestDefaultPort || serverPort == 0)
+			{
+				return String.Format("{0}://{1}{2}", GetServerSchema(), serverName, GetScriptPath());
+			}
+			else
+			{
+				return String.Format("{0}://{1}:{2}{3}", GetServerSchema(), serverName, serverPort, GetScriptPath());
+			}
+		}
 
-                public string GetBuildNumber(int buildN)
-                {
-                        int buildNumber = buildN;
-                        string aux = String.Empty;
-                        if (Config.GetValueOf("GX_BUILD_NUMBER", out aux))
-                        {
-                                Int32.TryParse(aux, out buildNumber);
-                                buildNumber = Math.Max(buildN, buildNumber);
-                        }
-                        return buildNumber.ToString();
+		public string GetBuildNumber(int buildN)
+		{
+			int buildNumber = buildN;
+			string aux = String.Empty;
+			if (Config.GetValueOf("GX_BUILD_NUMBER", out aux))
+			{
+				Int32.TryParse(aux, out buildNumber);
+				buildNumber = Math.Max(buildN, buildNumber);
+			}
+			return buildNumber.ToString();
 
-                }
-                private static bool IsKnownContentType(string type)
-                {
-                        if (!string.IsNullOrEmpty(type))
-                        {
-                                for (int i = 0; i < contentTypes.Length; i++)
-                                {
-                                        if (contentTypes[i].Length >= 2)
-                                        {
-                                                if (string.Compare(type.Trim(), contentTypes[i][1], true) == 0)
-                                                        return true;
-                                        }
-                                }
-                        }
-                        return false;
-                }
+		}
+		private static bool IsKnownContentType(string type)
+		{
+			if (!string.IsNullOrEmpty(type))
+			{
+				for (int i = 0; i < contentTypes.Length; i++)
+				{
+					if (contentTypes[i].Length >= 2)
+					{
+						if (string.Compare(type.Trim(), contentTypes[i][1], true) == 0)
+							return true;
+					}
+				}
+			}
+			return false;
+		}
 
-                public string GetContentType(string type)
-                {
-                        type = type.Trim();
-                        if (IsKnownContentType(type))
-                        {
-                                return type;
-                        }
-                        string emptyContentType = MediaTypesNames.TextHtml;
-                        try
-                        {
-                                string ltype = type.ToLower();
-                                string contentType = contentTypeForExtension(ltype);
-                                if (!String.IsNullOrEmpty(contentType))
-                                        return contentType;
+		public string GetContentType(string type)
+		{
+			type = type.Trim();
+			if (IsKnownContentType(type))
+			{
+				return type;
+			}
+			string emptyContentType = MediaTypesNames.TextHtml;
+			try
+			{
+				string ltype = type.ToLower();
+				string contentType = contentTypeForExtension(ltype);
+				if (!String.IsNullOrEmpty(contentType))
+					return contentType;
 
-                                string ext = Path.GetExtension(ltype);
-                                if (ext != null)
-                                        ext = ext.TrimStart('.');
-                                contentType = contentTypeForExtension(ext);
+				string ext = Path.GetExtension(ltype);
+				if (ext != null)
+					ext = ext.TrimStart('.');
+				contentType = contentTypeForExtension(ext);
 
-                                if (String.IsNullOrEmpty(contentType))
-                                        contentType = emptyContentType;
+				if (String.IsNullOrEmpty(contentType))
+					contentType = emptyContentType;
 
-                                return contentType;
-                        }
-                        catch
-                        {
-                                return emptyContentType;
-                        }
-                }
+				return contentType;
+			}
+			catch
+			{
+				return emptyContentType;
+			}
+		}
 
-                public string GetMessage(string id, string language)
-                {
-                        if (string.IsNullOrEmpty(language))
-                                return GXResourceManager.GetMessage(GetLanguage(), id);
-                        else
-                                return GXResourceManager.GetMessage(language, id);
-                }
-                public string GetMessage(string id, object[] args)
-                {
-                        return GXResourceManager.GetMessage(GetLanguage(), id, args);
-                }
-                public string GetMessage(string id)
-                {
-                        return GXResourceManager.GetMessage(GetLanguage(), id);
-                }
-                public void SetWrapped(bool wrapped)
-                {
-                        this.wrapped = wrapped;
-                }
-                public bool GetWrapped()
-                {
-                        return this.wrapped || this.IsCrawlerRequest;
-                }
+		public string GetMessage(string id, string language)
+		{
+			if (string.IsNullOrEmpty(language))
+				return GXResourceManager.GetMessage(GetLanguage(), id);
+			else
+				return GXResourceManager.GetMessage(language, id);
+		}
+		public string GetMessage(string id, object[] args)
+		{
+			return GXResourceManager.GetMessage(GetLanguage(), id, args);
+		}
+		public string GetMessage(string id)
+		{
+			return GXResourceManager.GetMessage(GetLanguage(), id);
+		}
+		public void SetWrapped(bool wrapped)
+		{
+			this.wrapped = wrapped;
+		}
+		public bool GetWrapped()
+		{
+			return this.wrapped || this.IsCrawlerRequest;
+		}
 
-                public IGxSession GetSession()
-                {
-                        if (this._session == null)
-                        {
-                                if (IsStandalone)
-                                        this._session = new GxSession();
-                                else
-                                        this._session = new GxWebSession(this);
-                        }
-                        return this._session;
-                }
+		public IGxSession GetSession()
+		{
+			if (this._session == null)
+			{
+				if (IsStandalone)
+					this._session = new GxSession();
+				else
+					this._session = new GxWebSession(this);
+			}
+			return this._session;
+		}
 
-                internal bool IsStandalone => this._session is GxSession || this._isSumbited || this.HttpContext == null;
-                internal bool IsSubmited => this._isSumbited;
-                internal void SetSession(IGxSession value)
-                {
-                        if (value != null)
-                                this._session = value;
-                }
+		internal bool IsStandalone => this._session is GxSession || this._isSumbited || this.HttpContext == null;
+		internal bool IsSubmited => this._isSumbited;
+		internal void SetSession(IGxSession value)
+		{
+			if (value != null)
+				this._session = value;
+		}
 
-                public int SetLanguage(string id)
-                {
-                        if (Config.ValidLanguage(id))
-                        {
-                                SetProperty(GXLanguage, id);
-                                _localUtil = GXResourceManager.GetLocalUtil(id);
-                                _refreshAsGET = true;
-                                return 0;
-                        }
-                        else
-                        {
-                                return 1;
-                        }
-                }
-                private int SetLanguageWithoutSession(string id)
-                {
-                        if (Config.ValidLanguage(id))
-                        {
-                                SetContextProperty(GXLanguage, id);
-                                _localUtil = GXResourceManager.GetLocalUtil(id);
-                                _refreshAsGET = true;
-                                return 0;
-                        }
-                        else
-                        {
-                                return 1;
-                        }
-                }
-                public string GetLanguage()
-                {
-                        string prop = GetProperty(GXLanguage);
-                        if (!String.IsNullOrEmpty(prop))
-                                return prop;
-                        else if (Config.GetValueOf("LANG_NAME", out prop))
-                        {
-                                if (HttpContext != null && HttpContext.Session != null)
-                                {
-                                        WriteSessionKey(GXLanguage, prop);
-                                }
-                                return prop;
-                        }
-                        else
-                                return "English";
-                }
-                public string GetLanguageProperty(String propName)
-                {
+		public int SetLanguage(string id)
+		{
+			if (Config.ValidLanguage(id))
+			{
+				SetProperty(GXLanguage, id);
+				_localUtil = GXResourceManager.GetLocalUtil(id);
+				_refreshAsGET = true;
+				return 0;
+			}
+			else
+			{
+				return 1;
+			}
+		}
+		private int SetLanguageWithoutSession(string id)
+		{
+			if (Config.ValidLanguage(id))
+			{
+				SetContextProperty(GXLanguage, id);
+				_localUtil = GXResourceManager.GetLocalUtil(id);
+				_refreshAsGET = true;
+				return 0;
+			}
+			else
+			{
+				return 1;
+			}
+		}
+		public string GetLanguage()
+		{
+			string prop = GetProperty(GXLanguage);
+			if (!String.IsNullOrEmpty(prop))
+				return prop;
+			else if (Config.GetValueOf("LANG_NAME", out prop))
+			{
+				if (HttpContext != null && HttpContext.Session != null)
+				{
+					WriteSessionKey(GXLanguage, prop);
+				}
+				return prop;
+			}
+			else
+				return "English";
+		}
+		public string GetLanguageProperty(String propName)
+		{
 
-                        return Config.GetLanguageProperty(GetLanguage(), propName);
-                }
+			return Config.GetLanguageProperty(GetLanguage(), propName);
+		}
 
-                internal static string GX_REQUEST_TIMEZONE = "GxTZOffset";
-                [Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead", false)]
-                public OlsonTimeZone ClientTimeZone
-                {
-                        get
-                        {
-                                if (_currentTimeZone != null)
-                                        return _currentTimeZone;
-                                string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
-                                GXLogging.DebugSanitized(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
-                                if (String.IsNullOrEmpty(sTZ))
-                                {
-                                        sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
-                                        GXLogging.Debug(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
-                                }
-                                try
-                                {
-                                        _currentTimeZone = String.IsNullOrEmpty(sTZ) ? TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id) : _currentTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
-                                }
-                                catch (Exception e1)
-                                {
-                                        GXLogging.Warn(Logger, "ClientTimeZone _currentTimeZone error", e1);
-                                        try
-                                        {
-                                                _currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
-                                        }
-                                        catch (Exception e2)
-                                        {
-                                                GXLogging.Warn(Logger, "ClientTimeZone GetInstanceFromWin32Id error", e2);
-                                                Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
-                                                if (storagePty == Preferences.StorageTimeZonePty.Undefined)
-                                                        _currentTimeZone = null;
-                                                else
-                                                        throw e2;
-                                        }
-                                }
-                                return _currentTimeZone;
-                        }
-                }
-                internal string ClientTimeZoneId
-                {
-                        get
-                        {
-                                if (_currentTimeZoneId != null)
-                                        return _currentTimeZoneId;
-                                string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
-                                GXLogging.DebugSanitized(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
-                                if (String.IsNullOrEmpty(sTZ))
-                                {
-                                        sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
-                                        GXLogging.Debug(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
-                                }
-                                if (!DateTimeUtil.ValidTimeZone(sTZ))
-                                {
-                                        sTZ = (string)GetUndecodedCookie(GX_REQUEST_TIMEZONE);
-                                        GXLogging.Debug(Logger, "Try reading undecoded ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
-                                }
-                                try
-                                {
-                                        if (!DateTimeUtil.ValidTimeZone(sTZ))
-                                        {
+		internal static string GX_REQUEST_TIMEZONE = "GxTZOffset";
+		internal string ClientTimeZoneId
+		{
+			get
+			{
+				if (_currentTimeZoneId != null)
+					return _currentTimeZoneId;
+				string sTZ = _HttpContext == null ? "" : (string)_HttpContext.Request.Headers[GX_REQUEST_TIMEZONE];
+				GXLogging.DebugSanitized(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE header:", sTZ);
+				if (String.IsNullOrEmpty(sTZ))
+				{
+					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
+				if (!DateTimeUtil.ValidTimeZone(sTZ))
+				{
+					sTZ = (string)GetUndecodedCookie(GX_REQUEST_TIMEZONE);
+					GXLogging.Debug(Logger, "Try reading undecoded ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+				}
+				try
+				{
+					if (!DateTimeUtil.ValidTimeZone(sTZ))
+					{
+						try
+						{
+							string invalidTimezone = DateTimeZoneProviders.Tzdb[sTZ].Id; 
+						}catch(Exception ex)//DateTimeZoneNotFound
+						{
+							GXLogging.Warn(Logger, $"Client timezone not found: {sTZ}", ex);
+						}
+						_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+						GXLogging.Warn(Logger, $"Setting Client timezone to System default: {_currentTimeZoneId}");
+					}
+					else
+					{
+						_currentTimeZoneId = sTZ;
+					}
+				}
+				catch (Exception e1)
+				{
+					GXLogging.Warn(Logger, "ClientTimeZone GetInstanceFromWin32Id error", e1);
+					Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
+					if (storagePty == Preferences.StorageTimeZonePty.Undefined)
+						_currentTimeZoneId = null;
+					else
+						throw e1;
+				}
 
-                                                GXLogging.Warn(Logger, $"Time zone '{sTZ}' is unknown to source TZDB: {DateTimeZoneProviders.Tzdb.VersionId}.");
-                                                _currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
-                                                GXLogging.Warn(Logger, $"Setting Client timezone to System default: {_currentTimeZoneId}");
-                                        }
-                                        else
-                                        {
-                                                _currentTimeZoneId = sTZ;
-                                        }
-                                }
-                                catch (Exception e1)
-                                {
-                                        GXLogging.Warn(Logger, "ClientTimeZone GetInstanceFromWin32Id error", e1);
-                                        Preferences.StorageTimeZonePty storagePty = Preferences.getStorageTimezonePty();
-                                        if (storagePty == Preferences.StorageTimeZonePty.Undefined)
-                                                _currentTimeZoneId = null;
-                                        else
-                                                throw e1;
-                                }
+				return _currentTimeZoneId;
+			}
+		}
 
-                                return _currentTimeZoneId;
-                        }
-                }
-                [Obsolete("GetOlsonTimeZone is deprecated. Use GetTimeZone() instead", false)]
-                public OlsonTimeZone GetOlsonTimeZone()
-                {
-                        return TimeZoneUtil.GetInstanceFromOlsonName(GetTimeZone());
-                }
+		public String GetTimeZone()
+		{
+			string sTZ = GetProperty("GXTimezone");
+			if (!String.IsNullOrEmpty(sTZ))
+			{
+				SetTimeZone(sTZ);
+			}
 
-                public String GetTimeZone()
-                {
-                        string sTZ = GetProperty("GXTimezone");
-                        if (!String.IsNullOrEmpty(sTZ))
-                        {
-                                SetTimeZone(sTZ);
-                        }
+			if (_currentTimeZoneId == null)
+				_currentTimeZoneId = ClientTimeZoneId;
+			if (_currentTimeZoneId==null)
+				_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+			return _currentTimeZoneId;
+		}
 
-#if NODATIME
-                        if (_currentTimeZoneId == null)
-                                _currentTimeZoneId = ClientTimeZoneId;
-                        if (_currentTimeZoneId==null)
-                                _currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
-                        return _currentTimeZoneId;
-#else
-                        if (_currentTimeZone == null)
-                                _currentTimeZone = ClientTimeZone;
-                        return _currentTimeZone == null ? TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id).Name : _currentTimeZone.Name;
-#endif
-                }
+		public Boolean SetTimeZone(String sTZ)
+		{
+			sTZ = StringUtil.RTrim(sTZ);
+			bool ret = false;
+			string tzId;
+			try
+			{
+				DateTimeZone zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(sTZ);
+				if (zone != null)
+				{
+					tzId = zone.Id;
+				}
+				else
+				{
+					tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+				}
+				ret = true;
+			}
+			catch (Exception)
+			{
+				tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
+			}
+			SetProperty("GXTimezone", tzId);
+			_currentTimeZoneId = tzId;
+			return ret;
+		}
+		private static ConcurrentDictionary<string, HashSet<string>> m_imagesDensity = new ConcurrentDictionary<string, HashSet<string>>();
 
-                public Boolean SetTimeZone(String sTZ)
-                {
-                        sTZ = StringUtil.RTrim(sTZ);
-                        bool ret = false;
-#if NODATIME
-                        string tzId;
-                        try
-                        {
-                                DateTimeZone zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(sTZ);
-                                if (zone != null)
-                                {
-                                        tzId = zone.Id;
-                                }
-                                else
-                                {
-                                        tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
-                                }
-                                ret = true;
-                        }
-                        catch (Exception)
-                        {
-                                tzId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
-                        }
-                        SetProperty("GXTimezone", tzId);
-                        _currentTimeZoneId = tzId;
-#else
-                        try
-                        {
-                                _currentTimeZone = TimeZoneUtil.GetInstanceFromOlsonName(sTZ);
-                                ret = true;
-                        }
-                        catch (Exception)
-                        {
-                                try
-                                {
-                                        _currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(sTZ);
-                                        ret = true;
-                                }
-                                catch (Exception)
-                                {
-                                        _currentTimeZone = TimeZoneUtil.GetInstanceFromWin32Id(TimeZoneInfo.Local.Id);
-                                }
-                        }
-                        SetProperty("GXTimezone", _currentTimeZone.Name);
-#endif
-                        return ret;
-                }
-                private static ConcurrentDictionary<string, HashSet<string>> m_imagesDensity = new ConcurrentDictionary<string, HashSet<string>>();
+		static Hashtable m_images = new Hashtable();
 
-                static Hashtable m_images = new Hashtable();
+		const string IMAGES_TXT = "Images.txt";
+		const string URL_SEPARATOR = "/";
+		Hashtable Images
+		{
+			get
+			{
+				lock (m_images)
+				{
+					if (m_images.Count == 0)
+					{
 
-                const string IMAGES_TXT = "Images.txt";
-                const string URL_SEPARATOR = "/";
-                Hashtable Images
-                {
-                        get
-                        {
-                                lock (m_images)
-                                {
-                                        if (m_images.Count == 0)
-                                        {
+						string dir = GetPhysicalPath();
+						string[] imageFiles = null;
+						string filename = IMAGES_TXT;
+						string imgDir = "";
+						if (String.IsNullOrEmpty(dir) && _HttpContext == null)
+						{
+							GXLogging.Debug(Logger, "Searching for txt files ..");
+							int srchIx = 0;
+							string[] paths = { Directory.GetCurrentDirectory(), Directory.GetParent(Directory.GetCurrentDirectory()).FullName};
+							bool found = false;
+							while (!found && srchIx < paths.Length)
+							{
+								dir = paths[srchIx++];
+								imageFiles = Directory.GetFiles(dir, "*.txt");
+								for (int i = 0; i < imageFiles.Length; i++)
+									if (imageFiles[i].EndsWith(IMAGES_TXT, StringComparison.OrdinalIgnoreCase))
+									{
+										found = true;
+										break;
+									}
+							}
+							imgDir = dir;
+							GXLogging.Debug(Logger, $"{imgDir} txt file found");
+						}
+						else
+						{ 
+							imageFiles = Directory.GetFiles(dir, "*.txt");
+							GXLogging.Debug(Logger, "imageFiles found");
+						}
 
-                                                string dir = GetPhysicalPath();
-                                                string[] imageFiles = null;
-                                                string filename = IMAGES_TXT;
-                                                string imgDir = "";
-                                                if (String.IsNullOrEmpty(dir) && _HttpContext == null)
-                                                {
-                                                        GXLogging.Debug(Logger, "Searching for txt files ..");
-                                                        int srchIx = 0;
-                                                        string[] paths = { Directory.GetCurrentDirectory(), Directory.GetParent(Directory.GetCurrentDirectory()).FullName};
-                                                        bool found = false;
-                                                        while (!found && srchIx < paths.Length)
-                                                        {
-                                                                dir = paths[srchIx++];
-                                                                imageFiles = Directory.GetFiles(dir, "*.txt");
-                                                                for (int i = 0; i < imageFiles.Length; i++)
-                                                                        if (imageFiles[i].EndsWith(IMAGES_TXT, StringComparison.OrdinalIgnoreCase))
-                                                                        {
-                                                                                found = true;
-                                                                                break;
-                                                                        }
-                                                        }
-                                                        imgDir = dir;
-                                                        GXLogging.Debug(Logger, $"{imgDir} txt file found");
-                                                }
-                                                else
-                                                { 
-                                                        imageFiles = Directory.GetFiles(dir, "*.txt");
-                                                        GXLogging.Debug(Logger, "imageFiles found");
-                                                }
-
-                                                string KBPrefix = String.Empty;
-                                                char[] densitySeparator = new char[] { '|' };
-                                                for (int i = 0; i < imageFiles.Length; i++)
-                                                {
-                                                        if (imageFiles[i].EndsWith(IMAGES_TXT, StringComparison.OrdinalIgnoreCase))
-                                                        {
-                                                                FileInfo f = new FileInfo(imageFiles[i]);
-                                                                filename = f.Name;
-                                                                KBPrefix = filename.Remove(filename.IndexOf(IMAGES_TXT, StringComparison.OrdinalIgnoreCase));
-                                                                Hashtable idNameMapping = new Hashtable();
-                                                                try
-                                                                {
+						string KBPrefix = String.Empty;
+						char[] densitySeparator = new char[] { '|' };
+						for (int i = 0; i < imageFiles.Length; i++)
+						{
+							if (imageFiles[i].EndsWith(IMAGES_TXT, StringComparison.OrdinalIgnoreCase))
+							{
+								FileInfo f = new FileInfo(imageFiles[i]);
+								filename = f.Name;
+								KBPrefix = filename.Remove(filename.IndexOf(IMAGES_TXT, StringComparison.OrdinalIgnoreCase));
+								Hashtable idNameMapping = new Hashtable();
+								try
+								{
 #pragma warning disable SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'
                                                                         using (FileStream fs = new FileStream(PathUtil.CompletePath(filename, dir), FileMode.Open, FileAccess.Read))
 #pragma warning restore SCS0018 // Path traversal: injection possible in {1} argument passed to '{0}'

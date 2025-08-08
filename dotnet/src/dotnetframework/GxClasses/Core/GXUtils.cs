@@ -11,7 +11,6 @@ namespace GeneXus.Utils
 	using Cache;
 	using GeneXus.Application;
 	using GeneXus.Services;
-	using TZ4Net;
 
 	public class GxMail
 	{
@@ -75,33 +74,6 @@ namespace GeneXus.Utils
 			{
 				valString = valString.Trim();
 				return (valString.Equals("true", StringComparison.OrdinalIgnoreCase) || valString.Equals("1"));
-			}
-		}
-	}
-	
-	public class TimeZoneUtil
-	{
-		[Obsolete("GetInstanceFromWin32Id is deprecated.", false)]
-		public static OlsonTimeZone GetInstanceFromWin32Id(string sTZ)
-		{
-			lock (OlsonTimeZone.SyncRoot)
-			{
-				try
-				{
-					return OlsonTimeZone.GetInstanceFromWin32Id(sTZ);
-				}
-				catch (ArgumentException)
-				{
-					return OlsonTimeZone.CurrentTimeZone;
-				}
-			}
-		}
-		[Obsolete("GetInstanceFromOlsonName is deprecated.", false)]
-		public static OlsonTimeZone GetInstanceFromOlsonName(string sTZ)
-		{
-			lock (OlsonTimeZone.SyncRoot)
-			{
-				return OlsonTimeZone.GetInstanceFromOlsonName(sTZ);
 			}
 		}
 	}

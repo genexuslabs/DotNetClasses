@@ -19,7 +19,6 @@ using GeneXus.Services;
 using GeneXus.Utils;
 using GeneXus.XML;
 using GxClasses.Helpers;
-using TZ4Net;
 namespace GeneXus.Data.ADO
 {
 
@@ -401,11 +400,6 @@ namespace GeneXus.Data.ADO
 		private string lastSQLStatement;
         private string lastObject;
 		private bool lastSqlStatementEnded;
-		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead.", false)]
-		public OlsonTimeZone ClientTimeZone
-		{
-			get { return dataStore.ClientTimeZone; } 
-		}
 		public string CurrentStmt
 		{
 			get
@@ -2522,13 +2516,6 @@ namespace GeneXus.Data.ADO
 		}
 		public GxDataStore( IGxDataRecord db, string id) : this( db, id, null, "")
 		{
-		}
-		[Obsolete("ClientTimeZone is deprecated. Use GxContext.GetTimeZone() instead.", false)]
-		public OlsonTimeZone ClientTimeZone
-		{
-			get {
-				return context.GetOlsonTimeZone();
-			}		
 		}
 		[Obsolete("GxDataStore.SmartCacheProvider is deprecated, use DataStoreProvider.SmartCacheProvider instead", false)]
         public GxSmartCacheProvider SmartCacheProvider
