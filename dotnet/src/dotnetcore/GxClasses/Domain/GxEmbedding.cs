@@ -44,7 +44,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(log, ex, $"Error generating embedding. Model: {embeddingInfo?.Model} Dimensions: {embeddingInfo?.Dimensions.ToString()} Text: {text}");
+				GXLogging.Error(log, $"Error generating embedding. Model: {embeddingInfo?.Model} Dimensions: {embeddingInfo?.Dimensions.ToString()} Text: {text}", ex);
 				GXUtil.ErrorToMessages("GenerateEmbedding Error", ex, Messages, false);
 				return embeddingInfo;
 			}
