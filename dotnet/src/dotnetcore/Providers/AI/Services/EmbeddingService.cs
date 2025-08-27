@@ -1,5 +1,6 @@
 using System;
 using System.ClientModel;
+using System.ClientModel.Primitives;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace GeneXus.AI
 {
 	public class EmbeddingService : IEmbeddingService
 	{
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<EmbeddingService>();
 		protected OpenAIClient _openAIClient;
 		protected string API_KEY;
 		protected virtual string DEFAULT_PROVIDER => "https://api.saia.ai";
@@ -47,11 +49,23 @@ namespace GeneXus.AI
 		}
 		async Task<OpenAIEmbeddingCollection> GenerateEmbeddingAsync(string model, int dimensions, IEnumerable<string> input)
 		{
-			EmbeddingClient client = _openAIClient.GetEmbeddingClient(model);
-			EmbeddingGenerationOptions options = new EmbeddingGenerationOptions() { Dimensions = dimensions };
-			ClientResult<OpenAIEmbeddingCollection> clientResult = await client.GenerateEmbeddingsAsync(input, options);
-
-			return clientResult.Value;
+			try
+			{
+				EmbeddingClient client = _openAIClient.GetEmbeddingClient(model);
+				EmbeddingGenerationOptions options = new EmbeddingGenerationOptions() { Dimensions = dimensions };
+				ClientResult<OpenAIEmbeddingCollection> clientResult = await client.GenerateEmbeddingsAsync(input, options);
+				return clientResult.Value;
+			}
+			catch (ClientResultException ex)
+			{
+				PipelineResponse response = ex.GetRawResponse();
+				string status = response?.Status.ToString() ?? string.Empty;
+				string reasonPhrase = response?.ReasonPhrase ?? string.Empty;
+				string content = response?.Content?.ToString() ?? string.Empty;
+				string headers = response?.Headers != null ? string.Join(", ", response.Headers.Select(h => $"{h.Key}: {h.Value}")) : string.Empty;
+				GXLogging.Error(log, ex, $"GenerateEmbedding request failed. Status: {status} ReasonPhrase: {reasonPhrase} Content: {content} Headers: {headers}");
+				throw;
+			}
 		}
 		internal static EmbeddingService Instance
 		{
