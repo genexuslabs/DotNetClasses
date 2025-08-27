@@ -5,6 +5,8 @@ namespace GeneXus.Utils
 {
 	public class GxEmbedding
 	{
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxEmbedding>();
+
 
 		ReadOnlyMemory<float> _embedding;
 		public GxEmbedding()
@@ -42,6 +44,7 @@ namespace GeneXus.Utils
 			}
 			catch (Exception ex)
 			{
+				GXLogging.Error(log, ex, "Error generating embedding. Model: ", embeddingInfo?.Model, " Dimensions: ", embeddingInfo?.Dimensions.ToString(), " Text: ", text);
 				GXUtil.ErrorToMessages("GenerateEmbedding Error", ex, Messages, false);
 				return embeddingInfo;
 			}
