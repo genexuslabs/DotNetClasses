@@ -4,6 +4,7 @@ using System.Security.Cryptography.Xml;
 using System.Xml;
 using log4net;
 using GeneXus;
+using System.Collections.Generic;
 
 namespace GamSaml20.Utils
 {
@@ -11,14 +12,15 @@ namespace GamSaml20.Utils
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(DSig));
 
-		internal static bool ValidateSignatures(XmlDocument doc, string certPath)
+		internal static string ValidateSignatures(XmlDocument doc, string certPath)
 		{
+			List<XmlElement> assertions = new List<XmlElement>();
 			logger.Trace("ValidateSignatures");
 			X509Certificate2 certificate = Keys.GetPublicX509Certificate2(certPath);
 			if (certificate == null)
 			{
 				logger.Error("ValidateSignatures - Problems loading the certificate");
-				return false;
+				return "";
 			}
 
 			XmlNamespaceManager nsManager = new XmlNamespaceManager(doc.NameTable);
@@ -30,10 +32,10 @@ namespace GamSaml20.Utils
 				try
 				{
 					XmlElement signature = node as XmlElement;
-					if (!IsValidAlgorithm(signature)) //securty measure
+					if (!IsValidAlgorithm(signature)) //securty meassure
 					{
 						logger.Error($"ValidateSignatures - Unsupported algorithm: {GetAlgorithm(signature)}");
-						return false;
+						return "";
 					}
 
 #if NETCORE
@@ -41,7 +43,12 @@ namespace GamSaml20.Utils
 					signedXml.LoadXml(signature);
 					if (!signedXml.CheckSignature(certificate, true))
 					{
-						return false;
+						return "";
+					}else
+					{
+						string uri = GetReference(signature).Attributes.GetNamedItem("URI").Value.Replace("#", "").Trim();
+						XmlElement signedElement = SamlAssertionUtils.FindNodeById(doc, "ID", uri);
+						assertions.Add(signedElement);
 					}
 #else
 					string uri = GetReference(signature).Attributes.GetNamedItem("URI").Value.Replace("#", "").Trim();
@@ -51,17 +58,20 @@ namespace GamSaml20.Utils
 					if (!VerifySignature(signature, certificate, signedElement))
 					{
 						logger.Debug("ValidateSignatures - false");
-						return false;
-					}
+						return "";
+					}else
+					{
+						assertions.Add(signedElement);
+					}	
 #endif
 				}
 				catch (Exception ex)
 				{
 					logger.Error("ValidateSignatures - Exception", ex);
-					return false;
+					return "";
 				}
 			}
-			return true;
+			return SamlAssertionUtils.IsLogout(doc) ? SamlAssertionUtils.BuildXmlLogout(assertions, doc) : SamlAssertionUtils.BuildXmlLogin(assertions, doc);
 
 		}
 
@@ -104,6 +114,7 @@ namespace GamSaml20.Utils
 			return signedXml.CheckSignature(certificate, true);
 		}
 
+#endif
 		private static XmlElement GetReference(XmlElement signature)
 		{
 			 XmlNodeList nodeList = signature.GetElementsByTagName("Reference");
@@ -113,7 +124,7 @@ namespace GamSaml20.Utils
              }
              return nodeList[0] as XmlElement;
 		}
-#endif
+
 	}
 
 #if !NETCORE
