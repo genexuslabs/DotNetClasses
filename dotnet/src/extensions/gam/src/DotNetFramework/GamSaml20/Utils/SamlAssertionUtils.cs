@@ -262,14 +262,6 @@ namespace GamSaml20.Utils
 			Element issuerElement = new Element(new List<string> { "Issuer", "saml2:Issuer" });
 			XmlNodeList nodeListIssuer = issuerElement.GetNodeListForTags(xmlDoc);
 			logoutResponse.AppendChild(nodeListIssuer[0]);
-
-			/*org.w3c.dom.Element element = assertions.get(0);
-			Node logoutResponse = element.cloneNode(false);
-			NodeList status = element.getElementsByTagNameNS(_saml_protocolNS, "Status");
-			logoutResponse.appendChild(status.item(0));
-			NodeList issuer = element.getElementsByTagNameNS(_saml_assertionNS, "Issuer");
-			logoutResponse.appendChild(issuer.item(0));
-			return Encoding.elementToString((org.w3c.dom.Element)logoutResponse);*/
 			Console.WriteLine($"BuildXmlLogout - logoutResponse = {logoutResponse.OuterXml}");
 			return logoutResponse.OuterXml;
 		}

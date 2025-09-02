@@ -20,7 +20,7 @@ namespace GamSaml20.Utils
 			if (certificate == null)
 			{
 				logger.Error("ValidateSignatures - Problems loading the certificate");
-				return "";
+				return String.Empty;
 			}
 
 			XmlNamespaceManager nsManager = new XmlNamespaceManager(doc.NameTable);
@@ -35,7 +35,7 @@ namespace GamSaml20.Utils
 					if (!IsValidAlgorithm(signature)) //securty meassure
 					{
 						logger.Error($"ValidateSignatures - Unsupported algorithm: {GetAlgorithm(signature)}");
-						return "";
+						return String.Empty;
 					}
 
 #if NETCORE
@@ -43,7 +43,7 @@ namespace GamSaml20.Utils
 					signedXml.LoadXml(signature);
 					if (!signedXml.CheckSignature(certificate, true))
 					{
-						return "";
+						return String.Empty;
 					}else
 					{
 						string uri = GetReference(signature).Attributes.GetNamedItem("URI").Value.Replace("#", "").Trim();
@@ -58,7 +58,7 @@ namespace GamSaml20.Utils
 					if (!VerifySignature(signature, certificate, signedElement))
 					{
 						logger.Debug("ValidateSignatures - false");
-						return "";
+						return String.Empty;
 					}else
 					{
 						assertions.Add(signedElement);
