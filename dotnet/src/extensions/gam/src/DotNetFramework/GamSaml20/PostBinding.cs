@@ -4,6 +4,7 @@ using System.Xml;
 using GamSaml20.Utils;
 using GeneXus;
 using log4net;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GamSaml20
 {
@@ -13,6 +14,8 @@ namespace GamSaml20
 		private static readonly ILog logger = LogManager.GetLogger(typeof(PostBinding));
 
 		private XmlDocument xmlDoc;
+
+		private XmlDocument verifiedDoc;
 
 #if !NETCORE
 		private XmlDocument nonCanonicalizedDoc;
@@ -63,39 +66,58 @@ namespace GamSaml20
 		[SecuritySafeCritical]
 		public bool VerifySignatures(SamlParms parms)
 		{
+			string verified = string.Empty;
 #if NETCORE
-			return DSig.ValidateSignatures(this.xmlDoc, parms.TrustedCertPath);
+			verified =  DSig.ValidateSignatures(this.xmlDoc, parms.TrustedCertPath);
 #else
-			return DSig.ValidateSignatures(this.nonCanonicalizedDoc, parms.TrustedCertPath);
+			verified =  DSig.ValidateSignatures(this.nonCanonicalizedDoc, parms.TrustedCertPath);
 #endif
+			if (verified.IsNullOrEmpty())
+			{
+				return false;
+			}
+			else
+			{
+
+#if NETCORE
+				this.verifiedDoc = new XmlDocument();
+				this.verifiedDoc.XmlResolver = null; //disable parser's DTD reading - security meassure
+				this.verifiedDoc.PreserveWhitespace = true;
+				this.verifiedDoc.LoadXml(verified);
+#else
+				this.verifiedDoc = GamSaml20.Utils.SamlAssertionUtils.CanonicalizeXml(verified);
+#endif
+				logger.Debug($"VerifySignatures - sanitized xmlDoc {this.verifiedDoc.OuterXml}");
+				return true;
+			}
 		}
 
 		[SecuritySafeCritical]
 		public string GetLoginAssertions()
 		{
 			logger.Trace("GetLoginAssertions");
-			return GamSaml20.Utils.SamlAssertionUtils.GetLoginInfo(this.xmlDoc);
+			return GamSaml20.Utils.SamlAssertionUtils.GetLoginInfo(this.verifiedDoc);
 		}
 
 		[SecuritySafeCritical]
 		public string GetLogoutAssertions()
 		{
 			logger.Trace("GetLogoutAssertions");
-			return GamSaml20.Utils.SamlAssertionUtils.GetLogoutInfo(this.xmlDoc);
+			return GamSaml20.Utils.SamlAssertionUtils.GetLogoutInfo(this.verifiedDoc);
 		}
 
 		[SecuritySafeCritical]
 		public string GetLoginAttribute(string name)
 		{
 			logger.Trace("GerLoginAttribute");
-			return GamSaml20.Utils.SamlAssertionUtils.GetLoginAttribute(this.xmlDoc, name);
+			return GamSaml20.Utils.SamlAssertionUtils.GetLoginAttribute(this.verifiedDoc, name);
 		}
 
 		[SecuritySafeCritical]
 		public string GetRoles(string name)
 		{
 			logger.Trace("GetRoles");
-			return GamSaml20.Utils.SamlAssertionUtils.GetRoles(this.xmlDoc, name);
+			return GamSaml20.Utils.SamlAssertionUtils.GetRoles(this.verifiedDoc, name);
 		}
 
 		[SecuritySafeCritical]
