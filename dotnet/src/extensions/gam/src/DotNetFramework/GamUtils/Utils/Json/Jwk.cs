@@ -93,14 +93,15 @@ namespace GamUtils.Utils.Json
 					Alg = "RS256",
 					Use = "sig",
 					KeyId = Guid.NewGuid().ToString(),
-					N = Convert.ToBase64String(parameters.Modulus),
-					E = Convert.ToBase64String(parameters.Exponent),
-					P = Convert.ToBase64String(parameters.P),
-					Q = Convert.ToBase64String(parameters.Q),
-					DP = Convert.ToBase64String(parameters.DP),
-					DQ = Convert.ToBase64String(parameters.DQ),
-					QI = Convert.ToBase64String(parameters.InverseQ),
-					D = Convert.ToBase64String(parameters.D)
+					N = Jose.Base64Url.Encode(parameters.Modulus),
+					E = Jose.Base64Url.Encode(parameters.Exponent),
+					P = Jose.Base64Url.Encode(parameters.P),
+					Q = Jose.Base64Url.Encode(parameters.Q),
+					DP = Jose.Base64Url.Encode(parameters.DP),
+					DQ = Jose.Base64Url.Encode(parameters.DQ),
+					QI = Jose.Base64Url.Encode(parameters.InverseQ),
+					D = Jose.Base64Url.Encode(parameters.D),
+					
 				};
 
 				return jwk;
