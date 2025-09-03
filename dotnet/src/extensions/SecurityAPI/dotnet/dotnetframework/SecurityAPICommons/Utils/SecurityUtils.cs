@@ -5,12 +5,15 @@ using SecurityAPICommons.Config;
 using System;
 using System.IO;
 using System.Security;
+using log4net;
 
 namespace SecurityAPICommons.Utils
 {
 	[SecuritySafeCritical]
 	public static class SecurityUtils
 	{
+
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SecurityUtils));
 
 		/// <summary>
 		/// Compares two strings ignoring casing
@@ -147,30 +150,33 @@ namespace SecurityAPICommons.Utils
 			}
 		}
 
-		public static bool validateStringInput(string name, string value, Error error)
-		{
-			if (value == null)
-			{
-				error.setError("SU005", String.Format("The parameter %s cannot be empty", name));
-				return false;
-			}
-			if (value.Length == 0)
-			{
-				error.setError("SU006", String.Format("The parameter %s cannot be empty", name));
-				return false;
-			}
-			return true;
-		}
+			public static bool validateStringInput(string classs, string method, string name, string value, Error error)
+				{
+					if (value == null)
+					{
+						error.setError("SU005", String.Format("The parameter %s cannot be empty", name));
+						logger.Error(String.Format("Class: {0} Method: {1} - The parameter {2} cannot be empty", classs, method, name));
+						return false;
+					}
+					if (value.Length == 0)
+					{
+						error.setError("SU006", String.Format("The parameter %s cannot be empty", name));
+						logger.Error(String.Format("Class: {0} Method: {1} - The parameter {2} cannot be empty", classs, method, name));
+						return false;
+					}
+					return true;
+				}
 
-		public static bool validateObjectInput(string name, Object value, Error error)
-		{
-			if (value == null)
-			{
-				error.setError("SU007", String.Format("The parameter %a cannot be empty", name));
-				return false;
-			}
-			return true;
-		}
+				public static bool validateObjectInput(string classs, string method, string name, Object value, Error error)
+				{
+					if (value == null)
+					{
+						error.setError("SU007", String.Format("The parameter %a cannot be empty", name));
+						logger.Error(String.Format("Class: {0} Method: {1} - The parameter {2} cannot be empty", classs, method, name));
+						return false;
+					}
+					return true;
+				}
 
 	}
 }

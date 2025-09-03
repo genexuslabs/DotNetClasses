@@ -191,9 +191,9 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			return sheet != null;
 		}
 
-		public List<ExcelWorksheet> GetWorksheets()
+		public List<IExcelWorksheet> GetWorksheets()
 		{
-			List<ExcelWorksheet> list = new List<ExcelWorksheet>();
+			List<IExcelWorksheet> list = new List<IExcelWorksheet>();
 			for (int i = 0; i < _workbook.NumberOfSheets; i++)
 			{
 				XSSFSheet sheet = (XSSFSheet)_workbook.GetSheetAt(i);
@@ -289,7 +289,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			return idx >= 0;
 		}
 
-		public ExcelWorksheet GetWorkSheet(string name)
+		public IExcelWorksheet GetWorkSheet(string name)
 		{
 			XSSFSheet sheet = (XSSFSheet)_workbook.GetSheet(name);
 			if (sheet != null)

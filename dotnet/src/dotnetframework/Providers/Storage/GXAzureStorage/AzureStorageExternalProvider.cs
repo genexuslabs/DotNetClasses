@@ -56,9 +56,15 @@ namespace GeneXus.Storage.GXAzureStorage
 			string publicContainer = GetEncryptedPropertyValue(PUBLIC_CONTAINER);
 			string privateContainer = GetEncryptedPropertyValue(PRIVATE_CONTAINER);
 
-			
+			string useDevelopmentStorage = Environment.GetEnvironmentVariable("AzuriteUseDevelopmentStorage");
+			CloudStorageAccount storageAccount;
+
+			if (string.Equals(useDevelopmentStorage, "true", StringComparison.OrdinalIgnoreCase))
+				storageAccount = CloudStorageAccount.Parse("UseDevelopmentStorage=true");	
+			else { 	
 			StorageCredentials credentials = new StorageCredentials(Account, Key);
-			CloudStorageAccount storageAccount = new CloudStorageAccount(credentials, true);
+			storageAccount = new CloudStorageAccount(credentials, true);
+			}
 
 			Client = storageAccount.CreateCloudBlobClient();
 

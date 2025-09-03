@@ -122,7 +122,6 @@ namespace GeneXus.Utils
 				Add(item);
 			}
 		}
-
 		protected CollectionBase jsonArr
 		{
 			get

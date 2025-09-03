@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net462</TargetFramework>
+		<OutputType>Library</OutputType>
+		<RootNamespace>GxSoapHandler</RootNamespace>
+		<AssemblyName>GxSoapHandler</AssemblyName>
+		<IsPackable>false</IsPackable>
+		<SignAssembly>false</SignAssembly>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj"/>
+		<Reference Include="System.ServiceModel">
+			<RequiredTargetFramework>3.0</RequiredTargetFramework>
+		</Reference>
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0"/>
+		<Reference Include="System.ServiecModel"/>
+		<Reference Include="System.IdentityModel" />
+		<!--Reference Include="GeneXus.Programs.Common">
+			<HintPath>C:\MyKB\CSharpModel\web\bin\GeneXus.Programs.Common.dll</HintPath>
+		</Reference-->
+	</ItemGroup>
+
+</Project>

@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<NoWarn>1701;1702;NU1701</NoWarn>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Itext PDF Report</PackageTags>
 		<PackageId>GeneXus.PdfReportsCS.Core</PackageId>
+		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,7 +17,7 @@
 	  <EmbeddedResource Include="..\..\dotnetframework\GxPdfReportsCS\sRGB Color Space Profile.icm" Link="sRGB Color Space Profile.icm" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="PdfPig" Version="0.1.8"  PrivateAssets="All"/>
+		<PackageReference Include="PdfPig" Version="0.1.8" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -31,11 +32,28 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-		<PackageReference Include="System.Drawing.Common" Version="4.7.2" />
-		<PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
+		<PackageReference Include="GeneXus.Drawing.Common" Version="2.0.4" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
 	</ItemGroup>
+	
+	<ItemGroup>
+		<Reference Include="iTextAsian" Condition="'$(TargetFramework)'=='net8.0'">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>..\libs\net8.0\iTextAsian.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<Target Name="CustomContentTarget" Condition="'$(TargetFramework)'=='net8.0'">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(OutputPath)\iTextAsian.dll">
+				<PackagePath>lib/$(TargetFramework)</PackagePath>
+				<PackageCopyToOutput>true</PackageCopyToOutput>
+			</TfmSpecificPackageFile>
+		</ItemGroup>
+	</Target>
+
 </Project>

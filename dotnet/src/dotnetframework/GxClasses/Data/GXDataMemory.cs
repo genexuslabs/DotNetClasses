@@ -517,6 +517,7 @@ namespace GeneXus.Data
 			{
 				this.key = SqlUtil.GetKeyStmtValues(parameters, stmt, isForFirst);
 				this.expiration = expiration;
+				AddToCache(false);
 			}
 		}
 
@@ -602,26 +603,21 @@ namespace GeneXus.Data
 			else
 				this._currentIndex = 0;
 
-			if (cached)
-			{
-				AddToCache(this._records.Count > 0);
-			}
-
 			return this._records.Count > 0;
 		}
 		public void AddToCache(bool hasNext)
 		{
-			if (hasNext)
+			foreach (MemoryDataRecord record in this._records)
 			{
 				object[] values = new object[FieldCount];
-				MemoryDataRecord record = this._records[0];
 				record.GetValues(values);
+				foreach(object obj in values)
+				{
+					readBytes += MemoryDataHelper.SizeInBytes(obj);
+				}
 				block.Add(values);
 			}
-			else
-			{
-				SqlUtil.AddBlockToCache(key, new CacheItem(block, false, block.Count, readBytes), con, expiration != null ? (int)expiration.ItemSlidingExpiration.TotalMinutes : 0);
-			}
+			SqlUtil.AddBlockToCache(key, new CacheItem(block, false, block.Count, readBytes), con, expiration != null ? (int)expiration.ItemSlidingExpiration.TotalMinutes : 0);
 		}
 		public int RecordsAffected
 		{
@@ -853,6 +849,55 @@ namespace GeneXus.Data
 
 	class MemoryDataHelper
 	{
+		internal static int SizeInBytes(object value)
+		{
+
+			if (value == null || value == DBNull.Value)
+				return 0;
+
+			Type type = value.GetType();
+
+			if (type == typeof(bool))
+			{
+				return 1;
+			}
+			if (type == typeof(byte[]))
+			{
+				return ((byte[])value).Length;
+			}
+			if (type == typeof(DateTime))
+			{
+				return 8;
+			}
+			if (type == typeof(Decimal))
+			{
+				return 12;
+			}
+			if (type == typeof(Double))
+			{
+				return 8;
+			}
+			if (type == typeof(Guid))
+			{
+				return 16;
+			}
+			if (type == typeof(Int16))
+			{
+				return 2;
+			}
+			if (type == typeof(Int32))
+			{
+				return 4;
+			}
+			if (type == typeof(Int64))
+			{
+				return 8;
+			}
+			if (type == typeof(string))
+				return (10 + (2 * ((string)value).Length));
+
+			return 0;
+		}
 		#region Copy objects
 
 		public static object GetCopyFrom(object value)
@@ -862,10 +907,7 @@ namespace GeneXus.Data
 			else
 			{
 				Type type = value.GetType();
-
-				if (type.IsSubclassOf(typeof(ValueType)))
-					return value;
-				else if (type == typeof(string))
+				if (type.IsSubclassOf(typeof(ValueType)) || type == typeof(string))
 					return value;
 				else if (type == typeof(Stream))
 				{
@@ -874,6 +916,12 @@ namespace GeneXus.Data
 					oStream.CopyTo(memStream);
 					return memStream;
 				}
+#if NETCORE
+				else if (type.FullName == PGVECTOR_VECTOR_TYPE_NAME) // Avoid referencing Pgvector type if datastore is not Npgsql; prevents loading Pgvector DLL unnecessarily
+				{
+					return CopyPgVectorValue(value);
+				}
+#endif
                 else
 				{
                     byte[] valueByte = value as byte[];
@@ -900,8 +948,19 @@ namespace GeneXus.Data
 				}
 			}
 		}
+#if NETCORE
+		const string PGVECTOR_VECTOR_TYPE_NAME = "Pgvector.Vector";
+		private static object CopyPgVectorValue(object value)
+		{
+			Pgvector.Vector vector = (Pgvector.Vector)value;
+			float[] copyArray = new float[vector.Memory.Length];
+			vector.Memory.Span.CopyTo(copyArray);
+			Pgvector.Vector copyVector = new Pgvector.Vector(new ReadOnlyMemory<float>(copyArray));
+			return copyVector;
 
-		#endregion
+		}
+#endif
+#endregion
 	}
 
 }

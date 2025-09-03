@@ -1,4 +1,4 @@
-﻿using GeneXusXmlSignature.GeneXusCommons;
+using GeneXusXmlSignature.GeneXusCommons;
 using GeneXusXmlSignature.GeneXusDSig;
 using NUnit.Framework;
 using SecurityAPICommons.Keys;
@@ -37,7 +37,6 @@ namespace SecurityAPITest.XmlSignature.DSig
 		[Test]
 		public void TestFindID1()
 		{
-			//System.Diagnostics.Debugger.Launch();
 			string signed = signer.DoSignElement(xmlInput, xPath, key, cert, options);
 			Assert.IsFalse(SecurityUtils.compareStrings(signed, ""));
 			Assert.IsFalse(signer.HasError());

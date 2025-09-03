@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using log4net;
 
 
 namespace GeneXusCryptography.SymmetricUtils
@@ -15,7 +16,7 @@ namespace GeneXusCryptography.SymmetricUtils
 	public enum SymmetricStreamAlgorithm
 	{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-		NONE, RC4, HC128, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC
+		NONE, RC4, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 	}
 
@@ -25,6 +26,7 @@ namespace GeneXusCryptography.SymmetricUtils
 	[SecuritySafeCritical]
 	public static class SymmetricStreamAlgorithmUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(SymmetricStreamAlgorithmUtils));
 		/// <summary>
 		/// Mapping between String name and SymmetricStreamAlgorithm enum representation
 		/// </summary>
@@ -33,10 +35,12 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>SymmetricStreamAlgorithm enum representation</returns>
 		public static SymmetricStreamAlgorithm getSymmetricStreamAlgorithm(String symmetricStreamAlgorithm, Error error)
 		{
+			logger.Debug("getSymmetricStreamAlgorithm");
 			if (error == null) return SymmetricStreamAlgorithm.NONE;
 			if (symmetricStreamAlgorithm == null)
 			{
 				error.setError("SSA05", "Unrecognized SymmetricStreamAlgorithm");
+				logger.Error("Unrecognized SymmetricStreamAlgorithm");
 				return SymmetricStreamAlgorithm.NONE;
 			}
 
@@ -44,8 +48,6 @@ namespace GeneXusCryptography.SymmetricUtils
 			{
 				case "RC4":
 					return SymmetricStreamAlgorithm.RC4;
-				case "HC128":
-					return SymmetricStreamAlgorithm.HC128;
 				case "HC256":
 					return SymmetricStreamAlgorithm.HC256;
 				case "CHACHA20":
@@ -58,6 +60,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return SymmetricStreamAlgorithm.ISAAC;
 				default:
 					error.setError("SSA01", "Unrecognized SymmetricStreamAlgorithm");
+					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					return SymmetricStreamAlgorithm.NONE;
 			}
 		}
@@ -69,13 +72,12 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>String SymmetrcStreamAlgorithm name value</returns>
 		public static String valueOf(SymmetricStreamAlgorithm symmetrcStreamAlgorithm, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "Unrecognized algorithm";
 			switch (symmetrcStreamAlgorithm)
 			{
 				case SymmetricStreamAlgorithm.RC4:
 					return "RC4";
-				case SymmetricStreamAlgorithm.HC128:
-					return "HC128";
 				case SymmetricStreamAlgorithm.HC256:
 					return "HC256";
 				case SymmetricStreamAlgorithm.CHACHA20:
@@ -88,6 +90,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return "ISAAC";
 				default:
 					error.setError("SSA02", "Unrecognized SymmetricStreamAlgorithm");
+					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					return "Unrecognized algorithm";
 			}
 		}
@@ -100,6 +103,7 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>array int with fixed length 3 with key, if array[0]=0 is range, else fixed values</returns>
 		public static int[] getKeySize(SymmetricStreamAlgorithm algorithm, Error error)
 		{
+			logger.Debug("getKeySize");
 			if (error == null) return null;
 			int[] keySize = new int[3];
 			switch (algorithm)
@@ -108,10 +112,6 @@ namespace GeneXusCryptography.SymmetricUtils
 					keySize[0] = 0;
 					keySize[1] = 40;
 					keySize[2] = 2048;
-					break;
-				case SymmetricStreamAlgorithm.HC128:
-					keySize[0] = 1;
-					keySize[1] = 128;
 					break;
 				case SymmetricStreamAlgorithm.HC256:
 				case SymmetricStreamAlgorithm.XSALSA20:
@@ -131,6 +131,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					break;
 				default:
 					error.setError("SSA03", "Unrecognized SymmetricStreamAlgorithm");
+					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					break;
 			}
 			return keySize;
@@ -145,10 +146,10 @@ namespace GeneXusCryptography.SymmetricUtils
 		/// <returns>true if the algorithm uses an IV or nonce, false if it do not</returns>
 		internal static bool usesIV(SymmetricStreamAlgorithm algorithm, Error error)
 		{
+			logger.Debug("usesIV");
 			switch (algorithm)
 			{
 				case SymmetricStreamAlgorithm.RC4:
-				case SymmetricStreamAlgorithm.HC128:
 				case SymmetricStreamAlgorithm.ISAAC:
 					return false;
 				case SymmetricStreamAlgorithm.HC256:
@@ -158,6 +159,7 @@ namespace GeneXusCryptography.SymmetricUtils
 					return true;
 				default:
 					error.setError("SSA04", "Unrecognized SymmetricStreamAlgorithm");
+					logger.Error("Unrecognized SymmetricStreamAlgorithm");
 					return true;
 			}
 

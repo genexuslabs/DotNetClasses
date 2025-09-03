@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<AssemblyName>GamUtilsNetImpl</AssemblyName>
+		<Version>17.4.0</Version>
+		<NoWarn>CA1031, CA1801, SYSLIB0027</NoWarn>
+		<PackageId>Gam.Utils.Net</PackageId>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants>NETCORE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\..\DotNetFramework\GamUtils\GamUtilsEO.cs" Link="GamUtilsEO.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Cryprography\Encryption.cs" Link="Utils\Cryptography\Encryption.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Cryprography\Hash.cs" Link="Utils\Cryptography\Hash.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Dictionary.cs" Link="Utils\Dictionary.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\DynamicCall.cs" Link="Utils\DynamicCall.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwk.cs" Link="Utils\Json\Jwk.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\Jwt.cs" Link="Utils\Json\Jwt.cs" />
+		<Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\JWTAlgorithm.cs" Link="Utils\Json\JWTAlgorithm.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Json\UnixTimestamp.cs" Link="Utils\Json\UnixTimestamp.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\PublicKeyExt.cs" Link="Utils\Keys\PublicKeyExt.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Keys\PrivateKeyExt.cs" Link="Utils\Keys\PrivateKeyExt.cs" />
+	  <Compile Include="..\..\DotNetFramework\GamUtils\Utils\Random.cs" Link="Utils\Random.cs" />
+		<Compile Include="..\..\DotNetFramework\GamUtils\Utils\Encoding.cs" Link="Utils\Encoding.cs" />
+		<Compile Include="..\..\DotNetFramework\GamUtils\Utils\Pkce.cs" Link="Utils\Pkce.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+		<PackageReference Include="jose-jwt" Version="5.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\..\dotnetcore\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Utils\Cryptography\" />
+	  <Folder Include="Utils\Keys\" />
+	</ItemGroup>
+
+</Project>

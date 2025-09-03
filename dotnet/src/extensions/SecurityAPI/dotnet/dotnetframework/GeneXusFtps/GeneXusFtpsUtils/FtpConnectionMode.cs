@@ -1,3 +1,4 @@
+using log4net;
 using SecurityAPICommons.Commons;
 using System;
 using System.Security;
@@ -13,13 +14,17 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 	[SecuritySafeCritical]
 	public static class FtpConnectionModeUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(FtpConnectionModeUtils));
+
 		[SecuritySafeCritical]
-		public static FtpConnectionMode getFtpMode(String ftpMode, Error error)
+		public static FtpConnectionMode getFtpMode(string ftpMode, Error error)
 		{
-			if(error == null) return FtpConnectionMode.NONE;
+			logger.Debug("getFtpMode");
+			if (error == null) return FtpConnectionMode.NONE;
 			if (ftpMode == null)
 			{
 				error.setError("FM001", "Unrecognized FtpMode");
+				logger.Error("Unrecognized FtpMode");
 				return FtpConnectionMode.NONE;
 			}
 			switch (ftpMode.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -30,13 +35,15 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 					return FtpConnectionMode.PASSIVE;
 				default:
 					error.setError("FM001", "Unrecognized FtpMode");
+					logger.Error("Unrecognized FtpMode");
 					return FtpConnectionMode.NONE;
 			}
 		}
 
 		[SecuritySafeCritical]
-		public static String valueOf(FtpConnectionMode ftpMode, Error error)
+		public static string valueOf(FtpConnectionMode ftpMode, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "";
 			switch (ftpMode)
 			{
@@ -46,6 +53,7 @@ namespace GeneXusFtps.GeneXusFtpsUtils
 					return "PASSIVE";
 				default:
 					error.setError("FM002", "Unrecognized FtpMode");
+					logger.Error("Unrecognized FtpMode");
 					return "";
 			}
 		}

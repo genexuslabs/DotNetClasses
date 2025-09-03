@@ -63,9 +63,6 @@
     </Reference>
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
-    <Reference Include="TZ4Net">
-      <HintPath>..\..\src\dotnetframework\libs\TZ4Net.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Update="resources\text.txt">
@@ -120,6 +117,9 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Update="resources\bird-thumbnail.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="resources\Minions-PNG-Photo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="resources\text.txt">

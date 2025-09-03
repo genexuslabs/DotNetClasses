@@ -21,6 +21,7 @@ namespace GeneXus.Http.Client
 	using GeneXus.Application;
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
+
 #if NETCORE
 	using Microsoft.AspNetCore.WebUtilities;
 #endif
@@ -238,8 +239,20 @@ namespace GeneXus.Http.Client
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 			}
-			foreach (X509Certificate2 cert in certificateCollection)
-				handler.SslOptions.ClientCertificates.Add(cert);
+			if (certificateCollection.Count > 0)
+			{
+				if (handler.SslOptions.ClientCertificates == null)
+				{
+					handler.SslOptions.ClientCertificates = new X509CertificateCollection(certificateCollection);
+				}
+				else
+				{
+					foreach (X509Certificate2 cert in certificateCollection)
+					{
+						handler.SslOptions.ClientCertificates.Add(cert);
+					}
+				}
+			}
 
 			WebProxy proxy = getProxy(proxyHost, proxyPort, authProxyCollection);
 			if (proxy != null)
@@ -562,6 +575,8 @@ namespace GeneXus.Http.Client
 		}
 		public void AddHeader(string name, string value)
 		{
+			GXLogging.Debug(log, "AddHeader ", name, "=", value);
+
 			if (name.Equals("content-type", StringComparison.OrdinalIgnoreCase))
 			{
 				if (value.StartsWith(MediaTypesNames.MultipartFormData, StringComparison.OrdinalIgnoreCase) &&
@@ -706,16 +721,37 @@ namespace GeneXus.Http.Client
 			if (IsMultipart)
 				reqStream.Write(MultiPart.EndBoundaryBytes, 0, MultiPart.EndBoundaryBytes.Length);
 		}
-		void setContentHeaders(HttpRequestMessage request, string contentType)
+		void SetContentHeaders(HttpRequestMessage request, string contentType)
 		{
-			if (contentType != null)
+			if (request.Content != null)
 			{
-				HttpContentHeaders contentHeaders = request.Content.Headers;
-				contentHeaders.ContentType = MediaTypeHeaderValue.Parse(contentType);
+				if (contentType != null)
+				{
+					HttpContentHeaders contentHeaders = request.Content.Headers;
+					contentHeaders.ContentType = MediaTypeHeaderValue.Parse(contentType);
+				}
+#if NETCORE
+				for (int i = 0; i < _headers.Count; i++)
+				{
+					string currHeader = _headers.Keys[i];
+					string upperHeader = currHeader.ToUpper();
+
+					if (upperHeader == "CONTENT-DISPOSITION")
+					{
+						GXLogging.Debug(log, "Adding Content-Disposition header: " + _headers[i]);
+						request.Content.Headers.Add("Content-Disposition", _headers[i]);
+					}
+					else if (upperHeader == "CONTENT-RANGE")
+					{
+						GXLogging.Debug(log, "Adding Content-Range header: " + _headers[i]);
+						request.Content.Headers.Add("Content-Range", _headers[i]);
+					}
+				}
+#endif
 			}
 			InferContentType(contentType, request);
 		}
-		void setHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
+		internal void SetHeaders(HttpRequestMessage request, CookieContainer cookies, out string contentType)
 		{
 			HttpRequestHeaders headers = request.Headers;
 			contentType = null;
@@ -814,15 +850,23 @@ namespace GeneXus.Http.Client
 			}
 		}
 
-		void setHttpVersion(HttpRequestMessage req)
+		void SetHttpVersion(HttpRequestMessage req)
 		{
 			string httpVersion;
 			if (Config.GetValueOf("HttpClientHttpVersion", out httpVersion))
 			{
 				if (httpVersion == "1.0")
 					req.Version = HttpVersion.Version10;
+#if NETCORE
+				else if (httpVersion == "2.0")
+					req.Version = HttpVersion.Version20;
+				else if (httpVersion == "3.0")
+					req.Version = HttpVersion.Version30;
+#endif
 				else
 					req.Version = HttpVersion.Version11;
+
+				GXLogging.Debug(log, "Setting HTTPClient request version to ", req.Version.ToString());
 			}
 			else
 				req.Version = HttpVersion.Version11;
@@ -844,8 +888,8 @@ namespace GeneXus.Http.Client
 				RequestUri = new Uri(requestUrl),
 				Method = new HttpMethod(method),
 			};
-			setHeaders(request, cookies, out string contentType);
-			setHttpVersion(request);
+			SetHeaders(request, cookies, out string contentType);
+			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
 			{
@@ -870,10 +914,15 @@ namespace GeneXus.Http.Client
 					EndMultipartBoundary(reqStream);
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
 					reqStream.Seek(0, SeekOrigin.Begin);
-					request.Content = new ByteArrayContent(reqStream.ToArray());
-					setContentHeaders(request, contentType);
+					if (reqStream.Length > 0)
+					{
+						request.Content = new ByteArrayContent(reqStream.ToArray());
+						SetContentHeaders(request, contentType);
+					}
+					else
+						GXLogging.Debug(log, "No content to send, skipping request.Content assignment.");
 #if NETCORE
-					response = client.Send(request, HttpCompletionOption.ResponseHeadersRead);
+					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
 					response.ExtractCookies(cookies);
 #else
 					response = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
@@ -906,8 +955,8 @@ namespace GeneXus.Http.Client
 				RequestUri = new Uri(requestUrl),
 				Method = new HttpMethod(method),
 			};
-			setHeaders(request, cookies, out string contentType);
-			setHttpVersion(request);
+			SetHeaders(request, cookies, out string contentType);
+			SetHttpVersion(request);
 			bool disposableInstance = true;
 			try
 			{
@@ -928,8 +977,15 @@ namespace GeneXus.Http.Client
 					EndMultipartBoundary(reqStream);
 					GXLogging.Debug(log, "End SendStream.Read: stream " + reqStream.ToString());
 					reqStream.Seek(0, SeekOrigin.Begin);
-					request.Content = new ByteArrayContent(reqStream.ToArray());
-					setContentHeaders(request, contentType);
+
+					if (reqStream.Length > 0)
+					{
+						request.Content = new ByteArrayContent(reqStream.ToArray());
+						SetContentHeaders(request, contentType);
+					}
+					else
+						GXLogging.Debug(log, "No content to send, skipping request.Content assignment.");
+
 					response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 					response.ExtractCookies(cookies);
 				}
@@ -1189,7 +1245,17 @@ namespace GeneXus.Http.Client
 		}
 		NameValueCollection _respHeaders;
 		private bool disposedValue;
+		static bool IsChunkedOrEventStream(HttpResponseMessage response)
+		{
+			if (response == null)
+				return false;
+			bool isEventStream = response.Content?.Headers.ContentType?.MediaType == "text/event-stream";
+			if (isEventStream)
+				return true;
 
+			bool isChunked = response.Headers.TransferEncodingChunked.HasValue && response.Headers.TransferEncodingChunked.Value;
+			return isChunked;
+		}
 		internal void LoadResponseHeaders(HttpResponseMessage resp)
 		{
 			_respHeaders = new NameValueCollection();
@@ -1203,7 +1269,7 @@ namespace GeneXus.Http.Client
 			{
 				_respHeaders.Add(header.Key, String.Join(",", header.Value));
 			}
-			_isChunkedResponse = resp.Headers.TransferEncodingChunked.HasValue && resp.Headers.TransferEncodingChunked.Value;
+			_isChunkedResponse = IsChunkedOrEventStream(resp) ;
 
 			if (_response.Content.Headers.ContentType == null)
 				_charset = null;
@@ -1247,7 +1313,7 @@ namespace GeneXus.Http.Client
 			}
 		}
 
-		private void setHeaders(HttpWebRequest req)
+		private void SetHeaders(HttpWebRequest req)
 		{
 			string contentType = null;
 			for (int i = 0; i < _headers.Count; i++)
@@ -1361,7 +1427,7 @@ namespace GeneXus.Http.Client
 			return null;
 		}
 
-		private void setHttpVersion(HttpWebRequest req)
+		private void SetHttpVersion(HttpWebRequest req)
 		{
 
 			string httpVersion;
@@ -1369,6 +1435,12 @@ namespace GeneXus.Http.Client
 			{
 				if (httpVersion == "1.0")
 					req.ProtocolVersion = HttpVersion.Version10;
+#if NETCORE
+				else if (httpVersion == "2.0")
+					req.ProtocolVersion = HttpVersion.Version20;
+				else if (httpVersion == "3.0")
+					req.ProtocolVersion = HttpVersion.Version30;
+#endif
 				else
 					req.ProtocolVersion = HttpVersion.Version11;
 			}
@@ -1430,17 +1502,17 @@ namespace GeneXus.Http.Client
 				req.ClientCertificates.Add(cert);
 			req.Method = method.Trim();
 			req.Timeout = _timeout;
-			setHttpVersion(req);
+			SetHttpVersion(req);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
 				req.Proxy = proxy;
 
-			setHeaders(req);
+			SetHeaders(req);
 
 			if (!method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) && !method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase))
 			{
 #if !NETCORE
-				using (Stream reqStream = req.GetRequestStream())
+                                using (Stream reqStream = req.GetRequestStream())
 #else
 				using (Stream reqStream = await req.GetRequestStreamAsync())
 #endif
@@ -1482,12 +1554,12 @@ namespace GeneXus.Http.Client
 				req.ClientCertificates.Add(cert);
 			req.Method = method.Trim();
 			req.Timeout = _timeout;
-			setHttpVersion(req);
+			SetHttpVersion(req);
 			WebProxy proxy = getProxy(_proxyHost, _proxyPort, _authProxyCollection);
 			if (proxy != null)
 				req.Proxy = proxy;
 
-			setHeaders(req);
+			SetHeaders(req);
 
 			if (!method.Equals(HttpMethod.Get.Method, StringComparison.OrdinalIgnoreCase) && !method.Equals(HttpMethod.Head.Method, StringComparison.OrdinalIgnoreCase))
 			{
@@ -1974,6 +2046,10 @@ namespace GeneXus.Http.Client
 		{
 			value = Convert.ToDouble(GetHeader(name));
 		}
+		public void GetHeader(string name, out Decimal value)
+		{
+			value = Convert.ToDecimal(GetHeader(name));
+		}
 		public void GetHeader(string name, out string value)
 		{
 			value = GetHeader(name);
@@ -1981,6 +2057,10 @@ namespace GeneXus.Http.Client
 		public void GetHeader(string name, out DateTime value)
 		{
 			value = Convert.ToDateTime(GetHeader(name));
+		}
+		public void GetHeader(string name, out bool value)
+		{
+			value = Convert.ToBoolean(GetHeader(name));
 		}
 		public void AddCertificate(string cert)
 		{

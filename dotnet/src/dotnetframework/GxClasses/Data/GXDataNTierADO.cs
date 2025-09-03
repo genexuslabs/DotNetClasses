@@ -198,10 +198,17 @@ namespace GeneXus.Data.NTier.ADO
         public IGeographicNative getGeospatial(int id)
         {
             return new Utils.Geospatial((object)_gxDbCommand.ErrorRecord(id - 1));
-        }
-        #endregion
-    }
-    public class GXFatFieldGetter : IFieldGetter
+		}
+#if NETCORE
+		public GxEmbedding getGxembedding(int id, string model, int dimensions)
+		{
+			return (GxEmbedding)_gxDbCommand.ErrorRecord(id - 1);
+		}
+#endif
+
+#endregion
+	}
+	public class GXFatFieldGetter : IFieldGetter
     {
         static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFatFieldGetter>();
         IGxDbCommand _gxDbCommand;
@@ -304,21 +311,13 @@ namespace GeneXus.Data.NTier.ADO
 		}
         public DateTime getGXDateTime(int id, Boolean precision)
         {
-#if NODATIME
 			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
-#else
-			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, precision), _gxDbCommand.Conn.ClientTimeZone);
-#endif
 			TraceRow(() => $"getDateTime - index : {id}  value:{value}");
 			return value;
 		}
         public DateTime getGXDateTime(int id)
         {
-#if NODATIME
 			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, false), _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
-#else
-			DateTime value = DateTimeUtil.DBserver2local(getDateTime(id, false), _gxDbCommand.Conn.ClientTimeZone);
-#endif
 			TraceRow(() => $"getGXDateTime - index : {id} value:{value.ToString()}");
 			return value;
 		}
@@ -476,7 +475,7 @@ namespace GeneXus.Data.NTier.ADO
 			TraceRow(() => $"getVarchar - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
 			return value;
 		}
-        public decimal getBigDecimal(int id, int dec)
+		public decimal getBigDecimal(int id, int dec)
         {
 			decimal value =_gxDbCommand.Db.GetDecimal(_gxDbCommand, _DR, id - 1);
 			TraceRow(() => $"getBigDecimal - index : {id} value:{value.ToString()}");
@@ -494,9 +493,17 @@ namespace GeneXus.Data.NTier.ADO
         {
             return _gxDbCommand.Db.IsDBNull(_gxDbCommand, _DR, id - 1);
         }
+#if NETCORE
+		public GxEmbedding getGxembedding(int id, string model, int dimensions)
+		{
+			GxEmbedding value = _gxDbCommand.Db.GetEmbedding(_gxDbCommand, _DR, id - 1, model, dimensions);
+			TraceRow(() => $"getGxembedding - index : {id} value:{(value != null ? value.ToString() : string.Empty)}");
+			return value;
+		}
+#endif
 
-    }
-    public class GXFatFieldSetter : IFieldSetter
+	}
+	public class GXFatFieldSetter : IFieldSetter
     {
 		protected static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXFatFieldSetter>();
 		GxCommand _gxDbCommand;
@@ -758,11 +765,7 @@ namespace GeneXus.Data.NTier.ADO
         public void SetParameterDatetime(int id, DateTime parm, Boolean precision)
         {
 			DateTime shifted = parm;
-#if NODATIME
 			shifted = DateTimeUtil.Local2DBserver(parm, _gxDbCommand.Conn.DataStore.Context.GetTimeZone());
-#else
-			shifted = DateTimeUtil.Local2DBserver(parm, _gxDbCommand.Conn.ClientTimeZone);
-#endif
 			DateTime param2 = (precision) ? shifted : DateTimeUtil.ResetMilliseconds(shifted);
             _gxDbCommand.SetParameter(id - 1, _gxDbCommand.Db.Net2DbmsDateTime((IDbDataParameter)_gxDbCommand.Parameters[id - 1], param2));
         }
@@ -849,8 +852,7 @@ namespace GeneXus.Data.NTier.ADO
 		{
 			get { return _gxDbCommand; }
 		}
-
-		public void createCursor(IGxDataStore ds, GxErrorHandler errorHandler)
+		public void createCursor(IGxDataStore ds, GxErrorHandler errorHandler, string objectName)
         {
 
             if (_state >= 2)
@@ -859,7 +861,7 @@ namespace GeneXus.Data.NTier.ADO
                 return;
             }
             _stmt = (_staticParameters == null)? _stmt : String.Format(_stmt, _staticParameters);
-            _gxDbCommand = new GxCommand(ds.Db, _stmt, _updatable, ds, "", _name, TTL, hasNested, isForFirst, errorHandler, _batchSize);
+            _gxDbCommand = new GxCommand(ds.Db, _stmt, _updatable, ds, objectName, _name, TTL, hasNested, isForFirst, errorHandler, _batchSize);
             _gxDbCommand.IsCursor = true;
             if (_blockSize > 0)
                 _gxDbCommand.FetchSize = Convert.ToUInt16(_blockSize);
@@ -871,7 +873,12 @@ namespace GeneXus.Data.NTier.ADO
             _gxDbCommand.ErrorMask = _errMask;
 
         }
-        protected virtual void bindParms(Object[] ptb)
+		public void createCursor(IGxDataStore ds, GxErrorHandler errorHandler)
+		{
+			createCursor(ds, errorHandler, string.Empty);
+		}
+
+		protected virtual void bindParms(Object[] ptb)
         {
             int pos = 1;
 			if (ptb != null)

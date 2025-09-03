@@ -67,7 +67,7 @@ namespace GeneXus.HttpHandlerFactory
 				{
 					context.Response.OnStarting(() =>
 					{
-						if (context.Response.StatusCode == (int)HttpStatusCode.OK && url.EndsWith(HttpHelper.ASPX) && string.IsNullOrEmpty(context.Response.ContentType))
+						if (context.Response.StatusCode == (int)HttpStatusCode.OK && string.IsNullOrEmpty(context.Response.ContentType))
 						{
 							context.Response.ContentType = MediaTypesNames.TextHtml;
 							//If no ContentType is specified, the default is text/HTML.
@@ -98,11 +98,6 @@ namespace GeneXus.HttpHandlerFactory
 				await Task.FromException(ex);
 			}
 		}
-		public static bool IsAspxHandler(string path, string basePath)
-		{
-			string name = ObjectUrl(path, basePath);
-			return name.EndsWith(HttpHelper.ASPX, StringComparison.OrdinalIgnoreCase) || _aspxObjects.ContainsKey(name);
-		}
 		private static string ObjectUrl(string requestPath, string basePath) 
 		{
 			string lastSegment = requestPath;
@@ -120,10 +115,17 @@ namespace GeneXus.HttpHandlerFactory
 		}
 		private static string CleanUploadUrlSuffix(string url)
 		{
+#if NETCORE
+			if (url.EndsWith($"{HttpHelper.GXOBJECT}", StringComparison.OrdinalIgnoreCase))
+			{
+				return url.Substring(0, url.Length - (HttpHelper.GXOBJECT.Length));
+			}
+#else
 			if (url.EndsWith($"{HttpHelper.ASPX}{HttpHelper.GXOBJECT}", StringComparison.OrdinalIgnoreCase))
 			{
 				return url.Substring(0, url.Length - (HttpHelper.GXOBJECT.Length));
 			}
+#endif
 			else
 				return url;
 		}
@@ -132,9 +134,12 @@ namespace GeneXus.HttpHandlerFactory
 			GXLogging.Debug(log, "GetHandler url:", url);
 
 			IHttpHandler handlerToReturn =null;
-
-			int idx = url.LastIndexOf('.');
+			int idx = -1;
 			string cname0;
+			if (url.EndsWith(HttpHelper.ASPX, StringComparison.OrdinalIgnoreCase))
+			{
+				idx = url.LastIndexOf('.');
+			}
 			if (idx >= 0)
 				cname0 = url.Substring(0, url.LastIndexOf('.')).ToLower();
 			else
@@ -270,7 +275,7 @@ namespace GeneXus.HttpHandlerFactory
 			try
 			{
 				
-                objType = GeneXus.Metadata.ClassLoader.FindType(assemblyName, className, null);
+                objType = GeneXus.Metadata.ClassLoader.FindType(assemblyName, className, null, false, true);
 				if (objType == null)
 					
 					objType = Assembly.Load(new AssemblyName(assemblyName)).GetType(className);

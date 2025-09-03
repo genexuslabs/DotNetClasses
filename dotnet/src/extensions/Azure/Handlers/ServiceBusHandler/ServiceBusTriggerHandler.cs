@@ -3,17 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Azure.Messaging.ServiceBus;
 using GeneXus.Application;
 using GeneXus.Deploy.AzureFunctions.Handlers.Helpers;
 using GeneXus.Metadata;
 using GeneXus.Utils;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-
-//https://github.com/Azure/azure-functions-dotnet-worker/issues/384
 
 namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 {
@@ -25,17 +26,16 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 		{
 			_callmappings = callMappings;
 		}
-		public void Run(string myQueueItem, FunctionContext context)
+		public async Task Run(ServiceBusReceivedMessage[] myQueueItem, FunctionContext context)
 		{
 			var log = context.GetLogger("ServiceBusTriggerHandler");
 			string functionName = context.FunctionDefinition.Name;
 
-			Message message = SetupMessage(context, myQueueItem);
-			log.LogInformation($"GeneXus Service Bus trigger handler. Function processed: {functionName}. Queue item Id: {StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList)}");
+			log.LogInformation($"GeneXus Service Bus trigger handler. Function processed: {functionName}.");
 
 			try
 			{
-				ProcessMessage(context, log, message);
+				await ProcessMessages(context, log, myQueueItem);
 			}
 			catch (Exception ex) //Catch System exception and retry
 			{
@@ -43,59 +43,39 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 				throw;
 			}
 		}
-		private Message SetupMessage(FunctionContext context, string item)
+
+		public async Task RunSingle(ServiceBusReceivedMessage myQueueItem, FunctionContext context)
 		{
-			Message message = new Message();
-			message.MessageProperties = new List<Message.MessageProperty>();
-			message.Body = item;
 
-			if (context.BindingContext.BindingData.TryGetValue("MessageId", out var MessageIdObj) && MessageIdObj != null)
+			var log = context.GetLogger("ServiceBusTriggerHandler");
+			string functionName = context.FunctionDefinition.Name;
+
+			log.LogInformation($"GeneXus Service Bus trigger handler. Function processed: {functionName}.");
+
+			try
 			{
-				message.MessageId = MessageIdObj.ToString();
-
-				foreach (string key in context.BindingContext.BindingData.Keys)
-				{
-					Message.MessageProperty messageProperty = new Message.MessageProperty();
-					messageProperty.key = key;
-
-					string valueStr = context.BindingContext.BindingData[key].ToString().Trim('\"');
-					DateTime valueDateTime;
-					if (DateTime.TryParse(valueStr, out valueDateTime))
-					{						
-						messageProperty.value = valueDateTime.ToUniversalTime().ToString();
-					}
-					else
-						messageProperty.value = context.BindingContext.BindingData[key].ToString();
-
-					message.MessageProperties.Add(messageProperty);
-				}
-
-				if (context.BindingContext.BindingData.TryGetValue("UserProperties", out var customProperties) && customProperties != null)
-				{
-					var customHeaders = JSONHelper.Deserialize<Dictionary<string, Object>>(customProperties.ToString());
-
-					if (customHeaders != null)
-						message.UserProperties = customHeaders;
-				}
-				if (context.BindingContext.BindingData.TryGetValue("SystemProperties", out var systemProperties) && systemProperties != null)
-				{
-					Message.SystemPropertiesCollection systemHeaders = new Message.SystemPropertiesCollection();
-					systemHeaders = JSONHelper.Deserialize<Message.SystemPropertiesCollection>(systemProperties.ToString());
-					if (systemHeaders != null)
-						message.SystemProperties = systemHeaders;
-				}
+				ServiceBusReceivedMessage[] queueItems = new ServiceBusReceivedMessage[] { myQueueItem };
+				await ProcessMessages(context, log, queueItems);
 			}
+			catch (Exception ex) //Catch System exception and retry
+			{
+				log.LogError(ex.ToString());
+				throw;
+			}
+		}
+		private Task ProcessMessages(FunctionContext context, ILogger log, ServiceBusReceivedMessage[] messages)
+		{
+			string envVar = $"GX_AZURE_{context.FunctionDefinition.Name.ToUpper()}_CLASS";
+			string envVarValue = Environment.GetEnvironmentVariable(envVar);
+			string gxProcedure = string.Empty;
+			if (!string.IsNullOrEmpty(envVarValue))
+				gxProcedure = envVarValue;
 			else
 			{
-				throw new InvalidOperationException();
+				CallMappings callmap = (CallMappings)_callmappings;
+				GxAzMappings map = callmap != null && callmap.mappings is object ? callmap.mappings.SingleOrDefault(m => m.FunctionName == context.FunctionDefinition.Name) : null;
+				gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
 			}
-			return message;
-		}
-		private void ProcessMessage(FunctionContext context, ILogger log, Message message)
-		{
-			CallMappings callmap = (CallMappings)_callmappings;
-			GxAzMappings map = (callmap!=null && callmap.mappings is object) ? callmap.mappings.First(m => m.FunctionName == context.FunctionDefinition.Name) : null;
-			string gxProcedure = map is object ? map.GXEntrypoint : string.Empty;
 
 			string exMessage;
 
@@ -125,7 +105,7 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 						{
 							//Thrown to the Azure monitor
 
-							exMessage = string.Format("{0} Error for Message Id {1}: the number of parameters in GeneXus procedure is not correct.", FunctionExceptionType.SysRuntimeError, message.MessageId);
+							exMessage = string.Format("The number of parameters in GeneXus procedure is not correct.", FunctionExceptionType.SysRuntimeError);
 							throw new Exception(exMessage); //Send to retry if possible.
 						}
 						else
@@ -135,88 +115,114 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 							//parm(in:&rawData, out:&ExternalEventMessageResponse );
 
 							GxContext gxcontext = new GxContext();
-							Object[] parametersdata;
+							object[] parametersdata;
 							parametersdata = new object[] { null };
 
 							if (parameters[0].ParameterType == typeof(string))
 							{
-								string queueMessageSerialized = JSONHelper.Serialize(message);
+								string queueMessageSerialized = GetSerializedMessages(messages);
 								parametersdata = new object[] { queueMessageSerialized, null };
 							}
 							else
 							{
 								//Initialization
-
 								Type eventMessagesType = parameters[0].ParameterType; //SdtEventMessages
+																					  //GxUserType eventMessages = (GxUserType)Activator.CreateInstance(eventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
 								GxUserType eventMessages = (GxUserType)Activator.CreateInstance(eventMessagesType, new object[] { gxcontext }); // instance of SdtEventMessages
 
-								IList eventMessage = (IList)ClassLoader.GetPropValue(eventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
-								Type eventMessageItemType = eventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
-
-								GxUserType eventMessageItem = (GxUserType)Activator.CreateInstance(eventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
-
-								IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
-								Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
-
-								//Payload
-								GxUserType eventMessageProperty;
-
-								foreach (var messageProp in message.MessageProperties)
+								foreach (ServiceBusReceivedMessage serviceBusReceivedMessage in messages)
 								{
-									if ((messageProp.key != "UserProperties") & (messageProp.key != "SystemProperties"))
+
+									IList eventMessage = (IList)ClassLoader.GetPropValue(eventMessages, "gxTpr_Eventmessage");//instance of GXBaseCollection<SdtEventMessage>
+									Type eventMessageItemType = eventMessage.GetType().GetGenericArguments()[0];//SdtEventMessage
+
+									GxUserType eventMessageItem = (GxUserType)Activator.CreateInstance(eventMessageItemType, new object[] { gxcontext }); // instance of SdtEventMessage
+
+									IList eventMessageProperties = (IList)ClassLoader.GetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties");//instance of GXBaseCollection<GeneXus.Programs.genexusserverlessapi.SdtEventMessageProperty>
+									Type eventMessPropsItemType = eventMessageProperties.GetType().GetGenericArguments()[0];//SdtEventMessageProperty								
+
+									//Payload
+									GxUserType eventMessageProperty;
+
+									foreach (var messageProp in serviceBusReceivedMessage.ApplicationProperties)
 									{
-										eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, messageProp.key, Convert.ToString(messageProp.value), gxcontext);
+										eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, messageProp.Key, Convert.ToString(messageProp.Value), gxcontext);
 										eventMessageProperties.Add(eventMessageProperty);
+
 									}
+
+									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Body", serviceBusReceivedMessage.Body?.ToString(), gxcontext);
+									eventMessageProperties.Add(eventMessageProperty);
+
+									eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ContentType", serviceBusReceivedMessage.ContentType, gxcontext);
+									eventMessageProperties.Add(eventMessageProperty);
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.CorrelationId))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "CorrelationId", serviceBusReceivedMessage.CorrelationId, gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.SessionId))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "SessionId", serviceBusReceivedMessage.SessionId, gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.Subject))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Subject", serviceBusReceivedMessage.Subject, gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.DeadLetterErrorDescription))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "DeadLetterErrorDescription", serviceBusReceivedMessage.DeadLetterErrorDescription, gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.DeadLetterReason))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "DeadLetterReason", serviceBusReceivedMessage.DeadLetterReason, gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.DeadLetterSource))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "DeadLetterSource", serviceBusReceivedMessage.DeadLetterSource, gxcontext));
+
+									eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "DeliveryCount", serviceBusReceivedMessage.DeliveryCount.ToString(), gxcontext));
+									eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "EnqueuedSequenceNumber", serviceBusReceivedMessage.EnqueuedSequenceNumber.ToString(), gxcontext));
+									eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "SequenceNumber", serviceBusReceivedMessage.SequenceNumber.ToString(), gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.ReplyTo))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ReplyTo", serviceBusReceivedMessage.ReplyTo, gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.ReplyToSessionId))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ReplyToSessionId", serviceBusReceivedMessage.ReplyToSessionId, gxcontext));
+
+									eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "State", serviceBusReceivedMessage.State.ToString(), gxcontext));
+
+									eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "EnqueuedTime", serviceBusReceivedMessage.EnqueuedTime.ToString(), gxcontext));
+
+									eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "LockedUntil", serviceBusReceivedMessage.LockedUntil.ToString(), gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.LockToken))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "LockToken", serviceBusReceivedMessage.LockToken, gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.PartitionKey))
+										eventMessageProperties.Add(eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "PartitionKey", serviceBusReceivedMessage.PartitionKey, gxcontext));
+
+									eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "ScheduledEnqueueTime", serviceBusReceivedMessage.ScheduledEnqueueTime.ToString(), gxcontext));
+
+									eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "TimeToLive", serviceBusReceivedMessage.TimeToLive.ToString(), gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.To))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "To", serviceBusReceivedMessage.To, gxcontext));
+
+									if (!string.IsNullOrEmpty(serviceBusReceivedMessage.TransactionPartitionKey))
+										eventMessageProperties.Add(EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "TransactionPartitionKey", serviceBusReceivedMessage.TransactionPartitionKey, gxcontext));
+
+									//Event
+
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", serviceBusReceivedMessage.MessageId);
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", serviceBusReceivedMessage.EnqueuedTime.UtcDateTime);
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedata", serviceBusReceivedMessage.Body.ToString());
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.ServiceBusMessage);
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
+									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
+
+									//List of Events
+									eventMessage.Add(eventMessageItem);
+
 								}
-
-								//Body
-
-								eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, "Body", message.Body, gxcontext);
-								eventMessageProperties.Add(eventMessageProperty);
-
-								//user Properties
-								if (message.UserProperties.Count > 0)
-								{
-									foreach (string key in message.UserProperties.Keys)
-									{
-										eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, key, JSONHelper.Serialize(message.UserProperties[key]), gxcontext);
-										eventMessageProperties.Add(eventMessageProperty);
-									}
-								}
-
-								//System Properties or broker properties
-								if (message.SystemProperties != null)
-								{
-									Type syst = message.SystemProperties.GetType();
-									PropertyInfo[] sysProps = syst.GetProperties();
-
-									foreach (var prop in sysProps)
-										if (prop.GetIndexParameters().Length == 0)
-										{
-											eventMessageProperty = EventMessagePropertyMapping.CreateEventMessageProperty(eventMessPropsItemType, prop.Name, Convert.ToString(prop.GetValue(message.SystemProperties)), gxcontext);
-											eventMessageProperties.Add(eventMessageProperty);
-										}
-								}
-
-								//Event
-
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageid", message.MessageId);	
-								Message.MessageProperty enqueuedTimeUtcProp = message.MessageProperties.Find(x => x.key == "EnqueuedTimeUtc");
-								if (enqueuedTimeUtcProp != null)
-								{
-									DateTime enqueuedTimeUtc;
-									if (DateTime.TryParse(enqueuedTimeUtcProp.value, out enqueuedTimeUtc))
-									ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagedate", enqueuedTimeUtc);
-								}
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessagesourcetype", EventSourceType.ServiceBusMessage);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageversion", string.Empty);
-								ClassLoader.SetPropValue(eventMessageItem, "gxTpr_Eventmessageproperties", eventMessageProperties);
-
-								//List of Events
-								eventMessage.Add(eventMessageItem);
 								parametersdata = new object[] { eventMessages, null };
 							}
+
 							try
 							{
 								method.Invoke(objgxproc, parametersdata);
@@ -236,93 +242,94 @@ namespace GeneXus.Deploy.AzureFunctions.ServiceBusHandler
 							}
 							catch (Exception)
 							{
-								exMessage = string.Format("{0} Error invoking the GX procedure for Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList));
+								exMessage = string.Format("{0} Error invoking the GX procedure for processing a batch of messages.", FunctionExceptionType.SysRuntimeError);
 								log.LogError(exMessage);
 								throw; //Throw the exception so the runtime can Retry the operation.
-							}	
+							}
 						}
 					}
 					else
 					{
-						exMessage = string.Format("{0} GeneXus procedure could not be executed for Message Id {1}.", FunctionExceptionType.SysRuntimeError, message.MessageId);
+						exMessage = string.Format("{0} GeneXus procedure could not be executed while processing a batch of messages. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError);
 						throw new Exception(exMessage);
 					}
 				}
 				catch (Exception)
 				{
-					log.LogError("{0} Error processing Message Id {1}.", FunctionExceptionType.SysRuntimeError, StringUtil.Sanitize(message.MessageId, StringUtil.LogUserEntryWhiteList));
+					log.LogError("{0} Error processing a batch of messages.", FunctionExceptionType.SysRuntimeError);
 					throw; //Throw the exception so the runtime can Retry the operation.
 				}
 			}
 			else
 			{
-				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing Message Id {1}. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError, message.MessageId);
+				exMessage = string.Format("{0} GeneXus procedure could not be executed while processing a batch of messages. Reason: procedure not specified in configuration file.", FunctionExceptionType.SysRuntimeError);
 				throw new Exception(exMessage);
 			}
+
+			return Task.CompletedTask;
 		}
-		[DataContract]
-		internal class Message
+		internal string GetSerializedMessages(ServiceBusReceivedMessage[] messages)
 		{
-			public Message()
-			{ }
-
-			[DataMember]
-			public string MessageId;
-
-			[DataMember]
-			public IDictionary<string, object> UserProperties { get; set; }
-
-			[DataMember]
-			public SystemPropertiesCollection SystemProperties { get; set; }
-
-			[DataMember]
-			public string Body { get; set; }
-
-			[DataMember]
-			public List<MessageProperty> MessageProperties;
-
-			[DataContract]
-			internal class SystemPropertiesCollection
+			
+			SerializableServiceBusMessages serializableServiceBusMessages = new SerializableServiceBusMessages();
+			foreach (ServiceBusReceivedMessage serviceBusReceivedMessage in messages)
 			{
-				[DataMember]
-				public bool IsLockTokenSet { get; }
+				SerializableServiceBusMessage serializableMessage = new SerializableServiceBusMessage
+				{
+					MessageId = serviceBusReceivedMessage.MessageId,
+					Body = serviceBusReceivedMessage.Body != null ? serviceBusReceivedMessage.Body.ToString() : string.Empty,
+					EnqueuedTime = serviceBusReceivedMessage.EnqueuedTime.UtcDateTime,
+					ContentType = serviceBusReceivedMessage.ContentType ?? "application/json",
+					CorrelationId = serviceBusReceivedMessage.CorrelationId ?? string.Empty,
+					SessionId = serviceBusReceivedMessage.SessionId ?? string.Empty,
+					DeliveryCount = serviceBusReceivedMessage.DeliveryCount,
+					PartitionKey = serviceBusReceivedMessage.PartitionKey ?? string.Empty,
+					ReplyToSessionId = serviceBusReceivedMessage.ReplyToSessionId ?? string.Empty,
+					ExpiresAt = serviceBusReceivedMessage.ExpiresAt.UtcDateTime,
+					LockedUntil = serviceBusReceivedMessage.LockedUntil.UtcDateTime,
+					LockToken = serviceBusReceivedMessage.LockToken ?? string.Empty,
+					ApplicationProperties = serviceBusReceivedMessage.ApplicationProperties,
+					EnqueuedSequenceNumber = serviceBusReceivedMessage.EnqueuedSequenceNumber,
+					ScheduledEnqueueTime = serviceBusReceivedMessage.ScheduledEnqueueTime.UtcDateTime,
+					TimeToLive = serviceBusReceivedMessage.TimeToLive,
+					Subject = serviceBusReceivedMessage.Subject ?? string.Empty
 
-				[DataMember]
-				public string LockToken { get; }
-
-				[DataMember]
-				public bool IsReceived { get; }
-
-				[DataMember]
-				public int DeliveryCount { get; }
-
-				[DataMember]
-				public DateTime LockedUntilUtc { get; }
-
-				[DataMember]
-				public long SequenceNumber { get; }
-
-				[DataMember]
-				public string DeadLetterSource { get; }
-
-				[DataMember]
-				public long EnqueuedSequenceNumber { get; }
-
-				[DataMember]
-				public DateTime EnqueuedTimeUtc { get; }
+				};
+				serializableServiceBusMessages.messages.Add(serializableMessage);
 			}
-
-			[DataContract]
-			internal class MessageProperty
-			{
-				[DataMember]
-				public string key { get; set; }
-
-				[DataMember]
-				public string value { get; set; }
-				public MessageProperty()
-				{ }
-			}
+			return JsonSerializer.Serialize(serializableServiceBusMessages);
 		}
+	}
+	[Serializable]
+	public class SerializableServiceBusMessages
+	{
+		public SerializableServiceBusMessages() {
+			messages = new List<SerializableServiceBusMessage>();
+		}
+		public List<SerializableServiceBusMessage> messages { get; set; }
+	}
+
+	[Serializable]
+	public class SerializableServiceBusMessage
+	{
+		public SerializableServiceBusMessage()
+		{}
+		public string MessageId { get; set; }
+		public string Body { get; set; }
+		public DateTime EnqueuedTime { get; set; }
+		public string ContentType { get; set; }
+		public string CorrelationId { get; set; }
+		public string SessionId { get; set; }
+		public int DeliveryCount { get; set; }
+		public string PartitionKey { get; set; }
+		public string ReplyToSessionId {  get; set; }
+		public DateTime ExpiresAt { get; set; }
+		public DateTime LockedUntil { get; set; }
+		public string LockToken { get; set; }
+		public IReadOnlyDictionary<string, object> ApplicationProperties {  get; set; }
+		public long EnqueuedSequenceNumber { get; set; }
+		public DateTime ScheduledEnqueueTime { get; set; }
+		public TimeSpan TimeToLive { get; set; }
+		public string Subject { get; set; }
 	}
 }

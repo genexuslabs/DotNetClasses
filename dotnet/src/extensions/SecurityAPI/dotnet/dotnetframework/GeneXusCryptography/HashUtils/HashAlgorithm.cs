@@ -1,4 +1,5 @@
 
+using log4net;
 using SecurityAPICommons.Commons;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,7 @@ namespace GeneXusCryptography.HashUtils
 	[SecuritySafeCritical]
 	public static class HashAlgorithmUtils
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(HashAlgorithmUtils));
 
 		/// <summary>
 		/// Mapping between string name and HashAlgorithm enum representation
@@ -37,10 +39,12 @@ namespace GeneXusCryptography.HashUtils
 		/// <returns>HashAlgorithm enum representation</returns>
 		public static HashAlgorithm getHashAlgorithm(string hashAlgorithm, Error error)
 		{
+			logger.Debug("getHashAlgorithm");
 			if (error == null) return HashAlgorithm.NONE;
 			if (hashAlgorithm == null)
 			{
 				error.setError("HAA01", "Unrecognized HashAlgorihm");
+				logger.Error("Unrecognized HashAlgorihm");
 				return HashAlgorithm.NONE;
 			}
 			switch (hashAlgorithm.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim())
@@ -111,9 +115,11 @@ namespace GeneXusCryptography.HashUtils
 					return HashAlgorithm.SHA3_512;
 				case "SHAKE_128":
 					error.setError("HAA04", "Not implemented algorithm SHAKE_128");
+					logger.Error("Not implemented algorithm SHAKE_128");
 					return HashAlgorithm.NONE;
 				case "SHAKE_256":
 					error.setError("HAA05", "Not implemented algorithm SHAKE_256");
+					logger.Error("Not implemented algorithm SHAKE_256");
 					return HashAlgorithm.NONE;
 				case "SM3":
 					return HashAlgorithm.SM3;
@@ -123,6 +129,7 @@ namespace GeneXusCryptography.HashUtils
 					return HashAlgorithm.WHIRLPOOL;
 				default:
 					error.setError("HAA02", "Unrecognized HashAlgorihm");
+					logger.Error("Unrecognized HashAlgorihm");
 					return HashAlgorithm.NONE;
 			}
 		}
@@ -135,6 +142,7 @@ namespace GeneXusCryptography.HashUtils
 		/// <returns>string name value of HashAlgorithm</returns>
 		public static string valueOf(HashAlgorithm hashAlgorithm, Error error)
 		{
+			logger.Debug("valueOf");
 			if (error == null) return "Unrecognized algorithm";
 			switch (hashAlgorithm)
 			{
@@ -214,6 +222,7 @@ namespace GeneXusCryptography.HashUtils
 					return "WHIRLPOOL";
 				default:
 					error.setError("HAA03", "Unrecognized HashAlgorihm");
+					logger.Error("Unrecognized HashAlgorihm");
 					return "Unrecognized algorithm";
 			}
 		}

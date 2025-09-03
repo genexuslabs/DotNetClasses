@@ -21,12 +21,15 @@ using Org.BouncyCastle.Utilities.Encoders;
 using System.Security.AccessControl;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using log4net;
 
 namespace SecurityAPICommons.Keys
 {
 	[SecuritySafeCritical]
 	public class PrivateKeyManager : PrivateKey
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(PrivateKeyManager));
+		private readonly string className = typeof(PrivateKeyManager).Name;
 
 		private PrivateKeyInfo privateKeyInfo;
 		private bool hasPrivateKey;
@@ -50,9 +53,11 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool Load(string privateKeyPath)
 		{
+			string method = "Load";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
+			SecurityUtils.validateStringInput(className, method, "path", privateKeyPath, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -66,10 +71,12 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool LoadEncrypted(string privateKeyPath, string encryptionPassword)
 		{
+			string method = "LoadEncrypted";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
-			SecurityUtils.validateStringInput("password", encryptionPassword, this.error);
+			SecurityUtils.validateStringInput(className, method, "path", privateKeyPath, this.error);
+			SecurityUtils.validateStringInput(className, method, "password", encryptionPassword, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -87,9 +94,11 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool LoadPKCS12(string privateKeyPath, string alias, string password)
 		{
+			string method = "LoadPKCS12";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
+			SecurityUtils.validateStringInput(className, method, "path", privateKeyPath, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -105,6 +114,7 @@ namespace SecurityAPICommons.Keys
 #pragma warning restore CA1031 // Do not catch general exception types
 			{
 				this.error.setError("PK001", e.Message);
+				logger.Error(method, e);
 				return false;
 			}
 			if (this.HasError())
@@ -118,9 +128,11 @@ namespace SecurityAPICommons.Keys
 		override
 		public bool FromBase64(string base64)
 		{
+			string method = "FromBase64";
+			logger.Debug(method);
 			this.error.cleanError();
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput("base64", base64, this.error);
+			SecurityUtils.validateStringInput(className, method, "base64", base64, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -135,6 +147,7 @@ namespace SecurityAPICommons.Keys
 			catch (Exception e)
 			{
 				this.error.setError("PK002", e.Message);
+				logger.Error(method, e);
 				return false;
 			}
 			this.hasPrivateKey = res;
@@ -145,6 +158,8 @@ namespace SecurityAPICommons.Keys
 		override
 		public string ToBase64()
 		{
+			string method = "ToBase64";
+			logger.Debug(method);
 			if (this.hasPrivateKey)
 			{
 				string encoded = "";
@@ -155,11 +170,13 @@ namespace SecurityAPICommons.Keys
 				catch (Exception e)
 				{
 					this.error.setError("PK003", e.Message);
+					logger.Error(method, e);
 					return "";
 				}
 				return encoded;
 			}
 			this.error.setError("PK0016", "No private key loaded");
+			logger.Error("No private key loaded");
 			return "";
 
 
@@ -189,6 +206,7 @@ namespace SecurityAPICommons.Keys
 
 		private bool ReadBase64(string base64)
 		{
+			logger.Debug("ReadBase64");
 			byte[] keybytes = Base64.Decode(base64);
 			Asn1InputStream istream = new Asn1InputStream(keybytes);
 			Asn1Sequence seq = (Asn1Sequence)istream.ReadObject();
@@ -198,6 +216,7 @@ namespace SecurityAPICommons.Keys
 
 			{
 				this.error.setError("PK004", "Could not read private key from base64 string");
+				logger.Error("Could not read private key from base64 string");
 				return false;
 			}
 
@@ -208,9 +227,11 @@ namespace SecurityAPICommons.Keys
 		[SecuritySafeCritical]
 		public AsymmetricAlgorithm getPrivateKeyForXML()
 		{
+			logger.Debug("getPrivateKeyForXML");
 			if (!this.hasPrivateKey)
 			{
 				this.error.setError("PK011", "No private key loaded");
+				logger.Error("No private key loaded");
 				return null;
 			}
 			string algorithm = getAlgorithm();
@@ -238,6 +259,7 @@ namespace SecurityAPICommons.Keys
 					}catch(Exception e )
 					{
 						this.error.setError("PK026", e.Message);
+						logger.Error("getPrivateKeyForXML", e);
 						return null;
 					}
 				}
@@ -245,10 +267,10 @@ namespace SecurityAPICommons.Keys
 #else
 
 
-                /****System.Security.Cryptography.CryptographicException: The system cannot find the file specified.****/
-                /****HACK****/
-                //https://social.msdn.microsoft.com/Forums/vstudio/en-US/7ea48fd0-8d6b-43ed-b272-1a0249ae490f/systemsecuritycryptographycryptographicexception-the-system-cannot-find-the-file-specified?forum=clr#37d4d83d-0eb3-497a-af31-030f5278781a
-                CspParameters cspParameters = new CspParameters();
+				/****System.Security.Cryptography.CryptographicException: The system cannot find the file specified.****/
+				/****HACK****/
+				//https://social.msdn.microsoft.com/Forums/vstudio/en-US/7ea48fd0-8d6b-43ed-b272-1a0249ae490f/systemsecuritycryptographycryptographicexception-the-system-cannot-find-the-file-specified?forum=clr#37d4d83d-0eb3-497a-af31-030f5278781a
+				CspParameters cspParameters = new CspParameters();
                 cspParameters.Flags = CspProviderFlags.UseMachineKeyStore;
                 if (SecurityUtils.compareStrings(Config.SecurityApiGlobal.GLOBALKEYCOONTAINERNAME, ""))
                 {
@@ -275,6 +297,7 @@ namespace SecurityAPICommons.Keys
 			else
 			{
 				this.error.setError("PK012", "XML signature with ECDSA keys is not implemented on Net Framework");
+				logger.Error("XML signature with ECDSA keys is not implemented on Net Framework");
 				return null;
 				//https://stackoverflow.com/questions/27420789/sign-xml-with-ecdsa-and-sha256-in-net?rq=1
 				// https://www.powershellgallery.com/packages/Posh-ACME/2.6.0/Content/Private%5CConvertFrom-BCKey.ps1
@@ -287,6 +310,8 @@ namespace SecurityAPICommons.Keys
 		override
 		public AsymmetricKeyParameter getAsymmetricKeyParameter()
 		{
+			string method = "getAsymmetricKeyParameter";
+			logger.Debug(method);
 			AsymmetricKeyParameter akp = null;
 			//string alg = this.privateKeyInfo.PrivateKeyAlgorithm.Algorithm.Id;
 			try
@@ -296,6 +321,7 @@ namespace SecurityAPICommons.Keys
 			catch (Exception e)
 			{
 				this.error.setError("PK013", e.Message);
+				logger.Error(method, e);
 			}
 			return akp;
 		}
@@ -314,6 +340,7 @@ namespace SecurityAPICommons.Keys
 		}
 		private bool loadPrivateKeyFromFile(string path, string alias, string password)
 		{
+			logger.Debug("loadPrivateKeyFromFile");
 
 			bool flag = false;
 			if (SecurityUtils.extensionIs(path, ".pem") || SecurityUtils.extensionIs(path, ".key"))
@@ -327,6 +354,7 @@ namespace SecurityAPICommons.Keys
 			if (SecurityUtils.extensionIs(path, ".jks"))
 			{
 				this.error.setError("PK014", "Java Key Stores not allowed on .Net applications");
+				logger.Error("Java Key Stores not allowed on .Net applications");
 				//throw new Exception("Java Key Stores not allowed on .Net applications");
 			}
 			if (flag) { setAlgorithm(); }
@@ -341,10 +369,13 @@ namespace SecurityAPICommons.Keys
 		/// <returns></returns>
 		private bool loadPrivateKeyFromPKCS12File(string path, string password)
 		{
+			string method = "loadPrivateKeyFromPKCS12File";
+			logger.Debug(method);
 			bool flag = false;
 			if (password == null)
 			{
-				this.error.setError("PK008", "Alias and Password are required for PKCS12 keys");
+				this.error.setError("PK008", "Password is required for PKCS12 keys");
+				logger.Error("Password is required for PKCS12 keys");
 				return false;
 			}
 			Pkcs12Store pkcs12 = null;
@@ -361,6 +392,7 @@ namespace SecurityAPICommons.Keys
 			catch(Exception e)
 			{
 				this.error.setError("PK015", e.Message);
+				logger.Error(method, e);
 				//throw new FileLoadException(path + "not found or wrong password.");
 			}
 
@@ -383,6 +415,7 @@ namespace SecurityAPICommons.Keys
 
 			}
 			this.error.setError("PK016", "Path not found");
+			logger.Error("Path not found");
 			return flag;
 
 		}
@@ -394,6 +427,8 @@ namespace SecurityAPICommons.Keys
 		/// <returns>boolean true if loaded correctly</returns>
 		private bool loadPrivateKeyFromPEMFile(string path)
 		{
+			string method = "loadPrivateKeyFromPEMFile";
+			logger.Debug(method);
 			bool flag = false;
 			using (StreamReader streamReader = new StreamReader(path))
 			{
@@ -418,6 +453,7 @@ namespace SecurityAPICommons.Keys
 					catch (Exception ex)
 					{
 						this.error.setError("PK017", ex.Message);
+						logger.Error(method, ex);
 						return false;
 					}
 				}
@@ -433,6 +469,7 @@ namespace SecurityAPICommons.Keys
 				if (obj.GetType() == typeof(Pkcs8EncryptedPrivateKeyInfo))
 				{
 					this.error.setError("PK018", "Encrypted key, remove the key password or use the adecuate function");
+					logger.Error("Encrypted key, remove the key password or use the adecuate function");
 					flag = false;
 				}
 				if (obj.GetType() == typeof(AsymmetricCipherKeyPair))
@@ -447,6 +484,7 @@ namespace SecurityAPICommons.Keys
 				if (obj.GetType() == typeof(X509Certificate))
 				{
 					this.error.setError("PK009", "The file contains a public key");
+					logger.Error("The file contains a public key");
 					flag = false;
 
 
@@ -470,7 +508,7 @@ namespace SecurityAPICommons.Keys
 		/// <returns>PrivateKeyInfo from AsymmetricKeyParameter </returns>
 		private PrivateKeyInfo createPrivateKeyInfo(AsymmetricKeyParameter key)
 		{
-
+			logger.Debug("createPrivateKeyInfo");
 			if (key is DsaPrivateKeyParameters)
 			{
 
@@ -528,9 +566,11 @@ namespace SecurityAPICommons.Keys
 
 				return new PrivateKeyInfo(algID, keyStruct.ToAsn1Object());
 			}
-			this.error.setError("PK019", "Class provided is not convertible: " + key.GetType().FullName);
+			this.error.setError("PK019", String.Format("Class provided is not convertible: {0}", key.GetType().FullName));
+			logger.Error(String.Format("Class provided is not convertible: {0}", key.GetType().FullName));
 			this.hasPrivateKey = false;
-			throw new ArgumentNullException("Class provided is not convertible: " + key.GetType().FullName);
+			throw new ArgumentNullException(String.Format("Class provided is not convertible: {0}", key.GetType().FullName));
+			
 
 		}
 
@@ -538,9 +578,12 @@ namespace SecurityAPICommons.Keys
 		override
 		public AsymmetricAlgorithm getAsymmetricAlgorithm()
 		{
+			string method = "getAsymmetricAlgorithm";
+			logger.Debug(method);
 			if (!this.hasPrivateKey)
 			{
 				this.error.setError("PK011", "No private key loaded");
+				logger.Error("No private key loaded");
 				return null;
 			}
 			AsymmetricAlgorithm alg;
@@ -592,6 +635,7 @@ namespace SecurityAPICommons.Keys
 					if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
 					{
 						this.error.setError("PK025", "ECDSA JWT signature not implemented for Net on Linux systems");
+						logger.Error("ECDSA JWT signature not implemented for Net on Linux systems");
 						return null;
 					}
 #endif
@@ -611,12 +655,14 @@ namespace SecurityAPICommons.Keys
 					catch (Exception e)
 					{
 						this.error.setError("PK020", e.Message);
+						logger.Error(method, e);
 						return null;
 					}
 					break;
 				default:
 
 					this.error.setError("PK021", "Unrecognized key type");
+					logger.Error("Unrecognized key type");
 					return null;
 			}
 			if (alg != null)

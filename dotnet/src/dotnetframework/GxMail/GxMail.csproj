@@ -9,9 +9,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MailKit" Version="3.1.1" />
-		<PackageReference Include="MimeKit" Version="3.1.1" />
-		<PackageReference Include="Microsoft.Identity.Client" Version="4.59.1" />
+		<PackageReference Include="MailKit" Version="4.7.1" />
+		<PackageReference Include="MimeKit" Version="4.7.1" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.60.4" />
 		<PackageReference Include="OpenPop.NET" Version="2.0.6.1120" />
 		<PackageReference Include="Org.Mentalis.Security" Version="1.0.0" />
 		<PackageReference Condition="'$(SignAssembly)'=='true'" Include="StrongNamer" Version="0.2.5" />

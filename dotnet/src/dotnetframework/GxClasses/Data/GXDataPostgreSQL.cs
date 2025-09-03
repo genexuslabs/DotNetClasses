@@ -11,8 +11,14 @@ using System.IO;
 using System.Collections.Generic;
 using GeneXus.Configuration;
 using System.Text.RegularExpressions;
+
+
 #if NETCORE
+using Npgsql;
+using Pgvector;
+using NpgsqlTypes;
 using GxClasses.Helpers;
+using System.Collections.Concurrent;
 #endif
 
 namespace GeneXus.Data
@@ -26,6 +32,9 @@ namespace GeneXus.Data
 		private bool _byteaOutputEscape;
 		const string NpgsqlDbTypeEnum = "NpgsqlTypes.NpgsqlDbType";
 		const string NpgsqlAssemblyName = "Npgsql";
+#if NETCORE
+		static ConcurrentDictionary<string, NpgsqlDataSource> _dataSources = new ConcurrentDictionary<string, NpgsqlDataSource>();
+#endif
 		public static Assembly NpgsqlAssembly
 		{
 			get
@@ -67,13 +76,30 @@ namespace GeneXus.Data
 					_byteaOutputEscape = true;
 			}
 		}
+#if NETCORE
+		static NpgsqlDataSource GetOrCreateDataSource(string connectionString)
+		{
+			return _dataSources.GetOrAdd(connectionString, cs =>
+			{
+				NpgsqlDataSourceBuilder ds = new NpgsqlDataSourceBuilder(connectionString);
+				ds.UseVector();
+				return ds.Build();
+			});
+		}
+#endif
 		public override GxAbstractConnectionWrapper GetConnection(bool showPrompt, string datasourceName, string userId,
 			string userPassword, string databaseName, string port, string schema, string extra, GxConnectionCache connectionCache)
 		{
 			if (m_connectionString == null)
 				m_connectionString = BuildConnectionString(datasourceName, userId, userPassword, databaseName, port, schema, extra);
 			GXLogging.Debug(log, "Setting connectionString property ", () => BuildConnectionString(datasourceName, userId, NaV, databaseName, port, schema, extra));
+
+#if NETCORE
+			return new PostgresqlConnectionWrapper(GetOrCreateDataSource(m_connectionString), connectionCache, isolationLevel);
+#else
+			
 			return new PostgresqlConnectionWrapper(m_connectionString, connectionCache, isolationLevel);
+#endif
 		}
 		string convertToSqlCall(string stmt, GxParameterCollection parameters)
 		{
@@ -209,10 +235,13 @@ namespace GeneXus.Data
 		public override IDbDataParameter CreateParameter(string name, Object dbtype, int gxlength, int gxdec)
 		{
 			IDbDataParameter parm = (IDbDataParameter)ClassLoader.CreateInstance(NpgsqlAssembly, "Npgsql.NpgsqlParameter");
-			ClassLoader.SetPropValue(parm, "NpgsqlDbType", GXTypeToNpgsqlDbType(dbtype));
-			ClassLoader.SetPropValue(parm, "Size", gxlength);
-			ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);
-			ClassLoader.SetPropValue(parm, "Scale", (byte)gxdec);
+			if (!(dbtype is GXType.Embedding))
+			{
+				ClassLoader.SetPropValue(parm, "NpgsqlDbType", GXTypeToNpgsqlDbType(dbtype));
+				ClassLoader.SetPropValue(parm, "Size", gxlength);
+				ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);
+				ClassLoader.SetPropValue(parm, "Scale", (byte)gxdec);
+			}
 			ClassLoader.SetPropValue(parm, "ParameterName", name);
 			return parm;
 
@@ -318,6 +347,12 @@ namespace GeneXus.Data
 			{
 				value = value.ToString();
 			}
+#if NETCORE
+			else if (value is GxEmbedding embedding)
+			{
+				value = new Vector(embedding.Data);
+			}
+#endif
 			base.SetParameter(parameter, value);
 		}
 		public override void SetBinary(IDbDataParameter parameter, byte[] byteArray)
@@ -435,6 +470,18 @@ namespace GeneXus.Data
 				return gtmp;
 			}
 		}
+#if NETCORE
+		public override GxEmbedding GetEmbedding(IGxDbCommand cmd, IDataReader DR, int i, string model, int dimensions)
+		{
+			if (!cmd.HasMoreRows || DR == null || DR.IsDBNull(i))
+				return GxEmbedding.Empty(model, dimensions);
+			else
+			{
+				Pgvector.Vector vector = (Pgvector.Vector)DR.GetValue(i);
+				return new GxEmbedding(vector.Memory.ToArray()) { Model = model, Dimensions = dimensions };
+			}
+		}
+#endif
 		public override IDataReader GetCacheDataReader(CacheItem item, bool computeSize, string keyCache)
 		{
 			return new GxCacheDataReader(item, computeSize, keyCache);
@@ -594,7 +641,21 @@ namespace GeneXus.Data
 		{
 			_connection = (IDbConnection)ClassLoader.CreateInstance(GxPostgreSql.NpgsqlAssembly, "Npgsql.NpgsqlConnection");
 		}
-
+#if NETCORE
+		internal PostgresqlConnectionWrapper(NpgsqlDataSource datasource, GxConnectionCache connCache, IsolationLevel isolationLevel)
+		{
+			try
+			{
+				_connection = datasource.CreateConnection();
+				AppContext.SetSwitch(INFINITY_CONVERSIONS, true);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "Npgsql data provider Ctr error " + ex.Message + ex.StackTrace);
+				throw ex;
+			}
+		}
+#endif
 		public PostgresqlConnectionWrapper(String connectionString, GxConnectionCache connCache, IsolationLevel isolationLevel) 
 		{
 			try
@@ -620,7 +681,11 @@ namespace GeneXus.Data
 				InternalConnection.Open();
 				if (!m_autoCommit)
 				{
+#if NETCORE
+					m_transaction = InternalConnection.BeginTransaction();
+#else
 					m_transaction = InternalConnection.BeginTransaction(m_isolationLevel);
+#endif
 				}
 				else
 				{

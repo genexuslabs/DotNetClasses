@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Security;
 using System.Security.Cryptography;
-using Microsoft.Win32.SafeHandles;
+using Jose;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
@@ -12,13 +12,18 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities.Encoders;
 using Org.BouncyCastle.X509;
 using SecurityAPICommons.Utils;
+using log4net;
 
 namespace SecurityAPICommons.Commons
 {
 	[SecuritySafeCritical]
 	public class PublicKey : Key
 	{
+		private static readonly ILog logger = LogManager.GetLogger(typeof(PublicKey));
+
 		public SubjectPublicKeyInfo subjectPublicKeyInfo;
+
+		private readonly string className = typeof(PublicKey).Name;	
 
 		[SecuritySafeCritical]
 		public PublicKey() : base()
@@ -30,12 +35,14 @@ namespace SecurityAPICommons.Commons
 		override
 		public bool Load(string path)
 		{
-
+			string method = "Load";
+			logger.Debug(method);
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput("path", path, this.error);
+			SecurityUtils.validateStringInput(className, method, "path", path, this.error);
 			if (!(SecurityUtils.extensionIs(path, ".pem") || SecurityUtils.extensionIs(path, "key")))
 			{
 				this.error.setError("PU001", "Public key should be loaded from a .pem or .key file");
+				logger.Error("Public key should be loaded from a .pem or .key file");
 				return false;
 			}
 			/******* INPUT VERIFICATION - END *******/
@@ -47,6 +54,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU002", e.Message);
+				logger.Error(method, e);
 				return false;
 			}
 			return loaded;
@@ -56,9 +64,10 @@ namespace SecurityAPICommons.Commons
 		override
 		public bool FromBase64(string base64Data)
 		{
-
+			string method = "FromBase64";
+			logger.Debug(method);
 			/******* INPUT VERIFICATION - BEGIN *******/
-			SecurityUtils.validateStringInput("base64Data", base64Data, this.error);
+			SecurityUtils.validateStringInput(className, method, "base64Data", base64Data, this.error);
 			if (this.HasError())
 			{
 				return false;
@@ -78,6 +87,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU003", e.Message);
+				logger.Error(method, e);
 				flag = false;
 			}
 			setAlgorithm();
@@ -89,9 +99,12 @@ namespace SecurityAPICommons.Commons
 		override
 		public string ToBase64()
 		{
+			string method = "ToBase64";
+			logger.Debug(method);
 			if (this.subjectPublicKeyInfo == null)
 			{
 				this.error.setError("PU004", "Not loaded key");
+				logger.Error("Not loaded key");
 				return "";
 			}
 			string base64Encoded = "";
@@ -104,15 +117,83 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU005", e.Message);
+				logger.Error(method, e);
 			}
 
 			return base64Encoded;
 		}
 
+		[SecuritySafeCritical]
+		public bool FromJwks(string jwks, string kid)
+		{
+			string method = "FromJwks";
+			logger.Debug(method);
+			/******* INPUT VERIFICATION - BEGIN *******/
+			SecurityUtils.validateStringInput(className, method, "jwks", jwks, this.error);
+			SecurityUtils.validateStringInput(className, method, "kid", kid, this.error);
+			if (this.HasError())
+			{
+				return false;
+			}
+
+			/******* INPUT VERIFICATION - END *******/
+
+			bool flag = false;
+			string b64 = "";
+			try
+			{
+				b64 = FromJson(jwks, kid);
+			}
+			catch (Exception e)
+			{
+				this.error.setError("PU016", e.Message);
+				logger.Error(method, e);
+				return false;
+			}
+			flag = this.FromBase64(b64);
+			return flag;
+
+		}
+
 		/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
+
+
+		private string FromJson(string json, string id)
+		{
+			string method = "FromJson";
+			logger.Debug(method);
+			JwkSet set;
+			try
+			{
+				set = JwkSet.FromJson(json, JWT.DefaultSettings.JsonMapper);
+			}
+			catch (Exception e)
+			{
+				this.error.setError("PU015", e.Message);
+				logger.Error(method, e);
+				return "";
+			}
+
+			foreach (Jwk key in set)
+			{
+				if (key.KeyId.CompareTo(id) == 0)
+				{
+					byte[] m = Base64Url.Decode(key.N);
+					byte[] e = Base64Url.Decode(key.E);
+
+					RsaKeyParameters parms = new RsaKeyParameters(false, new Org.BouncyCastle.Math.BigInteger(1, m), new Org.BouncyCastle.Math.BigInteger(1, e));
+					SubjectPublicKeyInfo subpubkey = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(parms);
+					return Convert.ToBase64String(subpubkey.GetEncoded());
+
+				}
+			}
+			return "";
+		}
 
 		private bool loadPublicKeyFromFile(string path, string alias, string password)
 		{
+			string method = "loadPublicKeyFromFile";
+			logger.Debug(method);
 			bool loaded = false;
 			try
 			{
@@ -121,6 +202,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU006", e.Message);
+				logger.Error(method, e);
 				return false;
 			}
 			return loaded;
@@ -129,6 +211,8 @@ namespace SecurityAPICommons.Commons
 
 		private bool loadPublicKeyFromFile(string path)
 		{
+			string method = "loadPublicKeyFromFile";
+			logger.Debug(method);
 			bool flag = false;
 			using (StreamReader streamReader = new StreamReader(path))
 			{
@@ -160,17 +244,20 @@ namespace SecurityAPICommons.Commons
 				if (obj.GetType() == typeof(System.Security.Cryptography.X509Certificates.X509Certificate))
 				{
 					this.error.setError("PU009", "This file contains a certificate, use the Certificate object instead");
+					logger.Error("This file contains a certificate, use the Certificate object instead");
 					flag = false;
 
 				}
 				if (obj.GetType() == typeof(Org.BouncyCastle.X509.X509Certificate))
 				{
 					this.error.setError("PU011", "This file contains a certificate, use the Certificate object instead");
+					logger.Error("This file contains a certificate, use the Certificate object instead");
 					flag = false;
 				}
 				if (obj.GetType() == typeof(X509CertificateStructure))
 				{
 					this.error.setError("PU012", "This file contains a certificate, use the Certificate object instead");
+					logger.Error("This file contains a certificate, use the Certificate object instead");
 					flag = false;
 				}
 
@@ -189,7 +276,7 @@ namespace SecurityAPICommons.Commons
 			{
 				return;
 			}
-			string alg = this.subjectPublicKeyInfo.AlgorithmID.Algorithm.Id;
+			string alg = this.subjectPublicKeyInfo.Algorithm.Algorithm.Id;
 			switch (alg)
 			{
 				case "1.2.840.113549.1.1.1":
@@ -206,6 +293,8 @@ namespace SecurityAPICommons.Commons
 		override
 		public AsymmetricKeyParameter getAsymmetricKeyParameter()
 		{
+			string method = "getAsymmetricKeyParameter";
+			logger.Debug(method);
 			AsymmetricKeyParameter akp = null;
 			try
 			{
@@ -214,6 +303,7 @@ namespace SecurityAPICommons.Commons
 			catch (Exception e)
 			{
 				this.error.setError("PU006", e.Message);
+				logger.Error(method, e);
 				return null;
 			}
 			return akp;
@@ -223,6 +313,8 @@ namespace SecurityAPICommons.Commons
 		override
 		public AsymmetricAlgorithm getAsymmetricAlgorithm()
 		{
+			string method = "getAsymmetricAlgorithm";
+			logger.Debug(method);
 			AsymmetricAlgorithm alg = null;
 			switch (this.getAlgorithm())
 			{
@@ -236,7 +328,7 @@ namespace SecurityAPICommons.Commons
 
 #if !NETCORE
 					ECPublicKeyParameters pubkeyparms = (ECPublicKeyParameters)this.getAsymmetricKeyParameter();
-					AlgorithmIdentifier algid = this.subjectPublicKeyInfo.AlgorithmID;
+					AlgorithmIdentifier algid = this.subjectPublicKeyInfo.Algorithm;
 					string oid = ((DerObjectIdentifier)algid.Parameters).Id;
 					ECParameters ecparams = new ECParameters();
 					ecparams.Curve = ECCurve.CreateFromOid(new Oid(oid));
@@ -260,11 +352,13 @@ namespace SecurityAPICommons.Commons
 					catch(PlatformNotSupportedException)
 					{
 						this.error.setError("PU013", "Not implemented for not Windows platforms, use a x509 certificate instead");
+						logger.Error("Not implemented for not Windows platforms, use a x509 certificate instead");
 					}		
 #endif
 					break;
 				default:
 					this.error.setError("PU014", "Unrecognized algorithm");
+					logger.Error("Unrecognized algorithm");
 					break;
 			}
 			return alg;

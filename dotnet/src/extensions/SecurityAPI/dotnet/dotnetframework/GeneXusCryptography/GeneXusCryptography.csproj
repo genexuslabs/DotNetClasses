@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup>
     <TargetFramework>net47</TargetFramework>
     <RootNamespace>GeneXusCryptography</RootNamespace>
@@ -7,9 +7,10 @@
     <PackageId>GeneXus.SecurityApi.Cryptography</PackageId>
   </PropertyGroup>
  <ItemGroup>
-   <PackageReference Include="BouncyCastle.Cryptography" Version="2.2.1" />
+   <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
  </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\SecurityAPICommons\SecurityAPICommons.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,63 @@
+name: Kafka Integration Tests
+
+on: 
+  pull_request:
+    branches:
+      - 'master'
+      - 'release-*'
+  push:
+    branches: 
+      - 'master'
+      - 'beta'
+      - 'release-*'
+
+jobs:
+  test-kafka:
+    env:
+      GIT_REF: ${{ github.ref }}
+      GIT_SHA: ${{ github.sha }}
+      Configuration: Release
+      SolutionFile: dotnet/KafkaTestSolution.sln
+      SolutionFileName: KafkaTestSolution
+    
+    runs-on: ubuntu-latest
+    environment: kafka-integration-tests
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install Docker
+      uses: docker/setup-buildx-action@v2
+ 
+    - name: Start kafka
+      run: |
+        docker compose -f dotnet/src/extensions/kafka/test/docker-compose.yml up -d
+      env:
+        COMPOSE_DOCKER_CLI_BUILD: 1
+        DOCKER_BUILDKIT: 1
+
+    - name: Install .NET 8
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.x'
+        include-prerelease: true
+
+    - name: Install libgdiplus
+      run: sudo apt-get install -y libgdiplus
+   
+    - name: Create temporary solution with Kafka projects
+      run: |
+        dotnet new sln --name $SolutionFileName --output dotnet --force
+        dotnet sln $SolutionFile add dotnet/src/extensions/kafka/src/Core.Messaging.csproj
+        dotnet sln $SolutionFile add dotnet/src/extensions/kafka/test/DotNetCoreKafkaTest/DotNetCoreKafkaTest.csproj 
+      
+    - name: Test Kafka
+      env:
+        KAFKA_TEST_ENABLED: "true"
+      run: dotnet test $SolutionFile --configuration $Configuration
+
+    - name: Inspect Kafka logs
+      run: docker logs kafka
