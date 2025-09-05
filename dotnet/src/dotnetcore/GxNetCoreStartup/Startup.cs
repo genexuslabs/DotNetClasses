@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.SqlServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -227,9 +228,10 @@ namespace GeneXus.Application
 			});
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 
+			services.AddHttpContextAccessor();
 			if (sessionService != null)
 				ConfigureSessionService(services, sessionService);
-			services.AddHttpContextAccessor();
+
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(Preferences.SessionTimeout);
@@ -460,14 +462,38 @@ namespace GeneXus.Application
 			}
 			else if (sessionService is GxDatabaseSession)
 			{
-				services.AddDistributedSqlServerCache(options =>
+
+				if (Preferences.IsBeforeConnectEventConfigured())
 				{
-					GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
-					options.ConnectionString = sessionService.ConnectionString;
-					options.SchemaName = sessionService.Schema;
-					options.TableName = sessionService.TableName;
-					options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
-				});
+					services.AddTransient<CacheResolver>(_ => connectionString =>
+					{
+						GXLogging.Info(log, $"Using SQLServer for request scoped Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
+						Action<SqlServerCacheOptions> cacheConfigOptions = options =>
+						{
+							options.ConnectionString = connectionString;
+							options.SchemaName = sessionService.Schema;
+							options.TableName = sessionService.TableName;
+							options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
+						};
+						services.AddOptions();
+						services.Configure(cacheConfigOptions);
+						services.AddTransient<SqlServerCache>();
+						return services.BuildServiceProvider().GetService<SqlServerCache>();
+					});
+					services.AddTransient<IDistributedCache, CustomCacheProvider>();
+				}
+				else
+				{
+
+					services.AddDistributedSqlServerCache(options =>
+					{
+						GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
+						options.ConnectionString = sessionService.ConnectionString;
+						options.SchemaName = sessionService.Schema;
+						options.TableName = sessionService.TableName;
+						options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
+					});
+				}
 			}
 		}
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor)
@@ -501,6 +527,10 @@ namespace GeneXus.Application
 			}
 			app.UseRouting();
 			app.UseCookiePolicy();
+			if (Preferences.IsBeforeConnectEventConfigured())
+			{
+				app.UseMiddleware<EnableCustomSessionStoreMiddleware>();
+			}
 			app.UseSession();
 			app.UseStaticFiles();
 
@@ -733,6 +763,20 @@ namespace GeneXus.Application
 				}
 			}
 			await Task.CompletedTask;
+		}
+	}
+	internal class EnableCustomSessionStoreMiddleware
+	{
+		private readonly RequestDelegate _next;
+
+		public EnableCustomSessionStoreMiddleware(RequestDelegate next)
+		{
+			_next = next;
+		}
+
+		public async Task Invoke(HttpContext context, IDistributedCache distributedCache)
+		{
+			await _next(context);
 		}
 	}
 	public class EnableRequestRewindMiddleware
