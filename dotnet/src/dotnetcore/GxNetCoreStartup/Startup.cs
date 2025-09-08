@@ -174,6 +174,7 @@ namespace GeneXus.Application
 		const string CORS_ANY_ORIGIN = "*";
 		const double CORS_MAX_AGE_SECONDS = 86400;
 		internal const string GX_CONTROLLERS = "gxcontrollers";
+		internal static string DefaultFileName { get; set; }
 
 		public List<string> servicesBase = new List<string>();		
 
@@ -530,10 +531,6 @@ namespace GeneXus.Application
 				app.UseHttpsRedirection();
 				app.UseHsts();
 			}
-			app.UseEndpoints(endpoints =>
-			{
-				endpoints.MapControllers();
-			});
 			
 			if (log.IsCriticalEnabled && env.IsDevelopment())
 			{
@@ -621,10 +618,13 @@ namespace GeneXus.Application
 					routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				});
 			}
-			app.UseMvc(routes =>
+			if (FindAndStoreDefaultFile())
 			{
-				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
-			});
+				app.UseEndpoints(endpoints =>
+				{
+					endpoints.MapControllerRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
+				});
+			}
 
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
@@ -646,6 +646,21 @@ namespace GeneXus.Application
 			{
 				app.UseCors(CORS_POLICY_NAME);
 			}
+		}
+		private static bool FindAndStoreDefaultFile()
+		{
+			string[] defaultFiles = { "default.htm", "default.html", "index.htm", "index.html" };
+			foreach (string file in defaultFiles)
+			{
+				string filePath = Path.Combine(LocalPath, file);
+				if (File.Exists(filePath))
+				{
+					DefaultFileName = file;
+					return true;
+				}
+			}
+			DefaultFileName = null;
+			return false;
 		}
 
 		private void ConfigureSwaggerUI(IApplicationBuilder app, string baseVirtualPath)
@@ -762,13 +777,11 @@ namespace GeneXus.Application
 	{
 		public IActionResult Index()
 		{
-			string[] defaultFiles = { "default.htm", "default.html", "index.htm", "index.html" };
-			foreach (string file in defaultFiles) {
-				if (System.IO.File.Exists(Path.Combine(Startup.LocalPath, file))){
-					return Redirect(Url.Content($"~/{file}"));
-				}
+			if (!string.IsNullOrEmpty(Startup.DefaultFileName))
+			{
+				return Redirect(Url.Content($"~/{Startup.DefaultFileName}"));
 			}
-			return Redirect(defaultFiles[0]);
+			return NotFound();
 		}
 	}
 	internal class SetRoutePrefix : IApplicationModelConvention
