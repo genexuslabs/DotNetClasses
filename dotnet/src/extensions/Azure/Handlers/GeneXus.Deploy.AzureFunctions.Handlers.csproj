@@ -21,6 +21,10 @@
 		<IntegratedSecuritySupport>true</IntegratedSecuritySupport>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<IntegratedSecurity Condition="'$(IntegratedSecuritySupport)'=='true'">true</IntegratedSecurity>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 	  <DebugType>portable</DebugType>
 	</PropertyGroup>
