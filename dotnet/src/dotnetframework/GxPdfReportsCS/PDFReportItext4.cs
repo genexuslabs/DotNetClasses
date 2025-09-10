@@ -27,11 +27,12 @@ namespace com.genexus.reports
 		private PdfTemplate template;
 		private BaseFont templateFont;
 		private bool asianFontsDllLoaded = false;
+		private bool documentOpened = false;
 		internal Dictionary<string, Image> documentImages;
 		int justifiedType;
 		static Assembly iTextAssembly = typeof(Document).Assembly;
 
-		public PDFReportItextSharp(String appPath):base(appPath)
+		public PDFReportItextSharp(String appPath) : base(appPath)
 		{
 
 			document = null;
@@ -65,15 +66,23 @@ namespace com.genexus.reports
 					if (SetComplainceLevel(complianceLevel))
 						writer.SetTagged();
 				}
-				
+
 			}
 			catch (DocumentException de)
 			{
 				GXLogging.Debug(log, "GxDrawRect error", de);
 			}
-			document.Open();
 		}
 
+		private void EnsureDocumentOpen()
+		{
+			if (!documentOpened && document != null)
+			{
+				document.Open();
+				documentOpened = true;
+				GXLogging.Debug(log, "Document opened on demand");
+			}
+		}
 		/**
 		* @param hideCorners indicates whether corner triangles should be hidden when the side that joins them is hidden.
 		*/
@@ -275,6 +284,7 @@ namespace com.genexus.reports
 			int styleTop, int styleBottom, int styleRight, int styleLeft, int cornerRadioTL, int cornerRadioTR, int cornerRadioBL, int cornerRadioBR)
 		{
 
+			EnsureDocumentOpen();
 			PdfContentByte cb = writer.DirectContent;
 
 			float penAux = (float)convertScale(pen);
@@ -363,6 +373,7 @@ namespace com.genexus.reports
 		}
 		public override void GxDrawLine(int left, int top, int right, int bottom, int width, int foreRed, int foreGreen, int foreBlue, int style)
 		{
+			EnsureDocumentOpen();
 			PdfContentByte cb = writer.DirectContent;
 
 			float widthAux = (float)convertScale(width);
@@ -403,6 +414,7 @@ namespace com.genexus.reports
 		}
 		public override void GxDrawBitMap(String bitmap, int left, int top, int right, int bottom, int aspectRatio)
 		{
+			EnsureDocumentOpen();
 			try
 			{
 				iTextSharp.text.Image image;
@@ -649,7 +661,7 @@ namespace com.genexus.reports
 				else
 					defaultFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
 			}
-			return defaultFont;		
+			return defaultFont;
 		}
 		private void LoadAsianFontsDll()
 		{
@@ -716,10 +728,11 @@ namespace com.genexus.reports
 				GXLogging.Debug(log, "setAsianFont io error", ioe);
 			}
 		}
-	
+
 #pragma warning disable CS0612 // Type or member is obsolete
 		public override void GxDrawText(String sTxt, int left, int top, int right, int bottom, int align, int htmlformat, int border, int valign)
 		{
+			EnsureDocumentOpen();
 			GXLogging.Debug(log, "GxDrawText, text:" + sTxt);
 			bool printRectangle = false;
 			if (props.getBooleanGeneralProperty(Const.BACK_FILL_IN_CONTROLS, true))
@@ -1279,7 +1292,7 @@ namespace com.genexus.reports
 			return new iTextSharp.text.Rectangle((int)(width / PAGE_SCALE_X) + leftMargin, (int)(length / PAGE_SCALE_Y) + topMargin);
 		}
 
-	
+
 		public override void GxEndDocument()
 		{
 			if (document.PageNumber == 0)
@@ -1401,7 +1414,7 @@ namespace com.genexus.reports
 
 				writer.CreateXmpMetadata();
 
-			}			
+			}
 
 			document.Close();
 
@@ -1484,6 +1497,7 @@ namespace com.genexus.reports
 
 		public override void GxStartPage()
 		{
+			EnsureDocumentOpen();
 			try
 			{
 
@@ -1497,7 +1511,7 @@ namespace com.genexus.reports
 			}
 		}
 
-	
+
 		private object GetColor(int backRed, int backGreen, int backBlue)
 		{
 			Type color;
@@ -1533,5 +1547,4 @@ namespace com.genexus.reports
 			}
 		}
 	}
-
 }
