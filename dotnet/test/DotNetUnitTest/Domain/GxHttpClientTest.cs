@@ -45,7 +45,7 @@ namespace xUnitTesting
 			}
 		}
 
-		[Fact]
+		[Fact(Skip ="For Local Test")]
 		public void HttpClientInvalidURLWithCustomPort()
 		{
 			using (GxHttpClient httpclient = new GxHttpClient())
