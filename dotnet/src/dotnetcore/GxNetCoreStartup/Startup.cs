@@ -194,8 +194,12 @@ namespace GeneXus.Application
 		{
 			OpenTelemetryService.Setup(services);
 
-			IMvcBuilder builder = services.AddMvc(option => option.EnableEndpointRouting = false);
-	
+			IMvcBuilder builder = services.AddMvc(option =>
+			{
+				option.EnableEndpointRouting = false;
+				option.Conventions.Add(new HomeControllerConvention());
+			});
+
 			RegisterControllerAssemblies(builder);
 
 			services.Configure<KestrelServerOptions>(options =>
@@ -561,7 +565,10 @@ namespace GeneXus.Application
 				app.UseHttpsRedirection();
 				app.UseHsts();
 			}
-			
+			app.UseEndpoints(endpoints =>
+			{
+				endpoints.MapControllers();
+			});
 			if (log.IsCriticalEnabled && env.IsDevelopment())
 			{
 				try
@@ -648,13 +655,6 @@ namespace GeneXus.Application
 					routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				});
 			}
-			if (FindAndStoreDefaultFile())
-			{
-				app.UseEndpoints(endpoints =>
-				{
-					endpoints.MapControllerRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
-				});
-			}
 
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
@@ -676,21 +676,6 @@ namespace GeneXus.Application
 			{
 				app.UseCors(CORS_POLICY_NAME);
 			}
-		}
-		private static bool FindAndStoreDefaultFile()
-		{
-			string[] defaultFiles = { "default.htm", "default.html", "index.htm", "index.html" };
-			foreach (string file in defaultFiles)
-			{
-				string filePath = Path.Combine(LocalPath, file);
-				if (File.Exists(filePath))
-				{
-					DefaultFileName = file;
-					return true;
-				}
-			}
-			DefaultFileName = null;
-			return false;
 		}
 
 		private void ConfigureSwaggerUI(IApplicationBuilder app, string baseVirtualPath)
@@ -849,6 +834,37 @@ namespace GeneXus.Application
 					{
 						selector.AttributeRouteModel = _routePrefix;
 					}
+				}
+			}
+		}
+	}
+
+	internal class HomeControllerConvention : IApplicationModelConvention
+	{
+		private static bool FindAndStoreDefaultFile()
+		{
+			string[] defaultFiles = { "default.htm", "default.html", "index.htm", "index.html" };
+			foreach (string file in defaultFiles)
+			{
+				string filePath = Path.Combine(Startup.LocalPath, file);
+				if (File.Exists(filePath))
+				{
+					Startup.DefaultFileName = file;
+					return true;
+				}
+			}
+			Startup.DefaultFileName = null;
+			return false;
+		}
+
+		public void Apply(ApplicationModel application)
+		{
+			var homeController = application.Controllers.FirstOrDefault(c => c.ControllerType == typeof(HomeController));
+			if (homeController != null)
+			{
+				if (!FindAndStoreDefaultFile())
+				{
+					application.Controllers.Remove(homeController);
 				}
 			}
 		}
