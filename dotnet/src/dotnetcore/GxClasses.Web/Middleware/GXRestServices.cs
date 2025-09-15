@@ -271,15 +271,18 @@ namespace GeneXus.Utils
 		}
 		protected ActionResult EmptyResult()
 		{
+			if (_statusCode != HttpStatusCode.OK)
+				return StatusCode((int)_statusCode);
+			else
 				return Ok();
 		}
 		protected ActionResult EmptyObjectResult()
 		{
-			return Ok(new { });
+			return GetResponse(new { });
 		}
 		protected ActionResult NullResult()
 		{
-			return Ok("null");
+			return GetResponse("null");
 		}
 		protected ObjectResult HandleException(Exception ex)
 		{
