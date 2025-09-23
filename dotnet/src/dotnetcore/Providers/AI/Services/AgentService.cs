@@ -19,6 +19,7 @@ namespace GeneXus.AI
 		protected string API_KEY;
 		protected const string AI_PROVIDER = "AI_PROVIDER";
 		protected const string AI_PROVIDER_API_KEY = "AI_PROVIDER_API_KEY";
+		protected const int SAIA_RESPONSE_TIMEOUT = 600;
 
 		protected string DEFAULT_API_KEY => "default_";
 		protected string DEFAULT_PROVIDER => "https://api.qa.saia.ai";
@@ -100,6 +101,7 @@ namespace GeneXus.AI
 		{
 			GxHttpClient httpClient = new GxHttpClient(context);
 			httpClient.Secure = 1;
+			httpClient.Timeout = SAIA_RESPONSE_TIMEOUT;
 			httpClient.AddHeader(HttpHeader.CONTENT_TYPE, "application/json");
 			httpClient.AddHeader(HttpHeader.AUTHORIZATION, "Bearer " + API_KEY);
 			string requestJson = AgentPaylod(assistant, messages, properties, stream);
