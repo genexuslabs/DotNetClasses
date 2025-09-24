@@ -5,7 +5,8 @@ namespace GeneXus.Utils
 {
 	public class GxEmbedding
 	{
-
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GxEmbedding>();
+		const int EmbeddingLogPreviewLength= 10;
 		ReadOnlyMemory<float> _embedding;
 		public GxEmbedding()
 		{
@@ -37,11 +38,13 @@ namespace GeneXus.Utils
 		{
 			try
 			{
+				GXLogging.Debug(log, $"Generating embedding with model {embeddingInfo.Model} and dimensions {embeddingInfo.Dimensions} for text:", ()=> text.Length > EmbeddingLogPreviewLength ? text.Substring(0, EmbeddingLogPreviewLength) + "..." : text);
 				ReadOnlyMemory<float> embedding = AIEmbeddingFactory.Instance.GenerateEmbeddingAsync(embeddingInfo.Model, embeddingInfo.Dimensions, text).GetAwaiter().GetResult();
 				return new GxEmbedding(embedding, embeddingInfo.Model, embeddingInfo.Dimensions);
 			}
 			catch (Exception ex)
 			{
+				GXLogging.Error(log, "Error generating embedding", ex);
 				GXUtil.ErrorToMessages("GenerateEmbedding Error", ex, Messages, false);
 				return embeddingInfo;
 			}
