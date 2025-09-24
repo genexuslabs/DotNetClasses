@@ -2545,7 +2545,7 @@ namespace GeneXus.Utils
 
 		public GXExternalCollection()
 		{
-
+			instance = new ArrayList();
 		}
 		public GXExternalCollection(IGxContext context, string containedType, string containedTypeNamespace)
 		{
