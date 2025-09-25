@@ -2536,7 +2536,7 @@ namespace GeneXus.Utils
 	}
 	public class GXExternalCollection<T> : IGxCollection where T : IGxExternalObject
 	{
-		IList instance;
+		List<T> instance;
 
 		public string _containedType;
 		public string _containedTypeNamespace;
@@ -2545,7 +2545,7 @@ namespace GeneXus.Utils
 
 		public GXExternalCollection()
 		{
-			instance = new ArrayList();
+			instance = new List<T>();
 		}
 		public GXExternalCollection(IGxContext context, string containedType, string containedTypeNamespace)
 		{
@@ -2557,22 +2557,31 @@ namespace GeneXus.Utils
 			{
 				_containedObjType = typeof(T);
 			}
-			instance = new ArrayList();
+			instance = new List<T>();
 		}
 		public IList ExternalInstance
 		{
 			get { return instance; }
-			set { instance = value; }
+			set { instance = (List<T>)value; }
 		}
 		public int Add(object value)
 		{
 			IGxExternalObject x = value as IGxExternalObject;
+			T tValue;
 			if (x != null)
-				return instance.Add(x.ExternalInstance);
+				tValue = (T)x.ExternalInstance;
 			else
-				return instance.Add(value);
+				tValue = (T)x;
+
+			if (instance != null)
+			{
+				instance.Add(tValue);
+				return instance.Count - 1;
+			}
+			else
+				return -1;
 		}
-		public void Add(Object o, int idx)
+		public void Add(object o, int idx)
 		{
 			object exoValue;
 			IGxExternalObject x = o as IGxExternalObject;
@@ -2581,9 +2590,9 @@ namespace GeneXus.Utils
 			else
 				exoValue = o;
 			if (idx == 0)
-				instance.Add(exoValue);
+				instance.Add((T)exoValue);
 			else
-				instance.Insert(idx - 1, exoValue);
+				instance.Insert(idx - 1, (T)exoValue);
 		}
 		public int Count
 		{
@@ -2650,9 +2659,9 @@ namespace GeneXus.Utils
 		{
 			IGxExternalObject x = value as IGxExternalObject;
 			if (x != null)
-				return instance.IndexOf(x.ExternalInstance) + 1;
+				return instance.IndexOf((T)x.ExternalInstance) + 1;
 			else
-				return instance.IndexOf(value) + 1;
+				return instance.IndexOf((T)value) + 1;
 		}
 		public string ToXml(string name)
 		{
@@ -2706,11 +2715,11 @@ namespace GeneXus.Utils
 		}
 		public string ToJSonString()
 		{
-			return "";
+			return string.Empty;
 		}
 		public string ToJSonString(bool includeState)
 		{
-			return "";
+			return string.Empty;
 		}
 		public bool FromJSonString(string s)
 		{
