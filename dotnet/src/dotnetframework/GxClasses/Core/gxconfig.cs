@@ -40,7 +40,7 @@ namespace GeneXus.Configuration
 		public const string GX_LANG_JAP = "jap";
 
 		public const string GX_LANG_SPANISH = "Spanish";
-		public const string GX_LANG_PORTUGUESE = "PORTUGUESE";
+		public const string GX_LANG_PORTUGUESE = "Portuguese";
 		public const string GX_LANG_ITALIAN = "Italian";
 		public const string GX_LANG_ENGLISH = "English";
 		public const string GX_LANG_CHSIMPLIFIED = "SimplifiedChinese";
