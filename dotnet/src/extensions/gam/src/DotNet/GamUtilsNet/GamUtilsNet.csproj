@@ -5,7 +5,7 @@
 		<AssemblyName>GamUtilsNetImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<NoWarn>CA1031, CA1801, SYSLIB0027</NoWarn>
-		<PackageId>Gam.Utils.Net</PackageId>
+		<PackageId>GeneXus.AccessManager.Utils.Net</PackageId>
 	</PropertyGroup>
 
 	<PropertyGroup>
