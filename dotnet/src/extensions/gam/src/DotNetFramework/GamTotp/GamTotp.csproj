@@ -3,7 +3,7 @@
 		<TargetFramework>net462</TargetFramework>
 		<AssemblyName>GamTotpImpl</AssemblyName>
 		<NoWarn>CA1031, CA1801</NoWarn>
-		<PackageId>Gam.Totp</PackageId>
+		<PackageId>GeneXus.AccessManager.Totp</PackageId>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <Optimize>True</Optimize>
