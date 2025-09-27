@@ -4,7 +4,7 @@
     <RootNamespace>GamSaml20</RootNamespace>
     <AssemblyName>GamSaml20Impl</AssemblyName>
     <NoWarn>CA1031, CA1801, CA1724</NoWarn>
-    <PackageId>Gam.Saml20</PackageId>
+    <PackageId>GeneXus.AccessManager.Saml20</PackageId>
   </PropertyGroup>
  <ItemGroup>
    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
