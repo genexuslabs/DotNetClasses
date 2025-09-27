@@ -3,7 +3,7 @@
 		<TargetFramework>net462</TargetFramework>
 		<AssemblyName>GamUtilsImpl</AssemblyName>
 		<NoWarn>CA1031, CA1801</NoWarn>
-		<PackageId>Gam.Utils</PackageId>
+		<PackageId>GeneXus.AccessManager.Utils</PackageId>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <Optimize>True</Optimize>
