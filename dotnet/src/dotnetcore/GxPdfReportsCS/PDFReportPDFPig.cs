@@ -16,7 +16,6 @@ using Color = System.Drawing.Color;
 using Font = System.Drawing.Font;
 #endif
 using System.IO;
-using System.Net.Http;
 using System.Text;
 using GeneXus;
 using UglyToad.PdfPig.Core;
@@ -27,6 +26,8 @@ using static UglyToad.PdfPig.Writer.PdfDocumentBuilder;
 using static UglyToad.PdfPig.Writer.PdfPageBuilder;
 using PageSize = UglyToad.PdfPig.Content.PageSize;
 using PdfRectangle = UglyToad.PdfPig.Core.PdfRectangle;
+using System.Net;
+using GeneXus.Http;
 
 namespace GeneXus.Printer
 {
@@ -272,17 +273,14 @@ namespace com.genexus.reports
 		private AddedImage AddImageFromURL(string url, PdfRectangle position)
 		{
 			AddedImage image = null;
-			using (HttpClient httpClient = new HttpClient())
+			byte[] imageBytes = HttpHelper.DownloadFile(url, out HttpStatusCode statusCode);
+			try
 			{
-				byte[] imageBytes = httpClient.GetByteArrayAsync(url).Result;
-				try
-				{
-					image = pageBuilder.AddJpeg(imageBytes, position);
-				}
-				catch (Exception)
-				{
-					pageBuilder.AddPng(imageBytes, position);
-				}
+				image = pageBuilder.AddJpeg(imageBytes, position);
+			}
+			catch (Exception)
+			{
+				pageBuilder.AddPng(imageBytes, position);
 			}
 			if (image == null)
 			{
