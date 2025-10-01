@@ -15,8 +15,8 @@ using System.Linq;
 #if NETCORE
 using Microsoft.AspNetCore.Http;
 using GxClasses.Helpers;
-using System.Net;
 #endif
+using System.Net;
 using NodaTime;
 using NUglify;
 using NUglify.Html;
@@ -38,6 +38,11 @@ using GeneXus.Services;
 using GeneXus.Http;
 using System.Security;
 using System.Net.Http.Headers;
+using System.Security.Policy;
+using GeneXus.Http.Client;
+
+
+
 #if NETCORE
 using Image = GeneXus.Drawing.Image;
 using GeneXus.Drawing;
@@ -50,6 +55,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 #endif
 using System.Net.Http;
+
 
 namespace GeneXus.Utils
 {
@@ -5885,20 +5891,17 @@ namespace GeneXus.Utils
 			Uri uri;
 			if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
 			{
-				using (HttpClient httpClient = new HttpClient())
+				try
 				{
-					try
+					byte[] data = HttpHelper.DownloadFile(uri.AbsoluteUri, out HttpStatusCode statusCode);
+					using (MemoryStream mem = new MemoryStream(data))
 					{
-						byte[] data = httpClient.GetByteArrayAsync(uri).Result;
-						using (MemoryStream mem = new MemoryStream(data))
-						{
-							return new Bitmap(mem);
-						}
+						return new Bitmap(mem);
 					}
-					catch
-					{
-						return null;
-					}
+				}
+				catch
+				{
+					return null;
 				}
 			}
 			else
@@ -5917,20 +5920,17 @@ namespace GeneXus.Utils
 			Uri uri;
 			if (Uri.TryCreate(filePathOrUrl, UriKind.Absolute, out uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
 			{
-				using (HttpClient httpClient = new HttpClient())
+				try
 				{
-					try
+					byte[] data = HttpHelper.DownloadFile(uri.AbsoluteUri, out HttpStatusCode statusCode);
+					using (MemoryStream mem = new MemoryStream(data))
 					{
-						byte[] data = httpClient.GetByteArrayAsync(uri).Result;
-						using (MemoryStream mem = new MemoryStream(data))
-						{
-							return Image.FromStream(mem);
-						}
+						return Image.FromStream(mem);
 					}
-					catch
-					{
-						return null;
-					}
+				}
+				catch
+				{
+					return null;
 				}
 			}
 			else

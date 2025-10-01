@@ -158,40 +158,49 @@ namespace GeneXus.Http.Client
 		}
 
 		private const int POOLED_CONNECTION_LIFETIME_MINUTES = 2;
+
 		internal static ConcurrentDictionary<string, HttpClient> _httpClientInstances = new ConcurrentDictionary<string, HttpClient>();
+		internal static HttpClient GetHttpClientInstance(Uri uri, out bool disposableInstance)
+		{
+			return GetHttpClientInstance(uri, 0, null, null, null, null, string.Empty, 0, out disposableInstance);
+		}
 		private static HttpClient GetHttpClientInstance(Uri URI, int timeout, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, List<string> fileCertificateCollection, string proxyHost, int proxyPort, out bool disposableInstance)
 		{
+			HttpClient client;
 			if (CacheableInstance(authCollection, authProxyCollection))
 			{
-				HttpClient value;
 				disposableInstance = false;
 				string key = HttpClientInstanceIdentifier(proxyHost, proxyPort, fileCertificateCollection, timeout);
-				if (_httpClientInstances.TryGetValue(key, out value))
+				if (_httpClientInstances.TryGetValue(key, out client))
 				{
 					GXLogging.Debug(log, $"Getting httpClient cached instance");
-					return value;
+					return client;
 				}
 				else
 				{
 					lock (syncRootHttpInstance)
 					{
-						if (_httpClientInstances.TryGetValue(key, out value))
+						if (_httpClientInstances.TryGetValue(key, out client))
 						{
 							GXLogging.Debug(log, $"Getting httpClient cached instance");
-							return value;
+							return client;
 						}
-						value = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
-						value.Timeout = TimeSpan.FromMilliseconds(timeout);
-						_httpClientInstances.TryAdd(key, value);
-						return value;
+						client = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+						if (timeout != 0)
+						{
+							client.Timeout = TimeSpan.FromMilliseconds(timeout);
+						}
+						_httpClientInstances.TryAdd(key, client);
 					}
 				}
 			}
 			else
 			{
 				disposableInstance = true;
-				return new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+				client = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
 			}
+			client.DefaultRequestHeaders.UserAgent.ParseAdd(Preferences.HttpClientUserAgent);
+			return client;
 		}
 
 		private static string HttpClientInstanceIdentifier(string proxyHost, int proxyPort, List<string> fileCertificateCollection, int timeout)
