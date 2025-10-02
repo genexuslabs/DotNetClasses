@@ -199,7 +199,8 @@ namespace GeneXus.Http.Client
 				disposableInstance = true;
 				client = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
 			}
-			client.DefaultRequestHeaders.UserAgent.ParseAdd(Preferences.HttpClientUserAgent);
+			if (!string.IsNullOrEmpty(Preferences.HttpClientUserAgent))
+				client.DefaultRequestHeaders.UserAgent.ParseAdd(Preferences.HttpClientUserAgent);
 			return client;
 		}
 

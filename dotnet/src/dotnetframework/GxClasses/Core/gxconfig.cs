@@ -883,12 +883,7 @@ namespace GeneXus.Configuration
 				if (Config.GetValueOrEnvironmentVarOf(HTTPCLIENT_USER_AGENT, out string userAgent))
 					return userAgent;
 				else
-				{
-					if (Config.GetValueOf("VER_STAMP", out string version))
-						return $"{AppMainNamespace}/{version}";
-					else
-						return $"{AppMainNamespace}";
-				}
+					return string.Empty;
 			}
 		}
 		
