@@ -567,7 +567,8 @@ namespace GeneXus.Http
 			try
 			{
 				WebClient Client = new WebClient();
-				Client.Headers.Add(HttpHeader.USER_AGENT, Preferences.HttpClientUserAgent);
+				if (!string.IsNullOrEmpty(Preferences.HttpClientUserAgent))
+					Client.Headers.Add(HttpHeader.USER_AGENT, Preferences.HttpClientUserAgent);
 				binary = Client.DownloadData(fileName);
 				statusCode = HttpStatusCode.OK;
 			}
