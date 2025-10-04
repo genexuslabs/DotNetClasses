@@ -27,14 +27,14 @@ namespace GeneXus.Application
 	using GeneXus.Http;
 	using System.Collections.Specialized;
 	using System.Collections.Generic;
-        using System.Text;
-        using GeneXus.Data.NTier;
-        using GeneXus.Resources;
-        using System.Net;
-        using System.Globalization;
-        using System.Diagnostics;
-        using System.Text.RegularExpressions;
-        using System.Web;
+	using System.Text;
+	using GeneXus.Data.NTier;
+	using GeneXus.Resources;
+	using System.Net;
+	using System.Globalization;
+	using System.Diagnostics;
+	using System.Text.RegularExpressions;
+	using System.Web;
 	using GeneXus.Http.Server;
 	using GeneXus.Mime;
 	using GeneXus.Printer;
@@ -208,6 +208,7 @@ namespace GeneXus.Application
 		void DoAjaxRefresh();
 		void DoAjaxRefreshForm();
 		void DoAjaxRefreshCmp(String sPrefix);
+
 #if !NETCORE
 		void DoAjaxLoad(int SId, GXWebRow row);
 #endif
@@ -370,6 +371,7 @@ namespace GeneXus.Application
 		internal const string GXLanguage = "GXLanguage";
 		internal const string GXTheme = "GXTheme";
 		internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
+		internal const string CURRENT_GX_CONTEXT = "CURRENT_GX_CONTEXT";
 #if NETCORE
 		string _tenantId;
 #endif
@@ -656,7 +658,7 @@ namespace GeneXus.Application
 				if (HttpContext.Current != null)
 				{
 
-					GxContext currCtx = (GxContext)HttpContext.Current.Items["CURRENT_GX_CONTEXT"];
+					GxContext currCtx = (GxContext)HttpContext.Current.Items[CURRENT_GX_CONTEXT];
 					if (currCtx != null)
 						return currCtx;
 				}
@@ -669,8 +671,7 @@ namespace GeneXus.Application
 #else
 				if (AppContext.Current != null)
 				{
-					GxContext currCtx = (GxContext)AppContext.Current.Items["CURRENT_GX_CONTEXT"];
-					if (currCtx != null)
+					if (AppContext.Current.Items.TryGetValue(CURRENT_GX_CONTEXT, out object ctxObj) && ctxObj is GxContext currCtx)
 						return currCtx;
 				}
 				else
@@ -685,11 +686,11 @@ namespace GeneXus.Application
 		{
 #if !NETCORE
 			if (HttpContext.Current != null)
-				HttpContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
+				HttpContext.Current.Items[CURRENT_GX_CONTEXT] = ctx;
 
 #else
 			if (AppContext.Current != null)
-				AppContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
+				AppContext.Current.Items[CURRENT_GX_CONTEXT] = ctx;
 #endif
 
 			else if (!IsHttpContext)
@@ -3786,7 +3787,7 @@ namespace GeneXus.Application
 
 			if (_currentTimeZoneId == null)
 				_currentTimeZoneId = ClientTimeZoneId;
-			if (_currentTimeZoneId==null)
+			if (_currentTimeZoneId == null)
 				_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
 			return _currentTimeZoneId;
 		}
@@ -3819,7 +3820,7 @@ namespace GeneXus.Application
 		}
 		private static ConcurrentDictionary<string, HashSet<string>> m_imagesDensity = new ConcurrentDictionary<string, HashSet<string>>();
 
-                static Hashtable m_images = new Hashtable();
+		static Hashtable m_images = new Hashtable();
 
 		const string IMAGES_TXT = "Images.txt";
 		const string URL_SEPARATOR = "/";
@@ -3994,8 +3995,8 @@ namespace GeneXus.Application
 				if (cThemeMap == null)
 					cThemeMap = new Hashtable();
 				if (!cThemeMap.Contains(_theme))
-                                        cThemeMap.Add(_theme, t);
-                                else
+					cThemeMap.Add(_theme, t);
+				else
 					cThemeMap[_theme] = t;
 				return WriteSessionKey(GXTheme, cThemeMap) ? 1 : 0;
 			}
@@ -4263,4 +4264,5 @@ namespace GeneXus.Application
 			}
 		}
 	}
+
 }
