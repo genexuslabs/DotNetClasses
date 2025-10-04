@@ -2556,8 +2556,8 @@ namespace GeneXus.Utils
 	}
 	public class GXExternalCollection<T> : IGxCollection where T : IGxExternalObject
 	{
+		// T represents the type of the SDT wrapper for the external instance. E.g SdtWorkflowUser
 		// Instance is a list of ExternalType, whose concrete type is unknown. E.g. GXflow.API.User
-		// The wrapper SDT, however, is strongly typed as T. E.g SdtWorkflowUser
 		IList instance;
 
 		public string _containedType;
