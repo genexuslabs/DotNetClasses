@@ -207,11 +207,11 @@ namespace GeneXus.Http.Client
 		private static string HttpClientInstanceIdentifier(string proxyHost, int proxyPort, List<string> fileCertificateCollection, int timeout)
 		{
 			bool defaultSslOptions = ServicePointManager.ServerCertificateValidationCallback == null;
-			if (string.IsNullOrEmpty(proxyHost) && fileCertificateCollection.Count==0 && timeout== DEFAULT_TIMEOUT && defaultSslOptions)
+			if (string.IsNullOrEmpty(proxyHost) && CollectionUtils.IsNullOrEmpty(fileCertificateCollection) && timeout== DEFAULT_TIMEOUT && defaultSslOptions)
 			{
 				return string.Empty;
 			}
-			else if (fileCertificateCollection.Count==0)
+			else if (CollectionUtils.IsNullOrEmpty(fileCertificateCollection))
 			{
 				return $"{proxyHost}:{proxyPort}::{timeout}:{defaultSslOptions}";
 			}
@@ -223,7 +223,7 @@ namespace GeneXus.Http.Client
 
 		private static bool CacheableInstance(ArrayList authCollection, ArrayList authProxyCollection)
 		{
-			return authCollection.Count == 0 && authProxyCollection.Count == 0 && Preferences.SingletonHttpClient();
+			return CollectionUtils.IsNullOrEmpty(authCollection) && CollectionUtils.IsNullOrEmpty(authProxyCollection) && Preferences.SingletonHttpClient();
 		}
 		private static SocketsHttpHandler GetHandler(Uri URI, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, string proxyHost, int proxyPort)
 		{
@@ -249,7 +249,7 @@ namespace GeneXus.Http.Client
 			{
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 			}
-			if (certificateCollection.Count > 0)
+			if (!CollectionUtils.IsNullOrEmpty(certificateCollection))
 			{
 				if (handler.SslOptions.ClientCertificates == null)
 				{
@@ -1600,6 +1600,8 @@ namespace GeneXus.Http.Client
 			string sScheme;
 			GxAuthScheme auth;
 			CredentialCache cc = null;
+			if (CollectionUtils.IsNullOrEmpty(authenticationCollection))
+				return null;
 
 			for (int i = 0; i < authenticationCollection.Count; i++)
 			{
