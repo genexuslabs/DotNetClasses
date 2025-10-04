@@ -2556,7 +2556,9 @@ namespace GeneXus.Utils
 	}
 	public class GXExternalCollection<T> : IGxCollection where T : IGxExternalObject
 	{
-		List<T> instance;
+		// Instance is a list of ExternalType, whose concrete type is unknown
+		// The wrapper SDT, however, is strongly typed as T.
+		IList instance;
 
 		public string _containedType;
 		public string _containedTypeNamespace;
@@ -2565,7 +2567,7 @@ namespace GeneXus.Utils
 
 		public GXExternalCollection()
 		{
-			instance = new List<T>();
+			instance = new ArrayList();
 		}
 		public GXExternalCollection(IGxContext context, string containedType, string containedTypeNamespace)
 		{
@@ -2577,7 +2579,7 @@ namespace GeneXus.Utils
 			{
 				_containedObjType = typeof(T);
 			}
-			instance = new List<T>();
+			instance = new ArrayList();
 		}
 		public IList ExternalInstance
 		{
@@ -2587,19 +2589,10 @@ namespace GeneXus.Utils
 		public int Add(object value)
 		{
 			IGxExternalObject x = value as IGxExternalObject;
-			T tValue;
 			if (x != null)
-				tValue = (T)x.ExternalInstance;
+				return instance.Add(x.ExternalInstance);
 			else
-				tValue = (T)x;
-
-			if (instance != null)
-			{
-				instance.Add(tValue);
-				return instance.Count - 1;
-			}
-			else
-				return -1;
+				return instance.Add(value);
 		}
 		public void Add(object o, int idx)
 		{
@@ -2610,9 +2603,9 @@ namespace GeneXus.Utils
 			else
 				exoValue = o;
 			if (idx == 0)
-				instance.Add((T)exoValue);
+				instance.Add(exoValue);
 			else
-				instance.Insert(idx - 1, (T)exoValue);
+				instance.Insert(idx - 1, exoValue);
 		}
 		public int Count
 		{
@@ -2679,9 +2672,9 @@ namespace GeneXus.Utils
 		{
 			IGxExternalObject x = value as IGxExternalObject;
 			if (x != null)
-				return instance.IndexOf((T)x.ExternalInstance) + 1;
+				return instance.IndexOf(x.ExternalInstance) + 1;
 			else
-				return instance.IndexOf((T)value) + 1;
+				return instance.IndexOf(value) + 1;
 		}
 		public string ToXml(string name)
 		{
