@@ -1480,7 +1480,9 @@ namespace GeneXus.Http.Client
 				}
 				else
 				{
-					if (!string.IsNullOrEmpty(name) && name.IndexOf('/') == 0)
+					if (string.IsNullOrEmpty(name))
+						return _url;
+					else if (name.IndexOf('/') == 0)
 						return _url + name;
 					else
 						return _url + "/" + name;
