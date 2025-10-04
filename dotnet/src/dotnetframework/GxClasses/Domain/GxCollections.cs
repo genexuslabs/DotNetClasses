@@ -2584,7 +2584,7 @@ namespace GeneXus.Utils
 		public IList ExternalInstance
 		{
 			get { return instance; }
-			set { instance = (List<T>)value; }
+			set { instance = value; }
 		}
 		public int Add(object value)
 		{
