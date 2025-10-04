@@ -2864,6 +2864,7 @@ namespace GeneXus.Utils
 			}
 			return o;
 		}
+		internal static bool IsNullOrEmpty(IList collection) =>	collection == null || collection.Count == 0;
 	}
 	public interface IGxCollectionConverter
 	{
