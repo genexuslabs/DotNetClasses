@@ -423,9 +423,12 @@ namespace GeneXus.Application
 				}
 				else
 				{
-					services.AddSingleton<IDistributedCache>(sp =>
-						new CustomRedisSessionStore(sessionService.ConnectionString, TimeSpan.FromMinutes(Preferences.SessionTimeout), sessionService.InstanceName));
-
+					services.AddStackExchangeRedisCache(options =>
+					{
+						GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
+						options.Configuration = sessionService.ConnectionString;
+						options.InstanceName = sessionService.InstanceName;
+					});
 					services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
 				}
 			}
@@ -787,7 +790,10 @@ namespace GeneXus.Application
 			app.UseSession();
 			app.Use(async (context, next) =>
 			{
-				await context.Session.LoadAsync();
+				if (context.Session != null)
+				{
+					await context.Session.LoadAsync();
+				}
 				await next();
 			});
 			return app;
