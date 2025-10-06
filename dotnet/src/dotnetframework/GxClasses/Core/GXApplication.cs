@@ -366,6 +366,7 @@ namespace GeneXus.Application
 		internal const string GXLanguage = "GXLanguage";
 		internal const string GXTheme = "GXTheme";
 		internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
+		internal const string CURRENT_GX_CONTEXT = "CURRENT_GX_CONTEXT";
 		[NonSerialized]
 		HttpContext _HttpContext;
 		[NonSerialized]
@@ -651,7 +652,7 @@ namespace GeneXus.Application
 				if (HttpContext.Current != null)
 				{
 
-					GxContext currCtx = (GxContext)HttpContext.Current.Items["CURRENT_GX_CONTEXT"];
+					GxContext currCtx = (GxContext)HttpContext.Current.Items[CURRENT_GX_CONTEXT];
 					if (currCtx != null)
 						return currCtx;
 				}
@@ -662,17 +663,16 @@ namespace GeneXus.Application
 				}
 				return null;
 #else
-                                if (AppContext.Current != null)
-                                {
-                                        GxContext currCtx = (GxContext)AppContext.Current.Items["CURRENT_GX_CONTEXT"];
-                                        if (currCtx != null)
-                                                return currCtx;
-                                }
-                                else
-                                {
-                                        return _currentBatchGxContext;
-                                }
-                                return null;
+				if (AppContext.Current != null)
+				{
+					if (AppContext.Current.Items.TryGetValue(CURRENT_GX_CONTEXT, out object ctxObj) && ctxObj is GxContext currCtx)
+						return currCtx;
+				}
+				else
+				{
+					return _currentBatchGxContext;
+				}
+				return null;
 #endif
 			}
 		}
@@ -680,11 +680,11 @@ namespace GeneXus.Application
 		{
 #if !NETCORE
 			if (HttpContext.Current != null)
-				HttpContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
+				HttpContext.Current.Items[CURRENT_GX_CONTEXT] = ctx;
 
 #else
-                if (AppContext.Current != null)
-                        AppContext.Current.Items["CURRENT_GX_CONTEXT"] = ctx;
+			if (AppContext.Current != null)
+				AppContext.Current.Items[CURRENT_GX_CONTEXT] = ctx;
 #endif
 
 			else if (!IsHttpContext)
