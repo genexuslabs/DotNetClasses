@@ -2001,7 +2001,7 @@ namespace GeneXus.Http.Client
 #if !NETCORE
 			if (HttpContext.Current != null)
 #endif
-			if (fileName.IndexOfAny(new char[] { '\\', ':' }) == -1)
+			if (!Path.IsPathRooted(fileName))
 				pathName = Path.Combine(GxContext.StaticPhysicalPath(), fileName);
 
 			if (ReceiveData != null)

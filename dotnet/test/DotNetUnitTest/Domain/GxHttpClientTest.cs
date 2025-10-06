@@ -189,6 +189,19 @@ namespace xUnitTesting
 
 		}
 
+		[Fact]
+		public void ToRelativeFile()
+		{
+			using (GxHttpClient client = new GxHttpClient())
+			{
+				client.Host = "localhost";
+				client.BaseURL = "/dummy/lem.txt";
+				client.Execute("GET", string.Empty);
+				client.ToFile("./lem.txt");
+				Assert.True(File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "lem.txt")));
+			}
+		}
+
 #if !NETCORE
 		[Fact]
 		public void NoStoreHeader()
