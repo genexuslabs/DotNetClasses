@@ -26,7 +26,10 @@ namespace GeneXus.Utils
 		{
 			_embedding = embedding;
 		}
-
+		public bool IsEmpty()
+		{
+			return _embedding.IsEmpty;
+		}
 		internal static GxEmbedding Empty(string model, int dimensions)
 		{
 			return new GxEmbedding(model, dimensions);
