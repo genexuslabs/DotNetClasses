@@ -935,7 +935,7 @@ namespace GeneXus.Data
 										return binary;
 									}
 								}
-								GXLogging.Debug(log, "GxCommand. An error occurred while getting data from file path ", uri.AbsolutePath, e);
+								GXLogging.DebugSanitized(log, e, "GxCommand. An error occurred while getting data from file path ", uri.AbsolutePath);
 								throw e;
 							}
 							break;
