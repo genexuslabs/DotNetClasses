@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using Microsoft.AspNetCore.Http;
 
 namespace GeneXus.Http
@@ -32,34 +34,13 @@ namespace GeneXus.Http
 			return allCookies;
 		}
 	}
-	internal class LockTracker : IDisposable
+	public static class LockTracker
 	{
-		private static Dictionary<string, LockTracker> _locks = new Dictionary<string, LockTracker>();
-		private int _activeUses = 0;
-		private readonly string _id;
+		private static readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
 
-		private LockTracker(string id) => _id = id;
-
-		internal static LockTracker Get(string id)
+		public static SemaphoreSlim Get(string sessionId)
 		{
-			lock (_locks)
-			{
-				if (!_locks.ContainsKey(id))
-					_locks.Add(id, new LockTracker(id));
-				var res = _locks[id];
-				res._activeUses += 1;
-				return res;
-			}
-		}
-
-		void IDisposable.Dispose()
-		{
-			lock (_locks)
-			{
-				_activeUses--;
-				if (_activeUses == 0)
-					_locks.Remove(_id);
-			}
+			return _locks.GetOrAdd(sessionId, _ => new SemaphoreSlim(1, 1));
 		}
 	}
 	internal class HttpSyncSessionState : HttpSessionState

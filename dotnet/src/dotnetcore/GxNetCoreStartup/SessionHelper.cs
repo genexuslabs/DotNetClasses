@@ -1,12 +1,13 @@
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using GeneXus.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
-using GeneXus.Services;
-using System.Linq;
+using StackExchange.Redis;
 
 namespace GeneXus.Application
 {
@@ -63,9 +64,10 @@ namespace GeneXus.Application
 		{
 			string host = context.Request.Host.Host;
 			string subdomain = host.Split('.').FirstOrDefault();
-			context.Items[TENANT_ID] = subdomain; 
+			context.Items[TENANT_ID] = subdomain;
 
 			await _next(context);
 		}
 	}
+
 }
