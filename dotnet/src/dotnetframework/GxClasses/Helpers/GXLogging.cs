@@ -844,6 +844,18 @@ namespace GeneXus
 				log.LogWarning(strBuilder.ToString());
 			}
 		}
+		internal static void WarnSanitized(IGXLogger log, Exception ex, params string[] list)
+		{
+			if (log.IsDebugEnabled)
+			{
+				StringBuilder strBuilder = new StringBuilder();
+				foreach (string parm in list)
+				{
+					strBuilder.Append(StringUtil.Sanitize(parm, StringUtil.LogUserEntryWhiteList));
+				}
+				log.LogWarning(ex, strBuilder.ToString());
+			}
+		}
 		public static void Warn(IGXLogger logger, string msg, params string[] list)
 		{
 			if (logger != null)
