@@ -343,9 +343,9 @@ namespace GeneXus.Data
 		}
 		public override void SetParameter(IDbDataParameter parameter, object value)
 		{
-			if (value is Guid)
+			if (value is Guid guid)
 			{
-				value = value.ToString();
+				value = guid.ToString();
 			}
 #if NETCORE
 			else if (value is GxEmbedding embedding)

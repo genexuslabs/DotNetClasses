@@ -112,7 +112,7 @@ namespace GeneXus.Metadata
 				}
 				catch(FileNotFoundException)
 				{
-					GXLogging.Warn(log, "Assembly: ", defaultAssemblyName, "not found");
+					GXLogging.WarnSanitized(log, "Assembly: ", defaultAssemblyName, "not found");
 				}
 				catch(Exception ex)
 				{

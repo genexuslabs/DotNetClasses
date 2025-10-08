@@ -3742,7 +3742,7 @@ namespace GeneXus.Application
 				if (String.IsNullOrEmpty(sTZ))
 				{
 					sTZ = (string)GetCookie(GX_REQUEST_TIMEZONE);
-					GXLogging.Debug(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+					GXLogging.DebugSanitized(Logger, "ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
 				}
 				if (!DateTimeUtil.ValidTimeZone(sTZ))
 				{
