@@ -188,7 +188,6 @@ namespace GxClasses.Web.Middleware
 					IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
 					context = new GxHttpContextAccesor(contextAccessor);
 				}
-				Task result = Task.CompletedTask;
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
 				bool isServiceInPath = ServiceInPath(path, out actualPath);
@@ -237,23 +236,23 @@ namespace GxClasses.Web.Middleware
 					{
 						if (HttpMethods.IsGet(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsGet(controllerInfo.Verb)))
 						{
-							result = controller.Get(controllerInfo.Parameters);
+							await controller.Get(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPost(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPost(controllerInfo.Verb)))
 						{
-							result = controller.Post();
+							await controller.Post();
 						}
 						else if (HttpMethods.IsDelete(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsDelete(controllerInfo.Verb)))
 						{
-							result = controller.Delete(controllerInfo.Parameters);
+							await controller.Delete(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPut(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPut(controllerInfo.Verb)))
 						{
-							result = controller.Put(controllerInfo.Parameters);
+							await controller.Put(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPatch(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPatch(controllerInfo.Verb)))
 						{
-							result = controller.Patch(controllerInfo.Parameters);
+							await controller.Patch(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
