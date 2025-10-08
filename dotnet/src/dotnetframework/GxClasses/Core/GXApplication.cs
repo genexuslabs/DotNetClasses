@@ -3721,7 +3721,7 @@ namespace GeneXus.Application
 				if (!DateTimeUtil.ValidTimeZone(sTZ))
 				{
 					sTZ = (string)GetUndecodedCookie(GX_REQUEST_TIMEZONE);
-					GXLogging.Debug(Logger, "Try reading undecoded ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
+					GXLogging.DebugSanitized(Logger, "Try reading undecoded ClientTimeZone GX_REQUEST_TIMEZONE cookie:", sTZ);
 				}
 				try
 				{
@@ -3733,7 +3733,7 @@ namespace GeneXus.Application
 						}
 						catch (Exception ex)//DateTimeZoneNotFound
 						{
-							GXLogging.Warn(Logger, $"Client timezone not found: {sTZ}", ex);
+							GXLogging.WarnSanitized(Logger, ex, $"Client timezone not found: {sTZ}");
 						}
 						_currentTimeZoneId = DateTimeZoneProviders.Tzdb.GetSystemDefault().Id;
 						GXLogging.Warn(Logger, $"Setting Client timezone to System default: {_currentTimeZoneId}");
