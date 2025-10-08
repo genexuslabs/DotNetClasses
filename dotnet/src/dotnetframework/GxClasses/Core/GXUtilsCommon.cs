@@ -3999,7 +3999,7 @@ namespace GeneXus.Utils
 				GXLogging.Debug(log, "Absolute uri:", fileName, " resolved to " + result);
 				return true;
 			}
-			GXLogging.Info(log, "Uri ", fileName, " resolved to:" + result);
+			GXLogging.InfoSanitized(log, "Uri ", fileName, " resolved to:" + result);
 			return false; ;
 		}
 
