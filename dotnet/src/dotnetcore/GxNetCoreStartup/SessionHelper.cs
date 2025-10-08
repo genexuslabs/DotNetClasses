@@ -1,12 +1,13 @@
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using GeneXus.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
-using GeneXus.Services;
-using System.Linq;
+using StackExchange.Redis;
 
 namespace GeneXus.Application
 {
@@ -24,7 +25,7 @@ namespace GeneXus.Application
 
 		private IDistributedCache GetTenantCache()
 		{
-			string tenantId = _httpContextAccessor.HttpContext?.Items[AppContext.TENANT_ID]?.ToString() ?? "default";
+			string tenantId = _httpContextAccessor.HttpContext?.Items[TenantMiddleware.TENANT_ID]?.ToString() ?? "default";
 
 			return _redisCaches.GetOrAdd(tenantId, id =>
 			{
@@ -51,6 +52,7 @@ namespace GeneXus.Application
 
 	public class TenantMiddleware
 	{
+		internal const string TENANT_ID = "TenantId";
 		private readonly RequestDelegate _next;
 
 		public TenantMiddleware(RequestDelegate next)
@@ -60,17 +62,12 @@ namespace GeneXus.Application
 
 		public async Task Invoke(HttpContext context)
 		{
-			string host = context?.Request?.Host.Host ?? string.Empty;
-			string subdomain;
-
-			if (!string.IsNullOrEmpty(host) && host.Contains('.'))
-			{
-				subdomain = host.Split('.').FirstOrDefault();
-				if (!string.IsNullOrEmpty(subdomain))
-					context.Items[AppContext.TENANT_ID] = subdomain;
-			}
+			string host = context.Request.Host.Host;
+			string subdomain = host.Split('.').FirstOrDefault();
+			context.Items[TENANT_ID] = subdomain;
 
 			await _next(context);
 		}
 	}
+
 }
