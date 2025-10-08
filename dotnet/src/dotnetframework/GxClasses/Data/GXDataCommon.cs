@@ -940,7 +940,7 @@ namespace GeneXus.Data
 							}
 							break;
 						default:
-							GXLogging.Error(log, "Schema not supported: ", fileName);
+							GXLogging.WarnSanitized(log, "Schema not supported: ", fileName);
 							break;
 					}				
 					GXLogging.Debug(log, "GetBinary fileName ", uri.AbsolutePath, ",ReadBytes:", binary != null ? binary.Length.ToString() : "0");
