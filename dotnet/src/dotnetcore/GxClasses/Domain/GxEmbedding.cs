@@ -28,7 +28,16 @@ namespace GeneXus.Utils
 		}
 		public bool IsEmpty()
 		{
-			return _embedding.IsEmpty;
+			ReadOnlySpan<float> span = _embedding.Span;
+			if (span != null)
+			{
+				for (int i = 0; i < span.Length; i++)
+				{
+					if (span[i] != 0f)
+						return false;
+				}
+			}
+			return true;
 		}
 		internal static GxEmbedding Empty(string model, int dimensions)
 		{
