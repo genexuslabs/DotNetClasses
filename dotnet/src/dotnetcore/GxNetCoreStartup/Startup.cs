@@ -468,7 +468,7 @@ namespace GeneXus.Application
 			else if (sessionService is GxDatabaseSession)
 			{
 
-				if (Preferences.IsBeforeConnectEventConfigured())
+				if (Preferences.IsBeforeSessionConnectEventConfigured())
 				{
 					services.AddTransient<CacheResolver>(_ => connectionString =>
 					{
@@ -532,7 +532,7 @@ namespace GeneXus.Application
 			}
 			app.UseRouting();
 			app.UseCookiePolicy();
-			if (Preferences.IsBeforeConnectEventConfigured())
+			if (Preferences.IsBeforeSessionConnectEventConfigured())
 			{
 				app.UseMiddleware<EnableCustomSessionStoreMiddleware>();
 			}

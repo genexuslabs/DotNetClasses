@@ -875,9 +875,10 @@ namespace GeneXus.Configuration
 				return nameSpace;
 			}
 		}
-		internal static bool IsBeforeConnectEventConfigured()
+		internal static bool IsBeforeSessionConnectEventConfigured()
 		{
-			return (Config.GetValueOf("EVENT_BEFORE_CONNECT", out string evtProcName) && !string.IsNullOrEmpty(evtProcName));
+			return Config.GetValueOf("ApplyBeforeConnectToWebSession", out string str) && str == YES &&
+			 Config.GetValueOf("EVENT_BEFORE_CONNECT", out string evtProcName) && !string.IsNullOrEmpty(evtProcName);
 		}
 		internal static string DefaultDatastore
 		{
