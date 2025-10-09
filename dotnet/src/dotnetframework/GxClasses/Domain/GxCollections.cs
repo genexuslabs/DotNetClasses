@@ -2536,6 +2536,8 @@ namespace GeneXus.Utils
 	}
 	public class GXExternalCollection<T> : IGxCollection where T : IGxExternalObject
 	{
+		// T represents the type of the SDT wrapper for the external instance. E.g SdtWorkflowUser
+		// Instance is a list of ExternalType, whose concrete type is unknown. E.g. GXflow.API.User
 		IList instance;
 
 		public string _containedType;
@@ -2572,7 +2574,7 @@ namespace GeneXus.Utils
 			else
 				return instance.Add(value);
 		}
-		public void Add(Object o, int idx)
+		public void Add(object o, int idx)
 		{
 			object exoValue;
 			IGxExternalObject x = o as IGxExternalObject;
@@ -2706,11 +2708,11 @@ namespace GeneXus.Utils
 		}
 		public string ToJSonString()
 		{
-			return "";
+			return string.Empty;
 		}
 		public string ToJSonString(bool includeState)
 		{
-			return "";
+			return string.Empty;
 		}
 		public bool FromJSonString(string s)
 		{
