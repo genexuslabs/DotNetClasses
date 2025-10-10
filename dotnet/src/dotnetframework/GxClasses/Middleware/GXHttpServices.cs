@@ -225,7 +225,7 @@ namespace GeneXus.Http
 				}
 				if (code != 0)
 				{
-					GXLogging.Error(log, "Error executing ", commandType);
+					GXLogging.WarnSanitized(log, "Error executing ", commandType);
 					context.HttpContext.Response.Write(ERROR_LINE);
 				}
 			}

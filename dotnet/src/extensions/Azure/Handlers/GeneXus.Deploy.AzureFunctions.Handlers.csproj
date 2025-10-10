@@ -19,6 +19,7 @@
 		<BlobSupport>true</BlobSupport>
 		<EventGridSupport>true</EventGridSupport>
 		<IntegratedSecuritySupport>true</IntegratedSecuritySupport>
+		<BackendServices>true</BackendServices>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -68,6 +69,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Include="BackendServices\BackendServices.cs" Condition="'$(BackendServices)' == 'true'"/>
 	  <Compile Include="GAMAzureFunctions\GAMFunctions.cs" Condition="'$(IntegratedSecuritySupport)' == 'true'" />
 	  <Compile Include="HttpHandler\GXHttpAzureContextAccessor.cs" />
 	  <Compile Include="HttpHandler\RedisHttpSession.cs" />

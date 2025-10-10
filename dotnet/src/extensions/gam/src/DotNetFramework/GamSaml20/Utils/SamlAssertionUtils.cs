@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using GamSaml20.Utils.Xml;
 using GeneXus;
 using log4net;
+using Microsoft.IdentityModel.Tokens;
 namespace GamSaml20.Utils
 {
 	internal class SamlAssertionUtils
@@ -221,7 +222,7 @@ namespace GamSaml20.Utils
 			return json;
 		}
 
-#if !NETCORE
+
 		internal static XmlElement FindNodeById(XmlDocument doc, string name, string value)
 		{
 			logger.Trace("FindNodeById");
@@ -242,6 +243,48 @@ namespace GamSaml20.Utils
 
 			return null;
 		}
-#endif
+
+		internal static string BuildXmlLogout(List<XmlElement> assertions, XmlDocument xmlDoc)
+		{
+			logger.Trace("BuildXmlLogout");
+			if (assertions.Count == 0)
+			{
+				logger.Error("BuildXmlLogout - There are 0 signed assertions on LogoutResponse");
+				return "";
+			}
+			XmlElement element = assertions[0];
+			XmlNode logoutResponse = element.CloneNode(false);
+
+			Element statusElement = new Element(new List<string> { "Status", "saml2p:Status", "samlp:Status" });
+			XmlNodeList nodeListStatus = statusElement.GetNodeListForTags(xmlDoc);
+			logoutResponse.AppendChild(nodeListStatus[0]);
+
+			Element issuerElement = new Element(new List<string> { "Issuer", "saml2:Issuer" });
+			XmlNodeList nodeListIssuer = issuerElement.GetNodeListForTags(xmlDoc);
+			logoutResponse.AppendChild(nodeListIssuer[0]);
+			Console.WriteLine($"BuildXmlLogout - logoutResponse = {logoutResponse.OuterXml}");
+			return logoutResponse.OuterXml;
+		}
+
+		internal static string BuildXmlLogin(List<XmlElement> assertions, XmlDocument xmlDoc)
+		{
+			//security meassure against assertion manipulation, it assures that every assertion to be used on the app has been signed and verified
+			logger.Trace("BuildXmlLogin");
+			XmlNode response = xmlDoc.DocumentElement.CloneNode(false);
+
+			Element statusElement = new Element(new List<string> { "Status", "saml2p:Status", "samlp:Status" });
+			XmlNodeList nodeListStatus = statusElement.GetNodeListForTags(xmlDoc);
+			response.AppendChild(nodeListStatus[0]);
+
+			foreach (XmlElement elem in assertions)
+			{
+				if (!elem.LocalName.Equals("Response"))
+				{
+					XmlNode node = elem.CloneNode(true);
+					response.AppendChild(node);
+				}
+			}
+			return response.OuterXml;
+		}
 	}
 }

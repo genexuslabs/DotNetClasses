@@ -1,7 +1,6 @@
 using System;
 using GeneXus.Application;
 using GeneXus.Utils;
-using TZ4Net;
 using Xunit;
 
 namespace xUnitTesting
@@ -23,13 +22,6 @@ namespace xUnitTesting
 			Assert.Equal(expected, result);
 			#endregion
 
-			#region TZ4Net
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone mdeoTimezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			result = DateTimeUtil.DBserver2local(dt, mdeoTimezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result);
-			#endregion
 
 			dt = new DateTime(1976, 4, 8, 22, 31, 0, DateTimeKind.Utc);
 			expected = new DateTime(1976, 4, 8, 19, 31, 0, DateTimeKind.Local);
@@ -39,12 +31,6 @@ namespace xUnitTesting
 			Assert.Equal(expected, result);
 			#endregion
 
-			#region TZ4Net
-#pragma warning disable CS0618 // Type or member is obsolete
-			result = DateTimeUtil.DBserver2local(dt, mdeoTimezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result);
-			#endregion
 
 		}
 #if NETCORE
@@ -55,16 +41,9 @@ namespace xUnitTesting
 			DateTime expected = new DateTime(2012, 1, 1, 12, 0, 0, DateTimeKind.Local);
 
 
-			#region TZ4Net
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone mdeoTimezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.Local2DBserver(dt, mdeoTimezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result);
-			#endregion
-			
+
 			#region NodaTime
-			result = DateTimeUtil.Local2DBserver(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.Local2DBserver(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 		}
@@ -80,13 +59,6 @@ namespace xUnitTesting
 			Assert.Equal(expected, result);
 			#endregion
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(GUADALAJARA_IANA_TIMEZONE_ID);
-			result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected.AddHours(1), result); //Olson has a mistake with this timezone
-			#endregion
 		}
 		[Fact]
 		public void EuropeTimeZone()
@@ -109,17 +81,6 @@ namespace xUnitTesting
 			Assert.Equal(expected3, result3);
 			#endregion
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone parisTimezone = TimeZoneUtil.GetInstanceFromOlsonName(PARIS_IANA_TIMEZONE_ID);
-			result1 = DateTimeUtil.DBserver2local(dt1, parisTimezone);
-			result2 = DateTimeUtil.DBserver2local(dt2, parisTimezone);
-			result3 = DateTimeUtil.DBserver2local(dt3, parisTimezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected1, result1);
-			Assert.Equal(expected2, result2);
-			Assert.Equal(expected3, result3);
-			#endregion
 
 		}
 		[Fact]
@@ -128,16 +89,9 @@ namespace xUnitTesting
 			DateTime dt = new DateTime(1753, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(1752, 12, 31, 21, 0, 0, DateTimeKind.Unspecified);
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result); 
-			#endregion
 
 			#region NodaTime
-			result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -149,16 +103,8 @@ namespace xUnitTesting
 			DateTime dt = new DateTime(1901, 12, 13, 12, 0, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(1901, 12, 13, 9, 0, 0, DateTimeKind.Unspecified);
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result);
-			#endregion
-
 			#region NodaTime
-			result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -170,16 +116,9 @@ namespace xUnitTesting
 			DateTime dt = new DateTime(1901, 12, 30, 12, 0, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(1901, 12, 30, 8, 15, 9, DateTimeKind.Unspecified);
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result);
-			#endregion
 
 			#region NodaTime
-			result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -191,16 +130,8 @@ namespace xUnitTesting
 			DateTime dt = new DateTime(1902, 12, 30, 12, 0, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(1902, 12, 30, 8, 15, 9, DateTimeKind.Unspecified);
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result);
-			#endregion
-
 			#region NodaTime
-			result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -212,16 +143,8 @@ namespace xUnitTesting
 			DateTime dt = new DateTime(1901, 12, 13, 11, 0, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(1901, 12, 13, 8, 0, 0, DateTimeKind.Unspecified);
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result); 
-			#endregion
-
 			#region NodaTime
-			result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -233,16 +156,9 @@ namespace xUnitTesting
 			DateTime dt = new DateTime(1901, 12, 13, 15, 0, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(1901, 12, 13, 12, 0, 0, DateTimeKind.Unspecified);
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result); 
-			#endregion
 
 			#region NodaTime
-			result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -253,16 +169,8 @@ namespace xUnitTesting
 			DateTime dt = new DateTime(2039, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(2038, 12, 31, 21, 0, 0, DateTimeKind.Unspecified);
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result); 
-			#endregion
-
 			#region NodaTime
-			result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 
@@ -273,16 +181,9 @@ namespace xUnitTesting
 			DateTime dt = new DateTime(2050, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 			DateTime expected = new DateTime(2049, 12, 31, 21, 0, 0, DateTimeKind.Unspecified);
 
-			#region T4ZNet
-#pragma warning disable CS0618 // Type or member is obsolete
-			OlsonTimeZone timezone = TimeZoneUtil.GetInstanceFromOlsonName(MONTEVIDEO_IANA_TIMEZONE_ID);
-			DateTime result = DateTimeUtil.DBserver2local(dt, timezone);
-#pragma warning restore CS0618 // Type or member is obsolete
-			Assert.Equal(expected, result);
-			#endregion
 
 			#region NodaTime
-			result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
+			DateTime result = DateTimeUtil.DBserver2local(dt, MONTEVIDEO_IANA_TIMEZONE_ID);
 			Assert.Equal(expected, result);
 			#endregion
 

@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.SqlServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -174,6 +175,7 @@ namespace GeneXus.Application
 		const string CORS_ANY_ORIGIN = "*";
 		const double CORS_MAX_AGE_SECONDS = 86400;
 		internal const string GX_CONTROLLERS = "gxcontrollers";
+		internal static string DefaultFileName { get; set; }
 
 		public List<string> servicesBase = new List<string>();		
 
@@ -192,8 +194,12 @@ namespace GeneXus.Application
 		{
 			OpenTelemetryService.Setup(services);
 
-			IMvcBuilder builder = services.AddMvc(option => option.EnableEndpointRouting = false);
-	
+			IMvcBuilder builder = services.AddMvc(option =>
+			{
+				option.EnableEndpointRouting = false;
+				option.Conventions.Add(new HomeControllerConvention());
+			});
+
 			RegisterControllerAssemblies(builder);
 
 			services.Configure<KestrelServerOptions>(options =>
@@ -227,9 +233,10 @@ namespace GeneXus.Application
 			});
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 
+			services.AddHttpContextAccessor();
 			if (sessionService != null)
 				ConfigureSessionService(services, sessionService);
-			services.AddHttpContextAccessor();
+
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(Preferences.SessionTimeout);
@@ -460,14 +467,38 @@ namespace GeneXus.Application
 			}
 			else if (sessionService is GxDatabaseSession)
 			{
-				services.AddDistributedSqlServerCache(options =>
+
+				if (Preferences.IsBeforeConnectEventConfigured())
 				{
-					GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
-					options.ConnectionString = sessionService.ConnectionString;
-					options.SchemaName = sessionService.Schema;
-					options.TableName = sessionService.TableName;
-					options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
-				});
+					services.AddTransient<CacheResolver>(_ => connectionString =>
+					{
+						GXLogging.Info(log, $"Using SQLServer for request scoped Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
+						Action<SqlServerCacheOptions> cacheConfigOptions = options =>
+						{
+							options.ConnectionString = connectionString;
+							options.SchemaName = sessionService.Schema;
+							options.TableName = sessionService.TableName;
+							options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
+						};
+						services.AddOptions();
+						services.Configure(cacheConfigOptions);
+						services.AddTransient<SqlServerCache>();
+						return services.BuildServiceProvider().GetService<SqlServerCache>();
+					});
+					services.AddTransient<IDistributedCache, CustomCacheProvider>();
+				}
+				else
+				{
+
+					services.AddDistributedSqlServerCache(options =>
+					{
+						GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
+						options.ConnectionString = sessionService.ConnectionString;
+						options.SchemaName = sessionService.Schema;
+						options.TableName = sessionService.TableName;
+						options.DefaultSlidingExpiration = TimeSpan.FromMinutes(sessionService.SessionTimeout);
+					});
+				}
 			}
 		}
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor)
@@ -501,6 +532,10 @@ namespace GeneXus.Application
 			}
 			app.UseRouting();
 			app.UseCookiePolicy();
+			if (Preferences.IsBeforeConnectEventConfigured())
+			{
+				app.UseMiddleware<EnableCustomSessionStoreMiddleware>();
+			}
 			app.UseSession();
 			app.UseStaticFiles();
 
@@ -530,7 +565,6 @@ namespace GeneXus.Application
 			{
 				endpoints.MapControllers();
 			});
-			
 			if (log.IsCriticalEnabled && env.IsDevelopment())
 			{
 				try
@@ -617,10 +651,6 @@ namespace GeneXus.Application
 					routes.MapRoute($"{restBasePath}{{*{UrlTemplateControllerWithParms}}}", new RequestDelegate(gxRouting.ProcessRestRequest));
 				});
 			}
-			app.UseMvc(routes =>
-			{
-				routes.MapRoute("Default", VirtualPath, new { controller = "Home", action = "Index" });
-			});
 
 			app.UseWebSockets();
 			string basePath = string.IsNullOrEmpty(VirtualPath) ? string.Empty : $"/{VirtualPath}";
@@ -731,6 +761,20 @@ namespace GeneXus.Application
 			await Task.CompletedTask;
 		}
 	}
+	internal class EnableCustomSessionStoreMiddleware
+	{
+		private readonly RequestDelegate _next;
+
+		public EnableCustomSessionStoreMiddleware(RequestDelegate next)
+		{
+			_next = next;
+		}
+
+		public async Task Invoke(HttpContext context, IDistributedCache distributedCache)
+		{
+			await _next(context);
+		}
+	}
 	public class EnableRequestRewindMiddleware
 	{
 		private readonly RequestDelegate _next;
@@ -758,13 +802,11 @@ namespace GeneXus.Application
 	{
 		public IActionResult Index()
 		{
-			string[] defaultFiles = { "default.htm", "default.html", "index.htm", "index.html" };
-			foreach (string file in defaultFiles) {
-				if (System.IO.File.Exists(Path.Combine(Startup.LocalPath, file))){
-					return Redirect(Url.Content($"~/{file}"));
-				}
+			if (!string.IsNullOrEmpty(Startup.DefaultFileName))
+			{
+				return Redirect(Url.Content($"~/{Startup.DefaultFileName}"));
 			}
-			return Redirect(defaultFiles[0]);
+			return NotFound();
 		}
 	}
 	internal class SetRoutePrefix : IApplicationModelConvention
@@ -788,6 +830,37 @@ namespace GeneXus.Application
 					{
 						selector.AttributeRouteModel = _routePrefix;
 					}
+				}
+			}
+		}
+	}
+
+	internal class HomeControllerConvention : IApplicationModelConvention
+	{
+		private static bool FindAndStoreDefaultFile()
+		{
+			string[] defaultFiles = { "default.htm", "default.html", "index.htm", "index.html" };
+			foreach (string file in defaultFiles)
+			{
+				string filePath = Path.Combine(Startup.LocalPath, file);
+				if (File.Exists(filePath))
+				{
+					Startup.DefaultFileName = file;
+					return true;
+				}
+			}
+			Startup.DefaultFileName = null;
+			return false;
+		}
+
+		public void Apply(ApplicationModel application)
+		{
+			var homeController = application.Controllers.FirstOrDefault(c => c.ControllerType == typeof(HomeController));
+			if (homeController != null)
+			{
+				if (!FindAndStoreDefaultFile())
+				{
+					application.Controllers.Remove(homeController);
 				}
 			}
 		}

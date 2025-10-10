@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Cache;
 using GeneXus.Configuration;
@@ -6,6 +8,9 @@ using GeneXus.Data;
 using GeneXus.Data.ADO;
 using GeneXus.Encryption;
 using GxClasses.Helpers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 
 namespace GeneXus.Services
 {
@@ -122,13 +127,14 @@ namespace GeneXus.Services
 		internal static string SESSION_TABLE_NAME = "SESSION_PROVIDER_TABLE_NAME";
 		internal static string SESSION_DATASTORE = "SESSION_PROVIDER_DATASTORE";
 		const string DEFAULT_SQLSERVER_SCHEMA = "dbo";
+		private IGxDataStore datastore;
 		public GxDatabaseSession(GXService serviceProvider)
 		{
 			string datastoreName = serviceProvider.Properties.Get(SESSION_DATASTORE);
 			if (!string.IsNullOrEmpty(datastoreName))
 			{
 				GxContext context = GxContext.CreateDefaultInstance();
-				IGxDataStore datastore = context.GetDataStore(datastoreName);
+				datastore = context.GetDataStore(datastoreName);
 				string schema = datastore.Connection.CurrentSchema;
 				if (string.IsNullOrEmpty(schema))
 					schema = DEFAULT_SQLSERVER_SCHEMA;
@@ -178,11 +184,24 @@ namespace GeneXus.Services
 			Schema = schema;
 			TableName = tableName;
 		}
-		public string ConnectionString { get; }
+		public string ConnectionString { get; private set; }
 		public string Schema { get; }
 		public string TableName { get; }
 		public string InstanceName => throw new NotImplementedException();
 		public int SessionTimeout { get; }
+		internal void BeforeConnect(HttpContext httpContext)
+		{
+			datastore.Context.HttpContext = httpContext;
+			datastore.BeforeConnect();
+			GxConnection conn = datastore.Connection as GxConnection;
+			GxDataRecord dr = datastore.Db as GxDataRecord;
+			if (dr != null && conn != null)
+			{
+				ConnectionString = dr.BuildConnectionStringImpl(conn.DataSourceName, conn.InternalUserId, conn.UserPassword, conn.DatabaseName, conn.Port, conn.CurrentSchema, conn.Data);
+				GXLogging.Debug(log, "Database ConnectionString after BeforeConnect:", dr.ConnectionStringForLog());
+			}
+
+		}
 	}
 	public interface ISessionService
 	{
@@ -192,4 +211,82 @@ namespace GeneXus.Services
 		string InstanceName { get; }
 		int SessionTimeout { get; }
 	}
+	internal class CustomCacheProvider : IDistributedCache
+	{
+
+		private readonly IDistributedCache _defaultCache;
+		private IHttpContextAccessor _httpContextAccessor;
+		private readonly ILoggerFactory _loggerFactory;
+		IDistributedCache _cache
+		{
+			get
+			{
+				IDistributedCache ctxCache = _httpContextAccessor.HttpContext.Features.Get<IDistributedCache>();
+				if (ctxCache != null)
+					return ctxCache;
+				else
+					return _defaultCache;
+			}
+
+		}
+
+		public CustomCacheProvider(CacheResolver resolver, ILoggerFactory loggerFactory, IHttpContextAccessor httpContextAccessor)
+		{
+			_httpContextAccessor = httpContextAccessor;
+			_loggerFactory = loggerFactory;
+			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
+			GxDatabaseSession _gxDatabaseSession = sessionService as GxDatabaseSession;
+			if (_gxDatabaseSession != null && _httpContextAccessor != null && _httpContextAccessor.HttpContext != null)
+			{
+				_gxDatabaseSession.BeforeConnect(_httpContextAccessor.HttpContext);
+				httpContextAccessor.HttpContext.Features.Set<IDistributedCache>(resolver(_gxDatabaseSession.ConnectionString));
+			}
+			else
+			{
+				_defaultCache = resolver(sessionService.ConnectionString);
+			}
+		}
+		byte[] IDistributedCache.Get(string key)
+		{
+			return _cache.Get(key);
+		}
+
+		Task<byte[]> IDistributedCache.GetAsync(string key, CancellationToken token)
+		{
+			return _cache.GetAsync(key, token);
+		}
+
+		void IDistributedCache.Refresh(string key)
+		{
+			_cache.Refresh(key);
+		}
+
+		Task IDistributedCache.RefreshAsync(string key, CancellationToken token)
+		{
+			return _cache.RefreshAsync(key, token);
+		}
+
+		void IDistributedCache.Remove(string key)
+		{
+			_cache.Remove(key);
+		}
+
+		Task IDistributedCache.RemoveAsync(string key, CancellationToken token)
+		{
+			return _cache.RefreshAsync(key, token);
+		}
+
+		void IDistributedCache.Set(string key, byte[] value, DistributedCacheEntryOptions options)
+		{
+			_cache.Set(key, value, options);
+		}
+
+		Task IDistributedCache.SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token)
+		{
+			return _cache.SetAsync(key, value, options, token);
+		}
+
+	}
+	internal delegate IDistributedCache CacheResolver(string connectionString);
+
 }

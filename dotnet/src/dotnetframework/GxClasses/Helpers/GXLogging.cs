@@ -535,7 +535,7 @@ namespace GeneXus
 		{
 			if (log.IsErrorEnabled)
 			{
-				log.Error(Utils.StringUtil.Sanitize(msg, Utils.StringUtil.LogUserEntryWhiteList), ex);
+				log.Error(StringUtil.Sanitize(msg, StringUtil.LogUserEntryWhiteList), ex);
 			}
 		}
 		public static void Error(ILog log, string msg1, string msg2, Exception ex)
@@ -598,7 +598,7 @@ namespace GeneXus
 				StringBuilder msg = new StringBuilder();
 				foreach (string parm in list)
 				{
-					msg.Append(Utils.StringUtil.Sanitize(parm, Utils.StringUtil.LogUserEntryWhiteList));
+					msg.Append(StringUtil.Sanitize(parm, StringUtil.LogUserEntryWhiteList));
 				}
 				if (ex != null)
 					log.Debug(msg, ex);
@@ -749,7 +749,7 @@ namespace GeneXus
 			{
 				if (logger.IsErrorEnabled)
 				{
-					logger.LogError(Utils.StringUtil.Sanitize(msg, Utils.StringUtil.LogUserEntryWhiteList), ex);
+					logger.LogError(StringUtil.Sanitize(msg, StringUtil.LogUserEntryWhiteList), ex);
 				}
 			}
 		}
@@ -832,6 +832,30 @@ namespace GeneXus
 				}
 			}
 		}
+		internal static void WarnSanitized(IGXLogger log, string msg, params string[] list)
+		{
+			if (log.IsDebugEnabled)
+			{
+				StringBuilder strBuilder = new StringBuilder(StringUtil.Sanitize(msg, StringUtil.LogUserEntryWhiteList));
+				foreach (string parm in list)
+				{
+					strBuilder.Append(StringUtil.Sanitize(parm, StringUtil.LogUserEntryWhiteList));
+				}
+				log.LogWarning(strBuilder.ToString());
+			}
+		}
+		internal static void WarnSanitized(IGXLogger log, Exception ex, params string[] list)
+		{
+			if (log.IsDebugEnabled)
+			{
+				StringBuilder strBuilder = new StringBuilder();
+				foreach (string parm in list)
+				{
+					strBuilder.Append(StringUtil.Sanitize(parm, StringUtil.LogUserEntryWhiteList));
+				}
+				log.LogWarning(ex, strBuilder.ToString());
+			}
+		}
 		public static void Warn(IGXLogger logger, string msg, params string[] list)
 		{
 			if (logger != null)
@@ -861,7 +885,7 @@ namespace GeneXus
 					StringBuilder msg = new StringBuilder();
 					foreach (string parm in list)
 					{
-						msg.Append(Utils.StringUtil.Sanitize(parm, Utils.StringUtil.LogUserEntryWhiteList));
+						msg.Append(StringUtil.Sanitize(parm, StringUtil.LogUserEntryWhiteList));
 					}
 					if (ex != null)
 						logger.LogDebug(ex, msg.ToString());
@@ -966,6 +990,21 @@ namespace GeneXus
 				if (logger.IsInfoEnabled)
 				{
 					logger.LogInfo(msg, list);
+				}
+			}
+		}
+		internal static void InfoSanitized(IGXLogger logger, string msg, params string[] list)
+		{
+			if (logger != null)
+			{
+				if (logger.IsInfoEnabled)
+				{
+					StringBuilder stringBuilder = new StringBuilder(StringUtil.Sanitize(msg, StringUtil.LogUserEntryWhiteList));
+					foreach (string parm in list)
+					{
+						stringBuilder.Append(StringUtil.Sanitize(parm, StringUtil.LogUserEntryWhiteList));
+					}
+					logger.LogInfo(stringBuilder.ToString());
 				}
 			}
 		}

@@ -262,24 +262,28 @@ namespace GeneXus.Utils
 				AddHeader(WARNING_HEADER, StringUtil.Sanitize(header.ToString(), StringUtil.HttpHeaderWhiteList));
 			}
 		}
-		protected ActionResult GetResponse(object data)
+		protected ActionResult GetResponse(object data = null)
 		{
+			if (_statusCode == HttpStatusCode.NoContent)
+				return NoContent();
+
 			if (_statusCode != HttpStatusCode.OK)
-				return StatusCode((int)_statusCode, data);
-			else
-				return Ok(data);
+				return data != null ? StatusCode((int)_statusCode, data) : StatusCode((int)_statusCode);
+
+			return data != null ? Ok(data) : Ok();
 		}
 		protected ActionResult EmptyResult()
 		{
-				return Ok();
+			return GetResponse();
 		}
+
 		protected ActionResult EmptyObjectResult()
 		{
-			return Ok(new { });
+			return GetResponse(new { });
 		}
 		protected ActionResult NullResult()
 		{
-			return Ok("null");
+			return GetResponse("null");
 		}
 		protected ObjectResult HandleException(Exception ex)
 		{
