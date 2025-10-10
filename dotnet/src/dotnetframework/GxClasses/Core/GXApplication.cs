@@ -1202,24 +1202,7 @@ namespace GeneXus.Application
 			Config.LoadConfiguration();
 		}
 
-		public bool JavascriptSourceAdded(string jsSrc)
-		{
-			return javascriptSources.Contains(jsSrc);
-		}
-
 		public static bool isReorganization { get; set; }
-
-		public string GetURLBuildNumber(string resourcePath, string urlBuildNumber)
-		{
-			if (string.IsNullOrEmpty(urlBuildNumber) && !PathUtil.IsAbsoluteUrl(resourcePath) && !PathUtil.HasUrlQueryString(resourcePath))
-			{
-				return "?" + GetCacheInvalidationToken();
-			}
-			else
-			{
-				return urlBuildNumber;
-			}
-		}
 
 		public bool IsMultipartRequest
 		{
@@ -1236,6 +1219,23 @@ namespace GeneXus.Application
 					return false;
 			}
 		}
+#if NETCORE
+		internal string TenantId
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_tenantId) && HttpContext != null)
+				{
+					_tenantId = AppContext.TenantId;
+				}
+				return _tenantId;
+			}
+			set
+			{
+				_tenantId = value;
+			}
+		}
+#endif
 		public IGxContext UtlClone()
 		{
 			//Context for new LUW
