@@ -1202,9 +1202,7 @@ namespace GeneXus.Application
 			Config.LoadConfiguration();
 		}
 
-
 		public static bool isReorganization { get; set; }
-
 
 		public bool IsMultipartRequest
 		{
@@ -1237,7 +1235,8 @@ namespace GeneXus.Application
 			return ctx;
 		}
 #if NETCORE
-		internal string TenantId {
+		internal string TenantId
+		{
 			get
 			{
 				if (string.IsNullOrEmpty(_tenantId) && HttpContext != null)
@@ -1249,7 +1248,7 @@ namespace GeneXus.Application
 			set
 			{
 				_tenantId = value;
-			} 
+			}
 		}
 #endif
 
