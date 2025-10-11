@@ -872,8 +872,8 @@ namespace GeneXus.Application
 			bool isMpcServer = false;
 			try
 			{
-				List<string> L = Directory.GetFiles($"{workingDir}/bin", "*mcp_service.dll").ToList<string>();
-				isMpcServer = L.Count > 0;				
+				List<string> L = Directory.GetFiles(Path.Combine(workingDir,"bin"), "*mcp_service.dll").ToList<string>();
+				isMpcServer = L.Count > 0;
 				if (isMpcServer)
 				{
 					GXLogging.Info(log, "Start MCP Server");
