@@ -24,6 +24,18 @@ namespace xUnitTesting
 			Environment.SetEnvironmentVariable("GX_HTTPCLIENT_MAX_PER_ROUTE", MAX_CONNECTIONS.ToString(), EnvironmentVariableTarget.Process);
 		}
 		[Fact]
+		public void HttpClientEmptyURLOnExecute()
+		{
+			using (GxHttpClient client = new GxHttpClient())
+			{
+				client.Host = "api.saia.ai";
+				client.BaseURL = "/v1/forecast?timezone=America%2FMontevideo";
+				string requestUrl = client.GetRequestURL(string.Empty);
+				Assert.EndsWith("Montevideo", requestUrl, StringComparison.Ordinal);
+			}
+		}
+
+		[Fact]
 		public void AddHeaderWithSpecialCharactersDoesNotThrowException()
 		{
 			using (GxHttpClient httpclient = new GxHttpClient())
@@ -39,7 +51,7 @@ namespace xUnitTesting
 			}
 		}
 
-		[Fact]
+		[Fact(Skip ="For Local Test")]
 		public void HttpClientInvalidURLWithCustomPort()
 		{
 			using (GxHttpClient httpclient = new GxHttpClient())

@@ -64,6 +64,7 @@ namespace com.genexus.reports
 		PdfDocument pdfDocument;
 		private PdfPage pdfPage;
 		private PdfWriter writer;
+		private bool documentOpened = false;
 		private Rectangle templateRectangle;
 		private float templatex, templatey;
 		private PdfFont templateFont;
@@ -95,12 +96,8 @@ namespace com.genexus.reports
 				if (Enum.TryParse(level, true, out complianceLevel))
 				{
 					//if (SetComplainceLevel(complianceLevel))
-						//writer.SetTagged();
+					//writer.SetTagged();
 				}
-				pdfDocument = new PdfDocument(writer);
-				pdfDocument.SetDefaultPageSize(this.pageSize);
-				document = new Document(pdfDocument);
-				document.SetFontProvider(new DefaultFontProvider(false, false, false));
 			}
 			catch (PdfException de)
 			{
@@ -122,11 +119,11 @@ namespace com.genexus.reports
 					return false;
 			}*/
 			return false;
-	}
+		}
 
-	/**
-	* @param hideCorners indicates whether corner triangles should be hidden when the side that joins them is hidden.
-	*/
+		/**
+		* @param hideCorners indicates whether corner triangles should be hidden when the side that joins them is hidden.
+		*/
 
 		private void drawRectangle(PdfCanvas cb, float x, float y, float w, float h, int styleTop, int styleBottom, int styleRight, int styleLeft,
 								float radioTL, float radioTR, float radioBL, float radioBR, float penAux, bool hideCorners)
@@ -136,7 +133,7 @@ namespace com.genexus.reports
 			float[] dashPatternBottom = getDashedPattern(styleBottom);
 			float[] dashPatternLeft = getDashedPattern(styleLeft);
 			float[] dashPatternRight = getDashedPattern(styleRight);
-			
+
 			//-------------------bottom line---------------------
 			if (styleBottom != STYLE_NONE_CONST)
 			{
@@ -325,6 +322,8 @@ namespace com.genexus.reports
 		public override void GxDrawRect(int left, int top, int right, int bottom, int pen, int foreRed, int foreGreen, int foreBlue, int backMode, int backRed, int backGreen, int backBlue,
 											int styleTop, int styleBottom, int styleRight, int styleLeft, int cornerRadioTL, int cornerRadioTR, int cornerRadioBL, int cornerRadioBR)
 		{
+			EnsureDocumentOpen();
+
 			Color rectBackColor = new DeviceRgb(backRed, backGreen, backBlue);
 			Color rectForeColor = new DeviceRgb(foreRed, foreGreen, foreBlue);
 			GxDrawRect(left, top, right, bottom, pen, rectForeColor, backMode, rectBackColor, styleTop, styleBottom, styleRight, styleLeft, cornerRadioTL, cornerRadioTR, cornerRadioBL, cornerRadioBR);
@@ -421,6 +420,8 @@ namespace com.genexus.reports
 		}
 		public override void GxDrawLine(int left, int top, int right, int bottom, int width, int foreRed, int foreGreen, int foreBlue, int style)
 		{
+			EnsureDocumentOpen();
+
 			PdfCanvas cb = new PdfCanvas(pdfPage);
 
 			Color foreColor = new DeviceRgb(foreRed, foreGreen, foreBlue);
@@ -464,6 +465,8 @@ namespace com.genexus.reports
 
 		public override void GxDrawBitMap(String bitmap, int left, int top, int right, int bottom, int aspectRatio)
 		{
+			EnsureDocumentOpen();
+
 			try
 			{
 				Image image;
@@ -514,7 +517,7 @@ namespace com.genexus.reports
 					float bottomAux = (float)convertScale(bottom);
 					float leftAux = (float)convertScale(left);
 					float topAux = (float)convertScale(top);
-					image.SetFixedPosition(this.getPage(),leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin);
+					image.SetFixedPosition(this.getPage(), leftAux + leftMargin, this.pageSize.GetTop() - bottomAux - topMargin - bottomMargin);
 					if (aspectRatio == 0)
 						image.ScaleAbsolute(rightAux - leftAux, bottomAux - topAux);
 					else
@@ -692,7 +695,7 @@ namespace com.genexus.reports
 			if (defaultFont == null)
 			{
 				if (IsPdfA())
-					defaultFont = PdfFontFactory.CreateFont("Helvetica", PdfEncodings.CP1252, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED); 
+					defaultFont = PdfFontFactory.CreateFont("Helvetica", PdfEncodings.CP1252, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
 				else
 					defaultFont = PdfFontFactory.CreateFont("Helvetica", PdfEncodings.WINANSI, PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
 			}
@@ -704,16 +707,16 @@ namespace com.genexus.reports
 			//LoadAsianFontsDll();
 			try
 			{
-					if (fontName.Equals("Japanese"))
-						baseFont = PdfFontFactory.CreateFont("HeiseiMin-W3", "UniJIS-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
-					if (fontName.Equals("Japanese2"))
-						baseFont = PdfFontFactory.CreateFont("HeiseiKakuGo-W5", "UniJIS-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
-					if (fontName.Equals("SimplifiedChinese"))
-						baseFont = PdfFontFactory.CreateFont("STSong-Light", "UniGB-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
-					if (fontName.Equals("TraditionalChinese"))
-						baseFont = PdfFontFactory.CreateFont("MHei-Medium", "UniCNS-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
-					if (fontName.Equals("Korean"))
-						baseFont = PdfFontFactory.CreateFont("HYSMyeongJo-Medium", "UniKS-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
+				if (fontName.Equals("Japanese"))
+					baseFont = PdfFontFactory.CreateFont("HeiseiMin-W3", "UniJIS-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
+				if (fontName.Equals("Japanese2"))
+					baseFont = PdfFontFactory.CreateFont("HeiseiKakuGo-W5", "UniJIS-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
+				if (fontName.Equals("SimplifiedChinese"))
+					baseFont = PdfFontFactory.CreateFont("STSong-Light", "UniGB-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
+				if (fontName.Equals("TraditionalChinese"))
+					baseFont = PdfFontFactory.CreateFont("MHei-Medium", "UniCNS-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
+				if (fontName.Equals("Korean"))
+					baseFont = PdfFontFactory.CreateFont("HYSMyeongJo-Medium", "UniKS-UCS2-H", PdfFontFactory.EmbeddingStrategy.PREFER_NOT_EMBEDDED);
 			}
 			catch (PdfException de)
 			{
@@ -727,6 +730,8 @@ namespace com.genexus.reports
 
 		public override void GxDrawText(String sTxt, int left, int top, int right, int bottom, int align, int htmlformat, int border, int valign)
 		{
+			EnsureDocumentOpen();
+
 			GXLogging.Debug(log, "GxDrawText, text:" + sTxt);
 
 			bool printRectangle = false;
@@ -1271,7 +1276,7 @@ namespace com.genexus.reports
 						GXLogging.Error(log, "GxEndDocument OUTPUT_SCREEN error", e);
 					}
 					try { showReport(docName, modal); }
-					catch (Exception){}
+					catch (Exception) { }
 					break;
 
 				case Const.OUTPUT_PRINTER:
@@ -1284,7 +1289,7 @@ namespace com.genexus.reports
 							printReport(docName, this.printerOutputMode == 0, printerSettings.getProperty(form, Const.PRINTER));
 						}
 					}
-					catch (Exception){}
+					catch (Exception) { }
 					break;
 
 				case Const.OUTPUT_FILE:
@@ -1307,8 +1312,23 @@ namespace com.genexus.reports
 
 			GXLogging.Debug(log, "GxEndDocument End");
 		}
+		private void EnsureDocumentOpen()
+		{
+			if (!documentOpened)
+			{
+				pdfDocument = new PdfDocument(writer);
+				pdfDocument.SetDefaultPageSize(this.pageSize);
+				document = new Document(pdfDocument);
+				document.SetFontProvider(new DefaultFontProvider(false, false, false));
+				documentOpened = true;
+				GXLogging.Debug(log, "Document opened on demand");
+			}
+		}
+
 		public override void GxStartPage()
 		{
+			EnsureDocumentOpen();
+
 			try
 			{
 				pdfPage = pdfDocument.AddNewPage();

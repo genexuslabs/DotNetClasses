@@ -38,6 +38,14 @@ namespace GeneXus.Configuration
 		public const string GX_LANG_CHS = "chs";
 		public const string GX_LANG_CHT = "cht";
 		public const string GX_LANG_JAP = "jap";
+
+		public const string GX_LANG_SPANISH = "Spanish";
+		public const string GX_LANG_PORTUGUESE = "Portuguese";
+		public const string GX_LANG_ITALIAN = "Italian";
+		public const string GX_LANG_ENGLISH = "English";
+		public const string GX_LANG_CHSIMPLIFIED = "SimplifiedChinese";
+		public const string GX_LANG_CHTRADITIONAL = "TraditionalChinese";
+		public const string GX_LANG_JAPANESE = "Japanese";
 		public const string DATASTORE_SECTION = "datastores/";
 
 		private static string configFileName;
@@ -403,34 +411,9 @@ namespace GeneXus.Configuration
 			if (string.IsNullOrEmpty(StringUtil.Trim(lang)) && Config.GetValueOf("LANG_NAME", out string kbLanguage))
 				lang = kbLanguage;
 
-			string culture = lang;
-			switch (culture.ToLower())
-			{
-				case GX_LANG_SPA:
-					culture = "es-UY";
-					break;
-				case GX_LANG_POR:
-					culture = "pt-BR";
-					break;
-				case GX_LANG_ITA:
-					culture = "it-IT";
-					break;
-				case GX_LANG_ENG:
-					culture = "en-US";
-					break;
-				case GX_LANG_CHS:
-					culture = "zh-CN";
-					break;
-				case GX_LANG_CHT:
-					culture = "zh-HK";
-					break;
-				case GX_LANG_JAP:
-					culture = "ja-JP";
-					break;
-				default:
-					culture = Config.GetLanguageProperty(lang, "culture");
-					break;
-			}
+			lang = NormalizeLanguageName(lang);
+			string culture = Config.GetLanguageProperty(lang, "culture");
+			
 			try
 			{
 				CultureInfo ci = new CultureInfo(culture);
@@ -446,7 +429,30 @@ namespace GeneXus.Configuration
 				return new CultureInfo(CultureInfo.CurrentCulture.Name);
 			}
 		}
+		private static string NormalizeLanguageName(string langCode)
+		{
+			if (string.IsNullOrEmpty(langCode) || langCode.Length!=3)
+				return langCode;
 
+			switch (langCode.ToLower())
+			{
+				case GX_LANG_SPA:
+					return GX_LANG_SPANISH;
+				case GX_LANG_POR:
+					return GX_LANG_PORTUGUESE;
+				case GX_LANG_ITA:
+					return GX_LANG_ITALIAN;
+				case GX_LANG_ENG:
+					return GX_LANG_ENGLISH;
+				case GX_LANG_CHS:
+					return GX_LANG_CHSIMPLIFIED;
+				case GX_LANG_CHT:
+					return GX_LANG_CHTRADITIONAL;
+				case GX_LANG_JAP:
+					return GX_LANG_JAPANESE;
+			}
+			return langCode;
+		}
 #if NETCORE
 		public static IConfiguration ConfigRoot { get ; set; }
 		const string Log4NetShortName = "log4net";
@@ -868,6 +874,12 @@ namespace GeneXus.Configuration
 				Config.GetValueOf("AppMainNamespace", out string nameSpace);
 				return nameSpace;
 			}
+		}
+		internal static bool IsBeforeConnectEventConfigured()
+		{
+			
+			return (Config.GetValueOrEnvironmentVarOf("ApplyBeforeConnectToWebSession", out string value) && value == YES && 
+				Config.GetValueOf("EVENT_BEFORE_CONNECT", out string evtProcName) && !string.IsNullOrEmpty(evtProcName));
 		}
 		internal static string DefaultDatastore
 		{

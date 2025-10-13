@@ -3,14 +3,13 @@
 		<TargetFramework>net462</TargetFramework>
 		<RootNamespace>GxClasses</RootNamespace>
 		<NoWarn>618;1607;1698</NoWarn>
-		<DefineConstants>NODATIME</DefineConstants>
 		<AssemblyName>GxClasses</AssemblyName>
 		<PackageTags>Data Access</PackageTags>
 		<PackageId>GeneXus.Classes</PackageId>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GeneXus.NodaTime" Version="2.4.19.1" />
+		<PackageReference Include="GeneXus.NodaTime" Version="2.4.19.2" />
 		<PackageReference Include="ManagedFusion.Rewriter" Version="3.7.0" />
 		<PackageReference Include="Microsoft.AspNet.WebPages" Version="3.2.9" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
@@ -37,10 +36,6 @@
 		<Reference Include="MySQLDriverCS">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\libs\MySQLDriverCS.dll</HintPath>
-		</Reference>
-		<Reference Include="TZ4Net">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\libs\TZ4Net.dll</HintPath>
 		</Reference>
 
 		<Reference Include="System.configuration" />

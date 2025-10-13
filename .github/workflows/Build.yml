@@ -122,6 +122,36 @@ jobs:
     - name: Pack
       run: dotnet pack $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration /p:Version=$Env:NUGET_PACKAGE_VERSION
 
+    - name: Validate package names
+      run: |
+        Write-Output "Validating package names for NuGet.org publication..."
+        Write-Output "All packages must start with 'GeneXus.' prefix as this namespace is reserved for GeneXus on NuGet.org"
+        Write-Output ""
+        
+        $invalidPackages = @()
+        Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
+          $packageName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+          # Remove version suffix to get the actual package name
+          $actualPackageName = $packageName -replace '\.\d+\.\d+\.\d+.*$', ''
+          
+          if (-not $actualPackageName.StartsWith("GeneXus.")) {
+            $invalidPackages += $_.Name
+            Write-Warning "Package '$($_.Name)' does not start with 'GeneXus.'"
+          } else {
+            Write-Output "✓ Package '$($_.Name)' correctly starts with 'GeneXus.'"
+          }
+        }
+        
+        if ($invalidPackages.Count -gt 0) {
+          Write-Output ""
+          Write-Error "Validation failed: The following packages do not start with 'GeneXus.': $($invalidPackages -join ', ')"
+          Write-Error "This validation is required for publishing to NuGet.org where the 'GeneXus' prefix is reserved."
+          exit 1
+        }
+        
+        Write-Output ""
+        Write-Output "✅ All packages correctly start with 'GeneXus.' prefix - ready for NuGet.org publication"
+
     - name: Sign packages
       if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
