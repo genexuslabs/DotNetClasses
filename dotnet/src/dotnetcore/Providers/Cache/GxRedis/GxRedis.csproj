@@ -19,7 +19,7 @@
     <Compile Include="..\..\..\..\dotnetframework\Providers\Cache\GxRedis\GxRedis.cs" Link="GxRedis.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="StackExchange.Redis" Version="2.6.122" />
+    <PackageReference Include="StackExchange.Redis" Version="2.9.17" />
   </ItemGroup>
 
   <ItemGroup>
