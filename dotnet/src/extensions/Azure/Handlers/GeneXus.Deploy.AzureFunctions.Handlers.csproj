@@ -72,7 +72,7 @@
 		<PackageReference Include="Azure.Core" Version="1.36.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.15.1" OutputItemType="Analyzer" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
-		<PackageReference Include="StackExchange.Redis" Version="2.6.122" />
+		<PackageReference Include="StackExchange.Redis" Version="2.9.17" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 	
