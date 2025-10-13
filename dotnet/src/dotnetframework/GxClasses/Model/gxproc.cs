@@ -3,6 +3,7 @@ using System.Threading;
 namespace GeneXus.Procedure
 {
 	using System;
+	using System.Collections;
 	using System.Collections.Generic;
 	using System.IO;
 	using System.Reflection;
@@ -53,7 +54,7 @@ namespace GeneXus.Procedure
 			}
 #endif
 		}
-		internal virtual string ProcessChatResponse(Choice choice, bool stream, string assistant, GXProperties gxproperties, List<ChatMessage> chatMessagesList, object result)
+		internal virtual string ProcessChatResponse(Choice choice, bool stream, string assistant, GXProperties gxproperties, IList chatMessagesList, object result)
 		{
 			return string.Empty;
 		}

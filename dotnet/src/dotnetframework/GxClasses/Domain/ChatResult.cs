@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -17,7 +18,7 @@ namespace GeneXus.AI.Chat
 		private GxHttpClient Client { get; set; }
 		private string Agent { get; set; }
 		private GXProperties Properties { get; set; }
-		private List<ChatMessage> Messages { get; set; }
+		private IList Messages { get; set; }
 		private CallResult Result { get; set; }
 		private GXProcedure AgentProcedure { get; set; }
 		private bool disposed = false;
@@ -25,7 +26,7 @@ namespace GeneXus.AI.Chat
 		{
 		}
 
-		public ChatResult(GXProcedure agentProcedure, string agent, GXProperties properties, List<ChatMessage> messages, CallResult result, GxHttpClient client)
+		public ChatResult(GXProcedure agentProcedure, string agent, GXProperties properties, IList messages, CallResult result, GxHttpClient client)
 		{
 			AgentProcedure = agentProcedure;
 			Agent = agent;
@@ -46,6 +47,8 @@ namespace GeneXus.AI.Chat
 				return string.Empty;
 			int index = data.IndexOf(ChatCompletionResult.DATA) + ChatCompletionResult.DATA.Length;
 			string chunkJson = data.Substring(index).Trim();
+			if (chunkJson.Equals(ChatCompletionResult.DONE))
+				return string.Empty;
 			try
 			{
 				ChatCompletionResult chatCompletion = JsonSerializer.Deserialize<ChatCompletionResult>(chunkJson);
@@ -117,6 +120,8 @@ namespace GeneXus.AI.Chat
 		internal const string FINISH_REASON_STOP = "stop";
 		internal const string FINISH_REASON_TOOL_CALLS = "tool_calls";
 		internal const string DATA = "data:";
+		internal const string DONE = "[DONE]";
+		
 
 		[JsonPropertyName("id")]
 		public string Id { get; set; }
