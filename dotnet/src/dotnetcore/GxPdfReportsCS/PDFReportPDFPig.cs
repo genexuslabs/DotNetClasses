@@ -28,6 +28,7 @@ using PageSize = UglyToad.PdfPig.Content.PageSize;
 using PdfRectangle = UglyToad.PdfPig.Core.PdfRectangle;
 using System.Net;
 using GeneXus.Http;
+using GeneXus.Utils;
 
 namespace GeneXus.Printer
 {
@@ -228,24 +229,34 @@ namespace com.genexus.reports
 				{
 					try
 					{
+						byte[] imageBytes;
 						if (!Path.IsPathRooted(bitmap))
 						{
-
-							image = imageType == "jpeg" ? pageBuilder.AddJpeg(File.ReadAllBytes(defaultRelativePrepend + bitmap), position) : pageBuilder.AddPng(File.ReadAllBytes(defaultRelativePrepend + bitmap), position);
-							if (image == null)
+							if (PathUtil.IsAbsoluteUrl(bitmap))
 							{
-								bitmap = webAppDir + bitmap;
-								image = imageType == "jpeg" ? pageBuilder.AddJpeg(File.ReadAllBytes(bitmap), position) : pageBuilder.AddPng(File.ReadAllBytes(bitmap), position);
+								imageBytes = HttpHelper.DownloadFile(bitmap, out _);
 							}
 							else
 							{
-								bitmap = defaultRelativePrepend + bitmap;
+								string bitmapPath = Path.Combine(defaultRelativePrepend, bitmap);
+								if (File.Exists(bitmapPath))
+								{
+									imageBytes = File.ReadAllBytes(bitmapPath);
+									bitmap = bitmapPath;
+								}
+								else
+								{
+									bitmapPath = Path.Combine(webAppDir, bitmap);
+									imageBytes = File.ReadAllBytes(bitmapPath);
+									bitmap = bitmapPath;
+								}
 							}
 						}
 						else
 						{
-							image = imageType == "jpeg" ? pageBuilder.AddJpeg(File.ReadAllBytes(bitmap), position) : pageBuilder.AddPng(File.ReadAllBytes(bitmap), position);
+							imageBytes = File.ReadAllBytes(bitmap);
 						}
+						image = imageType == "jpeg" ? pageBuilder.AddJpeg(imageBytes, position) : pageBuilder.AddPng(imageBytes, position);
 					}
 					catch (Exception)
 					{

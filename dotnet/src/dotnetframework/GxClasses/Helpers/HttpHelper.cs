@@ -561,7 +561,7 @@ namespace GeneXus.Http
 		}
 
 #else
-		internal static byte[] DownloadFile(string fileName, out HttpStatusCode statusCode)
+		public static byte[] DownloadFile(string fileName, out HttpStatusCode statusCode)
 		{
 			byte[] binary = Array.Empty<byte>();
 			try
