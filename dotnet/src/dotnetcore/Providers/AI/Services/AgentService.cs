@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -75,7 +77,7 @@ namespace GeneXus.AI
 			}
 
 		}
-		internal GxHttpClient ChatAgent(string assistant, List<Chat.ChatMessage> messages, GXProperties properties, IGxContext context)
+		internal GxHttpClient ChatAgent(string assistant, IList messages, GXProperties properties, IGxContext context)
 		{
 			try
 			{
@@ -97,7 +99,7 @@ namespace GeneXus.AI
 			}
 
 		}
-		internal GxHttpClient AgentHttpClient(IGxContext context, string assistant, List<Chat.ChatMessage> messages, GXProperties properties, bool stream)
+		internal GxHttpClient AgentHttpClient(IGxContext context, string assistant, IList messages, GXProperties properties, bool stream)
 		{
 			GxHttpClient httpClient = new GxHttpClient(context);
 			httpClient.Secure = 1;
@@ -112,11 +114,12 @@ namespace GeneXus.AI
 			return httpClient;
 		}
 
-		private string AgentPaylod(string assistant, List<ChatMessage> messages, GXProperties properties, bool stream)
+		private string AgentPaylod(string assistant, IList messages, GXProperties properties, bool stream)
 		{
+			List<Chat.ChatMessage> chatMessagesList = messages != null ? messages.Cast<Chat.ChatMessage>().ToList() : null;
 			ChatRequestPayload requestBody = new ChatRequestPayload();
 			requestBody.Model = $"{SAIA_AGENT}{assistant}";
-			requestBody.Messages = messages;
+			requestBody.Messages = chatMessagesList;
 			requestBody.Variables = properties.ToList();
 			requestBody.Stream = stream;
 
