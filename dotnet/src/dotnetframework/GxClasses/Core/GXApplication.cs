@@ -285,6 +285,12 @@ namespace GeneXus.Application
 #if NETCORE
 	internal static class AppContext
 	{
+		internal const string TENANT_ID = "TenantId";
+		internal static string TenantId
+		{
+			get => Current?.Items[TENANT_ID]?.ToString() ?? "default";
+		}
+
 		static IHttpContextAccessor _httpContextAccessor { get; set; }
 		internal static HttpContext Current => _httpContextAccessor != null ? new GxHttpContextAccesor(_httpContextAccessor) : null;
 		internal static void Configure(IHttpContextAccessor accessor)
@@ -365,6 +371,9 @@ namespace GeneXus.Application
 		internal const string GXLanguage = "GXLanguage";
 		internal const string GXTheme = "GXTheme";
 		internal const string SERVER_VAR_HTTP_HOST = "HTTP_HOST";
+#if NETCORE
+		string _tenantId;
+#endif
 		internal const string CURRENT_GX_CONTEXT = "CURRENT_GX_CONTEXT";
 		[NonSerialized]
 		HttpContext _HttpContext;
@@ -1193,9 +1202,7 @@ namespace GeneXus.Application
 			Config.LoadConfiguration();
 		}
 
-
 		public static bool isReorganization { get; set; }
-
 
 		public bool IsMultipartRequest
 		{
@@ -1212,6 +1219,23 @@ namespace GeneXus.Application
 					return false;
 			}
 		}
+#if NETCORE
+		internal string TenantId
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_tenantId) && HttpContext != null)
+				{
+					_tenantId = AppContext.TenantId;
+				}
+				return _tenantId;
+			}
+			set
+			{
+				_tenantId = value;
+			}
+		}
+#endif
 		public IGxContext UtlClone()
 		{
 			//Context for new LUW
@@ -4053,6 +4077,9 @@ namespace GeneXus.Application
 			this.SetPhysicalPath(context.GetPhysicalPath());
 			this.SetLanguageWithoutSession(context.GetLanguage());
 			this.ClientID = context.ClientID;
+#if NETCORE
+			this.TenantId = (context as GxContext)?.TenantId;
+#endif
 			InitializeSubmitSession(context, this);
 		}
 

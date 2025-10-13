@@ -543,11 +543,7 @@ namespace GeneXus.Application
 			app.UseStaticFiles();
 
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
-			GxRedisSession gxRedisSession = sessionService as GxRedisSession;
-			if (gxRedisSession != null && gxRedisSession.IsMultitenant)
-			{
-				app.UseMiddleware<TenantMiddleware>();
-			}
+			app.UseMiddleware<TenantMiddleware>();
 
 			ConfigureCors(app);
 			ConfigureSwaggerUI(app, baseVirtualPath);
