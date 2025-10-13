@@ -6,7 +6,9 @@ using System.IO;
 using System.Reflection;
 using GeneXus;
 using GeneXus.Configuration;
+using GeneXus.Http;
 using GeneXus.Metadata;
+using GeneXus.Utils;
 using iTextSharp.text;
 using iTextSharp.text.html.simpleparser;
 using iTextSharp.text.pdf;
@@ -417,8 +419,8 @@ namespace com.genexus.reports
 			EnsureDocumentOpen();
 			try
 			{
-				iTextSharp.text.Image image;
-				iTextSharp.text.Image imageRef;
+				Image image;
+				Image imageRef;
 				if (documentImages != null && documentImages.TryGetValue(bitmap, out imageRef))
 				{
 					image = imageRef;
@@ -429,24 +431,30 @@ namespace com.genexus.reports
 					{
 						if (!Path.IsPathRooted(bitmap))
 						{
-
-							image = iTextSharp.text.Image.GetInstance(defaultRelativePrepend + bitmap);
-							if (image == null)
+							if (PathUtil.IsAbsoluteUrl(bitmap))
 							{
-								bitmap = webAppDir + bitmap;
-								image = iTextSharp.text.Image.GetInstance(bitmap);
+								image = Image.GetInstance(HttpHelper.DownloadFile(bitmap, out _));
 							}
 							else
 							{
-								bitmap = defaultRelativePrepend + bitmap;
+								image = Image.GetInstance(defaultRelativePrepend + bitmap);
+								if (image == null)
+								{
+									bitmap = webAppDir + bitmap;
+									image = Image.GetInstance(bitmap);
+								}
+								else
+								{
+									bitmap = defaultRelativePrepend + bitmap;
+								}
 							}
 						}
 						else
 						{
-							image = iTextSharp.text.Image.GetInstance(bitmap);
+							image = Image.GetInstance(bitmap);
 						}
 					}
-					catch (Exception)//absolute url
+					catch (Exception)
 					{
 						Uri uri = new Uri(bitmap);
 						image = Image.GetInstance(uri);
