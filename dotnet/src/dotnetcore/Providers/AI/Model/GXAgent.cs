@@ -17,20 +17,18 @@ namespace GeneXus.AI
 		protected ChatResult ChatAgent(String agent, GXProperties properties, IList chatMessages, object result)
 		{
 			CallResult callResult = result as CallResult;
-			List<ChatMessage> chatMessagesList = chatMessages != null ? chatMessages.Cast<ChatMessage>().ToList() : null;
 			try
 			{
 				GXLogging.Debug(log, "Chatting Agent: ", agent);
 
-				GxHttpClient httpClient = AgentService.AgentHandlerInstance.ChatAgent(agent, chatMessagesList, properties, context);
-
-				return new ChatResult(this, agent, properties, chatMessagesList, callResult, httpClient);
+				GxHttpClient httpClient = AgentService.AgentHandlerInstance.ChatAgent(agent, chatMessages, properties, context);
+				return new ChatResult(this, agent, properties, chatMessages, callResult, httpClient);
 			}
 			catch (Exception ex)
 			{
 				callResult.AddMessage($"Error chatting Agent {agent}:" + ex.Message);
 				callResult.IsFail = true;
-				return new ChatResult(this, agent, properties, chatMessagesList, callResult, null); 
+				return new ChatResult(this, agent, properties, chatMessages, callResult, null); 
 			}
 		}
 		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatMessages, object result)
@@ -71,13 +69,13 @@ namespace GeneXus.AI
 			}
 
 		}
-		internal override string ProcessChatResponse(Choice choice, bool stream, string assistant, GXProperties gxproperties, List<ChatMessage> chatMessagesList, object result)
+		internal override string ProcessChatResponse(Choice choice, bool stream, string assistant, GXProperties gxproperties, IList chatMessagesList, object result)
 		{
 			foreach (ToolCall toolCall in choice.Message.ToolCalls)
 				ProcessToolCall(toolCall, chatMessagesList);
 			return CallAgent(assistant, gxproperties, chatMessagesList, result, stream);
 		}
-		private void ProcessToolCall(ToolCall toolCall, List<ChatMessage> messages)
+		private void ProcessToolCall(ToolCall toolCall, IList messages)
 		{
 			string result = string.Empty;
 			string functionName = toolCall.Function.Name;
