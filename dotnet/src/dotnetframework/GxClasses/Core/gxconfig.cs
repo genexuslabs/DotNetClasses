@@ -860,6 +860,7 @@ namespace GeneXus.Configuration
 		public static string DefaultRewriteFile = "rewrite.config";
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
 		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
+		const string UserAgentHeader = "UserAgentHeader";
 		internal const string YES = "1";
 		internal const string NO = "0";
 		static string defaultDatastore;
@@ -875,6 +876,17 @@ namespace GeneXus.Configuration
 				return nameSpace;
 			}
 		}
+		internal static string HttpClientUserAgent
+		{
+			get
+			{
+				if (Config.GetValueOrEnvironmentVarOf(UserAgentHeader, out string userAgent))
+					return userAgent;
+				else
+					return string.Empty;
+			}
+		}
+		
 		internal static bool IsBeforeConnectEventConfigured()
 		{
 			

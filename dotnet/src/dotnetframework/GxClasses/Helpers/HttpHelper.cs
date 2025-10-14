@@ -28,6 +28,8 @@ using Microsoft.Net.Http.Headers;
 using System.Net.Http;
 using System.Globalization;
 using System.Linq;
+using GeneXus.Http.Client;
+using System.Net.Http.Headers;
 
 namespace GeneXus.Http
 {
@@ -55,6 +57,7 @@ namespace GeneXus.Http
 		internal static string X_CSRF_TOKEN_COOKIE = "XSRF-TOKEN";
 		internal static string AUTHORIZATION = "Authorization";
 		internal static string CONTENT_TYPE = "Content-Type";
+		internal static string USER_AGENT = "User-Agent";
 	}
 	internal class HttpHeaderValue
 	{
@@ -530,9 +533,10 @@ namespace GeneXus.Http
 		public static byte[] DownloadFile(string url, out HttpStatusCode statusCode)
 		{
 			byte[] buffer = Array.Empty<byte>();
-			using (var client = new HttpClient())
+			HttpClient httpClient = GxHttpClient.GetHttpClientInstance(new Uri(url), out bool disposableInstance);
+			try
 			{
-				using (HttpResponseMessage response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result)
+				using (HttpResponseMessage response = httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result)
 				{
 					if (response.IsSuccessStatusCode)
 					{
@@ -548,16 +552,23 @@ namespace GeneXus.Http
 					}
 				}
 			}
+			finally
+			{
+				if (disposableInstance)
+					httpClient.Dispose();
+			}
 			return buffer;
 		}
 
 #else
-		internal static byte[] DownloadFile(string fileName, out HttpStatusCode statusCode)
+		public static byte[] DownloadFile(string fileName, out HttpStatusCode statusCode)
 		{
 			byte[] binary = Array.Empty<byte>();
 			try
 			{
 				WebClient Client = new WebClient();
+				if (!string.IsNullOrEmpty(Preferences.HttpClientUserAgent))
+					Client.Headers.Add(HttpHeader.USER_AGENT, Preferences.HttpClientUserAgent);
 				binary = Client.DownloadData(fileName);
 				statusCode = HttpStatusCode.OK;
 			}

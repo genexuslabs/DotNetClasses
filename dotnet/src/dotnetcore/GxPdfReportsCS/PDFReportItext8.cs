@@ -5,6 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using GeneXus;
+using GeneXus.Http;
+using GeneXus.Utils;
 using iText.Barcodes;
 using iText.Html2pdf;
 using iText.Html2pdf.Resolver.Font;
@@ -481,16 +483,22 @@ namespace com.genexus.reports
 					{
 						if (!Path.IsPathRooted(bitmap))
 						{
-
-							image = new Image(ImageDataFactory.Create(defaultRelativePrepend + bitmap));
-							if (image == null)
+							if (PathUtil.IsAbsoluteUrl(bitmap))
 							{
-								bitmap = webAppDir + bitmap;
-								image = new Image(ImageDataFactory.Create(bitmap));
+								image = new Image(ImageDataFactory.Create(HttpHelper.DownloadFile(bitmap, out _)));
 							}
 							else
 							{
-								bitmap = defaultRelativePrepend + bitmap;
+								image = new Image(ImageDataFactory.Create(defaultRelativePrepend + bitmap));
+								if (image == null)
+								{
+									bitmap = webAppDir + bitmap;
+									image = new Image(ImageDataFactory.Create(bitmap));
+								}
+								else
+								{
+									bitmap = defaultRelativePrepend + bitmap;
+								}
 							}
 						}
 						else
