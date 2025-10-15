@@ -1,13 +1,12 @@
-using System;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using GeneXus.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
-using StackExchange.Redis;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using GeneXus.Services;
+using System.Linq;
 
 namespace GeneXus.Application
 {
@@ -70,6 +69,7 @@ namespace GeneXus.Application
 				if (!string.IsNullOrEmpty(subdomain))
 					context.Items[AppContext.TENANT_ID] = subdomain;
 			}
+			
 			await _next(context);
 		}
 	}
