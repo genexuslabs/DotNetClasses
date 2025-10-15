@@ -13,13 +13,11 @@ namespace GeneXus.Application
 	public class TenantRedisCache : IDistributedCache
 	{
 		private readonly IHttpContextAccessor _httpContextAccessor;
-		private readonly IServiceProvider _serviceProvider;
-		private readonly ConcurrentDictionary<string, RedisCache> _redisCaches = new();
+		private readonly ConcurrentDictionary<string, IDistributedCache> _redisCaches = new();
 
-		public TenantRedisCache(IHttpContextAccessor httpContextAccessor, IServiceProvider serviceProvider)
+		public TenantRedisCache(IHttpContextAccessor httpContextAccessor)
 		{
 			_httpContextAccessor = httpContextAccessor;
-			_serviceProvider = serviceProvider;
 		}
 
 		private IDistributedCache GetTenantCache()
