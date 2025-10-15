@@ -1,25 +1,23 @@
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using GeneXus.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
-using GeneXus.Services;
-using System.Linq;
+using StackExchange.Redis;
 
 namespace GeneXus.Application
 {
 	public class TenantRedisCache : IDistributedCache
 	{
 		private readonly IHttpContextAccessor _httpContextAccessor;
-		private readonly IServiceProvider _serviceProvider;
-		private readonly ConcurrentDictionary<string, RedisCache> _redisCaches = new();
+		private readonly ConcurrentDictionary<string, IDistributedCache> _redisCaches = new();
 
-		public TenantRedisCache(IHttpContextAccessor httpContextAccessor, IServiceProvider serviceProvider)
+		public TenantRedisCache(IHttpContextAccessor httpContextAccessor)
 		{
 			_httpContextAccessor = httpContextAccessor;
-			_serviceProvider = serviceProvider;
 		}
 
 		private IDistributedCache GetTenantCache()
@@ -29,12 +27,7 @@ namespace GeneXus.Application
 			return _redisCaches.GetOrAdd(tenantId, id =>
 			{
 				ISessionService sessionService = GXSessionServiceFactory.GetProvider();
-				var options = new RedisCacheOptions
-				{
-					Configuration = sessionService.ConnectionString,
-					InstanceName = $"{id}:"
-				};
-				return new RedisCache(options);
+				return new CustomRedisSessionStore(sessionService.ConnectionString, TimeSpan.FromMinutes(sessionService.SessionTimeout), id);
 			});
 		}
 
@@ -48,6 +41,66 @@ namespace GeneXus.Application
 		public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default) => GetTenantCache().SetAsync(key, value, options, token);
 	}
 
+	public class CustomRedisSessionStore : IDistributedCache
+	{
+		private readonly IDatabase _db;
+		private readonly TimeSpan _idleTimeout;
+		private readonly TimeSpan _refreshThreshold;
+		private readonly string _instanceName;
+
+		public CustomRedisSessionStore(string connectionString, TimeSpan idleTimeout, string instanceName)
+		{
+			var mux = ConnectionMultiplexer.Connect(connectionString);
+			_db = mux.GetDatabase();
+			_idleTimeout = idleTimeout;
+			_refreshThreshold = TimeSpan.FromTicks((long)(idleTimeout.Ticks * 0.2));
+			_instanceName = instanceName ?? string.Empty;
+		}
+
+		private string FormatKey(string key) => string.IsNullOrEmpty(_instanceName) ? key : $"{_instanceName}:{key}";
+
+		public byte[] Get(string key) => _db.StringGet(FormatKey(key));
+
+		public async Task<byte[]> GetAsync(string key, CancellationToken token = default)
+		{
+			string redisKey = FormatKey(key);
+			var value = await _db.StringGetAsync(redisKey);
+
+			var ttl = await _db.KeyTimeToLiveAsync(redisKey);
+
+			if (ttl.HasValue && ttl.Value < _refreshThreshold)
+			{
+				_ = _db.KeyExpireAsync(redisKey, _idleTimeout);
+			}
+
+			return value;
+		}
+
+		public void Refresh(string key)
+		{
+			string redisKey = FormatKey(key);
+		}
+
+		public Task RefreshAsync(string key, CancellationToken token = default)
+		{
+			return Task.CompletedTask;
+		}
+
+		public void Remove(string key) => _db.KeyDelete(FormatKey(key));
+
+		public Task RemoveAsync(string key, CancellationToken token = default)
+			=> _db.KeyDeleteAsync(FormatKey(key));
+
+		public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+		{
+			_db.StringSet(FormatKey(key), value, _idleTimeout);
+		}
+
+		public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
+		{
+			return _db.StringSetAsync(FormatKey(key), value, _idleTimeout);
+		}
+	}
 
 	public class TenantMiddleware
 	{
