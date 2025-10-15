@@ -549,7 +549,7 @@ namespace GeneXus.Application
 			{
 				app.UseMiddleware<EnableCustomSessionStoreMiddleware>();
 			}
-			app.UseSession();
+			app.UseAsyncSession();
 			app.UseStaticFiles();
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 			app.UseMiddleware<TenantMiddleware>();
@@ -925,4 +925,36 @@ namespace GeneXus.Application
 			}
 		}
 	}
+	public static class SesssionAsyncExtensions
+	{
+		/// <summary>
+		/// Ensures sessions load asynchronously by calling LoadAsync before accessing session data,
+		/// forcing the session provider to avoid synchronous operations.
+		/// </summary>
+		/// <remarks>
+		/// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/app-state?view=aspnetcore-5.0
+		/// The default session provider in ASP.NET Core will only load the session record from the underlying IDistributedCache store asynchronously if the
+		/// ISession.LoadAsync method is explicitly called before calling the TryGetValue, Set or Remove methods. 
+		/// Failure to call LoadAsync first will result in the underlying session record being loaded synchronously,
+		/// which could potentially impact the ability of an application to scale.
+		/// 
+		/// See also:
+		/// https://github.com/aspnet/Session/blob/master/src/Microsoft.AspNetCore.Session/DistributedSession.cs
+		/// https://github.com/dotnet/AspNetCore.Docs/issues/1840#issuecomment-454182594
+		/// </remarks>
+		public static IApplicationBuilder UseAsyncSession(this IApplicationBuilder app)
+		{
+			app.UseSession();
+			app.Use(async (context, next) =>
+			{
+				if (context.Session != null)
+				{
+					await context.Session.LoadAsync();
+				}
+				await next();
+			});
+			return app;
+		}
+	}
+	
 }
