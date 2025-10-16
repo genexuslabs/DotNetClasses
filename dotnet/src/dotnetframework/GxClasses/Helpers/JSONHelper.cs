@@ -132,11 +132,7 @@ namespace GeneXus.Utils
 		{
 			if (value != null)
 			{
-				string json = JsonSerializer.Serialize(value, new JsonSerializerOptions
-				{
-					WriteIndented = true
-				});
-				return json;
+				return JsonSerializer.Serialize(value);
 			}
 			return null;
 		}
