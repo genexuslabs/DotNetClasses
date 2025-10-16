@@ -218,7 +218,7 @@ namespace GxClasses.Web.Middleware
 					}
 					else
 					{
-						if (path.Contains(oauthRoute) && (AzureDeploy.GAM == "true"))
+						if ((path.Contains(oauthRoute) && (AzureDeploy.GAM == "true")) || path.Contains("gxmulticall"))
 						{
 							await (RouteHttpService(context));
 							return;
