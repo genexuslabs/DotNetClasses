@@ -12,6 +12,9 @@ using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
+
+using iText.Commons.Actions;
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
@@ -36,6 +39,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
+
+using ModelContextProtocol.AspNetCore;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -59,12 +65,15 @@ namespace GeneXus.Application
 					port = args[2];
 					if (args.Length > 3 && Uri.UriSchemeHttps.Equals(args[3], StringComparison.OrdinalIgnoreCase))
 						schema = Uri.UriSchemeHttps;
+					if (args.Length > 4) 
+						Startup.IsMcp = args[4].Equals("mcp", StringComparison.OrdinalIgnoreCase);
 				}
 				else
 				{
 					LocatePhysicalLocalPath();
 
 				}
+
 				if (port == DEFAULT_PORT)
 				{
 					BuildWebHost(null).Run();
@@ -164,6 +173,7 @@ namespace GeneXus.Application
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
+		public static bool IsMcp = false;
 		internal static string APP_SETTINGS = "appsettings.json";
 
 		const string UrlTemplateControllerWithParms = "controllerWithParms";
@@ -273,6 +283,47 @@ namespace GeneXus.Application
 					options.SuppressXFrameOptionsHeader = true;
 				});
 			}
+			if (Startup.IsMcp)
+			{
+				var mcp = services.AddMcpServer(options =>
+				{
+					options.ServerInfo = new ModelContextProtocol.Protocol.Implementation
+					{
+						Name = "GxMcpServer",
+						Version = Assembly.GetExecutingAssembly()
+							.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "1.0.0"
+					};
+				})
+				.WithHttpTransport(transportOptions =>
+				{
+					// SSE endpoints (/sse, /message) require STATEFUL sessions to support server-to-client push
+					transportOptions.Stateless = false;
+					transportOptions.IdleTimeout = TimeSpan.FromSeconds();
+					GXLogging.Debug(log, "MCP HTTP Transport configured: Stateless=false (SSE enabled), IdleTimeout=10min");
+				});
+
+				try
+				{
+					var mcpAssemblies = FileTools.MCPFileTools(Startup.LocalPath).ToList();
+					foreach (var assembly in mcpAssemblies)
+					{
+						try
+						{
+							mcp.WithToolsFromAssembly(assembly);
+							GXLogging.Debug(log, $"Successfully loaded MCP tools from assembly: {assembly.FullName}");
+						}
+						catch (Exception assemblyEx)
+						{
+							GXLogging.Error(log, $"Failed to load MCP tools from assembly: {assembly.FullName}", assemblyEx);
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					GXLogging.Error(log, "Error discovering MCP tool assemblies", ex);
+				}
+			}
+
 			services.AddDirectoryBrowser();
 			if (GXUtil.CompressResponse())
 			{
@@ -583,6 +634,11 @@ namespace GeneXus.Application
 				{
 					Predicate = check => check.Tags.Contains("ready")
 				});
+				if (Startup.IsMcp)
+				{
+					// Register MCP endpoints at root, exposing /sse and /message
+					endpoints.MapMcp();
+				}
 			});
 
 			if (log.IsCriticalEnabled && env.IsDevelopment())
@@ -861,6 +917,7 @@ namespace GeneXus.Application
 		}
 	}
 
+	
 	internal class HomeControllerConvention : IApplicationModelConvention
 	{
 		private static bool FindAndStoreDefaultFile()
