@@ -65,9 +65,6 @@ namespace GeneXus.Application
 					LocatePhysicalLocalPath();
 
 				}
-
-				MCPTools.ServerStart(Startup.VirtualPath, Startup.LocalPath, schema);
-
 				if (port == DEFAULT_PORT)
 				{
 					BuildWebHost(null).Run();
@@ -863,37 +860,6 @@ namespace GeneXus.Application
 			}
 		}
 	}
-
-	static class MCPTools
-	{
-		public static void ServerStart(string virtualPath, string workingDir, string schema) 
-		{
-			IGXLogger log = GXLoggerFactory.GetLogger(typeof(CustomBadRequestObjectResult).FullName);
-			bool isMpcServer = false;
-			try
-			{
-				List<string> L = Directory.GetFiles(Path.Combine(workingDir,"bin"), "*mcp_service.dll").ToList<string>();
-				isMpcServer = L.Count > 0;
-				if (isMpcServer)
-				{
-					GXLogging.Info(log, "Start MCP Server");
-					
-					GxRunner.RunAsync("GxMcpStartup.exe", Path.Combine(workingDir,"bin"), virtualPath, schema, onExit: exitCode =>
-					{
-						if (exitCode == 0)
-							Console.WriteLine("Process completed successfully.");
-						else
-							Console.Error.WriteLine($"Process failed (exit code {exitCode})");
-					});
-				}
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, "Error starting MCP Server", ex);
-			}
-		}
-	}
-
 
 	internal class HomeControllerConvention : IApplicationModelConvention
 	{
