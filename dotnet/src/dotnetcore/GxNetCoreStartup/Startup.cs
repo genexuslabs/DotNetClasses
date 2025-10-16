@@ -300,7 +300,7 @@ namespace GeneXus.Application
 				{
 					// SSE endpoints (/sse, /message) require STATEFUL sessions to support server-to-client push
 					transportOptions.Stateless = false;
-					transportOptions.IdleTimeout = TimeSpan.FromSeconds();
+					transportOptions.IdleTimeout = TimeSpan.FromSeconds(30);
 					GXLogging.Debug(log, "MCP HTTP Transport configured: Stateless=false (SSE enabled), IdleTimeout=10min");
 				});
 
