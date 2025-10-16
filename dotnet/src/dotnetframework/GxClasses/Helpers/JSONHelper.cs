@@ -128,6 +128,19 @@ namespace GeneXus.Utils
 			});
 		}
 
+		internal override string DefaultSerialize<T>(T value)
+		{
+			if (value != null)
+			{
+				string json = JsonSerializer.Serialize(value, new JsonSerializerOptions
+				{
+					WriteIndented = true
+				});
+				return json;
+			}
+			return null;
+		}
+
 		internal override bool IsJsonString(string jobject)
 		{
 			try
@@ -229,6 +242,9 @@ namespace GeneXus.Utils
 		internal abstract string WriteJSON<T>(T kbObject) where T : class;
 
 		internal abstract string WriteNullableJSON(Dictionary<string, object> kbObject);
+#if NETCORE
+		internal abstract string DefaultSerialize<T>(T value) where T : class;
+#endif
 	}
 	
 	public class JSONHelper
@@ -328,7 +344,20 @@ namespace GeneXus.Utils
 		{
 			return Serialize<T>(kbObject, Encoding.UTF8);
 		}
-
+#if NETCORE
+		public static string DefaultSerialize<T>(T value) where T : class
+		{
+			try
+			{
+				return GXJsonSerializer.Instance.DefaultSerialize<T>(value);
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, "DefaultSerialize error ", ex);
+				return null;
+			}
+		}
+#endif
 		public static string Serialize<T>(T kbObject, Encoding encoding) where T : class
 		{
 			return Serialize<T>(kbObject, encoding, null);

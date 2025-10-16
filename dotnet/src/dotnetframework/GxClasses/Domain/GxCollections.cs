@@ -2728,7 +2728,15 @@ namespace GeneXus.Utils
 		}
 		public string ToJSonString()
 		{
+#if NETCORE
+			string json =  JSONHelper.DefaultSerialize(ExternalInstance);
+			if (json!=null)
+				return json;
+			else
+				return new JArray().ToString();
+#else
 			return string.Empty;
+#endif
 		}
 		public string ToJSonString(bool includeState)
 		{
