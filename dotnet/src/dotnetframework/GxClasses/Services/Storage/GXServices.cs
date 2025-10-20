@@ -15,6 +15,8 @@ namespace GeneXus.Services
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
+		public static string REDIS_CACHE_SERVICE = "Redis";
+		public static string DATABASE_CACHE_SERVICE = "DATABASE";
 		public static string DATA_ACCESS_SERVICE = "DataAccess";
 		public static string SESSION_SERVICE = "Session";
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
@@ -47,6 +49,7 @@ namespace GeneXus.Services
 			}
 			set { }			
 		}
+
 		public void AddService(string name, GXService service)
 		{
 			services[name] = service;

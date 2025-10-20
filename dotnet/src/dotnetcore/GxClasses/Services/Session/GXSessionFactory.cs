@@ -13,8 +13,6 @@ namespace GeneXus.Services
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXSessionServiceFactory>();
 
 		static ISessionService sessionService;
-		static string REDIS = "REDIS";
-		static string DATABASE = "DATABASE";
 		public static ISessionService GetProvider()
 		{
 			if (sessionService != null)
@@ -29,9 +27,9 @@ namespace GeneXus.Services
 					//Compatibility 
 					if (string.IsNullOrEmpty(className))
 					{
-						if (providerService.Name.Equals(REDIS, StringComparison.OrdinalIgnoreCase))
+						if (providerService.Name.Equals(GXServices.REDIS_CACHE_SERVICE, StringComparison.OrdinalIgnoreCase))
 							type = typeof(GxRedisSession);
-						else if (providerService.Name.Equals(DATABASE, StringComparison.OrdinalIgnoreCase))
+						else if (providerService.Name.Equals(GXServices.DATABASE_CACHE_SERVICE, StringComparison.OrdinalIgnoreCase))
 							type = typeof(GxDatabaseSession);
 					}
 					else
