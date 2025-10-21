@@ -861,8 +861,9 @@ namespace GeneXus.Configuration
 		const string USE_NAMED_PARAMETERS = "UseNamedParameters";
 		const string REST_DATES_WITH_MILLIS = "REST_DATES_WITH_MILLIS";
 		const string UserAgentHeader = "UserAgentHeader";
-		internal const string YES = "1";
-		internal const string NO = "0";
+		internal const string EnabledValueOne  = "1";
+		internal const string EnabledValueYes = "y";
+		internal const string DisabledValueZero = "0";
 		static string defaultDatastore;
 		const string DEFAULT_DS = "Default";
 		static int httpclient_max_per_route = -1;
@@ -890,9 +891,15 @@ namespace GeneXus.Configuration
 		internal static bool IsBeforeConnectEventConfigured()
 		{
 			
-			return (Config.GetValueOrEnvironmentVarOf("ApplyBeforeConnectToWebSession", out string value) && value == YES && 
+			return (Config.GetValueOrEnvironmentVarOf("ApplyBeforeConnectToWebSession", out string value) && IsEnabled(value)
 				Config.GetValueOf("EVENT_BEFORE_CONNECT", out string evtProcName) && !string.IsNullOrEmpty(evtProcName));
 		}
+
+		static bool IsEnabled(string value)
+		{
+			return !string.IsNullOrWhiteSpace(value) && value.Equals(EnabledValueOne , StringComparison.OrdinalIgnoreCase) || value.StartsWith(EnabledValueYes, StringComparison.OrdinalIgnoreCase);
+		}
+
 		internal static string DefaultDatastore
 		{
 			get
@@ -974,14 +981,14 @@ namespace GeneXus.Configuration
 		{
 			get
 			{
-				return Config.GetValueOf(USE_NAMED_PARAMETERS, YES) == YES;
+				return Config.GetValueOf(USE_NAMED_PARAMETERS, EnabledValueOne ) == EnabledValueOne ;
 			}
 		}
 		public static bool WFCDateTimeMillis
 		{
 			get
 			{
-				return Config.GetValueOf(REST_DATES_WITH_MILLIS, NO) == YES;
+				return Config.GetValueOf(REST_DATES_WITH_MILLIS, DisabledValueZero) == EnabledValueOne ;
 			}
 		}
 		public static bool MustSetupDB()
@@ -1168,7 +1175,7 @@ namespace GeneXus.Configuration
 			string data;
 			if (useBase64ViewState == -1)
 			{
-				if (Config.GetValueOf("UseBase64ViewState", out data) && data.Trim().Equals("y"))
+				if (Config.GetValueOf("UseBase64ViewState", out data) && data.Trim().Equals(EnabledValueYes))
 				{
 					useBase64ViewState = 1;
 				}
