@@ -22,7 +22,6 @@ namespace GeneXus.Cache
 		ConnectionMultiplexer _redisConnection;
 		IDatabase _redisDatabase;
 #if NETCORE
-		bool _multitenant;
 		MemoryCache _localCache;
 		private const double DEFAULT_LOCAL_CACHE_FACTOR = 0.8;
 		private static readonly TimeSpan LOCAL_CACHE_PERSISTENT_KEY_TTL = TimeSpan.FromMinutes(5);
@@ -31,7 +30,6 @@ namespace GeneXus.Cache
 		ConfigurationOptions _redisConnectionOptions;
 		private const int REDIS_DEFAULT_PORT = 6379;
 		public int redisSessionTimeout;
-		private string _instanceName;
 
 		public Redis(string connectionString)
 		{
@@ -52,16 +50,6 @@ namespace GeneXus.Cache
 				string address, password;
 				address = providerService.Properties.Get("CACHE_PROVIDER_ADDRESS");
 				password = providerService.Properties.Get("CACHE_PROVIDER_PASSWORD");
-				_instanceName = providerService.Properties.Get("CACHE_PROVIDER_INSTANCE_NAME");
-
-				if (!string.IsNullOrEmpty(password))
-				{
-					string ret = string.Empty;
-					if (CryptoImpl.Decrypt(ref ret, password))
-					{
-						password = ret;
-					}
-				}
 
 				if (string.IsNullOrEmpty(address))
 					address = String.Format("localhost:{0}", REDIS_DEFAULT_PORT);
@@ -105,29 +93,7 @@ namespace GeneXus.Cache
 				if (_redisDatabase == null)
 				{
 					_redisConnection = ConnectionMultiplexer.Connect(_redisConnectionOptions);
-					IDatabase db = _redisConnection.GetDatabase();
-
-					if (!string.IsNullOrEmpty(_instanceName))
-					{
-#if NETCORE
-						if (_instanceName == CacheFactory.SUBDOMAIN)
-						{
-							_multitenant = true;
-							GXLogging.Debug(log, "Using Redis multitenant (key prefix):" + CacheFactory.SUBDOMAIN);
-							_redisDatabase = db;
-						}
-						else
-#endif
-						{
-							string prefixKey = _instanceName.EndsWith(":") ? _instanceName : _instanceName + ":";
-							_redisDatabase = db.WithKeyPrefix(_instanceName);
-							GXLogging.Debug(log, "Using Redis instance name (key prefix): " + prefixKey);
-						}
-					}
-					else
-					{
-						_redisDatabase = db;
-					}
+					_redisDatabase = _redisConnection.GetDatabase();
 				}
 				return _redisDatabase;
 			}
@@ -373,12 +339,6 @@ namespace GeneXus.Cache
 		}
 		private string FormatKey(string cacheid, string key, Nullable<long> prefix)
 		{
-#if NETCORE
-			if (_multitenant)
-			{
-				return String.Format("{0}:{1}_{2}_{3}", GxContext.Current.TenantId, cacheid, prefix, GXUtil.GetHash(key));
-			}
-#endif
 			return String.Format("{0}_{1}_{2}", cacheid, prefix, GXUtil.GetHash(key));
 		}
 		private Nullable<long> KeyPrefix(string cacheid)
@@ -444,10 +404,10 @@ namespace GeneXus.Cache
 		private bool KeyExistsLocal(string fullKey)
 		{
 #if NETCORE
-			if (_localCache?.TryGetValue(fullKey, out _))
-				return true;
-#endif
+			return _localCache?.TryGetValue(fullKey, out _) ?? false;
+#else
 			return false;
+#endif
 		}
 
 		private void SetLocal<T>(string key, T value)

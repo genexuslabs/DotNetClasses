@@ -18,3 +18,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("DotNetCoreChunkedTest")]
 [assembly: InternalsVisibleTo("DotNetCoreChunkedTest")]
 [assembly: InternalsVisibleTo("GeneXus.OpenTelemetry.Diagnostics")]
+[assembly: InternalsVisibleTo("GxRedis")]
