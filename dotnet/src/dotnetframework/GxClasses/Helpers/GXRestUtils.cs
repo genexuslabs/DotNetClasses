@@ -143,16 +143,16 @@ namespace GeneXus.Utils
 
 		internal static bool ValidateCsrfToken()
 		{
-			return Config.GetValueOf("CSRF_PROTECTION", Preferences.NO) == Preferences.YES;
+			return Config.GetValueOf("CSRF_PROTECTION", Preferences.DisabledValueZero) == Preferences.EnabledValueOne ;
 		}
 
 		internal static bool ServiceAsController()
 		{
-			return Config.GetValueOf("SERVICE_AS_CONTROLLER", Preferences.YES) == Preferences.YES;
+			return Config.GetValueOf("SERVICE_AS_CONTROLLER", Preferences.EnabledValueOne ) == Preferences.EnabledValueOne ;
 		}
 		internal static bool JsonSerializerCaseSensitive()
 		{
-			return Config.GetValueOf("RestJsonCaseSensitive", Preferences.NO) == Preferences.YES;
+			return Config.GetValueOf("RestJsonCaseSensitive", Preferences.DisabledValueZero) == Preferences.EnabledValueOne ;
 		}
 	}
 }
