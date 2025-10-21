@@ -890,8 +890,7 @@ namespace GeneXus.Configuration
 		
 		internal static bool IsBeforeConnectEventConfigured()
 		{
-			
-			return (Config.GetValueOrEnvironmentVarOf("ApplyBeforeConnectToWebSession", out string value) && IsEnabled(value)
+			return (Config.GetValueOrEnvironmentVarOf("ApplyBeforeConnectToWebSession", out string value) && IsEnabled(value) && 
 				Config.GetValueOf("EVENT_BEFORE_CONNECT", out string evtProcName) && !string.IsNullOrEmpty(evtProcName));
 		}
 
