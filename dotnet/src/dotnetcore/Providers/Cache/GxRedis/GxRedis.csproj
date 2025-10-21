@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<PackageTags>Redis</PackageTags>
 		<PackageId>GeneXus.Redis.Core</PackageId>
 		<DefineConstants>NETCORE</DefineConstants>
@@ -19,7 +19,7 @@
 	<Compile Include="..\..\..\..\dotnetframework\Providers\Cache\GxRedis\GxRedis.cs" Link="GxRedis.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="StackExchange.Redis" Version="2.9.17" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.122" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,11 +7,9 @@ using GeneXus.Application;
 using GxClasses.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 #endif
-using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 using StackExchange.Redis;
-using StackExchange.Redis.KeyspaceIsolation;
 
 namespace GeneXus.Cache
 {
