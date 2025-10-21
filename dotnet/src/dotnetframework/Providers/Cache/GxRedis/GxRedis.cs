@@ -444,10 +444,10 @@ namespace GeneXus.Cache
 		private bool KeyExistsLocal(string fullKey)
 		{
 #if NETCORE
-			if (_localCache?.TryGetValue(fullKey, out _))
-				return true;
-#endif
+			return _localCache?.TryGetValue(fullKey, out _) ?? false;
+#else
 			return false;
+#endif
 		}
 
 		private void SetLocal<T>(string key, T value)
