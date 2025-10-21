@@ -86,7 +86,7 @@ namespace GeneXus.Cache
 		private void InitLocalCache()
 		{
 #if NETCORE
-			if (EnvVarReader.GetEnvironmentValue(GXServices.CACHE_SERVICE, GXServices.REDIS_CACHE_SERVICE, "HYBRID", out string envVarValue) && envVarValue.Equals(true.ToString(), StringComparison.OrdinalIgnoreCase))
+			if (EnvVarReader.GetEnvironmentValue(GXServices.CACHE_SERVICE, GXServices.REDIS_CACHE_SERVICE, "HYBRID", out string envVarValue) && envVarValue.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase))
 			{
 				GXLogging.Debug(log, "Using Redis Hybrid mode with local memory cache.");
 				_localCache = new MemoryCache(new MemoryCacheOptions());
@@ -425,34 +425,26 @@ namespace GeneXus.Cache
 		private void ClearKeyLocal(string key)
 		{
 #if NETCORE
-			if (_localCache == null)
-				return;
-			_localCache.Remove(key);
+			_localCache?.Remove(key);
 #endif
 		}
 		void ClearAllCachesLocal()
 		{
 #if NETCORE
-			if (_localCache == null)
-				return;
-			_localCache.Compact(1.0);
+			_localCache?.Compact(1.0);
 #endif
 		}
 
 		private void KeyExpireLocal(string fullKey)
 		{
 #if NETCORE
-			if (_localCache == null)
-				return;
-			_localCache.Remove(fullKey);
+			_localCache?.Remove(fullKey);
 #endif
 		}
 		private bool KeyExistsLocal(string fullKey)
 		{
 #if NETCORE
-			if (_localCache == null)
-				return false;
-			if (_localCache.TryGetValue(fullKey, out _))
+			if (_localCache?.TryGetValue(fullKey, out _))
 				return true;
 #endif
 			return false;
@@ -471,15 +463,13 @@ namespace GeneXus.Cache
 		private void SetPersistentLocal(string cacheid, long? prefix)
 		{
 #if NETCORE
-			if (_localCache != null) 
-				_localCache.Set(cacheid, prefix, LocalCacheTTL(LOCAL_CACHE_PERSISTENT_KEY_TTL));
+			_localCache?.Set(cacheid, prefix, LocalCacheTTL(LOCAL_CACHE_PERSISTENT_KEY_TTL));
 #endif
 		}
 		private void SetLocal<T>(string key, T value, int duration)
 		{
 #if NETCORE
-			if (_localCache != null)
-				_localCache.Set(key, value, LocalCacheTTL(duration));
+			_localCache?.Set(key, value, LocalCacheTTL(duration));
 #endif
 		}
 		private bool GetLocal<T>(string key, out T value)
