@@ -258,7 +258,7 @@ namespace GeneXus.Http
 				if (!string.IsNullOrEmpty(origin))
 					httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
 			}
-			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = bool.TrueString;
 
 			if (!string.IsNullOrEmpty(requestHeaders))
 				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
@@ -276,7 +276,7 @@ namespace GeneXus.Http
 				if (!string.IsNullOrEmpty(origin))
 					httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
 			}
-			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = bool.TrueString;
 
 			if (!string.IsNullOrEmpty(requestHeaders))
 				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
@@ -296,7 +296,7 @@ namespace GeneXus.Http
 				if (!string.IsNullOrEmpty(origin))
 					httpResponse.AppendHeader(HeaderNames.AccessControlAllowOrigin, origin);
 			}
-			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, true.ToString());
+			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, bool.TrueString);
 
 			if (!string.IsNullOrEmpty(requestHeaders))
 				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList));
@@ -880,18 +880,18 @@ namespace GeneXus.Http
 			string value = websession.Get<string>(NEWSESSION);
 			if (string.IsNullOrEmpty(value))
 			{
-				websession.Set<string>(NEWSESSION, true.ToString());
+				websession.Set<string>(NEWSESSION, bool.TrueString);
 			}
 			else
 			{
-				websession.Set<string>(NEWSESSION, false.ToString());
+				websession.Set<string>(NEWSESSION, bool.FalseString);
 			}
 		}
 		public static bool IsNewSession(this HttpContext context)
 		{
 			GxWebSession websession = new GxWebSession(new HttpSessionState(context.Session));
 			string value=websession.Get<string>(NEWSESSION);
-			return string.IsNullOrEmpty(value) || value == true.ToString();
+			return string.IsNullOrEmpty(value) || value == bool.TrueString;
 		}
 #else
 		public static bool IsNewSession(this HttpContext context)
