@@ -33,7 +33,6 @@ namespace GeneXus.Cache
 		{
 			_redisConnectionOptions = ConfigurationOptions.Parse(connectionString);
 			_redisConnectionOptions.AllowAdmin = true;
-			InitLocalCache();
 		}
 
 		public Redis(string connectionString, int sessionTimeout):this(connectionString)
@@ -66,13 +65,14 @@ namespace GeneXus.Cache
 					_redisConnectionOptions = ConfigurationOptions.Parse(address);
 				}
 				_redisConnectionOptions.AllowAdmin = true;
-				InitLocalCache();
+				InitLocalCache(providerService);
 			}
 		}
-		private void InitLocalCache()
+		private void InitLocalCache(GXService providerService)
 		{
 #if NETCORE
-			if (EnvVarReader.GetEnvironmentValue(GXServices.CACHE_SERVICE, GXServices.REDIS_CACHE_SERVICE, "HYBRID", out string envVarValue) && envVarValue.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase))
+			string localCache = providerService.Properties.Get("ENABLE_MEMORY_CACHE");
+			if (!string.IsNullOrEmpty(localCache) && localCache.Equals(bool.TrueString, StringComparison.OrdinalIgnoreCase))
 			{
 				GXLogging.Debug(log, "Using Redis Hybrid mode with local memory cache.");
 				_localCache = new MemoryCache(new MemoryCacheOptions());
