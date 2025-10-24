@@ -41,7 +41,6 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 
-using ModelContextProtocol.AspNetCore;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -74,7 +73,6 @@ namespace GeneXus.Application
 
 				}
 
-
 				if (port == DEFAULT_PORT)
 				{
 					BuildWebHost(null).Run();
@@ -88,7 +86,7 @@ namespace GeneXus.Application
 			{
 				Console.Error.WriteLine("ERROR:");
 				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
-			}
+			}			
 		}
 
 		public static IWebHost BuildWebHost(string[] args) =>
@@ -287,43 +285,7 @@ namespace GeneXus.Application
 			}
 			if (Startup.IsMcp)
 			{
-				var mcp = services.AddMcpServer(options =>
-				{
-					options.ServerInfo = new ModelContextProtocol.Protocol.Implementation
-					{
-						Name = "GxMcpServer",
-						Version = Assembly.GetExecutingAssembly()
-							.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "1.0.0"
-					};
-				})
-				.WithHttpTransport(transportOptions =>
-				{
-					// SSE endpoints (/sse, /message) require STATEFUL sessions to support server-to-client push
-					transportOptions.Stateless = false;
-					transportOptions.IdleTimeout = TimeSpan.FromSeconds(30);
-					GXLogging.Debug(log, "MCP HTTP Transport configured: Stateless=false (SSE enabled), IdleTimeout=10min");
-				});
-
-				try
-				{
-					var mcpAssemblies = FileTools.MCPFileTools(Startup.LocalPath).ToList();
-					foreach (var assembly in mcpAssemblies)
-					{
-						try
-						{
-							mcp.WithToolsFromAssembly(assembly);
-							GXLogging.Debug(log, $"Successfully loaded MCP tools from assembly: {assembly.FullName}");
-						}
-						catch (Exception assemblyEx)
-						{
-							GXLogging.Error(log, $"Failed to load MCP tools from assembly: {assembly.FullName}", assemblyEx);
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					GXLogging.Error(log, "Error discovering MCP tool assemblies", ex);
-				}
+				StartupMcp.AddService(services);
 			}
 
 			services.AddDirectoryBrowser();
@@ -332,20 +294,20 @@ namespace GeneXus.Application
 				services.AddResponseCompression(options =>
 				{
 					options.MimeTypes = new[]
-									{
-                                                        // Default
-                                                        "text/plain",
-														"text/css",
-														"application/javascript",
-														"text/html",
-														"application/xml",
-														"text/xml",
-														"application/json",
-														"text/json",
-                                                        // Custom
-                                                        "application/json",
-														"application/pdf"
-										};
+					{
+							// Default
+							"text/plain",
+							"text/css",
+							"application/javascript",
+							"text/html",
+							"application/xml",
+							"text/xml",
+							"application/json",
+							"text/json",
+							// Custom
+							"application/json",
+							"application/pdf"
+							};
 					options.EnableForHttps = true;
 				});
 			}
@@ -423,9 +385,9 @@ namespace GeneXus.Application
 				try
 				{
 					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
-																									   .Skip(1)
-																									   .TakeWhile(c => c != '"')
-																									   .ToArray()).Trim().Split(',');
+															   .Skip(1)
+															   .TakeWhile(c => c != '"')
+															   .ToArray()).Trim().Split(',');
 					string controllerAssemblyName = controllerAssemblyQualifiedName.Last();
 					if (!serviceAssemblies.Contains(controllerAssemblyName))
 					{
@@ -486,17 +448,17 @@ namespace GeneXus.Application
 					services.AddCors(options =>
 					{
 						options.AddPolicy(name: CORS_POLICY_NAME,
-																			  policy =>
-																			  {
-																				  policy.WithOrigins(origins);
-																				  if (!corsAllowedOrigins.Contains(CORS_ANY_ORIGIN))
-																				  {
-																					  policy.AllowCredentials();
-																				  }
-																				  policy.AllowAnyHeader();
-																				  policy.AllowAnyMethod();
-																				  policy.SetPreflightMaxAge(TimeSpan.FromSeconds(CORS_MAX_AGE_SECONDS));
-																			  });
+										  policy =>
+										  {
+											  policy.WithOrigins(origins);
+											  if (!corsAllowedOrigins.Contains(CORS_ANY_ORIGIN))
+											  {
+												  policy.AllowCredentials();
+											  }
+											  policy.AllowAnyHeader();
+											  policy.AllowAnyMethod();
+											  policy.SetPreflightMaxAge(TimeSpan.FromSeconds(CORS_MAX_AGE_SECONDS));
+										  });
 					});
 				}
 			}
@@ -550,7 +512,6 @@ namespace GeneXus.Application
 				}
 				else
 				{
-
 					services.AddDistributedSqlServerCache(options =>
 					{
 						GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
@@ -640,11 +601,11 @@ namespace GeneXus.Application
 					Predicate = check => check.Tags.Contains("ready")
 				});
 				if (Startup.IsMcp)
-				{
-					// Register MCP endpoints at root, exposing /sse and /message
-					endpoints.MapMcp();
+				{					
+					StartupMcp.MapEndpoints(endpoints);										
 				}
 			});
+
 			if (log.IsCriticalEnabled && env.IsDevelopment())
 			{
 				try
@@ -696,7 +657,7 @@ namespace GeneXus.Application
 				},
 				ContentTypeProvider = provider
 			});
-
+			
 			app.UseExceptionHandler(new ExceptionHandlerOptions
 			{
 				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
