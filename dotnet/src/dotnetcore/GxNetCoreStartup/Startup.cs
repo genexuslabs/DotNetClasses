@@ -41,7 +41,6 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 
-using ModelContextProtocol.AspNetCore;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -285,43 +284,7 @@ namespace GeneXus.Application
 			}
 			if (Startup.IsMcp)
 			{
-				var mcp = services.AddMcpServer(options =>
-				{
-					options.ServerInfo = new ModelContextProtocol.Protocol.Implementation
-					{
-						Name = "GxMcpServer",
-						Version = Assembly.GetExecutingAssembly()
-							.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "1.0.0"
-					};
-				})
-				.WithHttpTransport(transportOptions =>
-				{
-					// SSE endpoints (/sse, /message) require STATEFUL sessions to support server-to-client push
-					transportOptions.Stateless = false;
-					transportOptions.IdleTimeout = TimeSpan.FromSeconds(30);
-					GXLogging.Debug(log, "MCP HTTP Transport configured: Stateless=false (SSE enabled), IdleTimeout=10min");
-				});
-
-				try
-				{
-					var mcpAssemblies = FileTools.MCPFileTools(Startup.LocalPath).ToList();
-					foreach (var assembly in mcpAssemblies)
-					{
-						try
-						{
-							mcp.WithToolsFromAssembly(assembly);
-							GXLogging.Debug(log, $"Successfully loaded MCP tools from assembly: {assembly.FullName}");
-						}
-						catch (Exception assemblyEx)
-						{
-							GXLogging.Error(log, $"Failed to load MCP tools from assembly: {assembly.FullName}", assemblyEx);
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					GXLogging.Error(log, "Error discovering MCP tool assemblies", ex);
-				}
+				StartupMcp.AddService(services);
 			}
 
 			services.AddDirectoryBrowser();
@@ -635,9 +598,8 @@ namespace GeneXus.Application
 					Predicate = check => check.Tags.Contains("ready")
 				});
 				if (Startup.IsMcp)
-				{
-					// Register MCP endpoints at root, exposing /sse and /message
-					endpoints.MapMcp();
+				{					
+					StartupMcp.MapEndpoints(endpoints);										
 				}
 			});
 
