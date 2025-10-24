@@ -13,8 +13,6 @@ using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
 
-using iText.Commons.Actions;
-
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
@@ -39,7 +37,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
 
 using StackExchange.Redis;
 
@@ -64,7 +61,7 @@ namespace GeneXus.Application
 					port = args[2];
 					if (args.Length > 3 && Uri.UriSchemeHttps.Equals(args[3], StringComparison.OrdinalIgnoreCase))
 						schema = Uri.UriSchemeHttps;
-					if (args.Length > 4) 
+					if (args.Length > 4)
 						Startup.IsMcp = args[4].Equals("mcp", StringComparison.OrdinalIgnoreCase);
 				}
 				else
@@ -86,7 +83,7 @@ namespace GeneXus.Application
 			{
 				Console.Error.WriteLine("ERROR:");
 				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
-			}			
+			}
 		}
 
 		public static IWebHost BuildWebHost(string[] args) =>
@@ -596,13 +593,13 @@ namespace GeneXus.Application
 					Predicate = check => check.Tags.Contains("live")
 				});
 
-				endpoints.MapHealthChecks($"{baseVirtualPath }/_gx/health/ready", new HealthCheckOptions
+				endpoints.MapHealthChecks($"{baseVirtualPath}/_gx/health/ready", new HealthCheckOptions
 				{
 					Predicate = check => check.Tags.Contains("ready")
 				});
 				if (Startup.IsMcp)
-				{					
-					StartupMcp.MapEndpoints(endpoints);										
+				{
+					StartupMcp.MapEndpoints(endpoints);
 				}
 			});
 
@@ -657,7 +654,7 @@ namespace GeneXus.Application
 				},
 				ContentTypeProvider = provider
 			});
-			
+
 			app.UseExceptionHandler(new ExceptionHandlerOptions
 			{
 				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
@@ -719,8 +716,9 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				string baseVirtualPathWithSep = string.IsNullOrEmpty(baseVirtualPath) ? string.Empty: $"{baseVirtualPath.TrimStart('/')}/";
-				foreach (string yaml in Directory.GetFiles(LocalPath, "*.yaml")) {
+				string baseVirtualPathWithSep = string.IsNullOrEmpty(baseVirtualPath) ? string.Empty : $"{baseVirtualPath.TrimStart('/')}/";
+				foreach (string yaml in Directory.GetFiles(LocalPath, "*.yaml"))
+				{
 					FileInfo finfo = new FileInfo(yaml);
 
 					app.UseSwaggerUI(options =>
