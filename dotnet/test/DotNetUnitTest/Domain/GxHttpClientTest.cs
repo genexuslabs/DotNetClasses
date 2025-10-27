@@ -216,7 +216,7 @@ namespace xUnitTesting
 				client.BaseURL = "/dummy/lem.txt";
 				client.Execute("GET", string.Empty);
 				client.ToFile("./lem.txt");
-				Assert.True(File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "lem.txt")));
+				Assert.True(File.Exists(Path.Combine(GxContext.StaticPhysicalPath(), "lem.txt")), $"HttpClient.ToFile failed to create the file at path: {GxContext.StaticPhysicalPath()}");
 			}
 		}
 
