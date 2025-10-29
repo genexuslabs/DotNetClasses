@@ -689,7 +689,27 @@ namespace GeneXus.Http
 				return "\"" + text + "\"";
 			}
 		}
-
+#if !NETCORE
+		public static void SetSoapContext(GXSOAPContext value)
+		{
+			RequestMessageExtension ext = OperationContext.Current.Extensions.Find<RequestMessageExtension>();
+			if (ext == null)
+			{
+				ext = new RequestMessageExtension();
+				OperationContext.Current.Extensions.Add(ext);
+			}
+			ext.SOAPContext = value;
+		}
+		internal static GXSOAPContext GetSoapContext()
+		{
+			RequestMessageExtension ext = OperationContext.Current.Extensions.Find<RequestMessageExtension>();
+			if (ext != null)
+			{
+				return ext.SOAPContext;
+			}
+			return null;
+		}
+#endif
 	}
 #if NETCORE
 	public class HttpCookieCollection : Dictionary<string, HttpCookie>

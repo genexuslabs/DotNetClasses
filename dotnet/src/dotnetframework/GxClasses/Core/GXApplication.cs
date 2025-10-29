@@ -14,6 +14,7 @@ namespace GeneXus.Application
 	using System.ServiceModel.Web;
 	using GeneXus.UserControls;
 	using System.Net.Http.Headers;
+	using System.ServiceModel;
 #else
 	using Microsoft.AspNetCore.Http;
 	using GxClasses.Helpers;
@@ -4129,10 +4130,36 @@ namespace GeneXus.Application
 			}
 		}
 
+		
+#if NETCORE
 		public GXSOAPContext SoapContext { get; set; }
+#else
+		public GXSOAPContext SoapContext
+		{
+			get
+			{
+				return HttpHelper.GetSoapContext();
+			}
+			set
+			{
+				HttpHelper.SetSoapContext(value);
+			}
+		}
+
+#endif
+
 
 		#endregion
 	}
+#if !NETCORE
+	public class RequestMessageExtension : IExtension<OperationContext>
+	{
+		public GXSOAPContext SOAPContext { get; set; }
+
+		public void Attach(OperationContext owner) { }
+		public void Detach(OperationContext owner) { }
+	}
+#endif
 	public class GxXmlContext
 	{
 		GXXMLReader _XMLR;
