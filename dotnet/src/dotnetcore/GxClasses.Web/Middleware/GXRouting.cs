@@ -214,12 +214,12 @@ namespace GxClasses.Web.Middleware
 							}
 							string controllerPath = path.ToLower().Split(actualPath).Last<string>();
 							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
-					
+
 						}
 					}
 					else
 					{
-						if (path.Contains(oauthRoute) && (AzureDeploy.GAM == "true")) 
+						if ((path.Contains(oauthRoute) && (AzureDeploy.GAM == "true")) || path.Contains("gxmulticall")) 
 							return (RouteHttpService(context));
 						controllerWithParms = GetGxRouteValue(path);
 						GXLogging.Debug(log, $"Running Azure functions. ControllerWithParms :{controllerWithParms} path:{path}");
