@@ -11,6 +11,7 @@ namespace GeneXus.Configuration
 	using System.Web;
 	using System.Configuration;
 	using System.Collections.Generic;
+	using System.Linq;
 #endif
 	using System.Collections;
 	using System.Collections.Specialized;
@@ -583,7 +584,7 @@ namespace GeneXus.Configuration
 									logConfig(null, out configuredFilename);
 									loadedConfigFile = Path.Combine(GxContext.StaticPhysicalPath(), "web.config");
 									_config = ConfigurationSettings.AppSettings;
-									foreach (string key in _config.Keys)
+									foreach (string key in _config.AllKeys.ToArray())
 									{
 										string value = MappedValue(key, _config[key]);
 										if (value != _config[key])
