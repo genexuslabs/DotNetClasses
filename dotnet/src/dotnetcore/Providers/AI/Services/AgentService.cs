@@ -51,7 +51,7 @@ namespace GeneXus.AI
 			uriBuilder.Path += "chat";
 			return uriBuilder.Uri.ToString();
 		}
-		internal async Task<ChatCompletionResult> CallAgent(string assistant, List<Chat.ChatMessage> messages, GXProperties properties, IGxContext context)
+		internal async Task<ChatCompletionResult> CallAgent(string assistant, IList messages, GXProperties properties, IGxContext context)
 		{
 			try
 			{

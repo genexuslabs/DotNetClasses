@@ -42,8 +42,7 @@ namespace GeneXus.AI
 			{
 				GXLogging.Debug(log, "Calling Agent: ", assistant);
 
-				List<ChatMessage> chatMessagesList = chatMessages!=null ? chatMessages.Cast<ChatMessage>().ToList() :null;
-				ChatCompletionResult chatCompletion = AgentService.AgentHandlerInstance.CallAgent(assistant, chatMessagesList, gxproperties, context).GetAwaiter().GetResult();
+				ChatCompletionResult chatCompletion = AgentService.AgentHandlerInstance.CallAgent(assistant, chatMessages, gxproperties, context).GetAwaiter().GetResult();
 
 				if (chatCompletion != null && chatCompletion.Choices != null)
 				{
@@ -54,8 +53,8 @@ namespace GeneXus.AI
 							case ChatCompletionResult.FINISH_REASON_STOP:
 								return choice.Message.Content;
 							case ChatCompletionResult.FINISH_REASON_TOOL_CALLS:
-								chatMessagesList.Add(choice.Message);
-								return ProcessChatResponse(choice, stream, assistant, gxproperties, chatMessagesList, result);	
+								chatMessages.Add(choice.Message);
+								return ProcessChatResponse(choice, stream, assistant, gxproperties, chatMessages, result);	
 						}
 					}
 				}

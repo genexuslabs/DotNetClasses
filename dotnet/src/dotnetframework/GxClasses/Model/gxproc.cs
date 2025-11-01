@@ -387,7 +387,7 @@ namespace GeneXus.Procedure
 			if (!RecordCountSupported())
 			{
 				GXLogging.Debug(log, $"Adding '{RECORD_COUNT_SUPPORTED}' header");
-				context.SetHeader(RECORD_COUNT_SUPPORTED, false.ToString());
+				context.SetHeader(RECORD_COUNT_SUPPORTED, bool.FalseString);
 			}
 		}
 
