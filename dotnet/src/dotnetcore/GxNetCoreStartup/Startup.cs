@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -16,17 +17,23 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.SqlServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -71,7 +78,7 @@ namespace GeneXus.Application
 				Console.Error.WriteLine("ERROR:");
 				Console.Error.WriteLine("Web Host terminated unexpectedly: {0}", e.Message);
 				Console.Read();
-			}			
+			}
 		}
 
 		public static IWebHost BuildWebHost(string[] args) =>
@@ -146,7 +153,7 @@ namespace GeneXus.Application
 		const double CORS_MAX_AGE_SECONDS = 86400;
 		internal const string GX_CONTROLLERS = "gxcontrollers";
 
-		public List<string> servicesBase = new List<string>();		
+		public List<string> servicesBase = new List<string>();
 
 		private GXRouting gxRouting;
 		public Startup(IConfiguration configuration, IHostingEnvironment env)
@@ -212,9 +219,10 @@ namespace GeneXus.Application
 			});
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 
+			services.AddHttpContextAccessor();
 			if (sessionService != null)
 				ConfigureSessionService(services, sessionService);
-			services.AddHttpContextAccessor();
+
 			services.AddSession(options =>
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(Preferences.SessionTimeout);
@@ -354,7 +362,7 @@ namespace GeneXus.Application
 			}
 			app.UseRouting();
 			app.UseCookiePolicy();
-			app.UseSession();
+			app.UseAsyncSession();
 			app.UseStaticFiles();
 			ConfigureCors(app);
 			ConfigureSwaggerUI(app, baseVirtualPath);
@@ -618,4 +626,36 @@ namespace GeneXus.Application
 			return Redirect(defaultFiles[0]);
 		}
 	}
+	public static class SesssionAsyncExtensions
+	{
+		/// <summary>
+		/// Ensures sessions load asynchronously by calling LoadAsync before accessing session data,
+		/// forcing the session provider to avoid synchronous operations.
+		/// </summary>
+		/// <remarks>
+		/// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/app-state?view=aspnetcore-5.0
+		/// The default session provider in ASP.NET Core will only load the session record from the underlying IDistributedCache store asynchronously if the
+		/// ISession.LoadAsync method is explicitly called before calling the TryGetValue, Set or Remove methods. 
+		/// Failure to call LoadAsync first will result in the underlying session record being loaded synchronously,
+		/// which could potentially impact the ability of an application to scale.
+		/// 
+		/// See also:
+		/// https://github.com/aspnet/Session/blob/master/src/Microsoft.AspNetCore.Session/DistributedSession.cs
+		/// https://github.com/dotnet/AspNetCore.Docs/issues/1840#issuecomment-454182594
+		/// </remarks>
+		public static IApplicationBuilder UseAsyncSession(this IApplicationBuilder app)
+		{
+			app.UseSession();
+			app.Use(async (context, next) =>
+			{
+				if (context.Session != null)
+				{
+					await context.Session.LoadAsync();
+				}
+				await next();
+			});
+			return app;
+		}
+	}
+	
 }
