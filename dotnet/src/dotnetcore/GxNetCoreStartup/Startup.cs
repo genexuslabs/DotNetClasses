@@ -12,6 +12,7 @@ using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
@@ -36,6 +37,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -64,6 +66,7 @@ namespace GeneXus.Application
 					LocatePhysicalLocalPath();
 
 				}
+
 				if (port == DEFAULT_PORT)
 				{
 					BuildWebHost(null).Run();
@@ -310,14 +313,13 @@ namespace GeneXus.Application
 
 		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
 		{
+			
 			if (sessionService is GxRedisSession)
 			{
-				services.AddStackExchangeRedisCache(options =>
-				{
-					GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
-					options.Configuration = sessionService.ConnectionString;
-					options.InstanceName = sessionService.InstanceName;
-				});
+				GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
+
+				services.AddSingleton<IDistributedCache>(sp =>
+					new CustomRedisSessionStore(sessionService.ConnectionString, TimeSpan.FromMinutes(Preferences.SessionTimeout), sessionService.InstanceName));
 				services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
 			}
 			else if (sessionService is GxDatabaseSession)
