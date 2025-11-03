@@ -69,7 +69,6 @@ namespace GeneXus.Application
 				if (!string.IsNullOrEmpty(subdomain))
 					context.Items[AppContext.TENANT_ID] = subdomain;
 			}
-
 			await _next(context);
 		}
 	}

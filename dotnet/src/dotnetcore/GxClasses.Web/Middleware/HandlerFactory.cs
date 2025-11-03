@@ -89,13 +89,13 @@ namespace GeneXus.HttpHandlerFactory
 				}
 				else
 				{
-					await Task.FromException(new PageNotFoundException(url));
+					throw new PageNotFoundException(url);
 				}
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Handler Factory failed creating {url}", ex);
-				await Task.FromException(ex);
+				throw;
 			}
 		}
 		private static string ObjectUrl(string requestPath, string basePath) 
