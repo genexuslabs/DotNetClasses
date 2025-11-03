@@ -6,6 +6,7 @@ using StackExchange.Redis;
 
 namespace GeneXus.Application
 {
+
 	public class CustomRedisSessionStore : IDistributedCache
 	{
 		private readonly IDatabase _db;
