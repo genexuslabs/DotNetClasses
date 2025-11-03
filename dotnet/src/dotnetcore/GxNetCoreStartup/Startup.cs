@@ -312,12 +312,9 @@ namespace GeneXus.Application
 		{
 			if (sessionService is GxRedisSession)
 			{
-				services.AddStackExchangeRedisCache(options =>
-				{
-					GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
-					options.Configuration = sessionService.ConnectionString;
-					options.InstanceName = sessionService.InstanceName;
-				});
+				GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
+				services.AddSingleton<IDistributedCache>(sp =>
+						new CustomRedisSessionStore(sessionService.ConnectionString, TimeSpan.FromMinutes(Preferences.SessionTimeout), sessionService.InstanceName));
 				services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
 			}
 			else if (sessionService is GxDatabaseSession)
