@@ -66,12 +66,7 @@ namespace GeneXus.Application
 			string redisKey = FormatKey(key);
 			var value = await _db.StringGetAsync(redisKey);
 
-			var ttl = await _db.KeyTimeToLiveAsync(redisKey);
-
-			if (ttl.HasValue && ttl.Value < _refreshThreshold)
-			{
-				_ = _db.KeyExpireAsync(redisKey, _idleTimeout);
-			}
+			await RefreshKeyIfNeededAsync(redisKey);
 
 			return value;
 		}
@@ -79,13 +74,32 @@ namespace GeneXus.Application
 		public void Refresh(string key)
 		{
 			string redisKey = FormatKey(key);
-		}
 
-		public Task RefreshAsync(string key, CancellationToken token = default)
+			var ttl = _db.KeyTimeToLive(redisKey);
+
+			if (ShouldRefreshKey(ttl))
+			{
+				_db.KeyExpire(redisKey, _idleTimeout);
+			}
+		}
+		private bool ShouldRefreshKey(TimeSpan? ttl)
 		{
-			return Task.CompletedTask;
+			return ttl.HasValue && ttl.Value < _refreshThreshold;
 		}
+		public async Task RefreshAsync(string key, CancellationToken token = default)
+		{
+			string redisKey = FormatKey(key);
+			await RefreshKeyIfNeededAsync(redisKey);
+		}
+		private async Task RefreshKeyIfNeededAsync(string redisKey)
+		{
+			var ttl = await _db.KeyTimeToLiveAsync(redisKey);
 
+			if (ShouldRefreshKey(ttl))
+			{
+				_ = _db.KeyExpireAsync(redisKey, _idleTimeout);
+			}
+		}
 		public void Remove(string key) => _db.KeyDelete(FormatKey(key));
 
 		public Task RemoveAsync(string key, CancellationToken token = default)
