@@ -296,7 +296,7 @@ namespace GeneXus.Http
 		public virtual void InitializeDynEvents() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void initialize_properties() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void webExecute() { throw new Exception("The method or operation is not implemented."); }
-		protected virtual Task WebExecuteAsync()
+		public virtual Task WebExecuteAsync()
 		{
 			GXLogging.Warn(log, this.GetType().FullName + " not generated as async service");
 			webExecute();
@@ -2982,10 +2982,10 @@ namespace GeneXus.Http
 	public abstract class GXWebComponent : GXHttpHandler
 	{
 
-		public abstract void componentstart();
-		public abstract void componentdraw();
-		public abstract void componentprepare(Object[] parms);
-		public abstract void componentbind(Object[] values);
+		public virtual void componentstart() { }
+		public virtual void componentdraw() { }
+		public virtual void componentprepare(Object[] parms) { }
+		public virtual void componentbind(Object[] values) { }
 		public abstract String getstring(String s);
 
 		public bool IsUrlCreated()
@@ -3133,6 +3133,27 @@ namespace GeneXus.Http
 		public virtual void componentthemes()
 		{
 		}
+		public virtual async Task ComponentRestoreStateAsync(string sPPrefix, string sPSFPrefix)
+		{
+			await Task.CompletedTask;
+		}
+		public virtual async Task ComponentProcessAsync(string sPPrefix, string sPSFPrefix, string sEvt)
+		{
+			await Task.CompletedTask;
+		}
+		public virtual async Task ComponentPrepareAsync(Object[] parms)
+		{
+			await Task.CompletedTask;
+		}
+		public virtual async Task ComponentStartAsync()
+		{
+			await Task.CompletedTask;
+		}
+		public virtual async Task ComponentDrawAsync()
+		{
+			await Task.CompletedTask;
+		}
+
 	}
 
 	public class GXErrorWebComponent : GXWebComponent
