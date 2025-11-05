@@ -37,7 +37,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -209,6 +209,8 @@ namespace GeneXus.Application
 					.AddCheck("liveness", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
 					.AddCheck("readiness", () => HealthCheckResult.Healthy(), tags: new[] { "ready" });
 
+			services.Configure<MimeMappingsOptions>(Config.ConfigRoot.GetSection("MimeMappings"));
+
 			IMvcBuilder builder = services.AddMvc(option =>
 			{
 				option.EnableEndpointRouting = false;
@@ -232,7 +234,8 @@ namespace GeneXus.Application
 				options.AllowSynchronousIO = true;
 			});
 			services.AddLogging(builder => builder.AddConsole());
-			services.Configure<FormOptions>(options =>
+			services.Configure<FormOptions>(Config.ConfigRoot.GetSection("FormOptions"));
+			services.PostConfigure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
 				{
@@ -518,7 +521,10 @@ namespace GeneXus.Application
 				}
 			}
 		}
-		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor, Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime)
+		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory,
+			IHttpContextAccessor contextAccessor,
+			Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime,
+			IOptions<MimeMappingsOptions> mimeMappingsOptions)
 		{
 			// Registrar para el graceful shutdown
 			applicationLifetime.ApplicationStopping.Register(OnShutdown);
@@ -546,6 +552,14 @@ namespace GeneXus.Application
 			provider.Mappings[".sfb"] = "model/sfb";
 			provider.Mappings[".gltf"] = "model/gltf+json";
 			provider.Mappings[".ini"] = "text/plain";
+
+			if (mimeMappingsOptions?.Value != null)
+			{
+				foreach (var mapping in mimeMappingsOptions.Value)
+				{
+					provider.Mappings[mapping.Key] = mapping.Value;
+				}
+			}
 			if (GXUtil.CompressResponse())
 			{
 				app.UseResponseCompression();
@@ -938,5 +952,5 @@ namespace GeneXus.Application
 			return app;
 		}
 	}
-	
+	public class MimeMappingsOptions : Dictionary<string, string> { }
 }
