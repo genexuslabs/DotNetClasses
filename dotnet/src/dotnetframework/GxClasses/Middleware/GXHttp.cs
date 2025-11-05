@@ -3272,6 +3272,20 @@ namespace GeneXus.Http
 	}
 	public abstract class GXDataArea : GXHttpHandler
 	{
+#if NETCORE
+		public virtual Task ExecuteStartEventAsync()
+		{
+			return Task.CompletedTask;
+		}
+		public virtual Task RenderHtmlContentAsync()
+		{
+			return Task.CompletedTask;
+		}
+		public virtual Task DispatchEventsAsync()
+		{
+			return Task.CompletedTask;
+		}
+#endif
 		abstract public short ExecuteStartEvent();
 		abstract public void RenderHtmlHeaders();
 		abstract public void RenderHtmlOpenForm();
