@@ -296,7 +296,7 @@ namespace GeneXus.Http
 		public virtual void InitializeDynEvents() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void initialize_properties() { throw new Exception("The method or operation is not implemented."); }
 		public virtual void webExecute() { throw new Exception("The method or operation is not implemented."); }
-		protected virtual Task WebExecuteAsync()
+		public virtual Task WebExecuteAsync()
 		{
 			GXLogging.Warn(log, this.GetType().FullName + " not generated as async service");
 			webExecute();
@@ -2552,7 +2552,10 @@ namespace GeneXus.Http
 				}
 			}
 		}
-
+		public virtual Task<string> GetResponseAsync(string sGXDynURL)
+		{
+			return Task.FromResult(string.Empty);
+		}
 		public virtual string getresponse(string sGXDynURL)
 		{
 			return string.Empty;
@@ -2965,10 +2968,10 @@ namespace GeneXus.Http
 	public abstract class GXWebComponent : GXHttpHandler
 	{
 
-		public abstract void componentstart();
-		public abstract void componentdraw();
-		public abstract void componentprepare(Object[] parms);
-		public abstract void componentbind(Object[] values);
+		public virtual void componentstart() { }
+		public virtual void componentdraw() { }
+		public virtual void componentprepare(Object[] parms) { }
+		public virtual void componentbind(Object[] values) { }
 		public abstract String getstring(String s);
 
 		public bool IsUrlCreated()
@@ -3116,6 +3119,27 @@ namespace GeneXus.Http
 		public virtual void componentthemes()
 		{
 		}
+		public virtual Task ComponentRestoreStateAsync(string sPPrefix, string sPSFPrefix)
+		{
+			return Task.CompletedTask;
+		}
+		public virtual Task ComponentProcessAsync(string sPPrefix, string sPSFPrefix, string sEvt)
+		{
+			return Task.CompletedTask;
+		}
+		public virtual Task ComponentPrepareAsync(Object[] parms)
+		{
+			return Task.CompletedTask;
+		}
+		public virtual Task ComponentStartAsync()
+		{
+			return Task.CompletedTask;
+		}
+		public virtual Task ComponentDrawAsync()
+		{
+			return Task.CompletedTask;
+		}
+
 	}
 
 	public class GXErrorWebComponent : GXWebComponent
@@ -3231,6 +3255,20 @@ namespace GeneXus.Http
 	}
 	public abstract class GXDataArea : GXHttpHandler
 	{
+#if NETCORE
+		public virtual Task<short> ExecuteStartEventAsync()
+		{
+			return Task.FromResult<short>(0);
+		}
+		public virtual Task RenderHtmlContentAsync()
+		{
+			return Task.CompletedTask;
+		}
+		public virtual Task DispatchEventsAsync()
+		{
+			return Task.CompletedTask;
+		}
+#endif
 		abstract public short ExecuteStartEvent();
 		abstract public void RenderHtmlHeaders();
 		abstract public void RenderHtmlOpenForm();
