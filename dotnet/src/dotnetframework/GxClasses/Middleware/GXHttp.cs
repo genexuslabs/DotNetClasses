@@ -2569,7 +2569,10 @@ namespace GeneXus.Http
 				}
 			}
 		}
-
+		public virtual Task<string> GetResponseAsync(string sGXDynURL)
+		{
+			return Task.FromResult(string.Empty);
+		}
 		public virtual string getresponse(string sGXDynURL)
 		{
 			return string.Empty;
@@ -3133,25 +3136,25 @@ namespace GeneXus.Http
 		public virtual void componentthemes()
 		{
 		}
-		public virtual async Task ComponentRestoreStateAsync(string sPPrefix, string sPSFPrefix)
+		public virtual Task ComponentRestoreStateAsync(string sPPrefix, string sPSFPrefix)
 		{
-			await Task.CompletedTask;
+			return Task.CompletedTask;
 		}
-		public virtual async Task ComponentProcessAsync(string sPPrefix, string sPSFPrefix, string sEvt)
+		public virtual Task ComponentProcessAsync(string sPPrefix, string sPSFPrefix, string sEvt)
 		{
-			await Task.CompletedTask;
+			return Task.CompletedTask;
 		}
-		public virtual async Task ComponentPrepareAsync(Object[] parms)
+		public virtual Task ComponentPrepareAsync(Object[] parms)
 		{
-			await Task.CompletedTask;
+			return Task.CompletedTask;
 		}
-		public virtual async Task ComponentStartAsync()
+		public virtual Task ComponentStartAsync()
 		{
-			await Task.CompletedTask;
+			return Task.CompletedTask;
 		}
-		public virtual async Task ComponentDrawAsync()
+		public virtual Task ComponentDrawAsync()
 		{
-			await Task.CompletedTask;
+			return Task.CompletedTask;
 		}
 
 	}
