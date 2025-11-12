@@ -620,23 +620,23 @@ namespace GeneXus.Http
 
 			private void SetNullableScalarOrCollectionValue(JObject parm, object value, JArray columnValues)
 			{
-				string nullableAttribute = parm.Contains("nullAv") ? (string)parm["nullAv"] : null;
-				if (nullableAttribute != null && string.IsNullOrEmpty(JSONHelper.WriteJSON<dynamic>(value)))
-				{
-					SetScalarOrCollectionValue(nullableAttribute, true, null);
+					string nullableAttribute = parm.Contains("nullAv") ? (string)parm["nullAv"] : null;
+					if (nullableAttribute != null && string.IsNullOrEmpty(JSONHelper.WriteJSON<dynamic>(value)))
+					{
+						SetScalarOrCollectionValue(nullableAttribute, true, null);
+					}
+					else
+					{
+						SetScalarOrCollectionValue((string)parm["av"], value, columnValues);
+					}
 				}
-				else
-				{
-					SetScalarOrCollectionValue((string)parm["av"], value, columnValues);
-				}
-			}
 
 			private void SetScalarOrCollectionValue(string fieldName, object value, JArray values)
 			{
 				FieldInfo fieldInfo = getfieldInfo(targetObj, fieldName);
 				if (fieldInfo != null)
 				{
-					if (typeof(IGxCollection).IsAssignableFrom(fieldInfo.FieldType)) 
+					if (typeof(IGxCollection).IsAssignableFrom(fieldInfo.FieldType))
 						SetCollectionFieldValue(fieldInfo, values);
 					else
 						SetFieldValue(fieldInfo, value);
@@ -712,49 +712,58 @@ namespace GeneXus.Http
 			{
 				if (fieldInfo != null)
 				{
-					MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSONObject");
-					if (mth != null)
-						mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value });
 
+					if (typeof(IGxExternalObject).IsAssignableFrom(fieldInfo.FieldType))
+					{
+						MethodInfo mth = fieldInfo.FieldType.GetMethod("fromjson");
+						mth?.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value.ToString() });
+					}
 					else
 					{
-						if (fieldInfo.FieldType.IsArray)
-						{
-							Array tempArray = GetArrayFieldValue(fieldInfo, value);
-							if (tempArray != null)
-								value = tempArray;
-						}
-						else if (fieldInfo.FieldType == typeof(DateTime) && value is String)
-						{
-							value = targetObj._Context.localUtil.CToT(value.ToString(), 0, 0);
-						}
-						else if (fieldInfo.FieldType == typeof(System.Guid))
-						{
-							value = new Guid(value.ToString());
-						}
-						else if (fieldInfo.FieldType == typeof(GeneXus.Utils.Geospatial))
-						{
-							value = new GeneXus.Utils.Geospatial(value.ToString());
-						}
-						if (fieldInfo.FieldType == typeof(Boolean))
-						{
-							Boolean val = false;
-							if (!Boolean.TryParse(value.ToString(), out val))
-							{
-								GXLogging.Error(log, $"Could not parse boolean value '{value.ToString()}'");
-							}
-							value = val;
-						}
+						MethodInfo mth = fieldInfo.FieldType.GetMethod("FromJSONObject");
+						if (mth != null)
+							mth.Invoke(fieldInfo.GetValue(targetObj), new Object[] { value });
+
 						else
 						{
+							if (fieldInfo.FieldType.IsArray)
+							{
+								Array tempArray = GetArrayFieldValue(fieldInfo, value);
+								if (tempArray != null)
+									value = tempArray;
+							}
+							else if (fieldInfo.FieldType == typeof(DateTime) && value is String)
+							{
+								value = targetObj._Context.localUtil.CToT(value.ToString(), 0, 0);
+							}
+							else if (fieldInfo.FieldType == typeof(System.Guid))
+							{
+								value = new Guid(value.ToString());
+							}
+							else if (fieldInfo.FieldType == typeof(GeneXus.Utils.Geospatial))
+							{
+								value = new GeneXus.Utils.Geospatial(value.ToString());
+							}
+							if (fieldInfo.FieldType == typeof(Boolean))
+							{
+								Boolean val = false;
+								if (!Boolean.TryParse(value.ToString(), out val))
+								{
+									GXLogging.Error(log, $"Could not parse boolean value '{value.ToString()}'");
+								}
+								value = val;
+							}
+							else
+							{
 #if NETCORE
-							IFormatProvider provider = CultureInfo.InvariantCulture;
+								IFormatProvider provider = CultureInfo.InvariantCulture;
 #else
-							IFormatProvider provider = CultureInfo.CreateSpecificCulture("en-US");
+								IFormatProvider provider = CultureInfo.CreateSpecificCulture("en-US");
 #endif
-							value = Convert.ChangeType(value, fieldInfo.FieldType, provider);
+								value = Convert.ChangeType(value, fieldInfo.FieldType, provider);
+							}
+							fieldInfo.SetValue(targetObj, value);
 						}
-						fieldInfo.SetValue(targetObj, value);
 					}
 				}
 			}

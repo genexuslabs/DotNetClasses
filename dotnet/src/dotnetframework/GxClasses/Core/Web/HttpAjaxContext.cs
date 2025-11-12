@@ -20,6 +20,7 @@ namespace GeneXus.Http
 	using Microsoft.AspNetCore.Http;
 #endif
 	using GeneXus.Configuration;
+	using System.Reflection;
 
 	public interface IHttpAjaxContext
 	{
@@ -346,20 +347,30 @@ namespace GeneXus.Http
 					try
 					{
 						JObject obj = GetGxObject(AttValues, CmpContext, IsMasterPage);
-						if (obj != null && (!isUndefinedOutParam(AttName, SdtObj) || DynAjaxEventContext.isParmModified(AttName, SdtObj)))
-						{
-							IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
-							if (SdtObjJson != null)
+						if (obj != null) {
+							if (typeof(IGxExternalObject).IsAssignableFrom(SdtObj.GetType()))
 							{
-								obj.Put(AttName, SdtObjJson.GetJSONObject());
+								MethodInfo mth = SdtObj.GetType().GetMethod("tojson");
+								obj.Put(AttName, mth?.Invoke(SdtObj, new Object[] {}));
 							}
 							else
 							{
-								Array array = SdtObj as Array;
-								if (array != null)
+								if ((!isUndefinedOutParam(AttName, SdtObj) || DynAjaxEventContext.isParmModified(AttName, SdtObj)))
 								{
-									JArray jArray = new JArray(array);
-									obj.Put(AttName, jArray);
+									IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
+									if (SdtObjJson != null)
+									{
+										obj.Put(AttName, SdtObjJson.GetJSONObject());
+									}
+									else
+									{
+										Array array = SdtObj as Array;
+										if (array != null)
+										{
+											JArray jArray = new JArray(array);
+											obj.Put(AttName, jArray);
+										}
+									}
 								}
 							}
 						}
