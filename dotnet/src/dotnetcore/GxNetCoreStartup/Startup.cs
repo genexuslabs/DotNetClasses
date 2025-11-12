@@ -853,6 +853,7 @@ namespace GeneXus.Application
 			return builder.UseMiddleware<EnableRequestRewindMiddleware>();
 		}
 	}
+	[Route("")]
 	public class HomeController : Controller
 	{
 		public IActionResult Index()
