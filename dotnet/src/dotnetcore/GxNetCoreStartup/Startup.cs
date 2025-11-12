@@ -32,6 +32,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -192,6 +193,9 @@ namespace GeneXus.Application
 		{
 			OpenTelemetryService.Setup(services);
 
+
+			services.Configure<MimeMappingsOptions>(Config.ConfigRoot.GetSection("MimeMappings"));
+
 			IMvcBuilder builder = services.AddMvc(option => option.EnableEndpointRouting = false);
 	
 			RegisterControllerAssemblies(builder);
@@ -212,7 +216,8 @@ namespace GeneXus.Application
 			});
 			services.AddDistributedMemoryCache();
 			services.AddLogging(builder => builder.AddConsole());
-			services.Configure<FormOptions>(options =>
+			services.Configure<FormOptions>(Config.ConfigRoot.GetSection("FormOptions"));
+			services.PostConfigure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
 				{
@@ -458,7 +463,9 @@ namespace GeneXus.Application
 				});
 			}
 		}
-		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor)
+		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory,
+			IHttpContextAccessor contextAccessor,
+			IOptions<MimeMappingsOptions> mimeMappingsOptions)
 		{
 			string baseVirtualPath = string.IsNullOrEmpty(VirtualPath) ? VirtualPath : $"/{VirtualPath}";
 			LogConfiguration.SetupLog4Net();
@@ -483,6 +490,14 @@ namespace GeneXus.Application
 			provider.Mappings[".sfb"] = "model/sfb";
 			provider.Mappings[".gltf"] = "model/gltf+json";
 			provider.Mappings[".ini"] = "text/plain";
+
+			if (mimeMappingsOptions?.Value != null)
+			{
+				foreach (var mapping in mimeMappingsOptions.Value)
+				{
+					provider.Mappings[mapping.Key] = mapping.Value;
+				}
+			}
 			if (GXUtil.CompressResponse())
 			{
 				app.UseResponseCompression();
@@ -776,4 +791,6 @@ namespace GeneXus.Application
 			}
 		}
 	}
+	public class MimeMappingsOptions : Dictionary<string, string> { }
+	
 }
