@@ -1,72 +1,54 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace GeneXus.Application
 {
 
-	public static class GxRunner
+
+	internal static class FileTools
 	{
-		public static void RunAsync(
-			string commandLine,
-			string workingDir,
-			string virtualPath,
-			string schema,
-			Action<int> onExit = null)
+		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(FileTools).FullName);
+		public static List<Assembly> MCPFileTools(string baseDirectory)
 		{
-			var stdout = new StringBuilder();
-			var stderr = new StringBuilder();
-
-			using var proc = new Process
+			// List of Assemblies with MCP tools
+			List<Assembly> mcpAssemblies = new();
+			string currentBin = Path.Combine(baseDirectory, "bin");
+			if (!Directory.Exists(currentBin))
 			{
-				StartInfo = new ProcessStartInfo
+				currentBin = baseDirectory;
+				if (!Directory.Exists(currentBin))
 				{
-					FileName = commandLine,
-					WorkingDirectory = workingDir,
-					UseShellExecute = false,          // required for redirection
-					CreateNoWindow = true,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					RedirectStandardInput = false,    // flip to true only if you need to write to stdin
-					StandardOutputEncoding = Encoding.UTF8,
-					StandardErrorEncoding = Encoding.UTF8
-				},
-				EnableRaisingEvents = true
-			};
-
-			proc.StartInfo.ArgumentList.Add(virtualPath);
-			proc.StartInfo.ArgumentList.Add(schema);
-
-			proc.OutputDataReceived += (_, e) =>
+					currentBin = "";
+				}
+			}
+			if (!String.IsNullOrEmpty(currentBin))
 			{
-				if (e.Data is null) return;
-				stdout.AppendLine(e.Data);
-				Console.WriteLine(e.Data);          // forward to parent console (stdout)
-			};
-
-			proc.ErrorDataReceived += (_, e) =>
-			{
-				if (e.Data is null) return;
-				stderr.AppendLine(e.Data);
-				Console.Error.WriteLine(e.Data);        // forward to parent console (stderr)
-			};
-
-			proc.Exited += (sender, e) =>
-			{
-				var p = (Process)sender!;
-				int exitCode = p.ExitCode;
-				p.Dispose();
-
-				Console.WriteLine($"[{DateTime.Now:T}] Process exited with code {exitCode}");
-
-				// Optional: call user-provided callback
-				onExit?.Invoke(exitCode);
-			};
-
-			if (!proc.Start())
-				throw new InvalidOperationException("Failed to start process");
-			Console.WriteLine($"[{DateTime.Now:T}] MCP Server Started.");
+				GXLogging.Info(log, $"[{DateTime.Now:T}] Registering MCP tools.");
+				List<string> L = Directory.GetFiles(currentBin, "*mcp_service.dll").ToList<string>();
+				foreach (string mcpFile in L)
+				{
+					var assembly = Assembly.LoadFrom(mcpFile);
+					foreach (var tool in assembly.GetTypes())
+					{
+						// Each MCP Assembly is added to the list to return for registration
+						var attributes = tool.GetCustomAttributes().Where(att => att.ToString() == "ModelContextProtocol.Server.McpServerToolTypeAttribute");
+						if (attributes != null && attributes.Any())
+						{
+							GXLogging.Info(log, $"[{DateTime.Now:T}] Loading tool {mcpFile}.");
+							mcpAssemblies.Add(assembly);
+						}
+					}
+				}
+			}
+			return mcpAssemblies;
 		}
 	}
+
+
 
 }

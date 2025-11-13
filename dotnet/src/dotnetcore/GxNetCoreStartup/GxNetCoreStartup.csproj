@@ -8,6 +8,15 @@
 		<EnableDefaultContentItems>false</EnableDefaultContentItems>
 		<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CustomContentTarget</TargetsForTfmSpecificContentInPackage>
 	</PropertyGroup>
+	<PropertyGroup>
+		<NoWarn>$(NoWarn);NU5104</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
+		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904;NU5104</WarningsNotAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
+		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904;NU5104</WarningsNotAsErrors>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="8.0.3" />
@@ -27,12 +36,14 @@
 		<PackageReference Include="itext7" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="itext7.font-asian" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="itext7.pdfhtml" Version="5.0.0" PrivateAssets="All" />
-
+		<PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4"  PrivateAssets="All"/>
+		<PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4"  PrivateAssets="All"/>
+		<PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.4"  PrivateAssets="All"/>
 	</ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
-    <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
+		<ProjectReference Include="..\GxClasses\GxClasses.csproj" />
+	</ItemGroup>
 
 	<Target Name="CustomContentTarget">
 		<ItemGroup>
