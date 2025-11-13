@@ -30,6 +30,8 @@ using System.Globalization;
 using System.Linq;
 using GeneXus.Http.Client;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace GeneXus.Http
 {
@@ -258,7 +260,7 @@ namespace GeneXus.Http
 				if (!string.IsNullOrEmpty(origin))
 					httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
 			}
-			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = bool.TrueString;
 
 			if (!string.IsNullOrEmpty(requestHeaders))
 				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
@@ -276,7 +278,7 @@ namespace GeneXus.Http
 				if (!string.IsNullOrEmpty(origin))
 					httpResponse.Headers[HeaderNames.AccessControlAllowOrigin] = origin;
 			}
-			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = true.ToString();
+			httpResponse.Headers[HeaderNames.AccessControlAllowCredentials] = bool.TrueString;
 
 			if (!string.IsNullOrEmpty(requestHeaders))
 				httpResponse.Headers[HeaderNames.AccessControlAllowHeaders] = StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList);
@@ -296,7 +298,7 @@ namespace GeneXus.Http
 				if (!string.IsNullOrEmpty(origin))
 					httpResponse.AppendHeader(HeaderNames.AccessControlAllowOrigin, origin);
 			}
-			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, true.ToString());
+			httpResponse.AppendHeader(HeaderNames.AccessControlAllowCredentials, bool.TrueString);
 
 			if (!string.IsNullOrEmpty(requestHeaders))
 				httpResponse.AppendHeader(HeaderNames.AccessControlAllowHeaders, StringUtil.Sanitize(requestHeaders, StringUtil.HttpHeaderWhiteList));
@@ -880,18 +882,18 @@ namespace GeneXus.Http
 			string value = websession.Get<string>(NEWSESSION);
 			if (string.IsNullOrEmpty(value))
 			{
-				websession.Set<string>(NEWSESSION, true.ToString());
+				websession.Set<string>(NEWSESSION, bool.TrueString);
 			}
 			else
 			{
-				websession.Set<string>(NEWSESSION, false.ToString());
+				websession.Set<string>(NEWSESSION, bool.FalseString);
 			}
 		}
 		public static bool IsNewSession(this HttpContext context)
 		{
 			GxWebSession websession = new GxWebSession(new HttpSessionState(context.Session));
 			string value=websession.Get<string>(NEWSESSION);
-			return string.IsNullOrEmpty(value) || value == true.ToString();
+			return string.IsNullOrEmpty(value) || value == bool.TrueString;
 		}
 #else
 		public static bool IsNewSession(this HttpContext context)
@@ -944,38 +946,37 @@ namespace GeneXus.Http
 #endif
 		}
 #if NETCORE
-		internal static void CommitSession(this HttpContext context)
+		internal static async Task CommitSessionAsync(this HttpContext context)
 		{
-			Dictionary<string, string> _contextSession;
 			if (context.Items.TryGetValue(HttpSyncSessionState.CTX_SESSION, out object ctxSession))
 			{
-				_contextSession = ctxSession as Dictionary<string, string>;
+				var _contextSession = ctxSession as Dictionary<string, string>;
 				if (_contextSession != null && _contextSession.Count > 0)
 				{
 					ISession _httpSession = context.Session;
-					var locker = LockTracker.Get(_httpSession.Id);
-					using (locker)
+					var semaphore = LockTracker.Get(_httpSession.Id);
+					await semaphore.WaitAsync();
+					try
 					{
-						lock (locker)
+						FieldInfo loaded = _httpSession.GetType().GetField("_loaded", BindingFlags.Instance | BindingFlags.NonPublic);
+						if (loaded != null)
 						{
-							FieldInfo loaded = _httpSession.GetType().GetField("_loaded", BindingFlags.Instance | BindingFlags.NonPublic);
-							if (loaded != null)
-							{
-								loaded.SetValue(_httpSession, false);
-								_httpSession.LoadAsync().Wait();
-							}
-							foreach (string s in _contextSession.Keys)
-							{
-								if (_contextSession[s] == null)
-									_httpSession.Remove(s);
-								else
-								{
-									_httpSession.SetString(s, _contextSession[s]);
-								}
-							}
-							context.Items.Remove(HttpSyncSessionState.CTX_SESSION);
-							_httpSession.CommitAsync().Wait();
+							loaded.SetValue(_httpSession, false);
+							await _httpSession.LoadAsync();
 						}
+						foreach (string s in _contextSession.Keys)
+						{
+							if (_contextSession[s] == null)
+								_httpSession.Remove(s);
+							else
+								_httpSession.SetString(s, _contextSession[s]);
+						}
+						context.Items.Remove(HttpSyncSessionState.CTX_SESSION);
+						await _httpSession.CommitAsync();
+					}
+					finally
+					{
+						semaphore.Release();
 					}
 				}
 			}

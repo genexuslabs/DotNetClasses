@@ -37,7 +37,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -209,6 +209,8 @@ namespace GeneXus.Application
 					.AddCheck("liveness", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
 					.AddCheck("readiness", () => HealthCheckResult.Healthy(), tags: new[] { "ready" });
 
+			services.Configure<MimeMappingsOptions>(Config.ConfigRoot.GetSection("MimeMappings"));
+
 			IMvcBuilder builder = services.AddMvc(option =>
 			{
 				option.EnableEndpointRouting = false;
@@ -233,7 +235,8 @@ namespace GeneXus.Application
 			});
 			services.AddDistributedMemoryCache();
 			services.AddLogging(builder => builder.AddConsole());
-			services.Configure<FormOptions>(options =>
+			services.Configure<FormOptions>(Config.ConfigRoot.GetSection("FormOptions"));
+			services.PostConfigure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
 				{
@@ -261,7 +264,7 @@ namespace GeneXus.Application
 				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
 				if (!string.IsNullOrEmpty(sessionCookieName))
 				{
-					options.Cookie.Name = sessionCookieName;
+					options.Cookie.Name=sessionCookieName;
 					GxWebSession.SessionCookieName = sessionCookieName;
 				}
 				string sameSite;
@@ -313,7 +316,7 @@ namespace GeneXus.Application
 
 		private void RegisterControllerAssemblies(IMvcBuilder mvcBuilder)
 		{
-
+			
 			if (RestAPIHelpers.ServiceAsController())
 			{
 				mvcBuilder.AddMvcOptions(options => options.ModelBinderProviders.Insert(0, new QueryStringModelBinderProvider()));
@@ -463,7 +466,7 @@ namespace GeneXus.Application
 
 		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
 		{
-
+			
 			if (sessionService is GxRedisSession)
 			{
 				GxRedisSession gxRedisSession = (GxRedisSession)sessionService;
@@ -520,7 +523,10 @@ namespace GeneXus.Application
 				}
 			}
 		}
-		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor, Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime)
+		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory,
+			IHttpContextAccessor contextAccessor,
+			Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime,
+			IOptions<MimeMappingsOptions> mimeMappingsOptions)
 		{
 			// Registrar para el graceful shutdown
 			applicationLifetime.ApplicationStopping.Register(OnShutdown);
@@ -548,6 +554,14 @@ namespace GeneXus.Application
 			provider.Mappings[".sfb"] = "model/sfb";
 			provider.Mappings[".gltf"] = "model/gltf+json";
 			provider.Mappings[".ini"] = "text/plain";
+
+			if (mimeMappingsOptions?.Value != null)
+			{
+				foreach (var mapping in mimeMappingsOptions.Value)
+				{
+					provider.Mappings[mapping.Key] = mapping.Value;
+				}
+			}
 			if (GXUtil.CompressResponse())
 			{
 				app.UseResponseCompression();
@@ -558,7 +572,7 @@ namespace GeneXus.Application
 			{
 				app.UseMiddleware<EnableCustomSessionStoreMiddleware>();
 			}
-			app.UseSession();
+			app.UseAsyncSession();
 			app.UseStaticFiles();
 
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
@@ -654,7 +668,7 @@ namespace GeneXus.Application
 				},
 				ContentTypeProvider = provider
 			});
-
+			
 			app.UseExceptionHandler(new ExceptionHandlerOptions
 			{
 				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
@@ -697,7 +711,7 @@ namespace GeneXus.Application
 
 			app.UseGXHandlerFactory(basePath);
 
-			app.Run(async context =>
+			app.Run(async context => 
 			{
 				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
 			});
@@ -724,13 +738,13 @@ namespace GeneXus.Application
 					app.UseSwaggerUI(options =>
 					{
 						options.SwaggerEndpoint($"../../{finfo.Name}", finfo.Name);
-						options.RoutePrefix = $"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
+						options.RoutePrefix =$"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
 					});
 					if (finfo.Name.Equals(SWAGGER_DEFAULT_YAML, StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(LocalPath, DEVELOPER_MENU)))
 						app.UseSwaggerUI(options =>
 						{
 							options.SwaggerEndpoint($"../../{SWAGGER_DEFAULT_YAML}", SWAGGER_DEFAULT_YAML);
-							options.RoutePrefix = $"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
+							options.RoutePrefix =$"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
 						});
 
 				}
@@ -764,10 +778,10 @@ namespace GeneXus.Application
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
-			string httpReasonPhrase = string.Empty;
+			string httpReasonPhrase=string.Empty;
 			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
 			HttpStatusCode httpStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
-			if (ex != null)
+			if (ex!=null)
 			{
 				if (ex is PageNotFoundException)
 				{
@@ -785,7 +799,7 @@ namespace GeneXus.Application
 					GXLogging.Error(log, $"Internal error", ex);
 				}
 			}
-			if (httpStatusCode != HttpStatusCode.OK)
+			if (httpStatusCode!= HttpStatusCode.OK)
 			{
 				string redirectPage = Config.MapCustomError(httpStatusCode.ToString(HttpHelper.INT_FORMAT));
 				if (!string.IsNullOrEmpty(redirectPage))
@@ -799,7 +813,7 @@ namespace GeneXus.Application
 				if (!string.IsNullOrEmpty(httpReasonPhrase))
 				{
 					IHttpResponseFeature responseReason = httpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>();
-					if (responseReason != null)
+					if (responseReason!=null)
 						responseReason.ReasonPhrase = httpReasonPhrase;
 				}
 			}
@@ -843,6 +857,7 @@ namespace GeneXus.Application
 			return builder.UseMiddleware<EnableRequestRewindMiddleware>();
 		}
 	}
+	[Route("")]
 	public class HomeController : Controller
 	{
 		public IActionResult Index()
@@ -911,4 +926,36 @@ namespace GeneXus.Application
 			}
 		}
 	}
+	public static class SesssionAsyncExtensions
+	{
+		/// <summary>
+		/// Ensures sessions load asynchronously by calling LoadAsync before accessing session data,
+		/// forcing the session provider to avoid synchronous operations.
+		/// </summary>
+		/// <remarks>
+		/// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/app-state?view=aspnetcore-5.0
+		/// The default session provider in ASP.NET Core will only load the session record from the underlying IDistributedCache store asynchronously if the
+		/// ISession.LoadAsync method is explicitly called before calling the TryGetValue, Set or Remove methods. 
+		/// Failure to call LoadAsync first will result in the underlying session record being loaded synchronously,
+		/// which could potentially impact the ability of an application to scale.
+		/// 
+		/// See also:
+		/// https://github.com/aspnet/Session/blob/master/src/Microsoft.AspNetCore.Session/DistributedSession.cs
+		/// https://github.com/dotnet/AspNetCore.Docs/issues/1840#issuecomment-454182594
+		/// </remarks>
+		public static IApplicationBuilder UseAsyncSession(this IApplicationBuilder app)
+		{
+			app.UseSession();
+			app.Use(async (context, next) =>
+			{
+				if (context.Session != null)
+				{
+					await context.Session.LoadAsync();
+				}
+				await next();
+			});
+			return app;
+		}
+	}
+	public class MimeMappingsOptions : Dictionary<string, string> { }
 }

@@ -62,10 +62,10 @@ namespace GxClasses.Web.Middleware
 		}
 
 		static public List<ControllerInfo> GetRouteController(Dictionary<string, string> apiPaths,
-											Dictionary<string, List<string>> sValid,
-											Dictionary<string, Dictionary<string, SingleMap>> sMap,
-											Dictionary<string, Dictionary<Tuple<string, string>, string>> sMapData,
-											string basePath, string verb, string path)
+																				Dictionary<string, List<string>> sValid,
+																				Dictionary<string, Dictionary<string, SingleMap>> sMap,
+																				Dictionary<string, Dictionary<Tuple<string, string>, string>> sMapData,
+																				string basePath, string verb, string path)
 		{
 			List<ControllerInfo> result = new List<ControllerInfo>();
 			string parms = string.Empty;
@@ -78,10 +78,10 @@ namespace GxClasses.Web.Middleware
 					int questionMarkIdx = path.IndexOf(QUESTIONMARK);
 					string controller;
 					if (apiPaths.ContainsKey(basePath)
-						&& sValid.ContainsKey(basePath)
-						&& sMap.ContainsKey(basePath)
-						&& sMapData.ContainsKey(basePath)
-						)
+							&& sValid.ContainsKey(basePath)
+							&& sMap.ContainsKey(basePath)
+							&& sMapData.ContainsKey(basePath)
+							)
 					{
 						if (sValid[basePath].Contains(path.ToLower()))
 						{
@@ -174,12 +174,12 @@ namespace GxClasses.Web.Middleware
 				HandlerFactory handlerFactory = new HandlerFactory();
 				await handlerFactory.Invoke(context);
 			}
-			catch (Exception ex)
+			catch
 			{
-				await Task.FromException(ex);
+				throw;
 			}
 		}
-		public Task ProcessRestRequest(HttpContext context)
+		public async Task ProcessRestRequest(HttpContext context)
 		{
 			try
 			{
@@ -188,7 +188,6 @@ namespace GxClasses.Web.Middleware
 					IHttpContextAccessor contextAccessor = context.RequestServices.GetService<IHttpContextAccessor>();
 					context = new GxHttpContextAccesor(contextAccessor);
 				}
-				Task result = Task.CompletedTask;
 				string path = context.Request.Path.ToString();
 				string actualPath = string.Empty;
 				bool isServiceInPath = ServiceInPath(path, out actualPath);
@@ -214,43 +213,46 @@ namespace GxClasses.Web.Middleware
 							}
 							string controllerPath = path.ToLower().Split(actualPath).Last<string>();
 							controllerWithParms = controllerPath.Split(QUESTIONMARK).First<string>();
-					
+
 						}
 					}
 					else
 					{
-						if (path.Contains(oauthRoute) && (AzureDeploy.GAM == "true")) 
-							return (RouteHttpService(context));
+						if ((path.Contains(oauthRoute) && (AzureDeploy.GAM == "true")) || path.Contains("gxmulticall")) 
+						{
+							await (RouteHttpService(context));
+							return;
+						}
 						controllerWithParms = GetGxRouteValue(path);
 						GXLogging.Debug(log, $"Running Azure functions. ControllerWithParms :{controllerWithParms} path:{path}");
 					}
-				
+
 					List<ControllerInfo> controllers = GetRouteController(servicesPathUrl, servicesValidPath, servicesMap, servicesMapData, actualPath, context.Request.Method, controllerWithParms);
 					GxRestWrapper controller = null;
 					ControllerInfo controllerInfo = controllers.FirstOrDefault(c => (controller = GetController(context, c)) != null);
-					
+
 
 					if (controller != null)
 					{
 						if (HttpMethods.IsGet(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsGet(controllerInfo.Verb)))
 						{
-							result = controller.Get(controllerInfo.Parameters);
+							await controller.Get(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPost(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPost(controllerInfo.Verb)))
 						{
-							result = controller.Post();
+							await controller.Post();
 						}
 						else if (HttpMethods.IsDelete(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsDelete(controllerInfo.Verb)))
 						{
-							result = controller.Delete(controllerInfo.Parameters);
+							await controller.Delete(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPut(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPut(controllerInfo.Verb)))
 						{
-							result = controller.Put(controllerInfo.Parameters);
+							await controller.Put(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsPatch(context.Request.Method) && (controllerInfo.Verb == null || HttpMethods.IsPatch(controllerInfo.Verb)))
 						{
-							result = controller.Patch(controllerInfo.Parameters);
+							await controller.Patch(controllerInfo.Parameters);
 						}
 						else if (HttpMethods.IsOptions(context.Request.Method))
 						{
@@ -284,18 +286,20 @@ namespace GxClasses.Web.Middleware
 					{
 						GXLogging.Error(log, $"ProcessRestRequest controller not found path:{path} controllerWithParms:{controllerWithParms}");
 						context.Response.Headers.Clear();
-						result = Task.FromException(new PageNotFoundException(path));
+						throw new PageNotFoundException(path);
 					}
 				}
-				context.CommitSession();
-
-				return result;
+				
 			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "ProcessRestRequest", ex);
 				HttpHelper.SetUnexpectedError(context, HttpStatusCode.InternalServerError, ex);
-				return Task.FromException(ex);
+				throw;
+			}
+			finally
+			{
+				await context.CommitSessionAsync();
 			}
 		}
 
@@ -374,20 +378,21 @@ namespace GxClasses.Web.Middleware
 					return true;
 				}
 			}
-			else {
+			else
+			{
 				return true;
-			}						
+			}
 		}
 
-		private String FindPath(string innerPath, Dictionary<string,string > servicesPathUrl, bool startTxt)
+		private String FindPath(string innerPath, Dictionary<string, string> servicesPathUrl, bool startTxt)
 		{
 			string actualPath = String.Empty;
-			foreach (string subPath in from String subPath in servicesPathUrl.Keys									
-									select subPath)
+			foreach (string subPath in from String subPath in servicesPathUrl.Keys
+									   select subPath)
 			{
 				bool match = false;
 				innerPath = innerPath.ToLower();
-				match = (startTxt)? innerPath.StartsWith($"/{subPath.ToLower()}"): innerPath.Contains($"/{subPath.ToLower()}");
+				match = (startTxt) ? innerPath.StartsWith($"/{subPath.ToLower()}") : innerPath.Contains($"/{subPath.ToLower()}");
 				if (match)
 				{
 					actualPath = subPath.ToLower();
@@ -431,7 +436,7 @@ namespace GxClasses.Web.Middleware
 			bool privateDirExists = Directory.Exists(privateDir);
 
 			GXLogging.Debug(log, $"PrivateDir:{privateDir} asssemblycontroller:{asssemblycontroller}");
-			string svcFile=null;
+			string svcFile = null;
 			if (privateDirExists && File.Exists(Path.Combine(privateDir, $"{asssemblycontroller.ToLower()}.grp.json")))
 			{
 				controller = tmpController;
@@ -498,7 +503,7 @@ namespace GxClasses.Web.Middleware
 				GXLogging.Warn(log, "Service file not found:" + controllerFullName);
 				return null;
 			}
-			
+
 		}
 		public void ServicesGroupSetting()
 		{
@@ -524,7 +529,7 @@ namespace GxClasses.Web.Middleware
 								string mapPath = (m.BasePath.EndsWith("/")) ? m.BasePath : m.BasePath + "/";
 								string mapPathLower = mapPath.ToLower();
 								string mNameLower = m.Name.ToLower();
-								servicesPathUrl[mapPathLower]= mNameLower;
+								servicesPathUrl[mapPathLower] = mNameLower;
 								if (!RestAPIHelpers.ServiceAsController())
 								{
 									GXLogging.Debug(log, $"addServicesPathUrl key:{mapPathLower} value:{mNameLower}");
@@ -575,7 +580,8 @@ namespace GxClasses.Web.Middleware
 						}
 					}
 				}
-			}catch (Exception ex)
+			}
+			catch (Exception ex)
 			{
 				GXLogging.Error(log, $"Error Loading Services Group Settings", ex);
 				throw;
@@ -676,7 +682,7 @@ namespace GxClasses.Web.Middleware
 
 	[DataContract()]
 	public class MapGroup
-	{	
+	{
 		String _objectType;
 		String _name;
 		String _basePath;
