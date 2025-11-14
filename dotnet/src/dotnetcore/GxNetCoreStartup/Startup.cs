@@ -12,6 +12,7 @@ using GeneXus.Services;
 using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
@@ -36,6 +37,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace GeneXus.Application
@@ -59,14 +61,14 @@ namespace GeneXus.Application
 					port = args[2];
 					if (args.Length > 3 && Uri.UriSchemeHttps.Equals(args[3], StringComparison.OrdinalIgnoreCase))
 						schema = Uri.UriSchemeHttps;
+					if (args.Length > 4)
+						Startup.IsMcp = args[4].Equals("mcp", StringComparison.OrdinalIgnoreCase);
 				}
 				else
 				{
 					LocatePhysicalLocalPath();
 
 				}
-
-				MCPTools.ServerStart(Startup.VirtualPath, Startup.LocalPath, schema);
 
 				if (port == DEFAULT_PORT)
 				{
@@ -167,6 +169,7 @@ namespace GeneXus.Application
 		const long DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 528000000;
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
+		public static bool IsMcp = false;
 		internal static string APP_SETTINGS = "appsettings.json";
 
 		const string UrlTemplateControllerWithParms = "controllerWithParms";
@@ -206,6 +209,8 @@ namespace GeneXus.Application
 					.AddCheck("liveness", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
 					.AddCheck("readiness", () => HealthCheckResult.Healthy(), tags: new[] { "ready" });
 
+			services.Configure<MimeMappingsOptions>(Config.ConfigRoot.GetSection("MimeMappings"));
+
 			IMvcBuilder builder = services.AddMvc(option =>
 			{
 				option.EnableEndpointRouting = false;
@@ -230,7 +235,8 @@ namespace GeneXus.Application
 			});
 			services.AddDistributedMemoryCache();
 			services.AddLogging(builder => builder.AddConsole());
-			services.Configure<FormOptions>(options =>
+			services.Configure<FormOptions>(Config.ConfigRoot.GetSection("FormOptions"));
+			services.PostConfigure<FormOptions>(options =>
 			{
 				if (Config.GetValueOf("MaxFileUploadSize", out string MaxFileUploadSizeStr) && long.TryParse(MaxFileUploadSizeStr, out long MaxFileUploadSize))
 				{
@@ -258,7 +264,7 @@ namespace GeneXus.Application
 				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
 				if (!string.IsNullOrEmpty(sessionCookieName))
 				{
-					options.Cookie.Name = sessionCookieName;
+					options.Cookie.Name=sessionCookieName;
 					GxWebSession.SessionCookieName = sessionCookieName;
 				}
 				string sameSite;
@@ -277,26 +283,31 @@ namespace GeneXus.Application
 					options.SuppressXFrameOptionsHeader = true;
 				});
 			}
+			if (Startup.IsMcp)
+			{
+				StartupMcp.AddService(services);
+			}
+
 			services.AddDirectoryBrowser();
 			if (GXUtil.CompressResponse())
 			{
 				services.AddResponseCompression(options =>
 				{
 					options.MimeTypes = new[]
-									{
-                                                        // Default
-                                                        "text/plain",
-														"text/css",
-														"application/javascript",
-														"text/html",
-														"application/xml",
-														"text/xml",
-														"application/json",
-														"text/json",
-                                                        // Custom
-                                                        "application/json",
-														"application/pdf"
-										};
+					{
+							// Default
+							"text/plain",
+							"text/css",
+							"application/javascript",
+							"text/html",
+							"application/xml",
+							"text/xml",
+							"application/json",
+							"text/json",
+							// Custom
+							"application/json",
+							"application/pdf"
+							};
 					options.EnableForHttps = true;
 				});
 			}
@@ -305,7 +316,7 @@ namespace GeneXus.Application
 
 		private void RegisterControllerAssemblies(IMvcBuilder mvcBuilder)
 		{
-
+			
 			if (RestAPIHelpers.ServiceAsController())
 			{
 				mvcBuilder.AddMvcOptions(options => options.ModelBinderProviders.Insert(0, new QueryStringModelBinderProvider()));
@@ -374,9 +385,9 @@ namespace GeneXus.Application
 				try
 				{
 					string[] controllerAssemblyQualifiedName = new string(File.ReadLines(svcFile).First().SkipWhile(c => c != '"')
-																									   .Skip(1)
-																									   .TakeWhile(c => c != '"')
-																									   .ToArray()).Trim().Split(',');
+															   .Skip(1)
+															   .TakeWhile(c => c != '"')
+															   .ToArray()).Trim().Split(',');
 					string controllerAssemblyName = controllerAssemblyQualifiedName.Last();
 					if (!serviceAssemblies.Contains(controllerAssemblyName))
 					{
@@ -437,17 +448,17 @@ namespace GeneXus.Application
 					services.AddCors(options =>
 					{
 						options.AddPolicy(name: CORS_POLICY_NAME,
-																			  policy =>
-																			  {
-																				  policy.WithOrigins(origins);
-																				  if (!corsAllowedOrigins.Contains(CORS_ANY_ORIGIN))
-																				  {
-																					  policy.AllowCredentials();
-																				  }
-																				  policy.AllowAnyHeader();
-																				  policy.AllowAnyMethod();
-																				  policy.SetPreflightMaxAge(TimeSpan.FromSeconds(CORS_MAX_AGE_SECONDS));
-																			  });
+										  policy =>
+										  {
+											  policy.WithOrigins(origins);
+											  if (!corsAllowedOrigins.Contains(CORS_ANY_ORIGIN))
+											  {
+												  policy.AllowCredentials();
+											  }
+											  policy.AllowAnyHeader();
+											  policy.AllowAnyMethod();
+											  policy.SetPreflightMaxAge(TimeSpan.FromSeconds(CORS_MAX_AGE_SECONDS));
+										  });
 					});
 				}
 			}
@@ -455,7 +466,7 @@ namespace GeneXus.Application
 
 		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
 		{
-
+			
 			if (sessionService is GxRedisSession)
 			{
 				GxRedisSession gxRedisSession = (GxRedisSession)sessionService;
@@ -501,7 +512,6 @@ namespace GeneXus.Application
 				}
 				else
 				{
-
 					services.AddDistributedSqlServerCache(options =>
 					{
 						GXLogging.Info(log, $"Using SQLServer for Distributed session, ConnectionString:{sessionService.ConnectionString}, SchemaName: {sessionService.Schema}, TableName: {sessionService.TableName}");
@@ -513,7 +523,10 @@ namespace GeneXus.Application
 				}
 			}
 		}
-		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory, IHttpContextAccessor contextAccessor, Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime)
+		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory,
+			IHttpContextAccessor contextAccessor,
+			Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime,
+			IOptions<MimeMappingsOptions> mimeMappingsOptions)
 		{
 			// Registrar para el graceful shutdown
 			applicationLifetime.ApplicationStopping.Register(OnShutdown);
@@ -541,6 +554,14 @@ namespace GeneXus.Application
 			provider.Mappings[".sfb"] = "model/sfb";
 			provider.Mappings[".gltf"] = "model/gltf+json";
 			provider.Mappings[".ini"] = "text/plain";
+
+			if (mimeMappingsOptions?.Value != null)
+			{
+				foreach (var mapping in mimeMappingsOptions.Value)
+				{
+					provider.Mappings[mapping.Key] = mapping.Value;
+				}
+			}
 			if (GXUtil.CompressResponse())
 			{
 				app.UseResponseCompression();
@@ -551,7 +572,7 @@ namespace GeneXus.Application
 			{
 				app.UseMiddleware<EnableCustomSessionStoreMiddleware>();
 			}
-			app.UseSession();
+			app.UseAsyncSession();
 			app.UseStaticFiles();
 
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
@@ -586,11 +607,16 @@ namespace GeneXus.Application
 					Predicate = check => check.Tags.Contains("live")
 				});
 
-				endpoints.MapHealthChecks($"{baseVirtualPath }/_gx/health/ready", new HealthCheckOptions
+				endpoints.MapHealthChecks($"{baseVirtualPath}/_gx/health/ready", new HealthCheckOptions
 				{
 					Predicate = check => check.Tags.Contains("ready")
 				});
+				if (Startup.IsMcp)
+				{
+					StartupMcp.MapEndpoints(endpoints);
+				}
 			});
+
 			if (log.IsCriticalEnabled && env.IsDevelopment())
 			{
 				try
@@ -642,7 +668,7 @@ namespace GeneXus.Application
 				},
 				ContentTypeProvider = provider
 			});
-
+			
 			app.UseExceptionHandler(new ExceptionHandlerOptions
 			{
 				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
@@ -685,7 +711,7 @@ namespace GeneXus.Application
 
 			app.UseGXHandlerFactory(basePath);
 
-			app.Run(async context =>
+			app.Run(async context => 
 			{
 				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
 			});
@@ -704,20 +730,21 @@ namespace GeneXus.Application
 		{
 			try
 			{
-				string baseVirtualPathWithSep = string.IsNullOrEmpty(baseVirtualPath) ? string.Empty: $"{baseVirtualPath.TrimStart('/')}/";
-				foreach (string yaml in Directory.GetFiles(LocalPath, "*.yaml")) {
+				string baseVirtualPathWithSep = string.IsNullOrEmpty(baseVirtualPath) ? string.Empty : $"{baseVirtualPath.TrimStart('/')}/";
+				foreach (string yaml in Directory.GetFiles(LocalPath, "*.yaml"))
+				{
 					FileInfo finfo = new FileInfo(yaml);
 
 					app.UseSwaggerUI(options =>
 					{
 						options.SwaggerEndpoint($"../../{finfo.Name}", finfo.Name);
-						options.RoutePrefix = $"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
+						options.RoutePrefix =$"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
 					});
 					if (finfo.Name.Equals(SWAGGER_DEFAULT_YAML, StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(LocalPath, DEVELOPER_MENU)))
 						app.UseSwaggerUI(options =>
 						{
 							options.SwaggerEndpoint($"../../{SWAGGER_DEFAULT_YAML}", SWAGGER_DEFAULT_YAML);
-							options.RoutePrefix = $"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
+							options.RoutePrefix =$"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
 						});
 
 				}
@@ -751,10 +778,10 @@ namespace GeneXus.Application
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
-			string httpReasonPhrase = string.Empty;
+			string httpReasonPhrase=string.Empty;
 			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
 			HttpStatusCode httpStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
-			if (ex != null)
+			if (ex!=null)
 			{
 				if (ex is PageNotFoundException)
 				{
@@ -772,7 +799,7 @@ namespace GeneXus.Application
 					GXLogging.Error(log, $"Internal error", ex);
 				}
 			}
-			if (httpStatusCode != HttpStatusCode.OK)
+			if (httpStatusCode!= HttpStatusCode.OK)
 			{
 				string redirectPage = Config.MapCustomError(httpStatusCode.ToString(HttpHelper.INT_FORMAT));
 				if (!string.IsNullOrEmpty(redirectPage))
@@ -786,7 +813,7 @@ namespace GeneXus.Application
 				if (!string.IsNullOrEmpty(httpReasonPhrase))
 				{
 					IHttpResponseFeature responseReason = httpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>();
-					if (responseReason != null)
+					if (responseReason!=null)
 						responseReason.ReasonPhrase = httpReasonPhrase;
 				}
 			}
@@ -830,6 +857,7 @@ namespace GeneXus.Application
 			return builder.UseMiddleware<EnableRequestRewindMiddleware>();
 		}
 	}
+	[Route("")]
 	public class HomeController : Controller
 	{
 		public IActionResult Index()
@@ -867,36 +895,6 @@ namespace GeneXus.Application
 		}
 	}
 
-	static class MCPTools
-	{
-		public static void ServerStart(string virtualPath, string workingDir, string schema) 
-		{
-			IGXLogger log = GXLoggerFactory.GetLogger(typeof(CustomBadRequestObjectResult).FullName);
-			bool isMpcServer = false;
-			try
-			{
-				List<string> L = Directory.GetFiles(Path.Combine(workingDir,"bin"), "*mcp_service.dll").ToList<string>();
-				isMpcServer = L.Count > 0;
-				if (isMpcServer)
-				{
-					GXLogging.Info(log, "Start MCP Server");
-					
-					GxRunner.RunAsync("GxMcpStartup.exe", Path.Combine(workingDir,"bin"), virtualPath, schema, onExit: exitCode =>
-					{
-						if (exitCode == 0)
-							Console.WriteLine("Process completed successfully.");
-						else
-							Console.Error.WriteLine($"Process failed (exit code {exitCode})");
-					});
-				}
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, "Error starting MCP Server", ex);
-			}
-		}
-	}
-
 
 	internal class HomeControllerConvention : IApplicationModelConvention
 	{
@@ -928,4 +926,36 @@ namespace GeneXus.Application
 			}
 		}
 	}
+	public static class SesssionAsyncExtensions
+	{
+		/// <summary>
+		/// Ensures sessions load asynchronously by calling LoadAsync before accessing session data,
+		/// forcing the session provider to avoid synchronous operations.
+		/// </summary>
+		/// <remarks>
+		/// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/app-state?view=aspnetcore-5.0
+		/// The default session provider in ASP.NET Core will only load the session record from the underlying IDistributedCache store asynchronously if the
+		/// ISession.LoadAsync method is explicitly called before calling the TryGetValue, Set or Remove methods. 
+		/// Failure to call LoadAsync first will result in the underlying session record being loaded synchronously,
+		/// which could potentially impact the ability of an application to scale.
+		/// 
+		/// See also:
+		/// https://github.com/aspnet/Session/blob/master/src/Microsoft.AspNetCore.Session/DistributedSession.cs
+		/// https://github.com/dotnet/AspNetCore.Docs/issues/1840#issuecomment-454182594
+		/// </remarks>
+		public static IApplicationBuilder UseAsyncSession(this IApplicationBuilder app)
+		{
+			app.UseSession();
+			app.Use(async (context, next) =>
+			{
+				if (context.Session != null)
+				{
+					await context.Session.LoadAsync();
+				}
+				await next();
+			});
+			return app;
+		}
+	}
+	public class MimeMappingsOptions : Dictionary<string, string> { }
 }
