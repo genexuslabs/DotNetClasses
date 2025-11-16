@@ -692,20 +692,26 @@ namespace GeneXus.Http
 #if !NETCORE
 		public static void SetSoapContext(GXSOAPContext value)
 		{
-			RequestMessageExtension ext = OperationContext.Current.Extensions.Find<RequestMessageExtension>();
-			if (ext == null)
+			if (OperationContext.Current != null)
 			{
-				ext = new RequestMessageExtension();
-				OperationContext.Current.Extensions.Add(ext);
+				RequestMessageExtension ext = OperationContext.Current.Extensions.Find<RequestMessageExtension>();
+				if (ext == null)
+				{
+					ext = new RequestMessageExtension();
+					OperationContext.Current.Extensions.Add(ext);
+				}
+				ext.SOAPContext = value;
 			}
-			ext.SOAPContext = value;
 		}
 		internal static GXSOAPContext GetSoapContext()
 		{
-			RequestMessageExtension ext = OperationContext.Current.Extensions.Find<RequestMessageExtension>();
-			if (ext != null)
+			if (OperationContext.Current != null)
 			{
-				return ext.SOAPContext;
+				RequestMessageExtension ext = OperationContext.Current.Extensions.Find<RequestMessageExtension>();
+				if (ext != null)
+				{
+					return ext.SOAPContext;
+				}
 			}
 			return null;
 		}
