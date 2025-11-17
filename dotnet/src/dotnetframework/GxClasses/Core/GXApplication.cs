@@ -1257,20 +1257,33 @@ namespace GeneXus.Application
                         }
                 }
         }
-                public bool IsForward()
-                {
-                        if (_HttpContext != null)
-                        {
-                                string callMethod = (string)_HttpContext.Items["gx_webcall_method"];
-                                if ((callMethod != null) && (string.Compare(callMethod, "forward", true) == 0))
-                                {
-                                        return true;
-                                }
-                        }
-                        return false;
-                }
+		public bool IsForward()
+		{
+			if (_HttpContext != null)
+			{
+#if NETCORE
+				object callMethodObj;
+				if (_HttpContext.Items.TryGetValue("gx_webcall_method", out callMethodObj))
+				{
 
-                public bool isCrawlerRequest_impl()
+					string callMethod = callMethodObj as string;
+					if (!string.IsNullOrEmpty(callMethod) && (string.Compare(callMethod, "forward", true) == 0))
+					{
+						return true;
+					}
+				}
+#else
+				string callMethod = (string)_HttpContext.Items["gx_webcall_method"];
+				if ((callMethod != null) && (string.Compare(callMethod, "forward", true) == 0))
+				{
+					return true;
+				}
+#endif
+			}
+			return false;
+		}
+
+		public bool isCrawlerRequest_impl()
                 {
                         string query;
 #if NETCORE
