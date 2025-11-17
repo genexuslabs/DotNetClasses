@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<AssemblyName>casearch</AssemblyName>
+		<PackageId>GeneXus.GXflow.FullTextSearch.Net</PackageId>
+
+		<!--This Package may not be fully compatible with your project.-->
+		<!--Searcher.Close is obsolete, use Dispose() instead-->
+		<NoWarn>NU1701,CS0618</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Lucene.Net" Version="3.0.3" />
+		<PackageReference Include="PdfPig" Version="0.1.8" />
+		<PackageReference Include="NPOI" Version="2.7.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\DotNetFramework\FullTextSearch\AnalyzerManager.cs" Link="AnalyzerManager.cs" />
+		<Compile Include="..\..\DotNetFramework\FullTextSearch\Indexer.cs" Link="Indexer.cs" />
+		<Compile Include="..\..\DotNetFramework\FullTextSearch\IndexManager.cs" Link="IndexManager.cs" />
+		<Compile Include="..\..\DotNetFramework\FullTextSearch\Logger.cs" Link="Logger.cs" />
+		<Compile Include="..\..\DotNetFramework\FullTextSearch\Searcher.cs" Link="Searcher.cs" />
+	</ItemGroup>
+</Project>
