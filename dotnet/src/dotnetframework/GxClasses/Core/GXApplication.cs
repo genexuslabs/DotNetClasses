@@ -1301,7 +1301,13 @@ namespace GeneXus.Application
 
 		public bool isCrawlerRequest_impl()
 		{
-			string query = _HttpContext?.Request?.QueryString.ToString();
+			string query;
+#if NETCORE
+			QueryString? queryString = (_HttpContext?.Request?.QueryString);
+			query = queryString.HasValue ? queryString.Value.ToString() : null;
+#else
+			query = _HttpContext?.Request?.QueryString.ToString();
+#endif
 			return !string.IsNullOrEmpty(query) && query.Contains("_escaped_fragment_");
 		}
 
