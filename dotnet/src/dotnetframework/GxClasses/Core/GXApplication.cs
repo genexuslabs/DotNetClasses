@@ -1272,11 +1272,8 @@ namespace GeneXus.Application
 
                 public bool isCrawlerRequest_impl()
                 {
-                        if (_HttpContext != null && _HttpContext.Request.QueryString.ToString().Contains("_escaped_fragment_"))
-                        {
-                                return true;
-                        }
-                        return false;
+                        string query = _HttpContext?.Request?.QueryString.ToString();
+                        return !string.IsNullOrEmpty(query) && query.Contains("_escaped_fragment_");
                 }
 
                 public HtmlTextWriter OutputWriter
@@ -1649,7 +1646,7 @@ namespace GeneXus.Application
                         {
                                 try
                                 {
-                                        //Don´t use Uri.ToString() it returns unescaped canonical representation
+                                        //DonÂ´t use Uri.ToString() it returns unescaped canonical representation
                                         return AbsoluteUri;
                                 }
                                 catch
@@ -2457,7 +2454,7 @@ namespace GeneXus.Application
                         HttpCookie cookie = new HttpCookie(name, GXUtil.UrlEncode(cookieValue));
                         cookie.Path = path.TrimEnd();
                         //HttpCookie.Path default is /, which is the server root. 
-                        //In Genexus: If path isn’t specified, the cookie is valid for the web panels that are in the same directory as the one it is stored in, or in subordinated directories
+                        //In Genexus: If path isnâ€™t specified, the cookie is valid for the web panels that are in the same directory as the one it is stored in, or in subordinated directories
 
                         if (!expires.Equals(DateTimeUtil.NullDate()))
                                 cookie.Expires = expires;
