@@ -1299,11 +1299,8 @@ namespace GeneXus.Application
 
 		public bool isCrawlerRequest_impl()
 		{
-			if (_HttpContext != null && _HttpContext.Request.QueryString.ToString().Contains("_escaped_fragment_"))
-			{
-				return true;
-			}
-			return false;
+			string query = _HttpContext?.Request?.QueryString.ToString();
+			return !string.IsNullOrEmpty(query) && query.Contains("_escaped_fragment_");
 		}
 
 		public HtmlTextWriter OutputWriter
