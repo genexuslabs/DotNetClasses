@@ -1227,6 +1227,7 @@ namespace GeneXus.Application
 			DataStoreUtil.LoadDataStores(ctx);
 			ctx.SetPhysicalPath(this.GetPhysicalPath());
 			ctx.SetSession(this.GetSession());
+			ctx._isSumbited = this.IsSubmited;
 			if (this.HttpContext != null)
 			{
 				ctx.HttpContext = this.HttpContext;
