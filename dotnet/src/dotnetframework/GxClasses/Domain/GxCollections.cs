@@ -1577,11 +1577,31 @@ namespace GeneXus.Utils
 						JsonObj.Put(name, prop);
 					}
 				}
+				else if (prop is decimal)
+				{
+					JsonObj.Put(name, RemoveInternalTrailingZeroes((decimal)prop));
+				}
 				else
 				{
 					JsonObj.Put(name, prop);
 				}
 			}
+		}
+		static decimal RemoveInternalTrailingZeroes(decimal dec)
+		{
+			if (GetDecimalScale(dec) > 0)
+			{
+				string strdec = dec.ToString(CultureInfo.InvariantCulture);
+				return decimal.Parse(strdec.Contains(".") ? strdec.TrimEnd('0').TrimEnd('.') : strdec, CultureInfo.InvariantCulture);
+			}
+			else
+				return dec;
+
+		}
+		static int GetDecimalScale(decimal value)
+		{
+			int[] bits = decimal.GetBits(value);
+			return (bits[3] >> 16) & 0xFF;
 		}
 		public Object GetJSONObject(bool includeState, bool includeNoInitialized)
 		{
@@ -1603,24 +1623,27 @@ namespace GeneXus.Utils
 
 		private ICollection getFromJSONObjectOrderIterator(ICollection it)
 		{
-			List<string> v = new List<string>();
+			if (GxUploadAttrs.IsEmpty && !typeof(GxSilentTrnSdt).IsAssignableFrom(this.GetType()))
+			{
+				return it;
+			}
+			List<string> _JsonObjectOrderIterator = new List<string>();
+
 			List<string> vAtEnd = new List<string>();
 			foreach (string name in it)
 			{
-				string map = JsonMap(name);
-				PropertyInfo objProperty = GetTypeProperty("gxtpr_" + (!string.IsNullOrEmpty(map) ? map : name).ToLower());
-				if (name.EndsWith("_N") || objProperty != null && IsGxUploadAttribute(objProperty))
+				if (name.EndsWith("_N") || IsGxUploadAttribute(name))
 				{
 					vAtEnd.Add(name);
 				}
 				else
 				{
-					v.Add(name);//keep the order of attributes that do not end with _N.
+					_JsonObjectOrderIterator.Add(name);//keep the order of attributes that do not end with _N.
 				}
 			}
 			if (vAtEnd.Count > 0)
-				v.AddRange(vAtEnd);
-			return v;
+				_JsonObjectOrderIterator.AddRange(vAtEnd);
+			return _JsonObjectOrderIterator;
 		}
 
 		public void FromJSONObject(dynamic obj)
@@ -1633,9 +1656,7 @@ namespace GeneXus.Utils
 			foreach (string name in jsonIterator)
 			{
 				object currObj = jobj[name];
-				string map = JsonMap(name);
-				PropertyInfo objProperty = GetTypeProperty("gxtpr_" + (map != null ? map : name).ToLower());
-
+				PropertyInfo objProperty = GetTypeProperty(JsonNameToInternalName(name));
 				if (objProperty != null)
 				{
 					if (!JSONHelper.IsJsonNull(currObj))
@@ -1650,7 +1671,7 @@ namespace GeneXus.Utils
 								{
 
 									string sVar = uploadPath.Replace(GXFormData.FORMDATA_REFERENCE, string.Empty);
-									MethodInfo setBlob = GetMethodInfo("gxtv_" + GetType().Name + "_" + name + "_setblob");
+									MethodInfo setBlob = GetMethodInfo(FIELD_PREFIX + GetType().Name + "_" + name + "_setblob");
 									if (setBlob != null)
 									{
 										if (HttpHelper.GetHttpRequestPostedFile(context, sVar, out uploadPath))
@@ -1699,7 +1720,14 @@ namespace GeneXus.Utils
 							IGXBCCollection bcColl;
 							GxSimpleCollection<object> currSimpleColl;
 							IGxJSONAble currJsonProp;
+							IGxExternalObject currExtProp;
 							CollectionBase currObjColl = currObj as CollectionBase;
+
+							if ((currExtProp = currProp as IGxExternalObject) != null)
+							{
+								currProp = currExtProp.ExternalInstance;
+							}
+
 #if !NETCORE
 							GxObjectCollectionBase currColl;
 							if ((currColl = currProp as GxObjectCollectionBase) != null)
@@ -1895,32 +1923,51 @@ namespace GeneXus.Utils
 			return success;
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage("GxFxCopRules", "CR1000:EnforceThreadSafeType")]
-		private Dictionary<string, bool> gxuploadAttrs = new Dictionary<string, bool>();
-		private bool IsGxUploadAttribute(PropertyInfo property)
+		private GXTypeInfo _compatibilityGxuploadAttrs = null;
+		private bool IsGxUploadAttribute(string jsonPropertyName)
 		{
-			string key = property.Name;
-			if (!gxuploadAttrs.ContainsKey(key))
-			{
-				bool hasAtt = property.IsDefined(typeof(GxUpload), false);
-				gxuploadAttrs.Add(key, hasAtt);
-			}
-			return gxuploadAttrs[key];
+			return GxUploadAttrs.ContainsKey(JsonNameToInternalName(jsonPropertyName));
 		}
+		private bool IsGxUploadAttribute(PropertyInfo propertyInfo)
+		{
+			return GxUploadAttrs.ContainsKey(propertyInfo.Name);
+		}
+		private string JsonNameToInternalName(string jsonPropertyName)
+		{
+			string map = JsonMap(jsonPropertyName);
+			if (!string.IsNullOrEmpty(map))
+				return $"{PROPERTY_PREFIX}{map}";
+			else
+				return $"{PROPERTY_PREFIX}{jsonPropertyName}";
+		}
+		protected virtual GXTypeInfo TypeInfo { get { return _compatibilityGxuploadAttrs; } set { _compatibilityGxuploadAttrs = value; } }
+		private ConcurrentDictionary<string, byte> GxUploadAttrs
+		{
+			get
+			{
+				if (TypeInfo == null)
+				{
+					TypeInfo = new GXTypeInfo();
 
-		private Hashtable props;
-
+					TypeInfo.UploadAttrs = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
+					foreach (PropertyInfo property in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+					{
+						if (property.Name.StartsWith(PROPERTY_PREFIX, StringComparison.OrdinalIgnoreCase))
+						{
+							bool hasAtt = property.IsDefined(typeof(GxUpload), false);
+							if (hasAtt)
+							{
+								TypeInfo.UploadAttrs.TryAdd(property.Name, 1);
+							}
+						}
+					}
+				}
+				return TypeInfo.UploadAttrs;
+			}
+		}
 		private PropertyInfo GetTypeProperty(string propName)
 		{
-			if (props == null)
-			{
-				props = new Hashtable();
-				foreach (PropertyInfo prop in this.GetType().GetProperties())
-				{
-					props.Add(prop.Name.ToLower(), prop);
-				}
-			}
-			return (PropertyInfo)props[propName];
+			return this.GetType().GetProperty(propName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 		}
 
 		private Hashtable methods;
@@ -2002,7 +2049,10 @@ namespace GeneXus.Utils
 			GetType().GetProperty($"gxTpr_{propertyName}").SetValue(this, propertyValue);
 		}
 	}
-
+	public class GXTypeInfo
+	{
+		public ConcurrentDictionary<string, byte> UploadAttrs { get; set; }
+	}
 	public interface IGxJSONAble
 	{
 		void AddObjectProperty(string name, object prop);
@@ -2250,6 +2300,15 @@ namespace GeneXus.Utils
 			current++;
 			return getKeyValuePair(current);
 		}
+		internal List<GxKeyValuePair> ToList()
+		{
+			List<GxKeyValuePair> list = new List<GxKeyValuePair>();
+			for (int i = 0; i < this.Count; i++)
+			{
+				list.Add(getKeyValuePair(i));
+			}
+			return list;
+		}
 		public bool Eof()
 		{
 			return eof;
@@ -2354,7 +2413,8 @@ namespace GeneXus.Utils
 				{
 					lock (syncObj)
 					{
-						this.Set(item.Key.ToString(), item.Value.ToString());
+						if (item.Key != null && item.Value != null)
+							this.Set(item.Key.ToString(), item.Value.ToString());
 					}
 				}
 			}
@@ -2389,11 +2449,13 @@ namespace GeneXus.Utils
 			_key = key;
 			_value = value;
 		}
+		[JsonPropertyName("key")]
 		public string Key
 		{
 			get { return _key; }
 			set { _key = value; }
 		}
+		[JsonPropertyName("value")]
 		public string Value
 		{
 			get { return _value; }
@@ -2434,13 +2496,14 @@ namespace GeneXus.Utils
 	{
 		T GetNumeric(int idx);
 	}
-
 	public interface IGxExternalObject
 	{
 		object ExternalInstance { get; set; }
 	}
 	public class GXExternalCollection<T> : IGxCollection where T : IGxExternalObject
 	{
+		// T represents the type of the SDT wrapper for the external instance. E.g SdtWorkflowUser
+		// Instance is a list of ExternalType, whose concrete type is unknown. E.g. GXflow.API.User
 		IList instance;
 
 		public string _containedType;
@@ -2450,7 +2513,7 @@ namespace GeneXus.Utils
 
 		public GXExternalCollection()
 		{
-
+			instance = new ArrayList();
 		}
 		public GXExternalCollection(IGxContext context, string containedType, string containedTypeNamespace)
 		{
@@ -2477,7 +2540,7 @@ namespace GeneXus.Utils
 			else
 				return instance.Add(value);
 		}
-		public void Add(Object o, int idx)
+		public void Add(object o, int idx)
 		{
 			object exoValue;
 			IGxExternalObject x = o as IGxExternalObject;
@@ -2611,11 +2674,19 @@ namespace GeneXus.Utils
 		}
 		public string ToJSonString()
 		{
-			return "";
+#if NETCORE
+			string json =  JSONHelper.DefaultSerialize(ExternalInstance);
+			if (json!=null)
+				return json;
+			else
+				return new JArray().ToString();
+#else
+			return string.Empty;
+#endif
 		}
 		public string ToJSonString(bool includeState)
 		{
-			return "";
+			return string.Empty;
 		}
 		public bool FromJSonString(string s)
 		{
@@ -2738,6 +2809,7 @@ namespace GeneXus.Utils
 			}
 			return o;
 		}
+		internal static bool IsNullOrEmpty(IList collection) =>	collection == null || collection.Count == 0;
 	}
 	public interface IGxCollectionConverter
 	{
@@ -2833,7 +2905,173 @@ namespace GeneXus.Utils
 		}
 
 	}
+	public class GxGenericDictionary<TKey,TValue> : Dictionary<TKey,TValue>, IGxJSONSerializable, IGxJSONAble
+	{
+		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(typeof(GxGenericDictionary<TKey, TValue>));
+		private readonly DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings() { UseSimpleDictionaryFormat = true };
+		public void SetDictionary(GxGenericDictionary<TKey, TValue> dictionary)
+		{
+			foreach (var entry in dictionary)
+			{
+				this[entry.Key] = entry.Value;
+			}
+		}
 
+		public bool Get(TKey key, out TValue value)
+		{
+			if (TryGetValue(key, out value))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		public TValue Get(TKey key)
+		{
+			if (TryGetValue(key, out TValue value))
+			{
+				return value;
+
+			}
+			else
+			{
+				return default;
+			}
+		}
+		public List<TValue> ValueList
+		{
+			get{
+				return base.Values.ToList();
+			}
+		}
+		public List<TKey> KeyList
+		{
+			get
+			{
+				return base.Keys.ToList();
+			}
+		}
+		public void Set(TKey key, TValue value)
+		{
+			base[key] = value;
+		}
+
+		public bool RemoveKey(TKey key)
+		{
+			return Remove(key);
+		}
+
+		public void RemoveKeys(List<TKey> keys)
+		{
+			foreach (var key in keys.ToList())
+			{
+				RemoveKey(key);
+			}
+		}
+
+		public void RemoveAll(GxGenericDictionary<TKey, TValue> dictionary)
+		{
+			foreach (var key in dictionary.Keys.ToList())
+			{
+				RemoveKey(key);
+			}
+		}
+		public string ToJson()
+		{
+			try
+			{
+				return JSONHelper.Serialize(this, settings);
+			}
+			catch (Exception e)
+			{
+				log.Error("Could not obtain JSON from Dictionary", e);
+				return "";
+			}
+		}
+
+		public void FromJson(string json)
+		{
+			try
+			{
+				Clear();
+				Dictionary<TKey, TValue> deserializedDictionary = JSONHelper.Deserialize<Dictionary<TKey, TValue>>(json, Encoding.Unicode, null, null, settings);
+				foreach (var entry in deserializedDictionary)
+				{
+					this[entry.Key] = entry.Value;
+				}
+			}
+			catch (Exception e)
+			{
+				log.Error("Could not set Dictionary from JSON", e);
+			}
+		}
+
+		public string ToJSonString()
+		{
+			return ToJson();
+		}
+
+		public bool FromJSonString(string s)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool FromJSonString(string s, GXBaseCollection<SdtMessages_Message> Messages)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool FromJSonFile(GxFile file)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool FromJSonFile(GxFile file, GXBaseCollection<SdtMessages_Message> Messages)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void AddObjectProperty(string name, object prop)
+		{
+			throw new NotImplementedException();
+		}
+
+		public object GetJSONObject()
+		{
+			JObject jObj = new JObject();
+			foreach (TKey item in Keys)
+			{
+				jObj.Accumulate(item.ToString(), this[item]);
+			}
+			return jObj;
+
+		}
+
+		public object GetJSONObject(bool includeState)
+		{
+			return GetJSONObject();
+		}
+
+		public void FromJSONObject(dynamic obj)
+		{
+			this.Clear();
+			JObject jObj = obj as JObject;
+			if (jObj != null)
+			{
+				foreach (DictionaryEntry item in jObj)
+				{
+					base[(TKey)item.Key]= (TValue)item.Value;
+				}
+			}
+		}
+
+		public string ToJavascriptSource()
+		{
+			throw new NotImplementedException();
+		}
+	}
 	public class GxDictionary : Dictionary<string, Object>
 	{
 		public bool HasKey(string key)
@@ -2873,4 +3111,55 @@ namespace GeneXus.Utils
 
 	}
 
+#if NETCORE
+	public class BoolStringJsonConverter : JsonConverter<bool>
+	{
+		public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.String)
+			{
+				string stringValue = reader.GetString();
+				if (bool.TryParse(stringValue, out bool result))
+				{
+					return result;
+				}
+				throw new JsonException($"Invalid boolean value: {stringValue}");
+			}
+			else if (reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False)
+			{
+				return reader.GetBoolean();
+			}
+
+			throw new JsonException($"Unexpected token type: {reader.TokenType}");
+		}
+
+		public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options)
+		{
+			writer.WriteBooleanValue(value);
+		}
+	}
+	
+	public class StringConverter : JsonConverter<string>
+	{
+		public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType == JsonTokenType.Number)
+			{
+				var numberFmt = CultureInfo.InvariantCulture.NumberFormat;
+
+				if (reader.TryGetInt32(out int l))
+					return l.ToString(numberFmt);
+				if (reader.TryGetDecimal(out decimal d))
+					return d.ToString(numberFmt);
+				return reader.GetDouble().ToString(numberFmt);
+			}
+			return reader.GetString();
+		}
+
+		public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+		{
+			writer.WriteStringValue(value);
+		}
+	}
+#endif
 }
