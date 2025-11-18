@@ -736,9 +736,9 @@ namespace GeneXus.Utils
 				if (bc != null)
 					jarray.Add(bc.GetJSONObject(includeState));
 				else
-					jarray.Add(ijsonprop.GetJSONObject());
-			}
-			else if (prop is DateTime)
+						jarray.Add(ijsonprop.GetJSONObject());
+				}
+				else if (prop is DateTime)
 			{
 				jarray.Add(DateTimeUtil.TToC2((DateTime)prop, false));
 			}
@@ -1568,11 +1568,31 @@ namespace GeneXus.Utils
 						JsonObj.Put(name, prop);
 					}
 				}
+				else if (prop is decimal)
+				{
+					JsonObj.Put(name, RemoveInternalTrailingZeroes((decimal)prop));
+				}
 				else
 				{
 					JsonObj.Put(name, prop);
 				}
 			}
+		}
+		static decimal RemoveInternalTrailingZeroes(decimal dec)
+		{
+			if (GetDecimalScale(dec) > 0)
+			{
+				string strdec = dec.ToString(CultureInfo.InvariantCulture);
+				return decimal.Parse(strdec.Contains(".") ? strdec.TrimEnd('0').TrimEnd('.') : strdec, CultureInfo.InvariantCulture);
+			}
+			else
+				return dec;
+
+		}
+		static int GetDecimalScale(decimal value)
+		{
+			int[] bits = decimal.GetBits(value);
+			return (bits[3] >> 16) & 0xFF;
 		}
 		public Object GetJSONObject(bool includeState, bool includeNoInitialized)
 		{
@@ -2065,7 +2085,6 @@ namespace GeneXus.Utils
 			return innerArray[index][i];
 		}
 	}
-
 	[CollectionDataContract(Name = "GxUnknownObjectCollection")]
 	[KnownType(typeof(GxSimpleCollection<object>))]
 	[KnownType(typeof(GxStringCollection))]
@@ -2420,13 +2439,14 @@ namespace GeneXus.Utils
 	{
 		T GetNumeric(int idx);
 	}
-
 	public interface IGxExternalObject
 	{
 		object ExternalInstance { get; set; }
 	}
 	public class GXExternalCollection<T> : IGxCollection where T : IGxExternalObject
 	{
+		// T represents the type of the SDT wrapper for the external instance. E.g SdtWorkflowUser
+		// Instance is a list of ExternalType, whose concrete type is unknown. E.g. GXflow.API.User
 		IList instance;
 
 		public string _containedType;
