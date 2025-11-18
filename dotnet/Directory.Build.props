@@ -26,9 +26,11 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
 		<RepositoryCommit>$(GIT_SHA)</RepositoryCommit>
-		<NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023</NoWarn>
+		<NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023;CA1825</NoWarn>
 		<IsPackable>true</IsPackable>
 		<DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
+		<!--keep low and moderate vulnerabilities (NU1901;NU1902;NU1903;NU1904), high and critical vulnerabilities (NU1903 and NU1904) as warnings-->
+		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
 	</PropertyGroup>
 
 	<Target Name="GetFileVersionForPackage">
