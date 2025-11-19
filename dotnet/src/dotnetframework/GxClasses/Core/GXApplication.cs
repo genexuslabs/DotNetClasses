@@ -1244,6 +1244,7 @@ namespace GeneXus.Application
 			DataStoreUtil.LoadDataStores(ctx);
 			ctx.SetPhysicalPath(this.GetPhysicalPath());
 			ctx.SetSession(this.GetSession());
+			ctx._isSumbited = this.IsSubmited;
 			if (this.HttpContext != null)
 			{
 				ctx.HttpContext = this.HttpContext;
@@ -1289,22 +1290,38 @@ namespace GeneXus.Application
 		{
 			if (_HttpContext != null)
 			{
+#if NETCORE
+				object callMethodObj;
+				if (_HttpContext.Items.TryGetValue("gx_webcall_method", out callMethodObj))
+				{
+
+					string callMethod = callMethodObj as string;
+					if (!string.IsNullOrEmpty(callMethod) && (string.Compare(callMethod, "forward", true) == 0))
+					{
+						return true;
+					}
+				}
+#else
 				string callMethod = (string)_HttpContext.Items["gx_webcall_method"];
 				if ((callMethod != null) && (string.Compare(callMethod, "forward", true) == 0))
 				{
 					return true;
 				}
+#endif
 			}
 			return false;
 		}
 
 		public bool isCrawlerRequest_impl()
 		{
-			if (_HttpContext != null && _HttpContext.Request.QueryString.ToString().Contains("_escaped_fragment_"))
-			{
-				return true;
-			}
-			return false;
+			string query;
+#if NETCORE
+			QueryString? queryString = (_HttpContext?.Request?.QueryString);
+			query = queryString.HasValue ? queryString.Value.ToString() : null;
+#else
+			query = _HttpContext?.Request?.QueryString.ToString();
+#endif
+			return !string.IsNullOrEmpty(query) && query.Contains("_escaped_fragment_");
 		}
 
 		public HtmlTextWriter OutputWriter
