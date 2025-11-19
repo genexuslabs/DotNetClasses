@@ -1,0 +1,14 @@
+<?xml version = "1.0" encoding = "utf-8"?>
+<Invoicyretorno xmlns="InvoiCy">
+	<Mensagem>
+		<MensagemItem>
+			<Codigo>100</Codigo>
+			<Descricao>Documentos processados</Descricao>
+			<Documentos>
+				<DocumentosItem>
+					<Documento><![CDATA[<Documento><DocModelo>NFe</DocModelo><DocNumero>40047</DocNumero><DocSerie>1</DocSerie></Documento>]]></Documento>
+				</DocumentosItem>
+			</Documentos>
+		</MensagemItem>
+	</Mensagem>
+</Invoicyretorno>
