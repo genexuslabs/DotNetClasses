@@ -2181,11 +2181,7 @@ namespace GeneXus.Utils
 			return 0;
 		}
 	}
-#if !NETCORE
-	public class GXCData : Object, IXmlSerializable
-#else
-	public class GXCData : Object
-#endif
+	public class GXCData : IXmlSerializable
 	{
 		public string content;
 
@@ -2197,7 +2193,6 @@ namespace GeneXus.Utils
 		{
 			content = s;
 		}
-#if !NETCORE
 		public System.Xml.Schema.XmlSchema GetSchema()
 		{
 			return new System.Xml.Schema.XmlSchema();
@@ -2210,13 +2205,8 @@ namespace GeneXus.Utils
 		{
 			writer.WriteCData(content);
 		}
-#endif
 	}
-#if !NETCORE
-	public class GXXmlRaw : Object, IXmlSerializable
-#else
-	public class GXXmlRaw : Object
-#endif
+	public class GXXmlRaw : IXmlSerializable
 	{
 		public string content;
 
@@ -2228,7 +2218,6 @@ namespace GeneXus.Utils
 		{
 			content = s;
 		}
-#if !NETCORE
 		public System.Xml.Schema.XmlSchema GetSchema()
 		{
 			return new System.Xml.Schema.XmlSchema();
@@ -2241,7 +2230,6 @@ namespace GeneXus.Utils
 		{
 			writer.WriteRaw(content);
 		}
-#endif
 	}
 
 	public class GXProperties : NameObjectCollectionBase, IGxJSONSerializable, IGxJSONAble
