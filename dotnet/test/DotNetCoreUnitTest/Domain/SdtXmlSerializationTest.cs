@@ -1,3 +1,4 @@
+using System.IO;
 using GeneXus.Application;
 using GeneXus.Programs;
 using Xunit;
@@ -23,6 +24,18 @@ namespace DotNetCoreUnitTest.Domain
 
 			shouldSerializeField = emisor.ShouldSerializegxTpr_Departamento();
 			Assert.True(shouldSerializeField, "Departamento should be serialized since it was assigned during XML deserialization");
+
+		}
+
+		[Fact]
+		public void GXCDataDeserializationTest()
+		{
+			GxContext context = new GxContext();
+			SdtInvoicyretorno invoice = new SdtInvoicyretorno(context);
+			string xml = File.ReadAllText("invoicy.xml");
+
+			invoice.FromXml(xml, null, "Invoicyretorno", "InvoiCy");
+			Assert.Contains("40047", invoice.ToJSonString(), System.StringComparison.OrdinalIgnoreCase);
 
 		}
 	}
