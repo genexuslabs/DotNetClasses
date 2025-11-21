@@ -260,7 +260,10 @@ namespace GeneXus.Application
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(Preferences.SessionTimeout);
 				options.Cookie.HttpOnly = true;
-				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+				if (Preferences.HttpProtocolSecure()) 
+					options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+				else
+					options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
 				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
 				if (!string.IsNullOrEmpty(sessionCookieName))
@@ -565,7 +568,7 @@ namespace GeneXus.Application
 			}
 			app.UseForwardedHeaders(new ForwardedHeadersOptions
 			{
-				ForwardedHeaders = ForwardedHeaders.XForwardedProto
+				ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
 			});
 			if (GXUtil.CompressResponse())
 			{
