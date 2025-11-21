@@ -1,5 +1,6 @@
-﻿using GeneXus.Utils;
+using GeneXus.Utils;
 using System;
+using System.Linq;
 
 
 namespace GeneXus.Application
@@ -42,6 +43,10 @@ namespace GeneXus.Application
 			}
 			return MESSAGE_TYPE_WARNING;
 		}
+        public bool HasAny(string messageId)
+        {
+            return this.Any(item => item.gxTpr_Id == messageId);
+        }
 		public void addItem(string s)
 		{
 			Add(new msglistItem("", s, 0, "", false));
