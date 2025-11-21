@@ -241,7 +241,7 @@ namespace GeneXus.Http.HttpModules
 
 		private void Session_Start(object sender, EventArgs e)
 		{
-			if (App.Request.GetIsSecureFrontEnd() || App.Request.GetIsSecureConnection() == 1)
+			if (App.Request.GetIsSecureFrontEnd() || App.Request.GetIsSecureConnection() == 1 || Preferences.HttpProtocolSecure())
 			{
 				HttpCookie sessionCookie = RetrieveResponseCookie(App.Response, cookieName);
 
