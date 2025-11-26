@@ -3088,30 +3088,6 @@ namespace GeneXus.Application
 				return GXUri.UriSchemeHttp;
 			}
 		}
-		private bool FrontEndHttps()
-		{
-			if (CheckHeaderValue("Front-End-Https", "on") || CheckHeaderValue("X-Forwarded-Proto", "https"))
-			{
-				GXLogging.Debug(Logger, "Front-End-Https header activated");
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		private bool CheckHeaderValue(String headerName, String headerValue)
-		{
-			if (_HttpContext != null)
-			{
-				string httpsHeader = _HttpContext.Request.Headers[headerName];
-				if (!string.IsNullOrEmpty(httpsHeader) && httpsHeader.Equals(headerValue, StringComparison.OrdinalIgnoreCase))
-				{
-					return true;
-				}
-			}
-			return false;
-		}
 		public virtual string GetScriptPath()
 		{
 			try
