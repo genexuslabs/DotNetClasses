@@ -182,6 +182,13 @@ namespace GeneXus
 		}
 		public void LogDebug(string msg, params string[] list)
 		{
+			if (list != null && list.Length > 0)
+			{
+				for (int i = 0; i < list.Length; i++)
+				{
+					list[i] = StringUtil.Sanitize(list[i], StringUtil.LogUserEntryWhiteList);
+				}
+			}
 			log.LogDebug(msg, list);
 		}
 		public void LogDebug(Exception ex, string msg)
@@ -967,6 +974,13 @@ namespace GeneXus
 			{
 				if (logger.IsDebugEnabled)
 				{
+					if (list != null && list.Length > 0)
+					{
+						for (int i = 0; i < list.Length; i++)
+						{
+							list[i] = StringUtil.Sanitize(list[i], StringUtil.LogUserEntryWhiteList);
+						}
+					}
 					logger.LogDebug(msg, list);
 				}
 			}
