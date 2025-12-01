@@ -947,7 +947,7 @@ namespace GeneXus.Data
 				}
 				else
 				{
-					GXLogging.Error(log, "Not a valid URI: ", fileName);
+					GXLogging.WarnSanitized(log, "Not a valid URI: ", fileName);
 					throw new GxADODataException("GxCommand. Not a valid uri:  " + fileName);
 				}
 				return binary;
