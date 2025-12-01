@@ -41,8 +41,9 @@ namespace GxClasses.Web.Middleware
 		public static bool AzureRuntime;
 		public AzureDeployFeature AzureDeploy = new AzureDeployFeature();
 		public static string AzureFunctionName;
+		const int REGEX_DEFAULT_MATCH_TIMEOUT_SECONDS= 10;
 
-		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*");
+		static Regex SDSVC_PATTERN = new Regex("([^/]+/)*(sdsvc_[^/]+/[^/]+)(\\?.*)*", RegexOptions.None, TimeSpan.FromSeconds(REGEX_DEFAULT_MATCH_TIMEOUT_SECONDS));
 
 		internal const string PRIVATE_DIR = "private";
 		public Dictionary<string, string> servicesPathUrl = new Dictionary<string, string>();
