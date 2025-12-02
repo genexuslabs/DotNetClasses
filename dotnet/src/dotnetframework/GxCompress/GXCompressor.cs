@@ -603,6 +603,14 @@ namespace Genexus.Compression
 				foreach (var entry in archive.Entries)
 				{
 					string fullPath = Path.Combine(outputPath, entry.FullName);
+					string destFileName = Path.GetFullPath(fullPath);
+					string fullDestDirPath = Path.GetFullPath(outputPath + Path.DirectorySeparatorChar);
+					if (!destFileName.StartsWith(fullDestDirPath))
+					{
+						throw new InvalidOperationException("Entry is outside the target dir: " + destFileName);
+					}
+
+
 					if (string.IsNullOrEmpty(entry.Name))
 					{
 						Directory.CreateDirectory(fullPath);
@@ -742,6 +750,14 @@ namespace Genexus.Compression
 				foreach (var entry in archive.Entries)
 				{
 					string destinationPath = Path.Combine(outputPath, entry.FullName);
+					string destFileName = Path.GetFullPath(destinationPath);
+					string fullDestDirPath = Path.GetFullPath(outputPath + Path.DirectorySeparatorChar);
+					if (!destFileName.StartsWith(fullDestDirPath))
+					{
+						throw new InvalidOperationException("Entry is outside the target dir: " + destFileName);
+					}
+
+
 					if (string.IsNullOrEmpty(entry.Name))
 					{
 						Directory.CreateDirectory(destinationPath);
