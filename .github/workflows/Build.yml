@@ -16,6 +16,10 @@ on:
       - 'master'
       - 'beta'
       - 'release-*'
+  workflow_run:
+    workflows: ["CodeQL"]
+    types:
+      - completed
 
 jobs:
   build:
@@ -38,6 +42,28 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
+        
+    - name: Check for CodeQL high severity issues
+      if: github.event_name == 'workflow_run' && github.event.workflow_run.name == 'CodeQL'
+      run: |
+        # Download artifact containing the flag file
+        $CodeQLWorkflowRunID = "${{ github.event.workflow_run.id }}"
+        $REPO = "${{ github.repository }}"
+        $TOKEN = "${{ github.token }}"
+        
+        $artifactsListUrl = "https://api.github.com/repos/$REPO/actions/runs/$CodeQLWorkflowRunID/artifacts"
+        Write-Output "Fetching artifacts from $artifactsListUrl"
+        
+        $artifactsList = Invoke-RestMethod -Uri $artifactsListUrl -Headers @{Authorization = "Bearer $TOKEN"}
+        
+        foreach ($artifact in $artifactsList.artifacts) {
+          if ($artifact.name -eq "codeql_high_severity_found") {
+            Write-Error "CodeQL analysis found high severity security issues. Please fix the security vulnerabilities before proceeding."
+            exit 1
+          }
+        }
+        
+        Write-Output "No high severity issues found in CodeQL analysis."
 
     - name: Install .NET 8
       uses: actions/setup-dotnet@v3
