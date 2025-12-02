@@ -226,19 +226,9 @@ namespace GeneXus.Metadata
 		static public object FindInstance(string defaultAssemblyName, string nspace, string clss, Object[] constructorArgs, Assembly defaultAssembly, bool ignoreCase=false)
 		{
 			Type objType = FindType( defaultAssemblyName, nspace, clss, defaultAssembly, ignoreCase);
-			GXLogging.Debug(log, "CreateInstance, Args ", ConstructorArgsString(constructorArgs));
+			GXLogging.Debug(log, "CreateInstance class:", clss);
 			return Activator.CreateInstance(objType, constructorArgs);
 		}
-		internal static string ConstructorArgsString(Object[] constructorArgs)
-		{
-			string argsConstr = "";
-			for (int i = 0; constructorArgs != null && i < constructorArgs.Length; i++)
-			{
-				argsConstr += "'" + constructorArgs[i] + "' ";
-			}
-			return argsConstr;
-		}
-
 		static public void ExecuteVoidRef(object o, string mthd, Object[] args)
 		{
 			try
