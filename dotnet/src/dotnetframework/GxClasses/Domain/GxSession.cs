@@ -76,7 +76,7 @@ namespace GeneXus.Http
             {
                 if (_httpSession != null)
 				{
-					GXLogging.Debug(log, "SessionId : " + _httpSession.SessionID);
+					GXLogging.Debug(log, "SId : " + _httpSession.SessionID);
 					return _httpSession.SessionID;
 				}
                 return string.Empty;
@@ -86,11 +86,14 @@ namespace GeneXus.Http
         public void Set(string key, string val)
         {
 			key = GXUtil.NormalizeKey(key);
-			GXLogging.DebugSanitized(log, "Set Key" + key + "=" + val);
 			if (_httpSession != null)
 			{
-				GXLogging.Debug(log, "SetObject SessionId : " + _httpSession.SessionID);
+				GXLogging.Debug(log, $"Set: SId={_httpSession.SessionID}, Key={key}, Value={val}");
 				_httpSession[key] = val;
+			}
+			else
+			{
+				GXLogging.Debug(log, $"Set: Key={key}, Value={val}, No active session");
 			}
 		}
         public string Get(string key)
@@ -98,19 +101,19 @@ namespace GeneXus.Http
 			key = GXUtil.NormalizeKey(key);
 			if (_httpSession != null)
 			{
-				GXLogging.Debug(log, "GetObject SessionId : " + _httpSession.SessionID);
-				if (_httpSession[key] == null)
+				object value = _httpSession[key];
+				if (value == null)
 				{
-					GXLogging.Debug(log, "Get key: " + key + " is Empty");
+					GXLogging.Debug(log, $"Get: SId={_httpSession.SessionID}, Key={key}, Value=<empty>");
 					return string.Empty;
 				}
 				else
 				{
-					object value = _httpSession[key];
-					GXLogging.Debug(log, "Get key: " + key + "=" + value.ToString());
+					GXLogging.Debug(log, $"Get: SId={_httpSession.SessionID}, Key={key}, Value={value}");
 					return value.ToString();
 				}
 			}
+			GXLogging.Debug(log, $"Get: Key={key}, No active session");
 			return string.Empty;
         }
 		public T Get<T>(string key) where T: class
@@ -118,29 +121,40 @@ namespace GeneXus.Http
 			key = GXUtil.NormalizeKey(key);
 			if (_httpSession != null)
 			{
-				GXLogging.Debug(log, "GetObject SessionId : " + _httpSession.SessionID);
-				if (_httpSession[key] == null)
+				object value = _httpSession[key];
+				if (value == null)
+				{
+					GXLogging.Debug(log, $"Get: SId={_httpSession.SessionID}, Key={key}, Value=<empty>");
 					return null;
+				}
+				else
+				{
+					GXLogging.Debug(log, $"Get: SId={_httpSession.SessionID}, Key={key}, Value={value}");
 #if NETCORE
-				return JSONHelper.DeserializeNullDefaultValue<T>(_httpSession[key]);
+					return JSONHelper.DeserializeNullDefaultValue<T>(_httpSession[key]);
 #else
-				return (T)_httpSession[key];
+					return (T)_httpSession[key];
 #endif
+				}
 			}
+			GXLogging.Debug(log, $"Get: Key={key}, No active session");
 			return null;
 		}
 		public void Set<T>(string key, T val) where T : class
 		{
 			key = GXUtil.NormalizeKey(key);
-			GXLogging.Debug(log, "Set Key" + key + "=" + val);
 			if (_httpSession != null)
 			{
-				GXLogging.Debug(log, "SetObject SessionId : " + _httpSession.SessionID);
+				GXLogging.Debug(log, $"Set: SId={_httpSession.SessionID}, Key={key}, Value={val}");
 #if NETCORE
 				_httpSession[key] = JSONHelper.Serialize<T>(val);
 #else
 				_httpSession[key] = val;
 #endif
+			}
+			else
+			{
+				GXLogging.Debug(log, $"Set: Key={key}, Value={val}, No active session");
 			}
 		}
 
@@ -150,7 +164,7 @@ namespace GeneXus.Http
 			GXLogging.Debug(log, "Remove key: " + key );
 			if (_httpSession != null)
 			{
-				GXLogging.Debug(log, "Remove SessionId : " + _httpSession.SessionID);
+				GXLogging.Debug(log, "Remove SId : " + _httpSession.SessionID);
 				_httpSession.Remove(key);
 			}
         }
@@ -158,7 +172,7 @@ namespace GeneXus.Http
         {
             if (_httpSession != null)
             {
-				GXLogging.Debug(log, "Destroy sessionId: " + _httpSession.SessionID);
+				GXLogging.Debug(log, "Destroy SId: " + _httpSession.SessionID);
 				_httpSession.RemoveAll();
                 _httpSession.Abandon();
 #if !NETCORE
@@ -174,7 +188,7 @@ namespace GeneXus.Http
 		{
 			if (_httpSession != null)
 			{
-				GXLogging.Debug(log, "Renew sessionId: " + _httpSession.SessionID);
+				GXLogging.Debug(log, "Renew SId: " + _httpSession.SessionID);
 				BackupInternalKeys();
 				_httpSession.RemoveAll();
 				RestoreInternalKeys();
@@ -209,7 +223,7 @@ namespace GeneXus.Http
         {
             if (_httpSession != null)
             {
-				GXLogging.Debug(log, "Clear sessionId: " + _httpSession.SessionID);
+				GXLogging.Debug(log, "Clear SId: " + _httpSession.SessionID);
 				BackupInternalKeys();
                 _httpSession.Clear();
 				RestoreInternalKeys();
