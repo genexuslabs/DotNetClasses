@@ -20,6 +20,10 @@ on:
     workflows: ["CodeQL"]
     types:
       - completed
+    branches:
+      - 'master'
+      - 'beta'
+      - 'release-*'
 
 jobs:
   build:
@@ -46,6 +50,12 @@ jobs:
     - name: Check for CodeQL high severity issues
       if: github.event_name == 'workflow_run' && github.event.workflow_run.name == 'CodeQL'
       run: |
+        # First check if the CodeQL workflow was successful
+        if ("${{ github.event.workflow_run.conclusion }}" -ne "success") {
+            Write-Error "CodeQL workflow did not complete successfully. Please check the CodeQL analysis for errors."
+            exit 1
+        }
+        
         # Download artifact containing the flag file
         $CodeQLWorkflowRunID = "${{ github.event.workflow_run.id }}"
         $REPO = "${{ github.repository }}"
@@ -63,7 +73,7 @@ jobs:
           }
         }
         
-        Write-Output "No high severity issues found in CodeQL analysis."
+        Write-Output "No high severity issues found in CodeQL analysis. Build can proceed."
 
     - name: Install .NET 8
       uses: actions/setup-dotnet@v3
