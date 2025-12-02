@@ -613,21 +613,21 @@ namespace Genexus.Compression
 
 					if (string.IsNullOrEmpty(entry.Name))
 					{
-						Directory.CreateDirectory(fullPath);
+						Directory.CreateDirectory(destFileName);
 					}
 					else
 					{
 #if NETCORE
-						string directoryPath = Path.GetDirectoryName(fullPath)!;
+						string directoryPath = Path.GetDirectoryName(destFileName)!;
 #else
-						string directoryPath = Path.GetDirectoryName(fullPath);
+						string directoryPath = Path.GetDirectoryName(destFileName);
 						if (directoryPath != null)
 						{
 							Directory.CreateDirectory(directoryPath);
 						}
 #endif
 
-						entry.ExtractToFile(fullPath, true);
+						entry.ExtractToFile(destFileName, true);
 					}
 				}
 			}
@@ -760,18 +760,18 @@ namespace Genexus.Compression
 
 					if (string.IsNullOrEmpty(entry.Name))
 					{
-						Directory.CreateDirectory(destinationPath);
+						Directory.CreateDirectory(destFileName);
 					}
 					else
 					{
 #if NETCORE
-						string destinationDir = Path.GetDirectoryName(destinationPath)!;
+						string destinationDir = Path.GetDirectoryName(destFileName)!;
 #else
-						string destinationDir = Path.GetDirectoryName(destinationPath);
+						string destinationDir = Path.GetDirectoryName(destFileName);
 						if (!string.IsNullOrEmpty(destinationDir))
 							Directory.CreateDirectory(destinationDir);
 #endif
-						entry.ExtractToFile(destinationPath, true);
+						entry.ExtractToFile(destFileName, true);
 					}
 				}
 			}
