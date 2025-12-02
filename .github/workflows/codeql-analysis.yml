@@ -90,6 +90,7 @@ jobs:
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: sarif-results
+        wait-for-processing: true
         
     - name: Check for high severity alerts
       id: check_alerts
@@ -117,7 +118,7 @@ jobs:
         
     - name: Upload flag file as artifact
       if: steps.check_alerts.outputs.high_severity_found == 'true'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: codeql_high_severity_found
         path: codeql_high_severity_found
