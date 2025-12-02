@@ -227,7 +227,7 @@ namespace GeneXus.Metadata
 		static public object FindInstance(string defaultAssemblyName, string nspace, string clss, Object[] constructorArgs, Assembly defaultAssembly, bool ignoreCase=false)
 		{
 			Type objType = FindType( defaultAssemblyName, nspace, clss, defaultAssembly, ignoreCase);
-			GXLogging.Debug(log, "CreateInstance class:", clss);
+			GXLogging.DebugSanitized(log, "CreateInstance class:", clss);
 			return Activator.CreateInstance(objType, constructorArgs);
 		}
 		static public void ExecuteVoidRef(object o, string mthd, Object[] args)
