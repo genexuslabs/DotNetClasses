@@ -1,14 +1,17 @@
+using GeneXus.Application;
+using GeneXus.Configuration;
+using GeneXus.Utils;
+using log4net;
+using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Claims;
 using System.Text;
-using GeneXus.Application;
-using GeneXus.Configuration;
-using GeneXus.Utils;
-using Microsoft.IdentityModel.Tokens;
+using System.Text.Json;
 using static GeneXus.Web.Security.SecureTokenHelper;
 
 namespace GeneXus.Web.Security

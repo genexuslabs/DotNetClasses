@@ -1568,11 +1568,31 @@ namespace GeneXus.Utils
 						JsonObj.Put(name, prop);
 					}
 				}
+				else if (prop is decimal)
+				{
+					JsonObj.Put(name, RemoveInternalTrailingZeroes((decimal)prop));
+				}
 				else
 				{
 					JsonObj.Put(name, prop);
 				}
 			}
+		}
+		static decimal RemoveInternalTrailingZeroes(decimal dec)
+		{
+			if (GetDecimalScale(dec) > 0)
+			{
+				string strdec = dec.ToString(CultureInfo.InvariantCulture);
+				return decimal.Parse(strdec.Contains(".") ? strdec.TrimEnd('0').TrimEnd('.') : strdec);
+			}
+			else
+				return dec;
+
+		}
+		static int GetDecimalScale(decimal value)
+		{
+			int[] bits = decimal.GetBits(value);
+			return (bits[3] >> 16) & 0xFF;
 		}
 		public Object GetJSONObject(bool includeState, bool includeNoInitialized)
 		{
