@@ -1885,7 +1885,7 @@ namespace GeneXus.Http
 
 		protected string GetSecureSignedToken(string cmpCtx, string value, IGxContext context)
 		{
-			return WebSecurityHelper.Sign(PgmInstanceId(cmpCtx), string.Empty, value, SecureTokenHelper.SecurityMode.Sign, context);
+			return GetSecureSignedHashedToken(cmpCtx, SecureTokenHelper.GetTokenValue(value), context);
 		}
 		private string GetSecureSignedHashedToken(string cmpCtx, TokenValue tokenValue, IGxContext context)
 		{
