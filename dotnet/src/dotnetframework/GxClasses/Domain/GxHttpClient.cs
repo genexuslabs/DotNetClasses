@@ -22,6 +22,7 @@ namespace GeneXus.Http.Client
 	using GeneXus.Configuration;
 	using GeneXus.Utils;
 #if NETCORE
+	using HeyRed.Mime;
 	using Microsoft.AspNetCore.WebUtilities;
 #endif
 	using Mime;
@@ -710,7 +711,11 @@ namespace GeneXus.Http.Client
 					name = Path.GetFileNameWithoutExtension(s);
 				}
 				SendStream.Write(MultiPart.Boundarybytes, 0, MultiPart.Boundarybytes.Length);
-				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeMapping.GetMimeMapping(s));
+#if NETCORE
+				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeTypesMap.GetMimeType(s));
+#else
+				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeHelper.GetMimeMapping(s));
+#endif
 				byte[] headerbytes = Encoding.UTF8.GetBytes(header);
 				SendStream.Write(headerbytes, 0, headerbytes.Length);
 			}
@@ -1034,7 +1039,7 @@ namespace GeneXus.Http.Client
 				}
 			}
 		}
-		#endif
+#endif
 		bool UseOldHttpClient(string name)
 		{
 			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
@@ -2089,5 +2094,27 @@ namespace GeneXus.Http.Client
 		}
 
 	}
+#if !NETCORE
+	internal static class MimeHelper
+	{
+		private static readonly Dictionary<string, string> CustomMap =
+			new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+			{
+			{ ".json", "application/json" },
+			};
+
+		public static string GetMimeMapping(string fileName)
+		{
+			string ext = Path.GetExtension(fileName);
+
+			if (!string.IsNullOrEmpty(ext) &&
+				CustomMap.TryGetValue(ext, out string forcedMime))
+			{
+				return forcedMime;
+			}
+			return MimeMapping.GetMimeMapping(fileName);
+		}
+	}
+#endif
 
 }
