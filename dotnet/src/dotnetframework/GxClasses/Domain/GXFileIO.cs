@@ -688,6 +688,7 @@ public class GxFile
     public GxFile(string baseDirectory, string fileName, GxFileType fileType = GxFileType.Private)
       : this(baseDirectory)
     {
+		GXLogging.Debug(log, "GXFile ctr:" , fileName);
 		if (GxUploadHelper.IsUpload(fileName))
 		{
 			_uploadFileId = fileName;
