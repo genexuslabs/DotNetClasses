@@ -233,7 +233,6 @@ namespace GeneXus.Application
 			{
 				options.AllowSynchronousIO = true;
 			});
-			services.AddDistributedMemoryCache();
 			services.AddLogging(builder => builder.AddConsole());
 			services.Configure<FormOptions>(Config.ConfigRoot.GetSection("FormOptions"));
 			services.PostConfigure<FormOptions>(options =>
