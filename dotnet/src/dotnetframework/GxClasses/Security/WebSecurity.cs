@@ -55,9 +55,17 @@ namespace GeneXus.Web.Security
         }
 
         public static bool Verify(string pgmName, string issuer, string value, string jwtToken, IGxContext context)
-        {
-            WebSecureToken token;
-            return WebSecurityHelper.Verify(pgmName, issuer, value, jwtToken, out token, context);
+		{
+			WebSecureToken token;
+			WebSecureToken jwtTokenObj = SecureTokenHelper.getWebSecureToken(jwtToken, GetSecretKey(context));
+			if (jwtTokenObj != null && jwtTokenObj.ValueType == ValueTypeHash)
+			{
+				return Verify(pgmName, issuer, GetHash(value), jwtToken, out token, context);
+			}
+			else
+			{
+				return Verify(pgmName, issuer, value, jwtToken, out token, context);
+			}
         }
 		public static bool Verify(string pgmName, string issuer, string value, string jwtToken, out WebSecureToken token, IGxContext context)
 		{
@@ -255,20 +263,22 @@ namespace GeneXus.Web.Security
 		}
 		internal static TokenValue GetTokenValue(IGxJSONSerializable obj)
 		{
-	
-			string jsonString = obj.ToJSonString();
+			return GetTokenValue(obj.ToJSonString());
+		}
+		internal static TokenValue GetTokenValue(string value)
+		{
 
-			if (jsonString.Length > MaxTokenValueLength)
+			if (value!=null && value.Length > MaxTokenValueLength)
 			{
-				string hash = GetHash(jsonString);
+				string hash = GetHash(value);
 				GXLogging.Debug(_log, $"GetTokenValue: TokenValue is too long, using hash: {hash} instead of original value.");
-				GXLogging.Debug(_log, $"Server TokenOriginalValue:" + jsonString);
+				GXLogging.Debug(_log, $"Server TokenOriginalValue:" + value);
 				return new TokenValue() { Value = hash, ValueType = ValueTypeHash };
 			}
 			else
 			{
-				GXLogging.Debug(_log, $"GetTokenValue:" + jsonString);
-				return new TokenValue() { Value = jsonString };
+				GXLogging.Debug(_log, $"GetTokenValue:" + value);
+				return new TokenValue() { Value = value };
 			}
 		}
 		internal static string GetHash(string jsonString)
