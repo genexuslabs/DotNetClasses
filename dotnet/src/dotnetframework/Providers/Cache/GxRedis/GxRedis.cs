@@ -7,9 +7,12 @@ using GeneXus.Application;
 using GxClasses.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 #endif
+using GeneXus.Encryption;
 using GeneXus.Services;
 using GeneXus.Utils;
 using StackExchange.Redis;
+using StackExchange.Redis.KeyspaceIsolation;
+using GeneXus.Configuration;
 
 namespace GeneXus.Cache
 {
@@ -21,9 +24,11 @@ namespace GeneXus.Cache
 		IDatabase _redisDatabase;
 #if NETCORE
 		MemoryCache _localCache;
-		private const double DEFAULT_LOCAL_CACHE_FACTOR = 0.8;
-		private static readonly TimeSpan LOCAL_CACHE_PERSISTENT_KEY_TTL = TimeSpan.FromMinutes(5);
-	
+		private const double DEFAULT_LOCAL_CACHE_FACTOR = 0.2;
+		private TimeSpan MAX_LOCAL_CACHE_TTL;
+		private long MAX_LOCAL_CACHE_TTL_TICKS;
+		private const int MAX_LOCAL_CACHE_TTL_DEFAULT_MIMUTES = 5;
+
 #endif
 		ConfigurationOptions _redisConnectionOptions;
 		private const int REDIS_DEFAULT_PORT = 6379;
@@ -76,6 +81,18 @@ namespace GeneXus.Cache
 			{
 				GXLogging.Debug(log, "Using Redis Hybrid mode with local memory cache.");
 				_localCache = new MemoryCache(new MemoryCacheOptions());
+				if (Config.GetValueOrEnvironmentVarOf("MAX_LOCAL_CACHE_TTL", out string maxCacheTtlMinutesStr) && long.TryParse(maxCacheTtlMinutesStr, out long maxCacheTtlMinutes))
+				{
+					MAX_LOCAL_CACHE_TTL = TimeSpan.FromMinutes(maxCacheTtlMinutes);
+					GXLogging.Debug(log, $"MAX_LOCAL_CACHE_TTL read from config: {MAX_LOCAL_CACHE_TTL}");
+				}
+				else
+				{
+					MAX_LOCAL_CACHE_TTL = TimeSpan.FromMinutes(MAX_LOCAL_CACHE_TTL_DEFAULT_MIMUTES);
+					GXLogging.Debug(log, $"MAX_LOCAL_CACHE_TTL using default value: {MAX_LOCAL_CACHE_TTL}");
+				}
+
+				MAX_LOCAL_CACHE_TTL_TICKS = MAX_LOCAL_CACHE_TTL.Ticks;
 			}
 			else
 			{
@@ -377,7 +394,13 @@ namespace GeneXus.Cache
 		}
 		private TimeSpan LocalCacheTTL(TimeSpan? ttl)
 		{
-			return ttl.HasValue ? TimeSpan.FromTicks((long)(ttl.Value.Ticks * DEFAULT_LOCAL_CACHE_FACTOR)) : LOCAL_CACHE_PERSISTENT_KEY_TTL;
+			if (ttl.HasValue)
+			{
+				double ttlTicks = ttl.Value.Ticks * DEFAULT_LOCAL_CACHE_FACTOR;
+				if (ttlTicks < MAX_LOCAL_CACHE_TTL_TICKS)
+					return ttl.Value;
+			}
+			return MAX_LOCAL_CACHE_TTL;
 		}
 #endif
 		private void ClearKeyLocal(string key)
@@ -421,7 +444,7 @@ namespace GeneXus.Cache
 		private void SetPersistentLocal(string cacheid, long? prefix)
 		{
 #if NETCORE
-			_localCache?.Set(cacheid, prefix, LocalCacheTTL(LOCAL_CACHE_PERSISTENT_KEY_TTL));
+			_localCache?.Set(cacheid, prefix, LocalCacheTTL(MAX_LOCAL_CACHE_TTL));
 #endif
 		}
 		private void SetLocal<T>(string key, T value, int duration)
