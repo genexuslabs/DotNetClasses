@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using GeneXus.Services;
 using GeneXus.Attributes;
 using GeneXus.Utils;
 using GeneXus.Encryption;
-using System.Diagnostics;
+using System.Text;
+
 
 #if NETCORE
 using GxClasses.Helpers;
@@ -14,6 +16,8 @@ namespace GeneXus.Configuration
 	[GXApi]
 	public class ExternalStorage : GxStorageProvider
 	{
+		private static readonly ConcurrentDictionary<string, ExternalStorage> providerCache = new ConcurrentDictionary<string, ExternalStorage>();
+		private const int MaxCacheSize = 100;
 
 		private GXService providerService;
 
@@ -28,7 +32,7 @@ namespace GeneXus.Configuration
 			}
 		}
 
-		public bool Create(string name, GXProperties properties, ref GxStorageProvider storageProvider, ref GXBaseCollection<SdtMessages_Message> messages)
+		public bool Create(string name, GXProperties initialProperties, ref GxStorageProvider storageProvider, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			storageProvider = null;
 
@@ -40,6 +44,25 @@ namespace GeneXus.Configuration
 
 			try
 			{
+				// Create a unique key for the cache based on name and properties
+				string cacheKey = GenerateCacheKey(name, initialProperties);
+
+				// Try to retrieve an existing instance from the cache
+				if (providerCache.TryGetValue(cacheKey, out ExternalStorage cachedProvider))
+				{
+					GXLogging.Debug(logger, $"Using cached storage provider for key: {cacheKey}");
+					storageProvider = cachedProvider;
+					return true;
+				}
+				if (providerCache.Count >= MaxCacheSize)
+				{
+					foreach (string item in providerCache.Keys)
+					{
+						GXLogging.Debug(logger, $"providerCache reached MaxCacheSize ({MaxCacheSize}). Removing oldest entry with key: {item}");
+						providerCache.TryRemove(item, out _);
+						break;
+					}
+				}
 				if (providerService == null || !string.Equals(providerService.Name, name, StringComparison.OrdinalIgnoreCase))
 				{
 					providerService = new GXService();
@@ -48,7 +71,7 @@ namespace GeneXus.Configuration
 					providerService.AllowMultiple = false;
 					providerService.Properties = new GXProperties();
 				}
-
+				GXProperties properties = new GXProperties(initialProperties);
 				preprocess(name, properties);
 
 				GxKeyValuePair prop = properties.GetFirst();
@@ -69,9 +92,11 @@ namespace GeneXus.Configuration
 #else
 				Type type = AssemblyLoader.GetType(typeFullName);
 #endif
-				this.provider = (ExternalProvider) Activator.CreateInstance(type, new object[] { providerService });
+				this.provider = (ExternalProvider)Activator.CreateInstance(type, new object[] { providerService });
 				GXLogging.Debug(logger, "Loading storage provider ended.");
 
+				providerCache.TryAdd(cacheKey, this);
+				GXLogging.Debug(logger, $"Added storage provider to cache with key: {cacheKey}");
 			}
 			catch (Exception ex)
 			{
@@ -82,6 +107,21 @@ namespace GeneXus.Configuration
 
 			storageProvider = this;
 			return true;
+		}
+
+		private string GenerateCacheKey(string name, GXProperties properties)
+		{
+			StringBuilder keyBuilder = new StringBuilder(name.ToUpperInvariant());
+
+			foreach (string key in properties)
+			{
+				string value = properties.Get(key);
+				if (!string.IsNullOrEmpty(value))
+				{
+					keyBuilder.Append("_").Append(key).Append("=").Append(value);
+				}
+			}
+			return keyBuilder.ToString();
 		}
 
 		public bool Connect(string profileName, GXProperties properties, ref GxStorageProvider storageProvider, ref GXBaseCollection<SdtMessages_Message> messages)
