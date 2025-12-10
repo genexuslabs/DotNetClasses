@@ -2257,7 +2257,18 @@ namespace GeneXus.Utils
 		int current;
 		bool eof;
 		private object syncObj = new object();
-
+		public GXProperties(GXProperties source)
+		{
+			lock (source.syncObj)
+			{
+				for (int i = 0; i < source.Count; i++)
+				{
+					string key = source.GetKey(i);
+					string value = source[key];
+					this.Add(key, value);
+				}
+			}
+		}
 		public GXProperties()
 		{
 		}
