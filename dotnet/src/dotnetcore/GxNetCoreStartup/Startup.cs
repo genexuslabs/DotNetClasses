@@ -310,18 +310,28 @@ namespace GeneXus.Application
 				{
 					GXLogging.Info(log, $"Using multi-tenant Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
 
+					IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(sessionService.ConnectionString);
+					services.AddSingleton<IConnectionMultiplexer>(redis);
+
 					services.AddSingleton<IDistributedCache, TenantRedisCache>();
-					services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName("default");
+
+					string appDiscriminator = string.IsNullOrEmpty(sessionService.InstanceName)?string.Empty: sessionService.InstanceName.Trim('%');
+					services.AddDataProtection()
+						.PersistKeysToStackExchangeRedis(redis, DATA_PROTECTION_KEYS)
+						.SetApplicationName(appDiscriminator);
 				}
 				else
 				{
+					GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
+					IConnectionMultiplexer redis = ConnectionMultiplexer.Connect(sessionService.ConnectionString);
+					services.AddSingleton<IConnectionMultiplexer>(redis);
+
 					services.AddStackExchangeRedisCache(options =>
 					{
-						GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
-						options.Configuration = sessionService.ConnectionString;
+						options.ConnectionMultiplexerFactory = () => Task.FromResult(redis); 
 						options.InstanceName = sessionService.InstanceName;
 					});
-					services.AddDataProtection().PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(sessionService.ConnectionString), DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
+					services.AddDataProtection().PersistKeysToStackExchangeRedis(redis, DATA_PROTECTION_KEYS).SetApplicationName(sessionService.InstanceName);
 				}
 			}
 			else if (sessionService is GxDatabaseSession)

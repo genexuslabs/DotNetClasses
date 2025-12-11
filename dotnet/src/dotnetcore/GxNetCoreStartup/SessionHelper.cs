@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GeneXus.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
+using StackExchange.Redis;
 
 namespace GeneXus.Application
 {
@@ -15,90 +13,75 @@ namespace GeneXus.Application
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<TenantRedisCache>();
 
 		private readonly IHttpContextAccessor _httpContextAccessor;
-		private readonly IServiceProvider _serviceProvider;
-		private readonly ConcurrentDictionary<string, RedisCache> _redisCaches = new();
+		private readonly RedisCache _redis;
 
-		public TenantRedisCache(IHttpContextAccessor httpContextAccessor, IServiceProvider serviceProvider)
+		public TenantRedisCache(IConnectionMultiplexer _redisMultiplexer, IHttpContextAccessor httpContextAccessor)
 		{
 			_httpContextAccessor = httpContextAccessor;
-			_serviceProvider = serviceProvider;
-		}
 
-		private IDistributedCache GetTenantCache()
+			var options = new RedisCacheOptions
+			{
+				ConnectionMultiplexerFactory = () => Task.FromResult(_redisMultiplexer),
+			};
+			_redis = new RedisCache(options);
+		}
+		private string GetTenantId()
 		{
-			string tenantId = _httpContextAccessor.HttpContext?.Items[TenantMiddleware.TENANT_ID]?.ToString() ?? "default";
-			RedisCache cache;
-			bool existed = _redisCaches.TryGetValue(tenantId, out cache);
-			if (existed)
-			{
-				log.LogDebug($"GetTenantCache: tenantId={tenantId}, cache reused");
-				return cache;
-			}
-			else
-			{
-				log.LogDebug($"GetTenantCache: tenantId={tenantId}, cache created");
-				cache = _redisCaches.GetOrAdd(tenantId, id =>
-				{
-					ISessionService sessionService = GXSessionServiceFactory.GetProvider();
-					var options = new RedisCacheOptions
-					{
-						Configuration = sessionService.ConnectionString,
-						InstanceName = $"{id}:"
-					};
-					return new RedisCache(options);
-				});
-			}
-			return cache;
+			return _httpContextAccessor.HttpContext?.Items[TenantMiddleware.TENANT_ID]?.ToString() ?? "default";
+		}
+		private string BuildKey(string key)
+		{
+			return $"{GetTenantId()}:{key}";
 		}
 		public byte[] Get(string key)
 		{
-			IDistributedCache cache = GetTenantCache();
-			log.LogDebug($"CacheGet: key={key}");
-			return cache.Get(key);
+			string realKey = BuildKey(key);
+			log.LogDebug($"CacheGet: key={realKey}");
+			return _redis.Get(realKey);
 		}
 		public Task<byte[]> GetAsync(string key, CancellationToken token = default)
 		{
-			IDistributedCache cache = GetTenantCache();
-			log.LogDebug($"CacheGetAsync: key={key}");
-			return cache.GetAsync(key, token);
+			string realKey = BuildKey(key);
+			log.LogDebug($"CacheGetAsync: key={realKey}");
+			return _redis.GetAsync(realKey, token);
 		}
 		public void Refresh(string key)
 		{
-			IDistributedCache cache = GetTenantCache();
-			log.LogDebug($"CacheRefresh: key={key}");
-			cache.Refresh(key);
+			string realKey = BuildKey(key);
+			log.LogDebug($"CacheRefresh: key={realKey}");
+			_redis.Refresh(realKey);
 		}
 		public Task RefreshAsync(string key, CancellationToken token = default)
 		{
-			IDistributedCache cache = GetTenantCache();
-			log.LogDebug($"CacheRefreshAsync: key={key}");
-			return cache.RefreshAsync(key, token);
+			string realKey = BuildKey(key);
+			log.LogDebug($"CacheRefreshAsync: key={realKey}");
+			return _redis.RefreshAsync(realKey, token);
 		}
 		public void Remove(string key)
 		{
-			IDistributedCache cache = GetTenantCache();
-			log.LogDebug($"CacheRemove: key={key}");
-			cache.Remove(key);
+			string realKey = BuildKey(key);
+			log.LogDebug($"CacheRemove: key={realKey}");
+			_redis.Remove(realKey);
 		}
 		public Task RemoveAsync(string key, CancellationToken token = default)
 		{
-			IDistributedCache cache = GetTenantCache();
-			log.LogDebug($"CacheRemoveAsync: key={key}");
-			return cache.RemoveAsync(key, token);
+			string realKey = BuildKey(key);
+			log.LogDebug($"CacheRemoveAsync: key={realKey}");
+			return _redis.RemoveAsync(realKey, token);
 		}
 		public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
 		{
 			string sliding = options?.SlidingExpiration?.ToString() ?? "none";
-			IDistributedCache cache = GetTenantCache();
-			log.LogDebug($"CacheSet: key={key}, slidingExpiration={sliding}");
-			cache.Set(key, value, options);
+			string realKey = BuildKey(key);
+			log.LogDebug($"CacheSet: key={realKey}, slidingExpiration={sliding}");
+			_redis.Set(realKey, value, options);
 		}
 		public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
 		{
 			string sliding = options?.SlidingExpiration?.ToString() ?? "none";
-			IDistributedCache cache = GetTenantCache();
-			log.LogDebug($"CacheSetAsync: key={key}, slidingExpiration={sliding}");
-			return cache.SetAsync(key, value, options, token);
+			string realKey = BuildKey(key);
+			log.LogDebug($"CacheSetAsync: key={realKey}, slidingExpiration={sliding}");
+			return _redis.SetAsync(realKey, value, options, token);
 		}
 	}
 
