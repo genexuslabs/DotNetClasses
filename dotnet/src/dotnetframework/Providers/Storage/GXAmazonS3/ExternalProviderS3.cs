@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.IO;
+
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using GeneXus.Services;
@@ -102,10 +104,6 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 			else
 			{
-				if (region == Amazon.RegionEndpoint.USEast1)
-				{
-					Amazon.AWSConfigsS3.UseSignatureVersion4 = true;
-				}
 			}
 
 			string default_storage_privacy = GetPropertyValue(DEFAULT_ACL, DEFAULT_STORAGE_PRIVACY, "");
@@ -215,7 +213,20 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private bool DoesS3BucketExist()
 		{
+#if NETCORE
+			try
+			{
+				Client.HeadBucketAsync(new HeadBucketRequest{BucketName = Bucket}).GetAwaiter().GetResult();
+				return true;
+			}
+			catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+			{
+				return false;
+			}
+#else
 			return Client.DoesS3BucketExistAsync(Bucket).GetAwaiter().GetResult();
+
+#endif
 		}
 
 		void WriteResponseStreamToFile(GetObjectResponse response, string filePath)

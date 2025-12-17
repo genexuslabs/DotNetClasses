@@ -44,9 +44,7 @@ namespace Amazon.S3.IO
 		//     Type is a file.
 		File = 1
 	}
-}
-namespace Amazon.S3.IO
-{
+
 	public sealed class S3FileInfo : IS3FileSystemInfo
 	{
 		private IAmazonS3 s3Client;
@@ -189,22 +187,24 @@ namespace Amazon.S3.IO
 		{
 			get
 			{
-				DateTime ret = DateTime.MinValue;
-				if (Exists)
+				if (!Exists)
+					return DateTime.MinValue;
+
+				var request = new GetObjectMetadataRequest
 				{
-					
-					var request = new GetObjectMetadataRequest
-					{
-						BucketName = bucket,
-						Key = S3Helper.EncodeKey(key),
-					};
-					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
-					Task<GetObjectMetadataResponse> task = s3Client.GetObjectMetadataAsync(request);
-					task.Wait();
-					var response = task.Result;
-					ret = response.LastModified.ToLocalTime();
-				}
-				return ret;
+					BucketName = bucket,
+					Key = S3Helper.EncodeKey(key),
+				};
+
+				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request)
+					.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+
+				var response = s3Client.GetObjectMetadataAsync(request)
+									   .GetAwaiter()
+									   .GetResult();
+
+				return (response.LastModified ?? DateTime.MinValue).ToLocalTime();
+
 			}
 
 		}
@@ -276,7 +276,7 @@ namespace Amazon.S3.IO
 					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
 					Task<GetObjectMetadataResponse> t = s3Client.GetObjectMetadataAsync(request);
 					var response = t.Result;
-					ret = response.LastModified;
+					ret = (response.LastModified ?? DateTime.MinValue);
 				}
 				return ret;
 			}
@@ -349,43 +349,35 @@ namespace Amazon.S3.IO
 			bool bucketExists;
 			if (!ExistsWithBucketCheck(out bucketExists))
 			{
-				if (String.IsNullOrEmpty(key))
+				if (string.IsNullOrEmpty(key) || !bucketExists)
 				{
-					var request = new PutBucketRequest
+					var bucketRequest = new PutBucketRequest
 					{
 						BucketName = bucket
 					};
-					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
-					s3Client.PutBucketAsync(request).Wait();
+					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)bucketRequest)
+						.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
 
+					s3Client.PutBucketAsync(bucketRequest).GetAwaiter().GetResult();
 					WaitTillBucketS3StateIsConsistent(true);
 				}
-				else
+
+				if (!string.IsNullOrEmpty(key))
 				{
-					if (!bucketExists)
-					{
-						var request = new PutBucketRequest
-						{
-							BucketName = bucket
-						};
-						((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
-						s3Client.PutBucketAsync(request).Wait();
-
-						WaitTillBucketS3StateIsConsistent(true);
-					}
-
 					var putObjectRequest = new PutObjectRequest
 					{
 						BucketName = bucket,
 						Key = S3Helper.EncodeKey(key),
 						InputStream = new MemoryStream()
 					};
-					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)putObjectRequest).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)putObjectRequest)
+						.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
 
-					s3Client.PutObjectAsync(putObjectRequest).Wait();
+					s3Client.PutObjectAsync(putObjectRequest).GetAwaiter().GetResult();
 				}
 			}
 		}
+
 
 		/// <summary>
 		/// Creates a sub directory inside the instance of S3DirectoryInfo.
@@ -423,68 +415,85 @@ namespace Amazon.S3.IO
 		/// <param name="recursive">If true then sub directories will be deleted as well.</param>
 		public void Delete(bool recursive)
 		{
-			if (String.IsNullOrEmpty(bucket))
-			{
+			if (string.IsNullOrEmpty(bucket))
 				throw new NotSupportedException();
-			}
 
 			if (recursive)
 			{
-				ListObjectsRequest listRequest = new ListObjectsRequest
+				var deleteRequest = new DeleteObjectsRequest
+				{
+					BucketName = bucket
+				};
+				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)deleteRequest)
+					.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+
+				var listRequest = new ListObjectsV2Request
 				{
 					BucketName = bucket,
 					Prefix = S3Helper.EncodeKey(this.key)
 				};
-				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)listRequest).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)listRequest)
+					.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
 
-				DeleteObjectsRequest deleteRequest = new DeleteObjectsRequest
+				var paginator = s3Client.Paginators.ListObjectsV2(listRequest);
+				var enumerator = paginator.Responses.GetAsyncEnumerator();
+
+				try
 				{
-					BucketName = bucket
-				};
-				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)deleteRequest).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
-				ListObjectsResponse listResponse = null;
-				do
-				{
-					Task<ListObjectsResponse> t = s3Client.ListObjectsAsync(listRequest);
-					t.Wait();
-					listResponse = t.Result;
+					while (true)
+					{
+						if (!enumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
+							break;
+
+						var response = enumerator.Current;
 
 					// Sort to make sure the Marker for paging is set to the last lexiographical key.
-					foreach (S3Object s3o in listResponse.S3Objects.OrderBy(x => x.Key))
-					{
-						deleteRequest.AddKey(s3o.Key);
-						if (deleteRequest.Objects.Count == MULTIPLE_OBJECT_DELETE_LIMIT)
+						foreach (var s3Object in response.S3Objects.OrderBy(x => x.Key))
 						{
-							s3Client.DeleteObjectsAsync(deleteRequest).Wait();
-							deleteRequest.Objects.Clear();
-						}
+							deleteRequest.AddKey(s3Object.Key);
 
-						listRequest.Marker = s3o.Key;
+							if (deleteRequest.Objects.Count == MULTIPLE_OBJECT_DELETE_LIMIT)
+							{
+								s3Client.DeleteObjectsAsync(deleteRequest).GetAwaiter().GetResult();
+								deleteRequest.Objects.Clear();
+							}
+						}
 					}
 
-				} while (listResponse.IsTruncated);
-
-				if (deleteRequest.Objects.Count > 0)
+					if (deleteRequest.Objects.Count > 0)
+					{
+						s3Client.DeleteObjectsAsync(deleteRequest).GetAwaiter().GetResult();
+					}
+				}
+				finally
 				{
-					s3Client.DeleteObjectsAsync(deleteRequest).Wait();
+					enumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
 				}
 			}
 
-			if (String.IsNullOrEmpty(key) && Exists)
+			if (string.IsNullOrEmpty(key) && Exists)
 			{
 				var request = new DeleteBucketRequest { BucketName = bucket };
-				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
-				s3Client.DeleteBucketAsync(request).Wait();
+				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request)
+					.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+
+				s3Client.DeleteBucketAsync(request).GetAwaiter().GetResult();
 				WaitTillBucketS3StateIsConsistent(false);
 			}
 			else
 			{
+				// Delete single object if folder is empty
 				if (!EnumerateFileSystemInfos().GetEnumerator().MoveNext() && Exists)
 				{
-					var request = new DeleteObjectRequest { BucketName = bucket, Key = S3Helper.EncodeKey(key) };
-					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+					var request = new DeleteObjectRequest
+					{
+						BucketName = bucket,
+						Key = S3Helper.EncodeKey(key)
+					};
+					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request)
+						.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
 
-					s3Client.DeleteObjectAsync(request).Wait();
+					s3Client.DeleteObjectAsync(request).GetAwaiter().GetResult();
 					Parent.Create();
 				}
 			}
@@ -508,7 +517,7 @@ namespace Amazon.S3.IO
 					}
 					else
 					{
-						var bucketName = key.Substring(0, secondlast);
+						string bucketName = key.Substring(0, secondlast);
 						ret = new S3DirectoryInfo(s3Client, bucket, bucketName);
 					}
 				}
@@ -574,22 +583,51 @@ namespace Amazon.S3.IO
 			}
 			else
 			{
-				var request = new ListObjectsRequest
+				var result = new List<S3DirectoryInfo>();
+				var request = new ListObjectsV2Request
 				{
 					BucketName = bucket,
-					Delimiter = "/",
-					Prefix = S3Helper.EncodeKey(key)
+					Prefix = S3Helper.EncodeKey(key),
+					Delimiter = "/"
 				};
-				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
-				folders = new EnumerableConverter<string, S3DirectoryInfo>
-					((IEnumerable<string>)(PaginatedResourceFactory.Create<string, ListObjectsRequest, ListObjectsResponse>(new PaginatedResourceInfo()
-							.WithClient(s3Client)
-							.WithMethodName("ListObjects")
-							.WithRequest(request)
-							.WithItemListPropertyPath("CommonPrefixes")
-							.WithTokenRequestPropertyPath("Marker")
-							.WithTokenResponsePropertyPath("NextMarker"))),
-						prefix => new S3DirectoryInfo(s3Client, bucket, S3Helper.DecodeKey(prefix)));
+
+				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request)
+					.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+
+				var paginator = s3Client.Paginators.ListObjectsV2(request);
+
+				var enumerator = paginator.Responses.GetAsyncEnumerator();
+
+				try
+				{
+					while (true)
+					{
+						if (!enumerator.MoveNextAsync()
+									   .AsTask()
+									   .GetAwaiter()
+									   .GetResult())
+							break;
+
+						var response = enumerator.Current;
+
+						foreach (string prefix in response.CommonPrefixes)
+						{
+							result.Add(new S3DirectoryInfo(
+								s3Client,
+								bucket,
+								S3Helper.DecodeKey(prefix)));
+						}
+					}
+				}
+				finally
+				{
+					enumerator.DisposeAsync()
+							  .AsTask()
+							  .GetAwaiter()
+							  .GetResult();
+				}
+				return result;
+
 			}
 
 			//handle if recursion is set
@@ -604,7 +642,7 @@ namespace Amazon.S3.IO
 			}
 
 			//filter based on search pattern
-			var regEx = WildcardToRegex(searchPattern);
+			string regEx = WildcardToRegex(searchPattern);
 			folders = folders.Where(s3dirInfo => Regex.IsMatch(s3dirInfo.Name, regEx, RegexOptions.IgnoreCase));
 			return folders;
 		}
@@ -648,24 +686,54 @@ namespace Amazon.S3.IO
 			}
 			else
 			{
-				var request = new ListObjectsRequest
+				var request = new ListObjectsV2Request
 				{
 					BucketName = bucket,
-					Delimiter = "/",
-					Prefix = S3Helper.EncodeKey(key)
+					Prefix = S3Helper.EncodeKey(key),
+					Delimiter = "/"
 				};
-				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
-				PaginatedResourceInfo pagingInfo = new PaginatedResourceInfo().WithClient(s3Client)
-							.WithMethodName("ListObjects")
-							.WithRequest(request)
-							.WithItemListPropertyPath("S3Objects")
-							.WithTokenRequestPropertyPath("Marker")
-							.WithTokenResponsePropertyPath("NextMarker");
 
-				files = new EnumerableConverter<S3Object, S3FileInfo>
-					(((IEnumerable<S3Object>)(PaginatedResourceFactory.Create<S3Object, ListObjectsRequest, ListObjectsResponse>(pagingInfo)))
-						.Where(s3Object => !String.Equals(S3Helper.DecodeKey(s3Object.Key), key, StringComparison.Ordinal) && !s3Object.Key.EndsWith("\\", StringComparison.Ordinal)),
-						s3Object => new S3FileInfo(s3Client, bucket, S3Helper.DecodeKey(s3Object.Key)));
+				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request)
+					.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+
+				var paginator = s3Client.Paginators.ListObjectsV2(request);
+				var result = new List<S3FileInfo>();
+				var enumerator = paginator.Responses.GetAsyncEnumerator();
+				try
+				{
+					while (true)
+					{
+						if (!enumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
+							break;
+
+						var response = enumerator.Current;
+
+						foreach (var s3Object in response.S3Objects)
+						{
+							string decodedKey = S3Helper.DecodeKey(s3Object.Key);
+							if (String.Equals(decodedKey, key, StringComparison.Ordinal))
+								continue;
+
+							if (s3Object.Key.EndsWith("/", StringComparison.Ordinal))
+								continue;
+
+							result.Add(new S3FileInfo(
+								s3Client,
+								bucket,
+								decodedKey));
+						}
+					}
+				}
+				finally
+				{
+					enumerator.DisposeAsync()
+							  .AsTask()
+							  .GetAwaiter()
+							  .GetResult();
+				}
+
+				return result;
+
 			}
 
 			//handle if recursion is set
@@ -679,7 +747,7 @@ namespace Amazon.S3.IO
 			}
 
 			//filter based on search pattern
-			var regEx = WildcardToRegex(searchPattern);
+			string regEx = WildcardToRegex(searchPattern);
 			files = files.Where(s3fileInfo => Regex.IsMatch(s3fileInfo.Name, regEx, RegexOptions.IgnoreCase));
 			return files;
 		}
@@ -782,29 +850,34 @@ namespace Amazon.S3.IO
 				Replace("\\?", ".");
 			return "^" + newPattern + "$";
 		}
+		private void WaitTillBucketS3StateIsConsistent(bool exists)
+		{
+			WaitTillBucketS3StateIsConsistentAsync(exists).GetAwaiter().GetResult();
+		}
+
 		/// <summary>
 		/// Creating and deleting buckets can sometimes take a little bit of time.  To make sure
 		/// users of this API do not experience the side effects of the eventual consistency
 		/// we block until the state change has happened.
 		/// </summary>
 		/// <param name="exists"></param>
-		void WaitTillBucketS3StateIsConsistent(bool exists)
+		private async Task WaitTillBucketS3StateIsConsistentAsync(bool exists)
 		{
 			int success = 0;
 			bool currentState = false;
-			var start = this.S3Client.Config.CorrectedUtcNow;
+			var start = DateTime.UtcNow;
+
 			do
 			{
-				Task<ListBucketsResponse> t = this.S3Client.ListBucketsAsync();
-				t.Wait();
-				var buckets = t.Result.Buckets; 
-				currentState = buckets.FirstOrDefault(x => string.Equals(x.BucketName, this.BucketName)) != null;
+				var response = await S3Client.ListBucketsAsync();
+				var buckets = response.Buckets;
+
+				currentState = buckets.Any(x => string.Equals(x.BucketName, this.BucketName, StringComparison.Ordinal));
 
 				if (currentState == exists)
 				{
 					success++;
-
-					if (success == EVENTUAL_CONSISTENCY_SUCCESS_IN_ROW)
+					if (success >= EVENTUAL_CONSISTENCY_SUCCESS_IN_ROW)
 						break;
 				}
 				else
@@ -812,10 +885,11 @@ namespace Amazon.S3.IO
 					success = 0;
 				}
 
-				Thread.Sleep(EVENTUAL_CONSISTENCY_POLLING_PERIOD);
+				await Task.Delay(EVENTUAL_CONSISTENCY_POLLING_PERIOD);
 
-			} while ((this.S3Client.Config.CorrectedUtcNow - start).TotalMilliseconds < EVENTUAL_CONSISTENCY_MAX_WAIT);
+			} while ((DateTime.UtcNow - start).TotalMilliseconds < EVENTUAL_CONSISTENCY_MAX_WAIT);
 		}
+
 
 		/// <summary>
 		/// The S3DirectoryInfo for the root of the S3 bucket.
@@ -980,50 +1054,72 @@ namespace Amazon.S3.IO
 		{
 			get
 			{
-				DateTime ret = DateTime.MinValue;
-				if (Exists)
-				{
-					if (String.IsNullOrEmpty(this.bucket))
-					{
-						ret = DateTime.MinValue;
-						var listRequest = new ListBucketsRequest();
-						((Amazon.Runtime.Internal.IAmazonWebServiceRequest)listRequest).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
-						Task<ListBucketsResponse> task = s3Client.ListBucketsAsync(listRequest);
-						task.Wait();
-						foreach (S3Bucket s3Bucket in task.Result.Buckets)
-						{
-							DateTime currentBucketLastWriteTime = new S3DirectoryInfo(s3Client, s3Bucket.BucketName, String.Empty).LastWriteTime;
-							if (currentBucketLastWriteTime > ret)
-							{
-								ret = currentBucketLastWriteTime;
-							}
-						}
-					}
-					else
-					{
-						var request = new ListObjectsRequest
-						{
-							BucketName = bucket,
-							Prefix = S3Helper.EncodeKey(key)
-						};
-						((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+				if (!Exists)
+					return DateTime.MinValue;
 
-						S3Object lastWrittenObject =
-								((IEnumerable<S3Object>)
-									PaginatedResourceFactory.Create<S3Object, ListObjectsRequest, ListObjectsResponse>(new PaginatedResourceInfo()
-										.WithClient(s3Client)
-										.WithItemListPropertyPath("S3Objects")
-										.WithMethodName("ListObjects")
-										.WithRequest(request)
-										.WithTokenRequestPropertyPath("Marker")
-										.WithTokenResponsePropertyPath("NextMarker")))
-									.OrderByDescending(s3Object => s3Object.LastModified)
-									.FirstOrDefault();
-						if (lastWrittenObject != null)
+				DateTime ret = DateTime.MinValue;
+
+				if (string.IsNullOrEmpty(bucket))
+				{
+					var listRequest = new ListBucketsRequest();
+					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)listRequest)
+						.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+
+					var response = s3Client.ListBucketsAsync(listRequest)
+										   .GetAwaiter()
+										   .GetResult();
+
+					foreach (var s3Bucket in response.Buckets)
+					{
+						var bucketTime = new S3DirectoryInfo(
+							s3Client,
+							s3Bucket.BucketName,
+							string.Empty).LastWriteTime;
+
+						if (bucketTime > ret)
+							ret = bucketTime;
+					}
+
+					return ret;
+				}
+
+				var request = new ListObjectsV2Request
+				{
+					BucketName = bucket,
+					Prefix = S3Helper.EncodeKey(key)
+				};
+
+				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request)
+					.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
+
+				var paginator = s3Client.Paginators.ListObjectsV2(request);
+				var enumerator = paginator.Responses.GetAsyncEnumerator();
+
+				try
+				{
+					while (true)
+					{
+						if (!enumerator.MoveNextAsync()
+									   .AsTask()
+									   .GetAwaiter()
+									   .GetResult())
+							break;
+
+						var response = enumerator.Current;
+
+						foreach (var s3Object in response.S3Objects)
 						{
-							ret = lastWrittenObject.LastModified;
+							if (s3Object.LastModified > ret)
+								ret = (s3Object.LastModified ?? DateTime.MinValue);
 						}
 					}
+				}
+				finally
+				{
+					enumerator.DisposeAsync()
+							  .AsTask()
+							  .GetAwaiter()
+							  .GetResult();
 				}
 
 				return ret;
@@ -1093,81 +1189,5 @@ namespace Amazon.S3.IO
 		void Delete();
 	}
 
-	internal class EnumerableConverter<T, U> : IEnumerable<U>
-	{
-		internal IEnumerable<T> baseEnum = null;
-		internal Func<T, U> converter = null;
 
-		internal EnumerableConverter(IEnumerable<T> start, Func<T, U> convert)
-		{
-			baseEnum = start;
-			converter = convert;
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return (IEnumerator)GetEnumerator();
-		}
-
-		public IEnumerator<U> GetEnumerator()
-		{
-			return new ConvertingEnumerator<T, U>(this);
-		}
-
-
-	}
-
-	internal class ConvertingEnumerator<T, U> : IEnumerator<U>
-	{
-		Func<T, U> convert;
-		IEnumerator<T> getT;
-
-		bool isConverted = false;
-		U convertedCurrent = default(U);
-
-		internal ConvertingEnumerator(EnumerableConverter<T, U> ec)
-		{
-			getT = ec.baseEnum.GetEnumerator();
-			convert = ec.converter;
-		}
-
-		public bool MoveNext()
-		{
-			isConverted = false;
-			convertedCurrent = default(U);
-			return getT.MoveNext();
-		}
-
-		public void Reset()
-		{
-			isConverted = false;
-			convertedCurrent = default(U);
-			getT.Reset();
-		}
-
-		object IEnumerator.Current
-		{
-			get
-			{
-				return Current;
-			}
-		}
-
-		public U Current
-		{
-			get
-			{
-				if (!isConverted)
-				{
-					convertedCurrent = convert(getT.Current);
-					isConverted = true;
-				}
-				return convertedCurrent;
-			}
-		}
-
-		public void Dispose()
-		{
-		}
-	}
 }
