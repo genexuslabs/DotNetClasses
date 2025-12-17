@@ -571,17 +571,17 @@ namespace GeneXus.Storage.GXAmazonS3
 				BucketName = Bucket,
 				Key = resourceKey,
 				InputStream = fileStream
-			};
-			if (objectOwnershipEnabled)
-			{
-				objectRequest.CannedACL = GetCannedACL(destFileType);
-			}
-			if (TryGetContentType(fileName, out string mimeType))
-			{
-				objectRequest.ContentType = mimeType;
-			}
+				};
+				if (objectOwnershipEnabled)
+				{
+					objectRequest.CannedACL = GetCannedACL(destFileType);
+				}
+				if (TryGetContentType(fileName, out string mimeType))
+				{
+					objectRequest.ContentType = mimeType;
+				}
 
-			AddObjectMetadata(objectRequest.Metadata, tableName, fieldName, resourceKey);
+				AddObjectMetadata(objectRequest.Metadata, tableName, fieldName, resourceKey);
 			PutObjectResponse result = PutObject(objectRequest);
 
 			if (objectOwnershipEnabled)
