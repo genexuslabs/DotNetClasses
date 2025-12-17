@@ -189,7 +189,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			GXLogging.Debug(log, $"DeleteObject called for bucket: {request.BucketName}, key: {request.Key}");
 			try
 			{
-				var result = Task.Run(() => Client.DeleteObjectAsync(request)).ConfigureAwait(false).GetAwaiter().GetResult();
+				var result = Client.DeleteObjectAsync(request).GetAwaiter().GetResult();
 				GXLogging.Debug(log, $"DeleteObject completed for bucket: {request.BucketName}, key: {request.Key}");
 				return result;
 			}
@@ -205,7 +205,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			GXLogging.Debug(log, $"CopyObject called from {request.SourceBucket}/{request.SourceKey} to {request.DestinationBucket}/{request.DestinationKey}");
 			try
 			{
-				var result = Task.Run(() => Client.CopyObjectAsync(request)).ConfigureAwait(false).GetAwaiter().GetResult();
+				var result = Client.CopyObjectAsync(request).GetAwaiter().GetResult();
 				GXLogging.Debug(log, $"CopyObject completed from {request.SourceBucket}/{request.SourceKey} to {request.DestinationBucket}/{request.DestinationKey}");
 				return result;
 			}
@@ -221,7 +221,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			GXLogging.Debug(log, $"PutObject called for bucket: {request.BucketName}, key: {request.Key}");
 			try
 			{
-				var result = Task.Run(() => Client.PutObjectAsync(request)).ConfigureAwait(false).GetAwaiter().GetResult();
+				var result = Client.PutObjectAsync(request).GetAwaiter().GetResult();
 				GXLogging.Debug(log, $"PutObject completed for bucket: {request.BucketName}, key: {request.Key}");
 				return result;	
 			}
@@ -256,7 +256,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			GXLogging.Debug(log, $"GetObject (by name) called for bucket: {bucketName}, key: {key}");
 			try
 			{
-				var result = Task.Run(() => Client.GetObjectAsync(bucketName, key)).ConfigureAwait(false).GetAwaiter().GetResult();
+				var result = Client.GetObjectAsync(bucketName, key).GetAwaiter().GetResult();
 				GXLogging.Debug(log, $"GetObject (by name) completed for bucket: {bucketName}, key: {key}");
 				return result;
 			}
@@ -269,10 +269,12 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private bool DoesS3BucketExist()
 		{
-			GXLogging.Debug(log, $"DoesS3BucketExist called for bucket: {Bucket}");
+			GXLogging.Debug(log, $"DoesS3BucketExist dummy: {Bucket}");
+			return true;
+			/*GXLogging.Debug(log, $"DoesS3BucketExist called for bucket: {Bucket}");
 			try
 			{
-				var result = Task.Run(() => Client.DoesS3BucketExistAsync(Bucket)).ConfigureAwait(false).GetAwaiter().GetResult();
+				var result = Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(Client, Bucket).GetAwaiter().GetResult();
 				GXLogging.Debug(log, $"DoesS3BucketExist completed for bucket: {Bucket} - Exists: {result}");
 				return result;
 			}
@@ -280,7 +282,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			{
 				GXLogging.Error(log, $"DoesS3BucketExist failed for bucket: {Bucket}", ex);
 				throw;
-			}
+			}*/
 		}
 
 		private void BucketExists()

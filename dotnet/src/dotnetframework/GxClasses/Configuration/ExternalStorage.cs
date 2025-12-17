@@ -5,6 +5,8 @@ using GeneXus.Attributes;
 using GeneXus.Utils;
 using GeneXus.Encryption;
 using System.Text;
+using System.Threading;
+
 
 
 #if NETCORE
@@ -16,8 +18,7 @@ namespace GeneXus.Configuration
 	[GXApi]
 	public class ExternalStorage : GxStorageProvider
 	{
-		private static readonly ConcurrentDictionary<string, ExternalStorage> providerCache = new ConcurrentDictionary<string, ExternalStorage>();
-		private const int MaxCacheSize = 100;
+		private static readonly ConcurrentDictionary<string, Lazy<ExternalStorage>> providerCache = new ConcurrentDictionary<string, Lazy<ExternalStorage>>();
 
 		private GXService providerService;
 
@@ -31,82 +32,94 @@ namespace GeneXus.Configuration
 				providerService = ServiceFactory.GetGXServices()?.Get(GXServices.STORAGE_SERVICE);
 			}
 		}
-
 		public bool Create(string name, GXProperties initialProperties, ref GxStorageProvider storageProvider, ref GXBaseCollection<SdtMessages_Message> messages)
 		{
 			storageProvider = null;
 
 			if (string.IsNullOrEmpty(name))
 			{
-				GXUtil.ErrorToMessages("Unsopported", "Provider cannot be empty", messages);
+				GXUtil.ErrorToMessages("Unsupported", "Provider cannot be empty", messages);
 				return false;
 			}
 
 			try
 			{
-				// Create a unique key for the cache based on name and properties
 				string cacheKey = GenerateCacheKey(name, initialProperties);
 
-				// Try to retrieve an existing instance from the cache
-				if (providerCache.TryGetValue(cacheKey, out ExternalStorage cachedProvider))
+				var lazyProvider = providerCache.GetOrAdd(
+					cacheKey,
+					key => new Lazy<ExternalStorage>(
+						() => CreateProvider(name, initialProperties),
+						LazyThreadSafetyMode.ExecutionAndPublication));
+
+				if (lazyProvider.IsValueCreated)
 				{
-					GXLogging.Debug(logger, $"Using cached storage provider for key: {cacheKey}");
-					storageProvider = cachedProvider;
+					GXLogging.Debug(logger, $"Using cached storage provider for key: {cacheKey}"); 
+				}
+				else
+				{
+					GXLogging.Debug(logger, $"Added storage provider to cache with key: {cacheKey}");
+				}
+				try
+				{
+					storageProvider = lazyProvider.Value;
 					return true;
 				}
-				if (providerCache.Count >= MaxCacheSize)
+				catch
 				{
-					foreach (string item in providerCache.Keys)
-					{
-						GXLogging.Debug(logger, $"providerCache reached MaxCacheSize ({MaxCacheSize}). Removing oldest entry with key: {item}");
-						providerCache.TryRemove(item, out _);
-						break;
-					}
+					providerCache.TryRemove(cacheKey, out _);
+					throw;
 				}
-				if (providerService == null || !string.Equals(providerService.Name, name, StringComparison.OrdinalIgnoreCase))
-				{
-					providerService = new GXService();
-					providerService.Type = GXServices.STORAGE_SERVICE;
-					providerService.Name = name;
-					providerService.AllowMultiple = false;
-					providerService.Properties = new GXProperties();
-				}
-				GXProperties properties = new GXProperties(initialProperties);
-				preprocess(name, properties);
-
-				GxKeyValuePair prop = properties.GetFirst();
-				while (!properties.Eof())
-				{
-					providerService.Properties.Set(prop.Key, prop.Value);
-					prop = properties.GetNext();
-				}
-
-				string typeFullName = providerService.ClassName;
-				string fullStack = Environment.StackTrace;
-				int index = fullStack.IndexOf("GeneXus.Application.GxRestWrapper", StringComparison.OrdinalIgnoreCase);
-				if (index > 0) fullStack = fullStack.Substring(0, index);
-
-				GXLogging.Debug(logger, "Loading storage provider from Create: " + typeFullName, fullStack);
-#if !NETCORE
-				Type type = Type.GetType(typeFullName, true, true);
-#else
-				Type type = AssemblyLoader.GetType(typeFullName);
-#endif
-				this.provider = (ExternalProvider)Activator.CreateInstance(type, new object[] { providerService });
-				GXLogging.Debug(logger, "Loading storage provider ended.");
-
-				providerCache.TryAdd(cacheKey, this);
-				GXLogging.Debug(logger, $"Added storage provider to cache with key: {cacheKey}");
 			}
 			catch (Exception ex)
 			{
-				GXLogging.Error(logger, "Couldn't connect to external storage provider. ", ex);
+				GXLogging.Error(logger, "Couldn't connect to external storage provider.", ex);
 				StorageMessages(ex, messages);
 				return false;
 			}
+		}
 
-			storageProvider = this;
-			return true;
+		private ExternalStorage CreateProvider(string name, GXProperties initialProperties)
+		{
+			if (providerService == null || !string.Equals(providerService.Name, name, StringComparison.OrdinalIgnoreCase))
+			{
+				providerService = new GXService
+				{
+					Type = GXServices.STORAGE_SERVICE,
+					Name = name,
+					AllowMultiple = false,
+					Properties = new GXProperties()
+				};
+			}
+
+			GXProperties properties = new GXProperties(initialProperties);
+			preprocess(name, properties);
+
+			GxKeyValuePair prop = properties.GetFirst();
+			while (!properties.Eof())
+			{
+				providerService.Properties.Set(prop.Key, prop.Value);
+				prop = properties.GetNext();
+			}
+
+			string typeFullName = providerService.ClassName;
+			string fullStack = Environment.StackTrace;
+			int index = fullStack.IndexOf("GeneXus.Application.GxRestWrapper", StringComparison.OrdinalIgnoreCase);
+			if (index > 0) fullStack = fullStack.Substring(0, index);
+
+			GXLogging.Debug(logger, "Loading storage provider from Create: " + typeFullName, fullStack);
+
+#if !NETCORE
+			Type type = Type.GetType(typeFullName, true, true);
+#else
+			Type type = AssemblyLoader.GetType(typeFullName);
+#endif
+
+			this.provider = (ExternalProvider)Activator.CreateInstance(type, new object[] { providerService });
+
+			GXLogging.Debug(logger, "Loading storage provider ended.");
+
+			return this; 
 		}
 
 		private string GenerateCacheKey(string name, GXProperties properties)
