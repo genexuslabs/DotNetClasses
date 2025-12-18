@@ -1,15 +1,13 @@
-using Amazon.Runtime;
-using Amazon.S3.Model;
-using Amazon.Util;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime;
+using Amazon.S3.Model;
+using Amazon.Util;
 
 namespace Amazon.S3.IO
 {
