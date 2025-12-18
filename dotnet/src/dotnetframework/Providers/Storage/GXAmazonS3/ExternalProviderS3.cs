@@ -324,19 +324,33 @@ namespace GeneXus.Storage.GXAmazonS3
 			};
 			DeleteObject(deleteObjectRequest);
 		}
-		//https://github.com/aws/aws-sdk-net/blob/master/sdk/src/Services/S3/Custom/_bcl/IO/S3FileInfo.cs
+
 		public bool Exists(string objectName, GxFileType fileType)
 		{
-			bool exists;
 			try
 			{
-				exists = new S3FileInfo(Client, Bucket, objectName).Exists;
+					var request = new GetObjectMetadataRequest
+					{
+						BucketName = Bucket,
+						Key = objectName
+					};
+					Client.GetObjectMetadataAsync(request)
+						  .GetAwaiter()
+						  .GetResult();
+
+					return true;
 			}
-			catch (Exception)
+			catch (AmazonS3Exception ex)
 			{
-				exists = false;
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound ||
+					ex.ErrorCode == "NoSuchKey" ||
+					ex.ErrorCode == "NoSuchBucket")
+				{
+					return false;
+				}
+
+				throw;
 			}
-			return exists;
 		}
 
 		public string Rename(string objectName, string newName, GxFileType fileType)
@@ -539,14 +553,62 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		public long GetLength(string objectName, GxFileType destFileType)
 		{
-			return new S3FileInfo(Client, Bucket, objectName).Length;
+			try
+			{
+				var request = new GetObjectMetadataRequest
+				{
+					BucketName = Bucket,
+					Key = objectName
+				};
+
+				var response = Client.GetObjectMetadataAsync(request)
+									 .GetAwaiter()
+									 .GetResult();
+
+				return response.ContentLength;
+			}
+			catch (AmazonS3Exception ex)
+			{
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound ||
+					ex.ErrorCode == "NoSuchKey" ||
+					ex.ErrorCode == "NoSuchBucket")
+				{
+					return 0;
+				}
+
+				throw;
+			}
 		}
 
 		public DateTime GetLastModified(string objectName, GxFileType destFileType)
 		{
-			return new S3FileInfo(Client, Bucket, objectName).LastWriteTimeUtc;
-		}
+			try
+			{
 
+				var request = new GetObjectMetadataRequest
+				{
+					BucketName = Bucket,
+					Key = objectName
+				};
+
+				var response = Client.GetObjectMetadataAsync(request)
+									 .GetAwaiter()
+									 .GetResult();
+
+				return response.LastModified?.ToUniversalTime() ?? DateTime.MinValue;
+			}
+			catch (AmazonS3Exception ex)
+			{
+				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound ||
+					ex.ErrorCode == "NoSuchKey" ||
+					ex.ErrorCode == "NoSuchBucket")
+				{
+					return DateTime.MinValue;
+				}
+
+				throw;
+			}
+		}
 		public void CreateDirectory(string directoryName)
 		{
 			CreateFolder(StorageUtils.NormalizeDirectoryName(directoryName));
