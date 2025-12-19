@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.IO;
@@ -76,7 +75,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			Initialize();
 		}
 
-		private void Initialize() {
+		private void Initialize() { 
 			string keyId = GetEncryptedPropertyValue(ACCESS_KEY, ACCESS_KEY_ID_DEPRECATED);
 			string keySecret = GetEncryptedPropertyValue(SECRET_ACCESS_KEY, SECRET_ACCESS_KEY_DEPRECATED);
 			AWSCredentials credentials = null;
@@ -186,103 +185,42 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private DeleteObjectResponse DeleteObject(DeleteObjectRequest request)
 		{
-			GXLogging.Debug(log, $"DeleteObject called for bucket: {request.BucketName}, key: {request.Key}");
-			try
-			{
-				var result = Client.DeleteObjectAsync(request).GetAwaiter().GetResult();
-				GXLogging.Debug(log, $"DeleteObject completed for bucket: {request.BucketName}, key: {request.Key}");
-				return result;
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, $"DeleteObject failed for bucket: {request.BucketName}, key: {request.Key}", ex);
-				throw;
-			}
+			return Client.DeleteObjectAsync(request).GetAwaiter().GetResult();
 		}
 
 		private CopyObjectResponse CopyObject(CopyObjectRequest request)
 		{
-			GXLogging.Debug(log, $"CopyObject called from {request.SourceBucket}/{request.SourceKey} to {request.DestinationBucket}/{request.DestinationKey}");
-			try
-			{
-				var result = Client.CopyObjectAsync(request).GetAwaiter().GetResult();
-				GXLogging.Debug(log, $"CopyObject completed from {request.SourceBucket}/{request.SourceKey} to {request.DestinationBucket}/{request.DestinationKey}");
-				return result;
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, $"CopyObject failed from {request.SourceBucket}/{request.SourceKey} to {request.DestinationBucket}/{request.DestinationKey}", ex);
-				throw;
-			}
+			return Client.CopyObjectAsync(request).GetAwaiter().GetResult();
 		}
 
 		private PutObjectResponse PutObject(PutObjectRequest request)
 		{
-			GXLogging.Debug(log, $"PutObject called for bucket: {request.BucketName}, key: {request.Key}");
-			try
-			{
-				var result = Client.PutObjectAsync(request).GetAwaiter().GetResult();
-				GXLogging.Debug(log, $"PutObject completed for bucket: {request.BucketName}, key: {request.Key}");
-				return result;	
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, $"PutObject failed for bucket: {request.BucketName}, key: {request.Key}", ex);
-				throw;
-			}
+			return Client.PutObjectAsync(request).GetAwaiter().GetResult();
 		}
-		private void DownloadObject(GetObjectRequest request, string filePath)
+
+		private GetObjectResponse GetObject(GetObjectRequest request)
 		{
-			GXLogging.Debug(log, $"DownloadObject called for bucket: {request.BucketName}, key: {request.Key}, file: {filePath}");
-			try
-			{
-				Task.Run(async () =>
-				{
-					var response = await Client.GetObjectAsync(request);
-					GXLogging.Debug(log, $"GetObject completed for bucket: {request.BucketName}, key: {request.Key}");
-					await response.WriteResponseStreamToFileAsync(filePath, false, CancellationToken.None);
-					GXLogging.Debug(log, $"WriteResponseStreamToFile completed for file: {filePath}");
-				}).ConfigureAwait(false).GetAwaiter().GetResult();
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, $"DownloadObject failed for bucket: {request.BucketName}, key: {request.Key}, file: {filePath}", ex);
-				throw;
-			}
+			return Client.GetObjectAsync(request).GetAwaiter().GetResult();
 		}
-		
+
 		private GetObjectResponse GetObject(string bucketName, string key)
 		{
-			GXLogging.Debug(log, $"GetObject (by name) called for bucket: {bucketName}, key: {key}");
-			try
-			{
-				var result = Client.GetObjectAsync(bucketName, key).GetAwaiter().GetResult();
-				GXLogging.Debug(log, $"GetObject (by name) completed for bucket: {bucketName}, key: {key}");
-				return result;
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, $"GetObject (by name) failed for bucket: {bucketName}, key: {key}", ex);
-				throw;
-			}
+			return Client.GetObjectAsync(bucketName, key).GetAwaiter().GetResult();
+		}
+
+		private void PutBucket(PutBucketRequest request)
+		{
+			Client.PutBucketAsync(request).GetAwaiter().GetResult();
 		}
 
 		private bool DoesS3BucketExist()
 		{
-			GXLogging.Debug(log, $"DoesS3BucketExist dummy: {Bucket}");
-			return true;
-			/*GXLogging.Debug(log, $"DoesS3BucketExist called for bucket: {Bucket}");
-			try
-			{
-				var result = Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(Client, Bucket).GetAwaiter().GetResult();
-				GXLogging.Debug(log, $"DoesS3BucketExist completed for bucket: {Bucket} - Exists: {result}");
-				return result;
-			}
-			catch (Exception ex)
-			{
-				GXLogging.Error(log, $"DoesS3BucketExist failed for bucket: {Bucket}", ex);
-				throw;
-			}*/
+			return Client.DoesS3BucketExistAsync(Bucket).GetAwaiter().GetResult();
+		}
+
+		void WriteResponseStreamToFile(GetObjectResponse response, string filePath)
+		{
+			response.WriteResponseStreamToFileAsync(filePath, false, CancellationToken.None).GetAwaiter().GetResult();
 		}
 
 		private void BucketExists()
@@ -362,7 +300,8 @@ namespace GeneXus.Storage.GXAmazonS3
 				Key = objectName,
 			};
 
-			DownloadObject(request, localFile);
+			GetObjectResponse response = GetObject(request);
+			WriteResponseStreamToFile(response, localFile);
 		}
 
 		public void Delete(string objectName, GxFileType fileType)
