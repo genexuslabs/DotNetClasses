@@ -197,15 +197,16 @@ namespace Amazon.S3.IO
 				((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request)
 					.AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
 
-				var response = s3Client.GetObjectMetadataAsync(request)
-									   .GetAwaiter()
-									   .GetResult();
+				var response = s3Client
+					.GetObjectMetadataAsync(request)
+					.ConfigureAwait(false)
+					.GetAwaiter()
+					.GetResult();
 
-				return (response.LastModified ?? DateTime.MinValue).ToLocalTime();
-
+				return response.LastModified.ToLocalTime();
 			}
-
 		}
+
 		/// <summary>
 		/// Returns the type of file system element.
 		/// </summary>
@@ -274,7 +275,7 @@ namespace Amazon.S3.IO
 					((Amazon.Runtime.Internal.IAmazonWebServiceRequest)request).AddBeforeRequestHandler(S3Helper.FileIORequestEventHandler);
 					Task<GetObjectMetadataResponse> t = s3Client.GetObjectMetadataAsync(request);
 					var response = t.Result;
-					ret = (response.LastModified ?? DateTime.MinValue);
+					ret = response.LastModified;
 				}
 				return ret;
 			}
@@ -1108,7 +1109,7 @@ namespace Amazon.S3.IO
 						foreach (var s3Object in response.S3Objects)
 						{
 							if (s3Object.LastModified > ret)
-								ret = (s3Object.LastModified ?? DateTime.MinValue);
+								ret = s3Object.LastModified;
 						}
 					}
 				}
