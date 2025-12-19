@@ -7,7 +7,7 @@
 		<PackageId>GeneXus.Amazon</PackageId>
 	</PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.9.24" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.508.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
