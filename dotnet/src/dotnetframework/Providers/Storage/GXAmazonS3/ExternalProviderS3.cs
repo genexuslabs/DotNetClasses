@@ -19,7 +19,7 @@ namespace GeneXus.Storage.GXAmazonS3
 	{
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<ExternalProviderS3>();
 		public const string Name = "AWSS3";
-		
+
 		const string ACCESS_KEY = "ACCESS_KEY";
 		const string SECRET_ACCESS_KEY = "SECRET_KEY";
 		const string STORAGE_CUSTOM_ENDPOINT = "CUSTOM_ENDPOINT";
@@ -30,7 +30,7 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		const string DEFAULT_ENDPOINT = "s3.amazonaws.com";
 		const string DEFAULT_REGION = "us-east-1";
-		
+
 		[Obsolete("Use Property ACCESS_KEY instead", false)]
 		const string ACCESS_KEY_ID_DEPRECATED = "STORAGE_PROVIDER_ACCESSKEYID";
 		[Obsolete("Use Property SECRET_ACCESS_KEY instead", false)]
@@ -41,7 +41,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		const string ENDPOINT_DEPRECATED = "STORAGE_ENDPOINT";
 		[Obsolete("Use Property STORAGE_CUSTOM_ENDPOINT instead", false)]
 		const string STORAGE_CUSTOM_ENDPOINT_DEPRECATED = "STORAGE_CUSTOM_ENDPOINT";
-		
+
 		string _storageUri;
 
 		IAmazonS3 Client { get; set; }
@@ -58,7 +58,8 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		public string StorageUri
 		{
-			get {
+			get
+			{
 				return _storageUri;
 			}
 		}
@@ -68,16 +69,17 @@ namespace GeneXus.Storage.GXAmazonS3
 			return StorageUri + Folder + StorageUtils.DELIMITER;
 		}
 
-		public ExternalProviderS3(): this(null)
-		{			
+		public ExternalProviderS3() : this(null)
+		{
 		}
 
-		public ExternalProviderS3(GXService providerService): base(providerService)
+		public ExternalProviderS3(GXService providerService) : base(providerService)
 		{
 			Initialize();
 		}
 
-		private void Initialize() { 
+		private void Initialize()
+		{
 			string keyId = GetEncryptedPropertyValue(ACCESS_KEY, ACCESS_KEY_ID_DEPRECATED);
 			string keySecret = GetEncryptedPropertyValue(SECRET_ACCESS_KEY, SECRET_ACCESS_KEY_DEPRECATED);
 			AWSCredentials credentials = null;
@@ -124,7 +126,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			else
 			{
 				Client = new AmazonS3ClientExtended(config);
-			}						
+			}
 #else
 			if (credentials != null)
 			{
@@ -140,14 +142,14 @@ namespace GeneXus.Storage.GXAmazonS3
 			Region = region.SystemName;
 
 			SetURI();
-			BucketExists();			
+			BucketExists();
 		}
 
 		private void SetURI()
 		{
 			if (customEndpoint)
 			{
-				_storageUri = !Endpoint.EndsWith("/") ? $"{Endpoint}/{Bucket}/": $"{Endpoint}{Bucket}/";
+				_storageUri = !Endpoint.EndsWith("/") ? $"{Endpoint}/{Bucket}/" : $"{Endpoint}{Bucket}/";
 			}
 			else
 			{
@@ -224,7 +226,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			{
 				var result = Client.PutObjectAsync(request).GetAwaiter().GetResult();
 				GXLogging.Debug(log, $"PutObject completed for bucket: {request.BucketName}, key: {request.Key}");
-				return result;	
+				return result;
 			}
 			catch (Exception ex)
 			{
@@ -262,7 +264,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			try
 			{
 				GXLogging.Debug(log, $"DoesS3BucketExist called for bucket: {Bucket}");
-				Client.HeadBucketAsync(new HeadBucketRequest{BucketName = Bucket}).GetAwaiter().GetResult();
+				Client.HeadBucketAsync(new HeadBucketRequest { BucketName = Bucket }).GetAwaiter().GetResult();
 				GXLogging.Debug(log, $"DoesS3BucketExist completed for bucket: {Bucket} - Exists");
 				return true;
 			}
@@ -276,7 +278,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				GXLogging.Error(log, $"DoesS3BucketExist failed for bucket: {Bucket}", ex);
 				throw;
 			}
-		
+
 #else
 			return Client.DoesS3BucketExistAsync(Bucket).GetAwaiter().GetResult();
 
@@ -316,7 +318,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			if (objectOwnershipEnabled && GetCannedACL(fileType) != S3CannedACL.PublicRead)
 				return true;
-			else 
+			else
 				return ownerEnforcedBucketPrivacy.HasValue && ownerEnforcedBucketPrivacy == BucketPrivacy.PRIVATE;
 		}
 
@@ -331,15 +333,14 @@ namespace GeneXus.Storage.GXAmazonS3
 		}
 
 		public string GetUrl(string objectName, GxFileType fileType, int urlMinutes = 0)
-		{			
+		{
 			return GetUrlImpl(objectName, fileType, urlMinutes);
 		}
 
 		private string GetUrlImpl(string objectName, GxFileType fileType, int urlMinutes = 0)
 		{
 			bool isPrivate = IsPrivateUpload(fileType);
-			return (isPrivate) ? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes): IsPrivateUpload(fileType) ? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes): StorageUri + StorageUtils.EncodeUrlPath(objectName);
-			
+			return isPrivate ? GetPreSignedUrl(objectName, ResolveExpiration(urlMinutes).TotalMinutes) : StorageUri + StorageUtils.EncodeUrlPath(objectName);
 		}
 
 		private string GetPreSignedUrl(string objectName, double urlMinutes)
@@ -348,7 +349,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			{
 				BucketName = Bucket,
 				Key = objectName,
-				Expires = DateTime.Now.AddMinutes(urlMinutes),				
+				Expires = DateTime.Now.AddMinutes(urlMinutes),
 			};
 			if (customEndpoint && StorageUri.StartsWith("http://"))
 			{
@@ -383,16 +384,16 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			try
 			{
-					var request = new GetObjectMetadataRequest
-					{
-						BucketName = Bucket,
-						Key = objectName
-					};
-					Client.GetObjectMetadataAsync(request)
-						  .GetAwaiter()
-						  .GetResult();
+				var request = new GetObjectMetadataRequest
+				{
+					BucketName = Bucket,
+					Key = objectName
+				};
+				Client.GetObjectMetadataAsync(request)
+					  .GetAwaiter()
+					  .GetResult();
 
-					return true;
+				return true;
 			}
 			catch (AmazonS3Exception ex)
 			{
@@ -476,16 +477,16 @@ namespace GeneXus.Storage.GXAmazonS3
 			else
 			{
 				return UploadMultipart(fileName, stream, destFileType);
-			}			
+			}
 		}
 
 		private string UploadMultipart(string fileName, Stream stream, GxFileType destFileType)
-		{			
+		{
 			TransferUtility transfer = new TransferUtility(Client);
 			var uploadRequest = new TransferUtilityUploadRequest
 			{
 				BucketName = Bucket,
-				Key = fileName,				
+				Key = fileName,
 				PartSize = MULITIPART_POST_PART_SIZE,
 				InputStream = stream
 			};
@@ -506,7 +507,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		}
 
 		private string UploadSimple(string fileName, Stream stream, GxFileType destFileType)
-		{			
+		{
 			PutObjectRequest objectRequest = new PutObjectRequest()
 			{
 				BucketName = Bucket,
@@ -532,7 +533,7 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			url = StorageUtils.DecodeUrl(url);
 			string resourceKey = Folder + StorageUtils.DELIMITER + tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + newName;
-			
+
 			CreateFolder(Folder, tableName, fieldName);
 			url = url.Replace(StorageUri, string.Empty);
 
@@ -566,42 +567,39 @@ namespace GeneXus.Storage.GXAmazonS3
 		public string Save(Stream fileStream, string fileName, string tableName, string fieldName, GxFileType destFileType)
 		{
 			string resourceKey = Folder + StorageUtils.DELIMITER + tableName + StorageUtils.DELIMITER + fieldName + StorageUtils.DELIMITER + fileName;
-			try
+			CreateFolder(Folder, tableName, fieldName);
+			PutObjectRequest objectRequest = new PutObjectRequest()
 			{
-				CreateFolder(Folder, tableName, fieldName);
-				PutObjectRequest objectRequest = new PutObjectRequest()
-				{
-					BucketName = Bucket,
-					Key = resourceKey,
-					InputStream = fileStream
-				};
-				if (objectOwnershipEnabled)
-				{
-					objectRequest.CannedACL = GetCannedACL(destFileType);
-				}
-				if (TryGetContentType(fileName, out string mimeType))
-				{
-					objectRequest.ContentType = mimeType;
-				}
-
-				AddObjectMetadata(objectRequest.Metadata, tableName, fieldName, resourceKey);
-				PutObjectResponse result = PutObject(objectRequest);
-
-				if (objectOwnershipEnabled) 
-					return StorageUri + resourceKey;
-				return IsPrivateUpload(destFileType) ? GetPreSignedUrl(resourceKey, defaultExpiration.Minutes) : StorageUri + StorageUtils.EncodeUrlPath(resourceKey);
-			}
-			catch (Exception ex)
+				BucketName = Bucket,
+				Key = resourceKey,
+				InputStream = fileStream
+			};
+			if (objectOwnershipEnabled)
 			{
-				throw ex;
+				objectRequest.CannedACL = GetCannedACL(destFileType);
 			}
+			if (TryGetContentType(fileName, out string mimeType))
+			{
+				objectRequest.ContentType = mimeType;
+			}
+
+			AddObjectMetadata(objectRequest.Metadata, tableName, fieldName, resourceKey);
+			PutObjectResponse result = PutObject(objectRequest);
+
+			if (objectOwnershipEnabled)
+				return StorageUri + resourceKey;
+			return IsPrivateUpload(destFileType) ? GetPreSignedUrl(resourceKey, defaultExpiration.Minutes) : StorageUri + StorageUtils.EncodeUrlPath(resourceKey);
 		}
 
 		public Stream GetStream(string objectName, GxFileType destFileType)
 		{
-			GetObjectResponse getObjRespone = GetObject(Bucket, objectName);
+			GetObjectResponse getObjResponse = GetObject(Bucket, objectName);
 			MemoryStream stream = new MemoryStream();
-			getObjRespone.ResponseStream.CopyTo(stream);
+			using (getObjResponse.ResponseStream)
+			{
+				getObjResponse.ResponseStream.CopyTo(stream);
+				stream.Position = 0;
+			}
 			return stream;
 		}
 
@@ -773,6 +771,6 @@ namespace GeneXus.Storage.GXAmazonS3
 		{
 			return Name;
 		}
-	
+
 	}
 }
