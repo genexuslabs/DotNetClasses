@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using GeneXus.Application;
 using GeneXus.Utils;
@@ -206,7 +205,7 @@ namespace GeneXus.Services
 		public static void SetExternalProvider(ExternalProvider provider)
 		{
 			externalProvider = provider;
-			GXLogging.Debug(log, "SetExternalProvider null?: " + (provider==null));
+			GXLogging.Debug(log, "SetExternalProvider null?: " + (provider == null));
 		}
 
 		public static ExternalProvider GetExternalProviderImpl(string service)
@@ -220,13 +219,7 @@ namespace GeneXus.Services
 					try
 					{
 						string typeFullName = providerService.ClassName;
-
-						string fullStack = Environment.StackTrace;
-						int index = fullStack.IndexOf("GeneXus.Application.GxRestWrapper", StringComparison.OrdinalIgnoreCase);
-						if (index > 0) fullStack = fullStack.Substring(0, index);
-
-
-						GXLogging.Debug(log, "Loading storage provider from ServiceFactory:", typeFullName, fullStack);
+						GXLogging.Debug(log, "Loading storage provider from ServiceFactory:", typeFullName);
 #if !NETCORE
 						Type type = Type.GetType(typeFullName, true, true);
 #else

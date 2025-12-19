@@ -54,7 +54,7 @@ namespace GeneXus.Configuration
 
 				if (lazyProvider.IsValueCreated)
 				{
-					GXLogging.Debug(logger, $"Using cached storage provider for key: {cacheKey}"); 
+					GXLogging.Debug(logger, $"Using cached storage provider for key: {cacheKey}");
 				}
 				else
 				{
@@ -103,11 +103,7 @@ namespace GeneXus.Configuration
 			}
 
 			string typeFullName = providerService.ClassName;
-			string fullStack = Environment.StackTrace;
-			int index = fullStack.IndexOf("GeneXus.Application.GxRestWrapper", StringComparison.OrdinalIgnoreCase);
-			if (index > 0) fullStack = fullStack.Substring(0, index);
-
-			GXLogging.Debug(logger, "Loading storage provider from Create: " + typeFullName, fullStack);
+			GXLogging.Debug(logger, "Loading storage provider from Create: " + typeFullName);
 
 #if !NETCORE
 			Type type = Type.GetType(typeFullName, true, true);
@@ -119,7 +115,7 @@ namespace GeneXus.Configuration
 
 			GXLogging.Debug(logger, "Loading storage provider ended.");
 
-			return this; 
+			return this;
 		}
 
 		private string GenerateCacheKey(string name, GXProperties properties)
@@ -174,7 +170,7 @@ namespace GeneXus.Configuration
 					SetEncryptedProperty(properties, "ACCOUNT_NAME");
 					SetEncryptedProperty(properties, "ACCESS_KEY");
 					break;
-			
+
 				//case "BOX":
 				//	className = "{class}";
 				//	break;
