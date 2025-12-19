@@ -63,12 +63,19 @@ namespace GeneXus.Application
 					if (args.Length > 3 && Uri.UriSchemeHttps.Equals(args[3], StringComparison.OrdinalIgnoreCase))
 						schema = Uri.UriSchemeHttps;
 					if (args.Length > 4)
+					{
 						Startup.IsMcp = args[4].Equals("mcp", StringComparison.OrdinalIgnoreCase);
+						Startup.IsGrpc = args[4].Equals("grpc", StringComparison.OrdinalIgnoreCase);
+						if (args.Length > 5)
+						{
+							Startup.IsGrpc = (!Startup.IsGrpc) ? args[5].Equals("grpc", StringComparison.OrdinalIgnoreCase) : Startup.IsGrpc;
+							Startup.IsMcp |= (!Startup.IsMcp) ? args[5].Equals("mcp", StringComparison.OrdinalIgnoreCase) : Startup.IsMcp;
+						}
+					}
 				}
 				else
 				{
 					LocatePhysicalLocalPath();
-
 				}
 
 				if (port == DEFAULT_PORT)
@@ -106,6 +113,17 @@ namespace GeneXus.Application
 					.UseWebRoot(Startup.LocalPath)
 					.UseContentRoot(Startup.LocalPath)
 					.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS))
+					.ConfigureKestrel(options =>
+					{
+						options.ListenAnyIP(int.Parse(port), listenOptions =>
+						{
+							listenOptions.Protocols = HttpProtocols.Http1;
+						});
+						options.ListenAnyIP(int.Parse(port) + 1, listenOptions =>
+						{
+							listenOptions.Protocols = HttpProtocols.Http2;
+						});
+					})
 					.Build();
 		}
 
@@ -171,6 +189,7 @@ namespace GeneXus.Application
 		public static string VirtualPath = string.Empty;
 		public static string LocalPath = Directory.GetCurrentDirectory();
 		public static bool IsMcp = false;
+		public static bool IsGrpc = false;
 		internal static string APP_SETTINGS = "appsettings.json";
 
 		const string UrlTemplateControllerWithParms = "controllerWithParms";
@@ -224,11 +243,16 @@ namespace GeneXus.Application
 			{
 				options.AllowSynchronousIO = true;
 				options.Limits.MaxRequestBodySize = null;
+				options.ConfigureEndpointDefaults(listenOptions =>
+				{
+					listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+				});
 				if (Config.GetValueOrEnvironmentVarOf("MinRequestBodyDataRate", out string MinRequestBodyDataRateStr) && double.TryParse(MinRequestBodyDataRateStr, out double MinRequestBodyDataRate))
 				{
 					GXLogging.Info(log, $"MinRequestBodyDataRate:{MinRequestBodyDataRate}");
 					options.Limits.MinRequestBodyDataRate = new MinDataRate(bytesPerSecond: MinRequestBodyDataRate, gracePeriod: TimeSpan.FromSeconds(10));
 				}
+		
 			});
 			services.Configure<IISServerOptions>(options =>
 			{
@@ -285,6 +309,10 @@ namespace GeneXus.Application
 					options.HeaderName = HttpHeader.X_CSRF_TOKEN_HEADER;
 					options.SuppressXFrameOptionsHeader = true;
 				});
+			}
+			if (Startup.IsGrpc)
+			{
+				StartupGrpc.AddService(services);
 			}
 			if (Startup.IsMcp)
 			{
@@ -627,6 +655,10 @@ namespace GeneXus.Application
 				if (Startup.IsMcp)
 				{
 					StartupMcp.MapEndpoints(endpoints);
+				}
+				if (Startup.IsGrpc)
+				{
+					StartupGrpc.MapEndpoints(endpoints);
 				}
 			});
 
