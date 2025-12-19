@@ -183,46 +183,96 @@ namespace GeneXus.Storage.GXAmazonS3
 
 		private DeleteObjectResponse DeleteObject(DeleteObjectRequest request)
 		{
-			return Client.DeleteObjectAsync(request).GetAwaiter().GetResult();
+			GXLogging.Debug(log, $"DeleteObject called for bucket: {request.BucketName}, key: {request.Key}");
+			try
+			{
+				var result = Client.DeleteObjectAsync(request).GetAwaiter().GetResult();
+				GXLogging.Debug(log, $"DeleteObject completed for bucket: {request.BucketName}, key: {request.Key}");
+				return result;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"DeleteObject failed for bucket: {request.BucketName}, key: {request.Key}", ex);
+				throw;
+			}
 		}
 
 		private CopyObjectResponse CopyObject(CopyObjectRequest request)
 		{
-			return Client.CopyObjectAsync(request).GetAwaiter().GetResult();
+			GXLogging.Debug(log, $"CopyObject called from {request.SourceBucket}/{request.SourceKey} to {request.DestinationBucket}/{request.DestinationKey}");
+			try
+			{
+				var result = Client.CopyObjectAsync(request).GetAwaiter().GetResult();
+				GXLogging.Debug(log, $"CopyObject completed from {request.SourceBucket}/{request.SourceKey} to {request.DestinationBucket}/{request.DestinationKey}");
+				return result;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"CopyObject failed from {request.SourceBucket}/{request.SourceKey} to {request.DestinationBucket}/{request.DestinationKey}", ex);
+				throw;
+			}
 		}
 
 		private PutObjectResponse PutObject(PutObjectRequest request)
 		{
-			return Client.PutObjectAsync(request).GetAwaiter().GetResult();
+			GXLogging.Debug(log, $"PutObject called for bucket: {request.BucketName}, key: {request.Key}");
+			try
+			{
+				var result = Client.PutObjectAsync(request).GetAwaiter().GetResult();
+				GXLogging.Debug(log, $"PutObject completed for bucket: {request.BucketName}, key: {request.Key}");
+				return result;	
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"PutObject failed for bucket: {request.BucketName}, key: {request.Key}", ex);
+				throw;
+			}
 		}
 
 		private GetObjectResponse GetObject(GetObjectRequest request)
 		{
-			return Client.GetObjectAsync(request).GetAwaiter().GetResult();
+			GXLogging.Debug(log, $"DownloadObject called for bucket: {request.BucketName}, key: {request.Key}");
+			var response = Client.GetObjectAsync(request).GetAwaiter().GetResult();
+			GXLogging.Debug(log, $"GetObject completed for bucket: {request.BucketName}, key: {request.Key}");
+			return response;
 		}
 
 		private GetObjectResponse GetObject(string bucketName, string key)
 		{
-			return Client.GetObjectAsync(bucketName, key).GetAwaiter().GetResult();
+			GXLogging.Debug(log, $"GetObject (by name) called for bucket: {bucketName}, key: {key}");
+			try
+			{
+				var result = Client.GetObjectAsync(bucketName, key).GetAwaiter().GetResult();
+				GXLogging.Debug(log, $"GetObject (by name) completed for bucket: {bucketName}, key: {key}");
+				return result;
+			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"GetObject (by name) failed for bucket: {bucketName}, key: {key}", ex);
+				throw;
+			}
 		}
-
-		private void PutBucket(PutBucketRequest request)
-		{
-			Client.PutBucketAsync(request).GetAwaiter().GetResult();
-		}
-
 		private bool DoesS3BucketExist()
 		{
 #if NETCORE
 			try
 			{
+				GXLogging.Debug(log, $"DoesS3BucketExist called for bucket: {Bucket}");
 				Client.HeadBucketAsync(new HeadBucketRequest{BucketName = Bucket}).GetAwaiter().GetResult();
+				GXLogging.Debug(log, $"DoesS3BucketExist completed for bucket: {Bucket} - Exists");
 				return true;
 			}
 			catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
 			{
+				GXLogging.Error(log, $"DoesS3BucketExist does not exist: {Bucket}", ex);
 				return false;
 			}
+			catch (Exception ex)
+			{
+				GXLogging.Error(log, $"DoesS3BucketExist failed for bucket: {Bucket}", ex);
+				throw;
+			}
+		
 #else
 			return Client.DoesS3BucketExistAsync(Bucket).GetAwaiter().GetResult();
 
@@ -594,8 +644,12 @@ namespace GeneXus.Storage.GXAmazonS3
 				var response = Client.GetObjectMetadataAsync(request)
 									 .GetAwaiter()
 									 .GetResult();
+#if NETCORE
+				return response?.LastModified?.ToUniversalTime() ?? DateTime.MinValue;
+#else
+				return response?.LastModified.ToUniversalTime() ?? DateTime.MinValue;
+#endif
 
-				return response.LastModified?.ToUniversalTime() ?? DateTime.MinValue;
 			}
 			catch (AmazonS3Exception ex)
 			{
