@@ -104,6 +104,10 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 			else
 			{
+				if (region == Amazon.RegionEndpoint.USEast1)
+				{
+					Amazon.AWSConfigsS3.UseSignatureVersion4 = true;
+				}
 			}
 
 			string default_storage_privacy = GetPropertyValue(DEFAULT_ACL, DEFAULT_STORAGE_PRIVACY, "");
@@ -619,7 +623,7 @@ namespace GeneXus.Storage.GXAmazonS3
 			}
 			catch (AmazonS3Exception ex)
 			{
-				if (ex.StatusCode == System.Net.HttpStatusCode.NotFound ||
+				if (ex.StatusCode == HttpStatusCode.NotFound ||
 					ex.ErrorCode == "NoSuchKey" ||
 					ex.ErrorCode == "NoSuchBucket")
 				{
@@ -644,11 +648,7 @@ namespace GeneXus.Storage.GXAmazonS3
 				var response = Client.GetObjectMetadataAsync(request)
 									 .GetAwaiter()
 									 .GetResult();
-#if NETCORE
-				return response?.LastModified?.ToUniversalTime() ?? DateTime.MinValue;
-#else
 				return response?.LastModified.ToUniversalTime() ?? DateTime.MinValue;
-#endif
 
 			}
 			catch (AmazonS3Exception ex)
