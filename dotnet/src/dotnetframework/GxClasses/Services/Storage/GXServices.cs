@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using GeneXus.Application;
 using GeneXus.Utils;
@@ -186,6 +187,7 @@ namespace GeneXus.Services
 			externalProvider = GetExternalProviderImpl(GXServices.STORAGE_APISERVICE);
 			if (externalProvider == null)
 			{
+				GXLogging.Debug(log, "GetExternalProviderAPI load StorageAPIService");
 				externalProvider = GetExternalProvider();
 			}
 			return externalProvider;
@@ -195,6 +197,7 @@ namespace GeneXus.Services
 		{
 			if (externalProvider == null)
 			{
+				GXLogging.Debug(log, "GetExternalProvider load StorageService");
 				externalProvider = GetExternalProviderImpl(GXServices.STORAGE_SERVICE);
 			}
 			return externalProvider;
@@ -203,6 +206,7 @@ namespace GeneXus.Services
 		public static void SetExternalProvider(ExternalProvider provider)
 		{
 			externalProvider = provider;
+			GXLogging.Debug(log, "SetExternalProvider null?: " + (provider==null));
 		}
 
 		public static ExternalProvider GetExternalProviderImpl(string service)
@@ -216,13 +220,20 @@ namespace GeneXus.Services
 					try
 					{
 						string typeFullName = providerService.ClassName;
-						GXLogging.Debug(log, "Loading storage provider:", typeFullName);
+
+						string fullStack = Environment.StackTrace;
+						int index = fullStack.IndexOf("GeneXus.Application.GxRestWrapper", StringComparison.OrdinalIgnoreCase);
+						if (index > 0) fullStack = fullStack.Substring(0, index);
+
+
+						GXLogging.Debug(log, "Loading storage provider from ServiceFactory:", typeFullName, fullStack);
 #if !NETCORE
 						Type type = Type.GetType(typeFullName, true, true);
 #else
 						Type type = AssemblyLoader.GetType(typeFullName);
 #endif
 						externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
+						GXLogging.Debug(log, "Loading storage provider done.");
 					}
 					catch (Exception e)
 					{

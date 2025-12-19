@@ -3,6 +3,8 @@ using GeneXus.Services;
 using GeneXus.Attributes;
 using GeneXus.Utils;
 using GeneXus.Encryption;
+using System.Diagnostics;
+
 #if NETCORE
 using GxClasses.Helpers;
 #endif
@@ -57,14 +59,19 @@ namespace GeneXus.Configuration
 				}
 
 				string typeFullName = providerService.ClassName;
-				GXLogging.Debug(logger, "Loading storage provider: " + typeFullName);
+				string fullStack = Environment.StackTrace;
+				int index = fullStack.IndexOf("GeneXus.Application.GxRestWrapper", StringComparison.OrdinalIgnoreCase);
+				if (index > 0) fullStack = fullStack.Substring(0, index);
+
+				GXLogging.Debug(logger, "Loading storage provider from Create: " + typeFullName, fullStack);
 #if !NETCORE
 				Type type = Type.GetType(typeFullName, true, true);
 #else
 				Type type = AssemblyLoader.GetType(typeFullName);
 #endif
 				this.provider = (ExternalProvider) Activator.CreateInstance(type, new object[] { providerService });
-				
+				GXLogging.Debug(logger, "Loading storage provider ended.");
+
 			}
 			catch (Exception ex)
 			{
