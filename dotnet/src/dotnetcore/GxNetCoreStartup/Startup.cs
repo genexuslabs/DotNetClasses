@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -44,6 +45,8 @@ namespace GeneXus.Application
 {
 	public class Program
 	{
+		const string GRPC_FLAG = "grpc";
+		const string MCP_FLAG = "mcp";
 		const string DEFAULT_PORT = "80";
 		const int GRACEFUL_SHUTDOWN_DELAY_SECONDS = 30;
 		static string DEFAULT_SCHEMA = Uri.UriSchemeHttp;
@@ -63,12 +66,12 @@ namespace GeneXus.Application
 						schema = Uri.UriSchemeHttps;
 					if (args.Length > 4)
 					{
-						Startup.IsMcp = args[4].Equals("mcp", StringComparison.OrdinalIgnoreCase);
-						Startup.IsGrpc = args[4].Equals("grpc", StringComparison.OrdinalIgnoreCase);
+						Startup.IsMcp = args[4].Equals(MCP_FLAG, StringComparison.OrdinalIgnoreCase);
+						Startup.IsGrpc = args[4].Equals(GRPC_FLAG, StringComparison.OrdinalIgnoreCase);
 						if (args.Length > 5)
 						{
-							Startup.IsGrpc = (!Startup.IsGrpc) ? args[5].Equals("grpc", StringComparison.OrdinalIgnoreCase) : Startup.IsGrpc;
-							Startup.IsMcp |= (!Startup.IsMcp) ? args[5].Equals("mcp", StringComparison.OrdinalIgnoreCase) : Startup.IsMcp;
+							Startup.IsGrpc = (!Startup.IsGrpc) ? args[5].Equals(GRPC_FLAG, StringComparison.OrdinalIgnoreCase) : Startup.IsGrpc;
+							Startup.IsMcp |= (!Startup.IsMcp) ? args[5].Equals(MCP_FLAG, StringComparison.OrdinalIgnoreCase) : Startup.IsMcp;
 						}
 					}
 				}
@@ -118,10 +121,13 @@ namespace GeneXus.Application
 						{
 							listenOptions.Protocols = HttpProtocols.Http1;
 						});
-						options.ListenAnyIP(int.Parse(port) + 1, listenOptions =>
+						if (Startup.IsGrpc)
 						{
-							listenOptions.Protocols = HttpProtocols.Http2;
-						});
+							options.ListenAnyIP(int.Parse(port) + 1, listenOptions =>
+							{
+								listenOptions.Protocols = HttpProtocols.Http2;
+							});
+						}
 					})
 					.Build();
 		}
@@ -156,7 +162,7 @@ namespace GeneXus.Application
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(CustomBadRequestObjectResult).FullName);
 		public CustomBadRequestObjectResult(ActionContext context)
-				: base(HttpHelper.GetJsonError(StatusCodes.Status400BadRequest.ToString(), HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest)))
+			: base(HttpHelper.GetJsonError(StatusCodes.Status400BadRequest.ToString(), HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest)))
 		{
 			LogErrorResponse(context);
 			StatusCode = StatusCodes.Status400BadRequest;
@@ -207,7 +213,7 @@ namespace GeneXus.Application
 		internal const string GX_CONTROLLERS = "gxcontrollers";
 		internal static string DefaultFileName { get; set; }
 
-		public List<string> servicesBase = new List<string>();
+		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
 		public Startup(IConfiguration configuration, IHostingEnvironment env)
@@ -283,7 +289,7 @@ namespace GeneXus.Application
 			{
 				options.IdleTimeout = TimeSpan.FromMinutes(Preferences.SessionTimeout);
 				options.Cookie.HttpOnly = true;
-				options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+					options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 				options.Cookie.IsEssential = true;
 				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
 				if (!string.IsNullOrEmpty(sessionCookieName))
@@ -509,7 +515,7 @@ namespace GeneXus.Application
 				{
 					services.AddStackExchangeRedisCache(options =>
 					{
-						GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
+					GXLogging.Info(log, $"Using Redis for Distributed session, ConnectionString:{sessionService.ConnectionString}, InstanceName: {sessionService.InstanceName}");
 						options.Configuration = sessionService.ConnectionString;
 						options.InstanceName = sessionService.InstanceName;
 					});
@@ -590,6 +596,10 @@ namespace GeneXus.Application
 					provider.Mappings[mapping.Key] = mapping.Value;
 				}
 			}
+			app.UseForwardedHeaders(new ForwardedHeadersOptions
+			{
+				ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+			});
 			if (GXUtil.CompressResponse())
 			{
 				app.UseResponseCompression();
@@ -901,7 +911,7 @@ namespace GeneXus.Application
 	}
 	internal class SetRoutePrefix : IApplicationModelConvention
 	{
-		private readonly AttributeRouteModel _routePrefix;
+		private readonly AttributeRouteModel _routePrefix ;
 		public SetRoutePrefix(IRouteTemplateProvider route)
 		{
 			_routePrefix = new AttributeRouteModel(route);
@@ -925,7 +935,7 @@ namespace GeneXus.Application
 		}
 	}
 
-
+	
 	internal class HomeControllerConvention : IApplicationModelConvention
 	{
 		private static bool FindAndStoreDefaultFile()
