@@ -8,6 +8,7 @@ using NPOI.SS.Util;
 using NPOI.XSSF.Model;
 using NPOI.XSSF.UserModel;
 using NPOI.XSSF.UserModel.Extensions;
+using static NPOI.HSSF.Util.HSSFColor;
 
 namespace GeneXus.MSOffice.Excel.Poi.Xssf
 {
@@ -763,7 +764,12 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 						{
 							if ((red + green + blue) != 0)
 							{
-								newColor = new XSSFColor(new byte[] { (byte)red, (byte)green, (byte)blue });
+								var ctColor = new CT_Color
+								{
+									rgb = new byte[] { (byte)red, (byte)green, (byte)blue }
+								};
+
+								newColor = new XSSFColor(ctColor);
 
 								newFont = (XSSFFont)pWorkbook.CreateFont();
 								CopyPropertiesFont(newFont, fontCell);
@@ -785,8 +791,13 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 								if (triplet[0] != red || triplet[1] != green || triplet[2] != blue)
 								{
+									var ctColor = new CT_Color
+									{
+										rgb = new byte[] { (byte)red, (byte)green, (byte)blue }
+									};
 
-									newColor = new XSSFColor(new byte[] { (byte)red, (byte)green, (byte)blue });
+									newColor = new XSSFColor(ctColor);
+
 
 									newFont = (XSSFFont)pWorkbook.CreateFont();
 									CopyPropertiesFont(newFont, fontCell);
@@ -1031,7 +1042,12 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 
 		private XSSFColor ToColor(ExcelColor color)
 		{
-			return new XSSFColor(new byte[] { (byte)color.Red, (byte)color.Green, (byte)color.Blue });
+			var ctColor = new CT_Color
+			{
+				rgb = new byte[] { (byte)color.Red, (byte)color.Green, (byte)color.Blue }
+			};
+
+			return new XSSFColor(ctColor);
 		}
 		private XSSFCellStyle ApplyNewCellStyle(XSSFCellStyle cellStyle, ExcelStyle newCellStyle)
 		{
