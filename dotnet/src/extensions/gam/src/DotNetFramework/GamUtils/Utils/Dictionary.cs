@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
+using GeneXus.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using GeneXus.Utils;
 
 namespace GamUtils.Utils
 {
@@ -55,8 +55,9 @@ namespace GamUtils.Utils
 			{
 				userMap[key] = null;
 			}
-			else if (value is IDictionary || value is IList || value is bool || value is int ||
-					 value is long || value is float || value is double || value is decimal)
+			else if (value is IDictionary || value is IList || value is bool || value is short ||
+					 value is int || value is long || value is float || value is double ||
+					 value is decimal)
 			{
 				userMap[key] = value;
 			}
