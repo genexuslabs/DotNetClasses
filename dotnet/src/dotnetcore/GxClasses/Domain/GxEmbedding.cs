@@ -29,7 +29,7 @@ namespace GeneXus.Utils
 		public bool IsEmpty()
 		{
 			ReadOnlySpan<float> span = _embedding.Span;
-			if (span != null)
+			if (!span.IsEmpty)
 			{
 				for (int i = 0; i < span.Length; i++)
 				{

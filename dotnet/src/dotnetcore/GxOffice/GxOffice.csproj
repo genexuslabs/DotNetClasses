@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 		<DefineConstants>NETCORE</DefineConstants>
 		<AssemblyName>Genexus.Office</AssemblyName>
 		<RootNamespace>GxOffice</RootNamespace>
@@ -41,7 +41,7 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="NPOI" Version="2.7.3" />
+		<PackageReference Include="NPOI" Version="2.7.5" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 	</ItemGroup>
 

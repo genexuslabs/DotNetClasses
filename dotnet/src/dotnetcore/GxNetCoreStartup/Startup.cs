@@ -37,6 +37,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -94,17 +95,49 @@ namespace GeneXus.Application
 			}
 		}
 
+#if NET10_0_OR_GREATER
+		public static IHost BuildWebHost(string[] args) =>
+		Host.CreateDefaultBuilder(args)
+		.ConfigureWebHostDefaults(webBuilder =>
+		{
+			webBuilder
+				.UseStartup<Startup>()
+				.UseContentRoot(Startup.LocalPath)
+				.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
+		})
+		.Build();
+
+
+		public static IHost BuildWebHostPort(string[] args, string port)
+		{
+			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
+		}
+		static WebApplication BuildWebHostPort(string[] args, string port, string schema)
+		{
+			var builder = WebApplication.CreateBuilder(args);
+
+			builder.WebHost
+				.UseUrls($"{schema}://*:{port}")
+				.UseWebRoot(Startup.LocalPath)
+				.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
+
+			builder.Host.UseContentRoot(Startup.LocalPath);
+
+			var app = builder.Build();
+			return app;
+		}
+#else
 		public static IWebHost BuildWebHost(string[] args) =>
 		   WebHost.CreateDefaultBuilder(args)
 		   .UseStartup<Startup>()
 		   .UseContentRoot(Startup.LocalPath)
 		   .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS))
 		   .Build();
-
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
 			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
 		}
+
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
@@ -126,6 +159,7 @@ namespace GeneXus.Application
 					})
 					.Build();
 		}
+#endif
 
 		private static void LocatePhysicalLocalPath()
 		{
@@ -211,7 +245,7 @@ namespace GeneXus.Application
 		public List<string> servicesBase = new List<string>();		
 
 		private GXRouting gxRouting;
-		public Startup(IConfiguration configuration, IHostingEnvironment env)
+		public Startup(IConfiguration configuration, IWebHostEnvironment env)
 		{
 			Config.ConfigRoot = configuration;
 			GxContext.IsHttpContext = true;

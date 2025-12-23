@@ -207,7 +207,11 @@ namespace GeneXus.Http.Client
 
 		private static string HttpClientInstanceIdentifier(string proxyHost, int proxyPort, List<string> fileCertificateCollection, int timeout)
 		{
+#if !NET10_0_OR_GREATER
 			bool defaultSslOptions = ServicePointManager.ServerCertificateValidationCallback == null;
+#else
+			bool defaultSslOptions = true;
+#endif
 			if (string.IsNullOrEmpty(proxyHost) && CollectionUtils.IsNullOrEmpty(fileCertificateCollection) && timeout== DEFAULT_TIMEOUT && defaultSslOptions)
 			{
 				return string.Empty;
@@ -277,6 +281,7 @@ namespace GeneXus.Http.Client
 
 		private static void SetSslOptions(SocketsHttpHandler handler)
 		{
+#if !NET10_0_OR_GREATER
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
 			{
 				handler.SslOptions = new SslClientAuthenticationOptions
@@ -284,6 +289,7 @@ namespace GeneXus.Http.Client
 					RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback
 				};
 			}
+#endif
 		}
 #else
 		[SecuritySafeCritical]
@@ -2104,11 +2110,19 @@ namespace GeneXus.Http.Client
 			X509Certificate2 c;
 			if (pass == null || pass.Trim().Length == 0)
 			{
+#if NET10_0_OR_GREATER
+				c = X509CertificateLoader.LoadCertificateFromFile(file);
+#else
 				c = new X509Certificate2(file);
+#endif
 			}
 			else
 			{
+#if NET10_0_OR_GREATER
+				c = X509CertificateLoader.LoadPkcs12FromFile(file, pass);
+#else
 				c = new X509Certificate2(file, pass);
+#endif
 			}
 			_fileCertificateCollection.Add(file);
 			_certificateCollection.Add(c);
