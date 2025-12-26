@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using GeneXus.Services;
 using GeneXus.Attributes;
 using GeneXus.Utils;
@@ -18,6 +20,7 @@ namespace GeneXus.Configuration
 	[GXApi]
 	public class ExternalStorage : GxStorageProvider
 	{
+		private const int MAX_CACHE_SIZE = 100; // Maximum number of entries in the cache
 		private static readonly ConcurrentDictionary<string, Lazy<ExternalStorage>> providerCache = new ConcurrentDictionary<string, Lazy<ExternalStorage>>();
 
 		private GXService providerService;
@@ -45,6 +48,19 @@ namespace GeneXus.Configuration
 			try
 			{
 				string cacheKey = GenerateCacheKey(name, initialProperties);
+
+				if (providerCache.Count >= MAX_CACHE_SIZE) 
+				{
+					// Simple approach: Remove approximately 10% of entries when limit is reached
+					int itemsToRemove = MAX_CACHE_SIZE / 10;
+					GXLogging.Debug(logger, $"Cache size limit reached ({providerCache.Count}/{MAX_CACHE_SIZE}), removing {itemsToRemove} items");
+					
+					string[] keys = providerCache.Keys.Take(itemsToRemove).ToArray();
+					foreach (string key in keys)
+					{
+						providerCache.TryRemove(key, out _);
+					}
+				}
 
 				var lazyProvider = providerCache.GetOrAdd(
 					cacheKey,
