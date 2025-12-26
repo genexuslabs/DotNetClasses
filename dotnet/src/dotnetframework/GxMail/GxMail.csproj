@@ -15,6 +15,7 @@
 		<PackageReference Include="OpenPop.NET" Version="2.0.6.1120" />
 		<PackageReference Include="Org.Mentalis.Security" Version="1.0.0" />
 		<PackageReference Condition="'$(SignAssembly)'=='true'" Include="StrongNamer" Version="0.2.5" />
+		<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="Interop.MAPI">
