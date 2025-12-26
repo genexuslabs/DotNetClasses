@@ -508,7 +508,7 @@ namespace Amazon.S3.IO
 					}
 					else
 					{
-						var bucketName = key.Substring(0, secondlast);
+						string bucketName = key.Substring(0, secondlast);
 						ret = new S3DirectoryInfo(s3Client, bucket, bucketName);
 					}
 				}
@@ -604,7 +604,7 @@ namespace Amazon.S3.IO
 			}
 
 			//filter based on search pattern
-			var regEx = WildcardToRegex(searchPattern);
+			string regEx = WildcardToRegex(searchPattern);
 			folders = folders.Where(s3dirInfo => Regex.IsMatch(s3dirInfo.Name, regEx, RegexOptions.IgnoreCase));
 			return folders;
 		}
@@ -679,7 +679,7 @@ namespace Amazon.S3.IO
 			}
 
 			//filter based on search pattern
-			var regEx = WildcardToRegex(searchPattern);
+			string regEx = WildcardToRegex(searchPattern);
 			files = files.Where(s3fileInfo => Regex.IsMatch(s3fileInfo.Name, regEx, RegexOptions.IgnoreCase));
 			return files;
 		}
