@@ -57,7 +57,7 @@ namespace GeneXus.Web.Security
         public static bool Verify(string pgmName, string issuer, string value, string jwtToken, IGxContext context)
 		{
 			WebSecureToken token;
-			WebSecureToken jwtTokenObj = SecureTokenHelper.getWebSecureToken(jwtToken, GetSecretKey(context));
+			WebSecureToken jwtTokenObj = SecureTokenHelper.getWebSecureToken(jwtToken, GetSecretKey(context), false);
 			if (jwtTokenObj != null && jwtTokenObj.ValueType == ValueTypeHash)
 			{
 				return Verify(pgmName, issuer, GetHash(value), jwtToken, out token, context);
@@ -169,7 +169,7 @@ namespace GeneXus.Web.Security
             SignEncrypt,           
             None 
         }
-		internal static WebSecureToken getWebSecureToken(string signedToken, string secretKey)
+		internal static WebSecureToken getWebSecureToken(string signedToken, string secretKey, bool validate=true)
 		{
 			byte[] bSecretKey = Encoding.ASCII.GetBytes(secretKey);
 			if (string.IsNullOrEmpty(signedToken))
@@ -182,18 +182,28 @@ namespace GeneXus.Web.Security
 				{
 					handler.MaximumTokenSizeInBytes = signedToken.Length + 1;
 				}
-				var validationParameters = new TokenValidationParameters
-				{
-					ClockSkew = TimeSpan.FromMinutes(1),
-					ValidateAudience = false,
-					ValidateIssuer = false,
-					IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
-				};
-				SecurityToken securityToken;
 				WebSecureToken outToken = new WebSecureToken();
-				var claims = handler.ValidateToken(signedToken, validationParameters, out securityToken);
-				outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
-				outToken.ValueType = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE_TYPE)?.Value ?? string.Empty;
+				if (validate)
+				{
+					var validationParameters = new TokenValidationParameters
+					{
+						ClockSkew = TimeSpan.FromMinutes(1),
+						ValidateAudience = false,
+						ValidateIssuer = false,
+						IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
+					};
+					SecurityToken securityToken;
+					var claims = handler.ValidateToken(signedToken, validationParameters, out securityToken);
+					outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+					outToken.ValueType = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE_TYPE)?.Value ?? string.Empty;
+				}
+				else
+				{
+					JwtSecurityToken jwtSecurityToken = handler.ReadJwtToken(signedToken);
+					var claims = jwtSecurityToken.Claims;
+					outToken.Value = claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+					outToken.ValueType = claims.First(c => c.Type == WebSecureToken.GXVALUE_TYPE)?.Value ?? string.Empty;
+				}
 				return outToken;
 			}
 		}
