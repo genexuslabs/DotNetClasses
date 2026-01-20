@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>

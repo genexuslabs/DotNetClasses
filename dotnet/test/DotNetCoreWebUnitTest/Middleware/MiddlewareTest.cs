@@ -7,7 +7,6 @@ using GxClasses.Web.Middleware;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Hosting;
 
 namespace xUnitTesting
 {
@@ -20,25 +19,11 @@ namespace xUnitTesting
 		{
 			SetEnvironmentVars();
 			BeforeStartup();
-
+			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(DOTNET_ENVIRONMENT));
 			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
-
-			var hostBuilder = Host.CreateDefaultBuilder().ConfigureWebHostDefaults(webBuilder =>
-				{
-					webBuilder
-						.UseStartup<Startup>()
-						.UseEnvironment(DOTNET_ENVIRONMENT)
-						.UseContentRoot(GXRouting.ContentRootPath)
-						.UseTestServer();
-				});
-
-			var host = hostBuilder.Start();
-
-			server = host.GetTestServer();
-			server.PreserveExecutionContext = true;
+			server.PreserveExecutionContext= true;
 			server.CreateClient();
 		}
-
 		protected virtual void SetEnvironmentVars()
 		{
 
