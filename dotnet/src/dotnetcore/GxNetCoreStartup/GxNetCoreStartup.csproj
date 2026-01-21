@@ -40,7 +40,9 @@
 		<PackageReference Include="ModelContextProtocol.Core" Version="0.4.0-preview.3" PrivateAssets="All" />
 		<PackageReference Include="Grpc.AspNetCore" Version="2.62.0" PrivateAssets="All" />
 		<PackageReference Include="Grpc.Core.Api" Version="2.62.0" PrivateAssets="All" />
-		
+
+		<PackageReference Include="System.Formats.Asn1" Version="8.0.2" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GxClasses.Web\GxClasses.Web.csproj" />
