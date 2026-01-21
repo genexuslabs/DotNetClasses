@@ -8,8 +8,6 @@ using System.Text;
 
 namespace GeneXus.Application
 {
-
-
 	internal static class FileTools
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(FileTools).FullName);
@@ -47,8 +45,34 @@ namespace GeneXus.Application
 			}
 			return mcpAssemblies;
 		}
+
+		private static string RemoveSuffix(this string str, string suffix)
+		{
+	      return str.EndsWith(suffix)? str.Substring(0, str.Length - suffix.Length) : str;
+		}
+
+
+		public static List<(string FullPath, string ServiceName)> GrpcTools(string baseDirectory, IGXLogger log)
+		{
+			string currentBin = Path.Combine(baseDirectory, "bin");
+			if (!Directory.Exists(currentBin))
+			{
+				currentBin = baseDirectory;
+				if (!Directory.Exists(currentBin))
+				{
+					currentBin = "";
+				}
+			}
+			if (!string.IsNullOrEmpty(currentBin))
+			{
+				return Directory.GetFiles(currentBin, "*_grpc.dll")
+					.Select(file => (
+						FullPath: file,
+						ServiceName: Path.GetFileNameWithoutExtension(file).RemoveSuffix("_grpc")
+					))
+				.ToList();
+			}
+			return new List<(string FullPath, string ServiceName)>();
+		}		
 	}
-
-
-
 }
