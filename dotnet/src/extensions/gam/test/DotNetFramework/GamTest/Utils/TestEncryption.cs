@@ -15,7 +15,7 @@ namespace GamTest.Utils
 			string txt = "hello world";
 			int macSize = 64;
 			string encrypted = GamUtilsEO.AesGcm(txt, key, nonce, macSize, true);
-			Assert.IsFalse(encrypted.IsNullOrEmpty(), "testAesGcm encrypt");
+			Assert.IsFalse(string.IsNullOrEmpty(encrypted), "testAesGcm encrypt");
 			string decrypted = GamUtilsEO.AesGcm(encrypted, key, nonce, macSize, false);
 			Assert.AreEqual(txt, decrypted, "testAesGcm decrypt");
 		}
