@@ -1,9 +1,9 @@
-﻿using Lucene.Net.Documents;
+using GeneXus;
+using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using GeneXus;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
