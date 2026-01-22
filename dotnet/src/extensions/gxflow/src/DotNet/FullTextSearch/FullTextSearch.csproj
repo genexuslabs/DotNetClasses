@@ -24,7 +24,6 @@
 		<Compile Include="..\..\DotNetFramework\FullTextSearch\AnalyzerManager.cs" Link="AnalyzerManager.cs" />
 		<Compile Include="..\..\DotNetFramework\FullTextSearch\Indexer.cs" Link="Indexer.cs" />
 		<Compile Include="..\..\DotNetFramework\FullTextSearch\IndexManager.cs" Link="IndexManager.cs" />
-		<Compile Include="..\..\DotNetFramework\FullTextSearch\Logger.cs" Link="Logger.cs" />
 		<Compile Include="..\..\DotNetFramework\FullTextSearch\Searcher.cs" Link="Searcher.cs" />
 	</ItemGroup>
 </Project>
