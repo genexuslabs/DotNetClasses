@@ -3,64 +3,159 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using GeneXus;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Security;
 using System.Text;
 
 namespace com.genexus.CA.search
 {
   public class Searcher
   {
+    private static readonly IGXLogger logger = GXLoggerFactory.GetLogger<Searcher>();
+
     public static string Search(string dir, string lang, string query, int maxResults, int from)
     {
       StringBuilder stringBuilder = new StringBuilder();
+      List<string> uris = new List<string>();
+      int totalHits = 0;
+      Stopwatch stopwatch = Stopwatch.StartNew();
+      string normalizedLang = string.IsNullOrWhiteSpace(lang) ? string.Empty : lang.Trim().ToLowerInvariant();
+
       try
       {
-        IndexSearcher indexSearcher = new IndexSearcher((Directory) FSDirectory.Open(dir));
-        string[] fields = new string[2]
+        if (from < 0)
+          from = 0;
+        if (maxResults < 0)
+          maxResults = 0;
+
+        if (!IndexExists(dir))
         {
-          "title",
-          "content"
-        };
-        Occur[] flags = new Occur[2]
-        {
-          Occur.SHOULD,
-          Occur.SHOULD
-        };
-        Query query1 = MultiFieldQueryParser.Parse(Lucene.Net.Util.Version.LUCENE_30, query, fields, flags, AnalyzerManager.GetAnalyzer(lang));
-        if (!lang.Equals("IND"))
-        {
-          Query query2 = (Query) new TermQuery(new Term("language", lang));
-          query1 = (Query) new BooleanQuery()
-          {
-            {
-              query1,
-              Occur.MUST
-            },
-            {
-              query2,
-              Occur.MUST
-            }
-          };
+          stringBuilder.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Results hits=\"0\" time=\"0ms\"></Results>");
+          return stringBuilder.ToString();
         }
-        TopDocs topDocs = indexSearcher.Search(query1, maxResults);
-        string str = "";
-        int totalHits = topDocs.TotalHits;
-        stringBuilder.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        stringBuilder.Append("<Results hits = '" + totalHits.ToString() + "' time = '" + str + "'>");
-        for (int index = 0; index < totalHits; ++index)
+
+        if (!string.IsNullOrWhiteSpace(query))
         {
-          stringBuilder.Append("<Result >");
-          Document document = indexSearcher.Doc(topDocs.ScoreDocs[index].Doc);
-          stringBuilder.Append("<URI>" + document.GetField("uri").StringValue + "</URI>");
-          stringBuilder.Append("</Result>");
+          int start = Math.Max(0, from);
+          int size = maxResults > 0 ? maxResults : 10;
+          IndexSearcher indexSearcher = null;
+
+          try
+          {
+            indexSearcher = new IndexSearcher((Directory) FSDirectory.Open(dir));
+
+            string[] fields = new string[3]
+            {
+              "title",
+              "content",
+              "summary"
+            };
+            Occur[] flags = new Occur[3]
+            {
+              Occur.SHOULD,
+              Occur.SHOULD,
+              Occur.SHOULD
+            };
+
+            Query query1 = null;
+            try
+            {
+              query1 = MultiFieldQueryParser.Parse(Lucene.Net.Util.Version.LUCENE_30, query, fields, flags, AnalyzerManager.GetAnalyzer(normalizedLang));
+            }
+            catch (ParseException)
+            {
+              try
+              {
+                string escapedQuery = QueryParser.Escape(query);
+                query1 = MultiFieldQueryParser.Parse(Lucene.Net.Util.Version.LUCENE_30, escapedQuery, fields, flags, AnalyzerManager.GetAnalyzer(normalizedLang));
+              }
+              catch (ParseException)
+              {
+                query1 = (Query) new TermQuery(new Term("content", query));
+              }
+            }
+
+            if (!string.IsNullOrWhiteSpace(normalizedLang) && !string.Equals(normalizedLang, "ind", StringComparison.OrdinalIgnoreCase))
+            {
+              Query query2 = (Query) new TermQuery(new Term("language", normalizedLang));
+              query1 = (Query) new BooleanQuery()
+              {
+                {
+                  query1,
+                  Occur.MUST
+                },
+                {
+                  query2,
+                  Occur.MUST
+                }
+              };
+            }
+
+            TopDocs topDocs = indexSearcher.Search(query1, start + size);
+            totalHits = topDocs.TotalHits;
+
+            int end = Math.Min(totalHits, start + size);
+            for (int index = start; index < end; ++index)
+            {
+              Document document = indexSearcher.Doc(topDocs.ScoreDocs[index].Doc);
+              string uriValue = document.GetField("uri")?.StringValue ?? string.Empty;
+              uris.Add(uriValue);
+            }
+          }
+          finally
+          {
+            if (indexSearcher != null)
+              indexSearcher.Close();
+          }
         }
       }
       catch (Exception ex)
       {
-        Logger.Print(ex.ToString());
+        GXLogging.Error(logger, "Error executing search.", ex);
+        stringBuilder.Clear();
+        stringBuilder.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Results hits=\"0\" time=\"0ms\"></Results>");
+        return stringBuilder.ToString();
+      }
+      finally
+      {
+        stopwatch.Stop();
+      }
+
+      stringBuilder.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+      stringBuilder.Append("<Results hits=\"").Append(totalHits.ToString()).Append("\" time=\"").Append(stopwatch.ElapsedMilliseconds.ToString()).Append("ms\">");
+      foreach (string uriValue in uris)
+      {
+        stringBuilder.Append("<Result>");
+        stringBuilder.Append("<URI>").Append(EscapeXml(uriValue)).Append("</URI>");
+        stringBuilder.Append("</Result>");
       }
       stringBuilder.Append("</Results>");
       return stringBuilder.ToString();
     }
+
+    private static string EscapeXml(string value)
+    {
+      return SecurityElement.Escape(value ?? string.Empty) ?? string.Empty;
+    }
+
+    private static bool IndexExists(string dir)
+    {
+      try
+      {
+        if (string.IsNullOrWhiteSpace(dir))
+          return false;
+
+        return IndexReader.IndexExists((Directory) FSDirectory.Open(dir));
+      }
+      catch (Exception ex)
+      {
+        GXLogging.Error(logger, "Error checking index existence.", ex);
+        return false;
+      }
+    }
+
   }
 }
