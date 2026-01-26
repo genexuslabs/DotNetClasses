@@ -396,7 +396,7 @@ namespace GeneXus.Application
 					foreach (string controller in Directory.GetFiles(controllers))
 					{
 						Console.WriteLine($"Loading controller {controller}");
-						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller)).AddControllersAsServices();
+						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller));
 					}
 				}
 			}
@@ -427,7 +427,7 @@ namespace GeneXus.Application
 						if (File.Exists(controllerAssemblyFile))
 						{
 							GXLogging.Info(log, "Registering rest: " + controllerAssemblyName);
-							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile)).AddControllersAsServices();
+							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
 						}
 					}
 				}
@@ -452,7 +452,7 @@ namespace GeneXus.Application
 						if (File.Exists(controllerAssemblyFile))
 						{
 							GXLogging.Info(log, "Registering api: " + grp);
-							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile)).AddControllersAsServices();
+							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
 						}
 					}
 				}
