@@ -52,6 +52,12 @@ jobs:
       with:
         dotnet-version: '8.x'
         include-prerelease: true
+        
+    - name: Install .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        
 
     - name: Install libgdiplus
       run: sudo apt-get install -y libgdiplus
