@@ -61,6 +61,7 @@ namespace GeneXus.Http
 		internal const string GX_SPA_GXOBJECT_RESPONSE_HEADER = "X-GXOBJECT";
 		internal const string GX_SPA_MASTERPAGE_HEADER = "X-SPA-MP";
 		internal const string GX_AJAX_MULTIPART_ID = "GXAjaxMultipart";
+		internal const string GX_EVENT_METADATA_ASYNC_SUFFIX = "Async";
 		private string ThemekbPrefix;
 		private string ThemestyleSheet;
 		private string ThemeurlBuildNumber;
@@ -1038,16 +1039,7 @@ namespace GeneXus.Http
 
 			internal string Invoke(string JsonMessage, GXHttpHandler targetObj)
 			{
-				JObject objMessage = JSONHelper.ReadJSON<JObject>(JsonMessage);
-				ParseInputJSonMessage(objMessage, targetObj);
-				this.targetObj.setFullAjaxMode();
-				this.targetObj.createObjects();
-				this.targetObj.initialize();
-				this.targetObj.InitializeDynEvents();
-				this.targetObj.SetPrefix(cmpContext);
-				this.targetObj.initialize_properties();
-				this.targetObj.setAjaxEventMode();
-				this.targetObj.ajax_rsp_clear();
+				PrepareInvoke(JsonMessage, targetObj);
 
 				bool iSecEnabled = this.targetObj.IntegratedSecurityEnabled;
 				if (this.targetObj.ValidateObjectAccess(cmpContext) && (iSecEnabled ? this.targetObj.CheckCmpSecurityAccess() : true))
@@ -1064,6 +1056,63 @@ namespace GeneXus.Http
 				}
 				return response;
 			}
+			private void PrepareInvoke(string JsonMessage, GXHttpHandler targetObj)
+			{
+				JObject objMessage = JSONHelper.ReadJSON<JObject>(JsonMessage);
+				ParseInputJSonMessage(objMessage, targetObj);
+				this.targetObj.setFullAjaxMode();
+				this.targetObj.createObjects();
+				this.targetObj.initialize();
+				this.targetObj.InitializeDynEvents();
+				this.targetObj.SetPrefix(cmpContext);
+				this.targetObj.initialize_properties();
+				this.targetObj.setAjaxEventMode();
+				this.targetObj.ajax_rsp_clear();
+
+			}
+
+#if NETCORE
+			internal async Task<string> InvokeAsync(string JsonMessage, GXHttpHandler targetObj)
+			{
+				PrepareInvoke(JsonMessage, targetObj);
+
+				bool iSecEnabled = this.targetObj.IntegratedSecurityEnabled;
+				if (this.targetObj.ValidateObjectAccess(cmpContext) && (iSecEnabled ? this.targetObj.CheckCmpSecurityAccess() : true))
+				{
+					ParseMetadata();
+					await DoInvokeAsync(BeforeInvoke());
+					AfterInvoke();
+				}
+				string response = BuildOutputJSonMessage();
+				this.targetObj.cleanup();
+				if (this.targetObj != targetObj)
+				{
+					targetObj.context.CloseConnections();
+				}
+				return response;
+			}
+
+
+			private async Task DoInvokeAsync(object[] MethodParms)
+			{
+				if (!anyError)
+				{
+					for (int i = 0; i < eventHandlers.Length; i++)
+					{
+						string handler = eventHandlers[i];
+						if (i > 0)
+						{
+							targetObj.PrepareForReuse();
+						}
+						Task task = (Task)targetObj.GetType().InvokeMember(handler + GX_EVENT_METADATA_ASYNC_SUFFIX, BindingFlags.Public |
+						BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod,
+						Type.DefaultBinder,
+						targetObj, (eventUseInternalParms[i] ? MethodParms : null));
+						await task;
+					}
+				}
+			}
+#endif
 		}
 #if NETCORE
 		internal virtual async Task WebAjaxEventAsync()
@@ -1090,7 +1139,7 @@ namespace GeneXus.Http
 					jsonRequest = await reader.ReadToEndAsync(); ;
 				}
 			}
-			string jsonResponse = dynAjaxEvent.Invoke(jsonRequest, this);
+			string jsonResponse = await dynAjaxEvent.InvokeAsync(jsonRequest, this);
 
 
 			if (!redirect(context))
@@ -2534,7 +2583,7 @@ namespace GeneXus.Http
 		}
 		public virtual Task<string> GetResponseAsync(string sGXDynURL)
 		{
-			return Task.FromResult(string.Empty);
+			return Task.FromResult(getresponse(sGXDynURL));
 		}
 		public virtual string getresponse(string sGXDynURL)
 		{
@@ -3101,22 +3150,27 @@ namespace GeneXus.Http
 		}
 		public virtual Task ComponentRestoreStateAsync(string sPPrefix, string sPSFPrefix)
 		{
+			componentrestorestate(sPPrefix, sPSFPrefix);
 			return Task.CompletedTask;
 		}
 		public virtual Task ComponentProcessAsync(string sPPrefix, string sPSFPrefix, string sEvt)
 		{
+			componentprocess(sPPrefix, sPSFPrefix, sEvt);
 			return Task.CompletedTask;
 		}
 		public virtual Task ComponentPrepareAsync(Object[] parms)
 		{
+			componentprepare(parms);
 			return Task.CompletedTask;
 		}
 		public virtual Task ComponentStartAsync()
 		{
+			componentstart();
 			return Task.CompletedTask;
 		}
 		public virtual Task ComponentDrawAsync()
 		{
+			componentdraw();
 			return Task.CompletedTask;
 		}
 
@@ -3238,14 +3292,16 @@ namespace GeneXus.Http
 #if NETCORE
 		public virtual Task<short> ExecuteStartEventAsync()
 		{
-			return Task.FromResult<short>(0);
+			return Task.FromResult<short>(ExecuteStartEvent());
 		}
 		public virtual Task RenderHtmlContentAsync()
 		{
+			RenderHtmlContent();
 			return Task.CompletedTask;
 		}
 		public virtual Task DispatchEventsAsync()
 		{
+			DispatchEvents();
 			return Task.CompletedTask;
 		}
 #endif
