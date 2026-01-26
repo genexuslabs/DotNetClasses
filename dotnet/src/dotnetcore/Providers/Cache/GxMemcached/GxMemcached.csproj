@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 	<PackageTags>Memcached</PackageTags>
 	<PackageId>GeneXus.Memcached.Core</PackageId>
 	<DefineConstants>NETCORE</DefineConstants>
@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="EnyimMemcachedCore" Version="2.5.3" />
+    <PackageReference Include="EnyimMemcachedCore" Version="3.4.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
 	<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
   </ItemGroup>

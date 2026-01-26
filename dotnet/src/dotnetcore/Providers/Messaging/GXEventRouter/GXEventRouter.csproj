@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 	<PackageId>GeneXus.Message.EventRouter</PackageId>
 	<PackageTags>Event Bus Messaging Router</PackageTags>
 	<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>

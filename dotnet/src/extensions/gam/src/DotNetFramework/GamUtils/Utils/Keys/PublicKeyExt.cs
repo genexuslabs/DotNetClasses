@@ -153,7 +153,7 @@ namespace GamUtils.Utils.Keys
 #if !NETCORE
 				return extension.IsNullOrEmpty() ? "b64" : extension;
 #else
-				if (extension.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(extension))
 				{
 					try
 					{
@@ -211,7 +211,7 @@ namespace GamUtils.Utils.Keys
 		private static Org.BouncyCastle.X509.X509Certificate LoadFromPkcs12(string path, string alias, string password)
 		{
 			logger.Debug("LoadFromPkcs12");
-			if (password.IsNullOrEmpty())
+			if (string.IsNullOrEmpty(password))
 			{
 				logger.Error("LoadFromPkcs12: password is null or empty");
 				return null;

@@ -20,7 +20,7 @@ namespace GeneXus.OpenTelemetry.OpenTelemetry
 		public bool InstrumentAspNetCoreApplication(IServiceCollection services)
 		{
 			string envvar = Environment.GetEnvironmentVariable(OTEL_TRACES_EXPORTER);
-			if (envvar.IsNullOrEmpty() || !envvar.ToLower().Equals("none")) {
+			if (string.IsNullOrEmpty(envvar) || !envvar.ToLower().Equals("none")) {
 				services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
 				{
 					tracerProviderBuilder
@@ -30,7 +30,7 @@ namespace GeneXus.OpenTelemetry.OpenTelemetry
 			}
 
 			envvar = Environment.GetEnvironmentVariable(OTEL_METRICS_EXPORTER);
-			if (envvar.IsNullOrEmpty() || !envvar.ToLower().Equals("none")) {
+			if (string.IsNullOrEmpty(envvar) || !envvar.ToLower().Equals("none")) {
 				services.AddOpenTelemetry().WithMetrics(metricsProviderBuilder =>
 				{
 					metricsProviderBuilder

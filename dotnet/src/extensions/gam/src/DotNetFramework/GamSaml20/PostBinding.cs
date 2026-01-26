@@ -72,7 +72,7 @@ namespace GamSaml20
 #else
 			verified =  DSig.ValidateSignatures(this.nonCanonicalizedDoc, parms.TrustedCertPath);
 #endif
-			if (verified.IsNullOrEmpty())
+			if (string.IsNullOrEmpty(verified))
 			{
 				return false;
 			}

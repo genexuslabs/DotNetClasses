@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
 		<AssemblyName>GeneXus.Data.DynService.CosmosDB</AssemblyName>
 		<SignAssembly>false</SignAssembly>
@@ -16,6 +16,7 @@
 		<PackageReference Include="Azure.Core" Version="1.42.0" />
 		<PackageReference Include="Microsoft.Azure.Cosmos" Version="3.36.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
