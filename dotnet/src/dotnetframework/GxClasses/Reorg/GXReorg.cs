@@ -57,9 +57,11 @@ namespace GeneXus.Reorg
 #if NETCORE
 		protected virtual Task ExecutePrivateAsync()
 		{
+			ExecutePrivate();
 			return Task.CompletedTask;
 		}
 		protected virtual Task CleanupAsync() {
+			cleanup();
 			return Task.CompletedTask;
 		}
 		protected virtual async Task ExecuteImplAsync()
@@ -68,6 +70,7 @@ namespace GeneXus.Reorg
 		}
 		public virtual Task ExecFormAsync()
 		{
+			ExecForm();
 			return Task.CompletedTask;
 		}
 
