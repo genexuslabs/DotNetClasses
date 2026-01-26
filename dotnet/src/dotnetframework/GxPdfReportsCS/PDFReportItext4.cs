@@ -906,9 +906,29 @@ namespace com.genexus.reports
 						else
 						{
 							Col.AddElement((IElement)element);
-							Col.Go();
+							if (clipOverflowHtmlContent)
+							{
+								Col.Go();
+							}
+							else
+							{
+								int status;
+								do
+								{
+									status = Col.Go();
+									if (ColumnText.HasMoreText(status))
+									{
+										GxEndPage();
+										GxStartPage();
+										rect = new Rectangle(leftAux + leftMargin, drawingPageHeight - bottomAux, rightAux + leftMargin, drawingPageHeight - topAux);
+										SetSimpleColumn(Col, rect);
+									}
+								} while (ColumnText.HasMoreText(status));
+							}
 						}
 					}
+					pages = document.PageNumber;
+					setPage(pages);
 					if (drawWithTable)
 					{
 						ClassLoader.Invoke(t, "AddCell", new object[] { cell });
