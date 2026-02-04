@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net10.0;net462</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions);net462</TargetFrameworks>
 		<TargetFramework Condition="'$(Publishing)' == 'true'">net462</TargetFramework>
 		<NoWarn>618;1607;1698</NoWarn>
 		<IsPackable>false</IsPackable>

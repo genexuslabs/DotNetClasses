@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>$(NetVersions)</TargetFrameworks>
 	<PackageId>GeneXus.Azure.EventGrid</PackageId>
 	<PackageTags>Azure EventGrid Messaging</PackageTags>
   </PropertyGroup>
@@ -18,3 +18,5 @@
   </ItemGroup>
 
 </Project>
+
+
