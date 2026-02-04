@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<NoWarn>1701;1702;NU1701;NU1603;CS0618</NoWarn>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Lucene Search</PackageTags>
@@ -31,3 +31,4 @@
     <ProjectReference Include="..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 </Project>
+

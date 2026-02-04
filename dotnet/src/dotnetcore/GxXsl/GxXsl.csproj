@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<AssemblyName>GxXsl</AssemblyName>
 		<RootNamespace>GxXsl</RootNamespace>
 		<PackageTags>XML xsl apply</PackageTags>
@@ -12,3 +12,4 @@
 	</ItemGroup>
 
 </Project>
+

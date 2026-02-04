@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>$(NetVersions)</TargetFrameworks>
 	<PackageTags>Memcached</PackageTags>
 	<PackageId>GeneXus.Memcached.Core</PackageId>
 	<DefineConstants>NETCORE</DefineConstants>
@@ -24,3 +24,5 @@
   </ItemGroup>
 
 </Project>
+
+

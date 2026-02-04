@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
 		<AssemblyName>GeneXus.Data.DynService.CosmosDB</AssemblyName>
 		<SignAssembly>false</SignAssembly>
@@ -23,3 +23,5 @@
 	  <ProjectReference Include="..\..\..\dotnetcommon\DynService.Core\DynService.Core.csproj" />
 	</ItemGroup>
 </Project>
+
+

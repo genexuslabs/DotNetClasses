@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>$(NetVersions)</TargetFrameworks>
     <DefineConstants>NETCORE</DefineConstants>
     <AssemblyName>GxExcelI</AssemblyName>
 	<PackageTags>EPPlus Lite</PackageTags>
@@ -27,3 +27,5 @@
   </ItemGroup>
 
 </Project>
+
+

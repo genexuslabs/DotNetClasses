@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<PackageTags>Reorg</PackageTags>
 		<PackageId>GeneXus.Reorganization.Core</PackageId>
@@ -33,3 +33,4 @@
 		</ItemGroup>
 	</Target>
 </Project>
+
