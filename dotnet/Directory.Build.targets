@@ -17,11 +17,6 @@
 		<DumpSolutionTargetFrameworkDefault>net8</DumpSolutionTargetFrameworkDefault>
 	</PropertyGroup>
 	
-	<!-- Specific settings for .NET 10.0 -->
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('net10'))">
-		<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-		<!-- Additional .NET 10 specific settings can be added here -->
-	</PropertyGroup>
 	
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND '$(TargetFramework)'=='$(TF)' AND '$(DeployDirectory)'!='' AND '$(IsPackable)'=='true'" AfterTargets="Build">
 		<Message Importance="high" Text="Copying $(ProjectDir)$(OutDir)$(TargetFileName) to $(DeployDirectory)"></Message>
