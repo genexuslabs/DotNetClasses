@@ -1,8 +1,12 @@
 using System;
 using System.Net;
 using System.Net.Mail;
+#if NETCORE
+using System.Net.Sockets;
+#else
 using System.Reflection;
 using System.Text;
+#endif
 
 namespace GeneXus.Mail.Smtp
 {
@@ -10,13 +14,52 @@ namespace GeneXus.Mail.Smtp
 	{
 
 		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<SMTPMailClient>();
+
 #if NETCORE
-		const string SMTP_TRANSPORT = "_transport";
-		const string SMTP_CONNECTION = "_connection";
+		public static bool ValidateConnection(SmtpClient smtp, string senderAddress, bool checkUnicodeSupport = true)
+		{
+			using (var validationClient = new MailKit.Net.Smtp.SmtpClient())
+			{
+				try
+				{
+					if (smtp.Timeout > 0)
+						validationClient.Timeout = smtp.Timeout;
+
+					validationClient.Connect(smtp.Host, smtp.Port);
+
+					var credentials = smtp.Credentials as NetworkCredential;
+					if (credentials != null && !string.IsNullOrEmpty(credentials.UserName))
+					{
+						validationClient.Authenticate(credentials.UserName, credentials.Password);
+					}
+
+					validationClient.Disconnect(true);
+				}
+				catch (SocketException e)
+				{
+					GXLogging.Error(log, "SMTPConnection check failed", e);
+					throw new GXMailException(e.Message, GXInternetConstants.MAIL_CantLogin);
+				}
+				catch (MailKit.Security.SslHandshakeException e)
+				{
+					GXLogging.Error(log, "SMTPConnection TLS check failed", e);
+					throw new GXMailException(e.Message, GXInternetConstants.MAIL_CantLogin);
+				}
+				catch (MailKit.Security.AuthenticationException e)
+				{
+					GXLogging.Error(log, "SMTPConnection auth check failed", e);
+					throw new GXMailException(e.Message, GXInternetConstants.MAIL_AuthenticationError);
+				}
+				catch (Exception e)
+				{
+					GXLogging.Error(log, "SMTPConnection check failed", e);
+				}
+			}
+			return true;
+		}
 #else
 		const string SMTP_TRANSPORT = "transport";
 		const string SMTP_CONNECTION = "connection";
-#endif
 		const string SMTP_GET_CONNECTION = "GetConnection";
 		const string SMTP_TRANSPORT_TYPE = "System.Net.Mail.SmtpTransport";
 		const string SMTP_MAIL_COMMAND_TYPE = "System.Net.Mail.MailCommand";
@@ -42,7 +85,7 @@ namespace GeneXus.Mail.Smtp
 				}
 			}
 			catch (TargetInvocationException e)
-			{				
+			{
 				Exception inner = e.InnerException;
 				GXLogging.Error(log, "SMTPConnection check failed", inner);
 				if (inner is WebException)
@@ -56,7 +99,7 @@ namespace GeneXus.Mail.Smtp
 				else
 				{
 					throw new GXMailException(inner.Message, GXInternetConstants.MAIL_AuthenticationError);
-				}				
+				}
 			}
 			catch (Exception e)
 			{
@@ -82,11 +125,7 @@ namespace GeneXus.Mail.Smtp
 		}
 		internal static void SmtpGetConnection(Type smtpTransportType, object SmtpTransport, SmtpClient smtp)
 		{
-#if NETCORE
-			Execute(SmtpTransport.GetType(), SmtpTransport, SMTP_GET_CONNECTION, new object[] { smtp.Host, smtp.Port});
-#else
 			Execute(smtpTransportType, SmtpTransport, SMTP_GET_CONNECTION, new object[] { smtp.ServicePoint });
-#endif
 		}
 		private static object GetFieldValue(object instance, string FieldName)
 		{
@@ -99,6 +138,7 @@ namespace GeneXus.Mail.Smtp
 			MethodInfo methodInfo = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 			return methodInfo.Invoke(instance, parms);
 		}
+#endif
 
 	}
 }
