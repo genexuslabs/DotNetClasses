@@ -36,6 +36,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -86,17 +87,46 @@ namespace GeneXus.Application
 			}
 		}
 
+#if NET10_0_OR_GREATER
+		public static IHost BuildWebHost(string[] args) =>
+		Host.CreateDefaultBuilder(args)
+			.ConfigureWebHostDefaults(webBuilder =>
+		{
+			webBuilder.UseStartup<Startup>()
+			   .UseContentRoot(Startup.LocalPath)
+			   .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
+		}).Build();
+
+
+		public static IHost BuildWebHostPort(string[] args, string port)
+		{
+			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
+		}
+		static IHost BuildWebHostPort(string[] args, string port, string schema)
+		{
+			return Host.CreateDefaultBuilder(args)
+			.ConfigureWebHostDefaults(webBuilder =>
+			{
+				webBuilder.UseUrls($"{schema}://*:{port}")
+						  .UseStartup<Startup>()
+						  .UseWebRoot(Startup.LocalPath)
+						  .UseContentRoot(Startup.LocalPath)
+						  .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
+			})
+			.Build();
+		}
+#else
 		public static IWebHost BuildWebHost(string[] args) =>
 		   WebHost.CreateDefaultBuilder(args)
 		   .UseStartup<Startup>()
 		   .UseContentRoot(Startup.LocalPath)
 		   .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS))
 		   .Build();
-
 		public static IWebHost BuildWebHostPort(string[] args, string port)
 		{
 			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
 		}
+
 		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
 		{
 			return WebHost.CreateDefaultBuilder(args)
@@ -107,6 +137,7 @@ namespace GeneXus.Application
 					.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS))
 					.Build();
 		}
+#endif
 
 		private static void LocatePhysicalLocalPath()
 		{
@@ -191,7 +222,7 @@ namespace GeneXus.Application
 		public List<string> servicesBase = new List<string>();
 
 		private GXRouting gxRouting;
-		public Startup(IConfiguration configuration, IHostingEnvironment env)
+		public Startup(IConfiguration configuration, IWebHostEnvironment env)
 		{
 			Config.ConfigRoot = configuration;
 			GxContext.IsHttpContext = true;
@@ -263,7 +294,7 @@ namespace GeneXus.Application
 				string sessionCookieName = GxWebSession.GetSessionCookieName(VirtualPath);
 				if (!string.IsNullOrEmpty(sessionCookieName))
 				{
-					options.Cookie.Name=sessionCookieName;
+					options.Cookie.Name = sessionCookieName;
 					GxWebSession.SessionCookieName = sessionCookieName;
 				}
 				string sameSite;
@@ -315,7 +346,7 @@ namespace GeneXus.Application
 
 		private void RegisterControllerAssemblies(IMvcBuilder mvcBuilder)
 		{
-			
+
 			if (RestAPIHelpers.ServiceAsController())
 			{
 				mvcBuilder.AddMvcOptions(options => options.ModelBinderProviders.Insert(0, new QueryStringModelBinderProvider()));
@@ -365,7 +396,7 @@ namespace GeneXus.Application
 					foreach (string controller in Directory.GetFiles(controllers))
 					{
 						Console.WriteLine($"Loading controller {controller}");
-						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller)).AddControllersAsServices();
+						mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controller));
 					}
 				}
 			}
@@ -396,7 +427,7 @@ namespace GeneXus.Application
 						if (File.Exists(controllerAssemblyFile))
 						{
 							GXLogging.Info(log, "Registering rest: " + controllerAssemblyName);
-							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile)).AddControllersAsServices();
+							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
 						}
 					}
 				}
@@ -421,7 +452,7 @@ namespace GeneXus.Application
 						if (File.Exists(controllerAssemblyFile))
 						{
 							GXLogging.Info(log, "Registering api: " + grp);
-							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile)).AddControllersAsServices();
+							mvcBuilder.AddApplicationPart(Assembly.LoadFrom(controllerAssemblyFile));
 						}
 					}
 				}
@@ -465,7 +496,7 @@ namespace GeneXus.Application
 
 		private void ConfigureSessionService(IServiceCollection services, ISessionService sessionService)
 		{
-			
+
 			if (sessionService is GxRedisSession)
 			{
 				GxRedisSession gxRedisSession = (GxRedisSession)sessionService;
@@ -675,7 +706,7 @@ namespace GeneXus.Application
 				},
 				ContentTypeProvider = provider
 			});
-			
+
 			app.UseExceptionHandler(new ExceptionHandlerOptions
 			{
 				ExceptionHandler = new CustomExceptionHandlerMiddleware().Invoke,
@@ -718,7 +749,7 @@ namespace GeneXus.Application
 
 			app.UseGXHandlerFactory(basePath);
 
-			app.Run(async context => 
+			app.Run(async context =>
 			{
 				await Task.FromException(new PageNotFoundException(context.Request.Path.Value));
 			});
@@ -745,13 +776,13 @@ namespace GeneXus.Application
 					app.UseSwaggerUI(options =>
 					{
 						options.SwaggerEndpoint($"../../{finfo.Name}", finfo.Name);
-						options.RoutePrefix =$"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
+						options.RoutePrefix = $"{baseVirtualPathWithSep}{finfo.Name}/{SWAGGER_SUFFIX}";
 					});
 					if (finfo.Name.Equals(SWAGGER_DEFAULT_YAML, StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(LocalPath, DEVELOPER_MENU)))
 						app.UseSwaggerUI(options =>
 						{
 							options.SwaggerEndpoint($"../../{SWAGGER_DEFAULT_YAML}", SWAGGER_DEFAULT_YAML);
-							options.RoutePrefix =$"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
+							options.RoutePrefix = $"{baseVirtualPathWithSep}{DEVELOPER_MENU}/{SWAGGER_SUFFIX}";
 						});
 
 				}
@@ -785,10 +816,10 @@ namespace GeneXus.Application
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger<CustomExceptionHandlerMiddleware>();
 		public async Task Invoke(HttpContext httpContext)
 		{
-			string httpReasonPhrase=string.Empty;
+			string httpReasonPhrase = string.Empty;
 			Exception ex = httpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
 			HttpStatusCode httpStatusCode = (HttpStatusCode)httpContext.Response.StatusCode;
-			if (ex!=null)
+			if (ex != null)
 			{
 				if (ex is PageNotFoundException)
 				{
@@ -806,7 +837,7 @@ namespace GeneXus.Application
 					GXLogging.Error(log, $"Internal error", ex);
 				}
 			}
-			if (httpStatusCode!= HttpStatusCode.OK)
+			if (httpStatusCode != HttpStatusCode.OK)
 			{
 				string redirectPage = Config.MapCustomError(httpStatusCode.ToString(HttpHelper.INT_FORMAT));
 				if (!string.IsNullOrEmpty(redirectPage))
@@ -820,7 +851,7 @@ namespace GeneXus.Application
 				if (!string.IsNullOrEmpty(httpReasonPhrase))
 				{
 					IHttpResponseFeature responseReason = httpContext.Response.HttpContext.Features.Get<IHttpResponseFeature>();
-					if (responseReason!=null)
+					if (responseReason != null)
 						responseReason.ReasonPhrase = httpReasonPhrase;
 				}
 			}

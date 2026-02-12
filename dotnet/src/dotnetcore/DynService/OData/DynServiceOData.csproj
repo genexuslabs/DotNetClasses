@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>DynService OData</PackageTags>
 		<PackageId>GeneXus.DynService.OData.Core</PackageId>
@@ -20,3 +20,5 @@
 		<ProjectReference Include="..\..\..\dotnetcommon\DynService.Core\DynService.Core.csproj" />
 	</ItemGroup>
 </Project>
+
+

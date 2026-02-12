@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>$(NetVersions)</TargetFrameworks>
 	<DefineConstants>NETCORE;</DefineConstants>
 	<AppDesignerFolder>Properties</AppDesignerFolder>
 	<SignAssembly>false</SignAssembly>
@@ -12,7 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
 	<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" />  
   </ItemGroup>
 

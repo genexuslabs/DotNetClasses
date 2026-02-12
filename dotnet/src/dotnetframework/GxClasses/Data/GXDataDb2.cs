@@ -256,7 +256,8 @@ namespace GeneXus.Data
 #else
 			ClassLoader.SetPropValue(parm, "DB2Type", GXTypeToDB2DbType((GXType)dbtype));
 #endif
-
+			Console.WriteLine("TESTTTT");
+			System.Diagnostics.Debugger.Launch();
 			ClassLoader.SetPropValue(parm, "Size", gxlength);//This property is used for binary and strings types
             ClassLoader.SetPropValue(parm, "Precision", (byte)gxlength);//This property is used only for decimal and numeric input parameters
             ClassLoader.SetPropValue(parm, "Scale", (byte)gxdec);//This property is used only for decimal and numeric input parameters

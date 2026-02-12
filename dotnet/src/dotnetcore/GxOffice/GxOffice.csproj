@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<DefineConstants>NETCORE</DefineConstants>
 		<AssemblyName>Genexus.Office</AssemblyName>
 		<RootNamespace>GxOffice</RootNamespace>
@@ -57,3 +57,5 @@
 	</ItemGroup>
 
 </Project>
+
+

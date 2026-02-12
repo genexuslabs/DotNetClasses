@@ -1,5 +1,6 @@
 <Project>
-	<PropertyGroup>
+	<PropertyGroup>	
+		<TestProjectsTargetFramework>net10.0</TestProjectsTargetFramework>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<WarningLevel>4</WarningLevel>
 		<IsPackable>false</IsPackable>

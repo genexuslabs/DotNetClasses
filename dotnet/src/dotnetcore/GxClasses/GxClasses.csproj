@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<OutputType>Library</OutputType>
 		<DefineConstants>NETCORE</DefineConstants>
 		<PackageTags>Data Access</PackageTags>
@@ -140,16 +140,12 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" PrivateAssets="ALL" />
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.1.0" PrivateAssets="All" />
 		<PackageReference Include="MimeTypesMap" Version="1.0.9" />
 		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" PrivateAssets="All" />
 		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" PrivateAssets="All" />
 		<PackageReference Include="Pgvector" Version="0.3.0" PrivateAssets="All" />
-		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 		<PackageReference Include="MySqlConnector" Version="2.2.3" PrivateAssets="All" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" />
 		<PackageReference Include="NodaTime" Version="3.2.2" />
@@ -176,3 +172,4 @@
 
 
 </Project>
+
