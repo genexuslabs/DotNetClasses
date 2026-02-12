@@ -1,6 +1,7 @@
 <Project>
         <PropertyGroup>
                 <NetVersions>net8.0;net10.0</NetVersions>
+                <TestExtensionProjectsTargetFramework>net10.0</TestExtensionProjectsTargetFramework>
                 <AssemblyVersion>11.0.0.0</AssemblyVersion>
                 <MajorFileVersion>1</MajorFileVersion>
                 <MinorFileVersion>37</MinorFileVersion>
