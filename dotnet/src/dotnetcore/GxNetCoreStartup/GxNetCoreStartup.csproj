@@ -11,10 +11,7 @@
 	<PropertyGroup>
 		<NoWarn>$(NoWarn);NU5104</NoWarn>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
-		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904;NU5104</WarningsNotAsErrors>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
+	<PropertyGroup>
 		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904;NU5104</WarningsNotAsErrors>
 	</PropertyGroup>
 
