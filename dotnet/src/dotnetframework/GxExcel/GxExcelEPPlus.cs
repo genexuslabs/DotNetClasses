@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using GeneXus.Office.Excel;
 using OfficeOpenXml;
