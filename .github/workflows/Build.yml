@@ -25,6 +25,10 @@ on:
       - 'beta'
       - 'release-*'
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     env:
