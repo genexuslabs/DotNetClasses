@@ -17,7 +17,7 @@ jobs:
       GIT_REF: ${{ github.ref }}
       GIT_SHA: ${{ github.sha }}
       Configuration: Release
-      SolutionFile: dotnet\StorageTestSolution.sln
+      SolutionFile: dotnet\StorageTestSolution.slnx
       SolutionFileName: StorageTestSolution
     
     runs-on: ubuntu-latest
