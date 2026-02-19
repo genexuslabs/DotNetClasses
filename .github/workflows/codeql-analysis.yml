@@ -33,7 +33,7 @@ jobs:
     
     env:
       Configuration: Release
-      SolutionFile: dotnet\CodeqlSolution.sln
+      SolutionFile: dotnet\CodeqlSolution.slnx
 
     strategy:
       fail-fast: false
@@ -68,7 +68,7 @@ jobs:
     - name: Create temporary solution
       run: |
         $TempSolution = "CodeqlSolution"
-        dotnet new sln --name $TempSolution --output dotnet --force
+        dotnet new sln --format sln --name $TempSolution --output dotnet --force
         dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$TempSolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
 
     - name: Build temporary solution
