@@ -22,12 +22,12 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
@@ -77,6 +77,7 @@ namespace GeneXus.Application
 				else
 				{
 					LocatePhysicalLocalPath();
+
 				}
 
 				if (port == DEFAULT_PORT)
@@ -95,68 +96,28 @@ namespace GeneXus.Application
 			}
 		}
 
-#if NET10_0_OR_GREATER
 		public static IHost BuildWebHost(string[] args) =>
-		Host.CreateDefaultBuilder(args)
-			.ConfigureWebHostDefaults(webBuilder =>
-		{
-			webBuilder.UseStartup<Startup>()
-			   .UseContentRoot(Startup.LocalPath)
-			   .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
-		}).Build();
+			Host.CreateDefaultBuilder(args)
+				.ConfigureWebHostDefaults(webBuilder =>
+				{
+					webBuilder.UseStartup<Startup>()
+						.UseContentRoot(Startup.LocalPath)
+						.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
+				}).Build();
 
+		public static IHost BuildWebHostPort(string[] args, string port) =>
+			BuildWebHostPort(args, port, DEFAULT_SCHEMA);
 
-		public static IHost BuildWebHostPort(string[] args, string port)
-		{
-			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
-		}
-		static IHost BuildWebHostPort(string[] args, string port, string schema)
-		{
-			return Host.CreateDefaultBuilder(args)
-			.ConfigureWebHostDefaults(webBuilder =>
-			{
-				webBuilder.UseUrls($"{schema}://*:{port}")
-						  .UseStartup<Startup>()
-						  .UseWebRoot(Startup.LocalPath)
-						  .UseContentRoot(Startup.LocalPath)
-						  .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
-			})
-			.Build();
-		}
-#else
-		public static IWebHost BuildWebHost(string[] args) =>
-		   WebHost.CreateDefaultBuilder(args)
-		   .UseStartup<Startup>()
-		   .UseContentRoot(Startup.LocalPath)
-		   .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS))
-		   .Build();
-		public static IWebHost BuildWebHostPort(string[] args, string port)
-		{
-			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
-		}
-
-		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
-		{
-			return WebHost.CreateDefaultBuilder(args)
-					 .UseUrls($"{schema}://*:{port}")
-					.UseStartup<Startup>()
-					.UseWebRoot(Startup.LocalPath)
-					.UseContentRoot(Startup.LocalPath)
-					.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS))
-					.ConfigureKestrel(options =>
-					{
-						options.ListenAnyIP(int.Parse(port), listenOptions =>
-						{
-							listenOptions.Protocols = HttpProtocols.Http1;
-						});
-						options.ListenAnyIP(int.Parse(port) + 1, listenOptions =>
-						{
-							listenOptions.Protocols = HttpProtocols.Http2;
-						});
-					})
-					.Build();
-		}
-#endif
+		static IHost BuildWebHostPort(string[] args, string port, string schema) =>
+			Host.CreateDefaultBuilder(args)
+				.ConfigureWebHostDefaults(webBuilder =>
+				{
+					webBuilder.UseUrls($"{schema}://*:{port}")
+						.UseStartup<Startup>()
+						.UseWebRoot(Startup.LocalPath)
+						.UseContentRoot(Startup.LocalPath)
+						.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
+				}).Build();
 
 		private static void LocatePhysicalLocalPath()
 		{
@@ -180,15 +141,15 @@ namespace GeneXus.Application
 		public static IApplicationBuilder MapWebSocketManager(this IApplicationBuilder app, string basePath)
 		{
 			return app
-					.Map($"{basePath}/gxwebsocket"    , (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>())
-					.Map($"{basePath}/gxwebsocket.svc", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>()); //Compatibility reasons. Remove in the future.
+							.Map($"{basePath}/gxwebsocket", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>())
+							.Map($"{basePath}/gxwebsocket.svc", (_app) => _app.UseMiddleware<Notifications.WebSocket.WebSocketManagerMiddleware>()); //Compatibility reasons. Remove in the future.
 		}
 	}
 	public class CustomBadRequestObjectResult : ObjectResult
 	{
 		static readonly IGXLogger log = GXLoggerFactory.GetLogger(typeof(CustomBadRequestObjectResult).FullName);
 		public CustomBadRequestObjectResult(ActionContext context)
-			: base(HttpHelper.GetJsonError(StatusCodes.Status400BadRequest.ToString(), HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest)))
+				: base(HttpHelper.GetJsonError(StatusCodes.Status400BadRequest.ToString(), HttpHelper.StatusCodeToTitle(HttpStatusCode.BadRequest)))
 		{
 			LogErrorResponse(context);
 			StatusCode = StatusCodes.Status400BadRequest;
@@ -239,7 +200,7 @@ namespace GeneXus.Application
 		internal const string GX_CONTROLLERS = "gxcontrollers";
 		internal static string DefaultFileName { get; set; }
 
-		public List<string> servicesBase = new List<string>();		
+		public List<string> servicesBase = new List<string>();
 
 		private GXRouting gxRouting;
 		public Startup(IConfiguration configuration, IWebHostEnvironment env)
@@ -596,7 +557,8 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory,
 			IHttpContextAccessor contextAccessor,
 			Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime,
-			IOptions<MimeMappingsOptions> mimeMappingsOptions)
+			IOptions<MimeMappingsOptions> mimeMappingsOptions,
+			IConfiguration configuration)
 		{
 			// Registrar para el graceful shutdown
 			applicationLifetime.ApplicationStopping.Register(OnShutdown);
@@ -648,6 +610,7 @@ namespace GeneXus.Application
 			}
 			app.UseAsyncSession();
 			app.UseStaticFiles();
+
 			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
 			app.UseMiddleware<TenantMiddleware>();
 
@@ -673,6 +636,7 @@ namespace GeneXus.Application
 			app.UseEndpoints(endpoints =>
 			{
 				endpoints.MapControllers();
+
 				// Endpoints para health checks (Kubernetes probes)
 				endpoints.MapHealthChecks($"{baseVirtualPath}/_gx/health/live", new HealthCheckOptions
 				{
@@ -841,7 +805,7 @@ namespace GeneXus.Application
 		{
 			string rules = File.ReadAllText(rewriteFile);
 			rules = rules.Replace("{BASEURL}", baseURL);
-			
+
 			using (var apacheModRewriteStreamReader = new StringReader(rules))
 			{
 				var options = new RewriteOptions().AddApacheModRewrite(apacheModRewriteStreamReader);
@@ -947,7 +911,7 @@ namespace GeneXus.Application
 	}
 	internal class SetRoutePrefix : IApplicationModelConvention
 	{
-		private readonly AttributeRouteModel _routePrefix ;
+		private readonly AttributeRouteModel _routePrefix;
 		public SetRoutePrefix(IRouteTemplateProvider route)
 		{
 			_routePrefix = new AttributeRouteModel(route);
@@ -971,7 +935,7 @@ namespace GeneXus.Application
 		}
 	}
 
-	
+
 	internal class HomeControllerConvention : IApplicationModelConvention
 	{
 		private static bool FindAndStoreDefaultFile()
