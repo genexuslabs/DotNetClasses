@@ -13,7 +13,6 @@ using GeneXus.Services.OpenTelemetry;
 using GeneXus.Utils;
 using GxClasses.Web.Middleware;
 
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -27,6 +26,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
@@ -87,57 +87,28 @@ namespace GeneXus.Application
 			}
 		}
 
-#if NET10_0_OR_GREATER
 		public static IHost BuildWebHost(string[] args) =>
-		Host.CreateDefaultBuilder(args)
-			.ConfigureWebHostDefaults(webBuilder =>
-		{
-			webBuilder.UseStartup<Startup>()
-			   .UseContentRoot(Startup.LocalPath)
-			   .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
-		}).Build();
+			Host.CreateDefaultBuilder(args)
+				.ConfigureWebHostDefaults(webBuilder =>
+				{
+					webBuilder.UseStartup<Startup>()
+						.UseContentRoot(Startup.LocalPath)
+						.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
+				}).Build();
 
+		public static IHost BuildWebHostPort(string[] args, string port) =>
+			BuildWebHostPort(args, port, DEFAULT_SCHEMA);
 
-		public static IHost BuildWebHostPort(string[] args, string port)
-		{
-			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
-		}
-		static IHost BuildWebHostPort(string[] args, string port, string schema)
-		{
-			return Host.CreateDefaultBuilder(args)
-			.ConfigureWebHostDefaults(webBuilder =>
-			{
-				webBuilder.UseUrls($"{schema}://*:{port}")
-						  .UseStartup<Startup>()
-						  .UseWebRoot(Startup.LocalPath)
-						  .UseContentRoot(Startup.LocalPath)
-						  .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
-			})
-			.Build();
-		}
-#else
-		public static IWebHost BuildWebHost(string[] args) =>
-		   WebHost.CreateDefaultBuilder(args)
-		   .UseStartup<Startup>()
-		   .UseContentRoot(Startup.LocalPath)
-		   .UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS))
-		   .Build();
-		public static IWebHost BuildWebHostPort(string[] args, string port)
-		{
-			return BuildWebHostPort(args, port, DEFAULT_SCHEMA);
-		}
-
-		static IWebHost BuildWebHostPort(string[] args, string port, string schema)
-		{
-			return WebHost.CreateDefaultBuilder(args)
-					 .UseUrls($"{schema}://*:{port}")
-					.UseStartup<Startup>()
-					.UseWebRoot(Startup.LocalPath)
-					.UseContentRoot(Startup.LocalPath)
-					.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS))
-					.Build();
-		}
-#endif
+		static IHost BuildWebHostPort(string[] args, string port, string schema) =>
+			Host.CreateDefaultBuilder(args)
+				.ConfigureWebHostDefaults(webBuilder =>
+				{
+					webBuilder.UseUrls($"{schema}://*:{port}")
+						.UseStartup<Startup>()
+						.UseWebRoot(Startup.LocalPath)
+						.UseContentRoot(Startup.LocalPath)
+						.UseShutdownTimeout(TimeSpan.FromSeconds(GRACEFUL_SHUTDOWN_DELAY_SECONDS));
+				}).Build();
 
 		private static void LocatePhysicalLocalPath()
 		{
@@ -556,7 +527,8 @@ namespace GeneXus.Application
 		public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env, ILoggerFactory loggerFactory,
 			IHttpContextAccessor contextAccessor,
 			Microsoft.Extensions.Hosting.IHostApplicationLifetime applicationLifetime,
-			IOptions<MimeMappingsOptions> mimeMappingsOptions)
+			IOptions<MimeMappingsOptions> mimeMappingsOptions,
+			IConfiguration configuration)
 		{
 			// Registrar para el graceful shutdown
 			applicationLifetime.ApplicationStopping.Register(OnShutdown);
@@ -596,6 +568,18 @@ namespace GeneXus.Application
 			{
 				app.UseResponseCompression();
 			}
+			// In .NET 10, ASPNETCORE_FORWARDEDHEADERS_ENABLED no longer auto-registers ForwardedHeadersStartupFilter
+			// with the legacy IWebHostBuilder + Startup model. Must be configured explicitly,
+			// replicating what the startup filter used to do: set headers + clear trusted networks.
+			if (configuration.GetValue<bool>("FORWARDEDHEADERS_ENABLED", false))
+			{
+				var forwardedOptions = new ForwardedHeadersOptions
+				{
+					ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+				};
+				app.UseForwardedHeaders(forwardedOptions);
+			}
+
 			app.UseRouting();
 			app.UseCookiePolicy();
 			if (Preferences.IsBeforeConnectEventConfigured())
