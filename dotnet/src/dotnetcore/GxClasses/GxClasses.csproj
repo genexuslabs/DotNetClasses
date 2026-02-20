@@ -140,6 +140,9 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" PrivateAssets="ALL" />
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.1.0" PrivateAssets="All" />
 		<PackageReference Include="MimeTypesMap" Version="1.0.9" />
