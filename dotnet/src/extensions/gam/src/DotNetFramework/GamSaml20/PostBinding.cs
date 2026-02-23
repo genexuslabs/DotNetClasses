@@ -13,13 +13,10 @@ namespace GamSaml20
 	{
 		private static readonly ILog logger = LogManager.GetLogger(typeof(PostBinding));
 
-		private XmlDocument xmlDoc;
 
 		private XmlDocument verifiedDoc;
 
-#if !NETCORE
-		private XmlDocument nonCanonicalizedDoc;
-#endif
+		private XmlDocument xmlDoc;
 
 
 		/********EXTERNAL OBJECT PUBLIC METHODS  - BEGIN ********/
@@ -35,14 +32,11 @@ namespace GamSaml20
 		public void Init(string xml)
 		{
 			logger.Trace("init");
-			this.xmlDoc = GamSaml20.Utils.SamlAssertionUtils.CanonicalizeXml(xml);
-#if !NETCORE
 			XmlDocument nonDoc = new XmlDocument();
 			nonDoc.XmlResolver = null; //disable parser's DTD reading - security meassure
 			nonDoc.PreserveWhitespace = true;
 			nonDoc.LoadXml(xml);
-			this.nonCanonicalizedDoc = nonDoc;
-#endif
+			this.xmlDoc = nonDoc;
 			logger.Debug($"Init - XML IdP response: {this.xmlDoc.OuterXml}");
 		}
 
@@ -67,26 +61,14 @@ namespace GamSaml20
 		public bool VerifySignatures(SamlParms parms)
 		{
 			string verified = string.Empty;
-#if NETCORE
 			verified =  DSig.ValidateSignatures(this.xmlDoc, parms.TrustedCertPath);
-#else
-			verified =  DSig.ValidateSignatures(this.nonCanonicalizedDoc, parms.TrustedCertPath);
-#endif
 			if (verified.IsNullOrEmpty())
 			{
 				return false;
 			}
 			else
 			{
-
-#if NETCORE
-				this.verifiedDoc = new XmlDocument();
-				this.verifiedDoc.XmlResolver = null; //disable parser's DTD reading - security meassure
-				this.verifiedDoc.PreserveWhitespace = true;
-				this.verifiedDoc.LoadXml(verified);
-#else
 				this.verifiedDoc = GamSaml20.Utils.SamlAssertionUtils.CanonicalizeXml(verified);
-#endif
 				logger.Debug($"VerifySignatures - sanitized xmlDoc {this.verifiedDoc.OuterXml}");
 				return true;
 			}
