@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using GeneXus.Cache;
+using GeneXus.Configuration;
 using GeneXus.Metadata;
 using GeneXus.Utils;
 using GxClasses.Helpers;
@@ -18,9 +19,9 @@ namespace GeneXus.Data
         static Assembly _hanaAssembly;
         const string HanaDbTypeEnum = "Sap.Data.Hana.HanaDbType";
 #if NETCORE
-        const string _hanaAssemblyName = "Sap.Data.Hana.Core.v2.1";
+        static string _hanaAssemblyName = "Sap.Data.Hana.Core.v2.1";
 #else
-        const string _hanaAssemblyName = "Sap.Data.Hana.v3.5";
+        static string _hanaAssemblyName = "Sap.Data.Hana.v3.5";
 #endif
 
 		public static Assembly HanaAssembly
@@ -31,13 +32,15 @@ namespace GeneXus.Data
                 {
                     if (_hanaAssembly == null)
                     {
-#if NETCORE
+#if NETCORE						
+						if (Config.GetValueOf("HANA_ASSEMBLY_NAME", out string _assemblyName))
+							 _hanaAssemblyName = _assemblyName;
 						string assemblyPath = Path.Combine(FileUtil.GetStartupDirectory(), $"{_hanaAssemblyName}.dll");
 						GXLogging.Debug(log, $"Loading {_hanaAssemblyName} from:" + assemblyPath);
 						_hanaAssembly = AssemblyLoader.LoadAssembly(new AssemblyName(_hanaAssemblyName));
 #else
 						GXLogging.Debug(log, "Loading Sap.Data.Hana.v3.5 from GAC");
-            _hanaAssembly = Assembly.LoadWithPartialName("Sap.Data.Hana.v3.5");
+						_hanaAssembly = Assembly.LoadWithPartialName(_hanaAssemblyName);
 #endif
 						GXLogging.Debug(log, $"{_hanaAssemblyName} Loaded:" + _hanaAssembly.FullName + " location: " + _hanaAssembly.Location);
 					}

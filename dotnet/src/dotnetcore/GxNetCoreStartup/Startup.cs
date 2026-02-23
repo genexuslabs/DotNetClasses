@@ -244,7 +244,6 @@ namespace GeneXus.Application
 					GXLogging.Info(log, $"MinRequestBodyDataRate:{MinRequestBodyDataRate}");
 					options.Limits.MinRequestBodyDataRate = new MinDataRate(bytesPerSecond: MinRequestBodyDataRate, gracePeriod: TimeSpan.FromSeconds(10));
 				}
-		
 			});
 			services.Configure<IISServerOptions>(options =>
 			{
