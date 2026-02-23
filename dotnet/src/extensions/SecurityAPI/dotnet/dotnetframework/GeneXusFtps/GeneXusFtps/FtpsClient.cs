@@ -82,20 +82,23 @@ namespace GeneXusFtps.GeneXusFtps
             }
             else
             {
-
 				client.ValidateCertificate += (control, e1) =>
 				{
+#if NET10_0_OR_GREATER
+					using (X509Certificate2 cert_grt = X509CertificateLoader.LoadPkcs12FromFile(options.TrustStorePath, options.TrustStorePassword))
+#else
 					using (X509Certificate2 cert_grt = new X509Certificate2(options.TrustStorePath, options.TrustStorePassword))
+#endif
 					{
 						X509Chain verify = new X509Chain();
 						verify.Build(new X509Certificate2(e1.Certificate));
 						e1.Accept = SecurityUtils.compareStrings(verify.ChainElements[verify.ChainElements.Count - 1].Certificate.Thumbprint, cert_grt.Thumbprint);
 					}
 				};
-				
-            }
-            
-            try
+			}
+
+
+			try
             {
                 this.client.Connect();
                 if (!this.client.LastReply.Success)

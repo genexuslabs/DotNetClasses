@@ -1,39 +1,41 @@
 <Project>
-	<PropertyGroup>
-		<AssemblyVersion>11.0.0.0</AssemblyVersion>
-		<MajorFileVersion>1</MajorFileVersion>
-		<MinorFileVersion>37</MinorFileVersion>
-		<PatchFileVersion Condition="'$(COMMIT_NUMBER)'!=''">$(COMMIT_NUMBER)</PatchFileVersion>
-		<PatchFileVersion Condition="'$(COMMIT_NUMBER)'==''">0</PatchFileVersion>
-		<FileVersion>$(MajorFileVersion).$(MinorFileVersion).$(PatchFileVersion)</FileVersion>
-		<InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GIT_SHA)</InformationalVersion>
-		<Company>GeneXus</Company>
-		<AssemblyCulture></AssemblyCulture>
-		<Product>GeneXus</Product>
-		<AssemblyTrademark></AssemblyTrademark>
-		<CopyrightYear>$([System.DateTime]::UtcNow.ToString("yyyy"))</CopyrightYear>
-		<Copyright>Copyright © 1988-$(CopyrightYear) GeneXus. All Rights Reserved</Copyright>
-		<AssemblyOriginatorKeyFile Condition="'$(ARTECH_SNK_FILE)'!=''">$(ARTECH_SNK_FILE)</AssemblyOriginatorKeyFile>
-		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-		<Authors>GeneXus</Authors>
-		<SignAssembly Condition="'$(AssemblyOriginatorKeyFile)'!=''">true</SignAssembly>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<WarningLevel>4</WarningLevel>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
-		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
-		<RepositoryCommit>$(GIT_SHA)</RepositoryCommit>
-		<NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023</NoWarn>
-		<IsPackable>true</IsPackable>
-		<DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
-		<!--keep low and moderate vulnerabilities (NU1901;NU1902;NU1903;NU1904), high and critical vulnerabilities (NU1903 and NU1904) as warnings-->
-		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
-		<DefineConstants Condition="'$(ARTECH_SNK_FILE)'!=''">GX_SIGNED_ASSEMBLY</DefineConstants>
-	</PropertyGroup>
+        <PropertyGroup>
+                <NetVersions>net8.0;net10.0</NetVersions>
+                <TestExtensionProjectsTargetFramework>net10.0</TestExtensionProjectsTargetFramework>
+                <AssemblyVersion>11.0.0.0</AssemblyVersion>
+                <MajorFileVersion>1</MajorFileVersion>
+                <MinorFileVersion>37</MinorFileVersion>
+                <PatchFileVersion Condition="'$(COMMIT_NUMBER)'!=''">$(COMMIT_NUMBER)</PatchFileVersion>
+                <PatchFileVersion Condition="'$(COMMIT_NUMBER)'==''">0</PatchFileVersion>
+                <FileVersion>$(MajorFileVersion).$(MinorFileVersion).$(PatchFileVersion)</FileVersion>
+                <InformationalVersion>$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss")).$(GIT_SHA)</InformationalVersion>
+                <Company>GeneXus</Company>
+                <AssemblyCulture></AssemblyCulture>
+                <Product>GeneXus</Product>
+                <AssemblyTrademark></AssemblyTrademark>
+                <CopyrightYear>$([System.DateTime]::UtcNow.ToString("yyyy"))</CopyrightYear>
+                <Copyright>Copyright © 1988-$(CopyrightYear) GeneXus. All Rights Reserved</Copyright>
+                <AssemblyOriginatorKeyFile Condition="'$(ARTECH_SNK_FILE)'!=''">$(ARTECH_SNK_FILE)</AssemblyOriginatorKeyFile>
+                <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+                <Authors>GeneXus</Authors>
+                <SignAssembly Condition="'$(AssemblyOriginatorKeyFile)'!=''">true</SignAssembly>
+                <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+                <WarningLevel>4</WarningLevel>
+                <EnableNETAnalyzers>true</EnableNETAnalyzers>
+                <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StandardClasses.ruleset</CodeAnalysisRuleSet>
+                <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+                <RepositoryType>git</RepositoryType>
+                <RepositoryUrl>https://github.com/genexuslabs/dotnetClasses</RepositoryUrl>
+                <RepositoryCommit>$(GIT_SHA)</RepositoryCommit>
+                <NoWarn>NU5105;CS0618;CS8032;CS0618;SYSLIB0021;SYSLIB0023</NoWarn>
+                <IsPackable>true</IsPackable>
+                <DisableImplicitNamespaceImports>True</DisableImplicitNamespaceImports>
+                <!--keep low and moderate vulnerabilities (NU1901;NU1902;NU1903;NU1904), high and critical vulnerabilities (NU1903 and NU1904) as warnings-->
+                <WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+                <DefineConstants Condition="'$(ARTECH_SNK_FILE)'!=''">GX_SIGNED_ASSEMBLY</DefineConstants>
+        </PropertyGroup>
 
-	<Target Name="GetFileVersionForPackage">
-		<Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
-	</Target>
+        <Target Name="GetFileVersionForPackage">
+                <Message Importance="high" Text="FileVersion:$(FileVersion)"></Message>
+        </Target>
 </Project>

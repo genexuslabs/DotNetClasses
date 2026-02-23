@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using StackExchange.Redis;
 using Xunit;
 namespace xUnitTesting
@@ -28,7 +29,15 @@ namespace xUnitTesting
 		[Fact]
 		public async Task TestChunkedResponse()
 		{
-			var server = new TestServer(new WebHostBuilder().UseStartup<TestStartup>());
+			var hostBuilder = Host.CreateDefaultBuilder().ConfigureWebHostDefaults(webBuilder =>
+						   {
+							   webBuilder
+								   .UseStartup<TestStartup>()
+								   .UseTestServer();
+						   });
+			using var host = await hostBuilder.StartAsync();
+
+			var server = host.GetTestServer();
 			var client = server.CreateClient();
 			var response = await client.GetAsync("/", HttpCompletionOption.ResponseHeadersRead);
 			Assert.True(response.Headers.TransferEncodingChunked);
@@ -49,7 +58,16 @@ namespace xUnitTesting
 		[Fact]
 		public async Task TestBufferedResponse()
 		{
-			var server = new TestServer(new WebHostBuilder().UseStartup<TestStartup>());
+			var hostBuilder = Host.CreateDefaultBuilder().ConfigureWebHostDefaults(webBuilder =>
+							{
+								webBuilder
+									.UseStartup<TestStartup>()
+									.UseTestServer();
+							});
+
+			using var host = await hostBuilder.StartAsync();
+
+			var server = host.GetTestServer();
 			var client = server.CreateClient();
 			var response = await client.GetAsync("/", HttpCompletionOption.ResponseHeadersRead);
 			Assert.True(response.Headers.TransferEncodingChunked);
