@@ -262,7 +262,7 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(json))
+				if (!string.IsNullOrWhiteSpace(json))
 				{
 					return GXJsonSerializer.Instance.ReadJSON<T>(json);
 				}
@@ -283,7 +283,7 @@ namespace GeneXus.Utils
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(json))
+				if (!string.IsNullOrWhiteSpace(json))
 				{
 
 					return GXJsonSerializer.Instance.ReadJSON<T>(json);
@@ -449,7 +449,7 @@ namespace GeneXus.Utils
 		}
 		internal static T Deserialize<T>(string kbObject, Encoding encoding, IEnumerable<Type> knownTypes, T defaultValue, DataContractJsonSerializerSettings settings) where T : class
 		{
-			if (!string.IsNullOrEmpty(kbObject))
+			if (!string.IsNullOrWhiteSpace(kbObject))
 			{
 				try
 				{
