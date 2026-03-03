@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using GeneXus.Office.Excel;
 using OfficeOpenXml;
@@ -104,6 +105,7 @@ namespace GeneXus.Office.ExcelGXEPPlus
                 {
                     using (var stream = new MemoryStream())
                     {
+                        ApplyPendingAutoFit();
                         p.SaveAs(stream);
 						p.Dispose();
                         GxFile file = new GxFile(Path.GetDirectoryName(xlsFileName), xlsFileName, GxFileType.Private);
@@ -328,6 +330,22 @@ namespace GeneXus.Office.ExcelGXEPPlus
         private String errDescription = "OK";
         private short readOnly = 0;
         private bool autoFit = false;
+		private HashSet<(ExcelWorksheet sheet, int col)> _pendingAutoFitColumns = new HashSet<(ExcelWorksheet, int)>();
+
+		internal void MarkColumnForAutoFit(ExcelWorksheet sheet, int column)
+		{
+			_pendingAutoFitColumns.Add((sheet, column));
+		}
+
+		private void ApplyPendingAutoFit()
+		{
+			foreach (var (sheet, col) in _pendingAutoFitColumns)
+			{
+				sheet.Column(col).AutoFit();
+			}
+			_pendingAutoFitColumns.Clear();
+		}
+
 
         public short UnBind() { return -1; }
         public short Hide() { return -1; }
@@ -593,9 +611,8 @@ namespace GeneXus.Office.ExcelGXEPPlus
                         }
                         else
                             pCells[i].Value = value;
-
-                        fitColumnWidth();
                     }
+                    fitColumnWidth();
                 }
                 catch (Exception e)
                 {
@@ -631,7 +648,7 @@ namespace GeneXus.Office.ExcelGXEPPlus
 			{
 				for (int columnIndex = pCellsRange.Start.Column; columnIndex <= pCellsRange.End.Column; columnIndex++)
 				{
-					pSelectedSheet.Column(columnIndex).AutoFit();
+					doc.MarkColumnForAutoFit(pSelectedSheet, columnIndex);
 				}
 			}
 		}
