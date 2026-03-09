@@ -2,6 +2,7 @@ using System;
 using GeneXus.MSOffice.Excel.Style;
 using GeneXus.Utils;
 using NPOI.HSSF.UserModel;
+using NPOI.HSSF.Util;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 
@@ -782,33 +783,16 @@ namespace GeneXus.MSOffice.Excel.Poi.Hssf
 		}
 		private short GetClosestColorIndex(int? redValue, int? greenValue, int? blueValue)
 		{
-			// Extract RGB components
 			int red = redValue ?? 0;
 			int green = greenValue ?? 0;
 			int blue = blueValue ?? 0;
 
-			// If it's black, use standard black index
-			if (red == 0 && green == 0 && blue == 0)
-				return 8; // Black
+			HSSFPalette palette = pWorkbook.GetCustomPalette();
+			HSSFColor hssfColor = palette.FindSimilarColor((byte)red, (byte)green, (byte)blue);
+			if (hssfColor != null)
+				return hssfColor.Indexed;
 
-			// For standard colors, try to match to common indices
-			if (red == 255 && green == 0 && blue == 0)
-				return 10; // Red
-			if (red == 0 && green == 255 && blue == 0)
-				return 11; // Green
-			if (red == 0 && green == 0 && blue == 255)
-				return 12; // Blue
-			if (red == 255 && green == 255 && blue == 0)
-				return 13; // Yellow
-			if (red == 255 && green == 0 && blue == 255)
-				return 14; // Magenta
-			if (red == 0 && green == 255 && blue == 255)
-				return 15; // Cyan
-			if (red == 255 && green == 255 && blue == 255)
-				return 9;  // White
-
-			// For other colors, just use a reasonable default
-			return 32; // Default to a standard color index
+			return IndexedColors.Black.Index;
 		}
 
 		protected void CopyPropertiesStyle(HSSFCellStyle dest, ICellStyle source)
