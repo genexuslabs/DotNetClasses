@@ -1,20 +1,43 @@
 
 using System;
+using System.Threading.Tasks;
 using GeneXus.Application;
 using GeneXus.Core.genexus.common;
 
 namespace GeneXus.WebControls
 {
+	public class GXGridStateHandlerAsync: GXGridStateHandler
+	{
+		readonly Func<Task> varsFromState;
+		readonly Func<Task> varsToState;
+		public GXGridStateHandlerAsync(IGxContext context, string gridName, string programName, Func<Task> varsFromState, Func<Task> varsToState)
+		{
+			this.gridName = $"{programName}_{gridName}_{GRID_STATE}";
+			this.varsFromState = varsFromState;
+			this.varsToState = varsToState;
+			this.context = context;
+			state = new SdtGridState(context);
+			dirty = true;
+		}
+		protected override void ToState()
+		{
+			varsToState().GetAwaiter().GetResult();
+		}
+		protected override void FromState()
+		{
+			varsFromState().GetAwaiter().GetResult();
+		}
+	}
+
 	public class GXGridStateHandler
 	{
-		string gridName;
+		protected string gridName;
 		readonly Action varsFromState;
 		readonly Action varsToState;
-		IGxContext context;
-		SdtGridState state;
-		bool dirty;
-		const string GRID_STATE = "GridState";
-
+		protected IGxContext context;
+		protected SdtGridState state;
+		protected bool dirty;
+		protected const string GRID_STATE = "GridState";
 		public GXGridStateHandler(IGxContext context, string gridName, string programName, Action varsFromState, Action varsToState)
 		{
 			this.gridName = $"{programName}_{gridName}_{GRID_STATE}";
@@ -24,10 +47,13 @@ namespace GeneXus.WebControls
 			state = new SdtGridState(context);
 			dirty = true;
 		}
+		internal GXGridStateHandler()
+		{
+		}
 		public void SaveGridState()
 		{
 			state.FromJSonString(context.GetSession().Get(gridName));
-			varsToState();
+			ToState();
 			context.GetSession().Set(gridName, state.ToJSonString());
 			dirty = true;
 		}
@@ -37,9 +63,18 @@ namespace GeneXus.WebControls
 			{
 				state = new SdtGridState(context);
 				state.FromJSonString(context.GetSession().Get(gridName));
-				varsFromState();
+				FromState();
 				dirty = true;
 			}
+		}
+
+		protected virtual void FromState()
+		{
+			varsFromState();
+		}
+		protected virtual void ToState()
+		{
+			varsToState();
 		}
 		public string FilterValues(int idx)
 		{

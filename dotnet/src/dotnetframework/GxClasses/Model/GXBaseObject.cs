@@ -82,6 +82,7 @@ namespace GeneXus.Application
 
 		protected virtual Task ExecutePrivateAsync()
 		{
+			ExecutePrivate();
 			return Task.CompletedTask;
 		}
 #endif
