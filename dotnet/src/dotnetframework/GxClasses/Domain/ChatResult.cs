@@ -121,7 +121,7 @@ namespace GeneXus.AI.Chat
 		internal const string FINISH_REASON_TOOL_CALLS = "tool_calls";
 		internal const string DATA = "data:";
 		internal const string DONE = "[DONE]";
-		
+		internal const string STATUS_FAILED = "failed";
 
 		[JsonPropertyName("id")]
 		public string Id { get; set; }
@@ -143,6 +143,28 @@ namespace GeneXus.AI.Chat
 
 		[JsonPropertyName("data")]
 		public List<DataItem> Data { get; set; }
+
+		[JsonPropertyName("error")]
+		public ErrorInfo Error { get; set; }
+
+		[JsonPropertyName("success")]
+		public bool? Success { get; set; }
+
+		[JsonPropertyName("status")]
+		public string Status { get; set; }
+
+		internal bool HasError => Error != null || Success == false || string.Equals(Status, STATUS_FAILED, StringComparison.OrdinalIgnoreCase);
+
+		internal string ErrorMessage => Error?.Message ?? (HasError ? $"Agent call failed with status: {Status}" : null);
+	}
+
+	internal class ErrorInfo
+	{
+		[JsonPropertyName("code")]
+		public int Code { get; set; }
+
+		[JsonPropertyName("message")]
+		public string Message { get; set; }
 	}
 #endif
 	public class Choice
