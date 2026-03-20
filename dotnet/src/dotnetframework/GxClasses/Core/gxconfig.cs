@@ -507,8 +507,9 @@ namespace GeneXus.Configuration
 			{"log4net", new Version(2, 0, 11) },
 			{ "System.Threading.Tasks.Extensions", new Version(4, 2, 0, 1) },
 			{ "System.Runtime.CompilerServices.Unsafe", new Version(4, 0, 4, 1) },
-			{ "System.Buffers", new Version(4, 0, 3, 0)},
+			{ "System.Buffers", new Version(4, 0, 5, 0)},
 			{ "System.Memory",new Version(4, 0, 1, 1) },
+			{ "System.Numerics.Vectors", new Version(4, 1, 6, 0) },
 			{ "Microsoft.Bcl.AsyncInterfaces",new Version(8, 0, 0, 0) }//redirection required for StackExchange.Redis
 		};
 
