@@ -51,7 +51,7 @@ namespace UnitTesting
 			Assert.True(!string.IsNullOrEmpty(blobPath));
 			Uri uri;
 			string path = @"\\fs-server\test\files\xml\error.xml" ;
-			
+
 			PathUtil.AbsoluteUri(path, out uri);
 			Assert.True(uri.Scheme == Uri.UriSchemeFile);
 			Assert.True(uri.IsAbsoluteUri);
@@ -91,16 +91,13 @@ namespace UnitTesting
 			{
 				string newFileName = GXDbFile.ResolveUri($"{GXDbFile.Scheme}:{fileName}", false);
 				string baseDir = Preferences.getBLOB_PATH();
-				try
-				{
-					bool isOK = new Uri(newFileName).LocalPath.StartsWith(Path.GetFullPath(baseDir), StringComparison.OrdinalIgnoreCase);
-					Assert.True(isOK);
-				}
-				catch (Exception ex)
-				{
-
-					Assert.True(false,  $"FileName:{newFileName} Error:{ex.Message} ExternalProvider:{ServiceFactory.GetExternalProvider()?.GetType().FullName} fileName:{fileName}");
-				}
+				string resolvedPath = Uri.TryCreate(newFileName, UriKind.Absolute, out Uri parsedUri) && parsedUri.IsFile
+					? parsedUri.LocalPath
+					: newFileName;
+				string fullResolved = Path.GetFullPath(resolvedPath);
+				string fullBase = Path.GetFullPath(baseDir);
+				bool isOK = fullResolved.StartsWith(fullBase, StringComparison.OrdinalIgnoreCase);
+				Assert.True(isOK, $"Path traversal detected: resolved '{fullResolved}' is outside base '{fullBase}' for input '{fileName}'");
 			}
 		}
 
