@@ -204,8 +204,34 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 			string returnValue = string.Empty;
 			try
 			{
-				if (pCells[1].Hyperlink!=null)
+				if (pCells[1].Hyperlink != null && !string.IsNullOrEmpty(pCells[1].Hyperlink.Address))
+				{
 					returnValue = pCells[1].Hyperlink.Address;
+				}
+				else
+				{
+					XSSFSheet sheet = pSelectedSheet as XSSFSheet;
+					if (sheet != null)
+					{
+						foreach (IHyperlink hl in sheet.GetHyperlinkList())
+						{
+							XSSFHyperlink xhl = hl as XSSFHyperlink;
+							if (xhl != null)
+							{
+								CellRangeAddress hlRange = CellRangeAddress.ValueOf(xhl.CellRef);
+								if (rowStartIdx >= hlRange.FirstRow && rowStartIdx <= hlRange.LastRow &&
+									colStartIdx >= hlRange.FirstColumn && colStartIdx <= hlRange.LastColumn)
+								{
+									if (!string.IsNullOrEmpty(xhl.Address))
+										returnValue = xhl.Address;
+									else if (!string.IsNullOrEmpty(xhl.Location))
+										returnValue = xhl.Location;
+									break;
+								}
+							}
+						}
+					}
+				}
 			}
 			catch (Exception)
 			{

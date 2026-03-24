@@ -4,7 +4,7 @@
                 <TestExtensionProjectsTargetFramework>net10.0</TestExtensionProjectsTargetFramework>
                 <AssemblyVersion>11.0.0.0</AssemblyVersion>
                 <MajorFileVersion>1</MajorFileVersion>
-                <MinorFileVersion>37</MinorFileVersion>
+                <MinorFileVersion>38</MinorFileVersion>
                 <PatchFileVersion Condition="'$(COMMIT_NUMBER)'!=''">$(COMMIT_NUMBER)</PatchFileVersion>
                 <PatchFileVersion Condition="'$(COMMIT_NUMBER)'==''">0</PatchFileVersion>
                 <FileVersion>$(MajorFileVersion).$(MinorFileVersion).$(PatchFileVersion)</FileVersion>

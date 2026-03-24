@@ -13,11 +13,11 @@ namespace GeneXus.Utils
 
 		public bool Success()
 		{
-			return true;
+			return !IsFail;
 		}
 		public bool Fail()
 		{
-			return false;
+			return IsFail;
 		}
 		public msglist GetMessages()
 		{
