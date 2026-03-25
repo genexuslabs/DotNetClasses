@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GeneXus.NodaTime" Version="2.4.19.1" />
+		<PackageReference Include="GeneXus.NodaTime" Version="2.4.19.2" />
 		<PackageReference Include="ManagedFusion.Rewriter" Version="3.7.0" />
 		<PackageReference Include="Microsoft.AspNet.WebPages" Version="3.2.9" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.34.0" />
