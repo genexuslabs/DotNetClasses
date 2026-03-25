@@ -17,7 +17,7 @@ jobs:
       GIT_REF: ${{ github.ref }}
       GIT_SHA: ${{ github.sha }}
       Configuration: Release
-      SolutionFile: dotnet\StorageTestSolution.sln
+      SolutionFile: dotnet\StorageTestSolution.slnx
       SolutionFileName: StorageTestSolution
     
     runs-on: ubuntu-latest
@@ -52,6 +52,12 @@ jobs:
       with:
         dotnet-version: '8.x'
         include-prerelease: true
+        
+    - name: Install .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        
 
     - name: Install libgdiplus
       run: sudo apt-get install -y libgdiplus
@@ -59,7 +65,7 @@ jobs:
     - name: Create temporary solution with .NET 8 projects
       run: |
         dotnet new sln --name $SolutionFileName --output dotnet --force
-        dotnet msbuild dotnet/DotNetStandardClasses.sln /t:DumpProjectsAndCoreTests -p:DumpSolutionName=$SolutionFileName /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
+        dotnet msbuild dotnet/DotNetStandardClasses.sln /t:DumpProjectsAndCoreTests -p:DumpSolutionName=$SolutionFileName -p:DumpSolutionExtension=slnx /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
 
     - name: Restore packages
       run: dotnet restore $SolutionFile

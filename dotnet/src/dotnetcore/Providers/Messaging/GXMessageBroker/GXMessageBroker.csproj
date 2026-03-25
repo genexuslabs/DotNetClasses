@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>$(NetVersions)</TargetFrameworks>
 	<PackageId>GeneXus.Message.MessageBroker</PackageId>
 	<PackageTags>Broker Messaging</PackageTags>
 	<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
@@ -17,3 +17,5 @@
   </ItemGroup>
 
 </Project>
+
+

@@ -91,7 +91,7 @@ namespace GamUtils.Utils.Keys
 #if !NETCORE
 				return extension.IsNullOrEmpty() ? "b64" : extension;
 #else
-				if (extension.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(extension))
 				{
 					try
 					{

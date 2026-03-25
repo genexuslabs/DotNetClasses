@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
     <AssemblyName>GeneXus.SD.Store.StoreManager</AssemblyName>
     <RootNamespace>GeneXus.SD.Store</RootNamespace>
 	<PackageTags>StoreManager</PackageTags>
@@ -40,3 +40,5 @@
     <ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 </Project>
+
+

@@ -1,16 +1,18 @@
-﻿using System;
+using System;
 using System.Net;
 
 namespace GeneXus.Mail.Exchange
 {
     public static class CertificateCallback
     {
-        static CertificateCallback()
+#if !NET10_0_OR_GREATER
+		static CertificateCallback()
         {
             ServicePointManager.ServerCertificateValidationCallback = CertificateValidationCallBack;
         }
+#endif
 
-        public static void Initialize()
+		public static void Initialize()
         {
         }
 
