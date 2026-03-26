@@ -14,7 +14,7 @@
 	
 	<PropertyGroup>
 		<DumpSolutionName>TempSolution</DumpSolutionName>
-		<DumpSolutionExtension>sln</DumpSolutionExtension>
+		<DumpSolutionExtension>slnx</DumpSolutionExtension>
 		<DumpSolutionTargetFrameworkDefault>net8</DumpSolutionTargetFrameworkDefault>
 	</PropertyGroup>
 	
