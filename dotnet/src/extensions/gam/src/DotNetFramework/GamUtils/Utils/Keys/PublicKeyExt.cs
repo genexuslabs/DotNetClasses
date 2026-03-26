@@ -165,8 +165,10 @@ namespace GamUtils.Utils.Keys
 						return "json";
 					}
 				}
-				else
+				else if(extension.Contains("}"))
 				{
+					return "json";
+				}else{
 					return extension;
 				}
 #endif
