@@ -68,11 +68,11 @@ jobs:
     - name: Create temporary solution
       run: |
         $TempSolution = "CodeqlSolution"
-        dotnet new sln --format sln --name $TempSolution --output dotnet --force
-        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$TempSolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
+        dotnet new sln --name $TempSolution --output dotnet --force
+        dotnet msbuild dotnet\DotNetStandardClasses.slnx /t:DumpProjects -p:DumpSolutionName=$TempSolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
 
     - name: Build temporary solution
-      run: dotnet build dotnet\CodeqlSolution.sln --framework net8.0
+      run: dotnet build dotnet\CodeqlSolution.slnx --framework net8.0
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)

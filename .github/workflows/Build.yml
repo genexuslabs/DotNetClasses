@@ -35,7 +35,7 @@ jobs:
       GIT_REF: ${{ github.ref }}
       GIT_SHA: ${{ github.sha }}
       Configuration: Release
-      SolutionFile: dotnet\DotNetStandardClasses.sln
+      SolutionFile: dotnet\DotNetStandardClasses.slnx
     
     runs-on: windows-latest
 
