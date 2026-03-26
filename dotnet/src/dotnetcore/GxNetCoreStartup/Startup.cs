@@ -215,6 +215,7 @@ namespace GeneXus.Application
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.AddHostedService<GxStartupService>();
 			OpenTelemetryService.Setup(services);
 
 			services.AddHealthChecks()
