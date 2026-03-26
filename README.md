@@ -59,7 +59,7 @@ This repository contains projects for .NET and .NET Framework. It is organized a
         └── dotnetframework/ (.NET Framework projects)
     ├── Directory.Build.props (default configuration for projects, imported early in the import order)
     ├── Directory.Build.targets (configuration for particular projects, imported late in the build order)
-    ├── DotNetStandardClasses.sln (solution to build all the projects)
+    ├── DotNetStandardClasses.slnx (solution to build all the projects)
     └── StandardClasses.ruleset (Code analysis rulesets)
 ```
 
@@ -67,7 +67,7 @@ This repository contains projects for .NET and .NET Framework. It is organized a
 
 ## Requirements
 - Visual Studio 2022 (17.8 or higher).
-- .NET 6 & .NET 8 
+- .NET 10
 - .NET Framework 4.7 DevPack
 
 # Instructions
@@ -75,21 +75,21 @@ For the following steps must be executed from inside ```dotnet``` directory:
 ```c:\DotNetClasses>cd dotnet```
 
 ## How to build all projects?
-- ```dotnet build DotNetStandardClasses.sln```
+- ```dotnet build DotNetStandardClasses.slnx```
 
 ## How to build a specific project?
 - ```dotnet build project.csproj```
 
 ## How to test your changes with a GeneXus installation?
-- ```dotnet msbuild /p:TF=net462 /p:DeployDirectory=C:\KB\CSharpModel\web\bin DotNetStandardClasses.sln```
+- ```dotnet msbuild /p:TF=net462 /p:DeployDirectory=C:\KB\CSharpModel\web\bin DotNetStandardClasses.slnx```
 
 It compiles the solution and copies all the .NET Framework assemblies to the folder C:\KB\CSharpModel\web\bin.
 
-- ```dotnet msbuild /p:TF=net8.0 /p:DeployDirectory=C:\KB\NetModel\web\bin DotNetStandardClasses.sln```
+- ```dotnet msbuild /p:TF=net10.0 /p:DeployDirectory=C:\KB\NetModel\web\bin DotNetStandardClasses.slnx```
 
 It compiles the solution and copies all the .NET 8 assemblies to the folder C:\KB\NetModel\web\bin.
 
-- TF: target framework that will be deployed. Valid values are: `net462` (for GeneXus NET Framework generator) and `net8.0` (for GeneXus NET generator).
+- TF: target framework that will be deployed. Valid values are: `net462` (for GeneXus NET Framework generator) and `net10.0` (for GeneXus NET generator).
 - DeployDirectory: specifies the target directory to copy assemblies.
 
 
@@ -102,10 +102,10 @@ Suppose you do a fix in GxClasses project. In order to get that fix in your gene
 
 1. Set AssemblyOriginatorKeyFile property in [Directory.Build.props](dotnet/Directory.Build.props) with the full path of your .snk file. It is required to set a strong name for the assembly.
 	- A new .snk file can be created with the command [sn.exe](https://docs.microsoft.com/en-us/dotnet/framework/tools/sn-exe-strong-name-tool) -k keyPair.snk  
-2. Build DotNetStandardClasses.sln and copy ```DotNetClasses\dotnet\src\dotnetframework\GxClasses\bin\Release\net462\GxClasses.dll``` to your ```<KB>\CSharpModel\web\bin directory```
+2. Build DotNetStandardClasses.slnx and copy ```DotNetClasses\dotnet\src\dotnetframework\GxClasses\bin\Release\net462\GxClasses.dll``` to your ```<KB>\CSharpModel\web\bin directory```
 3. Patch all the ```<KB>\CSharpModel\web\bin``` assemblies to reference the new GxClasses.dll. To do this run [UpdateAssemblyReference tool](dotnet/tools) with the following parameters
 	```UpdateAssemblyReference.exe -a <KB>\CSharpModel\web\bin\GxClasses.dll -d <KB>\CSharpModel\web\bin```
-	- To get UpdateAssemblyReference.exe build [UpdateAssemblyReference.sln](dotnet/tools/updateassemblyreference/UpdateAssemblyReference.sln)
+	- To get UpdateAssemblyReference.exe build [UpdateAssemblyReference.slnx](dotnet/tools/updateassemblyreference/UpdateAssemblyReference.slnx)
 4. Since GxClasses references other assemblies, it is needed to keep that references unchanged. So this command will patch the new GxClasses.dll to reference the original ones:
 
 	```UpdateAssemblyReference.exe -a <KB>\CSharpModel\web\bin\GxCryptography.dll -d <KB>\CSharpModel\web\bin```
