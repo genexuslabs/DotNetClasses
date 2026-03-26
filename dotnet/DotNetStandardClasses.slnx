@@ -59,7 +59,7 @@
     <Project Path="src/dotnetcore/Providers/Storage/GXAzureStorage/GXAzureStorage.csproj" />
     <Project Path="src/dotnetcore/Providers/Storage/GXGoogleCloud/GXGoogleCloud.csproj" />
   </Folder>
-  <Folder Name="/dotnetcore/storage/tools/">
+  <Folder Name="/dotnetcore/tools/">
     <Project Path="src/dotnetcore/GxDataInitialization/GXDataInitialization.csproj" />
     <Project Path="src/dotnetcore/Reor/Reor.csproj" />
   </Folder>
