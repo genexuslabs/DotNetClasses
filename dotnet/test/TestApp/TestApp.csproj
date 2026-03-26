@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>$(TestProjectsTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(TestProjectsTargetFramework)</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<OutputPath>$(ProjectDir)..\DotNetCoreOpenTelemetryTest\bin\$(Configuration)</OutputPath>

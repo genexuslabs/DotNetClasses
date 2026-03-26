@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>$(TestProjectsTargetFramework)</TargetFrameworks>
+		<TargetFramework>$(TestProjectsTargetFramework)</TargetFramework>
 		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
