@@ -11,6 +11,9 @@ on:
       - 'beta'
       - 'release-*'
 
+permissions:
+  contents: read
+
 jobs:
   test-kafka:
     env:
