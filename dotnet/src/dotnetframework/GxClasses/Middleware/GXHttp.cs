@@ -1745,7 +1745,7 @@ namespace GeneXus.Http
 						value1 = Convert.ToBase64String(Encoding.UTF8.GetBytes(value1));
 						context.WriteHtmlTextNl("<script type=\"text/javascript\">gx.http.useBase64State=true;</script>");
 					}
-					context.WriteHtmlText("<div><input type=\"hidden\" name=\"GXState\" value='");
+					context.WriteHtmlText("<div><input type=\"hidden\" name=\"GXState\" data-gtm-ignore='true' value='");
 					context.WriteHtmlText(GXUtil.HtmlEncodeInputValue(value1));
 					context.WriteHtmlTextNl("'" + GXUtil.HtmlEndTag(HTMLElement.INPUT) + "</div>");
 				}
