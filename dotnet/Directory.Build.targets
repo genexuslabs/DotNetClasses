@@ -15,7 +15,7 @@
 	<PropertyGroup>
 		<DumpSolutionName>TempSolution</DumpSolutionName>
 		<DumpSolutionExtension>slnx</DumpSolutionExtension>
-		<DumpSolutionTargetFrameworkDefault>net8</DumpSolutionTargetFrameworkDefault>
+		<DumpSolutionTargetFrameworkDefault>net10</DumpSolutionTargetFrameworkDefault>
 	</PropertyGroup>
 	
 	
@@ -34,7 +34,7 @@
 	</Target>
 	
 	<Target Name="PublishForAnalyzer">
-		<Exec Command="dotnet publish $(MSBuildThisFileDirectory)$(DumpSolutionName).$(DumpSolutionExtension) --configuration Debug -o $(MSBuildThisFileDirectory)..\.out -p:Publishing=true -p:SignAssembly=false --framework net8.0"></Exec>
+		<Exec Command="dotnet publish $(MSBuildThisFileDirectory)$(DumpSolutionName).$(DumpSolutionExtension) --configuration Debug -o $(MSBuildThisFileDirectory)..\.out -p:Publishing=true -p:SignAssembly=false --framework net10.0"></Exec>
 	</Target>
 
 </Project>

@@ -62,10 +62,10 @@ jobs:
     - name: Install libgdiplus
       run: sudo apt-get install -y libgdiplus
    
-    - name: Create temporary solution with .NET 8 projects
+    - name: Create temporary solution with .NET 10 projects
       run: |
         dotnet new sln --name $SolutionFileName --output dotnet --force
-        dotnet msbuild dotnet/DotNetStandardClasses.slnx /t:DumpProjectsAndCoreTests -p:DumpSolutionName=$SolutionFileName -p:DumpSolutionExtension=slnx /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
+        dotnet msbuild dotnet/DotNetStandardClasses.slnx /t:DumpProjectsAndCoreTests -p:DumpSolutionName=$SolutionFileName -p:DumpSolutionExtension=slnx /m:1 -p:DumpSolutionTargetFrameworkDefault=net10
 
     - name: Restore packages
       run: dotnet restore $SolutionFile
