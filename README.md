@@ -66,7 +66,7 @@ This repository contains projects for .NET and .NET Framework. It is organized a
 # How to build
 
 ## Requirements
-- Visual Studio 2022 (17.8 or higher).
+- Visual Studio 2025 (17.14 or higher).
 - .NET 10
 - .NET Framework 4.7 DevPack
 
@@ -87,7 +87,7 @@ It compiles the solution and copies all the .NET Framework assemblies to the fol
 
 - ```dotnet msbuild /p:TF=net10.0 /p:DeployDirectory=C:\KB\NetModel\web\bin DotNetStandardClasses.slnx```
 
-It compiles the solution and copies all the .NET 8 assemblies to the folder C:\KB\NetModel\web\bin.
+It compiles the solution and copies all the .NET 10 assemblies to the folder C:\KB\NetModel\web\bin.
 
 - TF: target framework that will be deployed. Valid values are: `net462` (for GeneXus NET Framework generator) and `net10.0` (for GeneXus NET generator).
 - DeployDirectory: specifies the target directory to copy assemblies.
