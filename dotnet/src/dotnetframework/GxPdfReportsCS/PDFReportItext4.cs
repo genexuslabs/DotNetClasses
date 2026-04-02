@@ -803,14 +803,14 @@ namespace com.genexus.reports
 						if (!string.IsNullOrEmpty(fontPath))
 						{
 							FontFactory.Register(fontPath, fontName);
-							styles.LoadTagStyle("body", "face", fontName);
-
-							if (IsEmbeddedFont(fontName))
-								styles.LoadTagStyle("body", "encoding", BaseFont.IDENTITY_H);
-							else
-								styles.LoadTagStyle("body", "encoding", BaseFont.WINANSI);
 						}
 					}
+					string defaultFontName = baseFont.PostscriptFontName;
+					styles.LoadTagStyle("body", "face", defaultFontName);
+					if (IsEmbeddedFont(defaultFontName))
+						styles.LoadTagStyle("body", "encoding", BaseFont.IDENTITY_H);
+					else
+						styles.LoadTagStyle("body", "encoding", BaseFont.WINANSI);
 				}
 
 				//Bottom and top are the absolutes, regardless of the actual height at which the letters are written.
