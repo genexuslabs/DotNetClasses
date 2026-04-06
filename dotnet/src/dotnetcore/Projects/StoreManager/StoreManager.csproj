@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
     <AssemblyName>GeneXus.SD.Store.StoreManager</AssemblyName>
     <RootNamespace>GeneXus.SD.Store</RootNamespace>
 	<PackageTags>StoreManager</PackageTags>
@@ -37,13 +37,9 @@
     <ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
   </ItemGroup>
 	<ItemGroup>
-		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net8.0'">
+		<Reference Include="Jayrock-JSON">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>..\..\libs\net8.0\Jayrock.dll</HintPath>
-		</Reference>
-		<Reference Include="Jayrock-JSON" Condition="'$(TargetFramework)'=='net6.0'">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\..\libs\Jayrock.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

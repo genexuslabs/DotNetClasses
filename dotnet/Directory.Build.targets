@@ -14,7 +14,7 @@
 	
 	<PropertyGroup>
 		<DumpSolutionName>TempSolution</DumpSolutionName>
-		<DumpSolutionTargetFrameworkDefault>net6</DumpSolutionTargetFrameworkDefault>
+		<DumpSolutionTargetFrameworkDefault>net8</DumpSolutionTargetFrameworkDefault>
 	</PropertyGroup>
 	
 	<Target Name="CopyAssemblies" Condition="'$(ProjectName)'!='' AND '$(TargetFramework)'=='$(TF)' AND '$(DeployDirectory)'!='' AND '$(IsPackable)'=='true'" AfterTargets="Build">
@@ -28,7 +28,7 @@
 	</Target>
 	
 	<Target Name="PublishForAnalyzer">
-		<Exec Command="dotnet publish $(MSBuildThisFileDirectory)$(DumpSolutionName).sln --configuration Debug -o $(MSBuildThisFileDirectory)..\.out -p:Publishing=true -p:SignAssembly=false --framework net6.0"></Exec>
+		<Exec Command="dotnet publish $(MSBuildThisFileDirectory)$(DumpSolutionName).sln --configuration Debug -o $(MSBuildThisFileDirectory)..\.out -p:Publishing=true -p:SignAssembly=false --framework net8.0"></Exec>
 	</Target>
 
 </Project>
