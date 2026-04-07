@@ -38,12 +38,12 @@ jobs:
 
     - name: Start LocalStack and create S3 bucket
       run: |
-        echo "Starting LocalStack 3.0.0..."
-        docker run -d -p 4566:4566 --name localstack localstack/localstack:3.0.0
+        echo "Starting LocalStack 3.8.1..."
+        docker run -d -p 4566:4566 --name localstack localstack/localstack:3.8.1
 
         echo "Waiting for LocalStack S3 service to be ready..."
         for i in {1..60}; do
-          if curl -s http://localhost:4566/health | grep '"s3": "running"' > /dev/null; then
+          if curl -s http://localhost:4566/_localstack/health | grep -q '"s3"'; then
             echo "LocalStack S3 is ready!"
             break
           fi
