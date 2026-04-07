@@ -37,18 +37,29 @@ jobs:
 
     - name: Start LocalStack
       run: |
-        docker run -d -p 4566:4566 -p 4572:4572 --name localstack localstack/localstack
-        sleep 10  # Wait for LocalStack to initialize
+        docker run -d -p 4566:4566 --name localstack localstack/localstack
 
-    - name: Configure AWS CLI for LocalStack
-      run: |
-        aws configure set aws_access_key_id test
-        aws configure set aws_secret_access_key test
-        aws configure set default.region us-east-1
-        aws configure set endpoint_url http://localhost:4566
+        echo "Waiting for LocalStack to be ready..."
+
+        for i in {1..30}; do
+          if curl -s http://localhost:4566/health | grep '"s3": "running"' > /dev/null; then
+            echo "LocalStack is ready!"
+            break
+          fi
+          echo "Still waiting..."
+          sleep 2
+        done
+
+        echo "LocalStack logs:"
+        docker logs localstack
 
     - name: Create S3 Bucket in LocalStack
-      run: aws s3api create-bucket --bucket test-bucket --endpoint-url http://localhost:4566
+      env:
+        AWS_ACCESS_KEY_ID: test
+        AWS_SECRET_ACCESS_KEY: test
+        AWS_DEFAULT_REGION: us-east-1
+      run: |
+        aws --endpoint-url=http://localhost:4566 s3 mb s3://test-bucket
 
     - name: Install .NET 8
       uses: actions/setup-dotnet@v3
