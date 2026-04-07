@@ -37,7 +37,7 @@ jobs:
 
     - name: Start LocalStack
       run: |
-        docker run -d -p 4566:4566 --name localstack localstack/localstack:2.3
+        docker run -d -p 4566:4566 --name localstack localstack/localstack:3.0.0
 
         echo "Waiting for LocalStack to be ready..."
 
