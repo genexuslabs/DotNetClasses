@@ -13,7 +13,4 @@
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />
     <ProjectReference Include="..\..\..\..\dotnetcommon\GxEncrypt\GxEncrypt.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
 </Project>
