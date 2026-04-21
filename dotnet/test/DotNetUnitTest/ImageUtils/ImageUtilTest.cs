@@ -8,6 +8,13 @@ using System.Threading.Tasks;
 using GeneXus.Utils;
 using UnitTesting;
 using Xunit;
+#if NETCORE
+using Image = GeneXus.Drawing.Image;
+using GeneXus.Drawing.Imaging;
+#else
+using Image = System.Drawing.Image;
+using System.Drawing.Imaging;
+#endif
 
 namespace DotNetCoreUnitTest.ImageUtils
 {
@@ -128,17 +135,17 @@ namespace DotNetCoreUnitTest.ImageUtils
 			string signedUrl = "https://bucket.s3.amazonaws.com/folder/bird-thumbnail.jpg?X-Amz-Expires=86400&X-Amz-Signature=abc123def456&X-Amz-Algorithm=AWS4-HMAC-SHA256";
 
 			string destinationPath;
-			using (System.Drawing.Image image = System.Drawing.Image.FromFile(IMAGE_FILE_PATH))
+			using (Image image = Image.FromFile(IMAGE_FILE_PATH))
 			{
-				destinationPath = GxImageUtil.Save(image, signedUrl, System.Drawing.Imaging.ImageFormat.Jpeg);
+				destinationPath = GxImageUtil.Save(image, signedUrl, ImageFormat.Jpeg);
 			}
 
 			Assert.False(string.IsNullOrEmpty(destinationPath));
 			string destinationFileName = Path.GetFileName(destinationPath);
-			Assert.DoesNotContain("?", destinationFileName);
-			Assert.DoesNotContain("%3F", destinationFileName);
-			Assert.DoesNotContain("X-Amz-Expires", destinationFileName);
-			Assert.DoesNotContain("X-Amz-Signature", destinationFileName);
+			Assert.DoesNotContain("?", destinationFileName, StringComparison.Ordinal);
+			Assert.DoesNotContain("%3F", destinationFileName, StringComparison.Ordinal);
+			Assert.DoesNotContain("X-Amz-Expires", destinationFileName, StringComparison.Ordinal);
+			Assert.DoesNotContain("X-Amz-Signature", destinationFileName, StringComparison.Ordinal);
 
 			Assert.Equal(IMAGE_HEIGHT, GxImageUtil.GetImageHeight(destinationPath));
 			Assert.Equal(IMAGE_WIDTH, GxImageUtil.GetImageWidth(destinationPath));
