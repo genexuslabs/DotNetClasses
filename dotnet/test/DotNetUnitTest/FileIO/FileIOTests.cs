@@ -91,15 +91,19 @@ namespace UnitTesting
 				"content%5c..%5c..%5c..%5cdocument.aspx","content%255c%252e%252e%255c%252e%252e%255c%252e%252e%255cdocument.aspx","content%255c..%255c..%255c..%255cdocument.aspx",
 				"content%c0%af..%c0%af..%c0%af..%c0%afdocument.aspx","content%c1%9c..%c1%9c..%c1%9c..%c1%9cdocument.aspx"};
 
+			string safeResolved = GXDbFile.ResolveUri($"{GXDbFile.Scheme}:safe.txt", false);
+			string safeResolvedPath = Uri.TryCreate(safeResolved, UriKind.Absolute, out Uri safeUri) && safeUri.IsFile
+				? safeUri.LocalPath
+				: safeResolved;
+			string fullBase = Path.GetDirectoryName(Path.GetFullPath(safeResolvedPath)) + Path.DirectorySeparatorChar;
+
 			foreach (string fileName in filesName)
 			{
 				string newFileName = GXDbFile.ResolveUri($"{GXDbFile.Scheme}:{fileName}", false);
-				string baseDir = Preferences.getBLOB_PATH();
 				string resolvedPath = Uri.TryCreate(newFileName, UriKind.Absolute, out Uri parsedUri) && parsedUri.IsFile
 					? parsedUri.LocalPath
 					: newFileName;
 				string fullResolved = Path.GetFullPath(resolvedPath);
-				string fullBase = Path.GetFullPath(baseDir);
 				bool isOK = fullResolved.StartsWith(fullBase, StringComparison.OrdinalIgnoreCase);
 				Assert.True(isOK, $"Path traversal detected: resolved '{fullResolved}' is outside base '{fullBase}' for input '{fileName}'");
 			}
