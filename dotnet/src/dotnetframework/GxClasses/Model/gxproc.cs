@@ -116,8 +116,12 @@ namespace GeneXus.Procedure
 		}
 		private void exitApplication(bool flushBatchCursor)
 		{
+			bool inMainExit = false;
 			if (!(GxContext.IsHttpContext || GxContext.IsRestService) && IsMain && GxApplication.MainContext==context)
+			{
 				ThreadUtil.WaitForEnd();
+				inMainExit = true;
+			}
 
 			if (flushBatchCursor)
 			{
@@ -125,8 +129,9 @@ namespace GeneXus.Procedure
 					ds.Connection.FlushBatchCursors(this);
 			}
 
-			if (IsMain)
+			if (inMainExit)
 				dbgInfo?.OnExit();
+
 			if (disconnectUserAtCleanup)
 			{
 				try
