@@ -504,7 +504,7 @@ namespace GeneXus.Configuration
 #else
 		static Dictionary<string, Version> AssemblyRedirect = new Dictionary<string, Version>
 		{
-			{"log4net", new Version(3, 3, 0, 0) },
+			{"log4net", new Version(2, 0, 17, 0) },
 			{ "System.Threading.Tasks.Extensions", new Version(4, 2, 0, 1) },
 			{ "System.Runtime.CompilerServices.Unsafe", new Version(4, 0, 4, 1) },
 			{ "System.Buffers", new Version(4, 0, 5, 0)},
