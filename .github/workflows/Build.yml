@@ -160,16 +160,38 @@ jobs:
     - name: Sign packages
       if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
-        TIMESTAMPER_URL: ${{ secrets.CODE_SIGN_CERTIFICATE_TIMESTAMPER_URL }}
-        PFX_BASE64: ${{ secrets.CODE_SIGN_CERTIFICATE_BASE64 }}
-        PFX_PASS: ${{ secrets.CODE_SIGN_CERTIFICATE_PASSWORD }}
+        VAULT_URL:          ${{ vars.AZURE_CODE_SIGNING_VAULT_URL }}
+        CERT_NAME:          ${{ vars.AZURE_CODE_SIGNING_CERT_NAME }}
+        TIMESTAMPER_URL:    ${{ vars.AZURE_CODE_SIGNING_TIMESTAMP_SERVER }}
+        AZURE_TENANT:       ${{ vars.AZURE_CODE_SIGNING_TENANT }}
+        AZURE_APP_ID:       ${{ vars.AZURE_CODE_SIGNING_APP_ID }}
+        AZURE_APP_PASSWORD: ${{ secrets.AZURE_CODE_SIGNING_APP_PASSWORD }}
       run: |
-        $codesign_pfx = "code_sign_cert.pfx"
-        $bytes = [Convert]::FromBase64String($Env:PFX_BASE64)
-        [IO.File]::WriteAllBytes($codesign_pfx, $bytes)
+        # Restore the local tool manifest (.config/dotnet-tools.json) which pins NuGetKeyVaultSignTool.
+        dotnet tool restore
 
+        # Acquire an Azure Key Vault access token via client_credentials grant.
+        $body = @{
+          grant_type    = 'client_credentials'
+          client_id     = $Env:AZURE_APP_ID
+          client_secret = $Env:AZURE_APP_PASSWORD
+          scope         = 'https://vault.azure.net/.default'
+        }
+        $token = (Invoke-RestMethod -Method Post `
+            -Uri "https://login.microsoftonline.com/$Env:AZURE_TENANT/oauth2/v2.0/token" `
+            -Body $body).access_token
+        Write-Host "::add-mask::$token"
+
+        # Sign every produced .nupkg against the certificate stored in the vault.
         Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
-          dotnet nuget sign $_.FullName --certificate-path $codesign_pfx --certificate-password $Env:PFX_PASS --timestamper $Env:TIMESTAMPER_URL
+          dotnet tool run NuGetKeyVaultSignTool sign $_.FullName `
+            -kvu $Env:VAULT_URL `
+            -kvc $Env:CERT_NAME `
+            -kva $token `
+            -tr  $Env:TIMESTAMPER_URL `
+            -td  sha256 `
+            -fd  sha256
+          if ($LASTEXITCODE -ne 0) { throw "NuGetKeyVaultSignTool failed for $($_.Name)" }
         }
 
     - name: Configure Azure Artifacts feed
