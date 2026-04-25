@@ -149,35 +149,36 @@ jobs:
             -Body $body).access_token
         Write-Host "::add-mask::$token"
 
-        # Discover dlls produced by projects in dotnet/src/ (filename matches a .csproj
-        # under that tree). This avoids re-signing third-party dlls that NuGet copied
-        # into bin/, whose original signatures we must not overwrite.
-        $projectAssemblyNames = Get-ChildItem dotnet/src -Filter *.csproj -Recurse |
-            ForEach-Object { $_.BaseName } |
-            Sort-Object -Unique
-
-        $dllsToSign = Get-ChildItem dotnet/src -Filter *.dll -Recurse |
-            Where-Object {
-              $projectAssemblyNames -contains $_.BaseName -and
-              $_.FullName -match "\\bin\\$Env:Configuration\\"
-            } |
-            Select-Object -ExpandProperty FullName -Unique
+        # Discover dlls produced by projects in dotnet/src/. For each csproj we look ONLY
+        # inside its own bin/$Configuration/ tree, matching <ProjectName>.dll across all
+        # target frameworks. This avoids signing copies of the same dll that get duplicated
+        # into other projects' bins via project references, and keeps third-party dlls
+        # (their authors' signatures must not be overwritten) out of the list.
+        $dllsToSign = Get-ChildItem dotnet/src -Filter *.csproj -Recurse | ForEach-Object {
+            $projectBin = Join-Path $_.Directory.FullName "bin/$Env:Configuration"
+            if (Test-Path $projectBin) {
+              Get-ChildItem -Path $projectBin -Filter "$($_.BaseName).dll" -Recurse -File -ErrorAction SilentlyContinue
+            }
+        } | Select-Object -ExpandProperty FullName -Unique
 
         if ($dllsToSign.Count -eq 0) {
           throw "Sign assemblies: no dlls matched a project in dotnet/src/. Check the build output."
         }
 
+        # AzureSignTool reads the file list from -ifl <path>, avoiding the Windows
+        # command-line length limit (~32k chars) that 800+ paths blow through.
+        $listFile = Join-Path $Env:RUNNER_TEMP "files-to-sign.txt"
+        $dllsToSign | Set-Content -Path $listFile -Encoding utf8
+
         Write-Host "Signing $($dllsToSign.Count) assemblies via $Env:VAULT_URL ($Env:CERT_NAME)..."
-        $toolArgs = @(
-          'sign'
-          '-kvu', $Env:VAULT_URL
-          '-kvc', $Env:CERT_NAME
-          '-kva', $token
-          '-tr',  $Env:TIMESTAMPER_URL
-          '-td',  'sha256'
-          '-fd',  'sha256'
-        ) + $dllsToSign
-        dotnet tool run AzureSignTool @toolArgs
+        dotnet tool run AzureSignTool sign `
+          -kvu $Env:VAULT_URL `
+          -kvc $Env:CERT_NAME `
+          -kva $token `
+          -tr  $Env:TIMESTAMPER_URL `
+          -td  sha256 `
+          -fd  sha256 `
+          -ifl $listFile
         if ($LASTEXITCODE -ne 0) { throw "AzureSignTool failed (exit $LASTEXITCODE)" }
 
     - name: Pack
