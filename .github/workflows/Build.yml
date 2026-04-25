@@ -160,11 +160,11 @@ jobs:
     - name: Sign packages
       if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
-        VAULT_URL:          ${{ vars.AZURE_CODE_SIGNING_VAULT_URL }}
+        VAULT_URL:          ${{ secrets.AZURE_CODE_SIGNING_VAULT_URL }}
         CERT_NAME:          ${{ vars.AZURE_CODE_SIGNING_CERT_NAME }}
         TIMESTAMPER_URL:    ${{ vars.AZURE_CODE_SIGNING_TIMESTAMP_SERVER }}
-        AZURE_TENANT:       ${{ vars.AZURE_CODE_SIGNING_TENANT }}
-        AZURE_APP_ID:       ${{ vars.AZURE_CODE_SIGNING_APP_ID }}
+        AZURE_TENANT:       ${{ secrets.AZURE_CODE_SIGNING_TENANT }}
+        AZURE_APP_ID:       ${{ secrets.AZURE_CODE_SIGNING_APP_ID }}
         AZURE_APP_PASSWORD: ${{ secrets.AZURE_CODE_SIGNING_APP_PASSWORD }}
       run: |
         # Restore the local tool manifest (.config/dotnet-tools.json) which pins NuGetKeyVaultSignTool.
