@@ -2,6 +2,12 @@
   "version": 1,
   "isRoot": true,
   "tools": {
+    "azuresigntool": {
+      "version": "6.0.0",
+      "commands": [
+        "AzureSignTool"
+      ]
+    },
     "nugetkeyvaultsigntool": {
       "version": "3.2.3",
       "commands": [
