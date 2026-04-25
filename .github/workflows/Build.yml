@@ -124,63 +124,6 @@ jobs:
     - name: Test
       run: dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
 
-    # TODO: restore the SHOULD_DEPLOY gate before merging this PR.
-    - name: Sign assemblies
-      if: github.repository_owner == 'GeneXusLabs'
-      env:
-        VAULT_URL:          ${{ secrets.AZURE_CODE_SIGNING_VAULT_URL }}
-        CERT_NAME:          ${{ vars.AZURE_CODE_SIGNING_CERT_NAME }}
-        TIMESTAMPER_URL:    ${{ vars.AZURE_CODE_SIGNING_TIMESTAMP_SERVER }}
-        AZURE_TENANT:       ${{ secrets.AZURE_CODE_SIGNING_TENANT }}
-        AZURE_APP_ID:       ${{ secrets.AZURE_CODE_SIGNING_APP_ID }}
-        AZURE_APP_PASSWORD: ${{ secrets.AZURE_CODE_SIGNING_APP_PASSWORD }}
-      run: |
-        dotnet tool restore
-
-        # Acquire an Azure Key Vault access token via client_credentials grant.
-        $body = @{
-          grant_type    = 'client_credentials'
-          client_id     = $Env:AZURE_APP_ID
-          client_secret = $Env:AZURE_APP_PASSWORD
-          scope         = 'https://vault.azure.net/.default'
-        }
-        $token = (Invoke-RestMethod -Method Post `
-            -Uri "https://login.microsoftonline.com/$Env:AZURE_TENANT/oauth2/v2.0/token" `
-            -Body $body).access_token
-        Write-Host "::add-mask::$token"
-
-        # Discover dlls produced by projects in dotnet/src/. For each csproj we look ONLY
-        # inside its own bin/$Configuration/ tree, matching <ProjectName>.dll across all
-        # target frameworks. This avoids signing copies of the same dll that get duplicated
-        # into other projects' bins via project references, and keeps third-party dlls
-        # (their authors' signatures must not be overwritten) out of the list.
-        $dllsToSign = Get-ChildItem dotnet/src -Filter *.csproj -Recurse | ForEach-Object {
-            $projectBin = Join-Path $_.Directory.FullName "bin/$Env:Configuration"
-            if (Test-Path $projectBin) {
-              Get-ChildItem -Path $projectBin -Filter "$($_.BaseName).dll" -Recurse -File -ErrorAction SilentlyContinue
-            }
-        } | Select-Object -ExpandProperty FullName -Unique
-
-        if ($dllsToSign.Count -eq 0) {
-          throw "Sign assemblies: no dlls matched a project in dotnet/src/. Check the build output."
-        }
-
-        # AzureSignTool reads the file list from -ifl <path>, avoiding the Windows
-        # command-line length limit (~32k chars) that 800+ paths blow through.
-        $listFile = Join-Path $Env:RUNNER_TEMP "files-to-sign.txt"
-        $dllsToSign | Set-Content -Path $listFile -Encoding utf8
-
-        Write-Host "Signing $($dllsToSign.Count) assemblies via $Env:VAULT_URL ($Env:CERT_NAME)..."
-        dotnet tool run AzureSignTool sign `
-          -kvu $Env:VAULT_URL `
-          -kvc $Env:CERT_NAME `
-          -kva $token `
-          -tr  $Env:TIMESTAMPER_URL `
-          -td  sha256 `
-          -fd  sha256 `
-          -ifl $listFile
-        if ($LASTEXITCODE -ne 0) { throw "AzureSignTool failed (exit $LASTEXITCODE)" }
-
     - name: Pack
       run: dotnet pack $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration /p:Version=$Env:NUGET_PACKAGE_VERSION
 
@@ -214,9 +157,8 @@ jobs:
         Write-Output ""
         Write-Output "✅ All packages correctly start with 'GeneXus.' prefix - ready for NuGet.org publication"
 
-    # TODO: restore the SHOULD_DEPLOY gate before merging this PR.
     - name: Sign packages
-      if: github.repository_owner == 'GeneXusLabs'
+      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
         VAULT_URL:          ${{ secrets.AZURE_CODE_SIGNING_VAULT_URL }}
         CERT_NAME:          ${{ vars.AZURE_CODE_SIGNING_CERT_NAME }}
