@@ -207,11 +207,9 @@ namespace GeneXus.Http.Client
 
 		private static string HttpClientInstanceIdentifier(string proxyHost, int proxyPort, List<string> fileCertificateCollection, int timeout)
 		{
-#if !NET10_0_OR_GREATER
+#pragma warning disable SYSLIB0014
 			bool defaultSslOptions = ServicePointManager.ServerCertificateValidationCallback == null;
-#else
-			bool defaultSslOptions = true;
-#endif
+#pragma warning restore SYSLIB0014
 			if (string.IsNullOrEmpty(proxyHost) && CollectionUtils.IsNullOrEmpty(fileCertificateCollection) && timeout== DEFAULT_TIMEOUT && defaultSslOptions)
 			{
 				return string.Empty;
@@ -281,7 +279,7 @@ namespace GeneXus.Http.Client
 
 		private static void SetSslOptions(SocketsHttpHandler handler)
 		{
-#if !NET10_0_OR_GREATER
+#pragma warning disable SYSLIB0014
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
 			{
 				handler.SslOptions = new SslClientAuthenticationOptions
@@ -289,7 +287,7 @@ namespace GeneXus.Http.Client
 					RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback
 				};
 			}
-#endif
+#pragma warning restore SYSLIB0014
 		}
 #else
 		[SecuritySafeCritical]
