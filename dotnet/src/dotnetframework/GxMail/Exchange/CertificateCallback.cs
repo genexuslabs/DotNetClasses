@@ -5,12 +5,12 @@ namespace GeneXus.Mail.Exchange
 {
     public static class CertificateCallback
     {
-#if !NET10_0_OR_GREATER
+#pragma warning disable SYSLIB0014
 		static CertificateCallback()
         {
             ServicePointManager.ServerCertificateValidationCallback = CertificateValidationCallBack;
         }
-#endif
+#pragma warning restore SYSLIB0014
 
 		public static void Initialize()
         {
