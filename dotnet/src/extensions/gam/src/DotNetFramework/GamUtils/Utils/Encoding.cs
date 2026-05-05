@@ -85,6 +85,22 @@ namespace GamUtils.Utils
 			}
 		}
 
+		[SecuritySafeCritical]
+		internal static bool IsHexa(string hexa)
+		{
+			logger.Debug("IsHexa");
+			try
+			{
+				Hex.Decode(hexa);
+			}
+			catch (Exception e)
+			{
+				logger.Error("IsHexa", e);
+				return false;
+			}
+			return true;
+		}
+
 
 	}
 }
