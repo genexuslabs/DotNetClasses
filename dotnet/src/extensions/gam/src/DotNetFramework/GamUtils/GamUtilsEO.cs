@@ -103,7 +103,7 @@ namespace GamUtils
 		public static string Base64ToHexa(string base64) { return Encoding.Base64ToHexa(base64);  }
 
 		[SecuritySafeCritical]
-		public static bool IsHexadecimal(string base64) { return Encoding.IsHexa(base64); }
+		public static bool IsHexadecimal(string hexa) { return Encoding.IsHexa(hexa); }
 
 		//**PKCE**//
 
