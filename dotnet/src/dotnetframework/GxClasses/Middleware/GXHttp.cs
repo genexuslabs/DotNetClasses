@@ -1990,63 +1990,70 @@ namespace GeneXus.Http
 #if NETCORE
 		internal async Task ProcessRequestAsync(HttpContext httpContext)
 		{
-			localHttpContext = httpContext;
-
-			if (IsSpaRequest() && !IsSpaSupported())
-			{
-				this.SendResponseStatus(SPA_NOT_SUPPORTED_STATUS_CODE, "SPA not supported by the object");
-				context.CloseConnections();
-				await Task.CompletedTask;
-			}
-			ControlOutputWriter = new HtmlTextWriter(localHttpContext);
-			LoadParameters(localHttpContext.Request.QueryString.Value);
-			context.httpAjaxContext.GetAjaxEncryptionKey(); //Save encryption key in session
-			InitPrivates();
 			try
 			{
-				SetStreaming();
-				SendHeaders();
-				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
+				localHttpContext = httpContext;
 
-				bool validSession = ValidWebSession();
-				if (validSession && IntegratedSecurityEnabled)
-					validSession = ValidSession();
-				if (validSession)
+				if (IsSpaRequest() && !IsSpaSupported())
 				{
-					if (UseBigStack())
+					this.SendResponseStatus(SPA_NOT_SUPPORTED_STATUS_CODE, "SPA not supported by the object");
+					context.CloseConnections();
+					await Task.CompletedTask;
+				}
+				ControlOutputWriter = new HtmlTextWriter(localHttpContext);
+				LoadParameters(localHttpContext.Request.QueryString.Value);
+				context.httpAjaxContext.GetAjaxEncryptionKey(); //Save encryption key in session
+				InitPrivates();
+				try
+				{
+					SetStreaming();
+					SendHeaders();
+					string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
+
+					bool validSession = ValidWebSession();
+					if (validSession && IntegratedSecurityEnabled)
+						validSession = ValidSession();
+					if (validSession)
 					{
-						Thread ts = new Thread(new ParameterizedThreadStart(webExecuteWorker));
-						ts.Start(httpContext);
-						ts.Join();
-						if (workerException != null)
-							throw workerException;
+						if (UseBigStack())
+						{
+							Thread ts = new Thread(new ParameterizedThreadStart(webExecuteWorker));
+							ts.Start(httpContext);
+							ts.Join();
+							if (workerException != null)
+								throw workerException;
+						}
+						else
+						{
+							await WebExecuteExAsync(httpContext);
+						}
 					}
 					else
 					{
-						await WebExecuteExAsync(httpContext);
+						context.CloseConnections();
+						if (IsGxAjaxRequest() || context.isAjaxRequest())
+							context.DispatchAjaxCommands();
+					}
+					SetCompression(httpContext);
+					context.ResponseCommited = true;
+				}
+				catch (Exception e)
+				{
+					try
+					{
+						context.CloseConnections();
+					}
+					catch { }
+					{
+						Exception exceptionToHandle = e.InnerException ?? e;
+						handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
+						throw new Exception("GXApplication exception", e);
 					}
 				}
-				else
-				{
-					context.CloseConnections();
-					if (IsGxAjaxRequest() || context.isAjaxRequest())
-						context.DispatchAjaxCommands();
-				}
-				SetCompression(httpContext);
-				context.ResponseCommited = true;
 			}
-			catch (Exception e)
+			finally
 			{
-				try
-				{
-					context.CloseConnections();
-				}
-				catch { }
-				{
-					Exception exceptionToHandle = e.InnerException ?? e;
-					handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
-					throw new Exception("GXApplication exception", e);
-				}
+				try { (context as IDisposable)?.Dispose(); } catch { }
 			}
 		}
 
@@ -2056,90 +2063,97 @@ namespace GeneXus.Http
 #endif
 		public void ProcessRequest(HttpContext httpContext)
 		{
-			localHttpContext = httpContext;
-
-			if (IsSpaRequest() && !IsSpaSupported())
-			{
-				this.SendResponseStatus(SPA_NOT_SUPPORTED_STATUS_CODE, "SPA not supported by the object");
-#if !NETCORE
-				context.HttpContext.Response.TrySkipIisCustomErrors = true;
-#endif
-				context.CloseConnections();
-				return;
-			}
-#if NETCORE
-			ControlOutputWriter = new HtmlTextWriter(localHttpContext);
-			LoadParameters(localHttpContext.Request.QueryString.Value);
-			context.httpAjaxContext.GetAjaxEncryptionKey(); //Save encryption key in session
-#else
-			ControlOutputWriter = new HtmlTextWriter(localHttpContext.Response.Output);
-			LoadParameters(localHttpContext.Request.Url.Query);
-#endif
-			InitPrivates();
 			try
 			{
-				SetStreaming();
-				SendHeaders();
-				string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
+				localHttpContext = httpContext;
+
+				if (IsSpaRequest() && !IsSpaSupported())
+				{
+					this.SendResponseStatus(SPA_NOT_SUPPORTED_STATUS_CODE, "SPA not supported by the object");
 #if !NETCORE
-				CSRFHelper.ValidateAntiforgery(httpContext);
+					context.HttpContext.Response.TrySkipIisCustomErrors = true;
+#endif
+					context.CloseConnections();
+					return;
+				}
+#if NETCORE
+				ControlOutputWriter = new HtmlTextWriter(localHttpContext);
+				LoadParameters(localHttpContext.Request.QueryString.Value);
+				context.httpAjaxContext.GetAjaxEncryptionKey(); //Save encryption key in session
+#else
+				ControlOutputWriter = new HtmlTextWriter(localHttpContext.Response.Output);
+				LoadParameters(localHttpContext.Request.Url.Query);
+#endif
+				InitPrivates();
+				try
+				{
+					SetStreaming();
+					SendHeaders();
+					string clientid = context.ClientID; //Send clientid cookie (before response HasStarted) if necessary, since UseResponseBuffering is not in .netcore3.0
+#if !NETCORE
+					CSRFHelper.ValidateAntiforgery(httpContext);
 #endif
 
-				bool validSession = ValidWebSession();
-				if (validSession && IntegratedSecurityEnabled)
-					validSession = ValidSession();
-				if (validSession)
-				{
-					if (UseBigStack())
+					bool validSession = ValidWebSession();
+					if (validSession && IntegratedSecurityEnabled)
+						validSession = ValidSession();
+					if (validSession)
 					{
-#if !NETCORE
-						Thread ts = new Thread(new ParameterizedThreadStart(webExecuteWorker), STACKSIZE);
-						object currentCultureInfo = Thread.CurrentThread.CurrentUICulture.Clone();
-						if (currentCultureInfo != null)
+						if (UseBigStack())
 						{
-							ts.CurrentUICulture = (CultureInfo)currentCultureInfo;
-						}
+#if !NETCORE
+							Thread ts = new Thread(new ParameterizedThreadStart(webExecuteWorker), STACKSIZE);
+							object currentCultureInfo = Thread.CurrentThread.CurrentUICulture.Clone();
+							if (currentCultureInfo != null)
+							{
+								ts.CurrentUICulture = (CultureInfo)currentCultureInfo;
+							}
 #else
-						Thread ts = new Thread(new ParameterizedThreadStart(webExecuteWorker));
+							Thread ts = new Thread(new ParameterizedThreadStart(webExecuteWorker));
 #endif
-						ts.Start(httpContext);
-						ts.Join();
-						if (workerException != null)
-							throw workerException;
+							ts.Start(httpContext);
+							ts.Join();
+							if (workerException != null)
+								throw workerException;
+						}
+						else
+						{
+							webExecuteEx(httpContext);
+						}
 					}
 					else
 					{
-						webExecuteEx(httpContext);
+						context.CloseConnections();
+						if (IsGxAjaxRequest() || context.isAjaxRequest())
+							context.DispatchAjaxCommands();
+					}
+					SetCompression(httpContext);
+					context.ResponseCommited = true;
+				}
+				catch (Exception e)
+				{
+					try
+					{
+						context.CloseConnections();
+					}
+					catch { }
+#if !NETCORE
+					if (CSRFHelper.HandleException(e, httpContext))
+					{
+						GXLogging.Error(log, $"Validation of antiforgery failed", e);
+					}
+					else
+#endif
+					{
+						Exception exceptionToHandle = e.InnerException ?? e;
+						handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
+						throw new Exception("GXApplication exception", e);
 					}
 				}
-				else
-				{
-					context.CloseConnections();
-					if (IsGxAjaxRequest() || context.isAjaxRequest())
-						context.DispatchAjaxCommands();
-				}
-				SetCompression(httpContext);
-				context.ResponseCommited = true;
 			}
-			catch (Exception e)
+			finally
 			{
-				try
-				{
-					context.CloseConnections();
-				}
-				catch { }
-#if !NETCORE
-				if (CSRFHelper.HandleException(e, httpContext))
-				{
-					GXLogging.Error(log, $"Validation of antiforgery failed", e);
-				}
-				else
-#endif
-				{
-					Exception exceptionToHandle = e.InnerException ?? e;
-					handleException(exceptionToHandle.GetType().FullName, exceptionToHandle.Message, exceptionToHandle.StackTrace);
-					throw new Exception("GXApplication exception", e);
-				}
+				try { (context as IDisposable)?.Dispose(); } catch { }
 			}
 		}
 		protected virtual bool ChunkedStreaming() { return false; }
