@@ -2503,16 +2503,17 @@ namespace GeneXus.Data
 		{	
 			throw (new GxNotImplementedException());
 		}
-		public bool IsClosed 
+		public bool IsClosed
 		{
 			get{return !open;}
 		}
-		public int Depth 
+		public int Depth
 		{
 			get {return 0;}
 		}
 		public void Dispose()
 		{
+			try { Close(); } catch (Exception ex) { GXLogging.Warn(log, "GxDataReader.Dispose error", ex); }
 		}
 		public string GetName(int i)
 		{
