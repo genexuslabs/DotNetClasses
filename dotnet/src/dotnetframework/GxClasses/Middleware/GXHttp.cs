@@ -2053,7 +2053,8 @@ namespace GeneXus.Http
 			}
 			finally
 			{
-				try { (context as IDisposable)?.Dispose(); } catch { }
+				try { (context as IDisposable)?.Dispose(); }
+				catch (Exception disposeEx) { GXLogging.Warn(log, "Error disposing GxContext at end of request", disposeEx); }
 			}
 		}
 
@@ -2153,7 +2154,8 @@ namespace GeneXus.Http
 			}
 			finally
 			{
-				try { (context as IDisposable)?.Dispose(); } catch { }
+				try { (context as IDisposable)?.Dispose(); }
+				catch (Exception disposeEx) { GXLogging.Warn(log, "Error disposing GxContext at end of request", disposeEx); }
 			}
 		}
 		protected virtual bool ChunkedStreaming() { return false; }
