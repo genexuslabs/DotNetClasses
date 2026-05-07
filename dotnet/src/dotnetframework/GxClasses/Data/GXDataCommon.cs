@@ -837,7 +837,10 @@ namespace GeneXus.Data
 				}
 				else
 				{
-
+					foreach (object oldParam in cmd.Parameters)
+					{
+						if (oldParam is IDisposable disposable) disposable.Dispose();
+					}
 					cmd.Parameters.Clear();
 
 					AddParameters(cmd, parameters);
