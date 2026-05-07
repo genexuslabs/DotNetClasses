@@ -707,20 +707,20 @@ namespace GeneXus.Data.ADO
 		
 		public void Close()
 		{
-			if (connection!=null) 
+			if (connection!=null)
 			{
 				GXLogging.Debug(log, "GxConnection.Close Id " + " connection State '" + connection.State + "'" + " handle:" + handle + " datastore:" + DataStore.Id);
 			}
-			if (connection!=null && ((connection.State & ConnectionState.Closed) == 0 )) 
+			try
 			{
-				try
-				{
-					connectionCache.Clear();
-				}
-				catch(Exception e){
-					GXLogging.Warn(log, "GxConnection.Close can't close all prepared cursors" ,e);
-				}
-				
+				if (connectionCache != null) connectionCache.Clear();
+			}
+			catch (Exception e)
+			{
+				GXLogging.Warn(log, "GxConnection.Close can't close all prepared cursors", e);
+			}
+			if (connection!=null && ((connection.State & ConnectionState.Closed) == 0 ))
+			{
 				GXLogging.Debug(log, "UncommitedChanges before Close:" + UncommitedChanges );
                 try
                 {
@@ -764,17 +764,16 @@ namespace GeneXus.Data.ADO
 			{
 				GXLogging.Debug(log, "GxConnection.Close Id " + " connection State '" + connection.State + "'" + " handle:" + handle + " datastore:" + DataStore.Id);
 			}
+			try
+			{
+				if (connectionCache != null) connectionCache.Clear();
+			}
+			catch (Exception e)
+			{
+				GXLogging.Warn(log, "GxConnection.Close can't close all prepared cursors", e);
+			}
 			if (connection != null && ((connection.State & ConnectionState.Closed) == 0))
 			{
-				try
-				{
-					connectionCache.Clear();
-				}
-				catch (Exception e)
-				{
-					GXLogging.Warn(log, "GxConnection.Close can't close all prepared cursors", e);
-				}
-
 				GXLogging.Debug(log, "UncommitedChanges before Close:" + UncommitedChanges);
 				try
 				{
