@@ -160,9 +160,9 @@ namespace GeneXus.Http.Client
 		internal static ConcurrentDictionary<string, HttpClient> _httpClientInstances = new ConcurrentDictionary<string, HttpClient>();
 		private static HttpClient GetHttpClientInstance(Uri URI, int timeout, ArrayList authCollection, ArrayList authProxyCollection, X509Certificate2Collection certificateCollection, List<string> fileCertificateCollection, string proxyHost, int proxyPort, out bool disposableInstance)
 		{
+			HttpClient value;
 			if (CacheableInstance(authCollection, authProxyCollection))
 			{
-				HttpClient value;
 				disposableInstance = false;
 				string key = HttpClientInstanceIdentifier(proxyHost, proxyPort, fileCertificateCollection, timeout);
 				if (_httpClientInstances.TryGetValue(key, out value))
@@ -189,7 +189,9 @@ namespace GeneXus.Http.Client
 			else
 			{
 				disposableInstance = true;
-				return new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+				value = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+				value.Timeout = TimeSpan.FromMilliseconds(timeout);
+				return value;
 			}
 		}
 
@@ -1024,7 +1026,7 @@ namespace GeneXus.Http.Client
 				}
 			}
 		}
-		#endif
+#endif
 		bool UseOldHttpClient(string name)
 		{
 			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
