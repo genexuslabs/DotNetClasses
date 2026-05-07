@@ -465,8 +465,24 @@ namespace GeneXus.Http
 		}
 
 		public void ajax_rsp_clear()
-		{ 
+		{
 			_PropValues = new JArray();
+		}
+
+		public void Cleanup()
+		{
+			_AttValues = new JArray();
+			_HiddenValues = new JObject();
+			_PropValues = new JArray();
+			_WebComponents = new JObject();
+			_LoadCommands = new Hashtable();
+			_Messages = new JObject();
+			_Grids = new JArray();
+			DicGrids = new Dictionary<String, int>();
+			_ComponentObjects = new JObject();
+			_StylesheetsToLoad = new JArray();
+			commands = new GXAjaxCommandCollection();
+			cmpContents = new Stack();
 		}
 
 		public void ajax_rsp_assign_prop(String CmpContext, bool IsMasterPage, String Control, String Property, String Value, bool SendAjax = true)

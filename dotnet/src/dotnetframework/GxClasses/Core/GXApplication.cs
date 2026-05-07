@@ -358,9 +358,11 @@ namespace GeneXus.Application
 		internal static GxContext MainContext { get; set; }
 	}
 	[Serializable]
-	public class GxContext : IGxContext
+	public class GxContext : IGxContext, IDisposable
 	{
 		private static IGXLogger log = null;
+		[NonSerialized]
+		private bool _disposed;
 		internal static string GX_SPA_REQUEST_HEADER = "X-SPA-REQUEST";
 		internal static string GX_SPA_REDIRECT_URL = "X-SPA-REDIRECT-URL";
 		internal const string GXLanguage = "GXLanguage";
@@ -3441,8 +3443,25 @@ namespace GeneXus.Application
 		}
 		~GxContext()
 		{
+			if (_disposed) return;
 			GxUserInfo.RemoveHandle(_handle);
 			GXFileWatcher.Instance.DeleteTemporaryFiles(_handle);
+		}
+
+		public void Dispose()
+		{
+			if (_disposed) return;
+			_disposed = true;
+
+			if (_httpAjaxContext != null)
+			{
+				try { _httpAjaxContext.Cleanup(); } catch { }
+				_httpAjaxContext = null;
+			}
+
+			GxUserInfo.RemoveHandle(_handle);
+			GXFileWatcher.Instance.DeleteTemporaryFiles(_handle);
+			GC.SuppressFinalize(this);
 		}
 		public void SetProperty(string key, string value)
 		{
