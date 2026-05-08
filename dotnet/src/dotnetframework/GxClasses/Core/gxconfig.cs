@@ -457,7 +457,7 @@ namespace GeneXus.Configuration
 #if NETCORE
 		public static IConfiguration ConfigRoot { get ; set; }
 		const string Log4NetShortName = "log4net";
-		static Version Log4NetVersion = new Version(3, 3, 0, 0);
+		static Version Log4NetVersion = new Version(3, 3, 1, 0);
 
 		const string ConfigurationManagerBak = "System.Configuration.ConfigurationManager, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
 		const string ConfigurationManagerFileName = "System.Configuration.ConfigurationManager.dll";
@@ -504,7 +504,7 @@ namespace GeneXus.Configuration
 #else
 		static Dictionary<string, Version> AssemblyRedirect = new Dictionary<string, Version>
 		{
-			{"log4net", new Version(3, 3, 0, 0) },
+			{"log4net", new Version(3, 3, 1, 0) },
 			{ "System.Threading.Tasks.Extensions", new Version(4, 2, 0, 1) },
 			{ "System.Runtime.CompilerServices.Unsafe", new Version(4, 0, 4, 1) },
 			{ "System.Buffers", new Version(4, 0, 5, 0)},
