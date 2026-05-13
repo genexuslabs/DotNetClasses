@@ -5,6 +5,9 @@
 		<RootNamespace>GxOffice</RootNamespace>
 		<PackageTags>Office Excel Poi</PackageTags>
 		<PackageId>GeneXus.Office</PackageId>
+		<AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
+		<!-- NPOI 2.8.0 pulls SkiaSharp; on net462 its native libs land in content/ instead of runtimes/ and pack flags NU5100/NU5118. Consumers still get SkiaSharp transitively via NPOI. -->
+		<NoWarn>$(NoWarn);NU5100;NU5118</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
