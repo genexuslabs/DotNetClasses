@@ -5,15 +5,14 @@
 		<RootNamespace>GxOffice</RootNamespace>
 		<PackageTags>Office Excel Poi</PackageTags>
 		<PackageId>GeneXus.Office</PackageId>
-		<AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
-		<!-- NPOI 2.8.0 pulls SkiaSharp; on net462 its native libs land in content/ instead of runtimes/ and pack flags NU5100/NU5118. Consumers still get SkiaSharp transitively via NPOI. -->
-		<NoWarn>$(NoWarn);NU5100;NU5118</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
 		<PackageReference Include="EPPlus" Version="4.5.3.2" />
-		<PackageReference Include="NPOI" Version="2.8.0" />
+		<PackageReference Include="NPOI" Version="2.7.3" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+		<!-- Override NPOI's vulnerable transitive SixLabors.ImageSharp (2.1.x line; 3.x doesn't support net462) -->
+		<PackageReference Include="SixLabors.ImageSharp" Version="2.1.13" />
 	</ItemGroup>
 
 	<ItemGroup>

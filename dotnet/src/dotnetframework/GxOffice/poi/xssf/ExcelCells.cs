@@ -2,7 +2,6 @@
 using System;
 using GeneXus.MSOffice.Excel.Style;
 using GeneXus.Utils;
-using NPOI.OOXML.XSSF.UserModel;
 using NPOI.OpenXmlFormats.Spreadsheet;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
@@ -796,7 +795,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 									rgb = new byte[] { (byte)red, (byte)green, (byte)blue }
 								};
 
-								newColor = new XSSFColor(ctColor, new DefaultIndexedColorMap());
+								newColor = new XSSFColor(ctColor);
 
 								newFont = (XSSFFont)pWorkbook.CreateFont();
 								CopyPropertiesFont(newFont, fontCell);
@@ -823,7 +822,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 										rgb = new byte[] { (byte)red, (byte)green, (byte)blue }
 									};
 
-									newColor = new XSSFColor(ctColor, new DefaultIndexedColorMap());
+									newColor = new XSSFColor(ctColor);
 
 
 									newFont = (XSSFFont)pWorkbook.CreateFont();
@@ -1074,7 +1073,7 @@ namespace GeneXus.MSOffice.Excel.Poi.Xssf
 				rgb = new byte[] { (byte)color.Red, (byte)color.Green, (byte)color.Blue }
 			};
 
-			return new XSSFColor(ctColor, new DefaultIndexedColorMap());
+			return new XSSFColor(ctColor);
 		}
 		private XSSFCellStyle ApplyNewCellStyle(XSSFCellStyle cellStyle, ExcelStyle newCellStyle)
 		{
