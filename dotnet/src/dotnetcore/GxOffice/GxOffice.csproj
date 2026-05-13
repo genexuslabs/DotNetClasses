@@ -6,6 +6,7 @@
 		<RootNamespace>GxOffice</RootNamespace>
 		<PackageTags>Office Excel Poi</PackageTags>
 		<PackageId>GeneXus.Office.Core</PackageId>
+		<AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Include="..\..\dotnetframework\GxOffice\Constants.cs" Link="Constants.cs" />
