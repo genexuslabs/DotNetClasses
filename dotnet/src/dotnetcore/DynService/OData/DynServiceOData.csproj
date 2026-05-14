@@ -14,6 +14,8 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 		<PackageReference Include="GeneXus.Odata.Client" Version="5.2.3.8" />
+		<!-- Override GeneXus.Odata.Client's vulnerable transitive Microsoft.Data.OData 5.8.3 -->
+		<PackageReference Include="Microsoft.Data.OData" Version="5.8.4" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\GxClasses\GxClasses.csproj" />
