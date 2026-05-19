@@ -2077,48 +2077,26 @@ namespace GeneXus.Data.NTier
 
 		public GXODataClient Expand(params ODataExpression[] associations)
 		{
-			// GeneXus.Odata.Client >= 6.0 removed the custom ExpandMap extension; the upstream
-			// alias→association mapping has to live on the wrapper now. We Expand by the mapped
-			// name and remember each association so Filter(expression) can wire per-entity
-			// FilterExpressions onto the ODataExpandAssociation objects already attached to
-			// BoundClient.Command.Details.ExpandAssociations.
+			// Build each ODataExpandAssociation upfront so Filter(expression) can wire
+			// per-entity FilterExpressions onto the same objects later. The fork's 6.0.2
+			// IFluentClient exposes Expand(IEnumerable<ODataExpandAssociation>), which lets
+			// us pass our pre-built chain in directly — no reflection needed.
 			var mappings = ApplyEntityMappings(associations);
-			var beforeCount = GetExpandAssociationsCount();
-			BoundClient = BoundClient.Expand(mappings.Select(kvp => kvp.Value));
-			var added = GetExpandAssociations().Skip(beforeCount).ToList();
-			for (int i = 0; i < mappings.Length && i < added.Count; i++)
+			var odataAssociations = new List<ODataExpandAssociation>(mappings.Length);
+			foreach (var mapping in mappings)
 			{
-				string aliasRoot = mappings[i].Key.Split(separator)[0];
-				_expansionsByAlias[aliasRoot] = added[i];
+				var association = ODataExpandAssociation.From(mapping.Value);
+				odataAssociations.Add(association);
+				string aliasRoot = mapping.Key.Split(separator)[0];
+				_expansionsByAlias[aliasRoot] = association;
 			}
+			BoundClient = BoundClient.Expand(odataAssociations);
 			return this;
 		}
 
 		// Tracks the first-segment alias used by the caller (e.g. "Friends" for Expand("Friends/People"))
 		// against the corresponding root ODataExpandAssociation attached to BoundClient.
 		private readonly Dictionary<string, ODataExpandAssociation> _expansionsByAlias = new Dictionary<string, ODataExpandAssociation>();
-
-		private int GetExpandAssociationsCount() => GetExpandAssociations().Count;
-
-		private IList<ODataExpandAssociation> GetExpandAssociations()
-		{
-			// Reflection chain: BoundClient -> Command (internal) -> Details (internal) -> ExpandAssociations
-			// (list of KeyValuePair<ODataExpandAssociation, ODataExpandOptions>).
-			var command = GetPropertyValue<object>(BoundClient, "Command");
-			if (command == null) return new List<ODataExpandAssociation>();
-			var details = GetPropertyValue<object>(command, "Details");
-			if (details == null) return new List<ODataExpandAssociation>();
-			var raw = GetPropertyValue<System.Collections.IEnumerable>(details, "ExpandAssociations");
-			if (raw == null) return new List<ODataExpandAssociation>();
-			var result = new List<ODataExpandAssociation>();
-			foreach (var item in raw)
-			{
-				// Each item is a KeyValuePair<ODataExpandAssociation, ODataExpandOptions>.
-				var key = item.GetType().GetProperty("Key")?.GetValue(item) as ODataExpandAssociation;
-				if (key != null) result.Add(key);
-			}
-			return result;
-		}
 
 		private static char[] separator = new char[] { '/' };
 		private static string strSeparator = "/";
