@@ -1310,9 +1310,41 @@ namespace GeneXus.Http
 			else
 				return string.Empty;
 #else
-			return request.ApplicationPath;
+			string appPath = request.ApplicationPath;
+			if (!PreserveApplicationPathCasing || string.IsNullOrEmpty(appPath) || appPath == "/")
+				return appPath;
+			// Align .NET Framework behavior with .NET Core: return the path using
+			// the casing of the actual request URL (cookie paths are case-sensitive
+			// per RFC 6265, so the path written by callers must match what the
+			// browser sees in the address bar).
+			string urlPath = request.Url.AbsolutePath;
+			if (!string.IsNullOrEmpty(urlPath)
+				&& urlPath.Length >= appPath.Length
+				&& urlPath.StartsWith(appPath, StringComparison.OrdinalIgnoreCase))
+			{
+				return urlPath.Substring(0, appPath.Length);
+			}
+			return appPath;
 #endif
 		}
+#if !NETCORE
+		static bool? _preserveApplicationPathCasing;
+		static bool PreserveApplicationPathCasing
+		{
+			get
+			{
+				if (!_preserveApplicationPathCasing.HasValue)
+				{
+					if (Config.GetValueOf("PreserveApplicationPathCasing", out string value)
+						&& bool.TryParse(value, out bool parsed))
+						_preserveApplicationPathCasing = parsed;
+					else
+						_preserveApplicationPathCasing = true;
+				}
+				return _preserveApplicationPathCasing.Value;
+			}
+		}
+#endif
 		public static Uri GetUrlReferrer(this HttpRequest request)
 		{
 #if NETCORE
