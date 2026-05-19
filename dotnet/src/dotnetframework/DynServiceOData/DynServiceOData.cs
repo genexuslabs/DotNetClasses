@@ -2077,7 +2077,47 @@ namespace GeneXus.Data.NTier
 
 		public GXODataClient Expand(params ODataExpression[] associations)
 		{
-			return Apply(BoundClient.ExpandMap(ApplyEntityMappings(associations)));
+			// GeneXus.Odata.Client >= 6.0 removed the custom ExpandMap extension; the upstream
+			// alias→association mapping has to live on the wrapper now. We Expand by the mapped
+			// name and remember each association so Filter(expression) can wire per-entity
+			// FilterExpressions onto the ODataExpandAssociation objects already attached to
+			// BoundClient.Command.Details.ExpandAssociations.
+			var mappings = ApplyEntityMappings(associations);
+			var beforeCount = GetExpandAssociationsCount();
+			BoundClient = BoundClient.Expand(mappings.Select(kvp => kvp.Value));
+			var added = GetExpandAssociations().Skip(beforeCount).ToList();
+			for (int i = 0; i < mappings.Length && i < added.Count; i++)
+			{
+				string aliasRoot = mappings[i].Key.Split(separator)[0];
+				_expansionsByAlias[aliasRoot] = added[i];
+			}
+			return this;
+		}
+
+		// Tracks the first-segment alias used by the caller (e.g. "Friends" for Expand("Friends/People"))
+		// against the corresponding root ODataExpandAssociation attached to BoundClient.
+		private readonly Dictionary<string, ODataExpandAssociation> _expansionsByAlias = new Dictionary<string, ODataExpandAssociation>();
+
+		private int GetExpandAssociationsCount() => GetExpandAssociations().Count;
+
+		private IList<ODataExpandAssociation> GetExpandAssociations()
+		{
+			// Reflection chain: BoundClient -> Command (internal) -> Details (internal) -> ExpandAssociations
+			// (list of KeyValuePair<ODataExpandAssociation, ODataExpandOptions>).
+			var command = GetPropertyValue<object>(BoundClient, "Command");
+			if (command == null) return new List<ODataExpandAssociation>();
+			var details = GetPropertyValue<object>(command, "Details");
+			if (details == null) return new List<ODataExpandAssociation>();
+			var raw = GetPropertyValue<System.Collections.IEnumerable>(details, "ExpandAssociations");
+			if (raw == null) return new List<ODataExpandAssociation>();
+			var result = new List<ODataExpandAssociation>();
+			foreach (var item in raw)
+			{
+				// Each item is a KeyValuePair<ODataExpandAssociation, ODataExpandOptions>.
+				var key = item.GetType().GetProperty("Key")?.GetValue(item) as ODataExpandAssociation;
+				if (key != null) result.Add(key);
+			}
+			return result;
 		}
 
 		private static char[] separator = new char[] { '/' };
@@ -2154,7 +2194,7 @@ namespace GeneXus.Data.NTier
 		public GXODataClient Filter(ODataExpression expression)
 		{
 			try
-			{ // In the conditions of type Att = parmStr it does a parmStr.rtrim in order to support 
+			{ // In the conditions of type Att = parmStr it does a parmStr.rtrim in order to support
 			  // FK from an SQL table to an OData entity. In the SQL table the FK is left with spaces at the end.
 			  // de tener una FK desde una tabla SQL hacia una entidad OData. En la tabla SQL la FK queda con espacios al final
 				if (GetFieldValue<ExpressionType>(expression, "_operator").Equals(ExpressionType.Equal) &&
@@ -2173,7 +2213,63 @@ namespace GeneXus.Data.NTier
 			}
 			catch { }
 
-			return Apply(BoundClient.Filter(expression));
+			if (object.ReferenceEquals(expression, null))
+				return this;
+
+			// GeneXus.Odata.Client >= 6.0 no longer auto-decomposes a cross-entity filter expression
+			// into per-expanded-entity sub-filters at the FluentCommand level. Do it here using the
+			// ProcessFilter extension still exposed by the fork: walks the expression and groups the
+			// sub-expressions by the entity they reference. The base-entity bucket goes through the
+			// standard BoundClient.Filter; the others are written into the FilterExpression of the
+			// matching ODataExpandAssociation captured by Expand().
+			IDictionary<string, IList<ODataExpression>> entityFilters;
+			try
+			{
+				var baseCollection = Session.Metadata.GetEntityCollection(BaseEntity);
+				entityFilters = expression.ProcessFilter(Session, baseCollection);
+			}
+			catch
+			{
+				// If decomposition fails (e.g. metadata unavailable, non-cross-entity expression),
+				// fall back to the simple base-entity filter — preserves the pre-6.0 behaviour for
+				// the common single-entity case.
+				return Apply(BoundClient.Filter(expression));
+			}
+
+			foreach (KeyValuePair<string, IList<ODataExpression>> entityFilter in entityFilters)
+			{
+				if (entityFilter.Value == null || entityFilter.Value.Count == 0)
+					continue;
+
+				ODataExpression combined = null;
+				foreach (ODataExpression sub in entityFilter.Value)
+					combined = object.ReferenceEquals(combined, null) ? sub : combined && sub;
+				if (object.ReferenceEquals(combined, null))
+					continue;
+
+				if (string.IsNullOrEmpty(entityFilter.Key) || entityFilter.Key == BaseEntity)
+				{
+					BoundClient = BoundClient.Filter(combined);
+				}
+				else if (_expansionsByAlias.TryGetValue(entityFilter.Key, out ODataExpandAssociation association))
+				{
+					// Walk to the deepest nested association for chained expands like "Friends/People".
+					var leaf = association;
+					while (leaf.ExpandAssociations != null && leaf.ExpandAssociations.Count > 0)
+						leaf = leaf.ExpandAssociations[0];
+					leaf.FilterExpression = object.ReferenceEquals(leaf.FilterExpression, null)
+						? combined
+						: leaf.FilterExpression && combined;
+				}
+				else
+				{
+					// No matching expand found for this entity — apply to the base filter so the
+					// query still includes the constraint instead of silently dropping it.
+					BoundClient = BoundClient.Filter(combined);
+				}
+			}
+
+			return this;
 		}
 
 		public T GetFieldValue<T>(object obj, string name)
