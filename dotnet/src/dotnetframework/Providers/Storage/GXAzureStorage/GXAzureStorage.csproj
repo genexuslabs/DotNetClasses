@@ -8,6 +8,8 @@
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
+    <!-- Override WindowsAzure.Storage's vulnerable transitive Newtonsoft.Json 10.0.2 -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
