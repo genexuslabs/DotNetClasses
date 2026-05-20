@@ -316,9 +316,9 @@ namespace GeneXus.Http.HttpModules
         }
         #endregion
     }
-	public class GXCanonicalAppCasingModule : IHttpModule
+	public class GXVirtualPathCasingModule : IHttpModule
 	{
-		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXCanonicalAppCasingModule>();
+		private static readonly IGXLogger log = GXLoggerFactory.GetLogger<GXVirtualPathCasingModule>();
 
 		public void Init(HttpApplication context)
 		{
