@@ -99,7 +99,7 @@ namespace GeneXus.Data.NTier
 			if (builder.TryGetValue("Data Source", out object url))
 			{
 				serviceUri = url.ToString();
-				clientSettings = new ODataClientSettings(serviceUri, credentials);
+				clientSettings = new ODataClientSettings(new Uri(serviceUri), credentials);
 				clientSettings.IgnoreUnmappedProperties = true;
 			}
 			else throw new ArgumentException("Data source url cannot be empty");
