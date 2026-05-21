@@ -138,17 +138,25 @@
 		<!-- Override Microsoft.Data.SqlClient's vulnerable transitive Azure.Identity 1.11.4. Without
 		     this, every consumer of the GeneXus.Classes.Core nupkg (generated GeneXus apps included)
 		     inherits the 1.11.4 transitive and ships it in their bin. -->
-		<PackageReference Include="Azure.Identity" Version="1.17.1" />
+		<PackageReference Include="Azure.Identity" Version="1.21.0" />
+		<!-- OpenTelemetry 1.15.3 + Azure.Monitor.OpenTelemetry.Exporter 1.8.1 cascade these to v10.0
+		     transitively. The OpenTelemetry refs below carry PrivateAssets="All" so the cascade does
+		     not flow to consumers, which would then build against the net8.0 in-box 8.0 versions and
+		     hit CS1705 type-mismatch with this assembly. Re-export the cascade transitive packages so
+		     consumers resolve to the same 10.0 versions GxClasses was compiled against. -->
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
+		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.3" />
+		<PackageReference Include="System.Text.Json" Version="10.0.3" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" PrivateAssets="ALL" />
-		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.3.0" PrivateAssets="All" />
+		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.8.1" PrivateAssets="All" />
 		<PackageReference Include="MimeTypesMap" Version="1.0.9" />
-		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.8.1" PrivateAssets="All" />
-		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.8.1" PrivateAssets="All" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" PrivateAssets="All" />
+		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.15.3" PrivateAssets="All" />
 		<PackageReference Include="Pgvector" Version="0.3.0" PrivateAssets="All" />
 		<PackageReference Include="MySqlConnector" Version="2.2.3" PrivateAssets="All" />
 		<PackageReference Include="NetTopologySuite" Version="2.0.0" />
