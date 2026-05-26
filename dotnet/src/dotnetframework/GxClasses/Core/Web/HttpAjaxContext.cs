@@ -286,7 +286,17 @@ namespace GeneXus.Http
 				for (int i = 0; i < array.Count; i++)
                 {
 					obj = array.GetObject(i);
-                    if (obj["CmpContext"].ToString().Equals(CmpContext) && obj["IsMasterPage"].ToString().Equals(IsMasterPage.ToString()))
+					string objCmpContext = obj["CmpContext"]?.ToString();
+					string objIsMasterPage = obj["IsMasterPage"]?.ToString();
+					// A missing/null/empty CmpContext on the array entry is equivalent to a null-or-empty parameter.
+					bool cmpContextMatches = string.IsNullOrEmpty(objCmpContext)
+						? string.IsNullOrEmpty(CmpContext)
+						: objCmpContext.Equals(CmpContext);
+					// A missing IsMasterPage on the array entry is treated as the default value (false).
+					bool isMasterPageMatches = string.IsNullOrEmpty(objIsMasterPage)
+						? !IsMasterPage
+						: objIsMasterPage.Equals(IsMasterPage.ToString(), StringComparison.OrdinalIgnoreCase);
+					if (cmpContextMatches && isMasterPageMatches)
                     {
                         return obj;
                     }
@@ -303,7 +313,7 @@ namespace GeneXus.Http
 			}
 
 			return null;
-        }        
+        }
 
         public void ajax_rsp_assign_attri(String CmpContext, bool IsMasterPage, String AttName, Object AttValue)
 		{
