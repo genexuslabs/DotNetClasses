@@ -279,31 +279,38 @@ namespace GeneXus.Http
 		}
 
 		private JObject GetGxObject(JArray array, String CmpContext, bool IsMasterPage)
-        {
-            try
-            {
-                JObject obj;
+		{
+			try
+			{
+				JObject obj;
+				string paramCmpContext = CmpContext ?? string.Empty;
+				string paramIsMasterPage = IsMasterPage.ToString();
+
 				for (int i = 0; i < array.Count; i++)
-                {
+				{
 					obj = array.GetObject(i);
-                    if (obj["CmpContext"].ToString().Equals(CmpContext) && obj["IsMasterPage"].ToString().Equals(IsMasterPage.ToString()))
-                    {
-                        return obj;
-                    }
-                }
-                obj = new JObject();
-                obj.Put("CmpContext", CmpContext);
-                obj.Put("IsMasterPage", IsMasterPage.ToString());
+					string objCmpContext = obj["CmpContext"]?.ToString() ?? string.Empty;
+					string objIsMasterPage = obj["IsMasterPage"]?.ToString() ?? string.Empty;
+
+					if (objCmpContext.Equals(paramCmpContext) && objIsMasterPage.Equals(paramIsMasterPage))
+					{
+						return obj;
+					}
+				}
+
+				obj = new JObject();
+				obj.Put("CmpContext", CmpContext);
+				obj.Put("IsMasterPage", IsMasterPage.ToString());
 				array.Add(obj);
-                return obj;
-            }
+				return obj;
+			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "GetGxObject error", ex);
 			}
 
 			return null;
-        }        
+		}
 
         public void ajax_rsp_assign_attri(String CmpContext, bool IsMasterPage, String AttName, Object AttValue)
 		{
