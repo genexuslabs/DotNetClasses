@@ -279,41 +279,38 @@ namespace GeneXus.Http
 		}
 
 		private JObject GetGxObject(JArray array, String CmpContext, bool IsMasterPage)
-        {
-            try
-            {
-                JObject obj;
+		{
+			try
+			{
+				JObject obj;
+				string paramCmpContext = CmpContext ?? string.Empty;
+				string paramIsMasterPage = IsMasterPage.ToString();
+
 				for (int i = 0; i < array.Count; i++)
-                {
+				{
 					obj = array.GetObject(i);
-					string objCmpContext = obj["CmpContext"]?.ToString();
-					string objIsMasterPage = obj["IsMasterPage"]?.ToString();
-					// A missing/null/empty CmpContext on the array entry is equivalent to a null-or-empty parameter.
-					bool cmpContextMatches = string.IsNullOrEmpty(objCmpContext)
-						? string.IsNullOrEmpty(CmpContext)
-						: objCmpContext.Equals(CmpContext);
-					// A missing IsMasterPage on the array entry is treated as the default value (false).
-					bool isMasterPageMatches = string.IsNullOrEmpty(objIsMasterPage)
-						? !IsMasterPage
-						: objIsMasterPage.Equals(IsMasterPage.ToString(), StringComparison.OrdinalIgnoreCase);
-					if (cmpContextMatches && isMasterPageMatches)
-                    {
-                        return obj;
-                    }
-                }
-                obj = new JObject();
-                obj.Put("CmpContext", CmpContext);
-                obj.Put("IsMasterPage", IsMasterPage.ToString());
+					string objCmpContext = obj["CmpContext"]?.ToString() ?? string.Empty;
+					string objIsMasterPage = obj["IsMasterPage"]?.ToString() ?? string.Empty;
+
+					if (objCmpContext.Equals(paramCmpContext) && objIsMasterPage.Equals(paramIsMasterPage))
+					{
+						return obj;
+					}
+				}
+
+				obj = new JObject();
+				obj.Put("CmpContext", CmpContext);
+				obj.Put("IsMasterPage", IsMasterPage.ToString());
 				array.Add(obj);
-                return obj;
-            }
+				return obj;
+			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "GetGxObject error", ex);
 			}
 
 			return null;
-        }
+		}
 
         public void ajax_rsp_assign_attri(String CmpContext, bool IsMasterPage, String AttName, Object AttValue)
 		{
