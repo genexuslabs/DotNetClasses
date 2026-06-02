@@ -52,7 +52,8 @@ namespace GeneXus.Data.NTier
 			{
 				mLocalUrl = localUrl.ToString();
 			}
-			if (builder.TryGetValue(CLIENT_ID, out object clientId) && builder.TryGetValue(CLIENT_SECRET, out object clientSecret))
+			if (builder.TryGetValue(CLIENT_ID, out object clientId) && builder.TryGetValue(CLIENT_SECRET, out object clientSecret)
+				&& !string.IsNullOrEmpty(clientId?.ToString()) && !string.IsNullOrEmpty(clientSecret?.ToString()))
 			{
 				mCredentials = new BasicAWSCredentials(clientId.ToString(), clientSecret.ToString());
 			}
@@ -75,7 +76,12 @@ namespace GeneXus.Data.NTier
 		{
 			InitializeDBConnection();
 			State = ConnectionState.Executing;
-			mDynamoDB = new AmazonDynamoDBClient(mCredentials, mConfig);
+			// When no explicit credentials are provided, use the config-only constructor so the
+			// AWS default credential resolution chain (incl. the EC2 instance profile / IAM role)
+			// kicks in, mirroring how ExternalProviderS3 builds its client.
+			mDynamoDB = mCredentials != null
+				? new AmazonDynamoDBClient(mCredentials, mConfig)
+				: new AmazonDynamoDBClient(mConfig);
 		}
 
 		private const string FILTER_PATTERN = @"\((.*) = :(.*)\)";
