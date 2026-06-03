@@ -355,13 +355,10 @@ namespace GeneXus.Http.HttpModules
 			if (!rawUrl.StartsWith(appPath, StringComparison.Ordinal) &&
 				rawUrl.StartsWith(appPath, StringComparison.OrdinalIgnoreCase))
 			{
-				string canonicalPathAndQuery = appPath + rawUrl.Substring(appPath.Length);
-
-				string authority = context.Request.Url.GetLeftPart(UriPartial.Authority);
-				string canonical = authority + canonicalPathAndQuery;
+				string canonical = appPath + rawUrl.Substring(appPath.Length);
 
 				GXLogging.Debug(log, "Redirecting non-canonical app path '", rawUrl, "' to '", canonical, "'");
-#pragma warning disable SCS0027 // Open redirect: target is built from AppDomainAppVirtualPath (server config) and the original request path, always same-origin absolute URL
+#pragma warning disable SCS0027 // Open redirect: target is built from AppDomainAppVirtualPath (server config) and the original request path, always same-origin relative URL
 				context.Response.Redirect(canonical, false);
 				context.ApplicationInstance.CompleteRequest();
 #pragma warning restore SCS0027
