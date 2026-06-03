@@ -332,8 +332,20 @@ namespace GeneXus.Http.HttpModules
 		private static void OnBeginRequest(object sender, EventArgs e)
 		{
 			HttpContext context = ((HttpApplication)sender).Context;
+
+			string method = context.Request.HttpMethod;
+			if (!string.Equals(method, "GET", StringComparison.OrdinalIgnoreCase) &&
+				!string.Equals(method, "HEAD", StringComparison.OrdinalIgnoreCase))
+				return;
+
 			string appPath = HttpRuntime.AppDomainAppVirtualPath;
 			if (string.IsNullOrEmpty(appPath) || appPath == "/")
+				return;
+
+			string filePath = context.Request.FilePath;
+			if (filePath.EndsWith(".svc", StringComparison.OrdinalIgnoreCase) ||
+				filePath.EndsWith(".asmx", StringComparison.OrdinalIgnoreCase) ||
+				filePath.IndexOf("/rest/", StringComparison.OrdinalIgnoreCase) >= 0)
 				return;
 
 			string rawUrl = context.Request.RawUrl;
@@ -344,9 +356,11 @@ namespace GeneXus.Http.HttpModules
 				rawUrl.StartsWith(appPath, StringComparison.OrdinalIgnoreCase))
 			{
 				string canonical = appPath + rawUrl.Substring(appPath.Length);
+
 				GXLogging.Debug(log, "Redirecting non-canonical app path '", rawUrl, "' to '", canonical, "'");
 #pragma warning disable SCS0027 // Open redirect: target is built from AppDomainAppVirtualPath (server config) and the original request path, always same-origin relative URL
-				context.Response.RedirectPermanent(canonical, true);
+				context.Response.Redirect(canonical, false);
+				context.ApplicationInstance.CompleteRequest();
 #pragma warning restore SCS0027
 			}
 		}
