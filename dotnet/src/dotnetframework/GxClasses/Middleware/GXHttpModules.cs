@@ -333,8 +333,6 @@ namespace GeneXus.Http.HttpModules
 		{
 			HttpContext context = ((HttpApplication)sender).Context;
 
-			// Solo canonicalizamos navegaciones idempotentes (GET/HEAD). Un 302 sobre POST/PUT/...
-			// degrada el método a GET y descarta el body, lo que rompe las llamadas a .svc/REST.
 			string method = context.Request.HttpMethod;
 			if (!string.Equals(method, "GET", StringComparison.OrdinalIgnoreCase) &&
 				!string.Equals(method, "HEAD", StringComparison.OrdinalIgnoreCase))
@@ -344,8 +342,6 @@ namespace GeneXus.Http.HttpModules
 			if (string.IsNullOrEmpty(appPath) || appPath == "/")
 				return;
 
-			// Los endpoints de servicio resuelven case-insensitive y no necesitan casing canónico;
-			// redirigirlos solo agrega un round-trip extra (y un 302 rompería un POST).
 			string filePath = context.Request.FilePath;
 			if (filePath.EndsWith(".svc", StringComparison.OrdinalIgnoreCase) ||
 				filePath.EndsWith(".asmx", StringComparison.OrdinalIgnoreCase) ||
@@ -359,11 +355,8 @@ namespace GeneXus.Http.HttpModules
 			if (!rawUrl.StartsWith(appPath, StringComparison.Ordinal) &&
 				rawUrl.StartsWith(appPath, StringComparison.OrdinalIgnoreCase))
 			{
-				// RawUrl ya es path + query (relativo). Solo corregimos el casing del appPath
-				// y preservamos el resto (incluida la query) tal cual.
 				string canonicalPathAndQuery = appPath + rawUrl.Substring(appPath.Length);
 
-				// scheme://host[:port] tomado del request, para emitir un Location absoluto.
 				string authority = context.Request.Url.GetLeftPart(UriPartial.Authority);
 				string canonical = authority + canonicalPathAndQuery;
 
