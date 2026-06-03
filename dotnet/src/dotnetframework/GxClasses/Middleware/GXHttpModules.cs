@@ -332,8 +332,24 @@ namespace GeneXus.Http.HttpModules
 		private static void OnBeginRequest(object sender, EventArgs e)
 		{
 			HttpContext context = ((HttpApplication)sender).Context;
+
+			// Solo canonicalizamos navegaciones idempotentes (GET/HEAD). Un 302 sobre POST/PUT/...
+			// degrada el método a GET y descarta el body, lo que rompe las llamadas a .svc/REST.
+			string method = context.Request.HttpMethod;
+			if (!string.Equals(method, "GET", StringComparison.OrdinalIgnoreCase) &&
+				!string.Equals(method, "HEAD", StringComparison.OrdinalIgnoreCase))
+				return;
+
 			string appPath = HttpRuntime.AppDomainAppVirtualPath;
 			if (string.IsNullOrEmpty(appPath) || appPath == "/")
+				return;
+
+			// Los endpoints de servicio resuelven case-insensitive y no necesitan casing canónico;
+			// redirigirlos solo agrega un round-trip extra (y un 302 rompería un POST).
+			string filePath = context.Request.FilePath;
+			if (filePath.EndsWith(".svc", StringComparison.OrdinalIgnoreCase) ||
+				filePath.EndsWith(".asmx", StringComparison.OrdinalIgnoreCase) ||
+				filePath.IndexOf("/rest/", StringComparison.OrdinalIgnoreCase) >= 0)
 				return;
 
 			string rawUrl = context.Request.RawUrl;
@@ -343,10 +359,18 @@ namespace GeneXus.Http.HttpModules
 			if (!rawUrl.StartsWith(appPath, StringComparison.Ordinal) &&
 				rawUrl.StartsWith(appPath, StringComparison.OrdinalIgnoreCase))
 			{
-				string canonical = appPath + rawUrl.Substring(appPath.Length);
+				// RawUrl ya es path + query (relativo). Solo corregimos el casing del appPath
+				// y preservamos el resto (incluida la query) tal cual.
+				string canonicalPathAndQuery = appPath + rawUrl.Substring(appPath.Length);
+
+				// scheme://host[:port] tomado del request, para emitir un Location absoluto.
+				string authority = context.Request.Url.GetLeftPart(UriPartial.Authority);
+				string canonical = authority + canonicalPathAndQuery;
+
 				GXLogging.Debug(log, "Redirecting non-canonical app path '", rawUrl, "' to '", canonical, "'");
-#pragma warning disable SCS0027 // Open redirect: target is built from AppDomainAppVirtualPath (server config) and the original request path, always same-origin relative URL
-				context.Response.RedirectPermanent(canonical, true);
+#pragma warning disable SCS0027 // Open redirect: target is built from AppDomainAppVirtualPath (server config) and the original request path, always same-origin absolute URL
+				context.Response.Redirect(canonical, false);
+				context.ApplicationInstance.CompleteRequest();
 #pragma warning restore SCS0027
 			}
 		}
