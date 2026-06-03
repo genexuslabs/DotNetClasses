@@ -147,6 +147,10 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.3" />
 		<PackageReference Include="System.Text.Json" Version="10.0.3" />
+		<!-- Azure.Monitor.OpenTelemetry.Exporter (PrivateAssets=All above) floors Azure.Core at 1.56,
+		     but the public Azure.Identity floors it at 1.53. Without re-exporting 1.56, consumers
+		     resolve 1.53 and hit MSB3277 against this assembly's 1.56. Pin it so the cascade flows. -->
+		<PackageReference Include="Azure.Core" Version="1.56.0" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
 		  <PrivateAssets>all</PrivateAssets>
