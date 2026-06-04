@@ -10,7 +10,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Google.Apis.AndroidPublisher.v3" Version="1.55.0.2582" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Zlib.Portable.Signed" Version="1.11.0" />
 	</ItemGroup>
 	<ItemGroup>

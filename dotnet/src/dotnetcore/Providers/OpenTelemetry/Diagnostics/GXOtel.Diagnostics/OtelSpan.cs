@@ -44,7 +44,7 @@ namespace GeneXus.OpenTelemetry.Diagnostics
 		}
 		public void RecordException(string message)
 		{
-			_activity?.RecordException(new Exception(message));
+			_activity?.AddException(new Exception(message));
 		}
 
 		public void SetStringAttribute(string property, string value)

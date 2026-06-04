@@ -23,8 +23,11 @@ namespace GeneXus.OpenTelemetry
 				.AddSqlClientInstrumentation(opt =>
 				{
 					opt.RecordException = true;
-					opt.EnableConnectionLevelAttributes = true;
-					opt.SetDbStatementForText = true;
+					// OpenTelemetry.Instrumentation.SqlClient 1.15+ removed EnableConnectionLevelAttributes
+					// and SetDbStatementForText. Connection-level attributes and db.statement text are
+					// now emitted by default following the stable OpenTelemetry semantic conventions
+					// (gated by OTEL_SEMCONV_STABILITY_OPT_IN at the consumer's runtime if needed).
+					// For finer control re-enable via EnrichWithSqlCommand and manual Activity tagging.
 				});
 				string envvar = Environment.GetEnvironmentVariable("OTEL_TRACES_EXPORTER");
 				if (envvar != null && envvar.Contains("console"))
