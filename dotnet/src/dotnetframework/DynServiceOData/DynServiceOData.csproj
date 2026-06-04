@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GeneXus.Odata.Client" Version="5.2.3.8" />
+		<PackageReference Include="GeneXus.Odata.Client" Version="6.0.4" />
 		<PackageReference Include="Microsoft.Data.Edm" Version="5.8.4" />
 		<PackageReference Include="Microsoft.Data.OData" Version="5.8.4" />
 		<PackageReference Include="Microsoft.Data.Services" Version="5.8.4" />

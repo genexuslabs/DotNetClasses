@@ -44,6 +44,10 @@
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
 		<PackageReference Include="NPOI" Version="2.7.3" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+		<!-- Override NPOI's vulnerable transitives (NPOI 2.7.x still depends on these older versions) -->
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.3" Condition="'$(TargetFramework)' == 'net8.0'" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" Condition="'$(TargetFramework)' == 'net10.0'" />
 	</ItemGroup>
 
 	<ItemGroup>

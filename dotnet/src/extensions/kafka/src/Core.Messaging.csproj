@@ -6,11 +6,8 @@
 		<AssemblyName>GeneXus.Messaging.Kafka</AssemblyName>
 		<PackageId>GeneXus.Messaging.Kafka</PackageId>
 	</PropertyGroup>
-	<ItemGroup Condition="'$(TargetFramework)'!='net462'">
+	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Confluent.Kafka" Version="2.10.0" />
