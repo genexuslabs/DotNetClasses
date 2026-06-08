@@ -1596,6 +1596,8 @@ namespace GeneXus.Data
 		private const int MILLISECONDS_BETWEEN_RETRY_ATTEMPTS = 500;
 		private const string MULTIPLE_DATAREADERS = "MultipleActiveResultSets";
 #if NETCORE
+		private const string TRUST_SERVER_CERTIFICATE = "TrustServerCertificate";
+		private const bool TRUST_CERT_DEFAULT = true;
 		private const string INTEGRATED_SECURITY = "Integrated Security";
 		private const string INTEGRATED_SECURITY_NO = "no";
 #endif
@@ -2062,6 +2064,14 @@ namespace GeneXus.Data
 				connectionString.AppendFormat(";Password={0}", userPassword);
 			}
 			extra = ResolveConnectionStringAuthentication(extra, additionalConnectionString);
+
+			string tSrvCertificate = GetParameterValue(extra, TRUST_SERVER_CERTIFICATE);
+			if (string.IsNullOrEmpty(tSrvCertificate))
+			{
+				//TODO:Remove Temporary compatibility setting to bypass certificate validation
+				connectionString.AppendFormat(";{0}={1}", TRUST_SERVER_CERTIFICATE, TRUST_CERT_DEFAULT); 
+			}
+
 #else
 			if (userId!=null)
 			{
