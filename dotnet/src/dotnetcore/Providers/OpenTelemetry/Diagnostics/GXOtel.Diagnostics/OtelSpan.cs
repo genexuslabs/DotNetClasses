@@ -118,7 +118,10 @@ namespace GeneXus.OpenTelemetry.Diagnostics
 		private ActivityContext _activityContext;
 		public GXSpanContext()
 		{
-			_activityContext = Activity.Current.Context;
+			// Activity.Current is null when there is no active span (e.g. reading the current
+			// span outside any started Activity, or in a CLI/batch run with no span). Guard it
+			// so building a context yields an empty (all-zero) ActivityContext instead of an NRE.
+			_activityContext = Activity.Current?.Context ?? default;
 		}
 
 		public GXSpanContext(ActivityContext activityContext)
