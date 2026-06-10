@@ -7,7 +7,7 @@
     <PackageId>GeneXus.AccessManager.Saml20</PackageId>
   </PropertyGroup>
  <ItemGroup>
-   <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+   <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
  </ItemGroup>
  <ItemGroup>
    <ProjectReference Include="..\..\..\..\..\dotnetframework\GxClasses\GxClasses.csproj" />

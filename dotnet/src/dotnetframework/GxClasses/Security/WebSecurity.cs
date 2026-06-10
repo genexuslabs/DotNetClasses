@@ -55,9 +55,17 @@ namespace GeneXus.Web.Security
         }
 
         public static bool Verify(string pgmName, string issuer, string value, string jwtToken, IGxContext context)
-        {
-            WebSecureToken token;
-            return WebSecurityHelper.Verify(pgmName, issuer, value, jwtToken, out token, context);
+		{
+			WebSecureToken token;
+			WebSecureToken jwtTokenObj = SecureTokenHelper.getWebSecureToken(jwtToken, GetSecretKey(context), false);
+			if (jwtTokenObj != null && jwtTokenObj.ValueType == ValueTypeHash)
+			{
+				return Verify(pgmName, issuer, GetHash(value), jwtToken, out token, context);
+			}
+			else
+			{
+				return Verify(pgmName, issuer, value, jwtToken, out token, context);
+			}
         }
 		public static bool Verify(string pgmName, string issuer, string value, string jwtToken, out WebSecureToken token, IGxContext context)
 		{
@@ -161,7 +169,7 @@ namespace GeneXus.Web.Security
             SignEncrypt,           
             None 
         }
-		internal static WebSecureToken getWebSecureToken(string signedToken, string secretKey)
+		internal static WebSecureToken getWebSecureToken(string signedToken, string secretKey, bool validate=true)
 		{
 			byte[] bSecretKey = Encoding.ASCII.GetBytes(secretKey);
 			if (string.IsNullOrEmpty(signedToken))
@@ -174,18 +182,28 @@ namespace GeneXus.Web.Security
 				{
 					handler.MaximumTokenSizeInBytes = signedToken.Length + 1;
 				}
-				var validationParameters = new TokenValidationParameters
-				{
-					ClockSkew = TimeSpan.FromMinutes(1),
-					ValidateAudience = false,
-					ValidateIssuer = false,
-					IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
-				};
-				SecurityToken securityToken;
 				WebSecureToken outToken = new WebSecureToken();
-				var claims = handler.ValidateToken(signedToken, validationParameters, out securityToken);
-				outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
-				outToken.ValueType = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE_TYPE)?.Value ?? string.Empty;
+				if (validate)
+				{
+					var validationParameters = new TokenValidationParameters
+					{
+						ClockSkew = TimeSpan.FromMinutes(1),
+						ValidateAudience = false,
+						ValidateIssuer = false,
+						IssuerSigningKey = new SymmetricSecurityKey(hmac.Key),
+					};
+					SecurityToken securityToken;
+					var claims = handler.ValidateToken(signedToken, validationParameters, out securityToken);
+					outToken.Value = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+					outToken.ValueType = claims.Identities.First().Claims.First(c => c.Type == WebSecureToken.GXVALUE_TYPE)?.Value ?? string.Empty;
+				}
+				else
+				{
+					JwtSecurityToken jwtSecurityToken = handler.ReadJwtToken(signedToken);
+					var claims = jwtSecurityToken.Claims;
+					outToken.Value = claims.First(c => c.Type == WebSecureToken.GXVALUE).Value;
+					outToken.ValueType = claims.First(c => c.Type == WebSecureToken.GXVALUE_TYPE)?.Value ?? string.Empty;
+				}
 				return outToken;
 			}
 		}
@@ -255,20 +273,22 @@ namespace GeneXus.Web.Security
 		}
 		internal static TokenValue GetTokenValue(IGxJSONSerializable obj)
 		{
-	
-			string jsonString = obj.ToJSonString();
+			return GetTokenValue(obj.ToJSonString());
+		}
+		internal static TokenValue GetTokenValue(string value)
+		{
 
-			if (jsonString.Length > MaxTokenValueLength)
+			if (value!=null && value.Length > MaxTokenValueLength)
 			{
-				string hash = GetHash(jsonString);
+				string hash = GetHash(value);
 				GXLogging.Debug(_log, $"GetTokenValue: TokenValue is too long, using hash: {hash} instead of original value.");
-				GXLogging.Debug(_log, $"Server TokenOriginalValue:" + jsonString);
+				GXLogging.Debug(_log, $"Server TokenOriginalValue:" + value);
 				return new TokenValue() { Value = hash, ValueType = ValueTypeHash };
 			}
 			else
 			{
-				GXLogging.Debug(_log, $"GetTokenValue:" + jsonString);
-				return new TokenValue() { Value = jsonString };
+				GXLogging.Debug(_log, $"GetTokenValue:" + value);
+				return new TokenValue() { Value = value };
 			}
 		}
 		internal static string GetHash(string jsonString)

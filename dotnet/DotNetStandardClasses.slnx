@@ -1,0 +1,199 @@
+<Solution>
+  <Folder Name="/dotnetcommon/">
+    <Project Path="src/dotnetcommon/GxCryptography/GxCryptography.csproj" />
+    <Project Path="src/dotnetcommon/GxCryptographyCommon/GxCryptographyCommon.csproj" />
+    <Project Path="src/dotnetcommon/GxEncrypt/GxEncrypt.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcommon/dynservice/">
+    <Project Path="src/dotnetcommon/DynService.Core/DynService.Core.csproj" />
+    <Project Path="src/dotnetcommon/DynService.Dynamo/DynService.DynamoDB.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/">
+    <Project Path="src/dotnetcore/GxClasses.Web/GxClasses.Web.csproj" />
+    <Project Path="src/dotnetcore/GxClasses/GxClasses.csproj" />
+    <Project Path="src/dotnetcore/GxCompress/GXCompress.csproj" />
+    <Project Path="src/dotnetcore/GxEnterpriseLib/GxEnterpriseLib.csproj" />
+    <Project Path="src/dotnetcore/GxMail/GxMail.csproj" />
+    <Project Path="src/dotnetcore/GxMaps/GxMaps.csproj" />
+    <Project Path="src/dotnetcore/GxNetCoreStartup/GxNetCoreStartup.csproj" />
+    <Project Path="src/dotnetcore/GxPdfReportsCS/GxPdfReportsCS.csproj" />
+    <Project Path="src/dotnetcore/GxSearch/GxSearch.csproj" />
+    <Project Path="src/dotnetcore/GxXsl/GxXsl.csproj" />
+    <Project Path="src/dotnetcore/Projects/StoreManager/StoreManager.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/ai/">
+    <Project Path="src/dotnetcore/Providers/AI/GxAI.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/cache/">
+    <Project Path="src/dotnetcore/Providers/Cache/GxMemcached/GxMemcached.csproj" />
+    <Project Path="src/dotnetcore/Providers/Cache/GxRedis/GxRedis.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/dynservice/">
+    <Project Path="src/dotnetcore/DynService/Cosmos/DynService.CosmosDB.csproj" />
+    <Project Path="src/dotnetcore/DynService/OData/DynServiceOData.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/excel/">
+    <Project Path="src/dotnetcore/GxExcel/GxExcel.csproj" />
+    <Project Path="src/dotnetcore/GxOffice/GxOffice.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/messaging/">
+    <Project Path="src/dotnetcore/Providers/Messaging/GXAmazonSQS/GXAmazonSQS.csproj" />
+    <Project Path="src/dotnetcore/Providers/Messaging/GXAzureEventGrid/GXAzureEventGrid.csproj" />
+    <Project Path="src/dotnetcore/Providers/Messaging/GXAzureQueue/GXAzureQueue.csproj" />
+    <Project Path="src/dotnetcore/Providers/Messaging/GXAzureServiceBus/GXAzureServiceBus.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/messaging/common/">
+    <Project Path="src/dotnetcore/Providers/Messaging/GXEventRouter/GXEventRouter.csproj" />
+    <Project Path="src/dotnetcore/Providers/Messaging/GXMessageBroker/GXMessageBroker.csproj" />
+    <Project Path="src/dotnetcore/Providers/Messaging/GXQueue/GXQueue.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/opentelemetry/">
+    <Project Path="src/dotnetcore/Providers/OpenTelemetry/Diagnostics/GXOtel.Diagnostics/GXOtel.Diagnostics.csproj" />
+    <Project Path="src/dotnetcore/Providers/OpenTelemetry/OpenTelemetry/GeneXus.OpenTelemetry.csproj" />
+    <Project Path="src/dotnetcore/Providers/OpenTelemetry/OpenTelemetryAWSOtel/GeneXus.OpenTelemetry.AWS.AspNet.csproj" />
+    <Project Path="src/dotnetcore/Providers/OpenTelemetry/OpenTelemetryAzureMonitor/GeneXus.OpenTelemetry.Azure.AppInsights.csproj" />
+    <Project Path="src/dotnetcore/Providers/OpenTelemetry/OpenTelemetryLightStep/GeneXus.OpenTelemetry.Lightstep.AspNet.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/storage/">
+    <Project Path="src/dotnetcore/Providers/Storage/GXAmazonS3/GXAmazonS3.csproj" />
+    <Project Path="src/dotnetcore/Providers/Storage/GXAzureStorage/GXAzureStorage.csproj" />
+    <Project Path="src/dotnetcore/Providers/Storage/GXGoogleCloud/GXGoogleCloud.csproj" />
+  </Folder>
+  <Folder Name="/dotnetcore/tools/">
+    <Project Path="src/dotnetcore/GxDataInitialization/GXDataInitialization.csproj" />
+    <Project Path="src/dotnetcore/Reor/Reor.csproj" />
+  </Folder>
+  <Folder Name="/dotnetframework/">
+    <Project Path="src/dotnetframework/GxClasses.Win/GxClasses.Win.csproj" />
+    <Project Path="src/dotnetframework/GxClasses/GxClasses.csproj" />
+    <Project Path="src/dotnetframework/GxCompress/GXCompress.csproj" />
+    <Project Path="src/dotnetframework/GxEncryptCMD/GxEncryptCMD.csproj" />
+    <Project Path="src/dotnetframework/GxMail/GxMail.csproj" />
+    <Project Path="src/dotnetframework/GxMaps/GxMaps.csproj" />
+    <Project Path="src/dotnetframework/GxPdfReportsCS/GxPdfReportsCS.csproj" />
+    <Project Path="src/dotnetframework/GxSearch/GxSearch.csproj" />
+    <Project Path="src/dotnetframework/GxWebSocket/GXWebSocket.csproj" />
+    <Project Path="src/dotnetframework/GxXsl/GxXsl.csproj" />
+    <Project Path="src/dotnetframework/Projects/StoreManager/StoreManager.csproj" />
+  </Folder>
+  <Folder Name="/dotnetframework/cache/">
+    <Project Path="src/dotnetframework/Providers/Cache/GxMemcached/GxMemcached.csproj" />
+    <Project Path="src/dotnetframework/Providers/Cache/GxRedis/GxRedis.csproj" />
+  </Folder>
+  <Folder Name="/dotnetframework/dynservice/">
+    <Project Path="src/dotnetframework/DynServiceOData/DynServiceOData.csproj" />
+  </Folder>
+  <Folder Name="/dotnetframework/excel/">
+    <Project Path="src/dotnetframework/GxExcel/GxExcel.csproj" />
+    <Project Path="src/dotnetframework/GxOffice/GxOffice.csproj" />
+  </Folder>
+  <Folder Name="/dotnetframework/storage/">
+    <Project Path="src/dotnetframework/Providers/Storage/GXAmazonS3/GXAmazonS3.csproj" />
+    <Project Path="src/dotnetframework/Providers/Storage/GXAzureStorage/GXAzureStorage.csproj" />
+    <Project Path="src/dotnetframework/Providers/Storage/GXGoogleCloud/GXGoogleCloud.csproj" />
+  </Folder>
+  <Folder Name="/dotnetframework/tools/">
+    <Project Path="src/dotnetframework/GxConfig/GxConfig.csproj" />
+    <Project Path="src/dotnetframework/GxDataInitialization/GXDataInitialization.csproj" />
+    <Project Path="src/dotnetframework/GxSetFrm/GxSetFrm.csproj" />
+    <Project Path="src/dotnetframework/Reor/Reor.csproj" />
+  </Folder>
+  <Folder Name="/extensions/" />
+  <Folder Name="/extensions/azurefunctionhandlers/" />
+  <Folder Name="/extensions/azurefunctionhandlers/src/">
+    <Project Path="src/extensions/Azure/Handlers/GeneXus.Deploy.AzureFunctions.Handlers.csproj" />
+    <Project Path="src/extensions/Azure/Libraries/GeneXus.Deploy.AzureFunctionsLibraries.csproj" />
+  </Folder>
+  <Folder Name="/extensions/azurefunctionhandlers/src/Functions/" />
+  <Folder Name="/extensions/azurefunctionhandlers/test/">
+    <Project Path="src/extensions/Azure/test/amyprocedurehandler/amyprochandler.csproj" />
+    <Project Path="src/extensions/Azure/test/apiattractions/apiattractions.csproj" />
+    <Project Path="src/extensions/Azure/test/AzureFunctionsTest/AzureFunctionsTest.csproj" />
+    <Project Path="src/extensions/Azure/test/GeneXus.Programs.Common/GeneXus.Programs.Common.csproj" />
+  </Folder>
+  <Folder Name="/extensions/gam/" />
+  <Folder Name="/extensions/gam/src/" />
+  <Folder Name="/extensions/gam/src/DotNet/">
+    <Project Path="src/extensions/gam/src/DotNet/GamSaml20Net/GamSaml20Net.csproj" />
+    <Project Path="src/extensions/gam/src/DotNet/GamTotpNet/GamTotpNet.csproj" />
+    <Project Path="src/extensions/gam/src/DotNet/GamUtilsNet/GamUtilsNet.csproj" />
+  </Folder>
+  <Folder Name="/extensions/gam/src/DotNetFramework/">
+    <Project Path="src/extensions/gam/src/DotNetFramework/GamSaml20/GamSaml20.csproj" />
+    <Project Path="src/extensions/gam/src/DotNetFramework/GamTotp/GamTotp.csproj" />
+    <Project Path="src/extensions/gam/src/DotNetFramework/GamUtils/GamUtils.csproj" />
+  </Folder>
+  <Folder Name="/extensions/gam/test/" />
+  <Folder Name="/extensions/gam/test/DotNet/">
+    <Project Path="src/extensions/gam/test/DotNet/GamTestNet/GamTestNet.csproj" />
+  </Folder>
+  <Folder Name="/extensions/gam/test/DotNetFramework/">
+    <Project Path="src/extensions/gam/test/DotNetFramework/GamTest/GamTest.csproj" />
+  </Folder>
+  <Folder Name="/extensions/kafka/" />
+  <Folder Name="/extensions/kafka/src/">
+    <Project Path="src/extensions/kafka/src/Core.Messaging.csproj" />
+  </Folder>
+  <Folder Name="/extensions/kafka/test/">
+    <Project Path="src/extensions/kafka/test/DotNetCoreKafkaTest/DotNetCoreKafkaTest.csproj" />
+    <Project Path="src/extensions/kafka/test/DotNetKafkaTest/DotNetKafkaTest.csproj" />
+  </Folder>
+  <Folder Name="/extensions/mocking/" />
+  <Folder Name="/extensions/mocking/src/">
+    <Project Path="src/extensions/mocking/src/MockDBAccess/MockDBAccess.csproj" />
+  </Folder>
+  <Folder Name="/extensions/mocking/test/">
+    <Project Path="src/extensions/mocking/test/TestMockDBAccess/TestMockDBAccess.csproj" />
+  </Folder>
+  <Folder Name="/extensions/security/" />
+  <Folder Name="/extensions/security/src/" />
+  <Folder Name="/extensions/security/src/dotnetcore/">
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetcore/GeneXusCryptographyNetCore/GeneXusCryptographyNetCore.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetcore/GeneXusFtpsNetCore/GeneXusFtpsNetCore.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetcore/GeneXusJWTNetCore/GeneXusJWTNetCore.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetcore/GeneXusSftpNetCore/GeneXusSftpNetCore.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetcore/GeneXusXmlSignatureNetCore/GeneXusXmlSignatureNetCore.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetcore/SecurityAPICommonsNetCore/SecurityAPICommonsNetCore.csproj" />
+  </Folder>
+  <Folder Name="/extensions/security/src/dotnetframework/">
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetframework/GeneXusCryptography/GeneXusCryptography.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetframework/GeneXusFtps/GeneXusFtps.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetframework/GeneXusJWT/GeneXusJWT.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetframework/GeneXusSftp/GeneXusSftp.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetframework/GeneXusXmlSignature/GeneXusXmlSignature.csproj" />
+    <Project Path="src/extensions/SecurityAPI/dotnet/dotnetframework/SecurityAPICommons/SecurityAPICommons.csproj" />
+  </Folder>
+  <Folder Name="/extensions/security/test/" />
+  <Folder Name="/extensions/security/test/dotnetcore/">
+    <Project Path="src/extensions/SecurityAPI/test/dotnetcore/SecurityAPITestNetCore/SecurityAPITestNetCore.csproj" />
+  </Folder>
+  <Folder Name="/extensions/security/test/dotnetframework/">
+    <Project Path="src/extensions/SecurityAPI/test/dotnetframework/SecurityAPITest/SecurityAPITest.csproj" />
+  </Folder>
+  <Folder Name="/extensions/ws/" />
+  <Folder Name="/extensions/ws/src/">
+    <Project Path="src/extensions/ws/src/GxSoapHandler/GxSoapHandler.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="../.editorconfig" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/DotNetCoreAttackMitigationTest/DotNetCoreAttackMitigationTest.csproj" />
+    <Project Path="test/DotNetCoreChunkedTest/DotNetCoreChunkedTest.csproj" />
+    <Project Path="test/DotNetCoreCmdTest/DotNetCoreCmdTest.csproj" />
+    <Project Path="test/DotNetCoreOpenTelemetryTest/DotNetCoreOpenTelemetryTest.csproj">
+      <BuildDependency Project="test/TestApp/TestApp.csproj" />
+    </Project>
+    <Project Path="test/DotNetCoreUnitTest/DotNetCoreUnitTest.csproj" />
+    <Project Path="test/DotNetCoreWebUnitTest/DotNetCoreWebUnitTest.csproj" />
+    <Project Path="test/DotNetPdfTest/DotNetPDFUnitTest.csproj" />
+    <Project Path="test/DotNetRedisTest/DotNetRedisTest.csproj" />
+    <Project Path="test/DotNetUnitTest/DotNetUnitTest.csproj" />
+    <Project Path="test/NativeAccessControllerTest/AccessTokenController_Test.csproj" />
+    <Project Path="test/ProjectHealthTest/ProjectHealthTest.csproj" />
+    <Project Path="test/TestApp/TestApp.csproj" />
+  </Folder>
+  <Folder Name="/test/benchmarks/">
+    <Project Path="test/benchmarks/LogTest/LogTest.csproj" />
+  </Folder>
+</Solution>

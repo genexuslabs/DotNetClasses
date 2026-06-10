@@ -13,7 +13,7 @@
                 "/property:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
                 "/consoleloggerparameters:NoSummary",
-                "dotnet\\DotNetStandardClasses.sln"
+                "dotnet\\DotNetStandardClasses.slnx"
             ],
             "group": "build",
             "presentation": {

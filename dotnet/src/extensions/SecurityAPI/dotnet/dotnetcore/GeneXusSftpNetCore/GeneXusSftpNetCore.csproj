@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<AssemblyName>GeneXusSftpNetCoreImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<PackageId>GeneXus.SecurityApi.Sftp.Core</PackageId>
@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageReference Include="SSH.NET" Version="2025.0.0" />
   </ItemGroup>
 

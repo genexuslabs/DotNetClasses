@@ -1,16 +1,18 @@
-﻿using System;
+using System;
 using System.Net;
 
 namespace GeneXus.Mail.Exchange
 {
     public static class CertificateCallback
     {
-        static CertificateCallback()
+#pragma warning disable SYSLIB0014
+		static CertificateCallback()
         {
             ServicePointManager.ServerCertificateValidationCallback = CertificateValidationCallBack;
         }
+#pragma warning restore SYSLIB0014
 
-        public static void Initialize()
+		public static void Initialize()
         {
         }
 

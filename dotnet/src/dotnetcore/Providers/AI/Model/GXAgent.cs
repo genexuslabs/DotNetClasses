@@ -28,7 +28,7 @@ namespace GeneXus.AI
 			{
 				callResult.AddMessage($"Error chatting Agent {agent}:" + ex.Message);
 				callResult.IsFail = true;
-				return new ChatResult(this, agent, properties, chatMessages, callResult, null); 
+				return new ChatResult(this, agent, properties, chatMessages, callResult, null);
 			}
 		}
 		protected string CallAgent(string assistant, GXProperties gxproperties, IList chatMessages, object result)
@@ -44,6 +44,12 @@ namespace GeneXus.AI
 
 				ChatCompletionResult chatCompletion = AgentService.AgentHandlerInstance.CallAgent(assistant, chatMessages, gxproperties, context).GetAwaiter().GetResult();
 
+				if (chatCompletion != null && chatCompletion.HasError)
+				{
+					callResult.AddMessage($"Error calling Agent {assistant}: {chatCompletion.ErrorMessage}");
+					callResult.IsFail = true;
+					return string.Empty;
+				}
 				if (chatCompletion != null && chatCompletion.Choices != null)
 				{
 					foreach (Choice choice in chatCompletion.Choices)
@@ -54,7 +60,7 @@ namespace GeneXus.AI
 								return choice.Message.Content;
 							case ChatCompletionResult.FINISH_REASON_TOOL_CALLS:
 								chatMessages.Add(choice.Message);
-								return ProcessChatResponse(choice, stream, assistant, gxproperties, chatMessages, result);	
+								return ProcessChatResponse(choice, stream, assistant, gxproperties, chatMessages, result);
 						}
 					}
 				}
@@ -95,7 +101,7 @@ namespace GeneXus.AI
 			};
 			messages.Add(toolCallMessage);
 		}
-		protected virtual string CallTool(string name, string arguments) 
+		protected virtual string CallTool(string name, string arguments)
 		{
 			return string.Empty;
 		}

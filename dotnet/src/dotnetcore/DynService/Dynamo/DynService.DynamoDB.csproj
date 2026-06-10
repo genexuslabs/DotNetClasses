@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<DefineConstants>NETCORE</DefineConstants>
 		<RootNamespace>GeneXus.Data.NTier</RootNamespace>
 		<AssemblyName>GeneXus.Data.DynService.DynamoDB</AssemblyName>

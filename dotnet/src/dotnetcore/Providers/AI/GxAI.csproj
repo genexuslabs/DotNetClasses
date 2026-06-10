@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<PackageTags>Genexus AI</PackageTags>
 		<PackageId>GeneXus.AI.Core</PackageId>
   </PropertyGroup>
@@ -13,3 +13,5 @@
 
 
 </Project>
+
+

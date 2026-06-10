@@ -23,6 +23,7 @@ namespace GeneXus.Http.Client
 	using GeneXus.Utils;
 
 #if NETCORE
+	using HeyRed.Mime;
 	using Microsoft.AspNetCore.WebUtilities;
 #endif
 	using Mime;
@@ -198,6 +199,10 @@ namespace GeneXus.Http.Client
 			{
 				disposableInstance = true;
 				client = new HttpClient(GetHandler(URI, authCollection, authProxyCollection, certificateCollection, proxyHost, proxyPort));
+				if (timeout != 0)
+				{
+					client.Timeout = TimeSpan.FromMilliseconds(timeout);
+				}
 			}
 			if (!string.IsNullOrEmpty(Preferences.HttpClientUserAgent))
 				client.DefaultRequestHeaders.UserAgent.ParseAdd(Preferences.HttpClientUserAgent);
@@ -206,7 +211,9 @@ namespace GeneXus.Http.Client
 
 		private static string HttpClientInstanceIdentifier(string proxyHost, int proxyPort, List<string> fileCertificateCollection, int timeout)
 		{
+#pragma warning disable SYSLIB0014
 			bool defaultSslOptions = ServicePointManager.ServerCertificateValidationCallback == null;
+#pragma warning restore SYSLIB0014
 			if (string.IsNullOrEmpty(proxyHost) && CollectionUtils.IsNullOrEmpty(fileCertificateCollection) && timeout== DEFAULT_TIMEOUT && defaultSslOptions)
 			{
 				return string.Empty;
@@ -276,6 +283,7 @@ namespace GeneXus.Http.Client
 
 		private static void SetSslOptions(SocketsHttpHandler handler)
 		{
+#pragma warning disable SYSLIB0014
 			if (ServicePointManager.ServerCertificateValidationCallback != null)
 			{
 				handler.SslOptions = new SslClientAuthenticationOptions
@@ -283,6 +291,7 @@ namespace GeneXus.Http.Client
 					RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback
 				};
 			}
+#pragma warning restore SYSLIB0014
 		}
 #else
 		[SecuritySafeCritical]
@@ -721,7 +730,11 @@ namespace GeneXus.Http.Client
 					name = Path.GetFileNameWithoutExtension(s);
 				}
 				SendStream.Write(MultiPart.Boundarybytes, 0, MultiPart.Boundarybytes.Length);
-				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeMapping.GetMimeMapping(s));
+#if NETCORE
+				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeTypesMap.GetMimeType(s));
+#else
+				string header = string.Format(MultiPart.HeaderTemplate, name, s, MimeHelper.GetMimeMapping(s));
+#endif
 				byte[] headerbytes = Encoding.UTF8.GetBytes(header);
 				SendStream.Write(headerbytes, 0, headerbytes.Length);
 			}
@@ -1078,7 +1091,7 @@ namespace GeneXus.Http.Client
 				}
 			}
 		}
-		#endif
+#endif
 		bool UseOldHttpClient(string name)
 		{
 			if (Config.GetValueOf("useoldhttpclient", out string useOld) && useOld.StartsWith("y", StringComparison.OrdinalIgnoreCase))
@@ -2087,11 +2100,19 @@ namespace GeneXus.Http.Client
 			X509Certificate2 c;
 			if (pass == null || pass.Trim().Length == 0)
 			{
+#if NET10_0_OR_GREATER
+				c = X509CertificateLoader.LoadCertificateFromFile(file);
+#else
 				c = new X509Certificate2(file);
+#endif
 			}
 			else
 			{
+#if NET10_0_OR_GREATER
+				c = X509CertificateLoader.LoadPkcs12FromFile(file, pass);
+#else
 				c = new X509Certificate2(file, pass);
+#endif
 			}
 			_fileCertificateCollection.Add(file);
 			_certificateCollection.Add(c);
@@ -2155,5 +2176,27 @@ namespace GeneXus.Http.Client
 		}
 
 	}
+#if !NETCORE
+	internal static class MimeHelper
+	{
+		private static readonly Dictionary<string, string> CustomMap =
+			new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+			{
+			{ ".json", "application/json" },
+			};
+
+		public static string GetMimeMapping(string fileName)
+		{
+			string ext = Path.GetExtension(fileName);
+
+			if (!string.IsNullOrEmpty(ext) &&
+				CustomMap.TryGetValue(ext, out string forcedMime))
+			{
+				return forcedMime;
+			}
+			return MimeMapping.GetMimeMapping(fileName);
+		}
+	}
+#endif
 
 }

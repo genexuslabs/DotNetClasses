@@ -8,6 +8,8 @@
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
+    <!-- Override WindowsAzure.Storage's vulnerable transitive Newtonsoft.Json 10.0.2 -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -18,9 +20,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GxClasses\GxClasses.csproj" />

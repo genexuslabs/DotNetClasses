@@ -53,7 +53,7 @@ namespace GamTest.Utils
 		public void Test_pkcs8_pem()
 		{
 			string token = GamUtilsEO.CreateJwt(Path.Combine(path_RSA_sha256_2048, "sha256d_key.pem"), "", "", payload, header);
-			Assert.IsFalse(token.IsNullOrEmpty(), "Test_pkcs8_pem");
+			Assert.IsFalse(string.IsNullOrEmpty(token), "Test_pkcs8_pem");
 			bool result = GamUtilsEO.VerifyJwt(Path.Combine(path_RSA_sha256_2048, "sha256_cert.cer"), "", "", token);
 			Assert.IsTrue(result, "test_pkcs8 verify cer");
 		}
@@ -62,11 +62,11 @@ namespace GamTest.Utils
 		public void Test_get()
 		{
 			string token = GamUtilsEO.CreateJwt(Path.Combine(path_RSA_sha256_2048, "sha256d_key.pem"), "", "", payload, header);
-			Assert.IsFalse(token.IsNullOrEmpty(), "test_get create");
+			Assert.IsFalse(string.IsNullOrEmpty(token), "test_get create");
 			string header_get = GamUtilsEO.GetJwtHeader(token);
-			Assert.IsFalse(header_get.IsNullOrEmpty(), "test_get getHeader");
+			Assert.IsFalse(string.IsNullOrEmpty(header_get), "test_get getHeader");
 			string payload_get = GamUtilsEO.GetJwtPayload(token);
-			Assert.IsFalse(payload_get.IsNullOrEmpty(), "test_get getPayload");
+			Assert.IsFalse(string.IsNullOrEmpty(payload_get), "test_get getPayload");
 		}
 
 		[Test]

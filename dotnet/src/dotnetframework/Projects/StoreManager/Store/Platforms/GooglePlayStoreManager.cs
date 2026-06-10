@@ -233,7 +233,15 @@ namespace GeneXus.SD.Store.Platforms
 
 			try
 			{
+#if NET10_0_OR_GREATER
+				certificate = X509CertificateLoader.LoadPkcs12FromFile(
+								certPath,
+								CertificatePassword,
+								X509KeyStorageFlags.Exportable);
+#else
 				certificate = new X509Certificate2(certPath, CertificatePassword, X509KeyStorageFlags.Exportable);
+#endif
+
 			}
 			catch (Exception e)
 			{

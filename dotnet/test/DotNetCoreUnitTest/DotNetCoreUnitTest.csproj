@@ -1,9 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFramework>$(TestProjectsTargetFramework)</TargetFramework>
 		<NoWarn>CS8032;1701;1702;NU1701</NoWarn>
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
+	<!-- iTextSharp 5.5.13.2 (legacy iText 5, EOL) drags in the abandoned BouncyCastle 1.8.6.1.
+	     These advisories are only fixed in BouncyCastle.Cryptography 2.x, which iText 5 can't use.
+	     Test-only dependency, not shipped — suppress these specific advisories (keeps audit on for the rest). -->
+	<ItemGroup>
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-6xx3-rg99-gc3p" />
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-8xfc-gm6g-vgpv" />
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-m44j-cfrm-g8qc" />
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-v435-xc8x-wvr9" />
+	</ItemGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants>TRACE;NETCORE</DefineConstants>
 	</PropertyGroup>
@@ -62,10 +71,10 @@
 	<ItemGroup>
 		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.0" />
 		<PackageReference Include="iTextSharp" Version="5.5.13.2" />
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.0" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.6" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
 		<PackageReference Include="xunit" Version="2.4.1" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -1,12 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using GeneXus.Application;
 using GxClasses.Web.Middleware;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Hosting;
 
 namespace xUnitTesting
 {
@@ -19,9 +20,21 @@ namespace xUnitTesting
 		{
 			SetEnvironmentVars();
 			BeforeStartup();
-			server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>().UseEnvironment(DOTNET_ENVIRONMENT));
+
+			var builder = Host.CreateDefaultBuilder()
+				.ConfigureWebHost(webBuilder =>
+				{
+					webBuilder
+						.UseStartup<Startup>()
+						.UseEnvironment(DOTNET_ENVIRONMENT)
+						.UseTestServer();
+				});
+			var host = builder.Start();
+
+			server = host.GetTestServer();
+
 			GXRouting.ContentRootPath = Directory.GetCurrentDirectory();
-			server.PreserveExecutionContext= true;
+			server.PreserveExecutionContext = true;
 			server.CreateClient();
 		}
 		protected virtual void SetEnvironmentVars()

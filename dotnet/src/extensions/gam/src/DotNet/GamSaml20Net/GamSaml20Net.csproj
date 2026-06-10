@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<AssemblyName>GamSaml20NetImpl</AssemblyName>
 		<Version>17.4.0</Version>
 		<NoWarn>CA1031, CA1801, SYSLIB0027</NoWarn>
@@ -27,7 +27,7 @@
 
 	
   <ItemGroup>
-    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
   </ItemGroup>
 
   <ItemGroup>

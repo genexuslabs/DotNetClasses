@@ -21,6 +21,11 @@ on:
   schedule:
     - cron: '28 9 * * 6'
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   analyze:
     name: Analyze
@@ -28,7 +33,7 @@ jobs:
     
     env:
       Configuration: Release
-      SolutionFile: dotnet\CodeqlSolution.sln
+      SolutionFile: dotnet\CodeqlSolution.slnx
 
     strategy:
       fail-fast: false
@@ -45,7 +50,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         debug: true
         languages: ${{ matrix.language }}
@@ -55,14 +60,19 @@ jobs:
       with:
         dotnet-version: '8.0.100' 
 
+    - name: Install .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
     - name: Create temporary solution
       run: |
         $TempSolution = "CodeqlSolution"
         dotnet new sln --name $TempSolution --output dotnet --force
-        dotnet msbuild dotnet\DotNetStandardClasses.sln /t:DumpProjects -p:DumpSolutionName=$TempSolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
+        dotnet msbuild dotnet\DotNetStandardClasses.slnx /t:DumpProjects -p:DumpSolutionName=$TempSolution /m:1 -p:DumpSolutionTargetFrameworkDefault=net8
 
     - name: Build temporary solution
-      run: dotnet build dotnet\CodeqlSolution.sln --framework net8.0
+      run: dotnet build dotnet\CodeqlSolution.slnx --framework net8.0
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
@@ -81,6 +91,6 @@ jobs:
     #   make release
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"

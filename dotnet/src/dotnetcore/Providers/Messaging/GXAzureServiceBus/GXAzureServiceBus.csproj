@@ -1,14 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>$(NetVersions)</TargetFrameworks>
 	<PackageId>GeneXus.Azure.ServiceBus</PackageId>
 	<PackageTags>Azure ServiceBus Messaging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
 
-    <PackageReference Include="Azure.Identity" Version="1.11.4" />
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.16.2" />
 
   </ItemGroup>
@@ -18,3 +18,5 @@
   </ItemGroup>
 
 </Project>
+
+

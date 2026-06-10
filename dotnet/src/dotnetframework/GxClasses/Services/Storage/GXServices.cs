@@ -15,6 +15,8 @@ namespace GeneXus.Services
 		public static string STORAGE_SERVICE = "Storage";
 		public static string STORAGE_APISERVICE = "StorageAPI";
 		public static string CACHE_SERVICE = "Cache";
+		public static string REDIS_CACHE_SERVICE = "Redis";
+		public static string DATABASE_CACHE_SERVICE = "DATABASE";
 		public static string DATA_ACCESS_SERVICE = "DataAccess";
 		public static string SESSION_SERVICE = "Session";
 		public static string WEBNOTIFICATIONS_SERVICE = "WebNotifications";
@@ -47,6 +49,7 @@ namespace GeneXus.Services
 			}
 			set { }			
 		}
+
 		public void AddService(string name, GXService service)
 		{
 			services[name] = service;
@@ -183,6 +186,7 @@ namespace GeneXus.Services
 			externalProvider = GetExternalProviderImpl(GXServices.STORAGE_APISERVICE);
 			if (externalProvider == null)
 			{
+				GXLogging.Debug(log, "GetExternalProviderAPI load StorageAPIService");
 				externalProvider = GetExternalProvider();
 			}
 			return externalProvider;
@@ -192,6 +196,7 @@ namespace GeneXus.Services
 		{
 			if (externalProvider == null)
 			{
+				GXLogging.Debug(log, "GetExternalProvider load StorageService");
 				externalProvider = GetExternalProviderImpl(GXServices.STORAGE_SERVICE);
 			}
 			return externalProvider;
@@ -200,6 +205,7 @@ namespace GeneXus.Services
 		public static void SetExternalProvider(ExternalProvider provider)
 		{
 			externalProvider = provider;
+			GXLogging.Debug(log, "SetExternalProvider null?: " + (provider == null));
 		}
 
 		public static ExternalProvider GetExternalProviderImpl(string service)
@@ -213,13 +219,14 @@ namespace GeneXus.Services
 					try
 					{
 						string typeFullName = providerService.ClassName;
-						GXLogging.Debug(log, "Loading storage provider:", typeFullName);
+						GXLogging.Debug(log, "Loading storage provider from ServiceFactory:", typeFullName);
 #if !NETCORE
 						Type type = Type.GetType(typeFullName, true, true);
 #else
 						Type type = AssemblyLoader.GetType(typeFullName);
 #endif
 						externalProviderImpl = (ExternalProvider)Activator.CreateInstance(type);
+						GXLogging.Debug(log, "Loading storage provider done.");
 					}
 					catch (Exception e)
 					{

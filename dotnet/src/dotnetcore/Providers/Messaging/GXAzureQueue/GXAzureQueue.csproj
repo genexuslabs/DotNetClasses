@@ -1,14 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>$(NetVersions)</TargetFrameworks>
     <PackageId>GeneXus.Azure.Queue</PackageId>
     <PackageTags>Azure Queue Messaging</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
 
-    <PackageReference Include="Azure.Identity" Version="1.11.4" />
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="Azure.Storage.Queues" Version="12.16.0" />
 
   </ItemGroup>
@@ -19,3 +19,5 @@
   </ItemGroup>
 
 </Project>
+
+

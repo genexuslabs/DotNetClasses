@@ -19,7 +19,7 @@ namespace GamTest.Utils
 		public void TestGenerateKeyPair()
 		{
 			string jwk = GamUtilsEO.GenerateKeyPair();
-			Assert.IsFalse(jwk.IsNullOrEmpty(), "Generate key pair jwk");
+			Assert.IsFalse(string.IsNullOrEmpty(jwk), "Generate key pair jwk");
 		}
 
 

@@ -163,10 +163,10 @@ namespace GeneXus.Search
 			get
 			{
 				GxStringCollection keys = new GxStringCollection();
-				foreach (Field field in m_document.GetFields())
+				foreach (Field docField in m_document.GetFields())
 				{
-					if (field.Name.StartsWith(IndexRecord.KEYFIELDPREFIX))
-						keys.Add(field.StringValue);
+					if (docField.Name.StartsWith(IndexRecord.KEYFIELDPREFIX))
+						keys.Add(docField.StringValue);
 				}
 				return keys;
 			}

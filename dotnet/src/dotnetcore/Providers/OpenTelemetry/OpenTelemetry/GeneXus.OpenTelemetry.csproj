@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<AssemblyName>GeneXus.OpenTelemetry</AssemblyName>
 		<PackageTags>OpenTelemetry GeneXus DotNet </PackageTags>
 		<PackageId>GeneXus.OpenTelemetry.OpenTelemetry</PackageId>
@@ -9,13 +9,13 @@
 	</PropertyGroup>
 
   <ItemGroup>
-	  <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" />
-	  <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" />
-	  <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.7.0" />
-	  <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.8.1" />
-	  <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.8.1" />
-	  <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.7.0" />
-	  <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.0.0-rc9.14" NoWarn="NU5104" />
+	  <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.15.3" />
+	  <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+	  <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
+	  <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.2" />
+	  <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.15.1" />
+	  <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.1" />
+	  <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.15.2" NoWarn="NU5104" />
   </ItemGroup>
 	
   <ItemGroup>
@@ -23,3 +23,5 @@
   </ItemGroup>
 
 </Project>
+
+

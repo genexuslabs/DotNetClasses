@@ -20,6 +20,7 @@ namespace GeneXus.Http
 	using Microsoft.AspNetCore.Http;
 #endif
 	using GeneXus.Configuration;
+	using System.Reflection;
 
 	public interface IHttpAjaxContext
 	{
@@ -278,31 +279,38 @@ namespace GeneXus.Http
 		}
 
 		private JObject GetGxObject(JArray array, String CmpContext, bool IsMasterPage)
-        {
-            try
-            {
-                JObject obj;
+		{
+			try
+			{
+				JObject obj;
+				string paramCmpContext = CmpContext ?? string.Empty;
+				string paramIsMasterPage = IsMasterPage.ToString();
+
 				for (int i = 0; i < array.Count; i++)
-                {
+				{
 					obj = array.GetObject(i);
-                    if (obj["CmpContext"].ToString().Equals(CmpContext) && obj["IsMasterPage"].ToString().Equals(IsMasterPage.ToString()))
-                    {
-                        return obj;
-                    }
-                }
-                obj = new JObject();
-                obj.Put("CmpContext", CmpContext);
-                obj.Put("IsMasterPage", IsMasterPage.ToString());
+					string objCmpContext = obj["CmpContext"]?.ToString() ?? string.Empty;
+					string objIsMasterPage = obj["IsMasterPage"]?.ToString() ?? string.Empty;
+
+					if (objCmpContext.Equals(paramCmpContext) && objIsMasterPage.Equals(paramIsMasterPage))
+					{
+						return obj;
+					}
+				}
+
+				obj = new JObject();
+				obj.Put("CmpContext", CmpContext);
+				obj.Put("IsMasterPage", IsMasterPage.ToString());
 				array.Add(obj);
-                return obj;
-            }
+				return obj;
+			}
 			catch (Exception ex)
 			{
 				GXLogging.Error(log, "GetGxObject error", ex);
 			}
 
 			return null;
-        }        
+		}
 
         public void ajax_rsp_assign_attri(String CmpContext, bool IsMasterPage, String AttName, Object AttValue)
 		{
@@ -346,20 +354,30 @@ namespace GeneXus.Http
 					try
 					{
 						JObject obj = GetGxObject(AttValues, CmpContext, IsMasterPage);
-						if (obj != null && (!isUndefinedOutParam(AttName, SdtObj) || DynAjaxEventContext.isParmModified(AttName, SdtObj)))
-						{
-							IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
-							if (SdtObjJson != null)
+						if (obj != null) {
+							if (typeof(IGxExternalObject).IsAssignableFrom(SdtObj.GetType()))
 							{
-								obj.Put(AttName, SdtObjJson.GetJSONObject());
+								MethodInfo mth = SdtObj.GetType().GetMethod("tojson");
+								obj.Put(AttName, mth?.Invoke(SdtObj, new Object[] {}));
 							}
 							else
 							{
-								Array array = SdtObj as Array;
-								if (array != null)
+								if ((!isUndefinedOutParam(AttName, SdtObj) || DynAjaxEventContext.isParmModified(AttName, SdtObj)))
 								{
-									JArray jArray = new JArray(array);
-									obj.Put(AttName, jArray);
+									IGxJSONAble SdtObjJson = SdtObj as IGxJSONAble;
+									if (SdtObjJson != null)
+									{
+										obj.Put(AttName, SdtObjJson.GetJSONObject());
+									}
+									else
+									{
+										Array array = SdtObj as Array;
+										if (array != null)
+										{
+											JArray jArray = new JArray(array);
+											obj.Put(AttName, jArray);
+										}
+									}
 								}
 							}
 						}

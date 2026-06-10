@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<DefineConstants>TRACE;DEBUG;NETCORE</DefineConstants>
 		<AppDesignerFolder>Properties</AppDesignerFolder>
 		<SignAssembly>false</SignAssembly>
@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.9.24" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.508.3" />
 	<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
   </ItemGroup>
 
@@ -21,3 +21,5 @@
   </ItemGroup>
 
 </Project>
+
+

@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>$(NetVersions)</TargetFrameworks>
 		<PackageTags>GxNetCoreStartup</PackageTags>
 		<PackageId>GeneXus.NetCoreStartup</PackageId>
 		<GxGenerateDepsFile>true</GxGenerateDepsFile>
@@ -11,26 +11,22 @@
 	<PropertyGroup>
 		<NoWarn>$(NoWarn);NU5104</NoWarn>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
-		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904;NU5104</WarningsNotAsErrors>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
+	<PropertyGroup>
 		<WarningsNotAsErrors>NU1900;NU1901;NU1902;NU1903;NU1904;NU5104</WarningsNotAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="8.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="8.0.26" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.6" />
 		<PackageReference Include="Microsoft.Extensions.Caching.SqlServer" Version="3.1.3" />
-		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.3" />
-		<PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.26" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.84.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
-		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
 
-		<PackageReference Include="Azure.Identity" Version="1.11.4" PrivateAssets="All" />
-		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.1.0" PrivateAssets="All" />
-		<PackageReference Include="OpenTelemetry" Version="1.7.0" PrivateAssets="All" />
-		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" PrivateAssets="All" />
+		<PackageReference Include="Azure.Identity" Version="1.21.0" PrivateAssets="All" />
+		<PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.8.1" PrivateAssets="All" />
+		<PackageReference Include="OpenTelemetry" Version="1.15.3" PrivateAssets="All" />
+		<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.15.3" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" PrivateAssets="All" />
 
 		<PackageReference Include="itext7" Version="8.0.0" PrivateAssets="All" />
@@ -62,3 +58,5 @@
 	</Target>
 
 </Project>
+
+

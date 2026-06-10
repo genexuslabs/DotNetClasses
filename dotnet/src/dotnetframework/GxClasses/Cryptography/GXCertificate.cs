@@ -34,16 +34,29 @@ namespace GeneXus.Cryptography
                 {
                     if (!string.IsNullOrEmpty(password))
                     {
+#if NET10_0_OR_GREATER
+						_cert = X509CertificateLoader.LoadPkcs12FromFile(
+									certPath,
+									password,
+									X509KeyStorageFlags.MachineKeySet |
+									X509KeyStorageFlags.PersistKeySet |
+									X509KeyStorageFlags.Exportable);
+#else
 
 						_cert = new X509Certificate2(certPath, password, X509KeyStorageFlags.MachineKeySet |
                                      X509KeyStorageFlags.PersistKeySet |
                                      X509KeyStorageFlags.Exportable);
+#endif
                         _password = password;
                     }
                     else
                     {
-                        _cert = new X509Certificate2(certPath);
-                    }
+#if NET10_0_OR_GREATER
+						_cert = X509CertificateLoader.LoadCertificateFromFile(certPath);
+#else
+						_cert = new X509Certificate2(certPath);
+#endif
+					}
                     SetError(0);
                 }
                 catch (CryptographicException ex)
@@ -67,7 +80,12 @@ namespace GeneXus.Cryptography
             {
 				if (GXUtil.IsWindowsPlatform)
 				{
-					_cert = new X509Certificate2(Convert.FromBase64String(base64Data));
+					byte[] rawData = Convert.FromBase64String(base64Data);
+#if NET10_0_OR_GREATER
+					_cert = X509CertificateLoader.LoadCertificate(rawData);
+#else
+					_cert = new X509Certificate2(rawData);
+#endif
 					SetError(0);
 				}
 				else

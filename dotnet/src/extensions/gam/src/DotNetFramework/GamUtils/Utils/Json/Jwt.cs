@@ -146,7 +146,7 @@ namespace GamUtils.Utils
 			if(isSymmetric)
 			{
 				string payload = JWT.Decode(token, System.Text.Encoding.UTF8.GetBytes(password));
-				return payload.IsNullOrEmpty() ? false : true;
+				return string.IsNullOrEmpty(payload) ? false : true;
 			}
 			else
 			{
@@ -158,7 +158,7 @@ namespace GamUtils.Utils
 #else
 					string payload = JWT.Decode(token, rsa, FindAlgorithm(parsedHeader.Alg));
 #endif
-					return payload.IsNullOrEmpty() ? false : true;
+					return string.IsNullOrEmpty(payload) ? false : true;
 				}
 			}
 		}
