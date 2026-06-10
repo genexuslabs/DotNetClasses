@@ -93,5 +93,22 @@ namespace GamTest.Utils
 			}
 		}
 
+		[Test]
+		public void IsHexa()
+		{
+			int i = 0;
+			do
+			{
+				string randomHexa = GamUtilsEO.RandomHexaBits(128);
+				bool hexa = GamUtilsEO.IsHexadecimal(randomHexa);
+				Assert.IsTrue(hexa, "IsHexa_true");
+
+				string randomAlphanumeric = GamUtilsEO.RandomAlphanumeric(128);
+				bool notHexa = GamUtilsEO.IsHexadecimal(randomAlphanumeric);
+				Assert.IsFalse(notHexa, "testIsHexa_false");
+				i++;
+			} while (i < 50);
+		}
+
 	}
 }
