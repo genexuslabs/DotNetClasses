@@ -20,6 +20,7 @@ on:
 permissions:
   contents: read
   packages: write
+  actions: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -168,11 +169,11 @@ jobs:
     - name: Sign packages
       if: github.repository_owner == vars.PUBLIC_MIRROR_SOURCE_ORG && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
-        VAULT_URL:          ${{ secrets.AZURE_CODE_SIGNING_VAULT_URL }}
+        VAULT_URL:          ${{ vars.AZURE_CODE_SIGNING_VAULT_URL }}
         CERT_NAME:          ${{ vars.AZURE_CODE_SIGNING_CERT_NAME }}
         TIMESTAMPER_URL:    ${{ vars.AZURE_CODE_SIGNING_TIMESTAMP_SERVER }}
-        AZURE_TENANT:       ${{ secrets.AZURE_CODE_SIGNING_TENANT }}
-        AZURE_APP_ID:       ${{ secrets.AZURE_CODE_SIGNING_APP_ID }}
+        AZURE_TENANT:       ${{ vars.AZURE_CODE_SIGNING_TENANT }}
+        AZURE_APP_ID:       ${{ vars.AZURE_CODE_SIGNING_APP_ID }}
         AZURE_APP_PASSWORD: ${{ secrets.AZURE_CODE_SIGNING_APP_PASSWORD }}
       run: |
         # Restore the local tool manifest (.config/dotnet-tools.json) which pins NuGetKeyVaultSignTool.
@@ -265,5 +266,4 @@ jobs:
         gh workflow run update-genexus-dependency.yml `
           --repo ${{ github.repository }} `
           --ref ${{ github.ref_name }} `
-          --field VERSION=${{ steps.buildVariables.outputs.NUGET_PACKAGE_VERSION }} `
-          --field PACKAGE_NAMES="GeneXus.DotNetClasses"
+          --field VERSION=${{ steps.buildVariables.outputs.NUGET_PACKAGE_VERSION }}
