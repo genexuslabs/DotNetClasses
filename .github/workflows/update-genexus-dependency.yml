@@ -10,7 +10,8 @@ on:
         type: string
       PACKAGE_NAMES:
         description: 'Comma-separated list of package names'
-        required: true
+        required: false
+        default: ''
         type: string
 
 permissions:
