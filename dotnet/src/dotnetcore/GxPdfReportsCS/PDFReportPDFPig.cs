@@ -195,26 +195,41 @@ namespace com.genexus.reports
 		{
 			try
 			{
-				string imageType = Path.GetExtension(bitmap).Substring(1);
+				string imageType = Path.GetExtension(bitmap).Substring(1).ToLowerInvariant();
 
 				float rightAux = (float)convertScale(right);
 				float bottomAux = (float)convertScale(bottom);
 				float leftAux = (float)convertScale(left);
 				float topAux = (float)convertScale(top);
-				
+
 				float llx = leftAux + leftMargin;
-				float lly = (float) pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin;
+				float lly = (float)pageBuilder.PageSize.TopRight.Y - bottomAux - topMargin - bottomMargin;
+				float boxWidth = rightAux - leftAux;
+				float boxHeight = bottomAux - topAux;
+
+				byte[] imageBytes = null;
+				try
+				{
+					imageBytes = LoadImageBytes(ref bitmap);
+				}
+				catch (Exception) { }
+
 				float width;
 				float height;
-				if (aspectRatio == 0)
+				if (aspectRatio == 0 || imageBytes == null)
 				{
-					width = rightAux - leftAux;
-					height = bottomAux - topAux;
+					width = boxWidth;
+					height = boxHeight;
 				}
 				else
 				{
-					width = (rightAux - leftAux) * aspectRatio;
-					height = (bottomAux - topAux) * aspectRatio;
+					using (var ms = new MemoryStream(imageBytes))
+					using (var bmp = new Bitmap(ms))
+					{
+						float scale = Math.Min(boxWidth / bmp.Width, boxHeight / bmp.Height);
+						width = bmp.Width * scale;
+						height = bmp.Height * scale;
+					}
 				}
 
 				PdfRectangle position = new PdfRectangle(llx, lly, llx + width, lly + height);
@@ -229,40 +244,18 @@ namespace com.genexus.reports
 				{
 					try
 					{
-						byte[] imageBytes;
-						if (!Path.IsPathRooted(bitmap))
+						if (imageBytes != null)
 						{
-							if (PathUtil.IsAbsoluteUrl(bitmap))
-							{
-								imageBytes = HttpHelper.DownloadFile(bitmap, out _);
-							}
-							else
-							{
-								string bitmapPath = Path.Combine(defaultRelativePrepend, bitmap);
-								if (File.Exists(bitmapPath))
-								{
-									imageBytes = File.ReadAllBytes(bitmapPath);
-									bitmap = bitmapPath;
-								}
-								else
-								{
-									bitmapPath = Path.Combine(webAppDir, bitmap);
-									imageBytes = File.ReadAllBytes(bitmapPath);
-									bitmap = bitmapPath;
-								}
-							}
+							bool isJpeg = imageType == "jpeg" || imageType == "jpg";
+							image = isJpeg ? pageBuilder.AddJpeg(imageBytes, position) : pageBuilder.AddPng(imageBytes, position);
 						}
-						else
+						else if (PathUtil.IsAbsoluteUrl(bitmap))
 						{
-							imageBytes = File.ReadAllBytes(bitmap);
+							image = AddImageFromURL(bitmap, position);
 						}
-						image = imageType == "jpeg" ? pageBuilder.AddJpeg(imageBytes, position) : pageBuilder.AddPng(imageBytes, position);
 					}
-					catch (Exception)
-					{
-						image = AddImageFromURL(bitmap, position);
-					}
-					if (image == null)
+					catch (Exception) { }
+					if (image == null && PathUtil.IsAbsoluteUrl(bitmap))
 					{
 						image = AddImageFromURL(bitmap, position);
 					}
@@ -298,6 +291,36 @@ namespace com.genexus.reports
 				GXLogging.Error(log, "GxDrawBitMap : PDFPig only supports adding jpeg or png images to documents");
 			}
 			return image;
+		}
+
+		private byte[] LoadImageBytes(ref string bitmap)
+		{
+			if (!Path.IsPathRooted(bitmap))
+			{
+				if (PathUtil.IsAbsoluteUrl(bitmap))
+				{
+					return HttpHelper.DownloadFile(bitmap, out _);
+				}
+				else
+				{
+					string bitmapPath = Path.Combine(defaultRelativePrepend, bitmap);
+					if (File.Exists(bitmapPath))
+					{
+						bitmap = bitmapPath;
+						return File.ReadAllBytes(bitmapPath);
+					}
+					else
+					{
+						bitmapPath = Path.Combine(webAppDir, bitmap);
+						bitmap = bitmapPath;
+						return File.ReadAllBytes(bitmapPath);
+					}
+				}
+			}
+			else
+			{
+				return File.ReadAllBytes(bitmap);
+			}
 		}
 
 		public override void GxAttris(string fontName, int fontSize, bool fontBold, bool fontItalic, bool fontUnderline, bool fontStrikethru, int pen, int foreRed, int foreGreen, int foreBlue, int backMode, int backRed, int backGreen, int backBlue)
