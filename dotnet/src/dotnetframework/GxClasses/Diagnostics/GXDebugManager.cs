@@ -1,18 +1,26 @@
+//#define _DEBUG_DEBUGGER
+//#define _LOG_WRITER
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using GeneXus.Application;
+using static GeneXus.Diagnostics.GXDebugStream;
 
 namespace GeneXus.Diagnostics
 {
-
 	public class GXDebugManager
 	{
+		internal const string _LOG_WRITER = "_LOG_WRITER";
 		public const short GXDEBUG_VERSION = 2;
-		internal const GXDebugGenId GENERATOR_ID = GXDebugGenId.CSHARP;
+#if NETCORE 
+		internal const GXDebugGenId GENERATOR_ID = GXDebugGenId.NET;
+#else
+		internal const GXDebugGenId GENERATOR_ID = GXDebugGenId.NETFRAMEWORK;
+#endif
 
 		internal const int PGM_INFO_NO_PARENT = 0;
 		internal static double MICRO_FREQ = Stopwatch.Frequency / 10e6D;
@@ -220,9 +228,25 @@ namespace GeneXus.Diagnostics
 			else mSave(new object[] { ToSave, saveTop, saveCount });
 		}
 
+		public static void OnExit()
+		{
+			if(initialized)
+			{
+				Instance.OnExit(null);
+			}
+		}
+
 		internal void OnExit(GXDebugInfo dbgInfo)
 		{
 			PushSystem((int)GXDebugMsgCode.EXIT);
+			lock (saveLock)
+			{
+				for (int i = 0; i < dbgIndex; i++)
+				{
+					if (Current[i].Ticks == TICKS_NOT_SET)
+						Current[i].Ticks = TICKS_NOT_NEEDED;
+				}
+			}
 			Save();
 		}
 
@@ -292,12 +316,14 @@ namespace GeneXus.Diagnostics
 #if _DEBUG_DEBUGGER
 						Console.WriteLine("mSave-" + saveTop);
 #endif
+							LogWriter.Append($"\n  SaveTop = {saveTop}\n");
 							for (; idx < saveTop; idx++)
 							{
 								GXDebugItem dbgItem = Data[idx];
 #if _DEBUG_DEBUGGER
 							Console.WriteLine($"item({idx}): { dbgItem }");
 #endif
+								LogWriter.Log($"<{idx}:{dbgItem}>");
 								switch (dbgItem.MsgType)
 								{
 									case GXDebugMsgType.SYSTEM:
@@ -357,8 +383,11 @@ namespace GeneXus.Diagnostics
 										continue;
 								}
 								ClearDebugItem(dbgItem);
+								LogWriter.LogPosition(stream);
 							}
+							LogWriter.Append($"\n ENDSAVE ");
 						}
+						LogWriter.Flush();
 					}
 					catch (Exception ex)
 					{
@@ -421,8 +450,9 @@ namespace GeneXus.Diagnostics
 
 	internal enum GXDebugGenId : byte
 	{
-		CSHARP = 1,
+		NETFRAMEWORK = 1,
 		JAVA = 2,
+		NET = 3,
 
 		INVALID = 0xF
 	}
@@ -538,6 +568,7 @@ namespace GeneXus.Diagnostics
 
 		public GXDebugStream(string FileName, FileMode fileMode) : base(FileName, fileMode, fileMode == FileMode.Open ? FileAccess.Read : (fileMode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite), FileShare.None)
 		{
+			LogWriter.SetLogName($"{FileName}.log");
 			Last = 0;
 			LastLast = 0;
 			InitializeNewBlock();
@@ -567,8 +598,16 @@ namespace GeneXus.Diagnostics
 		}
 
 		public void Write(byte[] data) => Write(data, 0, data.Length);
-		public void WriteRaw(byte[] data, int from, int length) => base.Write(data, from, length);
-		public void WriteRaw(byte value) => base.WriteByte(value);
+		public void WriteRaw(byte[] data, int from, int length)
+		{
+			LogWriter.LogWriteRaw(data, from, length);
+			base.Write(data, from, length);
+		}
+		public void WriteRaw(byte value)
+		{
+			LogWriter.LogWriteByte(value);
+			base.WriteByte(value);
+		}
 
 		public override void Write(byte[] data, int offset, int count)
 		{
@@ -582,11 +621,13 @@ namespace GeneXus.Diagnostics
 		private byte Last, LastLast;
 		public override void WriteByte(byte value)
 		{
+			LogWriter.LogWriteByte(value);
 			base.WriteByte(value);
 			if (value == 0xFF &&
 			   value == Last &&
 			   value == LastLast)
 			{
+				LogWriter.Append("<3xFF> ");
 				WriteRaw(ESCAPE.TRIPLE_FF.ToByte());
 				Last = LastLast = 0;
 			}
@@ -602,6 +643,7 @@ namespace GeneXus.Diagnostics
 			if (value < 0) throw new ArgumentException("Cannot handle negative values");
 			else if (value > 0x1FFFFFFFL)
 				throw new ArgumentException("Cannot handle > 29bit values");
+			LogWriter.LogWrite("VLUI", value);
 			if (value < 0x80)
 				WriteByte((byte)value);
 			else if (value < 0x4000)
@@ -616,6 +658,7 @@ namespace GeneXus.Diagnostics
 		public void WriteVLUShort(short value)
 		{
 			if (value < 0) throw new ArgumentException("Cannot handle negative values");
+			LogWriter.LogWrite("VLUS", value);
 			if (value < 0x80)
 				WriteByte((byte)value);
 			else
@@ -627,6 +670,9 @@ namespace GeneXus.Diagnostics
 
 		public void WriteHeader(Guid sessionGuid, short version, int saveCount)
 		{
+			LogWriter.Log("Header", ( "Guid", sessionGuid), ( "Version", version), ("SaveCount", saveCount));
+			LogWriter.LogPosition(this);
+
 			WriteProlog(version);
 			WriteVLUInt(saveCount);
 			Write(sessionGuid.ToByteArray());
@@ -689,6 +735,8 @@ namespace GeneXus.Diagnostics
 		public void WriteScaledLong(long N)
 		{
 			if (N < 0) throw new ArgumentException("Cannot handle negative values");
+			LogWriter.LogWrite("SCAL", N);
+
 			int m = 0;
 			while (N > 31)
 			{
@@ -874,6 +922,82 @@ namespace GeneXus.Diagnostics
 			LastSId = 0;
 			LastLine1 = 0;
 		}
+
+		internal class LogWriter
+		{
+			private static string LogWriterName = "GXDebugCoverage.log";
+			public static object LogWriterLock = new object();
+			private static StringBuilder m_Buffer = new StringBuilder();
+
+			[Conditional(GXDebugManager._LOG_WRITER)]
+			public static void SetLogName(string name)
+			{
+				LogWriterName = name;
+			}
+
+			[Conditional(GXDebugManager._LOG_WRITER)]
+			public static void LogPosition(GXDebugStream stream)
+			{
+				Append($"\nPos: {stream.Position}\n");
+			}
+
+			[Conditional(GXDebugManager._LOG_WRITER)]
+			public static void Append(string msg)
+			{
+				lock (LogWriterLock)
+				{
+					m_Buffer.Append(msg);
+				}
+			}
+
+			[Conditional(GXDebugManager._LOG_WRITER)]
+			public static void Flush()
+			{
+				try
+				{
+					lock (LogWriterLock)
+					{
+						File.AppendAllText(LogWriterName, m_Buffer.ToString());
+					}
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e.StackTrace);
+				}
+				m_Buffer.Clear();
+			}
+
+			[Conditional(GXDebugManager._LOG_WRITER)]
+			internal static void Log(string title, params (string key, object value)[] values)
+			{
+				StringBuilder sb = new StringBuilder();
+				Append($"=========================================\n{title}\n");
+				if (values != null)
+				{
+					foreach ((string key, object value) in values)
+					{
+						sb.Append($"  {key} = {value?.ToString()}\n");
+					}
+				}
+				Append(sb.ToString());
+			}
+
+			[Conditional(GXDebugManager._LOG_WRITER)]
+			internal static void LogWrite(string type, long value) => Append($"{type}:{value} ");
+
+			[Conditional(GXDebugManager._LOG_WRITER)]
+			internal static void LogWriteByte(byte value) => Append($"({value.ToString("X2")}) ");
+
+			[Conditional(GXDebugManager._LOG_WRITER)]
+			internal static void LogWriteRaw(byte[] data, int from, int length)
+			{
+				lock (LogWriterLock)
+				{
+					for (int i = 0; i < length; i++)
+						m_Buffer.Append($"({data[from+i].ToString("X2")}) ");
+				}
+			}
+		}
 	}
 
 #if _DEBUG_DEBUGGER
@@ -897,7 +1021,7 @@ namespace GeneXus.Diagnostics
 			this.FileName = FileName;
 		}
 
-		public static int Main(String[] args)
+		public static int Main(string[] args)
 		{
 			try
 			{
