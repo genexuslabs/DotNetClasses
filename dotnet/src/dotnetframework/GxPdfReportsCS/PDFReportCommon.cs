@@ -83,6 +83,7 @@ namespace com.genexus.reports
 		protected int STYLE_NONE_CONST = 1;
 		protected int runDirection;
 		protected int MULTIPLIED_LEADING = 1;
+		protected bool clipOverflowHtmlContent = true;
 
 		public bool GxOpenDoc(string fileName)
 		{
@@ -337,6 +338,7 @@ namespace com.genexus.reports
 						props.setupGeneralProperty(Const.COMPLIANCE_LEVEL, PdfConformanceLevel.None.ToString()); 
 						props.setupGeneralProperty(Const.RUN_DIRECTION, Const.RUN_DIRECTION_LTR);
 						props.setupGeneralProperty(Const.JUSTIFIED_TYPE_ALL, "false");
+						props.setupGeneralProperty(Const.CLIP_OVERFLOW_HTML_CONTENT, "true");
 
 						props.setupGeneralProperty(Const.STYLE_DOTTED, Const.DEFAULT_STYLE_DOTTED);
 						props.setupGeneralProperty(Const.STYLE_DASHED, Const.DEFAULT_STYLE_DASHED);
@@ -633,6 +635,11 @@ namespace com.genexus.reports
 			STYLE_DASHED = parsePattern(props.getGeneralProperty(Const.STYLE_DASHED));
 			STYLE_LONG_DASHED = parsePattern(props.getGeneralProperty(Const.STYLE_LONG_DASHED));
 			STYLE_LONG_DOT_DASHED = parsePattern(props.getGeneralProperty(Const.STYLE_LONG_DOT_DASHED));
+
+			if (props.getBooleanGeneralProperty(Const.CLIP_OVERFLOW_HTML_CONTENT, true))
+				clipOverflowHtmlContent = true;
+			else
+				clipOverflowHtmlContent = false;
 
 			int result;
 			if (Int32.TryParse(props.getGeneralProperty(Const.RUN_DIRECTION), out result))
@@ -1396,6 +1403,7 @@ namespace com.genexus.reports
 		public static String RUN_DIRECTION_LTR = "2";
 
 		public static String JUSTIFIED_TYPE_ALL = "JustifiedTypeAll";
+		public static String CLIP_OVERFLOW_HTML_CONTENT = "ClipOverflowHtmlContent";
 
 		public const int OUTPUT_SCREEN = 0; 
 		public const int OUTPUT_PRINTER = 1; 
