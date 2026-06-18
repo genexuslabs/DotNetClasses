@@ -575,15 +575,20 @@ namespace GeneXus.Application
 			}
 			app.UseRouting();
 			app.UseCookiePolicy();
+
+			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
+			// TenantMiddleware must run before the session is loaded: UseAsyncSession eagerly
+			// calls Session.LoadAsync(), which resolves the tenant namespace from HttpContext.Items.
+			// If the tenant id isn't set yet it falls back to "default", reading from the wrong
+			// Redis namespace and losing per-subdomain session isolation.
+			app.UseMiddleware<TenantMiddleware>();
+
 			if (Preferences.IsBeforeConnectEventConfigured())
 			{
 				app.UseMiddleware<EnableCustomSessionStoreMiddleware>();
 			}
 			app.UseAsyncSession();
 			app.UseStaticFiles();
-
-			ISessionService sessionService = GXSessionServiceFactory.GetProvider();
-			app.UseMiddleware<TenantMiddleware>();
 
 			ConfigureCors(app);
 			ConfigureSwaggerUI(app, baseVirtualPath);
