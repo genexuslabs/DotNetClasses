@@ -12,10 +12,19 @@ on:
       - 'master'
       - 'release-*'
   push:
-    branches: 
+    branches:
       - 'master'
       - 'beta'
       - 'release-*'
+
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -24,7 +33,7 @@ jobs:
       GIT_SHA: ${{ github.sha }}
       Configuration: Release
       SolutionFile: dotnet\DotNetStandardClasses.sln
-    
+
     runs-on: windows-latest
 
     outputs:
@@ -35,14 +44,14 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
     - name: Install .NET 8
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: '8.0.100' 
+        dotnet-version: '8.0.100'
 
     - name: Calculate environment variables
       id: buildVariables
@@ -50,13 +59,13 @@ jobs:
         $IsMaster = $false
 
         switch -regex ($Env:GIT_REF) {
-          'master' { 
+          'master' {
             $IsPrerelease   = $true
             $IsMaster       = $true
             $SHOULD_DEPLOY  = 'true'
            }
 
-          'beta' { 
+          'beta' {
             $IsPrerelease   = $true
             $SHOULD_DEPLOY  = 'true'
            }
@@ -79,15 +88,15 @@ jobs:
         $GetFileVersionOutput = dotnet msbuild dotnet/Directory.Build.props /t:GetFileVersionForPackage /p:COMMIT_NUMBER=$COMMIT_NUMBER
         "$GetFileVersionOutput" -match "(?<=FileVersion:)(.*)" > $null
         $GetFileVersionOutput = $Matches[0]
-        
+
         $NUGET_PACKAGE_VERSION = $GetFileVersionOutput
-        
+
         if ($IsPrerelease -eq $true) {
           $VersionTag =  @("beta", "preview")[$IsMaster]
           $Timestamp = (Get-Date -AsUTC).ToString("yyyyMMddHHmmss")
           $NUGET_PACKAGE_VERSION = $NUGET_PACKAGE_VERSION + "-" + $VersionTag + "." + $Timestamp
         }
-        
+
         Write-Output "Packge version to be used: $NUGET_PACKAGE_VERSION"
 
         echo "NUGET_PACKAGE_VERSION=$NUGET_PACKAGE_VERSION" >> $env:GITHUB_ENV
@@ -100,7 +109,7 @@ jobs:
         echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $env:GITHUB_OUTPUT
 
     - name: Write SNK
-      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      if: github.repository_owner == vars.PUBLIC_MIRROR_SOURCE_ORG && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
         SNK_BASE64:  ${{ secrets.ARTECH_SNK_BASE64 }}
       run: |
@@ -115,7 +124,7 @@ jobs:
 
     - name: Build
       run: dotnet build $Env:SolutionFile --no-restore --configuration $Env:Configuration
-       
+
     - name: Test
       run: dotnet test $Env:SolutionFile --no-restore --no-build --configuration $Env:Configuration
 
@@ -127,13 +136,13 @@ jobs:
         Write-Output "Validating package names for NuGet.org publication..."
         Write-Output "All packages must start with 'GeneXus.' prefix as this namespace is reserved for GeneXus on NuGet.org"
         Write-Output ""
-        
+
         $invalidPackages = @()
         Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
           $packageName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
           # Remove version suffix to get the actual package name
           $actualPackageName = $packageName -replace '\.\d+\.\d+\.\d+.*$', ''
-          
+
           if (-not $actualPackageName.StartsWith("GeneXus.")) {
             $invalidPackages += $_.Name
             Write-Warning "Package '$($_.Name)' does not start with 'GeneXus.'"
@@ -141,25 +150,25 @@ jobs:
             Write-Output "✓ Package '$($_.Name)' correctly starts with 'GeneXus.'"
           }
         }
-        
+
         if ($invalidPackages.Count -gt 0) {
           Write-Output ""
           Write-Error "Validation failed: The following packages do not start with 'GeneXus.': $($invalidPackages -join ', ')"
           Write-Error "This validation is required for publishing to NuGet.org where the 'GeneXus' prefix is reserved."
           exit 1
         }
-        
+
         Write-Output ""
         Write-Output "✅ All packages correctly start with 'GeneXus.' prefix - ready for NuGet.org publication"
 
     - name: Sign packages
-      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      if: github.repository_owner == vars.PUBLIC_MIRROR_SOURCE_ORG && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
-        VAULT_URL:          ${{ secrets.AZURE_CODE_SIGNING_VAULT_URL }}
+        VAULT_URL:          ${{ vars.AZURE_CODE_SIGNING_VAULT_URL }}
         CERT_NAME:          ${{ vars.AZURE_CODE_SIGNING_CERT_NAME }}
         TIMESTAMPER_URL:    ${{ vars.AZURE_CODE_SIGNING_TIMESTAMP_SERVER }}
-        AZURE_TENANT:       ${{ secrets.AZURE_CODE_SIGNING_TENANT }}
-        AZURE_APP_ID:       ${{ secrets.AZURE_CODE_SIGNING_APP_ID }}
+        AZURE_TENANT:       ${{ vars.AZURE_CODE_SIGNING_TENANT }}
+        AZURE_APP_ID:       ${{ vars.AZURE_CODE_SIGNING_APP_ID }}
         AZURE_APP_PASSWORD: ${{ secrets.AZURE_CODE_SIGNING_APP_PASSWORD }}
       run: |
         # Restore the local tool manifest (.config/dotnet-tools.json) which pins NuGetKeyVaultSignTool.
@@ -190,7 +199,7 @@ jobs:
         }
 
     - name: Configure Azure Artifacts feed
-      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      if: github.repository_owner == vars.PUBLIC_MIRROR_SOURCE_ORG && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
         AzureArtifactsPrereleaseFeedURL: https://pkgs.dev.azure.com/genexuslabs/13fb82d9-57a8-49ef-95bb-0ec8324e470c/_packaging/dotnet-prereleases/nuget/v3/index.json
         AzureArtifactsReleaseFeedURL: https://pkgs.dev.azure.com/genexuslabs/13fb82d9-57a8-49ef-95bb-0ec8324e470c/_packaging/dotnet-releases/nuget/v3/index.json
@@ -203,20 +212,17 @@ jobs:
         echo "AZURE_ARTIFACTS_URL=$AZURE_ARTIFACTS_URL" >> $env:GITHUB_ENV
 
     - name: Push packages
-      if: github.repository_owner == 'GeneXusLabs' && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      if: github.repository_owner == vars.PUBLIC_MIRROR_SOURCE_ORG && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
       env:
-        GPRFeedURL: https://nuget.pkg.github.com/genexuslabs/index.json
         NuGetFeedURL: https://api.nuget.org/v3/index.json
       run: |
         $IsPrerelease = [System.Convert]::ToBoolean($Env:IsPrerelease)
 
         $totalPackages  = 0
         $pushedToAzure  = 0
-        $pushedToGitHub = 0
         $pushedToNuget  = 0
 
         Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
-          $PushToGitHubArgs = @("nuget", "push", $_.FullName, "--source", $Env:GPRFeedURL, "--api-key", "${{ secrets.SECURE_TOKEN }}")
           $PushToNugetArgs  = @("nuget", "push", $_.FullName, "--source", $Env:NuGetFeedURL, "--api-key", "${{ secrets.NUGET_ORG_TOKEN }}")
           $PushToAzureArgs  = @("nuget", "push", $_.FullName, "--source", $Env:AZURE_ARTIFACTS_URL, "--api-key", "DUMMY-KEY")
 
@@ -225,20 +231,16 @@ jobs:
           } else {
             $skipDuplicates = [System.Convert]::ToBoolean("${{ github.event.inputs.skip-duplicates }}")
           }
-          
+
           if ($skipDuplicates) {
             $PushToNugetArgs  += "--skip-duplicate"
-            $PushToGitHubArgs += "--skip-duplicate"
             $PushToAzureArgs  += "--skip-duplicate"
           }
-          
+
           dotnet $PushToAzureArgs  || exit 1
           $pushedToAzure += 1
 
           if (!$IsPrerelease) {
-            dotnet $PushToGitHubArgs || exit 1
-            $pushedToGitHub += 1
-
             dotnet $PushToNugetArgs || exit 1
             $pushedToNuget += 1
           }
@@ -249,17 +251,14 @@ jobs:
         Write-Output "Number of packages found: $totalPackages"
 
         Write-Output "Number of packages pushed to Azure Artifacts: $pushedToAzure"
-        Write-Output "Number of packages pushed to GitHub: $pushedToGitHub"
         Write-Output "Number of packages pushed to Nuget.org: $pushedToNuget"
 
-  update-genexus-dependency:
-    concurrency: 
-      group: build-${{ github.ref }}
-      cancel-in-progress: true
-    uses: genexuslabs/build-genexus-reusable-workflow/.github/workflows/update-genexus-dep-version.yml@main
-    needs: build
-    if: github.repository_owner == 'genexuslabs' && needs.build.outputs.SHOULD_DEPLOY == 'true'
-    with: 
-      VERSION: ${{ needs.build.outputs.NUGET_VERSION }}
-      COMMITTER: ${{ needs.build.outputs.LAST_COMMITTER }}
-    secrets: inherit
+    - name: Update GeneXus Dependency
+      if: github.repository_owner == vars.PUBLIC_MIRROR_SOURCE_ORG && steps.buildVariables.outputs.SHOULD_DEPLOY == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh workflow run update-genexus-dependency.yml `
+          --repo ${{ github.repository }} `
+          --ref ${{ github.ref_name }} `
+          --field VERSION=${{ steps.buildVariables.outputs.NUGET_PACKAGE_VERSION }}
