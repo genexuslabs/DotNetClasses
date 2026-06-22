@@ -228,7 +228,7 @@ jobs:
         $pushedToNuget  = 0
 
         Get-ChildItem ".\dotnet\*.nupkg" -Recurse | ForEach-Object {
-          $PushToNugetArgs  = @("nuget", "push", $_.FullName, "--source", $Env:NuGetFeedURL, "--api-key", "${{ secrets.NUGET_ORG_TOKEN }}")
+          $PushToNugetArgs  = @("nuget", "push", $_.FullName, "--source", $Env:NuGetFeedURL, "--api-key", "${{ secrets.NUGET_ORG_API_KEY }}")
           $PushToAzureArgs  = @("nuget", "push", $_.FullName, "--source", $Env:AZURE_ARTIFACTS_URL, "--api-key", "DUMMY-KEY")
 
           if ([string]::IsNullOrEmpty("${{ github.event.inputs.skip-duplicates }}") ) {
