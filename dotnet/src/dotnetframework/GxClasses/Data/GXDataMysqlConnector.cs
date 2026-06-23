@@ -113,6 +113,14 @@ namespace GeneXus.Data
 				connectionString.Append(res);
 			}
 			string connstr = connectionString.ToString();
+#if !NETCORE
+			// On .NET Framework, MySqlConnector passes SslProtocols.None (let the OS pick the TLS version)
+			// to SslStream, which rejects it as an invalid 'SslProtocolType' enum value (.NET Core accepts it,
+			// hence the same upgrade only breaks on Framework). Pinning an explicit TLS version makes the
+			// connector pass a concrete SslProtocols value instead of None. User-supplied TlsVersion wins.
+			if (!HasKey(connstr, "TlsVersion") && !HasKey(connstr, "Tls Version"))
+				connstr = connstr.TrimEnd(';') + ";TlsVersion=TLS 1.2";
+#endif
 			string maxpoolSize = GetParameterValue(connstr, "Max Pool Size");
 			if (String.IsNullOrEmpty(maxpoolSize)) MAX_TRIES = 100; 
 			else MAX_TRIES = Convert.ToInt32(maxpoolSize);
