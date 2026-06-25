@@ -458,10 +458,13 @@ namespace GeneXus.Utils
 					HttpHelper.SetError(httpContext, "0", "This service needs an Authorization Header");
 					return false;
 				}
-				else
+				token = token.Replace("OAuth ", "");
+				// Fail closed: only branches that explicitly validate the token may authenticate.
+				switch (objIntegratedSecurityLevel)
 				{
-					token = token.Replace("OAuth ", "");
-					if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityLow)
+					case GAMSecurityLevel.SecurityNone:
+						return true;
+					case GAMSecurityLevel.SecurityLow:
 					{
 						bool isOK;
 						GxResult result = GxSecurityProvider.Provider.checkaccesstoken(context, token, out isOK);
@@ -470,8 +473,9 @@ namespace GeneXus.Utils
 							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
 							return false;
 						}
+						return true;
 					}
-					else if (objIntegratedSecurityLevel == GAMSecurityLevel.SecurityHigh)
+					case GAMSecurityLevel.SecurityHigh:
 					{
 						bool sessionOk, permissionOk;
 						GxResult result = GxSecurityProvider.Provider.checkaccesstokenprm(context, token, objPermissionPrefix, out sessionOk, out permissionOk);
@@ -479,23 +483,23 @@ namespace GeneXus.Utils
 						{
 							return true;
 						}
+						HttpHelper.SetGamError(httpContext, result.Code, result.Description);
+						if (sessionOk)
+						{
+							SetStatusCode(HttpStatusCode.Forbidden);
+						}
 						else
 						{
-							HttpHelper.SetGamError(httpContext, result.Code, result.Description);
-							if (sessionOk)
-							{
-								SetStatusCode(HttpStatusCode.Forbidden);
-							}
-							else
-							{
-								AddHeader(HttpHeader.AUTHENTICATE_HEADER, StringUtil.Sanitize(HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description), StringUtil.HttpHeaderWhiteList));
-								SetStatusCode(HttpStatusCode.Unauthorized);
-							}
-							return false;
+							AddHeader(HttpHeader.AUTHENTICATE_HEADER, StringUtil.Sanitize(HttpHelper.OatuhUnauthorizedHeader(context.GetServerName(), result.Code, result.Description), StringUtil.HttpHeaderWhiteList));
+							SetStatusCode(HttpStatusCode.Unauthorized);
 						}
+						return false;
 					}
+					default:
+						// Security is enabled but the level is unsupported: deny instead of falling through to allow.
+						HttpHelper.SetError(httpContext, "0", "Unsupported security level");
+						return false;
 				}
-				return true;
 			}
 		}
 		protected void SetStatusCode(HttpStatusCode code)
